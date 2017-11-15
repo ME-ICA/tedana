@@ -1,0 +1,36 @@
+# Python CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-python/ for more details
+#
+version: 2
+jobs:
+  build:
+    docker:
+      - image: emdupre/meica-docker:0.0.3
+
+    working_directory: /home/neuro/code/
+
+    steps:
+      - checkout
+
+      - run:
+          name: download data
+          command: curl -L -o /home/neuro/data/zcat_ffd.nii.gz https://www.dropbox.com/s/ljeqskdmnc6si9d/zcat_ffd.nii.gz?dl=0
+
+      - run:
+          name: install dependencies
+          command: |
+            conda create --name venv python=3.6
+            source activate venv
+            pip install pytest
+            pip install -r requirements.txt
+            python setup.py install
+
+      # run tests!
+      - run:
+          name: run tests
+          command: |
+            source activate venv
+            py.test ./meica/tests/test_tedana.py
+          no_output_timeout: "40m"
+          post: bash <(curl -s https://codecov.io/bash)
