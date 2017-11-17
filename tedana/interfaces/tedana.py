@@ -7,7 +7,7 @@ import nibabel as nib
 from sklearn import svm
 import scipy.stats as stats
 from tedana.interfaces.t2smap import (optcom, t2sadmap)
-from tedana.utils.utils import (cat2echos, uncat2echos, makemask,
+from tedana.utils.utils import (cat2echos, uncat2echos, make_mask,
                                 makeadmask, fmask, unmask,
                                 fitgaussian, niwrite, dice, andb)
 
@@ -906,7 +906,7 @@ def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
     cAl = None
     if len(ste) == 1 and ste[0]==-1:
         print("-Computing PCA of optimally combined multi-echo data")
-        OCmask = makemask(OCcatd[:,:,:,np.newaxis,:])
+        OCmask = make_mask(OCcatd[:,:,:,np.newaxis,:])
         d = fmask(OCcatd,OCmask)
         eim = eimask(d[:,np.newaxis,:])
         eim = eim[:,0]==1

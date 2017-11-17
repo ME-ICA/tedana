@@ -2,9 +2,69 @@
 import numpy as np
 import nibabel as nib
 from scipy.optimize import leastsq
+from scipy.stats import scoreatpercentile
 
 from ..due import due, BibTeX
 
+def cat2echos(data, Ne):
+    """
+    Separates z- and echo-axis in `data`
+
+    Parameters
+    ----------
+    data : array_like
+        Array of shape (nx, ny, nz*Ne, nt)
+    Ne : int
+        Number of echoes that were in original (uncombined) data array
+
+    Returns
+    -------
+    ndarray
+        Array of shape (nx, ny, nz, Ne, nt)
+    """
+
+    nx, ny = data.shape[0:2]
+    nz = data.shape[2] // Ne
+    if len(data.shape) > 3:
+        nt = data.shape[3]
+    else:
+        nt = 1
+    return np.reshape(data, (nx, ny, nz, Ne, nt), order='F')
+
+def makeadmask(cdat, minimum=True, getsum=False):
+    """
+    Create a mask.
+    """
+    nx, ny, nz, Ne, _ = cdat.shape
+
+    mask = np.ones((nx, ny, nz), dtype=np.bool)
+
+    if minimum:
+        mask = cdat.prod(axis=-1).prod(-1) != 0
+        return mask
+    else:
+        #Make a map of longest echo that a voxel can be sampled with,
+        #with minimum value of map as X value of voxel that has median
+        #value in the 1st echo. N.b. larger factor leads to bias to lower TEs
+        emeans = cdat.mean(-1)
+        medv = emeans[:, :, :, 0] == scoreatpercentile(emeans[:, :, :, 0][emeans[:, :, :, 0] != 0],
+                                                       33, interpolation_method='higher')
+        lthrs = np.squeeze(np.array([emeans[:, :, :, ee][medv] / 3 for ee in range(Ne)]))
+
+        if len(lthrs.shape) == 1:
+            lthrs = np.atleast_2d(lthrs).T
+        lthrs = lthrs[:, lthrs.sum(0).argmax()]
+
+        mthr = np.ones([nx, ny, nz, Ne])
+        for i_echo in range(Ne):
+            mthr[:, :, :, i_echo] *= lthrs[i_echo]
+        mthr = np.abs(emeans) > mthr
+        masksum = np.array(mthr, dtype=np.int).sum(-1)
+        mask = masksum != 0
+        if getsum:
+            return mask, masksum
+        else:
+            return mask
 
 def uncat2echos(data, Ne):
     """
