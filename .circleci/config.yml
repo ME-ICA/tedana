@@ -18,6 +18,13 @@ jobs:
           command: curl -L -o /home/neuro/data/zcat_ffd.nii.gz https://www.dropbox.com/s/ljeqskdmnc6si9d/zcat_ffd.nii.gz?dl=0
 
       - run:
+          name: download and unzip processed data
+          command: |
+            curl -L -o /home/neuro/data/test_res.tar.gz https://www.dropbox.com/s/yzswu6ljnfxlhyo/test_res.tar.gz?dl=0
+            tar -xvzf /home/neuro/data/test_res.tar.gz -C /home/neuro/data
+
+
+      - run:
           name: install dependencies
           command: |
             conda create --name venv python=3.6
