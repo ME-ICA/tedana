@@ -1,6 +1,6 @@
-# Contributing to ME-ICA
+# Contributing to tedana
 
-Welcome to the ME-ICA repository! We're excited you're here and want to contribute.  
+Welcome to the tedana repository! We're excited you're here and want to contribute.  
 
 These guidelines are designed to make it as easy as possible to get involved. If you have any questions that aren't discussed below, please let us know by opening an [issue][link_issues]!
 
@@ -25,17 +25,17 @@ The current list of labels are [here][link_labels] and include:
 
 ## Making a change
 
-We appreciate all contributions to ME-ICA, but those accepted fastest will follow a workflow similar to the following:
+We appreciate all contributions to tedana, but those accepted fastest will follow a workflow similar to the following:
 
 **1. Comment on an existing issue or open a new issue referencing your addition.**
 
-This allows other members of the ME-ICA development team to confirm that you aren't overlapping with work that's currently underway and that everyone is on the same page with the goal of the work you're going to carry out.
+This allows other members of the tedana development team to confirm that you aren't overlapping with work that's currently underway and that everyone is on the same page with the goal of the work you're going to carry out.
 
 [This blog][link_pushpullblog] is a nice explanation of why putting this work in up front is so useful to everyone involved.
 
-**2. [Fork][link_fork] the [ME-ICA repository][link_meica] to your profile.**
+**2. [Fork][link_fork] the [tedana repository][link_tedana] to your profile.**
 
-This is now your own unique copy of ME-ICA. Changes here won't effect anyone else's work, so it's a safe space to explore edits to the code!
+This is now your own unique copy of tedana. Changes here won't effect anyone else's work, so it's a safe space to explore edits to the code!
 
 Make sure to [keep your fork up to date][link_updateupstreamwiki] with the master repository.
 
@@ -49,8 +49,8 @@ A member of the development team will review your changes to confirm that they c
 
 ## Recognizing contributions
 
-ME-ICA follows the [all-contributors][link_allcontributors] specification, so we welcome and recognize all contributions from documentation to testing to code development.
-You can see a list of current contributors in our [README][link_readme].
+We welcome and recognize all contributions from documentation to testing to code development.
+You can see a list of current contributors in the [contributors tab][link_contributors].
 
 ## Thank you!
 
@@ -61,22 +61,21 @@ You're awesome. :wave::smiley:
 *&mdash; Based on contributing guidelines from the [STEMMRoleModels][link_stemmrolemodels] project.*
 
 [link_github]: https://github.com/
-[link_meica]: https://github.com/ME-ICA/me-ica
+[link_tedana]: https://github.com/ME-ICA/tedana
 [link_signupinstructions]: https://help.github.com/articles/signing-up-for-a-new-github-account
 [link_react]: https://github.com/blog/2119-add-reactions-to-pull-requests-issues-and-comments
-[link_issues]: https://github.com/ME-ICA/me-ica/issues
-[link_labels]: https://github.com/ME-ICA/me-ica/labels
+[link_issues]: https://github.com/ME-ICA/tedana/issues
+[link_labels]: https://github.com/ME-ICA/tedana/labels
 [link_discussingissues]: https://help.github.com/articles/discussing-projects-in-issues-and-pull-requests
 
-[link_bugs]: https://github.com/ME-ICA/me-ica/labels/bug
-[link_helpwanted]: https://github.com/ME-ICA/me-ica/labels/help%20wanted
-[link_requests]: https://github.com/ME-ICA/me-ica/labels/requests
+[link_bugs]: https://github.com/ME-ICA/tedana/labels/bug
+[link_helpwanted]: https://github.com/ME-ICA/tedana/labels/help%20wanted
+[link_requests]: https://github.com/ME-ICA/tedana/labels/requests
 
 [link_pullrequest]: https://help.github.com/articles/creating-a-pull-request/
 [link_fork]: https://help.github.com/articles/fork-a-repo/
 [link_pushpullblog]: https://www.igvita.com/2011/12/19/dont-push-your-pull-requests/
 [link_branches]: https://help.github.com/articles/creating-and-deleting-branches-within-your-repository/
 [link_updateupstreamwiki]: https://help.github.com/articles/syncing-a-fork/
-[link_allcontributors]: https://github.com/kentcdodds/all-contributors#emoji-key
 [link_stemmrolemodels]: https://github.com/KirstieJane/STEMMRoleModels
-[link_readme]: https://github.com/ME-ICA/me-ica/blob/py3/README.md
+[link_contributors]: https://github.com/ME-ICA/tedana/graphs/contributors
