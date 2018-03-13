@@ -41,7 +41,7 @@ Make sure to [keep your fork up to date][link_updateupstreamwiki] with the maste
 
 **3. Make the changes you've discussed.**
 
-Try to keep the changes focused. If you feel tempted to "branch out" then please make a [new branch][link_branches].
+Try to keep the changes focused. We've found that working on a [new branch][link_branches] makes it easier to keep your changes targeted.
 
 **4. Submit a [pull request][link_pullrequest].**
 
