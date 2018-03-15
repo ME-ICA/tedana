@@ -8,13 +8,13 @@ tedana is part of the ME-ICA pipeline, and therefore assumes that you're working
 
 Multi-echo fMRI data collection entails acquires multiple TEs (commonly called [echo times](http://mriquestions.com/tr-and-te.html)) for each collected fMRI volume. Our signal of interest, Blood Oxygen-Level Dependent or [BOLD signal](http://www.fil.ion.ucl.ac.uk/spm/course/slides10-zurich/Kerstin_BOLD.pdf), is known to decay at a set rate within each fMRI volume. Collecting multiple echos therefore allows us to infer if components of fMRI signal are BOLD-related or driven by acquisition artifacts, like partipant motion. For a review, see [Kundu et al. (2017), _NeuroImage_](https://paperpile.com/shared/eH3PPu).
 
-In tedana, we combine all collected echos, then decompose the resulting timeseries into independent components that can be classified as BOLD or non-BOLD based. This is performed in a series of steps including:
+In tedana, we combine all collected echos, then decompose the resulting timeseries into components that can be classified as BOLD or non-BOLD based. This is performed in a series of steps including:
 
 * Principle components analysis
 * Independent components analysis
 * Component classification
 
-More information and documentation can be found at [tedana.readthedocs.io](https://tedana.readthedocs.io).
+More information and documentation can be found at https://tedana.readthedocs.io/.
 
 ## Installation
 
