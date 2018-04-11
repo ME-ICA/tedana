@@ -51,7 +51,7 @@ Want to learn more about our plans for developing tedana ? Check out [our roadma
 
 We ask that all contributions to tedana respect our [code of conduct](https://github.com/emdupre/tedana/blob/master/Code_of_Conduct.md).
 
-### Mozilla Global Sprint (10-11 May, 2018)
+### :earth_americas: Mozilla Global Sprint (10-11 May, 2018) :earth_africa:
 
 This year, tedana will be participating in the [Mozilla Global Sprint](https://foundation.mozilla.org/opportunity/global-sprint/) !
-Look out for issues tagged `global-sprint` for good places to get started during the sprint.
+Check out issues tagged [![mozsprint](https://img.shields.io/badge/-mozsprint-0052cc.svg)](https://github.com/ME-ICA/tedana/labels/mozsprint) for good places to get started during the sprint.
