@@ -21,7 +21,7 @@ jobs:
           name: download and unzip processed data
           command: |
             curl -L -o /home/neuro/data/test_res.tar.gz https://www.dropbox.com/s/yzswu6ljnfxlhyo/test_res.tar.gz?dl=0
-            tar -xvzf /home/neuro/data/test_res.tar.gz
+            tar -xvzf /home/neuro/data/test_res.tar.gz --no-same-owner -C /home/neuro/data/
 
 
       - run:

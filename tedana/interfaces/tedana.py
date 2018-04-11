@@ -2,6 +2,7 @@ import os
 import sys
 import gzip
 import pickle
+import textwrap
 import numpy as np
 import nibabel as nib
 from sklearn import svm
@@ -1257,8 +1258,7 @@ def gscontrol_mmix(mmix, acc, rej, midk, empty, head):
     """
     Make medn version of T1 corrected time series
     """
-    niwrite(Gmu[:, :, :, np.newaxis] + unmask((bold_noT1gs+resid)*Gstd[mask][:, np.newaxis]
-                                              mask),
+    niwrite(Gmu[:, :, :, np.newaxis] + unmask((bold_noT1gs+resid)*Gstd[mask][:, np.newaxis], mask),
             aff, 'dn_ts_OC_T1c.nii', head)
 
     """
