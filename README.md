@@ -2,9 +2,16 @@
 
 TE-Dependent Analysis (_tedana_) is a Python module for denoising multi-echo fMRI data.
 
-tedana is part of the ME-ICA pipeline, and therefore assumes that you're working with already preprocessed data. If you're in need of a preprocessing pipeline, we recommend [FMRIPREP](https://github.com/poldracklab/fmriprep/), which has been tested for compatibility with multi-echo fMRI data.
+[![CircleCI](https://circleci.com/gh/ME-ICA/tedana.svg?style=shield)](https://circleci.com/gh/ME-ICA/tedana)
+[![Documentation Status](https://readthedocs.org/projects/tedana/badge/?version=latest)](http://tedana.readthedocs.io/en/latest/?badge=latest)
+[![License](https://img.shields.io/badge/License-LGPL%202.0-blue.svg)](https://opensource.org/licenses/LGPL-2.1)
+
 
 ## About
+
+tedana is part of the ME-ICA pipeline, and therefore assumes that you're working with already preprocessed data. If you're in need of a preprocessing pipeline, we recommend [FMRIPREP](https://github.com/poldracklab/fmriprep/), which has been tested for compatibility with multi-echo fMRI data.
+
+### Why Multi-Echo?
 
 Multi-echo fMRI data collection entails acquires multiple TEs (commonly called [echo times](http://mriquestions.com/tr-and-te.html)) for each collected fMRI volume.
 Our signal of interest, Blood Oxygen-Level Dependent or [BOLD signal](http://www.fil.ion.ucl.ac.uk/spm/course/slides10-zurich/Kerstin_BOLD.pdf), is known to decay at a set rate within each fMRI volume.
