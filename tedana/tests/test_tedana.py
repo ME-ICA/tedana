@@ -1,4 +1,6 @@
-"""Tests for tedana."""
+"""
+Tests for tedana.
+"""
 
 import os.path
 from tedana.interfaces import tedana
@@ -6,6 +8,7 @@ from tedana.cli import run
 import nibabel as nb
 import numpy as np
 from pathlib import Path
+
 
 def test_basic_tedana():
     """
@@ -63,6 +66,6 @@ def test_outputs():
      'veins_l0.nii',
      'veins_l1.nii']
     test_dir = Path('/home/neuro/data/test_res/')
-    res_dir =  Path('/home/neuro/code/TED/')
+    res_dir = Path('/home/neuro/code/TED/')
     for fn in nifti_test_list:
         compare_nifti(fn, test_dir, res_dir)
