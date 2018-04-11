@@ -6,10 +6,10 @@ import numpy as np
 import nibabel as nib
 from sklearn import svm
 import scipy.stats as stats
-from tedana.interfaces.t2smap import (optcom, t2sadmap)
-from tedana.utils.utils import (cat2echos, uncat2echos, make_mask,
-                                makeadmask, fmask, unmask,
-                                fitgaussian, niwrite, dice, andb)
+from tedana.interfaces import (optcom, t2sadmap)
+from tedana.utils import (cat2echos, uncat2echos, make_mask,
+                          makeadmask, fmask, unmask,
+                          fitgaussian, niwrite, dice, andb)
 
 
 """
@@ -894,7 +894,9 @@ def selcomps(seldict, mmix, head, debug=False, olevel=2, oversion=99,
 
     tsoc_B_Zcl = np.zeros(tsoc_B.shape)
     tsoc_B_Zcl[Z_clmaps != 0] = np.abs(tsoc_B)[Z_clmaps != 0]
-    sig_B = [stats.scoreatpercentile(tsoc_B_Zcl[tsoc_B_Zcl[:, ii] != 0, ii], 25) if len(tsoc_B_Zcl[tsoc_B_Zcl[:, ii] != 0, ii]) != 0 else 0 for ii in nc]
+    sig_B = [stats.scoreatpercentile(tsoc_B_Zcl[tsoc_B_Zcl[:, ii] != 0, ii], 25)
+             if len(tsoc_B_Zcl[tsoc_B_Zcl[:, ii] != 0, ii]) != 0
+             else 0 for ii in nc]
     sig_B = np.abs(tsoc_B) > np.tile(sig_B, [tsoc_B.shape[0], 1])
 
     veinmask = andb([t2s < stats.scoreatpercentile(t2s[t2s != 0], 15,
