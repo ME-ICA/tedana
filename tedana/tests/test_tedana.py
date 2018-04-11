@@ -1,4 +1,6 @@
-"""Tests for tedana."""
+"""
+Tests for tedana.
+"""
 
 import os.path
 from tedana.interfaces import tedana
