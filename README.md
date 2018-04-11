@@ -43,3 +43,8 @@ We :yellow_heart: new contributors ! To get started, check out [our contributing
 Want to learn more about our plans for developing tedana ? Check out [our roadmap](https://github.com/emdupre/tedana/projects). Have a question, comment, or suggestion ? Open or comment on one of [our issues](https://github.com/emdupre/tedana/issues) !
 
 We ask that all contributions to tedana respect our [code of conduct](https://github.com/emdupre/tedana/blob/master/Code_of_Conduct.md).
+
+### Mozilla Global Sprint (10-11 May, 2018)
+
+This year, tedana will be participating in the [Mozilla Global Sprint](https://foundation.mozilla.org/opportunity/global-sprint/) !
+Look out for issues tagged `global-sprint` for good places to get started during the sprint.
