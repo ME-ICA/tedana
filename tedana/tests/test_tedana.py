@@ -7,6 +7,7 @@ import nibabel as nb
 import numpy as np
 from pathlib import Path
 
+
 def test_basic_tedana():
     """
     A very simple test, to confirm that tedana creates output
@@ -63,6 +64,6 @@ def test_outputs():
      'veins_l0.nii',
      'veins_l1.nii']
     test_dir = Path('/home/neuro/data/test_res/')
-    res_dir =  Path('/home/neuro/code/TED/')
+    res_dir = Path('/home/neuro/code/TED/')
     for fn in nifti_test_list:
         compare_nifti(fn, test_dir, res_dir)
