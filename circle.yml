@@ -41,3 +41,6 @@ jobs:
             py.test ./tedana/tests/test_tedana.py
           no_output_timeout: "40m"
           post: bash <(curl -s https://codecov.io/bash)
+
+      - store_artifacts:
+          path: /home/data/
