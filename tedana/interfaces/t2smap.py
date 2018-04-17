@@ -34,7 +34,7 @@ def t2sadmap(catd, mask, tes, masksum, start_echo):
 
         beta, res, rank, sing = np.linalg.lstsq(X, B)
         t2s = 1 / beta[1, :].transpose()
-        s0  = np.exp(beta[0, :]).transpose()
+        s0 = np.exp(beta[0, :]).transpose()
 
         t2s[np.isinf(t2s)] = 500.
         s0[np.isnan(s0)] = 0.
@@ -86,8 +86,8 @@ def optcom(data, t2, tes, mask, combmode, useG=False):
         fdat = fmask(data, mask)
         ft2s = fmask(t2, mask)
 
-    tes  = np.array(tes)
-    tes  = tes[np.newaxis, :]
+    tes = np.array(tes)
+    tes = tes[np.newaxis, :]
     ft2s = ft2s[:, np.newaxis]
 
     if combmode == 'ste':
@@ -98,7 +98,7 @@ def optcom(data, t2, tes, mask, combmode, useG=False):
     alpha = np.tile(alpha[:, :, np.newaxis], (1, 1, Nt))
 
     fout = np.average(fdat, axis=1, weights=alpha)
-    out  = unmask(fout, mask)
+    out = unmask(fout, mask)
     print('Out shape is ', out.shape)
     return out
 
@@ -114,7 +114,7 @@ def main(options):
     tes = [float(te) for te in options.tes]
     ne = len(tes)
     catim = nib.load(options.data[0])
-    head  = catim.get_header()
+    head = catim.get_header()
     head.extensions = []
     head.set_sform(head.get_sform(), code=1)
     aff = catim.get_affine()

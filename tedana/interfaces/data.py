@@ -87,16 +87,16 @@ class MultiEchoData():
         first_echo = emeans[:, :, :, 0]
         perc33 = np.percentile(first_echo[first_echo.nonzero()], 33,
                                interpolation='higher')
-        medv  = (first_echo == perc33)
+        medv = (first_echo == perc33)
         lthrs = np.vstack([emeans[:, :, :, echo][medv] / 3 for echo in
                            range(self.tes.size)])
         lthrs = lthrs[:, lthrs.sum(0).argmax()]
-        mthr  = np.ones(self.catdata.shape[:-1])
+        mthr = np.ones(self.catdata.shape[:-1])
         for echo in range(self.tes.size):
             mthr[:, :, :, echo] *= lthrs[echo]
 
         self.masksum = (np.abs(emeans) > mthr).astype('int').sum(axis=-1)
-        self.mask    = (self.masksum != 0)
+        self.mask = (self.masksum != 0)
 
 
 class T2Star():
