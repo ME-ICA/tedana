@@ -617,15 +617,15 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
     """
     Make table of dice values
     """
-    dice_table = np.zeros([nc.shape[0], 2])
+    dice_tbl = np.zeros([nc.shape[0], 2])
     csize = np.max([int(mask.sum()*0.0005)+5, 20])
     for ii in ncl:
         dice_FR2 = dice(unmask(Br_clmaps_R2[:, ii], mask)[t2s != 0],
                         F_R2_clmaps[:, ii])
         dice_FS0 = dice(unmask(Br_clmaps_S0[:, ii], mask)[t2s != 0],
                         F_S0_clmaps[:, ii])
-        dice_table[ii, :] = [dice_FR2, dice_FS0]  # step 3a here and above
-    dice_table[np.isnan(dice_table)] = 0
+        dice_tbl[ii, :] = [dice_FR2, dice_FS0]  # step 3a here and above
+    dice_tbl[np.isnan(dice_tbl)] = 0
 
     """
     Make table of noise gain
@@ -648,7 +648,8 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
         except:
             pass
     tt_table[np.isnan(tt_table)] = 0
-    tt_table[np.isinf(tt_table[:, 0]), 0] = np.percentile(tt_table[~np.isinf(tt_table[:, 0]), 0], 98)
+    tt_table[np.isinf(tt_table[:, 0]), 0] = np.percentile(tt_table[~np.isinf(tt_table[:, 0]), 0],
+                                                          98)
 
     # Time series derivative kurtosis
     mmix_dt = (mmix[:-1] - mmix[1:])
@@ -680,7 +681,8 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
         fproj_arr_val[:, ii] = fproj_z.flatten()
         spr.append(np.array(fproj_z > fproj_z.max() / 4, dtype=np.int).sum())
         fprojr = np.array([fproj, fproj[:, :, ::-1]]).max(0)
-        fdist.append(np.max([fitgaussian(fproj.max(jj))[3:].max() for jj in range(len(fprojr.shape))]))
+        fdist.append(np.max([fitgaussian(fproj.max(jj))[3:].max() for
+                     jj in range(len(fprojr.shape))]))
     fdist = np.array(fdist)
     spr = np.array(spr)
 
@@ -702,7 +704,7 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
     Rtz = (Rtz-Rtz.mean())/Rtz.std()
     KRr = stats.zscore(np.log(Kappas) / np.log(Rhos))
     cnz = (countnoise-countnoise.mean()) / countnoise.std()
-    Dz = stats.zscore(np.arctanh(dice_table[:, 0] + 0.001))
+    Dz = stats.zscore(np.arctanh(dice_tbl[:, 0] + 0.001))
     fz = np.array([Tz, Vz, Ktz, KRr, cnz, Rz, mmix_kurt, fdist_z])
 
     """
@@ -724,7 +726,8 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
                            getelbow_aggr(Kappas, val=True)] + list(getfbounds(ne)))
     Khighelbowval = stats.scoreatpercentile([getelbow_mod(Kappas, val=True),
                                              getelbow_cons(Kappas, val=True),
-                                             getelbow_aggr(Kappas, val=True)] + list(getfbounds(ne)),
+                                             getelbow_aggr(Kappas, val=True)] +
+                                            list(getfbounds(ne)),
                                             75, interpolation_method='lower')
     KRcut = np.median(KRcutguesses)
     # only use exclusive when inclusive is extremely inclusive - double KRcut
@@ -765,7 +768,14 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
 
     for ii in range(20000):
         db = DBSCAN(eps=.005 + ii * .005, min_samples=3).fit(fz.T)
-        if db.labels_.max() > 1 and db.labels_.max() < len(nc) / 6 and np.intersect1d(rej, nc[db.labels_ == 0]).shape[0] == 0 and np.array(db.labels_ == -1, dtype=int).sum() / float(len(nc)) < .5:
+
+        # it would be great to have descriptive names, here
+        cond1 = db.labels_.max() > 1
+        cond2 = db.labels_.max() < len(nc) / 6
+        cond3 = np.intersect1d(rej, nc[db.labels_ == 0]).shape[0] == 0
+        cond4 = np.array(db.labels_ == -1, dtype=int).sum() / float(len(nc)) < .5
+
+        if cond1 and cond2 and cond3 and cond4:
             epsmap.append([ii, dice(guessmask, db.labels_ == 0),
                            np.intersect1d(nc[db.labels_ == 0],
                            nc[Rhos > getelbow_mod(Rhos_sorted,
@@ -833,7 +843,8 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
     dice_rej = False
     if not dbscanfailed and len(rej) + len(group0) < 0.75 * len(nc):
         dice_rej = True
-        rej_supp = np.setdiff1d(np.setdiff1d(np.union1d(rej, nc[dice_table[nc, 0] <= dice_table[nc, 1]]),
+        rej_supp = np.setdiff1d(np.setdiff1d(np.union1d(rej,
+                                                        nc[dice_tbl[nc, 0] <= dice_tbl[nc, 1]]),
                                              group0), group_n1)
         rej = np.union1d(rej, rej_supp)
 
@@ -953,7 +964,8 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
     phys_art = np.setdiff1d(nc[andb([phys_var_z > 3.5,
                                      Kappas < minK_ign]) == 2], group0)
     phys_art = np.union1d(np.setdiff1d(nc[andb([phys_var_z > 2,
-                                                rankvec(phys_var_z) - rankvec(Kappas) > newcest / 2,
+                                                (rankvec(phys_var_z) -
+                                                 rankvec(Kappas)) > newcest / 2,
                                                 Vz2 > -1]) == 3],
                                        group0), phys_art)
     # Want to replace field_art with an acf/SVM based approach
@@ -961,14 +973,16 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
     field_art = np.setdiff1d(nc[andb([mmix_kurt_z_max > 5,
                                       Kappas < minK_ign]) == 2], group0)
     field_art = np.union1d(np.setdiff1d(nc[andb([mmix_kurt_z_max > 2,
-                                           rankvec(mmix_kurt_z_max) - rankvec(Kappas) > newcest / 2,
+                                           (rankvec(mmix_kurt_z_max) -
+                                            rankvec(Kappas)) > newcest / 2,
                                            Vz2 > 1, Kappas < F01]) == 4],
                                         group0), field_art)
     field_art = np.union1d(np.setdiff1d(nc[andb([mmix_kurt_z_max > 3,
                                                  Vz2 > 3,
                                                  Rhos > np.percentile(Rhos[group0], 75)]) == 3],
                                         group0), field_art)
-    field_art = np.union1d(np.setdiff1d(nc[andb([mmix_kurt_z_max > 5, Vz2 > 5]) == 2], group0), field_art)
+    field_art = np.union1d(np.setdiff1d(nc[andb([mmix_kurt_z_max > 5, Vz2 > 5]) == 2],
+                                        group0), field_art)
     misc_art = np.setdiff1d(nc[andb([(rankvec(Vz) - rankvec(Ktz)) > newcest / 2,
                             Kappas < Khighelbowval]) == 2], group0)
     ign_cand = np.unique(list(field_art)+list(phys_art)+list(misc_art))
@@ -1038,9 +1052,8 @@ def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
     pcastate_fn = 'pcastate.pklgz'
 
     if not os.path.exists(pcastate_fn):
-        # #Do PC dimension selection and
-        # get eigenvalue cutoff
 
+        # Do PC dimension selection and get eigenvalue cutoff
         if mlepca:
             from sklearn.decomposition import PCA
             ppca = PCA(n_components='mle', svd_solver='full')
@@ -1158,7 +1171,7 @@ def tedica(nc, dd, conv, fixed_seed, cost, final_cost):
     climit = float("%s" % conv)
     mdp.numx_rand.seed(fixed_seed)
     icanode = mdp.nodes.FastICANode(white_comp=nc, approach='symm', g=cost,
-                                    fine_g=final_cost, coarse_limit=climit*100,
+                                    fine_g=final_cost, coarse_limit=climit * 100,
                                     limit=climit, verbose=True)
     icanode.train(dd)
     smaps = icanode.execute(dd)  # noqa
@@ -1329,7 +1342,7 @@ def writect(comptable, nt, acc, rej, midk, empty, ctname='', varexpl='-1'):
                           ign=','.join([str(int(cc)) for cc in empty]))
     heading = textwrap.dedent("""\
         # ME-ICA Component statistics table for: {file} #
-        # Dataset variance explained by ICA (VEx): {vex}
+        # Dataset variance explained by ICA (VEx): {vex:.2f}
         # Total components generated by decomposition (TCo): {nc}
         # No. accepted BOLD-like components, i.e. effective degrees
           of freedom for correlation (lower bound; DFe): {dfe}
@@ -1341,7 +1354,7 @@ def writect(comptable, nt, acc, rej, midk, empty, ctname='', varexpl='-1'):
         # MID {mid} \t# Rejected R2*-weighted artifacts
         # IGN {ign} \t# Ignored components (kept in denoised time series)
         # VEx   TCo DFe RJn DFn
-        # {vex} {nc} {dfe} {rjn} {dfn}
+        # {vex:.2f} {nc} {dfe} {rjn} {dfn}
         # comp    Kappa   Rho Var   Var(norm)
         """).format(**_computed_vars)
 
