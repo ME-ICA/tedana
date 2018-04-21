@@ -1049,9 +1049,7 @@ def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
     dz = ((d.T - d.T.mean(0)) / d.T.std(0)).T  # Variance normalize timeseries
     dz = (dz - dz.mean()) / dz.std()  # Variance normalize everything
 
-    pcastate_fn = 'pcastate.pklgz'
-
-    if not os.path.exists(pcastate_fn):
+    if not os.path.exists('pcastate.pklz'):
 
         # Do PC dimension selection and get eigenvalue cutoff
         if mlepca:
@@ -1086,10 +1084,9 @@ def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
                          dtype=np.bool)
         vTmix = v.T
         vTmixN = ((vTmix.T - vTmix.T.mean(0)) / vTmix.T.std(0)).T
-        # ctb,KRd,betasv,v_T = fitmodels2(catd,v.T,eimum,t2s,tes,mmixN=vTmixN)
-        none, ctb, betasv, v_T = fitmodels_direct(catd, v.T, eimum, t2s, t2sG,
-                                                  tes, combmode, head,
-                                                  mmixN=vTmixN, full_sel=False)
+        _, ctb, betasv, v_T = fitmodels_direct(catd, v.T, eimum, t2s, t2sG,
+                                               tes, combmode, head,
+                                               mmixN=vTmixN, full_sel=False)
         ctb = ctb[ctb[:, 0].argsort(), :]
         ctb = np.vstack([ctb.T[0:3], sp]).T
 
@@ -1098,16 +1095,15 @@ def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
         pcastate = {'u': u, 's': s, 'v': v, 'ctb': ctb,
                     'eigelb': eigelb, 'spmin': spmin, 'spcum': spcum}
         try:
-            pcastate_f = gzip.open(pcastate_fn, 'wb')
-            pickle.dump(pcastate, pcastate_f)
-            pcastate_f.close()
-        except:
+            with open('pcastate.pkl', 'wb') as handle:
+                pickle.dump(pcastate, handle)
+        except TypeError:
             print("Could not save PCA solution!")
 
-    else:
+    else:  # if loading existing state
         print("Loading PCA")
-        pcastate_f = gzip.open(pcastate_fn, 'rb')
-        pcastate = pickle.load(pcastate_f)
+        with open('pcastate.pkl', 'rb') as handle:
+            pcastate = pickle.load(handle)
         (u, s, v, ctb,
          eigelb, spmin, spcum) = (pcastate['u'], pcastate['s'], pcastate['v'],
                                   pcastate['ctb'], pcastate['eigelb'],
@@ -1147,16 +1143,13 @@ def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
         pcscore = pcscore * temp7 * temp8 * temp9
 
     pcsel = pcscore > 0
-    # pcrej = np.array(pcscore == 0, dtype=np.int) * np.array(ctb[:, 3] > spmin, dtype=np.int) > 0
-
     dd = u.dot(np.diag(s*np.array(pcsel, dtype=np.int))).dot(v)
 
     nc = s[pcsel].shape[0]
-    print(pcsel)
     print("--Selected %i components. Minimum Kappa=%0.2f Rho=%0.2f" % (nc, kappa_thr, rho_thr))
 
-    dd = ((dd.T-dd.T.mean(0))/dd.T.std(0)).T  # Variance normalize timeseries
-    dd = (dd-dd.mean())/dd.std()  # Variance normalize everything
+    dd = ((dd.T - dd.T.mean(0)) / dd.T.std(0)).T  # Variance normalize timeseries
+    dd = (dd - dd.mean()) / dd.std()  # Variance normalize everything
 
     return nc, dd
 
