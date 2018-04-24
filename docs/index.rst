@@ -40,6 +40,7 @@ Copyright |copy| 2011-2017, Prantik Kundu. All rights reserved.
 
    introduction
    installation
+   contributing
    usage
 
 
