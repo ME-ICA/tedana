@@ -99,7 +99,6 @@ def optcom(data, t2, tes, mask, combmode, useG=False):
 
     fout = np.average(fdat, axis=1, weights=alpha)
     out = unmask(fout, mask)
-    print('Out shape is ', out.shape)
     return out
 
 

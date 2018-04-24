@@ -1,6 +1,5 @@
 import os
 import sys
-import gzip
 import pickle
 import textwrap
 import numpy as np
@@ -11,7 +10,6 @@ from tedana.interfaces import (optcom, t2sadmap)
 from tedana.utils import (cat2echos, uncat2echos, make_mask,
                           makeadmask, fmask, unmask,
                           fitgaussian, niwrite, dice, andb)
-
 
 """
 PROCEDURE 2 : Computes ME-PCA and ME-ICA
@@ -297,11 +295,12 @@ def getfbounds(ne):
         raise IOError('Input ne must be int')
     elif ne <= 0:
         raise ValueError('Input ne must be greater than 0')
+    idx = ne - 1
 
-    F05s = [None, 18.5, 10.1, 7.7, 6.6, 6.0, 5.6, 5.3, 5.1, 5.0]
-    F025s = [None, 38.5, 17.4, 12.2, 10, 8.8, 8.1, 7.6, 7.2, 6.9]
-    F01s = [None, 98.5, 34.1, 21.2, 16.2, 13.8, 12.2, 11.3, 10.7, 10.]
-    return F05s[ne], F025s[ne], F01s[ne]
+    F05s = [None, None, 18.5, 10.1, 7.7, 6.6, 6.0, 5.6, 5.3, 5.1, 5.0]
+    F025s = [None, None, 38.5, 17.4, 12.2, 10, 8.8, 8.1, 7.6, 7.2, 6.9]
+    F01s = [None, None, 98.5, 34.1, 21.2, 16.2, 13.8, 12.2, 11.3, 10.7, 10.]
+    return F05s[idx], F025s[idx], F01s[idx]
 
 
 def eimask(dd, ees=None):
@@ -371,11 +370,10 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, head,
     """
 
     # Compute opt. com. raw data
-    tsoc = np.array(optcom(catd, t2sG, tes,
-                           mask, combmode, useG=True),
+    tsoc = np.array(optcom(catd, t2sG, tes, mask, combmode, useG=True),
                     dtype=float)[mask]
     tsoc_mean = tsoc.mean(axis=-1)
-    tsoc_dm = tsoc-tsoc_mean[:, np.newaxis]
+    tsoc_dm = tsoc - tsoc_mean[:, np.newaxis]
 
     # Compute un-normalized weight dataset (features)
     if mmixN is None:
@@ -1049,7 +1047,7 @@ def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
     dz = ((d.T - d.T.mean(0)) / d.T.std(0)).T  # Variance normalize timeseries
     dz = (dz - dz.mean()) / dz.std()  # Variance normalize everything
 
-    if not os.path.exists('pcastate.pklz'):
+    if not os.path.exists('pcastate.pkl'):
 
         # Do PC dimension selection and get eigenvalue cutoff
         if mlepca:
@@ -1173,7 +1171,7 @@ def tedica(nc, dd, conv, fixed_seed, cost, final_cost):
     return mmix
 
 
-def gscontrol_raw(OCcatd, head, dtrank=4):
+def gscontrol_raw(OCcatd, head, Ne, dtrank=4):
     """
     This function uses the spatial global signal estimation approach to
     modify catd (global variable) to removal global signal out of individual
@@ -1218,11 +1216,14 @@ def gscontrol_raw(OCcatd, head, dtrank=4):
     niwrite(OCcatd, aff, 'tsoc_nogs.nii', head)
 
     # Project glbase out of each echo
-    # for ii in range(Ne):
-    #     dat = catd[:,:,:,ii,:][Gmask]
-    #     sol = np.linalg.lstsq(np.atleast_2d(glbase),dat.T)
-    #     e_nogs = dat - np.dot(np.atleast_2d(sol[0][dtrank]).T,np.atleast_2d(glbase.T[dtrank]))
-    #     catd[:,:,:,ii,:] = unmask(e_nogs,Gmask)
+    for ii in range(Ne):
+        dat = catd[:, :, :, ii, :][Gmask]
+        sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T)
+        e_nogs = dat - np.dot(np.atleast_2d(sol[0][dtrank]).T,
+                              np.atleast_2d(glbase.T[dtrank]))
+        catd[:, :, :, ii, :] = unmask(e_nogs, Gmask)
+
+    return catd, OCcatd
 
 
 def gscontrol_mmix(mmix, acc, rej, midk, empty, head):
@@ -1475,9 +1476,8 @@ def main(options):
     global OCcatd
     OCcatd = optcom(catd, t2sG, tes, mask,
                     combmode, useG=True)
-
     if not options.no_gscontrol:
-        gscontrol_raw(OCcatd, head)
+        catd, OCcatd = gscontrol_raw(OCcatd, head, len(tes))
 
     if options.mixm is None:
         print("++ Doing ME-PCA and ME-ICA")
