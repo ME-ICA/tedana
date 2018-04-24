@@ -1,9 +1,8 @@
 Introduction
 ============
 
-``tedana`` works in the following steps:
-
-#. Computes PCA and ICA in conjunction with TE-dependence analysis
+``tedana`` works by defining components in a BOLD time course via PCA and ICA.
+These components for then analyzed for TE-dependence, as classified as BOLD or non-BOLD.
 
 Derivatives
 -----------

@@ -15,6 +15,3 @@ Command line options
    :prog: tedana
    :nodefault:
    :nodefaultconst:
-
-.. tip:: FWHM smoothing is not recommended.
-   tSNR boost is provided by optimal combination of echoes.
