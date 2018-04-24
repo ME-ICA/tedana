@@ -6,6 +6,7 @@ from scipy.stats import scoreatpercentile
 
 from ..due import due, BibTeX
 
+
 def cat2echos(data, Ne):
     """
     Separates z- and echo-axis in `data`
@@ -31,6 +32,7 @@ def cat2echos(data, Ne):
         nt = 1
     return np.reshape(data, (nx, ny, nz, Ne, nt), order='F')
 
+
 def makeadmask(cdat, minimum=True, getsum=False):
     """
     Create a mask.
@@ -43,9 +45,9 @@ def makeadmask(cdat, minimum=True, getsum=False):
         mask = cdat.prod(axis=-1).prod(-1) != 0
         return mask
     else:
-        #Make a map of longest echo that a voxel can be sampled with,
-        #with minimum value of map as X value of voxel that has median
-        #value in the 1st echo. N.b. larger factor leads to bias to lower TEs
+        # Make a map of longest echo that a voxel can be sampled with,
+        # with minimum value of map as X value of voxel that has median
+        # value in the 1st echo. N.b. larger factor leads to bias to lower TEs
         emeans = cdat.mean(-1)
         medv = emeans[:, :, :, 0] == scoreatpercentile(emeans[:, :, :, 0][emeans[:, :, :, 0] != 0],
                                                        33, interpolation_method='higher')
@@ -65,6 +67,7 @@ def makeadmask(cdat, minimum=True, getsum=False):
             return mask, masksum
         else:
             return mask
+
 
 def uncat2echos(data, Ne):
     """
@@ -213,7 +216,7 @@ def moments(data):
     ----------
     `Scipy Cookbook`_
 
-    .. _Scipy Cookbook: http://scipy-cookbook.readthedocs.io/items/FittingData.html#Fitting-a-2D-gaussian
+    .. _Scipy Cookbook: http://scipy-cookbook.readthedocs.io/items/FittingData.html#Fitting-a-2D-gaussian  # noqa
     """
 
     total = data.sum()
@@ -249,12 +252,13 @@ def gaussian(height, center_x, center_y, width_x, width_y):
     ----------
     `Scipy Cookbook`_
 
-    .. _Scipy Cookbook: http://scipy-cookbook.readthedocs.io/items/FittingData.html#Fitting-a-2D-gaussian
+    .. _Scipy Cookbook: http://scipy-cookbook.readthedocs.io/items/FittingData.html#Fitting-a-2D-gaussian  # noqa
     """
 
     width_x = float(width_x)
     width_y = float(width_y)
-    return lambda x, y: height * np.exp(-(((center_x - x) / width_x)**2 + ((center_y - y) / width_y)**2) / 2)
+    return lambda x, y: height * np.exp(-(((center_x - x) / width_x)**2 +
+                                        ((center_y - y) / width_y)**2) / 2)
 
 
 def fitgaussian(data):
@@ -275,11 +279,14 @@ def fitgaussian(data):
     ----------
     `Scipy Cookbook`_
 
-    .. _Scipy Cookbook: http://scipy-cookbook.readthedocs.io/items/FittingData.html#Fitting-a-2D-gaussian
+    .. _Scipy Cookbook: http://scipy-cookbook.readthedocs.io/items/FittingData.html#Fitting-a-2D-gaussian  # noqa
     """
 
     params = moments(data)
-    errorfunction = lambda p, data: np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
+
+    def errorfunction(p, data):
+        return np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
+
     (p, _) = leastsq(errorfunction, params, data)
     return p
 
@@ -300,25 +307,25 @@ def niwrite(data, affine, name, head, header=None):
     outni.to_filename(name)
 
 
-@due.dcite(BibTeX('@article{dice1945measures,'\
-                  'author={Dice, Lee R},'\
-                  'title={Measures of the amount of ecologic association between species},'\
-                  'year = {1945},'\
-                  'publisher = {Wiley Online Library},'\
-                  'journal = {Ecology},'\
-                  'volume={26},'\
-                  'number={3},'\
+@due.dcite(BibTeX('@article{dice1945measures,'
+                  'author={Dice, Lee R},'
+                  'title={Measures of the amount of ecologic association between species},'
+                  'year = {1945},'
+                  'publisher = {Wiley Online Library},'
+                  'journal = {Ecology},'
+                  'volume={26},'
+                  'number={3},'
                   'pages={297--302}}'),
            description='Introduction of Sorenson-Dice index by Dice in 1945.')
-@due.dcite(BibTeX('@article{sorensen1948method,'\
-                  'author={S{\\o}rensen, Thorvald},'\
-                  'title={A method of establishing groups of equal amplitude '\
-                  'in plant sociology based on similarity of species and its '\
-                  'application to analyses of the vegetation on Danish commons},'\
-                  'year = {1948},'\
-                  'publisher = {Wiley Online Library},'\
-                  'journal = {Biol. Skr.},'\
-                  'volume={5},'\
+@due.dcite(BibTeX('@article{sorensen1948method,'
+                  'author={S{\\o}rensen, Thorvald},'
+                  'title={A method of establishing groups of equal amplitude '
+                  'in plant sociology based on similarity of species and its '
+                  'application to analyses of the vegetation on Danish commons},'
+                  'year = {1948},'
+                  'publisher = {Wiley Online Library},'
+                  'journal = {Biol. Skr.},'
+                  'volume={5},'
                   'pages={1--34}}'),
            description='Introduction of Sorenson-Dice index by Sorenson in 1948.')
 def dice(arr1, arr2):

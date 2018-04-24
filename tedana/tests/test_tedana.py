@@ -65,7 +65,7 @@ def test_outputs():
      'tsoc_orig.nii',
      'veins_l0.nii',
      'veins_l1.nii']
-    test_dir = Path('/home/neuro/data/test_res/')
+    test_dir = Path('/home/neuro/data/TED/')
     res_dir = Path('/home/neuro/code/TED/')
     for fn in nifti_test_list:
         compare_nifti(fn, test_dir, res_dir)

@@ -20,8 +20,8 @@ jobs:
       - run:
           name: download and unzip processed data
           command: |
-            curl -L -o /home/neuro/data/test_res.tar.gz https://www.dropbox.com/s/yzswu6ljnfxlhyo/test_res.tar.gz?dl=0
-            tar -xvzf /home/neuro/data/test_res.tar.gz --no-same-owner -C /home/neuro/data/
+            curl -L -o /home/neuro/data/test_TED.tar.gz https://www.dropbox.com/s/x5xhzs3x6p3ukjl/test_TED.tar.gz?dl=0
+            tar -xvzf /home/neuro/data/test_TED.tar.gz --no-same-owner -C /home/neuro/data/
 
 
       - run:
@@ -41,3 +41,6 @@ jobs:
             py.test ./tedana/tests/test_tedana.py
           no_output_timeout: "40m"
           post: bash <(curl -s https://codecov.io/bash)
+
+      - store_artifacts:
+          path: /home/neuro/code/TED/
