@@ -6,7 +6,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: emdupre/meica-docker:0.0.3
+      - image: emdupre/meica-docker:0.0.4
 
     working_directory: /home/neuro/code/
 
