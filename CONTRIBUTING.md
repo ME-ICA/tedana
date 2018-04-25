@@ -43,6 +43,8 @@ Make sure to [keep your fork up to date][link_updateupstreamwiki] with the maste
 
 Try to keep the changes focused. We've found that working on a [new branch][link_branches] makes it easier to keep your changes targeted.
 
+When you're creating your pull request, please make sure to review the tedana [style conventions][link_styleguide].
+
 **4. Submit a [pull request][link_pullrequest].**
 
 A member of the development team will review your changes to confirm that they can be merged into the main codebase.
@@ -76,6 +78,7 @@ You're awesome. :wave::smiley:
 [link_fork]: https://help.github.com/articles/fork-a-repo/
 [link_pushpullblog]: https://www.igvita.com/2011/12/19/dont-push-your-pull-requests/
 [link_branches]: https://help.github.com/articles/creating-and-deleting-branches-within-your-repository/
+[link_styleguide]: http://tedana.readthedocs.io/en/latest/contributing.html
 [link_updateupstreamwiki]: https://help.github.com/articles/syncing-a-fork/
 [link_stemmrolemodels]: https://github.com/KirstieJane/STEMMRoleModels
 [link_contributors]: https://github.com/ME-ICA/tedana/graphs/contributors

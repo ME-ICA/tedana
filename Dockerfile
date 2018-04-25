@@ -81,7 +81,7 @@ ENV CONDA_DIR=/opt/conda \
     PATH=/opt/conda/bin:$PATH
 RUN echo "Downloading Miniconda installer ..." \
     && miniconda_installer=/tmp/miniconda.sh \
-    && curl -sSL -o $miniconda_installer https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    && curl -sSL -o $miniconda_installer https://repo.continuum.io/miniconda/Miniconda3-4.3.31-Linux-x86_64.sh \
     && /bin/bash $miniconda_installer -f -b -p $CONDA_DIR \
     && rm -f $miniconda_installer \
     && conda config --system --prepend channels conda-forge \
