@@ -1,5 +1,7 @@
 # tedana
 
+[![Join the chat at https://gitter.im/tedana/Lobby](https://badges.gitter.im/tedana/Lobby.svg)](https://gitter.im/tedana/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 TE-Dependent Analysis (_tedana_) is a Python module for denoising multi-echo fMRI data.
 
 [![CircleCI](https://circleci.com/gh/ME-ICA/tedana.svg?style=shield)](https://circleci.com/gh/ME-ICA/tedana)
