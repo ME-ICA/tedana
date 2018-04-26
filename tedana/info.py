@@ -27,6 +27,7 @@ DOWNLOAD_URL = (
 REQUIRES = [
     'numpy',
     'scikit-learn',
+    'mdp',
     'nilearn',
     'nibabel>=2.1.0',
     'pybids>=0.4.0',
