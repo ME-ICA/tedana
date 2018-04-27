@@ -3,6 +3,9 @@ import nibabel as nib
 from tedana.utils import (niwrite, cat2echos,
                           makeadmask, unmask, fmask)
 
+import logging
+lgr = logging.getLogger(__name__)
+
 
 def t2sadmap(catd, mask, tes, masksum, start_echo):
     """
@@ -120,16 +123,16 @@ def main(options):
     catd = cat2echos(catim.get_data(), ne)
     nx, ny, nz, Ne, nt = catd.shape
 
-    print("++ Computing Mask")
-    mask, masksum = makeadmask(catd, min=False, getsum=True)
+    lgr.info('++ Computing Mask')
+    mask, masksum = makeadmask(catd, minimum=False, getsum=True)
 
-    print("++ Computing Adaptive T2* map")
+    lgr.info('++ Computing Adaptive T2* map')
     t2s, s0, t2ss, s0vs, t2saf, s0vaf = t2sadmap(catd, mask, tes, masksum, 2)
     niwrite(masksum, aff, 'masksum%s.nii' % suf)
     niwrite(t2ss, aff, 't2ss%s.nii' % suf)
     niwrite(s0vs, aff, 's0vs%s.nii' % suf)
 
-    print("++ Computing optimal combination")
+    lgr.info('++ Computing optimal combination')
     tsoc = np.array(optcom(catd,
                            t2s,
                            tes,
