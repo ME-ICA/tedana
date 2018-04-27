@@ -1,7 +1,7 @@
 """Utilities for meica package"""
 import numpy as np
 import nibabel as nib
-from nibabel.filename_parser import split_add_ext
+from nibabel.filename_parser import splitext_addext
 from nilearn._utils import check_niimg
 import nilearn.masking as nimask
 from scipy.optimize import leastsq
@@ -151,18 +151,6 @@ def make_min_mask(data):
     return data.prod(axis=-1).prod(axis=-1).astype('bool')
 
 
-def make_opt_com(medata):
-    """
-    Makes optimal combination from input multi-echo data
-
-    Parameters
-    ----------
-    medata : tedana.interfaces.data.MultiEchoData
-    """
-
-    pass
-
-
 def fmask(data, mask=None):
     """
     Masks `data` with non-zero entries of `mask`
@@ -185,7 +173,7 @@ def fmask(data, mask=None):
         raise TypeError('Provided `data` and `mask` must be of same type.')
 
     if isinstance(data, str):
-        root, ext, addext = split_add_ext(data)
+        root, ext, addext = splitext_addext(data)
         if ext == '.gii':
             # mask need not apply for gii files
             fdata = np.column_stack([f.data for f in nib.load(data).darrays])
