@@ -20,7 +20,7 @@ For a review, see [Kundu et al. (2017), _NeuroImage_](https://paperpile.com/shar
 
 In tedana, we combine all collected echos, then decompose the resulting time series into components that can be classified as BOLD or non-BOLD based. This is performed in a series of steps including:
 
-* Principle components analysis
+* Principal components analysis
 * Independent components analysis
 * Component classification
 
