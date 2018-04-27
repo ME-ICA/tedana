@@ -12,7 +12,6 @@ def fit(data, mask, tes, masksum, start_echo):
     """
     nx, ny, nz, n_echoes, n_trs = data.shape
     echodata = fmask(data, mask)
-    n_voxels = echodata.shape[0]
     tes = np.array(tes)
 
     t2sa_ts = np.zeros([nx, ny, nz, n_trs])
@@ -64,7 +63,7 @@ def fit(data, mask, tes, masksum, start_echo):
         s0va_ts[:, :, :, vol] = s0va
         t2saf_ts[:, :, :, vol] = t2saf
         s0vaf_ts[:, :, :, vol] = s0vaf
-    
+
     return t2sa_ts, s0va_ts, t2saf_ts, s0vaf_ts
 
 
@@ -186,7 +185,7 @@ def optcom(data, t2, tes, mask, combmode, useG=False):
         alpha = np.tile(alpha[:, :, np.newaxis], (1, 1, n_trs))
     else:
         alpha = np.swapaxes(alpha, 1, 2)
-        ax0_idx, ax2_idx = np.where(np.all(alpha==0, axis=1))
+        ax0_idx, ax2_idx = np.where(np.all(alpha == 0, axis=1))
         alpha[ax0_idx, :, ax2_idx] = 1.
 
     fout = np.average(fdat, axis=1, weights=alpha)
