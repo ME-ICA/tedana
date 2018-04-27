@@ -9,48 +9,192 @@ from scipy.optimize import leastsq
 from ..due import due, BibTeX
 
 
-# TODO: Currently only accepts niftis -- do we need it to accept giftis?
-def cat2echos(data, n_echos=None):
+def load_image(data):
     """
-    Coerces input `data` files to required array output
+    Takes input `data` and returns a sample x time array
 
     Parameters
     ----------
-    data : (X x Y x M x T) array_like or list-of-niimg-like
-        Input multi-echo data array or independent echo files, where M is Z *
-        the number of echos
-    n_echos : int
-        Number of echos
+    data : (X x Y x Z [x T]) array_like or niimg-like object
+        Data array or data file to be loaded / reshaped
 
     Returns
     -------
-    fdata : (X x Y x Z x E x T) np.ndarray
-        Where `X`, `Y`, `Z` are spatial dims, `E` is echos, and `T` is time
+    fdata : (S x T) np.ndarray
+        Reshaped `data`, where `S` is samples and `T` is time
     """
 
-    if isinstance(data, list):
-        # the individual echo files were provided
-        if len(data) > 2:
-            fdata = np.stack([nib.load(f).get_data() for f in data], axis=3)
-            # ensure we have a time dimension
-            if fdata.ndim < 5:
-                fdata = fdata[..., np.newaxis]
+    if isinstance(data, str):
+        root, ext, addext = splitext_addext(data)
+        if ext == '.gii':
+            fdata = np.column_stack([f.data for f in nib.load(data).darrays])
             return fdata
-        # a z-concatenated file was provided (hopefully)
+        else:
+            data = check_niimg(data).get_data()
+
+    fdata = data.reshape((-1,) + data.shape[3:])
+
+    return fdata.squeeze()
+
+
+def cat2echos(data, n_echos=None):
+    """
+    Coerces input `data` files to required 3D array output
+
+    Parameters
+    ----------
+    data : (X x Y x M x T) array_like or list-of-img-like
+        Input multi-echo data array, where `X` and `Y` are spatial dimensions,
+        `M` is the Z-spatial dimensions with all the input echos concatenated,
+        and `T` is time. A list of image-like objects (e.g., .nii or .gii) are
+        accepted, as well
+    n_echos : int, optional
+        Number of echos in provided data array. Only necessary if `data` is
+        array_like. Default: None
+
+    Returns
+    -------
+    fdata : (S x E x T) np.ndarray
+        Output data where `S` is samples, `E` is echos, and `T` is time
+    """
+
+    # data files were provided
+    if isinstance(data, list):
+        # individual echo files were provided
+        if len(data) > 2:
+            fdata = np.stack([load_image(f) for f in data], axis=1)
+        # a z-concatenated file was provided
         elif len(data) == 1:
             if n_echos is None:
                 raise ValueError('Number of echos `n_echos` must be specified '
                                  'if z-concatenated data file provided.')
-            data = nib.load(data[0]).get_data()
+            fdata = load_image(data[0])
+        # only two echo files were provided, which doesn't fly
         else:
             raise ValueError('Cannot run `tedana` with only two echos: '
                              '{}'.format(data))
-
-    # either an array or a z-concatenated file was provided
-    nx, ny, nz = data.shape[:2], data.shape[2] // n_echos
-    fdata = data.reshape(nx, ny, nz, n_echos, -1, order='F')
+        # ensure data has a time axis
+        if fdata.ndim < 3:
+            fdata = fdata[..., np.newaxis]
+    # data array was provided (is this necessary?)
+    elif isinstance(data, np.ndarray):
+        if data.ndim != 4:
+            raise ValueError('Data must be 4-dimensional, where the '
+                             'dimensions correspond to: (1) first spatial '
+                             'dimensions, (2) second spatial dimension, (3) '
+                             'third spatial dimension x number of echos, and '
+                             '(4) time. Provided data dimensions were: '
+                             '{}'.format(data.shape))
+        nx, ny, nz = data.shape[:2], data.shape[2] // n_echos
+        fdata = load_image(data.reshape(nx, ny, nz, n_echos, -1, order='F'))
 
     return fdata
+
+
+def makeadmask(data, minimum=True, getsum=False):
+    """
+    Makes map of `data` specifying longest echo a voxel can be sampled with
+
+    Parameters
+    ----------
+    data : (S x E x T) array_like
+        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
+        time
+    minimum : bool, optional
+        Use `make_min_mask()` instead of generating a map with echo-specific
+        times. Default: True
+    getsum : bool, optional
+        Return `masksum` in addition to `mask`. Default: False
+
+    Returns
+    -------
+    mask : (S, ) np.ndarray
+        Boolean array of voxels that have sufficient signal in at least one
+        echo
+    masksum : (S, ) np.ndarray
+        Valued array indicating the number of echos with sufficient signal in a
+        given voxel. Only returned if `getsum = True`
+    """
+
+    if minimum:
+        return make_min_mask(data)
+
+    n_samp, n_echos, n_vols = data.shape
+    echo_means = data.mean(axis=-1)  # temporal mean of echos
+    first_echo = echo_means[..., 0]
+    # make a map of longest echo with which a voxel can be sampled, with min
+    # value of map as X value of voxel that has median value in the 1st echo
+    # N.B. larger factor (%ile??) leads to bias to lower TEs
+    perc_33 = np.percentile(first_echo[first_echo.nonzero()], 33,
+                            interpolation='higher')  # why take 33rd %ile?
+    med_val = (first_echo == perc_33)
+    lthrs = np.vstack([echo_means[..., echo][med_val] / 3 for echo in
+                       range(n_echos)])  # why divide by three?
+    lthrs = lthrs[:, lthrs.sum(0).argmax()]
+    mthr = np.ones(data.shape[:-1])
+    for echo in range(n_echos):
+        mthr[..., echo] *= lthrs[echo]
+
+    masksum = (np.abs(echo_means) > mthr).astype('int').sum(axis=-1)
+    mask = (masksum != 0)
+
+    if getsum:
+        return mask, masksum
+
+    return mask
+
+
+def make_min_mask(data):
+    """
+    Generates a 3D mask of `data`
+
+    Only voxels that are consistently (i.e., across time AND echoes) non-zero
+    in `data` are True in output
+
+    Parameters
+    ----------
+    data : (S x E x T) array_like
+        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
+        time
+
+    Returns
+    -------
+    mask : (S, ) np.ndarray
+        Boolean array
+    """
+
+    data = np.asarray(data).astype(bool)
+    return data.prod(axis=-1).prod(axis=-1).astype(bool)
+
+
+def get_input_type(input):
+    pass
+
+
+def niwrite(data, affine, name, head, outtype='.nii.gz'):
+    """
+    Write out nifti file.
+
+    Parameters
+    ----------
+    data : array_like
+    affine : (4 x 4) array_like
+        Affine for output file
+    name : str
+        Name to save output file to
+    head : object
+    outtype : str, optional
+        Output type of file. Default: '.nii.gz'
+    """
+
+    # get rid of NaN
+    data[np.isnan(data)] = 0
+    # set header info
+    header = head.copy()
+    header.set_data_shape(list(data.shape))
+    outni = nib.Nifti1Image(data, affine, header=header)
+    outni.set_data_dtype('float64')
+    outni.to_filename(name)
 
 
 def uncat2echos(data):
@@ -76,81 +220,6 @@ def uncat2echos(data):
     return data.reshape(nx, ny, nz, -1, order='F')
 
 
-def makeadmask(data, minimum=True, getsum=False):
-    """
-    Makes map of `data` specifying longest echo a voxel can be sampled with
-
-    Parameters
-    ----------
-    data : (X x Y x Z x E x T) array_like
-        Where `X`, `Y`, `Z` are spatial dims, `E` is echos, and `T` is time
-    minimum : bool, optional
-        Use `make_min_mask` instead of generating a map with echo-specific.
-        Default: True
-    getsum : bool, optional
-        Return `masksum` in addition to mask. Default: False
-
-    Returns
-    -------
-    mask : (X x Y x Z) np.ndarray
-        Boolean array of voxels that have sufficient signal in at least one
-        echo
-    masksum : (X x Y x Z) np.ndarray
-        Valued array indicating the number of echos with sufficient signal in a
-        given voxel. Only returned if `getsum = True`
-    """
-
-    if minimum:
-        return make_min_mask(data)
-
-    x, y, z, n_echos, _ = data.shape
-    emeans = data.mean(axis=-1)
-    first_echo = emeans[:, :, :, 0]
-    # make a map of longest echo with which a voxel can be sampled, with min
-    # value of map as X value of voxel that has median value in the 1st echo
-    # N.B. larger factor (%ile??) leads to bias to lower TEs
-    perc33 = np.percentile(first_echo[first_echo.nonzero()], 33,
-                           interpolation='higher')  # why take 33rd %ile?
-    medv = (first_echo == perc33)
-    lthrs = np.vstack([emeans[:, :, :, echo][medv] / 3 for echo in
-                       range(n_echos)])  # why divide by three?
-    lthrs = lthrs[:, lthrs.sum(0).argmax()]
-    mthr = np.ones(data.shape[:-1])
-    for echo in range(n_echos):
-        mthr[:, :, :, echo] *= lthrs[echo]
-
-    masksum = (np.abs(emeans) > mthr).astype('int').sum(axis=-1)
-    mask = (masksum != 0)
-
-    if getsum:
-        return mask, masksum
-
-    return mask
-
-
-def make_min_mask(data):
-    """
-    Generates a 3D mask of `data`
-
-    Only voxels that are consistently (i.e., across time AND echoes) non-zero
-    in `data` are True in output
-
-    Parameters
-    ----------
-    data : (X x Y x Z x E x T) array_like
-        Multi-echo data array, where X, Y, Z are spatial dimensions, E
-        corresponds to individual echo data, and T is time
-
-    Returns
-    -------
-    mask : (X x Y x Z) np.ndarray
-        Boolean array
-    """
-
-    data = np.asarray(data)
-    return data.prod(axis=-1).prod(axis=-1).astype('bool')
-
-
 def fmask(data, mask=None):
     """
     Masks `data` with non-zero entries of `mask`
@@ -164,9 +233,8 @@ def fmask(data, mask=None):
 
     Returns
     -------
-    fdata : (V [x E] x T) np.ndarray
-        Masked `data`, where `V` is voxels/vertices, `E` is echoes, and `T` is
-        time
+    fdata : (S x E x T) np.ndarray
+        Masked `data`, where `S` is samples, `E` is echoes, and `T` is time
     """
 
     if mask is not None and not type(data) == type(mask):
@@ -200,8 +268,8 @@ def unmask(data, mask):
 
     Parameters
     ----------
-    data : (V x E x T) array_like
-        Masked array, where V is voxels flattened across spatial dimensions
+    data : (S x E x T) array_like
+        Masked array, where S is samples flattened across spatial dimensions
     mask : (X x Y x Z) array_like
         Boolean array that was used to mask `data`
 
@@ -321,22 +389,6 @@ def fitgaussian(data):
 
     (p, _) = leastsq(errorfunction, params, data)
     return p
-
-
-def niwrite(data, affine, name, head, header=None):
-    """
-    Write out nifti file.
-    """
-    data[np.isnan(data)] = 0
-    if header is None:
-        this_header = head.copy()
-        this_header.set_data_shape(list(data.shape))
-    else:
-        this_header = header
-
-    outni = nib.Nifti1Image(data, affine, header=this_header)
-    outni.set_data_dtype('float64')
-    outni.to_filename(name)
 
 
 @due.dcite(BibTeX('@article{dice1945measures,'

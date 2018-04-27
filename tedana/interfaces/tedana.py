@@ -6,9 +6,10 @@ import textwrap
 import numpy as np
 import nibabel as nib
 from sklearn import svm
+from scipy.special import lpmv
 import scipy.stats as stats
 from tedana.interfaces import (optcom, t2sadmap)
-from tedana.utils import (cat2echos, uncat2echos, make_mask,
+from tedana.utils import (cat2echos, uncat2echos, make_min_mask,
                           makeadmask, fmask, unmask,
                           fitgaussian, niwrite, dice, andb)
 
@@ -313,8 +314,8 @@ def eimask(dd, ees=None):
         hthr = 5 * stats.scoreatpercentile(dd[:, ee, :].flatten(),
                                            98, interpolation_method='lower')
         lgr.info(lthr, hthr)
-        imask[dd[:, ee, :].mean(1) > lthr, ee] = 1
-        imask[dd[:, ee, :].mean(1) > hthr, ee] = 0
+        imask[dd[:, ee, :].mean(axis=1) > lthr, ee] = 1
+        imask[dd[:, ee, :].mean(axis=1) > hthr, ee] = 0
     return imask
 
 
@@ -1022,31 +1023,29 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
 
 
 def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
-    nx, ny, nz, n_echos, nt = catd.shape
+    n_samp, n_echos, n_vols = catd.shape
     ste = np.array([int(ee) for ee in str(ste).split(',')])
     if len(ste) == 1 and ste[0] == -1:
         lgr.info('-Computing PCA of optimally combined multi-echo data')
-        OCmask = make_mask(OCcatd[:, :, :, np.newaxis, :])
-        d = fmask(OCcatd, OCmask)
+        d = OCcatd[make_min_mask(OCcatd[:, np.newaxis, :])]
         eim = eimask(d[:, np.newaxis, :])
         eim = eim[:, 0] == 1
         d = d[eim, :]
     elif len(ste) == 1 and ste[0] == 0:
         lgr.info('-Computing PCA of spatially concatenated multi-echo data')
         ste = np.arange(n_echos)
-        d = np.float64(fmask(catd, mask))
+        d = catd[mask].astype('float64')
         eim = eimask(d) == 1
         d = d[eim]
     else:
         lgr.info('-Computing PCA of TE #%s' % ','.join([str(ee) for ee in ste]))
-        d = np.float64(np.concatenate([fmask(catd[:, :, :, ee, :],
-                                             mask)[:, np.newaxis, :] for ee in ste-1], axis=1))
-        eim = eimask(d) == 1
-        eim = np.squeeze(eim)
+        d = np.concatenate([catd[mask, ee, :][:, np.newaxis] for ee in ste - 1],
+                           axis=1).astype('float64')
+        eim = np.squeeze(eimask(d) == 1)
         d = np.squeeze(d[eim])
 
-    dz = ((d.T - d.T.mean(0)) / d.T.std(0)).T  # Variance normalize timeseries
-    dz = (dz - dz.mean()) / dz.std()  # Variance normalize everything
+    dz = ((d.T - d.T.mean(axis=0)) / d.T.std(axis=0)).T  # var normalize ts
+    dz = (dz - dz.mean()) / dz.std()  # var normalize everything
 
     if not os.path.exists('pcastate.pkl'):
 
@@ -1057,18 +1056,20 @@ def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
             ppca.fit(dz)
             v = ppca.components_
             s = ppca.explained_variance_
-            u = np.dot(np.dot(dz, v.T), np.diag(1./s))
+            u = np.dot(np.dot(dz, v.T), np.diag(1. / s))
         else:
             u, s, v = np.linalg.svd(dz, full_matrices=0)
 
         sp = s/s.sum()
         eigelb = sp[getelbow_mod(sp)]
 
-        spdif = np.abs(sp[1:]-sp[:-1])
+        spdif = np.abs(sp[1:] - sp[:-1])
         spdifh = spdif[(spdif.shape[0]//2):]
         spdmin = spdif.min()
         spdthr = np.mean([spdifh.max(), spdmin])
-        spmin = sp[(spdif.shape[0]//2)+(np.arange(spdifh.shape[0])[spdifh >= spdthr][0]) + 1]
+        spmin = sp[(spdif.shape[0]//2) +
+                   (np.arange(spdifh.shape[0])[spdifh >= spdthr][0]) +
+                   1]
         spcum = []
         spcumv = 0
         for sss in sp:
@@ -1079,8 +1080,11 @@ def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
         # Compute K and Rho for PCA comps
         eimum = np.atleast_2d(eim)
         eimum = np.transpose(eimum, np.argsort(np.atleast_2d(eim).shape)[::-1])
-        eimum = np.array(np.squeeze(unmask(eimum.prod(1), mask)),
-                         dtype=np.bool)
+        eimum = eimum.prod(axis=1)
+        o = np.zeros((mask.shape[0], *eimum.shape[1:]))
+        o[mask] = eimum
+        eimum = np.squeeze(o).astype(bool)
+
         vTmix = v.T
         vTmixN = ((vTmix.T - vTmix.T.mean(0)) / vTmix.T.std(0)).T
         _, ctb, betasv, v_T = fitmodels_direct(catd, v.T, eimum, t2s, t2sG,
@@ -1178,51 +1182,52 @@ def gscontrol_raw(OCcatd, head, n_echos, dtrank=4):
     modify catd (global variable) to removal global signal out of individual
     echo time series datasets. The spatial global signal is estimated
     from the optimally combined data after detrending with a Legendre
-    polynomial basis of order=0 and degree=dtrank.
+    polynomial basis of `order = 0` and `degree = dtrank`.
     """
 
     lgr.info('++ Applying amplitude-based T1 equilibration correction')
 
     # Legendre polynomial basis for denoising
-    from scipy.special import lpmv
-    Lmix = np.array([lpmv(0, vv, np.linspace(-1, 1, OCcatd.shape[-1])) for vv in range(dtrank)]).T
+    n_vols = OCcatd.shape[-1]
+    Lmix = np.array([lpmv(0, vv, np.linspace(-1, 1, n_vols))
+                     for vv in range(dtrank)]).T
 
-    # Compute mean, std, mask local to this function
+    # compute mean, std, mask local to this function
     # inefficient, but makes this function a bit more modular
-    Gmu = OCcatd.mean(-1)
+    Gmu = OCcatd.mean(axis=-1)  # temporal mean
     Gmask = Gmu != 0
 
     # Find spatial global signal
     dat = OCcatd[Gmask] - Gmu[Gmask][:, np.newaxis]
-    sol = np.linalg.lstsq(Lmix, dat.T)  # Legendre basis for detrending
-    detr = dat - np.dot(sol[0].T, Lmix.T)[0]
-    sphis = (detr).min(1)
+    sol = np.linalg.lstsq(Lmix, dat.T)[0]  # Legendre basis for detrending
+    detr = dat - np.dot(sol.T, Lmix.T)[0]
+    sphis = (detr).min(axis=1)
     sphis -= sphis.mean()
-    niwrite(unmask(sphis, Gmask), aff, 'T1gs.nii', head)
+    # niwrite(unmask(sphis, Gmask), aff, 'T1gs.nii', head)  # FIXME
 
-    # Find time course of the spatial global signal
+    # Find time course ofc the spatial global signal
     # make basis with the Legendre basis
     glsig = np.linalg.lstsq(np.atleast_2d(sphis).T, dat)[0]
-    glsig = (glsig-glsig.mean()) / glsig.std()
+    glsig = (glsig - glsig.mean()) / glsig.std()
     np.savetxt('glsig.1D', glsig)
     glbase = np.hstack([Lmix, glsig.T])
 
     # Project global signal out of optimally combined data
-    sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T)
-    tsoc_nogs = dat - np.dot(np.atleast_2d(sol[0][dtrank]).T,
+    sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T)[0]
+    tsoc_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T,
                              np.atleast_2d(glbase.T[dtrank])) + Gmu[Gmask][:, np.newaxis]
 
-    niwrite(OCcatd, aff, 'tsoc_orig.nii', head)
-    OCcatd = unmask(tsoc_nogs, Gmask)
-    niwrite(OCcatd, aff, 'tsoc_nogs.nii', head)
+    # niwrite(OCcatd, aff, 'tsoc_orig.nii', head)  # FIXME
+    OCcatd[Gmask] = tsoc_nogs
+    # niwrite(OCcatd, aff, 'tsoc_nogs.nii', head)  # FIXME
 
     # Project glbase out of each echo
-    for ii in range(n_echos):
-        dat = catd[:, :, :, ii, :][Gmask]
-        sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T)
-        e_nogs = dat - np.dot(np.atleast_2d(sol[0][dtrank]).T,
+    for echo in range(n_echos):
+        dat = catd[Gmask, echo, :]
+        sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T)[0]
+        e_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T,
                               np.atleast_2d(glbase.T[dtrank]))
-        catd[:, :, :, ii, :] = unmask(e_nogs, Gmask)
+        catd[Gmask, echo, :] = e_nogs
 
     return catd, OCcatd
 
@@ -1393,7 +1398,6 @@ def writeresults_echoes(acc, rej, midk, head, comptable, mmix):
 
 def main(options):
     """
-
     Args (and defaults):
     data, tes, mixm=None, ctab=None, manacc=None, strict=False,
              no_gscontrol=False, kdaw=10., rdaw=1., conv=2.5e-5, ste=-1,
@@ -1407,48 +1411,61 @@ def main(options):
     tes = [float(te) for te in options.tes]
     n_echos = len(tes)
 
-    # get some info on the input data
-    # TODO: only works on nifti
+    # TODO: attempt to derive input data format as soon as possible
+    # we'll need to carry this through to writing out all the resultant output
+    # files for the rest of the script; options should include .nii and .gii
+    #
+    # output_type = get_input_type(options.data)
+
+    # FIXME: only works on nifti
     catim = nib.load(options.data[0])
     head = catim.header
-    head.extensions = []  # clear extension info in header
-    head.set_sform(head.get_sform(), code=1)  # reset sform code
-    aff = catim.get_affine()  # TODO: gifti has no affine
-    catd = cat2echos(options.data, n_echos=n_echos)
-    nx, ny, nz, n_echos, nt = catd.shape
+    head.extensions = []
+    head.set_sform(head.get_sform(), code=1)
+    aff = catim.affine
 
-    # parse options, prepare output directory
+    # coerce data to samples x echos x time array
+    catd = cat2echos(options.data, n_echos=n_echos)
+    n_samp, n_echos, n_vols = catd.shape
+
+    # FIXME: only works on nifti
     if options.fout:
         options.fout = aff
     else:
         options.fout = None
 
     global kdaw, rdaw
+    kdaw = float(options.kdaw)
+    rdaw = float(options.rdaw)
+
     if not options.stabilize:
         stabilize = False
     else:
         stabilize = True
-    kdaw = float(options.kdaw)
-    rdaw = float(options.rdaw)
 
+    # prepare output directory, copy over pre-generated outputs
+    dirname = 'TED'
     if options.label is not None:
-        dirname = '.'.join(['TED', options.label])
-    else:
-        dirname = 'TED'
-    os.mkdir(dirname)
+        dirname = '.'.join([dirname, options.label])
+    os.mkdir(dirname)  # should we check to see if this already exists?
     if options.mixm is not None:
         try:
-            shutil.copyfile(options.mixm, os.path.join(dirname, 'meica_mix.1D'))
-            shutil.copyfile(options.mixm, os.path.join(dirname, os.path.basename(options.mixm)))
+            shutil.copyfile(options.mixm,
+                            os.path.join(dirname, 'meica_mix.1D'))
+            shutil.copyfile(options.mixm,
+                            os.path.join(dirname,
+                                         os.path.basename(options.mixm)))
         except shutil.Error:
             pass
     if options.ctab is not None:
         try:
-            shutil.copyfile(options.mixm, os.path.join(dirname, 'comp_table.txt'))
-            shutil.copyfile(options.mixm, os.path.join(dirname, os.path.basename(options.mixm)))
+            shutil.copyfile(options.ctab,
+                            os.path.join(dirname, 'comp_table.txt'))
+            shutil.copyfile(options.ctab,
+                            os.path.join(dirname,
+                                         os.path.basename(options.ctab)))
         except shutil.Error:
             pass
-
     os.chdir(dirname)
 
     lgr.info('++ Computing Mask')
@@ -1457,12 +1474,16 @@ def main(options):
 
     lgr.info('++ Computing T2* map')
     global t2s, s0, t2ss, s0s, t2sG, s0G
-    t2s, s0, t2ss, s0s, t2sG, s0G = t2sadmap(catd, mask, tes, masksum, 1)
+    # TODO: can we maybe not do this? returning six things is a lot...
+    # also, WHAT ARE THEY?!?!?
+    t2s, s0, t2ss, s0s, t2sG, s0G = t2sadmap(catd, tes, mask, masksum, 1)
 
-    # Condition values
+    # set a hard cap for the T2* map
+    # anything that is 10x higher than the 99.5 %ile will be reset to
     cap_t2s = stats.scoreatpercentile(t2s.flatten(), 99.5,
                                       interpolation_method='lower')
-    t2s[t2s > cap_t2s*10] = cap_t2s
+    t2s[t2s > cap_t2s * 10] = cap_t2s
+    # FIXME: need to write the appropriate output file type!
     niwrite(s0, aff, 's0v.nii', head)
     niwrite(t2s, aff, 't2sv.nii', head)
     niwrite(t2ss, aff, 't2ss.nii', head)
@@ -1470,11 +1491,10 @@ def main(options):
     niwrite(s0G, aff, 's0vG.nii', head)
     niwrite(t2sG, aff, 't2svG.nii', head)
 
-    # Optimally combine data
+    # optimally combine data
     combmode = options.combmode
     global OCcatd
-    OCcatd = optcom(catd, t2sG, tes, mask,
-                    combmode, useG=True)
+    OCcatd = optcom(catd, t2sG, tes, mask, combmode)
     if not options.no_gscontrol:
         catd, OCcatd = gscontrol_raw(OCcatd, head, len(tes))
 
@@ -1522,7 +1542,7 @@ def main(options):
         lgr.info('** WARNING! No BOLD components detected!!! \n'
                  '** Please check data and results!')
 
-    writeresults(OCcatd, comptable, mmix, nt, acc, rej, midk, empty, head)
+    writeresults(OCcatd, comptable, mmix, n_vols, acc, rej, midk, empty, head)
     gscontrol_mmix(mmix, acc, rej, midk, empty, head)
     if options.dne:
         writeresults_echoes(acc, rej, midk, head, comptable, mmix)

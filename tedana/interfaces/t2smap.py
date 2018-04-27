@@ -7,102 +7,113 @@ import logging
 lgr = logging.getLogger(__name__)
 
 
-def t2sadmap(catd, mask, tes, masksum, start_echo):
+def t2sadmap(data, tes, mask, masksum, start_echo):
     """
-    t2sadmap(catd,mask,tes,masksum)
+    Parameters
+    ----------
+    data : (S x E x T) array_like
+        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
+        time
+    tes : (E, ) list
+        Echo times
+    mask : (S, ) array_like
+        Boolean array indicating samples that are consistently (i.e., across
+        time AND echoes) non-zero
+    masksum : (S, ) array_like
+        Valued array indicating number of echos that have sufficient signal in
+        given sample
+    start_echo : int
+        First echo to consider
 
-    Input:
-
-    catd  has shape (nx,ny,nz,Ne,nt)
-    mask  has shape (nx,ny,nz)
-    tes   is a 1d numpy array
-    masksum
+    Returns
+    -------
+    t2sa : (S x E x T) np.ndarray
+        Limited T2* map
+    s0va : (S x E x T) np.ndarray
+        Limited S0 map
+    t2ss : (S x E x T) np.ndarray
+        ???
+    s0vs : (S x E x T) np.ndarray
+        ???
+    t2saf : (S x E x T) np.ndarray
+        Full T2* map
+    s0vaf : (S x E x T) np.ndarray
+        Full S0 map
     """
-    nx, ny, nz, Ne, nt = catd.shape
-    echodata = fmask(catd, mask)
-    Nm = echodata.shape[0]
 
-    t2ss = np.zeros([nx, ny, nz, Ne - 1])
-    s0vs = t2ss.copy()
+    n_samp, n_echos, n_vols = data.shape
+    t2ss, s0vs = np.zeros([n_samp, n_echos - 1]), np.zeros([n_samp, n_echos - 1])
 
-    for ne in range(start_echo, Ne + 1):
-
-        # Do Log Linear fit
-        B = np.reshape(np.abs(echodata[:, :ne]) + 1, (Nm, ne * nt)).transpose()
+    for echo in range(start_echo, n_echos + 1):
+        # perform log linear fit of echo times against MR signal
+        B = np.reshape(np.abs(data[:, :echo, :]) + 1,
+                       (n_samp, echo * n_vols)).T
         B = np.log(B)
-        neg_tes = [-1 * te for te in tes[:ne]]
-        x = np.array([np.ones(ne), neg_tes])
-        X = np.tile(x, (1, nt))
-        X = np.sort(X)[:, ::-1].transpose()
+        neg_tes = [-1 * te for te in tes[:echo]]
+        x = np.array([np.ones(echo), neg_tes])
+        X = np.tile(x, (1, n_vols))
+        X = np.sort(X)[:, ::-1].T
 
         beta, res, rank, sing = np.linalg.lstsq(X, B)
-        t2s = 1 / beta[1, :].transpose()
-        s0 = np.exp(beta[0, :]).transpose()
+        t2s = 1 / beta[1, :].T
+        s0 = np.exp(beta[0, :]).T
 
-        t2s[np.isinf(t2s)] = 500.
-        s0[np.isnan(s0)] = 0.
+        t2s[np.isinf(t2s)] = 500.  # why 500?
+        s0[np.isnan(s0)] = 0.      # why 0?
 
-        t2ss[:, :, :, ne - 2] = np.squeeze(unmask(t2s, mask))
-        s0vs[:, :, :, ne - 2] = np.squeeze(unmask(s0, mask))
+        t2ss[..., echo - 2] = np.squeeze(t2s)
+        s0vs[..., echo - 2] = np.squeeze(s0)
 
-    # Limited T2* and S0 maps
-    fl = np.zeros([nx, ny, nz, len(tes) - 2 + 1])
-    for ne in range(Ne - 1):
-        fl_ = np.squeeze(fl[:, :, :, ne])
-        fl_[masksum == ne + 2] = True
-        fl[:, :, :, ne] = fl_
-    fl = np.array(fl, dtype=bool)
-    t2sa = np.squeeze(unmask(t2ss[fl], masksum > 1))
-    s0va = np.squeeze(unmask(s0vs[fl], masksum > 1))
+    # create limited T2* and S0 maps
+    fl = np.zeros([n_samp, len(tes) - 1], dtype=bool)
+    for echo in range(n_echos - 1):
+        fl_ = np.squeeze(fl[..., echo])
+        fl_[masksum == echo + 2] = True
+        fl[..., echo] = fl_
+    t2sa, s0va = masksum.copy(), masksum.copy()
+    t2sa[masksum > 1], s0va[masksum > 1] = t2ss[fl], s0vs[fl]
 
-    # Full T2* maps with S0 estimation errors
-    t2saf = t2sa.copy()
-    s0vaf = s0va.copy()
+    # create full T2* maps with S0 estimation errors
+    t2saf, s0vaf = t2sa.copy(), s0va.copy()
     t2saf[masksum == 1] = t2ss[masksum == 1, 0]
     s0vaf[masksum == 1] = s0vs[masksum == 1, 0]
 
     return t2sa, s0va, t2ss, s0vs, t2saf, s0vaf
 
 
-def optcom(data, t2, tes, mask, combmode, useG=False):
+def optcom(data, t2, tes, mask, combmode):
     """
-    out = optcom(data,t2s)
+    Parameters
+    ----------
+    data : (S x E x T) array_like
+    t2 : (S, ) array_like
+    tes : (E, ) list
+    combmode : str
+        Must be in ['ste', 't2s']. Determines method for optimal combination
 
-
-    Input:
-
-    data.shape = (nx,ny,nz,Ne,Nt)
-    t2s.shape  = (nx,ny,nz)
-    tes.shape  = len(Ne)
-
-    Output:
-
-    out.shape = (nx,ny,nz,Nt)
+    Returns
+    -------
+    comb_data : (S x T) np.ndarray
+        Optimally combined data
     """
-    nx, ny, nz, Ne, Nt = data.shape
 
-    if useG:
-        fdat = fmask(data, mask)
-        ft2s = fmask(t2, mask)
+    n_samp, n_echos, n_vols = data.shape
 
-    else:
-        fdat = fmask(data, mask)
-        ft2s = fmask(t2, mask)
+    tes = np.array(tes)[np.newaxis]  # (1 x E) array_like
+    t2s = t2[:, np.newaxis]  # (S x 1) array_like
 
-    tes = np.array(tes)
-    tes = tes[np.newaxis, :]
-    ft2s = ft2s[:, np.newaxis]
+    comb_data = np.zeros((data.shape[0], data.shape[-1]))
+    mdata = data[mask]
 
     if combmode == 'ste':
-        alpha = fdat.mean(-1) * tes
+        alpha = mdata.mean(axis=-1) * tes
     else:
-        alpha = tes * np.exp(-tes / ft2s)
+        alpha = tes * np.exp(-tes / t2s[mask])
 
-    alpha = np.tile(alpha[:, :, np.newaxis], (1, 1, Nt))
+    alpha = np.tile(alpha[:, :, np.newaxis], (1, 1, n_vols))
+    comb_data[mask] = np.average(mdata, axis=1, weights=alpha)
 
-    fout = np.average(fdat, axis=1, weights=alpha)
-    out = unmask(fout, mask)
-    return out
+    return comb_data
 
 
 def main(options):
@@ -115,6 +126,7 @@ def main(options):
 
     tes = [float(te) for te in options.tes]
     ne = len(tes)
+
     catim = nib.load(options.data[0])
     head = catim.get_header()
     head.extensions = []
@@ -127,7 +139,7 @@ def main(options):
     mask, masksum = makeadmask(catd, minimum=False, getsum=True)
 
     lgr.info('++ Computing Adaptive T2* map')
-    t2s, s0, t2ss, s0vs, t2saf, s0vaf = t2sadmap(catd, mask, tes, masksum, 2)
+    t2s, s0, t2ss, s0vs, t2saf, s0vaf = t2sadmap(catd, tes, mask, masksum, 2)
     niwrite(masksum, aff, 'masksum%s.nii' % suf)
     niwrite(t2ss, aff, 't2ss%s.nii' % suf)
     niwrite(s0vs, aff, 's0vs%s.nii' % suf)

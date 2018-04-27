@@ -5,10 +5,12 @@ from tedana.interfaces import tedana
 def get_parser():
     """
     Parses command line inputs for tedana
+
     Returns
     -------
     parser.parse_args() : argparse dict
     """
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-d',
                         dest='data',
