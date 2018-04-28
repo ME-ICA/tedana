@@ -558,17 +558,12 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, head,
 
 
 def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
-             knobargs='', filecsdata=False, savecsdiag=True, group0_only=False,
+             filecsdata=False, savecsdiag=True, group0_only=False,
              strict_mode=False):
-
+    """
+    Select components.
+    """
     from sklearn.cluster import DBSCAN
-
-    """
-    Set knobs
-    """
-    if knobargs is not '':
-        knobs = vars(knobargs)
-        locals().update(knobs)
 
     if filecsdata:
         filecsdata = True
@@ -1506,8 +1501,8 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         except:
             pass
 
-    orig_dir = os.getcwd()
-    os.chdir(out_dir)
+    #orig_dir = os.getcwd()
+    #os.chdir(out_dir)
 
     print("++ Computing Mask")
     global mask
@@ -1555,7 +1550,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
             group0_flag = False
 
         acc, rej, midk, empty = selcomps(seldict, mmix, head, manacc,
-                                         knobargs=options, strict_mode=strict,
+                                         strict_mode=strict,
                                          group0_only=group0_flag)
     else:
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
@@ -1565,7 +1560,6 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                                            fout=fout)
         if options.ctab is None:
             acc, rej, midk, empty = selcomps(seldict, mmix, head, manacc,
-                                             knobargs=options,
                                              strict_mode=strict)
         else:
             acc, rej, midk, empty = ctabsel(ctab)
