@@ -1,5 +1,7 @@
 import os
+import os.path as op
 import sys
+import shutil
 import pickle
 import textwrap
 import numpy as np
@@ -1390,67 +1392,122 @@ def writeresults_echoes(acc, rej, midk, head, comptable, mmix):
                        acc, rej, midk, head, suffix='e%i' % (ii+1))
 
 
-def main(options):
+def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
+         no_gscontrol=False, kdaw=10., rdaw=1., conv=2.5e-5, ste=-1,
+         combmode='t2s', dne=False, initcost='tanh', finalcost='tanh',
+         stabilize=False, fout=False, filecsdata=False, label=None,
+         fixed_seed=42):
     """
-
-    Args (and defaults):
-    data, tes, mixm=None, ctab=None, manacc=None, strict=False,
-             no_gscontrol=False, kdaw=10., rdaw=1., conv=2.5e-5, ste=-1,
-             combmode='t2s', dne=False, initcost='tanh', finalcost='tanh',
-             stabilize=False, fout=False, filecsdata=False, label=None,
-             fixed_seed=42
+    Parameters
+    ----------
+    data : :obj:`str` or :obj:`list` of :obj:`str`
+        Either a single z-concatenated file (str or single-entry list) or a
+        list of echo-specific files, in ascending order.
+    tes : :obj:`list`
+        List of echo times associated with data in seconds.
+    mixm : :obj:`str`, optional
+        File containing mixing matrix. If not provided, ME-PCA and ME-ICA are
+        done.
+    ctab : :obj:`str`, optional
+        File containing component table from which to extract pre-computed
+        classifications.
+    manacc : :obj:`str`, optional
+        Comma separated list of manually accepted components in string form.
+        Default is None.
+    strict : :obj:`bool`, optional
+        Ignore low-variance ambiguous components. Default is False.
+    no_gzcontrol : :obj:`bool`, optional
+        Control global signal using spatial approach. Default is False.
+    kdaw : :obj:`float`, optional
+        Dimensionality augmentation weight (Kappa). Default is 10.
+        -1 for low-dimensional ICA.
+    rdaw : :obj:`float`, optional
+        Dimensionality augmentation weight (Rho). Default is 1.
+        -1 for low-dimensional ICA.
+    conv : :obj:`float`, optional
+        Convergence limit. Default is 2.5e-5.
+    ste : :obj:`int`, optional
+        Source TEs for models. 0 for all, -1 for optimal combination.
+        Default is -1.
+    combmode : {'t2s', 'ste'}, optional
+        Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
+    dne : :obj:`bool`, optional
+        Denoise each TE dataset separately. Default is False.
+    initcost : {'tanh', 'pow3', 'gaus', 'skew'}, optional
+        Initial cost function for ICA. Default is 'tanh'.
+    finalcost : {'tanh', 'pow3', 'gaus', 'skew'}, optional
+        Final cost function. Default is 'tanh'.
+    stabilize : :obj:`bool`, optional
+        Stabilize convergence by reducing dimensionality, for low quality data.
+        Default is False.
+    fout : :obj:`bool`, optional
+        Save output TE-dependence Kappa/Rho SPMs. Default is False.
+    filecsdata : :obj:`bool`, optional
+        Save component selection data to file. Default is False.
+    label : :obj:`str` or :obj:`None`, optional
+        Label for output directory. Default is None.
+    fixed_seed : :obj:`int`, optional
+        Seeded value for ICA, for reproducibility.
     """
     global tes, ne, catd, head, aff
-    tes = [float(te) for te in options.tes]
+    tes = [float(te) for te in tes]
     ne = len(tes)
-    catim = nib.load(options.data[0])
+    if isinstance(data, str):
+        catim = nib.load(data)
+    elif len(data) == 1:
+        catim = nib.load(data[0])
+    else:
+        assert len(data) == ne
+        imgs = [nib.load(f) for f in data]
+        assert np.array_equal([img.affine for img in imgs])
+        zcat_data = np.dstack([img.get_data() for img in imgs])
+        catim = nib.Nifti1Image(zcat_data, imgs[0].affine,
+                                header=imgs[0].get_header())
 
+    # Prepare image metadata for output files
     head = catim.get_header()
     head.extensions = []
     head.set_sform(head.get_sform(), code=1)
-    aff = catim.get_affine()
+    aff = catim.affine
+
+    # Reshape data
     catd = cat2echos(catim.get_data(), ne)
     nx, ny, nz, Ne, nt = catd.shape
 
     # Parse options, prepare output directory
-    if options.fout:
-        options.fout = aff
+    if fout:
+        fout = aff
     else:
-        options.fout = None
+        fout = None
 
     global kdaw, rdaw
-    if not options.stabilize:
-        stabilize = False
-    else:
-        stabilize = True
-    kdaw = float(options.kdaw)
-    rdaw = float(options.rdaw)
+    kdaw = float(kdaw)
+    rdaw = float(rdaw)
 
-    if options.label is not None:
-        dirname = '%s' % '.'.join(['TED', options.label])
+    if label is not None:
+        out_dir = 'TED.{0}'.format(label)
     else:
-        dirname = 'TED'
-    os.system('mkdir %s' % dirname)
-    if options.mixm is not None:
+        out_dir = 'TED'
+    out_dir = op.abspath(out_dir)
+    os.mkdir(out_dir)
+    if mixm is not None:
         try:
-            os.system('cp %s %s/meica_mix.1D; cp %s %s/%s' % (options.mixm,
-                                                              dirname,
-                                                              options.mixm,
-                                                              dirname,
-                                                              os.path.basename(options.mixm)))
-        except:
-            pass
-    if options.ctab is not None:
-        try:
-            os.system('cp %s %s/comp_table.txt; cp %s %s/%s' % (options.mixm,
-                                                                dirname,
-                                                                options.mixm,
-                                                                dirname,
-                                                                os.path.basename(options.mixm)))
+            assert op.isfile(mixm)
+            shutil.copyfile(mixm, op.join(out_dir, 'meica_mix.1D'))
+            shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
         except:
             pass
 
-    os.chdir(dirname)
+    if ctab is not None:
+        try:
+            assert op.isfile(ctab)
+            shutil.copyfile(ctab, op.join(out_dir, 'comp_table.txt'))
+            shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
+        except:
+            pass
+
+    orig_dir = os.getcwd()
+    os.chdir(out_dir)
 
     print("++ Computing Mask")
     global mask
@@ -1458,66 +1515,60 @@ def main(options):
 
     print("++ Computing T2* map")
     global t2s, s0, t2ss, s0s, t2sG, s0G
-    t2s, s0, t2ss, s0s, t2sG, s0G = t2sadmap(catd, mask, tes, masksum, 1)
+    t2s, s0, t2ss, s0s, t2sG, s0G = t2sadmap(catd, mask, tes, masksum,
+                                             start_echo=1)
 
     # Condition values
     cap_t2s = stats.scoreatpercentile(t2s.flatten(), 99.5,
                                       interpolation_method='lower')
     t2s[t2s > cap_t2s*10] = cap_t2s
-    niwrite(s0, aff, 's0v.nii', head)
-    niwrite(t2s, aff, 't2sv.nii', head)
-    niwrite(t2ss, aff, 't2ss.nii', head)
-    niwrite(s0s, aff, 's0vs.nii', head)
-    niwrite(s0G, aff, 's0vG.nii', head)
-    niwrite(t2sG, aff, 't2svG.nii', head)
+    niwrite(s0, aff, op.join(out_dir, 's0v.nii'), head)
+    niwrite(t2s, aff, op.join(out_dir, 't2sv.nii'), head)
+    niwrite(t2ss, aff, op.join(out_dir, 't2ss.nii'), head)
+    niwrite(s0s, aff, op.join(out_dir, 's0vs.nii'), head)
+    niwrite(s0G, aff, op.join(out_dir, 's0vG.nii'), head)
+    niwrite(t2sG, aff, op.join(out_dir, 't2svG.nii'), head)
 
     # Optimally combine data
-    combmode = options.combmode
     global OCcatd
-    OCcatd = optcom(catd, t2sG, tes, mask,
-                    combmode, useG=True)
-    if not options.no_gscontrol:
+    OCcatd = optcom(catd, t2sG, tes, mask, combmode, useG=True)
+    if not no_gscontrol:
         catd, OCcatd = gscontrol_raw(OCcatd, head, len(tes))
 
-    if options.mixm is None:
+    if mixm is None:
         print("++ Doing ME-PCA and ME-ICA")
-
-        nc, dd = tedpca(combmode, mask, stabilize, head, ste=options.ste)
-
-        mmix_orig = tedica(nc, dd, options.conv, options.fixed_seed,
-                           cost=options.initcost,
-                           final_cost=options.finalcost)
-        np.savetxt('__meica_mix.1D', mmix_orig)
+        nc, dd = tedpca(combmode, mask, stabilize, head, ste=ste)
+        mmix_orig = tedica(nc, dd, conv, fixed_seed, cost=initcost,
+                           final_cost=finalcost)
+        np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
         seldict, comptable, betas, mmix = fitmodels_direct(catd, mmix_orig,
                                                            mask, t2s, t2sG,
                                                            tes, combmode, head,
-                                                           fout=options.fout,
+                                                           fout=fout,
                                                            reindex=True)
 
-        np.savetxt('meica_mix.1D', mmix)
+        np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
         if 'GROUP0' in sys.argv:
             group0_flag = True
         else:
             group0_flag = False
 
-        acc, rej, midk, empty = selcomps(seldict, mmix, head, options.manacc,
-                                         knobargs=options,
-                                         group0_only=group0_flag,
-                                         strict_mode=options.strict)
-
+        acc, rej, midk, empty = selcomps(seldict, mmix, head, manacc,
+                                         knobargs=options, strict_mode=strict,
+                                         group0_only=group0_flag)
     else:
-        mmix_orig = np.loadtxt('meica_mix.1D')
+        mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
         seldict, comptable, betas, mmix = fitmodels_direct(catd, mmix_orig,
                                                            mask, t2s, t2sG,
                                                            tes, combmode, head,
-                                                           fout=options.fout)
+                                                           fout=fout)
         if options.ctab is None:
-            acc, rej, midk, empty = selcomps(seldict, mmix, head, options.manacc,
+            acc, rej, midk, empty = selcomps(seldict, mmix, head, manacc,
                                              knobargs=options,
-                                             strict_mode=options.strict)
+                                             strict_mode=strict)
         else:
-            acc, rej, midk, empty = ctabsel(options.ctab)
+            acc, rej, midk, empty = ctabsel(ctab)
 
     if len(acc) == 0:
         print("** WARNING! No BOLD components detected!!! ** \n"
@@ -1525,5 +1576,5 @@ def main(options):
 
     writeresults(OCcatd, comptable, mmix, nt, acc, rej, midk, empty, head)
     gscontrol_mmix(mmix, acc, rej, midk, empty, head)
-    if options.dne:
+    if dne:
         writeresults_echoes(acc, rej, midk, head, comptable, mmix)
