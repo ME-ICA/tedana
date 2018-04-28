@@ -1017,7 +1017,8 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
     return list(sorted(ncl)), list(sorted(rej)), list(sorted(midk)), list(sorted(ign))
 
 
-def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
+def tedpca(combmode, mask, stabilize, head, tes, kdaw, rdaw, ste=0,
+           mlepca=True):
     nx, ny, nz, ne, nt = catd.shape
     ste = np.array([int(ee) for ee in str(ste).split(',')])
     if len(ste) == 1 and ste[0] == -1:
@@ -1399,7 +1400,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         Either a single z-concatenated file (str or single-entry list) or a
         list of echo-specific files, in ascending order.
     tes : :obj:`list`
-        List of echo times associated with data in seconds.
+        List of echo times associated with data in milliseconds.
     mixm : :obj:`str`, optional
         File containing mixing matrix. If not provided, ME-PCA and ME-ICA are
         done.
@@ -1444,7 +1445,6 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     fixed_seed : :obj:`int`, optional
         Seeded value for ICA, for reproducibility.
     """
-    # global tes,
     global ne, catd, head, aff
     tes = [float(te) for te in tes]
     ne = len(tes)
@@ -1476,7 +1476,6 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     else:
         fout = None
 
-    global kdaw, rdaw
     kdaw = float(kdaw)
     rdaw = float(rdaw)
 
@@ -1485,7 +1484,9 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     else:
         out_dir = 'TED'
     out_dir = op.abspath(out_dir)
-    os.mkdir(out_dir)
+    if not op.isdir:
+        os.mkdir(out_dir)
+
     if mixm is not None:
         try:
             assert op.isfile(mixm)
@@ -1529,11 +1530,12 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     global OCcatd
     OCcatd = optcom(catd, t2sG, tes, mask, combmode, useG=True)
     if not no_gscontrol:
-        catd, OCcatd = gscontrol_raw(OCcatd, head, len(tes))
+        catd, OCcatd = gscontrol_raw(OCcatd, head, ne)
 
     if mixm is None:
         print("++ Doing ME-PCA and ME-ICA")
-        nc, dd = tedpca(combmode, mask, stabilize, head, ste=ste)
+        nc, dd = tedpca(combmode, mask, stabilize, head, tes=tes, kdaw=kdaw,
+                        rdaw=rdaw, ste=ste)
         mmix_orig = tedica(nc, dd, conv, fixed_seed, cost=initcost,
                            final_cost=finalcost)
         np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
