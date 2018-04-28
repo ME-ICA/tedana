@@ -1558,7 +1558,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                                            mask, t2s, t2sG,
                                                            tes, combmode, head,
                                                            fout=fout)
-        if options.ctab is None:
+        if ctab is None:
             acc, rej, midk, empty = selcomps(seldict, mmix, head, manacc,
                                              strict_mode=strict)
         else:
