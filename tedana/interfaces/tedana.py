@@ -1484,7 +1484,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     else:
         out_dir = 'TED'
     out_dir = op.abspath(out_dir)
-    if not op.isdir:
+    if not op.isdir(out_dir):
         os.mkdir(out_dir)
 
     if mixm is not None:
@@ -1503,8 +1503,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         except:
             pass
 
-    #orig_dir = os.getcwd()
-    #os.chdir(out_dir)
+    os.chdir(out_dir)
 
     print("++ Computing Mask")
     global mask
