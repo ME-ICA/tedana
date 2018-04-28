@@ -1444,7 +1444,8 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     fixed_seed : :obj:`int`, optional
         Seeded value for ICA, for reproducibility.
     """
-    global tes, ne, catd, head, aff
+    # global tes,
+    global ne, catd, head, aff
     tes = [float(te) for te in tes]
     ne = len(tes)
     if isinstance(data, str):
