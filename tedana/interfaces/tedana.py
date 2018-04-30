@@ -1453,9 +1453,12 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     elif len(data) == 1:
         catim = nib.load(data[0])
     else:
-        assert len(data) == ne
+        if len(data) != ne:
+            raise ValueError('Number of single-echo "data" files does not match '
+                             'number of echos ({0} != {1})'.format(len(data), ne))
         imgs = [nib.load(f) for f in data]
-        assert np.array_equal([img.affine for img in imgs])
+        if not np.array_equal([img.affine for img in imgs]):
+            raise ValueError('All affines from files in "data" must be equal.')
         zcat_data = np.dstack([img.get_data() for img in imgs])
         catim = nib.Nifti1Image(zcat_data, imgs[0].affine,
                                 header=imgs[0].get_header())
@@ -1487,21 +1490,17 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
 
-    if mixm is not None:
-        try:
-            assert op.isfile(mixm)
-            shutil.copyfile(mixm, op.join(out_dir, 'meica_mix.1D'))
-            shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
-        except:
-            pass
+    if mixm is not None and op.isfile(mixm):
+        shutil.copyfile(mixm, op.join(out_dir, 'meica_mix.1D'))
+        shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
+    elif mixm is not None:
+        raise IOError('Argument "mixm" must be an existing file.')
 
-    if ctab is not None:
-        try:
-            assert op.isfile(ctab)
-            shutil.copyfile(ctab, op.join(out_dir, 'comp_table.txt'))
-            shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
-        except:
-            pass
+    if ctab is not None and op.isfile(ctab):
+        shutil.copyfile(ctab, op.join(out_dir, 'comp_table.txt'))
+        shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
+    elif ctab is not None:
+        raise IOError('Argument "ctab" must be an existing file.')
 
     os.chdir(out_dir)
 
@@ -1510,7 +1509,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     mask, masksum = makeadmask(catd, minimum=False, getsum=True)
 
     print("++ Computing T2* map")
-    global t2s, s0, t2ss, s0s, t2sG, s0G
+    global t2s, s0, t2sG
     t2s, s0, t2ss, s0s, t2sG, s0G = t2sadmap(catd, mask, tes, masksum,
                                              start_echo=1)
 
