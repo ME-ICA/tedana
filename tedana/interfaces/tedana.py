@@ -554,7 +554,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, head,
     return seldict, comptab, betas, mmix_new
 
 
-def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
+def selcomps(seldict, mmix, head, manacc, n_echoes, debug=False, olevel=2, oversion=99,
              filecsdata=False, savecsdiag=True, group0_only=False,
              strict_mode=False):
     """
@@ -1542,7 +1542,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         else:
             group0_flag = False
 
-        acc, rej, midk, empty = selcomps(seldict, mmix, head, manacc,
+        acc, rej, midk, empty = selcomps(seldict, mmix, head, manacc, n_echoes,
                                          strict_mode=strict,
                                          filecsdata=filecsdata,
                                          group0_only=group0_flag)
@@ -1554,6 +1554,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                                            fout=fout)
         if ctab is None:
             acc, rej, midk, empty = selcomps(seldict, mmix, head, manacc,
+                                             n_echoes,
                                              filecsdata=filecsdata,
                                              strict_mode=strict)
         else:
