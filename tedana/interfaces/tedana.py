@@ -596,8 +596,6 @@ def selcomps(seldict, mmix, head, manacc, n_echoes, debug=False, olevel=2, overs
     """
     Do some tallies for no. of significant voxels
     """
-    # possibly comment out next line
-    countsigZ = Z_clmaps.sum(0)
     countsigFS0 = F_S0_clmaps.sum(0)
     countsigFR2 = F_R2_clmaps.sum(0)
     countnoise = np.zeros(len(nc))
@@ -606,8 +604,6 @@ def selcomps(seldict, mmix, head, manacc, n_echoes, debug=False, olevel=2, overs
     Make table of dice values
     """
     dice_tbl = np.zeros([nc.shape[0], 2])
-    # possibly comment out next line
-    csize = np.max([int(mask.sum()*0.0005)+5, 20])
     for ii in ncl:
         dice_FR2 = dice(unmask(Br_clmaps_R2[:, ii], mask)[t2s != 0],
                         F_R2_clmaps[:, ii])
@@ -685,8 +681,6 @@ def selcomps(seldict, mmix, head, manacc, n_echoes, debug=False, olevel=2, overs
     Tz = (tt_table[:, 0] - tt_table[:, 0].mean()) / tt_table[:, 0].std()
     varex_ = np.log(varex)
     Vz = (varex_-varex_.mean()) / varex_.std()
-    # possibly comment out next line
-    Kz = (Kappas-Kappas.mean()) / Kappas.std()
     Rz = (Rhos-Rhos.mean()) / Rhos.std()
     Ktz = np.log(Kappas) / 2
     Ktz = (Ktz-Ktz.mean()) / Ktz.std()
@@ -711,10 +705,6 @@ def selcomps(seldict, mmix, head, manacc, n_echoes, debug=False, olevel=2, overs
     KRcutguesses = [getelbow_mod(Rhos), getelbow_cons(Rhos),
                     getelbow_aggr(Rhos), getelbow_mod(Kappas),
                     getelbow_cons(Kappas), getelbow_aggr(Kappas)]
-    # possibly comment out next three lines
-    Kelbowval = np.median([getelbow_mod(Kappas, val=True),
-                           getelbow_cons(Kappas, val=True),
-                           getelbow_aggr(Kappas, val=True)] + list(getfbounds(n_echoes)))
     Khighelbowval = stats.scoreatpercentile([getelbow_mod(Kappas, val=True),
                                              getelbow_cons(Kappas, val=True),
                                              getelbow_aggr(Kappas, val=True)] +
@@ -931,8 +921,6 @@ def selcomps(seldict, mmix, head, manacc, n_echoes, debug=False, olevel=2, overs
         veinmaskB = veinW.sum(1) > minW
         tsoc_Bp = tsoc_B.copy()
         tsoc_Bp[tsoc_Bp < 0] = 0
-        # possibly comment out next line
-        sig_Bp = sig_B*tsoc_Bp > 0
         vvex = np.array([(tsoc_Bp[veinmaskB, ii]**2.).sum() /
                          (tsoc_Bp[:, ii]**2.).sum() for ii in nc])
         group0_res = np.intersect1d(KRguess, group0)
@@ -977,8 +965,6 @@ def selcomps(seldict, mmix, head, manacc, n_echoes, debug=False, olevel=2, overs
     misc_art = np.setdiff1d(nc[andb([(rankvec(Vz) - rankvec(Ktz)) > newcest / 2,
                             Kappas < Khighelbowval]) == 2], group0)
     ign_cand = np.unique(list(field_art)+list(phys_art)+list(misc_art))
-    # possibly comment out next line
-    g0_red = np.setdiff1d(group0, ign_cand)
     midkrej = np.union1d(midk, rej)
     to_ign = np.setdiff1d(list(ign_cand), midkrej)
     toacc = np.union1d(toacc_hi, toacc_lo)
