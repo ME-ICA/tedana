@@ -8,6 +8,7 @@ import nibabel as nib
 from sklearn import svm
 from scipy.special import lpmv
 import scipy.stats as stats
+from scipy.stats import skew
 from tedana.interfaces import (optcom, t2sadmap)
 from tedana.utils import (cat2echos, uncat2echos, make_min_mask,
                           makeadmask, fmask, unmask,
@@ -147,37 +148,38 @@ def rankvec(vals):
 
 def get_coeffs(data, mask, X, add_const=False):
     """
-    get_coeffs(data,X)
+    get_coeffs(data, X)
 
     Parameters
     ----------
-    data : array-like
-        Array of shape (nx, ny, nz, nt)
-    mask : array-like
-        Array of shape (nx, ny, nz)
-    X : array-like
-        Array of shape (nt, nc)
+    data : (S x T) array-like
+        Array where `S` is samples and `T` is time
+    mask : (S,) array-like
+        Boolean mask array
+    X : (T x C) array-like
+        Array where `T` is time and `C` is components
     add_const : bool, optional
-        Default is False.
+        Add intercept column to `X` before fitting. Default: False
 
     Returns
     -------
-    out : array_like
-        Array of shape (nx, ny, nz, nc)
+    out : (S x C) np.ndarray
+        Array of betas for all samples `S`
     """
-    mdata = fmask(data, mask).transpose()
+
+    mdata = data[mask].T
 
     # Coerce X to >=2d
     X = np.atleast_2d(X)
 
     if X.shape[0] == 1:
         X = X.T
-    Xones = np.atleast_2d(np.ones(np.min(mdata.shape))).T
-    if add_const:
-        X = np.hstack([X, Xones])
+    if add_const:  # add intercept
+        Xones = np.ones((np.min(mdata.shape), 1))
+        X = np.column_stack([X, Xones])
 
-    tmpbetas = np.linalg.lstsq(X, mdata)[0].transpose()
-    if add_const:
+    tmpbetas = np.linalg.lstsq(X, mdata)[0].T
+    if add_const:  # drop beta for intercept
         tmpbetas = tmpbetas[:, :-1]
     out = unmask(tmpbetas, mask)
 
@@ -235,10 +237,11 @@ def getelbow_mod(ks, val=False):
         Either the elbow index (if val is True) or the values at the elbow
         index (if val is False)
     """
+
     ks = np.sort(ks)[::-1]
     nc = ks.shape[0]
     coords = np.array([np.arange(nc), ks])
-    p = coords - np.tile(np.reshape(coords[:, 0], (2, 1)), (1, nc))
+    p = coords - coords[:, 0].reshape(2, 1)
     b = p[:, -1]
     b_hat = np.reshape(b / np.sqrt((b ** 2).sum()), (2, 1))
     proj_p_b = p - np.dot(b_hat.T, p) * np.tile(b_hat, (1, nc))
@@ -304,18 +307,21 @@ def getfbounds(n_echos):
 
 
 def eimask(dd, ees=None):
+    """
+    Returns mask for data between [0.001, 5] * 98th percentile of dd
+    """
     if ees is None:
         ees = range(dd.shape[1])
-    imask = np.zeros([dd.shape[0], len(ees)])
+    imask = np.zeros([dd.shape[0], len(ees)], dtype=bool)
     for ee in ees:
         lgr.info(ee)
-        lthr = 0.001 * stats.scoreatpercentile(dd[:, ee, :].flatten(),
-                                               98, interpolation_method='lower')
-        hthr = 5 * stats.scoreatpercentile(dd[:, ee, :].flatten(),
-                                           98, interpolation_method='lower')
+        perc98 = stats.scoreatpercentile(dd[:, ee, :].flatten(), 98,
+                                         interpolation_method='lower')
+        lthr, hthr = 0.001 * perc98, 5 * perc98
         lgr.info(lthr, hthr)
-        imask[dd[:, ee, :].mean(axis=1) > lthr, ee] = 1
-        imask[dd[:, ee, :].mean(axis=1) > hthr, ee] = 0
+        m = dd[:, ee, :].mean(axis=1)
+        imask[np.logical_and(m > lthr, m < hthr), ee] = True
+
     return imask
 
 
@@ -332,16 +338,22 @@ def split_ts(data, comptable, mmix, acc, rej, midk):
 def computefeats2(data, mmix, mask, normalize=True):
     # Write feature versions of components
     data = data[mask]
-    data_vn = (data-data.mean(axis=-1)[:, np.newaxis])/data.std(axis=-1)[:, np.newaxis]
+    # demean data
+    data_vn = (data - data.mean(axis=-1, keepdims=True)) / data.std(axis=-1, keepdims=True)
+    # get betas for demeaned data against `mmix`
     data_R = get_coeffs(unmask(data_vn, mask), mask, mmix)[mask]
-    data_R[data_R < -.999] = -0.999
-    data_R[data_R > .999] = .999
+    # cap betas to range [-0.999, 0.999]
+    data_R[data_R < -0.999] = -0.999
+    data_R[data_R > 0.999] = 0.999
+    # R-to-Z transform?
     data_Z = np.arctanh(data_R)
     if len(data_Z.shape) == 1:
         data_Z = np.atleast_2d(data_Z).T
     if normalize:
-        data_Z = (((data_Z.T - data_Z.mean(0)[:, np.newaxis]) /
-                  data_Z.std(0)[:, np.newaxis]) + (data_Z.mean(0)/data_Z.std(0))[:, np.newaxis]).T
+        # standardize
+        data_Zm = (data_Z - data_Z.mean(axis=0, keepdims=True)) / data_Z.std(axis=0, keepdims=True)
+        # add back mean / stdev
+        data_Z = data_Zm + (data_Z.mean(axis=0, keepdims=True) / data_Z.std(axis=0, keepdims=True))
     return data_Z
 
 
@@ -359,36 +371,31 @@ def ctabsel(ctabfile):
 def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, head,
                      fout=None, reindex=False, mmixN=None, full_sel=True):
     """
-    Usage:
-
-    fitmodels_direct(fout)
-
     Input:
     fout is flag for output of per-component TE-dependence maps
     t2s is a (nx,ny,nz) ndarray
     tes is a 1d array
     """
 
-    # Compute opt. com. raw data
-    tsoc = np.array(optcom(catd, t2sG, tes, mask, combmode, useG=True),
+    # compute optimal combination of raw data
+    tsoc = np.array(optcom(catd, t2sG, tes, mask, combmode),
                     dtype=float)[mask]
-    tsoc_mean = tsoc.mean(axis=-1)
-    tsoc_dm = tsoc - tsoc_mean[:, np.newaxis]
+    # demean optimal combination
+    tsoc_dm = tsoc - tsoc.mean(axis=-1, keepdims=True)
 
-    # Compute un-normalized weight dataset (features)
+    # compute un-normalized weight dataset (features)
     if mmixN is None:
         mmixN = mmix
     WTS = computefeats2(unmask(tsoc, mask), mmixN, mask, normalize=False)
 
-    # Compute PSC dataset - shouldn't have to refit data
+    # compute PSC dataset - shouldn't have to refit data
     global tsoc_B
     tsoc_B = get_coeffs(unmask(tsoc_dm, mask), mask, mmix)[mask]
     tsoc_Babs = np.abs(tsoc_B)
-    PSC = tsoc_B/tsoc.mean(axis=-1)[:, np.newaxis]*100
+    PSC = tsoc_B / tsoc.mean(axis=-1, keepdims=True) * 100
 
-    # Compute skews to determine signs based on unnormalized weights,
+    # compute skews to determine signs based on unnormalized weights,
     # correct mmix & WTS signs based on spatial distribution tails
-    from scipy.stats import skew
     signs = skew(WTS, axis=0)
     signs /= np.abs(signs)
     mmix = mmix.copy()
@@ -398,53 +405,52 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, head,
     totvar = (tsoc_B**2).sum()
     totvar_norm = (WTS**2).sum()
 
-    # Compute Betas and means over TEs for TE-dependence analysis
+    # compute Betas and means over TEs for TE-dependence analysis
     n_echos = len(tes)
-    betas = cat2echos(get_coeffs(uncat2echos(catd),
-                                 np.tile(mask, (1, 1, n_echos)),
-                                 mmix), n_echos)
-    nx, ny, nz, n_echos, nc = betas.shape
+    betas = get_coeffs(catd,
+                       np.repeat(mask[:, np.newaxis], n_echos, axis=1),
+                       mmix)
+    n_samp, n_echos, n_components = betas.shape
     Nm = mask.sum()
     NmD = (t2s != 0).sum()
     mu = catd.mean(axis=-1)
     tes = np.reshape(tes, (n_echos, 1))
     fmin, fmid, fmax = getfbounds(n_echos)
 
-    # Mask arrays
-    mumask = fmask(mu, t2s != 0)
-    t2smask = fmask(t2s, t2s != 0)
-    betamask = fmask(betas, t2s != 0)
+    # mask arrays
+    mumask = mu[t2s != 0]
+    t2smask = t2s[t2s != 0]
+    betamask = betas[t2s != 0]
 
-    # Setup Xmats
-    X1 = mumask.transpose()  # Model 1
-    X2 = np.tile(tes,
-                 (1, NmD)) * mumask.transpose() / t2smask.transpose()  # Model 2
+    # setup Xmats
+    X1 = mumask.T  # Model 1
+    X2 = np.tile(tes, (1, NmD)) * mumask.T / t2smask.T  # Model 2
 
-    # Tables for component selection
+    # tables for component selection
     global Kappas, Rhos, varex, varex_norm
     global Z_maps, F_R2_maps, F_S0_maps
     global Z_clmaps, F_R2_clmaps, F_S0_clmaps
     global Br_clmaps_R2, Br_clmaps_S0
-    Kappas = np.zeros([nc])
-    Rhos = np.zeros([nc])
-    varex = np.zeros([nc])
-    varex_norm = np.zeros([nc])
-    Z_maps = np.zeros([Nm, nc])
-    F_R2_maps = np.zeros([NmD, nc])
-    F_S0_maps = np.zeros([NmD, nc])
-    Z_clmaps = np.zeros([Nm, nc])
-    F_R2_clmaps = np.zeros([NmD, nc])
-    F_S0_clmaps = np.zeros([NmD, nc])
-    Br_clmaps_R2 = np.zeros([Nm, nc])
-    Br_clmaps_S0 = np.zeros([Nm, nc])
+    Kappas = np.zeros([n_components])
+    Rhos = np.zeros([n_components])
+    varex = np.zeros([n_components])
+    varex_norm = np.zeros([n_components])
+    Z_maps = np.zeros([Nm, n_components])
+    F_R2_maps = np.zeros([NmD, n_components])
+    F_S0_maps = np.zeros([NmD, n_components])
+    Z_clmaps = np.zeros([Nm, n_components])
+    F_R2_clmaps = np.zeros([NmD, n_components])
+    F_S0_clmaps = np.zeros([NmD, n_components])
+    Br_clmaps_R2 = np.zeros([Nm, n_components])
+    Br_clmaps_S0 = np.zeros([Nm, n_components])
 
-    for i in range(nc):
+    for i in range(n_components):
 
-        # size of B is (nc, nx*ny*nz)
-        B = np.atleast_3d(betamask)[:, :, i].transpose()
+        # size of B is (n_components, n_samp)
+        B = np.atleast_3d(betamask)[:, :, i].T
         alpha = (np.abs(B)**2).sum(axis=0)
-        varex[i] = (tsoc_B[:, i]**2).sum()/totvar*100.
-        varex_norm[i] = (unmask(WTS, mask)[t2s != 0][:, i]**2).sum()/totvar_norm * 100.
+        varex[i] = (tsoc_B[:, i]**2).sum() / totvar * 100.
+        varex_norm[i] = (unmask(WTS, mask)[t2s != 0][:, i]**2).sum() / totvar_norm * 100.
 
         # S0 Model
         coeffs_S0 = (B * X1).sum(axis=0) / (X1**2).sum(axis=0)
@@ -457,26 +463,23 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, head,
         coeffs_R2 = (B * X2).sum(axis=0) / (X2**2).sum(axis=0)
         SSE_R2 = (B - X2 * np.tile(coeffs_R2, (n_echos, 1)))**2
         SSE_R2 = SSE_R2.sum(axis=0)
-        F_R2 = (alpha - SSE_R2)*2/(SSE_R2)
+        F_R2 = (alpha - SSE_R2) * 2 / (SSE_R2)
         F_R2_maps[:, i] = F_R2
 
-        # Compute weights as Z-values
+        # compute weights as Z-values
         wtsZ = (WTS[:, i] - WTS[:, i].mean()) / WTS[:, i].std()
         wtsZ[np.abs(wtsZ) > Z_MAX] = (Z_MAX * (np.abs(wtsZ) / wtsZ))[np.abs(wtsZ) > Z_MAX]
         Z_maps[:, i] = wtsZ
 
-        # Compute Kappa and Rho
+        # compute Kappa and Rho
         F_S0[F_S0 > F_MAX] = F_MAX
         F_R2[F_R2 > F_MAX] = F_MAX
-        Kappas[i] = np.average(F_R2,
-                               weights=np.abs(np.squeeze(unmask(wtsZ,
-                                                                mask)[t2s != 0]**2.)))
-        Rhos[i] = np.average(F_S0,
-                             weights=np.abs(np.squeeze(unmask(wtsZ,
-                                                              mask)[t2s != 0]**2.)))
+        norm_weights = np.abs(np.squeeze(unmask(wtsZ, mask)[t2s != 0]**2.))
+        Kappas[i] = np.average(F_R2, weights=norm_weights)
+        Rhos[i] = np.average(F_S0, weights=norm_weights)
 
     # Tabulate component values
-    comptab_pre = np.vstack([np.arange(nc), Kappas, Rhos, varex, varex_norm]).T
+    comptab_pre = np.vstack([np.arange(n_components), Kappas, Rhos, varex, varex_norm]).T
     if reindex:
         # Re-index all components in Kappa order
         comptab = comptab_pre[comptab_pre[:, 1].argsort()[::-1], :]
@@ -501,10 +504,10 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, head,
     # Full selection including clustering criteria
     seldict = None
     if full_sel:
-        for i in range(nc):
+        for i in range(n_components):
 
             # Save out files
-            out = np.zeros((nx, ny, nz, 4))
+            out = np.zeros((n_samp, 4))
             if fout is not None:
                 ccname = "cc%.3d.nii" % i
             else:
@@ -1023,33 +1026,28 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
 
 
 def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
+
     n_samp, n_echos, n_vols = catd.shape
     ste = np.array([int(ee) for ee in str(ste).split(',')])
+
     if len(ste) == 1 and ste[0] == -1:
         lgr.info('-Computing PCA of optimally combined multi-echo data')
-        d = OCcatd[make_min_mask(OCcatd[:, np.newaxis, :])]
-        eim = eimask(d[:, np.newaxis, :])
-        eim = eim[:, 0] == 1
-        d = d[eim, :]
+        d = OCcatd[make_min_mask(OCcatd[:, np.newaxis, :])][:, np.newaxis, :]
     elif len(ste) == 1 and ste[0] == 0:
         lgr.info('-Computing PCA of spatially concatenated multi-echo data')
-        ste = np.arange(n_echos)
         d = catd[mask].astype('float64')
-        eim = eimask(d) == 1
-        d = d[eim]
     else:
         lgr.info('-Computing PCA of TE #%s' % ','.join([str(ee) for ee in ste]))
-        d = np.concatenate([catd[mask, ee, :][:, np.newaxis] for ee in ste - 1],
-                           axis=1).astype('float64')
-        eim = np.squeeze(eimask(d) == 1)
-        d = np.squeeze(d[eim])
+        d = np.stack([catd[mask, ee] for ee in ste - 1], axis=1).astype('float64')
+
+    eim = np.squeeze(eimask(d))
+    d = np.squeeze(d[eim])
 
     dz = ((d.T - d.T.mean(axis=0)) / d.T.std(axis=0)).T  # var normalize ts
     dz = (dz - dz.mean()) / dz.std()  # var normalize everything
 
     if not os.path.exists('pcastate.pkl'):
-
-        # Do PC dimension selection and get eigenvalue cutoff
+        # do PC dimension selection and get eigenvalue cutoff
         if mlepca:
             from sklearn.decomposition import PCA
             ppca = PCA(n_components='mle', svd_solver='full')
@@ -1060,8 +1058,9 @@ def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
         else:
             u, s, v = np.linalg.svd(dz, full_matrices=0)
 
-        sp = s/s.sum()
-        eigelb = sp[getelbow_mod(sp)]
+        # actual variance explained (normalized)
+        sp = s / s.sum()
+        eigelb = getelbow_mod(sp, val=True)
 
         spdif = np.abs(sp[1:] - sp[:-1])
         spdifh = spdif[(spdif.shape[0]//2):]
@@ -1079,7 +1078,7 @@ def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
 
         # Compute K and Rho for PCA comps
         eimum = np.atleast_2d(eim)
-        eimum = np.transpose(eimum, np.argsort(np.atleast_2d(eim).shape)[::-1])
+        eimum = np.transpose(eimum, np.argsort(eimum.shape)[::-1])
         eimum = eimum.prod(axis=1)
         o = np.zeros((mask.shape[0], *eimum.shape[1:]))
         o[mask] = eimum
@@ -1160,7 +1159,7 @@ def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
 def tedica(nc, dd, conv, fixed_seed, cost, final_cost):
     """
     Input is dimensionally reduced spatially concatenated multi-echo
-    time series dataset from tedpca(). Output is comptable, mmix, smaps
+    time series dataset from `tedpca`. Output is comptable, mmix, smaps
     from ICA, and betas from fitting catd to mmix.
     """
     import mdp
@@ -1176,7 +1175,7 @@ def tedica(nc, dd, conv, fixed_seed, cost, final_cost):
     return mmix
 
 
-def gscontrol_raw(OCcatd, head, n_echos, dtrank=4):
+def gscontrol_raw(catd, OCcatd, head, n_echos, dtrank=4):
     """
     This function uses the spatial global signal estimation approach to
     modify catd (global variable) to removal global signal out of individual
@@ -1188,9 +1187,7 @@ def gscontrol_raw(OCcatd, head, n_echos, dtrank=4):
     lgr.info('++ Applying amplitude-based T1 equilibration correction')
 
     # Legendre polynomial basis for denoising
-    n_vols = OCcatd.shape[-1]
-    Lmix = np.array([lpmv(0, vv, np.linspace(-1, 1, n_vols))
-                     for vv in range(dtrank)]).T
+    Lmix = np.array([lpmv(0, vv, np.linspace(-1, 1, OCcatd.shape[-1])) for vv in range(dtrank)]).T
 
     # compute mean, std, mask local to this function
     # inefficient, but makes this function a bit more modular
@@ -1198,7 +1195,9 @@ def gscontrol_raw(OCcatd, head, n_echos, dtrank=4):
     Gmask = Gmu != 0
 
     # Find spatial global signal
+    # BUG: this is indexing differently!!!!! and the subtraction is causing differences
     dat = OCcatd[Gmask] - Gmu[Gmask][:, np.newaxis]
+    # ^^^ THIS IS THE BAD PLACE
     sol = np.linalg.lstsq(Lmix, dat.T)[0]  # Legendre basis for detrending
     detr = dat - np.dot(sol.T, Lmix.T)[0]
     sphis = (detr).min(axis=1)
@@ -1218,16 +1217,16 @@ def gscontrol_raw(OCcatd, head, n_echos, dtrank=4):
                              np.atleast_2d(glbase.T[dtrank])) + Gmu[Gmask][:, np.newaxis]
 
     # niwrite(OCcatd, aff, 'tsoc_orig.nii', head)  # FIXME
-    OCcatd[Gmask] = tsoc_nogs
+    OCcatd = unmask(tsoc_nogs, Gmask)
     # niwrite(OCcatd, aff, 'tsoc_nogs.nii', head)  # FIXME
 
     # Project glbase out of each echo
     for echo in range(n_echos):
-        dat = catd[Gmask, echo, :]
+        dat = catd[:, echo, :][Gmask]
         sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T)[0]
         e_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T,
                               np.atleast_2d(glbase.T[dtrank]))
-        catd[Gmask, echo, :] = e_nogs
+        catd[:, echo, :] = unmask(e_nogs, Gmask)
 
     return catd, OCcatd
 
@@ -1496,12 +1495,12 @@ def main(options):
     global OCcatd
     OCcatd = optcom(catd, t2sG, tes, mask, combmode)
     if not options.no_gscontrol:
-        catd, OCcatd = gscontrol_raw(OCcatd, head, len(tes))
+        catd, OCcatd = gscontrol_raw(catd, OCcatd, head, len(tes))
 
     if options.mixm is None:
         lgr.info('++ Doing ME-PCA and ME-ICA')
 
-        nc, dd = tedpca(combmode, mask, stabilize, head, ste=options.ste)
+        nc, dd = tedpca(catd, combmode, mask, stabilize, head, ste=options.ste)
 
         mmix_orig = tedica(nc, dd, options.conv, options.fixed_seed,
                            cost=options.initcost,

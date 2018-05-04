@@ -42,17 +42,16 @@ def t2sadmap(data, tes, mask, masksum, start_echo):
     """
 
     n_samp, n_echos, n_vols = data.shape
+    data = data[mask]
     t2ss, s0vs = np.zeros([n_samp, n_echos - 1]), np.zeros([n_samp, n_echos - 1])
 
     for echo in range(start_echo, n_echos + 1):
         # perform log linear fit of echo times against MR signal
-        B = np.reshape(np.abs(data[:, :echo, :]) + 1,
-                       (n_samp, echo * n_vols)).T
-        B = np.log(B)
-        neg_tes = [-1 * te for te in tes[:echo]]
-        x = np.array([np.ones(echo), neg_tes])
-        X = np.tile(x, (1, n_vols))
-        X = np.sort(X)[:, ::-1].T
+        # make DV matrix: samples x (time series * echos)
+        B = np.log((np.abs(data[:, :echo, :]) + 1).reshape(len(data), -1).T)
+        # make IV matrix: intercept/TEs x (time series * echos)
+        x = np.column_stack([np.ones(echo), [-te for te in tes[:echo]]])
+        X = np.repeat(x, n_vols, axis=0)
 
         beta, res, rank, sing = np.linalg.lstsq(X, B)
         t2s = 1 / beta[1, :].T
@@ -61,8 +60,8 @@ def t2sadmap(data, tes, mask, masksum, start_echo):
         t2s[np.isinf(t2s)] = 500.  # why 500?
         s0[np.isnan(s0)] = 0.      # why 0?
 
-        t2ss[..., echo - 2] = np.squeeze(t2s)
-        s0vs[..., echo - 2] = np.squeeze(s0)
+        t2ss[..., echo - 2] = np.squeeze(unmask(t2s, mask))
+        s0vs[..., echo - 2] = np.squeeze(unmask(s0, mask))
 
     # create limited T2* and S0 maps
     fl = np.zeros([n_samp, len(tes) - 1], dtype=bool)
@@ -70,8 +69,8 @@ def t2sadmap(data, tes, mask, masksum, start_echo):
         fl_ = np.squeeze(fl[..., echo])
         fl_[masksum == echo + 2] = True
         fl[..., echo] = fl_
-    t2sa, s0va = masksum.copy(), masksum.copy()
-    t2sa[masksum > 1], s0va[masksum > 1] = t2ss[fl], s0vs[fl]
+    t2sa, s0va = unmask(t2ss[fl], masksum > 1), unmask(s0vs[fl], masksum > 1)
+    # t2sa[masksum > 1], s0va[masksum > 1] = t2ss[fl], s0vs[fl]
 
     # create full T2* maps with S0 estimation errors
     t2saf, s0vaf = t2sa.copy(), s0va.copy()
@@ -89,7 +88,7 @@ def optcom(data, t2, tes, mask, combmode):
     t2 : (S, ) array_like
     tes : (E, ) list
     combmode : str
-        Must be in ['ste', 't2s']. Determines method for optimal combination
+        Must be in ['ste', 't2s']. Determines method for optimal combination.
 
     Returns
     -------

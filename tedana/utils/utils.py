@@ -32,7 +32,7 @@ def load_image(data):
         else:
             data = check_niimg(data).get_data()
 
-    fdata = data.reshape((-1,) + data.shape[3:])
+    fdata = data.reshape((-1,) + data.shape[3:], order='F')
 
     return fdata.squeeze()
 
@@ -63,30 +63,22 @@ def cat2echos(data, n_echos=None):
         # individual echo files were provided
         if len(data) > 2:
             fdata = np.stack([load_image(f) for f in data], axis=1)
-        # a z-concatenated file was provided
+            if fdata.ndim < 3:
+                fdata = fdata[..., np.newaxis]
+            return fdata
+        # a z-concatenated file was provided; load data and pipe it down
         elif len(data) == 1:
             if n_echos is None:
                 raise ValueError('Number of echos `n_echos` must be specified '
                                  'if z-concatenated data file provided.')
-            fdata = load_image(data[0])
+            data = check_niimg(data[0]).get_data()
         # only two echo files were provided, which doesn't fly
         else:
             raise ValueError('Cannot run `tedana` with only two echos: '
                              '{}'.format(data))
-        # ensure data has a time axis
-        if fdata.ndim < 3:
-            fdata = fdata[..., np.newaxis]
-    # data array was provided (is this necessary?)
-    elif isinstance(data, np.ndarray):
-        if data.ndim != 4:
-            raise ValueError('Data must be 4-dimensional, where the '
-                             'dimensions correspond to: (1) first spatial '
-                             'dimensions, (2) second spatial dimension, (3) '
-                             'third spatial dimension x number of echos, and '
-                             '(4) time. Provided data dimensions were: '
-                             '{}'.format(data.shape))
-        nx, ny, nz = data.shape[:2], data.shape[2] // n_echos
-        fdata = load_image(data.reshape(nx, ny, nz, n_echos, -1, order='F'))
+
+    (nx, ny), nz = data.shape[:2], data.shape[2] // n_echos
+    fdata = load_image(data.reshape(nx, ny, nz, n_echos, -1, order='F'))
 
     return fdata
 
@@ -268,31 +260,20 @@ def unmask(data, mask):
 
     Parameters
     ----------
-    data : (S x E x T) array_like
-        Masked array, where S is samples flattened across spatial dimensions
-    mask : (X x Y x Z) array_like
-        Boolean array that was used to mask `data`
+    data : (M x E x T) array_like
+        Masked array, where `M` is the number of samples
+    mask : (S,) array_like
+        Boolean array of `S` samples that was used to mask `data`
 
     Returns
     -------
-    fdata : (X x Y x Z x E x T) np.ndarray
-        Unmasked `data` array with spatial dimensions intact
+    out : (S x E x T) np.ndarray
+        Unmasked `data` array
     """
 
-    M = (mask != 0).ravel()
-    Nm = M.sum()
-
-    nx, ny, nz = mask.shape
-
-    if len(data.shape) > 1:
-        nt = data.shape[1]
-    else:
-        nt = 1
-
-    out = np.zeros((nx * ny * nz, nt), dtype=data.dtype)
-    out[M, :] = np.reshape(data, (Nm, nt))
-
-    return np.squeeze(np.reshape(out, (nx, ny, nz, nt)))
+    out = np.zeros((mask.shape + data.shape[1:]))
+    out[mask] = data
+    return out
 
 
 def moments(data):
