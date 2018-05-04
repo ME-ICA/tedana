@@ -1119,7 +1119,8 @@ def tedpca(combmode, mask, stabilize, head, tes, kdaw, rdaw, ste=0,
     dd = u.dot(np.diag(s*np.array(pcsel, dtype=np.int))).dot(v)
 
     n_components = s[pcsel].shape[0]
-    print("--Selected %i components. Minimum Kappa=%0.2f Rho=%0.2f" % (n_components, kappa_thr, rho_thr))
+    print('--Selected {0} components. Minimum Kappa={1:.02f} '
+          'Rho={2:.02f}'.format(n_components, kappa_thr, rho_thr))
 
     dd = ((dd.T - dd.T.mean(0)) / dd.T.std(0)).T  # Variance normalize timeseries
     dd = (dd - dd.mean()) / dd.std()  # Variance normalize everything
@@ -1508,7 +1509,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     if mixm is None:
         print("++ Doing ME-PCA and ME-ICA")
         n_components, dd = tedpca(combmode, mask, stabilize, head, tes=tes, kdaw=kdaw,
-                        rdaw=rdaw, ste=ste)
+                                  rdaw=rdaw, ste=ste)
         mmix_orig = tedica(n_components, dd, conv, fixed_seed, cost=initcost,
                            final_cost=finalcost)
         np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
