@@ -1,6 +1,5 @@
 import os
 import os.path as op
-import sys
 import shutil
 import pickle
 import textwrap
@@ -555,7 +554,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, head,
 
 
 def selcomps(seldict, mmix, head, manacc, n_echoes, debug=False, olevel=2, oversion=99,
-             filecsdata=False, savecsdiag=True, group0_only=False,
+             filecsdata=False, savecsdiag=True,
              strict_mode=False):
     """
     Select components.
@@ -814,9 +813,6 @@ def selcomps(seldict, mmix, head, manacc, n_echoes, debug=False, olevel=2, overs
             ofh.write('\n'.join(diagstepout))
         ofh.close()
         return list(sorted(min_acc)), list(sorted(rej)), [], list(sorted(to_clf))
-
-    if group0_only:
-        return list(sorted(group0)), list(sorted(rej)), [], list(sorted(to_clf))
 
     # Find additional components to reject based on Dice - doing this here
     # since Dice is a little unstable, need to reference group0
@@ -1523,15 +1519,9 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                                            reindex=True)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        if 'GROUP0' in sys.argv:
-            group0_flag = True
-        else:
-            group0_flag = False
-
         acc, rej, midk, empty = selcomps(seldict, mmix, head, manacc, n_echoes,
                                          strict_mode=strict,
-                                         filecsdata=filecsdata,
-                                         group0_only=group0_flag)
+                                         filecsdata=filecsdata)
     else:
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
         seldict, comptable, betas, mmix = fitmodels_direct(catd, mmix_orig,
