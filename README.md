@@ -46,11 +46,11 @@ pip install https://github.com/ME-ICA/tedana/archive/master.tar.gz
 
 ## Development
 
-We :yellow_heart: new contributors ! To get started, check out [our contributing guidelines](https://github.com/emdupre/tedana/blob/master/CONTRIBUTING.md).
+We :yellow_heart: new contributors ! To get started, check out [our contributing guidelines](https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md).
 
-Want to learn more about our plans for developing tedana ? Check out [our roadmap](https://github.com/emdupre/tedana/projects). Have a question, comment, or suggestion ? Open or comment on one of [our issues](https://github.com/emdupre/tedana/issues) !
+Want to learn more about our plans for developing tedana ? Check out [our roadmap](https://github.com/ME-ICA/tedana/projects). Have a question, comment, or suggestion ? Open or comment on one of [our issues](https://github.com/ME-ICA/tedana/issues) !
 
-We ask that all contributions to tedana respect our [code of conduct](https://github.com/emdupre/tedana/blob/master/Code_of_Conduct.md).
+We ask that all contributions to tedana respect our [code of conduct](https://github.com/ME-ICA/tedana/blob/master/Code_of_Conduct.md).
 
 ### :earth_americas: Mozilla Global Sprint (10-11 May, 2018) :earth_africa:
 

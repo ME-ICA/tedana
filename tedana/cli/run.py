@@ -22,18 +22,18 @@ def get_parser():
                         required=True)
     parser.add_argument('--mix',
                         dest='mixm',
-                        help='Mixing matrix. If not provided, ' +
-                             'ME-PCA & ME-ICA is done.',
+                        help=('Mixing matrix. If not provided, '
+                              'ME-PCA & ME-ICA is done.'),
                         default=None)
     parser.add_argument('--ctab',
                         dest='ctab',
-                        help='Component table extract pre-computed ' +
-                             'classifications from.',
+                        help=('Component table from which to extract '
+                              'pre-computed classifications.'),
                         default=None)
     parser.add_argument('--manacc',
                         dest='manacc',
-                        help='Comma separated list of manually ' +
-                             'accepted components',
+                        help=('Comma separated list of manually '
+                              'accepted components'),
                         default=None)
     parser.add_argument('--strict',
                         dest='strict',
@@ -47,13 +47,13 @@ def get_parser():
                         default=False)
     parser.add_argument('--kdaw',
                         dest='kdaw',
-                        help='Dimensionality augmentation weight ' +
-                             '(Kappa). Default 10. -1 for low-dimensional ICA',
+                        help=('Dimensionality augmentation weight (Kappa). '
+                              'Default 10. -1 for low-dimensional ICA'),
                         default=10.)
     parser.add_argument('--rdaw',
                         dest='rdaw',
-                        help='Dimensionality augmentation weight (Rho). ' +
-                             'Default 1. -1 for low-dimensional ICA',
+                        help=('Dimensionality augmentation weight (Rho). '
+                              'Default 1. -1 for low-dimensional ICA'),
                         default=1.)
     parser.add_argument('--conv',
                         dest='conv',
@@ -61,13 +61,13 @@ def get_parser():
                         default='2.5e-5')
     parser.add_argument('--sourceTEs',
                         dest='ste',
-                        help='Source TEs for models. ex: -ste 0 for all, ' +
-                             '-1 for opt. com. Default -1.',
+                        help=('Source TEs for models. ex: -ste 0 for all, '
+                              '-1 for opt. com. Default -1.'),
                         default=-1)
     parser.add_argument('--combmode',
                         dest='combmode',
-                        help='Combination scheme for TEs: t2s ' +
-                             '(Posse 1999, default),ste(Poser)',
+                        help=('Combination scheme for TEs: '
+                              't2s (Posse 1999, default), ste (Poser)'),
                         default='t2s')
     parser.add_argument('--denoiseTEs',
                         dest='dne',
@@ -76,8 +76,8 @@ def get_parser():
                         default=False)
     parser.add_argument('--initcost',
                         dest='initcost',
-                        help='Initial cost func. for ICA: pow3, ' +
-                             'tanh(default), gaus, skew',
+                        help=('Initial cost func. for ICA: '
+                              'tanh (default), pow3, gaus, skew'),
                         default='tanh')
     parser.add_argument('--finalcost',
                         dest='finalcost',
@@ -86,8 +86,8 @@ def get_parser():
     parser.add_argument('--stabilize',
                         dest='stabilize',
                         action='store_true',
-                        help='Stabilize convergence by reducing ' +
-                             'dimensionality, for low quality data',
+                        help=('Stabilize convergence by reducing '
+                              'dimensionality, for low quality data'),
                         default=False)
     parser.add_argument('--fout',
                         dest='fout',
@@ -113,7 +113,7 @@ def get_parser():
 def main(argv=None):
     """Entry point"""
     options = get_parser().parse_args(argv)
-    tedana.main(options)
+    tedana.main(**vars(options))
 
 
 if __name__ == '__main__':

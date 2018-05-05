@@ -1,11 +1,13 @@
 import os
-import sys
+import os.path as op
+import shutil
 import pickle
 import textwrap
 import numpy as np
 import nibabel as nib
+from scipy import stats
 from sklearn import svm
-import scipy.stats as stats
+from sklearn.cluster import DBSCAN
 from tedana.interfaces import (optcom, t2sadmap)
 from tedana.utils import (cat2echos, uncat2echos, make_mask,
                           makeadmask, fmask, unmask,
@@ -156,14 +158,14 @@ def get_coeffs(data, mask, X, add_const=False):
     mask : array-like
         Array of shape (nx, ny, nz)
     X : array-like
-        Array of shape (nt, nc)
+        Array of shape (nt, n_components)
     add_const : bool, optional
         Default is False.
 
     Returns
     -------
     out : array_like
-        Array of shape (nx, ny, nz, nc)
+        Array of shape (nx, ny, nz, n_components)
     """
     mdata = fmask(data, mask).transpose()
 
@@ -236,12 +238,12 @@ def getelbow_mod(ks, val=False):
         index (if val is False)
     """
     ks = np.sort(ks)[::-1]
-    nc = ks.shape[0]
-    coords = np.array([np.arange(nc), ks])
-    p = coords - np.tile(np.reshape(coords[:, 0], (2, 1)), (1, nc))
+    n_components = ks.shape[0]
+    coords = np.array([np.arange(n_components), ks])
+    p = coords - np.tile(np.reshape(coords[:, 0], (2, 1)), (1, n_components))
     b = p[:, -1]
     b_hat = np.reshape(b / np.sqrt((b ** 2).sum()), (2, 1))
-    proj_p_b = p - np.dot(b_hat.T, p) * np.tile(b_hat, (1, nc))
+    proj_p_b = p - np.dot(b_hat.T, p) * np.tile(b_hat, (1, n_components))
     d = np.sqrt((proj_p_b ** 2).sum(axis=0))
     k_min_ind = d.argmax()
 
@@ -280,22 +282,22 @@ def getelbow_aggr(ks, val=False):
         return maxcurv
 
 
-def getfbounds(ne):
+def getfbounds(n_echoes):
     """
 
     Parameters
     ----------
-    ne : int
+    n_echoes : int
         Number of echoes.
 
     Returns
     -------
     """
-    if not isinstance(ne, int):
-        raise IOError('Input ne must be int')
-    elif ne <= 0:
-        raise ValueError('Input ne must be greater than 0')
-    idx = ne - 1
+    if not isinstance(n_echoes, int):
+        raise IOError('Input n_echoes must be int')
+    elif n_echoes <= 0:
+        raise ValueError('Input n_echoes must be greater than 0')
+    idx = n_echoes - 1
 
     F05s = [None, None, 18.5, 10.1, 7.7, 6.6, 6.0, 5.6, 5.3, 5.1, 5.0]
     F025s = [None, None, 38.5, 17.4, 12.2, 10, 8.8, 8.1, 7.6, 7.2, 6.9]
@@ -388,8 +390,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, head,
 
     # Compute skews to determine signs based on unnormalized weights,
     # correct mmix & WTS signs based on spatial distribution tails
-    from scipy.stats import skew
-    signs = skew(WTS, axis=0)
+    signs = stats.skew(WTS, axis=0)
     signs /= np.abs(signs)
     mmix = mmix.copy()
     mmix *= signs
@@ -399,48 +400,46 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, head,
     totvar_norm = (WTS**2).sum()
 
     # Compute Betas and means over TEs for TE-dependence analysis
-    Ne = len(tes)
-    betas = cat2echos(get_coeffs(uncat2echos(catd, Ne),
-                                 np.tile(mask, (1, 1, Ne)),
-                                 mmix), Ne)
-    nx, ny, nz, Ne, nc = betas.shape
-    Nm = mask.sum()
-    NmD = (t2s != 0).sum()
+    n_echoes = len(tes)
+    betas = cat2echos(get_coeffs(uncat2echos(catd, n_echoes),
+                                 np.tile(mask, (1, 1, n_echoes)),
+                                 mmix), n_echoes)
+    nx, ny, nz, _, n_components = betas.shape
+    n_voxels = mask.sum()
+    n_data_voxels = (t2s != 0).sum()
     mu = catd.mean(axis=-1)
-    tes = np.reshape(tes, (Ne, 1))
-    fmin, fmid, fmax = getfbounds(Ne)
+    tes = np.reshape(tes, (n_echoes, 1))
+    fmin, fmid, fmax = getfbounds(n_echoes)
 
     # Mask arrays
     mumask = fmask(mu, t2s != 0)
     t2smask = fmask(t2s, t2s != 0)
     betamask = fmask(betas, t2s != 0)
 
-    # Setup Xmats
+    # Set up Xmats
     X1 = mumask.transpose()  # Model 1
-    X2 = np.tile(tes,
-                 (1, NmD)) * mumask.transpose() / t2smask.transpose()  # Model 2
+    X2 = np.tile(tes, (1, n_data_voxels)) * mumask.transpose() / t2smask.transpose()  # Model 2
 
     # Tables for component selection
     global Kappas, Rhos, varex, varex_norm
     global Z_maps, F_R2_maps, F_S0_maps
     global Z_clmaps, F_R2_clmaps, F_S0_clmaps
     global Br_clmaps_R2, Br_clmaps_S0
-    Kappas = np.zeros([nc])
-    Rhos = np.zeros([nc])
-    varex = np.zeros([nc])
-    varex_norm = np.zeros([nc])
-    Z_maps = np.zeros([Nm, nc])
-    F_R2_maps = np.zeros([NmD, nc])
-    F_S0_maps = np.zeros([NmD, nc])
-    Z_clmaps = np.zeros([Nm, nc])
-    F_R2_clmaps = np.zeros([NmD, nc])
-    F_S0_clmaps = np.zeros([NmD, nc])
-    Br_clmaps_R2 = np.zeros([Nm, nc])
-    Br_clmaps_S0 = np.zeros([Nm, nc])
+    Kappas = np.zeros([n_components])
+    Rhos = np.zeros([n_components])
+    varex = np.zeros([n_components])
+    varex_norm = np.zeros([n_components])
+    Z_maps = np.zeros([n_voxels, n_components])
+    F_R2_maps = np.zeros([n_data_voxels, n_components])
+    F_S0_maps = np.zeros([n_data_voxels, n_components])
+    Z_clmaps = np.zeros([n_voxels, n_components])
+    F_R2_clmaps = np.zeros([n_data_voxels, n_components])
+    F_S0_clmaps = np.zeros([n_data_voxels, n_components])
+    Br_clmaps_R2 = np.zeros([n_voxels, n_components])
+    Br_clmaps_S0 = np.zeros([n_voxels, n_components])
 
-    for i in range(nc):
-
-        # size of B is (nc, nx*ny*nz)
+    for i in range(n_components):
+        # size of B is (n_components, nx*ny*nz)
         B = np.atleast_3d(betamask)[:, :, i].transpose()
         alpha = (np.abs(B)**2).sum(axis=0)
         varex[i] = (tsoc_B[:, i]**2).sum()/totvar*100.
@@ -448,14 +447,14 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, head,
 
         # S0 Model
         coeffs_S0 = (B * X1).sum(axis=0) / (X1**2).sum(axis=0)
-        SSE_S0 = (B - X1 * np.tile(coeffs_S0, (Ne, 1)))**2
+        SSE_S0 = (B - X1 * np.tile(coeffs_S0, (n_echoes, 1)))**2
         SSE_S0 = SSE_S0.sum(axis=0)
         F_S0 = (alpha - SSE_S0) * 2 / (SSE_S0)
         F_S0_maps[:, i] = F_S0
 
         # R2 Model
         coeffs_R2 = (B * X2).sum(axis=0) / (X2**2).sum(axis=0)
-        SSE_R2 = (B - X2 * np.tile(coeffs_R2, (Ne, 1)))**2
+        SSE_R2 = (B - X2 * np.tile(coeffs_R2, (n_echoes, 1)))**2
         SSE_R2 = SSE_R2.sum(axis=0)
         F_R2 = (alpha - SSE_R2)*2/(SSE_R2)
         F_R2_maps[:, i] = F_R2
@@ -476,7 +475,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, head,
                                                               mask)[t2s != 0]**2.)))
 
     # Tabulate component values
-    comptab_pre = np.vstack([np.arange(nc), Kappas, Rhos, varex, varex_norm]).T
+    comptab_pre = np.vstack([np.arange(n_components), Kappas, Rhos, varex, varex_norm]).T
     if reindex:
         # Re-index all components in Kappa order
         comptab = comptab_pre[comptab_pre[:, 1].argsort()[::-1], :]
@@ -501,8 +500,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, head,
     # Full selection including clustering criteria
     seldict = None
     if full_sel:
-        for i in range(nc):
-
+        for i in range(n_components):
             # Save out files
             out = np.zeros((nx, ny, nz, 4))
             if fout is not None:
@@ -519,7 +517,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, head,
             os.system('3drefit -sublabel 0 PSC -sublabel 1 F_R2 -sublabel 2 F_SO '
                       '-sublabel 3 Z_sn %s 2> /dev/null > /dev/null' % ccname)
 
-            csize = np.max([int(Nm * 0.0005) + 5, 20])
+            csize = np.max([int(n_voxels * 0.0005) + 5, 20])
 
             # Do simple clustering on F
             os.system("3dcalc -overwrite -a %s[1..2] -expr 'a*step(a-%i)' -prefix .fcl_in.nii.gz "
@@ -555,22 +553,12 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, head,
     return seldict, comptab, betas, mmix_new
 
 
-def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
-             knobargs='', filecsdata=False, savecsdiag=True, group0_only=False,
+def selcomps(seldict, mmix, head, manacc, n_echoes, debug=False, olevel=2, oversion=99,
+             filecsdata=False, savecsdiag=True,
              strict_mode=False):
-
-    from sklearn.cluster import DBSCAN
-
     """
-    Set knobs
+    Select components.
     """
-    if knobargs is not '':
-        knobs = vars(knobargs)
-        locals().update(knobs)
-
-    if filecsdata:
-        filecsdata = True
-
     if filecsdata:
         import bz2
         if seldict is not None:
@@ -607,7 +595,6 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
     """
     Do some tallies for no. of significant voxels
     """
-    countsigZ = Z_clmaps.sum(0)
     countsigFS0 = F_S0_clmaps.sum(0)
     countsigFR2 = F_R2_clmaps.sum(0)
     countnoise = np.zeros(len(nc))
@@ -616,7 +603,6 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
     Make table of dice values
     """
     dice_tbl = np.zeros([nc.shape[0], 2])
-    csize = np.max([int(mask.sum()*0.0005)+5, 20])
     for ii in ncl:
         dice_FR2 = dice(unmask(Br_clmaps_R2[:, ii], mask)[t2s != 0],
                         F_R2_clmaps[:, ii])
@@ -694,7 +680,6 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
     Tz = (tt_table[:, 0] - tt_table[:, 0].mean()) / tt_table[:, 0].std()
     varex_ = np.log(varex)
     Vz = (varex_-varex_.mean()) / varex_.std()
-    Kz = (Kappas-Kappas.mean()) / Kappas.std()
     Rz = (Rhos-Rhos.mean()) / Rhos.std()
     Ktz = np.log(Kappas) / 2
     Ktz = (Ktz-Ktz.mean()) / Ktz.std()
@@ -711,7 +696,7 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
     """
     # epsmap is [index,level of overlap with dicemask,
     # number of high Rho components]
-    F05, F025, F01 = getfbounds(ne)
+    F05, F025, F01 = getfbounds(n_echoes)
     epsmap = []
     Rhos_sorted = np.array(sorted(Rhos))[::-1]
     # Make an initial guess as to number of good components based on
@@ -719,13 +704,10 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
     KRcutguesses = [getelbow_mod(Rhos), getelbow_cons(Rhos),
                     getelbow_aggr(Rhos), getelbow_mod(Kappas),
                     getelbow_cons(Kappas), getelbow_aggr(Kappas)]
-    Kelbowval = np.median([getelbow_mod(Kappas, val=True),
-                           getelbow_cons(Kappas, val=True),
-                           getelbow_aggr(Kappas, val=True)] + list(getfbounds(ne)))
     Khighelbowval = stats.scoreatpercentile([getelbow_mod(Kappas, val=True),
                                              getelbow_cons(Kappas, val=True),
                                              getelbow_aggr(Kappas, val=True)] +
-                                            list(getfbounds(ne)),
+                                            list(getfbounds(n_echoes)),
                                             75, interpolation_method='lower')
     KRcut = np.median(KRcutguesses)
     # only use exclusive when inclusive is extremely inclusive - double KRcut
@@ -832,9 +814,6 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
         ofh.close()
         return list(sorted(min_acc)), list(sorted(rej)), [], list(sorted(to_clf))
 
-    if group0_only:
-        return list(sorted(group0)), list(sorted(rej)), [], list(sorted(to_clf))
-
     # Find additional components to reject based on Dice - doing this here
     # since Dice is a little unstable, need to reference group0
     rej_supp = []
@@ -938,7 +917,6 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
         veinmaskB = veinW.sum(1) > minW
         tsoc_Bp = tsoc_B.copy()
         tsoc_Bp[tsoc_Bp < 0] = 0
-        sig_Bp = sig_B*tsoc_Bp > 0
         vvex = np.array([(tsoc_Bp[veinmaskB, ii]**2.).sum() /
                          (tsoc_Bp[:, ii]**2.).sum() for ii in nc])
         group0_res = np.intersect1d(KRguess, group0)
@@ -975,8 +953,7 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
                                             rankvec(Kappas)) > newcest / 2,
                                            Vz2 > 1, Kappas < F01]) == 4],
                                         group0), field_art)
-    field_art = np.union1d(np.setdiff1d(nc[andb([mmix_kurt_z_max > 3,
-                                                 Vz2 > 3,
+    field_art = np.union1d(np.setdiff1d(nc[andb([mmix_kurt_z_max > 3, Vz2 > 3,
                                                  Rhos > np.percentile(Rhos[group0], 75)]) == 3],
                                         group0), field_art)
     field_art = np.union1d(np.setdiff1d(nc[andb([mmix_kurt_z_max > 5, Vz2 > 5]) == 2],
@@ -984,7 +961,6 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
     misc_art = np.setdiff1d(nc[andb([(rankvec(Vz) - rankvec(Ktz)) > newcest / 2,
                             Kappas < Khighelbowval]) == 2], group0)
     ign_cand = np.unique(list(field_art)+list(phys_art)+list(misc_art))
-    g0_red = np.setdiff1d(group0, ign_cand)
     midkrej = np.union1d(midk, rej)
     to_ign = np.setdiff1d(list(ign_cand), midkrej)
     toacc = np.union1d(toacc_hi, toacc_lo)
@@ -1020,8 +996,9 @@ def selcomps(seldict, mmix, head, manacc, debug=False, olevel=2, oversion=99,
     return list(sorted(ncl)), list(sorted(rej)), list(sorted(midk)), list(sorted(ign))
 
 
-def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
-    nx, ny, nz, ne, nt = catd.shape
+def tedpca(combmode, mask, stabilize, head, tes, kdaw, rdaw, ste=0,
+           mlepca=True):
+    nx, ny, nz, n_echoes, nt = catd.shape
     ste = np.array([int(ee) for ee in str(ste).split(',')])
     if len(ste) == 1 and ste[0] == -1:
         print("-Computing PCA of optimally combined multi-echo data")
@@ -1032,7 +1009,7 @@ def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
         d = d[eim, :]
     elif len(ste) == 1 and ste[0] == 0:
         print("-Computing PCA of spatially concatenated multi-echo data")
-        ste = np.arange(ne)
+        ste = np.arange(n_echoes)
         d = np.float64(fmask(catd, mask))
         eim = eimask(d) == 1
         d = d[eim]
@@ -1047,8 +1024,7 @@ def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
     dz = ((d.T - d.T.mean(0)) / d.T.std(0)).T  # Variance normalize timeseries
     dz = (dz - dz.mean()) / dz.std()  # Variance normalize everything
 
-    if not os.path.exists('pcastate.pkl'):
-
+    if not op.exists('pcastate.pkl'):
         # Do PC dimension selection and get eigenvalue cutoff
         if mlepca:
             from sklearn.decomposition import PCA
@@ -1086,7 +1062,7 @@ def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
                                                tes, combmode, head,
                                                mmixN=vTmixN, full_sel=False)
         ctb = ctb[ctb[:, 0].argsort(), :]
-        ctb = np.vstack([ctb.T[0:3], sp]).T
+        ctb = np.vstack([ctb.T[:3], sp]).T
 
         # Save state
         print("Saving PCA")
@@ -1102,17 +1078,16 @@ def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
         print("Loading PCA")
         with open('pcastate.pkl', 'rb') as handle:
             pcastate = pickle.load(handle)
-        (u, s, v, ctb,
-         eigelb, spmin, spcum) = (pcastate['u'], pcastate['s'], pcastate['v'],
-                                  pcastate['ctb'], pcastate['eigelb'],
-                                  pcastate['spmin'], pcastate['spcum'])
+        u, s, v = pcastate['u'], pcastate['s'], pcastate['v']
+        ctb, eigelb = pcastate['ctb'], pcastate['eigelb']
+        spmin, spcum = pcastate['spmin'], pcastate['spcum']
 
     np.savetxt('comp_table_pca.txt', ctb[ctb[:, 1].argsort(), :][::-1])
     np.savetxt('mepca_mix.1D', v[ctb[:, 1].argsort()[::-1], :].T)
 
     kappas = ctb[ctb[:, 1].argsort(), 1]
     rhos = ctb[ctb[:, 2].argsort(), 2]
-    fmin, fmid, fmax = getfbounds(ne)
+    fmin, fmid, fmax = getfbounds(n_echoes)
     kappa_thr = np.average(sorted([fmin, getelbow_mod(kappas, val=True)/2, fmid]),
                            weights=[kdaw, 1, 1])
     rho_thr = np.average(sorted([fmin, getelbow_cons(rhos, val=True)/2, fmid]),
@@ -1127,13 +1102,13 @@ def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
         rhos_lim = rhos[andb([rhos < fmid, rhos > fmin]) == 2]
         rho_thr = rhos_lim[getelbow_mod(rhos_lim)]
 
-    temp1 = np.array(ctb[:, 1] > kappa_thr, dtype=np.int)
-    temp2 = np.array(ctb[:, 2] > rho_thr, dtype=np.int)
-    temp3 = np.array(ctb[:, 3] > eigelb, dtype=np.int)
-    temp4 = np.array(ctb[:, 3] > spmin, dtype=np.int)
-    temp5 = np.array(ctb[:, 1] != F_MAX, dtype=np.int)
-    temp6 = np.array(ctb[:, 2] != F_MAX, dtype=np.int)
-    pcscore = (temp1 + temp2 + temp3) * temp4 * temp5 * temp6
+    is_hik = np.array(ctb[:, 1] > kappa_thr, dtype=np.int)
+    is_hir = np.array(ctb[:, 2] > rho_thr, dtype=np.int)
+    is_hie = np.array(ctb[:, 3] > eigelb, dtype=np.int)
+    is_his = np.array(ctb[:, 3] > spmin, dtype=np.int)
+    is_not_fmax1 = np.array(ctb[:, 1] != F_MAX, dtype=np.int)
+    is_not_fmax2 = np.array(ctb[:, 2] != F_MAX, dtype=np.int)
+    pcscore = (is_hik + is_hir + is_hie) * is_his * is_not_fmax1 * is_not_fmax2
     if stabilize:
         temp7 = np.array(spcum < 0.95, dtype=np.int)
         temp8 = np.array(ctb[:, 2] > fmin, dtype=np.int)
@@ -1143,26 +1118,27 @@ def tedpca(combmode, mask, stabilize, head, ste=0, mlepca=True):
     pcsel = pcscore > 0
     dd = u.dot(np.diag(s*np.array(pcsel, dtype=np.int))).dot(v)
 
-    nc = s[pcsel].shape[0]
-    print("--Selected %i components. Minimum Kappa=%0.2f Rho=%0.2f" % (nc, kappa_thr, rho_thr))
+    n_components = s[pcsel].shape[0]
+    print('--Selected {0} components. Minimum Kappa={1:.02f} '
+          'Rho={2:.02f}'.format(n_components, kappa_thr, rho_thr))
 
     dd = ((dd.T - dd.T.mean(0)) / dd.T.std(0)).T  # Variance normalize timeseries
     dd = (dd - dd.mean()) / dd.std()  # Variance normalize everything
 
-    return nc, dd
+    return n_components, dd
 
 
-def tedica(nc, dd, conv, fixed_seed, cost, final_cost):
+def tedica(n_components, dd, conv, fixed_seed, cost, final_cost):
     """
     Input is dimensionally reduced spatially concatenated multi-echo
     time series dataset from tedpca(). Output is comptable, mmix, smaps
     from ICA, and betas from fitting catd to mmix.
     """
     import mdp
-    climit = float("%s" % conv)
+    climit = float(conv)
     mdp.numx_rand.seed(fixed_seed)
-    icanode = mdp.nodes.FastICANode(white_comp=nc, approach='symm', g=cost,
-                                    fine_g=final_cost, coarse_limit=climit * 100,
+    icanode = mdp.nodes.FastICANode(white_comp=n_components, approach='symm', g=cost,
+                                    fine_g=final_cost, coarse_limit=climit*100,
                                     limit=climit, verbose=True)
     icanode.train(dd)
     smaps = icanode.execute(dd)  # noqa
@@ -1171,7 +1147,7 @@ def tedica(nc, dd, conv, fixed_seed, cost, final_cost):
     return mmix
 
 
-def gscontrol_raw(OCcatd, head, Ne, dtrank=4):
+def gscontrol_raw(OCcatd, head, n_echoes, dtrank=4):
     """
     This function uses the spatial global signal estimation approach to
     modify catd (global variable) to removal global signal out of individual
@@ -1216,12 +1192,12 @@ def gscontrol_raw(OCcatd, head, Ne, dtrank=4):
     niwrite(OCcatd, aff, 'tsoc_nogs.nii', head)
 
     # Project glbase out of each echo
-    for ii in range(Ne):
-        dat = catd[:, :, :, ii, :][Gmask]
+    for i_echo in range(n_echoes):
+        dat = catd[:, :, :, i_echo, :][Gmask]
         sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T)
         e_nogs = dat - np.dot(np.atleast_2d(sol[0][dtrank]).T,
                               np.atleast_2d(glbase.T[dtrank]))
-        catd[:, :, :, ii, :] = unmask(e_nogs, Gmask)
+        catd[:, :, :, i_echo, :] = unmask(e_nogs, Gmask)
 
     return catd, OCcatd
 
@@ -1295,27 +1271,26 @@ def write_split_ts(data, comptable, mmix, acc, rej, midk, head, suffix=''):
     lowkts = betas[:, rej].dot(mmix.T[rej, :])
     if len(acc) != 0:
         niwrite(unmask(betas[:, acc].dot(mmix.T[acc, :]), mask),
-                aff, '_'.join(['hik_ts', suffix])+'.nii', head)
+                aff, 'hik_ts_{0}.nii'.format(suffix), head)
     if len(midk) != 0:
-        niwrite(unmask(midkts, mask), aff,
-                '_'.join(['midk_ts', suffix])+'.nii', head)
+        niwrite(unmask(midkts, mask), aff, 'midk_ts_{0}.nii'.format(suffix),
+                head)
     if len(rej) != 0:
-        niwrite(unmask(lowkts, mask), aff,
-                '_'.join(['lowk_ts', suffix])+'.nii', head)
+        niwrite(unmask(lowkts, mask), aff, 'lowk_ts_{0}.nii'.format(suffix),
+                head)
     niwrite(unmask(fmask(data, mask)-lowkts-midkts, mask), aff,
-            '_'.join(['dn_ts', suffix])+'.nii', head)
+            'dn_ts_{0}.nii'.format(suffix), head)
     return varexpl
 
 
 def writefeats(data, mmix, mask, head, suffix=''):
     # Write feature versions of components
     feats = computefeats2(data, mmix, mask)
-    niwrite(unmask(feats, mask), aff,
-            '_'.join(['feats', suffix]) + '.nii', head)
+    niwrite(unmask(feats, mask), aff, 'feats_{0}.nii'.format(suffix), head)
 
 
 def writect(comptable, nt, acc, rej, midk, empty, ctname='', varexpl='-1'):
-    nc = comptable.shape[0]
+    n_components = comptable.shape[0]
     sortab = comptable[comptable[:, 1].argsort()[::-1], :]
     if ctname is '':
         ctname = 'comp_table.txt'
@@ -1324,9 +1299,9 @@ def writect(comptable, nt, acc, rej, midk, empty, ctname='', varexpl='-1'):
     open('midk_rejected.txt',
          'w').write(','.join([str(int(cc)) for cc in midk]))
 
-    _computed_vars = dict(file=os.path.abspath(os.path.curdir),
+    _computed_vars = dict(file=op.abspath(op.curdir),
                           vex=varexpl,
-                          nc=nc,
+                          n_components=n_components,
                           dfe=len(acc),
                           rjn=len(midk) + len(rej),
                           dfn=nt - len(midk) - len(rej),
@@ -1337,7 +1312,7 @@ def writect(comptable, nt, acc, rej, midk, empty, ctname='', varexpl='-1'):
     heading = textwrap.dedent("""\
         # ME-ICA Component statistics table for: {file} #
         # Dataset variance explained by ICA (VEx): {vex:.2f}
-        # Total components generated by decomposition (TCo): {nc}
+        # Total components generated by decomposition (TCo): {n_components}
         # No. accepted BOLD-like components, i.e. effective degrees
           of freedom for correlation (lower bound; DFe): {dfe}
         # Total number of rejected components (RJn): {rjn}
@@ -1348,13 +1323,13 @@ def writect(comptable, nt, acc, rej, midk, empty, ctname='', varexpl='-1'):
         # MID {mid} \t# Rejected R2*-weighted artifacts
         # IGN {ign} \t# Ignored components (kept in denoised time series)
         # VEx   TCo DFe RJn DFn
-        # {vex:.2f} {nc} {dfe} {rjn} {dfn}
+        # {vex:.2f} {n_components} {dfe} {rjn} {dfn}
         # comp    Kappa   Rho Var   Var(norm)
         """).format(**_computed_vars)
 
     with open(ctname, 'w') as f:
         f.write(heading)
-        for i in range(nc):
+        for i in range(n_components):
             f.write('%d\t%f\t%f\t%.2f\t%.2f\n' % (sortab[i, 0], sortab[i, 1],
                                                   sortab[i, 2], sortab[i, 3],
                                                   sortab[i, 4]))
@@ -1365,159 +1340,202 @@ def writeresults(OCcatd, comptable, mmix, nt, acc, rej, midk, empty, head):
     ts = OCcatd
     niwrite(ts, aff, 'ts_OC.nii', head)
     print("++ Writing Kappa-filtered optimally combined timeseries")
-    varexpl = write_split_ts(ts, comptable, mmix, acc,
-                             rej, midk, head, suffix='OC')
+    varexpl = write_split_ts(ts, comptable, mmix, acc, rej, midk, head,
+                             suffix='OC')
     print("++ Writing signal versions of components")
     ts_B = get_coeffs(ts, mask, mmix)
-    niwrite(ts_B[:, :, :, :], aff, '_'.join(['betas', 'OC']) + '.nii', head)
+    niwrite(ts_B[:, :, :, :], aff, 'betas_OC.nii', head)
 
     if len(acc) != 0:
-        niwrite(ts_B[:, :, :, acc], aff, '_'.join(['betas_hik', 'OC'])+'.nii',
-                head)
+        niwrite(ts_B[:, :, :, acc], aff, 'betas_hik_OC.nii', head)
         print("++ Writing optimally combined high-Kappa features")
-        writefeats(split_ts(ts, comptable, mmix,
-                            acc, rej, midk)[0],
+        writefeats(split_ts(ts, comptable, mmix, acc, rej, midk)[0],
                    mmix[:, acc], mask, head, suffix='OC2')
     print("++ Writing component table")
-    writect(comptable, nt, acc, rej, midk, empty,
-            ctname='comp_table.txt', varexpl=varexpl)
+    writect(comptable, nt, acc, rej, midk, empty, ctname='comp_table.txt',
+            varexpl=varexpl)
 
 
-def writeresults_echoes(acc, rej, midk, head, comptable, mmix):
-    for ii in range(ne):
-        print("++ Writing Kappa-filtered TE#%i timeseries" % (ii+1))
-        write_split_ts(catd[:, :, :, ii, :], comptable, mmix,
-                       acc, rej, midk, head, suffix='e%i' % (ii+1))
+def writeresults_echoes(acc, rej, midk, head, comptable, mmix, n_echoes):
+    for i_echo in range(n_echoes):
+        print("++ Writing Kappa-filtered TE#%i timeseries" % (i_echo+1))
+        write_split_ts(catd[:, :, :, i_echo, :], comptable, mmix,
+                       acc, rej, midk, head, suffix='e%i' % (i_echo+1))
 
 
-def main(options):
+def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
+         no_gscontrol=False, kdaw=10., rdaw=1., conv=2.5e-5, ste=-1,
+         combmode='t2s', dne=False, initcost='tanh', finalcost='tanh',
+         stabilize=False, fout=False, filecsdata=False, label=None,
+         fixed_seed=42):
     """
-
-    Args (and defaults):
-    data, tes, mixm=None, ctab=None, manacc=None, strict=False,
-             no_gscontrol=False, kdaw=10., rdaw=1., conv=2.5e-5, ste=-1,
-             combmode='t2s', dne=False, initcost='tanh', finalcost='tanh',
-             stabilize=False, fout=False, filecsdata=False, label=None,
-             fixed_seed=42
+    Parameters
+    ----------
+    data : :obj:`str` or :obj:`list` of :obj:`str`
+        Either a single z-concatenated file (str or single-entry list) or a
+        list of echo-specific files, in ascending order.
+    tes : :obj:`list`
+        List of echo times associated with data in milliseconds.
+    mixm : :obj:`str`, optional
+        File containing mixing matrix. If not provided, ME-PCA and ME-ICA are
+        done.
+    ctab : :obj:`str`, optional
+        File containing component table from which to extract pre-computed
+        classifications.
+    manacc : :obj:`str`, optional
+        Comma separated list of manually accepted components in string form.
+        Default is None.
+    strict : :obj:`bool`, optional
+        Ignore low-variance ambiguous components. Default is False.
+    no_gzcontrol : :obj:`bool`, optional
+        Control global signal using spatial approach. Default is False.
+    kdaw : :obj:`float`, optional
+        Dimensionality augmentation weight (Kappa). Default is 10.
+        -1 for low-dimensional ICA.
+    rdaw : :obj:`float`, optional
+        Dimensionality augmentation weight (Rho). Default is 1.
+        -1 for low-dimensional ICA.
+    conv : :obj:`float`, optional
+        Convergence limit. Default is 2.5e-5.
+    ste : :obj:`int`, optional
+        Source TEs for models. 0 for all, -1 for optimal combination.
+        Default is -1.
+    combmode : {'t2s', 'ste'}, optional
+        Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
+    dne : :obj:`bool`, optional
+        Denoise each TE dataset separately. Default is False.
+    initcost : {'tanh', 'pow3', 'gaus', 'skew'}, optional
+        Initial cost function for ICA. Default is 'tanh'.
+    finalcost : {'tanh', 'pow3', 'gaus', 'skew'}, optional
+        Final cost function. Default is 'tanh'.
+    stabilize : :obj:`bool`, optional
+        Stabilize convergence by reducing dimensionality, for low quality data.
+        Default is False.
+    fout : :obj:`bool`, optional
+        Save output TE-dependence Kappa/Rho SPMs. Default is False.
+    filecsdata : :obj:`bool`, optional
+        Save component selection data to file. Default is False.
+    label : :obj:`str` or :obj:`None`, optional
+        Label for output directory. Default is None.
+    fixed_seed : :obj:`int`, optional
+        Seeded value for ICA, for reproducibility.
     """
-    global tes, ne, catd, head, aff
-    tes = [float(te) for te in options.tes]
-    ne = len(tes)
-    catim = nib.load(options.data[0])
+    global catd, head, aff
+    tes = [float(te) for te in tes]
+    n_echoes = len(tes)
+    if isinstance(data, str):
+        catim = nib.load(data)
+    elif len(data) == 1:
+        catim = nib.load(data[0])
+    else:
+        if len(data) != n_echoes:
+            raise ValueError('Number of single-echo "data" files does not '
+                             'match number of echos '
+                             '({0} != {1})'.format(len(data), n_echoes))
+        imgs = [nib.load(f) for f in data]
+        if not np.array_equal([img.affine for img in imgs]):
+            raise ValueError('All affines from files in "data" must be equal.')
+        zcat_data = np.dstack([img.get_data() for img in imgs])
+        catim = nib.Nifti1Image(zcat_data, imgs[0].affine,
+                                header=imgs[0].get_header())
 
+    # Prepare image metadata for output files
     head = catim.get_header()
     head.extensions = []
     head.set_sform(head.get_sform(), code=1)
-    aff = catim.get_affine()
-    catd = cat2echos(catim.get_data(), ne)
-    nx, ny, nz, Ne, nt = catd.shape
+    aff = catim.affine
+
+    # Reshape data
+    catd = cat2echos(catim.get_data(), n_echoes)
+    nx, ny, nz, _, nt = catd.shape
 
     # Parse options, prepare output directory
-    if options.fout:
-        options.fout = aff
+    if fout:
+        fout = aff
     else:
-        options.fout = None
+        fout = None
 
-    global kdaw, rdaw
-    if not options.stabilize:
-        stabilize = False
+    kdaw = float(kdaw)
+    rdaw = float(rdaw)
+
+    if label is not None:
+        out_dir = 'TED.{0}'.format(label)
     else:
-        stabilize = True
-    kdaw = float(options.kdaw)
-    rdaw = float(options.rdaw)
+        out_dir = 'TED'
+    out_dir = op.abspath(out_dir)
+    if not op.isdir(out_dir):
+        os.mkdir(out_dir)
 
-    if options.label is not None:
-        dirname = '%s' % '.'.join(['TED', options.label])
-    else:
-        dirname = 'TED'
-    os.system('mkdir %s' % dirname)
-    if options.mixm is not None:
-        try:
-            os.system('cp %s %s/meica_mix.1D; cp %s %s/%s' % (options.mixm,
-                                                              dirname,
-                                                              options.mixm,
-                                                              dirname,
-                                                              os.path.basename(options.mixm)))
-        except:
-            pass
-    if options.ctab is not None:
-        try:
-            os.system('cp %s %s/comp_table.txt; cp %s %s/%s' % (options.mixm,
-                                                                dirname,
-                                                                options.mixm,
-                                                                dirname,
-                                                                os.path.basename(options.mixm)))
-        except:
-            pass
+    if mixm is not None and op.isfile(mixm):
+        shutil.copyfile(mixm, op.join(out_dir, 'meica_mix.1D'))
+        shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
+    elif mixm is not None:
+        raise IOError('Argument "mixm" must be an existing file.')
 
-    os.chdir(dirname)
+    if ctab is not None and op.isfile(ctab):
+        shutil.copyfile(ctab, op.join(out_dir, 'comp_table.txt'))
+        shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
+    elif ctab is not None:
+        raise IOError('Argument "ctab" must be an existing file.')
+
+    os.chdir(out_dir)
 
     print("++ Computing Mask")
     global mask
     mask, masksum = makeadmask(catd, minimum=False, getsum=True)
 
     print("++ Computing T2* map")
-    global t2s, s0, t2ss, s0s, t2sG, s0G
-    t2s, s0, t2ss, s0s, t2sG, s0G = t2sadmap(catd, mask, tes, masksum, 1)
+    global t2s, s0, t2sG
+    t2s, s0, t2ss, s0s, t2sG, s0G = t2sadmap(catd, mask, tes, masksum,
+                                             start_echo=1)
 
     # Condition values
     cap_t2s = stats.scoreatpercentile(t2s.flatten(), 99.5,
                                       interpolation_method='lower')
     t2s[t2s > cap_t2s*10] = cap_t2s
-    niwrite(s0, aff, 's0v.nii', head)
-    niwrite(t2s, aff, 't2sv.nii', head)
-    niwrite(t2ss, aff, 't2ss.nii', head)
-    niwrite(s0s, aff, 's0vs.nii', head)
-    niwrite(s0G, aff, 's0vG.nii', head)
-    niwrite(t2sG, aff, 't2svG.nii', head)
+    niwrite(s0, aff, op.join(out_dir, 's0v.nii'), head)
+    niwrite(t2s, aff, op.join(out_dir, 't2sv.nii'), head)
+    niwrite(t2ss, aff, op.join(out_dir, 't2ss.nii'), head)
+    niwrite(s0s, aff, op.join(out_dir, 's0vs.nii'), head)
+    niwrite(s0G, aff, op.join(out_dir, 's0vG.nii'), head)
+    niwrite(t2sG, aff, op.join(out_dir, 't2svG.nii'), head)
 
     # Optimally combine data
-    combmode = options.combmode
     global OCcatd
-    OCcatd = optcom(catd, t2sG, tes, mask,
-                    combmode, useG=True)
-    if not options.no_gscontrol:
-        catd, OCcatd = gscontrol_raw(OCcatd, head, len(tes))
+    OCcatd = optcom(catd, t2sG, tes, mask, combmode, useG=True)
+    if not no_gscontrol:
+        catd, OCcatd = gscontrol_raw(OCcatd, head, n_echoes)
 
-    if options.mixm is None:
+    if mixm is None:
         print("++ Doing ME-PCA and ME-ICA")
-
-        nc, dd = tedpca(combmode, mask, stabilize, head, ste=options.ste)
-
-        mmix_orig = tedica(nc, dd, options.conv, options.fixed_seed,
-                           cost=options.initcost,
-                           final_cost=options.finalcost)
-        np.savetxt('__meica_mix.1D', mmix_orig)
+        n_components, dd = tedpca(combmode, mask, stabilize, head, tes=tes, kdaw=kdaw,
+                                  rdaw=rdaw, ste=ste)
+        mmix_orig = tedica(n_components, dd, conv, fixed_seed, cost=initcost,
+                           final_cost=finalcost)
+        np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
         seldict, comptable, betas, mmix = fitmodels_direct(catd, mmix_orig,
                                                            mask, t2s, t2sG,
                                                            tes, combmode, head,
-                                                           fout=options.fout,
+                                                           fout=fout,
                                                            reindex=True)
+        np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        np.savetxt('meica_mix.1D', mmix)
-
-        if 'GROUP0' in sys.argv:
-            group0_flag = True
-        else:
-            group0_flag = False
-
-        acc, rej, midk, empty = selcomps(seldict, mmix, head, options.manacc,
-                                         knobargs=options,
-                                         group0_only=group0_flag,
-                                         strict_mode=options.strict)
-
+        acc, rej, midk, empty = selcomps(seldict, mmix, head, manacc, n_echoes,
+                                         strict_mode=strict,
+                                         filecsdata=filecsdata)
     else:
-        mmix_orig = np.loadtxt('meica_mix.1D')
+        mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
         seldict, comptable, betas, mmix = fitmodels_direct(catd, mmix_orig,
                                                            mask, t2s, t2sG,
                                                            tes, combmode, head,
-                                                           fout=options.fout)
-        if options.ctab is None:
-            acc, rej, midk, empty = selcomps(seldict, mmix, head, options.manacc,
-                                             knobargs=options,
-                                             strict_mode=options.strict)
+                                                           fout=fout)
+        if ctab is None:
+            acc, rej, midk, empty = selcomps(seldict, mmix, head, manacc,
+                                             n_echoes,
+                                             filecsdata=filecsdata,
+                                             strict_mode=strict)
         else:
-            acc, rej, midk, empty = ctabsel(options.ctab)
+            acc, rej, midk, empty = ctabsel(ctab)
 
     if len(acc) == 0:
         print("** WARNING! No BOLD components detected!!! ** \n"
@@ -1525,5 +1543,5 @@ def main(options):
 
     writeresults(OCcatd, comptable, mmix, nt, acc, rej, midk, empty, head)
     gscontrol_mmix(mmix, acc, rej, midk, empty, head)
-    if options.dne:
-        writeresults_echoes(acc, rej, midk, head, comptable, mmix)
+    if dne:
+        writeresults_echoes(acc, rej, midk, head, comptable, mmix, n_echoes)
