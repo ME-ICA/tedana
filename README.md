@@ -5,6 +5,7 @@ TE-Dependent Analysis (_tedana_) is a Python module for denoising multi-echo fMR
 [![CircleCI](https://circleci.com/gh/ME-ICA/tedana.svg?style=shield)](https://circleci.com/gh/ME-ICA/tedana)
 [![Documentation Status](https://readthedocs.org/projects/tedana/badge/?version=latest)](http://tedana.readthedocs.io/en/latest/?badge=latest)
 [![License](https://img.shields.io/badge/License-LGPL%202.0-blue.svg)](https://opensource.org/licenses/LGPL-2.1)
+[![Join the chat at https://gitter.im/ME-ICA/tedana](https://badges.gitter.im/ME-ICA/tedana.svg)](https://gitter.im/ME-ICA/tedana?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
 ## About
@@ -20,7 +21,7 @@ For a review, see [Kundu et al. (2017), _NeuroImage_](https://paperpile.com/shar
 
 In tedana, we combine all collected echos, then decompose the resulting time series into components that can be classified as BOLD or non-BOLD based. This is performed in a series of steps including:
 
-* Principle components analysis
+* Principal components analysis
 * Independent components analysis
 * Component classification
 
@@ -45,11 +46,11 @@ pip install https://github.com/ME-ICA/tedana/archive/master.tar.gz
 
 ## Development
 
-We :yellow_heart: new contributors ! To get started, check out [our contributing guidelines](https://github.com/emdupre/tedana/blob/master/CONTRIBUTING.md).
+We :yellow_heart: new contributors ! To get started, check out [our contributing guidelines](https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md).
 
-Want to learn more about our plans for developing tedana ? Check out [our roadmap](https://github.com/emdupre/tedana/projects). Have a question, comment, or suggestion ? Open or comment on one of [our issues](https://github.com/emdupre/tedana/issues) !
+Want to learn more about our plans for developing tedana ? Check out [our roadmap](https://github.com/ME-ICA/tedana/projects). Have a question, comment, or suggestion ? Open or comment on one of [our issues](https://github.com/ME-ICA/tedana/issues) !
 
-We ask that all contributions to tedana respect our [code of conduct](https://github.com/emdupre/tedana/blob/master/Code_of_Conduct.md).
+We ask that all contributions to tedana respect our [code of conduct](https://github.com/ME-ICA/tedana/blob/master/Code_of_Conduct.md).
 
 ### :earth_americas: Mozilla Global Sprint (10-11 May, 2018) :earth_africa:
 
