@@ -810,7 +810,7 @@ def selcomps(seldict, mmix, head, manacc, n_echos, debug=False, olevel=2, oversi
                          'min_acc', 'toacc_hi']
 
         with open('csstepdata.txt', 'w') as ofh:
-            json.dumps(dict(zip(diagstep_keys, diagstep_vals)), ofh)
+            json.dump(dict(zip(diagstep_keys, diagstep_vals)), ofh, indent=4, sort_keys=True)
         return list(sorted(min_acc)), list(sorted(rej)), [], list(sorted(to_clf))
 
     # Find additional components to reject based on Dice - doing this here
@@ -993,7 +993,7 @@ def selcomps(seldict, mmix, head, manacc, n_echos, debug=False, olevel=2, oversi
                          field_art, phys_art, misc_art, ncl, ign]
 
         with open('csstepdata.txt', 'w') as ofh:
-            json.dumps(dict(zip(diagstep_keys, diagstep_vals)), ofh)
+            json.dump(dict(zip(diagstep_keys, diagstep_vals)), ofh, indent=4, sort_keys=True)
         allfz = np.array([Tz, Vz, Ktz, KRr, cnz, Rz, mmix_kurt, fdist_z])
         np.savetxt('csdata.txt', allfz)
 
