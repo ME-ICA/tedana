@@ -2,7 +2,7 @@
 # ex: set sts=4 ts=4 sw=4 et:
 
 from .utils import (
-    load_image, load_data,
+    load_image, load_data, get_dtype,
     make_min_mask, makeadmask,
     fmask, unmask, filewrite,
     fitgaussian, dice, andb,
@@ -10,7 +10,7 @@ from .utils import (
 
 
 __all__ = [
-    'load_image', 'load_data',
+    'load_image', 'load_data', 'get_dtype'
     'make_min_mask', 'makeadmask',
     'fmask', 'unmask', 'filewrite',
     'fitgaussian', 'dice', 'andb']
