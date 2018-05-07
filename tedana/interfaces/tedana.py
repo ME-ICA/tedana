@@ -802,12 +802,12 @@ def selcomps(seldict, mmix, head, manacc, n_echos, debug=False, olevel=2, oversi
                                     np.union1d(group0, rej))
             min_acc = np.union1d(group0, toacc_hi)
             to_clf = np.setdiff1d(nc, np.union1d(min_acc, rej))
-        diagstep_keys = [rej, KRcut, Kcut, Rcut, dbscanfailed,
-                         midkfailed, KRguess, min_acc, toacc_hi]
-        diagstep_vals = ['Rejected components', 'Kappa-Rho cut point',
+        diagstep_keys = ['Rejected components', 'Kappa-Rho cut point',
                          'Kappa cut point', 'Rho cut point', 'DBSCAN failed to converge',
                          'Mid-Kappa failed (limited BOLD signal)', 'Kappa-Rho guess',
                          'min_acc', 'toacc_hi']
+        diagstep_vals = [rej, KRcut, Kcut, Rcut, dbscanfailed,
+                         midkfailed, KRguess, min_acc, toacc_hi]
 
         with open('csstepdata.txt', 'w') as ofh:
             json.dump(dict(zip(diagstep_keys, diagstep_vals)), ofh, indent=4, sort_keys=True)
