@@ -1,5 +1,6 @@
 import os
 import os.path as op
+import json
 import shutil
 import pickle
 import textwrap
@@ -801,15 +802,15 @@ def selcomps(seldict, mmix, head, manacc, n_echos, debug=False, olevel=2, oversi
                                     np.union1d(group0, rej))
             min_acc = np.union1d(group0, toacc_hi)
             to_clf = np.setdiff1d(nc, np.union1d(min_acc, rej))
-        diagstepkeys = ['rej', 'KRcut', 'Kcut', 'Rcut', 'dbscanfailed',
-                        'midkfailed', 'KRguess', 'group0', 'min_acc',
-                        'toacc_hi']
-        diagstepout = []
-        for ddk in diagstepkeys:
-            diagstepout.append("%s: %s" % (ddk, eval('str(%s)' % ddk)))
+        diagstep_keys = [rej, KRcut, Kcut, Rcut, dbscanfailed,
+                         midkfailed, KRguess, min_acc, toacc_hi]
+        diagstep_vals = ['Rejected components', 'Kappa-Rho cut point',
+                         'Kappa cut point', 'Rho cut point', 'DBSCAN failed to converge',
+                         'Mid-Kappa failed (limited BOLD signal)', 'Kappa-Rho guess',
+                         'min_acc', 'toacc_hi']
+
         with open('csstepdata.txt', 'w') as ofh:
-            ofh.write('\n'.join(diagstepout))
-        ofh.close()
+            json.dumps(dict(zip(diagstep_keys, diagstep_vals)), ofh)
         return list(sorted(min_acc)), list(sorted(rej)), [], list(sorted(to_clf))
 
     # Find additional components to reject based on Dice - doing this here
@@ -979,15 +980,20 @@ def selcomps(seldict, mmix, head, manacc, n_echos, debug=False, olevel=2, oversi
         orphan = np.setdiff1d(nc, list(ncl) + list(to_ign) + list(midk) + list(rej))
 
     if savecsdiag:
-        diagstepkeys = ['rej', 'KRcut', 'Kcut', 'Rcut', 'dbscanfailed',
-                        'KRguess', 'group0', 'dice_rej', 'rej_supp', 'to_clf',
-                        'midk', 'svm_acc_fail', 'toacc_hi', 'toacc_lo',
-                        'field_art', 'phys_art', 'misc_art', 'ncl', 'ign']
-        diagstepout = []
-        for ddk in diagstepkeys:
-            diagstepout.append("%s: %s" % (ddk, eval('str(%s)' % ddk)))
+
+        diagstep_keys = ['Rejected components', 'Kappa-Rho cut point', 'Kappa cut',
+                         'Rho cut', 'DBSCAN failed to converge', 'Kappa-Rho guess',
+                         'Dice rejected', 'rej_supp', 'to_clf',
+                         'Mid-kappa components', 'svm_acc_fail', 'toacc_hi', 'toacc_lo',
+                         'Field artifacts', 'Physiological artifacts',
+                         'Miscellaneous artifacts', 'ncl', 'Ignored components']
+        diagstep_vals = [rej, KRcut, Kcut, Rcut, dbscanfailed,
+                         KRguess, dice_rej, rej_supp, to_clf,
+                         midk, svm_acc_fail, toacc_hi, toacc_lo,
+                         field_art, phys_art, misc_art, ncl, ign]
+
         with open('csstepdata.txt', 'w') as ofh:
-            ofh.write('\n'.join(diagstepout))
+            json.dumps(dict(zip(diagstep_keys, diagstep_vals)), ofh)
         allfz = np.array([Tz, Vz, Ktz, KRr, cnz, Rz, mmix_kurt, fdist_z])
         np.savetxt('csdata.txt', allfz)
 
