@@ -1,8 +1,8 @@
 import numpy as np
-import nibabel as nib
-from tedana.utils import (niwrite, cat2echos, makeadmask, unmask, fmask)
+from tedana.utils import (filewrite, load_data, makeadmask, unmask, fmask)
 
 import logging
+logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
 lgr = logging.getLogger(__name__)
 
 
@@ -115,7 +115,7 @@ def t2sadmap(data, tes, mask, masksum, start_echo):
         X = np.repeat(x, n_vols, axis=0)
 
         beta, res, rank, sing = np.linalg.lstsq(X, B)
-        t2s = 1 / beta[1, :].T
+        t2s = 1. / beta[1, :].T
         s0 = np.exp(beta[0, :]).T
 
         t2s[np.isinf(t2s)] = 500.  # why 500?
@@ -141,18 +141,18 @@ def t2sadmap(data, tes, mask, masksum, start_echo):
     return t2sa, s0va, t2ss, s0vs, t2saf, s0vaf
 
 
-def optcom(data, t2s, tes, mask, combmode):
+def make_optcom(data, t2s, tes, mask, combmode):
     """
     Optimally combine BOLD data across TEs.
 
-    out = optcom(data,t2s)
+    out = make_optcom(data,t2s)
 
     Parameters
     ----------
     data : (S x E x T) :obj:`numpy.ndarray`
         Concatenated BOLD data.
     t2 : (S,) :obj:`numpy.ndarray`
-        3D map of estimated T2* values.
+        Estimated T2* values.
     tes : :obj:`numpy.ndarray`
         Array of TEs, in seconds.
     mask : (S,) :obj:`numpy.ndarray`
@@ -172,31 +172,27 @@ def optcom(data, t2s, tes, mask, combmode):
     mdata = data[mask]
     tes = np.array(tes)[np.newaxis]  # (1 x E) array_like
 
-    if len(t2s.shape) == 3:
-        print('Optimally combining with voxel-wise T2 estimates')
-        ft2s = t2s[:, np.newaxis]
+    if t2s.ndim == 1:
+        lgr.info('Optimally combining with voxel-wise T2 estimates')
+        ft2s = t2s[mask, np.newaxis]
     else:
-        print('Optimally combining with voxel- and volume-wise T2 estimates')
-        ft2s = t2s[:, :, np.newaxis]
-
-    if combmode == 'ste':
-        alpha = mdata.mean(-1) * tes
-    else:
-        alpha = tes * np.exp(-tes / ft2s)
+        lgr.info('Optimally combining with voxel- and volume-wise T2 estimates')
+        ft2s = t2s[mask, :, np.newaxis]
 
     if combmode == 'ste':
         alpha = mdata.mean(axis=-1) * tes
     else:
-        alpha = tes * np.exp(-tes / t2s[mask])
+        alpha = tes * np.exp(-tes / ft2s)
 
-    if len(t2s.shape) == 3:
+    if t2s.ndim == 1:
         alpha = np.tile(alpha[:, :, np.newaxis], (1, 1, n_vols))
     else:
         alpha = np.swapaxes(alpha, 1, 2)
         ax0_idx, ax2_idx = np.where(np.all(alpha == 0, axis=1))
         alpha[ax0_idx, :, ax2_idx] = 1.
 
-    fout = unmask(np.average(mdata, axis=1, weights=alpha), mask)
+    fout = np.average(mdata, axis=1, weights=alpha)
+    fout = unmask(fout, mask)
 
     return fout
 
@@ -216,28 +212,27 @@ def main(options):
         suf = '_%s' % str(options.label)
     else:
         suf = ''
+    tes, data, combmode = options.tes, options.data, options.combmode
 
-    tes = [float(te) for te in options.tes]
+    tes = [float(te) for te in tes]
     n_echos = len(tes)
-    catim = nib.load(options.data[0])
-    head = catim.get_header()
-    head.extensions = []
-    head.set_sform(head.get_sform(), code=1)
-    aff = catim.get_affine()
-    catd = cat2echos(catim.get_data(), n_echos)
-    nx, ny, nz, n_echos, n_trs = catd.shape
+
+    catd = load_data(data, n_echos=n_echos)
+    n_samp, n_echos, n_trs = catd.shape
+
+    ref_img = data[0] if isinstance(data, list) else data
 
     lgr.info("++ Computing Mask")
     mask, masksum = makeadmask(catd, minimum=False, getsum=True)
-    niwrite(masksum, aff, 'masksum%s.nii' % suf)
+    filewrite(masksum, 'masksum%s' % suf, ref_img, copy_header=False)
 
     lgr.info("++ Computing Adaptive T2* map")
-    t2s, s0, t2ss, s0vs, t2saf, s0vaf = t2sadmap(catd, mask, tes, masksum, 2)
-    niwrite(t2ss, aff, 't2ss%s.nii' % suf)
-    niwrite(s0vs, aff, 's0vs%s.nii' % suf)
+    t2s, s0, t2ss, s0vs, t2saf, s0vaf = t2sadmap(catd, tes, mask, masksum, 2)
+    filewrite(t2ss, 't2ss%s' % suf, ref_img, copy_header=False)
+    filewrite(s0vs, 's0vs%s' % suf, ref_img, copy_header=False)
 
     lgr.info("++ Computing optimal combination")
-    tsoc = np.array(optcom(catd, t2s, tes, mask, options.combmode),
+    tsoc = np.array(make_optcom(catd, t2s, tes, mask, combmode),
                     dtype=float)
 
     # Clean up numerical errors
@@ -249,7 +244,7 @@ def main(options):
     t2s[t2s < 0] = 0
     t2sm[t2sm < 0] = 0
 
-    niwrite(tsoc, aff, 'ocv%s.nii' % suf)
-    niwrite(s0, aff, 's0v%s.nii' % suf)
-    niwrite(t2s, aff, 't2sv%s.nii' % suf)
-    niwrite(t2sm, aff, 't2svm%s.nii' % suf)
+    filewrite(tsoc, 'ocv%s' % suf, ref_img, copy_header=False)
+    filewrite(s0, 's0v%s' % suf, ref_img, copy_header=False)
+    filewrite(t2s, 't2sv%s' % suf, ref_img, copy_header=False)
+    filewrite(t2sm, 't2svm%s' % suf, ref_img, copy_header=False)

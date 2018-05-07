@@ -48,10 +48,6 @@ def test_fitgaussian():
     pass
 
 
-def test_niwrite():
-    pass
-
-
 def test_dice():
     pass
 

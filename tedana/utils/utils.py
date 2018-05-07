@@ -1,12 +1,51 @@
 """Utilities for meica package"""
+import os.path as op
 import numpy as np
 import nibabel as nib
 from nibabel.filename_parser import splitext_addext
+from nilearn.image import new_img_like
 from nilearn._utils import check_niimg
 import nilearn.masking as nimask
 from scipy.optimize import leastsq
 
 from ..due import due, BibTeX
+
+FORMATS = {'.nii': 'NIFTI',
+           '.gii': 'GIFTI'}
+
+
+def get_dtype(data):
+    """
+    Determines neuroimaging format of `data`
+
+    Parameters
+    ----------
+    data : list-of-str or str or img_like
+        Data to determine format of
+
+    Returns
+    -------
+    dtype : {'NIFTI', 'GIFTI', 'OTHER'} str
+        Format of input data
+    """
+
+    if isinstance(data, list):
+        dtypes = np.unique([splitext_addext(d)[1] for d in data])
+        if dtypes.size > 1:
+            raise ValueError('Provided data detected to have varying formats: '
+                             '{}'.format(dtypes))
+        dtype = dtypes[0]
+    elif isinstance(data, str):
+        dtype = splitext_addext(data)[1]
+    else:  # img_like?
+        if not hasattr(data, 'valid_exts'):
+            raise TypeError('Input data format cannot be detected.')
+        dtype = data.valid_exts[0]
+
+    if dtype in FORMATS.keys():
+        return FORMATS[dtype]
+
+    return 'OTHER'
 
 
 def load_image(data):
@@ -15,7 +54,7 @@ def load_image(data):
 
     Parameters
     ----------
-    data : (X x Y x Z [x T]) array_like or niimg-like object
+    data : (X x Y x Z [x T]) array_like or img_like object
         Data array or data file to be loaded / reshaped
 
     Returns
@@ -25,25 +64,24 @@ def load_image(data):
     """
 
     if isinstance(data, str):
-        root, ext, addext = splitext_addext(data)
-        if ext == '.gii':
+        if get_dtype(data) == 'GIFTI':
             fdata = np.column_stack([f.data for f in nib.load(data).darrays])
             return fdata
-        else:
+        elif get_dtype(data) == 'NIFTI':
             data = check_niimg(data).get_data()
 
-    fdata = data.reshape((-1,) + data.shape[3:], order='F')
+    fdata = data.reshape((-1,) + data.shape[3:])
 
     return fdata.squeeze()
 
 
-def cat2echos(data, n_echos=None):
+def load_data(data, n_echos=None):
     """
     Coerces input `data` files to required 3D array output
 
     Parameters
     ----------
-    data : (X x Y x M x T) array_like or list-of-img-like
+    data : (X x Y x M x T) array_like or list-of-img_like
         Input multi-echo data array, where `X` and `Y` are spatial dimensions,
         `M` is the Z-spatial dimensions with all the input echos concatenated,
         and `T` is time. A list of image-like objects (e.g., .nii or .gii) are
@@ -56,31 +94,35 @@ def cat2echos(data, n_echos=None):
     -------
     fdata : (S x E x T) np.ndarray
         Output data where `S` is samples, `E` is echos, and `T` is time
+    ref_img : str
+        Filepath to reference image for saving output files
     """
 
-    # data files were provided
     if isinstance(data, list):
-        # individual echo files were provided
-        if len(data) > 2:
-            fdata = np.stack([load_image(f) for f in data], axis=1)
-            if fdata.ndim < 3:
-                fdata = fdata[..., np.newaxis]
-            return fdata
-        # a z-concatenated file was provided; load data and pipe it down
-        elif len(data) == 1:
+        if get_dtype(data) == 'GIFTI':  # TODO: deal with L/R split GIFTI files
+            pass
+        if len(data) == 1:  # a z-concatenated file was provided
             if n_echos is None:
                 raise ValueError('Number of echos `n_echos` must be specified '
                                  'if z-concatenated data file provided.')
-            data = check_niimg(data[0]).get_data()
-        # only two echo files were provided, which doesn't fly
-        else:
+            data = data[0]
+        elif len(data) == 2:  # inviable -- need more than 2 echos
             raise ValueError('Cannot run `tedana` with only two echos: '
                              '{}'.format(data))
+        else:  # individual echo files were provided
+            fdata = np.stack([load_image(f) for f in data], axis=1)
+            return np.atleast_3d(fdata), data[0]
 
-    (nx, ny), nz = data.shape[:2], data.shape[2] // n_echos
-    fdata = load_image(data.reshape(nx, ny, nz, n_echos, -1, order='F'))
+    # we have a z-cat file
+    img = check_niimg(data)
+    (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
+    fdata = load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1))
 
-    return fdata
+    # create reference image
+    ref_img = img.__class__(np.zeros((nx, ny, nz)), affine=img.affine,
+                            header=img.header, extra=img.extra)
+
+    return fdata, ref_img
 
 
 def makeadmask(data, minimum=True, getsum=False):
@@ -140,7 +182,7 @@ def make_min_mask(data):
     """
     Generates a 3D mask of `data`
 
-    Only voxels that are consistently (i.e., across time AND echoes) non-zero
+    Only samples that are consistently (i.e., across time AND echoes) non-zero
     in `data` are True in output
 
     Parameters
@@ -159,34 +201,165 @@ def make_min_mask(data):
     return data.prod(axis=-1).prod(axis=-1).astype(bool)
 
 
-def get_input_type(input):
-    pass
-
-
-def niwrite(data, affine, name, head, outtype='.nii.gz'):
+def filewrite(data, filename, ref_img, gzip=False, copy_header=True,
+              copy_meta=False):
     """
-    Write out nifti file.
+    Writes `data` to `filename` in format of `ref_img`
+
+    If `ref_img` dtype is GIFTI, then `data` is assumed to be stacked L/R
+    hemispheric and will be split and saved as two files
 
     Parameters
     ----------
-    data : array_like
-    affine : (4 x 4) array_like
-        Affine for output file
+    data : (S [x T]) array_like
+        Data to be saved
+    filename : str
+        Filepath where data should be saved to
+    ref_img : str or img_like
+        Reference image
+    gzip : bool, optional
+        Whether to gzip output (if not specified in `filename`). Only applies
+        if output dtype is NIFTI. Default: False
+    copy_header : bool, optional
+        Whether to copy header from `ref_img` to new image. Default: True
+    copy_meta : bool, optional
+        Whether to copy meta from `ref_img` to new image. Only applies if
+        output dtype is GIFTI. Default: False
+
+    Returns
+    -------
     name : str
-        Name to save output file to
-    head : object
-    outtype : str, optional
-        Output type of file. Default: '.nii.gz'
+        Path of saved image (with added extensions, as appropriate)
     """
 
-    # get rid of NaN
-    data[np.isnan(data)] = 0
-    # set header info
-    header = head.copy()
-    header.set_data_shape(list(data.shape))
-    outni = nib.Nifti1Image(data, affine, header=header)
-    outni.set_data_dtype('float64')
-    outni.to_filename(name)
+    # get datatype and reference image for comparison
+    dtype = get_dtype(ref_img)
+    if isinstance(ref_img, list):
+        ref_img = ref_img[0]
+
+    # ensure that desired output type (from name) is compatible with `dtype`
+    root, ext, add = splitext_addext(filename)
+    if ext != '' and FORMATS[ext] != dtype:
+        raise ValueError('Cannot write {} data to {} file. Please ensure file'
+                         'formats are compatible'.format(dtype, FORMATS[ext]))
+
+    if dtype == 'NIFTI':
+        out = new_nii_like(ref_img, data,
+                           copy_header=copy_header)
+        name = '{}.{}'.format(root, 'nii.gz' if gzip else 'nii')
+        out.to_filename(name)
+    elif dtype == 'GIFTI':
+        # remove possible hemispheric denotations from root
+        root = op.join(op.dirname(root), op.basename(root).split('.')[0])
+        # save hemispheres separately
+        for n, (hdata, hemi) in enumerate(zip(np.split(data, 2, axis=0),
+                                              ['L', 'R'])):
+            out = new_gii_like(ref_img[n], hdata,
+                               copy_header=copy_header,
+                               copy_meta=copy_meta)
+            name = '{}.{}.func.gii'.format(root, hemi)
+            out.to_filename(name)
+
+    return name
+
+
+def new_nii_like(ref_img, data, copy_header=True):
+    """
+    Coerces `data` into NiftiImage format like `ref_img`
+
+    Parameters
+    ----------
+    ref_img : str or img_like
+        Reference image
+    data : (S [x T]) array_like
+        Data to be saved
+    copy_header : bool, optional
+        Whether to copy header from `ref_img` to new image. Default: True
+
+    Returns
+    -------
+    nii : nib.nifti.NiftiXImage
+        NiftiImage
+    """
+
+    ref_img = check_niimg(ref_img)
+    nii = new_img_like(ref_img,
+                       data.reshape(ref_img.shape[:3] + data.shape[1:]),
+                       copy_header=copy_header)
+    nii.set_data_dtype(data.dtype)
+
+    return nii
+
+
+def new_gii_like(ref_img, data, copy_header=True, copy_meta=False):
+    """
+    Coerces `data` into GiftiImage format like `ref_img`
+
+    Parameters
+    ----------
+    ref_img : str or img_like
+        Reference image
+    data : (S [x T]) array_like
+        Data to be saved
+    copy_header : bool, optional
+        Whether to copy header from `ref_img` to new image. Default: True
+    copy_meta : bool, optional
+        Whether to copy meta from `ref_img` to new image. Default: False
+
+    Returns
+    -------
+    gii : nib.gifti.GiftiImage
+        GiftiImage
+    """
+
+    if isinstance(ref_img, str):
+        ref_img = nib.load(ref_img)
+
+    if data.ndim == 1:
+        data = np.atleast_2d(data).T
+
+    darrays = [make_gii_darray(ref_img.darrays[n], d, copy_meta=copy_meta)
+               for n, d in enumerate(data.T)]
+    gii = nib.gifti.GiftiImage(header=ref_img.header if copy_header else None,
+                               extra=ref_img.extra,
+                               meta=ref_img.meta if copy_meta else None,
+                               labeltable=ref_img.labeltable,
+                               darrays=darrays)
+
+    return gii
+
+
+def make_gii_darray(ref_array, data, copy_meta=False):
+    """
+    Converts `data` into GiftiDataArray format like `ref_array`
+
+    Parameters
+    ----------
+    ref_array : str or img_like
+        Reference array
+    data : (S,) array_like
+        Data to be saved
+    copy_meta : bool, optional
+        Whether to copy meta from `ref_img` to new image. Default: False
+
+    Returns
+    -------
+    gii : nib.gifti.GiftiDataArray
+        Output data array instance
+    """
+
+    if not isinstance(ref_array, nib.gifti.GiftiDataArray):
+        raise TypeError('Provided reference is not a GiftiDataArray.')
+    darray = nib.gifti.GiftiDataArray(data,
+                                      intent=ref_array.intent,
+                                      datatype=data.dtype,
+                                      encoding=ref_array.encoding,
+                                      endian=ref_array.endian,
+                                      coordsys=ref_array.coordsys,
+                                      ordering=ref_array.ind_ord,
+                                      meta=ref_array.meta if copy_meta else None)
+
+    return darray
 
 
 def uncat2echos(data):
@@ -209,7 +382,7 @@ def uncat2echos(data):
                          'provided data has only {0}'.format(data.ndim))
 
     (nx, ny), nz = data.shape[:2], np.prod(data.shape[2:4])
-    return data.reshape(nx, ny, nz, -1, order='F')
+    return data.reshape(nx, ny, nz, -1)
 
 
 def fmask(data, mask=None):
@@ -218,9 +391,9 @@ def fmask(data, mask=None):
 
     Parameters
     ----------
-    data : (X x Y x Z [x E [x T]) array_like or niimg-like object
+    data : (X x Y x Z [x E [x T]) array_like or img_like object
         Data array or data file to be masked
-    mask : (X x Y x Z) array_like or niimg-like object
+    mask : (X x Y x Z) array_like or img_like object
         Boolean array or mask file
 
     Returns

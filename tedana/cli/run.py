@@ -20,7 +20,7 @@ def get_parser():
     parser.add_argument('-e',
                         dest='tes',
                         nargs='+',
-                        help='Echo times (in ms) ex: 15,39,63',
+                        help='Echo times (in ms) ex: 15.0 39.0 63.0',
                         required=True)
     parser.add_argument('--mix',
                         dest='mixm',
