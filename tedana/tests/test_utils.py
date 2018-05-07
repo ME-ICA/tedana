@@ -2,11 +2,6 @@
 Tests for tedana.utils
 """
 
-import os.path
-from tedana import utils
-import nibabel as nb
-import numpy as np
-
 
 def test_load_image():
     pass
