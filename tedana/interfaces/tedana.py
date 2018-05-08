@@ -37,29 +37,28 @@ Z_MAX = 8
 
 def do_svm(X_train, y_train, X_test, svmtype=0):
     """
-    sklearn's Support Vector Classification (SVC).
-    For svmtype=1, implemented in liblinear rather than libsvm.
+    Implements Support Vector Classification on provided data
 
     Parameters
     ----------
-    X_train : {array-like, sparse matrix}, shape (n_samples, n_features)
+    X_train : (N1 x F) array_like
         Training vectors, where n_samples is the number of samples in the
         training dataset and n_features is the number of features.
-    y_train : array-like, shape (n_samples,)
+    y_train : (N1,) array_like
         Target values (class labels in classification, real numbers in
         regression)
-    X_test : {array-like, sparse matrix}, shape (n_samples, n_features)
+    X_test : (N2 x F) array_like
         Test vectors, where n_samples is the number of samples in the test
         dataset and n_features is the number of features.
     svmtype : int
-        Desired support vector machine type.
+        Desired support vector machine type
 
     Returns
     -------
-    y_pred : array, shape (n_samples,)
-        Predicted class labels for samples in X_test.
+    y_pred : (N2,) np.ndarray
+        Predicted class labels for samples in `X_test`
     clf : {:obj:`sklearn.svm.classes.SVC`, :obj:`sklearn.svm.classes.LinearSVC`}
-        Trained sklearn model instance.
+        Trained sklearn model instance
     """
 
     if svmtype == 0:
@@ -69,7 +68,7 @@ def do_svm(X_train, y_train, X_test, svmtype=0):
     elif svmtype == 2:
         clf = svm.SVC(kernel='linear', probability=True)
     else:
-        raise ValueError('Input svmtype not in range (3)')
+        raise ValueError('Input svmtype not in [1, 2, 3]')
 
     clf.fit(X_train, y_train)
     y_pred = clf.predict(X_test)
@@ -84,19 +83,28 @@ def spatclust(data, mask, csize, thr, ref_img, infile=None, dindex=0,
 
     Parameters
     ----------
-    data : array_like
-    mask :
+    data : (S x T) array-like
+        Input data array
+    mask : (S,) array-like
+        Boolean mask array
     csize : int
-    thr :
-    header :
-    aff :
-    infile :
-    dindex :
-    tindex :
+        Size of cluster (in voxels) to retain
+    thr : float
+        Value to threshold image at before clustering
+    ref_img : str or img_like
+        Reference image to dictate how outputs are saved to disk
+    infile : str, optional
+        Path to file that should be used for clustering instead of `data`.
+        Default: None
+    dindex : int, optional
+        Index of data (2nd dimension) to use for clustering. Default: 0
+    tindex : int, optional
+        Index of data (2nd dimension) to use for thresholding. Default: 0
 
     Returns
     -------
-    clustered :
+    clustered : (S x T) np.ndarray
+        Boolean array indicated data samples to be retained after clustering
     """
 
     if infile is None:
@@ -121,7 +129,7 @@ def spatclust(data, mask, csize, thr, ref_img, infile=None, dindex=0,
 
 def get_coeffs(data, mask, X, add_const=False):
     """
-    get_coeffs(data, X)
+    Performs least-squares fit of `X` against `data`
 
     Parameters
     ----------
@@ -130,33 +138,33 @@ def get_coeffs(data, mask, X, add_const=False):
     mask : (S,) array-like
         Boolean mask array
     X : (T x C) array-like
-        Array where `T` is time and `C` is components
+        Array where `T` is time and `C` is predictor variables
     add_const : bool, optional
         Add intercept column to `X` before fitting. Default: False
 
     Returns
     -------
-    out : (S x C) np.ndarray
-        Array of betas for all samples `S`
+    betas : (S x C) np.ndarray
+        Array of `S` sample betas for `C` predictors
     """
 
+    # mask data and flip (time x samples)
     mdata = data[mask].T
 
-    # Coerce X to >=2d
+    # coerce X to >=2d if single variable supplies
     X = np.atleast_2d(X)
-
     if X.shape[0] == 1:
         X = X.T
-    if add_const:  # add intercept
+    if add_const:  # add intercept, if specified
         Xones = np.ones((np.min(mdata.shape), 1))
         X = np.column_stack([X, Xones])
 
-    tmpbetas = np.linalg.lstsq(X, mdata)[0].T
+    betas = np.linalg.lstsq(X, mdata)[0].T
     if add_const:  # drop beta for intercept
-        tmpbetas = tmpbetas[:, :-1]
-    out = unmask(tmpbetas, mask)
+        betas = betas[:, :-1]
+    betas = unmask(betas, mask)
 
-    return out
+    return betas
 
 
 def getelbow_cons(ks, val=False):
@@ -165,13 +173,13 @@ def getelbow_cons(ks, val=False):
 
     Parameters
     ----------
-    ks : array-like
+    ks : array_like
     val : bool, optional
         Return the value of the elbow instead of the index. Default: False
 
     Returns
     -------
-    array-like
+    int or float
         Either the elbow index (if val is True) or the values at the elbow
         index (if val is False)
     """
@@ -201,13 +209,13 @@ def getelbow_mod(ks, val=False):
 
     Parameters
     ----------
-    ks : array-like
+    ks : array_like
     val : bool, optional
         Return the value of the elbow instead of the index. Default: False
 
     Returns
     -------
-    array-like
+    int or float
         Either the elbow index (if val is True) or the values at the elbow
         index (if val is False)
     """
@@ -234,14 +242,13 @@ def getelbow_aggr(ks, val=False):
 
     Parameters
     ----------
-    ks : array-like
-
+    ks : array_like
     val : bool, optional
         Default is False
 
     Returns
     -------
-    array-like
+    int or float
         Either the elbow index (if val is True) or the values at the elbow
         index (if val is False)
     """
@@ -287,57 +294,130 @@ def getfbounds(n_echos):
 def eimask(dd, ees=None):
     """
     Returns mask for data between [0.001, 5] * 98th percentile of dd
+
+    Parameters
+    ----------
+    dd : (S x E x T) array_like
+        Input data, where `S` is samples, `E` is echos, and `T` is time
+    ees : (N,) list
+        Indices of echos to assess from `dd` in calculating output
+
+    Returns
+    -------
+    imask : (S x N) np.ndarray
+        Boolean array denoting
     """
 
     if ees is None:
         ees = range(dd.shape[1])
     imask = np.zeros([dd.shape[0], len(ees)], dtype=bool)
     for ee in ees:
-        lgr.info(ee)
+        lgr.info('++ Creating eimask for echo {}'.format(ee))
         perc98 = stats.scoreatpercentile(dd[:, ee, :].flatten(), 98,
                                          interpolation_method='lower')
         lthr, hthr = 0.001 * perc98, 5 * perc98
-        lgr.info(lthr, hthr)
+        lgr.info('++ Eimask threshold boundaries: {}'.format([lthr, hthr]))
         m = dd[:, ee, :].mean(axis=1)
         imask[np.logical_and(m > lthr, m < hthr), ee] = True
 
     return imask
 
 
-def split_ts(data, comptable, mmix, acc, rej, midk):
-    cbetas = get_coeffs(data-data.mean(-1)[:, :, :, np.newaxis], mask, mmix)
-    betas = fmask(cbetas, mask)
+def split_ts(data, mmix, mask, acc):
+    """
+    Splits `data` time series into accepted component time series and remainder
+
+    Parameters
+    ----------
+    data : (S x T) array_like
+        Input data, where `S` is samples and `T` is time
+    mmix : (T x C) array_like
+        Mixing matrix for converting input data to component space, where `C`
+        is components and `T` is the same as in `data`
+    mask : (S,) array_like
+        Boolean mask array
+    acc : list
+        List of accepted components used to subset `mmix`
+
+    Returns
+    -------
+    hikts : (S x T) np.ndarray
+        Time series reconstructed using only components in `acc`
+    rest : (S x T) np.ndarray
+        Original data with `hikts` removed
+    """
+
+    cbetas = get_coeffs(data - data.mean(axis=-1, keepdims=True), mask, mmix)
+    betas = cbetas[mask]
     if len(acc) != 0:
         hikts = unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
     else:
         hikts = None
-    return hikts, data-hikts
+
+    return hikts, data - hikts
 
 
 def computefeats2(data, mmix, mask, normalize=True):
-    # Write feature versions of components
-    data = data[mask]
-    # demean data
-    data_vn = stats.zscore(data, axis=-1)
-    # get betas for demeaned data against `mmix`
+    """
+    Converts `data` to component space using `mmix`
+
+    Parameters
+    ----------
+    data : (S x T) array_like
+        Input data
+    mmix : (T x C) array_like
+        Mixing matrix for converting input data to component space, where `C`
+        is components and `T` is the same as in `data`
+    mask : (S,) array-like
+        Boolean mask array
+    normalize : bool, optional
+        Whether to z-score output. Default: True
+
+    Returns
+    -------
+    data_Z : (S x C) np.ndarray
+        Data in component space
+    """
+
+    # demean masked data
+    data_vn = stats.zscore(data[mask], axis=-1)
+
+    # get betas of `data`~`mmix` and limit to range [-0.999, 0.999]
     data_R = get_coeffs(unmask(data_vn, mask), mask, mmix)[mask]
-    # cap betas to range [-0.999, 0.999]
     data_R[data_R < -0.999] = -0.999
     data_R[data_R > 0.999] = 0.999
-    # R-to-Z transform?
+
+    # R-to-Z transform
     data_Z = np.arctanh(data_R)
     if len(data_Z.shape) == 1:
         data_Z = np.atleast_2d(data_Z).T
+
+    # normalize data
     if normalize:
-        # standardize
         data_Zm = stats.zscore(data_Z, axis=0)
-        # add back (mean / stdev)
-        data_Z = data_Zm + (data_Z.mean(axis=0, keepdims=True) / data_Z.std(axis=0, keepdims=True))
+        data_Z = data_Zm + (data_Z.mean(axis=0, keepdims=True) /
+                            data_Z.std(axis=0, keepdims=True))
     return data_Z
 
 
 def ctabsel(ctabfile):
-    ctlines = open(ctabfile).readlines()
+    """
+    Loads a pre-existing component table file
+
+    Parameters
+    ----------
+    ctabfile : str
+        Filepath to existing component table
+
+    Returns
+    -------
+    ctab : (4,) tuple-of-arrays
+        Tuple containing arrays of (1) accepted, (2) rejected, (3) mid, and (4)
+        ignored components
+    """
+
+    with open(ctabfile, 'r') as src:
+        ctlines = src.readlines()
     class_tags = ['#ACC', '#REJ', '#MID', '#IGN']
     class_dict = {}
     for ii, ll in enumerate(ctlines):
@@ -353,21 +433,41 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     Parameters
     ----------
     catd : (S x E x T) array_like
+        Input data, where `S` is samples, `E` is echos, and `T` is time
     mmix : (T x C) array_like
+        Mixing matrix for converting input data to component space, where `C`
+        is components and `T` is the same as in `catd`
     mask : (S,) array_like
+        Boolean mask array
     t2s : (S,) array_like
     t2sG : (S,) array_like
-    tes : (E,) list
-    combmode : str
+    tes : list
+        List of echo times associated with `catd`, in milliseconds
+    combmode : {'t2s', 'ste'} str
+        How optimal combination of echos should be made, where 't2s' indicates
+        using the method of Posse 1999 and 'ste' indicates using the method of
+        Poser 2006
     ref_img : str or img_like
+        Reference image to dictate how outputs are saved to disk
     fout : bool
-        Whether to output per-component TE-dependencen maps Default: None
+        Whether to output per-component TE-dependence maps. Default: None
     reindex : bool, optional
         Default: False
     mmixN : array_like, optional
         Default: None
     full_sel : bool, optional
+        Whether to perform selection of components based on Rho/Kappa scores.
         Default: True
+
+    Returns
+    -------
+    seldict : dict
+    comptab : (N x 5) np.ndarray
+        Array with columns denoting (1) index of component, (2) Kappa score of
+        component, (3) Rho score of component, (4) variance explained by
+        component, and (5) normalized variance explained bycomponent
+    betas : np.ndarray
+    mmix_new : np.ndarray
     """
 
     # compute optimal combination of raw data
@@ -552,11 +652,47 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     return seldict, comptab, betas, mmix_new
 
 
-def selcomps(seldict, mmix, head, manacc, n_echos, debug=False, olevel=2, oversion=99,
-             filecsdata=False, savecsdiag=True,
-             strict_mode=False):
+def selcomps(seldict, mmix, ref_img, manacc, n_echos, debug=False, olevel=2, oversion=99,
+             filecsdata=False, savecsdiag=True, strict_mode=False):
     """
-    Select components.
+    Labels components in `mmix`
+
+    Parameters
+    ----------
+    seldict : dict
+        As output from `fitmodels_direct`
+    mmix : (C x T) array_like
+        Mixing matrix for converting input data to component space, where `C`
+        is components and `T` is the number of volumes in the original data
+    ref_img
+        Reference image to dictate how outputs are saved to disk
+    manacc
+        Comma-separated list of indices of manually accepted components
+    n_echos : int
+        Number of echos in original data
+    debug : bool, optional
+        Default: False
+    olevel : int, optional
+        Default: 2
+    oversion : int, optional
+        Default: 99
+    filecsdata: bool, optional
+        Default: False
+    savecsdiag: bool, optional
+        Default: True
+    strict_mode: bool, optional
+        Default: False
+
+    Returns
+    -------
+    acc : list
+        Indices of accepted (BOLD) components in `mmix`
+    rej : list
+        Indices of rejected (non-BOLD) components in `mmix`
+    midk : list
+        Indices of mid-K (questionable) components in `mmix`
+    ign : list
+        Indices of ignored components in `mmix`
     """
     if filecsdata:
         import bz2
@@ -1002,6 +1138,47 @@ def selcomps(seldict, mmix, head, manacc, n_echos, debug=False, olevel=2, oversi
 
 def tedpca(catd, combmode, mask, stabilize, ref_img, tes, kdaw, rdaw, ste=0,
            mlepca=True):
+    """
+    Performs PCA on `catd` and uses TE-dependence to dimensionally reduce data
+
+    Parameters
+    ----------
+    catd : (S x E x T) array_like
+        Input functional data
+    combmode : {'t2s', 'ste'} str
+        How optimal combination of echos should be made, where 't2s' indicates
+        using the method of Posse 1999 and 'ste' indicates using the method of
+        Poser 2006
+    mask : (S,) array_like
+        Boolean mask array
+    stabilize : bool
+        Whether to attempt to stabilize convergence of ICA by returning
+        dimensionally-reduced data from PCA and component selection.
+    ref_img : str or img_like
+        Reference image to dictate how outputs are saved to disk
+    tes : list
+        List of echo times associated with `catd`, in milliseconds
+    kdaw : float
+        Dimensionality augmentation weight for Kappa calculations
+    rdaw : float
+        Dimensionality augmentation weight for Rho calculations
+    ste : int or list-of-int, optional
+        Which echos to use in PCA. Values -1 and 0 are special, where a value
+        of -1 will indicate using all the echos and 0 will indicate using the
+        optimal combination of the echos. A list can be provided to indicate
+        a subset of echos. Default: 0
+    mlepca : bool, optional
+        Whether to use the method originally explained in Minka, NIPS 2000 for
+        guessing PCA dimensionality instead of a traditional SVD. Default: True
+
+    Returns
+    -------
+    n_components : int
+        Number of components retained from PCA decomposition
+    dd : (S x E x T) np.ndarray
+        Dimensionally-reduced functional data
+    """
+
     n_samp, n_echos, n_vols = catd.shape
     ste = np.array([int(ee) for ee in str(ste).split(',')])
 
@@ -1022,7 +1199,7 @@ def tedpca(catd, combmode, mask, stabilize, ref_img, tes, kdaw, rdaw, ste=0,
     dz = (dz - dz.mean()) / dz.std()  # var normalize everything
 
     if not op.exists('pcastate.pkl'):
-        # Do PC dimension selection and get eigenvalue cutoff
+        # do PC dimension selection and get eigenvalue cutoff
         if mlepca:
             from sklearn.decomposition import PCA
             ppca = PCA(n_components='mle', svd_solver='full')
@@ -1067,7 +1244,7 @@ def tedpca(catd, combmode, mask, stabilize, ref_img, tes, kdaw, rdaw, ste=0,
             with open('pcastate.pkl', 'wb') as handle:
                 pickle.dump(pcastate, handle)
         except TypeError:
-            lgr.info('Could not save PCA solution!')
+            lgr.warning('Could not save PCA solution.')
 
     else:  # if loading existing state
         lgr.info('Loading PCA')
@@ -1125,9 +1302,33 @@ def tedpca(catd, combmode, mask, stabilize, ref_img, tes, kdaw, rdaw, ste=0,
 
 def tedica(n_components, dd, conv, fixed_seed, cost, final_cost):
     """
-    Input is dimensionally reduced spatially concatenated multi-echo
-    time series dataset from `tedpca`. Output is comptable, mmix, smaps
-    from ICA, and betas from fitting catd to mmix.
+    Performs ICA on `dd` and returns mixing matrix
+
+    Parameters
+    ----------
+    n_components : int
+        Number of components retained from PCA decomposition
+    dd : (S x E x T) np.ndarray
+        Dimensionally-reduced functional data, where `S` is samples, `E` is
+        echos, and `T` is time
+    conv : float
+        Convergence limit for ICA
+    fixed_seed : int
+        Seed for ensuring reproducibility of ICA results
+    initcost : {'tanh', 'pow3', 'gaus', 'skew'} str, optional
+        Initial cost function for ICA
+    finalcost : {'tanh', 'pow3', 'gaus', 'skew'} str, optional
+        Final cost function for ICA
+
+    Returns
+    -------
+    mmix : (C x T) np.ndarray
+        Mixing matrix for converting input data to component space, where `C`
+        is components and `T` is the same as in `dd`
+
+    Notes
+    -----
+    Uses `mdp` implementation of FastICA for decomposition
     """
 
     import mdp
@@ -1139,17 +1340,41 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost):
     icanode.train(dd)
     smaps = icanode.execute(dd)  # noqa
     mmix = icanode.get_recmatrix().T
-    mmix = (mmix-mmix.mean(0))/mmix.std(0)
+    mmix = stats.zscore(mmix, axis=0)
     return mmix
 
 
 def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     """
+    Removes global signal from individual echo `catd` and `optcom` time series
+
     This function uses the spatial global signal estimation approach to
-    modify catd (global variable) to removal global signal out of individual
-    echo time series datasets. The spatial global signal is estimated
-    from the optimally combined data after detrending with a Legendre
-    polynomial basis of `order = 0` and `degree = dtrank`.
+    to removal global signal out of individual echo time series datasets. The
+    spatial global signal is estimated from the optimally combined data after
+    detrending with a Legendre polynomial basis of `order = 0` and
+    `degree = dtrank`.
+
+    Parameters
+    ----------
+    catd : (S x E x T) array_like
+        Input functional data
+    optcom : (S x T) array_like
+        Optimally-combined functional data (i.e., the output of
+        `tedana.interfaces.t2smap.make_optcom`)
+    n_echos : int
+        Number of echos in data. Should be the same as `E` dimension of `catd`
+    ref_img : str or img_like
+        Reference image to dictate how outputs are saved to disk
+    dtrank : int, optional
+        Specfies degree of Legendre polynomial basis function for estimating
+        spatial global signal. Default: 4
+
+    Returns
+    -------
+    dm_catd : (S x E x T) array_like
+        Input `catd` with global signal removed from time series
+    dm_optcom : (S x T) array_like
+        Input `optcom` with global signal removed from time series
     """
 
     lgr.info('++ Applying amplitude-based T1 equilibration correction')
@@ -1184,8 +1409,8 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
                              np.atleast_2d(glbase.T[dtrank])) + Gmu[Gmask][:, np.newaxis]
 
     filewrite(optcom, 'tsoc_orig', ref_img)
-    optcom = unmask(tsoc_nogs, Gmask)
-    filewrite(optcom, 'tsoc_nogs.nii', ref_img)
+    dm_optcom = unmask(tsoc_nogs, Gmask)
+    filewrite(dm_optcom, 'tsoc_nogs.nii', ref_img)
 
     # Project glbase out of each echo
     dm_catd = catd.copy()  # don't overwrite catd
@@ -1196,10 +1421,27 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
                               np.atleast_2d(glbase.T[dtrank]))
         dm_catd[:, echo, :] = unmask(e_nogs, Gmask)
 
-    return dm_catd, optcom
+    return dm_catd, dm_optcom
 
 
-def gscontrol_mmix(mmix, acc, rej, midk, empty, ref_img):
+def gscontrol_mmix(OCcatd, mmix, acc, rej, midk, ref_img):
+    """
+    Parameters
+    ----------
+    OCcatd : (S x T) array_like
+        Optimally-combined time series data
+    mmix : (C x T) array_like
+        Mixing matrix for converting input data to component space, where `C`
+        is components and `T` is the same as in `OCcatd`
+    acc : list
+        Indices of accepted (BOLD) components in `mmix`
+    rej : list
+        Indices of rejected (non-BOLD) components in `mmix`
+    midk : list
+        Indices of mid-K (questionable) components in `mmix`
+    ref_img : str or img_like
+        Reference image to dictate how outputs are saved to disk
+    """
 
     Gmu = OCcatd.mean(axis=-1)
     Gstd = OCcatd.std(axis=-1)
@@ -1257,38 +1499,118 @@ def gscontrol_mmix(mmix, acc, rej, midk, empty, ref_img):
     np.savetxt('meica_mix_T1c.1D', mmixnogs)
 
 
-def write_split_ts(data, comptable, mmix, acc, rej, midk, ref_img, suffix=''):
-    mdata = fmask(data, mask)
-    betas = fmask(get_coeffs(unmask((mdata.T - mdata.T.mean(0)).T, mask),
-                             mask, mmix), mask)
-    dmdata = mdata.T-mdata.T.mean(0)
-    varexpl = (1-((dmdata.T-betas.dot(mmix.T))**2.).sum()/(dmdata**2.).sum())*100
+def write_split_ts(data, mmix, acc, rej, midk, ref_img, suffix=''):
+    """
+    Splits `data` into denoised / noise / ignored time series and saves to disk
+
+    Parameters
+    ----------
+    data : (S x T) array_like
+        Input time series
+    mmix : (C x T) array_like
+        Mixing matrix for converting input data to component space, where `C`
+        is components and `T` is the same as in `data`
+    acc : list
+        Indices of accepted (BOLD) components in `mmix`
+    rej : list
+        Indices of rejected (non-BOLD) components in `mmix`
+    midk : list
+        Indices of mid-K (questionable) components in `mmix`
+    ref_img : str or img_like
+        Reference image to dictate how outputs are saved to disk
+    suffix : str, optional
+        Appended to name of saved files (before extension). Default: ''
+
+    Returns
+    -------
+    varexpl : float
+        Percent variance of data explained by extracted + retained components
+    """
+
+    # mask and de-mean data
+    mdata = data[mask]
+    dmdata = mdata.T - mdata.T.mean(axis=0)
+
+    # get variance explained by retained components
+    betas = get_coeffs(unmask(dmdata.T, mask), mask, mmix)[mask]
+    varexpl = (1 - ((dmdata.T - betas.dot(mmix.T))**2.).sum() / (dmdata**2.).sum()) * 100
     lgr.info('Variance explained: ', varexpl, '%')
+
+    # create component and de-noised time series and save to files
+    hikts = betas[:, acc].dot(mmix.T[acc, :])
     midkts = betas[:, midk].dot(mmix.T[midk, :])
     lowkts = betas[:, rej].dot(mmix.T[rej, :])
+    dnts = data[mask] - lowkts - midkts
     if len(acc) != 0:
-        filewrite(unmask(betas[:, acc].dot(mmix.T[acc, :]), mask),
-                  'hik_ts_{0}'.format(suffix), ref_img)
+        filewrite(unmask(hikts, mask), 'hik_ts_{0}'.format(suffix), ref_img)
     if len(midk) != 0:
         filewrite(unmask(midkts, mask), 'midk_ts_{0}'.format(suffix), ref_img)
     if len(rej) != 0:
         filewrite(unmask(lowkts, mask), 'lowk_ts_{0}'.format(suffix), ref_img)
-    filewrite(unmask(data[mask] - lowkts - midkts, mask),
-              'dn_ts_{0}'.format(suffix), ref_img)
+    filewrite(unmask(dnts, mask), 'dn_ts_{0}'.format(suffix), ref_img)
+
     return varexpl
 
 
 def writefeats(data, mmix, mask, ref_img, suffix=''):
-    # Write feature versions of components
-    feats = computefeats2(data, mmix, mask)
-    filewrite(unmask(feats, mask), 'feats_{0}'.format(suffix), ref_img)
+    """
+    Converts `data` to component space with `mmix` and saves to disk
+
+    Parameters
+    ----------
+    data : (S x T) array_like
+        Input time series
+    mmix : (C x T) array_like
+        Mixing matrix for converting input data to component space, where `C`
+        is components and `T` is the same as in `data`
+    mask : (S,) array_like
+        Boolean mask array
+    ref_img : str or img_like
+        Reference image to dictate how outputs are saved to disk
+    suffix : str, optional
+        Appended to name of saved files (before extension). Default: ''
+
+    Returns
+    -------
+    fname : str
+        Filepath to saved file
+    """
+
+    # write feature versions of components
+    feats = unmask(computefeats2(data, mmix, mask), mask)
+    fname = filewrite(feats, 'feats_{0}'.format(suffix), ref_img)
+
+    return fname
 
 
-def writect(comptable, nt, acc, rej, midk, empty, ctname='', varexpl='-1'):
+def writect(comptable, n_vols, acc, rej, midk, empty, ctname='comp_table.txt', varexpl='-1'):
+    """
+    Saves component table to disk
+
+    Parameters
+    ----------
+    comptable : (N x 5) array_like
+        Array with columns denoting (1) index of component, (2) Kappa score of
+        component, (3) Rho score of component, (4) variance explained by
+        component, and (5) normalized variance explained by component
+    n_vols : int
+        Number of volumes in original time series
+    acc : list
+        Indices of accepted (BOLD) components in `mmix`
+    rej : list
+        Indices of rejected (non-BOLD) components in `mmix`
+    midk : list
+        Indices of mid-K (questionable) components in `mmix`
+    empty : list
+        Indices of ignored components in `mmix`
+    ctname : str, optional
+        Filename to save comptable to disk. Default 'comp_table.txt'
+    varexpl : str
+        Variance explained by original data
+    """
+
     n_components = comptable.shape[0]
     sortab = comptable[comptable[:, 1].argsort()[::-1], :]
-    if ctname is '':
-        ctname = 'comp_table.txt'
     open('accepted.txt', 'w').write(','.join([str(int(cc)) for cc in acc]))
     open('rejected.txt', 'w').write(','.join([str(int(cc)) for cc in rej]))
     open('midk_rejected.txt',
@@ -1299,7 +1621,7 @@ def writect(comptable, nt, acc, rej, midk, empty, ctname='', varexpl='-1'):
                           n_components=n_components,
                           dfe=len(acc),
                           rjn=len(midk) + len(rej),
-                          dfn=nt - len(midk) - len(rej),
+                          dfn=n_vols - len(midk) - len(rej),
                           acc=','.join([str(int(cc)) for cc in acc]),
                           rej=','.join([str(int(cc)) for cc in rej]),
                           mid=','.join([str(int(cc)) for cc in midk]),
@@ -1330,32 +1652,78 @@ def writect(comptable, nt, acc, rej, midk, empty, ctname='', varexpl='-1'):
                                                   sortab[i, 4]))
 
 
-def writeresults(OCcatd, comptable, mmix, nt, acc, rej, midk, empty, ref_img):
+def writeresults(ts, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_img):
+    """
+    Denoises `ts` and saves all resulting files to disk
+
+    Parameters
+    ----------
+    ts : (S x T) array_like
+        Time series to denoise and save to disk
+    mask : (S,) array_like
+        Boolean mask array
+    comptable : (N x 5) array_like
+        Array with columns denoting (1) index of component, (2) Kappa score of
+        component, (3) Rho score of component, (4) variance explained by
+        component, and (5) normalized variance explained by component
+    mmix : (C x T) array_like
+        Mixing matrix for converting input data to component space, where `C`
+        is components and `T` is the same as in `data`
+    acc : list
+        Indices of accepted (BOLD) components in `mmix`
+    rej : list
+        Indices of rejected (non-BOLD) components in `mmix`
+    midk : list
+        Indices of mid-K (questionable) components in `mmix`
+    empty : list
+        Indices of ignored components in `mmix`
+    ref_img : str or img_like
+        Reference image to dictate how outputs are saved to disk
+    """
+
     lgr.info('++ Writing optimally combined time series')
-    ts = OCcatd
     filewrite(ts, 'ts_OC', ref_img)
-    print("++ Writing Kappa-filtered optimally combined timeseries")
-    varexpl = write_split_ts(ts, comptable, mmix, acc, rej, midk, ref_img,
-                             suffix='OC')
-    print("++ Writing signal versions of components")
+    lgr.info("++ Writing Kappa-filtered optimally combined timeseries")
+    varexpl = write_split_ts(ts, mmix, acc, rej, midk, ref_img, suffix='OC')
+    lgr.info("++ Writing signal versions of components")
     ts_B = get_coeffs(ts, mask, mmix)
-    filewrite(ts_B[:, :, :, :], 'betas_OC', ref_img)
+    filewrite(ts_B, 'betas_OC', ref_img)
 
     if len(acc) != 0:
-        filewrite(ts_B[:, :, :, acc], 'betas_hik_OC', ref_img)
-        print("++ Writing optimally combined high-Kappa features")
-        writefeats(split_ts(ts, comptable, mmix, acc, rej, midk)[0],
+        filewrite(ts_B[:, acc], 'betas_hik_OC', ref_img)
+        lgr.info("++ Writing optimally combined high-Kappa features")
+        writefeats(split_ts(ts, mmix, mask, acc)[0],
                    mmix[:, acc], mask, ref_img, suffix='OC2')
-    print("++ Writing component table")
-    writect(comptable, nt, acc, rej, midk, empty, ctname='comp_table.txt',
+    lgr.info("++ Writing component table")
+    writect(comptable, n_vols, acc, rej, midk, empty, ctname='comp_table.txt',
             varexpl=varexpl)
 
 
-def writeresults_echoes(acc, rej, midk, ref_img, comptable, mmix, n_echos):
-    for i_echo in range(n_echos):
-        print("++ Writing Kappa-filtered TE#%i timeseries" % (i_echo+1))
-        write_split_ts(catd[:, :, :, i_echo, :], comptable, mmix,
-                       acc, rej, midk, ref_img, suffix='e%i' % (i_echo+1))
+def writeresults_echoes(catd, mmix, acc, rej, midk, ref_img):
+    """
+    Saves individually denoised echos to disk
+
+    Parameters
+    ----------
+    catd : (S x E x T) array_like
+        Input data time series
+    mmix : (C x T) array_like
+        Mixing matrix for converting input data to component space, where `C`
+        is components and `T` is the same as in `data`
+    acc : list
+        Indices of accepted (BOLD) components in `mmix`
+    rej : list
+        Indices of rejected (non-BOLD) components in `mmix`
+    midk : list
+        Indices of mid-K (questionable) components in `mmix`
+    ref_img : str or img_like
+        Reference image to dictate how outputs are saved to disk
+    """
+
+    for i_echo in range(catd.shape[1]):
+        lgr.info("++ Writing Kappa-filtered TE#%i timeseries" % (i_echo+1))
+        write_split_ts(catd[:, i_echo, :], mmix, acc, rej, midk, ref_img,
+                       suffix='e%i' % (i_echo+1))
 
 
 def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
@@ -1522,7 +1890,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         lgr.info('** WARNING! No BOLD components detected!!! \n'
                  '** Please check data and results!')
 
-    writeresults(OCcatd, comptable, mmix, n_vols, acc, rej, midk, empty, ref_img)
-    gscontrol_mmix(mmix, acc, rej, midk, empty, ref_img)
+    writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_img)
+    gscontrol_mmix(OCcatd, mmix, acc, rej, midk, ref_img)
     if dne:
-        writeresults_echoes(acc, rej, midk, ref_img, comptable, mmix, n_echos)
+        writeresults_echoes(catd, mmix, acc, rej, midk, ref_img)
