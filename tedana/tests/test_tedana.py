@@ -52,21 +52,20 @@ def test_outputs():
      '.fcl_out.nii.gz',
      '__clin.nii.gz',
      '__clout.nii.gz',
-     # files are in order of creation above this point
-     'betas_hik_OC.nii',
-     'betas_hik_OC_T1c.nii',
-     'betas_OC.nii',
-     'dn_ts_OC.nii',
-     'dn_ts_OC_T1c.nii',
-     'feats_OC2.nii',
-     'hik_ts_OC.nii',
-     'hik_ts_OC_T1c.nii',
-     'lowk_ts_OC.nii',
-     'midk_ts_OC.nii',
-     'sphis_hik.nii',
-     'ts_OC.nii',
      'veins_l0.nii',
-     'veins_l1.nii']
+     'veins_l1.nii',
+     'ts_OC.nii',
+     'hik_ts_OC.nii',
+     'midk_ts_OC.nii',
+     'lowk_ts_OC.nii',
+     'dn_ts_OC.nii',
+     'betas_OC.nii',
+     'betas_hik_OC.nii',
+     'feats_OC2.nii',
+     'betas_hik_OC_T1c.nii',
+     'dn_ts_OC_T1c.nii',
+     'hik_ts_OC_T1c.nii',
+     'sphis_hik.nii']
     test_dir = Path('/home/neuro/data/TED/')
     res_dir = Path('/home/neuro/code/TED/')
     for fn in nifti_test_list:

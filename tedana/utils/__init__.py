@@ -4,7 +4,7 @@
 from .utils import (
     load_image, load_data, get_dtype,
     make_min_mask, make_adaptive_mask,
-    unmask, filewrite,
+    unmask, filewrite, new_nii_like,
     fitgaussian, dice, andb,
 )
 
@@ -12,5 +12,5 @@ from .utils import (
 __all__ = [
     'load_image', 'load_data', 'get_dtype'
     'make_min_mask', 'make_adaptive_mask',
-    'unmask', 'filewrite',
+    'unmask', 'filewrite', 'new_nii_like',
     'fitgaussian', 'dice', 'andb']

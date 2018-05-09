@@ -121,6 +121,8 @@ def load_data(data, n_echos=None):
     # create reference image
     ref_img = img.__class__(np.zeros((nx, ny, nz)), affine=img.affine,
                             header=img.header, extra=img.extra)
+    ref_img.header.extensions = []
+    ref_img.header.set_sform(ref_img.header.get_sform(), code=1)
 
     return fdata, ref_img
 
@@ -380,7 +382,7 @@ def unmask(data, mask):
         Unmasked `data` array
     """
 
-    out = np.zeros(mask.shape + data.shape[1:])
+    out = np.zeros(mask.shape + data.shape[1:], dtype=data.dtype)
     out[mask] = data
     return out
 

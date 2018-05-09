@@ -12,7 +12,7 @@ from sklearn.cluster import DBSCAN
 from tedana.interfaces import (make_optcom, t2sadmap)
 from tedana.utils import (load_image, load_data, get_dtype,
                           make_min_mask, make_adaptive_mask,
-                          unmask, filewrite,
+                          unmask, filewrite, new_nii_like,
                           fitgaussian, dice, andb)
 
 import logging
@@ -776,7 +776,7 @@ def selcomps(seldict, mmix, ref_img, manacc, n_echos, olevel=2, oversion=99,
     # Time series derivative kurtosis
     mmix_dt = (mmix[:-1] - mmix[1:])
     mmix_kurt = stats.kurtosis(mmix_dt)
-    mmix_std = np.std(mmix_dt, 0)
+    mmix_std = np.std(mmix_dt, axis=0)
 
     """
     Step 1: Reject anything that's obviously an artifact
@@ -790,21 +790,30 @@ def selcomps(seldict, mmix, ref_img, manacc, n_echos, olevel=2, oversion=99,
     Step 2: Compute 3-D spatial FFT of Beta maps to detect high-spatial
     frequency artifacts
     """
-    fproj_arr = np.zeros([np.prod(mask.shape[0:2]), len(nc)])
-    fproj_arr_val = np.zeros([np.prod(mask.shape[0:2]), len(nc)])
+    # spatial information is important so for NIFTI we convert back to 3D space
+    if get_dtype(ref_img) == 'NIFTI':
+        dim1 = np.prod(ref_img.shape[:2])
+    else:
+        dim1 = mask.shape[0]
+    fproj_arr = np.zeros([dim1, len(nc)])
+    fproj_arr_val = np.zeros([dim1, len(nc)])
     spr = []
     fdist = []
     for ii in nc:
-        fproj = np.fft.fftshift(np.abs(np.fft.rfftn(unmask(seldict['PSC'],
-                                                           mask)[:, :, :, ii])))
-        fproj_z = fproj.max(2)
+        # convert data back to 3D array
+        if get_dtype(ref_img) == 'NIFTI':
+            tproj = new_nii_like(unmask(seldict['PSC'], mask)[:, ii], ref_img).get_data()
+        else:
+            tproj = unmask(seldict['PSC'], mask)[:, ii]
+        fproj = np.fft.fftshift(np.abs(np.fft.rfftn(tproj)))
+        fproj_z = fproj.max(axis=2)
         fproj[fproj == fproj.max()] = 0
         fproj_arr[:, ii] = stats.rankdata(fproj_z.flatten())
         fproj_arr_val[:, ii] = fproj_z.flatten()
         spr.append(np.array(fproj_z > fproj_z.max() / 4, dtype=np.int).sum())
         fprojr = np.array([fproj, fproj[:, :, ::-1]]).max(0)
         fdist.append(np.max([fitgaussian(fproj.max(jj))[3:].max() for
-                     jj in range(len(fprojr.shape))]))
+                     jj in range(fprojr.ndim)]))
     fdist = np.array(fdist)
     spr = np.array(spr)
 
