@@ -5,7 +5,6 @@ import nibabel as nib
 from nibabel.filename_parser import splitext_addext
 from nilearn.image import new_img_like
 from nilearn._utils import check_niimg
-import nilearn.masking as nimask
 from scipy.optimize import leastsq
 from sklearn.utils import check_array
 
@@ -117,7 +116,7 @@ def load_data(data, n_echos=None):
     # we have a z-cat file
     img = check_niimg(data)
     (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
-    fdata = load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1))
+    fdata = load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1, order='F'))
 
     # create reference image
     ref_img = img.__class__(np.zeros((nx, ny, nz)), affine=img.affine,

@@ -637,9 +637,11 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
             # Do simple clustering on ranked signal-change map
             countsigFR2 = F_R2_clmaps[:, i].sum()
             countsigFS0 = F_S0_clmaps[:, i].sum()
-            Br_clmaps_R2[:, i] = spatclust(stats.rankdata(tsoc_Babs[:, i]), mask,
-                                           csize, max(tsoc_Babs.shape)-countsigFR2, ref_img)
-            Br_clmaps_S0[:, i] = spatclust(stats.rankdata(tsoc_Babs[:, i]), mask,
+            spclust_input = stats.rankdata(tsoc_Babs[:, i])
+            Br_clmaps_R2[:, i] = spatclust(spclust_input, mask,
+                                           csize, max(tsoc_Babs.shape)-countsigFR2,
+                                           ref_img)
+            Br_clmaps_S0[:, i] = spatclust(spclust_input, mask,
                                            csize, max(tsoc_Babs.shape)-countsigFS0,
                                            ref_img)
 
@@ -709,12 +711,13 @@ def selcomps(seldict, mmix, ref_img, manacc, n_echos, debug=False, olevel=2, ove
                 seldict = pickle.load(csstate_f)
                 csstate_f.close()
             except FileNotFoundError:
-                lgr.warning('++ No component data found!')
+                lgr.warning('++ Failed to load component selection data')
                 return None
 
     # Dump dictionary into variable names
+    # TODO: this is a terrible way to do things and we should change it
     for key in seldict.keys():
-        exec("%s=seldict['%s']" % (key, key))
+        exec("{0}=seldict['{0}']".format(key))
 
     # List of components
     midk = []
@@ -897,8 +900,7 @@ def selcomps(seldict, mmix, ref_img, manacc, n_echos, debug=False, olevel=2, ove
                            np.intersect1d(nc[db.labels_ == 0],
                            nc[Rhos > getelbow_mod(Rhos_sorted,
                                                   val=True)]).shape[0]])
-            if debug:
-                lgr.info('found solution', ii, db.labels_)
+            lgr.debug('++ Found solution', ii, db.labels_)
         db = None
 
     epsmap = np.array(epsmap)
@@ -908,7 +910,7 @@ def selcomps(seldict, mmix, ref_img, manacc, n_echos, debug=False, olevel=2, ove
         # Select index that maximizes Dice with guessmask but first
         # minimizes number of higher Rho components
         ii = int(epsmap[np.argmax(epsmap[epsmap[:, 2] == np.min(epsmap[:, 2]), 1], 0), 0])
-        lgr.info('Component selection tuning: ', epsmap[:, 1].max())
+        lgr.info('++ Component selection tuning: ', epsmap[:, 1].max())
         db = DBSCAN(eps=.005+ii*.005, min_samples=3).fit(fz.T)
         ncl = nc[db.labels_ == 0]
         ncl = np.setdiff1d(ncl, rej)
@@ -918,7 +920,7 @@ def selcomps(seldict, mmix, ref_img, manacc, n_echos, debug=False, olevel=2, ove
         to_clf = np.setdiff1d(nc, np.union1d(ncl, rej))
     if len(group0) == 0 or len(group0) < len(KRguess) * .5:
         dbscanfailed = True
-        lgr.info('DBSCAN based guess failed. Using elbow guess method.')
+        lgr.info('++ DBSCAN based guess failed. Using elbow guess method.')
         ncl = np.setdiff1d(np.setdiff1d(nc[KRelbow == 2], rej),
                            np.union1d(nc[tt_table[:, 0] < tt_lim],
                            np.union1d(np.union1d(nc[spz > 1],
@@ -929,8 +931,8 @@ def selcomps(seldict, mmix, ref_img, manacc, n_echos, debug=False, olevel=2, ove
         group_n1 = []
         to_clf = np.setdiff1d(nc, np.union1d(group0, rej))
     if len(group0) < 2 or (len(group0) < 4 and float(len(rej))/len(group0) > 3):
-        lgr.info('WARNING: Extremely limited reliable BOLD signal space. '
-                 'Not filtering further into midk etc.')
+        lgr.warning('++ Extremely limited reliable BOLD signal space. '
+                    'Not filtering further into midk etc.')
         midkfailed = True
         min_acc = np.array([])
         if len(group0) != 0:
@@ -1194,7 +1196,7 @@ def tedpca(catd, OCcatd, combmode, mask, stabilize, ref_img, tes, kdaw, rdaw,
         lgr.info('++ Computing PCA of spatially concatenated multi-echo data')
         d = catd[mask].astype('float64')
     else:
-        lgr.info('++ Computing PCA of TE #%s' % ','.join([str(ee) for ee in ste]))
+        lgr.info('++ Computing PCA of echo #%s' % ','.join([str(ee) for ee in ste]))
         d = np.stack([catd[mask, ee] for ee in ste - 1], axis=1).astype('float64')
 
     eim = np.squeeze(eimask(d))
@@ -1249,7 +1251,7 @@ def tedpca(catd, OCcatd, combmode, mask, stabilize, ref_img, tes, kdaw, rdaw,
             with open('pcastate.pkl', 'wb') as handle:
                 pickle.dump(pcastate, handle)
         except TypeError:
-            lgr.warning('Could not save PCA solution.')
+            lgr.warning('++ Could not save PCA solution.')
 
     else:  # if loading existing state
         lgr.info('++ Loading PCA')
@@ -1538,7 +1540,7 @@ def write_split_ts(data, mmix, acc, rej, midk, ref_img, suffix=''):
     # get variance explained by retained components
     betas = get_coeffs(unmask(dmdata.T, mask), mask, mmix)[mask]
     varexpl = (1 - ((dmdata.T - betas.dot(mmix.T))**2.).sum() / (dmdata**2.).sum()) * 100
-    lgr.info('Variance explained: ', varexpl, '%')
+    lgr.info('++ Variance explained: ', varexpl, '%')
 
     # create component and de-noised time series and save to files
     hikts = betas[:, acc].dot(mmix.T[acc, :])
@@ -1725,7 +1727,7 @@ def writeresults_echoes(catd, mmix, acc, rej, midk, ref_img):
     """
 
     for i_echo in range(catd.shape[1]):
-        lgr.info("++ Writing Kappa-filtered TE#%i timeseries" % (i_echo+1))
+        lgr.info('++ Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo+1))
         write_split_ts(catd[:, i_echo, :], mmix, acc, rej, midk, ref_img,
                        suffix='e%i' % (i_echo+1))
 
@@ -1891,8 +1893,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
             acc, rej, midk, empty = ctabsel(ctab)
 
     if len(acc) == 0:
-        lgr.info('** WARNING! No BOLD components detected!!! \n'
-                 '** Please check data and results!')
+        lgr.warning('++ No BOLD components detected!!! Please check data and results!')
 
     writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_img)
     gscontrol_mmix(OCcatd, mmix, acc, rej, midk, ref_img)
