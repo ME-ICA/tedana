@@ -11,8 +11,8 @@ from scipy.special import lpmv
 from sklearn.cluster import DBSCAN
 from tedana.interfaces import (make_optcom, t2sadmap)
 from tedana.utils import (load_image, load_data, get_dtype,
-                          make_min_mask, makeadmask,
-                          fmask, unmask, filewrite,
+                          make_min_mask, make_adaptive_mask,
+                          unmask, filewrite,
                           fitgaussian, dice, andb)
 
 import logging
@@ -151,16 +151,16 @@ def get_coeffs(data, mask, X, add_const=False):
     # mask data and flip (time x samples)
     mdata = data[mask].T
 
-    # coerce X to >=2d if single variable supplies
+    # coerce X to >=2d
     X = np.atleast_2d(X)
-    if X.shape[0] == 1:
+
+    if len(X) == 1:
         X = X.T
     if add_const:  # add intercept, if specified
-        Xones = np.ones((np.min(mdata.shape), 1))
-        X = np.column_stack([X, Xones])
+        X = np.column_stack([X, np.ones((len(X), 1))])
 
     betas = np.linalg.lstsq(X, mdata)[0].T
-    if add_const:  # drop beta for intercept
+    if add_const:  # drop beta for intercept, if specified
         betas = betas[:, :-1]
     betas = unmask(betas, mask)
 
@@ -316,7 +316,8 @@ def eimask(dd, ees=None):
         perc98 = stats.scoreatpercentile(dd[:, ee, :].flatten(), 98,
                                          interpolation_method='lower')
         lthr, hthr = 0.001 * perc98, 5 * perc98
-        lgr.info('++ Eimask threshold boundaries: {}'.format([lthr, hthr]))
+        lgr.info('++ Eimask threshold boundaries: '
+                 '{:.03f} {:.03f}'.format(lthr, hthr))
         m = dd[:, ee, :].mean(axis=1)
         imask[np.logical_and(m > lthr, m < hthr), ee] = True
 
@@ -389,7 +390,7 @@ def computefeats2(data, mmix, mask, normalize=True):
 
     # R-to-Z transform
     data_Z = np.arctanh(data_R)
-    if len(data_Z.shape) == 1:
+    if data_Z.ndim == 1:
         data_Z = np.atleast_2d(data_Z).T
 
     # normalize data
@@ -471,8 +472,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     """
 
     # compute optimal combination of raw data
-    tsoc = np.array(make_optcom(catd, t2sG, tes, mask, combmode),
-                    dtype=float)[mask]
+    tsoc = make_optcom(catd, t2sG, tes, mask, combmode).astype(float)[mask]
     # demean optimal combination
     tsoc_dm = tsoc - tsoc.mean(axis=-1, keepdims=True)
 
@@ -593,6 +593,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     # full selection including clustering criteria
     seldict = None
     if full_sel:
+        lgr.info('++ Performing spatial clustering of components')
         for i in range(n_components):
             # save out files
             out = np.zeros((n_samp, 4))
@@ -606,7 +607,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
             out[:, 2] = np.squeeze(unmask(F_S0_maps[:, i], t2s != 0))
             out[:, 3] = np.squeeze(unmask(Z_maps[:, i], mask))
 
-            filewrite(out, ccname, ref_img, gzip=gzip)
+            ccname = filewrite(out, ccname, ref_img, gzip=gzip)
 
             if get_dtype(ref_img) == 'GIFTI':
                 continue  # TODO: pass through GIFTI file data as below
@@ -694,10 +695,11 @@ def selcomps(seldict, mmix, ref_img, manacc, n_echos, debug=False, olevel=2, ove
     ign : list
         Indices of ignored components in `mmix`
     """
+
     if filecsdata:
         import bz2
         if seldict is not None:
-            lgr.info('Saving component selection data')
+            lgr.info('++ Saving component selection data')
             csstate_f = bz2.BZ2File('compseldata.pklbz', 'wb')
             pickle.dump(seldict, csstate_f)
             csstate_f.close()
@@ -707,7 +709,7 @@ def selcomps(seldict, mmix, ref_img, manacc, n_echos, debug=False, olevel=2, ove
                 seldict = pickle.load(csstate_f)
                 csstate_f.close()
             except FileNotFoundError:
-                lgr.info('No component data found!')
+                lgr.warning('++ No component data found!')
                 return None
 
     # Dump dictionary into variable names
@@ -1043,13 +1045,14 @@ def selcomps(seldict, mmix, ref_img, manacc, n_echos, debug=False, olevel=2, ove
     for t2sl_i in range(len(t2s_lim)):
         t2sl = t2s_lim[t2sl_i]
         veinW = sig_B[:, veinc]*np.tile(rej_veinRZ, [sig_B.shape[0], 1])
-        veincand = fmask(unmask(andb([s0[t2s != 0] < np.median(s0[t2s != 0]),
-                                t2s[t2s != 0] < t2sl]) >= 1, t2s != 0), mask)
+        veincand = unmask(andb([s0[t2s != 0] < np.median(s0[t2s != 0]),
+                                t2s[t2s != 0] < t2sl]) >= 1,
+                          t2s != 0)[mask]
         veinW[~veincand] = 0
-        invein = veinW.sum(1)[fmask(unmask(veinmaskf, mask) * unmask(veinW.sum(1) > 1, mask),
-                                    mask)]
+        invein = veinW.sum(axis=1)[(unmask(veinmaskf, mask) *
+                                    unmask(veinW.sum(axis=1) > 1, mask))[mask]]
         minW = 10 * (np.log10(invein).mean()) - 1 * 10**(np.log10(invein).std())
-        veinmaskB = veinW.sum(1) > minW
+        veinmaskB = veinW.sum(axis=1) > minW
         tsoc_Bp = tsoc_B.copy()
         tsoc_Bp[tsoc_Bp < 0] = 0
         vvex = np.array([(tsoc_Bp[veinmaskB, ii]**2.).sum() /
@@ -1136,8 +1139,8 @@ def selcomps(seldict, mmix, ref_img, manacc, n_echos, debug=False, olevel=2, ove
     return list(sorted(ncl)), list(sorted(rej)), list(sorted(midk)), list(sorted(ign))
 
 
-def tedpca(catd, combmode, mask, stabilize, ref_img, tes, kdaw, rdaw, ste=0,
-           mlepca=True):
+def tedpca(catd, OCcatd, combmode, mask, stabilize, ref_img, tes, kdaw, rdaw,
+           ste=0, mlepca=True):
     """
     Performs PCA on `catd` and uses TE-dependence to dimensionally reduce data
 
@@ -1145,6 +1148,8 @@ def tedpca(catd, combmode, mask, stabilize, ref_img, tes, kdaw, rdaw, ste=0,
     ----------
     catd : (S x E x T) array_like
         Input functional data
+    OCcatd : (S x T) array_like
+        Optimally-combined time series data
     combmode : {'t2s', 'ste'} str
         How optimal combination of echos should be made, where 't2s' indicates
         using the method of Posse 1999 and 'ste' indicates using the method of
@@ -1183,13 +1188,13 @@ def tedpca(catd, combmode, mask, stabilize, ref_img, tes, kdaw, rdaw, ste=0,
     ste = np.array([int(ee) for ee in str(ste).split(',')])
 
     if len(ste) == 1 and ste[0] == -1:
-        lgr.info('-Computing PCA of optimally combined multi-echo data')
+        lgr.info('++ Computing PCA of optimally combined multi-echo data')
         d = OCcatd[make_min_mask(OCcatd[:, np.newaxis, :])][:, np.newaxis, :]
     elif len(ste) == 1 and ste[0] == 0:
-        lgr.info('-Computing PCA of spatially concatenated multi-echo data')
+        lgr.info('++ Computing PCA of spatially concatenated multi-echo data')
         d = catd[mask].astype('float64')
     else:
-        lgr.info('-Computing PCA of TE #%s' % ','.join([str(ee) for ee in ste]))
+        lgr.info('++ Computing PCA of TE #%s' % ','.join([str(ee) for ee in ste]))
         d = np.stack([catd[mask, ee] for ee in ste - 1], axis=1).astype('float64')
 
     eim = np.squeeze(eimask(d))
@@ -1237,7 +1242,7 @@ def tedpca(catd, combmode, mask, stabilize, ref_img, tes, kdaw, rdaw, ste=0,
         ctb = np.vstack([ctb.T[:3], sp]).T
 
         # Save state
-        lgr.info('Saving PCA')
+        lgr.info('++ Saving PCA')
         pcastate = {'u': u, 's': s, 'v': v, 'ctb': ctb,
                     'eigelb': eigelb, 'spmin': spmin, 'spcum': spcum}
         try:
@@ -1247,7 +1252,7 @@ def tedpca(catd, combmode, mask, stabilize, ref_img, tes, kdaw, rdaw, ste=0,
             lgr.warning('Could not save PCA solution.')
 
     else:  # if loading existing state
-        lgr.info('Loading PCA')
+        lgr.info('++ Loading PCA')
         with open('pcastate.pkl', 'rb') as handle:
             pcastate = pickle.load(handle)
         u, s, v = pcastate['u'], pcastate['s'], pcastate['v']
@@ -1291,8 +1296,8 @@ def tedpca(catd, combmode, mask, stabilize, ref_img, tes, kdaw, rdaw, ste=0,
     dd = u.dot(np.diag(s*np.array(pcsel, dtype=np.int))).dot(v)
 
     n_components = s[pcsel].shape[0]
-    lgr.info('--Selected {0} components. Minimum Kappa={1:.02f} '
-             'Rho={2:.02f}'.format(n_components, kappa_thr, rho_thr))
+    lgr.info('++ Selected {0} components. Kappa threshold: {1:.02f}, '
+             'Rho threshold: {2:.02f}'.format(n_components, kappa_thr, rho_thr))
 
     dd = stats.zscore(dd.T, axis=0).T  # variance normalize timeseries
     dd = stats.zscore(dd, axis=None)  # variance normalize everything
@@ -1359,8 +1364,7 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     catd : (S x E x T) array_like
         Input functional data
     optcom : (S x T) array_like
-        Optimally-combined functional data (i.e., the output of
-        `tedana.interfaces.t2smap.make_optcom`)
+        Optimally-combined functional data (i.e., the output of `make_optcom`)
     n_echos : int
         Number of echos in data. Should be the same as `E` dimension of `catd`
     ref_img : str or img_like
@@ -1410,7 +1414,7 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
 
     filewrite(optcom, 'tsoc_orig', ref_img)
     dm_optcom = unmask(tsoc_nogs, Gmask)
-    filewrite(dm_optcom, 'tsoc_nogs.nii', ref_img)
+    filewrite(dm_optcom, 'tsoc_nogs', ref_img)
 
     # Project glbase out of each echo
     dm_catd = catd.copy()  # don't overwrite catd
@@ -1683,18 +1687,18 @@ def writeresults(ts, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_i
 
     lgr.info('++ Writing optimally combined time series')
     filewrite(ts, 'ts_OC', ref_img)
-    lgr.info("++ Writing Kappa-filtered optimally combined timeseries")
+    lgr.info('++ Writing Kappa-filtered optimally combined timeseries')
     varexpl = write_split_ts(ts, mmix, acc, rej, midk, ref_img, suffix='OC')
-    lgr.info("++ Writing signal versions of components")
+    lgr.info('++ Writing signal versions of components')
     ts_B = get_coeffs(ts, mask, mmix)
     filewrite(ts_B, 'betas_OC', ref_img)
 
     if len(acc) != 0:
         filewrite(ts_B[:, acc], 'betas_hik_OC', ref_img)
-        lgr.info("++ Writing optimally combined high-Kappa features")
+        lgr.info('++ Writing optimally combined high-Kappa features')
         writefeats(split_ts(ts, mmix, mask, acc)[0],
                    mmix[:, acc], mask, ref_img, suffix='OC2')
-    lgr.info("++ Writing component table")
+    lgr.info('++ Writing component table')
     writect(comptable, n_vols, acc, rej, midk, empty, ctname='comp_table.txt',
             varexpl=varexpl)
 
@@ -1791,6 +1795,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     n_echos = len(tes)
 
     # coerce data to samples x echos x time array
+    lgr.info('++ Loading input data: {}'.format(data))
     catd, ref_img = load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
 
@@ -1825,12 +1830,11 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
 
     lgr.info('++ Computing Mask')
     global mask
-    mask, masksum = makeadmask(catd, minimum=False, getsum=True)
+    mask, masksum = make_adaptive_mask(catd, minimum=False, getsum=True)
 
     lgr.info('++ Computing T2* map')
     global t2s, s0, t2sG
-    t2s, s0, t2ss, s0s, t2sG, s0G = t2sadmap(catd, tes,
-                                             mask, masksum,
+    t2s, s0, t2ss, s0s, t2sG, s0G = t2sadmap(catd, tes, mask, masksum,
                                              start_echo=1)
 
     # set a hard cap for the T2* map
@@ -1838,12 +1842,12 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     cap_t2s = stats.scoreatpercentile(t2s.flatten(), 99.5,
                                       interpolation_method='lower')
     t2s[t2s > cap_t2s * 10] = cap_t2s
-    filewrite(s0, op.join(out_dir, 's0v'), ref_img)
     filewrite(t2s, op.join(out_dir, 't2sv'), ref_img)
+    filewrite(s0, op.join(out_dir, 's0v'), ref_img)
     filewrite(t2ss, op.join(out_dir, 't2ss'), ref_img)
     filewrite(s0s, op.join(out_dir, 's0vs'), ref_img)
-    filewrite(s0G, op.join(out_dir, 's0vG'), ref_img)
     filewrite(t2sG, op.join(out_dir, 't2svG'), ref_img)
+    filewrite(s0G, op.join(out_dir, 's0vG'), ref_img)
 
     # optimally combine data
     global OCcatd
@@ -1855,7 +1859,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
 
     if mixm is None:
         lgr.info("++ Doing ME-PCA and ME-ICA")
-        n_components, dd = tedpca(catd, combmode, mask, stabilize, ref_img,
+        n_components, dd = tedpca(catd, OCcatd, combmode, mask, stabilize, ref_img,
                                   tes=tes, kdaw=kdaw, rdaw=rdaw, ste=ste)
         mmix_orig = tedica(n_components, dd, conv, fixed_seed, cost=initcost,
                            final_cost=finalcost)

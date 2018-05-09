@@ -1,5 +1,5 @@
 import numpy as np
-from tedana.utils import (filewrite, load_data, makeadmask, unmask, fmask)
+from tedana.utils import (filewrite, load_data, make_adaptive_mask, unmask)
 
 import logging
 logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
@@ -12,7 +12,7 @@ def fit(data, mask, tes, masksum, start_echo):
     T2* and S0 timeseries.
     """
     nx, ny, nz, n_echos, n_trs = data.shape
-    echodata = fmask(data, mask)
+    echodata = data[mask]
     tes = np.array(tes)
 
     t2sa_ts = np.zeros([nx, ny, nz, n_trs])
@@ -173,10 +173,10 @@ def make_optcom(data, t2s, tes, mask, combmode):
     tes = np.array(tes)[np.newaxis]  # (1 x E) array_like
 
     if t2s.ndim == 1:
-        lgr.info('Optimally combining with voxel-wise T2 estimates')
+        lgr.info('++ Optimally combining data with voxel-wise T2 estimates')
         ft2s = t2s[mask, np.newaxis]
     else:
-        lgr.info('Optimally combining with voxel- and volume-wise T2 estimates')
+        lgr.info('++ Optimally combining data with voxel- and volume-wise T2 estimates')
         ft2s = t2s[mask, :, np.newaxis]
 
     if combmode == 'ste':
@@ -223,7 +223,7 @@ def main(options):
     ref_img = data[0] if isinstance(data, list) else data
 
     lgr.info("++ Computing Mask")
-    mask, masksum = makeadmask(catd, minimum=False, getsum=True)
+    mask, masksum = make_adaptive_mask(catd, minimum=False, getsum=True)
     filewrite(masksum, 'masksum%s' % suf, ref_img, copy_header=False)
 
     lgr.info("++ Computing Adaptive T2* map")

@@ -3,14 +3,14 @@
 
 from .utils import (
     load_image, load_data, get_dtype,
-    make_min_mask, makeadmask,
-    fmask, unmask, filewrite,
+    make_min_mask, make_adaptive_mask,
+    unmask, filewrite,
     fitgaussian, dice, andb,
 )
 
 
 __all__ = [
     'load_image', 'load_data', 'get_dtype'
-    'make_min_mask', 'makeadmask',
-    'fmask', 'unmask', 'filewrite',
+    'make_min_mask', 'make_adaptive_mask',
+    'unmask', 'filewrite',
     'fitgaussian', 'dice', 'andb']

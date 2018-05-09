@@ -7,6 +7,7 @@ from nilearn.image import new_img_like
 from nilearn._utils import check_niimg
 import nilearn.masking as nimask
 from scipy.optimize import leastsq
+from sklearn.utils import check_array
 
 from ..due import due, BibTeX
 
@@ -125,7 +126,7 @@ def load_data(data, n_echos=None):
     return fdata, ref_img
 
 
-def makeadmask(data, minimum=True, getsum=False):
+def make_adaptive_mask(data, minimum=True, getsum=False):
     """
     Makes map of `data` specifying longest echo a voxel can be sampled with
 
@@ -362,89 +363,25 @@ def make_gii_darray(ref_array, data, copy_meta=False):
     return darray
 
 
-def uncat2echos(data):
-    """
-    Combines Z- and echo-axis in `data`
-
-    Parameters
-    ----------
-    data : (X x Y x Z x E x T) array_like
-        Multi-echo data array
-
-    Returns
-    -------
-    fdata : (X x Y x M x T) np.ndarray
-        Z-concatenated multi-echo data array, where M is Z * number of echos
-    """
-
-    if data.ndim < 4:
-        raise ValueError('Input data must have at least four dimensions; '
-                         'provided data has only {0}'.format(data.ndim))
-
-    (nx, ny), nz = data.shape[:2], np.prod(data.shape[2:4])
-    return data.reshape(nx, ny, nz, -1)
-
-
-def fmask(data, mask=None):
-    """
-    Masks `data` with non-zero entries of `mask`
-
-    Parameters
-    ----------
-    data : (X x Y x Z [x E [x T]) array_like or img_like object
-        Data array or data file to be masked
-    mask : (X x Y x Z) array_like or img_like object
-        Boolean array or mask file
-
-    Returns
-    -------
-    fdata : (S x E x T) np.ndarray
-        Masked `data`, where `S` is samples, `E` is echoes, and `T` is time
-    """
-
-    if mask is not None and not type(data) == type(mask):
-        raise TypeError('Provided `data` and `mask` must be of same type.')
-
-    if isinstance(data, str):
-        root, ext, addext = splitext_addext(data)
-        if ext == '.gii':
-            # mask need not apply for gii files
-            fdata = np.column_stack([f.data for f in nib.load(data).darrays])
-        else:
-            # use nilearn for other files
-            data = check_niimg(data)
-            if mask is not None:
-                # TODO: check that this uses same order to flatten
-                fdata = nimask.apply_mask(data, mask).T
-            else:
-                fdata = data.get_data().reshape((-1,) + data.shape[3:])
-    elif isinstance(data, np.ndarray):
-        # flatten data over first three dimensions and apply mask
-        fdata = data.reshape((-1,) + data.shape[3:])
-        if mask is not None:
-            fdata = fdata[mask.flatten() > 0]
-
-    return fdata.squeeze()
-
-
 def unmask(data, mask):
     """
     Unmasks `data` using non-zero entries of `mask`
 
     Parameters
     ----------
-    data : (M x E x T) array_like
-        Masked array, where `M` is the number of samples
+    data : (M [x E [x T]]) array_like
+        Masked array, where `M` is the number of `True` values in `mask`
     mask : (S,) array_like
-        Boolean array of `S` samples that was used to mask `data`
+        Boolean array of `S` samples that was used to mask `data`. It should
+        have exactly `M` True values.
 
     Returns
     -------
-    out : (S x E x T) np.ndarray
+    out : (S [x E [x T]]) np.ndarray
         Unmasked `data` array
     """
 
-    out = np.zeros((mask.shape + data.shape[1:]))
+    out = np.zeros(mask.shape + data.shape[1:])
     out[mask] = data
     return out
 
@@ -618,15 +555,13 @@ def andb(arrs):
         Integer array of summed `arrs`
     """
 
-    same_shape = []
-    for arr in arrs:
-        for arr2 in arrs:
-            same_shape.append(arr.shape == arr2.shape)
-
+    # coerce to integer and ensure same shape
+    arrs = [check_array(arr, dtype=int) for arr in arrs]
+    same_shape = [arr1.shape == arr2.shape for arr1 in arrs for arr2 in arrs]
     if not np.all(same_shape):
-        raise ValueError('All input arrays must have same shape')
+        raise ValueError('All input arrays must have same shape.')
 
-    result = np.zeros(arrs[0].shape)
-    for arr in arrs:
-        result += np.array(arr, dtype=np.int)
+    # sum across arrays
+    result = np.sum(arrs, axis=0)
+
     return result

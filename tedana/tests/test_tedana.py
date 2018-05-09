@@ -36,7 +36,18 @@ def test_outputs():
     """
     Compare the niftis specified in the below list again
     """
+
     nifti_test_list = [
+     't2sv.nii',
+     's0v.nii',
+     't2ss.nii',
+     's0vs.nii',
+     't2svG.nii',
+     's0vG.nii',
+     'T1gs.nii',
+     'tsoc_orig.nii',
+     'tsoc_nogs.nii',
+     # files are in order of creation above this point
      '.cc_temp.nii.gz',
      '.fcl_in.nii.gz',
      '.fcl_out.nii.gz',
@@ -52,17 +63,8 @@ def test_outputs():
      'hik_ts_OC_T1c.nii',
      'lowk_ts_OC.nii',
      'midk_ts_OC.nii',
-     's0v.nii',
-     's0vG.nii',
-     's0vs.nii',
      'sphis_hik.nii',
-     'T1gs.nii',
-     't2ss.nii',
-     't2sv.nii',
-     't2svG.nii',
      'ts_OC.nii',
-     'tsoc_nogs.nii',
-     'tsoc_orig.nii',
      'veins_l0.nii',
      'veins_l1.nii']
     test_dir = Path('/home/neuro/data/TED/')

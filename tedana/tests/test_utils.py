@@ -11,19 +11,11 @@ def test_cat2echos():
     pass
 
 
-def test_makeadmask():
+def test_make_adaptive_mask():
     pass
 
 
 def test_make_min_mask():
-    pass
-
-
-def test_uncat2echos():
-    pass
-
-
-def test_fmask():
     pass
 
 
