@@ -655,7 +655,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     return seldict, comptab, betas, mmix_new
 
 
-def selcomps(seldict, mmix, ref_img, manacc, n_echos, olevel=2, oversion=99,
+def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=99,
              filecsdata=False, savecsdiag=True, strict_mode=False):
     """
     Labels components in `mmix`
@@ -802,7 +802,7 @@ def selcomps(seldict, mmix, ref_img, manacc, n_echos, olevel=2, oversion=99,
     for ii in nc:
         # convert data back to 3D array
         if get_dtype(ref_img) == 'NIFTI':
-            tproj = new_nii_like(unmask(seldict['PSC'], mask)[:, ii], ref_img).get_data()
+            tproj = new_nii_like(ref_img, unmask(seldict['PSC'], mask)[:, ii]).get_data()
         else:
             tproj = unmask(seldict['PSC'], mask)[:, ii]
         fproj = np.fft.fftshift(np.abs(np.fft.rfftn(tproj)))
@@ -917,7 +917,7 @@ def selcomps(seldict, mmix, ref_img, manacc, n_echos, olevel=2, oversion=99,
         # Select index that maximizes Dice with guessmask but first
         # minimizes number of higher Rho components
         ii = int(epsmap[np.argmax(epsmap[epsmap[:, 2] == np.min(epsmap[:, 2]), 1], 0), 0])
-        lgr.info('++ Component selection tuning: ', epsmap[:, 1].max())
+        lgr.info('++ Component selection tuning: {:.05f}'.format(epsmap[:, 1].max()))
         db = DBSCAN(eps=.005+ii*.005, min_samples=3).fit(fz.T)
         ncl = nc[db.labels_ == 0]
         ncl = np.setdiff1d(ncl, rej)
@@ -953,8 +953,8 @@ def selcomps(seldict, mmix, ref_img, manacc, n_echos, olevel=2, oversion=99,
                          'Kappa cut point', 'Rho cut point', 'DBSCAN failed to converge',
                          'Mid-Kappa failed (limited BOLD signal)', 'Kappa-Rho guess',
                          'min_acc', 'toacc_hi']
-        diagstep_vals = [rej, KRcut, Kcut, Rcut, dbscanfailed,
-                         midkfailed, KRguess, min_acc, toacc_hi]
+        diagstep_vals = [rej.tolist(), KRcut, Kcut, Rcut, dbscanfailed,
+                         midkfailed, KRguess.tolist(), min_acc.tolist(), toacc_hi.tolist()]
 
         with open('csstepdata.txt', 'w') as ofh:
             json.dump(dict(zip(diagstep_keys, diagstep_vals)), ofh, indent=4, sort_keys=True)
@@ -1069,7 +1069,7 @@ def selcomps(seldict, mmix, ref_img, manacc, n_echos, olevel=2, oversion=99,
         group0_res = np.intersect1d(KRguess, group0)
         phys_var_zs.append((vvex - vvex[group0_res].mean()) / vvex[group0_res].std())
         veinBout = unmask(veinmaskB, mask)
-        filewrite(veinBout, 'veins_l%i' % t2sl_i, ref_img)
+        filewrite(veinBout.astype(int), 'veins_l%i' % t2sl_i, ref_img)
 
     # Mask to sample veins
     phys_var_z = np.array(phys_var_zs).max(0)
@@ -1135,10 +1135,12 @@ def selcomps(seldict, mmix, ref_img, manacc, n_echos, olevel=2, oversion=99,
                          'Mid-kappa components', 'svm_acc_fail', 'toacc_hi', 'toacc_lo',
                          'Field artifacts', 'Physiological artifacts',
                          'Miscellaneous artifacts', 'ncl', 'Ignored components']
-        diagstep_vals = [rej, KRcut, Kcut, Rcut, dbscanfailed,
-                         KRguess, dice_rej, rej_supp, to_clf,
-                         midk, svm_acc_fail, toacc_hi, toacc_lo,
-                         field_art, phys_art, misc_art, ncl, ign]
+        diagstep_vals = [rej.tolist(), KRcut, Kcut, Rcut, dbscanfailed,
+                         KRguess.tolist(), dice_rej, rej_supp.tolist(),
+                         to_clf.tolist(), midk.tolist(), svm_acc_fail,
+                         toacc_hi.tolist(), toacc_lo.tolist(),
+                         field_art.tolist(), phys_art.tolist(),
+                         misc_art.tolist(), ncl.tolist(), ign.tolist()]
 
         with open('csstepdata.txt', 'w') as ofh:
             json.dump(dict(zip(diagstep_keys, diagstep_vals)), ofh, indent=4, sort_keys=True)
@@ -1437,7 +1439,7 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     return dm_catd, dm_optcom
 
 
-def gscontrol_mmix(OCcatd, mmix, acc, rej, midk, ref_img):
+def gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img):
     """
     Parameters
     ----------
@@ -1512,7 +1514,7 @@ def gscontrol_mmix(OCcatd, mmix, acc, rej, midk, ref_img):
     np.savetxt('meica_mix_T1c.1D', mmixnogs)
 
 
-def write_split_ts(data, mmix, acc, rej, midk, ref_img, suffix=''):
+def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, suffix=''):
     """
     Splits `data` into denoised / noise / ignored time series and saves to disk
 
@@ -1547,7 +1549,7 @@ def write_split_ts(data, mmix, acc, rej, midk, ref_img, suffix=''):
     # get variance explained by retained components
     betas = get_coeffs(unmask(dmdata.T, mask), mask, mmix)[mask]
     varexpl = (1 - ((dmdata.T - betas.dot(mmix.T))**2.).sum() / (dmdata**2.).sum()) * 100
-    lgr.info('++ Variance explained: ', varexpl, '%')
+    lgr.info('++ Variance explained: {:.02f}%'.format(varexpl))
 
     # create component and de-noised time series and save to files
     hikts = betas[:, acc].dot(mmix.T[acc, :])
@@ -1697,7 +1699,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_i
     lgr.info('++ Writing optimally combined time series')
     filewrite(ts, 'ts_OC', ref_img)
     lgr.info('++ Writing Kappa-filtered optimally combined timeseries')
-    varexpl = write_split_ts(ts, mmix, acc, rej, midk, ref_img, suffix='OC')
+    varexpl = write_split_ts(ts, mmix, mask, acc, rej, midk, ref_img, suffix='OC')
     lgr.info('++ Writing signal versions of components')
     ts_B = get_coeffs(ts, mask, mmix)
     filewrite(ts_B, 'betas_OC', ref_img)
@@ -1712,7 +1714,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_i
             varexpl=varexpl)
 
 
-def writeresults_echoes(catd, mmix, acc, rej, midk, ref_img):
+def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img):
     """
     Saves individually denoised echos to disk
 
@@ -1735,7 +1737,7 @@ def writeresults_echoes(catd, mmix, acc, rej, midk, ref_img):
 
     for i_echo in range(catd.shape[1]):
         lgr.info('++ Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo+1))
-        write_split_ts(catd[:, i_echo, :], mmix, acc, rej, midk, ref_img,
+        write_split_ts(catd[:, i_echo, :], mmix, mask, acc, rej, midk, ref_img,
                        suffix='e%i' % (i_echo+1))
 
 
@@ -1881,7 +1883,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                                            reindex=True)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        acc, rej, midk, empty = selcomps(seldict, mmix, ref_img, manacc, n_echos,
+        acc, rej, midk, empty = selcomps(seldict, mmix, mask, ref_img, manacc, n_echos,
                                          strict_mode=strict,
                                          filecsdata=filecsdata)
     else:
@@ -1892,7 +1894,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                                            ref_img,
                                                            fout=fout)
         if ctab is None:
-            acc, rej, midk, empty = selcomps(seldict, mmix, ref_img, manacc,
+            acc, rej, midk, empty = selcomps(seldict, mmix, mask, ref_img, manacc,
                                              n_echos,
                                              filecsdata=filecsdata,
                                              strict_mode=strict)
@@ -1903,6 +1905,6 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         lgr.warning('++ No BOLD components detected!!! Please check data and results!')
 
     writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_img)
-    gscontrol_mmix(OCcatd, mmix, acc, rej, midk, ref_img)
+    gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img)
     if dne:
-        writeresults_echoes(catd, mmix, acc, rej, midk, ref_img)
+        writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
