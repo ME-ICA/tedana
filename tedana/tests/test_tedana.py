@@ -47,12 +47,12 @@ def test_outputs():
      'T1gs.nii',
      'tsoc_orig.nii',
      'tsoc_nogs.nii',
-     # files are in order of creation above this point
      '.cc_temp.nii.gz',
      '.fcl_in.nii.gz',
      '.fcl_out.nii.gz',
      '__clin.nii.gz',
      '__clout.nii.gz',
+     # files are in order of creation above this point
      'betas_hik_OC.nii',
      'betas_hik_OC_T1c.nii',
      'betas_OC.nii',

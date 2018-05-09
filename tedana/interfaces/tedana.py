@@ -655,7 +655,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     return seldict, comptab, betas, mmix_new
 
 
-def selcomps(seldict, mmix, ref_img, manacc, n_echos, debug=False, olevel=2, oversion=99,
+def selcomps(seldict, mmix, ref_img, manacc, n_echos, olevel=2, oversion=99,
              filecsdata=False, savecsdiag=True, strict_mode=False):
     """
     Labels components in `mmix`
@@ -673,8 +673,6 @@ def selcomps(seldict, mmix, ref_img, manacc, n_echos, debug=False, olevel=2, ove
         Comma-separated list of indices of manually accepted components
     n_echos : int
         Number of echos in original data
-    debug : bool, optional
-        Default: False
     olevel : int, optional
         Default: 2
     oversion : int, optional

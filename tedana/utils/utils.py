@@ -555,7 +555,7 @@ def andb(arrs):
     """
 
     # coerce to integer and ensure same shape
-    arrs = [check_array(arr, dtype=int) for arr in arrs]
+    arrs = [check_array(arr, dtype=int, ensure_2d=False, allow_nd=True) for arr in arrs]
     same_shape = [arr1.shape == arr2.shape for arr1 in arrs for arr2 in arrs]
     if not np.all(same_shape):
         raise ValueError('All input arrays must have same shape.')
