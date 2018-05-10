@@ -1752,7 +1752,7 @@ def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img):
 def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
          no_gscontrol=False, kdaw=10., rdaw=1., conv=2.5e-5, ste=-1,
          combmode='t2s', dne=False, initcost='tanh', finalcost='tanh',
-         stabilize=False, fout=False, filecsdata=False, label=None,
+         stabilize=False, fout=False, filecsdata=True, label=None,
          fixed_seed=42):
     """
     Parameters
