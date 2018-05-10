@@ -697,9 +697,6 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
     ign : list
         Indices of ignored components in `mmix`
     """
-    
-    with open('compsel.json', 'w') as f:
-      json.dump(seldict, f)
 
     if filecsdata:
         import bz2
