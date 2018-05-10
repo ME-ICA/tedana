@@ -407,7 +407,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, head,
     nx, ny, nz, _, n_components = betas.shape
     n_voxels = mask.sum()
     n_data_voxels = (t2s != 0).sum()
-    mu = catd.mean(axis=-1)
+    mu = catd.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echoes, 1))
     fmin, fmid, fmax = getfbounds(n_echoes)
 
