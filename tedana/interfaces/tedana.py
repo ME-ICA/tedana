@@ -1447,6 +1447,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
 
     # Reshape data
     catd = cat2echos(catim.get_data(), n_echoes)
+    catd = catd.astype(float)
     nx, ny, nz, _, nt = catd.shape
 
     # Parse options, prepare output directory
