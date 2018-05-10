@@ -110,7 +110,7 @@ def spatclust(data, mask, csize, thr, ref_img, infile=None, dindex=0,
     if infile is None:
         data = data.copy()
         data[data < thr] = 0
-        infile = filewrite(unmask(data, mask), '__clin.nii.gz', ref_img)
+        infile = filewrite(unmask(data, mask), '__clin.nii.gz', ref_img, gzip=True)
 
     # FIXME: ideally no calls to os.system!!! (or AFNI, for that matter)
     addopts = ''
@@ -503,7 +503,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     n_samp, n_echos, n_components = betas.shape
     n_voxels = mask.sum()
     n_data_voxels = (t2s != 0).sum()
-    mu = catd.mean(axis=-1)  # BUG: THIS IS THE BAD PLACE
+    mu = catd.mean(axis=-1, dtype=float)  # BUG: THIS IS THE BAD PLACE
     tes = np.reshape(tes, (n_echos, 1))
     fmin, fmid, fmax = getfbounds(n_echos)
 
@@ -619,11 +619,12 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
 
             # Do simple clustering on F
             # TODO: can be replaced with nilearn.image.threshold_img
-            os.system('3dcalc -overwrite -a {}[1..2] -expr \'a*step(a-{})\' -prefix '
-                      '.fcl_in.nii.gz -overwrite'.format(ccname, fmin))
+            # TODO: fmin is being cast to an integer here -- is that purposeful?!
+            os.system('3dcalc -overwrite -a {}[1..2] -expr \'a*step(a-{:0d})\' -prefix '
+                      '.fcl_in.nii.gz -overwrite'.format(ccname, int(fmin)))
             # TODO: can be replaced with nilearn.regions.connected_regions
-            os.system('3dmerge -overwrite -dxyz=1 -1clust 1 {} -doall '
-                      '-prefix .fcl_out.nii.gz .fcl_in.nii.gz'.format(csize))
+            os.system('3dmerge -overwrite -dxyz=1 -1clust 1 {:0d} -doall '
+                      '-prefix .fcl_out.nii.gz .fcl_in.nii.gz'.format(int(csize)))
             sel = load_image('.fcl_out.nii.gz')[t2s != 0]
             sel = np.array(sel != 0, dtype=np.int)
             F_R2_clmaps[:, i] = sel[:, 0]
@@ -1071,7 +1072,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
         group0_res = np.intersect1d(KRguess, group0)
         phys_var_zs.append((vvex - vvex[group0_res].mean()) / vvex[group0_res].std())
         veinBout = unmask(veinmaskB, mask)
-        filewrite(veinBout.astype(int), 'veins_l%i' % t2sl_i, ref_img)
+        filewrite(veinBout.astype(float), 'veins_l%i' % t2sl_i, ref_img)
 
     # Mask to sample veins
     phys_var_z = np.array(phys_var_zs).max(0)
