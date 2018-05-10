@@ -100,7 +100,7 @@ def get_parser():
                         dest='filecsdata',
                         help='Save component selection data',
                         action='store_true',
-                        default=False)
+                        default=True)
     parser.add_argument('--label',
                         dest='label',
                         help='Label for output directory.',
