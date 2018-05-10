@@ -110,7 +110,7 @@ def spatclust(data, mask, csize, thr, ref_img, infile=None, dindex=0,
     if infile is None:
         data = data.copy()
         data[data < thr] = 0
-        infile = filewrite(unmask(data, mask), '__clin', ref_img, gzip=True)
+        infile = filewrite(unmask(data, mask), '__clin.nii.gz', ref_img)
 
     # FIXME: ideally no calls to os.system!!! (or AFNI, for that matter)
     addopts = ''
@@ -503,7 +503,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     n_samp, n_echos, n_components = betas.shape
     n_voxels = mask.sum()
     n_data_voxels = (t2s != 0).sum()
-    mu = catd.mean(axis=-1)
+    mu = catd.mean(axis=-1)  # BUG: THIS IS THE BAD PLACE
     tes = np.reshape(tes, (n_echos, 1))
     fmin, fmid, fmax = getfbounds(n_echos)
 
@@ -600,7 +600,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
             if fout is not None:
                 ccname, gzip = 'cc{:03d}'.format(i), False
             else:
-                ccname, gzip = '.cc_temp', True
+                ccname, gzip = '.cc_temp.nii.gz', True
 
             out[:, 0] = np.squeeze(unmask(PSC[:, i], mask))
             out[:, 1] = np.squeeze(unmask(F_R2_maps[:, i], t2s != 0))
@@ -667,9 +667,11 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
     mmix : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the number of volumes in the original data
-    ref_img
+    mask : (S,) array_like
+        Boolean mask array
+    ref_img : str or img_like
         Reference image to dictate how outputs are saved to disk
-    manacc
+    manacc : list
         Comma-separated list of indices of manually accepted components
     n_echos : int
         Number of echos in original data
@@ -956,7 +958,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
         diagstep_vals = [rej.tolist(), KRcut, Kcut, Rcut, dbscanfailed,
                          midkfailed, KRguess.tolist(), min_acc.tolist(), toacc_hi.tolist()]
 
-        with open('csstepdata.txt', 'w') as ofh:
+        with open('csstepdata.json', 'w') as ofh:
             json.dump(dict(zip(diagstep_keys, diagstep_vals)), ofh, indent=4, sort_keys=True)
         return list(sorted(min_acc)), list(sorted(rej)), [], list(sorted(to_clf))
 
@@ -1142,7 +1144,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
                          field_art.tolist(), phys_art.tolist(),
                          misc_art.tolist(), ncl.tolist(), ign.tolist()]
 
-        with open('csstepdata.txt', 'w') as ofh:
+        with open('csstepdata.json', 'w') as ofh:
             json.dump(dict(zip(diagstep_keys, diagstep_vals)), ofh, indent=4, sort_keys=True)
         allfz = np.array([Tz, Vz, Ktz, KRr, cnz, Rz, mmix_kurt, fdist_z])
         np.savetxt('csdata.txt', allfz)
@@ -1448,6 +1450,8 @@ def gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img):
     mmix : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `OCcatd`
+    mask : (S,) array_like
+        Boolean mask array
     acc : list
         Indices of accepted (BOLD) components in `mmix`
     rej : list
@@ -1525,6 +1529,8 @@ def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, suffix=''):
     mmix : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
+    mask : (S,) array_like
+        Boolean mask array
     acc : list
         Indices of accepted (BOLD) components in `mmix`
     rej : list
@@ -1725,6 +1731,8 @@ def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img):
     mmix : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
+    mask : (S,) array_like
+        Boolean mask array
     acc : list
         Indices of accepted (BOLD) components in `mmix`
     rej : list
