@@ -481,7 +481,6 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     WTS = computefeats2(unmask(tsoc, mask), mmixN, mask, normalize=False)
 
     # compute PSC dataset - shouldn't have to refit data
-    global tsoc_B
     tsoc_B = get_coeffs(unmask(tsoc_dm, mask), mask, mmix)[mask]
     tsoc_Babs = np.abs(tsoc_B)
     PSC = tsoc_B / tsoc.mean(axis=-1, keepdims=True) * 100
@@ -516,10 +515,6 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     X2 = np.tile(tes, (1, n_data_voxels)) * mumask.T / t2smask.T  # Model 2
 
     # tables for component selection
-    global Kappas, Rhos, varex, varex_norm
-    global Z_maps, F_R2_maps, F_S0_maps
-    global Z_clmaps, F_R2_clmaps, F_S0_clmaps
-    global Br_clmaps_R2, Br_clmaps_S0
     Kappas = np.zeros([n_components])
     Rhos = np.zeros([n_components])
     varex = np.zeros([n_components])
@@ -1152,7 +1147,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
     return list(sorted(ncl)), list(sorted(rej)), list(sorted(midk)), list(sorted(ign))
 
 
-def tedpca(catd, OCcatd, combmode, mask, stabilize, ref_img, tes, kdaw, rdaw,
+def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize, ref_img, tes, kdaw, rdaw,
            ste=0, mlepca=True):
     """
     Performs PCA on `catd` and uses TE-dependence to dimensionally reduce data
@@ -1807,8 +1802,6 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         Seeded value for ICA, for reproducibility.
     """
 
-    global catd, ref_img
-
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
     n_echos = len(tes)
@@ -1848,11 +1841,9 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     os.chdir(out_dir)
 
     lgr.info('++ Computing Mask')
-    global mask
     mask, masksum = make_adaptive_mask(catd, minimum=False, getsum=True)
 
     lgr.info('++ Computing T2* map')
-    global t2s, s0, t2sG
     t2s, s0, t2ss, s0s, t2sG, s0G = t2sadmap(catd, tes, mask, masksum,
                                              start_echo=1)
 
@@ -1869,7 +1860,6 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     filewrite(s0G, op.join(out_dir, 's0vG'), ref_img)
 
     # optimally combine data
-    global OCcatd
     OCcatd = make_optcom(catd, t2sG, tes, mask, combmode)
 
     # regress out global signal unless explicitly not desired
@@ -1878,7 +1868,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
 
     if mixm is None:
         lgr.info("++ Doing ME-PCA and ME-ICA")
-        n_components, dd = tedpca(catd, OCcatd, combmode, mask, stabilize, ref_img,
+        n_components, dd = tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize, ref_img,
                                   tes=tes, kdaw=kdaw, rdaw=rdaw, ste=ste)
         mmix_orig = tedica(n_components, dd, conv, fixed_seed, cost=initcost,
                            final_cost=finalcost)
