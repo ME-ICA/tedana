@@ -114,7 +114,7 @@ def t2sadmap(data, tes, mask, masksum, start_echo):
         x = np.column_stack([np.ones(echo), [-te for te in tes[:echo]]])
         X = np.repeat(x, n_vols, axis=0)
 
-        beta, res, rank, sing = np.linalg.lstsq(X, B)
+        beta = np.linalg.lstsq(X, B)[0]
         t2s = 1. / beta[1, :].T
         s0 = np.exp(beta[0, :]).T
 
@@ -144,8 +144,6 @@ def t2sadmap(data, tes, mask, masksum, start_echo):
 def make_optcom(data, t2s, tes, mask, combmode):
     """
     Optimally combine BOLD data across TEs.
-
-    out = make_optcom(data,t2s)
 
     Parameters
     ----------

@@ -50,8 +50,8 @@ def do_svm(X_train, y_train, X_test, svmtype=0):
     X_test : (N2 x F) array_like
         Test vectors, where n_samples is the number of samples in the test
         dataset and n_features is the number of features.
-    svmtype : int
-        Desired support vector machine type
+    svmtype : int, optional
+        Desired support vector machine type. Must be in [0, 1, 2]. Default: 0
 
     Returns
     -------
@@ -68,7 +68,7 @@ def do_svm(X_train, y_train, X_test, svmtype=0):
     elif svmtype == 2:
         clf = svm.SVC(kernel='linear', probability=True)
     else:
-        raise ValueError('Input svmtype not in [1, 2, 3]')
+        raise ValueError('Input svmtype not in [0, 1, 2]: {}'.format(svmtype))
 
     clf.fit(X_train, y_train)
     y_pred = clf.predict(X_test)
@@ -112,7 +112,6 @@ def spatclust(data, mask, csize, thr, ref_img, infile=None, dindex=0,
         data[data < thr] = 0
         infile = filewrite(unmask(data, mask), '__clin.nii.gz', ref_img, gzip=True)
 
-    # FIXME: ideally no calls to os.system!!! (or AFNI, for that matter)
     addopts = ''
     if data is not None and data.squeeze().ndim > 1 and dindex + tindex == 0:
         addopts = '-doall'
@@ -503,7 +502,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     n_samp, n_echos, n_components = betas.shape
     n_voxels = mask.sum()
     n_data_voxels = (t2s != 0).sum()
-    mu = catd.mean(axis=-1, dtype=float)  # BUG: THIS IS THE BAD PLACE
+    mu = catd.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))
     fmin, fmid, fmax = getfbounds(n_echos)
 
