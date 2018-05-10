@@ -5,10 +5,12 @@ from tedana.interfaces import tedana
 def get_parser():
     """
     Parses command line inputs for tedana
+
     Returns
     -------
     parser.parse_args() : argparse dict
     """
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-d',
                         dest='data',
@@ -18,7 +20,7 @@ def get_parser():
     parser.add_argument('-e',
                         dest='tes',
                         nargs='+',
-                        help='Echo times (in ms) ex: 15,39,63',
+                        help='Echo times (in ms) ex: 15.0 39.0 63.0',
                         required=True)
     parser.add_argument('--mix',
                         dest='mixm',
