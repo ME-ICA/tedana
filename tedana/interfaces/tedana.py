@@ -650,7 +650,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     return seldict, comptab, betas, mmix_new
 
 
-def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=99,
+def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, oversion=99,
              filecsdata=False, savecsdiag=True, strict_mode=False):
     """
     Labels components in `mmix`
@@ -709,16 +709,11 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
                 lgr.warning('++ Failed to load component selection data')
                 return None
 
-    # Dump dictionary into variable names
-    # TODO: this is a terrible way to do things and we should change it
-    for key in seldict.keys():
-        exec("{0}=seldict['{0}']".format(key))
-
     # List of components
     midk = []
     ign = []
-    nc = np.arange(len(Kappas))
-    ncl = np.arange(len(Kappas))
+    nc = np.arange(len(seldict['Kappas']))
+    ncl = np.arange(len(seldict['Kappas']))
 
     # If user has specified components to accept manually
     if manacc:
@@ -730,8 +725,8 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
     """
     Do some tallies for no. of significant voxels
     """
-    countsigFS0 = F_S0_clmaps.sum(0)
-    countsigFR2 = F_R2_clmaps.sum(0)
+    countsigFS0 = seldict['F_S0_clmaps'].sum(0)
+    countsigFR2 = seldict['F_S0_clmaps'].sum(0)
     countnoise = np.zeros(len(nc))
 
     """
@@ -739,10 +734,10 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
     """
     dice_tbl = np.zeros([nc.shape[0], 2])
     for ii in ncl:
-        dice_FR2 = dice(unmask(Br_clmaps_R2[:, ii], mask)[t2s != 0],
-                        F_R2_clmaps[:, ii])
-        dice_FS0 = dice(unmask(Br_clmaps_S0[:, ii], mask)[t2s != 0],
-                        F_S0_clmaps[:, ii])
+        dice_FR2 = dice(unmask(seldict['Br_clmaps_R2'][:, ii], mask)[t2s != 0],
+                        seldict['F_R2_clmaps'][:, ii])
+        dice_FS0 = dice(unmask(seldict['Br_clmaps_R2'][:, ii], mask)[t2s != 0],
+                        seldict['F_S0_clmaps'][:, ii])
         dice_tbl[ii, :] = [dice_FR2, dice_FS0]  # step 3a here and above
     dice_tbl[np.isnan(dice_tbl)] = 0
 
@@ -752,12 +747,13 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
     tt_table = np.zeros([len(nc), 4])
     counts_FR2_Z = np.zeros([len(nc), 2])
     for ii in nc:
-        comp_noise_sel = andb([np.abs(Z_maps[:, ii]) > 1.95,
-                               Z_clmaps[:, ii] == 0]) == 2
+        comp_noise_sel = andb([np.abs(seldict['Z_maps'][:, ii]) > 1.95,
+                               seldict['Z_clmaps'][:, ii] == 0]) == 2
         countnoise[ii] = np.array(comp_noise_sel, dtype=np.int).sum()
-        noise_FR2_Z = np.log10(np.unique(F_R2_maps[unmask(comp_noise_sel, mask)[t2s != 0], ii]))
-        signal_FR2_Z = np.log10(np.unique(F_R2_maps[unmask(Z_clmaps[:, ii],
-                                                           mask)[t2s != 0] == 1, ii]))
+        noise_FR2_Z = np.log10(np.unique(seldict['F_R2_maps'][unmask(comp_noise_sel,
+                                                                     mask)[t2s != 0], ii]))
+        signal_FR2_Z = np.log10(np.unique(seldict['F_R2_maps'][unmask(seldict['Z_clmaps'][:, ii],
+                                                               mask)[t2s != 0] == 1, ii]))
         counts_FR2_Z[ii, :] = [len(signal_FR2_Z), len(noise_FR2_Z)]
         try:
             ttest = stats.ttest_ind(signal_FR2_Z, noise_FR2_Z, equal_var=True)
@@ -780,7 +776,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
     a. Estimate a null variance
     """
 
-    rej = ncl[andb([Rhos > Kappas, countsigFS0 > countsigFR2]) > 0]
+    rej = ncl[andb([seldict['Rhos'] > seldict['Kappas'], countsigFS0 > countsigFR2]) > 0]
     ncl = np.setdiff1d(ncl, rej)
 
     """
@@ -822,14 +818,14 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
     fdist_z = (fdist_pre - np.median(fdist_pre)) / fdist_pre.std()
     spz = (spr-spr.mean())/spr.std()
     Tz = (tt_table[:, 0] - tt_table[:, 0].mean()) / tt_table[:, 0].std()
-    varex_ = np.log(varex)
+    varex_ = np.log(seldict['varex'])
     Vz = (varex_-varex_.mean()) / varex_.std()
-    Rz = (Rhos-Rhos.mean()) / Rhos.std()
-    Ktz = np.log(Kappas) / 2
+    Rz = (seldict['Rhos'] - seldict['Rhos'].mean()) / seldict['Rhos'].std()
+    Ktz = np.log(seldict['Kappas']) / 2
     Ktz = (Ktz-Ktz.mean()) / Ktz.std()
-    Rtz = np.log(Rhos) / 2
+    Rtz = np.log(seldict['Rhos']) / 2
     Rtz = (Rtz-Rtz.mean())/Rtz.std()
-    KRr = stats.zscore(np.log(Kappas) / np.log(Rhos))
+    KRr = stats.zscore(np.log(seldict['Kappas']) / np.log(seldict['Rhos']))
     cnz = (countnoise-countnoise.mean()) / countnoise.std()
     Dz = stats.zscore(np.arctanh(dice_tbl[:, 0] + 0.001))
     fz = np.array([Tz, Vz, Ktz, KRr, cnz, Rz, mmix_kurt, fdist_z])
@@ -842,35 +838,38 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
     # number of high Rho components]
     F05, F025, F01 = getfbounds(n_echos)
     epsmap = []
-    Rhos_sorted = np.array(sorted(Rhos))[::-1]
+    Rhos_sorted = np.array(sorted(seldict['Rhos']))[::-1]
     # Make an initial guess as to number of good components based on
     # consensus of control points across Rhos and Kappas
-    KRcutguesses = [getelbow_mod(Rhos), getelbow_cons(Rhos),
-                    getelbow_aggr(Rhos), getelbow_mod(Kappas),
-                    getelbow_cons(Kappas), getelbow_aggr(Kappas)]
-    Khighelbowval = stats.scoreatpercentile([getelbow_mod(Kappas, val=True),
-                                             getelbow_cons(Kappas, val=True),
-                                             getelbow_aggr(Kappas, val=True)] +
+    KRcutguesses = [getelbow_mod(seldict['Rhos']), getelbow_cons(seldict['Rhos']),
+                    getelbow_aggr(seldict['Rhos']), getelbow_mod(seldict['Kappas']),
+                    getelbow_cons(seldict['Kappas']), getelbow_aggr(seldict['Kappas'])]
+    Khighelbowval = stats.scoreatpercentile([getelbow_mod(seldict['Kappas'], val=True),
+                                             getelbow_cons(seldict['Kappas'], val=True),
+                                             getelbow_aggr(seldict['Kappas'], val=True)] +
                                             list(getfbounds(n_echos)),
                                             75, interpolation_method='lower')
     KRcut = np.median(KRcutguesses)
+
     # only use exclusive when inclusive is extremely inclusive - double KRcut
-    if getelbow_cons(Kappas) > KRcut * 2 and getelbow_mod(Kappas, val=True) < F01:
-        Kcut = getelbow_mod(Kappas, val=True)
+    cond1 = getelbow_cons(seldict['Kappas']) > KRcut * 2
+    cond2 = getelbow_mod(seldict['Kappas'], val=True) < F01
+    if cond1 and cond2:
+        Kcut = getelbow_mod(seldict['Kappas'], val=True)
     else:
-        Kcut = getelbow_cons(Kappas, val=True)
+        Kcut = getelbow_cons(seldict['Kappas'], val=True)
     # only use inclusive when exclusive is extremely exclusive - half KRcut
     # (remember for Rho inclusive is higher, so want both Kappa and Rho
     # to defaut to lower)
-    if getelbow_cons(Rhos) > KRcut * 2:
-        Rcut = getelbow_mod(Rhos, val=True)
+    if getelbow_cons(seldict['Rhos']) > KRcut * 2:
+        Rcut = getelbow_mod(seldict['Rhos'], val=True)
     # for above, consider something like:
     # min([getelbow_mod(Rhos,True),sorted(Rhos)[::-1][KRguess] ])
     else:
-        Rcut = getelbow_cons(Rhos, val=True)
+        Rcut = getelbow_cons(seldict['Rhos'], val=True)
     if Rcut > Kcut:
         Kcut = Rcut  # Rcut should never be higher than Kcut
-    KRelbow = andb([Kappas > Kcut, Rhos < Rcut])
+    KRelbow = andb([seldict['Kappas'] > Kcut, seldict['Rhos'] < Rcut])
     # Make guess of Kundu et al 2011 plus remove high frequencies,
     # generally high variance, and high variance given low Kappa
     tt_lim = stats.scoreatpercentile(tt_table[tt_table[:, 0] > 0, 0],
@@ -879,14 +878,15 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
                            np.union1d(nc[tt_table[:, 0] < tt_lim],
                            np.union1d(np.union1d(nc[spz > 1],
                                                  nc[Vz > 2]),
-                                      nc[andb([varex > 0.5 * sorted(varex)[::-1][int(KRcut)],
-                                               Kappas < 2*Kcut]) == 2])))
+                                      nc[andb([seldict['varex'] > 0.5 *
+                                               sorted(seldict['varex'])[::-1][int(KRcut)],
+                                               seldict['Kappas'] < 2*Kcut]) == 2])))
     guessmask = np.zeros(len(nc))
     guessmask[KRguess] = 1
 
     # Throw lower-risk bad components out
     rejB = ncl[andb([tt_table[ncl, 0] < 0,
-                     varex[ncl] > np.median(varex), ncl > KRcut]) == 3]
+                     seldict['varex'][ncl] > np.median(seldict['varex']), ncl > KRcut]) == 3]
     rej = np.union1d(rej, rejB)
     ncl = np.setdiff1d(ncl, rej)
 
@@ -902,8 +902,8 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
         if cond1 and cond2 and cond3 and cond4:
             epsmap.append([ii, dice(guessmask, db.labels_ == 0),
                            np.intersect1d(nc[db.labels_ == 0],
-                           nc[Rhos > getelbow_mod(Rhos_sorted,
-                                                  val=True)]).shape[0]])
+                           nc[seldict['Rhos'] > getelbow_mod(Rhos_sorted,
+                                                             val=True)]).shape[0]])
             lgr.debug('++ Found solution', ii, db.labels_)
         db = None
 
@@ -929,8 +929,9 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
                            np.union1d(nc[tt_table[:, 0] < tt_lim],
                            np.union1d(np.union1d(nc[spz > 1],
                                       nc[Vz > 2]),
-                                      nc[andb([varex > 0.5 * sorted(varex)[::-1][int(KRcut)],
-                                               Kappas < 2 * Kcut]) == 2])))
+                                      nc[andb([seldict['varex'] > 0.5 *
+                                               sorted(seldict['varex'])[::-1][int(KRcut)],
+                                               seldict['Kappas'] < 2 * Kcut]) == 2])))
         group0 = ncl.copy()
         group_n1 = []
         to_clf = np.setdiff1d(nc, np.union1d(group0, rej))
@@ -942,7 +943,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
         if len(group0) != 0:
             # For extremes, building in a 20% tolerance
             toacc_hi = np.setdiff1d(nc[andb([fdist <= np.max(fdist[group0]),
-                                             Rhos < F025, Vz > -2]) == 3],
+                                             seldict['Rhos'] < F025, Vz > -2]) == 3],
                                     np.union1d(group0, rej))
             min_acc = np.union1d(group0, toacc_hi)
             to_clf = np.setdiff1d(nc, np.union1d(min_acc, rej))
@@ -991,18 +992,18 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
     # Tried getting rid of accepting based on SVM altogether,
     # now using only rejecting
     toacc_hi = np.setdiff1d(nc[andb([fdist <= np.max(fdist[group0]),
-                               Rhos < F025, Vz > -2]) == 3],
+                               seldict['Rhos'] < F025, Vz > -2]) == 3],
                             np.union1d(group0, rej))
     toacc_lo = np.intersect1d(to_clf,
                               nc[andb([spz < 1, Rz < 0, mmix_kurt_z_max < 5,
-                                       Dz > -1, Tz > -1, Vz < 0, Kappas >= F025,
+                                       Dz > -1, Tz > -1, Vz < 0, seldict['Kappas'] >= F025,
                                        fdist < 3 * np.percentile(fdist[group0], 98)]) == 8])
     midk_clf, clf_ = do_svm(fproj_arr_val[:, np.union1d(group0, rej)].T,
                             [0] * len(group0) + [1] * len(rej),
                             fproj_arr_val[:, to_clf].T,
                             svmtype=2)
-    midk = np.setdiff1d(to_clf[andb([midk_clf == 1,
-                                     varex[to_clf] > np.median(varex[group0])]) == 2],
+    midk = np.setdiff1d(to_clf[andb([midk_clf == 1, seldict['varex'][to_clf] >
+                                     np.median(seldict['varex'][group0])]) == 2],
                         np.union1d(toacc_hi, toacc_lo))
     # only use SVM to augment toacc_hi only if toacc_hi isn't already
     # conflicting with SVM choice
@@ -1024,12 +1025,12 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
     filewrite(veinBout, 'veins50', ref_img)
     """
 
-    tsoc_B_Zcl = np.zeros(tsoc_B.shape)
-    tsoc_B_Zcl[Z_clmaps != 0] = np.abs(tsoc_B)[Z_clmaps != 0]
+    tsoc_B_Zcl = np.zeros(seldict['tsoc_B'].shape)
+    tsoc_B_Zcl[seldict['Z_clmaps'] != 0] = np.abs(seldict['tsoc_B'])[seldict['Z_clmaps'] != 0]
     sig_B = [stats.scoreatpercentile(tsoc_B_Zcl[tsoc_B_Zcl[:, ii] != 0, ii], 25)
              if len(tsoc_B_Zcl[tsoc_B_Zcl[:, ii] != 0, ii]) != 0
              else 0 for ii in nc]
-    sig_B = np.abs(tsoc_B) > np.tile(sig_B, [tsoc_B.shape[0], 1])
+    sig_B = np.abs(seldict['tsoc_B']) > np.tile(sig_B, [seldict['tsoc_B'].shape[0], 1])
 
     veinmask = andb([t2s < stats.scoreatpercentile(t2s[t2s != 0], 15,
                                                    interpolation_method='lower'),
@@ -1059,7 +1060,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
                                     unmask(veinW.sum(axis=1) > 1, mask))[mask]]
         minW = 10 * (np.log10(invein).mean()) - 1 * 10**(np.log10(invein).std())
         veinmaskB = veinW.sum(axis=1) > minW
-        tsoc_Bp = tsoc_B.copy()
+        tsoc_Bp = seldict['tsoc_B'].copy()
         tsoc_Bp[tsoc_Bp < 0] = 0
         vvex = np.array([(tsoc_Bp[veinmaskB, ii]**2.).sum() /
                          (tsoc_Bp[:, ii]**2.).sum() for ii in nc])
@@ -1079,31 +1080,32 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
 
     to_ign = []
 
-    minK_ign = np.max([F05, getelbow_cons(Kappas, val=True)])
-    newcest = len(group0)+len(toacc_hi[Kappas[toacc_hi] > minK_ign])
+    minK_ign = np.max([F05, getelbow_cons(seldict['Kappas'], val=True)])
+    newcest = len(group0)+len(toacc_hi[seldict['Kappas'][toacc_hi] > minK_ign])
     phys_art = np.setdiff1d(nc[andb([phys_var_z > 3.5,
-                                     Kappas < minK_ign]) == 2], group0)
+                                     seldict['Kappas'] < minK_ign]) == 2], group0)
     phys_art = np.union1d(np.setdiff1d(nc[andb([phys_var_z > 2,
                                                 (stats.rankdata(phys_var_z) -
-                                                 stats.rankdata(Kappas)) > newcest / 2,
+                                                 stats.rankdata(seldict['Kappas'])) > newcest / 2,
                                                 Vz2 > -1]) == 3],
                                        group0), phys_art)
     # Want to replace field_art with an acf/SVM based approach
     # instead of a kurtosis/filter one
     field_art = np.setdiff1d(nc[andb([mmix_kurt_z_max > 5,
-                                      Kappas < minK_ign]) == 2], group0)
+                                      seldict['Kappas'] < minK_ign]) == 2], group0)
     field_art = np.union1d(np.setdiff1d(nc[andb([mmix_kurt_z_max > 2,
                                            (stats.rankdata(mmix_kurt_z_max) -
-                                            stats.rankdata(Kappas)) > newcest / 2,
-                                           Vz2 > 1, Kappas < F01]) == 4],
+                                            stats.rankdata(seldict['Kappas'])) > newcest / 2,
+                                           Vz2 > 1, seldict['Kappas'] < F01]) == 4],
                                         group0), field_art)
-    field_art = np.union1d(np.setdiff1d(nc[andb([mmix_kurt_z_max > 3, Vz2 > 3,
-                                                 Rhos > np.percentile(Rhos[group0], 75)]) == 3],
+    field_art = np.union1d(np.setdiff1d(nc[andb([mmix_kurt_z_max > 3, Vz2 > 3, seldict['Rhos'] >
+                                                 np.percentile(seldict['Rhos'][group0],
+                                                               75)]) == 3],
                                         group0), field_art)
     field_art = np.union1d(np.setdiff1d(nc[andb([mmix_kurt_z_max > 5, Vz2 > 5]) == 2],
                                         group0), field_art)
     misc_art = np.setdiff1d(nc[andb([(stats.rankdata(Vz) - stats.rankdata(Ktz)) > newcest / 2,
-                            Kappas < Khighelbowval]) == 2], group0)
+                            seldict['Kappas'] < Khighelbowval]) == 2], group0)
     ign_cand = np.unique(list(field_art)+list(phys_art)+list(misc_art))
     midkrej = np.union1d(midk, rej)
     to_ign = np.setdiff1d(list(ign_cand), midkrej)
@@ -1115,9 +1117,9 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, olevel=2, oversion=9
     # Last ditch effort to save some transient components
     if not strict_mode:
         Vz3 = (varex_ - varex_[ncl].mean())/varex_[ncl].std()
-        ncl = np.union1d(ncl, np.intersect1d(orphan, nc[andb([Kappas > F05,
-                                                              Rhos < F025,
-                                                              Kappas > Rhos,
+        ncl = np.union1d(ncl, np.intersect1d(orphan, nc[andb([seldict['Kappas'] > F05,
+                                                              seldict['Rhos'] < F025,
+                                                              seldict['Kappas'] > seldict['Rhos'],
                                                               Vz3 <= -1,
                                                               Vz3 > -3,
                                                               mmix_kurt_z_max < 2.5]) == 6]))
@@ -1881,7 +1883,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                                            reindex=True)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        acc, rej, midk, empty = selcomps(seldict, mmix, mask, ref_img, manacc, n_echos,
+        acc, rej, midk, empty = selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
                                          strict_mode=strict,
                                          filecsdata=filecsdata)
     else:
@@ -1893,7 +1895,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                                            fout=fout)
         if ctab is None:
             acc, rej, midk, empty = selcomps(seldict, mmix, mask, ref_img, manacc,
-                                             n_echos,
+                                             n_echos, t2s, s0,
                                              filecsdata=filecsdata,
                                              strict_mode=strict)
         else:
