@@ -5,7 +5,6 @@ from scipy import stats
 from tedana import model, utils
 
 import logging
-logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
 lgr = logging.getLogger(__name__)
 
 F_MAX = 500
@@ -33,12 +32,12 @@ def eimask(dd, ees=None):
         ees = range(dd.shape[1])
     imask = np.zeros([dd.shape[0], len(ees)], dtype=bool)
     for ee in ees:
-        lgr.info('++ Creating eimask for echo {}'.format(ee))
+        lgr.debug('Creating eimask for echo {}'.format(ee))
         perc98 = stats.scoreatpercentile(dd[:, ee, :].flatten(), 98,
                                          interpolation_method='lower')
         lthr, hthr = 0.001 * perc98, 5 * perc98
-        lgr.info('++ Eimask threshold boundaries: '
-                 '{:.03f} {:.03f}'.format(lthr, hthr))
+        lgr.debug('Eimask threshold boundaries: '
+                  '{:.03f} {:.03f}'.format(lthr, hthr))
         m = dd[:, ee, :].mean(axis=1)
         imask[np.logical_and(m > lthr, m < hthr), ee] = True
 
@@ -94,13 +93,13 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     ste = np.array([int(ee) for ee in str(ste).split(',')])
 
     if len(ste) == 1 and ste[0] == -1:
-        lgr.info('++ Computing PCA of optimally combined multi-echo data')
+        lgr.info('Computing PCA of optimally combined multi-echo data')
         d = OCcatd[utils.make_min_mask(OCcatd[:, np.newaxis, :])][:, np.newaxis, :]
     elif len(ste) == 1 and ste[0] == 0:
-        lgr.info('++ Computing PCA of spatially concatenated multi-echo data')
+        lgr.info('Computing PCA of spatially concatenated multi-echo data')
         d = catd[mask].astype('float64')
     else:
-        lgr.info('++ Computing PCA of echo #%s' % ','.join([str(ee) for ee in ste]))
+        lgr.info('Computing PCA of echo #%s' % ','.join([str(ee) for ee in ste]))
         d = np.stack([catd[mask, ee] for ee in ste - 1], axis=1).astype('float64')
 
     eim = np.squeeze(eimask(d))
@@ -141,6 +140,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
 
         vTmix = v.T
         vTmixN = ((vTmix.T - vTmix.T.mean(0)) / vTmix.T.std(0)).T
+        lgr.info('Making initial component selection guess from PCA results')
         _, ctb, betasv, v_T = model.fitmodels_direct(catd, v.T, eimum, t2s, t2sG,
                                                      tes, combmode, ref_img,
                                                      mmixN=vTmixN, full_sel=False)
@@ -148,17 +148,18 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         ctb = np.vstack([ctb.T[:3], sp]).T
 
         # Save state
-        lgr.info('++ Saving PCA')
+        fname = op.abspath('pcastate.pkl')
+        lgr.info('Saving PCA results to: {}'.format(fname))
         pcastate = {'u': u, 's': s, 'v': v, 'ctb': ctb,
                     'eigelb': eigelb, 'spmin': spmin, 'spcum': spcum}
         try:
-            with open('pcastate.pkl', 'wb') as handle:
+            with open(fname, 'wb') as handle:
                 pickle.dump(pcastate, handle)
         except TypeError:
-            lgr.warning('++ Could not save PCA solution.')
+            lgr.warning('Could not save PCA solution.')
 
     else:  # if loading existing state
-        lgr.info('++ Loading PCA')
+        lgr.info('Loading PCA from: {}'.format('pcastate.pkl'))
         with open('pcastate.pkl', 'rb') as handle:
             pcastate = pickle.load(handle)
         u, s, v = pcastate['u'], pcastate['s'], pcastate['v']
@@ -202,7 +203,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     dd = u.dot(np.diag(s*np.array(pcsel, dtype=np.int))).dot(v)
 
     n_components = s[pcsel].shape[0]
-    lgr.info('++ Selected {0} components. Kappa threshold: {1:.02f}, '
+    lgr.info('Selected {0} components with Kappa threshold: {1:.02f}, '
              'Rho threshold: {2:.02f}'.format(n_components, kappa_thr, rho_thr))
 
     dd = stats.zscore(dd.T, axis=0).T  # variance normalize timeseries
@@ -211,7 +212,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     return n_components, dd
 
 
-def tedica(n_components, dd, conv, fixed_seed, cost, final_cost):
+def tedica(n_components, dd, conv, fixed_seed, cost, final_cost, verbose=False):
     """
     Performs ICA on `dd` and returns mixing matrix
 
@@ -230,6 +231,8 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost):
         Initial cost function for ICA
     finalcost : {'tanh', 'pow3', 'gaus', 'skew'} str, optional
         Final cost function for ICA
+    verbose : bool, optional
+        Whether to print messages regarding convergence process. Default: False
 
     Returns
     -------
@@ -247,7 +250,7 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost):
     mdp.numx_rand.seed(fixed_seed)
     icanode = mdp.nodes.FastICANode(white_comp=n_components, approach='symm', g=cost,
                                     fine_g=final_cost, coarse_limit=climit*100,
-                                    limit=climit, verbose=True)
+                                    limit=climit, verbose=verbose)
     icanode.train(dd)
     smaps = icanode.execute(dd)  # noqa
     mmix = icanode.get_recmatrix().T

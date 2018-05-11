@@ -2,7 +2,6 @@ import numpy as np
 from tedana import utils
 
 import logging
-logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
 lgr = logging.getLogger(__name__)
 
 
@@ -35,7 +34,7 @@ def fit(data, mask, tes, masksum, start_echo):
             x = np.array([np.ones(i_echo), neg_tes])
             X = np.sort(x)[:, ::-1].transpose()
 
-            beta, _, _, _ = np.linalg.lstsq(X, B)
+            beta, _, _, _ = np.linalg.lstsq(X, B, rcond=None)
             t2s = 1. / beta[1, :].transpose()
             s0 = np.exp(beta[0, :]).transpose()
 
@@ -68,7 +67,7 @@ def fit(data, mask, tes, masksum, start_echo):
     return t2sa_ts, s0va_ts, t2saf_ts, s0vaf_ts
 
 
-def make_optcom(data, t2s, tes, mask, combmode):
+def make_optcom(data, t2s, tes, mask, combmode, verbose=True):
     """
     Optimally combine BOLD data across TEs.
 
@@ -86,6 +85,8 @@ def make_optcom(data, t2s, tes, mask, combmode):
         How to combine data. Either 'ste' or 't2s'.
     useG : :obj:`bool`, optional
         Use G. Default is False.
+    verbose : :obj:`bool`, optional
+        Print status messages. Default: True
 
     Returns
     -------
@@ -98,11 +99,14 @@ def make_optcom(data, t2s, tes, mask, combmode):
     tes = np.array(tes)[np.newaxis]  # (1 x E) array_like
 
     if t2s.ndim == 1:
-        lgr.info('++ Optimally combining data with voxel-wise T2 estimates')
+        msg = 'Optimally combining data with voxel-wise T2 estimates'
         ft2s = t2s[mask, np.newaxis]
     else:
-        lgr.info('++ Optimally combining data with voxel- and volume-wise T2 estimates')
+        msg = 'Optimally combining data with voxel- and volume-wise T2 estimates'
         ft2s = t2s[mask, :, np.newaxis]
+
+    if verbose:
+        lgr.info(msg)
 
     if combmode == 'ste':
         alpha = mdata.mean(axis=-1) * tes
@@ -168,7 +172,7 @@ def t2sadmap(data, tes, mask, masksum, start_echo):
         x = np.column_stack([np.ones(echo), [-te for te in tes[:echo]]])
         X = np.repeat(x, n_vols, axis=0)
 
-        beta = np.linalg.lstsq(X, B)[0]
+        beta = np.linalg.lstsq(X, B, rcond=None)[0]
         t2s = 1. / beta[1, :].T
         s0 = np.exp(beta[0, :]).T
 

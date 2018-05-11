@@ -7,7 +7,6 @@ from sklearn.cluster import DBSCAN
 from tedana import model, utils
 
 import logging
-logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
 lgr = logging.getLogger(__name__)
 
 
@@ -97,9 +96,8 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
 
     if filecsdata:
         import bz2
-
         if seldict is not None:
-            lgr.info('++ Saving component selection data')
+            lgr.info('Saving component selection data')
             with bz2.BZ2File('compseldata.pklbz', 'wb') as csstate_f:
                 pickle.dump(seldict, csstate_f)
         else:
@@ -107,7 +105,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
                 with bz2.BZ2File('compseldata.pklbz', 'rb') as csstate_f:
                     seldict = pickle.load(csstate_f)
             except FileNotFoundError:
-                lgr.warning('++ Failed to load component selection data')
+                lgr.warning('Failed to load component selection data')
                 return None
 
     # List of components
@@ -158,7 +156,11 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
         counts_FR2_Z[ii, :] = [len(signal_FR2_Z), len(noise_FR2_Z)]
         try:
             ttest = stats.ttest_ind(signal_FR2_Z, noise_FR2_Z, equal_var=True)
-            mwu = stats.norm.ppf(stats.mannwhitneyu(signal_FR2_Z, noise_FR2_Z)[1])
+            # avoid DivideByZero RuntimeWarning
+            if signal_FR2_Z.size > 0 and noise_FR2_Z.size > 0:
+                mwu = stats.norm.ppf(stats.mannwhitneyu(signal_FR2_Z, noise_FR2_Z)[1])
+            else:
+                mwu = -np.inf
             tt_table[ii, 0] = np.abs(mwu) * ttest[0] / np.abs(ttest[0])
             tt_table[ii, 1] = ttest[1]
         except Exception:  # TODO: what is the error that might be caught here?
@@ -176,7 +178,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
     Step 1: Reject anything that's obviously an artifact
     a. Estimate a null variance
     """
-
+    lgr.debug('Rejecting gross artifacts based on Rho/Kappa values and S0/R2 counts')
     rej = ncl[utils.andb([seldict['Rhos'] > seldict['Kappas'], countsigFS0 > countsigFR2]) > 0]
     ncl = np.setdiff1d(ncl, rej)
 
@@ -184,6 +186,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
     Step 2: Compute 3-D spatial FFT of Beta maps to detect high-spatial
     frequency artifacts
     """
+    lgr.debug('Computing 3D spatial FFT of beta maps to detect high-spatial frequency artifacts')
     # spatial information is important so for NIFTI we convert back to 3D space
     if utils.get_dtype(ref_img) == 'NIFTI':
         dim1 = np.prod(ref_img.shape[:2])
@@ -215,6 +218,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
     """
     Step 3: Create feature space of component properties
     """
+    lgr.debug('Creating feature space of component properties')
     fdist_pre = fdist.copy()
     fdist_pre[fdist > np.median(fdist) * 3] = np.median(fdist) * 3
     fdist_z = (fdist_pre - np.median(fdist_pre)) / fdist_pre.std()
@@ -236,6 +240,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
     Step 3: Make initial guess of where BOLD components are and use DBSCAN
     to exclude noise components and find a sample set of 'good' components
     """
+    lgr.debug('Making initial guess of BOLD components')
     # epsmap is [index,level of overlap with dicemask,
     # number of high Rho components]
     F05, F025, F01 = utils.getfbounds(n_echos)
@@ -275,7 +280,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
     # Make guess of Kundu et al 2011 plus remove high frequencies,
     # generally high variance, and high variance given low Kappa
     tt_lim = stats.scoreatpercentile(tt_table[tt_table[:, 0] > 0, 0],
-                                     75, interpolation_method='lower')/3
+                                     75, interpolation_method='lower') / 3
     KRguess = np.setdiff1d(np.setdiff1d(nc[KRelbow == 2], rej),
                            np.union1d(nc[tt_table[:, 0] < tt_lim],
                            np.union1d(np.union1d(nc[spz > 1],
@@ -292,13 +297,22 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
     rej = np.union1d(rej, rejB)
     ncl = np.setdiff1d(ncl, rej)
 
+    lgr.debug('Using DBSCAN to find optimal set of "good" BOLD components')
     for ii in range(20000):
-        db = DBSCAN(eps=.005 + ii * .005, min_samples=3).fit(fz.T)
+        eps = .005 + ii * .005
+        db = DBSCAN(eps=eps, min_samples=3).fit(fz.T)
 
         # it would be great to have descriptive names, here
+        # DBSCAN found more than three non-noisy (i.e., labels_ == -1) clusters
         cond1 = db.labels_.max() > 1
+        # DBSCAN didn't detect more classes than the total # of components / 6
         cond2 = db.labels_.max() < len(nc) / 6
+        # not totally sure if 0 is a special label for DBSCAN
+        # my intuition here is that we're confirming DBSCAN labelled previously
+        # rejected components as noise (i.e., no overlap between `rej` and
+        # labelled DBSCAN components)
         cond3 = np.intersect1d(rej, nc[db.labels_ == 0]).shape[0] == 0
+        # DBSCAN labelled less than half of the total components as noisy
         cond4 = np.array(db.labels_ == -1, dtype=int).sum() / float(len(nc)) < .5
 
         if cond1 and cond2 and cond3 and cond4:
@@ -306,17 +320,17 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
                            np.intersect1d(nc[db.labels_ == 0],
                            nc[seldict['Rhos'] > model.getelbow_mod(Rhos_sorted,
                                                                    val=True)]).shape[0]])
-            lgr.debug('++ Found solution', ii, db.labels_)
         db = None
 
     epsmap = np.array(epsmap)
+    lgr.debug('Found DBSCAN solutions for {}/20000 eps resolutions'.format(len(epsmap)))
     group0 = []
     dbscanfailed = False
     if len(epsmap) != 0:
         # Select index that maximizes Dice with guessmask but first
         # minimizes number of higher Rho components
         ii = int(epsmap[np.argmax(epsmap[epsmap[:, 2] == np.min(epsmap[:, 2]), 1], 0), 0])
-        lgr.info('++ Component selection tuning: {:.05f}'.format(epsmap[:, 1].max()))
+        lgr.debug('Component selection tuning: {:.05f}'.format(epsmap[:, 1].max()))
         db = DBSCAN(eps=.005+ii*.005, min_samples=3).fit(fz.T)
         ncl = nc[db.labels_ == 0]
         ncl = np.setdiff1d(ncl, rej)
@@ -326,7 +340,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
         to_clf = np.setdiff1d(nc, np.union1d(ncl, rej))
     if len(group0) == 0 or len(group0) < len(KRguess) * .5:
         dbscanfailed = True
-        lgr.info('++ DBSCAN based guess failed. Using elbow guess method.')
+        lgr.debug('DBSCAN guess failed; using elbow guess method instead')
         ncl = np.setdiff1d(np.setdiff1d(nc[KRelbow == 2], rej),
                            np.union1d(nc[tt_table[:, 0] < tt_lim],
                            np.union1d(np.union1d(nc[spz > 1],
@@ -338,8 +352,8 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
         group_n1 = []
         to_clf = np.setdiff1d(nc, np.union1d(group0, rej))
     if len(group0) < 2 or (len(group0) < 4 and float(len(rej))/len(group0) > 3):
-        lgr.warning('++ Extremely limited reliable BOLD signal space. '
-                    'Not filtering further into midk etc.')
+        lgr.warning('Extremely limited reliable BOLD signal space! '
+                    'Not filtering components beyond BOLD/non-BOLD guesses.')
         midkfailed = True
         min_acc = np.array([])
         if len(group0) != 0:
@@ -391,6 +405,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
         yy = aa * xx - (clf_.intercept_[0]) / ww[1]
         plt.plot(xx, yy, '-')
     """
+    lgr.debug('Attempting to classify midk components')
     # Tried getting rid of accepting based on SVM altogether,
     # now using only rejecting
     toacc_hi = np.setdiff1d(nc[utils.andb([fdist <= np.max(fdist[group0]),
@@ -426,7 +441,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
     veinBout = utils.unmask(veinmaskB, mask)
     utils.filewrite(veinBout, 'veins50', ref_img)
     """
-
+    lgr.debug('Computing variance associated with low T2* areas (e.g., draining veins)')
     tsoc_B_Zcl = np.zeros(seldict['tsoc_B'].shape)
     tsoc_B_Zcl[seldict['Z_clmaps'] != 0] = np.abs(seldict['tsoc_B'])[seldict['Z_clmaps'] != 0]
     sig_B = [stats.scoreatpercentile(tsoc_B_Zcl[tsoc_B_Zcl[:, ii] != 0, ii], 25)
@@ -479,6 +494,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
     Step 4: Learn joint TE-dependence spatial and temporal models to move
     remaining artifacts to ignore class
     """
+    lgr.debug('Learning joint TE-dependence spatial/temporal models to ignore remaining artifacts')
 
     to_ign = []
 
@@ -531,7 +547,6 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
         orphan = np.setdiff1d(nc, list(ncl) + list(to_ign) + list(midk) + list(rej))
 
     if savecsdiag:
-
         diagstep_keys = ['Rejected components', 'Kappa-Rho cut point', 'Kappa cut',
                          'Rho cut', 'DBSCAN failed to converge', 'Kappa-Rho guess',
                          'Dice rejected', 'rej_supp', 'to_clf',

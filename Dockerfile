@@ -98,7 +98,7 @@ RUN conda create -y -q --name default --channel vida-nyu python=3.6.1 \
     && sync && conda clean -tipsy && sync \
     && /bin/bash -c "source activate default \
     	&& pip install -q --no-cache-dir \
-    	nipype ipython scikit-learn scipy ipdb mdp nilearn nibabel>=2.1.0" \
+    	nipype ipython scikit-learn scipy ipdb mdp nilearn 'nibabel>=2.1.0'" \
     && sync
 ENV PATH=/opt/conda/envs/default/bin:$PATH
 
@@ -110,7 +110,7 @@ RUN conda create -y -q --name py27 python=2.7 \
     && sync && conda clean -tipsy && sync \
     && /bin/bash -c "source activate default \
         && pip install -q --no-cache-dir \
-        nipype ipython scikit-learn scipy ipdb mdp nilearn nibabel>=2.1.0" \
+        nipype ipython scikit-learn scipy ipdb mdp nilearn 'nibabel>=2.1.0'" \
     && sync
 
 USER root

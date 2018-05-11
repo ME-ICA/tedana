@@ -6,7 +6,6 @@ from scipy import stats
 from tedana import (decomp, io, model, select, utils)
 
 import logging
-logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
 lgr = logging.getLogger(__name__)
 
 """
@@ -26,7 +25,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
          no_gscontrol=False, kdaw=10., rdaw=1., conv=2.5e-5, ste=-1,
          combmode='t2s', dne=False, initcost='tanh', finalcost='tanh',
          stabilize=False, fout=False, filecsdata=False, label=None,
-         fixed_seed=42):
+         fixed_seed=42, debug=False, quiet=False):
     """
     Parameters
     ----------
@@ -85,9 +84,10 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     n_echos = len(tes)
 
     # coerce data to samples x echos x time array
-    lgr.info('++ Loading input data: {}'.format(data))
+    lgr.info('Loading input data: {}'.format([op.abspath(f) for f in data]))
     catd, ref_img = utils.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
+    lgr.debug('Resulting data shape: {}'.format(catd.shape))
 
     if fout:
         fout = ref_img
@@ -102,7 +102,10 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         out_dir = 'TED'
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
+        lgr.info('Creating output directory: {}'.format(out_dir))
         os.mkdir(out_dir)
+    else:
+        lgr.info('Using output directory: {}'.format(out_dir))
 
     if mixm is not None and op.isfile(mixm):
         shutil.copyfile(mixm, op.join(out_dir, 'meica_mix.1D'))
@@ -118,10 +121,11 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
 
     os.chdir(out_dir)
 
-    lgr.info('++ Computing Mask')
+    lgr.info('Computing adapative mask')
     mask, masksum = utils.make_adaptive_mask(catd, minimum=False, getsum=True)
+    lgr.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
 
-    lgr.info('++ Computing T2* map')
+    lgr.info('Computing T2* map')
     t2s, s0, t2ss, s0s, t2sG, s0G = model.t2sadmap(catd, tes, mask, masksum,
                                                    start_echo=1)
 
@@ -129,6 +133,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
     cap_t2s = stats.scoreatpercentile(t2s.flatten(), 99.5,
                                       interpolation_method='lower')
+    lgr.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
     t2s[t2s > cap_t2s * 10] = cap_t2s
     utils.filewrite(t2s, op.join(out_dir, 't2sv'), ref_img)
     utils.filewrite(s0, op.join(out_dir, 's0v'), ref_img)
@@ -145,13 +150,13 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         catd, OCcatd = model.gscontrol_raw(catd, OCcatd, n_echos, ref_img)
 
     if mixm is None:
-        lgr.info("++ Doing ME-PCA and ME-ICA")
         n_components, dd = decomp.tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
                                          stabilize, ref_img,
                                          tes=tes, kdaw=kdaw, rdaw=rdaw, ste=ste)
         mmix_orig = decomp.tedica(n_components, dd, conv, fixed_seed, cost=initcost,
-                                  final_cost=finalcost)
+                                  final_cost=finalcost, verbose=debug)
         np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
+        lgr.info('Making second component selection guess from ICA results')
         seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
                                                                  mask, t2s, t2sG,
                                                                  tes, combmode,
@@ -164,6 +169,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                                 n_echos, t2s, s0, strict_mode=strict,
                                                 filecsdata=filecsdata)
     else:
+        lgr.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
         seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
                                                                  mask, t2s, t2sG,
@@ -179,7 +185,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
             acc, rej, midk, empty = io.ctabsel(ctab)
 
     if len(acc) == 0:
-        lgr.warning('++ No BOLD components detected!!! Please check data and results!')
+        lgr.warning('No BOLD components detected! Please check data and results!')
 
     io.writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_img)
     io.gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img)
