@@ -10,8 +10,7 @@ from scipy import stats
 
 from tedana import model, utils
 from tedana.decomposition._utils import eimask
-from tedana.selection._utils import (getelbow_cons, getelbow_mod,
-                                     getelbow_aggr)
+from tedana.selection._utils import (getelbow_cons, getelbow_mod)
 
 logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
 LGR = logging.getLogger(__name__)
