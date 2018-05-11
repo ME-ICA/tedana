@@ -3,7 +3,7 @@ import shutil
 import numpy as np
 import os.path as op
 from scipy import stats
-from tedana import (decomp, io, model, select, utils)
+from tedana import (decomposition, io, model, selection, utils)
 
 import logging
 logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
@@ -146,11 +146,11 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
 
     if mixm is None:
         lgr.info("++ Doing ME-PCA and ME-ICA")
-        n_components, dd = decomp.tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
-                                         stabilize, ref_img,
-                                         tes=tes, kdaw=kdaw, rdaw=rdaw, ste=ste)
-        mmix_orig = decomp.tedica(n_components, dd, conv, fixed_seed, cost=initcost,
-                                  final_cost=finalcost)
+        n_components, dd = decomposition.tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
+                                                stabilize, ref_img,
+                                                tes=tes, kdaw=kdaw, rdaw=rdaw, ste=ste)
+        mmix_orig = decomposition.tedica(n_components, dd, conv, fixed_seed, cost=initcost,
+                                         final_cost=finalcost)
         np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
         seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
                                                                  mask, t2s, t2sG,
@@ -160,9 +160,9 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                                                  reindex=True)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        acc, rej, midk, empty = select.selcomps(seldict, mmix, mask, ref_img, manacc,
-                                                n_echos, t2s, s0, strict_mode=strict,
-                                                filecsdata=filecsdata)
+        acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask, ref_img, manacc,
+                                                   n_echos, t2s, s0, strict_mode=strict,
+                                                   filecsdata=filecsdata)
     else:
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
         seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
@@ -171,10 +171,10 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                                                  ref_img,
                                                                  fout=fout)
         if ctab is None:
-            acc, rej, midk, empty = select.selcomps(seldict, mmix, mask, ref_img, manacc,
-                                                    n_echos, t2s, s0,
-                                                    filecsdata=filecsdata,
-                                                    strict_mode=strict)
+            acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask, ref_img, manacc,
+                                                       n_echos, t2s, s0,
+                                                       filecsdata=filecsdata,
+                                                       strict_mode=strict)
         else:
             acc, rej, midk, empty = io.ctabsel(ctab)
 
