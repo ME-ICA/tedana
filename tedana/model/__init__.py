@@ -4,19 +4,19 @@
 from .fit import (
     computefeats2,
     fitmodels_direct, get_coeffs,
-    getelbow_cons, getelbow_mod,
-    getelbow_aggr, gscontrol_raw,
-    spatclust,
+    spatclust, gscontrol_raw,
 )
 
+from .combine import (
+    make_optcom
+)
 
-from .t2smap import (
-    fit, make_optcom, t2sadmap,
+from .monoexponential import (
+    fit_decay, fit_decay_ts
 )
 
 
 __all__ = [
     'computefeats2', 'fit', 'fitmodels_direct',
-    'get_coeffs', 'getelbow_cons', 'getelbow_mod',
-    'getelbow_aggr', 'gscontrol_raw',
-    'make_optcom', 'spatclust', 't2sadmap']
+    'get_coeffs', 'make_optcom', 'spatclust',
+    'fit_decay', 'fit_decay_ts']

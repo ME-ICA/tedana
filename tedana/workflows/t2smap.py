@@ -36,7 +36,7 @@ def main(options):
     utils.filewrite(masksum, 'masksum%s' % suf, ref_img, copy_header=False)
 
     lgr.info("++ Computing Adaptive T2* map")
-    t2s, s0, t2ss, s0vs, t2saf, s0vaf = model.t2sadmap(catd, tes, mask, masksum, 2)
+    t2s, s0, t2ss, s0vs, t2saf, s0vaf = model.fit_decay(catd, tes, mask, masksum, 2)
     utils.filewrite(t2ss, 't2ss%s' % suf, ref_img, copy_header=False)
     utils.filewrite(s0vs, 's0vs%s' % suf, ref_img, copy_header=False)
 
