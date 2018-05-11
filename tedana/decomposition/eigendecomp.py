@@ -10,6 +10,8 @@ from scipy import stats
 
 from tedana import model, utils
 from tedana.decomposition._utils import eimask
+from tedana.selection._utils import (getelbow_cons, getelbow_mod,
+                                     getelbow_aggr)
 
 logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
 LGR = logging.getLogger(__name__)
@@ -96,7 +98,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
 
         # actual variance explained (normalized)
         sp = s / s.sum()
-        eigelb = model.getelbow_mod(sp, val=True)
+        eigelb = getelbow_mod(sp, val=True)
 
         spdif = np.abs(np.diff(sp))
         spdifh = spdif[(len(spdif)//2):]
@@ -144,19 +146,19 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     kappas = ctb[ctb[:, 1].argsort(), 1]
     rhos = ctb[ctb[:, 2].argsort(), 2]
     fmin, fmid, fmax = utils.getfbounds(n_echos)
-    kappa_thr = np.average(sorted([fmin, model.getelbow_mod(kappas, val=True)/2, fmid]),
+    kappa_thr = np.average(sorted([fmin, getelbow_mod(kappas, val=True)/2, fmid]),
                            weights=[kdaw, 1, 1])
-    rho_thr = np.average(sorted([fmin, model.getelbow_cons(rhos, val=True)/2, fmid]),
+    rho_thr = np.average(sorted([fmin, getelbow_cons(rhos, val=True)/2, fmid]),
                          weights=[rdaw, 1, 1])
     if int(kdaw) == -1:
         kappas_lim = kappas[utils.andb([kappas < fmid, kappas > fmin]) == 2]
-        kappa_thr = kappas_lim[model.getelbow_mod(kappas_lim)]
+        kappa_thr = kappas_lim[getelbow_mod(kappas_lim)]
         rhos_lim = rhos[utils.andb([rhos < fmid, rhos > fmin]) == 2]
-        rho_thr = rhos_lim[model.getelbow_mod(rhos_lim)]
+        rho_thr = rhos_lim[getelbow_mod(rhos_lim)]
         stabilize = True
     if int(kdaw) != -1 and int(rdaw) == -1:
         rhos_lim = rhos[utils.andb([rhos < fmid, rhos > fmin]) == 2]
-        rho_thr = rhos_lim[model.getelbow_mod(rhos_lim)]
+        rho_thr = rhos_lim[getelbow_mod(rhos_lim)]
 
     is_hik = np.array(ctb[:, 1] > kappa_thr, dtype=np.int)
     is_hir = np.array(ctb[:, 2] > rho_thr, dtype=np.int)
