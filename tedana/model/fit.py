@@ -1,58 +1,20 @@
+"""
+Fit models.
+"""
 import os
+import logging
+
 import numpy as np
 from scipy import stats
-from tedana import model, utils
 from scipy.special import lpmv
 
-import logging
+from tedana import model, utils
+
 logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
-lgr = logging.getLogger(__name__)
+LGR = logging.getLogger(__name__)
 
 F_MAX = 500
 Z_MAX = 8
-
-
-def computefeats2(data, mmix, mask, normalize=True):
-    """
-    Converts `data` to component space using `mmix`
-
-    Parameters
-    ----------
-    data : (S x T) array_like
-        Input data
-    mmix : (T x C) array_like
-        Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `data`
-    mask : (S,) array-like
-        Boolean mask array
-    normalize : bool, optional
-        Whether to z-score output. Default: True
-
-    Returns
-    -------
-    data_Z : (S x C) np.ndarray
-        Data in component space
-    """
-
-    # demean masked data
-    data_vn = stats.zscore(data[mask], axis=-1)
-
-    # get betas of `data`~`mmix` and limit to range [-0.999, 0.999]
-    data_R = get_coeffs(utils.unmask(data_vn, mask), mask, mmix)[mask]
-    data_R[data_R < -0.999] = -0.999
-    data_R[data_R > 0.999] = 0.999
-
-    # R-to-Z transform
-    data_Z = np.arctanh(data_R)
-    if data_Z.ndim == 1:
-        data_Z = np.atleast_2d(data_Z).T
-
-    # normalize data
-    if normalize:
-        data_Zm = stats.zscore(data_Z, axis=0)
-        data_Z = data_Zm + (data_Z.mean(axis=0, keepdims=True) /
-                            data_Z.std(axis=0, keepdims=True))
-    return data_Z
 
 
 def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
@@ -215,7 +177,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     # full selection including clustering criteria
     seldict = None
     if full_sel:
-        lgr.info('++ Performing spatial clustering of components')
+        LGR.info('++ Performing spatial clustering of components')
         for i in range(n_components):
             # save out files
             out = np.zeros((n_samp, 4))
@@ -278,6 +240,49 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     return seldict, comptab, betas, mmix_new
 
 
+def computefeats2(data, mmix, mask, normalize=True):
+    """
+    Converts `data` to component space using `mmix`
+
+    Parameters
+    ----------
+    data : (S x T) array_like
+        Input data
+    mmix : (T x C) array_like
+        Mixing matrix for converting input data to component space, where `C`
+        is components and `T` is the same as in `data`
+    mask : (S,) array-like
+        Boolean mask array
+    normalize : bool, optional
+        Whether to z-score output. Default: True
+
+    Returns
+    -------
+    data_Z : (S x C) np.ndarray
+        Data in component space
+    """
+
+    # demean masked data
+    data_vn = stats.zscore(data[mask], axis=-1)
+
+    # get betas of `data`~`mmix` and limit to range [-0.999, 0.999]
+    data_R = get_coeffs(utils.unmask(data_vn, mask), mask, mmix)[mask]
+    data_R[data_R < -0.999] = -0.999
+    data_R[data_R > 0.999] = 0.999
+
+    # R-to-Z transform
+    data_Z = np.arctanh(data_R)
+    if data_Z.ndim == 1:
+        data_Z = np.atleast_2d(data_Z).T
+
+    # normalize data
+    if normalize:
+        data_Zm = stats.zscore(data_Z, axis=0)
+        data_Z = data_Zm + (data_Z.mean(axis=0, keepdims=True) /
+                            data_Z.std(axis=0, keepdims=True))
+    return data_Z
+
+
 def get_coeffs(data, mask, X, add_const=False):
     """
     Performs least-squares fit of `X` against `data`
@@ -318,105 +323,6 @@ def get_coeffs(data, mask, X, add_const=False):
     return betas
 
 
-def getelbow_cons(ks, val=False):
-    """
-    Elbow using mean/variance method - conservative
-
-    Parameters
-    ----------
-    ks : array_like
-    val : bool, optional
-        Return the value of the elbow instead of the index. Default: False
-
-    Returns
-    -------
-    int or float
-        Either the elbow index (if val is True) or the values at the elbow
-        index (if val is False)
-    """
-
-    ks = np.sort(ks)[::-1]
-    nk = len(ks)
-    temp1 = [(ks[nk - 5 - ii - 1] > ks[nk - 5 - ii:nk].mean() + 2 * ks[nk - 5 - ii:nk].std())
-             for ii in range(nk - 5)]
-    ds = np.array(temp1[::-1], dtype=np.int)
-    dsum = []
-    c_ = 0
-    for d_ in ds:
-        c_ = (c_ + d_) * d_
-        dsum.append(c_)
-    e2 = np.argmax(np.array(dsum))
-    elind = np.max([getelbow_mod(ks), e2])
-
-    if val:
-        return ks[elind]
-    else:
-        return elind
-
-
-def getelbow_mod(ks, val=False):
-    """
-    Elbow using linear projection method - moderate
-
-    Parameters
-    ----------
-    ks : array_like
-    val : bool, optional
-        Return the value of the elbow instead of the index. Default: False
-
-    Returns
-    -------
-    int or float
-        Either the elbow index (if val is True) or the values at the elbow
-        index (if val is False)
-    """
-
-    ks = np.sort(ks)[::-1]
-    n_components = ks.shape[0]
-    coords = np.array([np.arange(n_components), ks])
-    p = coords - coords[:, 0].reshape(2, 1)
-    b = p[:, -1]
-    b_hat = np.reshape(b / np.sqrt((b ** 2).sum()), (2, 1))
-    proj_p_b = p - np.dot(b_hat.T, p) * np.tile(b_hat, (1, n_components))
-    d = np.sqrt((proj_p_b ** 2).sum(axis=0))
-    k_min_ind = d.argmax()
-
-    if val:
-        return ks[k_min_ind]
-    else:
-        return k_min_ind
-
-
-def getelbow_aggr(ks, val=False):
-    """
-    Elbow using curvature - aggressive
-
-    Parameters
-    ----------
-    ks : array_like
-    val : bool, optional
-        Default is False
-
-    Returns
-    -------
-    int or float
-        Either the elbow index (if val is True) or the values at the elbow
-        index (if val is False)
-    """
-
-    ks = np.sort(ks)[::-1]
-    dKdt = ks[:-1] - ks[1:]
-    dKdt2 = dKdt[:-1] - dKdt[1:]
-    curv = np.abs((dKdt2 / (1 + dKdt[:-1]**2.) ** (3. / 2.)))
-    curv[np.isnan(curv)] = -1 * 10**6
-    maxcurv = np.argmax(curv) + 2
-
-    if val:
-        return(ks[maxcurv])
-    else:
-        return maxcurv
-
-
 def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     """
     Removes global signal from individual echo `catd` and `optcom` time series
@@ -449,7 +355,7 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
         Input `optcom` with global signal removed from time series
     """
 
-    lgr.info('++ Applying amplitude-based T1 equilibration correction')
+    LGR.info('++ Applying amplitude-based T1 equilibration correction')
 
     # Legendre polynomial basis for denoising
     bounds = np.linspace(-1, 1, optcom.shape[-1])
@@ -530,7 +436,8 @@ def spatclust(data, mask, csize, thr, ref_img, infile=None, dindex=0,
     if infile is None:
         data = data.copy()
         data[data < thr] = 0
-        infile = utils.filewrite(utils.unmask(data, mask), '__clin.nii.gz', ref_img, gzip=True)
+        infile = utils.filewrite(utils.unmask(data, mask), '__clin.nii.gz',
+                                 ref_img, gzip=True)
 
     addopts = ''
     if data is not None and data.squeeze().ndim > 1 and dindex + tindex == 0:
