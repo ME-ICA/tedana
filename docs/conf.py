@@ -32,9 +32,15 @@ sys.path.insert(0, os.path.abspath('../tedana'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.autodoc',
               'sphinx.ext.napoleon',
-              'sphinxarg.ext']
+              'sphinxarg.ext',
+              'sphinx.ext.intersphinx',
+              'sphinx.ext.autosummary',
+              'sphinx.ext.doctest',
+              'sphinx.ext.todo',
+              'numpydoc',
+              'sphinx.ext.ifconfig',
+              'sphinx.ext.viewcode']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -178,3 +184,18 @@ texinfo_documents = [
      author, 'tedana', 'One line description of project.',
      'Miscellaneous'),
 ]
+
+# generate autosummary even if no references
+autosummary_generate = True
+autodoc_default_flags = ['members', 'inherited-members']
+
+# Example configuration for intersphinx: refer to the Python standard library.
+intersphinx_mapping = {
+    'http://docs.python.org/3.5': None,
+    'http://docs.scipy.org/doc/numpy': None,
+    'http://docs.scipy.org/doc/scipy/reference': None,
+    'http://matplotlib.org/': None,
+    'http://scikit-learn.org/0.17': None,
+    'http://nipy.org/nibabel/': None,
+    'http://pandas.pydata.org/pandas-docs/stable/': None,
+}

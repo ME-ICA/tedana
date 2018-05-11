@@ -1,7 +1,7 @@
 .. include:: <isonum.txt>
 
 
-tedana: TE Dependent Analysis
+tedana: TE Dependent ANAlysis
 =============================
 
 The ``tedana`` package is part of the ME-ICA pipeline, performing TE-dependent
@@ -40,6 +40,7 @@ Copyright |copy| 2011-2017, Prantik Kundu. All rights reserved.
 
    introduction
    installation
+   api
    contributing
    usage
 

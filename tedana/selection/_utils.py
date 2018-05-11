@@ -1,5 +1,5 @@
 """
-Utility functions for tedana.select
+Utility functions for tedana.selection
 """
 import logging
 
