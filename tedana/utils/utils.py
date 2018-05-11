@@ -48,6 +48,31 @@ def get_dtype(data):
     return 'OTHER'
 
 
+def getfbounds(n_echos):
+    """
+    Parameters
+    ----------
+    n_echos : int
+        Number of echoes
+
+    Returns
+    -------
+    fmin, fmid, fmax : float
+        Minimum, mid, and max F bounds
+    """
+
+    if not isinstance(n_echos, int):
+        raise IOError('Input n_echos must be int')
+    elif n_echos <= 0:
+        raise ValueError('Input n_echos must be greater than 0')
+    idx = n_echos - 1
+
+    F05s = [None, None, 18.5, 10.1, 7.7, 6.6, 6.0, 5.6, 5.3, 5.1, 5.0]
+    F025s = [None, None, 38.5, 17.4, 12.2, 10, 8.8, 8.1, 7.6, 7.2, 6.9]
+    F01s = [None, None, 98.5, 34.1, 21.2, 16.2, 13.8, 12.2, 11.3, 10.7, 10.]
+    return F05s[idx], F025s[idx], F01s[idx]
+
+
 def load_image(data):
     """
     Takes input `data` and returns a sample x time array

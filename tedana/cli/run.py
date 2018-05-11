@@ -1,5 +1,5 @@
 import argparse
-from tedana.interfaces import tedana
+from tedana import workflows
 
 
 def get_parser():
@@ -115,7 +115,7 @@ def get_parser():
 def main(argv=None):
     """Entry point"""
     options = get_parser().parse_args(argv)
-    tedana.main(**vars(options))
+    workflows.tedana.main(**vars(options))
 
 
 if __name__ == '__main__':
