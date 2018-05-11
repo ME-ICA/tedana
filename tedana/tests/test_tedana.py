@@ -3,11 +3,11 @@ Tests for tedana.
 """
 
 import os.path
-from tedana.interfaces import tedana
-from tedana.cli import run
-import nibabel as nb
 import numpy as np
+import nibabel as nb
 from pathlib import Path
+from tedana.cli import run
+from tedana import workflows
 
 
 def test_basic_tedana():
@@ -19,7 +19,7 @@ def test_basic_tedana():
     parser = run.get_parser()
     options = parser.parse_args(['-d', '/home/neuro/data/zcat_ffd.nii.gz',
                                  '-e', '14.5', '38.5', '62.5'])
-    tedana.main(**vars(options))
+    workflows.tedana.main(**vars(options))
     assert os.path.isfile('comp_table.txt')
 
 
