@@ -4,7 +4,7 @@
 from .fit import (
     computefeats2,
     fitmodels_direct, get_coeffs,
-    spatclust,
+    spatclust, gscontrol_raw,
 )
 
 from .combine import (
