@@ -651,7 +651,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
 
 
 def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, oversion=99,
-             filecsdata=False, savecsdiag=True, strict_mode=False):
+             filecsdata=True, savecsdiag=True, strict_mode=False):
     """
     Labels components in `mmix`
 
@@ -695,16 +695,15 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
 
     if filecsdata:
         import bz2
+
         if seldict is not None:
             lgr.info('++ Saving component selection data')
-            csstate_f = bz2.BZ2File('compseldata.pklbz', 'wb')
-            pickle.dump(seldict, csstate_f)
-            csstate_f.close()
+            with bz2.BZ2File('compseldata.pklbz', 'wb') as csstate_f:
+                pickle.dump(seldict, csstate_f)
         else:
             try:
-                csstate_f = bz2.BZ2File('compseldata.pklbz', 'rb')
-                seldict = pickle.load(csstate_f)
-                csstate_f.close()
+                with bz2.BZ2File('compseldata.pklbz', 'rb') as csstate_f:
+                    seldict = pickle.load(csstate_f)
             except FileNotFoundError:
                 lgr.warning('++ Failed to load component selection data')
                 return None
@@ -726,7 +725,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
     Do some tallies for no. of significant voxels
     """
     countsigFS0 = seldict['F_S0_clmaps'].sum(0)
-    countsigFR2 = seldict['F_S0_clmaps'].sum(0)
+    countsigFR2 = seldict['F_R2_clmaps'].sum(0)
     countnoise = np.zeros(len(nc))
 
     """
@@ -736,7 +735,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
     for ii in ncl:
         dice_FR2 = dice(unmask(seldict['Br_clmaps_R2'][:, ii], mask)[t2s != 0],
                         seldict['F_R2_clmaps'][:, ii])
-        dice_FS0 = dice(unmask(seldict['Br_clmaps_R2'][:, ii], mask)[t2s != 0],
+        dice_FS0 = dice(unmask(seldict['Br_clmaps_S0'][:, ii], mask)[t2s != 0],
                         seldict['F_S0_clmaps'][:, ii])
         dice_tbl[ii, :] = [dice_FR2, dice_FS0]  # step 3a here and above
     dice_tbl[np.isnan(dice_tbl)] = 0
