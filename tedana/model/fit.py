@@ -508,13 +508,16 @@ def spatclust(img, min_cluster_size, threshold=None, index=None, mask=None):
         Boolean array of clustered (and thresholded) `img` data
     """
 
+    # we need a 4D image for `niimg.iter_img`, below
     img = niimg.copy_img(check_niimg(img, atleast_4d=True))
 
-    # make sure voxel sizes are 1mm^3
+    # temporarily set voxel sizes to 1mm isotropic so that `min_cluster_size`
+    # represents the minimum number of voxels we want to be in a cluster,
+    # rather than the minimum size of the desired clusters in mm^3
     if not np.all(np.abs(np.diag(img.affine)) == 1):
         img.set_sform(np.sign(img.affine))
 
-    # grab desired volumes
+    # grab desired volumes from provided image
     if index is not None:
         if not isinstance(index, list):
             index = [index]
@@ -524,18 +527,21 @@ def spatclust(img, min_cluster_size, threshold=None, index=None, mask=None):
     if threshold is not None:
         img = niimg.threshold_img(img, float(threshold))
 
-    # cluster image
     clout = []
     for subbrick in niimg.iter_img(img):
+        # `min_region_size` is not inclusive (as in AFNI's `3dmerge`)
+        # subtract one voxel to ensure we aren't hitting this thresholding issue
         try:
             clsts = connected_regions(subbrick,
                                       min_region_size=int(min_cluster_size) - 1,
                                       smoothing_fwhm=None,
                                       extract_type='connected_components')[0]
+        # if no clusters are detected we get a TypeError; create a blank 4D
+        # image object as a placeholder instead
         except TypeError:
             clsts = niimg.new_img_like(subbrick,
                                        np.zeros(subbrick.shape + (1,)))
-        # if multiple clusters deteceted, collapse into one volume
+        # if multiple clusters detected, collapse into one volume
         clout += [niimg.math_img('np.sum(a, axis=-1)', a=clsts)]
 
     # convert back to data array and make boolean
