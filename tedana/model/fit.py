@@ -1,7 +1,6 @@
 """
 Fit models.
 """
-import os
 import logging
 
 import numpy as np

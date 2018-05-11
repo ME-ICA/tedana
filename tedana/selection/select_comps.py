@@ -270,7 +270,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
             epsmap.append([ii, utils.dice(guessmask, db.labels_ == 0),
                            np.intersect1d(nc[db.labels_ == 0],
                            nc[seldict['Rhos'] > getelbow_mod(Rhos_sorted,
-                                                                   val=True)]).shape[0]])
+                                                             val=True)]).shape[0]])
             LGR.debug('++ Found solution', ii, db.labels_)
         db = None
 

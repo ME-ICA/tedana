@@ -122,8 +122,8 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     mask, masksum = utils.make_adaptive_mask(catd, minimum=False, getsum=True)
 
     lgr.info('++ Computing T2* map')
-    t2s, s0, t2ss, s0s, t2sG, s0G = model.t2sadmap(catd, tes, mask, masksum,
-                                                   start_echo=1)
+    t2s, s0, t2ss, s0s, t2sG, s0G = model.fit_decay(catd, tes, mask, masksum,
+                                                    start_echo=1)
 
     # set a hard cap for the T2* map
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile

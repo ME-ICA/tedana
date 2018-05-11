@@ -1,12 +1,10 @@
 """
 Utility functions for tedana.select
 """
-import os
 import logging
 
 import numpy as np
 from sklearn import svm
-from scipy.special import lpmv
 
 logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
 LGR = logging.getLogger(__name__)
