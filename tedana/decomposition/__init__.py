@@ -2,10 +2,10 @@
 # ex: set sts=4 ts=4 sw=4 et:
 
 from .eigendecomp import (
-    tedpca, tedica, eimask,
+    tedpca, tedica,
 )
 
 
 __all__ = [
-    'tedpca', 'tedica', 'eimask'
+    'tedpca', 'tedica',
     ]
