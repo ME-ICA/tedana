@@ -290,7 +290,7 @@ def filewrite(data, filename, ref_img, gzip=False, copy_header=True,
     return name
 
 
-def new_nii_like(ref_img, data, copy_header=True):
+def new_nii_like(ref_img, data, affine=None, copy_header=True):
     """
     Coerces `data` into NiftiImage format like `ref_img`
 
@@ -300,6 +300,8 @@ def new_nii_like(ref_img, data, copy_header=True):
         Reference image
     data : (S [x T]) array_like
         Data to be saved
+    affine : (4 x 4) array_like, optional
+        Transformation matrix to be used. Default: `ref_img.affine`
     copy_header : bool, optional
         Whether to copy header from `ref_img` to new image. Default: True
 
@@ -312,6 +314,7 @@ def new_nii_like(ref_img, data, copy_header=True):
     ref_img = check_niimg(ref_img)
     nii = new_img_like(ref_img,
                        data.reshape(ref_img.shape[:3] + data.shape[1:]),
+                       affine=affine,
                        copy_header=copy_header)
     nii.set_data_dtype(data.dtype)
 
