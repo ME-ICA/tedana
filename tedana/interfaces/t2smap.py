@@ -5,7 +5,7 @@ import nibabel as nib
 from tedana.utils import (niwrite, cat2echos, makeadmask, unmask, fmask)
 
 
-def fit(data, mask, tes, masksum, start_echo):
+def fit_decay_ts(data, mask, tes, masksum, start_echo):
     """
     Fit voxel- and timepoint-wise monoexponential decay models to estimate
     T2* and S0 timeseries.
@@ -20,44 +20,9 @@ def fit(data, mask, tes, masksum, start_echo):
     s0vaf_ts = np.zeros([nx, ny, nz, n_trs])
 
     for vol in range(echodata.shape[-1]):
-        t2ss = np.zeros([nx, ny, nz, n_echoes - 1])
-        s0vs = t2ss.copy()
-        # Fit monoexponential decay first for first echo only,
-        # then first two echoes, etc.
-        for i_echo in range(start_echo, n_echoes + 1):
-            B = np.abs(echodata[:, :i_echo, vol]) + 1
-            B = np.log(B).transpose()
-            neg_tes = -1 * tes[:i_echo]
 
-            # First row is constant, second is TEs for decay curve
-            # Independent variables for least-squares model
-            x = np.array([np.ones(i_echo), neg_tes])
-            X = np.sort(x)[:, ::-1].transpose()
-
-            beta, _, _, _ = np.linalg.lstsq(X, B)
-            t2s = 1. / beta[1, :].transpose()
-            s0 = np.exp(beta[0, :]).transpose()
-
-            t2s[np.isinf(t2s)] = 500.
-            s0[np.isnan(s0)] = 0.
-
-            t2ss[:, :, :, i_echo-2] = np.squeeze(unmask(t2s, mask))
-            s0vs[:, :, :, i_echo-2] = np.squeeze(unmask(s0, mask))
-
-        # Limited T2* and S0 maps
-        fl = np.zeros([nx, ny, nz, len(tes)-1], bool)
-        for i_echo in range(n_echoes - 1):
-            fl_ = np.squeeze(fl[:, :, :, i_echo])
-            fl_[masksum == i_echo + 2] = True
-            fl[:, :, :, i_echo] = fl_
-        t2sa = np.squeeze(unmask(t2ss[fl], masksum > 1))
-        s0va = np.squeeze(unmask(s0vs[fl], masksum > 1))
-
-        # Full T2* maps with S0 estimation errors
-        t2saf = t2sa.copy()
-        s0vaf = s0va.copy()
-        t2saf[masksum == 1] = t2ss[masksum == 1, 0]
-        s0vaf[masksum == 1] = s0vs[masksum == 1, 0]
+        [t2sa, s0va, t2ss, s0vs, t2saf, s0vaf] = t2sadmap(
+            data, mask, tes, masksum, start_echo, 4)
 
         t2sa_ts[:, :, :, vol] = t2sa
         s0va_ts[:, :, :, vol] = s0va
@@ -81,10 +46,16 @@ def t2sadmap(data, mask, tes, masksum, start_echo):
         Array of TEs, in milliseconds.
     masksum :
     """
-    nx, ny, nz, n_echoes, n_trs = data.shape
+    if dim == 5:
+        nx, ny, nz, n_echoes, n_trs = data.shape
+    else:
+        nx, ny, nz, n_echoes,_ = data.shape
+        n_trs = 1
+
     echodata = fmask(data, mask)
     n_voxels = echodata.shape[0]
     tes = np.array(tes)
+
     t2ss = np.zeros([nx, ny, nz, n_echoes - 1])
     s0vs = t2ss.copy()
 
