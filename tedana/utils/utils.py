@@ -42,10 +42,7 @@ def get_dtype(data):
             raise TypeError('Input data format cannot be detected.')
         dtype = data.valid_exts[0]
 
-    if dtype in FORMATS.keys():
-        return FORMATS[dtype]
-
-    return 'OTHER'
+    return FORMATS.get(dtype, 'OTHER')
 
 
 def getfbounds(n_echos):
@@ -62,9 +59,11 @@ def getfbounds(n_echos):
     """
 
     if not isinstance(n_echos, int):
-        raise IOError('Input n_echos must be int')
-    elif n_echos <= 0:
-        raise ValueError('Input n_echos must be greater than 0')
+        raise TypeError('Input n_echos must be type int. Type {} '
+                        'invalid'.format(type(n_echos)))
+    elif n_echos <= 0 or n_echos > 11:
+        raise ValueError('Input `n_echos` must be >0 and <12. Provided '
+                         'value: {}'.format(n_echos))
     idx = n_echos - 1
 
     F05s = [None, None, 18.5, 10.1, 7.7, 6.6, 6.0, 5.6, 5.3, 5.1, 5.0]
@@ -94,10 +93,12 @@ def load_image(data):
             return fdata
         elif get_dtype(data) == 'NIFTI':
             data = check_niimg(data).get_data()
+    elif isinstance(data, nib.spatialimages.SpatialImage):
+        data = check_niimg(data).get_data()
 
-    fdata = data.reshape((-1,) + data.shape[3:])
+    fdata = data.reshape((-1,) + data.shape[3:]).squeeze()
 
-    return fdata.squeeze()
+    return fdata
 
 
 def load_data(data, n_echos=None):
@@ -127,18 +128,18 @@ def load_data(data, n_echos=None):
         if get_dtype(data) == 'GIFTI':  # TODO: deal with L/R split GIFTI files
             pass
         if len(data) == 1:  # a z-concatenated file was provided
-            if n_echos is None:
-                raise ValueError('Number of echos `n_echos` must be specified '
-                                 'if z-concatenated data file provided.')
             data = data[0]
         elif len(data) == 2:  # inviable -- need more than 2 echos
             raise ValueError('Cannot run `tedana` with only two echos: '
                              '{}'.format(data))
-        else:  # individual echo files were provided
+        else:  # individual echo files were provided (surface or volumetric)
             fdata = np.stack([load_image(f) for f in data], axis=1)
             return np.atleast_3d(fdata), data[0]
 
-    # we have a z-cat file
+    # we have a z-cat file -- we need to know how many echos are in it!
+    if n_echos is None:
+        raise ValueError('Number of echos `n_echos` must be specified if only '
+                         'one data file is provided.')
     img = check_niimg(data)
     (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
     fdata = load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1, order='F'))
@@ -180,24 +181,26 @@ def make_adaptive_mask(data, minimum=True, getsum=False):
     if minimum:
         return make_min_mask(data)
 
-    n_samp, n_echos, n_vols = data.shape
+    # take temporal mean of echos and extract non-zero values in first echo
     echo_means = data.mean(axis=-1)  # temporal mean of echos
-    first_echo = echo_means[..., 0]
-    # make a map of longest echo with which a voxel can be sampled, with min
-    # value of map as X value of voxel that has median value in the 1st echo
-    # N.B. larger factor (%ile??) leads to bias to lower TEs
-    perc_33 = np.percentile(first_echo[first_echo.nonzero()], 33,
-                            interpolation='higher')  # why take 33rd %ile?
-    med_val = (first_echo == perc_33)
-    lthrs = np.vstack([echo_means[..., echo][med_val] / 3 for echo in
-                       range(n_echos)])  # why divide by three?
-    lthrs = lthrs[:, lthrs.sum(0).argmax()]
-    mthr = np.ones(data.shape[:-1])
-    for echo in range(n_echos):
-        mthr[..., echo] *= lthrs[echo]
+    first_echo = echo_means[echo_means[:, 0] != 0, 0]
 
-    masksum = (np.abs(echo_means) > mthr).astype('int').sum(axis=-1)
-    mask = (masksum != 0)
+    # get 33rd %ile of `first_echo` and find corresponding index
+    perc_33 = np.percentile(first_echo, 33, interpolation='higher')  # QUESTION: why 33%ile?
+    med_val = (echo_means[:, 0] == perc_33)
+
+    # extract values from all echos at relevant index
+    lthrs = np.squeeze(echo_means[med_val].T) / 3  # QUESTION: why divide by 3?
+
+    # if multiple samples were extracted per echo, keep the one w/the highest signal
+    if lthrs.ndim > 1:
+        lthrs = lthrs[:, lthrs.sum(axis=0).argmax()]
+
+    # determine samples where absolute value is greater than echo-specific thresholds
+    # and count # of echos that pass criterion
+    masksum = (np.abs(echo_means) > lthrs).sum(axis=-1)
+    # make it a boolean mask to (where we have at least 1 echo with good signal)
+    mask = masksum.astype(bool)
 
     if getsum:
         return mask, masksum
@@ -271,8 +274,7 @@ def filewrite(data, filename, ref_img, gzip=False, copy_header=True,
                          'formats are compatible'.format(dtype, FORMATS[ext]))
 
     if dtype == 'NIFTI':
-        out = new_nii_like(ref_img, data,
-                           copy_header=copy_header)
+        out = new_nii_like(ref_img, data, copy_header=copy_header)
         name = '{}.{}'.format(root, 'nii.gz' if gzip else 'nii')
         out.to_filename(name)
     elif dtype == 'GIFTI':
@@ -584,10 +586,9 @@ def andb(arrs):
         Integer array of summed `arrs`
     """
 
-    # coerce to integer and ensure same shape
+    # coerce to integer and ensure all arrays are the same shape
     arrs = [check_array(arr, dtype=int, ensure_2d=False, allow_nd=True) for arr in arrs]
-    same_shape = [arr1.shape == arr2.shape for arr1 in arrs for arr2 in arrs]
-    if not np.all(same_shape):
+    if not np.all([arr1.shape == arr2.shape for arr1 in arrs for arr2 in arrs]):
         raise ValueError('All input arrays must have same shape.')
 
     # sum across arrays

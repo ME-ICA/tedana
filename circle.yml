@@ -38,7 +38,7 @@ jobs:
           name: run tests
           command: |
             source activate venv
-            py.test ./tedana/tests/test_tedana.py
+            py.test ./tedana/tests
           no_output_timeout: "40m"
           post: bash <(curl -s https://codecov.io/bash)
 
