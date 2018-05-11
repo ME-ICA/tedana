@@ -1,165 +1,392 @@
 """Utilities for meica package"""
+import os.path as op
 import numpy as np
 import nibabel as nib
+from nibabel.filename_parser import splitext_addext
+from nilearn.image import new_img_like
+from nilearn._utils import check_niimg
 from scipy.optimize import leastsq
-from scipy.stats import scoreatpercentile
+from sklearn.utils import check_array
 
 from ..due import due, BibTeX
 
+FORMATS = {'.nii': 'NIFTI',
+           '.gii': 'GIFTI'}
 
-def cat2echos(data, Ne):
+
+def get_dtype(data):
     """
-    Separates z- and echo-axis in `data`
+    Determines neuroimaging format of `data`
 
     Parameters
     ----------
-    data : array_like
-        Array of shape (nx, ny, nz*Ne, nt)
-    Ne : int
-        Number of echoes that were in original (uncombined) data array
+    data : list-of-str or str or img_like
+        Data to determine format of
 
     Returns
     -------
-    ndarray
-        Array of shape (nx, ny, nz, Ne, nt)
+    dtype : {'NIFTI', 'GIFTI', 'OTHER'} str
+        Format of input data
     """
 
-    nx, ny = data.shape[0:2]
-    nz = data.shape[2] // Ne
-    if len(data.shape) > 3:
-        nt = data.shape[3]
-    else:
-        nt = 1
-    return np.reshape(data, (nx, ny, nz, Ne, nt), order='F')
+    if isinstance(data, list):
+        dtypes = np.unique([splitext_addext(d)[1] for d in data])
+        if dtypes.size > 1:
+            raise ValueError('Provided data detected to have varying formats: '
+                             '{}'.format(dtypes))
+        dtype = dtypes[0]
+    elif isinstance(data, str):
+        dtype = splitext_addext(data)[1]
+    else:  # img_like?
+        if not hasattr(data, 'valid_exts'):
+            raise TypeError('Input data format cannot be detected.')
+        dtype = data.valid_exts[0]
+
+    if dtype in FORMATS.keys():
+        return FORMATS[dtype]
+
+    return 'OTHER'
 
 
-def makeadmask(cdat, minimum=True, getsum=False):
+def getfbounds(n_echos):
     """
-    Create a mask.
-    """
-    nx, ny, nz, Ne, _ = cdat.shape
+    Parameters
+    ----------
+    n_echos : int
+        Number of echoes
 
-    mask = np.ones((nx, ny, nz), dtype=np.bool)
+    Returns
+    -------
+    fmin, fmid, fmax : float
+        Minimum, mid, and max F bounds
+    """
+
+    if not isinstance(n_echos, int):
+        raise IOError('Input n_echos must be int')
+    elif n_echos <= 0:
+        raise ValueError('Input n_echos must be greater than 0')
+    idx = n_echos - 1
+
+    F05s = [None, None, 18.5, 10.1, 7.7, 6.6, 6.0, 5.6, 5.3, 5.1, 5.0]
+    F025s = [None, None, 38.5, 17.4, 12.2, 10, 8.8, 8.1, 7.6, 7.2, 6.9]
+    F01s = [None, None, 98.5, 34.1, 21.2, 16.2, 13.8, 12.2, 11.3, 10.7, 10.]
+    return F05s[idx], F025s[idx], F01s[idx]
+
+
+def load_image(data):
+    """
+    Takes input `data` and returns a sample x time array
+
+    Parameters
+    ----------
+    data : (X x Y x Z [x T]) array_like or img_like object
+        Data array or data file to be loaded / reshaped
+
+    Returns
+    -------
+    fdata : (S x T) np.ndarray
+        Reshaped `data`, where `S` is samples and `T` is time
+    """
+
+    if isinstance(data, str):
+        if get_dtype(data) == 'GIFTI':
+            fdata = np.column_stack([f.data for f in nib.load(data).darrays])
+            return fdata
+        elif get_dtype(data) == 'NIFTI':
+            data = check_niimg(data).get_data()
+
+    fdata = data.reshape((-1,) + data.shape[3:])
+
+    return fdata.squeeze()
+
+
+def load_data(data, n_echos=None):
+    """
+    Coerces input `data` files to required 3D array output
+
+    Parameters
+    ----------
+    data : (X x Y x M x T) array_like or list-of-img_like
+        Input multi-echo data array, where `X` and `Y` are spatial dimensions,
+        `M` is the Z-spatial dimensions with all the input echos concatenated,
+        and `T` is time. A list of image-like objects (e.g., .nii or .gii) are
+        accepted, as well
+    n_echos : int, optional
+        Number of echos in provided data array. Only necessary if `data` is
+        array_like. Default: None
+
+    Returns
+    -------
+    fdata : (S x E x T) np.ndarray
+        Output data where `S` is samples, `E` is echos, and `T` is time
+    ref_img : str
+        Filepath to reference image for saving output files
+    """
+
+    if isinstance(data, list):
+        if get_dtype(data) == 'GIFTI':  # TODO: deal with L/R split GIFTI files
+            pass
+        if len(data) == 1:  # a z-concatenated file was provided
+            if n_echos is None:
+                raise ValueError('Number of echos `n_echos` must be specified '
+                                 'if z-concatenated data file provided.')
+            data = data[0]
+        elif len(data) == 2:  # inviable -- need more than 2 echos
+            raise ValueError('Cannot run `tedana` with only two echos: '
+                             '{}'.format(data))
+        else:  # individual echo files were provided
+            fdata = np.stack([load_image(f) for f in data], axis=1)
+            return np.atleast_3d(fdata), data[0]
+
+    # we have a z-cat file
+    img = check_niimg(data)
+    (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
+    fdata = load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1, order='F'))
+
+    # create reference image
+    ref_img = img.__class__(np.zeros((nx, ny, nz)), affine=img.affine,
+                            header=img.header, extra=img.extra)
+    ref_img.header.extensions = []
+    ref_img.header.set_sform(ref_img.header.get_sform(), code=1)
+
+    return fdata, ref_img
+
+
+def make_adaptive_mask(data, minimum=True, getsum=False):
+    """
+    Makes map of `data` specifying longest echo a voxel can be sampled with
+
+    Parameters
+    ----------
+    data : (S x E x T) array_like
+        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
+        time
+    minimum : bool, optional
+        Use `make_min_mask()` instead of generating a map with echo-specific
+        times. Default: True
+    getsum : bool, optional
+        Return `masksum` in addition to `mask`. Default: False
+
+    Returns
+    -------
+    mask : (S, ) np.ndarray
+        Boolean array of voxels that have sufficient signal in at least one
+        echo
+    masksum : (S, ) np.ndarray
+        Valued array indicating the number of echos with sufficient signal in a
+        given voxel. Only returned if `getsum = True`
+    """
 
     if minimum:
-        mask = cdat.prod(axis=-1).prod(-1) != 0
-        return mask
-    else:
-        # Make a map of longest echo that a voxel can be sampled with,
-        # with minimum value of map as X value of voxel that has median
-        # value in the 1st echo. N.b. larger factor leads to bias to lower TEs
-        emeans = cdat.mean(-1)
-        medv = emeans[:, :, :, 0] == scoreatpercentile(emeans[:, :, :, 0][emeans[:, :, :, 0] != 0],
-                                                       33, interpolation_method='higher')
-        lthrs = np.squeeze(np.array([emeans[:, :, :, ee][medv] / 3 for ee in range(Ne)]))
+        return make_min_mask(data)
 
-        if len(lthrs.shape) == 1:
-            lthrs = np.atleast_2d(lthrs).T
-        lthrs = lthrs[:, lthrs.sum(0).argmax()]
+    n_samp, n_echos, n_vols = data.shape
+    echo_means = data.mean(axis=-1)  # temporal mean of echos
+    first_echo = echo_means[..., 0]
+    # make a map of longest echo with which a voxel can be sampled, with min
+    # value of map as X value of voxel that has median value in the 1st echo
+    # N.B. larger factor (%ile??) leads to bias to lower TEs
+    perc_33 = np.percentile(first_echo[first_echo.nonzero()], 33,
+                            interpolation='higher')  # why take 33rd %ile?
+    med_val = (first_echo == perc_33)
+    lthrs = np.vstack([echo_means[..., echo][med_val] / 3 for echo in
+                       range(n_echos)])  # why divide by three?
+    lthrs = lthrs[:, lthrs.sum(0).argmax()]
+    mthr = np.ones(data.shape[:-1])
+    for echo in range(n_echos):
+        mthr[..., echo] *= lthrs[echo]
 
-        mthr = np.ones([nx, ny, nz, Ne])
-        for i_echo in range(Ne):
-            mthr[:, :, :, i_echo] *= lthrs[i_echo]
-        mthr = np.abs(emeans) > mthr
-        masksum = np.array(mthr, dtype=np.int).sum(-1)
-        mask = masksum != 0
-        if getsum:
-            return mask, masksum
-        else:
-            return mask
+    masksum = (np.abs(echo_means) > mthr).astype('int').sum(axis=-1)
+    mask = (masksum != 0)
+
+    if getsum:
+        return mask, masksum
+
+    return mask
 
 
-def uncat2echos(data, Ne):
+def make_min_mask(data):
     """
-    Combines z- and echo-axis in `data`
+    Generates a 3D mask of `data`
+
+    Only samples that are consistently (i.e., across time AND echoes) non-zero
+    in `data` are True in output
 
     Parameters
     ----------
-    data : array_like
-        Array of shape (nx, ny, nz, Ne, nt)
-    Ne : int
-        Number of echoes; should be equal to `data.shape[3]`
+    data : (S x E x T) array_like
+        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
+        time
 
     Returns
     -------
-    ndarray
-        Array of shape (nx, ny, nz*Ne, nt)
-    """
-
-    nx, ny = data.shape[0:2]
-    nz = data.shape[2] * Ne
-    if len(data.shape) > 4:
-        nt = data.shape[4]
-    else:
-        nt = 1
-    return np.reshape(data, (nx, ny, nz, nt), order='F')
-
-
-def make_mask(catdata):
-    """
-    Generates a 3D mask of `catdata`
-
-    Only voxels that are consistently (i.e., across time AND echoes) non-zero
-    in `catdata` are True in output
-
-    Parameters
-    ----------
-    catdata : (X x Y x Z x E x T) array_like
-        Multi-echo data array, where X, Y, Z are spatial dimensions, E
-        corresponds to individual echo data, and T is time
-
-    Returns
-    -------
-    mask : (X x Y x Z) np.ndarray
+    mask : (S, ) np.ndarray
         Boolean array
     """
 
-    catdata = np.asarray(catdata)
-    return catdata.prod(axis=-1).prod(axis=-1).astype('bool')
+    data = np.asarray(data).astype(bool)
+    return data.prod(axis=-1).prod(axis=-1).astype(bool)
 
 
-def make_opt_com(medata):
+def filewrite(data, filename, ref_img, gzip=False, copy_header=True,
+              copy_meta=False):
     """
-    Makes optimal combination from input multi-echo data
+    Writes `data` to `filename` in format of `ref_img`
+
+    If `ref_img` dtype is GIFTI, then `data` is assumed to be stacked L/R
+    hemispheric and will be split and saved as two files
 
     Parameters
     ----------
-    medata : tedana.interfaces.data.MultiEchoData
-    """
-
-    pass
-
-
-def fmask(data, mask):
-    """
-    Masks `data` with non-zero entries of `mask`
-
-    Parameters
-    ----------
-    data : array_like
-        Array of shape (nx, ny, nz[, Ne[, nt]])
-    mask : array_like
-        Boolean array of shape (nx, ny, nz)
+    data : (S [x T]) array_like
+        Data to be saved
+    filename : str
+        Filepath where data should be saved to
+    ref_img : str or img_like
+        Reference image
+    gzip : bool, optional
+        Whether to gzip output (if not specified in `filename`). Only applies
+        if output dtype is NIFTI. Default: False
+    copy_header : bool, optional
+        Whether to copy header from `ref_img` to new image. Default: True
+    copy_meta : bool, optional
+        Whether to copy meta from `ref_img` to new image. Only applies if
+        output dtype is GIFTI. Default: False
 
     Returns
     -------
-    ndarray
-        Masked array of shape (nx*ny*nz[, Ne[, nt]])
+    name : str
+        Path of saved image (with added extensions, as appropriate)
     """
 
-    s = data.shape
+    # get datatype and reference image for comparison
+    dtype = get_dtype(ref_img)
+    if isinstance(ref_img, list):
+        ref_img = ref_img[0]
 
-    N = s[0] * s[1] * s[2]
-    news = []
-    news.append(N)
+    # ensure that desired output type (from name) is compatible with `dtype`
+    root, ext, add = splitext_addext(filename)
+    if ext != '' and FORMATS[ext] != dtype:
+        raise ValueError('Cannot write {} data to {} file. Please ensure file'
+                         'formats are compatible'.format(dtype, FORMATS[ext]))
 
-    if len(s) > 3:
-        news.extend(s[3:])
+    if dtype == 'NIFTI':
+        out = new_nii_like(ref_img, data,
+                           copy_header=copy_header)
+        name = '{}.{}'.format(root, 'nii.gz' if gzip else 'nii')
+        out.to_filename(name)
+    elif dtype == 'GIFTI':
+        # remove possible hemispheric denotations from root
+        root = op.join(op.dirname(root), op.basename(root).split('.')[0])
+        # save hemispheres separately
+        for n, (hdata, hemi) in enumerate(zip(np.split(data, 2, axis=0),
+                                              ['L', 'R'])):
+            out = new_gii_like(ref_img[n], hdata,
+                               copy_header=copy_header,
+                               copy_meta=copy_meta)
+            name = '{}.{}.func.gii'.format(root, hemi)
+            out.to_filename(name)
 
-    tmp1 = np.reshape(data, news)
-    fdata = tmp1.compress((mask > 0).ravel(), axis=0)
+    return name
 
-    return fdata.squeeze()
+
+def new_nii_like(ref_img, data, copy_header=True):
+    """
+    Coerces `data` into NiftiImage format like `ref_img`
+
+    Parameters
+    ----------
+    ref_img : str or img_like
+        Reference image
+    data : (S [x T]) array_like
+        Data to be saved
+    copy_header : bool, optional
+        Whether to copy header from `ref_img` to new image. Default: True
+
+    Returns
+    -------
+    nii : nib.nifti.NiftiXImage
+        NiftiImage
+    """
+
+    ref_img = check_niimg(ref_img)
+    nii = new_img_like(ref_img,
+                       data.reshape(ref_img.shape[:3] + data.shape[1:]),
+                       copy_header=copy_header)
+    nii.set_data_dtype(data.dtype)
+
+    return nii
+
+
+def new_gii_like(ref_img, data, copy_header=True, copy_meta=False):
+    """
+    Coerces `data` into GiftiImage format like `ref_img`
+
+    Parameters
+    ----------
+    ref_img : str or img_like
+        Reference image
+    data : (S [x T]) array_like
+        Data to be saved
+    copy_header : bool, optional
+        Whether to copy header from `ref_img` to new image. Default: True
+    copy_meta : bool, optional
+        Whether to copy meta from `ref_img` to new image. Default: False
+
+    Returns
+    -------
+    gii : nib.gifti.GiftiImage
+        GiftiImage
+    """
+
+    if isinstance(ref_img, str):
+        ref_img = nib.load(ref_img)
+
+    if data.ndim == 1:
+        data = np.atleast_2d(data).T
+
+    darrays = [make_gii_darray(ref_img.darrays[n], d, copy_meta=copy_meta)
+               for n, d in enumerate(data.T)]
+    gii = nib.gifti.GiftiImage(header=ref_img.header if copy_header else None,
+                               extra=ref_img.extra,
+                               meta=ref_img.meta if copy_meta else None,
+                               labeltable=ref_img.labeltable,
+                               darrays=darrays)
+
+    return gii
+
+
+def make_gii_darray(ref_array, data, copy_meta=False):
+    """
+    Converts `data` into GiftiDataArray format like `ref_array`
+
+    Parameters
+    ----------
+    ref_array : str or img_like
+        Reference array
+    data : (S,) array_like
+        Data to be saved
+    copy_meta : bool, optional
+        Whether to copy meta from `ref_img` to new image. Default: False
+
+    Returns
+    -------
+    gii : nib.gifti.GiftiDataArray
+        Output data array instance
+    """
+
+    if not isinstance(ref_array, nib.gifti.GiftiDataArray):
+        raise TypeError('Provided reference is not a GiftiDataArray.')
+    darray = nib.gifti.GiftiDataArray(data,
+                                      intent=ref_array.intent,
+                                      datatype=data.dtype,
+                                      encoding=ref_array.encoding,
+                                      endian=ref_array.endian,
+                                      coordsys=ref_array.coordsys,
+                                      ordering=ref_array.ind_ord,
+                                      meta=ref_array.meta if copy_meta else None)
+
+    return darray
 
 
 def unmask(data, mask):
@@ -168,31 +395,21 @@ def unmask(data, mask):
 
     Parameters
     ----------
-    data : array_like
-        Masked array of shape (nx*ny*nz[, Ne[, nt]])
-    mask : array_like
-        Boolean array of shape (nx, ny, nz)
+    data : (M [x E [x T]]) array_like
+        Masked array, where `M` is the number of `True` values in `mask`
+    mask : (S,) array_like
+        Boolean array of `S` samples that was used to mask `data`. It should
+        have exactly `M` True values.
 
     Returns
     -------
-    ndarray
-        Array of shape (nx, ny, nz[, Ne[, nt]])
+    out : (S [x E [x T]]) np.ndarray
+        Unmasked `data` array
     """
 
-    M = (mask != 0).ravel()
-    Nm = M.sum()
-
-    nx, ny, nz = mask.shape
-
-    if len(data.shape) > 1:
-        nt = data.shape[1]
-    else:
-        nt = 1
-
-    out = np.zeros((nx * ny * nz, nt), dtype=data.dtype)
-    out[M, :] = np.reshape(data, (Nm, nt))
-
-    return np.squeeze(np.reshape(out, (nx, ny, nz, nt)))
+    out = np.zeros(mask.shape + data.shape[1:], dtype=data.dtype)
+    out[mask] = data
+    return out
 
 
 def moments(data):
@@ -291,22 +508,6 @@ def fitgaussian(data):
     return p
 
 
-def niwrite(data, affine, name, head, header=None):
-    """
-    Write out nifti file.
-    """
-    data[np.isnan(data)] = 0
-    if header is None:
-        this_header = head.copy()
-        this_header.set_data_shape(list(data.shape))
-    else:
-        this_header = header
-
-    outni = nib.Nifti1Image(data, affine, header=this_header)
-    outni.set_data_dtype('float64')
-    outni.to_filename(name)
-
-
 @due.dcite(BibTeX('@article{dice1945measures,'
                   'author={Dice, Lee R},'
                   'title={Measures of the amount of ecologic association between species},'
@@ -380,15 +581,13 @@ def andb(arrs):
         Integer array of summed `arrs`
     """
 
-    same_shape = []
-    for arr in arrs:
-        for arr2 in arrs:
-            same_shape.append(arr.shape == arr2.shape)
-
+    # coerce to integer and ensure same shape
+    arrs = [check_array(arr, dtype=int, ensure_2d=False, allow_nd=True) for arr in arrs]
+    same_shape = [arr1.shape == arr2.shape for arr1 in arrs for arr2 in arrs]
     if not np.all(same_shape):
-        raise ValueError('All input arrays must have same shape')
+        raise ValueError('All input arrays must have same shape.')
 
-    result = np.zeros(arrs[0].shape)
-    for arr in arrs:
-        result += np.array(arr, dtype=np.int)
+    # sum across arrays
+    result = np.sum(arrs, axis=0)
+
     return result

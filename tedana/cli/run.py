@@ -1,14 +1,16 @@
 import argparse
-from tedana.interfaces import tedana
+from tedana import workflows
 
 
 def get_parser():
     """
     Parses command line inputs for tedana
+
     Returns
     -------
     parser.parse_args() : argparse dict
     """
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-d',
                         dest='data',
@@ -18,7 +20,7 @@ def get_parser():
     parser.add_argument('-e',
                         dest='tes',
                         nargs='+',
-                        help='Echo times (in ms) ex: 15,39,63',
+                        help='Echo times (in ms) ex: 15.0 39.0 63.0',
                         required=True)
     parser.add_argument('--mix',
                         dest='mixm',
@@ -98,7 +100,7 @@ def get_parser():
                         dest='filecsdata',
                         help='Save component selection data',
                         action='store_true',
-                        default=False)
+                        default=True)
     parser.add_argument('--label',
                         dest='label',
                         help='Label for output directory.',
@@ -113,7 +115,7 @@ def get_parser():
 def main(argv=None):
     """Entry point"""
     options = get_parser().parse_args(argv)
-    tedana.main(**vars(options))
+    workflows.tedana.main(**vars(options))
 
 
 if __name__ == '__main__':
