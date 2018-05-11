@@ -1,4 +1,6 @@
-import os
+import nilearn.image as niimg
+from nilearn.regions import connected_regions
+from nilearn._utils import check_niimg
 import numpy as np
 from scipy import stats
 from tedana import model, utils
@@ -219,54 +221,41 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
         for i in range(n_components):
             # save out files
             out = np.zeros((n_samp, 4))
-            if fout is not None:
-                ccname, gzip = 'cc{:03d}'.format(i), False
-            else:
-                ccname, gzip = '.cc_temp.nii.gz', True
-
             out[:, 0] = np.squeeze(utils.unmask(PSC[:, i], mask))
             out[:, 1] = np.squeeze(utils.unmask(F_R2_maps[:, i], t2s != 0))
             out[:, 2] = np.squeeze(utils.unmask(F_S0_maps[:, i], t2s != 0))
             out[:, 3] = np.squeeze(utils.unmask(Z_maps[:, i], mask))
 
-            ccname = utils.filewrite(out, ccname, ref_img, gzip=gzip)
-
             if utils.get_dtype(ref_img) == 'GIFTI':
                 continue  # TODO: pass through GIFTI file data as below
 
-            os.system('3drefit -sublabel 0 PSC -sublabel 1 F_R2 -sublabel 2 F_SO '
-                      '-sublabel 3 Z_sn {} 2> /dev/null > /dev/null'.format(ccname))
-
+            ccimg = utils.new_nii_like(ref_img, out)
             csize = np.max([int(n_voxels * 0.0005) + 5, 20])
 
             # Do simple clustering on F
-            # TODO: can be replaced with nilearn.image.threshold_img
-            # TODO: fmin is being cast to an integer here -- is that purposeful?!
-            os.system('3dcalc -overwrite -a {}[1..2] -expr \'a*step(a-{:0d})\' -prefix '
-                      '.fcl_in.nii.gz -overwrite'.format(ccname, int(fmin)))
-            # TODO: can be replaced with nilearn.regions.connected_regions
-            os.system('3dmerge -overwrite -dxyz=1 -1clust 1 {:0d} -doall '
-                      '-prefix .fcl_out.nii.gz .fcl_in.nii.gz'.format(int(csize)))
-            sel = utils.load_image('.fcl_out.nii.gz')[t2s != 0]
-            sel = np.array(sel != 0, dtype=np.int)
+            sel = spatclust(ccimg, min_cluster_size=csize,
+                            threshold=int(fmin), index=[1, 2], mask=(t2s != 0))
             F_R2_clmaps[:, i] = sel[:, 0]
             F_S0_clmaps[:, i] = sel[:, 1]
+            countsigFR2 = F_R2_clmaps[:, i].sum()
+            countsigFS0 = F_S0_clmaps[:, i].sum()
 
             # Do simple clustering on Z at p<0.05
-            sel = spatclust(None, mask, csize, 1.95, ref_img,
-                            infile=ccname, dindex=3, tindex=3)
+            sel = spatclust(ccimg, min_cluster_size=csize,
+                            threshold=1.95, index=3, mask=mask)
             Z_clmaps[:, i] = sel
 
             # Do simple clustering on ranked signal-change map
-            countsigFR2 = F_R2_clmaps[:, i].sum()
-            countsigFS0 = F_S0_clmaps[:, i].sum()
-            spclust_input = stats.rankdata(tsoc_Babs[:, i])
-            Br_clmaps_R2[:, i] = spatclust(spclust_input, mask,
-                                           csize, max(tsoc_Babs.shape)-countsigFR2,
-                                           ref_img)
-            Br_clmaps_S0[:, i] = spatclust(spclust_input, mask,
-                                           csize, max(tsoc_Babs.shape)-countsigFS0,
-                                           ref_img)
+            spclust_input = utils.unmask(stats.rankdata(tsoc_Babs[:, i]), mask)
+            spclust_input = utils.new_nii_like(ref_img, spclust_input)
+            Br_clmaps_R2[:, i] = spatclust(spclust_input,
+                                           min_cluster_size=csize,
+                                           threshold=max(tsoc_Babs.shape)-countsigFR2,
+                                           mask=mask)
+            Br_clmaps_S0[:, i] = spatclust(spclust_input,
+                                           min_cluster_size=csize,
+                                           threshold=max(tsoc_Babs.shape)-countsigFS0,
+                                           mask=mask)
 
         seldict = {}
         selvars = ['Kappas', 'Rhos', 'WTS', 'varex', 'Z_maps', 'F_R2_maps',
@@ -496,51 +485,70 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     return dm_catd, dm_optcom
 
 
-def spatclust(data, mask, csize, thr, ref_img, infile=None, dindex=0,
-              tindex=0):
+def spatclust(img, min_cluster_size, threshold=None, index=None, mask=None):
     """
-    Thresholds and spatially clusters `data`
+    Spatially clusters `img`
 
     Parameters
     ----------
-    data : (S x T) array-like
-        Input data array
-    mask : (S,) array-like
-        Boolean mask array
-    csize : int
-        Size of cluster (in voxels) to retain
-    thr : float
-        Value to threshold image at before clustering
-    ref_img : str or img_like
-        Reference image to dictate how outputs are saved to disk
-    infile : str, optional
-        Path to file that should be used for clustering instead of `data`.
-        Default: None
-    dindex : int, optional
-        Index of data (2nd dimension) to use for clustering. Default: 0
-    tindex : int, optional
-        Index of data (2nd dimension) to use for thresholding. Default: 0
+    img : str or img_like
+        Image file or object to be clustered
+    min_cluster_size : int
+        Minimum cluster size (in voxels)
+    threshold : float, optional
+        Whether to threshold `img` before clustering
+    index : array_like, optional
+        Whether to extract volumes from `img` for clustering
+    mask : (S,) array_like, optional
+        Boolean array for masking resultant data array
 
     Returns
     -------
-    clustered : (S x T) np.ndarray
-        Boolean array indicated data samples to be retained after clustering
+    clustered : np.ndarray
+        Boolean array of clustered (and thresholded) `img` data
     """
 
-    if infile is None:
-        data = data.copy()
-        data[data < thr] = 0
-        infile = utils.filewrite(utils.unmask(data, mask), '__clin.nii.gz', ref_img, gzip=True)
+    # we need a 4D image for `niimg.iter_img`, below
+    img = niimg.copy_img(check_niimg(img, atleast_4d=True))
 
-    addopts = ''
-    if data is not None and data.squeeze().ndim > 1 and dindex + tindex == 0:
-        addopts = '-doall'
-    else:
-        addopts = '-1dindex {0} -1tindex {1}'.format(str(dindex), str(tindex))
+    # temporarily set voxel sizes to 1mm isotropic so that `min_cluster_size`
+    # represents the minimum number of voxels we want to be in a cluster,
+    # rather than the minimum size of the desired clusters in mm^3
+    if not np.all(np.abs(np.diag(img.affine)) == 1):
+        img.set_sform(np.sign(img.affine))
 
-    cmd_str = '3dmerge -overwrite {0} -dxyz=1 -1clust 1 {1:d} ' \
-              '-1thresh {2:.02f} -prefix __clout.nii.gz {3}'
-    os.system(cmd_str.format(addopts, int(csize), float(thr), infile))
+    # grab desired volumes from provided image
+    if index is not None:
+        if not isinstance(index, list):
+            index = [index]
+        img = niimg.index_img(img, index)
 
-    clustered = utils.load_image('__clout.nii.gz')[mask] != 0
+    # threshold image
+    if threshold is not None:
+        img = niimg.threshold_img(img, float(threshold))
+
+    clout = []
+    for subbrick in niimg.iter_img(img):
+        # `min_region_size` is not inclusive (as in AFNI's `3dmerge`)
+        # subtract one voxel to ensure we aren't hitting this thresholding issue
+        try:
+            clsts = connected_regions(subbrick,
+                                      min_region_size=int(min_cluster_size) - 1,
+                                      smoothing_fwhm=None,
+                                      extract_type='connected_components')[0]
+        # if no clusters are detected we get a TypeError; create a blank 4D
+        # image object as a placeholder instead
+        except TypeError:
+            clsts = niimg.new_img_like(subbrick,
+                                       np.zeros(subbrick.shape + (1,)))
+        # if multiple clusters detected, collapse into one volume
+        clout += [niimg.math_img('np.sum(a, axis=-1)', a=clsts)]
+
+    # convert back to data array and make boolean
+    clustered = utils.load_image(niimg.concat_imgs(clout).get_data()) != 0
+
+    # if mask provided, mask output
+    if mask is not None:
+        clustered = clustered[mask]
+
     return clustered
