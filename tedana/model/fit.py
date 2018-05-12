@@ -22,6 +22,8 @@ Z_MAX = 8
 def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
                      fout=None, reindex=False, mmixN=None, full_sel=True):
     """
+    Fit models directly.
+
     Parameters
     ----------
     catd : (S x E x T) array_like

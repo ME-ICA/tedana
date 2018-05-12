@@ -1,8 +1,8 @@
 API
 ===
 
-:mod:`tedana.model`: Importing and formatting data
-=======================================================
+:mod:`tedana.model`: Modeling TE-dependence
+--------------------------------------------------
 
 .. automodule:: tedana.model
    :no-members:
@@ -14,6 +14,8 @@ API
 
    tedana.model.fit_decay
    tedana.model.fit_decay_ts
+   tedana.model.fitmodels_direct
+   tedana.model.make_optcom
 
    :template: module.rst
 
@@ -27,7 +29,7 @@ API
 
 
 :mod:`tedana.decomposition`: Data decomposition
-===============================================
+--------------------------------------------------
 
 .. automodule:: tedana.decomposition
    :no-members:
@@ -50,7 +52,7 @@ API
 
 
 :mod:`tedana.selection`: Component selection
-============================================
+--------------------------------------------------
 
 .. automodule:: tedana.selection
    :no-members:
@@ -72,7 +74,7 @@ API
 
 
 :mod:`tedana.workflows`: Component selection
-============================================
+--------------------------------------------------
 
 .. automodule:: tedana.workflows
    :no-members:

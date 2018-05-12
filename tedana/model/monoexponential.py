@@ -90,6 +90,37 @@ def fit_decay_ts(data, mask, tes, masksum, start_echo):
     """
     Fit voxel- and timepoint-wise monoexponential decay models to estimate
     T2* and S0 timeseries.
+
+    Parameters
+    ----------
+    data : (S x E x T) array_like
+        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
+        time
+    tes : (E, ) list
+        Echo times
+    mask : (S, ) array_like
+        Boolean array indicating samples that are consistently (i.e., across
+        time AND echoes) non-zero
+    masksum : (S, ) array_like
+        Valued array indicating number of echos that have sufficient signal in
+        given sample
+    start_echo : int
+        First echo to consider
+
+    Returns
+    -------
+    t2sa : (S x E x T) np.ndarray
+        Limited T2* map
+    s0va : (S x E x T) np.ndarray
+        Limited S0 map
+    t2ss : (S x E x T) np.ndarray
+        ???
+    s0vs : (S x E x T) np.ndarray
+        ???
+    t2saf : (S x E x T) np.ndarray
+        Full T2* map
+    s0vaf : (S x E x T) np.ndarray
+        Full S0 map
     """
     nx, ny, nz, n_echos, n_trs = data.shape
     echodata = data[mask]
