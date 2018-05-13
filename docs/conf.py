@@ -19,7 +19,10 @@
 #
 import os
 import sys
+sys.path.insert(0, os.path.abspath('sphinxext'))
 sys.path.insert(0, os.path.abspath('../tedana'))
+
+from sphinxext import make_linkcode_resolve
 
 
 # -- General configuration ------------------------------------------------
@@ -40,7 +43,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.todo',
               'numpydoc',
               'sphinx.ext.ifconfig',
-              'sphinx.ext.viewcode']
+              'sphinx.ext.linkcode']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -188,6 +191,13 @@ texinfo_documents = [
 # generate autosummary even if no references
 autosummary_generate = True
 autodoc_default_flags = ['members', 'inherited-members']
+add_module_names = False
+
+# The following is used by sphinx.ext.linkcode to provide links to github
+linkcode_resolve = make_linkcode_resolve('tedana',
+                                         u'https://github.com/me-ica/'
+                                         'tedana/blob/{revision}/'
+                                         '{package}/{path}#L{lineno}')
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
