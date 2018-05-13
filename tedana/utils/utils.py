@@ -50,6 +50,8 @@ def get_dtype(data):
 
 def getfbounds(n_echos):
     """
+    Gets estimated F-statistic boundaries based on number of echos
+
     Parameters
     ----------
     n_echos : int
@@ -82,11 +84,11 @@ def load_image(data):
     Parameters
     ----------
     data : (X x Y x Z [x T]) array_like or img_like object
-        Data array or data file to be loaded / reshaped
+        Data array or data file to be loaded and reshaped
 
     Returns
     -------
-    fdata : (S x T) np.ndarray
+    fdata : (S [x T]) np.ndarray
         Reshaped `data`, where `S` is samples and `T` is time
     """
 
@@ -145,7 +147,7 @@ def load_data(data, n_echos=None):
                          'one data file is provided.')
     img = check_niimg(data)
     (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
-    fdata = load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1, order='F'))
+    fdata = load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1))
 
     # create reference image
     ref_img = img.__class__(np.zeros((nx, ny, nz)), affine=img.affine,

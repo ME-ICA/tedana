@@ -12,7 +12,7 @@ from tedana import model, utils
 from tedana.decomposition._utils import eimask
 from tedana.selection._utils import (getelbow_cons, getelbow_mod)
 
-lgr = logging.getLogger(__name__)
+LGR = logging.getLogger(__name__)
 
 F_MAX = 500
 Z_MAX = 8
@@ -67,13 +67,13 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     ste = np.array([int(ee) for ee in str(ste).split(',')])
 
     if len(ste) == 1 and ste[0] == -1:
-        lgr.info('Computing PCA of optimally combined multi-echo data')
+        LGR.info('Computing PCA of optimally combined multi-echo data')
         d = OCcatd[utils.make_min_mask(OCcatd[:, np.newaxis, :])][:, np.newaxis, :]
     elif len(ste) == 1 and ste[0] == 0:
-        lgr.info('Computing PCA of spatially concatenated multi-echo data')
+        LGR.info('Computing PCA of spatially concatenated multi-echo data')
         d = catd[mask].astype('float64')
     else:
-        lgr.info('Computing PCA of echo #%s' % ','.join([str(ee) for ee in ste]))
+        LGR.info('Computing PCA of echo #%s' % ','.join([str(ee) for ee in ste]))
         d = np.stack([catd[mask, ee] for ee in ste - 1], axis=1).astype('float64')
 
     eim = np.squeeze(eimask(d))
@@ -114,7 +114,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
 
         vTmix = v.T
         vTmixN = ((vTmix.T - vTmix.T.mean(0)) / vTmix.T.std(0)).T
-        lgr.info('Making initial component selection guess from PCA results')
+        LGR.info('Making initial component selection guess from PCA results')
         _, ctb, betasv, v_T = model.fitmodels_direct(catd, v.T, eimum, t2s, t2sG,
                                                      tes, combmode, ref_img,
                                                      mmixN=vTmixN, full_sel=False)
@@ -123,17 +123,17 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
 
         # Save state
         fname = op.abspath('pcastate.pkl')
-        lgr.info('Saving PCA results to: {}'.format(fname))
+        LGR.info('Saving PCA results to: {}'.format(fname))
         pcastate = {'u': u, 's': s, 'v': v, 'ctb': ctb,
                     'eigelb': eigelb, 'spmin': spmin, 'spcum': spcum}
         try:
             with open(fname, 'wb') as handle:
                 pickle.dump(pcastate, handle)
         except TypeError:
-            lgr.warning('Could not save PCA solution')
+            LGR.warning('Could not save PCA solution')
 
     else:  # if loading existing state
-        lgr.info('Loading PCA from: {}'.format('pcastate.pkl'))
+        LGR.info('Loading PCA from: {}'.format('pcastate.pkl'))
         with open('pcastate.pkl', 'rb') as handle:
             pcastate = pickle.load(handle)
         u, s, v = pcastate['u'], pcastate['s'], pcastate['v']
@@ -177,7 +177,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     dd = u.dot(np.diag(s*np.array(pcsel, dtype=np.int))).dot(v)
 
     n_components = s[pcsel].shape[0]
-    lgr.info('Selected {0} components with Kappa threshold: {1:.02f}, '
+    LGR.info('Selected {0} components with Kappa threshold: {1:.02f}, '
              'Rho threshold: {2:.02f}'.format(n_components, kappa_thr, rho_thr))
 
     dd = stats.zscore(dd.T, axis=0).T  # variance normalize timeseries

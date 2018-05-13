@@ -9,7 +9,7 @@ import numpy as np
 
 from tedana import model, utils
 
-lgr = logging.getLogger(__name__)
+LGR = logging.getLogger(__name__)
 
 
 def gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img):
@@ -160,7 +160,7 @@ def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, suffix=''):
     # get variance explained by retained components
     betas = model.get_coeffs(utils.unmask(dmdata.T, mask), mask, mmix)[mask]
     varexpl = (1 - ((dmdata.T - betas.dot(mmix.T))**2.).sum() / (dmdata**2.).sum()) * 100
-    lgr.info('Variance explained by ICA decomposition: {:.02f}%'.format(varexpl))
+    LGR.info('Variance explained by ICA decomposition: {:.02f}%'.format(varexpl))
 
     # create component and de-noised time series and save to files
     hikts = betas[:, acc].dot(mmix.T[acc, :])
@@ -170,16 +170,16 @@ def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, suffix=''):
 
     if len(acc) != 0:
         fout = utils.filewrite(utils.unmask(hikts, mask), 'hik_ts_{0}'.format(suffix), ref_img)
-        lgr.info('Writing high-Kappa time series: {}'.format(op.abspath(fout)))
+        LGR.info('Writing high-Kappa time series: {}'.format(op.abspath(fout)))
     if len(midk) != 0:
         fout = utils.filewrite(utils.unmask(midkts, mask), 'midk_ts_{0}'.format(suffix), ref_img)
-        lgr.info('Writing mid-Kappa time series: {}'.format(op.abspath(fout)))
+        LGR.info('Writing mid-Kappa time series: {}'.format(op.abspath(fout)))
     if len(rej) != 0:
         fout = utils.filewrite(utils.unmask(lowkts, mask), 'lowk_ts_{0}'.format(suffix), ref_img)
-        lgr.info('Writing low-Kappa time series: {}'.format(op.abspath(fout)))
+        LGR.info('Writing low-Kappa time series: {}'.format(op.abspath(fout)))
 
     fout = utils.filewrite(utils.unmask(dnts, mask), 'dn_ts_{0}'.format(suffix), ref_img)
-    lgr.info('Writing denoised time series: {}'.format(op.abspath(fout)))
+    LGR.info('Writing denoised time series: {}'.format(op.abspath(fout)))
 
     return varexpl
 
@@ -314,24 +314,24 @@ def writeresults(ts, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_i
     """
 
     fout = utils.filewrite(ts, 'ts_OC', ref_img)
-    lgr.info('Writing optimally-combined time series: {}'.format(op.abspath(fout)))
+    LGR.info('Writing optimally-combined time series: {}'.format(op.abspath(fout)))
 
     varexpl = write_split_ts(ts, mmix, mask, acc, rej, midk, ref_img, suffix='OC')
 
     ts_B = model.get_coeffs(ts, mask, mmix)
     fout = utils.filewrite(ts_B, 'betas_OC', ref_img)
-    lgr.info('Writing full ICA coefficient feature set: {}'.format(op.abspath(fout)))
+    LGR.info('Writing full ICA coefficient feature set: {}'.format(op.abspath(fout)))
 
     if len(acc) != 0:
         fout = utils.filewrite(ts_B[:, acc], 'betas_hik_OC', ref_img)
-        lgr.info('Writing denoised ICA coefficient feature set: {}'.format(op.abspath(fout)))
+        LGR.info('Writing denoised ICA coefficient feature set: {}'.format(op.abspath(fout)))
         fout = writefeats(split_ts(ts, mmix, mask, acc)[0],
                           mmix[:, acc], mask, ref_img, suffix='OC2')
-        lgr.info('Writing Z-normalized spatial component maps: {}'.format(op.abspath(fout)))
+        LGR.info('Writing Z-normalized spatial component maps: {}'.format(op.abspath(fout)))
 
     writect(comptable, n_vols, acc, rej, midk, empty, ctname='comp_table.txt',
             varexpl=varexpl)
-    lgr.info('Writing component table: {}'.format(op.abspath('comp_table.txt')))
+    LGR.info('Writing component table: {}'.format(op.abspath('comp_table.txt')))
 
 
 def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img):
@@ -358,7 +358,7 @@ def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img):
     """
 
     for i_echo in range(catd.shape[1]):
-        lgr.info('Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo+1))
+        LGR.info('Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo+1))
         write_split_ts(catd[:, i_echo, :], mmix, mask, acc, rej, midk, ref_img,
                        suffix='e%i' % (i_echo+1))
 

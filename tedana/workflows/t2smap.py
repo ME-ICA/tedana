@@ -2,7 +2,7 @@ import logging
 import numpy as np
 from tedana import model, utils
 
-lgr = logging.getLogger(__name__)
+LGR = logging.getLogger(__name__)
 
 
 def main(options):
@@ -30,16 +30,16 @@ def main(options):
 
     ref_img = data[0] if isinstance(data, list) else data
 
-    lgr.info('Computing adaptive mask')
+    LGR.info('Computing adaptive mask')
     mask, masksum = utils.make_adaptive_mask(catd, minimum=False, getsum=True)
     utils.filewrite(masksum, 'masksum%s' % suf, ref_img, copy_header=False)
 
-    lgr.info('Computing adaptive T2* map')
+    LGR.info('Computing adaptive T2* map')
     t2s, s0, t2ss, s0vs, t2saf, s0vaf = model.t2sadmap(catd, tes, mask, masksum, 2)
     utils.filewrite(t2ss, 't2ss%s' % suf, ref_img, copy_header=False)
     utils.filewrite(s0vs, 's0vs%s' % suf, ref_img, copy_header=False)
 
-    lgr.info('Computing optimal combination')
+    LGR.info('Computing optimal combination')
     tsoc = np.array(model.make_optcom(catd, t2s, tes, mask, combmode),
                     dtype=float)
 

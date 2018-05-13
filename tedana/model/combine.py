@@ -5,7 +5,7 @@ import logging
 import numpy as np
 from tedana import utils
 
-lgr = logging.getLogger(__name__)
+LGR = logging.getLogger(__name__)
 
 
 def make_optcom(data, t2s, tes, mask, combmode, verbose=True):
@@ -46,7 +46,7 @@ def make_optcom(data, t2s, tes, mask, combmode, verbose=True):
         ft2s = t2s[mask, :, np.newaxis]
 
     if verbose:
-        lgr.info(msg)
+        LGR.info(msg)
 
     if combmode == 'ste':
         alpha = mdata.mean(axis=-1) * tes

@@ -12,7 +12,7 @@ from scipy.special import lpmv
 
 from tedana import model, utils
 
-lgr = logging.getLogger(__name__)
+LGR = logging.getLogger(__name__)
 
 F_MAX = 500
 Z_MAX = 8
@@ -119,7 +119,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     Br_clmaps_R2 = np.zeros([n_voxels, n_components])
     Br_clmaps_S0 = np.zeros([n_voxels, n_components])
 
-    lgr.info('Fitting TE- and S0-dependent models to components')
+    LGR.info('Fitting TE- and S0-dependent models to components')
     for i in range(n_components):
         # size of B is (n_components, nx*ny*nz)
         B = np.atleast_3d(betamask)[:, :, i].T
@@ -179,9 +179,9 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     # full selection including clustering criteria
     seldict = None
     if full_sel:
-        lgr.info('Performing spatial clustering of components')
+        LGR.info('Performing spatial clustering of components')
         csize = np.max([int(n_voxels * 0.0005) + 5, 20])
-        lgr.debug('Using minimum cluster size: {}'.format(csize))
+        LGR.debug('Using minimum cluster size: {}'.format(csize))
         for i in range(n_components):
             # save out files
             out = np.zeros((n_samp, 4))
@@ -345,7 +345,7 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
         Input `optcom` with global signal removed from time series
     """
 
-    lgr.info('Applying amplitude-based T1 equilibration correction')
+    LGR.info('Applying amplitude-based T1 equilibration correction')
 
     # Legendre polynomial basis for denoising
     bounds = np.linspace(-1, 1, optcom.shape[-1])

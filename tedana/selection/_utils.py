@@ -6,7 +6,7 @@ import logging
 import numpy as np
 from sklearn import svm
 
-lgr = logging.getLogger(__name__)
+LGR = logging.getLogger(__name__)
 
 
 def do_svm(X_train, y_train, X_test, svmtype=0):

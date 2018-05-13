@@ -7,7 +7,7 @@ from tedana import utils
 
 def fit_decay(data, tes, mask, masksum, start_echo):
     """
-    Fit voxel-wise monoexponential decay models to estimate T2* and S0 maps.
+    Fit voxel-wise monoexponential decay models to `data`
 
     Parameters
     ----------
@@ -82,8 +82,23 @@ def fit_decay(data, tes, mask, masksum, start_echo):
 
 def fit_decay_ts(data, mask, tes, masksum, start_echo):
     """
-    Fit voxel- and timepoint-wise monoexponential decay models to estimate
-    T2* and S0 timeseries.
+    Fit voxel- and timepoint-wise monoexponential decay models to `data`
+
+    Parameters
+    ----------
+    data : (S x E x T) array_like
+        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
+        time
+    tes : (E, ) list
+        Echo times
+    mask : (S, ) array_like
+        Boolean array indicating samples that are consistently (i.e., across
+        time AND echoes) non-zero
+    masksum : (S, ) array_like
+        Valued array indicating number of echos that have sufficient signal in
+        given sample
+    start_echo : int
+        First echo to consider
     """
     nx, ny, nz, n_echos, n_trs = data.shape
     echodata = data[mask]
