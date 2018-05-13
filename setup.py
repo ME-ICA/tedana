@@ -19,7 +19,8 @@ def main():
     # Get version and release info, which is all stored in meica/info.py
     module_file = op.join(this_path, 'tedana', 'info.py')
     with open(module_file) as infofile:
-        pythoncode = [line for line in infofile.readlines() if not line.strip().startswith('#')]
+        pythoncode = [line for line in infofile.readlines() if not
+                      line.strip().startswith('#')]
         exec('\n'.join(pythoncode), globals(), ldict)
 
     setup(
@@ -40,10 +41,8 @@ def main():
         tests_require=ldict['TESTS_REQUIRES'],
         extras_require=ldict['EXTRA_REQUIRES'],
         entry_points={'console_scripts': [
-            'ama=meica.cli.run_alignp_mepi_anat:main',
-            'meica=meica.cli.run_meica:main',
-            't2smap=meica.cli.run_t2smap:main',
-            'tedana=meica.cli.run_tedana:main'
+            't2smap=tedana.cli.run_t2smap:main',
+            'tedana=tedana.cli.run_tedana:main'
         ]},
         packages=find_packages(exclude=("tests",)),
         zip_safe=False,

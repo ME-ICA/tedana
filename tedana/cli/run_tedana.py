@@ -83,9 +83,10 @@ def get_parser():
                         default='2.5e-5')
     parser.add_argument('--sourceTEs',
                         dest='ste',
-                        type=int,
-                        help=('Source TEs for models. ex: -ste 0 for all, '
-                              '-1 for opt. com. Default -1.'),
+                        type=str,
+                        help=('Source TEs for models. E.g., 0 for all, '
+                              '-1 for opt. com., and 1,2 for just TEs 1 and '
+                              '2. Default=-1.'),
                         default=-1)
     parser.add_argument('--combmode',
                         dest='combmode',

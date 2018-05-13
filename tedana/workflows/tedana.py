@@ -1,13 +1,18 @@
+"""
+Run the "canonical" TE-Dependent ANAlysis workflow.
+"""
 import os
-import shutil
-import numpy as np
 import os.path as op
+import shutil
+import logging
+
+import numpy as np
 from scipy import stats
+
 from tedana import (decomposition, io, model, selection, utils)
 
-import logging
 logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
-lgr = logging.getLogger(__name__)
+LGR = logging.getLogger(__name__)
 
 """
 PROCEDURE 2 : Computes ME-PCA and ME-ICA
@@ -28,6 +33,8 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
          stabilize=False, fout=False, filecsdata=False, label=None,
          fixed_seed=42):
     """
+    Run the "canonical" TE-Dependent ANAlysis workflow.
+
     Parameters
     ----------
     data : :obj:`list` of :obj:`str`
@@ -85,7 +92,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     n_echos = len(tes)
 
     # coerce data to samples x echos x time array
-    lgr.info('++ Loading input data: {}'.format(data))
+    LGR.info('++ Loading input data: {}'.format(data))
     catd, ref_img = utils.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
 
@@ -118,10 +125,10 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
 
     os.chdir(out_dir)
 
-    lgr.info('++ Computing Mask')
+    LGR.info('++ Computing Mask')
     mask, masksum = utils.make_adaptive_mask(catd, minimum=False, getsum=True)
 
-    lgr.info('++ Computing T2* map')
+    LGR.info('++ Computing T2* map')
     t2s, s0, t2ss, s0s, t2sG, s0G = model.fit_decay(catd, tes, mask, masksum,
                                                     start_echo=1)
 
@@ -145,7 +152,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         catd, OCcatd = model.gscontrol_raw(catd, OCcatd, n_echos, ref_img)
 
     if mixm is None:
-        lgr.info("++ Doing ME-PCA and ME-ICA")
+        LGR.info("++ Doing ME-PCA and ME-ICA")
         n_components, dd = decomposition.tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
                                                 stabilize, ref_img,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw, ste=ste)
@@ -171,7 +178,8 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                                                  ref_img,
                                                                  fout=fout)
         if ctab is None:
-            acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask, ref_img, manacc,
+            acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask,
+                                                       ref_img, manacc,
                                                        n_echos, t2s, s0,
                                                        filecsdata=filecsdata,
                                                        strict_mode=strict)
@@ -179,7 +187,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
             acc, rej, midk, empty = io.ctabsel(ctab)
 
     if len(acc) == 0:
-        lgr.warning('++ No BOLD components detected!!! Please check data and results!')
+        LGR.warning('++ No BOLD components detected!!! Please check data and results!')
 
     io.writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_img)
     io.gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img)
