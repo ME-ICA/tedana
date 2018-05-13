@@ -67,17 +67,6 @@ RUN conda create -y -q --name py36 python=3.6 \
     && sync \
     && sed -i '$isource activate py36' $ND_ENTRYPOINT
 
-#------------------------------
-# Create py27 conda environment
-#------------------------------
-RUN conda create -y -q --name py27 python=2.7 \
-        numpy scikit-learn mdp nilearn scipy 'nibabel>=2.1.0' \
-    && sync && conda clean -tipsy && sync \
-    && bash -c "source activate py27 \
-    && pip install -q --no-cache-dir \
-        https://github.com/ME-ICA/tedana/archive/master.tar.gz" \
-    && sync
-
 USER root
 
 # User-defined instruction
