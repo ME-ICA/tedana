@@ -11,7 +11,5 @@ But you can supply many other options, viewable with ``tedana -h``.
 Command line options
 --------------------
 .. argparse::
-   :ref: tedana.get_parser
+   :ref: tedana.cli.run.get_parser
    :prog: tedana
-   :nodefault:
-   :nodefaultconst:

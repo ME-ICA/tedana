@@ -23,7 +23,7 @@ PROCEDURE 2a: Model fitting and component selection routines
 
 
 def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
-         no_gscontrol=False, kdaw=10., rdaw=1., conv=2.5e-5, ste=-1,
+         gscontrol=True, kdaw=10., rdaw=1., conv=2.5e-5, ste=-1,
          combmode='t2s', dne=False, initcost='tanh', finalcost='tanh',
          stabilize=False, fout=False, filecsdata=False, label=None,
          fixed_seed=42):
@@ -46,8 +46,8 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         Default is None.
     strict : :obj:`bool`, optional
         Ignore low-variance ambiguous components. Default is False.
-    no_gzcontrol : :obj:`bool`, optional
-        Control global signal using spatial approach. Default is False.
+    gscontrol : :obj:`bool`, optional
+        Control global signal using spatial approach. Default is True.
     kdaw : :obj:`float`, optional
         Dimensionality augmentation weight (Kappa). Default is 10.
         -1 for low-dimensional ICA.
@@ -141,7 +141,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     OCcatd = model.make_optcom(catd, t2sG, tes, mask, combmode)
 
     # regress out global signal unless explicitly not desired
-    if not no_gscontrol:
+    if gscontrol:
         catd, OCcatd = model.gscontrol_raw(catd, OCcatd, n_echos, ref_img)
 
     if mixm is None:

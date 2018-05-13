@@ -18,7 +18,9 @@ Citations
 
 When using tedana, please include the following citations:
 
-  Kundu, P., Inati, S.J., Evans, J.W., Luh, W.M. & Bandettini, P.A. (2011). `Differentiating BOLD and non-BOLD signals in fMRI time series using multi-echo EPI.`_ *NeuroImage*, *60*, 1759-1770.
+  Kundu, P., Inati, S.J., Evans, J.W., Luh, W.M. & Bandettini, P.A. (2011).
+  `Differentiating BOLD and non-BOLD signals in fMRI time series using multi-echo EPI.`_
+  *NeuroImage*, *60*, 1759-1770.
 
 .. _Differentiating BOLD and non-BOLD signals in fMRI time series using multi-echo EPI.: http://dx.doi.org/10.1016/j.neuroimage.2011.12.028
 
