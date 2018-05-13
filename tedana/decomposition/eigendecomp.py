@@ -1,47 +1,21 @@
+"""
+Signal decomposition methods for tedana
+"""
 import pickle
-import numpy as np
-import os.path as op
-from scipy import stats
-from tedana import model, utils
-
 import logging
+import os.path as op
+
+import numpy as np
+from scipy import stats
+
+from tedana import model, utils
+from tedana.decomposition._utils import eimask
+from tedana.selection._utils import (getelbow_cons, getelbow_mod)
+
 lgr = logging.getLogger(__name__)
 
 F_MAX = 500
 Z_MAX = 8
-
-
-def eimask(dd, ees=None):
-    """
-    Returns mask for data between [0.001, 5] * 98th percentile of dd
-
-    Parameters
-    ----------
-    dd : (S x E x T) array_like
-        Input data, where `S` is samples, `E` is echos, and `T` is time
-    ees : (N,) list
-        Indices of echos to assess from `dd` in calculating output
-
-    Returns
-    -------
-    imask : (S x N) np.ndarray
-        Boolean array denoting
-    """
-
-    if ees is None:
-        ees = range(dd.shape[1])
-    imask = np.zeros([dd.shape[0], len(ees)], dtype=bool)
-    for ee in ees:
-        lgr.debug('Creating eimask for echo {}'.format(ee))
-        perc98 = stats.scoreatpercentile(dd[:, ee, :].flatten(), 98,
-                                         interpolation_method='lower')
-        lthr, hthr = 0.001 * perc98, 5 * perc98
-        lgr.debug('Eimask threshold boundaries: '
-                  '{:.03f} {:.03f}'.format(lthr, hthr))
-        m = dd[:, ee, :].mean(axis=1)
-        imask[np.logical_and(m > lthr, m < hthr), ee] = True
-
-    return imask
 
 
 def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
@@ -122,7 +96,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
 
         # actual variance explained (normalized)
         sp = s / s.sum()
-        eigelb = model.getelbow_mod(sp, val=True)
+        eigelb = getelbow_mod(sp, val=True)
 
         spdif = np.abs(np.diff(sp))
         spdifh = spdif[(len(spdif)//2):]
@@ -156,7 +130,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
             with open(fname, 'wb') as handle:
                 pickle.dump(pcastate, handle)
         except TypeError:
-            lgr.warning('Could not save PCA solution.')
+            lgr.warning('Could not save PCA solution')
 
     else:  # if loading existing state
         lgr.info('Loading PCA from: {}'.format('pcastate.pkl'))
@@ -172,19 +146,19 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     kappas = ctb[ctb[:, 1].argsort(), 1]
     rhos = ctb[ctb[:, 2].argsort(), 2]
     fmin, fmid, fmax = utils.getfbounds(n_echos)
-    kappa_thr = np.average(sorted([fmin, model.getelbow_mod(kappas, val=True)/2, fmid]),
+    kappa_thr = np.average(sorted([fmin, getelbow_mod(kappas, val=True)/2, fmid]),
                            weights=[kdaw, 1, 1])
-    rho_thr = np.average(sorted([fmin, model.getelbow_cons(rhos, val=True)/2, fmid]),
+    rho_thr = np.average(sorted([fmin, getelbow_cons(rhos, val=True)/2, fmid]),
                          weights=[rdaw, 1, 1])
     if int(kdaw) == -1:
         kappas_lim = kappas[utils.andb([kappas < fmid, kappas > fmin]) == 2]
-        kappa_thr = kappas_lim[model.getelbow_mod(kappas_lim)]
+        kappa_thr = kappas_lim[getelbow_mod(kappas_lim)]
         rhos_lim = rhos[utils.andb([rhos < fmid, rhos > fmin]) == 2]
-        rho_thr = rhos_lim[model.getelbow_mod(rhos_lim)]
+        rho_thr = rhos_lim[getelbow_mod(rhos_lim)]
         stabilize = True
     if int(kdaw) != -1 and int(rdaw) == -1:
         rhos_lim = rhos[utils.andb([rhos < fmid, rhos > fmin]) == 2]
-        rho_thr = rhos_lim[model.getelbow_mod(rhos_lim)]
+        rho_thr = rhos_lim[getelbow_mod(rhos_lim)]
 
     is_hik = np.array(ctb[:, 1] > kappa_thr, dtype=np.int)
     is_hir = np.array(ctb[:, 2] > rho_thr, dtype=np.int)

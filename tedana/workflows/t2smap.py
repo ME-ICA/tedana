@@ -1,7 +1,7 @@
+import logging
 import numpy as np
 from tedana import model, utils
 
-import logging
 lgr = logging.getLogger(__name__)
 
 

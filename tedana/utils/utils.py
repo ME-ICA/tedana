@@ -1,10 +1,13 @@
-"""Utilities for meica package"""
+"""
+Utilities for tedana
+"""
 import os.path as op
-import numpy as np
+
 import nibabel as nib
 from nibabel.filename_parser import splitext_addext
 from nilearn.image import new_img_like
 from nilearn._utils import check_niimg
+import numpy as np
 from scipy.optimize import leastsq
 from sklearn.utils import check_array
 

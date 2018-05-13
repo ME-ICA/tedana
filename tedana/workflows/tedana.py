@@ -3,7 +3,7 @@ import shutil
 import numpy as np
 import os.path as op
 from scipy import stats
-from tedana import (decomp, io, model, select, utils)
+from tedana import (decomposition, model, selection, utils)
 
 import logging
 lgr = logging.getLogger(__name__)
@@ -126,8 +126,8 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     lgr.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
 
     lgr.info('Computing T2* map')
-    t2s, s0, t2ss, s0s, t2sG, s0G = model.t2sadmap(catd, tes, mask, masksum,
-                                                   start_echo=1)
+    t2s, s0, t2ss, s0s, t2sG, s0G = model.fit_decay(catd, tes, mask, masksum,
+                                                    start_echo=1)
 
     # set a hard cap for the T2* map
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
@@ -150,11 +150,11 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         catd, OCcatd = model.gscontrol_raw(catd, OCcatd, n_echos, ref_img)
 
     if mixm is None:
-        n_components, dd = decomp.tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
-                                         stabilize, ref_img,
-                                         tes=tes, kdaw=kdaw, rdaw=rdaw, ste=ste)
-        mmix_orig = decomp.tedica(n_components, dd, conv, fixed_seed, cost=initcost,
-                                  final_cost=finalcost, verbose=debug)
+        n_components, dd = decomposition.tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
+                                                stabilize, ref_img,
+                                                tes=tes, kdaw=kdaw, rdaw=rdaw, ste=ste)
+        mmix_orig = decomposition.tedica(n_components, dd, conv, fixed_seed, cost=initcost,
+                                         final_cost=finalcost, verbose=debug)
         np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
         lgr.info('Making second component selection guess from ICA results')
         seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
@@ -165,9 +165,9 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                                                  reindex=True)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        acc, rej, midk, empty = select.selcomps(seldict, mmix, mask, ref_img, manacc,
-                                                n_echos, t2s, s0, strict_mode=strict,
-                                                filecsdata=filecsdata)
+        acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask, ref_img, manacc,
+                                                   n_echos, t2s, s0, strict_mode=strict,
+                                                   filecsdata=filecsdata)
     else:
         lgr.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
@@ -177,17 +177,17 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                                                  ref_img,
                                                                  fout=fout)
         if ctab is None:
-            acc, rej, midk, empty = select.selcomps(seldict, mmix, mask, ref_img, manacc,
-                                                    n_echos, t2s, s0,
-                                                    filecsdata=filecsdata,
-                                                    strict_mode=strict)
+            acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask, ref_img, manacc,
+                                                       n_echos, t2s, s0,
+                                                       filecsdata=filecsdata,
+                                                       strict_mode=strict)
         else:
-            acc, rej, midk, empty = io.ctabsel(ctab)
+            acc, rej, midk, empty = utils.ctabsel(ctab)
 
     if len(acc) == 0:
         lgr.warning('No BOLD components detected! Please check data and results!')
 
-    io.writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_img)
-    io.gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img)
+    utils.writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_img)
+    utils.gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img)
     if dne:
-        io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
+        utils.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
