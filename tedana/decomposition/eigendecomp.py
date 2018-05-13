@@ -185,7 +185,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     return n_components, dd
 
 
-def tedica(n_components, dd, conv, fixed_seed, cost, final_cost):
+def tedica(n_components, dd, conv, fixed_seed, cost='tanh'):
     """
     Performs ICA on `dd` and returns mixing matrix
 
@@ -198,12 +198,10 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost):
         echos, and `T` is time
     conv : float
         Convergence limit for ICA
+    cost : {'tanh', 'pow3', 'gaus', 'skew'} str, optional
+        Cost function for ICA
     fixed_seed : int
         Seed for ensuring reproducibility of ICA results
-    initcost : {'tanh', 'pow3', 'gaus', 'skew'} str, optional
-        Initial cost function for ICA
-    finalcost : {'tanh', 'pow3', 'gaus', 'skew'} str, optional
-        Final cost function for ICA
 
     Returns
     -------
@@ -216,14 +214,36 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost):
     Uses `mdp` implementation of FastICA for decomposition
     """
 
-    import mdp
+    from sklearn.decomposition import FastICA
+
+    def cost_func(cost):
+        """
+        Cost function supplied to ICA.
+
+        Parameters
+        ----------
+        cost:  {'tanh', 'pow3', 'gaus', 'skew'} str
+        """
+        def gaus(x):
+            return x * np.exp(-1 * x**2 / 2)
+
+        def skew(x):
+            return x**2
+
+        if cost is 'tanh':
+            return 'logcosh'
+        if cost is 'pow3':
+            return 'cube'
+        if cost is 'gaus':
+            return gaus
+        if cost is 'skew':
+            return skew
+
     climit = float(conv)
-    mdp.numx_rand.seed(fixed_seed)
-    icanode = mdp.nodes.FastICANode(white_comp=n_components, approach='symm', g=cost,
-                                    fine_g=final_cost, coarse_limit=climit*100,
-                                    limit=climit, verbose=True)
-    icanode.train(dd)
-    smaps = icanode.execute(dd)  # noqa
-    mmix = icanode.get_recmatrix().T
+    rand_state = np.random.RandomState(seed=fixed_seed)
+    ica = FastICA(n_components=n_components, algorithm='parallel',
+                  fun=cost_func(cost), tol=climit, random_state=rand_state)
+    ica.fit(dd)
+    mmix = ica.mixing_
     mmix = stats.zscore(mmix, axis=0)
     return mmix

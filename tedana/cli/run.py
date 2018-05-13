@@ -76,14 +76,10 @@ def get_parser():
                         action='store_true',
                         help='Denoise each TE dataset separately',
                         default=False)
-    parser.add_argument('--initcost',
-                        dest='initcost',
+    parser.add_argument('--cost',
+                        dest='cost',
                         help=('Initial cost func. for ICA: '
                               'tanh (default), pow3, gaus, skew'),
-                        default='tanh')
-    parser.add_argument('--finalcost',
-                        dest='finalcost',
-                        help='Final cost func, same opts. as initial',
                         default='tanh')
     parser.add_argument('--stabilize',
                         dest='stabilize',
