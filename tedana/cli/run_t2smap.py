@@ -63,7 +63,7 @@ def get_parser():
 def main(argv=None):
     """Entry point"""
     options = get_parser().parse_args(argv)
-    workflows.t2smap.main(**vars(options))
+    workflows.t2smap(**vars(options))
 
 
 if __name__ == '__main__':

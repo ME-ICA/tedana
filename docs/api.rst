@@ -90,3 +90,21 @@ API
 .. currentmodule:: tedana
 
 .. _calibration_ref:
+
+:mod:`tedana.utils`: Utility functions
+--------------------------------------------------
+
+.. automodule:: tedana.utils
+   :no-members:
+   :no-inherited-members:
+
+.. autosummary:: tedana.utils
+   :toctree: generated/
+   :template: module.rst
+
+   tedana.utils.io
+   tedana.utils.utils
+
+.. currentmodule:: tedana
+
+.. _calibration_ref:

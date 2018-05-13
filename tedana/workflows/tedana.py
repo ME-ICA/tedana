@@ -26,7 +26,7 @@ PROCEDURE 2a: Model fitting and component selection routines
 """
 
 
-def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
+def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
          gscontrol=True, kdaw=10., rdaw=1., conv=2.5e-5, ste=-1,
          combmode='t2s', dne=False, initcost='tanh', finalcost='tanh',
          stabilize=False, fout=False, filecsdata=False, label=None,

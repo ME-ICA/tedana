@@ -26,7 +26,7 @@ def eimask(dd, ees=None):
 
     Returns
     -------
-    imask : (S x N) np.ndarray
+    imask : (S x N) :obj:`numpy.ndarray`
         Boolean array denoting
     """
 

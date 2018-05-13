@@ -56,12 +56,12 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     Returns
     -------
     seldict : dict
-    comptab : (N x 5) np.ndarray
+    comptab : (N x 5) :obj:`numpy.ndarray`
         Array with columns denoting (1) index of component, (2) Kappa score of
         component, (3) Rho score of component, (4) variance explained by
         component, and (5) normalized variance explained bycomponent
-    betas : np.ndarray
-    mmix_new : np.ndarray
+    betas : :obj:`numpy.ndarray`
+    mmix_new : :obj:`numpy.ndarray`
     """
 
     # compute optimal combination of raw data

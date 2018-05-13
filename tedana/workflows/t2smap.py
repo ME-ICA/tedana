@@ -11,7 +11,7 @@ logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
 LGR = logging.getLogger(__name__)
 
 
-def main(data, tes, combmode='t2s', label=None):
+def t2smap(data, tes, combmode='t2s', label=None):
     """
     Estimate T2 and S0, and optimally combine data across TEs.
 

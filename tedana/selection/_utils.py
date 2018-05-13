@@ -33,9 +33,9 @@ def do_svm(X_train, y_train, X_test, svmtype=0):
 
     Returns
     -------
-    y_pred : (N2,) np.ndarray
+    y_pred : (N2,) :obj:`numpy.ndarray`
         Predicted class labels for samples in `X_test`
-    clf : {:obj:`sklearn.svm.classes.SVC`, :obj:`sklearn.svm.classes.LinearSVC`}
+    clf : {:obj:`sklearn.svm.SVC`, :obj:`sklearn.svm.LinearSVC`}
         Trained sklearn model instance
     """
 
