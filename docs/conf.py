@@ -19,6 +19,7 @@
 #
 import os
 import sys
+sys.path.insert(0, os.path.abspath('sphinxext'))
 sys.path.insert(0, os.path.abspath('../tedana'))
 
 from sphinxext import make_linkcode_resolve
