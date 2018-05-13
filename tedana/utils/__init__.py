@@ -10,9 +10,20 @@ from .utils import (
 )
 
 
+from .io import (
+    gscontrol_mmix, split_ts, write_split_ts, writefeats,
+    writect, writeresults, writeresults_echoes, ctabsel,
+)
+
+
 __all__ = [
     'load_image', 'load_data', 'get_dtype',
     'getfbounds', 'make_min_mask',
     'make_adaptive_mask', 'unmask',
     'filewrite', 'new_nii_like',
-    'fitgaussian', 'dice', 'andb']
+    'fitgaussian', 'dice', 'andb',
+    'ctabsel', 'gscontrol_mmix',
+    'split_ts', 'write_split_ts',
+    'writefeats', 'writect', 'writeresults',
+    'writeresults_echoes',
+    ]

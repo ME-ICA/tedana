@@ -3,7 +3,7 @@ import shutil
 import numpy as np
 import os.path as op
 from scipy import stats
-from tedana import (decomposition, io, model, selection, utils)
+from tedana import (decomposition, model, selection, utils)
 
 import logging
 logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
@@ -176,12 +176,12 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                                        filecsdata=filecsdata,
                                                        strict_mode=strict)
         else:
-            acc, rej, midk, empty = io.ctabsel(ctab)
+            acc, rej, midk, empty = utils.ctabsel(ctab)
 
     if len(acc) == 0:
         lgr.warning('++ No BOLD components detected!!! Please check data and results!')
 
-    io.writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_img)
-    io.gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img)
+    utils.writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_img)
+    utils.gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img)
     if dne:
-        io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
+        utils.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
