@@ -144,7 +144,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         eimum = np.atleast_2d(eim)
         eimum = np.transpose(eimum, np.argsort(eimum.shape)[::-1])
         eimum = eimum.prod(axis=1)
-        o = np.zeros((mask.shape[0], * eimum.shape[1:]))
+        o = np.zeros((mask.shape[0], *eimum.shape[1:]))
         o[mask] = eimum
         eimum = np.squeeze(o).astype(bool)
 
