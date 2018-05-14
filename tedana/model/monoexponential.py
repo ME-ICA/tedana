@@ -94,8 +94,8 @@ def fit_decay(data, tes, mask, masksum, start_echo):
         t2s[np.isinf(t2s)] = 500.
         s0[np.isnan(s0)] = 0.
 
-        t2ss[:, :, :, i_echo-2] = np.squeeze(utils.unmask(t2s, mask))
-        s0vs[:, :, :, i_echo-2] = np.squeeze(utils.unmask(s0, mask))
+        t2ss[..., i_echo-2] = np.squeeze(utils.unmask(t2s, mask))
+        s0vs[..., i_echo-2] = np.squeeze(utils.unmask(s0, mask))
 
     # Limited T2* and S0 maps
     fl = np.zeros([n_samples, len(tes)-1], bool)
