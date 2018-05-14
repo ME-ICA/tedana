@@ -1,5 +1,5 @@
 """
-Utilities for tedana
+Utilities for tedana package
 """
 import os.path as op
 
@@ -88,7 +88,7 @@ def load_image(data):
 
     Returns
     -------
-    fdata : (S [x T]) np.ndarray
+    fdata : (S [x T]) :obj:`numpy.ndarray`
         Reshaped `data`, where `S` is samples and `T` is time
     """
 
@@ -123,7 +123,7 @@ def load_data(data, n_echos=None):
 
     Returns
     -------
-    fdata : (S x E x T) np.ndarray
+    fdata : (S x E x T) :obj:`numpy.ndarray`
         Output data where `S` is samples, `E` is echos, and `T` is time
     ref_img : str
         Filepath to reference image for saving output files
@@ -175,10 +175,10 @@ def make_adaptive_mask(data, minimum=True, getsum=False):
 
     Returns
     -------
-    mask : (S, ) np.ndarray
+    mask : (S, ) :obj:`numpy.ndarray`
         Boolean array of voxels that have sufficient signal in at least one
         echo
-    masksum : (S, ) np.ndarray
+    masksum : (S, ) :obj:`numpy.ndarray`
         Valued array indicating the number of echos with sufficient signal in a
         given voxel. Only returned if `getsum = True`
     """
@@ -228,7 +228,7 @@ def make_min_mask(data):
 
     Returns
     -------
-    mask : (S, ) np.ndarray
+    mask : (S, ) :obj:`numpy.ndarray`
         Boolean array
     """
 
@@ -314,7 +314,7 @@ def new_nii_like(ref_img, data, affine=None, copy_header=True):
 
     Returns
     -------
-    nii : nib.nifti.NiftiXImage
+    nii : :obj:`nibabel.nifti.Nifti1Image`
         NiftiImage
     """
 
@@ -345,7 +345,7 @@ def new_gii_like(ref_img, data, copy_header=True, copy_meta=False):
 
     Returns
     -------
-    gii : nib.gifti.GiftiImage
+    gii : :obj:`nibabel.gifti.GiftiImage`
         GiftiImage
     """
 
@@ -381,7 +381,7 @@ def make_gii_darray(ref_array, data, copy_meta=False):
 
     Returns
     -------
-    gii : nib.gifti.GiftiDataArray
+    gii : :obj:`nibabel.gifti.GiftiDataArray`
         Output data array instance
     """
 
@@ -413,7 +413,7 @@ def unmask(data, mask):
 
     Returns
     -------
-    out : (S [x E [x T]]) np.ndarray
+    out : (S [x E [x T]]) :obj:`numpy.ndarray`
         Unmasked `data` array
     """
 
@@ -587,7 +587,7 @@ def andb(arrs):
 
     Returns
     -------
-    result : ndarray
+    result : :obj:`numpy.ndarray`
         Integer array of summed `arrs`
     """
 

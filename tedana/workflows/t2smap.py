@@ -1,32 +1,42 @@
+"""
+Estimate T2 and S0, and optimally combine data across TEs.
+"""
 import logging
+
 import numpy as np
+
 from tedana import model, utils
 
 LGR = logging.getLogger(__name__)
 
 
-def main(options):
+def t2smap(data, tes, combmode='t2s', label=None):
     """
     Estimate T2 and S0, and optimally combine data across TEs.
 
     Parameters
     ----------
-    options
-        label
-        tes
-        data
+    data : :obj:`list` of :obj:`str`
+        Either a single z-concatenated file (single-entry list) or a
+        list of echo-specific files, in ascending order.
+    tes : :obj:`list`
+        List of echo times associated with data in milliseconds.
+    combmode : {'t2s', 'ste'}, optional
+        Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
+    label : :obj:`str` or :obj:`None`, optional
+        Label for output directory. Default is None.
     """
-    if options.label is not None:
-        suf = '_%s' % str(options.label)
+    if label is not None:
+        suf = '_%s' % str(label)
     else:
         suf = ''
-    tes, data, combmode = options.tes, options.data, options.combmode
+    tes, data, combmode = tes, data, combmode
 
     tes = [float(te) for te in tes]
     n_echos = len(tes)
 
     catd = utils.load_data(data, n_echos=n_echos)
-    n_samp, n_echos, n_trs = catd.shape
+    _, n_echos, _ = catd.shape
 
     ref_img = data[0] if isinstance(data, list) else data
 
@@ -35,7 +45,7 @@ def main(options):
     utils.filewrite(masksum, 'masksum%s' % suf, ref_img, copy_header=False)
 
     LGR.info('Computing adaptive T2* map')
-    t2s, s0, t2ss, s0vs, t2saf, s0vaf = model.t2sadmap(catd, tes, mask, masksum, 2)
+    t2s, s0, t2ss, s0vs, _, _ = model.t2sadmap(catd, tes, mask, masksum, 2)
     utils.filewrite(t2ss, 't2ss%s' % suf, ref_img, copy_header=False)
     utils.filewrite(s0vs, 's0vs%s' % suf, ref_img, copy_header=False)
 

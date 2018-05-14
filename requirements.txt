@@ -6,3 +6,4 @@ nilearn
 nibabel>=2.1.0
 duecredit
 sphinx-argparse
+numpydoc

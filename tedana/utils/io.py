@@ -14,6 +14,8 @@ LGR = logging.getLogger(__name__)
 
 def gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img):
     """
+    Perform global signal regression.
+
     Parameters
     ----------
     OCcatd : (S x T) array_like
@@ -107,9 +109,9 @@ def split_ts(data, mmix, mask, acc):
 
     Returns
     -------
-    hikts : (S x T) np.ndarray
+    hikts : (S x T) :obj:`numpy.ndarray`
         Time series reconstructed using only components in `acc`
-    rest : (S x T) np.ndarray
+    rest : (S x T) :obj:`numpy.ndarray`
         Original data with `hikts` removed
     """
 
@@ -374,7 +376,7 @@ def ctabsel(ctabfile):
 
     Returns
     -------
-    ctab : (4,) tuple-of-arrays
+    ctab : (4,) :obj:`tuple` of :obj:`numpy.ndarray`
         Tuple containing arrays of (1) accepted, (2) rejected, (3) mid, and (4)
         ignored components
     """

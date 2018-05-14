@@ -19,7 +19,8 @@ def main():
     # Get version and release info, which is all stored in tedana/info.py
     module_file = op.join(this_path, 'tedana', 'info.py')
     with open(module_file) as infofile:
-        pythoncode = [line for line in infofile.readlines() if not line.strip().startswith('#')]
+        pythoncode = [line for line in infofile.readlines() if not
+                      line.strip().startswith('#')]
         exec('\n'.join(pythoncode), globals(), ldict)
 
     setup(
@@ -40,8 +41,8 @@ def main():
         tests_require=ldict['TESTS_REQUIRES'],
         extras_require=ldict['EXTRA_REQUIRES'],
         entry_points={'console_scripts': [
-            't2smap=tedana.cli.run:run_t2smap',
-            'tedana=tedana.cli.run:main'
+            't2smap=tedana.cli.run_t2smap:main',
+            'tedana=tedana.cli.run_tedana:main'
         ]},
         packages=find_packages(exclude=("tests",)),
         zip_safe=False,

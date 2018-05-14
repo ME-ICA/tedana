@@ -21,7 +21,8 @@ Z_MAX = 8
 def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
            ref_img, tes, kdaw, rdaw, ste=0, mlepca=True):
     """
-    Performs PCA on `catd` and uses TE-dependence to dimensionally reduce data
+    Use principal components analysis (PCA) to identify and remove thermal
+    noise from multi-echo data.
 
     Parameters
     ----------
@@ -59,8 +60,42 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     -------
     n_components : int
         Number of components retained from PCA decomposition
-    dd : (S x E x T) np.ndarray
+    dd : (S x E x T) :obj:`numpy.ndarray`
         Dimensionally-reduced functional data
+
+    Notes
+    -----
+    ======================    =================================================
+    Notation                  Meaning
+    ======================    =================================================
+    :math:`\\kappa`            Component pseudo-F statistic for TE-dependent
+                              (BOLD) model.
+    :math:`\\rho`              Component pseudo-F statistic for TE-independent
+                              (artifact) model.
+    :math:`v`                 Voxel
+    :math:`V`                 Total number of voxels in mask
+    :math:`\\zeta`             Something
+    :math:`c`                 Component
+    :math:`p`                 Something else
+    ======================    =================================================
+
+    Steps:
+
+    1.  Variance normalize either multi-echo or optimally combined data,
+        depending on settings.
+    2.  Decompose normalized data using PCA or SVD.
+    3.  Compute :math:`{\\kappa}` and :math:`{\\rho}`:
+
+            - :math:`{\\kappa}_c = \\frac{\sum_{v}^V {\\zeta}_{c,v}^p * \
+                      F_{c,v,R_2^*}}{\sum {\\zeta}_{c,v}^p}`
+            - :math:`{\\rho}_c = \\frac{\sum_{v}^V {\\zeta}_{c,v}^p * \
+                      F_{c,v,S_0}}{\sum {\\zeta}_{c,v}^p}`
+    4.  Some other stuff. Something about elbows.
+    5.  Classify components as thermal noise if they meet both of the
+        following criteria:
+
+            - Nonsignificant :math:`{\\kappa}` or :math:`{\\rho}`.
+            - Nonsignificant variance explained.
     """
 
     n_samp, n_echos, n_vols = catd.shape
@@ -194,7 +229,7 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost, verbose=False):
     ----------
     n_components : int
         Number of components retained from PCA decomposition
-    dd : (S x E x T) np.ndarray
+    dd : (S x E x T) :obj:`numpy.ndarray`
         Dimensionally-reduced functional data, where `S` is samples, `E` is
         echos, and `T` is time
     conv : float
@@ -210,7 +245,7 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost, verbose=False):
 
     Returns
     -------
-    mmix : (C x T) np.ndarray
+    mmix : (C x T) :obj:`numpy.ndarray`
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `dd`
 
