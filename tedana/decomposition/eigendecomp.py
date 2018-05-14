@@ -98,7 +98,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     5.  Classify components as thermal noise if they meet both of the
         following criteria:
 
-            - Nonsignificant :math:`{\\kappa}` or :math:`{\\rho}`.
+            - Nonsignificant :math:`{\\kappa}` and :math:`{\\rho}`.
             - Nonsignificant variance explained.
     """
 
