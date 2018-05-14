@@ -2,12 +2,16 @@ Installation
 ============
 
 We recommend running `containerized versions`_ of ``tedana`` to avoid dependency issues.
-The `Docker Engine`_ appropriate for your system (i.e., linux, Mac OSX, or Windows) is required to access and run the container.
+The `Docker Engine`_ appropriate for your system (i.e., linux, Mac OSX, or
+Windows) is required to access and run the container.
 
 .. _Docker Engine: https://docs.docker.com/engine/installation/
 
-It is also possible to run a local or "bare-metal" ``tedana`` if your system has `AFNI`_ and python 2.7 or 3.4+ installed.
-With a local python installation, we recommend using the `Anaconda`_ or `Miniconda`_ package manager, as these allow for the creation of `virtual environments`_.
+It is also possible to run a local or "bare-metal" ``tedana`` if your system
+has `AFNI`_ and python 2.7 or 3.4+ installed.
+With a local python installation, we recommend using the `Anaconda`_ or
+`Miniconda`_ package manager, as these allow for the creation of
+`virtual environments`_.
 
 .. _AFNI: https://afni.nimh.nih.gov/
 .. _Anaconda: https://docs.continuum.io/anaconda/install/
@@ -20,7 +24,7 @@ Containerized versions
 To access a containerized version of ``tedana`` simply pull the latest Docker image.
 This can be accomplished with the following command:
 
-``docker pull emdupre/meica-docker:0.0.3``
+  ``docker pull emdupre/meica-docker:0.0.3``
 
 Local installation
 ------------------
