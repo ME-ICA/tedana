@@ -1,3 +1,6 @@
+"""
+Functions to handle file input/output
+"""
 import textwrap
 import numpy as np
 import os.path as op
@@ -10,6 +13,8 @@ lgr = logging.getLogger(__name__)
 
 def gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img):
     """
+    Perform global signal regression.
+
     Parameters
     ----------
     OCcatd : (S x T) array_like
@@ -104,9 +109,9 @@ def split_ts(data, mmix, mask, acc):
 
     Returns
     -------
-    hikts : (S x T) np.ndarray
+    hikts : (S x T) :obj:`numpy.ndarray`
         Time series reconstructed using only components in `acc`
-    rest : (S x T) np.ndarray
+    rest : (S x T) :obj:`numpy.ndarray`
         Original data with `hikts` removed
     """
 
@@ -349,3 +354,30 @@ def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img):
         lgr.info('++ Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo+1))
         write_split_ts(catd[:, i_echo, :], mmix, mask, acc, rej, midk, ref_img,
                        suffix='e%i' % (i_echo+1))
+
+
+def ctabsel(ctabfile):
+    """
+    Loads a pre-existing component table file
+
+    Parameters
+    ----------
+    ctabfile : str
+        Filepath to existing component table
+
+    Returns
+    -------
+    ctab : (4,) :obj:`tuple` of :obj:`numpy.ndarray`
+        Tuple containing arrays of (1) accepted, (2) rejected, (3) mid, and (4)
+        ignored components
+    """
+
+    with open(ctabfile, 'r') as src:
+        ctlines = src.readlines()
+    class_tags = ['#ACC', '#REJ', '#MID', '#IGN']
+    class_dict = {}
+    for ii, ll in enumerate(ctlines):
+        for kk in class_tags:
+            if ll[:4] is kk and ll[4:].strip() is not '':
+                class_dict[kk] = ll[4:].split('#')[0].split(',')
+    return tuple([np.array(class_dict[kk], dtype=int) for kk in class_tags])

@@ -1,65 +1,30 @@
+"""
+Functions to identify TE-dependent and TE-independent components.
+"""
 import json
 import pickle
+import logging
+
 import numpy as np
 from scipy import stats
-from sklearn import svm
 from sklearn.cluster import DBSCAN
-from tedana import model, utils
 
-import logging
+from tedana import utils
+from tedana.selection._utils import (getelbow_cons, getelbow_mod,
+                                     getelbow_aggr, do_svm)
+
 logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
-lgr = logging.getLogger(__name__)
+LGR = logging.getLogger(__name__)
 
 
-def do_svm(X_train, y_train, X_test, svmtype=0):
-    """
-    Implements Support Vector Classification on provided data
-
-    Parameters
-    ----------
-    X_train : (N1 x F) array_like
-        Training vectors, where n_samples is the number of samples in the
-        training dataset and n_features is the number of features.
-    y_train : (N1,) array_like
-        Target values (class labels in classification, real numbers in
-        regression)
-    X_test : (N2 x F) array_like
-        Test vectors, where n_samples is the number of samples in the test
-        dataset and n_features is the number of features.
-    svmtype : int, optional
-        Desired support vector machine type. Must be in [0, 1, 2]. Default: 0
-
-    Returns
-    -------
-    y_pred : (N2,) np.ndarray
-        Predicted class labels for samples in `X_test`
-    clf : {:obj:`sklearn.svm.classes.SVC`, :obj:`sklearn.svm.classes.LinearSVC`}
-        Trained sklearn model instance
-    """
-
-    if svmtype == 0:
-        clf = svm.SVC(kernel='linear')
-    elif svmtype == 1:
-        clf = svm.LinearSVC(loss='squared_hinge', penalty='l1', dual=False)
-    elif svmtype == 2:
-        clf = svm.SVC(kernel='linear', probability=True)
-    else:
-        raise ValueError('Input svmtype not in [0, 1, 2]: {}'.format(svmtype))
-
-    clf.fit(X_train, y_train)
-    y_pred = clf.predict(X_test)
-
-    return y_pred, clf
-
-
-def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, oversion=99,
-             filecsdata=True, savecsdiag=True, strict_mode=False):
+def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
+             oversion=99, filecsdata=True, savecsdiag=True, strict_mode=False):
     """
     Labels components in `mmix`
 
     Parameters
     ----------
-    seldict : dict
+    seldict : :obj:`dict`
         As output from `fitmodels_direct`
     mmix : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
@@ -99,7 +64,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
         import bz2
 
         if seldict is not None:
-            lgr.info('++ Saving component selection data')
+            LGR.info('++ Saving component selection data')
             with bz2.BZ2File('compseldata.pklbz', 'wb') as csstate_f:
                 pickle.dump(seldict, csstate_f)
         else:
@@ -107,7 +72,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
                 with bz2.BZ2File('compseldata.pklbz', 'rb') as csstate_f:
                     seldict = pickle.load(csstate_f)
             except FileNotFoundError:
-                lgr.warning('++ Failed to load component selection data')
+                LGR.warning('++ Failed to load component selection data')
                 return None
 
     # List of components
@@ -243,32 +208,32 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
     Rhos_sorted = np.array(sorted(seldict['Rhos']))[::-1]
     # Make an initial guess as to number of good components based on
     # consensus of control points across Rhos and Kappas
-    KRcutguesses = [model.getelbow_mod(seldict['Rhos']), model.getelbow_cons(seldict['Rhos']),
-                    model.getelbow_aggr(seldict['Rhos']), model.getelbow_mod(seldict['Kappas']),
-                    model.getelbow_cons(seldict['Kappas']), model.getelbow_aggr(seldict['Kappas'])]
-    Khighelbowval = stats.scoreatpercentile([model.getelbow_mod(seldict['Kappas'], val=True),
-                                             model.getelbow_cons(seldict['Kappas'], val=True),
-                                             model.getelbow_aggr(seldict['Kappas'], val=True)] +
+    KRcutguesses = [getelbow_mod(seldict['Rhos']), getelbow_cons(seldict['Rhos']),
+                    getelbow_aggr(seldict['Rhos']), getelbow_mod(seldict['Kappas']),
+                    getelbow_cons(seldict['Kappas']), getelbow_aggr(seldict['Kappas'])]
+    Khighelbowval = stats.scoreatpercentile([getelbow_mod(seldict['Kappas'], val=True),
+                                             getelbow_cons(seldict['Kappas'], val=True),
+                                             getelbow_aggr(seldict['Kappas'], val=True)] +
                                             list(utils.getfbounds(n_echos)),
                                             75, interpolation_method='lower')
     KRcut = np.median(KRcutguesses)
 
     # only use exclusive when inclusive is extremely inclusive - double KRcut
-    cond1 = model.getelbow_cons(seldict['Kappas']) > KRcut * 2
-    cond2 = model.getelbow_mod(seldict['Kappas'], val=True) < F01
+    cond1 = getelbow_cons(seldict['Kappas']) > KRcut * 2
+    cond2 = getelbow_mod(seldict['Kappas'], val=True) < F01
     if cond1 and cond2:
-        Kcut = model.getelbow_mod(seldict['Kappas'], val=True)
+        Kcut = getelbow_mod(seldict['Kappas'], val=True)
     else:
-        Kcut = model.getelbow_cons(seldict['Kappas'], val=True)
+        Kcut = getelbow_cons(seldict['Kappas'], val=True)
     # only use inclusive when exclusive is extremely exclusive - half KRcut
     # (remember for Rho inclusive is higher, so want both Kappa and Rho
     # to defaut to lower)
-    if model.getelbow_cons(seldict['Rhos']) > KRcut * 2:
-        Rcut = model.getelbow_mod(seldict['Rhos'], val=True)
+    if getelbow_cons(seldict['Rhos']) > KRcut * 2:
+        Rcut = getelbow_mod(seldict['Rhos'], val=True)
     # for above, consider something like:
-    # min([model.getelbow_mod(Rhos,True),sorted(Rhos)[::-1][KRguess] ])
+    # min([getelbow_mod(Rhos,True),sorted(Rhos)[::-1][KRguess] ])
     else:
-        Rcut = model.getelbow_cons(seldict['Rhos'], val=True)
+        Rcut = getelbow_cons(seldict['Rhos'], val=True)
     if Rcut > Kcut:
         Kcut = Rcut  # Rcut should never be higher than Kcut
     KRelbow = utils.andb([seldict['Kappas'] > Kcut, seldict['Rhos'] < Rcut])
@@ -304,9 +269,9 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
         if cond1 and cond2 and cond3 and cond4:
             epsmap.append([ii, utils.dice(guessmask, db.labels_ == 0),
                            np.intersect1d(nc[db.labels_ == 0],
-                           nc[seldict['Rhos'] > model.getelbow_mod(Rhos_sorted,
-                                                                   val=True)]).shape[0]])
-            lgr.debug('++ Found solution', ii, db.labels_)
+                           nc[seldict['Rhos'] > getelbow_mod(Rhos_sorted,
+                                                             val=True)]).shape[0]])
+            LGR.debug('++ Found solution', ii, db.labels_)
         db = None
 
     epsmap = np.array(epsmap)
@@ -316,7 +281,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
         # Select index that maximizes Dice with guessmask but first
         # minimizes number of higher Rho components
         ii = int(epsmap[np.argmax(epsmap[epsmap[:, 2] == np.min(epsmap[:, 2]), 1], 0), 0])
-        lgr.info('++ Component selection tuning: {:.05f}'.format(epsmap[:, 1].max()))
+        LGR.info('++ Component selection tuning: {:.05f}'.format(epsmap[:, 1].max()))
         db = DBSCAN(eps=.005+ii*.005, min_samples=3).fit(fz.T)
         ncl = nc[db.labels_ == 0]
         ncl = np.setdiff1d(ncl, rej)
@@ -326,7 +291,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
         to_clf = np.setdiff1d(nc, np.union1d(ncl, rej))
     if len(group0) == 0 or len(group0) < len(KRguess) * .5:
         dbscanfailed = True
-        lgr.info('++ DBSCAN based guess failed. Using elbow guess method.')
+        LGR.info('++ DBSCAN based guess failed. Using elbow guess method.')
         ncl = np.setdiff1d(np.setdiff1d(nc[KRelbow == 2], rej),
                            np.union1d(nc[tt_table[:, 0] < tt_lim],
                            np.union1d(np.union1d(nc[spz > 1],
@@ -338,7 +303,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
         group_n1 = []
         to_clf = np.setdiff1d(nc, np.union1d(group0, rej))
     if len(group0) < 2 or (len(group0) < 4 and float(len(rej))/len(group0) > 3):
-        lgr.warning('++ Extremely limited reliable BOLD signal space. '
+        LGR.warning('++ Extremely limited reliable BOLD signal space. '
                     'Not filtering further into midk etc.')
         midkfailed = True
         min_acc = np.array([])
@@ -482,7 +447,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2, o
 
     to_ign = []
 
-    minK_ign = np.max([F05, model.getelbow_cons(seldict['Kappas'], val=True)])
+    minK_ign = np.max([F05, getelbow_cons(seldict['Kappas'], val=True)])
     newcest = len(group0) + len(toacc_hi[seldict['Kappas'][toacc_hi] > minK_ign])
     phys_art = np.setdiff1d(nc[utils.andb([phys_var_z > 3.5,
                                            seldict['Kappas'] < minK_ign]) == 2], group0)

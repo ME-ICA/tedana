@@ -1,13 +1,17 @@
+"""
+Run the "canonical" TE-Dependent ANAlysis workflow.
+"""
 import os
-import shutil
-import numpy as np
 import os.path as op
-from scipy import stats
-from tedana import (decomp, io, model, select, utils)
-
+import shutil
 import logging
+
+import numpy as np
+from scipy import stats
+from tedana import (decomposition, model, selection, utils)
+
 logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
-lgr = logging.getLogger(__name__)
+LGR = logging.getLogger(__name__)
 
 """
 PROCEDURE 2 : Computes ME-PCA and ME-ICA
@@ -22,12 +26,14 @@ PROCEDURE 2a: Model fitting and component selection routines
 """
 
 
-def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
-         no_gscontrol=False, kdaw=10., rdaw=1., conv=2.5e-5, ste=-1,
-         combmode='t2s', dne=False, initcost='tanh', finalcost='tanh',
-         stabilize=False, fout=False, filecsdata=False, label=None,
-         fixed_seed=42):
+def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
+           gscontrol=True, kdaw=10., rdaw=1., conv=2.5e-5, ste=-1,
+           combmode='t2s', dne=False, initcost='tanh', finalcost='tanh',
+           stabilize=False, fout=False, filecsdata=False, label=None,
+           fixed_seed=42):
     """
+    Run the "canonical" TE-Dependent ANAlysis workflow.
+
     Parameters
     ----------
     data : :obj:`list` of :obj:`str`
@@ -46,8 +52,8 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         Default is None.
     strict : :obj:`bool`, optional
         Ignore low-variance ambiguous components. Default is False.
-    no_gzcontrol : :obj:`bool`, optional
-        Control global signal using spatial approach. Default is False.
+    gscontrol : :obj:`bool`, optional
+        Control global signal using spatial approach. Default is True.
     kdaw : :obj:`float`, optional
         Dimensionality augmentation weight (Kappa). Default is 10.
         -1 for low-dimensional ICA.
@@ -85,7 +91,7 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     n_echos = len(tes)
 
     # coerce data to samples x echos x time array
-    lgr.info('++ Loading input data: {}'.format(data))
+    LGR.info('++ Loading input data: {}'.format(data))
     catd, ref_img = utils.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
 
@@ -118,12 +124,12 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
 
     os.chdir(out_dir)
 
-    lgr.info('++ Computing Mask')
+    LGR.info('++ Computing Mask')
     mask, masksum = utils.make_adaptive_mask(catd, minimum=False, getsum=True)
 
-    lgr.info('++ Computing T2* map')
-    t2s, s0, t2ss, s0s, t2sG, s0G = model.t2sadmap(catd, tes, mask, masksum,
-                                                   start_echo=1)
+    LGR.info('++ Computing T2* map')
+    t2s, s0, t2ss, s0s, t2sG, s0G = model.fit_decay(catd, tes, mask, masksum,
+                                                    start_echo=1)
 
     # set a hard cap for the T2* map
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
@@ -141,16 +147,16 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     OCcatd = model.make_optcom(catd, t2sG, tes, mask, combmode)
 
     # regress out global signal unless explicitly not desired
-    if not no_gscontrol:
+    if gscontrol:
         catd, OCcatd = model.gscontrol_raw(catd, OCcatd, n_echos, ref_img)
 
     if mixm is None:
-        lgr.info("++ Doing ME-PCA and ME-ICA")
-        n_components, dd = decomp.tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
-                                         stabilize, ref_img,
-                                         tes=tes, kdaw=kdaw, rdaw=rdaw, ste=ste)
-        mmix_orig = decomp.tedica(n_components, dd, conv, fixed_seed, cost=initcost,
-                                  final_cost=finalcost)
+        LGR.info("++ Doing ME-PCA and ME-ICA")
+        n_components, dd = decomposition.tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
+                                                stabilize, ref_img,
+                                                tes=tes, kdaw=kdaw, rdaw=rdaw, ste=ste)
+        mmix_orig = decomposition.tedica(n_components, dd, conv, fixed_seed, cost=initcost,
+                                         final_cost=finalcost)
         np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
         seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
                                                                  mask, t2s, t2sG,
@@ -160,9 +166,9 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                                                  reindex=True)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        acc, rej, midk, empty = select.selcomps(seldict, mmix, mask, ref_img, manacc,
-                                                n_echos, t2s, s0, strict_mode=strict,
-                                                filecsdata=filecsdata)
+        acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask, ref_img, manacc,
+                                                   n_echos, t2s, s0, strict_mode=strict,
+                                                   filecsdata=filecsdata)
     else:
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
         seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
@@ -171,17 +177,18 @@ def main(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                                                  ref_img,
                                                                  fout=fout)
         if ctab is None:
-            acc, rej, midk, empty = select.selcomps(seldict, mmix, mask, ref_img, manacc,
-                                                    n_echos, t2s, s0,
-                                                    filecsdata=filecsdata,
-                                                    strict_mode=strict)
+            acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask,
+                                                       ref_img, manacc,
+                                                       n_echos, t2s, s0,
+                                                       filecsdata=filecsdata,
+                                                       strict_mode=strict)
         else:
-            acc, rej, midk, empty = io.ctabsel(ctab)
+            acc, rej, midk, empty = utils.ctabsel(ctab)
 
     if len(acc) == 0:
-        lgr.warning('++ No BOLD components detected!!! Please check data and results!')
+        LGR.warning('++ No BOLD components detected!!! Please check data and results!')
 
-    io.writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_img)
-    io.gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img)
+    utils.writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_img)
+    utils.gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img)
     if dne:
-        io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
+        utils.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)

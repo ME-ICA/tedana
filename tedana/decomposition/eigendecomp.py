@@ -1,54 +1,29 @@
+"""
+Signal decomposition methods for tedana
+"""
 import pickle
-import numpy as np
-import os.path as op
-from scipy import stats
-from tedana import model, utils
-
 import logging
+import os.path as op
+
+import numpy as np
+from scipy import stats
+
+from tedana import model, utils
+from tedana.decomposition._utils import eimask
+from tedana.selection._utils import (getelbow_cons, getelbow_mod)
+
 logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
-lgr = logging.getLogger(__name__)
+LGR = logging.getLogger(__name__)
 
 F_MAX = 500
 Z_MAX = 8
 
 
-def eimask(dd, ees=None):
-    """
-    Returns mask for data between [0.001, 5] * 98th percentile of dd
-
-    Parameters
-    ----------
-    dd : (S x E x T) array_like
-        Input data, where `S` is samples, `E` is echos, and `T` is time
-    ees : (N,) list
-        Indices of echos to assess from `dd` in calculating output
-
-    Returns
-    -------
-    imask : (S x N) np.ndarray
-        Boolean array denoting
-    """
-
-    if ees is None:
-        ees = range(dd.shape[1])
-    imask = np.zeros([dd.shape[0], len(ees)], dtype=bool)
-    for ee in ees:
-        lgr.info('++ Creating eimask for echo {}'.format(ee))
-        perc98 = stats.scoreatpercentile(dd[:, ee, :].flatten(), 98,
-                                         interpolation_method='lower')
-        lthr, hthr = 0.001 * perc98, 5 * perc98
-        lgr.info('++ Eimask threshold boundaries: '
-                 '{:.03f} {:.03f}'.format(lthr, hthr))
-        m = dd[:, ee, :].mean(axis=1)
-        imask[np.logical_and(m > lthr, m < hthr), ee] = True
-
-    return imask
-
-
 def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
            ref_img, tes, kdaw, rdaw, ste=0, mlepca=True):
     """
-    Performs PCA on `catd` and uses TE-dependence to dimensionally reduce data
+    Use principal components analysis (PCA) to identify and remove thermal
+    noise from multi-echo data.
 
     Parameters
     ----------
@@ -86,21 +61,55 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     -------
     n_components : int
         Number of components retained from PCA decomposition
-    dd : (S x E x T) np.ndarray
+    dd : (S x E x T) :obj:`numpy.ndarray`
         Dimensionally-reduced functional data
+
+    Notes
+    -----
+    ======================    =================================================
+    Notation                  Meaning
+    ======================    =================================================
+    :math:`\\kappa`            Component pseudo-F statistic for TE-dependent
+                              (BOLD) model.
+    :math:`\\rho`              Component pseudo-F statistic for TE-independent
+                              (artifact) model.
+    :math:`v`                 Voxel
+    :math:`V`                 Total number of voxels in mask
+    :math:`\\zeta`             Something
+    :math:`c`                 Component
+    :math:`p`                 Something else
+    ======================    =================================================
+
+    Steps:
+
+    1.  Variance normalize either multi-echo or optimally combined data,
+        depending on settings.
+    2.  Decompose normalized data using PCA or SVD.
+    3.  Compute :math:`{\\kappa}` and :math:`{\\rho}`:
+
+            - :math:`{\\kappa}_c = \\frac{\sum_{v}^V {\\zeta}_{c,v}^p * \
+                      F_{c,v,R_2^*}}{\sum {\\zeta}_{c,v}^p}`
+            - :math:`{\\rho}_c = \\frac{\sum_{v}^V {\\zeta}_{c,v}^p * \
+                      F_{c,v,S_0}}{\sum {\\zeta}_{c,v}^p}`
+    4.  Some other stuff. Something about elbows.
+    5.  Classify components as thermal noise if they meet both of the
+        following criteria:
+
+            - Nonsignificant :math:`{\\kappa}` or :math:`{\\rho}`.
+            - Nonsignificant variance explained.
     """
 
     n_samp, n_echos, n_vols = catd.shape
     ste = np.array([int(ee) for ee in str(ste).split(',')])
 
     if len(ste) == 1 and ste[0] == -1:
-        lgr.info('++ Computing PCA of optimally combined multi-echo data')
+        LGR.info('++ Computing PCA of optimally combined multi-echo data')
         d = OCcatd[utils.make_min_mask(OCcatd[:, np.newaxis, :])][:, np.newaxis, :]
     elif len(ste) == 1 and ste[0] == 0:
-        lgr.info('++ Computing PCA of spatially concatenated multi-echo data')
+        LGR.info('++ Computing PCA of spatially concatenated multi-echo data')
         d = catd[mask].astype('float64')
     else:
-        lgr.info('++ Computing PCA of echo #%s' % ','.join([str(ee) for ee in ste]))
+        LGR.info('++ Computing PCA of echo #%s' % ','.join([str(ee) for ee in ste]))
         d = np.stack([catd[mask, ee] for ee in ste - 1], axis=1).astype('float64')
 
     eim = np.squeeze(eimask(d))
@@ -123,7 +132,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
 
         # actual variance explained (normalized)
         sp = s / s.sum()
-        eigelb = model.getelbow_mod(sp, val=True)
+        eigelb = getelbow_mod(sp, val=True)
 
         spdif = np.abs(np.diff(sp))
         spdifh = spdif[(len(spdif)//2):]
@@ -148,17 +157,17 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         ctb = np.vstack([ctb.T[:3], sp]).T
 
         # Save state
-        lgr.info('++ Saving PCA')
+        LGR.info('++ Saving PCA')
         pcastate = {'u': u, 's': s, 'v': v, 'ctb': ctb,
                     'eigelb': eigelb, 'spmin': spmin, 'spcum': spcum}
         try:
             with open('pcastate.pkl', 'wb') as handle:
                 pickle.dump(pcastate, handle)
         except TypeError:
-            lgr.warning('++ Could not save PCA solution.')
+            LGR.warning('++ Could not save PCA solution.')
 
     else:  # if loading existing state
-        lgr.info('++ Loading PCA')
+        LGR.info('++ Loading PCA')
         with open('pcastate.pkl', 'rb') as handle:
             pcastate = pickle.load(handle)
         u, s, v = pcastate['u'], pcastate['s'], pcastate['v']
@@ -171,19 +180,19 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     kappas = ctb[ctb[:, 1].argsort(), 1]
     rhos = ctb[ctb[:, 2].argsort(), 2]
     fmin, fmid, fmax = utils.getfbounds(n_echos)
-    kappa_thr = np.average(sorted([fmin, model.getelbow_mod(kappas, val=True)/2, fmid]),
+    kappa_thr = np.average(sorted([fmin, getelbow_mod(kappas, val=True)/2, fmid]),
                            weights=[kdaw, 1, 1])
-    rho_thr = np.average(sorted([fmin, model.getelbow_cons(rhos, val=True)/2, fmid]),
+    rho_thr = np.average(sorted([fmin, getelbow_cons(rhos, val=True)/2, fmid]),
                          weights=[rdaw, 1, 1])
     if int(kdaw) == -1:
         kappas_lim = kappas[utils.andb([kappas < fmid, kappas > fmin]) == 2]
-        kappa_thr = kappas_lim[model.getelbow_mod(kappas_lim)]
+        kappa_thr = kappas_lim[getelbow_mod(kappas_lim)]
         rhos_lim = rhos[utils.andb([rhos < fmid, rhos > fmin]) == 2]
-        rho_thr = rhos_lim[model.getelbow_mod(rhos_lim)]
+        rho_thr = rhos_lim[getelbow_mod(rhos_lim)]
         stabilize = True
     if int(kdaw) != -1 and int(rdaw) == -1:
         rhos_lim = rhos[utils.andb([rhos < fmid, rhos > fmin]) == 2]
-        rho_thr = rhos_lim[model.getelbow_mod(rhos_lim)]
+        rho_thr = rhos_lim[getelbow_mod(rhos_lim)]
 
     is_hik = np.array(ctb[:, 1] > kappa_thr, dtype=np.int)
     is_hir = np.array(ctb[:, 2] > rho_thr, dtype=np.int)
@@ -202,7 +211,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     dd = u.dot(np.diag(s*np.array(pcsel, dtype=np.int))).dot(v)
 
     n_components = s[pcsel].shape[0]
-    lgr.info('++ Selected {0} components. Kappa threshold: {1:.02f}, '
+    LGR.info('++ Selected {0} components. Kappa threshold: {1:.02f}, '
              'Rho threshold: {2:.02f}'.format(n_components, kappa_thr, rho_thr))
 
     dd = stats.zscore(dd.T, axis=0).T  # variance normalize timeseries
@@ -219,7 +228,7 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost):
     ----------
     n_components : int
         Number of components retained from PCA decomposition
-    dd : (S x E x T) np.ndarray
+    dd : (S x E x T) :obj:`numpy.ndarray`
         Dimensionally-reduced functional data, where `S` is samples, `E` is
         echos, and `T` is time
     conv : float
@@ -233,7 +242,7 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost):
 
     Returns
     -------
-    mmix : (C x T) np.ndarray
+    mmix : (C x T) :obj:`numpy.ndarray`
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `dd`
 
