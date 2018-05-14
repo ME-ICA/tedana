@@ -6,11 +6,7 @@ import logging
 import numpy as np
 from sklearn import svm
 
-logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
 LGR = logging.getLogger(__name__)
-
-F_MAX = 500
-Z_MAX = 8
 
 
 def do_svm(X_train, y_train, X_test, svmtype=0):

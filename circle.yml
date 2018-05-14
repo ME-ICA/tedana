@@ -14,18 +14,18 @@ jobs:
       - checkout
 
       - run:
-          name: download data
+          name: Download input test data
           command: curl -L -o /home/neuro/data/zcat_ffd.nii.gz https://www.dropbox.com/s/ljeqskdmnc6si9d/zcat_ffd.nii.gz?dl=0
 
       - run:
-          name: download and unzip processed data
+          name: Download expected output data
           command: |
             curl -L -o /home/neuro/data/test_TED.tar.gz https://www.dropbox.com/s/x5xhzs3x6p3ukjl/test_TED.tar.gz?dl=0
             tar -xvzf /home/neuro/data/test_TED.tar.gz --no-same-owner -C /home/neuro/data/
 
 
       - run:
-          name: install dependencies
+          name: Create test environment
           command: |
             conda create --name venv python=3.6
             source activate venv
@@ -33,9 +33,8 @@ jobs:
             pip install -r requirements.txt
             python setup.py install
 
-      # run tests!
       - run:
-          name: run tests
+          name: Run tests
           command: |
             source activate venv
             py.test ./tedana/tests/test_tedana.py

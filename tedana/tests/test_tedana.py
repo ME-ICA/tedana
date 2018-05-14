@@ -38,30 +38,29 @@ def test_outputs():
     """
 
     nifti_test_list = [
-     't2sv.nii',
-     's0v.nii',
-     't2ss.nii',
-     's0vs.nii',
-     't2svG.nii',
-     's0vG.nii',
-     'T1gs.nii',
-     'tsoc_orig.nii',
-     'tsoc_nogs.nii',
-     'veins_l0.nii',
-     'veins_l1.nii',
-     'ts_OC.nii',
-     'hik_ts_OC.nii',
-     'midk_ts_OC.nii',
-     'lowk_ts_OC.nii',
-     'dn_ts_OC.nii',
-     'betas_OC.nii',
-     'betas_hik_OC.nii',
-     'feats_OC2.nii',
-     'betas_hik_OC_T1c.nii',
-     'dn_ts_OC_T1c.nii',
-     'hik_ts_OC_T1c.nii',
-     'sphis_hik.nii']
-    test_dir = Path('/home/neuro/data/TED/')
-    res_dir = Path('/home/neuro/code/TED/')
+        't2sv.nii',
+        's0v.nii',
+        't2ss.nii',
+        's0vs.nii',
+        't2svG.nii',
+        's0vG.nii',
+        'T1gs.nii',
+        'tsoc_orig.nii',
+        'tsoc_nogs.nii',
+        'veins_l0.nii',
+        'veins_l1.nii',
+        'ts_OC.nii',
+        'hik_ts_OC.nii',
+        'midk_ts_OC.nii',
+        'lowk_ts_OC.nii',
+        'dn_ts_OC.nii',
+        'betas_OC.nii',
+        'betas_hik_OC.nii',
+        'feats_OC2.nii',
+        'betas_hik_OC_T1c.nii',
+        'dn_ts_OC_T1c.nii',
+        'hik_ts_OC_T1c.nii',
+        'sphis_hik.nii'
+    ]
     for fn in nifti_test_list:
-        compare_nifti(fn, test_dir, res_dir)
+        compare_nifti(fn, Path('/home/neuro/data/TED/'), Path('/home/neuro/code/TED/'))

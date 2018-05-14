@@ -16,9 +16,9 @@ __email__ = 'emd222@cornell.edu'
 __status__ = 'Prototype'
 __url__ = 'https://github.com/me-ica/tedana'
 __packagename__ = 'tedana'
-__description__ = ("TE-Dependent Analysis (tedana) of multi-echo functional "
-                   "magnetic resonance imaging (fMRI) data.")
-__longdesc__ = ("To do.")
+__description__ = ('TE-Dependent Analysis (tedana) of multi-echo functional '
+                   'magnetic resonance imaging (fMRI) data.')
+__longdesc__ = ('To do.')
 
 DOWNLOAD_URL = (
     'https://github.com/ME-ICA/{name}/archive/{ver}.tar.gz'.format(
@@ -30,17 +30,22 @@ REQUIRES = [
     'mdp',
     'nilearn',
     'nibabel>=2.1.0',
-    'pybids>=0.4.0',
-    'nipype',
+    'scipy'
 ]
 
 TESTS_REQUIRES = [
-    "codecov",
-    "pytest",
+    'codecov',
+    'pytest',
+    'pytest-cov'
 ]
 
 EXTRA_REQUIRES = {
-    'doc': ['sphinx>=1.5.3', 'sphinx_rtd_theme', 'sphinx-argparse'],
+    'doc': [
+        'sphinx>=1.5.3',
+        'sphinx_rtd_theme',
+        'sphinx-argparse',
+        'numpydoc'
+    ],
     'tests': TESTS_REQUIRES,
     'duecredit': ['duecredit'],
 }
