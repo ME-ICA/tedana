@@ -53,8 +53,12 @@ def fit_decay(data, tes, mask, masksum, start_echo):
     1.  Fit monoexponential decay function to all values for a given voxel
         across TRs, per TE, to estimate voxel-wise :math:`S_0` and
         :math:`T_2^*`:
-            - :math:`S(TE) = S_0 * exp(-R_2^* * TE)`
-            - :math:`T_2^* = 1 / R_2^*`
+
+        .. math::
+            S(TE) = S_0 * exp(-R_2^* * TE)
+
+            T_2^* = 1 / R_2^*
+
     2.  Replace infinite values in :math:`T_2^*` map with 500 and NaN values
         in :math:`S_0` map with 0.
     3.  Generate limited :math:`T_2^*` and :math:`S_0` maps by doing something.
