@@ -73,7 +73,7 @@ API
 .. _calibration_ref:
 
 
-:mod:`tedana.workflows`: Component selection
+:mod:`tedana.workflows`: Common workflows
 --------------------------------------------------
 
 .. automodule:: tedana.workflows
