@@ -1,19 +1,13 @@
 """
 Functions to estimate S0 and T2* from multi-echo data.
 """
-import logging
-
 import numpy as np
-
 from tedana import utils
-
-logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
-LGR = logging.getLogger(__name__)
 
 
 def fit_decay(data, tes, mask, masksum, start_echo):
     """
-    Fit voxel-wise monoexponential decay models to estimate T2* and S0 maps.
+    Fit voxel-wise monoexponential decay models to `data`
 
     Parameters
     ----------
@@ -121,8 +115,7 @@ def fit_decay(data, tes, mask, masksum, start_echo):
 
 def fit_decay_ts(data, mask, tes, masksum, start_echo):
     """
-    Fit voxel- and timepoint-wise monoexponential decay models to estimate
-    T2* and S0 timeseries.
+    Fit voxel- and timepoint-wise monoexponential decay models to `data`
 
     Parameters
     ----------
