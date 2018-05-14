@@ -24,7 +24,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
 
     Parameters
     ----------
-    seldict : dict
+    seldict : :obj:`dict`
         As output from `fitmodels_direct`
     mmix : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`

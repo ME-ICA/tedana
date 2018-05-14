@@ -33,18 +33,29 @@ def fit_decay(data, tes, mask, masksum, start_echo):
 
     Returns
     -------
-    t2sa : (S x E x T) np.ndarray
+    t2sa : (S x E x T) :obj:`numpy.ndarray`
         Limited T2* map
-    s0va : (S x E x T) np.ndarray
+    s0va : (S x E x T) :obj:`numpy.ndarray`
         Limited S0 map
-    t2ss : (S x E x T) np.ndarray
+    t2ss : (S x E x T) :obj:`numpy.ndarray`
         ???
-    s0vs : (S x E x T) np.ndarray
+    s0vs : (S x E x T) :obj:`numpy.ndarray`
         ???
-    t2saf : (S x E x T) np.ndarray
+    t2saf : (S x E x T) :obj:`numpy.ndarray`
         Full T2* map
-    s0vaf : (S x E x T) np.ndarray
+    s0vaf : (S x E x T) :obj:`numpy.ndarray`
         Full S0 map
+
+    Notes
+    -----
+    1.  Fit monoexponential decay function to all values for a given voxel
+        across TRs, per TE, to estimate voxel-wise :math:`S_0` and
+        :math:`T_2^*`:
+            - :math:`S(TE) = S_0 * exp(-R_2^* * TE)`
+            - :math:`T_2^* = 1 / R_2^*`
+    2.  Replace infinite values in :math:`T_2^*` map with 500 and NaN values
+        in :math:`S_0` map with 0.
+    3.  Generate limited :math:`T_2^*` and :math:`S_0` maps by doing something.
     """
 
     n_samp, n_echos, n_vols = data.shape
@@ -90,6 +101,37 @@ def fit_decay_ts(data, mask, tes, masksum, start_echo):
     """
     Fit voxel- and timepoint-wise monoexponential decay models to estimate
     T2* and S0 timeseries.
+
+    Parameters
+    ----------
+    data : (S x E x T) array_like
+        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
+        time
+    tes : (E, ) list
+        Echo times
+    mask : (S, ) array_like
+        Boolean array indicating samples that are consistently (i.e., across
+        time AND echoes) non-zero
+    masksum : (S, ) array_like
+        Valued array indicating number of echos that have sufficient signal in
+        given sample
+    start_echo : int
+        First echo to consider
+
+    Returns
+    -------
+    t2sa : (S x E x T) :obj:`numpy.ndarray`
+        Limited T2* map
+    s0va : (S x E x T) :obj:`numpy.ndarray`
+        Limited S0 map
+    t2ss : (S x E x T) :obj:`numpy.ndarray`
+        ???
+    s0vs : (S x E x T) :obj:`numpy.ndarray`
+        ???
+    t2saf : (S x E x T) :obj:`numpy.ndarray`
+        Full T2* map
+    s0vaf : (S x E x T) :obj:`numpy.ndarray`
+        Full S0 map
     """
     nx, ny, nz, n_echos, n_trs = data.shape
     echodata = data[mask]
