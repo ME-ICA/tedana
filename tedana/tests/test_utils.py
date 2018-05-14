@@ -2,12 +2,15 @@
 Tests for tedana.utils
 """
 
+from os.path import join as pjoin, dirname
 import nibabel as nib
 import numpy as np
 import pytest
 from tedana import utils
 
 rs = np.random.RandomState(1234)
+datadir = pjoin(dirname(__file__), 'data')
+fnames = [pjoin(datadir, 'echo{}.nii.gz'.format(n)) for n in range(1, 4)]
 
 
 def test_get_dtype():
@@ -102,28 +105,83 @@ def test_andb():
                     rs.randint(10, size=(20, 20))])
 
 
-# should tedana ship with test data for these?
 def test_load_image():
-    pass
+    fimg = nib.load(fnames[0])
+    exp_shape = (64350, 5)
+
+    # load filepath to image
+    assert utils.load_image(fnames[0]).shape == exp_shape
+    # load img_like object
+    assert utils.load_image(fimg).shape == exp_shape
+    # load array
+    assert utils.load_image(fimg.get_data()).shape == exp_shape
 
 
 def test_load_data():
-    pass
+    fimg = [nib.load(f) for f in fnames]
+    exp_shape = (64350, 3, 5)
+
+    # list of filepath to images
+    d, ref = utils.load_data(fnames)
+    assert d.shape == exp_shape
+    assert isinstance(ref, str)
+    assert ref == fnames[0]
+
+    # list of img_like
+    d, ref = utils.load_data(fimg)
+    assert d.shape == exp_shape
+    assert isinstance(ref, nib.Nifti1Image)
+    assert ref == fimg[0]
+
+    # imagine z-cat img
+    d, ref = utils.load_data(fnames[0], n_echos=3)
+    assert d.shape == (21450, 3, 5)
+    assert isinstance(ref, nib.Nifti1Image)
+    assert ref.shape == (39, 50, 11)
+
+    with pytest.raises(ValueError):
+        utils.load_data(fnames[0])
 
 
 def test_make_adaptive_mask():
-    pass
+    # load data make masks
+    data = utils.load_data(fnames)[0]
+    minmask = utils.make_adaptive_mask(data)
+    mask, masksum = utils.make_adaptive_mask(data, minimum=False, getsum=True)
+
+    # minimum mask different than adaptive mask
+    assert not np.allclose(minmask, mask)
+    # getsum doesn't change mask values
+    assert np.allclose(mask, utils.make_adaptive_mask(data, minimum=False))
+    # shapes are all the same
+    assert mask.shape == masksum.shape == (64350,)
+    assert np.allclose(mask, masksum.astype(bool))
+    # mask has correct # of entries
+    assert mask.sum() == 50786
+    # masksum has correct values
+    vals, counts = np.unique(masksum, return_counts=True)
+    assert np.allclose(vals, np.array([0, 1, 2, 3]))
+    assert np.allclose(counts, np.array([13564,  3977,  5060, 41749]))
 
 
 def test_make_min_mask():
-    pass
+    # load data make mask
+    data = utils.load_data(fnames)[0]
+    minmask = utils.make_min_mask(data)
 
-
-def test_filewrite():
-    pass
+    assert minmask.shape == (64350,)
+    assert minmask.sum() == 58378
 
 
 def test_new_nii_like():
+    data, ref = utils.load_data(fnames)
+    nimg = utils.new_nii_like(ref, data)
+
+    assert isinstance(nimg, nib.Nifti1Image)
+    assert nimg.shape == (39, 50, 33, 3, 5)
+
+
+def test_filewrite():
     pass
 
 

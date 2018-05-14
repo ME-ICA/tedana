@@ -33,11 +33,11 @@ def get_dtype(data):
     """
 
     if isinstance(data, list):
-        dtypes = np.unique([splitext_addext(d)[1] for d in data])
+        dtypes = np.unique([get_dtype(d) for d in data])
         if dtypes.size > 1:
             raise ValueError('Provided data detected to have varying formats: '
                              '{}'.format(dtypes))
-        dtype = dtypes[0]
+        return dtypes[0]
     elif isinstance(data, str):
         dtype = splitext_addext(data)[1]
     else:  # img_like?
@@ -147,7 +147,7 @@ def load_data(data, n_echos=None):
                          'one data file is provided.')
     img = check_niimg(data)
     (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
-    fdata = load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1))
+    fdata = load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1, order='F'))
 
     # create reference image
     ref_img = img.__class__(np.zeros((nx, ny, nz)), affine=img.affine,
