@@ -274,7 +274,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         cond1 = db.labels_.max() > 1
         # DBSCAN didn't detect more classes than the total # of components / 6
         cond2 = db.labels_.max() < len(nc) / 6
-        # not totally sure if 0 is a special label for DBSCAN
+        # TODO: confirm if 0 is a special label for DBSCAN
         # my intuition here is that we're confirming DBSCAN labelled previously
         # rejected components as noise (i.e., no overlap between `rej` and
         # labelled DBSCAN components)
