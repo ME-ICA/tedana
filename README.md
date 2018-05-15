@@ -42,8 +42,8 @@ mdp
 nilearn  
 nibabel>=2.1.0  
 numpy  
-pybids>=0.4.0  
-scikit-learn  
+scikit-learn
+scipy
 
 `tedana` will eventually be hosted on PyPi. In the interim, you can still install it with `pip` using:
 
