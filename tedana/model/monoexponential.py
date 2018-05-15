@@ -24,22 +24,20 @@ def fit_decay(data, tes, mask, masksum, start_echo):
         given sample
     start_echo : int
         First echo to consider
-    dim : The dimensions we wish to consider - e.g. if dim is 4 we only loop over
-          x by y by z by E. If dim is 5 we loop over x by y by z by E by T.
 
     Returns
     -------
-    t2sa : (S x E x T) :obj:`numpy.ndarray`
+    t2sa : (S x E) :obj:`numpy.ndarray`
         Limited T2* map
-    s0va : (S x E x T) :obj:`numpy.ndarray`
+    s0va : (S x E) :obj:`numpy.ndarray`
         Limited S0 map
-    t2ss : (S x E x T) :obj:`numpy.ndarray`
+    t2ss : (S x E) :obj:`numpy.ndarray`
         ???
-    s0vs : (S x E x T) :obj:`numpy.ndarray`
+    s0vs : (S x E) :obj:`numpy.ndarray`
         ???
-    t2saf : (S x E x T) :obj:`numpy.ndarray`
+    t2saf : (S x E) :obj:`numpy.ndarray`
         Full T2* map
-    s0vaf : (S x E x T) :obj:`numpy.ndarray`
+    s0vaf : (S x E) :obj:`numpy.ndarray`
         Full S0 map
 
     Notes
@@ -58,55 +56,44 @@ def fit_decay(data, tes, mask, masksum, start_echo):
     3.  Generate limited :math:`T_2^*` and :math:`S_0` maps by doing something.
     """
     if len(data.shape) == 3:
-        n_samples, n_echoes, n_trs = data.shape
+        n_samp, n_echos, n_vols = data.shape
     else:
-        n_samples, n_echoes = data.shape
-        n_trs = 1
+        n_samp, n_echos = data.shape
+        n_vols = 1
 
     data = data[mask]
-    n_voxels = data.shape[0]
-    tes = np.array(tes)
+    t2ss = np.zeros([n_samp, n_echos - 1])
+    s0vs = np.zeros([n_samp, n_echos - 1])
 
-    t2ss = np.zeros([n_samples, n_echoes - 1])
-    s0vs = t2ss.copy()
+    for echo in range(start_echo, n_echos + 1):
+        # perform log linear fit of echo times against MR signal
+        # make DV matrix: samples x (time series * echos)
+        B = np.log((np.abs(data[:, :echo, :]) + 1).reshape(len(data), -1).T)
+        # make IV matrix: intercept/TEs x (time series * echos)
+        x = np.column_stack([np.ones(echo), [-te for te in tes[:echo]]])
+        X = np.repeat(x, n_vols, axis=0)
 
-    # Fit monoexponential decay first for first echo only,
-    # then first two echoes, etc.
-    for i_echo in range(start_echo, n_echoes + 1):
-        # Do Log Linear fit
-        B = np.reshape(np.abs(data[:, :i_echo, :]) + 1,
-                       (n_voxels, i_echo*n_trs)).transpose()
-        B = np.log(B)
-        neg_tes = -1 * tes[:i_echo]
+        beta = np.linalg.lstsq(X, B, rcond=None)[0]
+        t2s = 1. / beta[1, :].T
+        s0 = np.exp(beta[0, :]).T
 
-        # First row is constant, second is TEs for decay curve
-        # Independent variables for least-squares model
-        x = np.array([np.ones(i_echo), neg_tes])
-        X = np.tile(x, (1, n_trs))
-        X = np.sort(X)[:, ::-1].transpose()
+        t2s[np.isinf(t2s)] = 500.  # why 500?
+        s0[np.isnan(s0)] = 0.      # why 0?
 
-        beta, _, _, _ = np.linalg.lstsq(X, B)
-        t2s = 1. / beta[1, :].transpose()
-        s0 = np.exp(beta[0, :]).transpose()
+        t2ss[..., echo - 2] = np.squeeze(utils.unmask(t2s, mask))
+        s0vs[..., echo - 2] = np.squeeze(utils.unmask(s0, mask))
 
-        t2s[np.isinf(t2s)] = 500.
-        s0[np.isnan(s0)] = 0.
+    # create limited T2* and S0 maps
+    fl = np.zeros([n_samp, len(tes) - 1], dtype=bool)
+    for echo in range(n_echos - 1):
+        fl_ = np.squeeze(fl[..., echo])
+        fl_[masksum == echo + 2] = True
+        fl[..., echo] = fl_
+    t2sa = utils.unmask(t2ss[fl], masksum > 1)
+    s0va = utils.unmask(s0vs[fl], masksum > 1)
 
-        t2ss[..., i_echo-2] = np.squeeze(utils.unmask(t2s, mask))
-        s0vs[..., i_echo-2] = np.squeeze(utils.unmask(s0, mask))
-
-    # Limited T2* and S0 maps
-    fl = np.zeros([n_samples, len(tes)-1], bool)
-    for i_echo in range(n_echoes - 1):
-        fl_ = np.squeeze(fl[..., i_echo])
-        fl_[masksum == i_echo + 2] = True
-        fl[..., i_echo] = fl_
-    t2sa = np.squeeze(utils.unmask(t2ss[fl], masksum > 1))
-    s0va = np.squeeze(utils.unmask(s0vs[fl], masksum > 1))
-
-    # Full T2* maps with S0 estimation errors
-    t2saf = t2sa.copy()
-    s0vaf = s0va.copy()
+    # create full T2* maps with S0 estimation errors
+    t2saf, s0vaf = t2sa.copy(), s0va.copy()
     t2saf[masksum == 1] = t2ss[masksum == 1, 0]
     s0vaf[masksum == 1] = s0vs[masksum == 1, 0]
 
@@ -135,17 +122,13 @@ def fit_decay_ts(data, mask, tes, masksum, start_echo):
 
     Returns
     -------
-    t2sa : (S x E x T) :obj:`numpy.ndarray`
+    t2sa_ts : (S x E x T) :obj:`numpy.ndarray`
         Limited T2* map
-    s0va : (S x E x T) :obj:`numpy.ndarray`
+    s0va_ts : (S x E x T) :obj:`numpy.ndarray`
         Limited S0 map
-    t2ss : (S x E x T) :obj:`numpy.ndarray`
-        ???
-    s0vs : (S x E x T) :obj:`numpy.ndarray`
-        ???
-    t2saf : (S x E x T) :obj:`numpy.ndarray`
+    t2saf_ts : (S x E x T) :obj:`numpy.ndarray`
         Full T2* map
-    s0vaf : (S x E x T) :obj:`numpy.ndarray`
+    s0vaf_ts : (S x E x T) :obj:`numpy.ndarray`
         Full S0 map
     """
     n_samples, _, n_trs = data.shape
