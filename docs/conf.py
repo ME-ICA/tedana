@@ -29,7 +29,7 @@ from github_link import make_linkcode_resolve
 
 # If your documentation needs a minimal Sphinx version, state it here.
 
-needs_sphinx = '1.2'
+# needs_sphinx = '1.0'
 
 # generate autosummary even if no references
 autosummary_generate = True
@@ -47,9 +47,18 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.doctest',
               'sphinx.ext.todo',
               'numpydoc',
-              'sphinx.ext.mathjax',
               'sphinx.ext.ifconfig',
               'sphinx.ext.linkcode']
+
+import sphinx
+from distutils.version import LooseVersion
+if LooseVersion(sphinx.__version__) < LooseVersion('1.4'):
+    extensions.append('sphinx.ext.pngmath')
+else:
+    extensions.append('sphinx.ext.imgmath')
+
+# Add any paths that contain templates here, relative to this directory.
+templates_path = ['_templates']
 
 # source_suffix = ['.rst', '.md']
 source_suffix = '.rst'
