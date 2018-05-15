@@ -139,6 +139,8 @@ html_sidebars = {
     ]
 }
 
+html_favicon = '_static/tedana_favicon.png'
+
 
 # -- Options for HTMLHelp output ------------------------------------------
 
