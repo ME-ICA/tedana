@@ -9,3 +9,7 @@ coverage:
         # basic
         target: 0
         threshold: null
+    patch:
+      default:
+        target: 0
+        threshold: null
