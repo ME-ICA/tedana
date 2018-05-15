@@ -314,7 +314,7 @@ def new_nii_like(ref_img, data, affine=None, copy_header=True):
 
     Returns
     -------
-    nii : :obj:`nibabel.nifti.Nifti1Image`
+    nii : :obj:`nibabel.nifti1.Nifti1Image`
         NiftiImage
     """
 
@@ -345,7 +345,7 @@ def new_gii_like(ref_img, data, copy_header=True, copy_meta=False):
 
     Returns
     -------
-    gii : :obj:`nibabel.gifti.GiftiImage`
+    gii : :obj:`nibabel.gifti.gifti.GiftiImage`
         GiftiImage
     """
 
@@ -381,7 +381,7 @@ def make_gii_darray(ref_array, data, copy_meta=False):
 
     Returns
     -------
-    gii : :obj:`nibabel.gifti.GiftiDataArray`
+    gii : :obj:`nibabel.gifti.gifti.GiftiDataArray`
         Output data array instance
     """
 

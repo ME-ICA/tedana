@@ -250,7 +250,7 @@ def computefeats2(data, mmix, mask, normalize=True):
 
     Returns
     -------
-    data_Z : (S x C) np.ndarray
+    data_Z : (S x C) :obj:`numpy.ndarray`
         Data in component space
     """
 
@@ -292,7 +292,7 @@ def get_coeffs(data, mask, X, add_const=False):
 
     Returns
     -------
-    betas : (S x C) np.ndarray
+    betas : (S x C) :obj:`numpy.ndarray`
         Array of `S` sample betas for `C` predictors
     """
 
@@ -413,7 +413,7 @@ def spatclust(img, min_cluster_size, threshold=None, index=None, mask=None):
 
     Returns
     -------
-    clustered : np.ndarray
+    clustered : :obj:`numpy.ndarray`
         Boolean array of clustered (and thresholded) `img` data
     """
 

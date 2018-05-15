@@ -86,15 +86,18 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     2.  Decompose normalized data using PCA or SVD.
     3.  Compute :math:`{\\kappa}` and :math:`{\\rho}`:
 
-            - :math:`{\\kappa}_c = \\frac{\sum_{v}^V {\\zeta}_{c,v}^p * \
-                      F_{c,v,R_2^*}}{\sum {\\zeta}_{c,v}^p}`
-            - :math:`{\\rho}_c = \\frac{\sum_{v}^V {\\zeta}_{c,v}^p * \
-                      F_{c,v,S_0}}{\sum {\\zeta}_{c,v}^p}`
+            .. math::
+                {\\kappa}_c = \\frac{\sum_{v}^V {\\zeta}_{c,v}^p * \
+                      F_{c,v,R_2^*}}{\sum {\\zeta}_{c,v}^p}
+
+                {\\rho}_c = \\frac{\sum_{v}^V {\\zeta}_{c,v}^p * \
+                      F_{c,v,S_0}}{\sum {\\zeta}_{c,v}^p}
+
     4.  Some other stuff. Something about elbows.
     5.  Classify components as thermal noise if they meet both of the
         following criteria:
 
-            - Nonsignificant :math:`{\\kappa}` or :math:`{\\rho}`.
+            - Nonsignificant :math:`{\\kappa}` and :math:`{\\rho}`.
             - Nonsignificant variance explained.
     """
 
