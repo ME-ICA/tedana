@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # @Author: oesteban
-""" meica setup script """
+""" tedana setup script """
 
 
 def main():
@@ -16,7 +16,7 @@ def main():
     # For Python 3: use a locals dictionary
     # http://stackoverflow.com/a/1463370/6820620
     ldict = locals()
-    # Get version and release info, which is all stored in meica/info.py
+    # Get version and release info, which is all stored in tedana/info.py
     module_file = op.join(this_path, 'tedana', 'info.py')
     with open(module_file) as infofile:
         pythoncode = [line for line in infofile.readlines() if not

@@ -7,6 +7,9 @@ import argparse
 
 from tedana import workflows
 
+import logging
+logging.basicConfig(format='[%(levelname)s]: ++ %(message)s', level=logging.INFO)
+
 
 def is_valid_file(parser, arg):
     """
@@ -138,7 +141,7 @@ def get_parser():
                         dest='filecsdata',
                         help='Save component selection data',
                         action='store_true',
-                        default=True)
+                        default=False)
     parser.add_argument('--label',
                         dest='label',
                         type=str,
@@ -149,13 +152,37 @@ def get_parser():
                         type=int,
                         help='Seeded value for ICA, for reproducibility.',
                         default=42)
+    parser.add_argument('--debug',
+                        dest='debug',
+                        help=argparse.SUPPRESS,
+                        action='store_true',
+                        default=False)
+    parser.add_argument('--quiet',
+                        dest='quiet',
+                        help=argparse.SUPPRESS,
+                        action='store_true',
+                        default=False)
     return parser
 
 
 def main(argv=None):
-    """Entry point"""
+    """Tedana entry point"""
     options = get_parser().parse_args(argv)
-    workflows.tedana(**vars(options))
+    if options.debug and not options.quiet:
+        logging.getLogger().setLevel(logging.DEBUG)
+    elif options.quiet:
+        logging.getLogger().setLevel(logging.WARNING)
+    workflows.tedana.main(**vars(options))
+
+
+def run_t2smap(argv=None):
+    """T2smap entry point"""
+    options = get_parser().parse_args(argv)
+    if options.debug and not options.quiet:
+        logging.getLogger().setLevel(logging.DEBUG)
+    elif options.quiet:
+        logging.getLogger().setLevel(logging.WARNING)
+    workflows.t2smap.main(**vars(options))
 
 
 if __name__ == '__main__':
