@@ -58,10 +58,10 @@ def fit_decay(data, tes, mask, masksum, start_echo):
     3.  Generate limited :math:`T_2^*` and :math:`S_0` maps by doing something.
     """
     if len(data.shape) == 3:
-        n_samples, n_echoes, n_trs = data.shape
+        n_samp, n_echos, n_vols = data.shape
     else:
-        n_samples, n_echoes = data.shape
-        n_trs = 1
+        n_samp, n_echos = data.shape
+        n_vols = 1
 
     data = data[mask]
     t2ss, s0vs = np.zeros([n_samp, n_echos - 1]), np.zeros([n_samp, n_echos - 1])
