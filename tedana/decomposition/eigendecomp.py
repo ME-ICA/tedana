@@ -185,7 +185,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     return n_components, dd
 
 
-def tedica(n_components, dd, conv, fixed_seed, cost='tanh'):
+def tedica(n_components, dd, conv, fixed_seed, cost='logcosh'):
     """
     Performs ICA on `dd` and returns mixing matrix
 
@@ -198,7 +198,7 @@ def tedica(n_components, dd, conv, fixed_seed, cost='tanh'):
         echos, and `T` is time
     conv : float
         Convergence limit for ICA
-    cost : {'tanh', 'pow3', 'gaus', 'skew'} str, optional
+    cost : {'logcosh', 'exp', 'cube'} str, optional
         Cost function for ICA
     fixed_seed : int
         Seed for ensuring reproducibility of ICA results
@@ -216,33 +216,14 @@ def tedica(n_components, dd, conv, fixed_seed, cost='tanh'):
 
     from sklearn.decomposition import FastICA
 
-    def cost_func(cost):
-        """
-        Cost function supplied to ICA.
-
-        Parameters
-        ----------
-        cost:  {'tanh', 'pow3', 'gaus', 'skew'} str
-        """
-        def gaus(x):
-            return x * np.exp(-1 * x**2 / 2)
-
-        def skew(x):
-            return x**2
-
-        if cost is 'tanh':
-            return 'logcosh'
-        if cost is 'pow3':
-            return 'cube'
-        if cost is 'gaus':
-            return gaus
-        if cost is 'skew':
-            return skew
+    if cost not in ('logcosh', 'cube', 'exp'):
+        LGR.error('ICA cost function not understood')
+        raise
 
     climit = float(conv)
     rand_state = np.random.RandomState(seed=fixed_seed)
     ica = FastICA(n_components=n_components, algorithm='parallel',
-                  fun=cost_func(cost), tol=climit, random_state=rand_state)
+                  fun=cost, tol=climit, random_state=rand_state)
     ica.fit(dd)
     mmix = ica.mixing_
     mmix = stats.zscore(mmix, axis=0)
