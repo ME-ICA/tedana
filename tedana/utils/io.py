@@ -1,18 +1,21 @@
 """
 Functions to handle file input/output
 """
-import textwrap
-import numpy as np
+import logging
 import os.path as op
+import textwrap
+
+import numpy as np
+
 from tedana import model, utils
 
-import logging
-logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
-lgr = logging.getLogger(__name__)
+LGR = logging.getLogger(__name__)
 
 
 def gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img):
     """
+    Perform global signal regression.
+
     Parameters
     ----------
     OCcatd : (S x T) array_like
@@ -40,7 +43,7 @@ def gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img):
     Compute temporal regression
     """
     dat = (OCcatd[Gmask] - Gmu[Gmask][:, np.newaxis]) / Gstd[mask][:, np.newaxis]
-    solG = np.linalg.lstsq(mmix, dat.T)[0]
+    solG = np.linalg.lstsq(mmix, dat.T, rcond=None)[0]
     resid = dat - np.dot(solG.T, mmix.T)
 
     """
@@ -49,19 +52,18 @@ def gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img):
     bold_ts = np.dot(solG.T[:, acc], mmix[:, acc].T)
     sphis = bold_ts.min(axis=-1)
     sphis -= sphis.mean()
-    lgr.info(sphis.shape)
     utils.utils.filewrite(utils.utils.unmask(sphis, mask), 'sphis_hik', ref_img)
 
     """
     Find the global signal based on the T1-like effect
     """
-    sol = np.linalg.lstsq(np.atleast_2d(sphis).T, dat)
+    sol = np.linalg.lstsq(np.atleast_2d(sphis).T, dat, rcond=None)
     glsig = sol[0]
 
     """
     T1 correct time series by regression
     """
-    bold_noT1gs = bold_ts - np.dot(np.linalg.lstsq(glsig.T, bold_ts.T)[0].T, glsig)
+    bold_noT1gs = bold_ts - np.dot(np.linalg.lstsq(glsig.T, bold_ts.T, rcond=None)[0].T, glsig)
     utils.utils.filewrite(utils.unmask(bold_noT1gs * Gstd[mask][:, np.newaxis], mask),
                           'hik_ts_OC_T1c.nii', ref_img)
 
@@ -75,7 +77,7 @@ def gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img):
     """
     Orthogonalize mixing matrix w.r.t. T1-GS
     """
-    mmixnogs = mmix.T - np.dot(np.linalg.lstsq(glsig.T, mmix)[0].T, glsig)
+    mmixnogs = mmix.T - np.dot(np.linalg.lstsq(glsig.T, mmix, rcond=None)[0].T, glsig)
     mmixnogs_mu = mmixnogs.mean(-1)
     mmixnogs_std = mmixnogs.std(-1)
     mmixnogs_norm = (mmixnogs - mmixnogs_mu[:, np.newaxis]) / mmixnogs_std[:, np.newaxis]
@@ -84,7 +86,7 @@ def gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img):
     """
     Write T1-GS corrected components and mixing matrix
     """
-    sol = np.linalg.lstsq(mmixnogs_norm.T, dat.T)
+    sol = np.linalg.lstsq(mmixnogs_norm.T, dat.T, rcond=None)
     utils.filewrite(utils.unmask(sol[0].T[:, 2:], mask), 'betas_hik_OC_T1c', ref_img)
     np.savetxt('meica_mix_T1c.1D', mmixnogs)
 
@@ -107,9 +109,9 @@ def split_ts(data, mmix, mask, acc):
 
     Returns
     -------
-    hikts : (S x T) np.ndarray
+    hikts : (S x T) :obj:`numpy.ndarray`
         Time series reconstructed using only components in `acc`
-    rest : (S x T) np.ndarray
+    rest : (S x T) :obj:`numpy.ndarray`
         Original data with `hikts` removed
     """
 
@@ -160,20 +162,26 @@ def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, suffix=''):
     # get variance explained by retained components
     betas = model.get_coeffs(utils.unmask(dmdata.T, mask), mask, mmix)[mask]
     varexpl = (1 - ((dmdata.T - betas.dot(mmix.T))**2.).sum() / (dmdata**2.).sum()) * 100
-    lgr.info('++ Variance explained: {:.02f}%'.format(varexpl))
+    LGR.info('Variance explained by ICA decomposition: {:.02f}%'.format(varexpl))
 
     # create component and de-noised time series and save to files
     hikts = betas[:, acc].dot(mmix.T[acc, :])
     midkts = betas[:, midk].dot(mmix.T[midk, :])
     lowkts = betas[:, rej].dot(mmix.T[rej, :])
     dnts = data[mask] - lowkts - midkts
+
     if len(acc) != 0:
-        utils.filewrite(utils.unmask(hikts, mask), 'hik_ts_{0}'.format(suffix), ref_img)
+        fout = utils.filewrite(utils.unmask(hikts, mask), 'hik_ts_{0}'.format(suffix), ref_img)
+        LGR.info('Writing high-Kappa time series: {}'.format(op.abspath(fout)))
     if len(midk) != 0:
-        utils.filewrite(utils.unmask(midkts, mask), 'midk_ts_{0}'.format(suffix), ref_img)
+        fout = utils.filewrite(utils.unmask(midkts, mask), 'midk_ts_{0}'.format(suffix), ref_img)
+        LGR.info('Writing mid-Kappa time series: {}'.format(op.abspath(fout)))
     if len(rej) != 0:
-        utils.filewrite(utils.unmask(lowkts, mask), 'lowk_ts_{0}'.format(suffix), ref_img)
-    utils.filewrite(utils.unmask(dnts, mask), 'dn_ts_{0}'.format(suffix), ref_img)
+        fout = utils.filewrite(utils.unmask(lowkts, mask), 'lowk_ts_{0}'.format(suffix), ref_img)
+        LGR.info('Writing low-Kappa time series: {}'.format(op.abspath(fout)))
+
+    fout = utils.filewrite(utils.unmask(dnts, mask), 'dn_ts_{0}'.format(suffix), ref_img)
+    LGR.info('Writing denoised time series: {}'.format(op.abspath(fout)))
 
     return varexpl
 
@@ -307,22 +315,25 @@ def writeresults(ts, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_i
         Reference image to dictate how outputs are saved to disk
     """
 
-    lgr.info('++ Writing optimally combined time series')
-    utils.filewrite(ts, 'ts_OC', ref_img)
-    lgr.info('++ Writing Kappa-filtered optimally combined timeseries')
+    fout = utils.filewrite(ts, 'ts_OC', ref_img)
+    LGR.info('Writing optimally-combined time series: {}'.format(op.abspath(fout)))
+
     varexpl = write_split_ts(ts, mmix, mask, acc, rej, midk, ref_img, suffix='OC')
-    lgr.info('++ Writing signal versions of components')
+
     ts_B = model.get_coeffs(ts, mask, mmix)
-    utils.filewrite(ts_B, 'betas_OC', ref_img)
+    fout = utils.filewrite(ts_B, 'betas_OC', ref_img)
+    LGR.info('Writing full ICA coefficient feature set: {}'.format(op.abspath(fout)))
 
     if len(acc) != 0:
-        utils.filewrite(ts_B[:, acc], 'betas_hik_OC', ref_img)
-        lgr.info('++ Writing optimally combined high-Kappa features')
-        writefeats(split_ts(ts, mmix, mask, acc)[0],
-                   mmix[:, acc], mask, ref_img, suffix='OC2')
-    lgr.info('++ Writing component table')
+        fout = utils.filewrite(ts_B[:, acc], 'betas_hik_OC', ref_img)
+        LGR.info('Writing denoised ICA coefficient feature set: {}'.format(op.abspath(fout)))
+        fout = writefeats(split_ts(ts, mmix, mask, acc)[0],
+                          mmix[:, acc], mask, ref_img, suffix='OC2')
+        LGR.info('Writing Z-normalized spatial component maps: {}'.format(op.abspath(fout)))
+
     writect(comptable, n_vols, acc, rej, midk, empty, ctname='comp_table.txt',
             varexpl=varexpl)
+    LGR.info('Writing component table: {}'.format(op.abspath('comp_table.txt')))
 
 
 def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img):
@@ -349,7 +360,7 @@ def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img):
     """
 
     for i_echo in range(catd.shape[1]):
-        lgr.info('++ Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo+1))
+        LGR.info('Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo+1))
         write_split_ts(catd[:, i_echo, :], mmix, mask, acc, rej, midk, ref_img,
                        suffix='e%i' % (i_echo+1))
 
@@ -365,7 +376,7 @@ def ctabsel(ctabfile):
 
     Returns
     -------
-    ctab : (4,) tuple-of-arrays
+    ctab : (4,) :obj:`tuple` of :obj:`numpy.ndarray`
         Tuple containing arrays of (1) accepted, (2) rejected, (3) mid, and (4)
         ignored components
     """

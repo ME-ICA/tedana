@@ -1,8 +1,11 @@
 Introduction
 ============
 
-``tedana`` works by defining components in a BOLD time course via PCA and ICA.
-These components for then analyzed for TE-dependence, as classified as BOLD or non-BOLD.
+``tedana`` works by decomposing multi-echo BOLD data via PCA and ICA.
+These components are then analyzed to determine whether they are TE-dependent
+or -independent. TE-dependent components are classified as BOLD, while
+TE-independent components are classified as non-BOLD, and are discarded as part
+of data cleaning.
 
 Derivatives
 -----------
@@ -11,7 +14,8 @@ Derivatives
     'Denoised' BOLD time series after: basic preprocessing,
     T2* weighted averaging of echoes (i.e. 'optimal combination'),
     ICA denoising.
-    Use this dataset for task analysis and resting state time series correlation analysis.
+    Use this dataset for task analysis and resting state time series correlation
+    analysis.
 * ``tsoc``
     'Raw' BOLD time series dataset after: basic preprocessing
     and T2* weighted averaging of echoes (i.e. 'optimal combination').
@@ -24,4 +28,5 @@ Derivatives
 * ``mefl``
     Component maps (in units of \delta S) of ALL ICA components.
 * ``ctab``
-    Table of component Kappa, Rho, and variance explained values, plus listing of component classifications.
+    Table of component Kappa, Rho, and variance explained values, plus listing
+    of component classifications.

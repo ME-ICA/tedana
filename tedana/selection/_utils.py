@@ -1,16 +1,12 @@
 """
-Utility functions for tedana.select
+Utility functions for tedana.selection
 """
 import logging
 
 import numpy as np
 from sklearn import svm
 
-logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
 LGR = logging.getLogger(__name__)
-
-F_MAX = 500
-Z_MAX = 8
 
 
 def do_svm(X_train, y_train, X_test, svmtype=0):
@@ -33,9 +29,9 @@ def do_svm(X_train, y_train, X_test, svmtype=0):
 
     Returns
     -------
-    y_pred : (N2,) np.ndarray
+    y_pred : (N2,) :obj:`numpy.ndarray`
         Predicted class labels for samples in `X_test`
-    clf : {:obj:`sklearn.svm.classes.SVC`, :obj:`sklearn.svm.classes.LinearSVC`}
+    clf : {:obj:`sklearn.svm.SVC`, :obj:`sklearn.svm.LinearSVC`}
         Trained sklearn model instance
     """
 

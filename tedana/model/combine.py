@@ -2,16 +2,13 @@
 Functions to optimally combine data across echoes.
 """
 import logging
-
 import numpy as np
-
 from tedana import utils
 
-logging.basicConfig(format='[%(levelname)s]: %(message)s', level=logging.INFO)
 LGR = logging.getLogger(__name__)
 
 
-def make_optcom(data, t2s, tes, mask, combmode):
+def make_optcom(data, t2s, tes, mask, combmode, verbose=True):
     """
     Optimally combine BOLD data across TEs.
 
@@ -27,13 +24,25 @@ def make_optcom(data, t2s, tes, mask, combmode):
         Brain mask in 3D array.
     combmode : :obj:`str`
         How to combine data. Either 'ste' or 't2s'.
-    useG : :obj:`bool`, optional
-        Use G. Default is False.
+    verbose : :obj:`bool`, optional
+        Whether to print status updates
+
 
     Returns
     -------
     combined : (S x T) :obj:`numpy.ndarray`
         Optimally combined data.
+
+    Notes
+    -----
+    1.  Estimate voxel- and TE-specific weights based on estimated
+        :math:`T_2^*`:
+
+            .. math::
+                w(T_2^*)_n = \\frac{TE_n * exp(\\frac{-TE}\
+                {T_{2(est)}^*})}{\sum TE_n * exp(\\frac{-TE}{T_{2(est)}^*})}
+    2.  Perform weighted average per voxel and TR across TEs based on weights
+        estimated in the previous step.
     """
 
     _, _, n_vols = data.shape
@@ -41,12 +50,14 @@ def make_optcom(data, t2s, tes, mask, combmode):
     tes = np.array(tes)[np.newaxis]  # (1 x E) array_like
 
     if t2s.ndim == 1:
-        LGR.info('++ Optimally combining data with voxel-wise T2 estimates')
+        msg = 'Optimally combining data with voxel-wise T2 estimates'
         ft2s = t2s[mask, np.newaxis]
     else:
-        LGR.info('++ Optimally combining data with voxel- and volume-wise T2 '
-                 'estimates')
+        msg = 'Optimally combining data with voxel- and volume-wise T2 estimates'
         ft2s = t2s[mask, :, np.newaxis]
+
+    if verbose:
+        LGR.info(msg)
 
     if combmode == 'ste':
         alpha = mdata.mean(axis=-1) * tes

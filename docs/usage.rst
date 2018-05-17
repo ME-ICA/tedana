@@ -10,8 +10,15 @@ But you can supply many other options, viewable with ``tedana -h``.
 
 Command line options
 --------------------
+
+Run tedana
+**********
 .. argparse::
-   :ref: tedana.get_parser
+   :ref: tedana.cli.run_tedana.get_parser
    :prog: tedana
-   :nodefault:
-   :nodefaultconst:
+
+Run t2smap
+**********
+.. argparse::
+   :ref: tedana.cli.run_t2smap.get_parser
+   :prog: t2smap
