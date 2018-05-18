@@ -157,13 +157,9 @@ def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         n_components, dd = decomposition.tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
                                                 stabilize, ref_img,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw, ste=ste)
-<<<<<<< HEAD
         mmix_orig = decomposition.tedica(n_components, dd, conv, fixed_seed, cost=cost)
-=======
-        mmix_orig = decomposition.tedica(n_components, dd, conv, fixed_seed, cost=initcost,
-                                         final_cost=finalcost, verbose=debug)
->>>>>>> upstream/master
         np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
+
         LGR.info('Making second component selection guess from ICA results')
         seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
                                                                  mask, t2s, t2sG,

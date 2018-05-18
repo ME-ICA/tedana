@@ -105,9 +105,10 @@ def get_parser():
                         default=False)
     parser.add_argument('--cost',
                         dest='cost',
-                        help=('Initial cost func. for ICA: '
-                              'tanh (default), pow3, gaus, skew'),
-                        default='tanh')
+                        help=('Cost func. for ICA: '
+                              'logcosh (default), cube, exp'),
+                        choices=['logcosh', 'cube', 'exp'],
+                        default='logcosh')
     parser.add_argument('--stabilize',
                         dest='stabilize',
                         action='store_true',
