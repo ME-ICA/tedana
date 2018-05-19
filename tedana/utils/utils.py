@@ -1,6 +1,7 @@
 """
 Utilities for tedana package
 """
+import warnings
 import os.path as op
 
 import nibabel as nib
@@ -129,33 +130,58 @@ def load_data(data, n_echos=None):
         Filepath to reference image for saving output files
     """
 
-    if isinstance(data, list):
-        if get_dtype(data) == 'GIFTI':  # TODO: deal with L/R split GIFTI files
-            pass
-        if len(data) == 1:  # a z-concatenated file was provided
-            data = data[0]
-        elif len(data) == 2:  # inviable -- need more than 2 echos
+    if isinstance(data, list) and len(data) > 1:
+        #if get_dtype(data) == 'GIFTI':  # TODO: deal with L/R split GIFTI files
+        #    pass
+        if len(data) == 2:  # inviable -- need more than 2 echos
             raise ValueError('Cannot run `tedana` with only two echos: '
                              '{}'.format(data))
         else:  # individual echo files were provided (surface or volumetric)
-            fdata = np.stack([load_image(f) for f in data], axis=1)
-            return np.atleast_3d(fdata), data[0]
+            if np.all([isinstance(f, str) for f in data]):
+                data = [nib.load(f) for f in data]
+
+            if isinstance(data[0], nib.gifti.gifti.GiftiImage):
+                arrays = [np.vstack([dat.data for dat in img.darrays]) for img
+                          in data]
+                arr = np.stack(arrays, axis=1)
+                out_img = nib.gifti.GiftiImage(img.header, arr)
+            elif isinstance(data[0], nib.Nifti1Image):
+                arr = np.stack([img.get_data() for img in data], axis=4)
+                out_img = nib.Nifti1Image(arr, data[0].affine)
+            return out_img
+    elif len(data) == 1:
+        data = data[0]
+
+    if isinstance(data, str):
+        img = nib.load(data)
+    else:
+        img = data
 
     # we have a z-cat file -- we need to know how many echos are in it!
-    if n_echos is None:
-        raise ValueError('Number of echos `n_echos` must be specified if only '
-                         'one data file is provided.')
-    img = check_niimg(data)
-    (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
-    fdata = load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1, order='F'))
+    if len(img.shape) == 4:
+        warnings.warn(('In the future, support for '
+                       'z-concatenated images will be removed. '
+                       'Please store multi-echo data as a set '
+                       'of 4D files or as a single 5D (X x Y x '
+                       'Z x E x T) file.'),
+                      FutureWarning)
+        if n_echos is None:
+            raise ValueError('For z-concatenated images, n_echos must be '
+                             'provided.')
+        elif img.shape[2] % n_echos != 0:
+            raise ValueError('Number of echoes does not divide evenly into '
+                             'data.')
+        else:
+            (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
+            fdata = img.get_data().reshape(nx, ny, nz, -1, n_echos, order='F')
+            out_img = nib.Nifti1Image(fdata, img.affine, header=img.header,
+                                      extra=img.extra)
+            out_img.header.extensions = []
+            out_img.header.set_sform(out_img.header.get_sform(), code=1)
+    else:
+        out_img = img
 
-    # create reference image
-    ref_img = img.__class__(np.zeros((nx, ny, nz)), affine=img.affine,
-                            header=img.header, extra=img.extra)
-    ref_img.header.extensions = []
-    ref_img.header.set_sform(ref_img.header.get_sform(), code=1)
-
-    return fdata, ref_img
+    return out_img
 
 
 def make_adaptive_mask(data, minimum=True, getsum=False):
