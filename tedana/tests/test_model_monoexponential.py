@@ -43,7 +43,6 @@ def test_fit_decay_ts():
     fit_decay_ts should return data in samples x time shape.
     """
     tes = np.array([14.5, 38.5, 62.5])
-    true_dir = '/home/neuro/data/TED/'
     in_file = '/home/neuro/data/zcat_ffd.nii.gz'
     data, ref_img = utils.load_data(in_file, n_echos=len(tes))
     mask, mask_sum = utils.make_adaptive_mask(data, minimum=False, getsum=True)
