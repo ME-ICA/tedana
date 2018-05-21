@@ -57,7 +57,6 @@ We :yellow_heart: new contributors !
 To get started, check out [our contributing guidelines](https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md).
 
 Want to learn more about our plans for developing `tedana` ?
-Check out [our roadmap](https://github.com/ME-ICA/tedana/projects).
 Have a question, comment, or suggestion ?
 Open or comment on one of [our issues](https://github.com/ME-ICA/tedana/issues) !
 
