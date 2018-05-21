@@ -172,7 +172,7 @@ def main(argv=None):
         logging.getLogger().setLevel(logging.DEBUG)
     elif options.quiet:
         logging.getLogger().setLevel(logging.WARNING)
-    workflows.tedana.main(**vars(options))
+    workflows.tedana(**vars(options))
 
 
 def run_t2smap(argv=None):
@@ -182,7 +182,7 @@ def run_t2smap(argv=None):
         logging.getLogger().setLevel(logging.DEBUG)
     elif options.quiet:
         logging.getLogger().setLevel(logging.WARNING)
-    workflows.t2smap.main(**vars(options))
+    workflows.t2smap(**vars(options))
 
 
 if __name__ == '__main__':
