@@ -73,7 +73,7 @@ def fit_decay(data, tes, mask, masksum, start_echo=1):
         x = np.column_stack([np.ones(echo), [-te for te in tes[:echo]]])
         X = np.repeat(x, n_vols, axis=0)
 
-        beta = np.linalg.lstsq(X, B, rcond=None)[0]
+        beta = np.linalg.lstsq(X, B)[0]
         t2s = 1. / beta[1, :].T
         s0 = np.exp(beta[0, :]).T
 
