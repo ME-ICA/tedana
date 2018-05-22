@@ -1,6 +1,7 @@
 """
 Tests for tedana.model.monoexponential
 """
+import pytest
 import os.path as op
 
 import numpy as np
@@ -10,34 +11,46 @@ from tedana.model import monoexponential as me
 from tedana.tests.utils import get_test_data_path
 
 
-def test_fit_decay():
+@pytest.fixture(scope='module')
+def testdata1():
     tes = np.array([14.5, 38.5, 62.5])
     in_files = [op.join(get_test_data_path(), 'echo{0}.nii.gz'.format(i+1))
                 for i in range(3)]
     data, _ = utils.load_data(in_files, n_echos=len(tes))
     mask, mask_sum = utils.make_adaptive_mask(data, minimum=False, getsum=True)
-    t2sv, s0v, t2ss, s0vs, t2svG, s0vG = me.fit_decay(data, tes, mask,
-                                                      mask_sum, start_echo=1)
-    assert len(t2sv.shape) == 1
-    assert len(s0v.shape) == 1
-    assert len(t2ss.shape) == 2
-    assert len(s0vs.shape) == 2
-    assert len(t2svG.shape) == 1
-    assert len(s0vG.shape) == 1
+    data_dict = {'data': data,
+                 'tes': tes,
+                 'mask': mask,
+                 'mask_sum': mask_sum
+                 }
+    return data_dict
 
 
-def test_fit_decay_ts():
+def test_fit_decay(testdata1):
+
+    t2sv, s0v, t2ss, s0vs, t2svG, s0vG = me.fit_decay(testdata1['data'],
+                                                      testdata1['tes'],
+                                                      testdata1['mask'],
+                                                      testdata1['mask_sum'],
+                                                      start_echo=1)
+    assert t2sv.ndim == 1
+    assert s0v.ndim == 1
+    assert t2ss.ndim == 2
+    assert s0vs.ndim == 2
+    assert t2svG.ndim == 1
+    assert s0vG.ndim == 1
+
+
+def test_fit_decay_ts(testdata1):
     """
     fit_decay_ts should return data in samples x time shape.
     """
-    tes = np.array([14.5, 38.5, 62.5])
-    in_files = [op.join(get_test_data_path(), 'echo{0}.nii.gz'.format(i+1))
-                for i in range(3)]
-    data, _ = utils.load_data(in_files, n_echos=len(tes))
-    mask, mask_sum = utils.make_adaptive_mask(data, minimum=False, getsum=True)
-    t2sv, s0v, t2svG, s0vG = me.fit_decay_ts(data, tes, mask, mask_sum,
+    t2sv, s0v, t2svG, s0vG = me.fit_decay_ts(testdata1['data'],
+                                             testdata1['tes'],
+                                             testdata1['mask'],
+                                             testdata1['mask_sum'],
                                              start_echo=1)
-    assert len(t2sv.shape) == 2
-    assert len(s0v.shape) == 2
-    assert len(t2svG.shape) == 2
-    assert len(s0vG.shape) == 2
+    assert t2sv.ndim == 2
+    assert s0v.ndim == 2
+    assert t2svG.ndim == 2
+    assert s0vG.ndim == 2
