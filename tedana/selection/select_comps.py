@@ -171,12 +171,15 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         else:
             tproj = utils.unmask(seldict['PSC'], mask)[:, ii]
         fproj = np.fft.fftshift(np.abs(np.fft.rfftn(tproj)))
-        fproj_z = fproj.max(axis=2)
+        fproj_z = fproj.max(axis=-1)
         fproj[fproj == fproj.max()] = 0
+        spr.append(np.array(fproj_z > fproj_z.max() / 4, dtype=np.int).sum())
         fproj_arr[:, ii] = stats.rankdata(fproj_z.flatten())
         fproj_arr_val[:, ii] = fproj_z.flatten()
-        spr.append(np.array(fproj_z > fproj_z.max() / 4, dtype=np.int).sum())
-        fprojr = np.array([fproj, fproj[:, :, ::-1]]).max(0)
+        if utils.get_dtype(ref_img) == 'NIFTI':
+            fprojr = np.array([fproj, fproj[:, :, ::-1]]).max(0)
+        else:
+            fprojr = np.array([fproj, fproj[::-1]]).max(0)
         fdist.append(np.max([utils.fitgaussian(fproj.max(jj))[3:].max() for
                      jj in range(fprojr.ndim)]))
     fdist = np.array(fdist)
