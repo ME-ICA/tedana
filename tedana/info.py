@@ -55,10 +55,9 @@ EXTRA_REQUIRES['all'] = [val for _, val in list(EXTRA_REQUIRES.items())]
 
 # Package classifiers
 CLASSIFIERS = [
-    'Development Status :: 2 - Pre-Alpha',
+    'Development Status :: 4 - Beta',
     'Intended Audience :: Science/Research',
-    'Topic :: Scientific/Engineering :: Image Recognition',
-    'License :: OSI Approved :: LGPL License',
-    'Programming Language :: Python :: 2.7',
+    'Topic :: Scientific/Engineering :: Information Analysis',
+    'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
     'Programming Language :: Python :: 3.6',
 ]
