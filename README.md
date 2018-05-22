@@ -36,8 +36,7 @@ More information and documentation can be found at https://tedana.readthedocs.io
 ## Installation
 
 You'll need to set up a working development environment to use `tedana`.
-We provide a Dockerfile for this purpose (check out [tips on using Docker](https://neurohackweek.github.io/docker-for-scientists/)), but you can also set up your environment locally.
-If you choose the latter, the following packages will need to be installed as dependencies:
+To set up a local environment, the following packages will need to be installed:
 
 mdp  
 nilearn  
@@ -46,10 +45,10 @@ numpy
 scikit-learn  
 scipy
 
-`tedana` will eventually be hosted on PyPi. In the interim, you can still install it with `pip` using:
+You can then install `tedana` with
 
 ```
-pip install https://github.com/ME-ICA/tedana/archive/master.tar.gz
+pip install tedana
 ```
 
 ## Getting involved
