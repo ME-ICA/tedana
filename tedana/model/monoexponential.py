@@ -5,7 +5,7 @@ import numpy as np
 from tedana import utils
 
 
-def fit_decay(data, tes, mask, masksum, start_echo):
+def fit_decay(data, tes, mask, masksum, start_echo=1):
     """
     Fit voxel-wise monoexponential decay models to `data`
 
@@ -22,22 +22,22 @@ def fit_decay(data, tes, mask, masksum, start_echo):
     masksum : (S, ) array_like
         Valued array indicating number of echos that have sufficient signal in
         given sample
-    start_echo : int
-        First echo to consider
+    start_echo : int, optional
+        First echo to consider. Default is 1 (first echo).
 
     Returns
     -------
-    t2sa : (S x E) :obj:`numpy.ndarray`
+    t2sa : (S) :obj:`numpy.ndarray`
         Limited T2* map
-    s0va : (S x E) :obj:`numpy.ndarray`
+    s0va : (S) :obj:`numpy.ndarray`
         Limited S0 map
-    t2ss : (S x E) :obj:`numpy.ndarray`
+    t2ss : (S, E-1) :obj:`numpy.ndarray`
         ???
-    s0vs : (S x E) :obj:`numpy.ndarray`
+    s0vs : (S, E-1) :obj:`numpy.ndarray`
         ???
-    t2saf : (S x E) :obj:`numpy.ndarray`
+    t2saf : (S) :obj:`numpy.ndarray`
         Full T2* map
-    s0vaf : (S x E) :obj:`numpy.ndarray`
+    s0vaf : (S) :obj:`numpy.ndarray`
         Full S0 map
 
     Notes
@@ -100,7 +100,7 @@ def fit_decay(data, tes, mask, masksum, start_echo):
     return t2sa, s0va, t2ss, s0vs, t2saf, s0vaf
 
 
-def fit_decay_ts(data, mask, tes, masksum, start_echo):
+def fit_decay_ts(data, tes, mask, masksum, start_echo=1):
     """
     Fit voxel- and timepoint-wise monoexponential decay models to `data`
 
@@ -117,18 +117,18 @@ def fit_decay_ts(data, mask, tes, masksum, start_echo):
     masksum : (S, ) array_like
         Valued array indicating number of echos that have sufficient signal in
         given sample
-    start_echo : int
-        First echo to consider
+    start_echo : int, optional
+        First echo to consider. Default is 1 (first echo).
 
     Returns
     -------
-    t2sa_ts : (S x E x T) :obj:`numpy.ndarray`
+    t2sa_ts : (S x T) :obj:`numpy.ndarray`
         Limited T2* map
-    s0va_ts : (S x E x T) :obj:`numpy.ndarray`
+    s0va_ts : (S x T) :obj:`numpy.ndarray`
         Limited S0 map
-    t2saf_ts : (S x E x T) :obj:`numpy.ndarray`
+    t2saf_ts : (S x T) :obj:`numpy.ndarray`
         Full T2* map
-    s0vaf_ts : (S x E x T) :obj:`numpy.ndarray`
+    s0vaf_ts : (S x T) :obj:`numpy.ndarray`
         Full S0 map
     """
     n_samples, _, n_trs = data.shape
@@ -143,7 +143,7 @@ def fit_decay_ts(data, mask, tes, masksum, start_echo):
     for vol in range(echodata.shape[-1]):
 
         [t2sa, s0va, _, _, t2saf, s0vaf] = fit_decay(
-            data, mask, tes, masksum, start_echo)
+            data, tes, mask, masksum, start_echo)
 
         t2sa_ts[:, vol] = t2sa
         s0va_ts[:, vol] = s0va
