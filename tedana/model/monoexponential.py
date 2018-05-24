@@ -31,9 +31,9 @@ def fit_decay(data, tes, mask, masksum, start_echo=1):
         Limited T2* map
     s0va : (S) :obj:`numpy.ndarray`
         Limited S0 map
-    t2ss : (S, ?) :obj:`numpy.ndarray`
+    t2ss : (S, E-1) :obj:`numpy.ndarray`
         ???
-    s0vs : (S, ?) :obj:`numpy.ndarray`
+    s0vs : (S, E-1) :obj:`numpy.ndarray`
         ???
     t2saf : (S) :obj:`numpy.ndarray`
         Full T2* map
@@ -73,7 +73,7 @@ def fit_decay(data, tes, mask, masksum, start_echo=1):
         x = np.column_stack([np.ones(echo), [-te for te in tes[:echo]]])
         X = np.repeat(x, n_vols, axis=0)
 
-        beta = np.linalg.lstsq(X, B)[0]
+        beta = np.linalg.lstsq(X, B, rcond=None)[0]
         t2s = 1. / beta[1, :].T
         s0 = np.exp(beta[0, :]).T
 
