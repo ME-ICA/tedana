@@ -6,12 +6,7 @@ to tedana and code style conventions we follow within the project.
 For a more general guide to the tedana development, please see our
 `contributing guide`_.
 
-Development in docker_ is encouraged, for the sake of consistency and portability.
-By default, work should be built off of ``emdupre/meica-docker:0.0.3``
-(see the :doc:`installation` guide for grabbing the docker image).
-
 .. _contributing guide: https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md
-.. _docker: https://www.docker.com/
 
 Style Guide
 -----------
