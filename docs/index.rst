@@ -38,10 +38,9 @@ Copyright |copy| 2011-2017, Prantik Kundu. All rights reserved.
    :caption: Contents:
 
    introduction
-   installation
-   api
-   contributing
    usage
+   contributing
+   api
 
 
 Indices and tables
