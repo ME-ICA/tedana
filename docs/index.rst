@@ -32,7 +32,8 @@ When using tedana, please include the following citations:
   *Zenodo*. doi:10.5281/zenodo.1250562.
 
 Alternatively, you can automatically compile relevant citations by running your
-tedana code with `duecredit`_, e.g.:
+tedana code with `duecredit`_. For example, if you plan to run a script using
+tedana (in this case, ``tedana_script.py``):
 
 .. code-block:: bash
 
