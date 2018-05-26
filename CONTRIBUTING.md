@@ -19,9 +19,9 @@ The current list of labels are [here][link_labels] and include:
     If you find new a bug, please give as much detail as possible in your issue, including steps to recreate the error.
     If you experience the same bug as one already listed, please add any additional information that you have as a comment.
 
-* [![Requests](https://img.shields.io/badge/-requests-fbca04.svg)][link_requests] *These issues are asking for new features to be added to the project.*
+* [![Enhancement](https://img.shields.io/badge/-enhancement-84b6eb.svg)][link_enhancement] *These issues are asking for enhancements to be added to the project.*
 
-    Please try to make sure that your requested feature is distinct from any others that have already been requested or implemented. If you find one that's similar but there are subtle differences please reference the other request in your issue.
+    Please try to make sure that your enhancement is distinct from any others that have already been requested or implemented. If you find one that's similar but there are subtle differences please reference the other request in your issue.
 
 ## Making a change
 
@@ -72,7 +72,7 @@ You're awesome. :wave::smiley:
 
 [link_bugs]: https://github.com/ME-ICA/tedana/labels/bug
 [link_helpwanted]: https://github.com/ME-ICA/tedana/labels/help%20wanted
-[link_requests]: https://github.com/ME-ICA/tedana/labels/requests
+[link_enhancement]: https://github.com/ME-ICA/tedana/labels/enhancement
 
 [link_pullrequest]: https://help.github.com/articles/creating-a-pull-request/
 [link_fork]: https://help.github.com/articles/fork-a-repo/
