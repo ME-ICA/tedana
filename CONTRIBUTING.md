@@ -72,7 +72,7 @@ You're awesome. :wave::smiley:
 
 [link_bugs]: https://github.com/ME-ICA/tedana/labels/bug
 [link_helpwanted]: https://github.com/ME-ICA/tedana/labels/help%20wanted
-[link_enhancement]: https://github.com/ME-ICA/tedana/labels/requests
+[link_enhancement]: https://github.com/ME-ICA/tedana/labels/enhancement
 
 [link_pullrequest]: https://help.github.com/articles/creating-a-pull-request/
 [link_fork]: https://help.github.com/articles/fork-a-repo/
