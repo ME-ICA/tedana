@@ -14,6 +14,7 @@ def apply_mask_nii_me(imgs, mask_img):
 def apply_mask_gii_me(img, mask_img):
     """
     Apply multi-echo mask to set of gifti images. Mask may vary by echo.
+    TODO: Extend to work with multiple images.
 
     Parameters
     ----------

@@ -109,7 +109,7 @@ def load_image(data):
 
 def load_data2(data, n_echos=None):
     """
-    Coerces input `data` files to required 3D array output
+    Load files into image object.
 
     Parameters
     ----------
@@ -120,14 +120,12 @@ def load_data2(data, n_echos=None):
         accepted, as well
     n_echos : int, optional
         Number of echos in provided data array. Only necessary if `data` is
-        array_like. Default: None
+        a z-concatenated file. Default: None
 
     Returns
     -------
-    fdata : (S x E x T) :obj:`numpy.ndarray`
-        Output data where `S` is samples, `E` is echos, and `T` is time
-    ref_img : str
-        Filepath to reference image for saving output files
+    out_img : img_list
+        Nifti1Image or GiftiImage object containing data from input file(s).
     """
     if n_echos is None:
         raise ValueError('Number of echos must be specified. '
