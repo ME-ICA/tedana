@@ -113,7 +113,7 @@ def load_data(data, n_echos=None):
 
     Parameters
     ----------
-    data : (X x Y x M x T) array_like or list-of-img_like
+    data : file, list of files, img_like, or list of img_like
         Input multi-echo data array, where `X` and `Y` are spatial dimensions,
         `M` is the Z-spatial dimensions with all the input echos concatenated,
         and `T` is time. A list of image-like objects (e.g., .nii or .gii) are
@@ -159,11 +159,10 @@ def load_data(data, n_echos=None):
 
     # we have a z-cat file -- we need to know how many echos are in it!
     if len(img.shape) == 4:
-        warnings.warn(('In the future, support for '
-                       'z-concatenated images will be removed. '
-                       'Please store multi-echo data as a set '
-                       'of 4D files or as a single 5D (X x Y x '
-                       'Z x E x T) file.'),
+        warnings.warn(('In the future, support for z-concatenated images will '
+                       'be removed. Please store multi-echo data as a set '
+                       'of 4D files or as a single 5D (X x Y x Z x E x T) '
+                       'file.'),
                       FutureWarning)
         if n_echos is None:
             raise ValueError('For z-concatenated images, n_echos must be '
