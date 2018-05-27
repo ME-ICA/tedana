@@ -34,3 +34,8 @@ due.cite(Doi('10.1016/j.neuroimage.2011.12.028'),
 due.cite(Doi('10.1073/pnas.1301725110'),
          description='Improves MEICA and tedana.',
          version=__version__, path='tedana', cite_module=True)
+
+# Citation for package version.
+due.cite(Doi('10.5281/zenodo.1250562'),
+         description='The tedana package version 0.0.1',
+         version='0.0.1', path='tedana', cite_module=True)

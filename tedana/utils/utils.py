@@ -107,7 +107,7 @@ def load_image(data):
     return fdata
 
 
-def load_data(data, n_echos=None):
+def load_data2(data, n_echos=None):
     """
     Coerces input `data` files to required 3D array output
 
@@ -129,6 +129,9 @@ def load_data(data, n_echos=None):
     ref_img : str
         Filepath to reference image for saving output files
     """
+    if n_echos is None:
+        raise ValueError('Number of echos must be specified. '
+                         'Confirm that TE times are provided with the `-e` argument.')
 
     if isinstance(data, list) and len(data) > 1:
         #if get_dtype(data) == 'GIFTI':  # TODO: deal with L/R split GIFTI files
@@ -181,6 +184,60 @@ def load_data(data, n_echos=None):
         out_img = img
 
     return out_img
+
+
+def load_data(data, n_echos=None):
+    """
+    Coerces input `data` files to required 3D array output
+
+    Parameters
+    ----------
+    data : file, list of files, img_like, or list of img_like
+        Input multi-echo data array, where `X` and `Y` are spatial dimensions,
+        `M` is the Z-spatial dimensions with all the input echos concatenated,
+        and `T` is time. A list of image-like objects (e.g., .nii or .gii) are
+        accepted, as well
+    n_echos : int, optional
+        Number of echos in provided data array. Only necessary if `data` is
+        array_like. Default: None
+
+    Returns
+    -------
+    fdata : (S x E x T) :obj:`numpy.ndarray`
+        Output data where `S` is samples, `E` is echos, and `T` is time
+    ref_img : str
+        Filepath to reference image for saving output files
+    """
+    if n_echos is None:
+        raise ValueError('Number of echos must be specified. '
+                         'Confirm that TE times are provided with the `-e` argument.')
+
+    if isinstance(data, list):
+        if len(data) == 1:  # a z-concatenated file was provided
+            data = data[0]
+        elif len(data) == 2:  # inviable -- need more than 2 echos
+            raise ValueError('Cannot run `tedana` with only two echos: '
+                             '{}'.format(data))
+        else:  # individual echo files were provided (surface or volumetric)
+            if get_dtype(data) == 'GIFTI':  # NOTE: only handles .[L/R].func.gii files
+                echos = np.array_split(data, n_echos)
+                fdata = np.stack([np.vstack([load_image(f) for f in e]) for e in echos], axis=1)
+                return np.atleast_3d(fdata), data[0]
+            else:
+                fdata = np.stack([load_image(f) for f in data], axis=1)
+                return np.atleast_3d(fdata), data[0]
+
+    img = check_niimg(data)
+    (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
+    fdata = load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1, order='F'))
+
+    # create reference image
+    ref_img = img.__class__(np.zeros((nx, ny, nz)), affine=img.affine,
+                            header=img.header, extra=img.extra)
+    ref_img.header.extensions = []
+    ref_img.header.set_sform(ref_img.header.get_sform(), code=1)
+
+    return fdata, ref_img
 
 
 def make_adaptive_mask(data, minimum=True, getsum=False):
