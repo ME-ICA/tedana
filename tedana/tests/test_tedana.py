@@ -17,7 +17,7 @@ def test_basic_tedana():
     """
 
     parser = run_tedana.get_parser()
-    options = parser.parse_args(['-d', '/home/neuro/data/zcat_ffd.nii.gz',
+    options = parser.parse_args(['-d', '~/data/zcat_ffd.nii.gz',
                                  '-e', '14.5', '38.5', '62.5'])
     workflows.tedana(**vars(options))
     assert os.path.isfile('comp_table.txt')
@@ -63,4 +63,4 @@ def test_outputs():
         'sphis_hik.nii'
     ]
     for fn in nifti_test_list:
-        compare_nifti(fn, Path('/home/neuro/data/TED/'), Path('/home/neuro/code/TED/'))
+        compare_nifti(fn, Path('~/data/TED/'), Path('~/code/TED/'))
