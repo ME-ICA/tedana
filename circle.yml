@@ -12,13 +12,7 @@ jobs:
     steps:
       - run:
           name: Create data and code directories
-          command: mkdir code data
-
-      - run:
-          name: Initialize git repository
-          command: git init
-
-      - checkout
+          command: mkdir ~/data
 
       - run:
           name: Download input test data
@@ -29,6 +23,8 @@ jobs:
           command: |
             curl -L -o ~/data/test_TED.tar.gz https://www.dropbox.com/s/x5xhzs3x6p3ukjl/test_TED.tar.gz?dl=0
             tar -xvzf ~/data/test_TED.tar.gz --no-same-owner -C ~/data/
+
+      - checkout
 
       - run:
           name: Create test environment
