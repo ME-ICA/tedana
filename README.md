@@ -7,6 +7,7 @@
 [![Codecov](https://codecov.io/gh/me-ica/tedana/branch/master/graph/badge.svg)](https://codecov.io/gh/me-ica/tedana)
 [![License](https://img.shields.io/badge/License-LGPL%202.0-blue.svg)](https://opensource.org/licenses/LGPL-2.1)
 [![Join the chat at https://gitter.im/ME-ICA/tedana](https://badges.gitter.im/ME-ICA/tedana.svg)](https://gitter.im/ME-ICA/tedana?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![DOI](https://zenodo.org/badge/110845855.svg)](https://zenodo.org/badge/latestdoi/110845855)
 
    ![](https://user-images.githubusercontent.com/7406227/40031156-57b7cbb8-57bc-11e8-8c51-5b29f2e86a48.png)
 
@@ -35,8 +36,7 @@ More information and documentation can be found at https://tedana.readthedocs.io
 ## Installation
 
 You'll need to set up a working development environment to use `tedana`.
-We provide a Dockerfile for this purpose (check out [tips on using Docker](https://neurohackweek.github.io/docker-for-scientists/)), but you can also set up your environment locally.
-If you choose the latter, the following packages will need to be installed as dependencies:
+To set up a local environment, the following packages will need to be installed:
 
 mdp  
 nilearn  
@@ -45,10 +45,10 @@ numpy
 scikit-learn  
 scipy
 
-`tedana` will eventually be hosted on PyPi. In the interim, you can still install it with `pip` using:
+You can then install `tedana` with
 
 ```
-pip install https://github.com/ME-ICA/tedana/archive/master.tar.gz
+pip install tedana
 ```
 
 ## Getting involved
@@ -57,7 +57,6 @@ We :yellow_heart: new contributors !
 To get started, check out [our contributing guidelines](https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md).
 
 Want to learn more about our plans for developing `tedana` ?
-Check out [our roadmap](https://github.com/ME-ICA/tedana/projects).
 Have a question, comment, or suggestion ?
 Open or comment on one of [our issues](https://github.com/ME-ICA/tedana/issues) !
 

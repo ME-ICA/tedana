@@ -128,23 +128,25 @@ def load_data(data, n_echos=None):
     ref_img : str
         Filepath to reference image for saving output files
     """
+    if n_echos is None:
+        raise ValueError('Number of echos must be specified. '
+                         'Confirm that TE times are provided with the `-e` argument.')
 
     if isinstance(data, list):
-        if get_dtype(data) == 'GIFTI':  # TODO: deal with L/R split GIFTI files
-            pass
         if len(data) == 1:  # a z-concatenated file was provided
             data = data[0]
         elif len(data) == 2:  # inviable -- need more than 2 echos
             raise ValueError('Cannot run `tedana` with only two echos: '
                              '{}'.format(data))
         else:  # individual echo files were provided (surface or volumetric)
-            fdata = np.stack([load_image(f) for f in data], axis=1)
-            return np.atleast_3d(fdata), data[0]
+            if get_dtype(data) == 'GIFTI':  # NOTE: only handles .[L/R].func.gii files
+                echos = np.array_split(data, n_echos)
+                fdata = np.stack([np.vstack([load_image(f) for f in e]) for e in echos], axis=1)
+                return np.atleast_3d(fdata), data[0]
+            else:
+                fdata = np.stack([load_image(f) for f in data], axis=1)
+                return np.atleast_3d(fdata), data[0]
 
-    # we have a z-cat file -- we need to know how many echos are in it!
-    if n_echos is None:
-        raise ValueError('Number of echos `n_echos` must be specified if only '
-                         'one data file is provided.')
     img = check_niimg(data)
     (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
     fdata = load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1, order='F'))

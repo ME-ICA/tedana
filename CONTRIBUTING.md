@@ -6,7 +6,21 @@ These guidelines are designed to make it as easy as possible to get involved. If
 
 Before you start you'll need to set up a free [GitHub][link_github] account and sign in. Here are some [instructions][link_signupinstructions].
 
-### Labels
+Already know what you're looking for in this guide? Jump to the following sections:
+* [Joining the conversation](#joining-the-conversation)
+* [Understanding issue labels](#issue-labels)
+* [Making a change](#making-a-change)
+* [Recognizing contributions](#recognizing-contributions)
+
+## Joining the conversation
+
+`tedana` is a young project maintained by a growing group of enthusiastic developers&mdash; and we're excited to have you join!
+Most of our discussions will take place on open [issues][link_issues].
+We also maintain a [gitter chat room][link_gitter] for more informal conversations and general project updates.
+
+There is significant cross-talk between these two spaces, and we look forward to hearing from you in either venue! As a reminder, we expect all contributions to `tedana` to adhere to our [code of conduct][link_coc].
+
+### Issue labels
 
 The current list of labels are [here][link_labels] and include:
 
@@ -19,9 +33,9 @@ The current list of labels are [here][link_labels] and include:
     If you find new a bug, please give as much detail as possible in your issue, including steps to recreate the error.
     If you experience the same bug as one already listed, please add any additional information that you have as a comment.
 
-* [![Requests](https://img.shields.io/badge/-requests-fbca04.svg)][link_requests] *These issues are asking for new features to be added to the project.*
+* [![Enhancement](https://img.shields.io/badge/-enhancement-84b6eb.svg)][link_enhancement] *These issues are asking for enhancements to be added to the project.*
 
-    Please try to make sure that your requested feature is distinct from any others that have already been requested or implemented. If you find one that's similar but there are subtle differences please reference the other request in your issue.
+    Please try to make sure that your enhancement is distinct from any others that have already been requested or implemented. If you find one that's similar but there are subtle differences please reference the other request in your issue.
 
 ## Making a change
 
@@ -67,12 +81,14 @@ You're awesome. :wave::smiley:
 [link_signupinstructions]: https://help.github.com/articles/signing-up-for-a-new-github-account
 [link_react]: https://github.com/blog/2119-add-reactions-to-pull-requests-issues-and-comments
 [link_issues]: https://github.com/ME-ICA/tedana/issues
+[link_gitter]: https://gitter.im/me-ica/tedana
+[link_coc]: https://github.com/ME-ICA/tedana/blob/master/Code_of_Conduct.md
 [link_labels]: https://github.com/ME-ICA/tedana/labels
 [link_discussingissues]: https://help.github.com/articles/discussing-projects-in-issues-and-pull-requests
 
 [link_bugs]: https://github.com/ME-ICA/tedana/labels/bug
 [link_helpwanted]: https://github.com/ME-ICA/tedana/labels/help%20wanted
-[link_requests]: https://github.com/ME-ICA/tedana/labels/requests
+[link_enhancement]: https://github.com/ME-ICA/tedana/labels/enhancement
 
 [link_pullrequest]: https://help.github.com/articles/creating-a-pull-request/
 [link_fork]: https://help.github.com/articles/fork-a-repo/

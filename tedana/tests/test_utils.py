@@ -11,6 +11,7 @@ from tedana import utils
 rs = np.random.RandomState(1234)
 datadir = pjoin(dirname(__file__), 'data')
 fnames = [pjoin(datadir, 'echo{}.nii.gz'.format(n)) for n in range(1, 4)]
+tes = ['14.5', '38.5', '62.5']
 
 
 def test_get_dtype():
@@ -122,13 +123,13 @@ def test_load_data():
     exp_shape = (64350, 3, 5)
 
     # list of filepath to images
-    d, ref = utils.load_data(fnames)
+    d, ref = utils.load_data(fnames, n_echos=len(tes))
     assert d.shape == exp_shape
     assert isinstance(ref, str)
     assert ref == fnames[0]
 
     # list of img_like
-    d, ref = utils.load_data(fimg)
+    d, ref = utils.load_data(fimg, n_echos=len(tes))
     assert d.shape == exp_shape
     assert isinstance(ref, nib.Nifti1Image)
     assert ref == fimg[0]
@@ -145,7 +146,7 @@ def test_load_data():
 
 def test_make_adaptive_mask():
     # load data make masks
-    data = utils.load_data(fnames)[0]
+    data = utils.load_data(fnames, n_echos=len(tes))[0]
     minmask = utils.make_adaptive_mask(data)
     mask, masksum = utils.make_adaptive_mask(data, minimum=False, getsum=True)
 
@@ -166,7 +167,7 @@ def test_make_adaptive_mask():
 
 def test_make_min_mask():
     # load data make mask
-    data = utils.load_data(fnames)[0]
+    data = utils.load_data(fnames, n_echos=len(tes))[0]
     minmask = utils.make_min_mask(data)
 
     assert minmask.shape == (64350,)
@@ -174,7 +175,7 @@ def test_make_min_mask():
 
 
 def test_new_nii_like():
-    data, ref = utils.load_data(fnames)
+    data, ref = utils.load_data(fnames, n_echos=len(tes))
     nimg = utils.new_nii_like(ref, data)
 
     assert isinstance(nimg, nib.Nifti1Image)
