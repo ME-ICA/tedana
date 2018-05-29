@@ -127,10 +127,6 @@ def load_data2(data, n_echos=None):
     out_img : img_list
         Nifti1Image or GiftiImage object containing data from input file(s).
     """
-    if n_echos is None:
-        raise ValueError('Number of echos must be specified. '
-                         'Confirm that TE times are provided with the `-e` argument.')
-
     if isinstance(data, list) and len(data) > 1:
         #if get_dtype(data) == 'GIFTI':  # TODO: deal with L/R split GIFTI files
         #    pass
@@ -142,10 +138,17 @@ def load_data2(data, n_echos=None):
                 data = [nib.load(f) for f in data]
 
             if isinstance(data[0], nib.gifti.gifti.GiftiImage):
+                # Compile data across echoes
                 arrays = [np.vstack([dat.data for dat in img.darrays]) for img
                           in data]
                 arr = np.stack(arrays, axis=1)
-                out_img = nib.gifti.GiftiImage(img.header, arr)
+
+                # Split by volume
+                split = np.split(arr, np.arange(1, arr.shape[0]), axis=0)
+                split = [vol.squeeze().T for vol in split]  # S x E darrays
+                darrs = [nib.gifti.GiftiDataArray(vol) for vol in split]
+                out_img = nib.gifti.GiftiImage(header=data[0].header,
+                                               darrays=darrs)
             elif isinstance(data[0], nib.Nifti1Image):
                 arr = np.stack([img.get_data() for img in data], axis=4)
                 out_img = nib.Nifti1Image(arr, data[0].affine)
@@ -159,7 +162,7 @@ def load_data2(data, n_echos=None):
         img = data
 
     # we have a z-cat file -- we need to know how many echos are in it!
-    if len(img.shape) == 4:
+    if isinstance(img, nib.Nifti1Image) and len(img.shape) == 4:
         warnings.warn(('In the future, support for z-concatenated images will '
                        'be removed. Please store multi-echo data as a set '
                        'of 4D files or as a single 5D (X x Y x Z x E x T) '

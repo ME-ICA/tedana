@@ -38,7 +38,7 @@ def apply_mask_gii_me(img, mask_img):
         raise TypeError('Provided data img is not a GiftiImage.')
 
     img_arrs = [np.array(darr.data) for darr in img.darrays]
-    all_imgs_same = np.all(arr.shape == img_arrs[0].shape for arr in img_arrs)
+    all_imgs_same = np.all([arr.shape == img_arrs[0].shape for arr in img_arrs])
     if not all_imgs_same:
         raise ValueError('All volumes in data img must have same number of '
                          'vertices.')
