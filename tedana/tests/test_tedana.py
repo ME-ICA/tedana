@@ -16,7 +16,7 @@ def test_basic_tedana():
     A very simple test, to confirm that tedana creates output
     files.
     """
-    workflows.tedana_workflow(['~/data/zcat_ffd.nii.gz'],
+    workflows.tedana_workflow([op.expanduser('~/data/zcat_ffd.nii.gz')],
                               [14.5, 38.5, 62.5])
     assert op.isfile('comp_table.txt')
 
@@ -61,4 +61,5 @@ def test_outputs():
         'sphis_hik.nii'
     ]
     for fn in nifti_test_list:
-        compare_nifti(fn, Path('~/data/TED/'), Path('~/code/TED/'))
+        compare_nifti(fn, Path(os.path.expanduser('~/data/TED/')),
+                      Path(os.path.expanduser('~/code/TED/')))
