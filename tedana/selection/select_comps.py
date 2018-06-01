@@ -5,6 +5,7 @@ import json
 import logging
 import pickle
 
+from nilearn._utils import check_niimg
 import numpy as np
 from scipy import stats
 from sklearn.cluster import DBSCAN
@@ -156,7 +157,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     LGR.debug('Computing 3D spatial FFT of beta maps to detect high-spatial frequency artifacts')
     # spatial information is important so for NIFTI we convert back to 3D space
     if utils.get_dtype(ref_img) == 'NIFTI':
-        dim1 = np.prod(ref_img.shape[:2])
+        dim1 = np.prod(check_niimg(ref_img).shape[:2])
     else:
         dim1 = mask.shape[0]
     fproj_arr = np.zeros([dim1, len(nc)])
