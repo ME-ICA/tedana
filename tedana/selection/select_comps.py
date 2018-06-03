@@ -1,9 +1,11 @@
 """
 Functions to identify TE-dependent and TE-independent components.
 """
+import os
 import json
 import logging
 import pickle
+import pkg_resources
 
 from nilearn._utils import check_niimg
 import numpy as np
@@ -15,6 +17,7 @@ from tedana.selection._utils import (getelbow_cons, getelbow_mod,
                                      getelbow_aggr, do_svm)
 
 LGR = logging.getLogger(__name__)
+RESOURCES = pkg_resources.resource_filename('tedana', 'tests/data')
 
 
 def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
@@ -122,17 +125,14 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         signal_FR2_Z_mask = utils.unmask(seldict['Z_clmaps'][:, ii], mask)[t2s != 0] == 1
         signal_FR2_Z = np.log10(np.unique(seldict['F_R2_maps'][signal_FR2_Z_mask, ii]))
         counts_FR2_Z[ii, :] = [len(signal_FR2_Z), len(noise_FR2_Z)]
-        try:
-            ttest = stats.ttest_ind(signal_FR2_Z, noise_FR2_Z, equal_var=True)
-            # avoid DivideByZero RuntimeWarning
-            if signal_FR2_Z.size > 0 and noise_FR2_Z.size > 0:
-                mwu = stats.norm.ppf(stats.mannwhitneyu(signal_FR2_Z, noise_FR2_Z)[1])
-            else:
-                mwu = -np.inf
-            tt_table[ii, 0] = np.abs(mwu) * ttest[0] / np.abs(ttest[0])
-            tt_table[ii, 1] = ttest[1]
-        except Exception:  # TODO: what is the error that might be caught here?
-            pass
+        ttest = stats.ttest_ind(signal_FR2_Z, noise_FR2_Z, equal_var=True)
+        # avoid DivideByZero RuntimeWarning
+        if signal_FR2_Z.size > 0 and noise_FR2_Z.size > 0:
+            mwu = stats.norm.ppf(stats.mannwhitneyu(signal_FR2_Z, noise_FR2_Z)[1])
+        else:
+            mwu = -np.inf
+        tt_table[ii, 0] = np.abs(mwu) * ttest[0] / np.abs(ttest[0])
+        tt_table[ii, 1] = ttest[1]
     tt_table[np.isnan(tt_table)] = 0
     tt_table[np.isinf(tt_table[:, 0]), 0] = np.percentile(tt_table[~np.isinf(tt_table[:, 0]), 0],
                                                           98)
@@ -182,10 +182,11 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
             fdist.append(np.max([utils.fitgaussian(fproj.max(jj))[3:].max() for
                          jj in range(fprojr.ndim)]))
         else:
-            fdist = np.load('tests/data/fdist.npy')
-    if type(fdist) is not numpy.ndarray:  # noqa
+            fdist = np.load(os.path.join(RESOURCES, 'fdist.npy'))
+    if type(fdist) is not np.ndarray:
         fdist = np.array(fdist)
     spr = np.array(spr)
+    # import ipdb; ipdb.set_trace()
 
     """
     Step 3: Create feature space of component properties
