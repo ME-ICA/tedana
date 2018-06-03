@@ -179,10 +179,12 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         fproj_arr_val[:, ii] = fproj_z.flatten()
         if utils.get_dtype(ref_img) == 'NIFTI':
             fprojr = np.array([fproj, fproj[:, :, ::-1]]).max(0)
+            fdist.append(np.max([utils.fitgaussian(fproj.max(jj))[3:].max() for
+                         jj in range(fprojr.ndim)]))
         else:
             fprojr = np.array([fproj, fproj[::-1]]).max(0)
-        fdist.append(np.max([utils.fitgaussian(fproj.max(jj))[3:].max() for
-                     jj in range(fprojr.ndim)]))
+            fdist.append(np.max([utils.fitgaussian(fproj.max(jj))[3:].max() for
+                         jj in range(fprojr.ndim)]))
     fdist = np.array(fdist)
     spr = np.array(spr)
 
