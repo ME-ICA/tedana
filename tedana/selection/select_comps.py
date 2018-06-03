@@ -344,7 +344,6 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
                          'min_acc', 'toacc_hi']
         diagstep_vals = [list(rej), KRcut, Kcut, Rcut, dbscanfailed,
                          midkfailed, list(KRguess), list(min_acc), list(toacc_hi)]
-
         with open('csstepdata.json', 'w') as ofh:
             json.dump(dict(zip(diagstep_keys, diagstep_vals)), ofh, indent=4, sort_keys=True)
         return list(sorted(min_acc)), list(sorted(rej)), [], list(sorted(to_clf))
@@ -528,15 +527,16 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
                          'Mid-kappa components', 'svm_acc_fail', 'toacc_hi', 'toacc_lo',
                          'Field artifacts', 'Physiological artifacts',
                          'Miscellaneous artifacts', 'ncl', 'Ignored components']
-        diagstep_vals = [list(rej), KRcut, Kcut, Rcut, dbscanfailed,
-                         list(KRguess), dice_rej, list(rej_supp),
-                         list(to_clf), list(midk), svm_acc_fail,
-                         list(toacc_hi), list(toacc_lo),
+        diagstep_vals = [list(rej), KRcut.item(), Kcut.item(), Rcut.item(),
+                         dbscanfailed, list(KRguess), dice_rej,
+                         list(rej_supp), list(to_clf), list(midk),
+                         svm_acc_fail, list(toacc_hi), list(toacc_lo),
                          list(field_art), list(phys_art),
                          list(misc_art), list(ncl), list(ign)]
 
         with open('csstepdata.json', 'w') as ofh:
-            json.dump(dict(zip(diagstep_keys, diagstep_vals)), ofh, indent=4, sort_keys=True)
+            json.dump(dict(zip(diagstep_keys, diagstep_vals)), ofh,
+                      indent=4, sort_keys=True, default=str)
         allfz = np.array([Tz, Vz, Ktz, KRr, cnz, Rz, mmix_kurt, fdist_z])
         np.savetxt('csdata.txt', allfz)
 
