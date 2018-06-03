@@ -27,7 +27,7 @@ PROCEDURE 2a: Model fitting and component selection routines
 
 def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
            gscontrol=True, kdaw=10., rdaw=1., conv=2.5e-5, ste=-1,
-           combmode='t2s', dne=False, initcost='tanh', finalcost='tanh',
+           combmode='t2s', dne=False, cost='logcosh',
            stabilize=False, fout=False, filecsdata=False, label=None,
            fixed_seed=42, debug=False, quiet=False):
     """
@@ -68,10 +68,8 @@ def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
     dne : :obj:`bool`, optional
         Denoise each TE dataset separately. Default is False.
-    initcost : {'tanh', 'pow3', 'gaus', 'skew'}, optional
+    cost : {'tanh', 'pow3', 'gaus', 'skew'}, optional
         Initial cost function for ICA. Default is 'tanh'.
-    finalcost : {'tanh', 'pow3', 'gaus', 'skew'}, optional
-        Final cost function. Default is 'tanh'.
     stabilize : :obj:`bool`, optional
         Stabilize convergence by reducing dimensionality, for low quality data.
         Default is False.
@@ -159,9 +157,9 @@ def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         n_components, dd = decomposition.tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
                                                 stabilize, ref_img,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw, ste=ste)
-        mmix_orig = decomposition.tedica(n_components, dd, conv, fixed_seed, cost=initcost,
-                                         final_cost=finalcost, verbose=debug)
+        mmix_orig = decomposition.tedica(n_components, dd, conv, fixed_seed, cost=cost)
         np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
+
         LGR.info('Making second component selection guess from ICA results')
         seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
                                                                  mask, t2s, t2sG,

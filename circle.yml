@@ -5,30 +5,32 @@
 version: 2
 jobs:
   build:
+    working_directory: ~/code
     docker:
-      - image: emdupre/meica-docker:0.0.4
-
-    working_directory: /home/neuro/code/
+      - image: circleci/python:3.6.1
 
     steps:
-      - checkout
+      - run:
+          name: Create data and code directories
+          command: mkdir ~/data
 
       - run:
           name: Download input test data
-          command: curl -L -o /home/neuro/data/zcat_ffd.nii.gz https://www.dropbox.com/s/ljeqskdmnc6si9d/zcat_ffd.nii.gz?dl=0
+          command: curl -L --create-dirs -o ~/data/zcat_ffd.nii.gz https://www.dropbox.com/s/ljeqskdmnc6si9d/zcat_ffd.nii.gz?dl=0
 
       - run:
           name: Download expected output data
           command: |
-            curl -L -o /home/neuro/data/test_TED.tar.gz https://www.dropbox.com/s/x5xhzs3x6p3ukjl/test_TED.tar.gz?dl=0
-            tar -xvzf /home/neuro/data/test_TED.tar.gz --no-same-owner -C /home/neuro/data/
+            curl -L -o ~/data/test_TED.tar.gz https://www.dropbox.com/s/x5xhzs3x6p3ukjl/test_TED.tar.gz?dl=0
+            tar -xvzf ~/data/test_TED.tar.gz --no-same-owner -C ~/data/
 
+      - checkout
 
       - run:
           name: Create test environment
           command: |
-            conda create --name venv python=3.6
-            source activate venv
+            python3 -m venv venv
+            . venv/bin/activate
             pip install pytest
             pip install -r requirements.txt
             python setup.py install
@@ -36,10 +38,10 @@ jobs:
       - run:
           name: Run tests
           command: |
-            source activate venv
+            . venv/bin/activate
             py.test ./tedana/tests/test_tedana.py
           no_output_timeout: "40m"
           post: bash <(curl -s https://codecov.io/bash)
 
       - store_artifacts:
-          path: /home/neuro/code/TED/
+          path: ~/code/TED/

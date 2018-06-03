@@ -98,34 +98,17 @@ def get_parser():
                         help=('Combination scheme for TEs: '
                               't2s (Posse 1999, default), ste (Poser)'),
                         default='t2s')
-    parser.add_argument('--initcost',
-                        dest='initcost',
-                        action='store',
-                        choices=['tanh', 'pow3', 'gaus', 'skew'],
-                        help=('Initial cost function for ICA.'),
-                        default='tanh')
-    parser.add_argument('--finalcost',
-                        dest='finalcost',
-                        action='store',
-                        choices=['tanh', 'pow3', 'gaus', 'skew'],
-                        help=('Final cost function for ICA. Same options as '
-                              'initcost.'),
-                        default='tanh')
     parser.add_argument('--denoiseTEs',
                         dest='dne',
                         action='store_true',
-                        help='Denoise each TE dataset separately.',
+                        help='Denoise each TE dataset separately',
                         default=False)
-    parser.add_argument('--strict',
-                        dest='strict',
-                        action='store_true',
-                        help='Ignore low-variance ambiguous components',
-                        default=False)
-    parser.add_argument('--no_gscontrol',
-                        dest='gscontrol',
-                        action='store_false',
-                        help='Disable global signal regression.',
-                        default=True)
+    parser.add_argument('--cost',
+                        dest='cost',
+                        help=('Cost func. for ICA: '
+                              'logcosh (default), cube, exp'),
+                        choices=['logcosh', 'cube', 'exp'],
+                        default='logcosh')
     parser.add_argument('--stabilize',
                         dest='stabilize',
                         action='store_true',
