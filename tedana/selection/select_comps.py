@@ -183,8 +183,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
                          jj in range(fprojr.ndim)]))
         else:
             fprojr = np.array([fproj, fproj[::-1]]).max(0)
-            fdist.append(np.max([utils.fitgaussian(fproj.max(jj))[3:].max() for
-                         jj in range(fprojr.ndim)]))
+            fdist.append(np.max(utils.fitgaussian(fproj.max())[3:].max()))
     fdist = np.array(fdist)
     spr = np.array(spr)
 
@@ -336,12 +335,15 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
                                     np.union1d(group0, rej))
             min_acc = np.union1d(group0, toacc_hi)
             to_clf = np.setdiff1d(nc, np.union1d(min_acc, rej))
+        else:
+            toacc_hi = []
+            min_acc = []
         diagstep_keys = ['Rejected components', 'Kappa-Rho cut point',
                          'Kappa cut point', 'Rho cut point', 'DBSCAN failed to converge',
                          'Mid-Kappa failed (limited BOLD signal)', 'Kappa-Rho guess',
                          'min_acc', 'toacc_hi']
-        diagstep_vals = [rej.tolist(), KRcut, Kcut, Rcut, dbscanfailed,
-                         midkfailed, KRguess.tolist(), min_acc.tolist(), toacc_hi.tolist()]
+        diagstep_vals = [list(rej), KRcut, Kcut, Rcut, dbscanfailed,
+                         midkfailed, list(KRguess), list(min_acc), list(toacc_hi)]
 
         with open('csstepdata.json', 'w') as ofh:
             json.dump(dict(zip(diagstep_keys, diagstep_vals)), ofh, indent=4, sort_keys=True)
@@ -526,12 +528,12 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
                          'Mid-kappa components', 'svm_acc_fail', 'toacc_hi', 'toacc_lo',
                          'Field artifacts', 'Physiological artifacts',
                          'Miscellaneous artifacts', 'ncl', 'Ignored components']
-        diagstep_vals = [rej.tolist(), KRcut, Kcut, Rcut, dbscanfailed,
-                         KRguess.tolist(), dice_rej, rej_supp.tolist(),
-                         to_clf.tolist(), midk.tolist(), svm_acc_fail,
-                         toacc_hi.tolist(), toacc_lo.tolist(),
-                         field_art.tolist(), phys_art.tolist(),
-                         misc_art.tolist(), ncl.tolist(), ign.tolist()]
+        diagstep_vals = [list(rej), KRcut, Kcut, Rcut, dbscanfailed,
+                         list(KRguess), dice_rej, list(rej_supp),
+                         list(to_clf), list(midk), svm_acc_fail,
+                         list(toacc_hi), list(toacc_lo),
+                         list(field_art), list(phys_art),
+                         list(misc_art), list(ncl), list(ign)]
 
         with open('csstepdata.json', 'w') as ofh:
             json.dump(dict(zip(diagstep_keys, diagstep_vals)), ofh, indent=4, sort_keys=True)
