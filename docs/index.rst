@@ -48,10 +48,6 @@ License Information
 -------------------
 
 tedana is licensed under GNU Lesser General Public License version 2.1.
-All trademarks referenced herein are property of their respective holders.
-
-Copyright |copy| 2011-2017, Prantik Kundu. All rights reserved.
-
 
 .. toctree::
    :maxdepth: 2

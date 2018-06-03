@@ -18,7 +18,7 @@ def is_valid_file(parser, arg):
     if not op.isfile(arg) and arg is not None:
         parser.error('The file {0} does not exist!'.format(arg))
 
-    return arg
+    return op.abspath(arg)
 
 
 def get_parser():
