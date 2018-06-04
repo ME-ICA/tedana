@@ -42,4 +42,4 @@ jobs:
           post: bash <(curl -s https://codecov.io/bash)
 
       - store_artifacts:
-          path: /home/neuro/code/TED/
+          path: /home/neuro/code/TED.zcat_ffd/
