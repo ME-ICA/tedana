@@ -224,7 +224,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     return n_components, dd
 
 
-def tedica(n_components, dd, conv, fixed_seed, cost, final_cost, verbose=False):
+def tedica(n_components, dd, conv, fixed_seed, cost='logcosh'):
     """
     Performs ICA on `dd` and returns mixing matrix
 
@@ -237,14 +237,10 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost, verbose=False):
         echos, and `T` is time
     conv : float
         Convergence limit for ICA
+    cost : {'logcosh', 'exp', 'cube'} str, optional
+        Cost function for ICA
     fixed_seed : int
         Seed for ensuring reproducibility of ICA results
-    initcost : {'tanh', 'pow3', 'gaus', 'skew'} str, optional
-        Initial cost function for ICA
-    finalcost : {'tanh', 'pow3', 'gaus', 'skew'} str, optional
-        Final cost function for ICA
-    verbose : bool, optional
-        Whether to print messages regarding convergence process. Default: False
 
     Returns
     -------
@@ -257,14 +253,17 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost, verbose=False):
     Uses `mdp` implementation of FastICA for decomposition
     """
 
-    import mdp
+    from sklearn.decomposition import FastICA
+
+    if cost not in ('logcosh', 'cube', 'exp'):
+        LGR.error('ICA cost function not understood')
+        raise
+
     climit = float(conv)
-    mdp.numx_rand.seed(fixed_seed)
-    icanode = mdp.nodes.FastICANode(white_comp=n_components, approach='symm', g=cost,
-                                    fine_g=final_cost, coarse_limit=climit*100,
-                                    limit=climit, verbose=verbose)
-    icanode.train(dd)
-    smaps = icanode.execute(dd)  # noqa
-    mmix = icanode.get_recmatrix().T
+    rand_state = np.random.RandomState(seed=fixed_seed)
+    ica = FastICA(n_components=n_components, algorithm='parallel',
+                  fun=cost, tol=climit, random_state=rand_state)
+    ica.fit(dd)
+    mmix = ica.mixing_
     mmix = stats.zscore(mmix, axis=0)
     return mmix
