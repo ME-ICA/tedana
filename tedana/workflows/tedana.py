@@ -105,7 +105,7 @@ def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     try:
         ref_label = os.path.basename(ref_img).split('.')[0]
     except TypeError:
-        ref_label = os.path.basename(str(data)).split('.')[0]
+        ref_label = os.path.basename(str(data[0])).split('.')[0]
 
     if label is not None:
         out_dir = 'TED.{0}.{1}'.format(ref_label, label)
