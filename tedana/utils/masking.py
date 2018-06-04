@@ -4,11 +4,50 @@ import numpy as np
 import nibabel as nib
 
 
-def apply_mask_nii_me(imgs, mask_img):
+def apply_mask_nii_me(img, mask_img):
     """
     Apply multi-echo mask to set of nifti images. Mask may vary by echo.
     """
-    pass
+    if not isinstance(mask_img, nib.Nifti1Image):
+        raise TypeError('Provided mask is not a Nifti1Image.')
+    elif len(mask_img.shape) not in (3, 4):
+        raise ValueError('Mask must be 3D (X x Y x Z) or 4D (X x Y x Z x E).')
+
+    if not np.array_equal(img.affine, mask_img.affine):
+        raise ValueError('Input img affine must match mask_img affine.')
+
+    data = img.get_data()
+    if len(img.shape) == 4:
+        _, _, _, n_echos = img.shape
+        n_vols = 1
+        data = data[:, :, :, :, None]
+    elif len(img.shape) == 5:
+        _, _, _, n_echos, n_vols = img.shape
+    else:
+        raise ValueError('Input img must be 4D (X x Y x Z x E) or '
+                         '5D (X x Y x Z x E x T).')
+
+    n_x, n_y, n_z = mask_img.shape[:3]
+    mask_arr = np.array(mask_img.get_data()).astype(bool)
+    if mask_arr.ndim == 3:
+        mask_arr = mask_arr[:, :, :, None]
+        mask_arr = np.tile(mask_arr, (1, 1, 1, n_echos))
+
+    union_mask = np.any(mask_arr, axis=3)
+    union_idx = np.vstack(np.where(union_mask))
+    masked_arr = np.empty((np.sum(union_mask), n_echos, n_vols))
+    masked_arr[:] = np.nan
+
+    for i_echo in range(n_echos):
+        echo_mask = mask_arr[:, :, :, i_echo]
+        abs_echo_idx = np.vstack(np.where(echo_mask))
+        return abs_echo_idx, union_idx
+        # We need the intersection of the echo-specific
+        # mask's 3D index and the shared mask's 3D index
+        # as a 1D index to fill in the absolute mask with
+        # values and NaNs.
+        rel_echo_idx = np.array([np.where(union_idx == idx_val)[0][0] for
+                                 idx_val in abs_echo_idx])
 
 
 def apply_mask_gii_me(img, mask_img):
@@ -38,7 +77,8 @@ def apply_mask_gii_me(img, mask_img):
         raise TypeError('Provided data img is not a GiftiImage.')
 
     img_arrs = [np.array(darr.data) for darr in img.darrays]
-    all_imgs_same = np.all([arr.shape == img_arrs[0].shape for arr in img_arrs])
+    all_imgs_same = np.all([arr.shape == img_arrs[0].shape for arr in
+                            img_arrs])
     if not all_imgs_same:
         raise ValueError('All volumes in data img must have same number of '
                          'vertices.')
@@ -80,7 +120,42 @@ def unmask_nii_me(X, mask_img):
     """
     Unmask multi-echo data to nifti image. Mask may vary by echo.
     """
-    pass
+    if not isinstance(mask_img, nib.Nifti1Image):
+        raise TypeError('Provided mask is not a Nifti1Image.')
+    elif len(mask_img.shape) not in (3, 4):
+        raise ValueError('Mask must be 3D (X x Y x Z) or 4D (X x Y x Z x E).')
+
+    if X.ndim == 2:
+        X = X[:, :, None]
+    elif X.ndim != 3:
+        raise ValueError('Input X it not 2D or 3D.')
+
+    _, n_echos, n_vols = X.shape
+
+    mask_arr = np.array(mask_img.get_data()).astype(bool)
+    if mask_arr.ndim == 3:
+        mask_arr = mask_arr[:, :, :, None]
+        mask_arr = np.tile(mask_arr, (1, 1, 1, n_echos))
+    n_x, n_y, n_z = mask_arr.shape[:3]
+
+    full_arr = np.zeros((n_x, n_y, n_z, n_echos, n_vols))
+    for i_vol in range(n_vols):
+        unmasked_arr = np.zeros(mask_arr.shape)
+        for j_echo in range(n_echos):
+            echo_x = X[:, j_echo, i_vol]
+            echo_mask = mask_arr[:, :, :, j_echo]
+            echo_mask_idx = np.vstack(np.where(echo_mask)).T
+            echo_x = echo_x[~np.isnan(echo_x)]
+            if echo_x.shape[0] != echo_mask_idx.shape[0]:
+                raise ValueError('Masked data do not match dimensions of '
+                                 'echo-specific mask.')
+            unmasked_arr[echo_mask_idx[:, 0], echo_mask_idx[:, 1],
+                         echo_mask_idx[:, 2], j_echo] = echo_x
+        full_arr[:, :, :, :, i_vol] = unmasked_arr
+    out_img = nib.Nifti1Image(full_arr,
+                              header=mask_img.header,
+                              affine=mask_img.affine)
+    return out_img
 
 
 def unmask_gii_me(X, mask_img):

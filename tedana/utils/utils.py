@@ -128,8 +128,6 @@ def load_data2(data, n_echos=None):
         Nifti1Image or GiftiImage object containing data from input file(s).
     """
     if isinstance(data, list) and len(data) > 1:
-        #if get_dtype(data) == 'GIFTI':  # TODO: deal with L/R split GIFTI files
-        #    pass
         if len(data) == 2:  # inviable -- need more than 2 echos
             raise ValueError('Cannot run `tedana` with only two echos: '
                              '{}'.format(data))
@@ -137,7 +135,7 @@ def load_data2(data, n_echos=None):
             if np.all([isinstance(f, str) for f in data]):
                 data = [nib.load(f) for f in data]
 
-            if isinstance(data[0], nib.gifti.gifti.GiftiImage):
+            if get_dtype(data) == 'GIFTI':
                 # Compile data across echoes
                 arrays = [np.vstack([dat.data for dat in img.darrays]) for img
                           in data]
@@ -149,11 +147,14 @@ def load_data2(data, n_echos=None):
                 darrs = [nib.gifti.GiftiDataArray(vol) for vol in split]
                 out_img = nib.gifti.GiftiImage(header=data[0].header,
                                                darrays=darrs)
-            elif isinstance(data[0], nib.Nifti1Image):
+            elif get_dtype(data) == 'NIFTI':
                 arr = np.stack([img.get_data() for img in data], axis=4)
                 out_img = nib.Nifti1Image(arr, data[0].affine)
+            else:
+                raise TypeError('Input file(s) must be nifti or gifti.')
             return out_img
-    elif len(data) == 1:
+    elif isinstance(data, list) and len(data) == 1:
+        # A single multi-echo nifti/gifti file
         data = data[0]
 
     if isinstance(data, str):
@@ -162,7 +163,7 @@ def load_data2(data, n_echos=None):
         img = data
 
     # we have a z-cat file -- we need to know how many echos are in it!
-    if isinstance(img, nib.Nifti1Image) and len(img.shape) == 4:
+    if get_dtype(img) == 'NIFTI' and len(img.shape) == 4:
         warnings.warn(('In the future, support for z-concatenated images will '
                        'be removed. Please store multi-echo data as a set '
                        'of 4D files or as a single 5D (X x Y x Z x E x T) '
