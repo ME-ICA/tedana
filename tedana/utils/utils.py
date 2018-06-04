@@ -372,7 +372,7 @@ def filewrite(data, filename, ref_img, gzip=False, copy_header=True,
         # save hemispheres separately
         for n, (hdata, hemi) in enumerate(zip(np.split(data, 2, axis=0),
                                               ['L', 'R'])):
-            out = new_gii_like(ref_img[n], hdata,
+            out = new_gii_like(ref_img, hdata,
                                copy_header=copy_header,
                                copy_meta=copy_meta)
             name = '{}.{}.func.gii'.format(root, hemi)

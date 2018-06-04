@@ -45,6 +45,7 @@ def main():
             'tedana=tedana.cli.run_tedana:main'
         ]},
         packages=find_packages(exclude=("tests",)),
+        package_data=ldict['PACKAGE_DATA'],
         zip_safe=False,
     )
 

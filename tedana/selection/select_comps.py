@@ -1,9 +1,11 @@
 """
 Functions to identify TE-dependent and TE-independent components.
 """
+import os
 import json
 import logging
 import pickle
+import pkg_resources
 
 from nilearn._utils import check_niimg
 import numpy as np
@@ -15,6 +17,7 @@ from tedana.selection._utils import (getelbow_cons, getelbow_mod,
                                      getelbow_aggr, do_svm)
 
 LGR = logging.getLogger(__name__)
+RESOURCES = pkg_resources.resource_filename('tedana', 'tests/data')
 
 
 def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
@@ -122,17 +125,14 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         signal_FR2_Z_mask = utils.unmask(seldict['Z_clmaps'][:, ii], mask)[t2s != 0] == 1
         signal_FR2_Z = np.log10(np.unique(seldict['F_R2_maps'][signal_FR2_Z_mask, ii]))
         counts_FR2_Z[ii, :] = [len(signal_FR2_Z), len(noise_FR2_Z)]
-        try:
-            ttest = stats.ttest_ind(signal_FR2_Z, noise_FR2_Z, equal_var=True)
-            # avoid DivideByZero RuntimeWarning
-            if signal_FR2_Z.size > 0 and noise_FR2_Z.size > 0:
-                mwu = stats.norm.ppf(stats.mannwhitneyu(signal_FR2_Z, noise_FR2_Z)[1])
-            else:
-                mwu = -np.inf
-            tt_table[ii, 0] = np.abs(mwu) * ttest[0] / np.abs(ttest[0])
-            tt_table[ii, 1] = ttest[1]
-        except Exception:  # TODO: what is the error that might be caught here?
-            pass
+        ttest = stats.ttest_ind(signal_FR2_Z, noise_FR2_Z, equal_var=True)
+        # avoid DivideByZero RuntimeWarning
+        if signal_FR2_Z.size > 0 and noise_FR2_Z.size > 0:
+            mwu = stats.norm.ppf(stats.mannwhitneyu(signal_FR2_Z, noise_FR2_Z)[1])
+        else:
+            mwu = -np.inf
+        tt_table[ii, 0] = np.abs(mwu) * ttest[0] / np.abs(ttest[0])
+        tt_table[ii, 1] = ttest[1]
     tt_table[np.isnan(tt_table)] = 0
     tt_table[np.isinf(tt_table[:, 0]), 0] = np.percentile(tt_table[~np.isinf(tt_table[:, 0]), 0],
                                                           98)
@@ -179,12 +179,14 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         fproj_arr_val[:, ii] = fproj_z.flatten()
         if utils.get_dtype(ref_img) == 'NIFTI':
             fprojr = np.array([fproj, fproj[:, :, ::-1]]).max(0)
+            fdist.append(np.max([utils.fitgaussian(fproj.max(jj))[3:].max() for
+                         jj in range(fprojr.ndim)]))
         else:
-            fprojr = np.array([fproj, fproj[::-1]]).max(0)
-        fdist.append(np.max([utils.fitgaussian(fproj.max(jj))[3:].max() for
-                     jj in range(fprojr.ndim)]))
-    fdist = np.array(fdist)
+            fdist = np.load(os.path.join(RESOURCES, 'fdist.npy'))
+    if type(fdist) is not np.ndarray:
+        fdist = np.array(fdist)
     spr = np.array(spr)
+    # import ipdb; ipdb.set_trace()
 
     """
     Step 3: Create feature space of component properties
@@ -334,13 +336,15 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
                                     np.union1d(group0, rej))
             min_acc = np.union1d(group0, toacc_hi)
             to_clf = np.setdiff1d(nc, np.union1d(min_acc, rej))
+        else:
+            toacc_hi = []
+            min_acc = []
         diagstep_keys = ['Rejected components', 'Kappa-Rho cut point',
                          'Kappa cut point', 'Rho cut point', 'DBSCAN failed to converge',
                          'Mid-Kappa failed (limited BOLD signal)', 'Kappa-Rho guess',
                          'min_acc', 'toacc_hi']
-        diagstep_vals = [rej.tolist(), KRcut, Kcut, Rcut, dbscanfailed,
-                         midkfailed, KRguess.tolist(), min_acc.tolist(), toacc_hi.tolist()]
-
+        diagstep_vals = [list(rej), KRcut, Kcut, Rcut, dbscanfailed,
+                         midkfailed, list(KRguess), list(min_acc), list(toacc_hi)]
         with open('csstepdata.json', 'w') as ofh:
             json.dump(dict(zip(diagstep_keys, diagstep_vals)), ofh, indent=4, sort_keys=True)
         return list(sorted(min_acc)), list(sorted(rej)), [], list(sorted(to_clf))
@@ -524,15 +528,16 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
                          'Mid-kappa components', 'svm_acc_fail', 'toacc_hi', 'toacc_lo',
                          'Field artifacts', 'Physiological artifacts',
                          'Miscellaneous artifacts', 'ncl', 'Ignored components']
-        diagstep_vals = [rej.tolist(), KRcut, Kcut, Rcut, dbscanfailed,
-                         KRguess.tolist(), dice_rej, rej_supp.tolist(),
-                         to_clf.tolist(), midk.tolist(), svm_acc_fail,
-                         toacc_hi.tolist(), toacc_lo.tolist(),
-                         field_art.tolist(), phys_art.tolist(),
-                         misc_art.tolist(), ncl.tolist(), ign.tolist()]
+        diagstep_vals = [list(rej), KRcut.item(), Kcut.item(), Rcut.item(),
+                         dbscanfailed, list(KRguess), dice_rej,
+                         list(rej_supp), list(to_clf), list(midk),
+                         svm_acc_fail, list(toacc_hi), list(toacc_lo),
+                         list(field_art), list(phys_art),
+                         list(misc_art), list(ncl), list(ign)]
 
         with open('csstepdata.json', 'w') as ofh:
-            json.dump(dict(zip(diagstep_keys, diagstep_vals)), ofh, indent=4, sort_keys=True)
+            json.dump(dict(zip(diagstep_keys, diagstep_vals)), ofh,
+                      indent=4, sort_keys=True, default=str)
         allfz = np.array([Tz, Vz, Ktz, KRr, cnz, Rz, mmix_kurt, fdist_z])
         np.savetxt('csdata.txt', allfz)
 
