@@ -100,10 +100,15 @@ def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
 
     kdaw, rdaw = float(kdaw), float(rdaw)
 
+    try:
+        ref_label = os.path.basename(ref_img).split('.')[0]
+    except TypeError:
+        ref_label = os.path.basename(str(data[0])).split('.')[0]
+
     if label is not None:
-        out_dir = 'TED.{0}'.format(label)
+        out_dir = 'TED.{0}.{1}'.format(ref_label, label)
     else:
-        out_dir = 'TED'
+        out_dir = 'TED.{0}'.format(ref_label)
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
         LGR.info('Creating output directory: {}'.format(out_dir))
