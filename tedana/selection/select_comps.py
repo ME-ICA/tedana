@@ -346,7 +346,8 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         diagstep_vals = [list(rej), KRcut, Kcut, Rcut, dbscanfailed,
                          midkfailed, list(KRguess), list(min_acc), list(toacc_hi)]
         with open('csstepdata.json', 'w') as ofh:
-            json.dump(dict(zip(diagstep_keys, diagstep_vals)), ofh, indent=4, sort_keys=True)
+            json.dump(dict(zip(diagstep_keys, diagstep_vals)), ofh,
+                      indent=4, sort_keys=True, default=str)
         return list(sorted(min_acc)), list(sorted(rej)), [], list(sorted(to_clf))
 
     # Find additional components to reject based on Dice - doing this here
