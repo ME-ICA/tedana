@@ -74,9 +74,31 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     the decision tree for the selection process and other sections that
     are part of the decision tree. Certain comments are prefaced with METRIC
     and variable names to make clear which are metrics and others are prefaced
-    with SELETION to make clear which are for applying metrics. These
+    with SELECTION to make clear which are for applying metrics. METRICs tend
+    to be summary values that containt a signal number per component. These
     distinctions will hopefully make it easier to better modularize this
     function.
+
+    Note there are some variables that are calculated in one section of the code
+    that are later transformed into another metric that is actually part of a
+    selection criterion. This running list is an attempt to summarize
+    intermediate metrics vs the metrics that are actually used in decision
+    steps. For applied metrics that are made up of intermediate metrics defined
+    in earlier sections of the code, the constituent metrics are noted
+
+    Intermediate Metrics:  dice_tbl countnoise
+        counts_FR2_Z tt_table mmix_kurt mmix_std
+        spr fproj_arr_val fdist
+        spz, Rtz, Dz
+
+    Applied Metrices:
+        seldict['Rhos']
+        seldict['Kappas']
+        countsigFS0
+        countsigFR2
+        fz (a combination of multiple z-scored metrics: tt_table,
+            seldict['varex'], seldict['Kappa'], seldict['Rho'], countnoise,
+            mmix_kurt, fdist)
     """
 
     """
@@ -102,7 +124,10 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     """
     List of components
     nc and ncl start out as an ordered list of the component numbers
-    nc is constant throughout the function. ncl changes based on comp selection
+    nc is constant throughout the function.
+    ncl changes through his function as components are assigned to other
+    categories (i.e. components that are classified as rejected are removed
+    from ncl)
     """
     midk = []
     ign = []
@@ -137,22 +162,23 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     METRICS: dice_tbl
     dice_FR2, dice_FS0 are calculated for each component and the concatinated
     values are in dice_tbl
-    Br_clmaps_R2 and Br_clmaps_R2 are binarized clustered Z_maps.
+    Br_clmaps_R2 and Br_clmaps_S0 are binarized clustered Z_maps.
     The volume being clustered is the rank order indices of the absolute value
     of the beta values for the fit between the optimally combined time series
     and the mixing matrix (i.e. the lowest beta value is 1 and the highest is
     the # of voxels).
     The cluster size is a function of the # of voxels in the mask.
     The cluster threshold are the voxels with beta ranks greater than
-    countsigFS0 or countsigFR2.
+    countsigFS0 or countsigFR2 (i.e. roughly the same number of voxels will be
+    in the countsig clusters as the ICA beta map clusters)
     These dice values are the Dice-Sorenson index for the Br_clmap and the
     F_??_clmap.
     If handwerkerd understands this correctly, If the voxels with the above
     threshold F stats are clustered in the same voxels with the highest beta
-    values, then the dice coefficient will be 1. If the high F or beta values
+    values, then the dice coefficient will be 1. If the thresholded F or betas
     aren't spatially clustered (i.e. the component map is less spatially smooth)
     or the clusters are in different locations (i.e. voxels with high betas)
-    are also noisers so they have lower F values, then the dice coefficients
+    are also noiser so they have lower F values, then the dice coefficients
     will be lower
     """
     dice_tbl = np.zeros([nc.shape[0], 2])
@@ -166,7 +192,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
 
     """
     Make table of noise gain
-    METRICS: countnoise, counts_FR2_Z tt_table
+    METRICS: countnoise, counts_FR2_Z, tt_table
     (This is a bit confusing & is handwerkerd's attempt and making sense of this)
     seldict['Z_maps'] is the Fisher Z normalized beta fits for the optimally
     combined time series and the mixing matrix. Z_clmaps is a binarized cluster
@@ -182,7 +208,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     tt_table is a bit confusing. For each component, the first index is
     some type of normalized signal/noise t statistic and the second is the
     p value for the signal/noise t statistic. In general, these should be
-    bigger or have lower p values when most of the Z values above threshold
+    bigger t or have lower p values when most of the Z values above threshold
     are inside clusters.
     """
     tt_table = np.zeros([len(nc), 4])
@@ -208,22 +234,58 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     tt_table[np.isinf(tt_table[:, 0]), 0] = np.percentile(tt_table[~np.isinf(tt_table[:, 0]), 0],
                                                           98)
 
-    # Time series derivative kurtosis
+    """
+    Time series derivative kurtosis
+    METRICS: mmix_kurt and mmix_std
+    Take the derivative of the time series for each component in the ICA
+    mixing matrix and calculate the kurtosis & standard deviation.
+    handwerkerd thinks these metrics are later used to calculate measures
+    of time series spikiness and drift in the component time series.
+    """
     mmix_dt = (mmix[:-1] - mmix[1:])
     mmix_kurt = stats.kurtosis(mmix_dt)
     mmix_std = np.std(mmix_dt, axis=0)
 
     """
-    Step 1: Reject anything that's obviously an artifact
-    a. Estimate a null variance
+    SELECTION #1
+    Reject anything that is obviously an artifact
+    Obvious artifacts are components with Rho>Kappa or with more clustered,
+    significant voxels for the S0 model than the R2 model
     """
     LGR.debug('Rejecting gross artifacts based on Rho/Kappa values and S0/R2 counts')
     rej = ncl[utils.andb([seldict['Rhos'] > seldict['Kappas'], countsigFS0 > countsigFR2]) > 0]
     ncl = np.setdiff1d(ncl, rej)
 
     """
-    Step 2: Compute 3-D spatial FFT of Beta maps to detect high-spatial
+    Compute 3-D spatial FFT of Beta maps to detect high-spatial
     frequency artifacts
+
+    METRIC spr, fproj_arr_val, fdist
+    PSC is the mean centered beta map for each ICA component
+    The FFT is sequentially calculated across each dimension of PSC, the maximum
+    value is removed (probably the 0Hz bin). The maximum remaining frequency
+    magnitude along the z dimenions is calculated leaving a 2D matrix.
+    spr contains a count of the number of frequency bins in the 2D matrix where
+    the frequency magnitude is greater than 4* the maximum freq in the matrix.
+    spr is later z-normed across components into spz and this is actually used
+    as the selection metric
+    handwerkerd interpretation: spr is bigger the more values of the fft are
+    >1/4 the max. Thus, if you assume the highest bins are low frequency, and
+    all components have roughly the same low freq power (i.e. a brain-shaped
+    blob), then spr will be bigger the more high frequency bins have magnitudes
+    that are more than 1/4 of the low frequency bins.
+
+    fproj_arr_val is a flattened 1D vector of the 2D max projection fft
+    of each component. This seems to be later used in an SVM to train on
+    this value for rejected components to classify some remaining n_components
+    as midk
+    Note: fproj_arr is created here and is a ranked list of FFT values, but is
+    not used anywhere in the code. Was fproj_arr_val supposed to contain this
+    ranking?
+
+    fdist isn't completely clear to handwerkerd yet but it looks like the fit of
+    the fft of the spatial map to a Gaussian distribution. If so, then the
+    worse the fit the more high frequency power would be in the component
     """
     LGR.debug('Computing 3D spatial FFT of beta maps to detect high-spatial frequency artifacts')
     # spatial information is important so for NIFTI we convert back to 3D space
@@ -260,7 +322,38 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     # import ipdb; ipdb.set_trace()
 
     """
-    Step 3: Create feature space of component properties
+    Create feature space of component properties
+    METRIC fz, spz, Rtz, Dz
+
+    fz is matrix of multiple other metrics described above and calculated
+    in this section. Most are all of these have one number per component and
+    they are z-scored across components
+    Attempted explanations in order:
+    Tz: The z-scored t statistics of the spatial noisiness metric in tt_table
+    Vz: The z-scored the natural log of the non-normalized variance explained
+        of each component
+    Ktz: The z-scored natural log of the Kappa values
+    (the '/ 2' doesnot seem necessary beacuse it will be removed by z-scoring)
+    KRr: The z-scored ratio of the natural log of Kappa / nat log of Rho
+    (unclear why sometimes using stats.zcore and other times writing the eq out)
+    cnz: The z-scored measure of a noisy voxel count where the noisy voxels are
+         the voxels with large beta estimates, but aren't part of clusters
+    Rz: z-scored rho values (why aren't this log scaled, like kappa in Ktz?)
+    mmix_kurt: Probably a rough measure of the spikiness of each component's
+        time series in the ICA mixing matrix
+    fdist_z: z-score of fdist, which is probably a measure of high freq info
+        in the spatial FFT of the components (with lower being more high freq?)
+
+    NOT in fz:
+    spz: Z-scored measure probably of how much high freq is in the data. Larger
+        values mean more bins of the FFT have over 1/4 the power of the maximum
+        bin (read about spr above for more info)
+    Rtz: Z-scored natural log of the Rho values
+    Dz: Z-scored Fisher Z transformed dice values of the overlap between
+        clusters for the F stats and clusters of the ICA spatial beta maps with
+        roughly the same number of voxels as in the clustered F maps.
+        Dz saves this for the R2 model, there are also Dice coefs for the S0
+        model in dice_tbl
     """
     LGR.debug('Creating feature space of component properties')
     fdist_pre = fdist.copy()
@@ -281,13 +374,17 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     fz = np.array([Tz, Vz, Ktz, KRr, cnz, Rz, mmix_kurt, fdist_z])
 
     """
+    METRICS Kcut, Rcut
     Step 3: Make initial guess of where BOLD components are and use DBSCAN
     to exclude noise components and find a sample set of 'good' components
     """
     LGR.debug('Making initial guess of BOLD components')
+    # The F threshold for the echo fit (based on the # of echos) for p<0.05
+    #    p<0.025, and p<0.001 (Confirm this is accurate since the function
+    #    contains a lookup table rather than a calculation)
+    F05, F025, F01 = utils.getfbounds(n_echos)
     # epsmap is [index,level of overlap with dicemask,
     # number of high Rho components]
-    F05, F025, F01 = utils.getfbounds(n_echos)
     epsmap = []
     Rhos_sorted = np.array(sorted(seldict['Rhos']))[::-1]
     # Make an initial guess as to number of good components based on
