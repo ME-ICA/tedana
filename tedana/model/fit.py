@@ -414,7 +414,8 @@ def spatclust(img, min_cluster_size, threshold=None, index=None, mask=None):
     Returns
     -------
     clustered : :obj:`numpy.ndarray`
-        Boolean array of clustered (and thresholded) `img` data
+        Binarized array (values are 0 or 1) of clustered (and thresholded)
+        `img` data
     """
 
     # we need a 4D image for `niimg.iter_img`, below

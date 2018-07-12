@@ -61,10 +61,30 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         Indices of rejected (non-BOLD) components in `mmix`
     midk : list
         Indices of mid-K (questionable) components in `mmix`
+        These components are typically removed from the data during denoising
     ign : list
         Indices of ignored components in `mmix`
+        Ignored components are considered to have too low variance to matter.
+        They are not processed through the accept vs reject decision tree and
+        are NOT removed during the denoising process
     """
 
+    """
+    There are sections of this code that calculate metrics that are used in
+    the decision tree for the selection process and other sections that
+    are part of the decision tree. Certain comments are prefaced with METRIC
+    and variable names to make clear which are metrics and others are prefaced
+    with SELETION to make clear which are for applying metrics. These
+    distinctions will hopefully make it easier to better modularize this
+    function.
+    """
+
+    """
+    If seldict exists, save it into a pickle file called compseldata.pklbz
+    that can be loaded directly into python for future analyses
+    If seldict=None, load it from the pre-saved pickle file to use for the
+    rest of this function
+    """
     if filecsdata:
         import bz2
         if seldict is not None:
@@ -79,13 +99,20 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
                 LGR.warning('Failed to load component selection data')
                 return None
 
-    # List of components
+    """
+    List of components
+    nc and ncl start out as an ordered list of the component numbers
+    nc is constant throughout the function. ncl changes based on comp selection
+    """
     midk = []
     ign = []
     nc = np.arange(len(seldict['Kappas']))
     ncl = np.arange(len(seldict['Kappas']))
 
-    # If user has specified components to accept manually
+    """
+    If user has specified components to accept manually, just assign those
+    components to the accepted and rejected comp lists and end the function
+    """
     if manacc:
         acc = sorted([int(vv) for vv in manacc.split(',')])
         midk = []
@@ -93,7 +120,13 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         return acc, rej, midk, []  # Add string for ign
 
     """
-    Do some tallies for no. of significant voxels
+    METRICS: countsigFS0 countsigFR2
+    F_S0_clmaps & F_R2_clmaps are the thresholded & binarized clustered maps of
+    significant fits for the separate S0 and R2 cross-echo models per component.
+    Since the values are 0 or 1, the countsig variables are a count of the
+    significant voxels per component.
+    The cluster size is a function of the # of voxels in the mask.
+    The cluster threshold is based on the # of echos acquired
     """
     countsigFS0 = seldict['F_S0_clmaps'].sum(0)
     countsigFR2 = seldict['F_R2_clmaps'].sum(0)
@@ -101,6 +134,26 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
 
     """
     Make table of dice values
+    METRICS: dice_tbl
+    dice_FR2, dice_FS0 are calculated for each component and the concatinated
+    values are in dice_tbl
+    Br_clmaps_R2 and Br_clmaps_R2 are binarized clustered Z_maps.
+    The volume being clustered is the rank order indices of the absolute value
+    of the beta values for the fit between the optimally combined time series
+    and the mixing matrix (i.e. the lowest beta value is 1 and the highest is
+    the # of voxels).
+    The cluster size is a function of the # of voxels in the mask.
+    The cluster threshold are the voxels with beta ranks greater than
+    countsigFS0 or countsigFR2.
+    These dice values are the Dice-Sorenson index for the Br_clmap and the
+    F_??_clmap.
+    If handwerkerd understands this correctly, If the voxels with the above
+    threshold F stats are clustered in the same voxels with the highest beta
+    values, then the dice coefficient will be 1. If the high F or beta values
+    aren't spatially clustered (i.e. the component map is less spatially smooth)
+    or the clusters are in different locations (i.e. voxels with high betas)
+    are also noisers so they have lower F values, then the dice coefficients
+    will be lower
     """
     dice_tbl = np.zeros([nc.shape[0], 2])
     for ii in ncl:
@@ -113,6 +166,24 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
 
     """
     Make table of noise gain
+    METRICS: countnoise, counts_FR2_Z tt_table
+    (This is a bit confusing & is handwerkerd's attempt and making sense of this)
+    seldict['Z_maps'] is the Fisher Z normalized beta fits for the optimally
+    combined time series and the mixing matrix. Z_clmaps is a binarized cluster
+    of Z_maps with the cluster size based on the # of voxels and the cluster
+    threshold of 1.95. utils.andb is a sum of the True values in arrays so
+    comp_noise_sel is true for voxels where the Z values are greater than 1.95
+    but not part of a cluster of Z values that are greater than 1.95.
+    countnoise is the # of voxels per component where comp_noise_sel is true.
+
+    counts_FR2_Z is the number of voxels with Z values above the threshold
+    that are in clusters (signal) and the number outside of clusters (noise)
+
+    tt_table is a bit confusing. For each component, the first index is
+    some type of normalized signal/noise t statistic and the second is the
+    p value for the signal/noise t statistic. In general, these should be
+    bigger or have lower p values when most of the Z values above threshold
+    are inside clusters.
     """
     tt_table = np.zeros([len(nc), 4])
     counts_FR2_Z = np.zeros([len(nc), 2])
