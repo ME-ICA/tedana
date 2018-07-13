@@ -89,16 +89,20 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     Intermediate Metrics:  dice_tbl countnoise
         counts_FR2_Z tt_table mmix_kurt mmix_std
         spr fproj_arr_val fdist
-        spz, Rtz, Dz
+        Rtz, Dz
 
-    Applied Metrices:
+    Applied Metrices (this is a running list as more comment is hypercommented):
         seldict['Rhos']
         seldict['Kappas']
+        seldict['varex']
         countsigFS0
         countsigFR2
         fz (a combination of multiple z-scored metrics: tt_table,
             seldict['varex'], seldict['Kappa'], seldict['Rho'], countnoise,
             mmix_kurt, fdist)
+        tt_table[:,0]
+        spz
+        KRcut
     """
 
     """
@@ -206,10 +210,12 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     that are in clusters (signal) and the number outside of clusters (noise)
 
     tt_table is a bit confusing. For each component, the first index is
-    some type of normalized signal/noise t statistic and the second is the
-    p value for the signal/noise t statistic. In general, these should be
-    bigger t or have lower p values when most of the Z values above threshold
-    are inside clusters.
+    some type of normalized, log10, signal/noise t statistic and the second is
+    the p value for the signal/noise t statistic (for the R2 model).
+    In general, these should be bigger t or have lower p values when most of
+    the Z values above threshold are inside clusters.
+    Because of the log10, values below 1 are negative, which is later used as
+    a threshold.
     """
     tt_table = np.zeros([len(nc), 4])
     counts_FR2_Z = np.zeros([len(nc), 2])
@@ -374,7 +380,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     fz = np.array([Tz, Vz, Ktz, KRr, cnz, Rz, mmix_kurt, fdist_z])
 
     """
-    METRICS Kcut, Rcut
+    METRICS Kcut, Rcut, KRcut, KRcutguesses, Khighelbowval
     Step 3: Make initial guess of where BOLD components are and use DBSCAN
     to exclude noise components and find a sample set of 'good' components
     """
@@ -389,39 +395,83 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     Rhos_sorted = np.array(sorted(seldict['Rhos']))[::-1]
     # Make an initial guess as to number of good components based on
     # consensus of control points across Rhos and Kappas
+    # For terminology later, typically getelbow _aggr > _mod > _cons
+    #  though this might not be universally true. A more "inclusive" threshold
+    #  has a lower kappa since that means more components are above that thresh
+    #  and are likely to be accepted. For Rho, a more "inclusive" threshold is
+    #  higher since that means fewer components will be rejected based on rho.
+    # KRcut seems weird to handwerkerd. I see that the thresholds are slightly
+    # shifted for kappa & rho later in the code, but why would we ever want to
+    # set a common threhsold reference point for both? These are two different
+    # elbows on two different data sets.
     KRcutguesses = [getelbow_mod(seldict['Rhos']), getelbow_cons(seldict['Rhos']),
                     getelbow_aggr(seldict['Rhos']), getelbow_mod(seldict['Kappas']),
                     getelbow_cons(seldict['Kappas']), getelbow_aggr(seldict['Kappas'])]
+    KRcut = np.median(KRcutguesses)
+
+    # Also a bit werid to handwerkerd. This is the 75th percentile of Kappa F
+    # stats of the components with the 3 elbow selection criteria and the
+    # F states for 3 significance thresholds based on the # of echos.
+    # This is some type of way to get a significance criterion for a component
+    # fit, but it's include why this specific criterion is useful.
     Khighelbowval = stats.scoreatpercentile([getelbow_mod(seldict['Kappas'], val=True),
                                              getelbow_cons(seldict['Kappas'], val=True),
                                              getelbow_aggr(seldict['Kappas'], val=True)] +
                                             list(utils.getfbounds(n_echos)),
                                             75, interpolation_method='lower')
-    KRcut = np.median(KRcutguesses)
 
-    # only use exclusive when inclusive is extremely inclusive - double KRcut
+    # Default to the most inclusive kappa threshold (_cons) unless:
+    # 1. That threshold is more than twice the median of Kappa & Rho thresholds
+    # 2. and the moderate elbow is more inclusive than a p=0.01
+    # handwerkerd: This actually seems like a way to avoid using the theoretically
+    #   most liberal threshold only when there was a bad estimate and _mod is
+    #   is more inclusive. My one concern is that it's an odd way to test that
+    #   the _mod elbow is any better. WHy not at least see if _mod < _cons?
     cond1 = getelbow_cons(seldict['Kappas']) > KRcut * 2
     cond2 = getelbow_mod(seldict['Kappas'], val=True) < F01
     if cond1 and cond2:
         Kcut = getelbow_mod(seldict['Kappas'], val=True)
     else:
         Kcut = getelbow_cons(seldict['Kappas'], val=True)
-    # only use inclusive when exclusive is extremely exclusive - half KRcut
-    # (remember for Rho inclusive is higher, so want both Kappa and Rho
-    # to defaut to lower)
+
+    # handwerkerd: The goal seems to be to maximize the rejected components
+    #   based on the rho cut by defaulting to a lower Rcut value. Again, if
+    #   that is the goal, why not just test if _mod < _cons?
     if getelbow_cons(seldict['Rhos']) > KRcut * 2:
         Rcut = getelbow_mod(seldict['Rhos'], val=True)
     # for above, consider something like:
     # min([getelbow_mod(Rhos,True),sorted(Rhos)[::-1][KRguess] ])
     else:
         Rcut = getelbow_cons(seldict['Rhos'], val=True)
+
+    # Rcut should never be higher than Kcut (handwerkerd: not sure why)
     if Rcut > Kcut:
-        Kcut = Rcut  # Rcut should never be higher than Kcut
+        Kcut = Rcut
+
+    # KRelbow has a 2 for componts that are above the Kappa accept threshold
+    # and below the rho reject threshold
     KRelbow = utils.andb([seldict['Kappas'] > Kcut, seldict['Rhos'] < Rcut])
+
     # Make guess of Kundu et al 2011 plus remove high frequencies,
     # generally high variance, and high variance given low Kappa
+    # the first index of tt_table is a t static of a what handwerkerd thinks
+    #  is a spatial noise metric. Since log10 of these values are taken the >0
+    #  threshold means the metric is >1. tt_lim seems to be a fairly aggressive
+    #  percentile that is then divided by 3.
     tt_lim = stats.scoreatpercentile(tt_table[tt_table[:, 0] > 0, 0],
                                      75, interpolation_method='lower') / 3
+    # KRguess is a list of components to potentially accept. it starts with a
+    #  list of components that cross the Kcut and Rcut threshold and weren't
+    #  previously rejected for other reasons. From that list, it removes more
+    #  components based on several additional criteria:
+    #  1. tt_table less than the tt_lim threshold (spatial noisiness metric)
+    #  2. spz (a z-scored probably high spatial freq metric) >1
+    #  3. Vz (a z-scored variance explained metric) >2
+    #  4. If both (seems to be if a component has a relatively high variance
+    #      the acceptance threshold for Kappa values is doubled):
+    #     A. The variance explained is greater than half the KRcut highest
+    #         variance component
+    #    B. Kappa is less than twice Kcut
     KRguess = np.setdiff1d(np.setdiff1d(nc[KRelbow == 2], rej),
                            np.union1d(nc[tt_table[:, 0] < tt_lim],
                            np.union1d(np.union1d(nc[spz > 1],
@@ -432,10 +482,16 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     guessmask = np.zeros(len(nc))
     guessmask[KRguess] = 1
 
-    # Throw lower-risk bad components out
+    # Throw lower-risk bad components out based on 3 criteria all being true:
+    #  1. tt_table (a spatial noisiness metric) <0
+    #  2. A components variance explains is greater than the median variance
+    #     explained
+    #  3. The component index is greater than the KRcut index. Since the
+    #      components are sorted by kappa, this is another kappa thresholding)
     rejB = ncl[utils.andb([tt_table[ncl, 0] < 0,
                            seldict['varex'][ncl] > np.median(seldict['varex']), ncl > KRcut]) == 3]
     rej = np.union1d(rej, rejB)
+    # adjust ncl again to only contain the remainng non-rejected components
     ncl = np.setdiff1d(ncl, rej)
 
     LGR.debug('Using DBSCAN to find optimal set of "good" BOLD components')
