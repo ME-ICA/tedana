@@ -16,7 +16,7 @@ def make_optcom(data, t2s, tes, mask, combmode, verbose=True):
     ----------
     data : (S x E x T) :obj:`numpy.ndarray`
         Concatenated BOLD data.
-    t2 : (S,) :obj:`numpy.ndarray`
+    t2s : (S,) or (S x T) :obj:`numpy.ndarray`
         Estimated T2* values.
     tes : :obj:`numpy.ndarray`
         Array of TEs, in seconds.
