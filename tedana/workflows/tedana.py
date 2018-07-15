@@ -139,7 +139,7 @@ def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
 
     os.chdir(out_dir)
 
-    LGR.info('Computing adapative mask')
+    LGR.info('Computing adaptive mask')
     mask, masksum = utils.make_adaptive_mask(catd, minimum=False, getsum=True)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
 
@@ -206,9 +206,11 @@ def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
             acc, rej, midk, empty = utils.ctabsel(ctab)
 
     if len(acc) == 0:
-        LGR.warning('No BOLD components detected! Please check data and results!')
+        LGR.warning('No BOLD components detected! Please check data and '
+                    'results!')
 
-    utils.writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_img)
+    utils.writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk,
+                       empty, ref_img)
     utils.gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img)
     if dne:
         utils.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
