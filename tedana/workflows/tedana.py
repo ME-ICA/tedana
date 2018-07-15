@@ -28,8 +28,8 @@ PROCEDURE 2a: Model fitting and component selection routines
 def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
            gscontrol=True, kdaw=10., rdaw=1., conv=2.5e-5, ste=-1,
            combmode='t2s', dne=False, initcost='tanh', finalcost='tanh',
-           stabilize=False, fout=False, filecsdata=False, label=None,
-           fixed_seed=42, debug=False, quiet=False):
+           stabilize=False, fout=False, filecsdata=False, wvpca=False,
+           label=None, fixed_seed=42, debug=False, quiet=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -79,10 +79,17 @@ def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         Save output TE-dependence Kappa/Rho SPMs. Default is False.
     filecsdata : :obj:`bool`, optional
         Save component selection data to file. Default is False.
+    wvpca : :obj:`bool`, optional
+        Whether or not to perform PCA on wavelet-transformed data.
+        Default is False.
     label : :obj:`str` or :obj:`None`, optional
         Label for output directory. Default is None.
     fixed_seed : :obj:`int`, optional
         Seeded value for ICA, for reproducibility.
+    debug : :obj:`bool`, optional
+        Whether to run in debugging mode or not. Default is False.
+    quiet : :obj:`bool`, optional
+        If True, suppresses logging/printing of messages. Default is False.
     """
 
     # ensure tes are in appropriate format
@@ -161,11 +168,13 @@ def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         catd, OCcatd = model.gscontrol_raw(catd, OCcatd, n_echos, ref_img)
 
     if mixm is None:
-        n_components, dd = decomposition.tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
-                                                stabilize, ref_img,
-                                                tes=tes, kdaw=kdaw, rdaw=rdaw, ste=ste)
-        mmix_orig = decomposition.tedica(n_components, dd, conv, fixed_seed, cost=initcost,
-                                         final_cost=finalcost, verbose=debug)
+        n_components, dd = decomposition.tedpca(catd, OCcatd, combmode, mask,
+                                                t2s, t2sG, stabilize, ref_img,
+                                                tes=tes, kdaw=kdaw, rdaw=rdaw,
+                                                ste=ste, wvpca=wvpca)
+        mmix_orig = decomposition.tedica(n_components, dd, conv, fixed_seed,
+                                         cost=initcost, final_cost=finalcost,
+                                         verbose=debug)
         np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
         LGR.info('Making second component selection guess from ICA results')
         seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,

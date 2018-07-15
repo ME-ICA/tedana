@@ -3,6 +3,7 @@ Utility functions for tedana decomposition
 """
 import logging
 
+import pywt
 import numpy as np
 from scipy import stats
 
@@ -40,3 +41,51 @@ def eimask(dd, ees=None):
         imask[np.logical_and(m > lthr, m < hthr), ee] = True
 
     return imask
+
+
+def dwtmat(mmix):
+    """
+    Wavelet transform data.
+
+    Parameters
+    ----------
+    mmix : :obj:`numpy.ndarray`
+        Data to wavelet transform.
+
+    Returns
+    -------
+    mmix_wt : :obj:`numpy.ndarray`
+        Wavelet-transformed data.
+    cAlen : :obj:`int`
+        Index of some kind?
+    """
+    llt = len(np.hstack(pywt.dwt(mmix[0], 'db2')))
+    mmix_wt = np.zeros([mmix.shape[0], llt])
+    for ii in range(mmix_wt.shape[0]):
+        wtx = pywt.dwt(mmix[ii], 'db2')
+        mmix_wt[ii] = np.hstack(wtx)
+    cAlen = len(wtx[0])
+    return mmix_wt, cAlen
+
+
+def idwtmat(mmix_wt, cAl):
+    """
+    Invert wavelet transform data.
+
+    Parameters
+    ----------
+    mmix_wt : :obj:`numpy.ndarray`
+        Wavelet-transformed data.
+    cAl : :obj:`int`
+        Index of some kind?
+
+    Returns
+    -------
+    mmix_iwt : :obj:`numpy.ndarray`
+        Inverse wavelet-transformed data.
+    """
+    lt = len(pywt.idwt(mmix_wt[0, :cAl], mmix_wt[0, cAl:], 'db2'))
+    mmix_iwt = np.zeros([mmix_wt.shape[0], lt])
+    for ii in range(mmix_iwt.shape[0]):
+        mmix_iwt[ii] = pywt.idwt(mmix_wt[ii, :cAl], mmix_wt[ii, cAl:], 'db2')
+    return mmix_iwt

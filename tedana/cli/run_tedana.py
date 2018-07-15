@@ -142,6 +142,11 @@ def get_parser():
                         help='Save component selection data',
                         action='store_true',
                         default=False)
+    parser.add_argument('--wvpca',
+                        dest='wvpca',
+                        help='Perform PCA on wavelet-transformed data',
+                        action='store_true',
+                        default=False)
     parser.add_argument('--label',
                         dest='label',
                         type=str,
