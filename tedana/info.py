@@ -5,7 +5,7 @@
 Base module variables
 """
 
-__version__ = '0.0.1'
+__version__ = '0.0.3'
 __author__ = 'tedana developers'
 __copyright__ = 'Copyright 2017, tedana developers'
 __credits__ = ['Elizabeth DuPre', 'Prantik Kundu', 'Ross Markello',
@@ -52,6 +52,10 @@ EXTRA_REQUIRES = {
 
 # Enable a handle to install all extra dependencies at once
 EXTRA_REQUIRES['all'] = [val for _, val in list(EXTRA_REQUIRES.items())]
+
+PACKAGE_DATA = {
+    'tedana': ['tests/data']
+}
 
 # Package classifiers
 CLASSIFIERS = [

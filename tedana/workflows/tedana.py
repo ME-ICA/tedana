@@ -90,7 +90,7 @@ def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     n_echos = len(tes)
 
     # coerce data to samples x echos x time array
-    LGR.info('Loading input data: {}'.format([op.abspath(f) for f in data]))
+    LGR.info('Loading input data: {}'.format([f for f in data]))
     catd, ref_img = utils.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
@@ -102,10 +102,15 @@ def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
 
     kdaw, rdaw = float(kdaw), float(rdaw)
 
+    try:
+        ref_label = os.path.basename(ref_img).split('.')[0]
+    except TypeError:
+        ref_label = os.path.basename(str(data[0])).split('.')[0]
+
     if label is not None:
-        out_dir = 'TED.{0}'.format(label)
+        out_dir = 'TED.{0}.{1}'.format(ref_label, label)
     else:
-        out_dir = 'TED'
+        out_dir = 'TED.{0}'.format(ref_label)
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
         LGR.info('Creating output directory: {}'.format(out_dir))

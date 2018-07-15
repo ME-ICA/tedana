@@ -125,8 +125,8 @@ def load_data(data, n_echos=None):
     -------
     fdata : (S x E x T) :obj:`numpy.ndarray`
         Output data where `S` is samples, `E` is echos, and `T` is time
-    ref_img : str
-        Filepath to reference image for saving output files
+    ref_img : str or :obj:`numpy.ndarray`
+        Filepath to reference image for saving output files or NIFTI-like array
     """
     if n_echos is None:
         raise ValueError('Number of echos must be specified. '
@@ -290,7 +290,7 @@ def filewrite(data, filename, ref_img, gzip=False, copy_header=True,
         # save hemispheres separately
         for n, (hdata, hemi) in enumerate(zip(np.split(data, 2, axis=0),
                                               ['L', 'R'])):
-            out = new_gii_like(ref_img[n], hdata,
+            out = new_gii_like(ref_img, hdata,
                                copy_header=copy_header,
                                copy_meta=copy_meta)
             name = '{}.{}.func.gii'.format(root, hemi)

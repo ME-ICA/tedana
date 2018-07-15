@@ -63,4 +63,5 @@ def test_outputs():
         'sphis_hik.nii'
     ]
     for fn in nifti_test_list:
-        compare_nifti(fn, Path('/home/neuro/data/TED/'), Path('/home/neuro/code/TED/'))
+        compare_nifti(fn, Path('/home/neuro/data/TED/'),
+                      Path('/home/neuro/code/TED.zcat_ffd/'))
