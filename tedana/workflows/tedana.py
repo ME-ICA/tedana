@@ -146,12 +146,12 @@ def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                       interpolation_method='lower')
     LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
     t2s[t2s > cap_t2s * 10] = cap_t2s
-    utils.filewrite(t2s, op.join(out_dir, 't2sv'), ref_img)
-    utils.filewrite(s0, op.join(out_dir, 's0v'), ref_img)
-    utils.filewrite(t2ss, op.join(out_dir, 't2ss'), ref_img)
-    utils.filewrite(s0s, op.join(out_dir, 's0vs'), ref_img)
-    utils.filewrite(t2sG, op.join(out_dir, 't2svG'), ref_img)
-    utils.filewrite(s0G, op.join(out_dir, 's0vG'), ref_img)
+    utils.filewrite(t2s, op.join(out_dir, 't2sv.nii'), ref_img)
+    utils.filewrite(s0, op.join(out_dir, 's0v.nii'), ref_img)
+    utils.filewrite(t2ss, op.join(out_dir, 't2ss.nii'), ref_img)
+    utils.filewrite(s0s, op.join(out_dir, 's0vs.nii'), ref_img)
+    utils.filewrite(t2sG, op.join(out_dir, 't2svG.nii'), ref_img)
+    utils.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
 
     # optimally combine data
     OCcatd = model.make_optcom(catd, t2sG, tes, mask, combmode)
