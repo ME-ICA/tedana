@@ -59,7 +59,7 @@ RUN echo "Downloading Miniconda installer ..." \
 # Create py3 conda environment
 #-----------------------------
 RUN conda create -y -q --name py36 python=3.6 \
-    	numpy scikit-learn mdp nilearn scipy 'nibabel>=2.1.0' \
+    	numpy scikit-learn mdp pywt nilearn scipy 'nibabel>=2.1.0' \
     && sync && conda clean -tipsy && sync \
     && bash -c "source activate py36 \
     && pip install -q --no-cache-dir \
