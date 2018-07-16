@@ -77,21 +77,24 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     with SELECTION to make clear which are for applying metrics. METRICs tend
     to be summary values that containt a signal number per component. These
     distinctions will hopefully make it easier to better modularize this
-    function.
+    function. The work to fully comment all the steps in this function is not
+    yet completed.
 
     Note there are some variables that are calculated in one section of the code
     that are later transformed into another metric that is actually part of a
     selection criterion. This running list is an attempt to summarize
     intermediate metrics vs the metrics that are actually used in decision
     steps. For applied metrics that are made up of intermediate metrics defined
-    in earlier sections of the code, the constituent metrics are noted
+    in earlier sections of the code, the constituent metrics are noted. More
+    metrics will be added to the applied metrics section has the commenting of
+    this function continues.
 
     Intermediate Metrics:  dice_tbl countnoise
         counts_FR2_Z tt_table mmix_kurt mmix_std
         spr fproj_arr_val fdist
         Rtz, Dz
 
-    Applied Metrices (this is a running list as more comment is hypercommented):
+    Applied Metrices:
         seldict['Rhos']
         seldict['Kappas']
         seldict['varex']
@@ -409,7 +412,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
                     getelbow_cons(seldict['Kappas']), getelbow_aggr(seldict['Kappas'])]
     KRcut = np.median(KRcutguesses)
 
-    # Also a bit werid to handwerkerd. This is the 75th percentile of Kappa F
+    # Also a bit weird to handwerkerd. This is the 75th percentile of Kappa F
     # stats of the components with the 3 elbow selection criteria and the
     # F states for 3 significance thresholds based on the # of echos.
     # This is some type of way to get a significance criterion for a component
@@ -494,6 +497,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     # adjust ncl again to only contain the remainng non-rejected components
     ncl = np.setdiff1d(ncl, rej)
 
+    # This is where handwerkerd has paused in hypercommenting the function.
     LGR.debug('Using DBSCAN to find optimal set of "good" BOLD components')
     for ii in range(20000):
         eps = .005 + ii * .005
