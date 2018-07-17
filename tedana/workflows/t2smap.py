@@ -108,7 +108,7 @@ def t2smap(data, tes, fitmode='all', combmode='t2s', label=None):
 
     LGR.info('Computing optimal combination')
     # optimally combine data
-    OCcatd = model.make_optcom(catd, t2s_limited, tes, mask, combmode)
+    OCcatd = model.make_optcom(catd, t2s_full, tes, mask, combmode)
 
     # clean up numerical errors
     for arr in (OCcatd, s0_limited, t2s_limited):
