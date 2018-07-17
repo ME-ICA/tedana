@@ -31,6 +31,31 @@ def t2smap(data, tes, fitmode='all', combmode='t2s', label=None):
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
     label : :obj:`str` or :obj:`None`, optional
         Label for output directory. Default is None.
+
+    Notes
+    -----
+    This workflow writes out several files, which are written out to a folder
+    named TED.[ref_label].[label] if ``label`` is provided and TED.[ref_label]
+    if not. ``ref_label`` is determined based on the name of the first ``data``
+    file.
+
+    Files are listed below:
+
+    ======================    =================================================
+    Filename                  Content
+    ======================    =================================================
+    t2sv.nii                  Limited estimated T2* 3D map or 4D timeseries.
+                              Will be a 3D map if ``fitmode`` is 'all' and a
+                              4D timeseries if it is 'ts'.
+    s0v.nii                   Limited S0 3D map or 4D timeseries.
+    t2svG.nii                 Full T2* map/timeseries. The difference between
+                              the limited and full maps is that, for voxels
+                              affected by dropout where only one echo contains
+                              good data, the full map uses the single echo's
+                              value while the limited map has a NaN.
+    s0vG.nii                  Full S0 map/timeseries.
+    ts_OC.nii                 Optimally combined timeseries.
+    ======================    =================================================
     """
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
@@ -60,7 +85,6 @@ def t2smap(data, tes, fitmode='all', combmode='t2s', label=None):
 
     LGR.info('Computing adaptive mask')
     mask, masksum = utils.make_adaptive_mask(catd, minimum=False, getsum=True)
-    utils.filewrite(masksum, 'masksum%s' % suf, ref_img, copy_header=False)
 
     LGR.info('Computing adaptive T2* map')
     if fitmode == 'all':
@@ -84,18 +108,15 @@ def t2smap(data, tes, fitmode='all', combmode='t2s', label=None):
     # optimally combine data
     OCcatd = model.make_optcom(catd, t2s_limited, tes, mask, combmode)
 
-    # Clean up numerical errors
-    t2sm = t2s_limited.copy()
-    for arr in (OCcatd, s0_limited, t2s_limited, t2sm):
+    # clean up numerical errors
+    for arr in (OCcatd, s0_limited, t2s_limited):
         np.nan_to_num(arr, copy=False)
 
     s0_limited[s0_limited < 0] = 0
     t2s_limited[t2s_limited < 0] = 0
-    t2sm[t2sm < 0] = 0
 
     utils.filewrite(t2s_limited, op.join(out_dir, 't2sv'), ref_img)
     utils.filewrite(s0_limited, op.join(out_dir, 's0v'), ref_img)
     utils.filewrite(t2s_full, op.join(out_dir, 't2svG'), ref_img)
     utils.filewrite(s0_full, op.join(out_dir, 's0vG'), ref_img)
     utils.filewrite(OCcatd, op.join(out_dir, 'ts_OC'), ref_img)
-    utils.filewrite(t2sm, op.join(out_dir, 't2sm'), ref_img)

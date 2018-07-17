@@ -84,12 +84,72 @@ def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         Default is False.
     label : :obj:`str` or :obj:`None`, optional
         Label for output directory. Default is None.
+
+    Other Parameters
+    ----------------
     fixed_seed : :obj:`int`, optional
         Seeded value for ICA, for reproducibility.
     debug : :obj:`bool`, optional
         Whether to run in debugging mode or not. Default is False.
     quiet : :obj:`bool`, optional
         If True, suppresses logging/printing of messages. Default is False.
+
+    Notes
+    -----
+    This workflow writes out several files, which are written out to a folder
+    named TED.[ref_label].[label] if ``label`` is provided and TED.[ref_label]
+    if not. ``ref_label`` is determined based on the name of the first ``data``
+    file.
+
+    Files are listed below:
+
+    ======================    =================================================
+    Filename                  Content
+    ======================    =================================================
+    t2sv.nii                  Limited estimated T2* 3D map.
+                              The difference between the limited and full maps
+                              is that, for voxels affected by dropout where
+                              only one echo contains good data, the full map
+                              uses the single echo's value while the limited
+                              map has a NaN.
+    s0v.nii                   Limited S0 3D map.
+                              The difference between the limited and full maps
+                              is that, for voxels affected by dropout where
+                              only one echo contains good data, the full map
+                              uses the single echo's value while the limited
+                              map has a NaN.
+    t2ss.nii                  ???
+    s0vs.nii                  ???
+    t2svG.nii                 Full T2* map/timeseries. The difference between
+                              the limited and full maps is that, for voxels
+                              affected by dropout where only one echo contains
+                              good data, the full map uses the single echo's
+                              value while the limited map has a NaN.
+    s0vG.nii                  Full S0 map/timeseries.
+    __meica_mix.1D            A mixing matrix
+    meica_mix.1D              Another mixing matrix
+    ts_OC.nii                 Optimally combined timeseries.
+    betas_OC.nii              Full ICA coefficient feature set.
+    betas_hik_OC.nii          Denoised ICA coefficient feature set
+    feats_OC2.nii             Z-normalized spatial component maps
+    comp_table.txt            Component table
+    sphis_hik.nii             T1-like effect
+    hik_ts_OC_T1c.nii         T1 corrected time series by regression
+    dn_ts_OC_T1c.nii          ME-DN version of T1 corrected time series
+    betas_hik_OC_T1c.nii      T1-GS corrected components
+    meica_mix_T1c.1D          T1-GS corrected mixing matrix
+    ======================    =================================================
+
+    If ``dne`` is set to True:
+
+    ======================    =================================================
+    Filename                  Content
+    ======================    =================================================
+    hik_ts_e[echo].nii        High-Kappa timeseries for echo number ``echo``
+    midk_ts_e[echo].nii       Mid-Kappa timeseries for echo number ``echo``
+    lowk_ts_e[echo].nii       Low-Kappa timeseries for echo number ``echo``
+    dn_ts_e[echo].nii         Denoised timeseries for echo number ``echo``
+    ======================    =================================================
     """
 
     # ensure tes are in appropriate format
