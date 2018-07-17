@@ -106,7 +106,6 @@ class TestT2smap():
         img = nib.load(op.join(out_dir, 'ts_OC.nii'))
         assert len(img.shape) == 4
 
-    @pytest.mark.xfail
     def test_basic_t2smap4(self):
         """
         A very simple test, to confirm that t2smap creates output
@@ -130,13 +129,13 @@ class TestT2smap():
         # Check outputs
         assert op.isfile(op.join(out_dir, 'ts_OC.nii'))
         img = nib.load(op.join(out_dir, 't2sv.nii'))
-        assert len(img.shape) == 3
+        assert len(img.shape) == 4
         img = nib.load(op.join(out_dir, 's0v.nii'))
-        assert len(img.shape) == 3
+        assert len(img.shape) == 4
         img = nib.load(op.join(out_dir, 't2svG.nii'))
-        assert len(img.shape) == 3
+        assert len(img.shape) == 4
         img = nib.load(op.join(out_dir, 's0vG.nii'))
-        assert len(img.shape) == 3
+        assert len(img.shape) == 4
         img = nib.load(op.join(out_dir, 'ts_OC.nii'))
         assert len(img.shape) == 4
 

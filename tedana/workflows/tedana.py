@@ -221,7 +221,7 @@ def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     utils.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
 
     # optimally combine data
-    OCcatd = model.make_optcom(catd, t2sG, tes, mask, combmode)
+    OCcatd = model.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
 
     # regress out global signal unless explicitly not desired
     if gscontrol:
