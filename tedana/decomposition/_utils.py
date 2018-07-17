@@ -29,7 +29,7 @@ def eimask(dd, ees=None):
 
     if ees is None:
         ees = range(dd.shape[1])
-    imask = np.zeros([dd.shape[0], len(ees)], dtype=bool)
+    imask = np.zeros((dd.shape[0], len(ees)), dtype=bool)
     for ee in ees:
         LGR.debug('Creating eimask for echo {}'.format(ee))
         perc98 = stats.scoreatpercentile(dd[:, ee, :].flatten(), 98,
@@ -97,7 +97,7 @@ def idwtmat(mmix_wt, n_coefs_approx):
     coefs_approx = mmix_wt[:, :n_coefs_approx]
     coefs_detail = mmix_wt[:, n_coefs_approx:]
     n_trs = len(pywt.idwt(coefs_approx[0, :], coefs_detail[0, :], 'db2'))
-    mmix_iwt = np.zeros(n_samp, n_trs)
+    mmix_iwt = np.zeros((n_samp, n_trs))
     for i_samp in range(n_samp):
         mmix_iwt[i_samp] = pywt.idwt(coefs_approx[i_samp, :],
                                      coefs_detail[i_samp, :], 'db2')
