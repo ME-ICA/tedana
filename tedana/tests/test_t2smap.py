@@ -4,7 +4,6 @@ Tests for tedana.
 import os.path as op
 from shutil import rmtree
 
-import pytest
 import nibabel as nib
 
 from tedana.cli import run_t2smap
