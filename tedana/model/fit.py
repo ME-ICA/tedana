@@ -64,7 +64,9 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     """
 
     # compute optimal combination of raw data
-    tsoc = model.make_optcom(catd, t2sG, tes, mask, combmode, verbose=False).astype(float)[mask]
+    tsoc = model.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode,
+                             verbose=False).astype(float)[mask]
+
     # demean optimal combination
     tsoc_dm = tsoc - tsoc.mean(axis=-1, keepdims=True)
 
