@@ -31,7 +31,7 @@ script:
           if [ "${COVERAGE}" == "1" ]; then
               TEST_ARGS="--cov-report term-missing --cov=tedana";
           fi
-          py.test --ignore=tedana/tests/test_tedana.py ${TEST_ARGS} tedana;
+          py.test --ignore=tedana/tests/test_tedana.py --ignore=tedana/tests/test_t2smap.py ${TEST_ARGS} tedana;
       fi
 
 after_success:
