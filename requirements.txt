@@ -4,7 +4,7 @@ scipy
 mdp
 nilearn
 nibabel>=2.1.0
-pywt
+pywavelets
 duecredit
 sphinx-argparse
 numpydoc
