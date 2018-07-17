@@ -117,8 +117,8 @@ def t2smap(data, tes, fitmode='all', combmode='t2s', label=None):
     s0_limited[s0_limited < 0] = 0
     t2s_limited[t2s_limited < 0] = 0
 
-    utils.filewrite(t2s_limited, op.join(out_dir, 't2sv'), ref_img)
-    utils.filewrite(s0_limited, op.join(out_dir, 's0v'), ref_img)
-    utils.filewrite(t2s_full, op.join(out_dir, 't2svG'), ref_img)
-    utils.filewrite(s0_full, op.join(out_dir, 's0vG'), ref_img)
-    utils.filewrite(OCcatd, op.join(out_dir, 'ts_OC'), ref_img)
+    utils.filewrite(t2s_limited, op.join(out_dir, 't2sv.nii'), ref_img)
+    utils.filewrite(s0_limited, op.join(out_dir, 's0v.nii'), ref_img)
+    utils.filewrite(t2s_full, op.join(out_dir, 't2svG.nii'), ref_img)
+    utils.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
+    utils.filewrite(OCcatd, op.join(out_dir, 'ts_OC.nii'), ref_img)
