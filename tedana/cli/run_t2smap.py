@@ -7,6 +7,10 @@ import argparse
 
 from tedana import workflows
 
+import logging
+logging.basicConfig(format='[%(levelname)s]: ++ %(message)s',
+                    level=logging.INFO)
+
 
 def is_valid_file(parser, arg):
     """
@@ -45,6 +49,16 @@ def get_parser():
                         type=float,
                         help='Echo times (in ms). E.g., 15.0 39.0 63.0',
                         required=True)
+    parser.add_argument('--fitmode',
+                        dest='fitmode',
+                        action='store',
+                        choices=['all', 'ts'],
+                        help=('Monoexponential model fitting scheme. '
+                              '"all" means that the model is fit, per voxel, '
+                              'across all timepoints. '
+                              '"ts" means that the model is fit, per voxel '
+                              'and per timepoint.'),
+                        default='all')
     parser.add_argument('--combmode',
                         dest='combmode',
                         action='store',
@@ -61,8 +75,12 @@ def get_parser():
 
 
 def main(argv=None):
-    """Entry point"""
+    """T2smap entry point"""
     options = get_parser().parse_args(argv)
+    if options.debug and not options.quiet:
+        logging.getLogger().setLevel(logging.DEBUG)
+    elif options.quiet:
+        logging.getLogger().setLevel(logging.WARNING)
     workflows.t2smap(**vars(options))
 
 

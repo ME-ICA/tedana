@@ -28,8 +28,8 @@ PROCEDURE 2a: Model fitting and component selection routines
 def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
            gscontrol=True, kdaw=10., rdaw=1., conv=2.5e-5, ste=-1,
            combmode='t2s', dne=False, initcost='tanh', finalcost='tanh',
-           stabilize=False, fout=False, filecsdata=False, label=None,
-           fixed_seed=42, debug=False, quiet=False):
+           stabilize=False, fout=False, filecsdata=False, wvpca=False,
+           label=None, fixed_seed=42, debug=False, quiet=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -79,10 +79,77 @@ def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         Save output TE-dependence Kappa/Rho SPMs. Default is False.
     filecsdata : :obj:`bool`, optional
         Save component selection data to file. Default is False.
+    wvpca : :obj:`bool`, optional
+        Whether or not to perform PCA on wavelet-transformed data.
+        Default is False.
     label : :obj:`str` or :obj:`None`, optional
         Label for output directory. Default is None.
+
+    Other Parameters
+    ----------------
     fixed_seed : :obj:`int`, optional
         Seeded value for ICA, for reproducibility.
+    debug : :obj:`bool`, optional
+        Whether to run in debugging mode or not. Default is False.
+    quiet : :obj:`bool`, optional
+        If True, suppresses logging/printing of messages. Default is False.
+
+    Notes
+    -----
+    This workflow writes out several files, which are written out to a folder
+    named TED.[ref_label].[label] if ``label`` is provided and TED.[ref_label]
+    if not. ``ref_label`` is determined based on the name of the first ``data``
+    file.
+
+    Files are listed below:
+
+    ======================    =================================================
+    Filename                  Content
+    ======================    =================================================
+    t2sv.nii                  Limited estimated T2* 3D map.
+                              The difference between the limited and full maps
+                              is that, for voxels affected by dropout where
+                              only one echo contains good data, the full map
+                              uses the single echo's value while the limited
+                              map has a NaN.
+    s0v.nii                   Limited S0 3D map.
+                              The difference between the limited and full maps
+                              is that, for voxels affected by dropout where
+                              only one echo contains good data, the full map
+                              uses the single echo's value while the limited
+                              map has a NaN.
+    t2ss.nii                  ???
+    s0vs.nii                  ???
+    t2svG.nii                 Full T2* map/timeseries. The difference between
+                              the limited and full maps is that, for voxels
+                              affected by dropout where only one echo contains
+                              good data, the full map uses the single echo's
+                              value while the limited map has a NaN.
+    s0vG.nii                  Full S0 map/timeseries.
+    __meica_mix.1D            A mixing matrix
+    meica_mix.1D              Another mixing matrix
+    ts_OC.nii                 Optimally combined timeseries.
+    betas_OC.nii              Full ICA coefficient feature set.
+    betas_hik_OC.nii          Denoised ICA coefficient feature set
+    feats_OC2.nii             Z-normalized spatial component maps
+    comp_table.txt            Component table
+    sphis_hik.nii             T1-like effect
+    hik_ts_OC_T1c.nii         T1 corrected time series by regression
+    dn_ts_OC_T1c.nii          ME-DN version of T1 corrected time series
+    betas_hik_OC_T1c.nii      T1-GS corrected components
+    meica_mix_T1c.1D          T1-GS corrected mixing matrix
+    ======================    =================================================
+
+    If ``dne`` is set to True:
+
+    ======================    =================================================
+    Filename                  Content
+    ======================    =================================================
+    hik_ts_e[echo].nii        High-Kappa timeseries for echo number ``echo``
+    midk_ts_e[echo].nii       Mid-Kappa timeseries for echo number ``echo``
+    lowk_ts_e[echo].nii       Low-Kappa timeseries for echo number ``echo``
+    dn_ts_e[echo].nii         Denoised timeseries for echo number ``echo``
+    ======================    =================================================
     """
 
     # ensure tes are in appropriate format
@@ -132,7 +199,7 @@ def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
 
     os.chdir(out_dir)
 
-    LGR.info('Computing adapative mask')
+    LGR.info('Computing adaptive mask')
     mask, masksum = utils.make_adaptive_mask(catd, minimum=False, getsum=True)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
 
@@ -154,18 +221,20 @@ def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     utils.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
 
     # optimally combine data
-    OCcatd = model.make_optcom(catd, t2sG, tes, mask, combmode)
+    OCcatd = model.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
 
     # regress out global signal unless explicitly not desired
     if gscontrol:
         catd, OCcatd = model.gscontrol_raw(catd, OCcatd, n_echos, ref_img)
 
     if mixm is None:
-        n_components, dd = decomposition.tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
-                                                stabilize, ref_img,
-                                                tes=tes, kdaw=kdaw, rdaw=rdaw, ste=ste)
-        mmix_orig = decomposition.tedica(n_components, dd, conv, fixed_seed, cost=initcost,
-                                         final_cost=finalcost, verbose=debug)
+        n_components, dd = decomposition.tedpca(catd, OCcatd, combmode, mask,
+                                                t2s, t2sG, stabilize, ref_img,
+                                                tes=tes, kdaw=kdaw, rdaw=rdaw,
+                                                ste=ste, wvpca=wvpca)
+        mmix_orig = decomposition.tedica(n_components, dd, conv, fixed_seed,
+                                         cost=initcost, final_cost=finalcost,
+                                         verbose=debug)
         np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
         LGR.info('Making second component selection guess from ICA results')
         seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
@@ -197,9 +266,11 @@ def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
             acc, rej, midk, empty = utils.ctabsel(ctab)
 
     if len(acc) == 0:
-        LGR.warning('No BOLD components detected! Please check data and results!')
+        LGR.warning('No BOLD components detected! Please check data and '
+                    'results!')
 
-    utils.writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_img)
+    utils.writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk,
+                       empty, ref_img)
     utils.gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img)
     if dne:
         utils.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
