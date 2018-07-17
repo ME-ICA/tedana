@@ -1,6 +1,8 @@
 """
 Estimate T2 and S0, and optimally combine data across TEs.
 """
+import os
+import os.path as op
 import logging
 
 import numpy as np
