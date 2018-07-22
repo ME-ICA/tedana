@@ -18,8 +18,8 @@ def eimask(dd, ees=None):
     ----------
     dd : (S x E x T) array_like
         Input data, where `S` is samples, `E` is echos, and `T` is time
-    ees : (N,) list
-        Indices of echos to assess from `dd` in calculating output
+    ees : (N) :obj:`list`
+        Index of echos to assess from `dd` in calculating output
 
     Returns
     -------

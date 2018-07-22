@@ -20,7 +20,7 @@ def make_optcom(data, tes, mask, t2s=None, combmode='t2s', verbose=True):
         Array of TEs, in seconds.
     mask : (S,) :obj:`numpy.ndarray`
         Brain mask in 3D array.
-    t2s : (S,) or (S x T) :obj:`numpy.ndarray` or None, optional
+    t2s : (S [x T]) :obj:`numpy.ndarray` or None, optional
         Estimated T2* values. Only required if combmode = 't2s'.
         Default is None.
     combmode : {'t2s', 'ste'}

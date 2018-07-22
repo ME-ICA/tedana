@@ -6,7 +6,8 @@ tedana minimally requires:
 #. acquired echo times (in milliseconds), and
 #. functional datasets equal to the number of acquired echoes.
 
-But you can supply many other options, viewable with ``tedana -h``.
+But you can supply many other options, viewable with ``tedana -h`` or
+``t2smap -h``.
 
 Run tedana
 ----------

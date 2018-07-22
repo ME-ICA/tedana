@@ -32,36 +32,38 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     mmix : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the number of volumes in the original data
-    mask : (S,) array_like
+    mask : (S) array_like
         Boolean mask array
-    ref_img : str or img_like
+    ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
-    manacc : list
+    manacc : :obj:`list`
         Comma-separated list of indices of manually accepted components
-    n_echos : int
+    n_echos : :obj:`int`
         Number of echos in original data
-    t2s : (S,) array_like
-    s0 : (S,) array_like
-    olevel : int, optional
+    t2s : (S) array_like
+        Estimated T2* map
+    s0 : (S) array_like
+        S0 map
+    olevel : :obj:`int`, optional
         Default: 2
-    oversion : int, optional
+    oversion : :obj:`int`, optional
         Default: 99
-    filecsdata: bool, optional
+    filecsdata: :obj:`bool`, optional
         Default: False
-    savecsdiag: bool, optional
+    savecsdiag: :obj:`bool`, optional
         Default: True
-    strict_mode: bool, optional
+    strict_mode: :obj:`bool`, optional
         Default: False
 
     Returns
     -------
-    acc : list
+    acc : :obj:`list`
         Indices of accepted (BOLD) components in `mmix`
-    rej : list
+    rej : :obj:`list`
         Indices of rejected (non-BOLD) components in `mmix`
-    midk : list
+    midk : :obj:`list`
         Indices of mid-K (questionable) components in `mmix`
-    ign : list
+    ign : :obj:`list`
         Indices of ignored components in `mmix`
     """
 
@@ -311,6 +313,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         group0 = ncl.copy()
         group_n1 = nc[db.labels_ == -1]
         to_clf = np.setdiff1d(nc, np.union1d(ncl, rej))
+
     if len(group0) == 0 or len(group0) < len(KRguess) * .5:
         dbscanfailed = True
         LGR.debug('DBSCAN guess failed; using elbow guess method instead')
@@ -324,6 +327,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         group0 = ncl.copy()
         group_n1 = []
         to_clf = np.setdiff1d(nc, np.union1d(group0, rej))
+
     if len(group0) < 2 or (len(group0) < 4 and float(len(rej))/len(group0) > 3):
         LGR.warning('Extremely limited reliable BOLD signal space! '
                     'Not filtering components beyond BOLD/non-BOLD guesses.')
@@ -398,6 +402,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     midk = np.setdiff1d(to_clf[utils.andb([midk_clf == 1, seldict['varex'][to_clf] >
                                            np.median(seldict['varex'][group0])]) == 2],
                         np.union1d(toacc_hi, toacc_lo))
+
     # only use SVM to augment toacc_hi only if toacc_hi isn't already
     # conflicting with SVM choice
     if len(np.intersect1d(to_clf[utils.andb([midk_clf == 1,

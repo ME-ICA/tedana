@@ -14,15 +14,15 @@ def fit_decay(data, tes, mask, masksum, start_echo=1):
     data : (S x E [x T]) array_like
         Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
         time
-    tes : (E, ) list
+    tes : (E) :obj:`list`
         Echo times
-    mask : (S, ) array_like
+    mask : (S) array_like
         Boolean array indicating samples that are consistently (i.e., across
         time AND echoes) non-zero
-    masksum : (S, ) array_like
+    masksum : (S) array_like
         Valued array indicating number of echos that have sufficient signal in
         given sample
-    start_echo : int, optional
+    start_echo : :obj:`int`, optional
         First echo to consider. Default is 1 (first echo).
 
     Returns
@@ -33,9 +33,9 @@ def fit_decay(data, tes, mask, masksum, start_echo=1):
     s0va : (S) :obj:`numpy.ndarray`
         Limited S0 map.  The limited map only keeps the S0 values for data
         where there are at least two echos with good signal.
-    t2ss : (S, E-1) :obj:`numpy.ndarray`
+    t2ss : (S x E-1) :obj:`numpy.ndarray`
         ???
-    s0vs : (S, E-1) :obj:`numpy.ndarray`
+    s0vs : (S x E-1) :obj:`numpy.ndarray`
         ???
     t2saf : (S) :obj:`numpy.ndarray`
         Full T2* map. For voxels affected by dropout, with good signal from
@@ -113,15 +113,15 @@ def fit_decay_ts(data, tes, mask, masksum, start_echo=1):
     data : (S x E x T) array_like
         Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
         time
-    tes : (E, ) list
+    tes : (E) :obj:`list`
         Echo times
-    mask : (S, ) array_like
+    mask : (S) array_like
         Boolean array indicating samples that are consistently (i.e., across
         time AND echoes) non-zero
-    masksum : (S, ) array_like
+    masksum : (S) array_like
         Valued array indicating number of echos that have sufficient signal in
         given sample
-    start_echo : int, optional
+    start_echo : :obj:`int`, optional
         First echo to consider. Default is 1 (first echo).
 
     Returns

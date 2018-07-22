@@ -333,11 +333,11 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
         Input functional data
     optcom : (S x T) array_like
         Optimally-combined functional data (i.e., the output of `make_optcom`)
-    n_echos : int
+    n_echos : :obj:`int`
         Number of echos in data. Should be the same as `E` dimension of `catd`
-    ref_img : str or img_like
+    ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
-    dtrank : int, optional
+    dtrank : :obj:`int`, optional
         Specfies degree of Legendre polynomial basis function for estimating
         spatial global signal. Default: 4
 
