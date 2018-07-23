@@ -92,7 +92,8 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     totvar_norm = (WTS**2).sum()
 
     # compute Betas and means over TEs for TE-dependence analysis
-    betas = get_coeffs(catd, np.repeat(mask[:, np.newaxis], len(tes), axis=1), mmix)
+    betas = get_coeffs(catd, np.repeat(mask[:, np.newaxis], len(tes), axis=1),
+                       mmix)
     n_samp, n_echos, n_components = betas.shape
     n_voxels = mask.sum()
     n_data_voxels = (t2s != 0).sum()
@@ -158,7 +159,8 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
         Rhos[i] = np.average(F_S0, weights=norm_weights)
 
     # tabulate component values
-    comptab_pre = np.vstack([np.arange(n_components), Kappas, Rhos, varex, varex_norm]).T
+    comptab_pre = np.vstack([np.arange(n_components), Kappas, Rhos, varex,
+                             varex_norm]).T
     if reindex:
         # re-index all components in Kappa order
         comptab = comptab_pre[comptab_pre[:, 1].argsort()[::-1], :]
@@ -245,7 +247,7 @@ def computefeats2(data, mmix, mask, normalize=True):
     mmix : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    mask : (S,) array-like
+    mask : (S,) array_like
         Boolean mask array
     normalize : bool, optional
         Whether to z-score output. Default: True
@@ -283,11 +285,11 @@ def get_coeffs(data, mask, X, add_const=False):
 
     Parameters
     ----------
-    data : (S x T) array-like
+    data : (S x T) array_like
         Array where `S` is samples and `T` is time
-    mask : (S,) array-like
+    mask : (S,) array_like
         Boolean mask array
-    X : (T x C) array-like
+    X : (T x C) array_like
         Array where `T` is time and `C` is predictor variables
     add_const : bool, optional
         Add intercept column to `X` before fitting. Default: False
@@ -445,7 +447,7 @@ def spatclust(img, min_cluster_size, threshold=None, index=None, mask=None):
         # subtract one voxel to ensure we aren't hitting this thresholding issue
         try:
             clsts = connected_regions(subbrick,
-                                      min_region_size=int(min_cluster_size) - 1,
+                                      min_region_size=int(min_cluster_size)-1,
                                       smoothing_fwhm=None,
                                       extract_type='connected_components')[0]
         # if no clusters are detected we get a TypeError; create a blank 4D

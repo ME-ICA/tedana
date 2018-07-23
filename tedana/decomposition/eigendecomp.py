@@ -34,7 +34,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         How optimal combination of echos should be made, where 't2s' indicates
         using the method of Posse 1999 and 'ste' indicates using the method of
         Poser 2006
-    mask : (S) array_like
+    mask : (S,) array_like
         Boolean mask array
     stabilize : :obj:`bool`
         Whether to attempt to stabilize convergence of ICA by returning
@@ -101,6 +101,18 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
 
             - Nonsignificant :math:`{\\kappa}` and :math:`{\\rho}`.
             - Nonsignificant variance explained.
+
+    Outputs:
+
+    This function writes out several files:
+
+    ======================    =================================================
+    Filename                  Content
+    ======================    =================================================
+    pcastate.pkl              Values from PCA results.
+    comp_table_pca.txt        PCA component table.
+    mepca_mix.1D              PCA mixing matrix.
+    ======================    =================================================
     """
 
     n_samp, n_echos, n_vols = catd.shape
@@ -243,7 +255,7 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost,
     n_components : :obj:`int`
         Number of components retained from PCA decomposition
     dd : (S x E x T) :obj:`numpy.ndarray`
-        Dimensionally-reduced functional data, where `S` is samples, `E` is
+        Dimensionally reduced functional data, where `S` is samples, `E` is
         echos, and `T` is time
     conv : :obj:`float`
         Convergence limit for ICA
