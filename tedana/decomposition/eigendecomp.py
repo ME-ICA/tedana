@@ -9,7 +9,7 @@ import numpy as np
 from scipy import stats
 
 from tedana import model, utils
-from tedana.decomposition._utils import eimask
+from tedana.decomposition._utils import eimask, dwtmat, idwtmat
 from tedana.selection._utils import (getelbow_cons, getelbow_mod)
 
 LGR = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ Z_MAX = 8
 
 
 def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
-           ref_img, tes, kdaw, rdaw, ste=0, mlepca=True):
+           ref_img, tes, kdaw, rdaw, ste=0, mlepca=True, wvpca=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
     noise from multi-echo data.
@@ -55,6 +55,8 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     mlepca : bool, optional
         Whether to use the method originally explained in Minka, NIPS 2000 for
         guessing PCA dimensionality instead of a traditional SVD. Default: True
+    wvpca : bool, optional
+        Whether to apply wavelet denoising to data. Default: False
 
     Returns
     -------
@@ -119,6 +121,9 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
 
     dz = ((d.T - d.T.mean(axis=0)) / d.T.std(axis=0)).T  # var normalize ts
     dz = (dz - dz.mean()) / dz.std()  # var normalize everything
+
+    if wvpca:
+        dz, cAl = dwtmat(dz)
 
     if not op.exists('pcastate.pkl'):
         # do PC dimension selection and get eigenvalue cutoff
@@ -214,9 +219,13 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     pcsel = pcscore > 0
     dd = u.dot(np.diag(s*np.array(pcsel, dtype=np.int))).dot(v)
 
+    if wvpca:
+        dd = idwtmat(dd, cAl)
+
     n_components = s[pcsel].shape[0]
     LGR.info('Selected {0} components with Kappa threshold: {1:.02f}, '
-             'Rho threshold: {2:.02f}'.format(n_components, kappa_thr, rho_thr))
+             'Rho threshold: {2:.02f}'.format(n_components, kappa_thr,
+                                              rho_thr))
 
     dd = stats.zscore(dd.T, axis=0).T  # variance normalize timeseries
     dd = stats.zscore(dd, axis=None)  # variance normalize everything
@@ -250,7 +259,7 @@ def tedica(n_components, dd, conv, fixed_seed, cost='logcosh'):
 
     Notes
     -----
-    Uses `mdp` implementation of FastICA for decomposition
+    Uses `sklearn` implementation of FastICA for decomposition
     """
 
     from sklearn.decomposition import FastICA

@@ -28,17 +28,21 @@ def fit_decay(data, tes, mask, masksum, start_echo=1):
     Returns
     -------
     t2sa : (S) :obj:`numpy.ndarray`
-        Limited T2* map
+        Limited T2* map. The limited map only keeps the T2* values for data
+        where there are at least two echos with good signal.
     s0va : (S) :obj:`numpy.ndarray`
-        Limited S0 map
+        Limited S0 map.  The limited map only keeps the S0 values for data
+        where there are at least two echos with good signal.
     t2ss : (S, E-1) :obj:`numpy.ndarray`
         ???
     s0vs : (S, E-1) :obj:`numpy.ndarray`
         ???
     t2saf : (S) :obj:`numpy.ndarray`
-        Full T2* map
+        Full T2* map. For voxels affected by dropout, with good signal from
+        only one echo, the full map uses the single echo's value at that voxel.
     s0vaf : (S) :obj:`numpy.ndarray`
-        Full S0 map
+        Full S0 map. For voxels affected by dropout, with good signal from
+        only one echo, the full map uses the single echo's value at that voxel.
 
     Notes
     -----
@@ -123,13 +127,19 @@ def fit_decay_ts(data, tes, mask, masksum, start_echo=1):
     Returns
     -------
     t2sa_ts : (S x T) :obj:`numpy.ndarray`
-        Limited T2* map
+        Limited T2* map. The limited map only keeps the T2* values for data
+        where there are at least two echos with good signal.
     s0va_ts : (S x T) :obj:`numpy.ndarray`
-        Limited S0 map
+        Limited S0 map.  The limited map only keeps the S0 values for data
+        where there are at least two echos with good signal.
     t2saf_ts : (S x T) :obj:`numpy.ndarray`
-        Full T2* map
+        Full T2* timeseries.  For voxels affected by dropout, with good signal
+        from only one echo, the full timeseries uses the single echo's value
+        at that voxel/volume.
     s0vaf_ts : (S x T) :obj:`numpy.ndarray`
-        Full S0 map
+        Full S0 timeseries. For voxels affected by dropout, with good signal
+        from only one echo, the full timeseries uses the single echo's value
+        at that voxel/volume.
     """
     n_samples, _, n_trs = data.shape
     echodata = data[mask]
