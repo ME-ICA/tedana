@@ -21,7 +21,7 @@ Z_MAX = 8
 def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
                      fout=None, reindex=False, mmixN=None, full_sel=True):
     """
-    Fit models directly.
+    Fit TE-dependence and -independence models.
 
     Parameters
     ----------
@@ -73,10 +73,10 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     # compute un-normalized weight dataset (features)
     if mmixN is None:
         mmixN = mmix
-    WTS = computefeats2(utils.unmask(tsoc, mask), mmixN, mask, normalize=False)
+    WTS = _convert_to_components(utils.unmask(tsoc, mask), mmixN, mask, normalize=False)
 
     # compute PSC dataset - shouldn't have to refit data
-    tsoc_B = get_coeffs(utils.unmask(tsoc_dm, mask), mask, mmix)[mask]
+    tsoc_B = _get_lstsq_coeffs(utils.unmask(tsoc_dm, mask), mask, mmix)[mask]
     tsoc_Babs = np.abs(tsoc_B)
     PSC = tsoc_B / tsoc.mean(axis=-1, keepdims=True) * 100
 
@@ -92,8 +92,8 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     totvar_norm = (WTS**2).sum()
 
     # compute Betas and means over TEs for TE-dependence analysis
-    betas = get_coeffs(catd, np.repeat(mask[:, np.newaxis], len(tes), axis=1),
-                       mmix)
+    betas = _get_lstsq_coeffs(catd, np.repeat(mask[:, np.newaxis], len(tes),
+                                              axis=1), mmix)
     n_samp, n_echos, n_components = betas.shape
     n_voxels = mask.sum()
     n_data_voxels = (t2s != 0).sum()
@@ -130,7 +130,8 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
         B = np.atleast_3d(betamask)[:, :, i].T
         alpha = (np.abs(B)**2).sum(axis=0)
         varex[i] = (tsoc_B[:, i]**2).sum() / totvar * 100.
-        varex_norm[i] = (utils.unmask(WTS, mask)[t2s != 0][:, i]**2).sum() / totvar_norm * 100.
+        varex_norm[i] = (utils.unmask(WTS, mask)[t2s != 0][:, i]**2).sum() /\
+            totvar_norm * 100.
 
         # S0 Model
         coeffs_S0 = (B * X1).sum(axis=0) / (X1**2).sum(axis=0)
@@ -236,7 +237,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     return seldict, comptab, betas, mmix_new
 
 
-def computefeats2(data, mmix, mask, normalize=True):
+def _convert_to_components(data, mmix, mask, normalize=True):
     """
     Converts `data` to component space using `mmix`
 
@@ -262,7 +263,7 @@ def computefeats2(data, mmix, mask, normalize=True):
     data_vn = stats.zscore(data[mask], axis=-1)
 
     # get betas of `data`~`mmix` and limit to range [-0.999, 0.999]
-    data_R = get_coeffs(utils.unmask(data_vn, mask), mask, mmix)[mask]
+    data_R = _get_lstsq_coeffs(utils.unmask(data_vn, mask), mask, mmix)[mask]
     data_R[data_R < -0.999] = -0.999
     data_R[data_R > 0.999] = 0.999
 
@@ -279,7 +280,7 @@ def computefeats2(data, mmix, mask, normalize=True):
     return data_Z
 
 
-def get_coeffs(data, mask, X, add_const=False):
+def _get_lstsq_coeffs(data, mask, X, add_const=False):
     """
     Performs least-squares fit of `X` against `data`
 
@@ -334,13 +335,13 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     catd : (S x E x T) array_like
         Input functional data
     optcom : (S x T) array_like
-        Optimally-combined functional data (i.e., the output of `make_optcom`)
+        Optimally combined functional data (i.e., the output of `make_optcom`)
     n_echos : :obj:`int`
         Number of echos in data. Should be the same as `E` dimension of `catd`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
     dtrank : :obj:`int`, optional
-        Specfies degree of Legendre polynomial basis function for estimating
+        Specifies degree of Legendre polynomial basis function for estimating
         spatial global signal. Default: 4
 
     Returns

@@ -2,8 +2,7 @@
 # ex: set sts=4 ts=4 sw=4 et:
 
 from .fit import (
-    computefeats2,
-    fitmodels_direct, get_coeffs,
+    fitmodels_direct,
     spatclust, gscontrol_raw,
 )
 
@@ -17,6 +16,6 @@ from .monoexponential import (
 
 
 __all__ = [
-    'computefeats2', 'fit', 'fitmodels_direct',
-    'get_coeffs', 'make_optcom', 'spatclust',
+    'fitmodels_direct', 'gscontrol_raw',
+    'make_optcom', 'spatclust',
     'fit_decay', 'fit_decay_ts']
