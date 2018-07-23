@@ -28,6 +28,7 @@ REQUIRES = [
     'numpy',
     'scikit-learn',
     'mdp',
+    'pywt',
     'nilearn',
     'nibabel>=2.1.0',
     'scipy'

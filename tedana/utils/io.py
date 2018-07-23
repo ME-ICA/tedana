@@ -52,7 +52,7 @@ def gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img):
     bold_ts = np.dot(solG.T[:, acc], mmix[:, acc].T)
     sphis = bold_ts.min(axis=-1)
     sphis -= sphis.mean()
-    utils.utils.filewrite(utils.utils.unmask(sphis, mask), 'sphis_hik', ref_img)
+    utils.filewrite(utils.unmask(sphis, mask), 'sphis_hik', ref_img)
 
     """
     Find the global signal based on the T1-like effect
@@ -64,8 +64,8 @@ def gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img):
     T1 correct time series by regression
     """
     bold_noT1gs = bold_ts - np.dot(np.linalg.lstsq(glsig.T, bold_ts.T, rcond=None)[0].T, glsig)
-    utils.utils.filewrite(utils.unmask(bold_noT1gs * Gstd[mask][:, np.newaxis], mask),
-                          'hik_ts_OC_T1c.nii', ref_img)
+    utils.filewrite(utils.unmask(bold_noT1gs * Gstd[mask][:, np.newaxis], mask),
+                    'hik_ts_OC_T1c.nii', ref_img)
 
     """
     Make medn version of T1 corrected time series
