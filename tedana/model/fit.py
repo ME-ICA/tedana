@@ -313,6 +313,7 @@ def get_lstsq_coeffs(data, X, mask=None, add_const=False):
 
     if len(X) == 1:
         X = X.T
+
     if add_const:  # add intercept, if specified
         X = np.column_stack([X, np.ones((len(X), 1))])
 
