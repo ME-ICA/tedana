@@ -46,7 +46,7 @@ def _combine_t2s(mdata, ft2s, tes, n_vols):
     return combined
 
 
-due.cite(Doi('10.1002/mrm.20900'),
+@due.cite(Doi('10.1002/mrm.20900'),
          description='STE method of combining data across echoes using just '
                      'SNR/signal and TE.')
 def _combine_ste(mdata, tes, n_vols):
