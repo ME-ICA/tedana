@@ -28,7 +28,26 @@ LGR = logging.getLogger(__name__)
                   'MRM13%3E3.0.CO%3B2-O}}'),
            description='T2* method of combining data across echoes using '
                        'monoexponential equation.')
-def _combine_t2s(mdata, ft2s, tes, n_vols):
+def _combine_t2s(mdata, tes, ft2s):
+    """
+    Combine data across echoes using weighted averaging according to voxel-
+    (and sometimes volume-) wise estimates of T2*.
+
+    Parameters
+    ----------
+    mdata : (S x E x T) array_like
+        Masked data.
+    tes : (E,) array_like
+        Echo times in milliseconds.
+    ft2s : (S [x T]) array_like
+        Either voxel-wise or voxel- and volume-wise estimates of T2*.
+
+    Returns
+    -------
+    combined : (S x T) :obj:`numpy.ndarray`
+        Data combined across echoes according to T2* estimates.
+    """
+    n_vols = mdata.shape[-1]
     alpha = tes * np.exp(-tes / ft2s)
     if alpha.ndim == 2:
         # Voxel-wise T2 estimates
@@ -49,7 +68,23 @@ def _combine_t2s(mdata, ft2s, tes, n_vols):
 @due.dcite(Doi('10.1002/mrm.20900'),
            description='STE method of combining data across echoes using just '
                        'SNR/signal and TE.')
-def _combine_ste(mdata, tes, n_vols):
+def _combine_ste(mdata, tes):
+    """
+    Combine data across echoes using SNR/signal and TE.
+
+    Parameters
+    ----------
+    mdata : (S x E x T) array_like
+        Masked data.
+    tes : (E,) array_like
+        Echo times in milliseconds.
+
+    Returns
+    -------
+    combined : (S x T) :obj:`numpy.ndarray`
+        Data combined across echoes according to SNR/signal.
+    """
+    n_vols = mdata.shape[-1]
     alpha = mdata.mean(axis=-1) * tes
     alpha = np.tile(alpha[:, :, np.newaxis], (1, 1, n_vols))
     combined = np.average(mdata, axis=1, weights=alpha)
@@ -71,11 +106,11 @@ def make_optcom(data, tes, mask, t2s=None, combmode='t2s', verbose=True):
     t2s : (S [x T]) :obj:`numpy.ndarray` or None, optional
         Estimated T2* values. Only required if combmode = 't2s'.
         Default is None.
-    combmode : {'t2s', 'ste'}
+    combmode : {'t2s', 'ste'}, optional
         How to combine data. Either 'ste' or 't2s'. If 'ste', argument 't2s' is
-        not required.
+        not required. Default is 't2s'.
     verbose : :obj:`bool`, optional
-        Whether to print status updates
+        Whether to print status updates. Default is True.
 
     Returns
     -------
@@ -116,7 +151,6 @@ def make_optcom(data, tes, mask, t2s=None, combmode='t2s', verbose=True):
     elif combmode == 'ste' and t2s is not None:
         LGR.warning("Argument 't2s' is not required if 'combmode' is 'ste'.")
 
-    _, _, n_vols = data.shape
     mdata = data[mask, :, :]  # mask out empty voxels/samples
     tes = np.array(tes)[np.newaxis]  # (1 x E) array_like
 
@@ -132,9 +166,9 @@ def make_optcom(data, tes, mask, t2s=None, combmode='t2s', verbose=True):
         LGR.info(msg)
 
     if combmode == 'ste':
-        combined = _combine_ste(mdata, tes, n_vols)
+        combined = _combine_ste(mdata, tes)
     else:
-        combined = _combine_t2s(mdata, ft2s, tes, n_vols)
+        combined = _combine_t2s(mdata, tes, ft2s)
 
     combined = unmask(combined, mask)
     return combined

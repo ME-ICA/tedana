@@ -193,7 +193,7 @@ def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, suffix=''):
     dmdata = mdata.T - mdata.T.mean(axis=0)
 
     # get variance explained by retained components
-    betas = model.get_coeffs(utils.unmask(dmdata.T, mask), mask, mmix)[mask]
+    betas = model.get_lstsq_coeffs(dmdata.T, mmix, mask)
     varexpl = (1 - ((dmdata.T - betas.dot(mmix.T))**2.).sum() /
                (dmdata**2.).sum()) * 100
     LGR.info('Variance explained by ICA decomposition: '
