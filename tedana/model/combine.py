@@ -47,8 +47,8 @@ def _combine_t2s(mdata, ft2s, tes, n_vols):
 
 
 @due.cite(Doi('10.1002/mrm.20900'),
-         description='STE method of combining data across echoes using just '
-                     'SNR/signal and TE.')
+          description='STE method of combining data across echoes using just '
+                      'SNR/signal and TE.')
 def _combine_ste(mdata, tes, n_vols):
     alpha = mdata.mean(axis=-1) * tes
     alpha = np.tile(alpha[:, :, np.newaxis], (1, 1, n_vols))
