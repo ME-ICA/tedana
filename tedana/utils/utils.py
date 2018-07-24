@@ -197,7 +197,8 @@ def make_adaptive_mask(data, minimum=True, getsum=False):
     med_val = (echo_means[:, 0] == perc_33)
 
     # extract values from all echos at relevant index
-    lthrs = np.squeeze(echo_means[med_val].T) / 3  # QUESTION: why divide by 3?
+    n_echos = data.shape[1]
+    lthrs = np.squeeze(echo_means[med_val].T) / n_echos
 
     # if multiple samples were extracted per echo, keep the one w/the highest signal
     if lthrs.ndim > 1:
