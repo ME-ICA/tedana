@@ -194,11 +194,10 @@ def make_adaptive_mask(data, minimum=True, getsum=False):
 
     # get 33rd %ile of `first_echo` and find corresponding index
     perc_33 = np.percentile(first_echo, 33, interpolation='higher')  # QUESTION: why 33%ile?
-    med_val = (echo_means[:, 0] == perc_33)
+    perc_val = (echo_means[:, 0] == perc_33)
 
     # extract values from all echos at relevant index
-    n_echos = data.shape[1]
-    lthrs = np.squeeze(echo_means[med_val].T) / n_echos
+    lthrs = np.squeeze(echo_means[perc_val].T) / 3  # QUESTION: why 3?
 
     # if multiple samples were extracted per echo, keep the one w/the highest signal
     if lthrs.ndim > 1:
