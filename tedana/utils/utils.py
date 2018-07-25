@@ -193,11 +193,13 @@ def make_adaptive_mask(data, minimum=True, getsum=False):
     first_echo = echo_means[echo_means[:, 0] != 0, 0]
 
     # get 33rd %ile of `first_echo` and find corresponding index
-    perc_33 = np.percentile(first_echo, 33, interpolation='higher')  # QUESTION: why 33%ile?
-    perc_val = (echo_means[:, 0] == perc_33)
+    # NOTE: percentile is arbitrary
+    perc = np.percentile(first_echo, 33, interpolation='higher')
+    perc_val = (echo_means[:, 0] == perc)
 
     # extract values from all echos at relevant index
-    lthrs = np.squeeze(echo_means[perc_val].T) / 3  # QUESTION: why 3?
+    # NOTE: threshold of 1/3 voxel value is arbitrary
+    lthrs = np.squeeze(echo_means[perc_val].T) / 3
 
     # if multiple samples were extracted per echo, keep the one w/the highest signal
     if lthrs.ndim > 1:
