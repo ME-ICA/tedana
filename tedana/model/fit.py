@@ -21,7 +21,7 @@ Z_MAX = 8
 def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
                      fout=None, reindex=False, mmixN=None, full_sel=True):
     """
-    Fit models directly.
+    Fit TE-dependence and -independence models.
 
     Parameters
     ----------
@@ -76,7 +76,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     WTS = computefeats2(utils.unmask(tsoc, mask), mmixN, mask, normalize=False)
 
     # compute PSC dataset - shouldn't have to refit data
-    tsoc_B = get_coeffs(utils.unmask(tsoc_dm, mask), mask, mmix)[mask]
+    tsoc_B = get_coeffs(tsoc_dm, mmix, mask=None)
     tsoc_Babs = np.abs(tsoc_B)
     PSC = tsoc_B / tsoc.mean(axis=-1, keepdims=True) * 100
 
@@ -92,7 +92,8 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     totvar_norm = (WTS**2).sum()
 
     # compute Betas and means over TEs for TE-dependence analysis
-    betas = get_coeffs(catd, np.repeat(mask[:, np.newaxis], len(tes), axis=1), mmix)
+    betas = get_coeffs(catd, mmix, np.repeat(mask[:, np.newaxis], len(tes),
+                                             axis=1))
     n_samp, n_echos, n_components = betas.shape
     n_voxels = mask.sum()
     n_data_voxels = (t2s != 0).sum()
@@ -129,20 +130,21 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
         B = np.atleast_3d(betamask)[:, :, i].T
         alpha = (np.abs(B)**2).sum(axis=0)
         varex[i] = (tsoc_B[:, i]**2).sum() / totvar * 100.
-        varex_norm[i] = (utils.unmask(WTS, mask)[t2s != 0][:, i]**2).sum() / totvar_norm * 100.
+        varex_norm[i] = (utils.unmask(WTS, mask)[t2s != 0][:, i]**2).sum() /\
+            totvar_norm * 100.
 
         # S0 Model
         coeffs_S0 = (B * X1).sum(axis=0) / (X1**2).sum(axis=0)
         SSE_S0 = (B - X1 * np.tile(coeffs_S0, (n_echos, 1)))**2
         SSE_S0 = SSE_S0.sum(axis=0)
-        F_S0 = (alpha - SSE_S0) * 2 / (SSE_S0)
+        F_S0 = (alpha - SSE_S0) * (n_echos - 1) / (SSE_S0)
         F_S0_maps[:, i] = F_S0
 
         # R2 Model
         coeffs_R2 = (B * X2).sum(axis=0) / (X2**2).sum(axis=0)
         SSE_R2 = (B - X2 * np.tile(coeffs_R2, (n_echos, 1)))**2
         SSE_R2 = SSE_R2.sum(axis=0)
-        F_R2 = (alpha - SSE_R2) * 2 / (SSE_R2)
+        F_R2 = (alpha - SSE_R2) * (n_echos - 1) / (SSE_R2)
         F_R2_maps[:, i] = F_R2
 
         # compute weights as Z-values
@@ -158,7 +160,8 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
         Rhos[i] = np.average(F_S0, weights=norm_weights)
 
     # tabulate component values
-    comptab_pre = np.vstack([np.arange(n_components), Kappas, Rhos, varex, varex_norm]).T
+    comptab_pre = np.vstack([np.arange(n_components), Kappas, Rhos, varex,
+                             varex_norm]).T
     if reindex:
         # re-index all components in Kappa order
         comptab = comptab_pre[comptab_pre[:, 1].argsort()[::-1], :]
@@ -245,7 +248,7 @@ def computefeats2(data, mmix, mask, normalize=True):
     mmix : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    mask : (S,) array-like
+    mask : (S,) array_like
         Boolean mask array
     normalize : bool, optional
         Whether to z-score output. Default: True
@@ -260,7 +263,7 @@ def computefeats2(data, mmix, mask, normalize=True):
     data_vn = stats.zscore(data[mask], axis=-1)
 
     # get betas of `data`~`mmix` and limit to range [-0.999, 0.999]
-    data_R = get_coeffs(utils.unmask(data_vn, mask), mask, mmix)[mask]
+    data_R = get_coeffs(data_vn, mmix, mask=None)
     data_R[data_R < -0.999] = -0.999
     data_R[data_R > 0.999] = 0.999
 
@@ -277,17 +280,17 @@ def computefeats2(data, mmix, mask, normalize=True):
     return data_Z
 
 
-def get_coeffs(data, mask, X, add_const=False):
+def get_coeffs(data, X, mask=None, add_const=False):
     """
     Performs least-squares fit of `X` against `data`
 
     Parameters
     ----------
-    data : (S x T) array-like
+    data : (S x T) array_like
         Array where `S` is samples and `T` is time
-    mask : (S,) array-like
+    mask : (S,) array_like
         Boolean mask array
-    X : (T x C) array-like
+    X : (T x C) array_like
         Array where `T` is time and `C` is predictor variables
     add_const : bool, optional
         Add intercept column to `X` before fitting. Default: False
@@ -299,20 +302,26 @@ def get_coeffs(data, mask, X, add_const=False):
     """
 
     # mask data and flip (time x samples)
-    mdata = data[mask].T
+    if mask is not None:
+        mdata = data[mask, :].T
+    else:
+        mdata = data.T
 
     # coerce X to >=2d
     X = np.atleast_2d(X)
 
     if len(X) == 1:
         X = X.T
+
     if add_const:  # add intercept, if specified
         X = np.column_stack([X, np.ones((len(X), 1))])
 
     betas = np.linalg.lstsq(X, mdata, rcond=None)[0].T
     if add_const:  # drop beta for intercept, if specified
         betas = betas[:, :-1]
-    betas = utils.unmask(betas, mask)
+
+    if mask is not None:
+        betas = utils.unmask(betas, mask)
 
     return betas
 
@@ -332,13 +341,13 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     catd : (S x E x T) array_like
         Input functional data
     optcom : (S x T) array_like
-        Optimally-combined functional data (i.e., the output of `make_optcom`)
-    n_echos : int
+        Optimally combined functional data (i.e., the output of `make_optcom`)
+    n_echos : :obj:`int`
         Number of echos in data. Should be the same as `E` dimension of `catd`
-    ref_img : str or img_like
+    ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
-    dtrank : int, optional
-        Specfies degree of Legendre polynomial basis function for estimating
+    dtrank : :obj:`int`, optional
+        Specifies degree of Legendre polynomial basis function for estimating
         spatial global signal. Default: 4
 
     Returns

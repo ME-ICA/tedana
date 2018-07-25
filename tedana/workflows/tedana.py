@@ -271,6 +271,6 @@ def tedana(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
 
     utils.writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk,
                        empty, ref_img)
-    utils.gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img)
+    utils.gscontrol_mmix(OCcatd, mmix, mask, acc, ref_img)
     if dne:
         utils.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)

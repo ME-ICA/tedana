@@ -24,7 +24,7 @@ def do_svm(X_train, y_train, X_test, svmtype=0):
     X_test : (N2 x F) array_like
         Test vectors, where n_samples is the number of samples in the test
         dataset and n_features is the number of features.
-    svmtype : int, optional
+    svmtype : :obj:`int`, optional
         Desired support vector machine type. Must be in [0, 1, 2]. Default: 0
 
     Returns
@@ -57,12 +57,12 @@ def getelbow_cons(ks, val=False):
     Parameters
     ----------
     ks : array_like
-    val : bool, optional
+    val : :obj:`bool`, optional
         Return the value of the elbow instead of the index. Default: False
 
     Returns
     -------
-    int or float
+    :obj:`int` or :obj:`float`
         Either the elbow index (if val is True) or the values at the elbow
         index (if val is False)
     """
@@ -93,12 +93,12 @@ def getelbow_mod(ks, val=False):
     Parameters
     ----------
     ks : array_like
-    val : bool, optional
+    val : :obj:`bool`, optional
         Return the value of the elbow instead of the index. Default: False
 
     Returns
     -------
-    int or float
+    :obj:`int` or :obj:`float`
         Either the elbow index (if val is True) or the values at the elbow
         index (if val is False)
     """
@@ -126,12 +126,12 @@ def getelbow_aggr(ks, val=False):
     Parameters
     ----------
     ks : array_like
-    val : bool, optional
+    val : :obj:`bool`, optional
         Default is False
 
     Returns
     -------
-    int or float
+    :obj:`int` or :obj:`float`
         Either the elbow index (if val is True) or the values at the elbow
         index (if val is False)
     """
@@ -144,6 +144,6 @@ def getelbow_aggr(ks, val=False):
     maxcurv = np.argmax(curv) + 2
 
     if val:
-        return(ks[maxcurv])
+        return ks[maxcurv]
     else:
         return maxcurv

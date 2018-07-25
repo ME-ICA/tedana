@@ -1,7 +1,52 @@
 """
 """
 import numpy as np
+import pandas as pd
 import nibabel as nib
+
+
+def row_idx(arr1, arr2):
+    """
+    Get a 1D index of rows in arr1 that exist in arr2.
+
+    Parameters
+    ----------
+    arr1 : (X x 3) :obj:`numpy.ndarray`
+    arr2 : (Z x 3) :obj:`numpy.ndarray`
+
+    Returns
+    -------
+    idx : 1D :obj:`numpy.ndarray`
+        Index of rows in arr1 that exist in arr2.
+
+    Notes
+    -----
+    This works amazingly well, but is quite slow.
+    """
+    df1 = pd.DataFrame(arr1, columns=['x', 'y', 'z'], dtype=str)
+    df2 = pd.DataFrame(arr2, columns=['x', 'y', 'z'], dtype=str)
+
+    df1['unique_value'] = df1[['x', 'y', 'z']].apply(lambda x: '_'.join(x),
+                                                     axis=1)
+    df1 = df1[['unique_value']]
+    df1['idx1'] = df1.index
+    df1 = df1.set_index('unique_value')
+
+    df2['unique_value'] = df2[['x', 'y', 'z']].apply(lambda x: '_'.join(x),
+                                                     axis=1)
+    df2 = df2[['unique_value']]
+    df2['idx2'] = df2.index
+    df2 = df2.set_index('unique_value')
+
+    catted = pd.concat((df1, df2), axis=1, ignore_index=False)
+    if any(pd.isnull(catted['idx1'])):
+        raise Exception('We have a weird error where there is >=1 '
+                        'voxel in echo-specific mask outside of union mask.')
+
+    catted = catted.dropna()
+    catted = catted.sort_values(by=['idx2'])
+    rel_echo_idx = catted['idx1'].values
+    return rel_echo_idx
 
 
 def apply_mask_me(img, mask_img):
@@ -42,35 +87,25 @@ def apply_mask_me(img, mask_img):
     n_x, n_y, n_z = mask_img.shape[:3]
     mask_arr = np.array(mask_img.get_data()).astype(bool)
     if mask_arr.ndim == 3:
-        # We can probably skip a lot after this when there aren't echo-specific
-        # masks, just to speed things up.
-        # Coerce to 4D (X x Y x Z x E)
+        # We can probably simplify/speed things up when the mask is not
+        # echo-dependent
         mask_arr = mask_arr[:, :, :, None]
         mask_arr = np.tile(mask_arr, (1, 1, 1, n_echos))
 
-    # Create absolute (union) mask across echoes
-    # Voxels that are in union mask but not in echo-specific mask will be NaN
     union_mask = np.any(mask_arr, axis=3)
-    union_idx = np.vstack(np.where(union_mask))  # 3d index for union mask
+    union_idx = np.vstack(np.where(union_mask)).T
     masked_arr = np.empty((np.sum(union_mask), n_echos, n_vols))
     masked_arr[:] = np.nan
 
     for i_echo in range(n_echos):
         echo_mask = mask_arr[:, :, :, i_echo]
-        abs_echo_idx = np.vstack(np.where(echo_mask))  # 3d index for echo mask
-        return abs_echo_idx, union_idx
-        # We need the intersection of the echo-specific
-        # mask's 3D index and the shared mask's 3D index
-        # as a 1D index to fill in the absolute mask with
-        # values and NaNs.
-        rel_echo_idx = np.array([np.where(union_idx == idx_val)[0][0] for
-                                 idx_val in abs_echo_idx])
-
+        abs_echo_idx = np.vstack(np.where(echo_mask)).T
+        rel_echo_idx = row_idx(union_idx, abs_echo_idx)
         masked_arr[rel_echo_idx, i_echo, :] = data[abs_echo_idx[:, 0],
                                                    abs_echo_idx[:, 1],
                                                    abs_echo_idx[:, 2],
                                                    i_echo, :]
-        return masked_arr
+    return masked_arr
 
 
 def unmask_me(X, mask_img):

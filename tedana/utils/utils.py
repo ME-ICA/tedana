@@ -24,7 +24,7 @@ def get_dtype(data):
 
     Parameters
     ----------
-    data : list-of-str or str or img_like
+    data : :obj:`list` of :obj:`str` or :obj:`str` or img_like
         Data to determine format of
 
     Returns
@@ -55,12 +55,12 @@ def getfbounds(n_echos):
 
     Parameters
     ----------
-    n_echos : int
+    n_echos : :obj:`int`
         Number of echoes
 
     Returns
     -------
-    fmin, fmid, fmax : float
+    fmin, fmid, fmax : :obj:`float`
         Minimum, mid, and max F bounds
     """
 
@@ -194,12 +194,12 @@ def load_data(data, n_echos=None):
 
     Parameters
     ----------
-    data : file, list of files, img_like, or list of img_like
+    data : (X x Y x M x T) array_like or :obj:`list` of img_like
         Input multi-echo data array, where `X` and `Y` are spatial dimensions,
         `M` is the Z-spatial dimensions with all the input echos concatenated,
         and `T` is time. A list of image-like objects (e.g., .nii or .gii) are
         accepted, as well
-    n_echos : int, optional
+    n_echos : :obj:`int`, optional
         Number of echos in provided data array. Only necessary if `data` is
         array_like. Default: None
 
@@ -207,7 +207,7 @@ def load_data(data, n_echos=None):
     -------
     fdata : (S x E x T) :obj:`numpy.ndarray`
         Output data where `S` is samples, `E` is echos, and `T` is time
-    ref_img : str or :obj:`numpy.ndarray`
+    ref_img : :obj:`str` or :obj:`numpy.ndarray`
         Filepath to reference image for saving output files or NIFTI-like array
     """
     if n_echos is None:
@@ -251,18 +251,18 @@ def make_adaptive_mask(data, minimum=True, getsum=False):
     data : (S x E x T) array_like
         Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
         time
-    minimum : bool, optional
+    minimum : :obj:`bool`, optional
         Use `make_min_mask()` instead of generating a map with echo-specific
         times. Default: True
-    getsum : bool, optional
+    getsum : :obj:`bool`, optional
         Return `masksum` in addition to `mask`. Default: False
 
     Returns
     -------
-    mask : (S, ) :obj:`numpy.ndarray`
+    mask : (S,) :obj:`numpy.ndarray`
         Boolean array of voxels that have sufficient signal in at least one
         echo
-    masksum : (S, ) :obj:`numpy.ndarray`
+    masksum : (S,) :obj:`numpy.ndarray`
         Valued array indicating the number of echos with sufficient signal in a
         given voxel. Only returned if `getsum = True`
     """
@@ -275,11 +275,13 @@ def make_adaptive_mask(data, minimum=True, getsum=False):
     first_echo = echo_means[echo_means[:, 0] != 0, 0]
 
     # get 33rd %ile of `first_echo` and find corresponding index
-    perc_33 = np.percentile(first_echo, 33, interpolation='higher')  # QUESTION: why 33%ile?
-    med_val = (echo_means[:, 0] == perc_33)
+    # NOTE: percentile is arbitrary
+    perc = np.percentile(first_echo, 33, interpolation='higher')
+    perc_val = (echo_means[:, 0] == perc)
 
     # extract values from all echos at relevant index
-    lthrs = np.squeeze(echo_means[med_val].T) / 3  # QUESTION: why divide by 3?
+    # NOTE: threshold of 1/3 voxel value is arbitrary
+    lthrs = np.squeeze(echo_means[perc_val].T) / 3
 
     # if multiple samples were extracted per echo, keep the one w/the highest signal
     if lthrs.ndim > 1:
@@ -312,7 +314,7 @@ def make_min_mask(data):
 
     Returns
     -------
-    mask : (S, ) :obj:`numpy.ndarray`
+    mask : (S,) :obj:`numpy.ndarray`
         Boolean array
     """
 
@@ -332,22 +334,22 @@ def filewrite(data, filename, ref_img, gzip=False, copy_header=True,
     ----------
     data : (S [x T]) array_like
         Data to be saved
-    filename : str
+    filename : :obj:`str`
         Filepath where data should be saved to
-    ref_img : str or img_like
+    ref_img : :obj:`str` or img_like
         Reference image
-    gzip : bool, optional
+    gzip : :obj:`bool`, optional
         Whether to gzip output (if not specified in `filename`). Only applies
         if output dtype is NIFTI. Default: False
-    copy_header : bool, optional
+    copy_header : :obj:`bool`, optional
         Whether to copy header from `ref_img` to new image. Default: True
-    copy_meta : bool, optional
+    copy_meta : :obj:`bool`, optional
         Whether to copy meta from `ref_img` to new image. Only applies if
         output dtype is GIFTI. Default: False
 
     Returns
     -------
-    name : str
+    name : :obj:`str`
         Path of saved image (with added extensions, as appropriate)
     """
 
@@ -387,13 +389,13 @@ def new_nii_like(ref_img, data, affine=None, copy_header=True):
 
     Parameters
     ----------
-    ref_img : str or img_like
+    ref_img : :obj:`str` or img_like
         Reference image
     data : (S [x T]) array_like
         Data to be saved
     affine : (4 x 4) array_like, optional
         Transformation matrix to be used. Default: `ref_img.affine`
-    copy_header : bool, optional
+    copy_header : :obj:`bool`, optional
         Whether to copy header from `ref_img` to new image. Default: True
 
     Returns
@@ -418,13 +420,13 @@ def new_gii_like(ref_img, data, copy_header=True, copy_meta=False):
 
     Parameters
     ----------
-    ref_img : str or img_like
+    ref_img : :obj:`str` or img_like
         Reference image
     data : (S [x T]) array_like
         Data to be saved
-    copy_header : bool, optional
+    copy_header : :obj:`bool`, optional
         Whether to copy header from `ref_img` to new image. Default: True
-    copy_meta : bool, optional
+    copy_meta : :obj:`bool`, optional
         Whether to copy meta from `ref_img` to new image. Default: False
 
     Returns
@@ -456,11 +458,11 @@ def make_gii_darray(ref_array, data, copy_meta=False):
 
     Parameters
     ----------
-    ref_array : str or img_like
+    ref_array : :obj:`str` or img_like
         Reference array
     data : (S,) array_like
         Data to be saved
-    copy_meta : bool, optional
+    copy_meta : :obj:`bool`, optional
         Whether to copy meta from `ref_img` to new image. Default: False
 
     Returns
@@ -517,11 +519,11 @@ def moments(data):
 
     Returns
     -------
-    height : float
-    center_x : float
-    center_y : float
-    width_x : float
-    width_y : float
+    height : :obj:`float`
+    center_x : :obj:`float`
+    center_y : :obj:`float`
+    width_x : :obj:`float`
+    width_y : :obj:`float`
 
     References
     ----------
@@ -548,11 +550,11 @@ def gaussian(height, center_x, center_y, width_x, width_y):
 
     Parameters
     ----------
-    height : float
-    center_x : float
-    center_y : float
-    width_x : float
-    width_y : float
+    height : :obj:`float`
+    center_x : :obj:`float`
+    center_y : :obj:`float`
+    width_x : :obj:`float`
+    width_y : :obj:`float`
 
     Returns
     -------
@@ -630,12 +632,12 @@ def dice(arr1, arr2):
 
     Parameters
     ----------
-    arr1, arr2 : array-like
+    arr1, arr2 : array_like
         Input arrays, arrays to binarize and compare.
 
     Returns
     -------
-    dsi : float
+    dsi : :obj:`float`
         Dice-Sorenson index.
 
     References
@@ -666,7 +668,7 @@ def andb(arrs):
 
     Parameters
     ----------
-    arrs : list
+    arrs : :obj:`list`
         List of boolean or integer arrays to be summed
 
     Returns
