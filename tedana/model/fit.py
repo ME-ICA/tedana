@@ -73,7 +73,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     # compute un-normalized weight dataset (features)
     if mmixN is None:
         mmixN = mmix
-    WTS = _convert_to_components(utils.unmask(tsoc, mask), mmixN, mask,
+    WTS = computefeats2(utils.unmask(tsoc, mask), mmixN, mask,
                                  normalize=False)
 
     # compute PSC dataset - shouldn't have to refit data
@@ -238,7 +238,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     return seldict, comptab, betas, mmix_new
 
 
-def _convert_to_components(data, mmix, mask, normalize=True):
+def computefeats2(data, mmix, mask, normalize=True):
     """
     Converts `data` to component space using `mmix`
 

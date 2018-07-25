@@ -262,7 +262,7 @@ def writefeats(data, mmix, mask, ref_img, suffix=''):
     """
 
     # write feature versions of components
-    feats = utils.unmask(model._convert_to_components(data, mmix, mask), mask)
+    feats = utils.unmask(model.computefeats2(data, mmix, mask), mask)
     fname = utils.filewrite(feats, 'feats_{0}'.format(suffix), ref_img)
 
     return fname
