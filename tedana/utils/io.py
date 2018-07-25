@@ -122,23 +122,23 @@ def split_ts(data, mmix, mask, acc):
 
     Returns
     -------
-    hik_ts : (S x T) :obj:`numpy.ndarray`
+    hikts : (S x T) :obj:`numpy.ndarray`
         Time series reconstructed using only components in `acc`
-    resid : (S x T) :obj:`numpy.ndarray`
-        Original data with `hik_ts` removed
+    rest : (S x T) :obj:`numpy.ndarray`
+        Original data with `hikts` removed
     """
 
     cbetas = model.get_coeffs(data - data.mean(axis=-1, keepdims=True),
                               mmix, mask)
     betas = cbetas[mask]
     if len(acc) != 0:
-        hik_ts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
+        hikts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
     else:
-        hik_ts = None
+        hikts = None
 
-    resid = data - hik_ts
+    resid = data - hikts
 
-    return hik_ts, resid
+    return hikts, resid
 
 
 def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, suffix=''):

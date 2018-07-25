@@ -48,8 +48,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.todo',
               'numpydoc',
               'sphinx.ext.ifconfig',
-              'sphinx.ext.linkcode',
-              'm2r']
+              'sphinx.ext.linkcode']
 
 import sphinx
 from distutils.version import LooseVersion

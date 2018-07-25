@@ -454,7 +454,7 @@ def spatclust(img, min_cluster_size, threshold=None, index=None, mask=None):
         # subtract one voxel to ensure we aren't hitting this thresholding issue
         try:
             clsts = connected_regions(subbrick,
-                                      min_region_size=int(min_cluster_size)-1,
+                                      min_region_size=int(min_cluster_size) - 1,
                                       smoothing_fwhm=None,
                                       extract_type='connected_components')[0]
         # if no clusters are detected we get a TypeError; create a blank 4D
