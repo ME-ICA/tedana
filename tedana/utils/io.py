@@ -6,7 +6,7 @@ import os.path as op
 import textwrap
 
 import numpy as np
-from np.linalg import lstsq
+from numpy.linalg import lstsq
 
 from tedana import model, utils
 
