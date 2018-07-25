@@ -36,31 +36,31 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         Poser 2006
     mask : (S,) array_like
         Boolean mask array
-    stabilize : bool
+    stabilize : :obj:`bool`
         Whether to attempt to stabilize convergence of ICA by returning
         dimensionally-reduced data from PCA and component selection.
-    ref_img : str or img_like
+    ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
-    tes : list
+    tes : :obj:`list`
         List of echo times associated with `catd`, in milliseconds
-    kdaw : float
+    kdaw : :obj:`float`
         Dimensionality augmentation weight for Kappa calculations
-    rdaw : float
+    rdaw : :obj:`float`
         Dimensionality augmentation weight for Rho calculations
-    ste : int or list-of-int, optional
+    ste : :obj:`int` or :obj:`list` of :obj:`int`, optional
         Which echos to use in PCA. Values -1 and 0 are special, where a value
         of -1 will indicate using all the echos and 0 will indicate using the
         optimal combination of the echos. A list can be provided to indicate
         a subset of echos. Default: 0
-    mlepca : bool, optional
+    mlepca : :obj:`bool`, optional
         Whether to use the method originally explained in Minka, NIPS 2000 for
         guessing PCA dimensionality instead of a traditional SVD. Default: True
-    wvpca : bool, optional
+    wvpca : :obj:`bool`, optional
         Whether to apply wavelet denoising to data. Default: False
 
     Returns
     -------
-    n_components : int
+    n_components : :obj:`int`
         Number of components retained from PCA decomposition
     dd : (S x E x T) :obj:`numpy.ndarray`
         Dimensionally-reduced functional data
@@ -101,6 +101,18 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
 
             - Nonsignificant :math:`{\\kappa}` and :math:`{\\rho}`.
             - Nonsignificant variance explained.
+
+    Outputs:
+
+    This function writes out several files:
+
+    ======================    =================================================
+    Filename                  Content
+    ======================    =================================================
+    pcastate.pkl              Values from PCA results.
+    comp_table_pca.txt        PCA component table.
+    mepca_mix.1D              PCA mixing matrix.
+    ======================    =================================================
     """
 
     n_samp, n_echos, n_vols = catd.shape
@@ -176,7 +188,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
             LGR.warning('Could not save PCA solution')
 
     else:  # if loading existing state
-        LGR.info('Loading PCA from: {}'.format('pcastate.pkl'))
+        LGR.info('Loading PCA from: pcastate.pkl')
         with open('pcastate.pkl', 'rb') as handle:
             pcastate = pickle.load(handle)
         u, s, v = pcastate['u'], pcastate['s'], pcastate['v']
@@ -240,20 +252,20 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost,
 
     Parameters
     ----------
-    n_components : int
+    n_components : :obj:`int`
         Number of components retained from PCA decomposition
     dd : (S x E x T) :obj:`numpy.ndarray`
-        Dimensionally-reduced functional data, where `S` is samples, `E` is
+        Dimensionally reduced functional data, where `S` is samples, `E` is
         echos, and `T` is time
-    conv : float
+    conv : :obj:`float`
         Convergence limit for ICA
-    fixed_seed : int
+    fixed_seed : :obj:`int`
         Seed for ensuring reproducibility of ICA results
-    initcost : {'tanh', 'pow3', 'gaus', 'skew'} str, optional
-        Initial cost function for ICA
-    finalcost : {'tanh', 'pow3', 'gaus', 'skew'} str, optional
-        Final cost function for ICA
-    verbose : bool, optional
+    cost : {'tanh', 'pow3', 'gaus', 'skew'}
+        Initial cost function for ICA.
+    final_cost : {'tanh', 'pow3', 'gaus', 'skew'}
+        Final cost function for ICA.
+    verbose : :obj:`bool`, optional
         Whether to print messages regarding convergence process. Default: False
 
     Returns
@@ -270,9 +282,10 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost,
     import mdp
     climit = float(conv)
     mdp.numx_rand.seed(fixed_seed)
-    icanode = mdp.nodes.FastICANode(white_comp=n_components, approach='symm', g=cost,
-                                    fine_g=final_cost, coarse_limit=climit*100,
-                                    limit=climit, verbose=verbose)
+    icanode = mdp.nodes.FastICANode(white_comp=n_components, approach='symm',
+                                    g=cost, fine_g=final_cost,
+                                    coarse_limit=climit*100, limit=climit,
+                                    verbose=verbose)
     icanode.train(dd)
     smaps = icanode.execute(dd)  # noqa
     mmix = icanode.get_recmatrix().T

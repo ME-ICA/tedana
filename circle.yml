@@ -23,7 +23,6 @@ jobs:
             curl -L -o /home/neuro/data/test_TED.tar.gz https://www.dropbox.com/s/x5xhzs3x6p3ukjl/test_TED.tar.gz?dl=0
             tar -xvzf /home/neuro/data/test_TED.tar.gz --no-same-owner -C /home/neuro/data/
 
-
       - run:
           name: Create test environment
           command: |

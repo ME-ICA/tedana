@@ -4,15 +4,17 @@ Contributing to tedana
 This document explains how to set up a development environment for contributing
 to tedana and code style conventions we follow within the project.
 For a more general guide to the tedana development, please see our
-`contributing guide`_.
+`contributing guide`_. Please also follow our `code of conduct`_.
 
 .. _contributing guide: https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md
+.. _code of conduct: https://github.com/ME-ICA/tedana/blob/master/Code_of_Conduct.md
+
 
 Style Guide
 -----------
 
 Code
-####
+````
 
 Docstrings should follow `numpydoc`_ convention. We encourage extensive
 documentation.
@@ -24,7 +26,7 @@ most about 500 lines of code (not including docstrings) per script.
 .. _PEP8: https://www.python.org/dev/peps/pep-0008/
 
 Pull Requests
-#############
+`````````````
 
 We encourage the use of standardized tags for categorizing pull requests.
 When opening a pull request, please use one of the following prefixes:
