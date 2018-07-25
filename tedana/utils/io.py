@@ -134,7 +134,7 @@ def split_ts(data, mmix, mask, acc):
         Original data with `hikts` removed
     """
 
-    cbetas = model.get_lstsq_coeffs(data - data.mean(axis=-1, keepdims=True),
+    cbetas = model.get_coeffs(data - data.mean(axis=-1, keepdims=True),
                                     mmix, mask)
     betas = cbetas[mask]
     if len(acc) != 0:
@@ -193,7 +193,7 @@ def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, suffix=''):
     dmdata = mdata.T - mdata.T.mean(axis=0)
 
     # get variance explained by retained components
-    betas = model.get_lstsq_coeffs(dmdata.T, mmix, mask=None)
+    betas = model.get_coeffs(dmdata.T, mmix, mask=None)
     varexpl = (1 - ((dmdata.T - betas.dot(mmix.T))**2.).sum() /
                (dmdata**2.).sum()) * 100
     LGR.info('Variance explained by ICA decomposition: '
@@ -418,7 +418,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, acc, rej, midk, empty,
 
     varexpl = write_split_ts(ts, mmix, mask, acc, rej, midk, ref_img, suffix='OC')
 
-    ts_B = model.get_lstsq_coeffs(ts, mmix, mask)
+    ts_B = model.get_coeffs(ts, mmix, mask)
     fout = utils.filewrite(ts_B, 'betas_OC', ref_img)
     LGR.info('Writing full ICA coefficient feature set: {}'.format(op.abspath(fout)))
 

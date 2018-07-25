@@ -77,7 +77,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
                                  normalize=False)
 
     # compute PSC dataset - shouldn't have to refit data
-    tsoc_B = get_lstsq_coeffs(tsoc_dm, mmix, mask=None)
+    tsoc_B = get_coeffs(tsoc_dm, mmix, mask=None)
     tsoc_Babs = np.abs(tsoc_B)
     PSC = tsoc_B / tsoc.mean(axis=-1, keepdims=True) * 100
 
@@ -93,7 +93,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     totvar_norm = (WTS**2).sum()
 
     # compute Betas and means over TEs for TE-dependence analysis
-    betas = get_lstsq_coeffs(catd, mmix,
+    betas = get_coeffs(catd, mmix,
                              np.repeat(mask[:, np.newaxis], len(tes), axis=1))
     n_samp, n_echos, n_components = betas.shape
     n_voxels = mask.sum()
@@ -264,7 +264,7 @@ def computefeats2(data, mmix, mask, normalize=True):
     data_vn = stats.zscore(data[mask], axis=-1)
 
     # get betas of `data`~`mmix` and limit to range [-0.999, 0.999]
-    data_R = get_lstsq_coeffs(data_vn, mmix, mask=None)
+    data_R = get_coeffs(data_vn, mmix, mask=None)
     data_R[data_R < -0.999] = -0.999
     data_R[data_R > 0.999] = 0.999
 
@@ -281,7 +281,7 @@ def computefeats2(data, mmix, mask, normalize=True):
     return data_Z
 
 
-def get_lstsq_coeffs(data, X, mask=None, add_const=False):
+def get_coeffs(data, X, mask=None, add_const=False):
     """
     Performs least-squares fit of `X` against `data`
 
