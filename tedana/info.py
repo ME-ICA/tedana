@@ -5,7 +5,7 @@
 Base module variables
 """
 
-__version__ = '0.0.1'
+__version__ = '0.0.3'
 __author__ = 'tedana developers'
 __copyright__ = 'Copyright 2017, tedana developers'
 __credits__ = ['Elizabeth DuPre', 'Prantik Kundu', 'Ross Markello',
@@ -28,6 +28,7 @@ REQUIRES = [
     'numpy',
     'scikit-learn',
     'mdp',
+    'pywt',
     'nilearn',
     'nibabel>=2.1.0',
     'scipy'

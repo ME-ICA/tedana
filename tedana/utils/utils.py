@@ -207,8 +207,8 @@ def load_data(data, n_echos=None):
     -------
     fdata : (S x E x T) :obj:`numpy.ndarray`
         Output data where `S` is samples, `E` is echos, and `T` is time
-    ref_img : str
-        Filepath to reference image for saving output files
+    ref_img : str or :obj:`numpy.ndarray`
+        Filepath to reference image for saving output files or NIFTI-like array
     """
     if n_echos is None:
         raise ValueError('Number of echos must be specified. '

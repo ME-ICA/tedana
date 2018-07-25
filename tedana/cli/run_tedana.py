@@ -8,7 +8,8 @@ import argparse
 from tedana import workflows
 
 import logging
-logging.basicConfig(format='[%(levelname)s]: ++ %(message)s', level=logging.INFO)
+logging.basicConfig(format='[%(levelname)s]: ++ %(message)s',
+                    level=logging.INFO)
 
 
 def is_valid_file(parser, arg):
@@ -142,6 +143,11 @@ def get_parser():
                         help='Save component selection data',
                         action='store_true',
                         default=False)
+    parser.add_argument('--wvpca',
+                        dest='wvpca',
+                        help='Perform PCA on wavelet-transformed data',
+                        action='store_true',
+                        default=False)
     parser.add_argument('--label',
                         dest='label',
                         type=str,
@@ -173,16 +179,6 @@ def main(argv=None):
     elif options.quiet:
         logging.getLogger().setLevel(logging.WARNING)
     workflows.tedana(**vars(options))
-
-
-def run_t2smap(argv=None):
-    """T2smap entry point"""
-    options = get_parser().parse_args(argv)
-    if options.debug and not options.quiet:
-        logging.getLogger().setLevel(logging.DEBUG)
-    elif options.quiet:
-        logging.getLogger().setLevel(logging.WARNING)
-    workflows.t2smap(**vars(options))
 
 
 if __name__ == '__main__':
