@@ -6,7 +6,7 @@ import numpy as np
 from tedana.model import fit
 
 
-def test_get_lstsq_coeffs():
+def test_get_coeffs():
     """
     Check least squares coefficients.
     """
@@ -17,18 +17,18 @@ def test_get_lstsq_coeffs():
     X = np.arange(0, 40)[:, np.newaxis]
     mask = np.array([True, False])
 
-    betas = fit.get_lstsq_coeffs(data, X, mask=None, add_const=False)
+    betas = fit.get_coeffs(data, X, mask=None, add_const=False)
     betas = np.squeeze(betas)
     assert np.allclose(betas, np.array([5., 5.]))
 
-    betas = fit.get_lstsq_coeffs(data, X, mask=None, add_const=True)
+    betas = fit.get_coeffs(data, X, mask=None, add_const=True)
     betas = np.squeeze(betas)
     assert np.allclose(betas, np.array([5., 5.]))
 
-    betas = fit.get_lstsq_coeffs(data, X, mask=mask, add_const=False)
+    betas = fit.get_coeffs(data, X, mask=mask, add_const=False)
     betas = np.squeeze(betas)
     assert np.allclose(betas, np.array([5, 0]))
 
-    betas = fit.get_lstsq_coeffs(data, X, mask=mask, add_const=True)
+    betas = fit.get_coeffs(data, X, mask=mask, add_const=True)
     betas = np.squeeze(betas)
     assert np.allclose(betas, np.array([5, 0]))
