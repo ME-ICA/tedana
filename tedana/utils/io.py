@@ -135,7 +135,7 @@ def split_ts(data, mmix, mask, acc):
     """
 
     cbetas = model.get_lstsq_coeffs(data - data.mean(axis=-1, keepdims=True),
-                                    mask, mmix)
+                                    mmix, mask)
     betas = cbetas[mask]
     if len(acc) != 0:
         hikts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
@@ -418,7 +418,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, acc, rej, midk, empty,
 
     varexpl = write_split_ts(ts, mmix, mask, acc, rej, midk, ref_img, suffix='OC')
 
-    ts_B = model.get_lstsq_coeffs(ts, mask, mmix)
+    ts_B = model.get_lstsq_coeffs(ts, mmix, mask)
     fout = utils.filewrite(ts_B, 'betas_OC', ref_img)
     LGR.info('Writing full ICA coefficient feature set: {}'.format(op.abspath(fout)))
 
