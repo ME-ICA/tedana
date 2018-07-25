@@ -55,8 +55,8 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
 
    introduction
    usage
-   contributing
    api
+   contributing
 
 
 Indices and tables
