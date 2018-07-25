@@ -73,8 +73,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     # compute un-normalized weight dataset (features)
     if mmixN is None:
         mmixN = mmix
-    WTS = computefeats2(utils.unmask(tsoc, mask), mmixN, mask,
-                                 normalize=False)
+    WTS = computefeats2(utils.unmask(tsoc, mask), mmixN, mask, normalize=False)
 
     # compute PSC dataset - shouldn't have to refit data
     tsoc_B = get_coeffs(tsoc_dm, mmix, mask=None)
@@ -93,8 +92,8 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     totvar_norm = (WTS**2).sum()
 
     # compute Betas and means over TEs for TE-dependence analysis
-    betas = get_coeffs(catd, mmix,
-                             np.repeat(mask[:, np.newaxis], len(tes), axis=1))
+    betas = get_coeffs(catd, mmix, np.repeat(mask[:, np.newaxis], len(tes),
+                                             axis=1))
     n_samp, n_echos, n_components = betas.shape
     n_voxels = mask.sum()
     n_data_voxels = (t2s != 0).sum()

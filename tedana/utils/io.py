@@ -6,31 +6,28 @@ import os.path as op
 import textwrap
 
 import numpy as np
+from np.linalg import lstsq
 
 from tedana import model, utils
 
 LGR = logging.getLogger(__name__)
 
 
-def gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img):
+def gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img):
     """
     Perform global signal regression.
 
     Parameters
     ----------
-    OCcatd : (S x T) array_like
-        Optimally-combined time series data
+    optcom_ts : (S x T) array_like
+        Optimally combined time series data
     mmix : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `OCcatd`
+        is components and `T` is the same as in `optcom_ts`
     mask : (S,) array_like
         Boolean mask array
     acc : :obj:`list`
         Indices of accepted (BOLD) components in `mmix`
-    rej : :obj:`list`
-        Indices of rejected (non-BOLD) components in `mmix`
-    midk : :obj:`list`
-        Indices of mid-K (questionable) components in `mmix`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
 
@@ -48,64 +45,61 @@ def gscontrol_mmix(OCcatd, mmix, mask, acc, rej, midk, ref_img):
     meica_mix_T1c.1D          T1-GS corrected mixing matrix
     ======================    =================================================
     """
-
-    Gmu = OCcatd.mean(axis=-1)
-    Gstd = OCcatd.std(axis=-1)
-    Gmask = (Gmu != 0)
+    optcom_masked = optcom_ts[mask, :]
+    optcom_mu = optcom_masked.mean(axis=-1)[:, np.newaxis]
+    optcom_std = optcom_masked.std(axis=-1)[:, np.newaxis]
 
     """
     Compute temporal regression
     """
-    dat = (OCcatd[Gmask] - Gmu[Gmask][:, np.newaxis]) / Gstd[mask][:, np.newaxis]
-    solG = np.linalg.lstsq(mmix, dat.T, rcond=None)[0]
-    resid = dat - np.dot(solG.T, mmix.T)
+    data_norm = (optcom_masked - optcom_mu) / optcom_std
+    cbetas = lstsq(mmix, data_norm.T, rcond=None)[0].T
+    resid = data_norm - np.dot(cbetas, mmix.T)
 
     """
     Build BOLD time series without amplitudes, and save T1-like effect
     """
-    bold_ts = np.dot(solG.T[:, acc], mmix[:, acc].T)
-    sphis = bold_ts.min(axis=-1)
-    sphis -= sphis.mean()
-    utils.filewrite(utils.unmask(sphis, mask), 'sphis_hik', ref_img)
+    bold_ts = np.dot(cbetas[:, acc], mmix[:, acc].T)
+    t1_map = bold_ts.min(axis=-1)
+    t1_map -= t1_map.mean()
+    utils.filewrite(utils.unmask(t1_map, mask), 'sphis_hik', ref_img)
+    t1_map = t1_map[:, np.newaxis]
 
     """
     Find the global signal based on the T1-like effect
     """
-    sol = np.linalg.lstsq(np.atleast_2d(sphis).T, dat, rcond=None)
-    glsig = sol[0]
+    glob_sig = lstsq(t1_map, data_norm, rcond=None)[0]
 
     """
-    T1 correct time series by regression
+    T1-correct time series by regression
     """
-    bold_noT1gs = bold_ts - np.dot(np.linalg.lstsq(glsig.T, bold_ts.T,
-                                                   rcond=None)[0].T, glsig)
-    utils.filewrite(utils.unmask(bold_noT1gs * Gstd[mask][:, np.newaxis], mask),
+    bold_noT1gs = bold_ts - np.dot(lstsq(glob_sig.T, bold_ts.T,
+                                         rcond=None)[0].T, glob_sig)
+    utils.filewrite(utils.unmask(bold_noT1gs * optcom_std, mask),
                     'hik_ts_OC_T1c.nii', ref_img)
 
     """
-    Make medn version of T1 corrected time series
+    Make denoised version of T1-corrected time series
     """
-    utils.filewrite(Gmu[..., np.newaxis] +
-                    utils.unmask((bold_noT1gs+resid)*Gstd[mask][:, np.newaxis],
-                                 mask), 'dn_ts_OC_T1c', ref_img)
+    medn_ts = optcom_mu + ((bold_noT1gs + resid) * optcom_std)
+    utils.filewrite(utils.unmask(medn_ts, mask), 'dn_ts_OC_T1c', ref_img)
 
     """
     Orthogonalize mixing matrix w.r.t. T1-GS
     """
-    mmixnogs = mmix.T - np.dot(np.linalg.lstsq(glsig.T, mmix, rcond=None)[0].T,
-                               glsig)
-    mmixnogs_mu = mmixnogs.mean(-1)
-    mmixnogs_std = mmixnogs.std(-1)
-    mmixnogs_norm = (mmixnogs - mmixnogs_mu[:, np.newaxis]) /\
-        mmixnogs_std[:, np.newaxis]
-    mmixnogs_norm = np.vstack([np.atleast_2d(np.ones(max(glsig.shape))), glsig,
-                               mmixnogs_norm])
+    mmixnogs = mmix.T - np.dot(lstsq(glob_sig.T, mmix, rcond=None)[0].T,
+                               glob_sig)
+    mmixnogs_mu = mmixnogs.mean(-1)[:, np.newaxis]
+    mmixnogs_std = mmixnogs.std(-1)[:, np.newaxis]
+    mmixnogs_norm = (mmixnogs - mmixnogs_mu) / mmixnogs_std
+    mmixnogs_norm = np.vstack([np.atleast_2d(np.ones(max(glob_sig.shape))),
+                               glob_sig, mmixnogs_norm])
 
     """
     Write T1-GS corrected components and mixing matrix
     """
-    sol = np.linalg.lstsq(mmixnogs_norm.T, dat.T, rcond=None)
-    utils.filewrite(utils.unmask(sol[0].T[:, 2:], mask), 'betas_hik_OC_T1c',
+    cbetas_norm = lstsq(mmixnogs_norm.T, data_norm.T, rcond=None)[0].T
+    utils.filewrite(utils.unmask(cbetas_norm[:, 2:], mask), 'betas_hik_OC_T1c',
                     ref_img)
     np.savetxt('meica_mix_T1c.1D', mmixnogs)
 
@@ -128,21 +122,23 @@ def split_ts(data, mmix, mask, acc):
 
     Returns
     -------
-    hikts : (S x T) :obj:`numpy.ndarray`
+    hik_ts : (S x T) :obj:`numpy.ndarray`
         Time series reconstructed using only components in `acc`
-    rest : (S x T) :obj:`numpy.ndarray`
-        Original data with `hikts` removed
+    resid : (S x T) :obj:`numpy.ndarray`
+        Original data with `hik_ts` removed
     """
 
     cbetas = model.get_coeffs(data - data.mean(axis=-1, keepdims=True),
-                                    mmix, mask)
+                              mmix, mask)
     betas = cbetas[mask]
     if len(acc) != 0:
-        hikts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
+        hik_ts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
     else:
-        hikts = None
+        hik_ts = None
 
-    return hikts, data - hikts
+    resid = data - hik_ts
+
+    return hik_ts, resid
 
 
 def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, suffix=''):
