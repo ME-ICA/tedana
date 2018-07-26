@@ -21,7 +21,7 @@ Journal articles
 Videos
 ******
 * An `educational session from OHBM 2017`_ by Dr. Prantik Kundu about multi-echo denoising
-* A `series of lectures from the OHBM 2017 multi-echo session` on multiple facets of multi-echo data analysis
+* A `series of lectures from the OHBM 2017 multi-echo session`_ on multiple facets of multi-echo data analysis
 
 .. _educational session from OHBM 2017: https://www.pathlms.com/ohbm/courses/5158/sections/7788/video_presentations/75977
 .. _series of lectures from the OHBM 2017 multi-echo session: https://www.pathlms.com/ohbm/courses/5158/sections/7822
