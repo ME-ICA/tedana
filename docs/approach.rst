@@ -1,5 +1,5 @@
-Introduction
-============
+tedana's approach
+=================
 
 ``tedana`` works by decomposing multi-echo BOLD data via PCA and ICA.
 These components are then analyzed to determine whether they are TE-dependent
