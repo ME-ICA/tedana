@@ -6,7 +6,6 @@ import os.path
 import numpy as np
 import nibabel as nb
 from pathlib import Path
-from tedana.cli import run_tedana
 from tedana import workflows
 
 
@@ -15,10 +14,8 @@ def test_basic_tedana():
     A very simple test, to confirm that tedana creates output
     files.
     """
-    parser = run_tedana.get_parser()
-    options = parser.parse_args(['-d', '/home/neuro/data/zcat_ffd.nii.gz',
-                                 '-e', '14.5', '38.5', '62.5'])
-    workflows.tedana(**vars(options))
+    workflows.tedana_workflow('/home/neuro/data/zcat_ffd.nii.gz',
+                              [14.5, 38.5, 62.5])
     assert os.path.isfile('comp_table.txt')
 
 
