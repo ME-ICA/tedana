@@ -10,18 +10,9 @@ import numpy as np
 from scipy import stats
 
 from tedana import model, utils
+from tedana.workflows.parser_utils import is_valid_file
 
 LGR = logging.getLogger(__name__)
-
-
-def _is_valid_file(parser, arg):
-    """
-    Check if argument is existing file.
-    """
-    if not op.isfile(arg) and arg is not None:
-        parser.error('The file {0} does not exist!'.format(arg))
-
-    return arg
 
 
 def _get_parser():
@@ -37,7 +28,7 @@ def _get_parser():
                         dest='data',
                         nargs='+',
                         metavar='FILE',
-                        type=lambda x: _is_valid_file(parser, x),
+                        type=lambda x: is_valid_file(parser, x),
                         help=('Multi-echo dataset for analysis. May be a '
                               'single file with spatially concatenated data '
                               'or a set of echo-specific files, in the same '
