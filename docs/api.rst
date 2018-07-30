@@ -12,8 +12,8 @@ API
    :template: function.rst
    :toctree: generated/
 
-   tedana.workflows.tedana
-   tedana.workflows.t2smap
+   tedana.workflows.tedana_workflow
+   tedana.workflows.t2smap_workflow
 
 .. currentmodule:: tedana
 

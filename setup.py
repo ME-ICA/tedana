@@ -41,8 +41,8 @@ def main():
         tests_require=ldict['TESTS_REQUIRES'],
         extras_require=ldict['EXTRA_REQUIRES'],
         entry_points={'console_scripts': [
-            't2smap=tedana.cli.run_t2smap:main',
-            'tedana=tedana.cli.run_tedana:main'
+            't2smap=tedana.workflows.t2smap:_main',
+            'tedana=tedana.workflows.tedana:_main'
         ]},
         packages=find_packages(exclude=("tests",)),
         package_data=ldict['PACKAGE_DATA'],

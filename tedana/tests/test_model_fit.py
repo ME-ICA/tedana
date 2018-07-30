@@ -1,6 +1,7 @@
 """
 Tests for tedana.model.fit
 """
+
 import numpy as np
 
 from tedana.model import fit

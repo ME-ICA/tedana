@@ -2,11 +2,12 @@
 Tests for tedana.
 """
 
-import os.path
-import numpy as np
-import nibabel as nb
+import os.path as op
 from pathlib import Path
-from tedana.cli import run_tedana
+
+import numpy as np
+import nibabel as nib
+
 from tedana import workflows
 
 
@@ -15,11 +16,9 @@ def test_basic_tedana():
     A very simple test, to confirm that tedana creates output
     files.
     """
-    parser = run_tedana.get_parser()
-    options = parser.parse_args(['-d', '/home/neuro/data/zcat_ffd.nii.gz',
-                                 '-e', '14.5', '38.5', '62.5'])
-    workflows.tedana(**vars(options))
-    assert os.path.isfile('comp_table.txt')
+    workflows.tedana_workflow(['/home/neuro/data/zcat_ffd.nii.gz'],
+                              [14.5, 38.5, 62.5])
+    assert op.isfile('comp_table.txt')
 
 
 def compare_nifti(fn, test_dir, res_dir):
@@ -28,7 +27,7 @@ def compare_nifti(fn, test_dir, res_dir):
     """
     res_fp = (res_dir/fn).as_posix()
     test_fp = (test_dir/fn).as_posix()
-    assert np.allclose(nb.load(res_fp).get_data(), nb.load(test_fp).get_data())
+    assert np.allclose(nib.load(res_fp).get_data(), nib.load(test_fp).get_data())
 
 
 def test_outputs():
