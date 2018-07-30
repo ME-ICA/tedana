@@ -53,7 +53,8 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
    :maxdepth: 2
    :caption: Contents:
 
-   introduction
+   multi-echo
+   approach
    usage
    api
    contributing
