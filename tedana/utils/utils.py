@@ -1,6 +1,7 @@
 """
 Utilities for tedana package
 """
+import warnings
 import os.path as op
 
 import nibabel as nib
@@ -104,6 +105,87 @@ def load_image(data):
     fdata = data.reshape((-1,) + data.shape[3:]).squeeze()
 
     return fdata
+
+
+def load_data2(data, n_echos=None):
+    """
+    Load files into image object.
+
+    Parameters
+    ----------
+    data : file, list of files, img_like, or list of img_like
+        Input multi-echo data array, where `X` and `Y` are spatial dimensions,
+        `M` is the Z-spatial dimensions with all the input echos concatenated,
+        and `T` is time. A list of image-like objects (e.g., .nii or .gii) are
+        accepted, as well
+    n_echos : int, optional
+        Number of echos in provided data array. Only necessary if `data` is
+        a z-concatenated file. Default: None
+
+    Returns
+    -------
+    out_img : img_list
+        Nifti1Image or GiftiImage object containing data from input file(s).
+    """
+    if isinstance(data, list) and len(data) > 1:
+        if len(data) == 2:  # inviable -- need more than 2 echos
+            raise ValueError('Cannot run `tedana` with only two echos: '
+                             '{}'.format(data))
+        else:  # individual echo files were provided (surface or volumetric)
+            if np.all([isinstance(f, str) for f in data]):
+                data = [nib.load(f) for f in data]
+
+            if get_dtype(data) == 'GIFTI':
+                # Compile data across echoes
+                arrays = [np.vstack([dat.data for dat in img.darrays]) for img
+                          in data]
+                arr = np.stack(arrays, axis=1)
+
+                # Split by volume
+                split = np.split(arr, np.arange(1, arr.shape[0]), axis=0)
+                split = [vol.squeeze().T for vol in split]  # S x E darrays
+                darrs = [nib.gifti.GiftiDataArray(vol) for vol in split]
+                out_img = nib.gifti.GiftiImage(header=data[0].header,
+                                               darrays=darrs)
+            elif get_dtype(data) == 'NIFTI':
+                arr = np.stack([img.get_data() for img in data], axis=4)
+                out_img = nib.Nifti1Image(arr, data[0].affine)
+            else:
+                raise TypeError('Input file(s) must be nifti or gifti.')
+            return out_img
+    elif isinstance(data, list) and len(data) == 1:
+        # A single multi-echo nifti/gifti file
+        data = data[0]
+
+    if isinstance(data, str):
+        img = nib.load(data)
+    else:
+        img = data
+
+    # we have a z-cat file -- we need to know how many echos are in it!
+    if get_dtype(img) == 'NIFTI' and len(img.shape) == 4:
+        warnings.warn(('In the future, support for z-concatenated images will '
+                       'be removed. Please store multi-echo data as a set '
+                       'of 4D files or as a single 5D (X x Y x Z x E x T) '
+                       'file.'),
+                      FutureWarning)
+        if n_echos is None:
+            raise ValueError('For z-concatenated images, n_echos must be '
+                             'provided.')
+        elif img.shape[2] % n_echos != 0:
+            raise ValueError('Number of echoes does not divide evenly into '
+                             'data.')
+        else:
+            (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
+            fdata = img.get_data().reshape(nx, ny, nz, -1, n_echos, order='F')
+            out_img = nib.Nifti1Image(fdata, img.affine, header=img.header,
+                                      extra=img.extra)
+            out_img.header.extensions = []
+            out_img.header.set_sform(out_img.header.get_sform(), code=1)
+    else:
+        out_img = img
+
+    return out_img
 
 
 def load_data(data, n_echos=None):
