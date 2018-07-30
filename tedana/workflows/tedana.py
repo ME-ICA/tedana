@@ -237,13 +237,16 @@ def tedana_workflow(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     Notes
     -----
     PROCEDURE 2 : Computes ME-PCA and ME-ICA
-    -Computes T2* map
-    -Computes PCA of concatenated ME data, then computes TE-dependence of PCs
-    -Computes ICA of TE-dependence PCs
-    -Identifies TE-dependent ICs, outputs high-\kappa (BOLD) component
-       and denoised time series
-    -or- Computes TE-dependence of each component of a general linear model
-       specified by input (includes MELODIC FastICA mixing matrix)
+
+    - Computes T2* map
+    - Computes PCA of concatenated ME data, then computes TE-dependence of PCs
+    - Computes ICA of TE-dependence PCs
+    - Identifies TE-dependent ICs, outputs high-\kappa (BOLD) component
+      and denoised time series
+
+    or computes TE-dependence of each component of a general linear model
+    specified by input (includes MELODIC FastICA mixing matrix)
+
     PROCEDURE 2a: Model fitting and component selection routines
 
     This workflow writes out several files, which are written out to a folder
