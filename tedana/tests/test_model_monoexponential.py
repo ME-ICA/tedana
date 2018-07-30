@@ -1,6 +1,7 @@
 """
 Tests for tedana.model.monoexponential
 """
+
 import os.path as op
 
 import pytest

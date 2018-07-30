@@ -1,6 +1,7 @@
 """
-Tests for tedana.
+Tests for t2smap.
 """
+
 import os.path as op
 from shutil import rmtree
 

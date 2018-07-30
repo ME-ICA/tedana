@@ -1,6 +1,7 @@
 """
 Tests for tedana.model.combine
 """
+
 import numpy as np
 
 from tedana.model import combine

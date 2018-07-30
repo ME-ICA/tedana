@@ -175,8 +175,8 @@ def tedana_workflow(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
 
     Parameters
     ----------
-    data : :obj:`list` of :obj:`str`
-        Either a single z-concatenated file (single-entry list) or a
+    data : :obj:`str` or :obj:`list` of :obj:`str`
+        Either a single z-concatenated file (single-entry list or str) or a
         list of echo-specific files, in ascending order.
     tes : :obj:`list`
         List of echo times associated with data in milliseconds.
@@ -307,6 +307,9 @@ def tedana_workflow(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     n_echos = len(tes)
 
     # coerce data to samples x echos x time array
+    if isinstance(data, str):
+        data = [data]
+
     LGR.info('Loading input data: {}'.format([f for f in data]))
     catd, ref_img = utils.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
@@ -320,9 +323,9 @@ def tedana_workflow(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     kdaw, rdaw = float(kdaw), float(rdaw)
 
     try:
-        ref_label = os.path.basename(ref_img).split('.')[0]
+        ref_label = op.basename(ref_img).split('.')[0]
     except TypeError:
-        ref_label = os.path.basename(str(data[0])).split('.')[0]
+        ref_label = op.basename(str(data[0])).split('.')[0]
 
     if label is not None:
         out_dir = 'TED.{0}.{1}'.format(ref_label, label)

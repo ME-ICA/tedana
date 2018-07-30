@@ -73,8 +73,8 @@ def t2smap_workflow(data, tes, fitmode='all', combmode='t2s', label=None):
 
     Parameters
     ----------
-    data : :obj:`list` of :obj:`str`
-        Either a single z-concatenated file (single-entry list) or a
+    data : :obj:`str` or :obj:`list` of :obj:`str`
+        Either a single z-concatenated file (single-entry list or str) or a
         list of echo-specific files, in ascending order.
     tes : :obj:`list`
         List of echo times associated with data in milliseconds.
@@ -118,6 +118,9 @@ def t2smap_workflow(data, tes, fitmode='all', combmode='t2s', label=None):
     n_echos = len(tes)
 
     # coerce data to samples x echos x time array
+    if isinstance(data, str):
+        data = [data]
+
     LGR.info('Loading input data: {}'.format([f for f in data]))
     catd, ref_img = utils.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
