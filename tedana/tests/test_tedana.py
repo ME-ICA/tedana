@@ -62,4 +62,4 @@ def test_outputs():
     ]
     for fn in nifti_test_list:
         compare_nifti(fn, Path(op.expanduser('~/data/TED/')),
-                      Path(op.expanduser('~/code/TED/')))
+                      Path(op.expanduser('~/code/TED.zcat_ffd/')))
