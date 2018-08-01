@@ -149,7 +149,9 @@ def _get_parser():
     parser.add_argument('--seed',
                         dest='fixed_seed',
                         type=int,
-                        help='Seeded value for ICA, for reproducibility.',
+                        help=('Value passed to repr(mdp.numx_rand.seed()) '
+                              'Set to an integer value for reproducible ICA results; '
+                              'otherwise, set to `None` for varying results across calls.'),
                         default=42)
     parser.add_argument('--debug',
                         dest='debug',
@@ -228,7 +230,9 @@ def tedana_workflow(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     Other Parameters
     ----------------
     fixed_seed : :obj:`int`, optional
-        Seeded value for ICA, for reproducibility.
+        Value passed to ``mdp.numx_rand.seed()``.
+        Set to an integer value for reproducible ICA results;
+        otherwise, set to `None` for varying results across calls.
     debug : :obj:`bool`, optional
         Whether to run in debugging mode or not. Default is False.
     quiet : :obj:`bool`, optional

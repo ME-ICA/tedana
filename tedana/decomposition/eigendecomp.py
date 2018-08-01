@@ -260,7 +260,9 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost,
     conv : :obj:`float`
         Convergence limit for ICA
     fixed_seed : :obj:`int`
-        Seed for ensuring reproducibility of ICA results
+        Value passed to ``mdp.numx_rand.seed()``.
+        Set to an integer value for reproducible ICA results;
+        otherwise, set to `None` for varying results across calls.
     cost : {'tanh', 'pow3', 'gaus', 'skew'}
         Initial cost function for ICA.
     final_cost : {'tanh', 'pow3', 'gaus', 'skew'}
