@@ -28,7 +28,7 @@ REQUIRES = [
     'numpy',
     'scikit-learn',
     'mdp',
-    'pywt',
+    'pywavelets',
     'nilearn',
     'nibabel>=2.1.0',
     'scipy'
