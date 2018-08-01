@@ -421,10 +421,19 @@ def tedana_workflow(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         else:
             acc, rej, midk, empty = utils.ctabsel(ctab)
 
+    # TODO: Move this into selcomps
+    comptable['classification'] = ''
+    comptable.loc[acc, 'classification'] = 'accepted'
+    comptable.loc[rej, 'classification'] = 'rejected'
+    comptable.loc[midk, 'classification'] = 'midk'
+    comptable.loc[empty, 'classification'] = 'ignored'
+
     if len(acc) == 0:
         LGR.warning('No BOLD components detected! Please check data and '
                     'results!')
 
+    comptable.to_csv(op.join(out_dir, 'comp_table_ica.txt'), sep='\t',
+                     index=True, index_label='component')
     utils.writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk,
                        empty, ref_img)
     utils.gscontrol_mmix(OCcatd, mmix, mask, acc, ref_img)

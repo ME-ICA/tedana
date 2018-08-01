@@ -6,6 +6,7 @@ import logging
 import os.path as op
 
 import numpy as np
+import pandas as pd
 from scipy import stats
 
 from tedana import model, utils
@@ -143,21 +144,21 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
             from sklearn.decomposition import PCA
             ppca = PCA(n_components='mle', svd_solver='full')
             ppca.fit(dz)
-            v = ppca.components_
-            s = ppca.explained_variance_
-            u = np.dot(np.dot(dz, v.T), np.diag(1. / s))
+            comp_ts = ppca.components_
+            varex = ppca.explained_variance_
+            u = np.dot(np.dot(dz, comp_ts.T), np.diag(1. / varex))
         else:
-            u, s, v = np.linalg.svd(dz, full_matrices=0)
+            u, varex, comp_ts = np.linalg.svd(dz, full_matrices=0)
 
         # actual variance explained (normalized)
-        sp = s / s.sum()
-        eigelb = getelbow_mod(sp, val=True)
+        varex_norm = varex / varex.sum()
+        eigenvalue_elbow = getelbow_mod(varex_norm, val=True)
 
-        spdif = np.abs(np.diff(sp))
+        spdif = np.abs(np.diff(varex_norm))
         spdifh = spdif[(len(spdif)//2):]
         spdthr = np.mean([spdifh.max(), spdif.min()])
-        spmin = sp[(len(spdif)//2) + np.arange(len(spdifh))[spdifh >= spdthr][0] + 1]
-        spcum = np.cumsum(sp)
+        varex_norm_min = varex_norm[(len(spdif)//2) + np.arange(len(spdifh))[spdifh >= spdthr][0] + 1]
+        varex_norm_cum = np.cumsum(varex_norm)
 
         # Compute K and Rho for PCA comps
         eimum = np.atleast_2d(eim)
@@ -167,20 +168,24 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         o[mask] = eimum
         eimum = np.squeeze(o).astype(bool)
 
-        vTmix = v.T
+        vTmix = comp_ts.T
         vTmixN = ((vTmix.T - vTmix.T.mean(0)) / vTmix.T.std(0)).T
         LGR.info('Making initial component selection guess from PCA results')
-        _, ctb, betasv, v_T = model.fitmodels_direct(catd, v.T, eimum, t2s, t2sG,
-                                                     tes, combmode, ref_img,
-                                                     mmixN=vTmixN, full_sel=False)
-        ctb = ctb[ctb[:, 0].argsort(), :]
-        ctb = np.vstack([ctb.T[:3], sp]).T
+        _, ct_df, betasv, v_T = model.fitmodels_direct(catd, comp_ts.T, eimum,
+                                                       t2s, t2sG,
+                                                       tes, combmode, ref_img,
+                                                       mmixN=vTmixN,
+                                                       full_sel=False)
+        ct_df['variance explained 2 (normalized)'] = varex_norm
 
         # Save state
         fname = op.abspath('pcastate.pkl')
         LGR.info('Saving PCA results to: {}'.format(fname))
-        pcastate = {'u': u, 's': s, 'v': v, 'ctb': ctb,
-                    'eigelb': eigelb, 'spmin': spmin, 'spcum': spcum}
+        pcastate = {'u': u, 'varex': varex, 'comp_ts': comp_ts,
+                    'comptable': ct_df,
+                    'eigenvalue_elbow': eigenvalue_elbow,
+                    'varex_norm_min': varex_norm_min,
+                    'varex_norm_cum': varex_norm_cum}
         try:
             with open(fname, 'wb') as handle:
                 pickle.dump(pcastate, handle)
@@ -191,58 +196,87 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         LGR.info('Loading PCA from: pcastate.pkl')
         with open('pcastate.pkl', 'rb') as handle:
             pcastate = pickle.load(handle)
-        u, s, v = pcastate['u'], pcastate['s'], pcastate['v']
-        ctb, eigelb = pcastate['ctb'], pcastate['eigelb']
-        spmin, spcum = pcastate['spmin'], pcastate['spcum']
+        u, varex = pcastate['u'], pcastate['varex']
+        comp_ts = pcastate['comp_ts']
+        ct_df = pcastate['comptable']
+        eigenvalue_elbow = pcastate['eigenvalue_elbow']
+        varex_norm_min = pcastate['varex_norm_min']
+        varex_norm_cum = pcastate['varex_norm_cum']
 
-    np.savetxt('comp_table_pca.txt', ctb[ctb[:, 1].argsort(), :][::-1])
-    np.savetxt('mepca_mix.1D', v[ctb[:, 1].argsort()[::-1], :].T)
+    np.savetxt('mepca_mix.1D', comp_ts)
 
-    kappas = ctb[ctb[:, 1].argsort(), 1]
-    rhos = ctb[ctb[:, 2].argsort(), 2]
+    kappas = ct_df['kappa']
+    rhos = ct_df['rho']
     fmin, fmid, fmax = utils.getfbounds(n_echos)
-    kappa_thr = np.average(sorted([fmin, getelbow_mod(kappas, val=True)/2, fmid]),
+    kappa_thr = np.average(sorted([fmin,
+                                   getelbow_mod(ct_df['kappa'], val=True)/2,
+                                   fmid]),
                            weights=[kdaw, 1, 1])
-    rho_thr = np.average(sorted([fmin, getelbow_cons(rhos, val=True)/2, fmid]),
+    rho_thr = np.average(sorted([fmin,
+                                 getelbow_cons(ct_df['rho'], val=True)/2,
+                                 fmid]),
                          weights=[rdaw, 1, 1])
     if int(kdaw) == -1:
-        kappas_lim = kappas[utils.andb([kappas < fmid, kappas > fmin]) == 2]
+        kappas_lim = kappas[utils.andb([ct_df['kappa'] < fmid,
+                                        ct_df['kappa'] > fmin]) == 2]
         kappa_thr = kappas_lim[getelbow_mod(kappas_lim)]
-        rhos_lim = rhos[utils.andb([rhos < fmid, rhos > fmin]) == 2]
+        rhos_lim = rhos[utils.andb([ct_df['rho'] < fmid,
+                                    ct_df['rho'] > fmin]) == 2]
         rho_thr = rhos_lim[getelbow_mod(rhos_lim)]
         stabilize = True
-    if int(kdaw) != -1 and int(rdaw) == -1:
-        rhos_lim = rhos[utils.andb([rhos < fmid, rhos > fmin]) == 2]
+    elif int(rdaw) == -1:
+        rhos_lim = rhos[utils.andb([ct_df['rho'] < fmid,
+                                    ct_df['rho'] > fmin]) == 2]
         rho_thr = rhos_lim[getelbow_mod(rhos_lim)]
 
-    is_hik = np.array(ctb[:, 1] > kappa_thr, dtype=np.int)
-    is_hir = np.array(ctb[:, 2] > rho_thr, dtype=np.int)
-    is_hie = np.array(ctb[:, 3] > eigelb, dtype=np.int)
-    is_his = np.array(ctb[:, 3] > spmin, dtype=np.int)
-    is_not_fmax1 = np.array(ctb[:, 1] != F_MAX, dtype=np.int)
-    is_not_fmax2 = np.array(ctb[:, 2] != F_MAX, dtype=np.int)
-    pcscore = (is_hik + is_hir + is_hie) * is_his * is_not_fmax1 * is_not_fmax2
-    if stabilize:
-        temp7 = np.array(spcum < 0.95, dtype=np.int)
-        temp8 = np.array(ctb[:, 2] > fmin, dtype=np.int)
-        temp9 = np.array(ctb[:, 1] > fmin, dtype=np.int)
-        pcscore = pcscore * temp7 * temp8 * temp9
+    # Add new columns to comptable for classification
+    ct_df['classification'] = 'accepted'
+    ct_df['rationale'] = ''
+    is_lowk = ct_df['kappa'] <= kappa_thr
+    is_lowr = ct_df['rho'] <= rho_thr
+    is_lowe = ct_df['variance explained'] <= eigenvalue_elbow
+    is_lowkre = is_lowk & is_lowr & is_lowe
+    ct_df.loc[is_lowkre, 'classification'] = 'rejected'
+    ct_df.loc[is_lowkre, 'rationale'] += 'low rho, kappa, and varex;'
 
-    pcsel = pcscore > 0
-    dd = u.dot(np.diag(s*np.array(pcsel, dtype=np.int))).dot(v)
+    is_lows = ct_df['variance explained'] <= varex_norm_min
+    ct_df.loc[is_lows, 'classification'] = 'rejected'
+    ct_df.loc[is_lows, 'rationale'] += 'low variance explained;'
+    is_fmax1 = ct_df['kappa'] == F_MAX
+    ct_df.loc[is_fmax1, 'classification'] = 'rejected'
+    ct_df.loc[is_fmax1, 'rationale'] += 'kappa equals fmax;'
+    is_fmax2 = ct_df['rho'] == F_MAX
+    ct_df.loc[is_fmax2, 'classification'] = 'rejected'
+    ct_df.loc[is_fmax2, 'rationale'] += 'rho equals fmax;'
+    if stabilize:
+        temp7 = varex_norm_cum >= 0.95
+        ct_df.loc[temp7, 'classification'] = 'rejected'
+        ct_df.loc[temp7, 'rationale'] += 'cumulative var. explained above 95%;'
+        under_fmin1 = ct_df['kappa'] <= fmin
+        ct_df.loc[under_fmin1, 'classification'] = 'rejected'
+        ct_df.loc[under_fmin1, 'rationale'] += 'kappa below fmin;'
+        under_fmin2 = ct_df['rho'] <= fmin
+        ct_df.loc[under_fmin2, 'classification'] = 'rejected'
+        ct_df.loc[under_fmin2, 'rationale'] += 'rho below fmin;'
+
+    ct_df.to_csv('comp_table_pca.txt', sep='\t', index=True,
+                 index_label='component')
+
+    pcsel = ct_df['classification'] == 'accepted'
+    n_components = np.sum(pcsel)
+    kept_data = u.dot(np.diag(varex * np.array(pcsel, dtype=np.int))).dot(comp_ts)
 
     if wvpca:
-        dd = idwtmat(dd, cAl)
+        kept_data = idwtmat(kept_data, cAl)
 
-    n_components = s[pcsel].shape[0]
     LGR.info('Selected {0} components with Kappa threshold: {1:.02f}, '
              'Rho threshold: {2:.02f}'.format(n_components, kappa_thr,
                                               rho_thr))
 
-    dd = stats.zscore(dd.T, axis=0).T  # variance normalize timeseries
-    dd = stats.zscore(dd, axis=None)  # variance normalize everything
+    kept_data = stats.zscore(kept_data.T, axis=0).T  # variance normalize timeseries
+    kept_data = stats.zscore(kept_data, axis=None)  # variance normalize everything
 
-    return n_components, dd
+    return n_components, kept_data
 
 
 def tedica(n_components, dd, conv, fixed_seed, cost, final_cost,

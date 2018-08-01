@@ -425,10 +425,6 @@ def writeresults(ts, mask, comptable, mmix, n_vols, acc, rej, midk, empty,
                           mmix[:, acc], mask, ref_img, suffix='OC2')
         LGR.info('Writing Z-normalized spatial component maps: {}'.format(op.abspath(fout)))
 
-    writect(comptable, n_vols, acc, rej, midk, empty, ctname='comp_table.txt',
-            varexpl=varexpl)
-    LGR.info('Writing component table: {}'.format(op.abspath('comp_table.txt')))
-
 
 def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img):
     """

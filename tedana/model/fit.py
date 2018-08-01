@@ -3,12 +3,13 @@ Fit models.
 """
 import logging
 
+import numpy as np
+import pandas as pd
+from scipy import stats
+from scipy.special import lpmv
 import nilearn.image as niimg
 from nilearn._utils import check_niimg
 from nilearn.regions import connected_regions
-import numpy as np
-from scipy import stats
-from scipy.special import lpmv
 
 from tedana import model, utils
 
@@ -160,16 +161,15 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
         Rhos[i] = np.average(F_S0, weights=norm_weights)
 
     # tabulate component values
-    comptab_pre = np.vstack([np.arange(n_components), Kappas, Rhos, varex,
-                             varex_norm]).T
+    comptab_pre = np.vstack([Kappas, Rhos, varex, varex_norm]).T
     if reindex:
         # re-index all components in Kappa order
-        comptab = comptab_pre[comptab_pre[:, 1].argsort()[::-1], :]
-        Kappas = comptab[:, 1]
-        Rhos = comptab[:, 2]
-        varex = comptab[:, 3]
-        varex_norm = comptab[:, 4]
-        nnc = np.array(comptab[:, 0], dtype=np.int)
+        comptab = comptab_pre[comptab_pre[:, 0].argsort()[::-1], :]
+        Kappas = comptab[:, 0]
+        Rhos = comptab[:, 1]
+        varex = comptab[:, 2]
+        varex_norm = comptab[:, 3]
+        nnc = np.arange(comptab.shape[0])
         mmix_new = mmix[:, nnc]
         F_S0_maps = F_S0_maps[:, nnc]
         F_R2_maps = F_R2_maps[:, nnc]
@@ -178,10 +178,15 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
         PSC = PSC[:, nnc]
         tsoc_B = tsoc_B[:, nnc]
         tsoc_Babs = tsoc_Babs[:, nnc]
-        comptab[:, 0] = np.arange(comptab.shape[0])
     else:
         comptab = comptab_pre
         mmix_new = mmix
+
+    comptab = pd.DataFrame(comptab_pre,
+                           columns=['kappa', 'rho',
+                                    'variance explained',
+                                    'variance explained (normalized)'])
+    comptab.index.name = 'component'
 
     # full selection including clustering criteria
     seldict = None
