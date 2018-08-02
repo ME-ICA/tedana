@@ -151,7 +151,7 @@ def _get_parser():
                         type=int,
                         help=('Value passed to repr(mdp.numx_rand.seed()) '
                               'Set to an integer value for reproducible ICA results; '
-                              'otherwise, set to `None` for varying results across calls.'),
+                              'otherwise, set to -1 for varying results across calls.'),
                         default=42)
     parser.add_argument('--debug',
                         dest='debug',
@@ -231,8 +231,8 @@ def tedana_workflow(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     ----------------
     fixed_seed : :obj:`int`, optional
         Value passed to ``mdp.numx_rand.seed()``.
-        Set to an integer value for reproducible ICA results;
-        otherwise, set to `None` for varying results across calls.
+        Set to a positive integer value for reproducible ICA results;
+        otherwise, set to -1 for varying results across calls.
     debug : :obj:`bool`, optional
         Whether to run in debugging mode or not. Default is False.
     quiet : :obj:`bool`, optional
@@ -392,9 +392,9 @@ def tedana_workflow(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                                 t2s, t2sG, stabilize, ref_img,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw,
                                                 ste=ste, wvpca=wvpca)
-        mmix_orig = decomposition.tedica(n_components, dd, conv, fixed_seed,
-                                         cost=initcost, final_cost=finalcost,
-                                         verbose=debug)
+        mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, conv, fixed_seed,
+                                                     cost=initcost, final_cost=finalcost,
+                                                     verbose=debug)
         np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
         LGR.info('Making second component selection guess from ICA results')
         seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
@@ -430,7 +430,7 @@ def tedana_workflow(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                     'results!')
 
     utils.writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk,
-                       empty, ref_img)
+                       empty, ref_img, fixed_seed)
     utils.gscontrol_mmix(OCcatd, mmix, mask, acc, ref_img)
     if dne:
         utils.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)

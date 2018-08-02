@@ -262,7 +262,7 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost,
     fixed_seed : :obj:`int`
         Value passed to ``mdp.numx_rand.seed()``.
         Set to an integer value for reproducible ICA results;
-        otherwise, set to `None` for varying results across calls.
+        otherwise, set to -1 for varying results across calls.
     cost : {'tanh', 'pow3', 'gaus', 'skew'}
         Initial cost function for ICA.
     final_cost : {'tanh', 'pow3', 'gaus', 'skew'}
@@ -283,6 +283,8 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost,
 
     import mdp
     climit = float(conv)
+    if fixed_seed == -1:
+        fixed_seed = np.random.randint(low=1, high=1000)
     mdp.numx_rand.seed(fixed_seed)
     icanode = mdp.nodes.FastICANode(white_comp=n_components, approach='symm',
                                     g=cost, fine_g=final_cost,
@@ -292,4 +294,4 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost,
     smaps = icanode.execute(dd)  # noqa
     mmix = icanode.get_recmatrix().T
     mmix = stats.zscore(mmix, axis=0)
-    return mmix
+    return mmix, fixed_seed
