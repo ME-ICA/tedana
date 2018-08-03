@@ -359,8 +359,8 @@ def writect(comptable, n_vols, fixed_seed, acc, rej, midk, empty, ctname='comp_t
                                                   sortab[i, 4]))
 
 
-def writeresults(ts, mask, comptable, mmix, n_vols, acc, rej, midk, empty,
-                 ref_img, fixed_seed):
+def writeresults(ts, mask, comptable, mmix, n_vols, fixed_seed,
+                 acc, rej, midk, empty, ref_img):
     """
     Denoises `ts` and saves all resulting files to disk
 
@@ -377,6 +377,10 @@ def writeresults(ts, mask, comptable, mmix, n_vols, acc, rej, midk, empty,
     mmix : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
+    n_vols : :obj:`int`
+        Number of volumes in original time series
+    fixed_seed: :obj:`int`
+        Integer value used in seeding ICA
     acc : :obj:`list`
         Indices of accepted (BOLD) components in `mmix`
     rej : :obj:`list`
@@ -387,8 +391,6 @@ def writeresults(ts, mask, comptable, mmix, n_vols, acc, rej, midk, empty,
         Indices of ignored components in `mmix`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
-    fixed_seed: :obj:`int`
-        Integer value used in seeding ICA
 
     Notes
     -----

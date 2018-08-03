@@ -429,8 +429,8 @@ def tedana_workflow(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         LGR.warning('No BOLD components detected! Please check data and '
                     'results!')
 
-    utils.writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk,
-                       empty, ref_img, fixed_seed)
+    utils.writeresults(OCcatd, mask, comptable, mmix, fixed_seed, n_vols,
+                       acc, rej, midk, empty, ref_img)
     utils.gscontrol_mmix(OCcatd, mmix, mask, acc, ref_img)
     if dne:
         utils.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
