@@ -5,7 +5,7 @@ import numpy as np
 from tedana import utils
 
 
-def fit_decay(data, tes, mask, masksum, start_echo=1):
+def fit_decay(data, tes, mask, masksum):
     """
     Fit voxel-wise monoexponential decay models to `data`
 
@@ -22,27 +22,29 @@ def fit_decay(data, tes, mask, masksum, start_echo=1):
     masksum : (S,) array_like
         Valued array indicating number of echos that have sufficient signal in
         given sample
-    start_echo : :obj:`int`, optional
-        First echo to consider. Default is 1 (first echo).
 
     Returns
     -------
-    t2sa : (S,) :obj:`numpy.ndarray`
+    t2s_limited : (S,) :obj:`numpy.ndarray`
         Limited T2* map. The limited map only keeps the T2* values for data
         where there are at least two echos with good signal.
-    s0va : (S,) :obj:`numpy.ndarray`
+    s0_limited : (S,) :obj:`numpy.ndarray`
         Limited S0 map.  The limited map only keeps the S0 values for data
         where there are at least two echos with good signal.
     t2ss : (S x E-1) :obj:`numpy.ndarray`
-        ???
+        Voxel-wise T2* estimates using ascending numbers of echoes, starting
+        with 2.
     s0vs : (S x E-1) :obj:`numpy.ndarray`
-        ???
-    t2saf : (S,) :obj:`numpy.ndarray`
+        Voxel-wise S0 estimates using ascending numbers of echoes, starting
+        with 2.
+    t2s_full : (S,) :obj:`numpy.ndarray`
         Full T2* map. For voxels affected by dropout, with good signal from
-        only one echo, the full map uses the single echo's value at that voxel.
-    s0vaf : (S,) :obj:`numpy.ndarray`
+        only one echo, the full map uses the T2* estimate from the first two
+        echoes.
+    s0_full : (S,) :obj:`numpy.ndarray`
         Full S0 map. For voxels affected by dropout, with good signal from
-        only one echo, the full map uses the single echo's value at that voxel.
+        only one echo, the full map uses the S0 estimate from the first two
+        echoes.
 
     Notes
     -----
@@ -65,46 +67,49 @@ def fit_decay(data, tes, mask, masksum, start_echo=1):
         n_samp, n_echos = data.shape
         n_vols = 1
 
+    assert n_echos == len(tes)
+    assert n_samp == mask.shape[0] == masksum.shape[0]
+
     data = data[mask]
     t2ss = np.zeros([n_samp, n_echos - 1])
     s0vs = np.zeros([n_samp, n_echos - 1])
 
-    for echo in range(start_echo, n_echos + 1):
+    for echo in range(1, n_echos):
         # perform log linear fit of echo times against MR signal
         # make DV matrix: samples x (time series * echos)
-        B = np.log((np.abs(data[:, :echo, :]) + 1).reshape(len(data), -1).T)
+        log_data = np.log((np.abs(data[:, :echo+1, :]) + 1).reshape(len(data), -1).T)
         # make IV matrix: intercept/TEs x (time series * echos)
-        x = np.column_stack([np.ones(echo), [-te for te in tes[:echo]]])
+        x = np.column_stack([np.ones(echo+1), [-te for te in tes[:echo+1]]])
         X = np.repeat(x, n_vols, axis=0)
 
-        beta = np.linalg.lstsq(X, B, rcond=None)[0]
-        t2s = 1. / beta[1, :].T
-        s0 = np.exp(beta[0, :]).T
+        betas = np.linalg.lstsq(X, log_data, rcond=None)[0]
+        t2s = 1. / betas[1, :].T
+        s0 = np.exp(betas[0, :]).T
 
         t2s[np.isinf(t2s)] = 500.  # why 500?
         s0[np.isnan(s0)] = 0.      # why 0?
 
-        t2ss[..., echo - 2] = np.squeeze(utils.unmask(t2s, mask))
-        s0vs[..., echo - 2] = np.squeeze(utils.unmask(s0, mask))
+        t2ss[..., echo - 1] = np.squeeze(utils.unmask(t2s, mask))
+        s0vs[..., echo - 1] = np.squeeze(utils.unmask(s0, mask))
 
     # create limited T2* and S0 maps
-    fl = np.zeros([n_samp, len(tes) - 1], dtype=bool)
-    for echo in range(n_echos - 1):
-        fl_ = np.squeeze(fl[..., echo])
-        fl_[masksum == echo + 2] = True
-        fl[..., echo] = fl_
-    t2sa = utils.unmask(t2ss[fl], masksum > 1)
-    s0va = utils.unmask(s0vs[fl], masksum > 1)
+    echo_masks = np.zeros([n_samp, n_echos - 1], dtype=bool)
+    for echo in range(2, n_echos + 1):
+        echo_mask = np.squeeze(echo_masks[..., echo - 2])
+        echo_mask[masksum == echo] = True
+        echo_masks[..., echo - 2] = echo_mask
+    t2s_limited = utils.unmask(t2ss[echo_masks], masksum > 1)
+    s0_limited = utils.unmask(s0vs[echo_masks], masksum > 1)
 
     # create full T2* maps with S0 estimation errors
-    t2saf, s0vaf = t2sa.copy(), s0va.copy()
-    t2saf[masksum == 1] = t2ss[masksum == 1, 0]
-    s0vaf[masksum == 1] = s0vs[masksum == 1, 0]
+    t2s_full, s0_full = t2s_limited.copy(), s0_limited.copy()
+    t2s_full[masksum == 1] = t2ss[masksum == 1, 0]
+    s0_full[masksum == 1] = s0vs[masksum == 1, 0]
 
-    return t2sa, s0va, t2ss, s0vs, t2saf, s0vaf
+    return t2s_limited, s0_limited, t2ss, s0vs, t2s_full, s0_full
 
 
-def fit_decay_ts(data, tes, mask, masksum, start_echo=1):
+def fit_decay_ts(data, tes, mask, masksum):
     """
     Fit voxel- and timepoint-wise monoexponential decay models to `data`
 
@@ -121,43 +126,39 @@ def fit_decay_ts(data, tes, mask, masksum, start_echo=1):
     masksum : (S,) array_like
         Valued array indicating number of echos that have sufficient signal in
         given sample
-    start_echo : :obj:`int`, optional
-        First echo to consider. Default is 1 (first echo).
 
     Returns
     -------
-    t2sa_ts : (S x T) :obj:`numpy.ndarray`
+    t2s_limited_ts : (S x T) :obj:`numpy.ndarray`
         Limited T2* map. The limited map only keeps the T2* values for data
         where there are at least two echos with good signal.
-    s0va_ts : (S x T) :obj:`numpy.ndarray`
+    s0_limited_ts : (S x T) :obj:`numpy.ndarray`
         Limited S0 map.  The limited map only keeps the S0 values for data
         where there are at least two echos with good signal.
-    t2saf_ts : (S x T) :obj:`numpy.ndarray`
+    t2s_full_ts : (S x T) :obj:`numpy.ndarray`
         Full T2* timeseries.  For voxels affected by dropout, with good signal
         from only one echo, the full timeseries uses the single echo's value
         at that voxel/volume.
-    s0vaf_ts : (S x T) :obj:`numpy.ndarray`
+    s0_full_ts : (S x T) :obj:`numpy.ndarray`
         Full S0 timeseries. For voxels affected by dropout, with good signal
         from only one echo, the full timeseries uses the single echo's value
         at that voxel/volume.
     """
-    n_samples, _, n_trs = data.shape
-    echodata = data[mask]
+    n_samples, _, n_vols = data.shape
     tes = np.array(tes)
 
-    t2sa_ts = np.zeros([n_samples, n_trs])
-    s0va_ts = np.copy(t2sa_ts)
-    t2saf_ts = np.copy(t2sa_ts)
-    s0vaf_ts = np.copy(t2sa_ts)
+    t2s_limited_ts = np.zeros([n_samples, n_vols])
+    s0_limited_ts = np.copy(t2s_limited_ts)
+    t2s_full_ts = np.copy(t2s_limited_ts)
+    s0_full_ts = np.copy(t2s_limited_ts)
 
-    for vol in range(echodata.shape[-1]):
+    for vol in range(n_vols):
+        (t2s_limited, s0_limited,
+         _, _,
+         t2s_full, s0_full) = fit_decay(data, tes, mask, masksum)
+        t2s_limited_ts[:, vol] = t2s_limited
+        s0_limited_ts[:, vol] = s0_limited
+        t2s_full_ts[:, vol] = t2s_full
+        s0_full_ts[:, vol] = s0_full
 
-        [t2sa, s0va, _, _, t2saf, s0vaf] = fit_decay(
-            data, tes, mask, masksum, start_echo)
-
-        t2sa_ts[:, vol] = t2sa
-        s0va_ts[:, vol] = s0va
-        t2saf_ts[:, vol] = t2saf
-        s0vaf_ts[:, vol] = s0vaf
-
-    return t2sa_ts, s0va_ts, t2saf_ts, s0vaf_ts
+    return t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts

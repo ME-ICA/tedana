@@ -18,10 +18,10 @@ F_MAX = 500
 Z_MAX = 8
 
 
-def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
-                     fout=None, reindex=False, mmixN=None, full_sel=True):
+def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
+                     fout=False, reindex=False, mmixN=None, full_sel=True):
     """
-    Fit TE-dependence and -independence models.
+    Fit TE-dependence and -independence models to components.
 
     Parameters
     ----------
@@ -30,10 +30,14 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     mmix : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `catd`
-    mask : (S,) array_like
+    mask : (S [x E]) array_like
         Boolean mask array
-    t2s : (S,) array_like
-    t2sG : (S,) array_like
+    t2s : (S [x T]) array_like
+        Limited T2* map or timeseries.
+    t2s_full : (S [x T]) array_like
+        Full T2* map or timeseries. For voxels with good signal in only one
+        echo, which are zeros in the limited T2* map, this map uses the T2*
+        estimate using the first two echoes.
     tes : list
         List of echo times associated with `catd`, in milliseconds
     combmode : {'t2s', 'ste'} str
@@ -42,8 +46,9 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
         Poser 2006
     ref_img : str or img_like
         Reference image to dictate how outputs are saved to disk
-    fout : bool
-        Whether to output per-component TE-dependence maps. Default: None
+    fout : bool, optional
+        Whether to output per-component TE-dependence maps. Default: False
+        *NOT USED*
     reindex : bool, optional
         Default: False
     mmixN : array_like, optional
@@ -62,9 +67,15 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     betas : :obj:`numpy.ndarray`
     mmix_new : :obj:`numpy.ndarray`
     """
+    assert catd.shape[0] == t2s.shape[0] == mask.shape[0]
+    assert catd.shape[1] == len(tes)
+    assert catd.shape[2] == mmix.shape[0]
+    assert t2s.shape == t2s_full.shape
+    if t2s.ndim == 2:
+        assert catd.shape[2] == t2s.shape[1]
 
     # compute optimal combination of raw data
-    tsoc = model.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode,
+    tsoc = model.make_optcom(catd, tes, mask, t2s=t2s_full, combmode=combmode,
                              verbose=False).astype(float)[mask]
 
     # demean optimal combination
@@ -258,6 +269,11 @@ def computefeats2(data, mmix, mask, normalize=True):
     data_Z : (S x C) :obj:`numpy.ndarray`
         Data in component space
     """
+    assert data.shape[0] == mask.shape[0]
+    assert data.shape[1] == mmix.shape[0]
+    assert data.ndim == 2
+    assert mmix.ndim == 2
+    assert mask.ndim == 1
 
     # demean masked data
     data_vn = stats.zscore(data[mask], axis=-1)
@@ -286,12 +302,12 @@ def get_coeffs(data, X, mask=None, add_const=False):
 
     Parameters
     ----------
-    data : (S x T) array_like
-        Array where `S` is samples and `T` is time
-    mask : (S,) array_like
-        Boolean mask array
+    data : (S [x E] x T) array_like
+        Array where `S` is samples, `E` is echoes, and `T` is time
     X : (T x C) array_like
         Array where `T` is time and `C` is predictor variables
+    mask : (S [x E]) array_like
+        Boolean mask array
     add_const : bool, optional
         Add intercept column to `X` before fitting. Default: False
 
@@ -300,9 +316,15 @@ def get_coeffs(data, X, mask=None, add_const=False):
     betas : (S x C) :obj:`numpy.ndarray`
         Array of `S` sample betas for `C` predictors
     """
+    assert data.ndim in [2, 3]
+    assert X.ndim == 2
+    assert data.shape[-1] == X.shape[0]
+    n_vars = X.shape[1]
 
     # mask data and flip (time x samples)
     if mask is not None:
+        assert mask.ndim in [1, 2]
+        assert data.shape[0] == mask.shape[0]
         mdata = data[mask, :].T
     else:
         mdata = data.T
@@ -323,6 +345,9 @@ def get_coeffs(data, X, mask=None, add_const=False):
     if mask is not None:
         betas = utils.unmask(betas, mask)
 
+    assert betas.ndim in [2, 3], betas.shape
+    assert betas.shape[0] == data.shape[0]
+    assert betas.shape[-1] == n_vars
     return betas
 
 
@@ -357,8 +382,10 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     dm_optcom : (S x T) array_like
         Input `optcom` with global signal removed from time series
     """
-
     LGR.info('Applying amplitude-based T1 equilibration correction')
+    assert catd.shape[0] == optcom.shape[0]
+    assert catd.shape[1] == n_echos
+    assert catd.shape[2] == optcom.shape[1]
 
     # Legendre polynomial basis for denoising
     bounds = np.linspace(-1, 1, optcom.shape[-1])

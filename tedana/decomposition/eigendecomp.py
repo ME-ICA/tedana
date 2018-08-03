@@ -151,7 +151,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
 
         # actual variance explained (normalized)
         sp = s / s.sum()
-        eigelb = getelbow_mod(sp, val=True)
+        eigelb = getelbow_mod(sp, return_val=True)
 
         spdif = np.abs(np.diff(sp))
         spdifh = spdif[(len(spdif)//2):]
@@ -201,9 +201,13 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     kappas = ctb[ctb[:, 1].argsort(), 1]
     rhos = ctb[ctb[:, 2].argsort(), 2]
     fmin, fmid, fmax = utils.getfbounds(n_echos)
-    kappa_thr = np.average(sorted([fmin, getelbow_mod(kappas, val=True)/2, fmid]),
+    kappa_thr = np.average(sorted([fmin,
+                                   getelbow_mod(kappas, return_val=True)/2,
+                                   fmid]),
                            weights=[kdaw, 1, 1])
-    rho_thr = np.average(sorted([fmin, getelbow_cons(rhos, val=True)/2, fmid]),
+    rho_thr = np.average(sorted([fmin,
+                                 getelbow_cons(rhos, return_val=True)/2,
+                                 fmid]),
                          weights=[rdaw, 1, 1])
     if int(kdaw) == -1:
         kappas_lim = kappas[utils.andb([kappas < fmid, kappas > fmin]) == 2]

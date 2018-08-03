@@ -149,12 +149,10 @@ def t2smap_workflow(data, tes, fitmode='all', combmode='t2s', label=None):
     if fitmode == 'all':
         (t2s_limited, s0_limited,
          t2ss, s0s,
-         t2s_full, s0_full) = model.fit_decay(catd, tes, mask,
-                                              masksum, start_echo=1)
+         t2s_full, s0_full) = model.fit_decay(catd, tes, mask, masksum)
     else:
         (t2s_limited, s0_limited,
-         t2s_full, s0_full) = model.fit_decay_ts(catd, tes, mask, masksum,
-                                                 start_echo=1)
+         t2s_full, s0_full) = model.fit_decay_ts(catd, tes, mask, masksum)
 
     # set a hard cap for the T2* map/timeseries
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile

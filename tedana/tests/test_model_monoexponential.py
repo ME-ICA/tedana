@@ -22,7 +22,7 @@ def testdata1():
     data_dict = {'data': data,
                  'tes': tes,
                  'mask': mask,
-                 'mask_sum': mask_sum
+                 'mask_sum': mask_sum,
                  }
     return data_dict
 
@@ -34,8 +34,7 @@ def test_fit_decay(testdata1):
     t2sv, s0v, t2ss, s0vs, t2svG, s0vG = me.fit_decay(testdata1['data'],
                                                       testdata1['tes'],
                                                       testdata1['mask'],
-                                                      testdata1['mask_sum'],
-                                                      start_echo=1)
+                                                      testdata1['mask_sum'])
     assert t2sv.ndim == 1
     assert s0v.ndim == 1
     assert t2ss.ndim == 2
@@ -51,8 +50,7 @@ def test_fit_decay_ts(testdata1):
     t2sv, s0v, t2svG, s0vG = me.fit_decay_ts(testdata1['data'],
                                              testdata1['tes'],
                                              testdata1['mask'],
-                                             testdata1['mask_sum'],
-                                             start_echo=1)
+                                             testdata1['mask_sum'])
     assert t2sv.ndim == 2
     assert s0v.ndim == 2
     assert t2svG.ndim == 2
