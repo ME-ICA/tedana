@@ -421,7 +421,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     Vz = stats.zscore(varex_log)
     Rz = stats.zscore(seldict['Rhos'])
     Ktz = stats.zscore(np.log(seldict['Kappas']) / 2)
-    Rtz = stats.zscore(np.log(seldict['Rhos']) / 2)
+    #  Rtz = stats.zscore(np.log(seldict['Rhos']) / 2)
     KRr = stats.zscore(np.log(seldict['Kappas']) / np.log(seldict['Rhos']))
     cnz = stats.zscore(countnoise)
     Dz = stats.zscore(np.arctanh(dice_tbl[:, 0] + 0.001))
@@ -541,13 +541,14 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
              variance component
         B. Kappa is less than twice Kcut
     """
+    temp = all_comps[utils.andb([seldict['varex'] > 0.5 *
+                                 sorted(seldict['varex'])[::-1][int(KRcut)],
+                                 seldict['Kappas'] < 2*Kcut]) == 2]
     KRguess = np.setdiff1d(np.setdiff1d(all_comps[KRelbow == 2], rej),
                            np.union1d(all_comps[tt_table[:, 0] < tt_lim],
                            np.union1d(np.union1d(all_comps[spz > 1],
                                                  all_comps[Vz > 2]),
-                                      all_comps[utils.andb([seldict['varex'] > 0.5 *
-                                                            sorted(seldict['varex'])[::-1][int(KRcut)],
-                                                            seldict['Kappas'] < 2*Kcut]) == 2])))
+                                      temp)))
     guessmask = np.zeros(len(all_comps))
     guessmask[KRguess] = 1
     """
@@ -590,7 +591,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
             epsmap.append([ii, utils.dice(guessmask, db.labels_ == 0),
                            np.intersect1d(all_comps[db.labels_ == 0],
                            all_comps[seldict['Rhos'] > getelbow_mod(Rhos_sorted,
-                                                             return_val=True)]).shape[0]])
+                                                                    return_val=True)]).shape[0]])
         db = None
 
     epsmap = np.array(epsmap)
@@ -613,13 +614,14 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     if len(group0) == 0 or len(group0) < len(KRguess) * .5:
         dbscanfailed = True
         LGR.debug('DBSCAN guess failed; using elbow guess method instead')
+        temp = all_comps[utils.andb([seldict['varex'] > 0.5 *
+                                     sorted(seldict['varex'])[::-1][int(KRcut)],
+                                     seldict['Kappas'] < 2 * Kcut]) == 2]
         acc_comps = np.setdiff1d(np.setdiff1d(all_comps[KRelbow == 2], rej),
-                           np.union1d(all_comps[tt_table[:, 0] < tt_lim],
-                           np.union1d(np.union1d(all_comps[spz > 1],
-                                      all_comps[Vz > 2]),
-                                      all_comps[utils.andb([seldict['varex'] > 0.5 *
-                                                     sorted(seldict['varex'])[::-1][int(KRcut)],
-                                                     seldict['Kappas'] < 2 * Kcut]) == 2])))
+                                 np.union1d(all_comps[tt_table[:, 0] < tt_lim],
+                                 np.union1d(np.union1d(all_comps[spz > 1],
+                                                       all_comps[Vz > 2]),
+                                            temp)))
         group0 = acc_comps.copy()
         group_n1 = []
         to_clf = np.setdiff1d(all_comps, np.union1d(group0, rej))
@@ -632,7 +634,8 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         if len(group0) != 0:
             # For extremes, building in a 20% tolerance
             toacc_hi = np.setdiff1d(all_comps[utils.andb([fdist <= np.max(fdist[group0]),
-                                                   seldict['Rhos'] < F025, Vz > -2]) == 3],
+                                                          seldict['Rhos'] < F025,
+                                                          Vz > -2]) == 3],
                                     np.union1d(group0, rej))
             min_acc = np.union1d(group0, toacc_hi)
             to_clf = np.setdiff1d(all_comps, np.union1d(min_acc, rej))
@@ -658,8 +661,8 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     dice_rej = False
     if not dbscanfailed and len(rej) + len(group0) < 0.75 * len(all_comps):
         dice_rej = True
-        rej_supp = np.setdiff1d(np.setdiff1d(np.union1d(rej,
-                                                        all_comps[dice_tbl[all_comps, 0] <= dice_tbl[all_comps, 1]]),
+        temp = all_comps[dice_tbl[all_comps, 0] <= dice_tbl[all_comps, 1]]
+        rej_supp = np.setdiff1d(np.setdiff1d(np.union1d(rej, temp),
                                              group0), group_n1)
         rej = np.union1d(rej, rej_supp)
 
@@ -689,12 +692,12 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     toacc_hi = np.setdiff1d(all_comps[utils.andb([fdist <= np.max(fdist[group0]),
                                                   seldict['Rhos'] < F025, Vz > -2]) == 3],
                             np.union1d(group0, rej))
-    toacc_lo = np.intersect1d(to_clf,
-                              all_comps[utils.andb([spz < 1, Rz < 0,
-                                                    mmix_kurt_z_max < 5,
-                                                    Dz > -1, Tz > -1, Vz < 0,
-                                                    seldict['Kappas'] >= F025,
-                                                    fdist < 3 * np.percentile(fdist[group0], 98)]) == 8])
+    temp = utils.andb([spz < 1, Rz < 0,
+                       mmix_kurt_z_max < 5,
+                       Dz > -1, Tz > -1, Vz < 0,
+                       seldict['Kappas'] >= F025,
+                       fdist < 3 * np.percentile(fdist[group0], 98)]) == 8
+    toacc_lo = np.intersect1d(to_clf, all_comps[temp])
     midk_clf, clf_ = do_svm(fproj_arr_val[:, np.union1d(group0, rej)].T,
                             [0] * len(group0) + [1] * len(rej),
                             fproj_arr_val[:, to_clf].T,
@@ -794,16 +797,16 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     # instead of a kurtosis/filter one
     field_art = np.setdiff1d(all_comps[utils.andb([mmix_kurt_z_max > 5,
                                                    seldict['Kappas'] < minK_ign]) == 2], group0)
+    temp = (stats.rankdata(mmix_kurt_z_max) - stats.rankdata(seldict['Kappas'])) > newcest / 2
     field_art = np.union1d(np.setdiff1d(all_comps[utils.andb([mmix_kurt_z_max > 2,
-                                                  (stats.rankdata(mmix_kurt_z_max) -
-                                                   stats.rankdata(seldict['Kappas'])) > newcest / 2,
-                                           Vz2 > 1, seldict['Kappas'] < F01]) == 4],
+                                                              temp,
+                                                              Vz2 > 1,
+                                                              seldict['Kappas'] < F01]) == 4],
                                         group0), field_art)
+    temp = seldict['Rhos'] > np.percentile(seldict['Rhos'][group0], 75)
     field_art = np.union1d(np.setdiff1d(all_comps[utils.andb([mmix_kurt_z_max > 3,
                                                               Vz2 > 3,
-                                                              seldict['Rhos'] >
-                                                              np.percentile(seldict['Rhos'][group0],
-                                                                            75)]) == 3],
+                                                              temp]) == 3],
                                         group0), field_art)
     field_art = np.union1d(np.setdiff1d(all_comps[utils.andb([mmix_kurt_z_max > 5, Vz2 > 5]) == 2],
                                         group0), field_art)
@@ -821,13 +824,14 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     # Last ditch effort to save some transient components
     if not strict_mode:
         Vz3 = (varex_log - varex_log[acc_comps].mean()) / varex_log[acc_comps].std()
-        acc_comps = np.union1d(acc_comps, np.intersect1d(orphan,
-                                                         all_comps[utils.andb([seldict['Kappas'] > F05,
-                                                                               seldict['Rhos'] < F025,
-                                                                               seldict['Kappas'] > seldict['Rhos'],
-                                                                               Vz3 <= -1,
-                                                                               Vz3 > -3,
-                                                                               mmix_kurt_z_max < 2.5]) == 6]))
+        temp = utils.andb([seldict['Kappas'] > F05,
+                           seldict['Rhos'] < F025,
+                           seldict['Kappas'] > seldict['Rhos'],
+                           Vz3 <= -1,
+                           Vz3 > -3,
+                           mmix_kurt_z_max < 2.5])
+        acc_comps = np.union1d(acc_comps,
+                               np.intersect1d(orphan, all_comps[temp == 6]))
         ign = np.setdiff1d(all_comps, list(acc_comps)+list(midk)+list(rej))
         orphan = np.setdiff1d(all_comps, list(acc_comps) + list(to_ign) + list(midk) + list(rej))
 
