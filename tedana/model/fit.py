@@ -78,7 +78,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     elif t2s.shape != t2s_full.shape:
         raise ValueError('Shape of t2s array {0} does not match shape of '
                          't2s_full array {1}'.format(t2s.shape, t2s_full.shape))
-    elif t2s.ndim != 2:
+    elif t2s.ndim == 2:
         if catd.shape[2] != t2s.shape[1]:
             raise ValueError('Third dimension (number of volumes) of catd ({0}) '
                              'does not match second dimension of '
