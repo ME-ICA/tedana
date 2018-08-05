@@ -343,7 +343,6 @@ def get_coeffs(data, X, mask=None, add_const=False):
         raise ValueError('Last dimension (dimension {0}) of data ({1}) does not '
                          'match first dimension of '
                          'X ({2})'.format(data.ndim, data.shape[-1], X.shape[0]))
-    n_vars = X.shape[1]
 
     # mask data and flip (time x samples)
     if mask is not None:
