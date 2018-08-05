@@ -415,7 +415,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, acc, rej, midk, empty,
     varexpl = write_split_ts(ts, mmix, mask, acc, rej, midk, ref_img, suffix='OC')
 
     ts_B = model.get_coeffs(ts, mmix, mask)
-    fout = utils.filewrite(ts_B, 'betas_OC', ref_img)
+    fout = utils.filewrite(ts_B, 'meica_OC_components.nii', ref_img)
     LGR.info('Writing full ICA coefficient feature set: {}'.format(op.abspath(fout)))
 
     if len(acc) != 0:
