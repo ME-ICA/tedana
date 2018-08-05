@@ -19,7 +19,7 @@ Z_MAX = 8
 
 
 def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
-                     fout=False, reindex=False, mmixN=None, full_sel=True):
+                     reindex=False, mmixN=None, full_sel=True):
     """
     Fit TE-dependence and -independence models to components.
 
@@ -46,9 +46,6 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         Poser 2006
     ref_img : str or img_like
         Reference image to dictate how outputs are saved to disk
-    fout : bool, optional
-        Whether to output per-component TE-dependence maps. Default: False
-        *NOT USED*
     reindex : bool, optional
         Default: False
     mmixN : array_like, optional
