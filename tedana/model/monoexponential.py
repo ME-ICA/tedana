@@ -61,14 +61,19 @@ def fit_decay(data, tes, mask, masksum):
         in :math:`S_0` map with 0.
     3.  Generate limited :math:`T_2^*` and :math:`S_0` maps by doing something.
     """
+    if data.shape[1] != len(tes):
+        raise ValueError('Second dimension of data ({0}) does not match number '
+                         'of echoes provided (tes; {1})'.format(data.shape[1], len(tes)))
+    elif not (data.shape[0] == mask.shape[0] == masksum.shape[0]):
+        raise ValueError('First dimensions (number of samples) of data ({0}), '
+                         'mask ({1}), and masksum ({2}) do not '
+                         'match'.format(data.shape[0], mask.shape[0], masksum.shape[0]))
+
     if len(data.shape) == 3:
         n_samp, n_echos, n_vols = data.shape
     else:
         n_samp, n_echos = data.shape
         n_vols = 1
-
-    assert n_echos == len(tes)
-    assert n_samp == mask.shape[0] == masksum.shape[0]
 
     data = data[mask]
     t2ss = np.zeros([n_samp, n_echos - 1])

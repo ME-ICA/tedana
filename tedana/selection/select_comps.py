@@ -98,10 +98,16 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     based on how similar metrics in one component are similar to metrics in
     other components.
     """
-    assert mmix.ndim == 2
-    assert t2s.shape[0] == s0.shape[0] == mask.shape[0]
-    assert t2s.ndim == 1  # FIT not necessarily supported
-    assert s0.ndim == 1
+    if mmix.ndim != 2:
+        raise ValueError('Parameter mmix should be 2d, not {0}d'.format(mmix.ndim))
+    elif t2s.ndim != 1:  # FIT not necessarily supported
+        raise ValueError('Parameter t2s should be 1d, not {0}d'.format(t2s.ndim))
+    elif s0.ndim != 1:  # FIT not necessarily supported
+        raise ValueError('Parameter s0 should be 1d, not {0}d'.format(s0.ndim))
+    elif not (t2s.shape[0] == s0.shape[0] == mask.shape[0]):
+        raise ValueError('First dimensions (number of samples) of t2s ({0}), '
+                         's0 ({1}), and mask ({2}) do not '
+                         'match'.format(t2s.shape[0], s0.shape[0], mask.shape[0]))
 
     """
     handwerkerd and others are working to "hypercomment" this function to

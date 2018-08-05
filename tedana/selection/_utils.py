@@ -67,7 +67,8 @@ def getelbow_cons(arr, return_val=False):
         Either the elbow index (if return_val is True) or the values at the
         elbow index (if return_val is False)
     """
-    assert arr.ndim == 1
+    if arr.ndim != 1:
+        raise ValueError('Parameter arr should be 1d, not {0}d'.format(arr.ndim))
     arr = np.sort(arr)[::-1]
     nk = len(arr)
     temp1 = [(arr[nk - 5 - ii - 1] > arr[nk - 5 - ii:nk].mean() + 2 * arr[nk - 5 - ii:nk].std())
@@ -104,7 +105,8 @@ def getelbow_mod(arr, return_val=False):
         Either the elbow index (if return_val is True) or the values at the
         elbow index (if return_val is False)
     """
-    assert arr.ndim == 1
+    if arr.ndim != 1:
+        raise ValueError('Parameter arr should be 1d, not {0}d'.format(arr.ndim))
     arr = np.sort(arr)[::-1]
     n_components = arr.shape[0]
     coords = np.array([np.arange(n_components), arr])
@@ -138,7 +140,8 @@ def getelbow_aggr(arr, return_val=False):
         Either the elbow index (if return_val is True) or the values at the
         elbow index (if return_val is False)
     """
-    assert arr.ndim == 1
+    if arr.ndim != 1:
+        raise ValueError('Parameter arr should be 1d, not {0}d'.format(arr.ndim))
     arr = np.sort(arr)[::-1]
     dKdt = arr[:-1] - arr[1:]
     dKdt2 = dKdt[:-1] - dKdt[1:]
