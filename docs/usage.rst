@@ -21,6 +21,13 @@ documentation: :py:func:`tedana.workflows.tedana_workflow`.
    :prog: tedana
    :func: _get_parser
 
+.. note::
+    The ``--mask`` argument is not intended for use with very conservative region-of-interest
+    analyses. One of the ways by which components are assessed as BOLD or non-BOLD is their
+    spatial pattern, so overly conservative masks will invalidate several steps in the tedana
+    workflow. To examine regions-of-interest with multi-echo data, apply masks after TE
+    Dependent ANAlysis. 
+
 Run t2smap
 ----------
 This workflow uses multi-echo data to optimally combine data across echoes and\
