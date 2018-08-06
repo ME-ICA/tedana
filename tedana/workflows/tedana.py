@@ -372,8 +372,11 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     if mask is None:
         LGR.info('Computing adaptive mask')
-        mask, masksum = utils.make_adaptive_mask(catd, minimum=False, getsum=True)
-        LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
+    else:
+        LGR.info('Using user-defined mask')
+    mask, masksum = utils.make_adaptive_mask(catd, mask=mask,
+                                             minimum=False, getsum=True)
+    LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
 
     LGR.info('Computing T2* map')
     t2s, s0, t2ss, s0s, t2sG, s0G = model.fit_decay(catd, tes, mask, masksum,
