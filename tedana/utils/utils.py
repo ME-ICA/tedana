@@ -160,7 +160,7 @@ def load_data(data, n_echos=None):
     return fdata, ref_img
 
 
-def make_adaptive_mask(data, minimum=True, getsum=False):
+def make_adaptive_mask(data, mask=None, minimum=True, getsum=False):
     """
     Makes map of `data` specifying longest echo a voxel can be sampled with
 
@@ -169,6 +169,9 @@ def make_adaptive_mask(data, minimum=True, getsum=False):
     data : (S x E x T) array_like
         Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
         time
+    mask : :obj:`str`, optional
+        Binary mask for voxels to consider in TE Dependent ANAlysis. Default is
+        to generate mask from data with good signal across echoes
     minimum : :obj:`bool`, optional
         Use `make_min_mask()` instead of generating a map with echo-specific
         times. Default: True
@@ -186,7 +189,7 @@ def make_adaptive_mask(data, minimum=True, getsum=False):
     """
 
     if minimum:
-        return make_min_mask(data)
+        return make_min_mask(data, roi=mask)
 
     # take temporal mean of echos and extract non-zero values in first echo
     echo_means = data.mean(axis=-1)  # temporal mean of echos
@@ -208,8 +211,14 @@ def make_adaptive_mask(data, minimum=True, getsum=False):
     # determine samples where absolute value is greater than echo-specific thresholds
     # and count # of echos that pass criterion
     masksum = (np.abs(echo_means) > lthrs).sum(axis=-1)
-    # make it a boolean mask to (where we have at least 1 echo with good signal)
-    mask = masksum.astype(bool)
+
+    if mask is None:
+        # make it a boolean mask to (where we have at least 1 echo with good signal)
+        mask = masksum.astype(bool)
+    else:
+        # if the user has supplied a binary mask
+        mask = load_image(mask).astype(bool)
+        masksum = masksum * mask
 
     if getsum:
         return mask, masksum
@@ -217,7 +226,7 @@ def make_adaptive_mask(data, minimum=True, getsum=False):
     return mask
 
 
-def make_min_mask(data):
+def make_min_mask(data, roi=None):
     """
     Generates a 3D mask of `data`
 
@@ -229,6 +238,8 @@ def make_min_mask(data):
     data : (S x E x T) array_like
         Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
         time
+    roi : :obj:`str`, optional
+        Binary mask for region-of-interest to consider in TE Dependent ANAlysis
 
     Returns
     -------
@@ -237,7 +248,13 @@ def make_min_mask(data):
     """
 
     data = np.asarray(data).astype(bool)
-    return data.prod(axis=-1).prod(axis=-1).astype(bool)
+    mask = data.prod(axis=-1).prod(axis=-1).astype(bool)
+
+    if roi is None:
+        return mask
+    else:
+        roi = load_image(roi).astype(bool)
+        return np.logical_and(mask, roi)
 
 
 def filewrite(data, filename, ref_img, gzip=False, copy_header=True,
