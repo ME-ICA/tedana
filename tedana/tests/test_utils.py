@@ -164,6 +164,13 @@ def test_make_adaptive_mask():
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
     assert np.allclose(counts, np.array([13564,  3977,  5060, 41749]))
 
+    # test user-defined mask
+    mask, masksum = utils.make_adaptive_mask(data, mask=pjoin(datadir,
+                                                              'mask.nii.gz'),
+                                             minimum=False, getsum=True)
+    assert np.allclose(mask, nib.load(pjoin(datadir,
+                                            'mask.nii.gz')).get_data().flatten())
+
 
 def test_make_min_mask():
     # load data make mask
