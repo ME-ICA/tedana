@@ -64,7 +64,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     betas : :obj:`numpy.ndarray`
     mmix_new : :obj:`numpy.ndarray`
     """
-    if not (catd.shape[0] == t2s.shape[0] == mask.shape[0]):
+    if not (catd.shape[0] == t2s.shape[0] == t2s_full.shape[0] == mask.shape[0]):
         raise ValueError('First dimensions (number of samples) of catd ({0}), '
                          't2s ({1}), and mask ({2}) do not '
                          'match'.format(catd.shape[0], t2s.shape[0], mask.shape[0]))
@@ -287,11 +287,11 @@ def computefeats2(data, mmix, mask, normalize=True):
         raise ValueError('Parameter mask should be 1d, not {0}d'.format(mask.ndim))
     elif data.shape[0] != mask.shape[0]:
         raise ValueError('First dimensions (number of samples) of data ({0}) '
-                         'and mask ({2}) do not match.'.format(data.shape[0],
+                         'and mask ({1}) do not match.'.format(data.shape[0],
                                                                mask.shape[0]))
     elif data.shape[1] != mmix.shape[0]:
         raise ValueError('Second dimensions (number of volumes) of data ({0}) '
-                         'and mmix ({2}) do not match.'.format(data.shape[0],
+                         'and mmix ({1}) do not match.'.format(data.shape[0],
                                                                mmix.shape[0]))
 
     # demean masked data
