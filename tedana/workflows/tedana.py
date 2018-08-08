@@ -42,6 +42,14 @@ def _get_parser():
                         type=float,
                         help='Echo times (in ms). E.g., 15.0 39.0 63.0',
                         required=True)
+    parser.add_argument('--mask',
+                        dest='mask',
+                        metavar='FILE',
+                        type=lambda x: is_valid_file(parser, x),
+                        help=('Binary mask of voxels to include in TE '
+                              'Dependent ANAlysis. Must be in the same '
+                              'space as `data`.'),
+                        default=None)
     parser.add_argument('--mix',
                         dest='mixm',
                         metavar='FILE',
@@ -166,9 +174,9 @@ def _get_parser():
     return parser
 
 
-def tedana_workflow(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
-                    gscontrol=True, kdaw=10., rdaw=1., conv=2.5e-5, ste=-1,
-                    combmode='t2s', dne=False,
+def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
+                    strict=False, gscontrol=True, kdaw=10., rdaw=1., conv=2.5e-5,
+                    ste=-1, combmode='t2s', dne=False,
                     initcost='tanh', finalcost='tanh',
                     stabilize=False, fout=False, filecsdata=False, wvpca=False,
                     label=None, fixed_seed=42, debug=False, quiet=False):
@@ -182,6 +190,9 @@ def tedana_workflow(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         list of echo-specific files, in ascending order.
     tes : :obj:`list`
         List of echo times associated with data in milliseconds.
+    mask : :obj:`str`, optional
+        Binary mask of voxels to include in TE Dependent ANAlysis. Must be spatially
+        aligned with `data`.
     mixm : :obj:`str`, optional
         File containing mixing matrix. If not provided, ME-PCA and ME-ICA are
         done.
@@ -359,8 +370,13 @@ def tedana_workflow(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
 
     os.chdir(out_dir)
 
-    LGR.info('Computing adaptive mask')
-    mask, masksum = utils.make_adaptive_mask(catd, minimum=False, getsum=True)
+    if mask is None:
+        LGR.info('Computing adaptive mask')
+    else:
+        # TODO: add affine check
+        LGR.info('Using user-defined mask')
+    mask, masksum = utils.make_adaptive_mask(catd, mask=mask,
+                                             minimum=False, getsum=True)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
 
     LGR.info('Computing T2* map')
