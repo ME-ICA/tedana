@@ -169,7 +169,7 @@ def make_adaptive_mask(data, mask=None, minimum=True, getsum=False):
     data : (S x E x T) array_like
         Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
         time
-    mask : :obj:`str`, optional
+    mask : :obj:`str` or img_like, optional
         Binary mask for voxels to consider in TE Dependent ANAlysis. Default is
         to generate mask from data with good signal across echoes
     minimum : :obj:`bool`, optional

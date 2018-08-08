@@ -373,6 +373,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if mask is None:
         LGR.info('Computing adaptive mask')
     else:
+        # TODO: add affine check
         LGR.info('Using user-defined mask')
     mask, masksum = utils.make_adaptive_mask(catd, mask=mask,
                                              minimum=False, getsum=True)
