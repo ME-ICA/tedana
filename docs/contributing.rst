@@ -57,11 +57,16 @@ releasing your own Python projects!
        in the release notes. Here's a `guide for creating a release on GitHub`_.
     #. Pulling from the ``master`` branch, locally build a new copy of tedana and
         `upload it to PyPi`_.
-    #. Update the `Read the Docs landing page`_ to reference the lastest Zenodo DOI.
-       We have set up tedana so that releases automatically mint a new DOI with Zenodo;
-       a guide for doing this integration is available `here`_.
+    #. Update the `Read the Docs landing page`_ and the `DueCredit citation`_
+       to reference the lastest Zenodo DOI.
+
+We have set up tedana so that releases automatically mint a new DOI with Zenodo;
+a guide for doing this integration is available `here`_.
+You can also `learn more about DueCredit`_ and why citing software is important.
 
     .. _`upload it to PyPi`: https://packaging.python.org/tutorials/packaging-projects/#uploading-the-distribution-archives
     .. _`guide for creating a release on GitHub`: https://help.github.com/articles/creating-releases/
     .. _`Read the Docs landing page`: https://tedana.readthedocs.io/
+    .. _`DueCredit citation`: https://github.com/ME-ICA/tedana/blob/7ff7ae428d5510122b7826d24f61b69a5990175a/tedana/__init__.py#L38
     .. _here: https://guides.github.com/activities/citable-code/
+    .. _`learn more about DueCredit`: https://github.com/duecredit/duecredit
