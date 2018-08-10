@@ -42,6 +42,14 @@ def _get_parser():
                         type=float,
                         help='Echo times (in ms). E.g., 15.0 39.0 63.0',
                         required=True)
+    parser.add_argument('--mask',
+                        dest='mask',
+                        metavar='FILE',
+                        type=lambda x: is_valid_file(parser, x),
+                        help=('Binary mask of voxels to include in TE '
+                              'Dependent ANAlysis. Must be in the same '
+                              'space as `data`.'),
+                        default=None)
     parser.add_argument('--mix',
                         dest='mixm',
                         metavar='FILE',
@@ -149,7 +157,9 @@ def _get_parser():
     parser.add_argument('--seed',
                         dest='fixed_seed',
                         type=int,
-                        help='Seeded value for ICA, for reproducibility.',
+                        help=('Value passed to repr(mdp.numx_rand.seed()) '
+                              'Set to an integer value for reproducible ICA results; '
+                              'otherwise, set to -1 for varying results across calls.'),
                         default=42)
     parser.add_argument('--debug',
                         dest='debug',
@@ -164,9 +174,9 @@ def _get_parser():
     return parser
 
 
-def tedana_workflow(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
-                    gscontrol=True, kdaw=10., rdaw=1., conv=2.5e-5, ste=-1,
-                    combmode='t2s', dne=False,
+def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
+                    strict=False, gscontrol=True, kdaw=10., rdaw=1., conv=2.5e-5,
+                    ste=-1, combmode='t2s', dne=False,
                     initcost='tanh', finalcost='tanh',
                     stabilize=False, fout=False, filecsdata=False, wvpca=False,
                     label=None, fixed_seed=42, debug=False, quiet=False):
@@ -180,6 +190,9 @@ def tedana_workflow(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         list of echo-specific files, in ascending order.
     tes : :obj:`list`
         List of echo times associated with data in milliseconds.
+    mask : :obj:`str`, optional
+        Binary mask of voxels to include in TE Dependent ANAlysis. Must be spatially
+        aligned with `data`.
     mixm : :obj:`str`, optional
         File containing mixing matrix. If not provided, ME-PCA and ME-ICA are
         done.
@@ -228,7 +241,9 @@ def tedana_workflow(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
     Other Parameters
     ----------------
     fixed_seed : :obj:`int`, optional
-        Seeded value for ICA, for reproducibility.
+        Value passed to ``mdp.numx_rand.seed()``.
+        Set to a positive integer value for reproducible ICA results;
+        otherwise, set to -1 for varying results across calls.
     debug : :obj:`bool`, optional
         Whether to run in debugging mode or not. Default is False.
     quiet : :obj:`bool`, optional
@@ -355,8 +370,13 @@ def tedana_workflow(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
 
     os.chdir(out_dir)
 
-    LGR.info('Computing adaptive mask')
-    mask, masksum = utils.make_adaptive_mask(catd, minimum=False, getsum=True)
+    if mask is None:
+        LGR.info('Computing adaptive mask')
+    else:
+        # TODO: add affine check
+        LGR.info('Using user-defined mask')
+    mask, masksum = utils.make_adaptive_mask(catd, mask=mask,
+                                             minimum=False, getsum=True)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
 
     LGR.info('Computing T2* map')
@@ -388,9 +408,9 @@ def tedana_workflow(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
                                                 t2s, t2sG, stabilize, ref_img,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw,
                                                 ste=ste, wvpca=wvpca)
-        mmix_orig = decomposition.tedica(n_components, dd, conv, fixed_seed,
-                                         cost=initcost, final_cost=finalcost,
-                                         verbose=debug)
+        mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, conv, fixed_seed,
+                                                     cost=initcost, final_cost=finalcost,
+                                                     verbose=debug)
         np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
         LGR.info('Making second component selection guess from ICA results')
         seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
@@ -425,8 +445,8 @@ def tedana_workflow(data, tes, mixm=None, ctab=None, manacc=None, strict=False,
         LGR.warning('No BOLD components detected! Please check data and '
                     'results!')
 
-    utils.writeresults(OCcatd, mask, comptable, mmix, n_vols, acc, rej, midk,
-                       empty, ref_img)
+    utils.writeresults(OCcatd, mask, comptable, mmix, fixed_seed, n_vols,
+                       acc, rej, midk, empty, ref_img)
     utils.gscontrol_mmix(OCcatd, mmix, mask, acc, ref_img)
     if dne:
         utils.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)

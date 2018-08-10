@@ -42,6 +42,14 @@ def _get_parser():
                         type=float,
                         help='Echo times (in ms). E.g., 15.0 39.0 63.0',
                         required=True)
+    parser.add_argument('--mask',
+                        dest='mask',
+                        metavar='FILE',
+                        type=lambda x: is_valid_file(parser, x),
+                        help=('Binary mask of voxels to include in TE '
+                              'Dependent ANAlysis. Must be in the same '
+                              'space as `data`.'),
+                        default=None)
     parser.add_argument('--fitmode',
                         dest='fitmode',
                         action='store',
@@ -67,7 +75,7 @@ def _get_parser():
     return parser
 
 
-def t2smap_workflow(data, tes, fitmode='all', combmode='t2s', label=None):
+def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s', label=None):
     """
     Estimate T2 and S0, and optimally combine data across TEs.
 
@@ -78,6 +86,9 @@ def t2smap_workflow(data, tes, fitmode='all', combmode='t2s', label=None):
         list of echo-specific files, in ascending order.
     tes : :obj:`list`
         List of echo times associated with data in milliseconds.
+    mask : :obj:`str`, optional
+        Binary mask of voxels to include in TE Dependent ANAlysis. Must be spatially
+        aligned with `data`.
     fitmode : {'all', 'ts'}, optional
         Monoexponential model fitting scheme.
         'all' means that the model is fit, per voxel, across all timepoints.
@@ -142,7 +153,10 @@ def t2smap_workflow(data, tes, fitmode='all', combmode='t2s', label=None):
     else:
         LGR.info('Using output directory: {}'.format(out_dir))
 
-    LGR.info('Computing adaptive mask')
+    if mask is None:
+        LGR.info('Computing adaptive mask')
+    else:
+        LGR.info('Using user-defined mask')
     mask, masksum = utils.make_adaptive_mask(catd, minimum=False, getsum=True)
 
     LGR.info('Computing adaptive T2* map')
