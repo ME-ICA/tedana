@@ -134,11 +134,6 @@ def _get_parser():
                         help=('Stabilize convergence by reducing '
                               'dimensionality, for low quality data'),
                         default=False)
-    parser.add_argument('--fout',
-                        dest='fout',
-                        help='Output TE-dependence Kappa/Rho SPMs',
-                        action='store_true',
-                        default=False)
     parser.add_argument('--filecsdata',
                         dest='filecsdata',
                         help='Save component selection data',
@@ -178,7 +173,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     strict=False, gscontrol=True, kdaw=10., rdaw=1., conv=2.5e-5,
                     ste=-1, combmode='t2s', dne=False,
                     initcost='tanh', finalcost='tanh',
-                    stabilize=False, fout=False, filecsdata=False, wvpca=False,
+                    stabilize=False, filecsdata=False, wvpca=False,
                     label=None, fixed_seed=42, debug=False, quiet=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
@@ -228,8 +223,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     stabilize : :obj:`bool`, optional
         Stabilize convergence by reducing dimensionality, for low quality data.
         Default is False.
-    fout : :obj:`bool`, optional
-        Save output TE-dependence Kappa/Rho SPMs. Default is False.
     filecsdata : :obj:`bool`, optional
         Save component selection data to file. Default is False.
     wvpca : :obj:`bool`, optional
@@ -333,11 +326,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
-    if fout:
-        fout = ref_img
-    else:
-        fout = None
-
     kdaw, rdaw = float(kdaw), float(rdaw)
 
     try:
@@ -380,8 +368,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
 
     LGR.info('Computing T2* map')
-    t2s, s0, t2ss, s0s, t2sG, s0G = model.fit_decay(catd, tes, mask, masksum,
-                                                    start_echo=1)
+    t2s, s0, t2ss, s0s, t2sG, s0G = model.fit_decay(catd, tes, mask, masksum)
 
     # set a hard cap for the T2* map
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
@@ -417,7 +404,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                                  mask, t2s, t2sG,
                                                                  tes, combmode,
                                                                  ref_img,
-                                                                 fout=fout,
                                                                  reindex=True)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
@@ -430,8 +416,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
                                                                  mask, t2s, t2sG,
                                                                  tes, combmode,
-                                                                 ref_img,
-                                                                 fout=fout)
+                                                                 ref_img)
         if ctab is None:
             acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask,
                                                        ref_img, manacc,
