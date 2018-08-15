@@ -1,0 +1,30 @@
+{
+  "creators": [
+    {
+      "name": "DuPre, Elizabeth",
+      "affiliation": "Montreal Neurological Institute, McGill University"
+    },
+    {
+      "name": "Salo, Taylor",
+      "affiliation": "Florida International University"
+    },
+    {
+      "name": "Markello, Ross",
+      "affiliation": "Montreal Neurological Institute, McGill University"
+    },
+    {
+      "name": "Kundu, Prantik",
+      "affiliation": "Mount Sinai Hospital"
+    },
+    {
+      "name": "Whitaker, Kirstie",
+      "affiliation": "Alan Turing Institute; Cambridge University"
+    }
+  ],
+  "keywords": [
+    "neuroimaging",
+    "fMRI"
+  ],
+  "license": "LGPL-2",
+  "upload_type": "software"
+}
