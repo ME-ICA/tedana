@@ -2,23 +2,28 @@
   "creators": [
     {
       "name": "DuPre, Elizabeth",
-      "affiliation": "Montreal Neurological Institute, McGill University"
+      "affiliation": "Montreal Neurological Institute, McGill University",
+      "orcid": "0000-0003-1358-196X"
     },
     {
       "name": "Salo, Taylor",
-      "affiliation": "Florida International University"
+      "affiliation": "Florida International University",
+      "orcid": "0000-0001-9813-3167"
     },
     {
       "name": "Markello, Ross",
-      "affiliation": "Montreal Neurological Institute, McGill University"
+      "affiliation": "Montreal Neurological Institute, McGill University",
+      "orcid": "0000-0003-1057-1336"
     },
     {
       "name": "Kundu, Prantik",
-      "affiliation": "Mount Sinai Hospital"
+      "affiliation": "Mount Sinai Hospital",
+      "orcid": "0000-0001-9367-3068"
     },
     {
       "name": "Whitaker, Kirstie",
-      "affiliation": "Alan Turing Institute; Cambridge University"
+      "affiliation": "Alan Turing Institute; Cambridge University",
+      "orcid": "0000-0001-8498-4059"
     }
   ],
   "keywords": [
