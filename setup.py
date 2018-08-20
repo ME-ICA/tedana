@@ -1,52 +1,76 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Author: oesteban
 """ tedana setup script """
 
 
 def main():
     """ Install entry-point """
+    import versioneer
     from io import open
     from os import path as op
     from inspect import getfile, currentframe
     from setuptools import setup, find_packages
+    from tedana.info import (
+        __packagename__,
+        __version__,
+        __author__,
+        __email__,
+        __maintainer__,
+        __license__,
+        __description__,
+        __longdesc__,
+        __url__,
+        DOWNLOAD_URL,
+        CLASSIFIERS,
+        REQUIRES,
+        TESTS_REQUIRES,
+        EXTRA_REQUIRES,
+    )
 
-    this_path = op.dirname(op.abspath(getfile(currentframe())))
+    pkg_data = {
+        'tedana': [
+            'tests/data/*',
+        ]
+    }
 
-    # For Python 3: use a locals dictionary
-    # http://stackoverflow.com/a/1463370/6820620
-    ldict = locals()
-    # Get version and release info, which is all stored in tedana/info.py
-    module_file = op.join(this_path, 'tedana', 'info.py')
-    with open(module_file) as infofile:
-        pythoncode = [line for line in infofile.readlines() if not
-                      line.strip().startswith('#')]
-        exec('\n'.join(pythoncode), globals(), ldict)
+    root_dir = op.dirname(op.abspath(getfile(currentframe())))
+
+    version = None
+    cmdclass = {}
+    if op.isfile(op.join(root_dir, 'tedana', 'VERSION')):
+        with open(op.join(root_dir, 'tedana', 'VERSION')) as vfile:
+            version = vfile.readline().strip()
+        pkg_data['tedana'].insert(0, 'VERSION')
+
+    if version is None:
+        version = versioneer.get_version()
+        cmdclass = versioneer.get_cmdclass()
 
     setup(
-        name=ldict['__packagename__'],
-        version=ldict['__version__'],
-        description=ldict['__description__'],
-        long_description=ldict['__longdesc__'],
-        author=ldict['__author__'],
-        author_email=ldict['__email__'],
-        maintainer=ldict['__maintainer__'],
-        maintainer_email=ldict['__email__'],
-        url=ldict['__url__'],
-        license=ldict['__license__'],
-        classifiers=ldict['CLASSIFIERS'],
-        download_url=ldict['DOWNLOAD_URL'],
+        name=__packagename__,
+        version=__version__,
+        description=__description__,
+        long_description=__longdesc__,
+        author=__author__,
+        author_email=__email__,
+        maintainer=__maintainer__,
+        maintainer_email=__email__,
+        url=__url__,
+        license=__license__,
+        classifiers=CLASSIFIERS,
+        download_url=DOWNLOAD_URL,
         # Dependencies handling
-        install_requires=ldict['REQUIRES'],
-        tests_require=ldict['TESTS_REQUIRES'],
-        extras_require=ldict['EXTRA_REQUIRES'],
+        install_requires=REQUIRES,
+        tests_require=TESTS_REQUIRES,
+        extras_require=EXTRA_REQUIRES,
         entry_points={'console_scripts': [
             't2smap=tedana.workflows.t2smap:_main',
             'tedana=tedana.workflows.tedana:_main'
         ]},
         packages=find_packages(exclude=("tests",)),
-        package_data=ldict['PACKAGE_DATA'],
+        package_data=pkg_data,
         zip_safe=False,
+        cmdclass=cmdclass
     )
 
 
