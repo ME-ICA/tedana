@@ -7,6 +7,10 @@ tedana: TE Dependent ANAlysis
 The ``tedana`` package is part of the ME-ICA pipeline, performing TE-dependent
 analysis of multi-echo functional magnetic resonance imaging (fMRI) data.
 
+.. image:: https://img.shields.io/pypi/v/tedana.svg
+    :target: https://pypi.python.org/pypi/tedana/
+    :alt: Latest Version
+
 .. image:: https://circleci.com/gh/ME-ICA/tedana.svg?style=svg
     :target: https://circleci.com/gh/ME-ICA/tedana
 
