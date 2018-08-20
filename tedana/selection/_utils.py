@@ -50,26 +50,28 @@ def do_svm(X_train, y_train, X_test, svmtype=0):
     return y_pred, clf
 
 
-def getelbow_cons(ks, val=False):
+def getelbow_cons(arr, return_val=False):
     """
     Elbow using mean/variance method - conservative
 
     Parameters
     ----------
-    ks : array_like
-    val : :obj:`bool`, optional
+    arr : (C,) array_like
+        Metric (e.g., Kappa or Rho) values.
+    return_val : :obj:`bool`, optional
         Return the value of the elbow instead of the index. Default: False
 
     Returns
     -------
     :obj:`int` or :obj:`float`
-        Either the elbow index (if val is True) or the values at the elbow
-        index (if val is False)
+        Either the elbow index (if return_val is True) or the values at the
+        elbow index (if return_val is False)
     """
-
-    ks = np.sort(ks)[::-1]
-    nk = len(ks)
-    temp1 = [(ks[nk - 5 - ii - 1] > ks[nk - 5 - ii:nk].mean() + 2 * ks[nk - 5 - ii:nk].std())
+    if arr.ndim != 1:
+        raise ValueError('Parameter arr should be 1d, not {0}d'.format(arr.ndim))
+    arr = np.sort(arr)[::-1]
+    nk = len(arr)
+    temp1 = [(arr[nk - 5 - ii - 1] > arr[nk - 5 - ii:nk].mean() + 2 * arr[nk - 5 - ii:nk].std())
              for ii in range(nk - 5)]
     ds = np.array(temp1[::-1], dtype=np.int)
     dsum = []
@@ -78,34 +80,36 @@ def getelbow_cons(ks, val=False):
         c_ = (c_ + d_) * d_
         dsum.append(c_)
     e2 = np.argmax(np.array(dsum))
-    elind = np.max([getelbow_mod(ks), e2])
+    elind = np.max([getelbow_mod(arr), e2])
 
-    if val:
-        return ks[elind]
+    if return_val:
+        return arr[elind]
     else:
         return elind
 
 
-def getelbow_mod(ks, val=False):
+def getelbow_mod(arr, return_val=False):
     """
     Elbow using linear projection method - moderate
 
     Parameters
     ----------
-    ks : array_like
-    val : :obj:`bool`, optional
+    arr : (C,) array_like
+        Metric (e.g., Kappa or Rho) values.
+    return_val : :obj:`bool`, optional
         Return the value of the elbow instead of the index. Default: False
 
     Returns
     -------
     :obj:`int` or :obj:`float`
-        Either the elbow index (if val is True) or the values at the elbow
-        index (if val is False)
+        Either the elbow index (if return_val is True) or the values at the
+        elbow index (if return_val is False)
     """
-
-    ks = np.sort(ks)[::-1]
-    n_components = ks.shape[0]
-    coords = np.array([np.arange(n_components), ks])
+    if arr.ndim != 1:
+        raise ValueError('Parameter arr should be 1d, not {0}d'.format(arr.ndim))
+    arr = np.sort(arr)[::-1]
+    n_components = arr.shape[0]
+    coords = np.array([np.arange(n_components), arr])
     p = coords - coords[:, 0].reshape(2, 1)
     b = p[:, -1]
     b_hat = np.reshape(b / np.sqrt((b ** 2).sum()), (2, 1))
@@ -113,37 +117,39 @@ def getelbow_mod(ks, val=False):
     d = np.sqrt((proj_p_b ** 2).sum(axis=0))
     k_min_ind = d.argmax()
 
-    if val:
-        return ks[k_min_ind]
+    if return_val:
+        return arr[k_min_ind]
     else:
         return k_min_ind
 
 
-def getelbow_aggr(ks, val=False):
+def getelbow_aggr(arr, return_val=False):
     """
     Elbow using curvature - aggressive
 
     Parameters
     ----------
-    ks : array_like
-    val : :obj:`bool`, optional
-        Default is False
+    arr : (C,) array_like
+        Metric (e.g., Kappa or Rho) values.
+    return_val : :obj:`bool`, optional
+        Return the value of the elbow instead of the index. Default: False
 
     Returns
     -------
     :obj:`int` or :obj:`float`
-        Either the elbow index (if val is True) or the values at the elbow
-        index (if val is False)
+        Either the elbow index (if return_val is True) or the values at the
+        elbow index (if return_val is False)
     """
-
-    ks = np.sort(ks)[::-1]
-    dKdt = ks[:-1] - ks[1:]
+    if arr.ndim != 1:
+        raise ValueError('Parameter arr should be 1d, not {0}d'.format(arr.ndim))
+    arr = np.sort(arr)[::-1]
+    dKdt = arr[:-1] - arr[1:]
     dKdt2 = dKdt[:-1] - dKdt[1:]
     curv = np.abs((dKdt2 / (1 + dKdt[:-1]**2.) ** (3. / 2.)))
     curv[np.isnan(curv)] = -1 * 10**6
     maxcurv = np.argmax(curv) + 2
 
-    if val:
-        return ks[maxcurv]
+    if return_val:
+        return arr[maxcurv]
     else:
         return maxcurv

@@ -5,11 +5,14 @@
 Base module variables
 """
 
-__version__ = '0.0.3'
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
+
 __author__ = 'tedana developers'
-__copyright__ = 'Copyright 2017, tedana developers'
+__copyright__ = 'Copyright 2018, tedana developers'
 __credits__ = ['Elizabeth DuPre', 'Prantik Kundu', 'Ross Markello',
-               'Taylor Salo', 'Kirstie Whitaker']
+               'Taylor Salo', 'Kirstie Whitaker', 'Dan Handwerker']
 __license__ = 'LGPL 2.0'
 __maintainer__ = 'Elizabeth DuPre'
 __email__ = 'emd222@cornell.edu'
@@ -31,7 +34,8 @@ REQUIRES = [
     'pywavelets',
     'nilearn',
     'nibabel>=2.1.0',
-    'scipy'
+    'scipy',
+    'versioneer'
 ]
 
 TESTS_REQUIRES = [
@@ -52,11 +56,8 @@ EXTRA_REQUIRES = {
 }
 
 # Enable a handle to install all extra dependencies at once
-EXTRA_REQUIRES['all'] = [val for _, val in list(EXTRA_REQUIRES.items())]
-
-PACKAGE_DATA = {
-    'tedana': ['tests/data']
-}
+EXTRA_REQUIRES['all'] = list(set([
+    v for deps in EXTRA_REQUIRES.values() for v in deps]))
 
 # Package classifiers
 CLASSIFIERS = [
