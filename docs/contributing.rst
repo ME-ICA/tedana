@@ -51,10 +51,9 @@ These steps can only be completed by a project maintainer, but they a good resou
 releasing your own Python projects!
 
     #. All continuous integration must be passing and docs must be building successfully
-    #. Run ``update_changes.sh``. This will update the ``CHANGES.rst`` file to include all
-       changes since the last release.
-    #. Create a new release on GitHub, logging the changes from ``CHANGES.rst``
-       in the release notes. Here's a `guide for creating a release on GitHub`_.
+    #. Create a new release, using the GitHub `guide for creating a release on GitHub`_.
+       `Release-drafter`_ should have already drafted release notes listing all
+       changes since the last release; check to make sure these are correct.
     #. Pulling from the ``master`` branch, locally build a new copy of tedana and
         `upload it to PyPi`_.
 
@@ -64,5 +63,6 @@ You can also `learn more about DueCredit`_ and why citing software is important.
 
     .. _`upload it to PyPi`: https://packaging.python.org/tutorials/packaging-projects/#uploading-the-distribution-archives
     .. _`guide for creating a release on GitHub`: https://help.github.com/articles/creating-releases/
+    .. _`Release-drafter`: https://github.com/apps/release-drafter
     .. _here: https://guides.github.com/activities/citable-code/
     .. _`learn more about DueCredit`: https://github.com/duecredit/duecredit
