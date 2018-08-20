@@ -57,8 +57,6 @@ releasing your own Python projects!
        in the release notes. Here's a `guide for creating a release on GitHub`_.
     #. Pulling from the ``master`` branch, locally build a new copy of tedana and
         `upload it to PyPi`_.
-    #. Update the `Read the Docs landing page`_ and the `DueCredit citation`_
-       to reference the lastest Zenodo DOI.
 
 We have set up tedana so that releases automatically mint a new DOI with Zenodo;
 a guide for doing this integration is available `here`_.
