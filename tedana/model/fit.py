@@ -218,9 +218,6 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
             out[:, 2] = np.squeeze(utils.unmask(F_S0_maps[:, i], t2s != 0))
             out[:, 3] = np.squeeze(utils.unmask(Z_maps[:, i], mask))
 
-            if utils.get_dtype(ref_img) == 'GIFTI':
-                continue  # TODO: pass through GIFTI file data as below
-
             ccimg = utils.new_nii_like(ref_img, out)
 
             # Do simple clustering on F
