@@ -66,9 +66,13 @@ tedana (in this case, ``tedana_script.py``):
 
   python -m duecredit tedana_script.py
 
+You can also learn more about `why citing software is important`_.
+
 .. _Differentiating BOLD and non-BOLD signals in fMRI time series using multi-echo EPI.: http://dx.doi.org/10.1016/j.neuroimage.2011.12.028
 .. _Integrated strategy for improving functional connectivity mapping using multiecho fMRI.: http://dx.doi.org/10.1073/pnas.1301725110
 .. _duecredit: https://github.com/duecredit/duecredit
+.. _`why citing software is important`: https://www.software.ac.uk/how-cite-software
+
 
 License Information
 -------------------
