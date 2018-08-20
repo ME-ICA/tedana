@@ -17,8 +17,6 @@ tes = ['14.5', '38.5', '62.5']
 def test_get_dtype():
     # various combinations of input types
     good_inputs = [
-        (['echo1.func.gii', 'echo2.func.gii', 'echo3.func.gii'], 'GIFTI'),
-        ('echo1.func.gii', 'GIFTI'),
         (['echo1.nii.gz', 'echo2.nii.gz', 'echo3.nii.gz'], 'NIFTI'),
         ('echo1.nii.gz', 'NIFTI'),
         (['echo1.unknown', 'echo2.unknown', 'echo3.unknown'], 'OTHER'),
@@ -31,7 +29,7 @@ def test_get_dtype():
         assert utils.get_dtype(input) == expected
 
     with pytest.raises(ValueError):  # mixed arrays don't work
-        utils.get_dtype(['echo1.func.gii', 'echo1.nii.gz'])
+        utils.get_dtype(['echo1.unknown', 'echo1.nii.gz'])
 
     with pytest.raises(TypeError):  # non-img_like inputs don't work
         utils.get_dtype(rs.rand(100, 100))
@@ -183,12 +181,4 @@ def test_new_nii_like():
 
 
 def test_filewrite():
-    pass
-
-
-def test_new_gii_like():
-    pass
-
-
-def test_new_gii_darray():
     pass
