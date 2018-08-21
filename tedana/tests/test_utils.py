@@ -123,8 +123,8 @@ def test_load_data():
     # list of filepath to images
     d, ref = utils.load_data(fnames, n_echos=len(tes))
     assert d.shape == exp_shape
-    assert isinstance(ref, str)
-    assert ref == fnames[0]
+    assert isinstance(ref, nib.Nifti1Image)
+    assert np.allclose(ref.get_data(), nib.load(fnames[0]).get_data())
 
     # list of img_like
     d, ref = utils.load_data(fimg, n_echos=len(tes))
