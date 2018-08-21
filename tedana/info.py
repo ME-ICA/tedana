@@ -13,7 +13,7 @@ __author__ = 'tedana developers'
 __copyright__ = 'Copyright 2018, tedana developers'
 __credits__ = ['Elizabeth DuPre', 'Prantik Kundu', 'Ross Markello',
                'Taylor Salo', 'Kirstie Whitaker', 'Dan Handwerker']
-__license__ = 'LGPL 2.0'
+__license__ = 'LGPL 2.1'
 __maintainer__ = 'Elizabeth DuPre'
 __email__ = 'emd222@cornell.edu'
 __status__ = 'Prototype'

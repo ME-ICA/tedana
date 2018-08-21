@@ -35,6 +35,6 @@
     "neuroimaging",
     "fMRI"
   ],
-  "license": "LGPL-2",
+  "license": "lgpl-2.1",
   "upload_type": "software"
 }
