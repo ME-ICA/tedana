@@ -29,12 +29,12 @@
       "name": "Handwerker, Dan",
       "affiliation": "National Institutes of Health",
       "orcid": "0000-0001-7261-4042"
-    },
+    }
   ],
   "keywords": [
     "neuroimaging",
     "fMRI"
   ],
-  "license": "LGPL-2",
+  "license": "lgpl-2.1",
   "upload_type": "software"
 }
