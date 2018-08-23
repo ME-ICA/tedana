@@ -210,40 +210,40 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         LGR.info('Performing spatial clustering of components')
         csize = np.max([int(n_voxels * 0.0005) + 5, 20])
         LGR.debug('Using minimum cluster size: {}'.format(csize))
-        for i in range(n_components):
+        for i_comp in range(n_components):
             # save out files
             out = np.zeros((n_samp, 4))
-            out[:, 0] = np.squeeze(utils.unmask(PSC[:, i], mask))
-            out[:, 1] = np.squeeze(utils.unmask(F_R2_maps[:, i], t2s != 0))
-            out[:, 2] = np.squeeze(utils.unmask(F_S0_maps[:, i], t2s != 0))
-            out[:, 3] = np.squeeze(utils.unmask(Z_maps[:, i], mask))
+            out[:, 0] = np.squeeze(utils.unmask(PSC[:, i_comp], mask))
+            out[:, 1] = np.squeeze(utils.unmask(F_R2_maps[:, i_comp], t2s != 0))
+            out[:, 2] = np.squeeze(utils.unmask(F_S0_maps[:, i_comp], t2s != 0))
+            out[:, 3] = np.squeeze(utils.unmask(Z_maps[:, i_comp], mask))
 
             ccimg = utils.new_nii_like(ref_img, out)
 
             # Do simple clustering on F
             sel = spatclust(ccimg, min_cluster_size=csize,
                             threshold=int(fmin), index=[1, 2], mask=(t2s != 0))
-            F_R2_clmaps[:, i] = sel[:, 0]
-            F_S0_clmaps[:, i] = sel[:, 1]
-            countsigFR2 = F_R2_clmaps[:, i].sum()
-            countsigFS0 = F_S0_clmaps[:, i].sum()
+            F_R2_clmaps[:, i_comp] = sel[:, 0]
+            F_S0_clmaps[:, i_comp] = sel[:, 1]
+            countsigFR2 = F_R2_clmaps[:, i_comp].sum()
+            countsigFS0 = F_S0_clmaps[:, i_comp].sum()
 
             # Do simple clustering on Z at p<0.05
             sel = spatclust(ccimg, min_cluster_size=csize,
                             threshold=1.95, index=3, mask=mask)
-            Z_clmaps[:, i] = sel
+            Z_clmaps[:, i_comp] = sel
 
             # Do simple clustering on ranked signal-change map
-            spclust_input = utils.unmask(stats.rankdata(tsoc_Babs[:, i]), mask)
+            spclust_input = utils.unmask(stats.rankdata(tsoc_Babs[:, i_comp]), mask)
             spclust_input = utils.new_nii_like(ref_img, spclust_input)
-            Br_clmaps_R2[:, i] = spatclust(spclust_input,
-                                           min_cluster_size=csize,
-                                           threshold=max(tsoc_Babs.shape)-countsigFR2,
-                                           mask=mask)
-            Br_clmaps_S0[:, i] = spatclust(spclust_input,
-                                           min_cluster_size=csize,
-                                           threshold=max(tsoc_Babs.shape)-countsigFS0,
-                                           mask=mask)
+            Br_clmaps_R2[:, i_comp] = spatclust(spclust_input,
+                                                min_cluster_size=csize,
+                                                threshold=max(tsoc_Babs.shape)-countsigFR2,
+                                                mask=mask)
+            Br_clmaps_S0[:, i_comp] = spatclust(spclust_input,
+                                                min_cluster_size=csize,
+                                                threshold=max(tsoc_Babs.shape)-countsigFS0,
+                                                mask=mask)
 
         seldict = {}
         selvars = ['Kappas', 'Rhos', 'WTS', 'varex', 'Z_maps', 'F_R2_maps',
