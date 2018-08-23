@@ -137,7 +137,7 @@ def selcomps(seldict, mmix, manacc, n_echos):
         countnoise[i_comp] = np.array(comp_noise_sel, dtype=np.int).sum()
         noise_FR2_Z = np.log10(np.unique(F_R2_maps[comp_noise_sel, i_comp]))
         signal_FR2_Z = np.log10(np.unique(F_R2_maps[Z_clmaps[:, i_comp] == 1,
-                                          i_comp]))
+                                                    i_comp]))
         counts_FR2_Z[i_comp, :] = [len(signal_FR2_Z), len(noise_FR2_Z)]
         tt_table[i_comp, :2] = stats.ttest_ind(signal_FR2_Z, noise_FR2_Z,
                                                equal_var=False)
