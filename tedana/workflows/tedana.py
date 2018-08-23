@@ -312,6 +312,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     dn_ts_e[echo].nii         Denoised timeseries for echo number ``echo``
     ======================    =================================================
     """
+    METHOD = 'kundu_v2_5'
+    if METHOD not in ['kundu_v2_5', 'kundu_v3_2']:
+        raise ValueError('Component selection must be either "kundu_v2_5" or '
+                         '"kundu_v3_2"')
 
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
@@ -395,34 +399,45 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                 t2s, t2sG, stabilize, ref_img,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw,
                                                 ste=ste, wvpca=wvpca)
-        mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, conv, fixed_seed,
-                                                     cost=initcost, final_cost=finalcost,
+        mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, conv,
+                                                     fixed_seed, cost=initcost,
+                                                     final_cost=finalcost,
                                                      verbose=debug)
         np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
         LGR.info('Making second component selection guess from ICA results')
-        seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
-                                                                 mask, t2s, t2sG,
-                                                                 tes, combmode,
-                                                                 ref_img,
-                                                                 reindex=True)
+        (seldict, comptable,
+         betas, mmix) = model.fitmodels_direct(catd, mmix_orig, mask, t2s,
+                                               t2sG, tes, combmode, ref_img,
+                                               reindex=True)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask, ref_img, manacc,
-                                                   n_echos, t2s, s0, strict_mode=strict,
-                                                   filecsdata=filecsdata)
-    else:
-        LGR.info('Using supplied mixing matrix from ICA')
-        mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
-        seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
-                                                                 mask, t2s, t2sG,
-                                                                 tes, combmode,
-                                                                 ref_img)
-        if ctab is None:
+        if METHOD == 'kundu_v2_5':
+            acc, rej, midk, empty = selection.selcomps(seldict, mmix, manacc,
+                                                       n_echos)
+        elif METHOD == 'kundu_v3_2':
             acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask,
                                                        ref_img, manacc,
                                                        n_echos, t2s, s0,
-                                                       filecsdata=filecsdata,
-                                                       strict_mode=strict)
+                                                       strict_mode=strict,
+                                                       filecsdata=filecsdata)
+    else:
+        LGR.info('Using supplied mixing matrix from ICA')
+        mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
+        (seldict, comptable,
+         betas, mmix) = model.fitmodels_direct(catd, mmix_orig, mask, t2s,
+                                               t2sG, tes, combmode, ref_img)
+        if ctab is None:
+            if METHOD == 'kundu_v2_5':
+                (acc, rej,
+                 midk, empty) = selection.selcomps(seldict, mmix, manacc,
+                                                   n_echos)
+            elif METHOD == 'kundu_v3_2':
+                (acc, rej,
+                 midk, empty) = selection.selcomps(seldict, mmix, mask,
+                                                   ref_img, manacc,
+                                                   n_echos, t2s, s0,
+                                                   filecsdata=filecsdata,
+                                                   strict_mode=strict)
         else:
             acc, rej, midk, empty = utils.ctabsel(ctab)
 
