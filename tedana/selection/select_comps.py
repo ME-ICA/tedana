@@ -76,7 +76,6 @@ def selcomps(seldict, mmix, manacc, n_echos):
     varex = seldict['varex']
     Z_maps = seldict['Z_maps']
     Z_clmaps = seldict['Z_clmaps']
-    F_S0_maps = seldict['F_S0_maps']
     F_R2_maps = seldict['F_R2_maps']
     F_S0_clmaps = seldict['F_S0_clmaps']
     F_R2_clmaps = seldict['F_R2_clmaps']
