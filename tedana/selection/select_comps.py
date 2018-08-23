@@ -5,6 +5,7 @@ import logging
 import numpy as np
 import pkg_resources
 from scipy import stats
+
 from tedana import utils
 from tedana.selection._utils import (getelbow_mod)
 
@@ -16,6 +17,12 @@ def selcomps(seldict, mmix, manacc, n_echos):
     """
     Classify components in seldict as accepted, rejected, midk, or ignored
     based on Kundu approach v2.5.
+
+    The selection process uses pre-calculated parameters for each ICA component
+    inputted into this function in `seldict` such as Kappa (a T2* weighting
+    metric), Rho (an S0 weighting metric), and variance explained. Additional
+    selection metrics are calculated within this function and then used to
+    classify each component into one of four groups.
 
     Parameters
     ----------
@@ -64,11 +71,13 @@ def selcomps(seldict, mmix, manacc, n_echos):
     based on how similar metrics in one component are similar to metrics in
     other components.
     """
-    Kappas = seldict['Kappas']
-    Rhos = seldict['Rhos']
+    kappas = seldict['Kappas']
+    rhos = seldict['Rhos']
     varex = seldict['varex']
     Z_maps = seldict['Z_maps']
     Z_clmaps = seldict['Z_clmaps']
+    F_S0_maps = seldict['F_S0_maps']
+    F_R2_maps = seldict['F_R2_maps']
     F_S0_clmaps = seldict['F_S0_clmaps']
     F_R2_clmaps = seldict['F_R2_clmaps']
     Br_clmaps_S0 = seldict['Br_clmaps_S0']
@@ -77,8 +86,8 @@ def selcomps(seldict, mmix, manacc, n_echos):
     n_vols = mmix.shape[1]
 
     # List of components
-    all_comps = np.arange(len(Kappas))
-    acc = np.arange(len(Kappas))
+    all_comps = np.arange(len(kappas))
+    acc = np.arange(len(kappas))
     midk = []
     ign = []
 
@@ -103,8 +112,8 @@ def selcomps(seldict, mmix, manacc, n_echos):
     """
     Do some tallies for no. of significant voxels
     """
-    countsigFS0 = F_S0_clmaps.sum(0)
-    countsigFR2 = F_R2_clmaps.sum(0)
+    countsigFS0 = F_S0_clmaps.sum(axis=0)
+    countsigFR2 = F_R2_clmaps.sum(axis=0)
     countnoise = np.zeros(len(all_comps))
 
     """
@@ -138,7 +147,7 @@ def selcomps(seldict, mmix, manacc, n_echos):
     Assemble decision table
     """
     d_table_rank = np.vstack([
-        len(all_comps)-stats.rankdata(Kappas, method='ordinal'),
+        len(all_comps)-stats.rankdata(kappas, method='ordinal'),
         len(all_comps)-stats.rankdata(dice_table[:, 0], method='ordinal'),
         len(all_comps)-stats.rankdata(tt_table[:, 0], method='ordinal'),
         stats.rankdata(countnoise, method='ordinal'),
@@ -149,14 +158,14 @@ def selcomps(seldict, mmix, manacc, n_echos):
     Step 1: Reject anything that's obviously an artifact
     a. Estimate a null variance
     """
-    rej = acc[utils.andb([Rhos > Kappas, countsigFS0 > countsigFR2]) > 0]
+    rej = acc[utils.andb([rhos > kappas, countsigFS0 > countsigFR2]) > 0]
     rej = np.union1d(rej, acc[utils.andb([dice_table[:, 1] > dice_table[:, 0],
                                           varex > np.median(varex)]) == 2])
     rej = np.union1d(rej,
                      acc[utils.andb([tt_table[acc, 0] < 0,
                                      varex[acc] > np.median(varex)]) == 2])
     acc = np.setdiff1d(acc, rej)
-    varex_ub_p = np.median(varex[Kappas > Kappas[getelbow_mod(Kappas)]])
+    varex_ub_p = np.median(varex[kappas > kappas[getelbow_mod(kappas)]])
 
     """
     Step 2: Make a  guess for what the good components are, in order to
@@ -172,23 +181,23 @@ def selcomps(seldict, mmix, manacc, n_echos):
     ncls = acc.copy()
     for nn in range(3):
         ncls = ncls[1:][(varex[ncls][1:] - varex[ncls][:-1]) < varex_ub_p]
-    Kappas_lim = Kappas[Kappas < utils.getfbounds(n_echos)[-1]]
-    Rhos_lim = np.array(sorted(Rhos[ncls])[::-1])
-    Rhos_sorted = np.array(sorted(Rhos)[::-1])
-    Kappas_elbow = min(Kappas_lim[getelbow_mod(Kappas_lim)],
-                       Kappas[getelbow_mod(Kappas)])
-    Rhos_elbow = np.mean([Rhos_lim[getelbow_mod(Rhos_lim)],
-                          Rhos_sorted[getelbow_mod(Rhos_sorted)],
+    kappas_lim = kappas[kappas < utils.getfbounds(n_echos)[-1]]
+    rhos_lim = np.array(sorted(rhos[ncls])[::-1])
+    rhos_sorted = np.array(sorted(rhos)[::-1])
+    kappa_elbow = min(kappas_lim[getelbow_mod(kappas_lim)],
+                      kappas[getelbow_mod(kappas)])
+    rho_elbow = np.mean([rhos_lim[getelbow_mod(rhos_lim)],
+                         rhos_sorted[getelbow_mod(rhos_sorted)],
                          utils.getfbounds(n_echos)[0]])
-    good_guess = ncls[utils.andb([Kappas[ncls] >= Kappas_elbow,
-                                  Rhos[ncls] < Rhos_elbow]) == 2]
+    good_guess = ncls[utils.andb([kappas[ncls] >= kappa_elbow,
+                                  rhos[ncls] < rho_elbow]) == 2]
 
     if len(good_guess) == 0:
         return [], sorted(rej), [], sorted(np.setdiff1d(all_comps, rej))
 
-    Kappa_rate = ((max(Kappas[good_guess]) - min(Kappas[good_guess])) /
+    kappa_rate = ((max(kappas[good_guess]) - min(kappas[good_guess])) /
                   (max(varex[good_guess]) - min(varex[good_guess])))
-    Kappa_ratios = Kappa_rate * varex / Kappas
+    kappa_ratios = kappa_rate * varex / kappas
     varex_lb = stats.scoreatpercentile(varex[good_guess], LOW_PERC)
     varex_ub = stats.scoreatpercentile(varex[good_guess], HIGH_PERC)
 
@@ -211,7 +220,7 @@ def selcomps(seldict, mmix, manacc, n_echos):
     igncand = np.setdiff1d(acc, loaded)
     igncand = np.setdiff1d(igncand,
                            igncand[d_table_score[igncand] < max_good_d_score])
-    igncand = np.setdiff1d(igncand, igncand[Kappas[igncand] > Kappas_elbow])
+    igncand = np.setdiff1d(igncand, igncand[kappas[igncand] > kappa_elbow])
     ign = np.array(np.union1d(ign, igncand), dtype=np.int)
     acc = np.setdiff1d(acc, ign)
 
@@ -221,19 +230,19 @@ def selcomps(seldict, mmix, manacc, n_echos):
     if len(acc) > len(good_guess):
         # Recompute the midk steps on the limited set to clean up the tail
         d_table_rank = np.vstack([
-            len(acc) - stats.rankdata(Kappas[acc], method='ordinal'),
+            len(acc) - stats.rankdata(kappas[acc], method='ordinal'),
             len(acc) - stats.rankdata(dice_table[acc, 0], method='ordinal'),
             len(acc) - stats.rankdata(tt_table[acc, 0], method='ordinal'),
             stats.rankdata(countnoise[acc], method='ordinal'),
             len(acc) - stats.rankdata(countsigFR2[acc], method='ordinal')]).T
         d_table_score = d_table_rank.sum(1)
         num_acc_guess = np.mean([
-            np.sum(utils.andb([Kappas[acc] > Kappas_elbow,
-                               Rhos[acc] < Rhos_elbow]) == 2),
-            np.sum(Kappas[acc] > Kappas_elbow)])
+            np.sum(utils.andb([kappas[acc] > kappa_elbow,
+                               rhos[acc] < rho_elbow]) == 2),
+            np.sum(kappas[acc] > kappa_elbow)])
         conservative_guess = num_acc_guess * d_table_rank.shape[1] / RESTRICT_FACTOR
         candartA = np.intersect1d(acc[d_table_score > conservative_guess],
-                                  acc[Kappa_ratios[acc] > EXTEND_FACTOR * 2])
+                                  acc[kappa_ratios[acc] > EXTEND_FACTOR * 2])
         midkadd = np.union1d(midkadd, np.intersect1d(
             candartA, candartA[varex[candartA] > varex_ub * EXTEND_FACTOR]))
         candartB = acc[d_table_score > num_acc_guess * d_table_rank.shape[1] * HIGH_PERC / 100.]
@@ -249,7 +258,7 @@ def selcomps(seldict, mmix, manacc, n_echos):
         ignadd = np.intersect1d(candart[varex[candart] > new_varex_lb],
                                 candart)
         ignadd = np.union1d(ignadd, np.intersect1d(
-            acc[Kappas[acc] <= Kappas_elbow], acc[varex[acc] > new_varex_lb]))
+            acc[kappas[acc] <= kappa_elbow], acc[varex[acc] > new_varex_lb]))
         ign = np.setdiff1d(np.union1d(ign, ignadd), midk)
         acc = np.setdiff1d(acc, np.union1d(midk, ign))
 
