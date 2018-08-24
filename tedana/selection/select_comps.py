@@ -180,6 +180,9 @@ def selcomps(seldict, mmix, manacc, n_echos):
     # Step 2a
     varex_ub_p = np.median(varex[kappas > kappas[getelbow_mod(kappas)]])
     ncls = acc.copy()
+    # NOTE: We're not sure why this is done, nor why it's specifically done
+    # three times. Need to look into this deeper, esp. to make sure the 3
+    # isn't a hard-coded reference to the number of echoes.
     for nn in range(3):
         ncls = ncls[1:][(varex[ncls][1:] - varex[ncls][:-1]) < varex_ub_p]
 
