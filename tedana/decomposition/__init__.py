@@ -4,8 +4,11 @@
 from .eigendecomp import (
     tedpca, tedica,
 )
+from .godecomp import (
+    tedgodec
+)
 
 
 __all__ = [
-    'tedpca', 'tedica',
+    'tedpca', 'tedica', 'tedgodec',
     ]

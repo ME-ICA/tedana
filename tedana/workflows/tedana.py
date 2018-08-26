@@ -170,8 +170,9 @@ def _get_parser():
 
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
-                    strict=False, gscontrol=True, kdaw=10., rdaw=1., conv=2.5e-5,
-                    ste=-1, combmode='t2s', dne=False,
+                    strict=False, gscontrol=True, ws_denoise=None,
+                    kdaw=10., rdaw=1.,
+                    conv=2.5e-5, ste=-1, combmode='t2s', dne=False,
                     initcost='tanh', finalcost='tanh',
                     stabilize=False, filecsdata=False, wvpca=False,
                     label=None, fixed_seed=42, debug=False, quiet=False):
@@ -201,6 +202,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Ignore low-variance ambiguous components. Default is False.
     gscontrol : :obj:`bool`, optional
         Control global signal using spatial approach. Default is True.
+    ws_denoise : {None, 'gsr', 'godec'}, optional
+        Which method to apply for widespread signal denoising. Default is None.
     kdaw : :obj:`float`, optional
         Dimensionality augmentation weight (Kappa). Default is 10.
         -1 for low-dimensional ICA.
@@ -384,14 +387,14 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     utils.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
 
     # optimally combine data
-    OCcatd = model.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
+    optcom_ts = model.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
 
     # regress out global signal unless explicitly not desired
     if gscontrol:
-        catd, OCcatd = model.gscontrol_raw(catd, OCcatd, n_echos, ref_img)
+        catd, optcom_ts = model.gscontrol_raw(catd, optcom_ts, n_echos, ref_img)
 
     if mixm is None:
-        n_components, dd = decomposition.tedpca(catd, OCcatd, combmode, mask,
+        n_components, dd = decomposition.tedpca(catd, optcom_ts, combmode, mask,
                                                 t2s, t2sG, stabilize, ref_img,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw,
                                                 ste=ste, wvpca=wvpca)
@@ -430,9 +433,17 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         LGR.warning('No BOLD components detected! Please check data and '
                     'results!')
 
-    utils.writeresults(OCcatd, mask, comptable, mmix, fixed_seed, n_vols,
+    utils.writeresults(optcom_ts, mask, comptable, mmix, fixed_seed, n_vols,
                        acc, rej, midk, empty, ref_img)
-    utils.gscontrol_mmix(OCcatd, mmix, mask, acc, ref_img)
+
+    # Widespread noise control
+    if ws_denoise == 'gsr':
+        utils.gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img)
+    elif ws_denoise == 'godec':
+        decomposition.tedgodec(optcom_ts, mmix, mask, acc, ref_img,
+                               ranks=[2], wavelet=wvpca,
+                               thresh=10, norm_mode='vn', power=2)
+
     if dne:
         utils.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
 
