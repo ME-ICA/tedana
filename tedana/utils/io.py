@@ -15,7 +15,8 @@ LGR = logging.getLogger(__name__)
 
 def gscontrol_mmix(optcom_ts, mmix, mask, acc, ign, ref_img):
     """
-    Perform global signal regression.
+    Perform minimum image regression to identify and remove global artifacts.
+    This is an alternative to methods like GoDec with fewer parameters to tune.
 
     Parameters
     ----------
@@ -40,11 +41,11 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ign, ref_img):
     ======================    =================================================
     Filename                  Content
     ======================    =================================================
-    sphis_hik.nii             T1-like effect.
-    hik_ts_OC_T1c.nii         T1 corrected BOLD (high-Kappa) time series.
-    dn_ts_OC_T1c.nii          Denoised version of T1 corrected time series
-    betas_hik_OC_T1c.nii      T1-GS corrected components
-    meica_mix_T1c.1D          T1-GS corrected mixing matrix
+    sphis_hik.nii             T1-like effect
+    hik_ts_OC_T1c.nii         T1-corrected BOLD (high-Kappa) time series
+    dn_ts_OC_T1c.nii          Denoised version of T1-corrected time series
+    betas_hik_OC_T1c.nii      T1 global signal-corrected components
+    meica_mix_T1c.1D          T1 global signal-corrected mixing matrix
     ======================    =================================================
     """
     optcom_masked = optcom_ts[mask, :]
