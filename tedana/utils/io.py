@@ -21,7 +21,7 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ign, ref_img):
     ----------
     optcom_ts : (S x T) array_like
         Optimally combined time series data
-    mmix : (C x T) array_like
+    mmix : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `optcom_ts`
     mask : (S,) array_like
@@ -56,7 +56,7 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ign, ref_img):
     """
     data_norm = (optcom_masked - optcom_mu) / optcom_std
     cbetas = lstsq(mmix, data_norm.T, rcond=None)[0].T
-    all_comps = np.arange(mmix.shape[0])
+    all_comps = np.arange(mmix.shape[1])
     not_ign = sorted(np.setdiff1d(all_comps, ign))
     resid = data_norm - np.dot(cbetas[:, not_ign], mmix[:, not_ign].T)
 
