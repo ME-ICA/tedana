@@ -79,7 +79,7 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ign, ref_img):
     """
     bold_noT1gs = bold_ts - np.dot(lstsq(glob_sig.T, bold_ts.T,
                                          rcond=None)[0].T, glob_sig)
-    hik_ts = optcom_mu + (bold_noT1gs * optcom_std)
+    hik_ts = bold_noT1gs * optcom_std
     utils.filewrite(utils.unmask(hik_ts, mask), 'hik_ts_OC_T1c.nii', ref_img)
 
     """
