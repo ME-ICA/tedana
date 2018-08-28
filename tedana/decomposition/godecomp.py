@@ -2,6 +2,7 @@
 Go Decomposition
 """
 import logging
+import os.path as op
 
 import numpy as np
 from numpy.linalg import qr, lstsq
@@ -12,7 +13,7 @@ from tedana.decomposition._utils import dwtmat, idwtmat
 LGR = logging.getLogger(__name__)
 
 
-def wthresh(a, thresh):
+def _wthresh(a, thresh):
     """
     Soft wavelet threshold
     """
@@ -58,18 +59,17 @@ def godec(data, thresh=.03, rank=2, power=1, tol=1e-3, max_iter=100,
         L_new = np.dot(np.dot(L, Q), Q.T)
         T = L - L_new + S
         L = L_new
-        S = wthresh(T, thresh)
+        S = _wthresh(T, thresh)
         T -= S
         err = np.linalg.norm(T.ravel(), 2)
         if err < tol:
             if verbose:
-                LGR.info('Successful convergence after {0} '
-                         'iterations'.format(itr+1))
+                LGR.info('Successful convergence after %i iterations', itr+1)
             break
         elif itr >= max_iter:
             if verbose:
-                LGR.warning('Model failed to converge after {0} '
-                            'iterations'.format(itr+1))
+                LGR.warning('Model failed to converge after %i iterations',
+                            itr+1)
             break
         L += T
         itr += 1
@@ -79,7 +79,7 @@ def godec(data, thresh=.03, rank=2, power=1, tol=1e-3, max_iter=100,
     return L, S, G
 
 
-def _tedgodec(data, wavelet=False, rank=2, increment=2, power=2, tol=1e-3,
+def _tedgodec(data, wavelet=False, rank=2, power=2, tol=1e-3,
               thresh=10, max_iter=500, norm_mode='vn', random_seed=0,
               verbose=True):
     """
@@ -96,7 +96,7 @@ def _tedgodec(data, wavelet=False, rank=2, increment=2, power=2, tol=1e-3,
         data_mean = data.mean(-1)
         data_norm = data - data_mean[:, np.newaxis]
     elif norm_mode == 'vn':
-        # What is this?
+        # Variance normalize
         data_mean = data.mean(-1)[:, np.newaxis]
         data_std = data.std(-1)[:, np.newaxis]
         data_norm = (data - data_mean) / data_std
@@ -128,8 +128,8 @@ def _tedgodec(data, wavelet=False, rank=2, increment=2, power=2, tol=1e-3,
     return L, S, G
 
 
-def tedgodec(optcom_ts, mmix, mask, acc, ref_img, ranks=[2], wavelet=False,
-             thresh=10, norm_mode='vn', power=2):
+def tedgodec(optcom_ts, mmix, mask, acc, ign, ref_img, ranks=[2],
+             wavelet=False, thresh=10, norm_mode='vn', power=2, out_dir='.'):
     """
     optcom_ts : (S x T) array_like
         Optimally combined time series data
@@ -140,18 +140,23 @@ def tedgodec(optcom_ts, mmix, mask, acc, ref_img, ranks=[2], wavelet=False,
         Boolean mask array
     acc : :obj:`list`
         Indices of accepted (BOLD) components in `mmix`
+    ign : :obj:`list`
+        Indices of all ignored components in `mmix`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
     ranks : list of int
         Ranks of low-rank components to run
+    norm_mode : {'vn', 'dm', None}
     """
-    # Construct denoised data from optcom, mmix, and acc
+    # Construct denoised data from optcom, mmix, acc, and all_ref
     optcom_masked = optcom_ts[mask, :]
     optcom_mu = optcom_masked.mean(axis=-1)[:, np.newaxis]
     optcom_std = optcom_masked.std(axis=-1)[:, np.newaxis]
     data_norm = (optcom_masked - optcom_mu) / optcom_std
     cbetas = lstsq(mmix, data_norm.T, rcond=None)[0].T
-    resid = data_norm - np.dot(cbetas, mmix.T)
+    all_comps = np.arange(mmix.shape[0])
+    not_ign = sorted(np.setdiff1d(all_comps, ign))
+    resid = data_norm - np.dot(cbetas[:, not_ign], mmix[:, not_ign].T)
     bold_ts = np.dot(cbetas[:, acc], mmix[:, acc].T)
     medn_ts = optcom_mu + ((bold_ts + resid) * optcom_std)
 
@@ -169,8 +174,11 @@ def tedgodec(optcom_ts, mmix, mask, acc, ref_img, ranks=[2], wavelet=False,
 
         suffix = '{0}r{1}p{2}t{3}'.format(name_norm_mode, rank, power, thresh)
         utils.filewrite(utils.unmask(L, mask),
-                        'lowrank_{0}.nii'.format(suffix), ref_img)
+                        op.join(out_dir, 'lowrank_{0}.nii'.format(suffix)),
+                        ref_img)
         utils.filewrite(utils.unmask(S, mask),
-                        'sparse_{0}.nii'.format(suffix), ref_img)
+                        op.join(out_dir, 'sparse_{0}.nii'.format(suffix)),
+                        ref_img)
         utils.filewrite(utils.unmask(G, mask),
-                        'noise_{0}.nii'.format(suffix), ref_img)
+                        op.join(out_dir, 'noise_{0}.nii'.format(suffix)),
+                        ref_img)

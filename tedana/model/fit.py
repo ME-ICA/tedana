@@ -376,7 +376,7 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     Removes global signal from individual echo `catd` and `optcom` time series
 
     This function uses the spatial global signal estimation approach to
-    to removal global signal out of individual echo time series datasets. The
+    to remove global signal out of individual echo time series datasets. The
     spatial global signal is estimated from the optimally combined data after
     detrending with a Legendre polynomial basis of `order = 0` and
     `degree = dtrank`.

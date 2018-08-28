@@ -13,7 +13,7 @@ from tedana import model, utils
 LGR = logging.getLogger(__name__)
 
 
-def gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img):
+def gscontrol_mmix(optcom_ts, mmix, mask, acc, ign, ref_img):
     """
     Perform global signal regression.
 
@@ -28,6 +28,8 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img):
         Boolean mask array
     acc : :obj:`list`
         Indices of accepted (BOLD) components in `mmix`
+    ign : :obj:`list`
+        Indices of all ignored components in `mmix`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
 
@@ -39,7 +41,7 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img):
     Filename                  Content
     ======================    =================================================
     sphis_hik.nii             T1-like effect.
-    hik_ts_OC_T1c.nii         T1 corrected time series.
+    hik_ts_OC_T1c.nii         T1 corrected BOLD (high-Kappa) time series.
     dn_ts_OC_T1c.nii          Denoised version of T1 corrected time series
     betas_hik_OC_T1c.nii      T1-GS corrected components
     meica_mix_T1c.1D          T1-GS corrected mixing matrix
@@ -54,7 +56,9 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img):
     """
     data_norm = (optcom_masked - optcom_mu) / optcom_std
     cbetas = lstsq(mmix, data_norm.T, rcond=None)[0].T
-    resid = data_norm - np.dot(cbetas, mmix.T)
+    all_comps = np.arange(mmix.shape[0])
+    not_ign = sorted(np.setdiff1d(all_comps, ign))
+    resid = data_norm - np.dot(cbetas[:, not_ign], mmix[:, not_ign].T)
 
     """
     Build BOLD time series without amplitudes, and save T1-like effect
@@ -75,14 +79,14 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img):
     """
     bold_noT1gs = bold_ts - np.dot(lstsq(glob_sig.T, bold_ts.T,
                                          rcond=None)[0].T, glob_sig)
-    utils.filewrite(utils.unmask(bold_noT1gs * optcom_std, mask),
-                    'hik_ts_OC_T1c.nii', ref_img)
+    hik_ts = optcom_mu + (bold_noT1gs * optcom_std)
+    utils.filewrite(utils.unmask(hik_ts, mask), 'hik_ts_OC_T1c.nii', ref_img)
 
     """
     Make denoised version of T1-corrected time series
     """
     medn_ts = optcom_mu + ((bold_noT1gs + resid) * optcom_std)
-    utils.filewrite(utils.unmask(medn_ts, mask), 'dn_ts_OC_T1c', ref_img)
+    utils.filewrite(utils.unmask(medn_ts, mask), 'dn_ts_OC_T1c.nii', ref_img)
 
     """
     Orthogonalize mixing matrix w.r.t. T1-GS
@@ -99,8 +103,8 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img):
     Write T1-GS corrected components and mixing matrix
     """
     cbetas_norm = lstsq(mmixnogs_norm.T, data_norm.T, rcond=None)[0].T
-    utils.filewrite(utils.unmask(cbetas_norm[:, 2:], mask), 'betas_hik_OC_T1c',
-                    ref_img)
+    utils.filewrite(utils.unmask(cbetas_norm[:, 2:], mask),
+                    'betas_hik_OC_T1c.nii', ref_img)
     np.savetxt('meica_mix_T1c.1D', mmixnogs)
 
 
@@ -177,10 +181,13 @@ def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, suffix=''):
     ======================    =================================================
     Filename                  Content
     ======================    =================================================
-    hik_ts_[suffix].nii       High-Kappa time series.
+    hik_ts_[suffix].nii       High-Kappa time series. Combination of accepted
+                              components.
     midk_ts_[suffix].nii      Mid-Kappa time series.
-    low_ts_[suffix].nii       Low-Kappa time series.
-    dn_ts_[suffix].nii        Denoised time series.
+    low_ts_[suffix].nii       Low-Kappa time series. Combination of rejected
+                              components.
+    dn_ts_[suffix].nii        Denoised time series. Optimally combined data
+                              minus mid-Kappa and rejected components.
     ======================    =================================================
     """
 
@@ -264,8 +271,8 @@ def writefeats(data, mmix, mask, ref_img, suffix=''):
     return fname
 
 
-def writect(comptable, n_vols, fixed_seed, acc, rej, midk, empty, ctname='comp_table.txt',
-            varexpl='-1'):
+def writect(comptable, n_vols, fixed_seed, acc, rej, midk, ign,
+            ctname='comp_table.txt', varexpl='-1'):
     """
     Saves component table to disk
 
@@ -285,7 +292,7 @@ def writect(comptable, n_vols, fixed_seed, acc, rej, midk, empty, ctname='comp_t
         Indices of rejected (non-BOLD) components in `mmix`
     midk : :obj:`list`
         Indices of mid-K (questionable) components in `mmix`
-    empty : :obj:`list`
+    ign : :obj:`list`
         Indices of ignored components in `mmix`
     ctname : :obj:`str`, optional
         Filename to save comptable to disk. Default 'comp_table.txt'
@@ -303,8 +310,10 @@ def writect(comptable, n_vols, fixed_seed, acc, rej, midk, empty, ctname='comp_t
                               indices.
     rejected.txt              A comma-separated list of the rejected component
                               indices.
-    midk_rejected.txt         A comma-separated list of middle-kappa components
+    midk_rejected.txt         A comma-separated list of middle-Kappa components
                               which were ultimately rejected.
+    ignored.txt               A comma-separated list of the ignored component
+                              indices.
     [ctname] (comp_table.txt) Component table file.
     ========================= =================================================
     """
@@ -321,6 +330,9 @@ def writect(comptable, n_vols, fixed_seed, acc, rej, midk, empty, ctname='comp_t
     with open('midk_rejected.txt', 'w') as fo:
         fo.write(','.join([str(int(cc)) for cc in midk]))
 
+    with open('ignored.txt', 'w') as fo:
+        fo.write(','.join([str(int(cc)) for cc in ign]))
+
     _computed_vars = dict(file=op.abspath(op.curdir),
                           vex=varexpl,
                           seed=fixed_seed,
@@ -331,7 +343,7 @@ def writect(comptable, n_vols, fixed_seed, acc, rej, midk, empty, ctname='comp_t
                           acc=','.join([str(int(cc)) for cc in acc]),
                           rej=','.join([str(int(cc)) for cc in rej]),
                           mid=','.join([str(int(cc)) for cc in midk]),
-                          ign=','.join([str(int(cc)) for cc in empty]))
+                          ign=','.join([str(int(cc)) for cc in ign]))
     heading = textwrap.dedent("""\
         # ME-ICA Component statistics table for: {file} #
         # Dataset variance explained by ICA (VEx): {vex:.2f}
@@ -360,7 +372,7 @@ def writect(comptable, n_vols, fixed_seed, acc, rej, midk, empty, ctname='comp_t
 
 
 def writeresults(ts, mask, comptable, mmix, n_vols, fixed_seed,
-                 acc, rej, midk, empty, ref_img):
+                 acc, rej, midk, ign, ref_img):
     """
     Denoises `ts` and saves all resulting files to disk
 
@@ -387,7 +399,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, fixed_seed,
         Indices of rejected (non-BOLD) components in `mmix`
     midk : :obj:`list`
         Indices of mid-K (questionable) components in `mmix`
-    empty : :obj:`list`
+    ign : :obj:`list`
         Indices of ignored components in `mmix`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
@@ -433,8 +445,8 @@ def writeresults(ts, mask, comptable, mmix, n_vols, fixed_seed,
                           mmix[:, acc], mask, ref_img, suffix='OC2')
         LGR.info('Writing Z-normalized spatial component maps: {}'.format(op.abspath(fout)))
 
-    writect(comptable, n_vols, fixed_seed, acc, rej, midk, empty, ctname='comp_table.txt',
-            varexpl=varexpl)
+    writect(comptable, n_vols, fixed_seed, acc, rej, midk, ign,
+            ctname='comp_table.txt', varexpl=varexpl)
     LGR.info('Writing component table: {}'.format(op.abspath('comp_table.txt')))
 
 
@@ -481,7 +493,6 @@ def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img):
                               :py:func:`tedana.utils.io.write_split_ts`.
     ======================    =================================================
     """
-
     for i_echo in range(catd.shape[1]):
         LGR.info('Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo+1))
         write_split_ts(catd[:, i_echo, :], mmix, mask, acc, rej, midk, ref_img,

@@ -438,9 +438,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     # Widespread noise control
     if ws_denoise == 'gsr':
-        utils.gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img)
+        utils.gscontrol_mmix(optcom_ts, mmix, mask, acc, empty, ref_img)
     elif ws_denoise == 'godec':
-        decomposition.tedgodec(optcom_ts, mmix, mask, acc, ref_img,
+        decomposition.tedgodec(optcom_ts, mmix, mask, acc, empty, ref_img,
                                ranks=[2], wavelet=wvpca,
                                thresh=10, norm_mode='vn', power=2)
 
