@@ -384,14 +384,14 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     utils.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
 
     # optimally combine data
-    OCcatd = model.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
+    data_oc = model.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
 
     # regress out global signal unless explicitly not desired
     if gscontrol:
-        catd, OCcatd = model.gscontrol_raw(catd, OCcatd, n_echos, ref_img)
+        catd, data_oc = model.gscontrol_raw(catd, data_oc, n_echos, ref_img)
 
     if mixm is None:
-        n_components, dd = decomposition.tedpca(catd, OCcatd, combmode, mask,
+        n_components, dd = decomposition.tedpca(catd, data_oc, combmode, mask,
                                                 t2s, t2sG, stabilize, ref_img,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw,
                                                 ste=ste, wvpca=wvpca)
@@ -439,9 +439,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     comptable.to_csv(op.join(out_dir, 'comp_table_ica.txt'), sep='\t',
                      index=True, index_label='component')
-    utils.writeresults(OCcatd, mask, comptable, mmix, fixed_seed, n_vols,
+    utils.writeresults(data_oc, mask, comptable, mmix, fixed_seed, n_vols,
                        acc, rej, midk, empty, ref_img)
-    utils.gscontrol_mmix(OCcatd, mmix, mask, acc, ref_img)
+    utils.gscontrol_mmix(data_oc, mmix, mask, acc, ref_img)
     if dne:
         utils.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
 

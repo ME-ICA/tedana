@@ -19,18 +19,18 @@ F_MAX = 500
 Z_MAX = 8
 
 
-def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
+def fitmodels_direct(data, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
                      reindex=False, mmixN=None, full_sel=True):
     """
     Fit TE-dependence and -independence models to components.
 
     Parameters
     ----------
-    catd : (S x E x T) array_like
+    data : (S x E x T) array_like
         Input data, where `S` is samples, `E` is echos, and `T` is time
     mmix : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `catd`
+        is components and `T` is the same as in `data`
     mask : (S [x E]) array_like
         Boolean mask array
     t2s : (S [x T]) array_like
@@ -40,7 +40,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         echo, which are zeros in the limited T2* map, this map uses the T2*
         estimate using the first two echoes.
     tes : list
-        List of echo times associated with `catd`, in milliseconds
+        List of echo times associated with `data`, in milliseconds
     combmode : {'t2s', 'ste'} str
         How optimal combination of echos should be made, where 't2s' indicates
         using the method of Posse 1999 and 'ste' indicates using the method of
@@ -58,35 +58,38 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     Returns
     -------
     seldict : dict
-    comptab : (N x 5) :obj:`numpy.ndarray`
+    comptab : (N x 5) :obj:`pandas.DataFrame`
         Array with columns denoting (1) index of component, (2) Kappa score of
         component, (3) Rho score of component, (4) variance explained by
         component, and (5) normalized variance explained bycomponent
     betas : :obj:`numpy.ndarray`
     mmix_new : :obj:`numpy.ndarray`
     """
-    if not (catd.shape[0] == t2s.shape[0] == t2s_full.shape[0] == mask.shape[0]):
-        raise ValueError('First dimensions (number of samples) of catd ({0}), '
+    if not (data.shape[0] == t2s.shape[0] == t2s_full.shape[0] == mask.shape[0]):
+        raise ValueError('First dimensions (number of samples) of data ({0}), '
                          't2s ({1}), and mask ({2}) do not '
-                         'match'.format(catd.shape[0], t2s.shape[0], mask.shape[0]))
-    elif catd.shape[1] != len(tes):
-        raise ValueError('Second dimension of catd ({0}) does not match number '
-                         'of echoes provided (tes; {1})'.format(catd.shape[1], len(tes)))
-    elif catd.shape[2] != mmix.shape[0]:
-        raise ValueError('Third dimension (number of volumes) of catd ({0}) '
+                         'match'.format(data.shape[0], t2s.shape[0],
+                                        mask.shape[0]))
+    elif data.shape[1] != len(tes):
+        raise ValueError('Second dimension of data ({0}) does not match '
+                         'number of echoes provided (tes; '
+                         '{1})'.format(data.shape[1], len(tes)))
+    elif data.shape[2] != mmix.shape[0]:
+        raise ValueError('Third dimension (number of volumes) of data ({0}) '
                          'does not match first dimension of '
-                         'mmix ({1})'.format(catd.shape[2], mmix.shape[0]))
+                         'mmix ({1})'.format(data.shape[2], mmix.shape[0]))
     elif t2s.shape != t2s_full.shape:
         raise ValueError('Shape of t2s array {0} does not match shape of '
-                         't2s_full array {1}'.format(t2s.shape, t2s_full.shape))
+                         't2s_full array {1}'.format(t2s.shape,
+                                                     t2s_full.shape))
     elif t2s.ndim == 2:
-        if catd.shape[2] != t2s.shape[1]:
-            raise ValueError('Third dimension (number of volumes) of catd ({0}) '
-                             'does not match second dimension of '
-                             't2s ({1})'.format(catd.shape[2], t2s.shape[1]))
+        if data.shape[2] != t2s.shape[1]:
+            raise ValueError('Third dimension (number of volumes) of data '
+                             '({0}) does not match second dimension of '
+                             't2s ({1})'.format(data.shape[2], t2s.shape[1]))
 
     # compute optimal combination of raw data
-    tsoc = model.make_optcom(catd, tes, mask, t2s=t2s_full, combmode=combmode,
+    tsoc = model.make_optcom(data, tes, mask, t2s=t2s_full, combmode=combmode,
                              verbose=False).astype(float)[mask]
 
     # demean optimal combination
@@ -114,12 +117,12 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     totvar_norm = (WTS**2).sum()
 
     # compute Betas and means over TEs for TE-dependence analysis
-    betas = get_coeffs(catd, mmix, np.repeat(mask[:, np.newaxis], len(tes),
+    betas = get_coeffs(data, mmix, np.repeat(mask[:, np.newaxis], len(tes),
                                              axis=1))
     n_samp, n_echos, n_components = betas.shape
     n_voxels = mask.sum()
     n_data_voxels = (t2s != 0).sum()
-    mu = catd.mean(axis=-1, dtype=float)
+    mu = data.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))
     fmin, fmid, fmax = utils.getfbounds(n_echos)
 
@@ -133,8 +136,8 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     X2 = np.tile(tes, (1, n_data_voxels)) * mumask.T / t2smask.T  # Model 2
 
     # tables for component selection
-    Kappas = np.zeros([n_components])
-    Rhos = np.zeros([n_components])
+    kappas = np.zeros([n_components])
+    rhos = np.zeros([n_components])
     varex = np.zeros([n_components])
     varex_norm = np.zeros([n_components])
     Z_maps = np.zeros([n_voxels, n_components])
@@ -143,16 +146,16 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     Z_clmaps = np.zeros([n_voxels, n_components])
     F_R2_clmaps = np.zeros([n_data_voxels, n_components])
     F_S0_clmaps = np.zeros([n_data_voxels, n_components])
-    Br_clmaps_R2 = np.zeros([n_voxels, n_components])
-    Br_clmaps_S0 = np.zeros([n_voxels, n_components])
+    Br_R2_clmaps = np.zeros([n_voxels, n_components])
+    Br_S0_clmaps = np.zeros([n_voxels, n_components])
 
     LGR.info('Fitting TE- and S0-dependent models to components')
-    for i in range(n_components):
+    for i_comp in range(n_components):
         # size of B is (n_components, nx*ny*nz)
-        B = np.atleast_3d(betamask)[:, :, i].T
+        B = np.atleast_3d(betamask)[:, :, i_comp].T
         alpha = (np.abs(B)**2).sum(axis=0)
-        varex[i] = (tsoc_B[:, i]**2).sum() / totvar * 100.
-        varex_norm[i] = (utils.unmask(WTS, mask)[t2s != 0][:, i]**2).sum() /\
+        varex[i_comp] = (tsoc_B[:, i_comp]**2).sum() / totvar * 100.
+        varex_norm[i_comp] = (utils.unmask(WTS, mask)[t2s != 0][:, i_comp]**2).sum() /\
             totvar_norm * 100.
 
         # S0 Model
@@ -160,50 +163,48 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         SSE_S0 = (B - X1 * np.tile(coeffs_S0, (n_echos, 1)))**2
         SSE_S0 = SSE_S0.sum(axis=0)
         F_S0 = (alpha - SSE_S0) * (n_echos - 1) / (SSE_S0)
-        F_S0_maps[:, i] = F_S0
+        F_S0_maps[:, i_comp] = F_S0
 
         # R2 Model
         coeffs_R2 = (B * X2).sum(axis=0) / (X2**2).sum(axis=0)
         SSE_R2 = (B - X2 * np.tile(coeffs_R2, (n_echos, 1)))**2
         SSE_R2 = SSE_R2.sum(axis=0)
         F_R2 = (alpha - SSE_R2) * (n_echos - 1) / (SSE_R2)
-        F_R2_maps[:, i] = F_R2
+        F_R2_maps[:, i_comp] = F_R2
 
         # compute weights as Z-values
-        wtsZ = (WTS[:, i] - WTS[:, i].mean()) / WTS[:, i].std()
-        wtsZ[np.abs(wtsZ) > Z_MAX] = (Z_MAX * (np.abs(wtsZ) / wtsZ))[np.abs(wtsZ) > Z_MAX]
-        Z_maps[:, i] = wtsZ
+        wtsZ = (WTS[:, i_comp] - WTS[:, i_comp].mean()) / WTS[:, i_comp].std()
+        wtsZ[np.abs(wtsZ) > Z_MAX] = (Z_MAX * (np.abs(wtsZ) / wtsZ))[
+            np.abs(wtsZ) > Z_MAX]
+        Z_maps[:, i_comp] = wtsZ
 
         # compute Kappa and Rho
         F_S0[F_S0 > F_MAX] = F_MAX
         F_R2[F_R2 > F_MAX] = F_MAX
-        norm_weights = np.abs(np.squeeze(utils.unmask(wtsZ, mask)[t2s != 0]**2.))
-        Kappas[i] = np.average(F_R2, weights=norm_weights)
-        Rhos[i] = np.average(F_S0, weights=norm_weights)
+        norm_weights = np.abs(np.squeeze(
+            utils.unmask(wtsZ, mask)[t2s != 0]**2.))
+        kappas[i_comp] = np.average(F_R2, weights=norm_weights)
+        rhos[i_comp] = np.average(F_S0, weights=norm_weights)
 
     # tabulate component values
-    comptab_pre = np.vstack([Kappas, Rhos, varex, varex_norm]).T
+    comptab = np.vstack([kappas, rhos, varex, varex_norm]).T
     if reindex:
         # re-index all components in Kappa order
-        comptab = comptab_pre[comptab_pre[:, 0].argsort()[::-1], :]
-        Kappas = comptab[:, 0]
-        Rhos = comptab[:, 1]
-        varex = comptab[:, 2]
-        varex_norm = comptab[:, 3]
-        nnc = np.arange(comptab.shape[0])
-        mmix_new = mmix[:, nnc]
-        F_S0_maps = F_S0_maps[:, nnc]
-        F_R2_maps = F_R2_maps[:, nnc]
-        Z_maps = Z_maps[:, nnc]
-        WTS = WTS[:, nnc]
-        PSC = PSC[:, nnc]
-        tsoc_B = tsoc_B[:, nnc]
-        tsoc_Babs = tsoc_Babs[:, nnc]
+        sort_idx = comptab[:, 0].argsort()[::-1]
+        comptab = comptab[sort_idx, :]
+        mmix_new = mmix[:, sort_idx]
+        F_S0_maps = F_S0_maps[:, sort_idx]
+        F_R2_maps = F_R2_maps[:, sort_idx]
+        Z_maps = Z_maps[:, sort_idx]
+        WTS = WTS[:, sort_idx]
+        PSC = PSC[:, sort_idx]
+        tsoc_B = tsoc_B[:, sort_idx]
+        tsoc_Babs = tsoc_Babs[:, sort_idx]
     else:
-        comptab = comptab_pre
+        comptab = comptab
         mmix_new = mmix
 
-    comptab = pd.DataFrame(comptab_pre,
+    comptab = pd.DataFrame(comptab,
                            columns=['kappa', 'rho',
                                     'variance explained',
                                     'variance explained (normalized)'])
@@ -215,45 +216,47 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         LGR.info('Performing spatial clustering of components')
         csize = np.max([int(n_voxels * 0.0005) + 5, 20])
         LGR.debug('Using minimum cluster size: {}'.format(csize))
-        for i in range(n_components):
+        for i_comp in range(n_components):
             # save out files
             out = np.zeros((n_samp, 4))
-            out[:, 0] = np.squeeze(utils.unmask(PSC[:, i], mask))
-            out[:, 1] = np.squeeze(utils.unmask(F_R2_maps[:, i], t2s != 0))
-            out[:, 2] = np.squeeze(utils.unmask(F_S0_maps[:, i], t2s != 0))
-            out[:, 3] = np.squeeze(utils.unmask(Z_maps[:, i], mask))
+            out[:, 0] = np.squeeze(utils.unmask(PSC[:, i_comp], mask))
+            out[:, 1] = np.squeeze(utils.unmask(F_R2_maps[:, i_comp],
+                                                t2s != 0))
+            out[:, 2] = np.squeeze(utils.unmask(F_S0_maps[:, i_comp],
+                                                t2s != 0))
+            out[:, 3] = np.squeeze(utils.unmask(Z_maps[:, i_comp], mask))
 
             ccimg = utils.new_nii_like(ref_img, out)
 
             # Do simple clustering on F
-            sel = spatclust(ccimg, min_cluster_size=csize,
-                            threshold=int(fmin), index=[1, 2], mask=(t2s != 0))
-            F_R2_clmaps[:, i] = sel[:, 0]
-            F_S0_clmaps[:, i] = sel[:, 1]
-            countsigFR2 = F_R2_clmaps[:, i].sum()
-            countsigFS0 = F_S0_clmaps[:, i].sum()
+            sel = spatclust(ccimg, min_cluster_size=csize, threshold=int(fmin),
+                            index=[1, 2], mask=(t2s != 0))
+            F_R2_clmaps[:, i_comp] = sel[:, 0]
+            F_S0_clmaps[:, i_comp] = sel[:, 1]
+            countsigFR2 = F_R2_clmaps[:, i_comp].sum()
+            countsigFS0 = F_S0_clmaps[:, i_comp].sum()
 
             # Do simple clustering on Z at p<0.05
-            sel = spatclust(ccimg, min_cluster_size=csize,
-                            threshold=1.95, index=3, mask=mask)
-            Z_clmaps[:, i] = sel
+            sel = spatclust(ccimg, min_cluster_size=csize, threshold=1.95,
+                            index=3, mask=mask)
+            Z_clmaps[:, i_comp] = sel
 
             # Do simple clustering on ranked signal-change map
-            spclust_input = utils.unmask(stats.rankdata(tsoc_Babs[:, i]), mask)
+            spclust_input = utils.unmask(stats.rankdata(tsoc_Babs[:, i_comp]),
+                                         mask)
             spclust_input = utils.new_nii_like(ref_img, spclust_input)
-            Br_clmaps_R2[:, i] = spatclust(spclust_input,
-                                           min_cluster_size=csize,
-                                           threshold=max(tsoc_Babs.shape)-countsigFR2,
-                                           mask=mask)
-            Br_clmaps_S0[:, i] = spatclust(spclust_input,
-                                           min_cluster_size=csize,
-                                           threshold=max(tsoc_Babs.shape)-countsigFS0,
-                                           mask=mask)
+            Br_R2_clmaps[:, i_comp] = spatclust(
+                spclust_input, min_cluster_size=csize,
+                threshold=max(tsoc_Babs.shape)-countsigFR2, mask=mask)
+            Br_S0_clmaps[:, i_comp] = spatclust(
+                spclust_input, min_cluster_size=csize,
+                threshold=max(tsoc_Babs.shape)-countsigFS0, mask=mask)
 
         seldict = {}
-        selvars = ['Kappas', 'Rhos', 'WTS', 'varex', 'Z_maps', 'F_R2_maps',
-                   'F_S0_maps', 'Z_clmaps', 'F_R2_clmaps', 'F_S0_clmaps',
-                   'tsoc_B', 'Br_clmaps_R2', 'Br_clmaps_S0', 'PSC']
+        selvars = ['WTS', 'tsoc_B', 'PSC',
+                   'Z_maps', 'F_R2_maps', 'F_S0_maps',
+                   'Z_clmaps', 'F_R2_clmaps', 'F_S0_clmaps',
+                   'Br_R2_clmaps', 'Br_S0_clmaps']
         for vv in selvars:
             seldict[vv] = eval(vv)
 
@@ -268,7 +271,7 @@ def computefeats2(data, mmix, mask, normalize=True):
     ----------
     data : (S x T) array_like
         Input data
-    mmix : (T x C) array_like
+    mmix : (T [x C]) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
     mask : (S,) array_like
@@ -283,8 +286,9 @@ def computefeats2(data, mmix, mask, normalize=True):
     """
     if data.ndim != 2:
         raise ValueError('Parameter data should be 2d, not {0}d'.format(data.ndim))
-    elif mmix.ndim != 2:
-        raise ValueError('Parameter mmix should be 2d, not {0}d'.format(mmix.ndim))
+    elif mmix.ndim not in [1, 2]:
+        raise ValueError('Parameter mmix should be 1d or 2d, not '
+                         '{0}d'.format(mmix.ndim))
     elif mask.ndim != 1:
         raise ValueError('Parameter mask should be 1d, not {0}d'.format(mask.ndim))
     elif data.shape[0] != mask.shape[0]:
@@ -325,7 +329,7 @@ def get_coeffs(data, X, mask=None, add_const=False):
     ----------
     data : (S [x E] x T) array_like
         Array where `S` is samples, `E` is echoes, and `T` is time
-    X : (T x C) array_like
+    X : (T [x C]) array_like
         Array where `T` is time and `C` is predictor variables
     mask : (S [x E]) array_like
         Boolean mask array
@@ -339,8 +343,8 @@ def get_coeffs(data, X, mask=None, add_const=False):
     """
     if data.ndim not in [2, 3]:
         raise ValueError('Parameter data should be 2d or 3d, not {0}d'.format(data.ndim))
-    elif X.ndim != 2:
-        raise ValueError('Parameter X should be 2d, not {0}d'.format(X.ndim))
+    elif X.ndim not in [1, 2]:
+        raise ValueError('Parameter X should be 1d or 2d, not {0}d'.format(X.ndim))
     elif data.shape[-1] != X.shape[0]:
         raise ValueError('Last dimension (dimension {0}) of data ({1}) does not '
                          'match first dimension of '
@@ -376,9 +380,9 @@ def get_coeffs(data, X, mask=None, add_const=False):
     return betas
 
 
-def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
+def gscontrol_raw(data, optcom, n_echos, ref_img, dtrank=4):
     """
-    Removes global signal from individual echo `catd` and `optcom` time series
+    Removes global signal from individual echo `data` and `optcom` time series
 
     This function uses the spatial global signal estimation approach to
     to removal global signal out of individual echo time series datasets. The
@@ -388,12 +392,12 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
 
     Parameters
     ----------
-    catd : (S x E x T) array_like
+    data : (S x E x T) array_like
         Input functional data
     optcom : (S x T) array_like
         Optimally combined functional data (i.e., the output of `make_optcom`)
     n_echos : :obj:`int`
-        Number of echos in data. Should be the same as `E` dimension of `catd`
+        Number of echos in data. Should be the same as `E` dimension of `data`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
     dtrank : :obj:`int`, optional
@@ -403,21 +407,21 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     Returns
     -------
     dm_catd : (S x E x T) array_like
-        Input `catd` with global signal removed from time series
+        Input `data` with global signal removed from time series
     dm_optcom : (S x T) array_like
         Input `optcom` with global signal removed from time series
     """
     LGR.info('Applying amplitude-based T1 equilibration correction')
-    if catd.shape[0] != optcom.shape[0]:
-        raise ValueError('First dimensions of catd ({0}) and optcom ({1}) do not '
-                         'match'.format(catd.shape[0], optcom.shape[0]))
-    elif catd.shape[1] != n_echos:
-        raise ValueError('Second dimension of catd ({0}) does not match '
-                         'n_echos ({1})'.format(catd.shape[1], n_echos))
-    elif catd.shape[2] != optcom.shape[1]:
-        raise ValueError('Third dimension of catd ({0}) does not match '
+    if data.shape[0] != optcom.shape[0]:
+        raise ValueError('First dimensions of data ({0}) and optcom ({1}) do not '
+                         'match'.format(data.shape[0], optcom.shape[0]))
+    elif data.shape[1] != n_echos:
+        raise ValueError('Second dimension of data ({0}) does not match '
+                         'n_echos ({1})'.format(data.shape[1], n_echos))
+    elif data.shape[2] != optcom.shape[1]:
+        raise ValueError('Third dimension of data ({0}) does not match '
                          'second dimension of optcom '
-                         '({1})'.format(catd.shape[2], optcom.shape[1]))
+                         '({1})'.format(data.shape[2], optcom.shape[1]))
 
     # Legendre polynomial basis for denoising
     bounds = np.linspace(-1, 1, optcom.shape[-1])
@@ -453,7 +457,7 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     utils.filewrite(dm_optcom, 'tsoc_nogs', ref_img)
 
     # Project glbase out of each echo
-    dm_catd = catd.copy()  # don't overwrite catd
+    dm_catd = data.copy()  # don't overwrite data
     for echo in range(n_echos):
         dat = dm_catd[:, echo, :][Gmask]
         sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T, rcond=None)[0]

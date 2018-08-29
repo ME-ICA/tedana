@@ -133,7 +133,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     this function continues.
 
     Intermediate Metrics:  seldict['F_S0_clmaps'] seldict['F_R2_clmaps']
-        seldict['Br_clmaps_S0'] seldict['Br_clmaps_R2'] seldict['Z_maps']
+        seldict['Br_S0_clmaps'] seldict['Br_R2_clmaps'] seldict['Z_maps']
         dice_tbl countnoise
         counts_FR2_Z tt_table mmix_kurt mmix_std
         spr fproj_arr_val fdist
@@ -215,7 +215,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     METRICS: dice_tbl
     dice_FR2, dice_FS0 are calculated for each component and the concatenated
     values are in dice_tbl
-    Br_clmaps_R2 and Br_clmaps_S0 are binarized clustered Z_maps.
+    Br_R2_clmaps and Br_S0_clmaps are binarized clustered Z_maps.
     The volume being clustered is the rank order indices of the absolute value
     of the beta values for the fit between the optimally combined time series
     and the mixing matrix (i.e. the lowest beta value is 1 and the highest is
@@ -236,10 +236,10 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     """
     dice_tbl = np.zeros([all_comps.shape[0], 2])
     for comp_num in all_comps:
-        dice_FR2 = utils.dice(utils.unmask(seldict['Br_clmaps_R2'][:, comp_num],
+        dice_FR2 = utils.dice(utils.unmask(seldict['Br_R2_clmaps'][:, comp_num],
                                            mask)[t2s != 0],
                               seldict['F_R2_clmaps'][:, comp_num])
-        dice_FS0 = utils.dice(utils.unmask(seldict['Br_clmaps_S0'][:, comp_num],
+        dice_FS0 = utils.dice(utils.unmask(seldict['Br_S0_clmaps'][:, comp_num],
                                            mask)[t2s != 0],
                               seldict['F_S0_clmaps'][:, comp_num])
         dice_tbl[comp_num, :] = [dice_FR2, dice_FS0]  # step 3a here and above

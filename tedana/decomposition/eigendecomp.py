@@ -19,7 +19,7 @@ F_MAX = 500
 Z_MAX = 8
 
 
-def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
+def tedpca(data, data_oc, combmode, mask, t2s_limited, t2s_full, stabilize,
            ref_img, tes, kdaw, rdaw, ste=0, mlepca=True, wvpca=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
@@ -27,12 +27,12 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
 
     Parameters
     ----------
-    catd : (S x E x T) array_like
+    data : (S x E x T) array_like
         Input functional data
-    OCcatd : (S x T) array_like
+    data_oc : (S x T) array_like
         Optimally-combined time series data
-    combmode : {'t2s', 'ste'} str
-        How optimal combination of echos should be made, where 't2s' indicates
+    combmode : {'t2s_limited', 'ste'} str
+        How optimal combination of echos should be made, where 't2s_limited' indicates
         using the method of Posse 1999 and 'ste' indicates using the method of
         Poser 2006
     mask : (S,) array_like
@@ -43,7 +43,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
     tes : :obj:`list`
-        List of echo times associated with `catd`, in milliseconds
+        List of echo times associated with `data`, in milliseconds
     kdaw : :obj:`float`
         Dimensionality augmentation weight for Kappa calculations
     rdaw : :obj:`float`
@@ -116,18 +116,18 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     ======================    =================================================
     """
 
-    n_samp, n_echos, n_vols = catd.shape
+    n_samp, n_echos, n_vols = data.shape
     ste = np.array([int(ee) for ee in str(ste).split(',')])
 
     if len(ste) == 1 and ste[0] == -1:
         LGR.info('Computing PCA of optimally combined multi-echo data')
-        d = OCcatd[utils.make_min_mask(OCcatd[:, np.newaxis, :])][:, np.newaxis, :]
+        d = data_oc[utils.make_min_mask(data_oc[:, np.newaxis, :])][:, np.newaxis, :]
     elif len(ste) == 1 and ste[0] == 0:
         LGR.info('Computing PCA of spatially concatenated multi-echo data')
-        d = catd[mask].astype('float64')
+        d = data[mask].astype('float64')
     else:
         LGR.info('Computing PCA of echo #%s' % ','.join([str(ee) for ee in ste]))
-        d = np.stack([catd[mask, ee] for ee in ste - 1], axis=1).astype('float64')
+        d = np.stack([data[mask, ee] for ee in ste - 1], axis=1).astype('float64')
 
     eim = np.squeeze(eimask(d))
     d = np.squeeze(d[eim])
@@ -146,9 +146,9 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
             ppca.fit(dz)
             comp_ts = ppca.components_
             varex = ppca.explained_variance_
-            u = np.dot(np.dot(dz, comp_ts.T), np.diag(1. / varex))
+            voxel_comp_weights = np.dot(np.dot(dz, comp_ts.T), np.diag(1. / varex))
         else:
-            u, varex, comp_ts = np.linalg.svd(dz, full_matrices=0)
+            voxel_comp_weights, varex, comp_ts = np.linalg.svd(dz, full_matrices=0)
 
         # actual variance explained (normalized)
         varex_norm = varex / varex.sum()
@@ -157,7 +157,8 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         spdif = np.abs(np.diff(varex_norm))
         spdifh = spdif[(len(spdif)//2):]
         spdthr = np.mean([spdifh.max(), spdif.min()])
-        varex_norm_min = varex_norm[(len(spdif)//2) + np.arange(len(spdifh))[spdifh >= spdthr][0] + 1]
+        varex_norm_min = varex_norm[
+            (len(spdif)//2) + np.arange(len(spdifh))[spdifh >= spdthr][0] + 1]
         varex_norm_cum = np.cumsum(varex_norm)
 
         # Compute K and Rho for PCA comps
@@ -171,8 +172,8 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         vTmix = comp_ts.T
         vTmixN = ((vTmix.T - vTmix.T.mean(0)) / vTmix.T.std(0)).T
         LGR.info('Making initial component selection guess from PCA results')
-        _, ct_df, betasv, v_T = model.fitmodels_direct(catd, comp_ts.T, eimum,
-                                                       t2s, t2sG,
+        _, ct_df, betasv, v_T = model.fitmodels_direct(data, comp_ts.T, eimum,
+                                                       t2s_limited, t2s_full,
                                                        tes, combmode, ref_img,
                                                        mmixN=vTmixN,
                                                        full_sel=False)
@@ -181,7 +182,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         # Save state
         fname = op.abspath('pcastate.pkl')
         LGR.info('Saving PCA results to: {}'.format(fname))
-        pcastate = {'u': u, 'varex': varex, 'comp_ts': comp_ts,
+        pcastate = {'u': voxel_comp_weights, 'varex': varex, 'comp_ts': comp_ts,
                     'comptable': ct_df,
                     'eigenvalue_elbow': eigenvalue_elbow,
                     'varex_norm_min': varex_norm_min,
@@ -196,7 +197,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         LGR.info('Loading PCA from: pcastate.pkl')
         with open('pcastate.pkl', 'rb') as handle:
             pcastate = pickle.load(handle)
-        u, varex = pcastate['u'], pcastate['varex']
+        voxel_comp_weights, varex = pcastate['u'], pcastate['varex']
         comp_ts = pcastate['comp_ts']
         ct_df = pcastate['comptable']
         eigenvalue_elbow = pcastate['eigenvalue_elbow']
@@ -206,9 +207,9 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     np.savetxt('mepca_mix.1D', comp_ts)
 
     # write component maps to 4D image
-    comp_maps = np.zeros((OCcatd.shape[0], comp_ts.shape[0]))
+    comp_maps = np.zeros((data_oc.shape[0], comp_ts.shape[0]))
     for i_comp in range(comp_ts.shape[0]):
-        comp_map = utils.unmask(model.computefeats2(OCcatd, comp_ts[i_comp, :], mask), mask)
+        comp_map = utils.unmask(model.computefeats2(data_oc, comp_ts[i_comp, :], mask), mask)
         comp_maps[:, i_comp] = np.squeeze(comp_map)
     _ = utils.filewrite(comp_maps, 'mepca_OC_components.nii', ref_img)
 
@@ -216,29 +217,32 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     rhos = ct_df['rho']
     fmin, fmid, fmax = utils.getfbounds(n_echos)
     kappa_thr = np.average(sorted([fmin,
-                                   getelbow_mod(kappas, return_val=True)/2,
+                                   getelbow_mod(ct_df['kappa'],
+                                                return_val=True)/2,
                                    fmid]),
                            weights=[kdaw, 1, 1])
     rho_thr = np.average(sorted([fmin,
-                                 getelbow_cons(rhos, return_val=True)/2,
+                                 getelbow_cons(ct_df['rho'],
+                                               return_val=True)/2,
                                  fmid]),
                          weights=[rdaw, 1, 1])
     if int(kdaw) == -1:
-        kappas_lim = kappas[utils.andb([ct_df['kappa'] < fmid,
-                                        ct_df['kappa'] > fmin]) == 2]
-        kappa_thr = kappas_lim[getelbow_mod(kappas_lim)]
-        rhos_lim = rhos[utils.andb([ct_df['rho'] < fmid,
-                                    ct_df['rho'] > fmin]) == 2]
-        rho_thr = rhos_lim[getelbow_mod(rhos_lim)]
+        lim_idx = utils.andb([ct_df['kappa'] < fmid,
+                              ct_df['kappa'] > fmin]) == 2
+        kappa_lim = ct_df.loc[lim_idx, 'kappa'].values
+        kappa_thr = kappa_lim[getelbow_mod(kappa_lim)]
         stabilize = True
-    elif int(rdaw) == -1:
-        rhos_lim = rhos[utils.andb([ct_df['rho'] < fmid,
-                                    ct_df['rho'] > fmin]) == 2]
-        rho_thr = rhos_lim[getelbow_mod(rhos_lim)]
+
+    if int(rdaw) == -1:
+        lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
+        rho_lim = ct_df.loc[lim_idx, 'rho'].values
+        rho_thr = rho_lim[getelbow_mod(rho_lim)]
 
     # Add new columns to comptable for classification
     ct_df['classification'] = 'accepted'
     ct_df['rationale'] = ''
+
+    # Reject if low Kappa, Rho, and variance explained
     is_lowk = ct_df['kappa'] <= kappa_thr
     is_lowr = ct_df['rho'] <= rho_thr
     is_lowe = ct_df['variance explained'] <= eigenvalue_elbow
@@ -246,15 +250,21 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     ct_df.loc[is_lowkre, 'classification'] = 'rejected'
     ct_df.loc[is_lowkre, 'rationale'] += 'low rho, kappa, and varex;'
 
+    # Reject if low variance explained
     is_lows = ct_df['variance explained'] <= varex_norm_min
     ct_df.loc[is_lows, 'classification'] = 'rejected'
     ct_df.loc[is_lows, 'rationale'] += 'low variance explained;'
+
+    # Reject if Kappa over limit
     is_fmax1 = ct_df['kappa'] == F_MAX
     ct_df.loc[is_fmax1, 'classification'] = 'rejected'
     ct_df.loc[is_fmax1, 'rationale'] += 'kappa equals fmax;'
+
+    # Reject if Rho over limit
     is_fmax2 = ct_df['rho'] == F_MAX
     ct_df.loc[is_fmax2, 'classification'] = 'rejected'
     ct_df.loc[is_fmax2, 'rationale'] += 'rho equals fmax;'
+
     if stabilize:
         temp7 = varex_norm_cum >= 0.95
         ct_df.loc[temp7, 'classification'] = 'rejected'
@@ -268,10 +278,13 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
 
     ct_df.to_csv('comp_table_pca.txt', sep='\t', index=True,
                  index_label='component')
+    raise Exception()
 
-    pcsel = ct_df['classification'] == 'accepted'
-    n_components = np.sum(pcsel)
-    kept_data = u.dot(np.diag(varex * np.array(pcsel, dtype=np.int))).dot(comp_ts)
+    sel_idx = ct_df['classification'] == 'accepted'
+    n_components = np.sum(sel_idx)
+    voxel_kept_comp_weighted = (voxel_comp_weights[:, sel_idx] *
+                                varex[None, sel_idx])
+    kept_data = np.dot(voxel_kept_comp_weighted, comp_ts[sel_idx, :])
 
     if wvpca:
         kept_data = idwtmat(kept_data, cAl)
@@ -280,7 +293,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
              'Rho threshold: {2:.02f}'.format(n_components, kappa_thr,
                                               rho_thr))
 
-    kept_data = stats.zscore(kept_data.T, axis=0).T  # variance normalize timeseries
+    kept_data = stats.zscore(kept_data, axis=1)  # variance normalize timeseries
     kept_data = stats.zscore(kept_data, axis=None)  # variance normalize everything
 
     return n_components, kept_data
