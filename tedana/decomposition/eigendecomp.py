@@ -151,13 +151,8 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
             u, varex, comp_ts = np.linalg.svd(dz, full_matrices=0)
 
         # actual variance explained (normalized)
-<<<<<<< HEAD
         varex_norm = varex / varex.sum()
-        eigenvalue_elbow = getelbow_mod(varex_norm, val=True)
-=======
-        sp = s / s.sum()
-        eigelb = getelbow_mod(sp, return_val=True)
->>>>>>> ME-ICA/master
+        eigenvalue_elbow = getelbow_mod(varex_norm, return_val=True)
 
         spdif = np.abs(np.diff(varex_norm))
         spdifh = spdif[(len(spdif)//2):]
@@ -221,19 +216,11 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     rhos = ct_df['rho']
     fmin, fmid, fmax = utils.getfbounds(n_echos)
     kappa_thr = np.average(sorted([fmin,
-<<<<<<< HEAD
-                                   getelbow_mod(ct_df['kappa'], val=True)/2,
-                                   fmid]),
-                           weights=[kdaw, 1, 1])
-    rho_thr = np.average(sorted([fmin,
-                                 getelbow_cons(ct_df['rho'], val=True)/2,
-=======
                                    getelbow_mod(kappas, return_val=True)/2,
                                    fmid]),
                            weights=[kdaw, 1, 1])
     rho_thr = np.average(sorted([fmin,
                                  getelbow_cons(rhos, return_val=True)/2,
->>>>>>> ME-ICA/master
                                  fmid]),
                          weights=[rdaw, 1, 1])
     if int(kdaw) == -1:
