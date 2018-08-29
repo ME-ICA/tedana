@@ -245,13 +245,13 @@ def tedpca(data, data_oc, combmode, mask, t2s_limited, t2s_full, stabilize,
     # Reject if low Kappa, Rho, and variance explained
     is_lowk = ct_df['kappa'] <= kappa_thr
     is_lowr = ct_df['rho'] <= rho_thr
-    is_lowe = ct_df['variance explained'] <= eigenvalue_elbow
+    is_lowe = ct_df['variance explained 2 (normalized)'] <= eigenvalue_elbow
     is_lowkre = is_lowk & is_lowr & is_lowe
     ct_df.loc[is_lowkre, 'classification'] = 'rejected'
     ct_df.loc[is_lowkre, 'rationale'] += 'low rho, kappa, and varex;'
 
     # Reject if low variance explained
-    is_lows = ct_df['variance explained'] <= varex_norm_min
+    is_lows = ct_df['variance explained 2 (normalized)'] <= varex_norm_min
     ct_df.loc[is_lows, 'classification'] = 'rejected'
     ct_df.loc[is_lows, 'rationale'] += 'low variance explained;'
 
