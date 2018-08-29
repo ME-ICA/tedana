@@ -19,10 +19,10 @@ F_MAX = 500
 Z_MAX = 8
 
 
-def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
-                     fout=None, reindex=False, mmixN=None, full_sel=True):
+def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
+                     reindex=False, mmixN=None, full_sel=True):
     """
-    Fit TE-dependence and -independence models.
+    Fit TE-dependence and -independence models to components.
 
     Parameters
     ----------
@@ -31,10 +31,14 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     mmix : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `catd`
-    mask : (S,) array_like
+    mask : (S [x E]) array_like
         Boolean mask array
-    t2s : (S,) array_like
-    t2sG : (S,) array_like
+    t2s : (S [x T]) array_like
+        Limited T2* map or timeseries.
+    t2s_full : (S [x T]) array_like
+        Full T2* map or timeseries. For voxels with good signal in only one
+        echo, which are zeros in the limited T2* map, this map uses the T2*
+        estimate using the first two echoes.
     tes : list
         List of echo times associated with `catd`, in milliseconds
     combmode : {'t2s', 'ste'} str
@@ -43,8 +47,6 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
         Poser 2006
     ref_img : str or img_like
         Reference image to dictate how outputs are saved to disk
-    fout : bool
-        Whether to output per-component TE-dependence maps. Default: None
     reindex : bool, optional
         Default: False
     mmixN : array_like, optional
@@ -63,9 +65,28 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
     betas : :obj:`numpy.ndarray`
     mmix_new : :obj:`numpy.ndarray`
     """
+    if not (catd.shape[0] == t2s.shape[0] == t2s_full.shape[0] == mask.shape[0]):
+        raise ValueError('First dimensions (number of samples) of catd ({0}), '
+                         't2s ({1}), and mask ({2}) do not '
+                         'match'.format(catd.shape[0], t2s.shape[0], mask.shape[0]))
+    elif catd.shape[1] != len(tes):
+        raise ValueError('Second dimension of catd ({0}) does not match number '
+                         'of echoes provided (tes; {1})'.format(catd.shape[1], len(tes)))
+    elif catd.shape[2] != mmix.shape[0]:
+        raise ValueError('Third dimension (number of volumes) of catd ({0}) '
+                         'does not match first dimension of '
+                         'mmix ({1})'.format(catd.shape[2], mmix.shape[0]))
+    elif t2s.shape != t2s_full.shape:
+        raise ValueError('Shape of t2s array {0} does not match shape of '
+                         't2s_full array {1}'.format(t2s.shape, t2s_full.shape))
+    elif t2s.ndim == 2:
+        if catd.shape[2] != t2s.shape[1]:
+            raise ValueError('Third dimension (number of volumes) of catd ({0}) '
+                             'does not match second dimension of '
+                             't2s ({1})'.format(catd.shape[2], t2s.shape[1]))
 
     # compute optimal combination of raw data
-    tsoc = model.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode,
+    tsoc = model.make_optcom(catd, tes, mask, t2s=t2s_full, combmode=combmode,
                              verbose=False).astype(float)[mask]
 
     # demean optimal combination
@@ -202,9 +223,6 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2sG, tes, combmode, ref_img,
             out[:, 2] = np.squeeze(utils.unmask(F_S0_maps[:, i], t2s != 0))
             out[:, 3] = np.squeeze(utils.unmask(Z_maps[:, i], mask))
 
-            if utils.get_dtype(ref_img) == 'GIFTI':
-                continue  # TODO: pass through GIFTI file data as below
-
             ccimg = utils.new_nii_like(ref_img, out)
 
             # Do simple clustering on F
@@ -263,6 +281,20 @@ def computefeats2(data, mmix, mask, normalize=True):
     data_Z : (S x C) :obj:`numpy.ndarray`
         Data in component space
     """
+    if data.ndim != 2:
+        raise ValueError('Parameter data should be 2d, not {0}d'.format(data.ndim))
+    elif mmix.ndim != 2:
+        raise ValueError('Parameter mmix should be 2d, not {0}d'.format(mmix.ndim))
+    elif mask.ndim != 1:
+        raise ValueError('Parameter mask should be 1d, not {0}d'.format(mask.ndim))
+    elif data.shape[0] != mask.shape[0]:
+        raise ValueError('First dimensions (number of samples) of data ({0}) '
+                         'and mask ({1}) do not match.'.format(data.shape[0],
+                                                               mask.shape[0]))
+    elif data.shape[1] != mmix.shape[0]:
+        raise ValueError('Second dimensions (number of volumes) of data ({0}) '
+                         'and mmix ({1}) do not match.'.format(data.shape[0],
+                                                               mmix.shape[0]))
 
     # demean masked data
     data_vn = stats.zscore(data[mask], axis=-1)
@@ -291,23 +323,36 @@ def get_coeffs(data, X, mask=None, add_const=False):
 
     Parameters
     ----------
-    data : (S x T) array_like
-        Array where `S` is samples and `T` is time
-    mask : (S,) array_like
-        Boolean mask array
+    data : (S [x E] x T) array_like
+        Array where `S` is samples, `E` is echoes, and `T` is time
     X : (T x C) array_like
         Array where `T` is time and `C` is predictor variables
+    mask : (S [x E]) array_like
+        Boolean mask array
     add_const : bool, optional
         Add intercept column to `X` before fitting. Default: False
 
     Returns
     -------
-    betas : (S x C) :obj:`numpy.ndarray`
+    betas : (S [x E] x C) :obj:`numpy.ndarray`
         Array of `S` sample betas for `C` predictors
     """
+    if data.ndim not in [2, 3]:
+        raise ValueError('Parameter data should be 2d or 3d, not {0}d'.format(data.ndim))
+    elif X.ndim != 2:
+        raise ValueError('Parameter X should be 2d, not {0}d'.format(X.ndim))
+    elif data.shape[-1] != X.shape[0]:
+        raise ValueError('Last dimension (dimension {0}) of data ({1}) does not '
+                         'match first dimension of '
+                         'X ({2})'.format(data.ndim, data.shape[-1], X.shape[0]))
 
     # mask data and flip (time x samples)
     if mask is not None:
+        if mask.ndim not in [1, 2]:
+            raise ValueError('Parameter data should be 1d or 2d, not {0}d'.format(mask.ndim))
+        elif data.shape[0] != mask.shape[0]:
+            raise ValueError('First dimensions of data ({0}) and mask ({1}) do not '
+                             'match'.format(data.shape[0], mask.shape[0]))
         mdata = data[mask, :].T
     else:
         mdata = data.T
@@ -362,8 +407,17 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     dm_optcom : (S x T) array_like
         Input `optcom` with global signal removed from time series
     """
-
     LGR.info('Applying amplitude-based T1 equilibration correction')
+    if catd.shape[0] != optcom.shape[0]:
+        raise ValueError('First dimensions of catd ({0}) and optcom ({1}) do not '
+                         'match'.format(catd.shape[0], optcom.shape[0]))
+    elif catd.shape[1] != n_echos:
+        raise ValueError('Second dimension of catd ({0}) does not match '
+                         'n_echos ({1})'.format(catd.shape[1], n_echos))
+    elif catd.shape[2] != optcom.shape[1]:
+        raise ValueError('Third dimension of catd ({0}) does not match '
+                         'second dimension of optcom '
+                         '({1})'.format(catd.shape[2], optcom.shape[1]))
 
     # Legendre polynomial basis for denoising
     bounds = np.linspace(-1, 1, optcom.shape[-1])

@@ -27,7 +27,9 @@ def compare_nifti(fn, test_dir, res_dir):
     """
     res_fp = (res_dir/fn).as_posix()
     test_fp = (test_dir/fn).as_posix()
-    assert np.allclose(nib.load(res_fp).get_data(), nib.load(test_fp).get_data())
+    passed = np.allclose(nib.load(res_fp).get_data(),
+                         nib.load(test_fp).get_data())
+    return passed
 
 
 def test_outputs():
@@ -60,6 +62,11 @@ def test_outputs():
         'hik_ts_OC_T1c.nii',
         'sphis_hik.nii'
     ]
+    out = []
     for fn in nifti_test_list:
-        compare_nifti(fn, Path(op.expanduser('~/data/TED/')),
-                      Path(op.expanduser('~/code/TED.zcat_ffd/')))
+        passed = compare_nifti(fn, Path(op.expanduser('~/data/TED/')),
+                               Path(op.expanduser('~/code/TED.zcat_ffd/')))
+        if not passed:
+            out.append(fn)
+
+    assert not out, ', '.join(out)
