@@ -231,9 +231,12 @@ def tedpca(data, data_oc, combmode, mask, t2s_limited, t2s_full, stabilize,
                               ct_df['kappa'] > fmin]) == 2
         kappa_lim = ct_df.loc[lim_idx, 'kappa'].values
         kappa_thr = kappa_lim[getelbow_mod(kappa_lim)]
-        stabilize = True
 
-    if int(rdaw) == -1:
+        lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
+        rho_lim = ct_df.loc[lim_idx, 'rho'].values
+        rho_thr = rho_lim[getelbow_mod(rho_lim)]
+        stabilize = True
+    elif int(rdaw) == -1:
         lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
         rho_lim = ct_df.loc[lim_idx, 'rho'].values
         rho_thr = rho_lim[getelbow_mod(rho_lim)]
