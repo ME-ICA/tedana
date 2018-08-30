@@ -281,7 +281,6 @@ def tedpca(data, data_oc, combmode, mask, t2s_limited, t2s_full, stabilize,
 
     ct_df.to_csv('comp_table_pca.txt', sep='\t', index=True,
                  index_label='component')
-    raise Exception()
 
     sel_idx = ct_df['classification'] == 'accepted'
     n_components = np.sum(sel_idx)

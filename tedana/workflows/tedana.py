@@ -407,9 +407,11 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                                  reindex=True)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask, ref_img, manacc,
-                                                   n_echos, t2s, s0, strict_mode=strict,
-                                                   filecsdata=filecsdata)
+        comptable = selection.selcomps(seldict, comptable, mmix,
+                                       mask, ref_img, manacc,
+                                       n_echos, t2s, s0,
+                                       strict_mode=strict,
+                                       filecsdata=filecsdata)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
@@ -418,30 +420,29 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                                  tes, combmode,
                                                                  ref_img)
         if ctab is None:
-            acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask,
-                                                       ref_img, manacc,
-                                                       n_echos, t2s, s0,
-                                                       filecsdata=filecsdata,
-                                                       strict_mode=strict)
+            comptable = selection.selcomps(seldict, comptable, mmix,
+                                           mask, ref_img, manacc,
+                                           n_echos, t2s, s0,
+                                           filecsdata=filecsdata,
+                                           strict_mode=strict)
         else:
-            acc, rej, midk, empty = utils.ctabsel(ctab)
+            comptable = pd.read_csv(ctab, sep='\t', index_col='component')
 
-    # TODO: Move this into selcomps
-    comptable['classification'] = ''
-    comptable.loc[acc, 'classification'] = 'accepted'
-    comptable.loc[rej, 'classification'] = 'rejected'
-    comptable.loc[midk, 'classification'] = 'midk'
-    comptable.loc[empty, 'classification'] = 'ignored'
-
+    comptable.to_csv(op.join(out_dir, 'comp_table_ica.txt'), sep='\t',
+                     index=True, index_label='component')
+    if 'component' not in comptable.columns:
+        comptable['component'] = comptable.index
+    acc = comptable.loc[comptable['classification'] == 'accepted', 'component']
+    rej = comptable.loc[comptable['classification'] == 'rejected', 'component']
+    midk = comptable.loc[comptable['classification'] == 'midk', 'component']
+    ign = comptable.loc[comptable['classification'] == 'ignored', 'component']
     if len(acc) == 0:
         LGR.warning('No BOLD components detected! Please check data and '
                     'results!')
 
-    comptable.to_csv(op.join(out_dir, 'comp_table_ica.txt'), sep='\t',
-                     index=True, index_label='component')
-    utils.writeresults(data_oc, mask, comptable, mmix, fixed_seed, n_vols,
-                       acc, rej, midk, empty, ref_img)
-    utils.gscontrol_mmix(data_oc, mmix, mask, acc, ref_img)
+    utils.writeresults(data_oc, mask, comptable, mmix, fixed_seed,
+                       acc, rej, midk, ign, n_vols, ref_img)
+    utils.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
     if dne:
         utils.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
 

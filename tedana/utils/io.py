@@ -13,7 +13,7 @@ from tedana import model, utils
 LGR = logging.getLogger(__name__)
 
 
-def gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img):
+def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img):
     """
     Perform global signal regression.
 
@@ -59,6 +59,7 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img):
     """
     Build BOLD time series without amplitudes, and save T1-like effect
     """
+    acc = comptable.loc[comptable['classification'] == 'accepted', 'component']
     bold_ts = np.dot(cbetas[:, acc], mmix[:, acc].T)
     t1_map = bold_ts.min(axis=-1)
     t1_map -= t1_map.mean()
