@@ -457,7 +457,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, fixed_seed,
     """
 
     fout = utils.filewrite(ts, op.join(out_dir, 'ts_OC.nii'), ref_img)
-    LGR.info('Writing optimally-combined time series: '
+    LGR.info('Writing optimally combined time series: '
              '{}'.format(op.abspath(fout)))
 
     varexpl = write_split_ts(ts, mmix, mask, acc, rej, midk, ref_img,
