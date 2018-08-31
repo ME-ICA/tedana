@@ -67,15 +67,16 @@ def _get_parser():
                         help=('Combination scheme for TEs: '
                               't2s (Posse 1999, default), ste (Poser)'),
                         default='t2s')
-    parser.add_argument('--label',
-                        dest='label',
+    parser.add_argument('--out',
+                        dest='out_dir',
                         type=str,
-                        help='Label for output directory.',
-                        default=None)
+                        help='Output directory.',
+                        default='.')
     return parser
 
 
-def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s', label=None):
+def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
+                    out_dir='.'):
     """
     Estimate T2 and S0, and optimally combine data across TEs.
 
@@ -96,15 +97,13 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s', label=N
         Default is 'all'.
     combmode : {'t2s', 'ste'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
-    label : :obj:`str` or :obj:`None`, optional
-        Label for output directory. Default is None.
+    out_dir : :obj:`str`, optional
+        Output directory in which to save output files. Default is current
+        directory ('.').
 
     Notes
     -----
-    This workflow writes out several files, which are written out to a folder
-    named TED.[ref_label].[label] if ``label`` is provided and TED.[ref_label]
-    if not. ``ref_label`` is determined based on the name of the first ``data``
-    file.
+    This workflow writes out several files to ``out_dir``.
 
     Files are listed below:
 
@@ -137,16 +136,7 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s', label=N
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
-    try:
-        ref_label = os.path.basename(ref_img).split('.')[0]
-    except TypeError:
-        ref_label = os.path.basename(str(data[0])).split('.')[0]
-
-    if label is not None:
-        out_dir = 'TED.{0}.{1}'.format(ref_label, label)
-    else:
-        out_dir = 'TED.{0}'.format(ref_label)
-    out_dir = op.abspath(out_dir)
+    out_dir = op.abspath(op.expanduser(out_dir))
     if not op.isdir(out_dir):
         LGR.info('Creating output directory: {}'.format(out_dir))
         os.mkdir(out_dir)

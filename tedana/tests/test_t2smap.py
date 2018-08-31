@@ -18,12 +18,12 @@ class TestT2smap():
         files.
         """
         data_dir = get_test_data_path()
+        out_dir = 'TED.t2smap'
         data = [op.join(data_dir, 'echo1.nii.gz'),
                 op.join(data_dir, 'echo2.nii.gz'),
                 op.join(data_dir, 'echo3.nii.gz')]
         workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='t2s',
-                                  fitmode='all', label='t2smap')
-        out_dir = 'TED.echo1.t2smap'
+                                  fitmode='all', out_dir=out_dir)
 
         # Check outputs
         assert op.isfile(op.join(out_dir, 'ts_OC.nii'))
@@ -44,12 +44,12 @@ class TestT2smap():
         files when fitmode is set to ts.
         """
         data_dir = get_test_data_path()
+        out_dir = 'TED.t2smap'
         data = [op.join(data_dir, 'echo1.nii.gz'),
                 op.join(data_dir, 'echo2.nii.gz'),
                 op.join(data_dir, 'echo3.nii.gz')]
         workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='t2s',
-                                  fitmode='ts', label='t2smap')
-        out_dir = 'TED.echo1.t2smap'
+                                  fitmode='ts', out_dir=out_dir)
 
         # Check outputs
         assert op.isfile(op.join(out_dir, 'ts_OC.nii'))
@@ -70,12 +70,12 @@ class TestT2smap():
         files when combmode is set to 'ste'.
         """
         data_dir = get_test_data_path()
+        out_dir = 'TED.t2smap'
         data = [op.join(data_dir, 'echo1.nii.gz'),
                 op.join(data_dir, 'echo2.nii.gz'),
                 op.join(data_dir, 'echo3.nii.gz')]
         workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='ste',
-                                  fitmode='all', label='t2smap')
-        out_dir = 'TED.echo1.t2smap'
+                                  fitmode='all', out_dir=out_dir)
 
         # Check outputs
         assert op.isfile(op.join(out_dir, 'ts_OC.nii'))
@@ -98,12 +98,12 @@ class TestT2smap():
         Not sure why this fails.
         """
         data_dir = get_test_data_path()
+        out_dir = 'TED.t2smap'
         data = [op.join(data_dir, 'echo1.nii.gz'),
                 op.join(data_dir, 'echo2.nii.gz'),
                 op.join(data_dir, 'echo3.nii.gz')]
         workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='ste',
-                                  fitmode='ts', label='t2smap')
-        out_dir = 'TED.echo1.t2smap'
+                                  fitmode='ts', out_dir=out_dir)
 
         # Check outputs
         assert op.isfile(op.join(out_dir, 'ts_OC.nii'))
@@ -120,4 +120,4 @@ class TestT2smap():
 
     def teardown_method(self):
         # Clean up folders
-        rmtree('TED.echo1.t2smap')
+        rmtree('TED.t2smap')

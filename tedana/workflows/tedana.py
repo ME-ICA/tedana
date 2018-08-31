@@ -144,11 +144,11 @@ def _get_parser():
                         help='Perform PCA on wavelet-transformed data',
                         action='store_true',
                         default=False)
-    parser.add_argument('--label',
-                        dest='label',
+    parser.add_argument('--out',
+                        dest='out_dir',
                         type=str,
-                        help='Label for output directory.',
-                        default=None)
+                        help='Output directory.',
+                        default='.')
     parser.add_argument('--seed',
                         dest='fixed_seed',
                         type=int,
@@ -175,7 +175,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     conv=2.5e-5, ste=-1, combmode='t2s', dne=False,
                     initcost='tanh', finalcost='tanh',
                     stabilize=False, filecsdata=False, wvpca=False,
-                    label=None, fixed_seed=42, debug=False, quiet=False):
+                    out_dir='.', fixed_seed=42, debug=False, quiet=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -231,8 +231,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     wvpca : :obj:`bool`, optional
         Whether or not to perform PCA on wavelet-transformed data.
         Default is False.
-    label : :obj:`str` or :obj:`None`, optional
-        Label for output directory. Default is None.
+    out_dir : :obj:`str`, optional
+        Output directory in which to save output files. Default is current
+        directory ('.').
 
     Other Parameters
     ----------------
@@ -260,10 +261,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     PROCEDURE 2a: Model fitting and component selection routines
 
-    This workflow writes out several files, which are written out to a folder
-    named TED.[ref_label].[label] if ``label`` is provided and TED.[ref_label]
-    if not. ``ref_label`` is determined based on the name of the first ``data``
-    file.
+    This workflow writes out several files to ``out_dir``.
 
     Files are listed below:
 
@@ -331,16 +329,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     kdaw, rdaw = float(kdaw), float(rdaw)
 
-    try:
-        ref_label = op.basename(ref_img).split('.')[0]
-    except TypeError:
-        ref_label = op.basename(str(data[0])).split('.')[0]
-
-    if label is not None:
-        out_dir = 'TED.{0}.{1}'.format(ref_label, label)
-    else:
-        out_dir = 'TED.{0}'.format(ref_label)
-    out_dir = op.abspath(out_dir)
+    out_dir = op.abspath(op.expanduser(out_dir))
     if not op.isdir(out_dir):
         LGR.info('Creating output directory: {}'.format(out_dir))
         os.mkdir(out_dir)

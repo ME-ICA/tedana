@@ -17,7 +17,8 @@ def test_basic_tedana():
     files.
     """
     workflows.tedana_workflow([op.expanduser('~/data/zcat_ffd.nii.gz')],
-                              [14.5, 38.5, 62.5], ws_denoise='gsr')
+                              [14.5, 38.5, 62.5], ws_denoise='gsr',
+                              out_dir='~/code/TED.zcat_ffd')
     assert op.isfile(op.expanduser('~/code/TED.zcat_ffd/comp_table.txt'))
 
 
