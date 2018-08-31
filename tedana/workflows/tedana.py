@@ -9,7 +9,9 @@ import logging
 import argparse
 import numpy as np
 from scipy import stats
-from tedana import (decomposition, model, selection, utils)
+import tedana.decomposition as decomp
+import tedana.selection as sel
+from tedana import (model, utils)
 from tedana.workflows.parser_utils import is_valid_file
 
 LGR = logging.getLogger(__name__)
@@ -358,23 +360,26 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
 
     LGR.info('Computing T2* map')
-    t2s, s0, t2ss, s0s, t2sG, s0G = model.fit_decay(catd, tes, mask, masksum)
+    (t2s_limited, s0_limited,
+     t2ss, s0s,
+     t2s_full, s0_full) = model.fit_decay(catd, tes, mask, masksum)
 
     # set a hard cap for the T2* map
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
-    cap_t2s = stats.scoreatpercentile(t2s.flatten(), 99.5,
+    cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5,
                                       interpolation_method='lower')
     LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
-    t2s[t2s > cap_t2s * 10] = cap_t2s
-    utils.filewrite(t2s, op.join(out_dir, 't2sv.nii'), ref_img)
-    utils.filewrite(s0, op.join(out_dir, 's0v.nii'), ref_img)
+    t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
+    utils.filewrite(t2s_limited, op.join(out_dir, 't2sv.nii'), ref_img)
+    utils.filewrite(s0_limited, op.join(out_dir, 's0v.nii'), ref_img)
     utils.filewrite(t2ss, op.join(out_dir, 't2ss.nii'), ref_img)
     utils.filewrite(s0s, op.join(out_dir, 's0vs.nii'), ref_img)
-    utils.filewrite(t2sG, op.join(out_dir, 't2svG.nii'), ref_img)
-    utils.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
+    utils.filewrite(t2s_full, op.join(out_dir, 't2svG.nii'), ref_img)
+    utils.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
 
     # optimally combine data
-    optcom_ts = model.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
+    optcom_ts = model.make_optcom(catd, tes, mask, t2s=t2s_full,
+                                  combmode=combmode)
 
     # regress out global signal unless explicitly not desired
     if gscontrol:
@@ -382,40 +387,41 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                               ref_img, out_dir=out_dir)
 
     if mixm is None:
-        n_components, dd = decomposition.tedpca(catd, optcom_ts, combmode, mask,
-                                                t2s, t2sG, stabilize, ref_img,
-                                                tes=tes, kdaw=kdaw, rdaw=rdaw,
-                                                ste=ste, wvpca=wvpca,
-                                                out_dir=out_dir)
-        mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, conv, fixed_seed,
-                                                     cost=initcost, final_cost=finalcost,
-                                                     verbose=debug)
+        n_components, dd = decomp.tedpca(catd, optcom_ts, combmode, mask,
+                                         t2s_limited, t2s_full, stabilize,
+                                         ref_img,
+                                         tes=tes, kdaw=kdaw, rdaw=rdaw,
+                                         ste=ste, wvpca=wvpca,
+                                         out_dir=out_dir)
+        mmix_orig, fixed_seed = decomp.tedica(n_components, dd, conv, fixed_seed,
+                                              cost=initcost, final_cost=finalcost,
+                                              verbose=debug)
         np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
         LGR.info('Making second component selection guess from ICA results')
-        seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
-                                                                 mask, t2s, t2sG,
-                                                                 tes, combmode,
-                                                                 ref_img,
-                                                                 reindex=True)
+        (seldict, comptable,
+         betas, mmix) = model.fitmodels_direct(catd, mmix_orig,
+                                               mask, t2s_limited, t2s_full,
+                                               tes, combmode,
+                                               ref_img, reindex=True)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
         acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask,
                                                    ref_img, manacc,
-                                                   n_echos, t2s, s0,
+                                                   n_echos, t2s_limited, s0_limited,
                                                    strict_mode=strict,
                                                    filecsdata=filecsdata,
                                                    out_dir=out_dir)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
-        seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
-                                                                 mask, t2s, t2sG,
-                                                                 tes, combmode,
-                                                                 ref_img)
+        (seldict, comptable,
+         betas, mmix) = model.fitmodels_direct(catd, mmix_orig,
+                                               mask, t2s_limited, t2s_full,
+                                               tes, combmode, ref_img)
         if ctab is None:
             acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask,
                                                        ref_img, manacc,
-                                                       n_echos, t2s, s0,
+                                                       n_echos, t2s_limited, s0_limited,
                                                        filecsdata=filecsdata,
                                                        strict_mode=strict)
         else:
@@ -433,10 +439,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         utils.gscontrol_mmix(optcom_ts, mmix, mask, acc, empty, ref_img,
                              out_dir=out_dir)
     elif ws_denoise == 'godec':
-        decomposition.tedgodec(optcom_ts, mmix, mask, acc, empty, ref_img,
-                               ranks=[2], wavelet=wvpca,
-                               thresh=10, norm_mode='vn', power=2,
-                               out_dir=out_dir)
+        decomp.tedgodec(optcom_ts, mmix, mask, acc, empty, ref_img,
+                        ranks=[2], wavelet=wvpca,
+                        thresh=10, norm_mode='vn', power=2,
+                        out_dir=out_dir)
 
     if dne:
         utils.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img,

@@ -60,6 +60,7 @@ API
 
    tedana.decomposition.tedpca
    tedana.decomposition.tedica
+   tedana.decomposition.tedgodec
 
    :template: module.rst
 
