@@ -2,6 +2,7 @@
 Fit models.
 """
 import logging
+import os.path as op
 
 import nilearn.image as niimg
 from nilearn._utils import check_niimg
@@ -371,7 +372,7 @@ def get_coeffs(data, X, mask=None, add_const=False):
     return betas
 
 
-def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
+def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
     """
     Removes global signal from individual echo `catd` and `optcom` time series
 
@@ -391,6 +392,8 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
         Number of echos in data. Should be the same as `E` dimension of `catd`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
+    out_dir : :obj:`str`
+        Output directory in which to save output files
     dtrank : :obj:`int`, optional
         Specifies degree of Legendre polynomial basis function for estimating
         spatial global signal. Default: 4
@@ -401,6 +404,19 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
         Input `catd` with global signal removed from time series
     dm_optcom : (S x T) array_like
         Input `optcom` with global signal removed from time series
+
+    Notes
+    -----
+    This function writes out several files. Files are listed below:
+
+    ======================    =================================================
+    Filename                  Content
+    ======================    =================================================
+    T1gs.nii                  Spatial global signal
+    tsoc_orig.nii             Optimally combined data
+    tsoc_nogs.nii             Optimally combined data with global signal
+                              regressed out
+    ======================    =================================================
     """
     LGR.info('Applying amplitude-based T1 equilibration correction')
     if catd.shape[0] != optcom.shape[0]:
@@ -429,13 +445,14 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     detr = dat - np.dot(sol.T, Lmix.T)[0]
     sphis = (detr).min(axis=1)
     sphis -= sphis.mean()
-    utils.filewrite(utils.unmask(sphis, Gmask), 'T1gs', ref_img)
+    utils.filewrite(utils.unmask(sphis, Gmask),
+                    op.join(out_dir, 'T1gs.nii'), ref_img)
 
     # find time course ofc the spatial global signal
     # make basis with the Legendre basis
     glsig = np.linalg.lstsq(np.atleast_2d(sphis).T, dat, rcond=None)[0]
     glsig = stats.zscore(glsig, axis=None)
-    np.savetxt('glsig.1D', glsig)
+    np.savetxt(op.join(out_dir, 'glsig.1D'), glsig)
     glbase = np.hstack([Lmix, glsig.T])
 
     # Project global signal out of optimally combined data
@@ -443,9 +460,9 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     tsoc_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T,
                              np.atleast_2d(glbase.T[dtrank])) + Gmu[Gmask][:, np.newaxis]
 
-    utils.filewrite(optcom, 'tsoc_orig', ref_img)
+    utils.filewrite(optcom, op.join(out_dir, 'tsoc_orig.nii'), ref_img)
     dm_optcom = utils.unmask(tsoc_nogs, Gmask)
-    utils.filewrite(dm_optcom, 'tsoc_nogs', ref_img)
+    utils.filewrite(dm_optcom, op.join(out_dir, 'tsoc_nogs.nii'), ref_img)
 
     # Project glbase out of each echo
     dm_catd = catd.copy()  # don't overwrite catd

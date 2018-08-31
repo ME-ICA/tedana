@@ -359,8 +359,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
 
-    os.chdir(out_dir)
-
     if mask is None:
         LGR.info('Computing adaptive mask')
     else:
@@ -391,13 +389,15 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     # regress out global signal unless explicitly not desired
     if gscontrol:
-        catd, optcom_ts = model.gscontrol_raw(catd, optcom_ts, n_echos, ref_img)
+        catd, optcom_ts = model.gscontrol_raw(catd, optcom_ts, n_echos,
+                                              ref_img, out_dir=out_dir)
 
     if mixm is None:
         n_components, dd = decomposition.tedpca(catd, optcom_ts, combmode, mask,
                                                 t2s, t2sG, stabilize, ref_img,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw,
-                                                ste=ste, wvpca=wvpca)
+                                                ste=ste, wvpca=wvpca,
+                                                out_dir=out_dir)
         mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, conv, fixed_seed,
                                                      cost=initcost, final_cost=finalcost,
                                                      verbose=debug)
@@ -410,9 +410,12 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                                  reindex=True)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask, ref_img, manacc,
-                                                   n_echos, t2s, s0, strict_mode=strict,
-                                                   filecsdata=filecsdata)
+        acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask,
+                                                   ref_img, manacc,
+                                                   n_echos, t2s, s0,
+                                                   strict_mode=strict,
+                                                   filecsdata=filecsdata,
+                                                   out_dir=out_dir)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
@@ -434,18 +437,21 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     'results!')
 
     utils.writeresults(optcom_ts, mask, comptable, mmix, fixed_seed, n_vols,
-                       acc, rej, midk, empty, ref_img)
+                       acc, rej, midk, empty, ref_img, out_dir=out_dir)
 
     # Widespread noise control
     if ws_denoise == 'gsr':
-        utils.gscontrol_mmix(optcom_ts, mmix, mask, acc, empty, ref_img)
+        utils.gscontrol_mmix(optcom_ts, mmix, mask, acc, empty, ref_img,
+                             out_dir=out_dir)
     elif ws_denoise == 'godec':
         decomposition.tedgodec(optcom_ts, mmix, mask, acc, empty, ref_img,
                                ranks=[2], wavelet=wvpca,
-                               thresh=10, norm_mode='vn', power=2)
+                               thresh=10, norm_mode='vn', power=2,
+                               out_dir=out_dir)
 
     if dne:
-        utils.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
+        utils.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img,
+                                  out_dir=out_dir)
 
 
 def _main(argv=None):

@@ -2,6 +2,7 @@
 Functions to identify TE-dependent and TE-independent components.
 """
 import os
+import os.path as op
 import json
 import logging
 import pickle
@@ -21,7 +22,8 @@ RESOURCES = pkg_resources.resource_filename('tedana', 'tests/data')
 
 
 def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
-             oversion=99, filecsdata=True, savecsdiag=True, strict_mode=False):
+             oversion=99, filecsdata=True, savecsdiag=True, strict_mode=False,
+             out_dir='.'):
     """
     Labels ICA components to keep or remove from denoised data
 
@@ -60,6 +62,8 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         Default: True
     strict_mode: :obj:`bool`, optional
         Default: False
+    out_dir : :obj:`str`
+        Output directory in which to save output files
 
     Returns
     -------
@@ -776,7 +780,9 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         group0_res = np.intersect1d(KRguess, group0)
         phys_var_zs.append((vvex - vvex[group0_res].mean()) / vvex[group0_res].std())
         veinBout = utils.unmask(veinmaskB, mask)
-        utils.filewrite(veinBout.astype(float), 'veins_l%i' % t2sl_i, ref_img)
+        utils.filewrite(veinBout.astype(float),
+                        op.join(out_dir, 'veins_l{}.nii'.format(t2sl_i)),
+                        ref_img)
 
     # Mask to sample veins
     phys_var_z = np.array(phys_var_zs).max(0)
@@ -855,10 +861,10 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
                          list(field_art), list(phys_art),
                          list(misc_art), list(acc_comps), list(ign)]
 
-        with open('csstepdata.json', 'w') as ofh:
+        with open(op.join(out_dir, 'csstepdata.json'), 'w') as ofh:
             json.dump(dict(zip(diagstep_keys, diagstep_vals)), ofh,
                       indent=4, sort_keys=True, default=str)
         allfz = np.array([Tz, Vz, Ktz, KRr, cnz, Rz, mmix_kurt, fdist_z])
-        np.savetxt('csdata.txt', allfz)
+        np.savetxt(op.join(out_dir, 'csdata.txt'), allfz)
 
     return list(sorted(acc_comps)), list(sorted(rej)), list(sorted(midk)), list(sorted(ign))

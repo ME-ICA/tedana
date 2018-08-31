@@ -19,7 +19,8 @@ Z_MAX = 8
 
 
 def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
-           ref_img, tes, kdaw, rdaw, ste=0, mlepca=True, wvpca=False):
+           ref_img, tes, kdaw, rdaw, ste=0, mlepca=True, wvpca=False,
+           out_dir='.'):
     """
     Use principal components analysis (PCA) to identify and remove thermal
     noise from multi-echo data.
@@ -57,6 +58,8 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         guessing PCA dimensionality instead of a traditional SVD. Default: True
     wvpca : :obj:`bool`, optional
         Whether to apply wavelet denoising to data. Default: False
+    out_dir : :obj:`str`, optional
+        Output directory in which to save output files
 
     Returns
     -------
@@ -137,7 +140,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     if wvpca:
         dz, cAl = dwtmat(dz)
 
-    if not op.exists('pcastate.pkl'):
+    if not op.exists(op.join(out_dir, 'pcastate.pkl')):
         # do PC dimension selection and get eigenvalue cutoff
         if mlepca:
             from sklearn.decomposition import PCA
@@ -177,7 +180,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         ctb = np.vstack([ctb.T[:3], sp]).T
 
         # Save state
-        fname = op.abspath('pcastate.pkl')
+        fname = op.abspath(op.join(out_dir, 'pcastate.pkl'))
         LGR.info('Saving PCA results to: {}'.format(fname))
         pcastate = {'u': u, 's': s, 'v': v, 'ctb': ctb,
                     'eigelb': eigelb, 'spmin': spmin, 'spcum': spcum}
@@ -189,14 +192,16 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
 
     else:  # if loading existing state
         LGR.info('Loading PCA from: pcastate.pkl')
-        with open('pcastate.pkl', 'rb') as handle:
+        with open(op.join(out_dir, 'pcastate.pkl'), 'rb') as handle:
             pcastate = pickle.load(handle)
         u, s, v = pcastate['u'], pcastate['s'], pcastate['v']
         ctb, eigelb = pcastate['ctb'], pcastate['eigelb']
         spmin, spcum = pcastate['spmin'], pcastate['spcum']
 
-    np.savetxt('comp_table_pca.txt', ctb[ctb[:, 1].argsort(), :][::-1])
-    np.savetxt('mepca_mix.1D', v[ctb[:, 1].argsort()[::-1], :].T)
+    np.savetxt(op.join(out_dir, 'comp_table_pca.txt'),
+               ctb[ctb[:, 1].argsort(), :][::-1])
+    np.savetxt(op.join(out_dir, 'mepca_mix.1D'),
+               v[ctb[:, 1].argsort()[::-1], :].T)
 
     kappas = ctb[ctb[:, 1].argsort(), 1]
     rhos = ctb[ctb[:, 2].argsort(), 2]
