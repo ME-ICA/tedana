@@ -35,6 +35,7 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     Parameters
     ----------
     seldict : :obj:`dict`
+        A dictionary with component-specific features used for classification.
         As output from `fitmodels_direct`
     comptable : (C x 5) :obj:`pandas.DataFrame`
         Component metric table
@@ -66,18 +67,7 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
 
     Returns
     -------
-    acc : :obj:`list`
-        Indices of accepted (BOLD) components in `mmix`
-    rej : :obj:`list`
-        Indices of rejected (non-BOLD) components in `mmix`
-    midk : :obj:`list`
-        Indices of mid-K (questionable) components in `mmix`
-        These components are typically removed from the data during denoising
-    ign : :obj:`list`
-        Indices of ignored components in `mmix`
-        Ignored components are considered to have too low variance to matter.
-        They are not processed through the accept vs reject decision tree and
-        are NOT removed during the denoising process
+    comptable
 
     Notes
     -----
@@ -127,7 +117,7 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     the decision tree for the selection process and other sections that
     are part of the decision tree. Certain comments are prefaced with METRIC
     and variable names to make clear which are metrics and others are prefaced
-    with SELECTION to make clear which are for applying metrics. METRICs tend
+    with selection to make clear which are for applying metrics. METRICs tend
     to be summary values that contain a signal number per component.
 
     Note there are some variables that are calculated in one section of the code
@@ -188,6 +178,9 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     categories (i.e. components that are classified as rejected are removed
     from acc_comps)
     """
+    comptable['classification'] = 'accepted'
+    comptable['rationale'] = ''
+
     midk = []
     ign = []
     all_comps = np.arange(comptable.shape[0])
@@ -202,7 +195,10 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
         midk = []
         rej = sorted(np.setdiff1d(all_comps, acc))
         ign = []
-        return acc, rej, midk, ign  # Add string for ign
+        comptable.loc[acc, 'classification'] = 'accepted'
+        comptable.loc[rej, 'classification'] = 'rejected'
+        comptable.loc[rej, 'rationale'] = 'manual exclusion'
+        return comptable
 
     """
     METRICS: countsigFS0 countsigFR2
@@ -312,7 +308,7 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     mmix_std = np.std(mmix_dt, axis=0)
 
     """
-    SELECTION #1 (prantikk labeled "Step 1")
+    selection #1 (prantikk labeled "Step 1")
     Reject anything that is obviously an artifact
     Obvious artifacts are components with Rho>Kappa or with more clustered,
     significant voxels for the S0 model than the R2 model
@@ -321,6 +317,9 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
               'counts')
     rej = acc_comps[utils.andb([comptable['rho'] > comptable['kappa'],
                                 countsigFS0 > countsigFR2]) > 0]
+    comptable.loc[rej, 'classification'] = 'rejected'
+    comptable.loc[rej, 'rationale'] = ('Rho>Kappa or more significant voxels '
+                                       'in S0 model than R2 model')
     acc_comps = np.setdiff1d(acc_comps, rej)
 
     """
@@ -575,6 +574,10 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     rejB = acc_comps[utils.andb([tt_table[acc_comps, 0] < 0,
                                  comptable['variance explained'][acc_comps] > np.median(comptable['variance explained']),
                                  acc_comps > KRcut]) == 3]
+    comptable.loc[rejB, 'classification'] = 'rejected'
+    comptable.loc[rejB, 'rationale'] = ('tt_table < 0, component variance '
+                                        'explained > median variance explained, '
+                                        'and component index > KRcut index')
     rej = np.union1d(rej, rejB)
     # adjust acc_comps again to only contain the remaining non-rejected components
     acc_comps = np.setdiff1d(acc_comps, rej)
@@ -604,7 +607,7 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
             epsmap.append([ii, utils.dice(guessmask, db.labels_ == 0),
                            np.intersect1d(all_comps[db.labels_ == 0],
                            all_comps[comptable['rho'] > getelbow_mod(Rhos_sorted,
-                                                                    return_val=True)]).shape[0]])
+                                                                     return_val=True)]).shape[0]])
         db = None
 
     epsmap = np.array(epsmap)
@@ -677,6 +680,8 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
         temp = all_comps[dice_tbl[all_comps, 0] <= dice_tbl[all_comps, 1]]
         rej_supp = np.setdiff1d(np.setdiff1d(np.union1d(rej, temp),
                                              group0), group_n1)
+        comptable.loc[rej_supp, 'classification'] = 'rejected'
+        comptable.loc[rej_supp, 'rationale'] = 'Dice is bad'
         rej = np.union1d(rej, rej_supp)
 
     # Temporal features
@@ -718,6 +723,7 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     midk = np.setdiff1d(to_clf[utils.andb([midk_clf == 1, comptable['variance explained'][to_clf] >
                                            np.median(comptable['variance explained'][group0])]) == 2],
                         np.union1d(toacc_hi, toacc_lo))
+    comptable.loc[midk, 'classification'] = 'midk'
 
     # only use SVM to augment toacc_hi only if toacc_hi isn't already
     # conflicting with SVM choice
@@ -843,10 +849,14 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
                            Vz3 <= -1,
                            Vz3 > -3,
                            mmix_kurt_z_max < 2.5])
-        acc_comps = np.union1d(acc_comps,
-                               np.intersect1d(orphan, all_comps[temp == 6]))
+        new_acc = np.intersect1d(orphan, all_comps[temp == 6])
+        comptable.loc[new_acc, 'rationale'] = 'Saved at the last second'
+        acc_comps = np.union1d(acc_comps, new_acc)
         ign = np.setdiff1d(all_comps, list(acc_comps)+list(midk)+list(rej))
-        orphan = np.setdiff1d(all_comps, list(acc_comps) + list(to_ign) + list(midk) + list(rej))
+        orphan = np.setdiff1d(all_comps, (list(acc_comps) + list(to_ign) +
+                                          list(midk) + list(rej)))
+    comptable.loc[ign, 'classification'] = 'ignored'
+    comptable.loc[orphan, 'classification'] = 'orphan'
 
     if savecsdiag:
         diagstep_keys = ['Rejected components', 'Kappa-Rho cut point', 'Kappa cut',
@@ -868,14 +878,8 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
         allfz = np.array([Tz, Vz, Ktz, KRr, cnz, Rz, mmix_kurt, fdist_z])
         np.savetxt('csdata.txt', allfz)
 
-    acc = list(sorted(acc_comps))
-    rej = list(sorted(rej))
-    midk = list(sorted(midk))
-    ign = list(sorted(ign))
-
-    comptable['classification'] = ''
-    comptable.loc[acc, 'classification'] = 'accepted'
-    comptable.loc[rej, 'classification'] = 'rejected'
-    comptable.loc[midk, 'classification'] = 'midk'
-    comptable.loc[ign, 'classification'] = 'ignored'
+    # acc = list(sorted(acc_comps))
+    # rej = list(sorted(rej))
+    # midk = list(sorted(midk))
+    # ign = list(sorted(ign))
     return comptable
