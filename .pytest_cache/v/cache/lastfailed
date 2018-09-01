@@ -1,5 +1,4 @@
 {
   "tedana/tests/test_t2smap.py::test_outputs": true,
-  "tedana/tests/test_tedana.py::test_basic_tedana": true,
   "tedana/tests/test_tedana.py::test_outputs": true
 }
