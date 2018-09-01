@@ -197,7 +197,7 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
         ign = []
         comptable.loc[acc, 'classification'] = 'accepted'
         comptable.loc[rej, 'classification'] = 'rejected'
-        comptable.loc[rej, 'rationale'] = 'manual exclusion'
+        comptable.loc[rej, 'rationale'] += 'manual exclusion;'
         return comptable
 
     """
@@ -209,10 +209,10 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     The cluster size is a function of the # of voxels in the mask.
     The cluster threshold is based on the # of echos acquired
     """
-    countsigFS0 = seldict['F_S0_clmaps'].sum(0)
     countsigFR2 = seldict['F_R2_clmaps'].sum(0)
-    comptable['countsigFS0'] = countsigFS0
+    countsigFS0 = seldict['F_S0_clmaps'].sum(0)
     comptable['countsigFR2'] = countsigFR2
+    comptable['countsigFS0'] = countsigFS0
 
     """
     Make table of dice values
@@ -301,8 +301,6 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     comptable['countnoise'] = countnoise
     comptable['tt0'] = tt_table[:, 0]
     comptable['tt1'] = tt_table[:, 1]
-    comptable['tt2'] = tt_table[:, 2]
-    comptable['tt3'] = tt_table[:, 3]
 
     """
     Time series derivative kurtosis
@@ -329,8 +327,8 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     rej = acc_comps[utils.andb([comptable['rho'] > comptable['kappa'],
                                 countsigFS0 > countsigFR2]) > 0]
     comptable.loc[rej, 'classification'] = 'rejected'
-    comptable.loc[rej, 'rationale'] = ('Rho>Kappa or more significant voxels '
-                                       'in S0 model than R2 model')
+    comptable.loc[rej, 'rationale'] += ('Rho>Kappa or more significant voxels '
+                                        'in S0 model than R2 model;')
     acc_comps = np.setdiff1d(acc_comps, rej)
 
     """
@@ -587,9 +585,10 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
                                   np.median(comptable['variance explained'])),
                                  acc_comps > KRcut]) == 3]
     comptable.loc[rejB, 'classification'] = 'rejected'
-    comptable.loc[rejB, 'rationale'] = ('tt_table < 0, component variance '
-                                        'explained > median variance explained, '
-                                        'and component index > KRcut index')
+    comptable.loc[rejB, 'rationale'] += ('tt_table < 0, component variance '
+                                         'explained > median variance '
+                                         'explained, and component index > '
+                                         'KRcut index;')
     rej = np.union1d(rej, rejB)
     # adjust acc_comps again to only contain the remaining non-rejected components
     acc_comps = np.setdiff1d(acc_comps, rej)
@@ -693,7 +692,7 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
         rej_supp = np.setdiff1d(np.setdiff1d(np.union1d(rej, temp),
                                              group0), group_n1)
         comptable.loc[rej_supp, 'classification'] = 'rejected'
-        comptable.loc[rej_supp, 'rationale'] = 'Dice is bad'
+        comptable.loc[rej_supp, 'rationale'] += 'Dice is bad;'
         rej = np.union1d(rej, rej_supp)
 
     # Temporal features
@@ -852,7 +851,7 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     to_ign = np.setdiff1d(list(ign_cand), midkrej)
     toacc = np.union1d(toacc_hi, toacc_lo)
     acc_comps = np.setdiff1d(np.union1d(acc_comps, toacc), np.union1d(to_ign, midkrej))
-    ign = np.setdiff1d(all_comps, list(acc_comps) + list(midk) + list(rej))
+    # ign = np.setdiff1d(all_comps, list(acc_comps) + list(midk) + list(rej))
     orphan = np.setdiff1d(all_comps, list(acc_comps) + list(to_ign) + list(midk) + list(rej))
 
     # Last ditch effort to save some transient components
@@ -865,14 +864,14 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
                            Vz3 > -3,
                            mmix_kurt_z_max < 2.5])
         new_acc = np.intersect1d(orphan, all_comps[temp == 6])
-        comptable.loc[new_acc, 'rationale'] = 'Saved at the last second'
+        comptable.loc[new_acc, 'rationale'] += 'Saved at the last second;'
         acc_comps = np.union1d(acc_comps, new_acc)
-        ign = np.setdiff1d(all_comps, list(acc_comps)+list(midk)+list(rej))
+        # ign = np.setdiff1d(all_comps, list(acc_comps)+list(midk)+list(rej))
         orphan = np.setdiff1d(all_comps, (list(acc_comps) + list(to_ign) +
                                           list(midk) + list(rej)))
-    comptable.loc[ign, 'classification'] = 'ignored'
+    comptable.loc[to_ign, 'classification'] = 'ignored'
     comptable.loc[orphan, 'classification'] = 'ignored'
-    comptable.loc[orphan, 'rationale'] = 'orphan'
+    comptable.loc[orphan, 'rationale'] += 'orphan;'
 
     if savecsdiag:
         diagstep_keys = ['Rejected components', 'Kappa-Rho cut point', 'Kappa cut',
@@ -894,8 +893,8 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
         allfz = np.array([Tz, Vz, Ktz, KRr, cnz, Rz, mmix_kurt, fdist_z])
         np.savetxt('csdata.txt', allfz)
 
-    # acc = list(sorted(acc_comps))
-    # rej = list(sorted(rej))
-    # midk = list(sorted(midk))
-    # ign = list(sorted(ign))
+    # Move decision columns to end
+    cols_at_end = ['classification', 'rationale']
+    comptable = comptable[[c for c in comptable if c not in cols_at_end] +
+                          [c for c in cols_at_end if c in comptable]]
     return comptable
