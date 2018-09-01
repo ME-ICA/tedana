@@ -6,7 +6,6 @@ import logging
 import os.path as op
 
 import numpy as np
-import pandas as pd
 from scipy import stats
 
 from tedana import model, utils
@@ -211,10 +210,8 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     for i_comp in range(comp_ts.shape[0]):
         comp_map = utils.unmask(model.computefeats2(OCcatd, comp_ts[i_comp, :], mask), mask)
         comp_maps[:, i_comp] = np.squeeze(comp_map)
-    _ = utils.filewrite(comp_maps, 'mepca_OC_components.nii', ref_img)
+    utils.filewrite(comp_maps, 'mepca_OC_components.nii', ref_img)
 
-    kappas = ct_df['kappa']
-    rhos = ct_df['rho']
     fmin, fmid, fmax = utils.getfbounds(n_echos)
     kappa_thr = np.average(sorted([fmin,
                                    getelbow_mod(ct_df['kappa'],

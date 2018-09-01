@@ -583,7 +583,8 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
           components are sorted by kappa, this is another kappa thresholding)
     """
     rejB = acc_comps[utils.andb([tt_table[acc_comps, 0] < 0,
-                                 comptable['variance explained'][acc_comps] > np.median(comptable['variance explained']),
+                                 (comptable['variance explained'][acc_comps] >
+                                  np.median(comptable['variance explained'])),
                                  acc_comps > KRcut]) == 3]
     comptable.loc[rejB, 'classification'] = 'rejected'
     comptable.loc[rejB, 'rationale'] = ('tt_table < 0, component variance '
@@ -731,9 +732,12 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
                             [0] * len(group0) + [1] * len(rej),
                             fproj_arr_val[:, to_clf].T,
                             svmtype=2)
-    midk = np.setdiff1d(to_clf[utils.andb([midk_clf == 1, comptable['variance explained'][to_clf] >
-                                           np.median(comptable['variance explained'][group0])]) == 2],
-                        np.union1d(toacc_hi, toacc_lo))
+    midk = np.setdiff1d(
+        to_clf[utils.andb([
+            midk_clf == 1,
+            (comptable['variance explained'][to_clf] >
+             np.median(comptable['variance explained'][group0]))]) == 2],
+        np.union1d(toacc_hi, toacc_lo))
     comptable.loc[midk, 'classification'] = 'midk'
 
     # only use SVM to augment toacc_hi only if toacc_hi isn't already

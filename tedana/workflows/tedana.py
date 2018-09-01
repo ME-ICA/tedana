@@ -8,6 +8,7 @@ import logging
 
 import argparse
 import numpy as np
+import pandas as pd
 from scipy import stats
 from tedana import (decomposition, model, selection, utils)
 from tedana.workflows.parser_utils import is_valid_file
