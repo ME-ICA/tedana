@@ -117,7 +117,7 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     the decision tree for the selection process and other sections that
     are part of the decision tree. Certain comments are prefaced with METRIC
     and variable names to make clear which are metrics and others are prefaced
-    with selection to make clear which are for applying metrics. METRICs tend
+    with SELECTION to make clear which are for applying metrics. METRICs tend
     to be summary values that contain a signal number per component.
 
     Note there are some variables that are calculated in one section of the code
@@ -319,7 +319,7 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     comptable['mmix_std'] = mmix_std
 
     """
-    selection #1 (prantikk labeled "Step 1")
+    SELECTION #1 (prantikk labeled "Step 1")
     Reject anything that is obviously an artifact
     Obvious artifacts are components with Rho>Kappa or with more clustered,
     significant voxels for the S0 model than the R2 model

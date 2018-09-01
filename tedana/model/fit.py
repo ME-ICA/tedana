@@ -19,18 +19,18 @@ F_MAX = 500
 Z_MAX = 8
 
 
-def fitmodels_direct(data, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
+def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
                      reindex=False, mmixN=None, full_sel=True):
     """
     Fit TE-dependence and -independence models to components.
 
     Parameters
     ----------
-    data : (S x E x T) array_like
+    catd : (S x E x T) array_like
         Input data, where `S` is samples, `E` is echos, and `T` is time
     mmix : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `data`
+        is components and `T` is the same as in `catd`
     mask : (S [x E]) array_like
         Boolean mask array
     t2s : (S [x T]) array_like
@@ -40,7 +40,7 @@ def fitmodels_direct(data, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         echo, which are zeros in the limited T2* map, this map uses the T2*
         estimate using the first two echoes.
     tes : list
-        List of echo times associated with `data`, in milliseconds
+        List of echo times associated with `catd`, in milliseconds
     combmode : {'t2s', 'ste'} str
         How optimal combination of echos should be made, where 't2s' indicates
         using the method of Posse 1999 and 'ste' indicates using the method of
@@ -65,31 +65,31 @@ def fitmodels_direct(data, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     betas : :obj:`numpy.ndarray`
     mmix_new : :obj:`numpy.ndarray`
     """
-    if not (data.shape[0] == t2s.shape[0] == t2s_full.shape[0] == mask.shape[0]):
-        raise ValueError('First dimensions (number of samples) of data ({0}), '
+    if not (catd.shape[0] == t2s.shape[0] == t2s_full.shape[0] == mask.shape[0]):
+        raise ValueError('First dimensions (number of samples) of catd ({0}), '
                          't2s ({1}), and mask ({2}) do not '
-                         'match'.format(data.shape[0], t2s.shape[0],
+                         'match'.format(catd.shape[0], t2s.shape[0],
                                         mask.shape[0]))
-    elif data.shape[1] != len(tes):
-        raise ValueError('Second dimension of data ({0}) does not match '
+    elif catd.shape[1] != len(tes):
+        raise ValueError('Second dimension of catd ({0}) does not match '
                          'number of echoes provided (tes; '
-                         '{1})'.format(data.shape[1], len(tes)))
-    elif data.shape[2] != mmix.shape[0]:
-        raise ValueError('Third dimension (number of volumes) of data ({0}) '
+                         '{1})'.format(catd.shape[1], len(tes)))
+    elif catd.shape[2] != mmix.shape[0]:
+        raise ValueError('Third dimension (number of volumes) of catd ({0}) '
                          'does not match first dimension of '
-                         'mmix ({1})'.format(data.shape[2], mmix.shape[0]))
+                         'mmix ({1})'.format(catd.shape[2], mmix.shape[0]))
     elif t2s.shape != t2s_full.shape:
         raise ValueError('Shape of t2s array {0} does not match shape of '
                          't2s_full array {1}'.format(t2s.shape,
                                                      t2s_full.shape))
     elif t2s.ndim == 2:
-        if data.shape[2] != t2s.shape[1]:
-            raise ValueError('Third dimension (number of volumes) of data '
+        if catd.shape[2] != t2s.shape[1]:
+            raise ValueError('Third dimension (number of volumes) of catd '
                              '({0}) does not match second dimension of '
-                             't2s ({1})'.format(data.shape[2], t2s.shape[1]))
+                             't2s ({1})'.format(catd.shape[2], t2s.shape[1]))
 
     # compute optimal combination of raw data
-    tsoc = model.make_optcom(data, tes, mask, t2s=t2s_full, combmode=combmode,
+    tsoc = model.make_optcom(catd, tes, mask, t2s=t2s_full, combmode=combmode,
                              verbose=False).astype(float)[mask]
 
     # demean optimal combination
@@ -117,12 +117,12 @@ def fitmodels_direct(data, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     totvar_norm = (WTS**2).sum()
 
     # compute Betas and means over TEs for TE-dependence analysis
-    betas = get_coeffs(data, mmix, np.repeat(mask[:, np.newaxis], len(tes),
+    betas = get_coeffs(catd, mmix, np.repeat(mask[:, np.newaxis], len(tes),
                                              axis=1))
     n_samp, n_echos, n_components = betas.shape
     n_voxels = mask.sum()
     n_data_voxels = (t2s != 0).sum()
-    mu = data.mean(axis=-1, dtype=float)
+    mu = catd.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))
     fmin, fmid, fmax = utils.getfbounds(n_echos)
 
@@ -380,9 +380,9 @@ def get_coeffs(data, X, mask=None, add_const=False):
     return betas
 
 
-def gscontrol_raw(data, optcom, n_echos, ref_img, dtrank=4):
+def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     """
-    Removes global signal from individual echo `data` and `optcom` time series
+    Removes global signal from individual echo `catd` and `optcom` time series
 
     This function uses the spatial global signal estimation approach to
     to removal global signal out of individual echo time series datasets. The
@@ -392,12 +392,12 @@ def gscontrol_raw(data, optcom, n_echos, ref_img, dtrank=4):
 
     Parameters
     ----------
-    data : (S x E x T) array_like
+    catd : (S x E x T) array_like
         Input functional data
     optcom : (S x T) array_like
         Optimally combined functional data (i.e., the output of `make_optcom`)
     n_echos : :obj:`int`
-        Number of echos in data. Should be the same as `E` dimension of `data`
+        Number of echos in data. Should be the same as `E` dimension of `catd`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
     dtrank : :obj:`int`, optional
@@ -407,21 +407,21 @@ def gscontrol_raw(data, optcom, n_echos, ref_img, dtrank=4):
     Returns
     -------
     dm_catd : (S x E x T) array_like
-        Input `data` with global signal removed from time series
+        Input `catd` with global signal removed from time series
     dm_optcom : (S x T) array_like
         Input `optcom` with global signal removed from time series
     """
     LGR.info('Applying amplitude-based T1 equilibration correction')
-    if data.shape[0] != optcom.shape[0]:
-        raise ValueError('First dimensions of data ({0}) and optcom ({1}) do not '
-                         'match'.format(data.shape[0], optcom.shape[0]))
-    elif data.shape[1] != n_echos:
-        raise ValueError('Second dimension of data ({0}) does not match '
-                         'n_echos ({1})'.format(data.shape[1], n_echos))
-    elif data.shape[2] != optcom.shape[1]:
-        raise ValueError('Third dimension of data ({0}) does not match '
+    if catd.shape[0] != optcom.shape[0]:
+        raise ValueError('First dimensions of catd ({0}) and optcom ({1}) do not '
+                         'match'.format(catd.shape[0], optcom.shape[0]))
+    elif catd.shape[1] != n_echos:
+        raise ValueError('Second dimension of catd ({0}) does not match '
+                         'n_echos ({1})'.format(catd.shape[1], n_echos))
+    elif catd.shape[2] != optcom.shape[1]:
+        raise ValueError('Third dimension of catd ({0}) does not match '
                          'second dimension of optcom '
-                         '({1})'.format(data.shape[2], optcom.shape[1]))
+                         '({1})'.format(catd.shape[2], optcom.shape[1]))
 
     # Legendre polynomial basis for denoising
     bounds = np.linspace(-1, 1, optcom.shape[-1])
@@ -457,7 +457,7 @@ def gscontrol_raw(data, optcom, n_echos, ref_img, dtrank=4):
     utils.filewrite(dm_optcom, 'tsoc_nogs', ref_img)
 
     # Project glbase out of each echo
-    dm_catd = data.copy()  # don't overwrite data
+    dm_catd = catd.copy()  # don't overwrite catd
     for echo in range(n_echos):
         dat = dm_catd[:, echo, :][Gmask]
         sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T, rcond=None)[0]
