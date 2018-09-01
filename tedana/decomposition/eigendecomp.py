@@ -19,7 +19,7 @@ F_MAX = 500
 Z_MAX = 8
 
 
-def tedpca(data, data_oc, combmode, mask, t2s_limited, t2s_full, stabilize,
+def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
            ref_img, tes, kdaw, rdaw, ste=0, mlepca=True, wvpca=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
@@ -27,12 +27,12 @@ def tedpca(data, data_oc, combmode, mask, t2s_limited, t2s_full, stabilize,
 
     Parameters
     ----------
-    data : (S x E x T) array_like
+    catd : (S x E x T) array_like
         Input functional data
-    data_oc : (S x T) array_like
+    OCcatd : (S x T) array_like
         Optimally-combined time series data
-    combmode : {'t2s_limited', 'ste'} str
-        How optimal combination of echos should be made, where 't2s_limited' indicates
+    combmode : {'t2s', 'ste'} str
+        How optimal combination of echos should be made, where 't2s' indicates
         using the method of Posse 1999 and 'ste' indicates using the method of
         Poser 2006
     mask : (S,) array_like
@@ -43,7 +43,7 @@ def tedpca(data, data_oc, combmode, mask, t2s_limited, t2s_full, stabilize,
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
     tes : :obj:`list`
-        List of echo times associated with `data`, in milliseconds
+        List of echo times associated with `catd`, in milliseconds
     kdaw : :obj:`float`
         Dimensionality augmentation weight for Kappa calculations
     rdaw : :obj:`float`
@@ -116,18 +116,18 @@ def tedpca(data, data_oc, combmode, mask, t2s_limited, t2s_full, stabilize,
     ======================    =================================================
     """
 
-    n_samp, n_echos, n_vols = data.shape
+    n_samp, n_echos, n_vols = catd.shape
     ste = np.array([int(ee) for ee in str(ste).split(',')])
 
     if len(ste) == 1 and ste[0] == -1:
         LGR.info('Computing PCA of optimally combined multi-echo data')
-        d = data_oc[utils.make_min_mask(data_oc[:, np.newaxis, :])][:, np.newaxis, :]
+        d = OCcatd[utils.make_min_mask(OCcatd[:, np.newaxis, :])][:, np.newaxis, :]
     elif len(ste) == 1 and ste[0] == 0:
         LGR.info('Computing PCA of spatially concatenated multi-echo data')
-        d = data[mask].astype('float64')
+        d = catd[mask].astype('float64')
     else:
         LGR.info('Computing PCA of echo #%s' % ','.join([str(ee) for ee in ste]))
-        d = np.stack([data[mask, ee] for ee in ste - 1], axis=1).astype('float64')
+        d = np.stack([catd[mask, ee] for ee in ste - 1], axis=1).astype('float64')
 
     eim = np.squeeze(eimask(d))
     d = np.squeeze(d[eim])
@@ -172,8 +172,8 @@ def tedpca(data, data_oc, combmode, mask, t2s_limited, t2s_full, stabilize,
         vTmix = comp_ts.T
         vTmixN = ((vTmix.T - vTmix.T.mean(0)) / vTmix.T.std(0)).T
         LGR.info('Making initial component selection guess from PCA results')
-        _, ct_df, betasv, v_T = model.fitmodels_direct(data, comp_ts.T, eimum,
-                                                       t2s_limited, t2s_full,
+        _, ct_df, betasv, v_T = model.fitmodels_direct(catd, comp_ts.T, eimum,
+                                                       t2s, t2sG,
                                                        tes, combmode, ref_img,
                                                        mmixN=vTmixN,
                                                        full_sel=False)
@@ -207,9 +207,9 @@ def tedpca(data, data_oc, combmode, mask, t2s_limited, t2s_full, stabilize,
     np.savetxt('mepca_mix.1D', comp_ts)
 
     # write component maps to 4D image
-    comp_maps = np.zeros((data_oc.shape[0], comp_ts.shape[0]))
+    comp_maps = np.zeros((OCcatd.shape[0], comp_ts.shape[0]))
     for i_comp in range(comp_ts.shape[0]):
-        comp_map = utils.unmask(model.computefeats2(data_oc, comp_ts[i_comp, :], mask), mask)
+        comp_map = utils.unmask(model.computefeats2(OCcatd, comp_ts[i_comp, :], mask), mask)
         comp_maps[:, i_comp] = np.squeeze(comp_map)
     _ = utils.filewrite(comp_maps, 'mepca_OC_components.nii', ref_img)
 
