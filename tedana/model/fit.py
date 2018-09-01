@@ -286,8 +286,8 @@ def computefeats2(data, mmix, mask, normalize=True):
     """
     if data.ndim != 2:
         raise ValueError('Parameter data should be 2d, not {0}d'.format(data.ndim))
-    elif mmix.ndim not in [1, 2]:
-        raise ValueError('Parameter mmix should be 1d or 2d, not '
+    elif mmix.ndim not in [2]:
+        raise ValueError('Parameter mmix should be 2d, not '
                          '{0}d'.format(mmix.ndim))
     elif mask.ndim != 1:
         raise ValueError('Parameter mask should be 1d, not {0}d'.format(mask.ndim))
@@ -343,8 +343,8 @@ def get_coeffs(data, X, mask=None, add_const=False):
     """
     if data.ndim not in [2, 3]:
         raise ValueError('Parameter data should be 2d or 3d, not {0}d'.format(data.ndim))
-    elif X.ndim not in [1, 2]:
-        raise ValueError('Parameter X should be 1d or 2d, not {0}d'.format(X.ndim))
+    elif X.ndim not in [2]:
+        raise ValueError('Parameter X should be 2d, not {0}d'.format(X.ndim))
     elif data.shape[-1] != X.shape[0]:
         raise ValueError('Last dimension (dimension {0}) of data ({1}) does not '
                          'match first dimension of '
