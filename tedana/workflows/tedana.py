@@ -405,12 +405,12 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                ref_img, reindex=True)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask,
-                                                   ref_img, manacc,
-                                                   n_echos, t2s_limited, s0_limited,
-                                                   strict_mode=strict,
-                                                   filecsdata=filecsdata,
-                                                   out_dir=out_dir)
+        acc, rej, midk, empty = sel.selcomps(seldict, mmix, mask,
+                                             ref_img, manacc,
+                                             n_echos, t2s_limited, s0_limited,
+                                             strict_mode=strict,
+                                             filecsdata=filecsdata,
+                                             out_dir=out_dir)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
@@ -419,11 +419,11 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                mask, t2s_limited, t2s_full,
                                                tes, combmode, ref_img)
         if ctab is None:
-            acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask,
-                                                       ref_img, manacc,
-                                                       n_echos, t2s_limited, s0_limited,
-                                                       filecsdata=filecsdata,
-                                                       strict_mode=strict)
+            acc, rej, midk, empty = sel.selcomps(seldict, mmix, mask,
+                                                 ref_img, manacc,
+                                                 n_echos, t2s_limited, s0_limited,
+                                                 filecsdata=filecsdata,
+                                                 strict_mode=strict)
         else:
             acc, rej, midk, empty = utils.ctabsel(ctab)
 
