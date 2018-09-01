@@ -871,7 +871,8 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
         orphan = np.setdiff1d(all_comps, (list(acc_comps) + list(to_ign) +
                                           list(midk) + list(rej)))
     comptable.loc[ign, 'classification'] = 'ignored'
-    comptable.loc[orphan, 'classification'] = 'orphan'
+    comptable.loc[orphan, 'classification'] = 'ignored'
+    comptable.loc[orphan, 'rationale'] = 'orphan'
 
     if savecsdiag:
         diagstep_keys = ['Rejected components', 'Kappa-Rho cut point', 'Kappa cut',

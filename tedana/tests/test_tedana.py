@@ -64,12 +64,8 @@ def test_outputs():
     ]
     out = []
     for fn in nifti_test_list:
-        try:
-            passed = compare_nifti(fn, Path(op.expanduser('~/data/TED/')),
-                                   Path(op.expanduser('~/code/TED.zcat_ffd/')))
-            passed = True
-        except:
-            passed = False
+        passed = compare_nifti(fn, Path(op.expanduser('~/data/TED/')),
+                               Path(op.expanduser('~/code/TED.zcat_ffd/')))
 
         if not passed:
             out.append(fn)
