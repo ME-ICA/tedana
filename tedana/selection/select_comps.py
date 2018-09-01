@@ -211,7 +211,8 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     """
     countsigFS0 = seldict['F_S0_clmaps'].sum(0)
     countsigFR2 = seldict['F_R2_clmaps'].sum(0)
-    countnoise = np.zeros(len(all_comps))
+    comptable['countsigFS0'] = countsigFS0
+    comptable['countsigFR2'] = countsigFR2
 
     """
     Make table of dice values
@@ -247,6 +248,8 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
                               seldict['F_S0_clmaps'][:, comp_num])
         dice_tbl[comp_num, :] = [dice_FR2, dice_FS0]  # step 3a here and above
     dice_tbl[np.isnan(dice_tbl)] = 0
+    comptable['dict_FR2'] = dice_tbl[:, 0]
+    comptable['dict_FS0'] = dice_tbl[:, 1]
 
     """
     Make table of noise gain
@@ -272,6 +275,7 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     Because of the log10, values below 1 are negative, which is later used as
     a threshold. It doesn't seem like the p values are ever used.
     """
+    countnoise = np.zeros(len(all_comps))
     tt_table = np.zeros([len(all_comps), 4])
     counts_FR2_Z = np.zeros([len(all_comps), 2])
     for comp_num in all_comps:
@@ -294,6 +298,11 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     tt_table[np.isnan(tt_table)] = 0
     tt_table[np.isinf(tt_table[:, 0]), 0] = np.percentile(tt_table[~np.isinf(tt_table[:, 0]), 0],
                                                           98)
+    comptable['countnoise'] = countnoise
+    comptable['tt0'] = tt_table[:, 0]
+    comptable['tt1'] = tt_table[:, 1]
+    comptable['tt2'] = tt_table[:, 2]
+    comptable['tt3'] = tt_table[:, 3]
 
     """
     Time series derivative kurtosis
@@ -306,6 +315,8 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     mmix_dt = (mmix[:-1, :] - mmix[1:, :])
     mmix_kurt = stats.kurtosis(mmix_dt)
     mmix_std = np.std(mmix_dt, axis=0)
+    comptable['mmix_kurt'] = mmix_kurt
+    comptable['mmix_std'] = mmix_std
 
     """
     selection #1 (prantikk labeled "Step 1")
