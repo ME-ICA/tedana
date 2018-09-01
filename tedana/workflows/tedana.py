@@ -352,7 +352,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         raise IOError('Argument "mixm" must be an existing file.')
 
     if ctab is not None and op.isfile(ctab):
-        shutil.copyfile(ctab, op.join(out_dir, 'comp_table.txt'))
+        shutil.copyfile(ctab, op.join(out_dir, 'comp_table_ica.txt'))
         shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
@@ -441,8 +441,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         LGR.warning('No BOLD components detected! Please check data and '
                     'results!')
 
-    utils.writeresults(data_oc, mask, comptable, mmix, fixed_seed,
-                       acc, rej, midk, ign, n_vols, ref_img)
+    utils.writeresults(data_oc, mask=mask, comptable=comptable, mmix=mmix,
+                       n_vols=n_vols, fixed_seed=fixed_seed,
+                       acc=acc, rej=rej, midk=midk, empty=ign,
+                       ref_img=ref_img)
     utils.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
     if dne:
         utils.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
