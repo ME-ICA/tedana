@@ -201,7 +201,6 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         tsoc_B = tsoc_B[:, sort_idx]
         tsoc_Babs = tsoc_Babs[:, sort_idx]
     else:
-        comptab = comptab
         mmix_new = mmix
 
     comptab = pd.DataFrame(comptab,

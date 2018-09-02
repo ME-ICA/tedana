@@ -815,7 +815,7 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     """
     LGR.debug('Learning joint TE-dependence spatial/temporal models to ignore remaining artifacts')
 
-    to_ign = []
+    midkrej = np.union1d(midk, rej)
 
     minK_ign = np.max([F05, getelbow_cons(comptable['kappa'], return_val=True)])
     newcest = len(group0) + len(toacc_hi[comptable['kappa'][toacc_hi] > minK_ign])
@@ -826,6 +826,8 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
                                                              rank_diff > newcest / 2,
                                                              Vz2 > -1]) == 3],
                                        group0), phys_art)
+    phys_art = np.setdiff1d(phys_art, midkreg)
+
     # Want to replace field_art with an acf/SVM based approach
     # instead of a kurtosis/filter one
     field_art = np.setdiff1d(all_comps[utils.andb([mmix_kurt_z_max > 5,
@@ -843,16 +845,22 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
                                         group0), field_art)
     field_art = np.union1d(np.setdiff1d(all_comps[utils.andb([mmix_kurt_z_max > 5, Vz2 > 5]) == 2],
                                         group0), field_art)
+    field_art = np.setdiff1d(field_art, midkreg)
+
     misc_art = np.setdiff1d(all_comps[utils.andb([(stats.rankdata(Vz) -
                                                    stats.rankdata(Ktz)) > newcest / 2,
                             comptable['kappa'] < Khighelbowval]) == 2], group0)
-    ign_cand = np.unique(list(field_art)+list(phys_art)+list(misc_art))
-    midkrej = np.union1d(midk, rej)
-    to_ign = np.setdiff1d(list(ign_cand), midkrej)
+    misc_art = np.setdiff1d(misc_art, midkreg)
+    ign = np.unique(list(field_art) + list(phys_art) + list(misc_art))
+    comptable.loc[misc_art, 'rationale'] += 'misc artifact;'
+    comptable.loc[field_art, 'rationale'] += 'field artifact;'
+    comptable.loc[phys_art, 'rationale'] += 'physiological artifact;'
+    comptable.loc[ign, 'classification'] = 'ignored'
+
     toacc = np.union1d(toacc_hi, toacc_lo)
-    acc_comps = np.setdiff1d(np.union1d(acc_comps, toacc), np.union1d(to_ign, midkrej))
+    acc_comps = np.setdiff1d(np.union1d(acc_comps, toacc), np.union1d(ign, midkrej))
     # ign = np.setdiff1d(all_comps, list(acc_comps) + list(midk) + list(rej))
-    orphan = np.setdiff1d(all_comps, list(acc_comps) + list(to_ign) + list(midk) + list(rej))
+    orphan = np.setdiff1d(all_comps, list(acc_comps) + list(ign) + list(midk) + list(rej))
 
     # Last ditch effort to save some transient components
     if not strict_mode:
@@ -867,9 +875,8 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
         comptable.loc[new_acc, 'rationale'] += 'Saved at the last second;'
         acc_comps = np.union1d(acc_comps, new_acc)
         # ign = np.setdiff1d(all_comps, list(acc_comps)+list(midk)+list(rej))
-        orphan = np.setdiff1d(all_comps, (list(acc_comps) + list(to_ign) +
+        orphan = np.setdiff1d(all_comps, (list(acc_comps) + list(ign) +
                                           list(midk) + list(rej)))
-    comptable.loc[to_ign, 'classification'] = 'ignored'
     comptable.loc[orphan, 'classification'] = 'ignored'
     comptable.loc[orphan, 'rationale'] += 'orphan;'
 

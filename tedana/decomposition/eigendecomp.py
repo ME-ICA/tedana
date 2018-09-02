@@ -181,7 +181,9 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         # Save state
         fname = op.abspath('pcastate.pkl')
         LGR.info('Saving PCA results to: {}'.format(fname))
-        pcastate = {'u': voxel_comp_weights, 'varex': varex, 'comp_ts': comp_ts,
+        pcastate = {'voxel_comp_weights': voxel_comp_weights,
+                    'varex': varex,
+                    'comp_ts': comp_ts,
                     'comptable': ct_df,
                     'eigenvalue_elbow': eigenvalue_elbow,
                     'varex_norm_min': varex_norm_min,
@@ -196,7 +198,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         LGR.info('Loading PCA from: pcastate.pkl')
         with open('pcastate.pkl', 'rb') as handle:
             pcastate = pickle.load(handle)
-        voxel_comp_weights, varex = pcastate['u'], pcastate['varex']
+        voxel_comp_weights, varex = pcastate['voxel_comp_weights'], pcastate['varex']
         comp_ts = pcastate['comp_ts']
         ct_df = pcastate['comptable']
         eigenvalue_elbow = pcastate['eigenvalue_elbow']
