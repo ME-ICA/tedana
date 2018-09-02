@@ -72,6 +72,16 @@ def _get_parser():
                         type=str,
                         help='Label for output directory.',
                         default=None)
+    parser.add_argument('--debug',
+                        dest='debug',
+                        help=argparse.SUPPRESS,
+                        action='store_true',
+                        default=False)
+    parser.add_argument('--quiet',
+                        dest='quiet',
+                        help=argparse.SUPPRESS,
+                        action='store_true',
+                        default=False)
     return parser
 
 
