@@ -826,7 +826,7 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
                                                              rank_diff > newcest / 2,
                                                              Vz2 > -1]) == 3],
                                        group0), phys_art)
-    phys_art = np.setdiff1d(phys_art, midkreg)
+    phys_art = np.setdiff1d(phys_art, midkrej)
 
     # Want to replace field_art with an acf/SVM based approach
     # instead of a kurtosis/filter one
@@ -845,12 +845,12 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
                                         group0), field_art)
     field_art = np.union1d(np.setdiff1d(all_comps[utils.andb([mmix_kurt_z_max > 5, Vz2 > 5]) == 2],
                                         group0), field_art)
-    field_art = np.setdiff1d(field_art, midkreg)
+    field_art = np.setdiff1d(field_art, midkrej)
 
     misc_art = np.setdiff1d(all_comps[utils.andb([(stats.rankdata(Vz) -
                                                    stats.rankdata(Ktz)) > newcest / 2,
                             comptable['kappa'] < Khighelbowval]) == 2], group0)
-    misc_art = np.setdiff1d(misc_art, midkreg)
+    misc_art = np.setdiff1d(misc_art, midkrej)
     ign = np.unique(list(field_art) + list(phys_art) + list(misc_art))
     comptable.loc[misc_art, 'rationale'] += 'misc artifact;'
     comptable.loc[field_art, 'rationale'] += 'field artifact;'
