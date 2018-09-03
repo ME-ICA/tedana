@@ -72,10 +72,21 @@ def _get_parser():
                         type=str,
                         help='Label for output directory.',
                         default=None)
+    parser.add_argument('--debug',
+                        dest='debug',
+                        help=argparse.SUPPRESS,
+                        action='store_true',
+                        default=False)
+    parser.add_argument('--quiet',
+                        dest='quiet',
+                        help=argparse.SUPPRESS,
+                        action='store_true',
+                        default=False)
     return parser
 
 
-def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s', label=None):
+def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
+                    label=None, debug=False, quiet=False):
     """
     Estimate T2 and S0, and optimally combine data across TEs.
 
@@ -98,6 +109,14 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s', label=N
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
     label : :obj:`str` or :obj:`None`, optional
         Label for output directory. Default is None.
+
+    Other Parameters
+    ----------------
+    debug : :obj:`bool`, optional
+        Whether to run in debugging mode or not. Default is False.
+    quiet : :obj:`bool`, optional
+        If True, suppresses logging/printing of messages. Default is False.
+
 
     Notes
     -----
