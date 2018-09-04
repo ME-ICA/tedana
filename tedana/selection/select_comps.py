@@ -67,7 +67,9 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
 
     Returns
     -------
-    comptable
+    comptable : :obj:`pandas.DataFrame`
+        Updated component table with additional metrics and with
+        classification (accepted, rejected, midk, or ignored)
 
     Notes
     -----

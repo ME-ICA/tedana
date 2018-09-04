@@ -176,7 +176,8 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
                                                        tes, combmode, ref_img,
                                                        mmixN=vTmixN,
                                                        full_sel=False)
-        ct_df['variance explained 2 (normalized)'] = varex_norm
+        # varex_norm overrides normalized varex computed by fitmodels_direct
+        ct_df['normalized variance explained'] = varex_norm
 
         # Save state
         fname = op.abspath('pcastate.pkl')
@@ -248,13 +249,13 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     # Reject if low Kappa, Rho, and variance explained
     is_lowk = ct_df['kappa'] <= kappa_thr
     is_lowr = ct_df['rho'] <= rho_thr
-    is_lowe = ct_df['variance explained 2 (normalized)'] <= eigenvalue_elbow
+    is_lowe = ct_df['normalized variance explained'] <= eigenvalue_elbow
     is_lowkre = is_lowk & is_lowr & is_lowe
     ct_df.loc[is_lowkre, 'classification'] = 'rejected'
     ct_df.loc[is_lowkre, 'rationale'] += 'low rho, kappa, and varex;'
 
     # Reject if low variance explained
-    is_lows = ct_df['variance explained 2 (normalized)'] <= varex_norm_min
+    is_lows = ct_df['normalized variance explained'] <= varex_norm_min
     ct_df.loc[is_lows, 'classification'] = 'rejected'
     ct_df.loc[is_lows, 'rationale'] += 'low variance explained;'
 

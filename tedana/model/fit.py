@@ -61,7 +61,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     comptab : (N x 5) :obj:`pandas.DataFrame`
         Array with columns denoting (1) index of component, (2) Kappa score of
         component, (3) Rho score of component, (4) variance explained by
-        component, and (5) normalized variance explained bycomponent
+        component, and (5) normalized variance explained by component
     betas : :obj:`numpy.ndarray`
     mmix_new : :obj:`numpy.ndarray`
     """
@@ -206,7 +206,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     comptab = pd.DataFrame(comptab,
                            columns=['kappa', 'rho',
                                     'variance explained',
-                                    'variance explained (normalized)'])
+                                    'normalized variance explained'])
     comptab.index.name = 'component'
 
     # full selection including clustering criteria
