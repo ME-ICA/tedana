@@ -18,6 +18,23 @@ F_MAX = 500
 Z_MAX = 8
 
 
+def run_pca(data, mlepca=True):
+    """
+    Run PCA or SVD.
+    """
+    # do PC dimension selection and get eigenvalue cutoff
+    if mlepca:
+        from sklearn.decomposition import PCA
+        ppca = PCA(n_components='mle', svd_solver='full')
+        ppca.fit(data)
+        v = ppca.components_
+        s = ppca.explained_variance_
+        u = np.dot(np.dot(data, v.T), np.diag(1. / s))
+    else:
+        u, s, v = np.linalg.svd(data, full_matrices=0)
+    return u, s, v
+
+
 def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
            ref_img, tes, kdaw, rdaw, ste=0, mlepca=True, wvpca=False):
     """
@@ -138,26 +155,19 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         dz, cAl = dwtmat(dz)
 
     if not op.exists('pcastate.pkl'):
-        # do PC dimension selection and get eigenvalue cutoff
-        if mlepca:
-            from sklearn.decomposition import PCA
-            ppca = PCA(n_components='mle', svd_solver='full')
-            ppca.fit(dz)
-            comp_ts = ppca.components_
-            varex = ppca.explained_variance_
-            voxel_comp_weights = np.dot(np.dot(dz, comp_ts.T), np.diag(1. / varex))
-        else:
-            voxel_comp_weights, varex, comp_ts = np.linalg.svd(dz, full_matrices=0)
+        voxel_comp_weights, varex, comp_ts = run_pca(dz, mlepca=mlepca)
 
         # actual variance explained (normalized)
         varex_norm = varex / varex.sum()
         eigenvalue_elbow = getelbow_mod(varex_norm, return_val=True)
 
-        spdif = np.abs(np.diff(varex_norm))
-        spdifh = spdif[(len(spdif)//2):]
-        spdthr = np.mean([spdifh.max(), spdif.min()])
+        diff_varex_norm = np.abs(np.diff(varex_norm))
+        lower_diff_varex_norm = diff_varex_norm[(len(diff_varex_norm)//2):]
+        varex_norm_thr = np.mean([lower_diff_varex_norm.max(),
+                                  diff_varex_norm.min()])
         varex_norm_min = varex_norm[
-            (len(spdif)//2) + np.arange(len(spdifh))[spdifh >= spdthr][0] + 1]
+            (len(diff_varex_norm)//2) +
+            np.arange(len(lower_diff_varex_norm))[lower_diff_varex_norm >= varex_norm_thr][0] + 1]
         varex_norm_cum = np.cumsum(varex_norm)
 
         # Compute K and Rho for PCA comps
