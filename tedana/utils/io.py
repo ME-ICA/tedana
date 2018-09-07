@@ -3,7 +3,6 @@ Functions to handle file input/output
 """
 import logging
 import os.path as op
-import textwrap
 
 import numpy as np
 from numpy.linalg import lstsq
