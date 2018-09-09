@@ -80,13 +80,14 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img, out_dir='.'):
     bold_noT1gs = bold_ts - np.dot(lstsq(glob_sig.T, bold_ts.T,
                                          rcond=None)[0].T, glob_sig)
     utils.filewrite(utils.unmask(bold_noT1gs * optcom_std, mask),
-                    'hik_ts_OC_T1c.nii', ref_img)
+                    op.join(out_dir, 'hik_ts_OC_T1c.nii'), ref_img)
 
     """
     Make denoised version of T1-corrected time series
     """
     medn_ts = optcom_mu + ((bold_noT1gs + resid) * optcom_std)
-    utils.filewrite(utils.unmask(medn_ts, mask), 'dn_ts_OC_T1c', ref_img)
+    utils.filewrite(utils.unmask(medn_ts, mask),
+                    op.join(out_dir, 'dn_ts_OC_T1c.nii'), ref_img)
 
     """
     Orthogonalize mixing matrix w.r.t. T1-GS
@@ -103,7 +104,8 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img, out_dir='.'):
     Write T1-GS corrected components and mixing matrix
     """
     cbetas_norm = lstsq(mmixnogs_norm.T, data_norm.T, rcond=None)[0].T
-    utils.filewrite(utils.unmask(cbetas_norm[:, 2:], mask), 'betas_hik_OC_T1c',
+    utils.filewrite(utils.unmask(cbetas_norm[:, 2:], mask),
+                    op.join(out_dir, 'betas_hik_OC_T1c.nii'),
                     ref_img)
     np.savetxt(op.join(out_dir, 'meica_mix_T1c.1D'), mmixnogs)
 
