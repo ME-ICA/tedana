@@ -432,15 +432,15 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         LGR.warning('No BOLD components detected! Please check data and '
                     'results!')
 
-if orth:
-    a = mmix[:, acc]
-    midkrej = np.hstack((midk, rej))
-    b = mmix[:, midkrej]
-    betas = np.linalg.lstsq(a, b, rcond=None)[0]
-    pred_b = np.dot(a, betas)
-    resid = b - pred_b
-    mmix[:, midkrej] = resid
-    np.savetxt(op.join(out_dir, 'meica_mix_orth.1D'), mmix)
+    if orth:
+        a = mmix[:, acc]
+        midkrej = np.hstack((midk, rej))
+        b = mmix[:, midkrej]
+        betas = np.linalg.lstsq(a, b, rcond=None)[0]
+        pred_b = np.dot(a, betas)
+        resid = b - pred_b
+        mmix[:, midkrej] = resid
+        np.savetxt(op.join(out_dir, 'meica_mix_orth.1D'), mmix)
 
     utils.writeresults(OCcatd, mask, comptable, mmix, fixed_seed, n_vols,
                        acc, rej, midk, empty, ref_img)
