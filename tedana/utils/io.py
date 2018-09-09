@@ -13,7 +13,7 @@ from tedana import model, utils
 LGR = logging.getLogger(__name__)
 
 
-def gscontrol_mmix(optcom_ts, mmix, mask, acc, ign, ref_img, out_dir='.'):
+def gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img, out_dir='.'):
     """
     Perform minimum image regression to identify and remove global artifacts.
     This is an alternative to methods like GoDec with fewer parameters to tune.
@@ -22,15 +22,13 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ign, ref_img, out_dir='.'):
     ----------
     optcom_ts : (S x T) array_like
         Optimally combined time series data
-    mmix : (T x C) array_like
+    mmix : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `optcom_ts`
     mask : (S,) array_like
         Boolean mask array
     acc : :obj:`list`
         Indices of accepted (BOLD) components in `mmix`
-    ign : :obj:`list`
-        Indices of all ignored components in `mmix`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
     out_dir : :obj:`str`
@@ -43,11 +41,11 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ign, ref_img, out_dir='.'):
     ======================    =================================================
     Filename                  Content
     ======================    =================================================
-    sphis_hik.nii             T1-like effect
-    hik_ts_OC_T1c.nii         T1-corrected BOLD (high-Kappa) time series
-    dn_ts_OC_T1c.nii          Denoised version of T1-corrected time series
-    betas_hik_OC_T1c.nii      T1 global signal-corrected components
-    meica_mix_T1c.1D          T1 global signal-corrected mixing matrix
+    sphis_hik.nii             T1-like effect.
+    hik_ts_OC_T1c.nii         T1 corrected time series.
+    dn_ts_OC_T1c.nii          Denoised version of T1 corrected time series
+    betas_hik_OC_T1c.nii      T1-GS corrected components
+    meica_mix_T1c.1D          T1-GS corrected mixing matrix
     ======================    =================================================
     """
     optcom_masked = optcom_ts[mask, :]
@@ -59,9 +57,7 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ign, ref_img, out_dir='.'):
     """
     data_norm = (optcom_masked - optcom_mu) / optcom_std
     cbetas = lstsq(mmix, data_norm.T, rcond=None)[0].T
-    all_comps = np.arange(mmix.shape[1])
-    not_ign = sorted(np.setdiff1d(all_comps, ign))
-    resid = data_norm - np.dot(cbetas[:, not_ign], mmix[:, not_ign].T)
+    resid = data_norm - np.dot(cbetas, mmix.T)
 
     """
     Build BOLD time series without amplitudes, and save T1-like effect
@@ -83,16 +79,14 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ign, ref_img, out_dir='.'):
     """
     bold_noT1gs = bold_ts - np.dot(lstsq(glob_sig.T, bold_ts.T,
                                          rcond=None)[0].T, glob_sig)
-    hik_ts = bold_noT1gs * optcom_std
-    utils.filewrite(utils.unmask(hik_ts, mask),
-                    op.join(out_dir, 'hik_ts_OC_T1c.nii'), ref_img)
+    utils.filewrite(utils.unmask(bold_noT1gs * optcom_std, mask),
+                    'hik_ts_OC_T1c.nii', ref_img)
 
     """
     Make denoised version of T1-corrected time series
     """
     medn_ts = optcom_mu + ((bold_noT1gs + resid) * optcom_std)
-    utils.filewrite(utils.unmask(medn_ts, mask),
-                    op.join(out_dir, 'dn_ts_OC_T1c.nii'), ref_img)
+    utils.filewrite(utils.unmask(medn_ts, mask), 'dn_ts_OC_T1c', ref_img)
 
     """
     Orthogonalize mixing matrix w.r.t. T1-GS
@@ -109,8 +103,8 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ign, ref_img, out_dir='.'):
     Write T1-GS corrected components and mixing matrix
     """
     cbetas_norm = lstsq(mmixnogs_norm.T, data_norm.T, rcond=None)[0].T
-    utils.filewrite(utils.unmask(cbetas_norm[:, 2:], mask),
-                    op.join(out_dir, 'betas_hik_OC_T1c.nii'), ref_img)
+    utils.filewrite(utils.unmask(cbetas_norm[:, 2:], mask), 'betas_hik_OC_T1c',
+                    ref_img)
     np.savetxt(op.join(out_dir, 'meica_mix_T1c.1D'), mmixnogs)
 
 

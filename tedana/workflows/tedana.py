@@ -436,7 +436,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     # Widespread noise control
     if ws_denoise == 'gsr':
-        utils.gscontrol_mmix(optcom_ts, mmix, mask, acc, empty, ref_img,
+        utils.gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img,
                              out_dir=out_dir)
     elif ws_denoise == 'godec':
         decomp.tedgodec(optcom_ts, mmix, mask, acc, empty, ref_img,
