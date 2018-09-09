@@ -199,6 +199,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Default is None.
     strict : :obj:`bool`, optional
         Ignore low-variance ambiguous components. Default is False.
+    orth : :obj:`bool`, optional
+        Orthogonalize rejected components wrt accepted ones. Default is False.
     gscontrol : :obj:`bool`, optional
         Control global signal using spatial approach. Default is True.
     kdaw : :obj:`float`, optional
@@ -429,6 +431,16 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if len(acc) == 0:
         LGR.warning('No BOLD components detected! Please check data and '
                     'results!')
+
+if orth:
+    a = mmix[:, acc]
+    midkrej = np.hstack((midk, rej))
+    b = mmix[:, midkrej]
+    betas = np.linalg.lstsq(a, b, rcond=None)[0]
+    pred_b = np.dot(a, betas)
+    resid = b - pred_b
+    mmix[:, midkrej] = resid
+    np.savetxt(op.join(out_dir, 'meica_mix_orth.1D'), mmix)
 
     utils.writeresults(OCcatd, mask, comptable, mmix, fixed_seed, n_vols,
                        acc, rej, midk, empty, ref_img)
