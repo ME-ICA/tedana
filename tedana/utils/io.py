@@ -13,7 +13,7 @@ from tedana import model, utils
 LGR = logging.getLogger(__name__)
 
 
-def gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img):
+def gscontrol_mmix(optcom_ts, mmix, mask, acc, ign, ref_img):
     """
     Perform global signal regression.
 
@@ -21,13 +21,15 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img):
     ----------
     optcom_ts : (S x T) array_like
         Optimally combined time series data
-    mmix : (C x T) array_like
+    mmix : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `optcom_ts`
     mask : (S,) array_like
         Boolean mask array
     acc : :obj:`list`
         Indices of accepted (BOLD) components in `mmix`
+    ign : :obj:`list`
+        Indices of all ignored components in `mmix`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
 
@@ -54,7 +56,9 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img):
     """
     data_norm = (optcom_masked - optcom_mu) / optcom_std
     cbetas = lstsq(mmix, data_norm.T, rcond=None)[0].T
-    resid = data_norm - np.dot(cbetas, mmix.T)
+    all_comps = np.arange(mmix.shape[1])
+    not_ign = sorted(np.setdiff1d(all_comps, ign))
+    resid = data_norm - np.dot(cbetas[:, not_ign], mmix[:, not_ign].T)
 
     """
     Build BOLD time series without amplitudes, and save T1-like effect
