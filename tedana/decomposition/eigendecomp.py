@@ -18,9 +18,26 @@ F_MAX = 500
 Z_MAX = 8
 
 
-def run_pca(data, mlepca=True):
+def run_svd(data, mlepca=True):
     """
-    Run PCA or SVD.
+    Run Singular Value Decomposition (SVD) on input data.
+
+    Parameters
+    ----------
+    data : (S [*E] x T) array_like
+        Optimally combined (S x T) or full multi-echo (S*E x T) data.
+    mlepca : :obj:`bool`, optional
+        If True, use sklearn's PCA method to estimate the number of components
+        and decompose data. If False, use numpy's SVD method. Default is True.
+
+    Returns
+    -------
+    u : (S [*E] x C) array_like
+        Component weight map for each component.
+    s : (C,) array_like
+        Variance explained for each component.
+    v : (C x T) array_like
+        Component timeseries.
     """
     # do PC dimension selection and get eigenvalue cutoff
     if mlepca:
@@ -155,7 +172,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         dz, cAl = dwtmat(dz)
 
     if not op.exists('pcastate.pkl'):
-        voxel_comp_weights, varex, comp_ts = run_pca(dz, mlepca=mlepca)
+        voxel_comp_weights, varex, comp_ts = run_svd(dz, mlepca=mlepca)
 
         # actual variance explained (normalized)
         varex_norm = varex / varex.sum()

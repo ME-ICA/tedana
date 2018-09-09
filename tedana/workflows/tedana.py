@@ -392,15 +392,21 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         catd, data_oc = model.gscontrol_raw(catd, data_oc, n_echos, ref_img)
 
     if mixm is None:
+        # Identify and remove thermal noise from data
         n_components, dd = decomposition.tedpca(catd, data_oc, combmode, mask,
                                                 t2s, t2sG, stabilize, ref_img,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw,
-                                                ste=ste, wvpca=wvpca)
+                                                ste=ste, mlepca=True,
+                                                wvpca=wvpca)
+        # Perform ICA on dimensionally reduced data (*without* thermal noise)
         mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, conv, fixed_seed,
                                                      cost=initcost, final_cost=finalcost,
                                                      verbose=debug)
         np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
         LGR.info('Making second component selection guess from ICA results')
+        # Estimate betas and compute selection metrics for mixing matrix
+        # generated from dimensionally reduced data using full data (i.e., data
+        # with thermal noise)
         seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
                                                                  mask, t2s, t2sG,
                                                                  tes, combmode,
