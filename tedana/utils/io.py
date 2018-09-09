@@ -40,11 +40,11 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ign, ref_img):
     ======================    =================================================
     Filename                  Content
     ======================    =================================================
-    sphis_hik.nii             T1-like effect.
-    hik_ts_OC_T1c.nii         T1 corrected time series.
-    dn_ts_OC_T1c.nii          Denoised version of T1 corrected time series
-    betas_hik_OC_T1c.nii      T1-GS corrected components
-    meica_mix_T1c.1D          T1-GS corrected mixing matrix
+    sphis_hik.nii             T1-like effect
+    hik_ts_OC_T1c.nii         T1-corrected BOLD (high-Kappa) time series
+    dn_ts_OC_T1c.nii          Denoised version of T1-corrected time series
+    betas_hik_OC_T1c.nii      T1 global signal-corrected components
+    meica_mix_T1c.1D          T1 global signal-corrected mixing matrix
     ======================    =================================================
     """
     optcom_masked = optcom_ts[mask, :]
@@ -79,14 +79,14 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ign, ref_img):
     """
     bold_noT1gs = bold_ts - np.dot(lstsq(glob_sig.T, bold_ts.T,
                                          rcond=None)[0].T, glob_sig)
-    utils.filewrite(utils.unmask(bold_noT1gs * optcom_std, mask),
-                    'hik_ts_OC_T1c.nii', ref_img)
+    hik_ts = bold_noT1gs * optcom_std
+    utils.filewrite(utils.unmask(hik_ts, mask), 'hik_ts_OC_T1c.nii', ref_img)
 
     """
     Make denoised version of T1-corrected time series
     """
     medn_ts = optcom_mu + ((bold_noT1gs + resid) * optcom_std)
-    utils.filewrite(utils.unmask(medn_ts, mask), 'dn_ts_OC_T1c', ref_img)
+    utils.filewrite(utils.unmask(medn_ts, mask), 'dn_ts_OC_T1c.nii', ref_img)
 
     """
     Orthogonalize mixing matrix w.r.t. T1-GS
@@ -103,8 +103,8 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ign, ref_img):
     Write T1-GS corrected components and mixing matrix
     """
     cbetas_norm = lstsq(mmixnogs_norm.T, data_norm.T, rcond=None)[0].T
-    utils.filewrite(utils.unmask(cbetas_norm[:, 2:], mask), 'betas_hik_OC_T1c',
-                    ref_img)
+    utils.filewrite(utils.unmask(cbetas_norm[:, 2:], mask),
+                    'betas_hik_OC_T1c.nii', ref_img)
     np.savetxt('meica_mix_T1c.1D', mmixnogs)
 
 
