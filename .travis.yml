@@ -3,7 +3,7 @@ sudo: false
 
 python:
     - 3.6
-    - 3.7
+    - 3.7-dev
 
 matrix:
   include:
@@ -19,9 +19,11 @@ before_install:
     - pip install --upgrade virtualenv
     - if [ "${STYLE}" == "1" ]; then
       pip install "flake8<3.0" flake8-putty;
+      else
+      pip install pytest;
       fi
     - if [ "${COVERAGE}" == "1" ]; then
-      pip install coverage coveralls codecov pytest pytest-cov;
+      pip install coverage coveralls codecov pytest-cov;
       fi
 
 script:
@@ -31,6 +33,8 @@ script:
       else
           if [ "${COVERAGE}" == "1" ]; then
               TEST_ARGS="--cov-report term-missing --cov=tedana";
+          else
+              TEST_ARGS="";
           fi
           py.test --ignore=tedana/tests/test_tedana.py ${TEST_ARGS} tedana;
       fi
