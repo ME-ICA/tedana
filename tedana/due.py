@@ -53,8 +53,8 @@ except Exception as e:
     if type(e).__name__ != 'ImportError':
         import logging
         logging.getLogger("duecredit").error(
-            "Module `duecredit` not successfully imported. Package "
-            "functionality unaffected.")
+            'Module `duecredit` not successfully imported due to "%s". '
+            'Package functionality unaffected.', str(e))
 
     # Initiate due stub
     due = InactiveDueCreditCollector()
