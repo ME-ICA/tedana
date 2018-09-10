@@ -11,11 +11,37 @@ from scipy import stats
 from tedana import model, utils
 from tedana.decomposition._utils import eimask, dwtmat, idwtmat
 from tedana.selection._utils import (getelbow_cons, getelbow_mod)
+from tedana.due import due, BibTeX
 
 LGR = logging.getLogger(__name__)
 
 F_MAX = 500
 Z_MAX = 8
+
+
+@due.dcite(BibTeX(
+    """
+    @inproceedings{minka2001automatic,
+      title={Automatic choice of dimensionality for PCA},
+      author={Minka, Thomas P},
+      booktitle={Advances in neural information processing systems},
+      pages={598--604},
+      year={2001}
+    }
+    """),
+    description='Introduces method for choosing PCA dimensionality '
+                'automatically')
+def _run_mlepca(data):
+    """
+    Run PCA with automatic choice of dimensionality.
+    """
+    from sklearn.decomposition import PCA
+    ppca = PCA(n_components='mle', svd_solver='full')
+    ppca.fit(data)
+    v = ppca.components_
+    s = ppca.explained_variance_
+    u = np.dot(np.dot(data, v.T), np.diag(1. / s))
+    return u, s, v
 
 
 def run_svd(data, mlepca=True):
@@ -41,12 +67,7 @@ def run_svd(data, mlepca=True):
     """
     # do PC dimension selection and get eigenvalue cutoff
     if mlepca:
-        from sklearn.decomposition import PCA
-        ppca = PCA(n_components='mle', svd_solver='full')
-        ppca.fit(data)
-        v = ppca.components_
-        s = ppca.explained_variance_
-        u = np.dot(np.dot(data, v.T), np.diag(1. / s))
+        u, s, v = _run_mlepca(data)
     else:
         u, s, v = np.linalg.svd(data, full_matrices=0)
     return u, s, v
