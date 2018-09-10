@@ -67,4 +67,5 @@ CLASSIFIERS = [
     'Topic :: Scientific/Engineering :: Information Analysis',
     'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
     'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7'
 ]
