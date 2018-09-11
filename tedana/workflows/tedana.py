@@ -396,8 +396,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         n_components, dd = decomposition.tedpca(catd, data_oc, combmode, mask,
                                                 t2s, t2sG, stabilize, ref_img,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw,
-                                                ste=ste, mlepca=True,
-                                                wvpca=wvpca)
+                                                ste=ste, wvpca=wvpca)
         # Perform ICA on dimensionally reduced data (*without* thermal noise)
         mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, conv, fixed_seed,
                                                      cost=initcost, final_cost=finalcost,

@@ -7,6 +7,7 @@ import os.path as op
 
 import numpy as np
 from scipy import stats
+from sklearn.decomposition import PCA
 
 from tedana import model, utils
 from tedana.decomposition._utils import eimask, dwtmat, idwtmat
@@ -31,20 +32,7 @@ Z_MAX = 8
     """),
     description='Introduces method for choosing PCA dimensionality '
                 'automatically')
-def _run_mlepca(data):
-    """
-    Run PCA with automatic choice of dimensionality.
-    """
-    from sklearn.decomposition import PCA
-    ppca = PCA(n_components='mle', svd_solver='full')
-    ppca.fit(data)
-    v = ppca.components_
-    s = ppca.explained_variance_
-    u = np.dot(np.dot(data, v.T), np.diag(1. / s))
-    return u, s, v
-
-
-def run_svd(data, mlepca=True):
+def run_svd(data):
     """
     Run Singular Value Decomposition (SVD) on input data.
 
@@ -52,9 +40,6 @@ def run_svd(data, mlepca=True):
     ----------
     data : (S [*E] x T) array_like
         Optimally combined (S x T) or full multi-echo (S*E x T) data.
-    mlepca : :obj:`bool`, optional
-        If True, use sklearn's PCA method to estimate the number of components
-        and decompose data. If False, use numpy's SVD method. Default is True.
 
     Returns
     -------
@@ -66,15 +51,16 @@ def run_svd(data, mlepca=True):
         Component timeseries.
     """
     # do PC dimension selection and get eigenvalue cutoff
-    if mlepca:
-        u, s, v = _run_mlepca(data)
-    else:
-        u, s, v = np.linalg.svd(data, full_matrices=0)
+    ppca = PCA(n_components='mle', svd_solver='full')
+    ppca.fit(data)
+    v = ppca.components_
+    s = ppca.explained_variance_
+    u = np.dot(np.dot(data, v.T), np.diag(1. / s))
     return u, s, v
 
 
 def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
-           ref_img, tes, kdaw, rdaw, ste=0, mlepca=True, wvpca=False):
+           ref_img, tes, kdaw, rdaw, ste=0, wvpca=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
     noise from multi-echo data.
@@ -107,9 +93,6 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         of -1 will indicate using all the echos and 0 will indicate using the
         optimal combination of the echos. A list can be provided to indicate
         a subset of echos. Default: 0
-    mlepca : :obj:`bool`, optional
-        Whether to use the method originally explained in Minka, NIPS 2000 for
-        guessing PCA dimensionality instead of a traditional SVD. Default: True
     wvpca : :obj:`bool`, optional
         Whether to apply wavelet denoising to data. Default: False
 
@@ -193,7 +176,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         dz, cAl = dwtmat(dz)
 
     if not op.exists('pcastate.pkl'):
-        voxel_comp_weights, varex, comp_ts = run_svd(dz, mlepca=mlepca)
+        voxel_comp_weights, varex, comp_ts = run_svd(dz)
 
         # actual variance explained (normalized)
         varex_norm = varex / varex.sum()
