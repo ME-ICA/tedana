@@ -3,6 +3,7 @@
 `TE`-`de`pendent `ana`lysis (_tedana_) is a Python module for denoising multi-echo functional magnetic resonance imaging (fMRI) data.
 
 [![Latest Version](https://img.shields.io/pypi/v/tedana.svg)](https://pypi.python.org/pypi/tedana/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tedana.svg)](https://pypi.python.org/pypi/tedana/)
 [![DOI](https://zenodo.org/badge/110845855.svg)](https://zenodo.org/badge/latestdoi/110845855)
 [![License](https://img.shields.io/badge/License-LGPL%202.0-blue.svg)](https://opensource.org/licenses/LGPL-2.1)
 [![CircleCI](https://circleci.com/gh/ME-ICA/tedana.svg?style=shield)](https://circleci.com/gh/ME-ICA/tedana)
@@ -37,7 +38,7 @@ More information and documentation can be found at https://tedana.readthedocs.io
 ## Installation
 
 You'll need to set up a working development environment to use `tedana`.
-To set up a local environment, the following packages will need to be installed:
+To set up a local environment, you will need Python >=3.6 and the following packages will need to be installed:
 
 mdp  
 nilearn  
