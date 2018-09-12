@@ -22,3 +22,7 @@ If T1-GS control is employed:
 
 - ``dn_ts_OC_T1c.nii.gz``
 - ``hik_ts_OC_T1c.nii.gz``
+
+Visual reports
+--------------
+We're working on it.
