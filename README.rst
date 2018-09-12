@@ -40,6 +40,7 @@ multi-echo functional magnetic resonance imaging (fMRI) data.
 
 About
 -----
+
 ``tedana`` originally came about as a part of the `ME-ICA`_ pipeline.
 The ME-ICA pipeline originally performed both pre-processing and TE-dependent
 analysis of multi-echo fMRI data; however, ``tedana`` now assumes that you're
@@ -115,7 +116,6 @@ You can also learn more about `why citing software is important`_.
 .. _Integrated strategy for improving functional connectivity mapping using multiecho fMRI.: http://dx.doi.org/10.1073/pnas.1301725110
 .. _duecredit: https://github.com/duecredit/duecredit
 .. _`why citing software is important`: https://www.software.ac.uk/how-cite-software
-
 
 Installation
 ------------

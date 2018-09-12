@@ -11,11 +11,11 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
    :caption: Contents:
 
    multi-echo
-   approach
    usage
-   api
+   approach
+   outputs
    contributing
-
+   api
 
 Indices and tables
 ------------------

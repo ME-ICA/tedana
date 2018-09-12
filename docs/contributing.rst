@@ -55,7 +55,7 @@ releasing your own Python projects!
        `Release-drafter`_ should have already drafted release notes listing all
        changes since the last release; check to make sure these are correct.
     #. Pulling from the ``master`` branch, locally build a new copy of tedana and
-        `upload it to PyPi`_.
+       `upload it to PyPi`_.
 
 We have set up tedana so that releases automatically mint a new DOI with Zenodo;
 a guide for doing this integration is available `here`_.
