@@ -7,7 +7,7 @@ For a more general guide to the tedana development, please see our
 `contributing guide`_. Please also follow our `code of conduct`_.
 
 .. _contributing guide: https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md
-.. _code of conduct: https://github.com/ME-ICA/tedana/blob/master/Code_of_Conduct.md
+.. _code of conduct: https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md
 
 
 Style Guide

@@ -151,4 +151,4 @@ We ask that all contributions to ``tedana`` respect our `code of conduct`_.
 
 .. _our contributing guidelines: https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md
 .. _our issues: https://github.com/ME-ICA/tedana/issues
-.. _code of conduct: https://github.com/ME-ICA/tedana/blob/master/Code_of_Conduct.md
+.. _code of conduct: https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md
