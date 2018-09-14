@@ -271,21 +271,18 @@ def filewrite(data, filename, ref_img, gzip=False, copy_header=True):
         Path of saved image (with added extensions, as appropriate)
     """
 
-    # get datatype and reference image for comparison
-    dtype = get_dtype(ref_img)
+    # get reference image for comparison
     if isinstance(ref_img, list):
         ref_img = ref_img[0]
 
-    # ensure that desired output type (from name) is compatible with `dtype`
-    root, ext, add = splitext_addext(filename)
-    if ext != '' and FORMATS[ext] != dtype:
-        raise ValueError('Cannot write {} data to {} file. Please ensure file'
-                         'formats are compatible'.format(dtype, FORMATS[ext]))
+    # generate out file for saving
+    out = new_nii_like(ref_img, data, copy_header=copy_header)
 
-    if dtype == 'NIFTI':
-        out = new_nii_like(ref_img, data, copy_header=copy_header)
-        name = '{}.{}'.format(root, 'nii.gz' if gzip else 'nii')
-        out.to_filename(name)
+    # FIXME: we only handle writing to nifti right now
+    # get root of desired output file and save as nifti image
+    root, ext, add = splitext_addext(filename)
+    name = '{}.{}'.format(root, 'nii.gz' if gzip else 'nii')
+    out.to_filename(name)
 
     return name
 
@@ -312,10 +309,15 @@ def new_nii_like(ref_img, data, affine=None, copy_header=True):
     """
 
     ref_img = check_niimg(ref_img)
-    nii = new_img_like(ref_img,
-                       data.reshape(ref_img.shape[:3] + data.shape[1:]),
-                       affine=affine,
-                       copy_header=copy_header)
+    newdata = data.reshape(ref_img.shape[:3] + data.shape[1:])
+    if '.nii' not in ref_img.valid_exts:
+        # this is rather ugly and may lose some information...
+        nii = nib.Nifti1Image(newdata, affine=ref_img.affine,
+                              header=ref_img.header)
+    else:
+        # nilearn's `new_img_like` is a very nice function
+        nii = new_img_like(ref_img, newdata, affine=affine,
+                           copy_header=copy_header)
     nii.set_data_dtype(data.dtype)
 
     return nii
