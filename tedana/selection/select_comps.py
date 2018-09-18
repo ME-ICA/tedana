@@ -6,7 +6,6 @@ import os.path as op
 import json
 import logging
 import pickle
-import pkg_resources
 
 from nilearn._utils import check_niimg
 import numpy as np
@@ -18,7 +17,6 @@ from tedana.selection._utils import (getelbow_cons, getelbow_mod,
                                      getelbow_aggr, do_svm)
 
 LGR = logging.getLogger(__name__)
-RESOURCES = pkg_resources.resource_filename('tedana', 'tests/data')
 
 
 def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
@@ -354,33 +352,24 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     """
     LGR.debug('Computing 3D spatial FFT of beta maps to detect high-spatial frequency artifacts')
     # spatial information is important so for NIFTI we convert back to 3D space
-    if utils.get_dtype(ref_img) == 'NIFTI':
-        dim1 = np.prod(check_niimg(ref_img).shape[:2])
-    else:
-        dim1 = mask.shape[0]
+    dim1 = np.prod(check_niimg(ref_img).shape[:2])
     fproj_arr = np.zeros([dim1, len(all_comps)])
     fproj_arr_val = np.zeros([dim1, len(all_comps)])
     spr = []
     fdist = []
     for comp_num in all_comps:
         # convert data back to 3D array
-        if utils.get_dtype(ref_img) == 'NIFTI':
-            tproj = utils.new_nii_like(ref_img, utils.unmask(seldict['PSC'],
-                                                             mask)[:, comp_num]).get_data()
-        else:
-            tproj = utils.unmask(seldict['PSC'], mask)[:, comp_num]
+        tproj = utils.new_nii_like(ref_img, utils.unmask(seldict['PSC'],
+                                                         mask)[:, comp_num]).get_data()
         fproj = np.fft.fftshift(np.abs(np.fft.rfftn(tproj)))
         fproj_z = fproj.max(axis=-1)
         fproj[fproj == fproj.max()] = 0
         spr.append(np.array(fproj_z > fproj_z.max() / 4, dtype=np.int).sum())
         fproj_arr[:, comp_num] = stats.rankdata(fproj_z.flatten())
         fproj_arr_val[:, comp_num] = fproj_z.flatten()
-        if utils.get_dtype(ref_img) == 'NIFTI':
-            fprojr = np.array([fproj, fproj[:, :, ::-1]]).max(0)
-            fdist.append(np.max([utils.fitgaussian(fproj.max(jj))[3:].max() for
-                         jj in range(fprojr.ndim)]))
-        else:
-            fdist = np.load(os.path.join(RESOURCES, 'fdist.npy'))
+        fprojr = np.array([fproj, fproj[:, :, ::-1]]).max(0)
+        fdist.append(np.max([utils.fitgaussian(fproj.max(jj))[3:].max() for
+                             jj in range(fprojr.ndim)]))
     if type(fdist) is not np.ndarray:
         fdist = np.array(fdist)
     spr = np.array(spr)
