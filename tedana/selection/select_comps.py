@@ -1,11 +1,10 @@
 """
 Functions to identify TE-dependent and TE-independent components.
 """
-import os
-import os.path as op
 import json
 import logging
 import pickle
+import os.path as op
 
 from nilearn._utils import check_niimg
 import numpy as np
