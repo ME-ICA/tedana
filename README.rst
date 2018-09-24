@@ -3,7 +3,7 @@ tedana: TE Dependent ANAlysis
 
 The ``tedana`` package is part of the ME-ICA pipeline, performing TE-dependent
 analysis of multi-echo functional magnetic resonance imaging (fMRI) data.
-``TE``-``de``\pendent ``ana``\lysis (_tedana_) is a Python module for denoising
+``TE``-``de``\pendent ``ana``\lysis (*tedana*) is a Python module for denoising
 multi-echo functional magnetic resonance imaging (fMRI) data.
 
 .. image:: https://img.shields.io/pypi/v/tedana.svg
@@ -18,7 +18,7 @@ multi-echo functional magnetic resonance imaging (fMRI) data.
    :target: https://zenodo.org/badge/latestdoi/110845855
    :alt: DOI
 
-.. image:: https://circleci.com/gh/ME-ICA/tedana.svg?style=svg
+.. image:: https://circleci.com/gh/ME-ICA/tedana.svg?style=shield
    :target: https://circleci.com/gh/ME-ICA/tedana
    :alt: CircleCI
 
