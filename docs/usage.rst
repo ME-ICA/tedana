@@ -9,6 +9,15 @@ tedana minimally requires:
 But you can supply many other options, viewable with ``tedana -h`` or
 ``t2smap -h``.
 
+For most use cases, we recommend that users call tedana from within existing fMRI preprocessing
+pipelines such as `fMRIPrep`_ or `afni_proc.py`_..
+Users can also construct their own preprocessing pipelines from which to call tedana;
+for more information on doing so, see the documentation on
+:doc:`ME-EPI preprocessing pipelines </pipelines>`.
+
+.. _fMRIPrep: https://fmriprep.readthedocs.io
+.. _afni_proc.py: https://afni.nimh.nih.gov/pub/dist/doc/program_help/afni_proc.py.html
+
 Run tedana
 ----------
 This is the full tedana workflow, which runs multi-echo ICA and outputs
@@ -26,7 +35,7 @@ documentation: :py:func:`tedana.workflows.tedana_workflow`.
     analyses. One of the ways by which components are assessed as BOLD or non-BOLD is their
     spatial pattern, so overly conservative masks will invalidate several steps in the tedana
     workflow. To examine regions-of-interest with multi-echo data, apply masks after TE
-    Dependent ANAlysis. 
+    Dependent ANAlysis.
 
 Run t2smap
 ----------

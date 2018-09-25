@@ -86,6 +86,7 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
    multi-echo
    approach
    usage
+   pipelines
    api
    contributing
 
