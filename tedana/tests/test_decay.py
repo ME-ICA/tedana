@@ -4,11 +4,10 @@ Tests for tedana.model.monoexponential
 
 import os.path as op
 
-import pytest
 import numpy as np
+import pytest
 
-from tedana import utils
-from tedana.model import monoexponential as me
+from tedana import utils, decay as me
 from tedana.tests.utils import get_test_data_path
 
 

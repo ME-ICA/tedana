@@ -1,4 +1,4 @@
-API
+   API
 ===
 
 :mod:`tedana.workflows`: Common workflows
@@ -19,6 +19,23 @@ API
 
 .. _calibration_ref:
 
+:mod:`tedana.decay`: Signal decay
+--------------------------------------------------
+
+.. automodule:: tedana.decay
+   :no-members:
+   :no-inherited-members:
+
+.. autosummary:: tedana.decay
+   :toctree: generated/
+   :template: function.rst
+
+   tedana.decay.fit_decay
+   tedana.decay.fit_decay_ts
+
+.. currentmodule:: tedana
+
+.. _calibration_ref:
 
 :mod:`tedana.model`: Modeling TE-dependence
 --------------------------------------------------
@@ -31,14 +48,11 @@ API
    :toctree: generated/
    :template: function.rst
 
-   tedana.model.fit_decay
-   tedana.model.fit_decay_ts
    tedana.model.fitmodels_direct
    tedana.model.make_optcom
 
    :template: module.rst
 
-   tedana.model.monoexponential
    tedana.model.fit
    tedana.model.combine
 

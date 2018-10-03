@@ -9,6 +9,8 @@ import logging
 import argparse
 import numpy as np
 from scipy import stats
+
+import tedana.decay as decay
 from tedana import (decomposition, model, selection, utils)
 from tedana.workflows.parser_utils import is_valid_file
 
@@ -368,7 +370,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
 
     LGR.info('Computing T2* map')
-    t2s, s0, t2ss, s0s, t2sG, s0G = model.fit_decay(catd, tes, mask, masksum)
+    t2s, s0, t2ss, s0s, t2sG, s0G = decay.fit_decay(catd, tes, mask, masksum)
 
     # set a hard cap for the T2* map
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
