@@ -9,8 +9,9 @@ import argparse
 import numpy as np
 from scipy import stats
 
+import tedana.combine as combine
 import tedana.decay as decay
-from tedana import model, utils
+from tedana import utils
 from tedana.workflows.parser_utils import is_valid_file
 
 LGR = logging.getLogger(__name__)
@@ -197,7 +198,7 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
 
     LGR.info('Computing optimal combination')
     # optimally combine data
-    OCcatd = model.make_optcom(catd, tes, mask, t2s=t2s_full,
+    OCcatd = combine.make_optcom(catd, tes, mask, t2s=t2s_full,
                                combmode=combmode)
 
     # clean up numerical errors

@@ -37,6 +37,23 @@
 
 .. _calibration_ref:
 
+:mod:`tedana.combine`: Combine time series
+--------------------------------------------------
+
+.. automodule:: tedana.combine
+   :no-members:
+   :no-inherited-members:
+
+.. autosummary:: tedana.combine
+   :toctree: generated/
+   :template: function.rst
+
+   tedana.combine.make_optcom
+
+.. currentmodule:: tedana
+
+.. _calibration_ref:
+
 :mod:`tedana.model`: Modeling TE-dependence
 --------------------------------------------------
 
@@ -49,12 +66,10 @@
    :template: function.rst
 
    tedana.model.fitmodels_direct
-   tedana.model.make_optcom
 
    :template: module.rst
 
    tedana.model.fit
-   tedana.model.combine
 
 .. currentmodule:: tedana
 

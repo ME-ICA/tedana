@@ -10,7 +10,8 @@ import numpy as np
 from scipy import stats
 from scipy.special import lpmv
 
-from tedana import model, utils
+import tedana.combine as combine
+from tedana import utils
 
 LGR = logging.getLogger(__name__)
 
@@ -85,7 +86,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
                              't2s ({1})'.format(catd.shape[2], t2s.shape[1]))
 
     # compute optimal combination of raw data
-    tsoc = model.make_optcom(catd, tes, mask, t2s=t2s_full, combmode=combmode,
+    tsoc = combine.make_optcom(catd, tes, mask, t2s=t2s_full, combmode=combmode,
                              verbose=False).astype(float)[mask]
 
     # demean optimal combination

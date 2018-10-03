@@ -11,6 +11,7 @@ import numpy as np
 from scipy import stats
 
 import tedana.decay as decay
+import tedana.combine as combine
 from tedana import (decomposition, model, selection, utils)
 from tedana.workflows.parser_utils import is_valid_file
 
@@ -386,7 +387,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     utils.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
 
     # optimally combine data
-    OCcatd = model.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
+    OCcatd = combine.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
 
     # regress out global signal unless explicitly not desired
     if gscontrol:
