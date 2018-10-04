@@ -9,6 +9,7 @@ from scipy.optimize import leastsq
 from sklearn.utils import check_array
 
 from tedana.due import due, BibTeX
+from tedana.io import filewrite
 
 FORMATS = {'.nii': 'NIFTI'}
 
@@ -396,3 +397,94 @@ def andb(arrs):
     result = np.sum(arrs, axis=0)
 
     return result
+
+
+def gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img):
+    """
+    Perform global signal regression.
+
+    Parameters
+    ----------
+    optcom_ts : (S x T) array_like
+        Optimally combined time series data
+    mmix : (C x T) array_like
+        Mixing matrix for converting input data to component space, where `C`
+        is components and `T` is the same as in `optcom_ts`
+    mask : (S,) array_like
+        Boolean mask array
+    acc : :obj:`list`
+        Indices of accepted (BOLD) components in `mmix`
+    ref_img : :obj:`str` or img_like
+        Reference image to dictate how outputs are saved to disk
+
+    Notes
+    -----
+    This function writes out several files:
+
+    ======================    =================================================
+    Filename                  Content
+    ======================    =================================================
+    sphis_hik.nii             T1-like effect.
+    hik_ts_OC_T1c.nii         T1 corrected time series.
+    dn_ts_OC_T1c.nii          Denoised version of T1 corrected time series
+    betas_hik_OC_T1c.nii      T1-GS corrected components
+    meica_mix_T1c.1D          T1-GS corrected mixing matrix
+    ======================    =================================================
+    """
+    optcom_masked = optcom_ts[mask, :]
+    optcom_mu = optcom_masked.mean(axis=-1)[:, np.newaxis]
+    optcom_std = optcom_masked.std(axis=-1)[:, np.newaxis]
+
+    """
+    Compute temporal regression
+    """
+    data_norm = (optcom_masked - optcom_mu) / optcom_std
+    cbetas = np.linalg(mmix, data_norm.T, rcond=None)[0].T
+    resid = data_norm - np.dot(cbetas, mmix.T)
+
+    """
+    Build BOLD time series without amplitudes, and save T1-like effect
+    """
+    bold_ts = np.dot(cbetas[:, acc], mmix[:, acc].T)
+    t1_map = bold_ts.min(axis=-1)
+    t1_map -= t1_map.mean()
+    filewrite(unmask(t1_map, mask), 'sphis_hik', ref_img)
+    t1_map = t1_map[:, np.newaxis]
+
+    """
+    Find the global signal based on the T1-like effect
+    """
+    glob_sig = np.linalg(t1_map, data_norm, rcond=None)[0]
+
+    """
+    T1-correct time series by regression
+    """
+    bold_noT1gs = bold_ts - np.dot(np.linalg(glob_sig.T, bold_ts.T,
+                                             rcond=None)[0].T, glob_sig)
+    filewrite(unmask(bold_noT1gs * optcom_std, mask),
+              'hik_ts_OC_T1c.nii', ref_img)
+
+    """
+    Make denoised version of T1-corrected time series
+    """
+    medn_ts = optcom_mu + ((bold_noT1gs + resid) * optcom_std)
+    filewrite(unmask(medn_ts, mask), 'dn_ts_OC_T1c', ref_img)
+
+    """
+    Orthogonalize mixing matrix w.r.t. T1-GS
+    """
+    mmixnogs = mmix.T - np.dot(np.linalg(glob_sig.T, mmix, rcond=None)[0].T,
+                               glob_sig)
+    mmixnogs_mu = mmixnogs.mean(-1)[:, np.newaxis]
+    mmixnogs_std = mmixnogs.std(-1)[:, np.newaxis]
+    mmixnogs_norm = (mmixnogs - mmixnogs_mu) / mmixnogs_std
+    mmixnogs_norm = np.vstack([np.atleast_2d(np.ones(max(glob_sig.shape))),
+                               glob_sig, mmixnogs_norm])
+
+    """
+    Write T1-GS corrected components and mixing matrix
+    """
+    cbetas_norm = np.linalg(mmixnogs_norm.T, data_norm.T, rcond=None)[0].T
+    filewrite(unmask(cbetas_norm[:, 2:], mask), 'betas_hik_OC_T1c',
+              ref_img)
+    np.savetxt('meica_mix_T1c.1D', mmixnogs)
