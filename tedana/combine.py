@@ -3,7 +3,7 @@ Functions to optimally combine data across echoes.
 """
 import logging
 import numpy as np
-from tedana.utils import unmask
+import tedana.utils
 from tedana.due import due, Doi
 
 LGR = logging.getLogger(__name__)
@@ -155,5 +155,5 @@ def make_optcom(data, tes, mask, t2s=None, combmode='t2s', verbose=True):
     else:
         combined = _combine_t2s(data, tes, t2s)
 
-    combined = unmask(combined, mask)
+    combined = tedana.utils.unmask(combined, mask)
     return combined
