@@ -1,4 +1,4 @@
-   API
+API
 ===
 
 :mod:`tedana.workflows`: Common workflows
@@ -19,40 +19,6 @@
 
 .. _calibration_ref:
 
-:mod:`tedana.decay`: Signal decay
---------------------------------------------------
-
-.. automodule:: tedana.decay
-   :no-members:
-   :no-inherited-members:
-
-.. autosummary:: tedana.decay
-   :toctree: generated/
-   :template: function.rst
-
-   tedana.decay.fit_decay
-   tedana.decay.fit_decay_ts
-
-.. currentmodule:: tedana
-
-.. _calibration_ref:
-
-:mod:`tedana.combine`: Combine time series
---------------------------------------------------
-
-.. automodule:: tedana.combine
-   :no-members:
-   :no-inherited-members:
-
-.. autosummary:: tedana.combine
-   :toctree: generated/
-   :template: function.rst
-
-   tedana.combine.make_optcom
-
-.. currentmodule:: tedana
-
-.. _calibration_ref:
 
 :mod:`tedana.model`: Modeling TE-dependence
 --------------------------------------------------
@@ -65,11 +31,16 @@
    :toctree: generated/
    :template: function.rst
 
+   tedana.model.fit_decay
+   tedana.model.fit_decay_ts
    tedana.model.fitmodels_direct
+   tedana.model.make_optcom
 
    :template: module.rst
 
+   tedana.model.monoexponential
    tedana.model.fit
+   tedana.model.combine
 
 .. currentmodule:: tedana
 
@@ -132,25 +103,8 @@
    :toctree: generated/
    :template: module.rst
 
-   tedana.utils
-
-.. currentmodule:: tedana
-
-.. _calibration_ref:
-
-
-:mod:`tedana.io`: IO functions
---------------------------------------------------
-
-.. automodule:: tedana.io
-   :no-members:
-   :no-inherited-members:
-
-.. autosummary:: tedana.io
-   :toctree: generated/
-   :template: module.rst
-
-   tedana.io
+   tedana.utils.io
+   tedana.utils.utils
 
 .. currentmodule:: tedana
 
