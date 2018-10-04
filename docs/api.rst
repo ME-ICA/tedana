@@ -132,8 +132,25 @@
    :toctree: generated/
    :template: module.rst
 
-   tedana.utils.io
-   tedana.utils.utils
+   tedana.utils
+
+.. currentmodule:: tedana
+
+.. _calibration_ref:
+
+
+:mod:`tedana.io`: Utility functions
+--------------------------------------------------
+
+.. automodule:: tedana.utils
+   :no-members:
+   :no-inherited-members:
+
+.. autosummary:: tedana.utils
+   :toctree: generated/
+   :template: module.rst
+
+   tedana.io
 
 .. currentmodule:: tedana
 

@@ -10,9 +10,8 @@ import argparse
 import numpy as np
 from scipy import stats
 
-import tedana.decay as decay
-import tedana.combine as combine
-from tedana import (decomposition, model, selection, utils)
+from tedana import (decay, combine, decomposition,
+                    io, model, selection, utils)
 from tedana.workflows.parser_utils import is_valid_file
 
 LGR = logging.getLogger(__name__)
@@ -427,17 +426,17 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                        filecsdata=filecsdata,
                                                        strict_mode=strict)
         else:
-            acc, rej, midk, empty = utils.ctabsel(ctab)
+            acc, rej, midk, empty = io.ctabsel(ctab)
 
     if len(acc) == 0:
         LGR.warning('No BOLD components detected! Please check data and '
                     'results!')
 
-    utils.writeresults(OCcatd, mask, comptable, mmix, fixed_seed, n_vols,
-                       acc, rej, midk, empty, ref_img)
-    utils.gscontrol_mmix(OCcatd, mmix, mask, acc, ref_img)
+    io.writeresults(OCcatd, mask, comptable, mmix, fixed_seed, n_vols,
+                    acc, rej, midk, empty, ref_img)
+    io.gscontrol_mmix(OCcatd, mmix, mask, acc, ref_img)
     if dne:
-        utils.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
+        io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
 
 
 def _main(argv=None):

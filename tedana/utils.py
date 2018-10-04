@@ -9,7 +9,7 @@ import numpy as np
 from scipy.optimize import leastsq
 from sklearn.utils import check_array
 
-from ..due import due, BibTeX
+from tedana.due import due, BibTeX
 
 FORMATS = {'.nii': 'NIFTI'}
 
