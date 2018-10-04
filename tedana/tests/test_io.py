@@ -15,3 +15,7 @@ def test_new_nii_like():
 
     assert isinstance(nimg, nib.Nifti1Image)
     assert nimg.shape == (39, 50, 33, 3, 5)
+
+
+def test_filewrite():
+    pass

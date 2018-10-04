@@ -7,6 +7,7 @@ import textwrap
 
 import nibabel as nib
 import numpy as np
+from nibabel.filename_parser import splitext_addext
 from nilearn._utils import check_niimg
 from nilearn.image import new_img_like
 from numpy.linalg import lstsq
@@ -65,7 +66,7 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img):
     bold_ts = np.dot(cbetas[:, acc], mmix[:, acc].T)
     t1_map = bold_ts.min(axis=-1)
     t1_map -= t1_map.mean()
-    utils.filewrite(utils.unmask(t1_map, mask), 'sphis_hik', ref_img)
+    filewrite(utils.unmask(t1_map, mask), 'sphis_hik', ref_img)
     t1_map = t1_map[:, np.newaxis]
 
     """
@@ -78,14 +79,14 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img):
     """
     bold_noT1gs = bold_ts - np.dot(lstsq(glob_sig.T, bold_ts.T,
                                          rcond=None)[0].T, glob_sig)
-    utils.filewrite(utils.unmask(bold_noT1gs * optcom_std, mask),
-                    'hik_ts_OC_T1c.nii', ref_img)
+    filewrite(utils.unmask(bold_noT1gs * optcom_std, mask),
+              'hik_ts_OC_T1c.nii', ref_img)
 
     """
     Make denoised version of T1-corrected time series
     """
     medn_ts = optcom_mu + ((bold_noT1gs + resid) * optcom_std)
-    utils.filewrite(utils.unmask(medn_ts, mask), 'dn_ts_OC_T1c', ref_img)
+    filewrite(utils.unmask(medn_ts, mask), 'dn_ts_OC_T1c', ref_img)
 
     """
     Orthogonalize mixing matrix w.r.t. T1-GS
@@ -102,8 +103,8 @@ def gscontrol_mmix(optcom_ts, mmix, mask, acc, ref_img):
     Write T1-GS corrected components and mixing matrix
     """
     cbetas_norm = lstsq(mmixnogs_norm.T, data_norm.T, rcond=None)[0].T
-    utils.filewrite(utils.unmask(cbetas_norm[:, 2:], mask), 'betas_hik_OC_T1c',
-                    ref_img)
+    filewrite(utils.unmask(cbetas_norm[:, 2:], mask), 'betas_hik_OC_T1c',
+              ref_img)
     np.savetxt('meica_mix_T1c.1D', mmixnogs)
 
 
@@ -205,21 +206,21 @@ def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, suffix=''):
     dnts = data[mask] - lowkts - midkts
 
     if len(acc) != 0:
-        fout = utils.filewrite(utils.unmask(hikts, mask),
-                               'hik_ts_{0}'.format(suffix), ref_img)
+        fout = filewrite(utils.unmask(hikts, mask),
+                         'hik_ts_{0}'.format(suffix), ref_img)
         LGR.info('Writing high-Kappa time series: {}'.format(op.abspath(fout)))
 
     if len(midk) != 0:
-        fout = utils.filewrite(utils.unmask(midkts, mask),
-                               'midk_ts_{0}'.format(suffix), ref_img)
+        fout = filewrite(utils.unmask(midkts, mask),
+                         'midk_ts_{0}'.format(suffix), ref_img)
         LGR.info('Writing mid-Kappa time series: {}'.format(op.abspath(fout)))
 
     if len(rej) != 0:
-        fout = utils.filewrite(utils.unmask(lowkts, mask),
-                               'lowk_ts_{0}'.format(suffix), ref_img)
+        fout = filewrite(utils.unmask(lowkts, mask),
+                         'lowk_ts_{0}'.format(suffix), ref_img)
         LGR.info('Writing low-Kappa time series: {}'.format(op.abspath(fout)))
 
-    fout = utils.filewrite(utils.unmask(dnts, mask),
+    fout = filewrite(utils.unmask(dnts, mask),
                            'dn_ts_{0}'.format(suffix), ref_img)
     LGR.info('Writing denoised time series: {}'.format(op.abspath(fout)))
 
@@ -262,7 +263,7 @@ def writefeats(data, mmix, mask, ref_img, suffix=''):
 
     # write feature versions of components
     feats = utils.unmask(model.computefeats2(data, mmix, mask), mask)
-    fname = utils.filewrite(feats, 'feats_{0}'.format(suffix), ref_img)
+    fname = filewrite(feats, 'feats_{0}'.format(suffix), ref_img)
 
     return fname
 
@@ -420,17 +421,17 @@ def writeresults(ts, mask, comptable, mmix, n_vols, fixed_seed,
     ======================    =================================================
     """
 
-    fout = utils.filewrite(ts, 'ts_OC', ref_img)
+    fout = filewrite(ts, 'ts_OC', ref_img)
     LGR.info('Writing optimally-combined time series: {}'.format(op.abspath(fout)))
 
     varexpl = write_split_ts(ts, mmix, mask, acc, rej, midk, ref_img, suffix='OC')
 
     ts_B = model.get_coeffs(ts, mmix, mask)
-    fout = utils.filewrite(ts_B, 'betas_OC', ref_img)
+    fout = filewrite(ts_B, 'betas_OC', ref_img)
     LGR.info('Writing full ICA coefficient feature set: {}'.format(op.abspath(fout)))
 
     if len(acc) != 0:
-        fout = utils.filewrite(ts_B[:, acc], 'betas_hik_OC', ref_img)
+        fout = filewrite(ts_B[:, acc], 'betas_hik_OC', ref_img)
         LGR.info('Writing denoised ICA coefficient feature set: {}'.format(op.abspath(fout)))
         fout = writefeats(split_ts(ts, mmix, mask, acc)[0],
                           mmix[:, acc], mask, ref_img, suffix='OC2')
@@ -552,3 +553,43 @@ def new_nii_like(ref_img, data, affine=None, copy_header=True):
     nii.set_data_dtype(data.dtype)
 
     return nii
+
+
+def filewrite(data, filename, ref_img, gzip=False, copy_header=True):
+    """
+    Writes `data` to `filename` in format of `ref_img`
+
+    Parameters
+    ----------
+    data : (S [x T]) array_like
+        Data to be saved
+    filename : :obj:`str`
+        Filepath where data should be saved to
+    ref_img : :obj:`str` or img_like
+        Reference image
+    gzip : :obj:`bool`, optional
+        Whether to gzip output (if not specified in `filename`). Only applies
+        if output dtype is NIFTI. Default: False
+    copy_header : :obj:`bool`, optional
+        Whether to copy header from `ref_img` to new image. Default: True
+
+    Returns
+    -------
+    name : :obj:`str`
+        Path of saved image (with added extensions, as appropriate)
+    """
+
+    # get reference image for comparison
+    if isinstance(ref_img, list):
+        ref_img = ref_img[0]
+
+    # generate out file for saving
+    out = new_nii_like(ref_img, data, copy_header=copy_header)
+
+    # FIXME: we only handle writing to nifti right now
+    # get root of desired output file and save as nifti image
+    root, ext, add = splitext_addext(filename)
+    name = '{}.{}'.format(root, 'nii.gz' if gzip else 'nii')
+    out.to_filename(name)
+
+    return name

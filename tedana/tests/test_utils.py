@@ -179,7 +179,3 @@ def test_make_min_mask():
 
     assert minmask.shape == (64350,)
     assert minmask.sum() == 58378
-
-
-def test_filewrite():
-    pass

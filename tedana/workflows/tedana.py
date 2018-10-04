@@ -378,12 +378,12 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                       interpolation_method='lower')
     LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
     t2s[t2s > cap_t2s * 10] = cap_t2s
-    utils.filewrite(t2s, op.join(out_dir, 't2sv.nii'), ref_img)
-    utils.filewrite(s0, op.join(out_dir, 's0v.nii'), ref_img)
-    utils.filewrite(t2ss, op.join(out_dir, 't2ss.nii'), ref_img)
-    utils.filewrite(s0s, op.join(out_dir, 's0vs.nii'), ref_img)
-    utils.filewrite(t2sG, op.join(out_dir, 't2svG.nii'), ref_img)
-    utils.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
+    io.filewrite(t2s, op.join(out_dir, 't2sv.nii'), ref_img)
+    io.filewrite(s0, op.join(out_dir, 's0v.nii'), ref_img)
+    io.filewrite(t2ss, op.join(out_dir, 't2ss.nii'), ref_img)
+    io.filewrite(s0s, op.join(out_dir, 's0vs.nii'), ref_img)
+    io.filewrite(t2sG, op.join(out_dir, 't2svG.nii'), ref_img)
+    io.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
 
     # optimally combine data
     OCcatd = combine.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)

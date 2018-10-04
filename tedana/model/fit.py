@@ -429,7 +429,7 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     detr = dat - np.dot(sol.T, Lmix.T)[0]
     sphis = (detr).min(axis=1)
     sphis -= sphis.mean()
-    utils.filewrite(utils.unmask(sphis, Gmask), 'T1gs', ref_img)
+    io.filewrite(utils.unmask(sphis, Gmask), 'T1gs', ref_img)
 
     # find time course ofc the spatial global signal
     # make basis with the Legendre basis
@@ -443,9 +443,9 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     tsoc_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T,
                              np.atleast_2d(glbase.T[dtrank])) + Gmu[Gmask][:, np.newaxis]
 
-    utils.filewrite(optcom, 'tsoc_orig', ref_img)
+    io.filewrite(optcom, 'tsoc_orig', ref_img)
     dm_optcom = utils.unmask(tsoc_nogs, Gmask)
-    utils.filewrite(dm_optcom, 'tsoc_nogs', ref_img)
+    io.filewrite(dm_optcom, 'tsoc_nogs', ref_img)
 
     # Project glbase out of each echo
     dm_catd = catd.copy()  # don't overwrite catd

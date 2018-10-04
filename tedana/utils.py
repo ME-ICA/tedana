@@ -9,7 +9,6 @@ from scipy.optimize import leastsq
 from sklearn.utils import check_array
 
 from tedana.due import due, BibTeX
-from tedana.io import new_nii_like
 
 FORMATS = {'.nii': 'NIFTI'}
 
@@ -245,46 +244,6 @@ def make_min_mask(data, roi=None):
     else:
         roi = load_image(roi).astype(bool)
         return np.logical_and(mask, roi)
-
-
-def filewrite(data, filename, ref_img, gzip=False, copy_header=True):
-    """
-    Writes `data` to `filename` in format of `ref_img`
-
-    Parameters
-    ----------
-    data : (S [x T]) array_like
-        Data to be saved
-    filename : :obj:`str`
-        Filepath where data should be saved to
-    ref_img : :obj:`str` or img_like
-        Reference image
-    gzip : :obj:`bool`, optional
-        Whether to gzip output (if not specified in `filename`). Only applies
-        if output dtype is NIFTI. Default: False
-    copy_header : :obj:`bool`, optional
-        Whether to copy header from `ref_img` to new image. Default: True
-
-    Returns
-    -------
-    name : :obj:`str`
-        Path of saved image (with added extensions, as appropriate)
-    """
-
-    # get reference image for comparison
-    if isinstance(ref_img, list):
-        ref_img = ref_img[0]
-
-    # generate out file for saving
-    out = new_nii_like(ref_img, data, copy_header=copy_header)
-
-    # FIXME: we only handle writing to nifti right now
-    # get root of desired output file and save as nifti image
-    root, ext, add = splitext_addext(filename)
-    name = '{}.{}'.format(root, 'nii.gz' if gzip else 'nii')
-    out.to_filename(name)
-
-    return name
 
 
 def unmask(data, mask):

@@ -764,7 +764,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         group0_res = np.intersect1d(KRguess, group0)
         phys_var_zs.append((vvex - vvex[group0_res].mean()) / vvex[group0_res].std())
         veinBout = utils.unmask(veinmaskB, mask)
-        utils.filewrite(veinBout.astype(float), 'veins_l%i' % t2sl_i, ref_img)
+        io.filewrite(veinBout.astype(float), 'veins_l%i' % t2sl_i, ref_img)
 
     # Mask to sample veins
     phys_var_z = np.array(phys_var_zs).max(0)
