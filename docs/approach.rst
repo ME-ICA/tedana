@@ -40,7 +40,7 @@ Longer echo times are more susceptible to signal dropout, which means that
 certain brain regions (e.g., orbitofrontal cortex, temporal poles) will only
 have good signal for some echoes. In order to avoid using bad signal from
 affected echoes in calculating :math:`T_{2}^*` and :math:`S_{0}` for a given voxel,
-`tedana` generates an adaptive mask, where the value for each voxel is the
+``tedana`` generates an adaptive mask, where the value for each voxel is the
 number of echoes with "good" signal. When :math:`T_{2}^*` and :math:`S_{0}` are
 calculated below, each voxel's values are only calculated from the first :math:`n`
 echoes, where :math:`n` is the value for that voxel in the adaptive mask.
@@ -54,7 +54,7 @@ Monoexponential decay model fit
 The next step is to fit a monoexponential decay model to the data in order to
 estimate voxel-wise T2* and S0.
 
-In order to make it easier to fit the decay model to the data, `tedana`
+In order to make it easier to fit the decay model to the data, ``tedana``
 transforms the data. The BOLD data are transformed as :math:`log(|S|+1)`, where
 :math:`S` is the BOLD signal. The echo times are also multiplied by -1.
 
@@ -131,7 +131,7 @@ time series.
 These components are subjected to component selection, the
 specifics of which vary according to algorithm.
 
-In the simplest approach, `tedana` uses Minka’s MLE to estimate the
+In the simplest approach, ``tedana`` uses Minka’s MLE to estimate the
 dimensionality of the data, which disregards low-variance components.
 
 A more complicated approach involves applying a decision tree to identify PCA
@@ -178,7 +178,7 @@ be fit to these betas. These models allow calculation of F-statistics for the
 A decision tree is applied to $\kappa$, $\rho$, and other metrics in order to
 classify ICA components as TE-dependent (BOLD signal), TE-independent
 (non-BOLD noise), or neither (to be ignored). The actual decision tree is
-dependent on the component selection algorithm employed. `tedana` includes
+dependent on the component selection algorithm employed. ``tedana`` includes
 two options: `kundu_v2_5`, which uses hardcoded thresholds applied to each of
 the metrics, and `kundu_v3_2`, which trains a classifier to select components.
 
