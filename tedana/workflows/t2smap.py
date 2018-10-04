@@ -9,9 +9,7 @@ import argparse
 import numpy as np
 from scipy import stats
 
-import tedana.combine as combine
-import tedana.decay as decay
-from tedana import (io, utils)
+from tedana import (combine, decay, io, utils)
 from tedana.workflows.parser_utils import is_valid_file
 
 LGR = logging.getLogger(__name__)

@@ -13,7 +13,6 @@ from nilearn.image import new_img_like
 from numpy.linalg import lstsq
 
 from tedana import model, utils
-from tedana.utils import load_image
 
 LGR = logging.getLogger(__name__)
 
@@ -629,14 +628,14 @@ def load_data(data, n_echos=None):
             raise ValueError('Cannot run `tedana` with only two echos: '
                              '{}'.format(data))
         else:  # individual echo files were provided (surface or volumetric)
-            fdata = np.stack([load_image(f) for f in data], axis=1)
+            fdata = np.stack([utils.load_image(f) for f in data], axis=1)
             ref_img = check_niimg(data[0])
             ref_img.header.extensions = []
             return np.atleast_3d(fdata), ref_img
 
     img = check_niimg(data)
     (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
-    fdata = load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1, order='F'))
+    fdata = utils.load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1, order='F'))
 
     # create reference image
     ref_img = img.__class__(np.zeros((nx, ny, nz)), affine=img.affine,
