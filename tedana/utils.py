@@ -2,14 +2,14 @@
 Utilities for tedana package
 """
 import nibabel as nib
-from nibabel.filename_parser import splitext_addext
-from nilearn.image import new_img_like
-from nilearn._utils import check_niimg
 import numpy as np
+from nibabel.filename_parser import splitext_addext
+from nilearn._utils import check_niimg
 from scipy.optimize import leastsq
 from sklearn.utils import check_array
 
 from tedana.due import due, BibTeX
+from tedana.io import new_nii_like
 
 FORMATS = {'.nii': 'NIFTI'}
 
@@ -285,42 +285,6 @@ def filewrite(data, filename, ref_img, gzip=False, copy_header=True):
     out.to_filename(name)
 
     return name
-
-
-def new_nii_like(ref_img, data, affine=None, copy_header=True):
-    """
-    Coerces `data` into NiftiImage format like `ref_img`
-
-    Parameters
-    ----------
-    ref_img : :obj:`str` or img_like
-        Reference image
-    data : (S [x T]) array_like
-        Data to be saved
-    affine : (4 x 4) array_like, optional
-        Transformation matrix to be used. Default: `ref_img.affine`
-    copy_header : :obj:`bool`, optional
-        Whether to copy header from `ref_img` to new image. Default: True
-
-    Returns
-    -------
-    nii : :obj:`nibabel.nifti1.Nifti1Image`
-        NiftiImage
-    """
-
-    ref_img = check_niimg(ref_img)
-    newdata = data.reshape(ref_img.shape[:3] + data.shape[1:])
-    if '.nii' not in ref_img.valid_exts:
-        # this is rather ugly and may lose some information...
-        nii = nib.Nifti1Image(newdata, affine=ref_img.affine,
-                              header=ref_img.header)
-    else:
-        # nilearn's `new_img_like` is a very nice function
-        nii = new_img_like(ref_img, newdata, affine=affine,
-                           copy_header=copy_header)
-    nii.set_data_dtype(data.dtype)
-
-    return nii
 
 
 def unmask(data, mask):

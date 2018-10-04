@@ -10,7 +10,7 @@ import numpy as np
 from scipy import stats
 from sklearn.cluster import DBSCAN
 
-from tedana import utils
+from tedana import (io, utils)
 from tedana.selection._utils import (getelbow_cons, getelbow_mod,
                                      getelbow_aggr, do_svm)
 
@@ -354,8 +354,8 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     fdist = []
     for comp_num in all_comps:
         # convert data back to 3D array
-        tproj = utils.new_nii_like(ref_img, utils.unmask(seldict['PSC'],
-                                                         mask)[:, comp_num]).get_data()
+        tproj = io.new_nii_like(ref_img, utils.unmask(seldict['PSC'],
+                                                      mask)[:, comp_num]).get_data()
         fproj = np.fft.fftshift(np.abs(np.fft.rfftn(tproj)))
         fproj_z = fproj.max(axis=-1)
         fproj[fproj == fproj.max()] = 0

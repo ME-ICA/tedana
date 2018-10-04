@@ -10,8 +10,7 @@ import numpy as np
 from scipy import stats
 from scipy.special import lpmv
 
-import tedana.combine as combine
-from tedana import utils
+from tedana import (combine, io, utils)
 
 LGR = logging.getLogger(__name__)
 
@@ -219,7 +218,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
             out[:, 2] = np.squeeze(utils.unmask(F_S0_maps[:, i], t2s != 0))
             out[:, 3] = np.squeeze(utils.unmask(Z_maps[:, i], mask))
 
-            ccimg = utils.new_nii_like(ref_img, out)
+            ccimg = io.new_nii_like(ref_img, out)
 
             # Do simple clustering on F
             sel = spatclust(ccimg, min_cluster_size=csize,
@@ -236,7 +235,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
 
             # Do simple clustering on ranked signal-change map
             spclust_input = utils.unmask(stats.rankdata(tsoc_Babs[:, i]), mask)
-            spclust_input = utils.new_nii_like(ref_img, spclust_input)
+            spclust_input = io.new_nii_like(ref_img, spclust_input)
             Br_clmaps_R2[:, i] = spatclust(spclust_input,
                                            min_cluster_size=csize,
                                            threshold=max(tsoc_Babs.shape)-countsigFR2,

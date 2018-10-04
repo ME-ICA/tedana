@@ -3,9 +3,11 @@ Tests for tedana.utils
 """
 
 from os.path import join as pjoin, dirname
+
 import nibabel as nib
 import numpy as np
 import pytest
+
 from tedana import utils
 
 rs = np.random.RandomState(1234)
@@ -177,14 +179,6 @@ def test_make_min_mask():
 
     assert minmask.shape == (64350,)
     assert minmask.sum() == 58378
-
-
-def test_new_nii_like():
-    data, ref = utils.load_data(fnames, n_echos=len(tes))
-    nimg = utils.new_nii_like(ref, data)
-
-    assert isinstance(nimg, nib.Nifti1Image)
-    assert nimg.shape == (39, 50, 33, 3, 5)
 
 
 def test_filewrite():
