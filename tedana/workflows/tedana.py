@@ -324,7 +324,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         data = [data]
 
     LGR.info('Loading input data: {}'.format([f for f in data]))
-    catd, ref_img = utils.load_data(data, n_echos=n_echos)
+    catd, ref_img = io.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 

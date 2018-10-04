@@ -13,6 +13,7 @@ from nilearn.image import new_img_like
 from numpy.linalg import lstsq
 
 from tedana import model, utils
+from tedana.utils import load_image
 
 LGR = logging.getLogger(__name__)
 
@@ -593,3 +594,54 @@ def filewrite(data, filename, ref_img, gzip=False, copy_header=True):
     out.to_filename(name)
 
     return name
+
+
+def load_data(data, n_echos=None):
+    """
+    Coerces input `data` files to required 3D array output
+
+    Parameters
+    ----------
+    data : (X x Y x M x T) array_like or :obj:`list` of img_like
+        Input multi-echo data array, where `X` and `Y` are spatial dimensions,
+        `M` is the Z-spatial dimensions with all the input echos concatenated,
+        and `T` is time. A list of image-like objects (e.g., .nii) are
+        accepted, as well
+    n_echos : :obj:`int`, optional
+        Number of echos in provided data array. Only necessary if `data` is
+        array_like. Default: None
+
+    Returns
+    -------
+    fdata : (S x E x T) :obj:`numpy.ndarray`
+        Output data where `S` is samples, `E` is echos, and `T` is time
+    ref_img : :obj:`str` or :obj:`numpy.ndarray`
+        Filepath to reference image for saving output files or NIFTI-like array
+    """
+    if n_echos is None:
+        raise ValueError('Number of echos must be specified. '
+                         'Confirm that TE times are provided with the `-e` argument.')
+
+    if isinstance(data, list):
+        if len(data) == 1:  # a z-concatenated file was provided
+            data = data[0]
+        elif len(data) == 2:  # inviable -- need more than 2 echos
+            raise ValueError('Cannot run `tedana` with only two echos: '
+                             '{}'.format(data))
+        else:  # individual echo files were provided (surface or volumetric)
+            fdata = np.stack([load_image(f) for f in data], axis=1)
+            ref_img = check_niimg(data[0])
+            ref_img.header.extensions = []
+            return np.atleast_3d(fdata), ref_img
+
+    img = check_niimg(data)
+    (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
+    fdata = load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1, order='F'))
+
+    # create reference image
+    ref_img = img.__class__(np.zeros((nx, ny, nz)), affine=img.affine,
+                            header=img.header, extra=img.extra)
+    ref_img.header.extensions = []
+    ref_img.header.set_sform(ref_img.header.get_sform(), code=1)
+
+    return fdata, ref_img

@@ -139,14 +139,14 @@
 .. _calibration_ref:
 
 
-:mod:`tedana.io`: Utility functions
+:mod:`tedana.io`: IO functions
 --------------------------------------------------
 
-.. automodule:: tedana.utils
+.. automodule:: tedana.io
    :no-members:
    :no-inherited-members:
 
-.. autosummary:: tedana.utils
+.. autosummary:: tedana.io
    :toctree: generated/
    :template: module.rst
 

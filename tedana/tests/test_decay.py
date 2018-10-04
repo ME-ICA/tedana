@@ -7,7 +7,7 @@ import os.path as op
 import numpy as np
 import pytest
 
-from tedana import utils, decay as me
+from tedana import io, utils, decay as me
 from tedana.tests.utils import get_test_data_path
 
 
@@ -16,7 +16,7 @@ def testdata1():
     tes = np.array([14.5, 38.5, 62.5])
     in_files = [op.join(get_test_data_path(), 'echo{0}.nii.gz'.format(i+1))
                 for i in range(3)]
-    data, _ = utils.load_data(in_files, n_echos=len(tes))
+    data, _ = io.load_data(in_files, n_echos=len(tes))
     mask, mask_sum = utils.make_adaptive_mask(data, minimum=False, getsum=True)
     data_dict = {'data': data,
                  'tes': tes,
