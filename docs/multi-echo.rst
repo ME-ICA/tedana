@@ -44,4 +44,4 @@ find more.
 .. _Multi-echo fMRI replication sample of autobiographical memory, prospection and theory of mind reasoning tasks: https://openneuro.org/datasets/ds000210/
 .. _Multi-echo Cambridge: https://openneuro.org/datasets/ds000258
 .. _Multiband multi-echo imaging of simultaneous oxygenation and flow timeseries for resting state connectivity: https://openneuro.org/datasets/ds000254
-.. _Valence processing differs across stimulus modalities: https://openneuro.org/datasets/ds001491/versions/1.0.0
+.. _Valence processing differs across stimulus modalities: https://openneuro.org/datasets/ds001491
