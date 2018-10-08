@@ -249,7 +249,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     - Computes T2* map
     - Computes PCA of concatenated ME data, then computes TE-dependence of PCs
     - Computes ICA of TE-dependence PCs
-    - Identifies TE-dependent ICs, outputs high-\kappa (BOLD) component
+    - Identifies TE-dependent ICs, outputs high-kappa (BOLD) component
       and denoised time series
 
     or computes TE-dependence of each component of a general linear model

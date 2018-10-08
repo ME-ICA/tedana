@@ -280,6 +280,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         ttest = stats.ttest_ind(signal_FR2_Z, noise_FR2_Z, equal_var=True)
         # avoid DivideByZero RuntimeWarning
         if signal_FR2_Z.size > 0 and noise_FR2_Z.size > 0:
+            # TODO: Calling `mannwhitneyu` without specifying `alternative` is deprecated.
             mwu = stats.norm.ppf(stats.mannwhitneyu(signal_FR2_Z, noise_FR2_Z)[1])
         else:
             mwu = -np.inf
