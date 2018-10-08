@@ -9,7 +9,7 @@ of data cleaning.
 
 In ``tedana``, we take the time series from all the collected TEs, combine them,
 and decompose the resulting data into components that can be classified as BOLD
-or non-BOLD. This is performed in a series of steps including:
+or non-BOLD. This is performed in a series of steps, including:
 
 * Principal components analysis
 * Independent components analysis
@@ -21,7 +21,7 @@ or non-BOLD. This is performed in a series of steps including:
 Multi-echo data
 ```````````````
 
-Here are the echo-specific timeseries for a single voxel in an example
+Here are the echo-specific time series for a single voxel in an example
 resting-state scan with 5 echoes.
 
 .. image:: /_static/01_echo_timeseries.png
@@ -99,15 +99,15 @@ weighted average. The echoes are weighted according to the formula
 
 .. math:: w_{TE} = TE * e^{\frac{-TE}{T_{2}^*}}
 
-The weights are then normalized across echoes. For the example voxels, the
+The weights are then normalized across echoes. For the example voxel, the
 resulting weights are:
 
 .. image:: /_static/08_optimal_combination_echo_weights.png
   :width: 400 px
   :align: center
 
-The distribution of values for the optimally combined data land somewhere
-between the values for other echoes.
+The distribution of values for the optimally combined data lands somewhere
+between the distributions for other echoes.
 
 .. image:: /_static/09_optimal_combination_value_distributions.png
   :width: 400 px
@@ -124,7 +124,8 @@ TEDPCA
 The next step is to identify and temporarily remove Gaussian (thermal) noise
 with TE-dependent principal components analysis (PCA). TEDPCA applies PCA to
 the optimally combined data in order to decompose it into component maps and
-time series.
+time series. Here we can see time series for some example components (we don't
+really care about the maps):
 
 .. image:: /_static/11_pca_component_timeseries.png
 
@@ -134,9 +135,10 @@ specifics of which vary according to algorithm.
 In the simplest approach, ``tedana`` uses Minka’s MLE to estimate the
 dimensionality of the data, which disregards low-variance components.
 
-A more complicated approach involves applying a decision tree to identify PCA
-components which are not significantly TE-dependent (low Kappa) or
-TE-independent (low Rho), or which do not explain much variance.
+A more complicated approach involves applying a decision tree to identify and
+discard PCA components which, in addition to not explaining much variance,
+are also not significantly TE-dependent (i.e., have low Kappa) or
+TE-independent (i.e., have low Rho).
 
 After component selection is performed, the retained components and their
 associated betas are used to reconstruct the optimally combined data, resulting
