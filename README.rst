@@ -140,7 +140,7 @@ You can then install ``tedana`` with:
 Getting involved
 ----------------
 
-We :yellow_heart: new contributors!
+We 💛 new contributors!
 To get started, check out `our contributing guidelines`_.
 
 Want to learn more about our plans for developing ``tedana``?
