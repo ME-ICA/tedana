@@ -29,7 +29,7 @@ DOWNLOAD_URL = (
 
 REQUIRES = [
     'numpy',
-    'scikit-learn=0.19.2',
+    'scikit-learn==0.19.2',
     'mdp',
     'pywavelets',
     'nilearn',
