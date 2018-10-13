@@ -27,8 +27,13 @@ def compare_nifti(fn, test_dir, res_dir):
     """
     res_fp = (res_dir/fn).as_posix()
     test_fp = (test_dir/fn).as_posix()
-    passed = np.allclose(nib.load(res_fp).get_data(),
-                         nib.load(test_fp).get_data())
+    assert op.isfile(test_fp), 'File {0} DNE'.format(test_fp)
+
+    if op.isfile(test_fp):
+        passed = np.allclose(nib.load(res_fp).get_data(),
+                             nib.load(test_fp).get_data())
+    else:
+        passed = False
     return passed
 
 
