@@ -28,12 +28,15 @@ def compare_nifti(fn, test_dir, res_dir):
     res_fp = (res_dir/fn).as_posix()
     test_fp = (test_dir/fn).as_posix()
 
-    if op.isfile(res_fp):
-        isfile = True
-        passed = np.allclose(nib.load(res_fp).get_data(),
-                             nib.load(test_fp).get_data())
+    isfile = op.isfile(res_fp)
+    if isfile:
+        res_dat = nib.load(res_fp).get_data()
+        test_dat = nib.load(test_fp).get_data()
+        if res_dat.shape == test_dat.shape:
+            passed = np.allclose(res_dat, test_dat)
+        else:
+            passed = False
     else:
-        isfile = False
         passed = False
     return isfile, passed
 
