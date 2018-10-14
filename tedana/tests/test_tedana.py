@@ -27,18 +27,9 @@ def compare_nifti(fn, test_dir, res_dir):
     """
     res_fp = (res_dir/fn).as_posix()
     test_fp = (test_dir/fn).as_posix()
-
-    isfile = op.isfile(res_fp)
-    if isfile:
-        res_dat = nib.load(res_fp).get_data()
-        test_dat = nib.load(test_fp).get_data()
-        if res_dat.shape == test_dat.shape:
-            passed = np.allclose(res_dat, test_dat)
-        else:
-            passed = False
-    else:
-        passed = False
-    return isfile, passed
+    passed = np.allclose(nib.load(res_fp).get_data(),
+                         nib.load(test_fp).get_data())
+    return passed
 
 
 def test_outputs():
@@ -71,15 +62,11 @@ def test_outputs():
         'hik_ts_OC_T1c.nii',
         'sphis_hik.nii'
     ]
-    out1, out2 = [], []
+    out = []
     for fn in nifti_test_list:
-        isfile, passed = compare_nifti(fn, Path(op.expanduser('~/data/TED/')),
-                                       Path(op.expanduser('~/code/TED.zcat_ffd/')))
-        if not isfile:
-            out1.append(fn)
-
+        passed = compare_nifti(fn, Path(op.expanduser('~/data/TED/')),
+                               Path(op.expanduser('~/code/TED.zcat_ffd/')))
         if not passed:
-            out2.append(fn)
+            out.append(fn)
 
-    out_str = 'File DNE: '+', '.join(out1)+'\nNot passed: '+', '.join(out2)
-    assert not out1 and not out2, out_str
+    assert not out, ', '.join(out)
