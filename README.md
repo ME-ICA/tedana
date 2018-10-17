@@ -40,17 +40,32 @@ More information and documentation can be found at https://tedana.readthedocs.io
 You'll need to set up a working development environment to use `tedana`.
 To set up a local environment, you will need Python >=3.6 and the following packages will need to be installed:
 
-mdp  
-nilearn  
-nibabel>=2.1.0  
-numpy  
-scikit-learn  
-scipy
+[mdp](https://pypi.org/project/MDP/)  
+[numpy](http://www.numpy.org/)   
+[scikit-learn](http://scikit-learn.org/stable/)   
+[scipy](https://www.scipy.org/)    
+[nilearn](https://nilearn.github.io/)     
+[nibabel>=2.1.0](http://nipy.org/nibabel/)      
 
 You can then install `tedana` with
 
 ```
 pip install tedana
+```
+
+### Creating a miniconda environment for use with tedana
+In order to use tedana, you can configure a miniconda environment for your user profile in Mac and Linux systems. (Systems administrators: note that global installation of miniconda in /usr/local/ may cause some trouble for individual users; user installations are recommended; pip installation will require root privileges otherwise. Some users may need you to adjust their home directory permissions during a miniconda install). This also makes it straightforward to install nibabel and nilearn. You can use [miniconda3](https://conda.io/miniconda.html). Then, use the following commands to create the environment:
+
+```
+conda create -n ENVIRONMENT_NAME python=3 pip mdp numpy scikit-learn scipy
+source activate ENVIRONMENT_NAME
+pip install nilearn nibabel tedana
+```
+
+At this stage tedana will be added to your path, while allowing any existing tedana installations, such as the one packaged with AfNI, to remain untouched. To leave this environment, use
+
+```
+source deactivate
 ```
 
 ## Getting involved
