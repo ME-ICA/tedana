@@ -67,6 +67,15 @@ For the sake of this introduction, we can assume that the example voxel has
 good signal in all five echoes (i.e., the adaptive mask has a value of 5 at
 this voxel), so the line is fit to all available data.
 
+.. note::
+    ``tedana`` actually performs and uses two sets of T2*/S0 model fits.
+    In one case, ``tedana`` estimates T2* and S0 for voxels with good signal in at
+    least two echoes. The resulting "limited" T2* and S0 maps are used throughout
+    most of the pipeline. In the other case, ``tedana`` estimates T2* and S0 for voxels
+    with good data in only one echo as well, but uses the first two echoes for
+    those voxels. The resulting "full" T2* and S0 maps are used to generate the
+    optimally combined data.
+
 .. image:: /_static/05_loglinear_regression.png
   :width: 400 px
   :align: center
@@ -177,12 +186,12 @@ be fit to these betas. These models allow calculation of F-statistics for the
   :width: 400 px
   :align: center
 
-A decision tree is applied to $\kappa$, $\rho$, and other metrics in order to
+A decision tree is applied to :math:`\kappa`, :math:`\rho`, and other metrics in order to
 classify ICA components as TE-dependent (BOLD signal), TE-independent
 (non-BOLD noise), or neither (to be ignored). The actual decision tree is
 dependent on the component selection algorithm employed. ``tedana`` includes
-two options: `kundu_v2_5`, which uses hardcoded thresholds applied to each of
-the metrics, and `kundu_v3_2`, which trains a classifier to select components.
+two options: `kundu_v2_5` (which uses hardcoded thresholds applied to each of
+the metrics) and `kundu_v3_2` (which trains a classifier to select components).
 
 .. image:: /_static/15_denoised_data_timeseries.png
 
