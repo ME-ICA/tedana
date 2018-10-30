@@ -186,8 +186,8 @@ the metrics, and `kundu_v3_2`, which trains a classifier to select components.
 
 .. image:: /_static/15_denoised_data_timeseries.png
 
-Removal of spatially diffuse noise
-``````````````````````````````````
+Removal of spatially diffuse noise (optional)
+`````````````````````````````````````````````
 Due to the constraints of ICA, MEICA is able to identify and remove spatially
 localized noise components, but it cannot identify components that are spread
 out throughout the whole brain. See `Power et al. (2018)`_ for more information
