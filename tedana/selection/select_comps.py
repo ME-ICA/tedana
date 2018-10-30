@@ -10,7 +10,6 @@ from tedana import utils
 from tedana.selection._utils import (getelbow_mod)
 
 LGR = logging.getLogger(__name__)
-RESOURCES = pkg_resources.resource_filename('tedana', 'tests/data')
 
 
 def selcomps(seldict, mmix, manacc, n_echos):

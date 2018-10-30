@@ -11,6 +11,10 @@ analysis of multi-echo functional magnetic resonance imaging (fMRI) data.
     :target: https://pypi.python.org/pypi/tedana/
     :alt: Latest Version
 
+.. image:: https://img.shields.io/pypi/pyversions/tedana.svg
+    :target: https://pypi.python.org/pypi/tedana/
+    :alt: PyPI - Python Version
+
 .. image:: https://circleci.com/gh/ME-ICA/tedana.svg?style=svg
     :target: https://circleci.com/gh/ME-ICA/tedana
 
