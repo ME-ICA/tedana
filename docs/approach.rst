@@ -52,7 +52,7 @@ echoes, where :math:`n` is the value for that voxel in the adaptive mask.
 Monoexponential decay model fit
 ```````````````````````````````
 The next step is to fit a monoexponential decay model to the data in order to
-estimate voxel-wise T2* and S0.
+estimate voxel-wise :math:`T_{2}^*` and :math:`S_0`.
 
 In order to make it easier to fit the decay model to the data, ``tedana``
 transforms the data. The BOLD data are transformed as :math:`log(|S|+1)`, where
@@ -68,12 +68,12 @@ good signal in all five echoes (i.e., the adaptive mask has a value of 5 at
 this voxel), so the line is fit to all available data.
 
 .. note::
-    ``tedana`` actually performs and uses two sets of T2*/S0 model fits.
-    In one case, ``tedana`` estimates T2* and S0 for voxels with good signal in at
-    least two echoes. The resulting "limited" T2* and S0 maps are used throughout
-    most of the pipeline. In the other case, ``tedana`` estimates T2* and S0 for voxels
+    ``tedana`` actually performs and uses two sets of :math:`T_{2}^*`/:math:`S_0` model fits.
+    In one case, ``tedana`` estimates :math:`T_{2}^*` and :math:`S_0` for voxels with good signal in at
+    least two echoes. The resulting "limited" :math:`T_{2}^*` and :math:`S_0` maps are used throughout
+    most of the pipeline. In the other case, ``tedana`` estimates :math:`T_{2}^*` and :math:`S_0` for voxels
     with good data in only one echo as well, but uses the first two echoes for
-    those voxels. The resulting "full" T2* and S0 maps are used to generate the
+    those voxels. The resulting "full" :math:`T_{2}^*` and :math:`S_0` maps are used to generate the
     optimally combined data.
 
 .. image:: /_static/05_loglinear_regression.png
@@ -103,7 +103,7 @@ We can also see where :math:`T_{2}^*` lands on this curve.
 
 Optimal combination
 ```````````````````
-Using the T2* estimates, ``tedana`` combines signal across echoes using a
+Using the :math:`T_{2}^*` estimates, ``tedana`` combines signal across echoes using a
 weighted average. The echoes are weighted according to the formula
 
 .. math:: w_{TE} = TE * e^{\frac{-TE}{T_{2}^*}}
