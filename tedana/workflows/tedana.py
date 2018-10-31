@@ -244,29 +244,14 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     Notes
     -----
-    PROCEDURE 2 : Computes ME-PCA and ME-ICA
-
-    - Computes T2* map
-    - Computes PCA of concatenated ME data, then computes TE-dependence of PCs
-    - Computes ICA of TE-dependence PCs
-    - Identifies TE-dependent ICs, outputs high-\kappa (BOLD) component
-      and denoised time series
-
-    or computes TE-dependence of each component of a general linear model
-    specified by input (includes MELODIC FastICA mixing matrix)
-
-    PROCEDURE 2a: Model fitting and component selection routines
-
     This workflow writes out several files, which are written out to a folder
     named TED.[ref_label].[label] if ``label`` is provided and TED.[ref_label]
     if not. ``ref_label`` is determined based on the name of the first ``data``
     file.
 
-    Files are listed below:
-
-    ======================    =================================================
+    ======================    =====================================================
     Filename                  Content
-    ======================    =================================================
+    ======================    =====================================================
     t2sv.nii                  Limited estimated T2* 3D map.
                               The difference between the limited and full maps
                               is that, for voxels affected by dropout where
@@ -279,38 +264,81 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                               only one echo contains good data, the full map
                               uses the single echo's value while the limited
                               map has a NaN.
-    t2ss.nii                  ???
-    s0vs.nii                  ???
-    t2svG.nii                 Full T2* map/timeseries. The difference between
+    ts_OC.nii                 Optimally combined time series.
+    dn_ts_OC.nii              Denoised optimally combined time series.
+    lowk_ts_OC.nii            Combined time series from rejected components.
+    midk_ts_OC.nii            Combined time series from "mid-k" rejected components.
+    hik_ts_OC.nii             High-kappa time series.
+    t2ss.nii                  Voxel-wise T2* estimates using ascending numbers
+                              of echoes, starting with 2.
+    s0vs.nii                  Voxel-wise S0 estimates using ascending numbers
+                              of echoes, starting with 2.
+    t2svG.nii                 Full T2* map/time series. The difference between
                               the limited and full maps is that, for voxels
                               affected by dropout where only one echo contains
                               good data, the full map uses the single echo's
-                              value while the limited map has a NaN.
-    s0vG.nii                  Full S0 map/timeseries.
-    __meica_mix.1D            A mixing matrix
-    meica_mix.1D              Another mixing matrix
-    ts_OC.nii                 Optimally combined timeseries.
+                              value while the limited map has a NaN. Only used
+                              for optimal combination.
+    s0vG.nii                  Full S0 map/time series. Only used for optimal
+                              combination.
+    comp_table_pca.txt        TEDPCA component table. A tab-delimited file with
+                              summary metrics and inclusion/exclusion information
+                              for each component from the PCA decomposition.
+    mepca_mix.1D              Mixing matrix (component time series) from PCA
+                              decomposition.
+    __meica_mix.1D            Mixing matrix (component time series) from ICA
+                              decomposition.
+    meica_mix.1D              Mixing matrix (component time series) from ICA
+                              decomposition. The only differences between this
+                              mixing matrix and the one above are that
+                              components may be sorted differently and signs of
+                              time series may be flipped.
     betas_OC.nii              Full ICA coefficient feature set.
-    betas_hik_OC.nii          Denoised ICA coefficient feature set
+    betas_hik_OC.nii          High-kappa ICA coefficient feature set
     feats_OC2.nii             Z-normalized spatial component maps
-    comp_table.txt            Component table
+    comp_table_ica.txt        TEDICA component table. A tab-delimited file with
+                              summary metrics and inclusion/exclusion information
+                              for each component from the ICA decomposition.
+    veins_l0.nii              ???
+    veins_l1.nii              ???
+    ======================    =====================================================
+
+    If global signal correction is employed:
+
+    ======================    =====================================================
+    Filename                  Content
+    ======================    =====================================================
+    T1gs.nii                  Spatial global signal
+    glsig.1D                  Time series of global signal from optimally combined
+                              data.
+    tsoc_orig.nii             Optimally combined time series with global signal
+                              retained.
+    tsoc_nogs.nii             Optimally combined time series with global signal
+                              removed.
+    ======================    =====================================================
+
+    If T1-GS correction is employed:
+
+    ======================    =====================================================
+    Filename                  Content
+    ======================    =====================================================
     sphis_hik.nii             T1-like effect
-    hik_ts_OC_T1c.nii         T1 corrected time series by regression
-    dn_ts_OC_T1c.nii          ME-DN version of T1 corrected time series
-    betas_hik_OC_T1c.nii      T1-GS corrected components
+    hik_ts_OC_T1c.nii         T1 corrected high-kappa time series by regression
+    dn_ts_OC_T1c.nii          T1 corrected denoised time series
+    betas_hik_OC_T1c.nii      T1-GS corrected high-kappa components
     meica_mix_T1c.1D          T1-GS corrected mixing matrix
-    ======================    =================================================
+    ======================    =====================================================
 
     If ``dne`` is set to True:
 
-    ======================    =================================================
+    ======================    =====================================================
     Filename                  Content
-    ======================    =================================================
-    hik_ts_e[echo].nii        High-Kappa timeseries for echo number ``echo``
-    midk_ts_e[echo].nii       Mid-Kappa timeseries for echo number ``echo``
-    lowk_ts_e[echo].nii       Low-Kappa timeseries for echo number ``echo``
-    dn_ts_e[echo].nii         Denoised timeseries for echo number ``echo``
-    ======================    =================================================
+    ======================    =====================================================
+    hik_ts_e[echo].nii        High-Kappa time series for echo number ``echo``
+    midk_ts_e[echo].nii       Mid-Kappa time series for echo number ``echo``
+    lowk_ts_e[echo].nii       Low-Kappa time series for echo number ``echo``
+    dn_ts_e[echo].nii         Denoised time series for echo number ``echo``
+    ======================    =====================================================
     """
 
     # ensure tes are in appropriate format
