@@ -151,7 +151,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
 
     LGR.info('Fitting TE- and S0-dependent models to components')
     for i_comp in range(n_components):
-        # size of B is (n_components, nx*ny*nz)
+        # size of B is (n_echoes, n_samples)
         B = np.atleast_3d(betamask)[:, :, i_comp].T
         alpha = (np.abs(B)**2).sum(axis=0)
         varex[i_comp] = (tsoc_B[:, i_comp]**2).sum() / totvar * 100.

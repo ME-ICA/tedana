@@ -100,8 +100,8 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     -------
     n_components : :obj:`int`
         Number of components retained from PCA decomposition
-    dd : (S x E x T) :obj:`numpy.ndarray`
-        Dimensionally-reduced functional data
+    dd : (S x T) :obj:`numpy.ndarray`
+        Dimensionally reduced optimally combined functional data
 
     Notes
     -----
@@ -342,9 +342,9 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost,
     ----------
     n_components : :obj:`int`
         Number of components retained from PCA decomposition
-    dd : (S x E x T) :obj:`numpy.ndarray`
-        Dimensionally reduced functional data, where `S` is samples, `E` is
-        echos, and `T` is time
+    dd : (S x T) :obj:`numpy.ndarray`
+        Dimensionally reduced optimally combined functional data, where `S` is
+        samples and `T` is time
     conv : :obj:`float`
         Convergence limit for ICA
     fixed_seed : :obj:`int`
