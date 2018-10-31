@@ -150,9 +150,9 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     Br_S0_clmaps = np.zeros([n_voxels, n_components])
 
     LGR.info('Fitting TE- and S0-dependent models to components')
-    for i in range(n_components):
+    for i_comp in range(n_components):
         # size of B is (n_echoes, n_samples)
-        B = np.atleast_3d(betamask)[:, :, i].T
+        B = np.atleast_3d(betamask)[:, :, i_comp].T
         alpha = (np.abs(B)**2).sum(axis=0)
         varex[i_comp] = (tsoc_B[:, i_comp]**2).sum() / totvar * 100.
         varex_norm[i_comp] = (utils.unmask(WTS, mask)[t2s != 0][:, i_comp]**2).sum() /\
