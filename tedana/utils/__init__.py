@@ -12,7 +12,7 @@ from .utils import (
 
 from .io import (
     gscontrol_mmix, split_ts, write_split_ts, writefeats,
-    writect, writeresults, writeresults_echoes, ctabsel,
+    writeresults, writeresults_echoes, ctabsel,
 )
 
 
@@ -24,6 +24,6 @@ __all__ = [
     'fitgaussian', 'dice', 'andb',
     'ctabsel', 'gscontrol_mmix',
     'split_ts', 'write_split_ts',
-    'writefeats', 'writect', 'writeresults',
+    'writefeats', 'writeresults',
     'writeresults_echoes',
     ]
