@@ -24,13 +24,6 @@ dn_ts_OC.nii              Denoised optimally combined time series.
 lowk_ts_OC.nii            Combined time series from rejected components.
 midk_ts_OC.nii            Combined time series from "mid-k" rejected components.
 hik_ts_OC.nii             High-kappa time series.
-======================    =====================================================
-
-If ``verbose`` is set to True:
-
-======================    =====================================================
-Filename                  Content
-======================    =====================================================
 t2ss.nii                  Voxel-wise T2* estimates using ascending numbers
                           of echoes, starting with 2.
 s0vs.nii                  Voxel-wise S0 estimates using ascending numbers
