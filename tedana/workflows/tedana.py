@@ -8,6 +8,7 @@ import logging
 
 import argparse
 import numpy as np
+import pandas as pd
 from scipy import stats
 from tedana import (decomposition, model, selection, utils)
 from tedana.workflows.parser_utils import is_valid_file
@@ -351,7 +352,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         raise IOError('Argument "mixm" must be an existing file.')
 
     if ctab is not None and op.isfile(ctab):
-        shutil.copyfile(ctab, op.join(out_dir, 'comp_table.txt'))
+        shutil.copyfile(ctab, op.join(out_dir, 'comp_table_ica.txt'))
         shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
@@ -384,22 +385,27 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     utils.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
 
     # optimally combine data
-    OCcatd = model.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
+    data_oc = model.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
 
     # regress out global signal unless explicitly not desired
     if gscontrol:
-        catd, OCcatd = model.gscontrol_raw(catd, OCcatd, n_echos, ref_img)
+        catd, data_oc = model.gscontrol_raw(catd, data_oc, n_echos, ref_img)
 
     if mixm is None:
-        n_components, dd = decomposition.tedpca(catd, OCcatd, combmode, mask,
+        # Identify and remove thermal noise from data
+        n_components, dd = decomposition.tedpca(catd, data_oc, combmode, mask,
                                                 t2s, t2sG, stabilize, ref_img,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw,
                                                 ste=ste, wvpca=wvpca)
+        # Perform ICA on dimensionally reduced data (*without* thermal noise)
         mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, conv, fixed_seed,
                                                      cost=initcost, final_cost=finalcost,
                                                      verbose=debug)
         np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
         LGR.info('Making second component selection guess from ICA results')
+        # Estimate betas and compute selection metrics for mixing matrix
+        # generated from dimensionally reduced data using full data (i.e., data
+        # with thermal noise)
         seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
                                                                  mask, t2s, t2sG,
                                                                  tes, combmode,
@@ -407,9 +413,11 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                                  reindex=True)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask, ref_img, manacc,
-                                                   n_echos, t2s, s0, strict_mode=strict,
-                                                   filecsdata=filecsdata)
+        comptable = selection.selcomps(seldict, comptable, mmix,
+                                       mask, ref_img, manacc,
+                                       n_echos, t2s, s0,
+                                       strict_mode=strict,
+                                       filecsdata=filecsdata)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
@@ -418,21 +426,31 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                                  tes, combmode,
                                                                  ref_img)
         if ctab is None:
-            acc, rej, midk, empty = selection.selcomps(seldict, mmix, mask,
-                                                       ref_img, manacc,
-                                                       n_echos, t2s, s0,
-                                                       filecsdata=filecsdata,
-                                                       strict_mode=strict)
+            comptable = selection.selcomps(seldict, comptable, mmix,
+                                           mask, ref_img, manacc,
+                                           n_echos, t2s, s0,
+                                           filecsdata=filecsdata,
+                                           strict_mode=strict)
         else:
-            acc, rej, midk, empty = utils.ctabsel(ctab)
+            comptable = pd.read_csv(ctab, sep='\t', index_col='component')
 
+    comptable.to_csv(op.join(out_dir, 'comp_table_ica.txt'), sep='\t',
+                     index=True, index_label='component', float_format='%.6f')
+    if 'component' not in comptable.columns:
+        comptable['component'] = comptable.index
+    acc = comptable.loc[comptable['classification'] == 'accepted', 'component']
+    rej = comptable.loc[comptable['classification'] == 'rejected', 'component']
+    midk = comptable.loc[comptable['classification'] == 'midk', 'component']
+    ign = comptable.loc[comptable['classification'] == 'ignored', 'component']
     if len(acc) == 0:
         LGR.warning('No BOLD components detected! Please check data and '
                     'results!')
 
-    utils.writeresults(OCcatd, mask, comptable, mmix, fixed_seed, n_vols,
-                       acc, rej, midk, empty, ref_img)
-    utils.gscontrol_mmix(OCcatd, mmix, mask, acc, ref_img)
+    utils.writeresults(data_oc, mask=mask, comptable=comptable, mmix=mmix,
+                       n_vols=n_vols, fixed_seed=fixed_seed,
+                       acc=acc, rej=rej, midk=midk, empty=ign,
+                       ref_img=ref_img)
+    utils.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
     if dne:
         utils.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
 

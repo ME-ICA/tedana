@@ -9,3 +9,4 @@ duecredit
 sphinx-argparse
 numpydoc
 versioneer
+pandas
