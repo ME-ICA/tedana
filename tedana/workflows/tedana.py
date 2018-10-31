@@ -441,9 +441,12 @@ def _main(argv=None):
     """Tedana entry point"""
     options = _get_parser().parse_args(argv)
     if options.debug and not options.quiet:
-        logging.getLogger().setLevel(logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG)
     elif options.quiet:
-        logging.getLogger().setLevel(logging.WARNING)
+        logging.basicConfig(level=logging.WARNING)
+    else:
+        logging.basicConfig(level=logging.INFO)
+
     tedana_workflow(**vars(options))
 
 
