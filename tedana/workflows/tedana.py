@@ -435,7 +435,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
             comptable = pd.read_csv(ctab, sep='\t', index_col='component')
 
     comptable.to_csv(op.join(out_dir, 'comp_table_ica.txt'), sep='\t',
-                     index=True, index_label='component')
+                     index=True, index_label='component', float_format='%g')
     if 'component' not in comptable.columns:
         comptable['component'] = comptable.index
     acc = comptable.loc[comptable['classification'] == 'accepted', 'component']

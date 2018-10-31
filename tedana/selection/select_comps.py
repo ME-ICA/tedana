@@ -739,7 +739,8 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
             (comptable['variance explained'][to_clf] >
              np.median(comptable['variance explained'][group0]))]) == 2],
         np.union1d(toacc_hi, toacc_lo))
-    comptable.loc[midk, 'classification'] = 'midk'
+    comptable.loc[midk, 'classification'] = 'rejected'
+    comptable.loc[midk, 'rationale'] += 'midk;'
 
     # only use SVM to augment toacc_hi only if toacc_hi isn't already
     # conflicting with SVM choice

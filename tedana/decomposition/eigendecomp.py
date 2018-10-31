@@ -312,7 +312,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         ct_df.loc[under_fmin2, 'rationale'] += 'rho below fmin;'
 
     ct_df.to_csv('comp_table_pca.txt', sep='\t', index=True,
-                 index_label='component')
+                 index_label='component', float_format='%g')
 
     sel_idx = ct_df['classification'] == 'accepted'
     n_components = np.sum(sel_idx)
