@@ -54,13 +54,13 @@ for compatibility with multi-echo fMRI data and ``tedana``.
 .. image:: https://user-images.githubusercontent.com/7406227/40031156-57b7cbb8-57bc-11e8-8c51-5b29f2e86a48.png
   :target: http://tedana.readthedocs.io/
 
-.. image:: /_static/tedana-poster.png
-
 .. _ME-ICA: https://github.com/me-ica/me-ica
 .. _fmriprep: https://github.com/poldracklab/fmriprep/
 
 Citations
 ---------
+
+.. image:: /_static/tedana-poster.png
 
 When using tedana, please include the following citations:
 
@@ -119,41 +119,6 @@ You can also learn more about `why citing software is important`_.
 .. _duecredit: https://github.com/duecredit/duecredit
 .. _`why citing software is important`: https://www.software.ac.uk/how-cite-software
 
-Installation
-------------
-
-You'll need to set up a working development environment to use ``tedana``.
-To set up a local environment, you will need Python >=3.6 and the following
-packages will need to be installed:
-
-- mdp
-- nilearn
-- nibabel>=2.1.0
-- numpy
-- scikit-learn
-- scipy
-
-You can then install ``tedana`` with:
-
-.. code-block:: bash
-
-  pip install tedana
-
-Getting involved
-----------------
-
-We 💛 new contributors!
-To get started, check out `our contributing guidelines`_.
-
-Want to learn more about our plans for developing ``tedana``?
-Have a question, comment, or suggestion?
-Open or comment on one of `our issues`_!
-
-We ask that all contributions to ``tedana`` respect our `code of conduct`_.
-
-.. _our contributing guidelines: https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md
-.. _our issues: https://github.com/ME-ICA/tedana/issues
-.. _code of conduct: https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md
 
 License Information
 -------------------
@@ -166,6 +131,7 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
 
    multi-echo
    usage
+   installation
    approach
    outputs
    contributing
