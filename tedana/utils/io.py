@@ -12,6 +12,40 @@ from tedana import model, utils
 LGR = logging.getLogger(__name__)
 
 
+def generate_fname(basefile, description, extension='.nii.gz'):
+    """
+    Generate BIDS derivatives-compatible filename from components.
+
+    Parameters
+    ----------
+    basefile : :obj:`str`
+        Name of file from which to derive BIDSRawBase prefix and datatype
+        suffix.
+    description : :obj:`str`
+        Description for file. Added as "desc-<description>" field.
+    extension : :obj:`str`, optional
+        Extension for file. Default is ".nii.gz".
+
+    Returns
+    -------
+    out_file : :obj:`str`
+        BIDS derivatives-compatible filename
+    """
+    # Remove echo field from filename
+    echo_regex = re.compile('_echo-[0-9+]_')
+    temp = re.sub(echo_regex, '_', base_file)
+
+    # Get prefix
+    prefix = temp[:temp.rfind('_')]
+
+    # Grab data type (should be "_bold")
+    suffix = temp[temp.rfind('_'):]
+    suffix = suffix.split('.')[0]
+
+    out_file = prefix+'_desc-'+description+suffix+extension
+    return out_file
+
+
 def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img):
     """
     Perform global signal regression.

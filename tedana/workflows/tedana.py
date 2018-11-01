@@ -12,6 +12,7 @@ import pandas as pd
 from scipy import stats
 from tedana import (decomposition, model, selection, utils)
 from tedana.workflows.parser_utils import is_valid_file
+from tedana.utils.io import generate_fname
 
 LGR = logging.getLogger(__name__)
 
@@ -145,11 +146,11 @@ def _get_parser():
                         help='Perform PCA on wavelet-transformed data',
                         action='store_true',
                         default=False)
-    parser.add_argument('--label',
-                        dest='label',
+    parser.add_argument('--out',
+                        dest='out_dir',
                         type=str,
-                        help='Label for output directory.',
-                        default=None)
+                        help='Output directory.',
+                        default='.')
     parser.add_argument('--seed',
                         dest='fixed_seed',
                         type=int,
@@ -175,7 +176,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     ste=-1, combmode='t2s', dne=False,
                     initcost='tanh', finalcost='tanh',
                     stabilize=False, filecsdata=False, wvpca=False,
-                    label=None, fixed_seed=42, debug=False, quiet=False):
+                    out_dir='.', fixed_seed=42, debug=False, quiet=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -267,15 +268,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     kdaw, rdaw = float(kdaw), float(rdaw)
 
-    try:
-        ref_label = op.basename(ref_img).split('.')[0]
-    except TypeError:
-        ref_label = op.basename(str(data[0])).split('.')[0]
+    basefile = op.basename(data[0])
 
-    if label is not None:
-        out_dir = 'TED.{0}.{1}'.format(ref_label, label)
-    else:
-        out_dir = 'TED.{0}'.format(ref_label)
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
         LGR.info('Creating output directory: {}'.format(out_dir))
@@ -284,18 +278,19 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         LGR.info('Using output directory: {}'.format(out_dir))
 
     if mixm is not None and op.isfile(mixm):
-        shutil.copyfile(mixm, op.join(out_dir, 'meica_mix.1D'))
+        out_mixm_file = generate_fname(basefile, 'icammix', extension='.1D')
+        shutil.copyfile(mixm, op.join(out_dir, out_mixm_file))
         shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
     elif mixm is not None:
         raise IOError('Argument "mixm" must be an existing file.')
 
     if ctab is not None and op.isfile(ctab):
-        shutil.copyfile(ctab, op.join(out_dir, 'comp_table_ica.txt'))
+        out_ctab_file = generate_fname(basefile, 'icacomptable',
+                                       extension='.txt')
+        shutil.copyfile(ctab, op.join(out_dir, out_ctab_file))
         shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
-
-    os.chdir(out_dir)
 
     if mask is None:
         LGR.info('Computing adaptive mask')
@@ -315,12 +310,18 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                       interpolation_method='lower')
     LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
     t2s[t2s > cap_t2s * 10] = cap_t2s
-    utils.filewrite(t2s, op.join(out_dir, 't2sv.nii'), ref_img)
-    utils.filewrite(s0, op.join(out_dir, 's0v.nii'), ref_img)
-    utils.filewrite(t2ss, op.join(out_dir, 't2ss.nii'), ref_img)
-    utils.filewrite(s0s, op.join(out_dir, 's0vs.nii'), ref_img)
-    utils.filewrite(t2sG, op.join(out_dir, 't2svG.nii'), ref_img)
-    utils.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
+    t2sv_file = generate_fname(basefile, 't2sv', extension='.nii.gz')
+    s0v_file = generate_fname(basefile, 's0v', extension='.nii.gz')
+    t2ss_file = generate_fname(basefile, 't2ss', extension='.nii.gz')
+    s0vs_file = generate_fname(basefile, 's0vs', extension='.nii.gz')
+    t2svG_file = generate_fname(basefile, 't2svG', extension='.nii.gz')
+    s0vG_file = generate_fname(basefile, 's0vG', extension='.nii.gz')
+    utils.filewrite(t2s, op.join(out_dir, t2sv_file), ref_img)
+    utils.filewrite(s0, op.join(out_dir, s0v_file), ref_img)
+    utils.filewrite(t2ss, op.join(out_dir, t2ss_file), ref_img)
+    utils.filewrite(s0s, op.join(out_dir, s0vs_file), ref_img)
+    utils.filewrite(t2sG, op.join(out_dir, t2svG_file), ref_img)
+    utils.filewrite(s0G, op.join(out_dir, s0vG_file), ref_img)
 
     # optimally combine data
     data_oc = model.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
