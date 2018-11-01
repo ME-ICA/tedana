@@ -129,11 +129,12 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
    :maxdepth: 2
    :caption: Contents:
 
+   installation
    multi-echo
    usage
-   installation
    approach
    outputs
+   support
    contributing
    api
 

@@ -1,3 +1,19 @@
+Getting involved
+----------------
+
+We 💛 new contributors!
+To get started, check out `our contributing guidelines`_.
+
+Want to learn more about our plans for developing ``tedana``?
+Have a question, comment, or suggestion?
+Open or comment on one of `our issues`_!
+
+We ask that all contributions to ``tedana`` respect our `code of conduct`_.
+
+.. _our contributing guidelines: https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md
+.. _our issues: https://github.com/ME-ICA/tedana/issues
+.. _code of conduct: https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md
+
 Contributing to tedana
 ======================
 
@@ -11,7 +27,7 @@ For a more general guide to the tedana development, please see our
 
 
 Style Guide
------------
+===========
 
 Code
 ````
@@ -44,7 +60,7 @@ This tells the development team that your pull request is a "work-in-progress",
 and that you plan to continue working on it.
 
 Release Checklist
------------------
+=================
 
 This is the checklist of items that must be completed when cutting a new release of tedana.
 These steps can only be completed by a project maintainer, but they are a good resource for
