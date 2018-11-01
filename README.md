@@ -1,5 +1,4 @@
-tedana: TE Dependent ANAlysis
-=============================
+# tedana: TE Dependent ANAlysis
 
 The ``tedana`` package is part of the ME-ICA pipeline, performing TE-dependent
 analysis of multi-echo functional magnetic resonance imaging (fMRI) data.
@@ -15,16 +14,12 @@ multi-echo functional magnetic resonance imaging (fMRI) data.
 [![Codecov](https://codecov.io/gh/me-ica/tedana/branch/master/graph/badge.svg)](https://codecov.io/gh/me-ica/tedana)
 [![Join the chat at https://gitter.im/ME-ICA/tedana](https://badges.gitter.im/ME-ICA/tedana.svg)](https://gitter.im/ME-ICA/tedana?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-About
------
+## About
 
 ``tedana`` originally came about as a part of the [ME-ICA](https://github.com/me-ica/me-ica) pipeline.
 The ME-ICA pipeline originally performed both pre-processing and TE-dependent
 analysis of multi-echo fMRI data; however, ``tedana`` now assumes that you're
 working with data which has been previously preprocessed.
-If you're in need of a preprocessing pipeline, we recommend
-[fmriprep](https://github.com/poldracklab/fmriprep/), which has been tested
-for compatibility with multi-echo fMRI data and ``tedana``.
 
 ![http://tedana.readthedocs.io/](https://user-images.githubusercontent.com/7406227/40031156-57b7cbb8-57bc-11e8-8c51-5b29f2e86a48.png)
 
@@ -48,23 +43,28 @@ You can then install `tedana` with
 pip install tedana
 ```
 
-### Creating a miniconda environment for use with tedana
-In order to use tedana, you can configure a miniconda environment for your user profile in Mac and Linux systems. (Systems administrators: note that global installation of miniconda in /usr/local/ may cause some trouble for individual users; user installations are recommended; pip installation will require root privileges otherwise. Some users may need you to adjust their home directory permissions during a miniconda install). This also makes it straightforward to install nibabel and nilearn. You can use [miniconda3](https://conda.io/miniconda.html). Then, use the following commands to create the environment:
+### Creating a miniconda environment for use with `tedana`
+In using `tedana`, you can optionally configure [a conda environment](https://conda.io/docs/user-guide/tasks/manage-environments.html).
 
-```
-conda create -n ENVIRONMENT_NAME python=3 pip mdp numpy scikit-learn scipy
+We recommend using [miniconda3](https://conda.io/miniconda.html).
+After installation, you can use the following commands to create an environment for `tedana`:
+
+```bash
+conda create -n ENVIRONMENT_NAME python=3 pip mdp numpy scikit-learn scipy nilearn nibabel
 source activate ENVIRONMENT_NAME
-pip install nilearn nibabel tedana
+pip install tedana
 ```
 
-At this stage tedana will be added to your path, while allowing any existing tedana installations, such as the one packaged with AfNI, to remain untouched. To leave this environment, use
+`tedana` will then be available in your path.
+This will also allow any previously existing tedana installations to remain untouched.
 
-```
+To exit this conda environment, use
+
+```bash
 source deactivate
 ```
 
-Getting involved
-----------------
+## Getting involved
 
 We :yellow_heart: new contributors!
 To get started, check out [our contributing guidelines](https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md).
