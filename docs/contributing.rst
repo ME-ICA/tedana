@@ -11,9 +11,14 @@ For a more practical guide to the tedana development, please see our
 Governance
 ----------
 
+<<<<<<< HEAD
 Governance is a hugely important part of any project.
 It is especially important to have clear process and communication channels
 for open source projects that rely on a distributed network of volunteers, such as ``tedana``.
+=======
+Style Guide
+===========
+>>>>>>> upstream/master
 
 ```tedana`` is currently supported by a small group of five core developers.
 Even with only five members involved in decision making processes,
@@ -165,7 +170,11 @@ More information about what is required for a release to proceed is available in
 .. _release checklist:
 
 Release Checklist
+<<<<<<< HEAD
 """""""""""""""""
+=======
+=================
+>>>>>>> upstream/master
 
 This is the checklist of items that must be completed when cutting a new release of tedana.
 These steps can only be completed by a project maintainer, but they are a good resource for
