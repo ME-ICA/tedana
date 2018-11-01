@@ -11,14 +11,9 @@ For a more practical guide to the tedana development, please see our
 Governance
 ----------
 
-<<<<<<< HEAD
 Governance is a hugely important part of any project.
 It is especially important to have clear process and communication channels
 for open source projects that rely on a distributed network of volunteers, such as ``tedana``.
-=======
-Style Guide
-===========
->>>>>>> upstream/master
 
 ```tedana`` is currently supported by a small group of five core developers.
 Even with only five members involved in decision making processes,
@@ -87,11 +82,10 @@ We understand that it is possible to build the software to provide more
 options within the existing framework, but have chosen to focus on `the 80 percent use cases`_.
 
 You can provide feedback on this philosophy through any of the channels
-listed on the ``tedana``  `get in touch`_ page.
+listed on the ``tedana``  :doc:`support` page.
 
 .. _an LGPL2 license: https://github.com/ME-ICA/tedana/blob/master/LICENSE
 .. _the 80 percent use cases: https://en.wikipedia.org/wiki/Pareto_principle#In_software
-.. _get in touch: https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md#joining-the-conversation
 
 
 .. _prioritizing project developments:
@@ -101,14 +95,14 @@ Structuring project developments
 
 The ``tedana``  developers have chosen to structure ongoing development around specific goals.
 When implemented successfully, this focuses the direction of the project and
-helps new contributors prioritise what work needs to be completed.
+helps new contributors prioritize what work needs to be completed.
 We have outlined our goals for ``tedana`` in our :doc:`roadmap`,
-which we encourage all new contributors to read and `give feedback`_ on.
+which we encourage all contributors to read and give feedback on.
+Feedback can be provided through any of the channels listed on our :doc:`support` page.
 
 In order to more directly map between our :doc:`roadmap` and ongoing `project issues`_,
 we have also created `milestones in the github repository`_.
 
-.. _give feedback: https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md#joining-the-conversation
 .. _project issues: https://github.com/ME-ICA/tedana/issues
 .. _milestones in the github repository: https://github.com/me-ica/tedana/milestones
 
@@ -170,11 +164,7 @@ More information about what is required for a release to proceed is available in
 .. _release checklist:
 
 Release Checklist
-<<<<<<< HEAD
 """""""""""""""""
-=======
-=================
->>>>>>> upstream/master
 
 This is the checklist of items that must be completed when cutting a new release of tedana.
 These steps can only be completed by a project maintainer, but they are a good resource for
