@@ -11,7 +11,7 @@ For a more general guide to the tedana development, please see our
 
 
 Style Guide
------------
+===========
 
 Code
 ````
@@ -44,7 +44,7 @@ This tells the development team that your pull request is a "work-in-progress",
 and that you plan to continue working on it.
 
 Release Checklist
------------------
+=================
 
 This is the checklist of items that must be completed when cutting a new release of tedana.
 These steps can only be completed by a project maintainer, but they are a good resource for
