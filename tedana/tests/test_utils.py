@@ -20,7 +20,7 @@ def test_generate_fname():
                 'desc-preproc_bold.nii.gz')
     desc = 'thing'
     ext = '.nii.gz'
-    testfile = utils.io.generate_fname(basefile, extension=ext, desc='thing')
+    testfile = utils.io.generate_fname(basefile, extension=ext, desc=desc)
     assert testfile == truefile
 
 
@@ -173,11 +173,12 @@ def test_make_adaptive_mask():
     assert np.allclose(counts, np.array([13564,  3977,  5060, 41749]))
 
     # test user-defined mask
-    mask, masksum = utils.make_adaptive_mask(data, mask=op.join(datadir,
-                                                              'mask.nii.gz'),
-                                             minimum=False, getsum=True)
-    assert np.allclose(mask, nib.load(op.join(datadir,
-                                            'mask.nii.gz')).get_data().flatten())
+    mask, masksum = utils.make_adaptive_mask(
+        data, mask=op.join(datadir, 'mask.nii.gz'),
+        minimum=False, getsum=True)
+    assert np.allclose(
+        mask,
+        nib.load(op.join(datadir, 'mask.nii.gz')).get_data().flatten())
 
 
 def test_make_min_mask():
