@@ -221,7 +221,7 @@ def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, suffix=''):
         LGR.info('Writing low-Kappa time series: {}'.format(op.abspath(fout)))
 
     fout = filewrite(utils.unmask(dnts, mask),
-                           'dn_ts_{0}'.format(suffix), ref_img)
+                     'dn_ts_{0}'.format(suffix), ref_img)
     LGR.info('Writing denoised time series: {}'.format(op.abspath(fout)))
 
     return varexpl

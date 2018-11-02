@@ -387,9 +387,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     'results!')
 
     io.writeresults(data_oc, mask=mask, comptable=comptable, mmix=mmix,
-                       n_vols=n_vols, fixed_seed=fixed_seed,
-                       acc=acc, rej=rej, midk=midk, empty=ign,
-                       ref_img=ref_img)
+                    n_vols=n_vols, fixed_seed=fixed_seed,
+                    acc=acc, rej=rej, midk=midk, empty=ign,
+                    ref_img=ref_img)
     io.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
     if dne:
         io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
