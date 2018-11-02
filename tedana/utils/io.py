@@ -54,7 +54,7 @@ def generate_fname(basefile, extension='.nii.gz', **kwargs):
     # Create string with description-field pairs
     add_str = ''
     for k, v in kwargs.items():
-        add_str += f'_{k}-{v}'
+        add_str += '_{0}-{1}'.format(k, v)
 
     out_file = prefix+add_str+suffix+extension
     return out_file
