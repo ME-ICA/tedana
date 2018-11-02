@@ -1,6 +1,7 @@
 """
 Functions to handle file input/output
 """
+import re
 import logging
 import os.path as op
 
@@ -33,7 +34,7 @@ def generate_fname(basefile, description, extension='.nii.gz'):
     """
     # Remove echo field from filename
     echo_regex = re.compile('_echo-[0-9+]_')
-    temp = re.sub(echo_regex, '_', base_file)
+    temp = re.sub(echo_regex, '_', basefile)
 
     # Get prefix
     prefix = temp[:temp.rfind('_')]
