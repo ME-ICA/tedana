@@ -1,17 +1,27 @@
 """
 Tests for tedana.utils
 """
-
-from os.path import join as pjoin, dirname
+import os.path as op
 import nibabel as nib
 import numpy as np
 import pytest
 from tedana import utils
 
 rs = np.random.RandomState(1234)
-datadir = pjoin(dirname(__file__), 'data')
-fnames = [pjoin(datadir, 'echo{}.nii.gz'.format(n)) for n in range(1, 4)]
+datadir = op.join(op.dirname(__file__), 'data')
+fnames = [op.join(datadir, 'echo{}.nii.gz'.format(n)) for n in range(1, 4)]
 tes = ['14.5', '38.5', '62.5']
+
+
+def test_generate_fname():
+    truefile = ('sub-01_task-rest_run-01_space-MNI152NLin2009cAsym_'
+                'desc-preproc_desc-thing_bold.nii.gz')
+    basefile = ('sub-01_task-rest_run-01_echo-1_space-MNI152NLin2009cAsym_'
+                'desc-preproc_bold.nii.gz')
+    desc = 'thing'
+    ext = '.nii.gz'
+    testfile = utils.io.generate_fname(basefile, extension=ext, desc='thing')
+    assert testfile == truefile
 
 
 def test_get_dtype():
@@ -163,10 +173,10 @@ def test_make_adaptive_mask():
     assert np.allclose(counts, np.array([13564,  3977,  5060, 41749]))
 
     # test user-defined mask
-    mask, masksum = utils.make_adaptive_mask(data, mask=pjoin(datadir,
+    mask, masksum = utils.make_adaptive_mask(data, mask=op.join(datadir,
                                                               'mask.nii.gz'),
                                              minimum=False, getsum=True)
-    assert np.allclose(mask, nib.load(pjoin(datadir,
+    assert np.allclose(mask, nib.load(op.join(datadir,
                                             'mask.nii.gz')).get_data().flatten())
 
 
