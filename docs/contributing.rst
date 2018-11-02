@@ -32,7 +32,7 @@ during any interaction with the project.
 That includes---but is not limited to---online conversations,
 in-person workshops or development sprints, and when giving talks about the software.
 
-As is stated in the code, severe or repeated violations by community members may result in exclusion
+As it is stated in the code, severe or repeated violations by community members may result in exclusion
 from collective decision-making and rejection of future contributions to the ``tedana`` project.
 
 .. _code of conduct: https://github.com/ME-ICA/tedana/blob/master/Code_of_Conduct.md

@@ -98,7 +98,7 @@ the existing implementation.
 Moving forward, we want to grow an active development community,
 where developers feel empowered to explore new enhancements to the ``tedana`` code base.
 
-One means to ensure that new code does not introduce silent failures is through extensive testing.
+One means to ensure that new code does not introduce bugs is through extensive testing.
 We are therefore committed to implementing high test coverage at both
 the unit test and integration test levels;
 that is, both in testing individual functions and broader workflows, respectively.

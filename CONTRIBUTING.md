@@ -25,7 +25,7 @@ We also maintain a [gitter chat room][link_gitter] for more informal conversatio
 There is significant cross-talk between these two spaces, and we look forward to hearing from you in either venue!
 As a reminder, we expect all contributions to `tedana` to adhere to our [code of conduct][link_coc].
 
-## Explaining issues, milestones and project boards
+## Understanding issues, milestones and project boards
 
 Every project on GitHub uses [issues][link_issues], [milestones][link_milestones],
 and [project boards][link_project_boards] slightly differently.
@@ -110,7 +110,9 @@ When opening a pull request, please use at least one of the following prefixes:
 * **[TST]** for new or updated tests
 * **[DOC]** for new or updated documentation
 * **[STY]** for stylistic changes
-* **[RF]** for refactoring existing code
+* **[REF]** for refactoring existing code
+* **[BRK]** for changes which break existing builds or tests
+* **[WIP]** for changes which are not yet ready to be merged
 
 Pull requests should be submitted early and often!
 If your pull request is not yet ready to be merged, please also include the **[WIP]** prefix.
