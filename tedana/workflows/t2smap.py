@@ -217,9 +217,12 @@ def _main(argv=None):
     """T2smap entry point"""
     options = _get_parser().parse_args(argv)
     if options.debug and not options.quiet:
-        logging.getLogger().setLevel(logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG)
     elif options.quiet:
-        logging.getLogger().setLevel(logging.WARNING)
+        logging.basicConfig(level=logging.WARNING)
+    else:
+        logging.basicConfig(level=logging.INFO)
+
     t2smap_workflow(**vars(options))
 
 

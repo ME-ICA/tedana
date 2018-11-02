@@ -7,11 +7,11 @@ For a more general guide to the tedana development, please see our
 `contributing guide`_. Please also follow our `code of conduct`_.
 
 .. _contributing guide: https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md
-.. _code of conduct: https://github.com/ME-ICA/tedana/blob/master/Code_of_Conduct.md
+.. _code of conduct: https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md
 
 
 Style Guide
------------
+===========
 
 Code
 ````
@@ -44,7 +44,7 @@ This tells the development team that your pull request is a "work-in-progress",
 and that you plan to continue working on it.
 
 Release Checklist
-`````````````````
+=================
 
 This is the checklist of items that must be completed when cutting a new release of tedana.
 These steps can only be completed by a project maintainer, but they are a good resource for
@@ -55,7 +55,7 @@ releasing your own Python projects!
        `Release-drafter`_ should have already drafted release notes listing all
        changes since the last release; check to make sure these are correct.
     #. Pulling from the ``master`` branch, locally build a new copy of tedana and
-        `upload it to PyPi`_.
+       `upload it to PyPi`_.
 
 We have set up tedana so that releases automatically mint a new DOI with Zenodo;
 a guide for doing this integration is available `here`_.
