@@ -34,9 +34,14 @@ When opening a pull request, please use one of the following prefixes:
     + **[TST]** for new or updated tests
     + **[DOC]** for new or updated documentation
     + **[STY]** for stylistic changes
-    + **[RF]** for refactoring existing code
+    + **[REF]** for refactoring existing code
+    + **[WIP]** for works in progress
 
 Pull requests should be submitted early and often!
 If your pull request is not yet ready to be merged, please also include the **[WIP]** prefix.
 This tells the development team that your pull request is a "work-in-progress",
 and that you plan to continue working on it.
+
+You can also combine the tags above, for example if you are updating both a test and
+the documentation: **[TST, DOC]**. If you're still working on the pull request that
+prefix would be **[WIP, TST, DOC]**.
