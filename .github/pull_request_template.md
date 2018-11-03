@@ -9,8 +9,12 @@ See here for more information and a list of available options:
 http://tedana.readthedocs.io/en/latest/contributing.html#pull-requests
 -->
 
+<!-- Please indicate after the # which issue you're closing with this PR -->
 Closes # .
 
+<!-- Please give a brief overview of what has changed in the PR.
+If you're not sure what to write, consider it a note to the maintainers to indicate
+what they should be looking for when they review the pull request. -->
 Changes proposed in this pull request:
 
 -
