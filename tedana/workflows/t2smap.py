@@ -5,25 +5,101 @@ import os
 import os.path as op
 import logging
 
+import argparse
 import numpy as np
 from scipy import stats
 
 from tedana import model, utils
+from tedana.workflows.parser_utils import is_valid_file
 
 LGR = logging.getLogger(__name__)
 
 
-def t2smap(data, tes, fitmode='all', combmode='t2s', label=None):
+def _get_parser():
+    """
+    Parses command line inputs for tedana
+
+    Returns
+    -------
+    parser.parse_args() : argparse dict
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d',
+                        dest='data',
+                        nargs='+',
+                        metavar='FILE',
+                        type=lambda x: is_valid_file(parser, x),
+                        help=('Multi-echo dataset for analysis. May be a '
+                              'single file with spatially concatenated data '
+                              'or a set of echo-specific files, in the same '
+                              'order as the TEs are listed in the -e '
+                              'argument.'),
+                        required=True)
+    parser.add_argument('-e',
+                        dest='tes',
+                        nargs='+',
+                        metavar='TE',
+                        type=float,
+                        help='Echo times (in ms). E.g., 15.0 39.0 63.0',
+                        required=True)
+    parser.add_argument('--mask',
+                        dest='mask',
+                        metavar='FILE',
+                        type=lambda x: is_valid_file(parser, x),
+                        help=('Binary mask of voxels to include in TE '
+                              'Dependent ANAlysis. Must be in the same '
+                              'space as `data`.'),
+                        default=None)
+    parser.add_argument('--fitmode',
+                        dest='fitmode',
+                        action='store',
+                        choices=['all', 'ts'],
+                        help=('Monoexponential model fitting scheme. '
+                              '"all" means that the model is fit, per voxel, '
+                              'across all timepoints. '
+                              '"ts" means that the model is fit, per voxel '
+                              'and per timepoint.'),
+                        default='all')
+    parser.add_argument('--combmode',
+                        dest='combmode',
+                        action='store',
+                        choices=['t2s', 'ste'],
+                        help=('Combination scheme for TEs: '
+                              't2s (Posse 1999, default), ste (Poser)'),
+                        default='t2s')
+    parser.add_argument('--label',
+                        dest='label',
+                        type=str,
+                        help='Label for output directory.',
+                        default=None)
+    parser.add_argument('--debug',
+                        dest='debug',
+                        help=argparse.SUPPRESS,
+                        action='store_true',
+                        default=False)
+    parser.add_argument('--quiet',
+                        dest='quiet',
+                        help=argparse.SUPPRESS,
+                        action='store_true',
+                        default=False)
+    return parser
+
+
+def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
+                    label=None, debug=False, quiet=False):
     """
     Estimate T2 and S0, and optimally combine data across TEs.
 
     Parameters
     ----------
-    data : :obj:`list` of :obj:`str`
-        Either a single z-concatenated file (single-entry list) or a
+    data : :obj:`str` or :obj:`list` of :obj:`str`
+        Either a single z-concatenated file (single-entry list or str) or a
         list of echo-specific files, in ascending order.
     tes : :obj:`list`
         List of echo times associated with data in milliseconds.
+    mask : :obj:`str`, optional
+        Binary mask of voxels to include in TE Dependent ANAlysis. Must be spatially
+        aligned with `data`.
     fitmode : {'all', 'ts'}, optional
         Monoexponential model fitting scheme.
         'all' means that the model is fit, per voxel, across all timepoints.
@@ -33,6 +109,14 @@ def t2smap(data, tes, fitmode='all', combmode='t2s', label=None):
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
     label : :obj:`str` or :obj:`None`, optional
         Label for output directory. Default is None.
+
+    Other Parameters
+    ----------------
+    debug : :obj:`bool`, optional
+        Whether to run in debugging mode or not. Default is False.
+    quiet : :obj:`bool`, optional
+        If True, suppresses logging/printing of messages. Default is False.
+
 
     Notes
     -----
@@ -64,6 +148,9 @@ def t2smap(data, tes, fitmode='all', combmode='t2s', label=None):
     n_echos = len(tes)
 
     # coerce data to samples x echos x time array
+    if isinstance(data, str):
+        data = [data]
+
     LGR.info('Loading input data: {}'.format([f for f in data]))
     catd, ref_img = utils.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
@@ -85,19 +172,20 @@ def t2smap(data, tes, fitmode='all', combmode='t2s', label=None):
     else:
         LGR.info('Using output directory: {}'.format(out_dir))
 
-    LGR.info('Computing adaptive mask')
+    if mask is None:
+        LGR.info('Computing adaptive mask')
+    else:
+        LGR.info('Using user-defined mask')
     mask, masksum = utils.make_adaptive_mask(catd, minimum=False, getsum=True)
 
     LGR.info('Computing adaptive T2* map')
     if fitmode == 'all':
         (t2s_limited, s0_limited,
          t2ss, s0s,
-         t2s_full, s0_full) = model.fit_decay(catd, tes, mask,
-                                              masksum, start_echo=1)
+         t2s_full, s0_full) = model.fit_decay(catd, tes, mask, masksum)
     else:
         (t2s_limited, s0_limited,
-         t2s_full, s0_full) = model.fit_decay_ts(catd, tes, mask, masksum,
-                                                 start_echo=1)
+         t2s_full, s0_full) = model.fit_decay_ts(catd, tes, mask, masksum)
 
     # set a hard cap for the T2* map/timeseries
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
@@ -123,3 +211,20 @@ def t2smap(data, tes, fitmode='all', combmode='t2s', label=None):
     utils.filewrite(t2s_full, op.join(out_dir, 't2svG.nii'), ref_img)
     utils.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
     utils.filewrite(OCcatd, op.join(out_dir, 'ts_OC.nii'), ref_img)
+
+
+def _main(argv=None):
+    """T2smap entry point"""
+    options = _get_parser().parse_args(argv)
+    if options.debug and not options.quiet:
+        logging.basicConfig(level=logging.DEBUG)
+    elif options.quiet:
+        logging.basicConfig(level=logging.WARNING)
+    else:
+        logging.basicConfig(level=logging.INFO)
+
+    t2smap_workflow(**vars(options))
+
+
+if __name__ == '__main__':
+    _main()

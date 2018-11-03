@@ -1,6 +1,25 @@
 API
 ===
 
+:mod:`tedana.workflows`: Common workflows
+--------------------------------------------------
+
+.. automodule:: tedana.workflows
+   :no-members:
+   :no-inherited-members:
+
+.. autosummary:: tedana.workflows
+   :template: function.rst
+   :toctree: generated/
+
+   tedana.workflows.tedana_workflow
+   tedana.workflows.t2smap_workflow
+
+.. currentmodule:: tedana
+
+.. _calibration_ref:
+
+
 :mod:`tedana.model`: Modeling TE-dependence
 --------------------------------------------------
 
@@ -72,24 +91,6 @@ API
 
 .. _calibration_ref:
 
-
-:mod:`tedana.workflows`: Common workflows
---------------------------------------------------
-
-.. automodule:: tedana.workflows
-   :no-members:
-   :no-inherited-members:
-
-.. autosummary:: tedana.workflows
-   :template: function.rst
-   :toctree: generated/
-
-   tedana.workflows.tedana
-   tedana.workflows.t2smap
-
-.. currentmodule:: tedana
-
-.. _calibration_ref:
 
 :mod:`tedana.utils`: Utility functions
 --------------------------------------------------

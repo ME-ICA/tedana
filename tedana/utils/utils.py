@@ -1,8 +1,6 @@
 """
 Utilities for tedana package
 """
-import os.path as op
-
 import nibabel as nib
 from nibabel.filename_parser import splitext_addext
 from nilearn.image import new_img_like
@@ -13,8 +11,7 @@ from sklearn.utils import check_array
 
 from ..due import due, BibTeX
 
-FORMATS = {'.nii': 'NIFTI',
-           '.gii': 'GIFTI'}
+FORMATS = {'.nii': 'NIFTI'}
 
 
 def get_dtype(data):
@@ -23,12 +20,12 @@ def get_dtype(data):
 
     Parameters
     ----------
-    data : list-of-str or str or img_like
+    data : :obj:`list` of :obj:`str` or :obj:`str` or img_like
         Data to determine format of
 
     Returns
     -------
-    dtype : {'NIFTI', 'GIFTI', 'OTHER'} str
+    dtype : {'NIFTI', 'OTHER'} str
         Format of input data
     """
 
@@ -54,12 +51,12 @@ def getfbounds(n_echos):
 
     Parameters
     ----------
-    n_echos : int
+    n_echos : :obj:`int`
         Number of echoes
 
     Returns
     -------
-    fmin, fmid, fmax : float
+    fmin, fmid, fmax : :obj:`float`
         Minimum, mid, and max F bounds
     """
 
@@ -93,11 +90,7 @@ def load_image(data):
     """
 
     if isinstance(data, str):
-        if get_dtype(data) == 'GIFTI':
-            fdata = np.column_stack([f.data for f in nib.load(data).darrays])
-            return fdata
-        elif get_dtype(data) == 'NIFTI':
-            data = check_niimg(data).get_data()
+        data = check_niimg(data).get_data()
     elif isinstance(data, nib.spatialimages.SpatialImage):
         data = check_niimg(data).get_data()
 
@@ -112,12 +105,12 @@ def load_data(data, n_echos=None):
 
     Parameters
     ----------
-    data : (X x Y x M x T) array_like or list-of-img_like
+    data : (X x Y x M x T) array_like or :obj:`list` of img_like
         Input multi-echo data array, where `X` and `Y` are spatial dimensions,
         `M` is the Z-spatial dimensions with all the input echos concatenated,
-        and `T` is time. A list of image-like objects (e.g., .nii or .gii) are
+        and `T` is time. A list of image-like objects (e.g., .nii) are
         accepted, as well
-    n_echos : int, optional
+    n_echos : :obj:`int`, optional
         Number of echos in provided data array. Only necessary if `data` is
         array_like. Default: None
 
@@ -125,7 +118,7 @@ def load_data(data, n_echos=None):
     -------
     fdata : (S x E x T) :obj:`numpy.ndarray`
         Output data where `S` is samples, `E` is echos, and `T` is time
-    ref_img : str or :obj:`numpy.ndarray`
+    ref_img : :obj:`str` or :obj:`numpy.ndarray`
         Filepath to reference image for saving output files or NIFTI-like array
     """
     if n_echos is None:
@@ -139,13 +132,10 @@ def load_data(data, n_echos=None):
             raise ValueError('Cannot run `tedana` with only two echos: '
                              '{}'.format(data))
         else:  # individual echo files were provided (surface or volumetric)
-            if get_dtype(data) == 'GIFTI':  # NOTE: only handles .[L/R].func.gii files
-                echos = np.array_split(data, n_echos)
-                fdata = np.stack([np.vstack([load_image(f) for f in e]) for e in echos], axis=1)
-                return np.atleast_3d(fdata), data[0]
-            else:
-                fdata = np.stack([load_image(f) for f in data], axis=1)
-                return np.atleast_3d(fdata), data[0]
+            fdata = np.stack([load_image(f) for f in data], axis=1)
+            ref_img = check_niimg(data[0])
+            ref_img.header.extensions = []
+            return np.atleast_3d(fdata), ref_img
 
     img = check_niimg(data)
     (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
@@ -160,7 +150,7 @@ def load_data(data, n_echos=None):
     return fdata, ref_img
 
 
-def make_adaptive_mask(data, minimum=True, getsum=False):
+def make_adaptive_mask(data, mask=None, minimum=True, getsum=False):
     """
     Makes map of `data` specifying longest echo a voxel can be sampled with
 
@@ -169,35 +159,40 @@ def make_adaptive_mask(data, minimum=True, getsum=False):
     data : (S x E x T) array_like
         Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
         time
-    minimum : bool, optional
+    mask : :obj:`str` or img_like, optional
+        Binary mask for voxels to consider in TE Dependent ANAlysis. Default is
+        to generate mask from data with good signal across echoes
+    minimum : :obj:`bool`, optional
         Use `make_min_mask()` instead of generating a map with echo-specific
         times. Default: True
-    getsum : bool, optional
+    getsum : :obj:`bool`, optional
         Return `masksum` in addition to `mask`. Default: False
 
     Returns
     -------
-    mask : (S, ) :obj:`numpy.ndarray`
+    mask : (S,) :obj:`numpy.ndarray`
         Boolean array of voxels that have sufficient signal in at least one
         echo
-    masksum : (S, ) :obj:`numpy.ndarray`
+    masksum : (S,) :obj:`numpy.ndarray`
         Valued array indicating the number of echos with sufficient signal in a
         given voxel. Only returned if `getsum = True`
     """
 
     if minimum:
-        return make_min_mask(data)
+        return make_min_mask(data, roi=mask)
 
     # take temporal mean of echos and extract non-zero values in first echo
     echo_means = data.mean(axis=-1)  # temporal mean of echos
     first_echo = echo_means[echo_means[:, 0] != 0, 0]
 
     # get 33rd %ile of `first_echo` and find corresponding index
-    perc_33 = np.percentile(first_echo, 33, interpolation='higher')  # QUESTION: why 33%ile?
-    med_val = (echo_means[:, 0] == perc_33)
+    # NOTE: percentile is arbitrary
+    perc = np.percentile(first_echo, 33, interpolation='higher')
+    perc_val = (echo_means[:, 0] == perc)
 
     # extract values from all echos at relevant index
-    lthrs = np.squeeze(echo_means[med_val].T) / 3  # QUESTION: why divide by 3?
+    # NOTE: threshold of 1/3 voxel value is arbitrary
+    lthrs = np.squeeze(echo_means[perc_val].T) / 3
 
     # if multiple samples were extracted per echo, keep the one w/the highest signal
     if lthrs.ndim > 1:
@@ -206,8 +201,14 @@ def make_adaptive_mask(data, minimum=True, getsum=False):
     # determine samples where absolute value is greater than echo-specific thresholds
     # and count # of echos that pass criterion
     masksum = (np.abs(echo_means) > lthrs).sum(axis=-1)
-    # make it a boolean mask to (where we have at least 1 echo with good signal)
-    mask = masksum.astype(bool)
+
+    if mask is None:
+        # make it a boolean mask to (where we have at least 1 echo with good signal)
+        mask = masksum.astype(bool)
+    else:
+        # if the user has supplied a binary mask
+        mask = load_image(mask).astype(bool)
+        masksum = masksum * mask
 
     if getsum:
         return mask, masksum
@@ -215,7 +216,7 @@ def make_adaptive_mask(data, minimum=True, getsum=False):
     return mask
 
 
-def make_min_mask(data):
+def make_min_mask(data, roi=None):
     """
     Generates a 3D mask of `data`
 
@@ -227,74 +228,61 @@ def make_min_mask(data):
     data : (S x E x T) array_like
         Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
         time
+    roi : :obj:`str`, optional
+        Binary mask for region-of-interest to consider in TE Dependent ANAlysis
 
     Returns
     -------
-    mask : (S, ) :obj:`numpy.ndarray`
+    mask : (S,) :obj:`numpy.ndarray`
         Boolean array
     """
 
     data = np.asarray(data).astype(bool)
-    return data.prod(axis=-1).prod(axis=-1).astype(bool)
+    mask = data.prod(axis=-1).prod(axis=-1).astype(bool)
+
+    if roi is None:
+        return mask
+    else:
+        roi = load_image(roi).astype(bool)
+        return np.logical_and(mask, roi)
 
 
-def filewrite(data, filename, ref_img, gzip=False, copy_header=True,
-              copy_meta=False):
+def filewrite(data, filename, ref_img, gzip=False, copy_header=True):
     """
     Writes `data` to `filename` in format of `ref_img`
-
-    If `ref_img` dtype is GIFTI, then `data` is assumed to be stacked L/R
-    hemispheric and will be split and saved as two files
 
     Parameters
     ----------
     data : (S [x T]) array_like
         Data to be saved
-    filename : str
+    filename : :obj:`str`
         Filepath where data should be saved to
-    ref_img : str or img_like
+    ref_img : :obj:`str` or img_like
         Reference image
-    gzip : bool, optional
+    gzip : :obj:`bool`, optional
         Whether to gzip output (if not specified in `filename`). Only applies
         if output dtype is NIFTI. Default: False
-    copy_header : bool, optional
+    copy_header : :obj:`bool`, optional
         Whether to copy header from `ref_img` to new image. Default: True
-    copy_meta : bool, optional
-        Whether to copy meta from `ref_img` to new image. Only applies if
-        output dtype is GIFTI. Default: False
 
     Returns
     -------
-    name : str
+    name : :obj:`str`
         Path of saved image (with added extensions, as appropriate)
     """
 
-    # get datatype and reference image for comparison
-    dtype = get_dtype(ref_img)
+    # get reference image for comparison
     if isinstance(ref_img, list):
         ref_img = ref_img[0]
 
-    # ensure that desired output type (from name) is compatible with `dtype`
-    root, ext, add = splitext_addext(filename)
-    if ext != '' and FORMATS[ext] != dtype:
-        raise ValueError('Cannot write {} data to {} file. Please ensure file'
-                         'formats are compatible'.format(dtype, FORMATS[ext]))
+    # generate out file for saving
+    out = new_nii_like(ref_img, data, copy_header=copy_header)
 
-    if dtype == 'NIFTI':
-        out = new_nii_like(ref_img, data, copy_header=copy_header)
-        name = '{}.{}'.format(root, 'nii.gz' if gzip else 'nii')
-        out.to_filename(name)
-    elif dtype == 'GIFTI':
-        # remove possible hemispheric denotations from root
-        root = op.join(op.dirname(root), op.basename(root).split('.')[0])
-        # save hemispheres separately
-        for n, (hdata, hemi) in enumerate(zip(np.split(data, 2, axis=0),
-                                              ['L', 'R'])):
-            out = new_gii_like(ref_img, hdata,
-                               copy_header=copy_header,
-                               copy_meta=copy_meta)
-            name = '{}.{}.func.gii'.format(root, hemi)
-            out.to_filename(name)
+    # FIXME: we only handle writing to nifti right now
+    # get root of desired output file and save as nifti image
+    root, ext, add = splitext_addext(filename)
+    name = '{}.{}'.format(root, 'nii.gz' if gzip else 'nii')
+    out.to_filename(name)
 
     return name
 
@@ -305,13 +293,13 @@ def new_nii_like(ref_img, data, affine=None, copy_header=True):
 
     Parameters
     ----------
-    ref_img : str or img_like
+    ref_img : :obj:`str` or img_like
         Reference image
     data : (S [x T]) array_like
         Data to be saved
     affine : (4 x 4) array_like, optional
         Transformation matrix to be used. Default: `ref_img.affine`
-    copy_header : bool, optional
+    copy_header : :obj:`bool`, optional
         Whether to copy header from `ref_img` to new image. Default: True
 
     Returns
@@ -321,84 +309,18 @@ def new_nii_like(ref_img, data, affine=None, copy_header=True):
     """
 
     ref_img = check_niimg(ref_img)
-    nii = new_img_like(ref_img,
-                       data.reshape(ref_img.shape[:3] + data.shape[1:]),
-                       affine=affine,
-                       copy_header=copy_header)
+    newdata = data.reshape(ref_img.shape[:3] + data.shape[1:])
+    if '.nii' not in ref_img.valid_exts:
+        # this is rather ugly and may lose some information...
+        nii = nib.Nifti1Image(newdata, affine=ref_img.affine,
+                              header=ref_img.header)
+    else:
+        # nilearn's `new_img_like` is a very nice function
+        nii = new_img_like(ref_img, newdata, affine=affine,
+                           copy_header=copy_header)
     nii.set_data_dtype(data.dtype)
 
     return nii
-
-
-def new_gii_like(ref_img, data, copy_header=True, copy_meta=False):
-    """
-    Coerces `data` into GiftiImage format like `ref_img`
-
-    Parameters
-    ----------
-    ref_img : str or img_like
-        Reference image
-    data : (S [x T]) array_like
-        Data to be saved
-    copy_header : bool, optional
-        Whether to copy header from `ref_img` to new image. Default: True
-    copy_meta : bool, optional
-        Whether to copy meta from `ref_img` to new image. Default: False
-
-    Returns
-    -------
-    gii : :obj:`nibabel.gifti.gifti.GiftiImage`
-        GiftiImage
-    """
-
-    if isinstance(ref_img, str):
-        ref_img = nib.load(ref_img)
-
-    if data.ndim == 1:
-        data = np.atleast_2d(data).T
-
-    darrays = [make_gii_darray(ref_img.darrays[n], d, copy_meta=copy_meta)
-               for n, d in enumerate(data.T)]
-    gii = nib.gifti.GiftiImage(header=ref_img.header if copy_header else None,
-                               extra=ref_img.extra,
-                               meta=ref_img.meta if copy_meta else None,
-                               labeltable=ref_img.labeltable,
-                               darrays=darrays)
-
-    return gii
-
-
-def make_gii_darray(ref_array, data, copy_meta=False):
-    """
-    Converts `data` into GiftiDataArray format like `ref_array`
-
-    Parameters
-    ----------
-    ref_array : str or img_like
-        Reference array
-    data : (S,) array_like
-        Data to be saved
-    copy_meta : bool, optional
-        Whether to copy meta from `ref_img` to new image. Default: False
-
-    Returns
-    -------
-    gii : :obj:`nibabel.gifti.gifti.GiftiDataArray`
-        Output data array instance
-    """
-
-    if not isinstance(ref_array, nib.gifti.GiftiDataArray):
-        raise TypeError('Provided reference is not a GiftiDataArray.')
-    darray = nib.gifti.GiftiDataArray(data,
-                                      intent=ref_array.intent,
-                                      datatype=data.dtype,
-                                      encoding=ref_array.encoding,
-                                      endian=ref_array.endian,
-                                      coordsys=ref_array.coordsys,
-                                      ordering=ref_array.ind_ord,
-                                      meta=ref_array.meta if copy_meta else None)
-
-    return darray
 
 
 def unmask(data, mask):
@@ -435,11 +357,11 @@ def moments(data):
 
     Returns
     -------
-    height : float
-    center_x : float
-    center_y : float
-    width_x : float
-    width_y : float
+    height : :obj:`float`
+    center_x : :obj:`float`
+    center_y : :obj:`float`
+    width_x : :obj:`float`
+    width_y : :obj:`float`
 
     References
     ----------
@@ -466,11 +388,11 @@ def gaussian(height, center_x, center_y, width_x, width_y):
 
     Parameters
     ----------
-    height : float
-    center_x : float
-    center_y : float
-    width_x : float
-    width_y : float
+    height : :obj:`float`
+    center_x : :obj:`float`
+    center_y : :obj:`float`
+    width_x : :obj:`float`
+    width_y : :obj:`float`
 
     Returns
     -------
@@ -548,12 +470,12 @@ def dice(arr1, arr2):
 
     Parameters
     ----------
-    arr1, arr2 : array-like
+    arr1, arr2 : array_like
         Input arrays, arrays to binarize and compare.
 
     Returns
     -------
-    dsi : float
+    dsi : :obj:`float`
         Dice-Sorenson index.
 
     References
@@ -584,7 +506,7 @@ def andb(arrs):
 
     Parameters
     ----------
-    arrs : list
+    arrs : :obj:`list`
         List of boolean or integer arrays to be summed
 
     Returns

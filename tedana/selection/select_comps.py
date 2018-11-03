@@ -1,11 +1,9 @@
 """
 Functions to identify TE-dependent and TE-independent components.
 """
-import os
 import json
 import logging
 import pickle
-import pkg_resources
 
 from nilearn._utils import check_niimg
 import numpy as np
@@ -17,11 +15,11 @@ from tedana.selection._utils import (getelbow_cons, getelbow_mod,
                                      getelbow_aggr, do_svm)
 
 LGR = logging.getLogger(__name__)
-RESOURCES = pkg_resources.resource_filename('tedana', 'tests/data')
 
 
-def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
-             oversion=99, filecsdata=True, savecsdiag=True, strict_mode=False):
+def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
+             olevel=2, oversion=99, filecsdata=True, savecsdiag=True,
+             strict_mode=False):
     """
     Labels ICA components to keep or remove from denoised data
 
@@ -34,45 +32,41 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     Parameters
     ----------
     seldict : :obj:`dict`
+        A dictionary with component-specific features used for classification.
         As output from `fitmodels_direct`
-    mmix : (C x T) array_like
+    comptable : (C x 5) :obj:`pandas.DataFrame`
+        Component metric table
+    mmix : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the number of volumes in the original data
     mask : (S,) array_like
         Boolean mask array
-    ref_img : str or img_like
+    ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
-    manacc : list
+    manacc : :obj:`list`
         Comma-separated list of indices of manually accepted components
-    n_echos : int
+    n_echos : :obj:`int`
         Number of echos in original data
     t2s : (S,) array_like
+        Estimated T2* map
     s0 : (S,) array_like
-    olevel : int, optional
+        S0 map
+    olevel : :obj:`int`, optional
         Default: 2
-    oversion : int, optional
+    oversion : :obj:`int`, optional
         Default: 99
-    filecsdata: bool, optional
+    filecsdata: :obj:`bool`, optional
         Default: False
-    savecsdiag: bool, optional
+    savecsdiag: :obj:`bool`, optional
         Default: True
-    strict_mode: bool, optional
+    strict_mode: :obj:`bool`, optional
         Default: False
 
     Returns
     -------
-    acc : list
-        Indices of accepted (BOLD) components in `mmix`
-    rej : list
-        Indices of rejected (non-BOLD) components in `mmix`
-    midk : list
-        Indices of mid-K (questionable) components in `mmix`
-        These components are typically removed from the data during denoising
-    ign : list
-        Indices of ignored components in `mmix`
-        Ignored components are considered to have too low variance to matter.
-        They are not processed through the accept vs reject decision tree and
-        are NOT removed during the denoising process
+    comptable : :obj:`pandas.DataFrame`
+        Updated component table with additional metrics and with
+        classification (accepted, rejected, midk, or ignored)
 
     Notes
     -----
@@ -96,6 +90,20 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     based on how similar metrics in one component are similar to metrics in
     other components.
     """
+    if mmix.ndim != 2:
+        raise ValueError('Parameter mmix should be 2d, not {0}d'.format(mmix.ndim))
+    elif t2s.ndim != 1:  # FIT not necessarily supported
+        raise ValueError('Parameter t2s should be 1d, not {0}d'.format(t2s.ndim))
+    elif s0.ndim != 1:  # FIT not necessarily supported
+        raise ValueError('Parameter s0 should be 1d, not {0}d'.format(s0.ndim))
+    elif not (t2s.shape[0] == s0.shape[0] == mask.shape[0]):
+        raise ValueError('First dimensions (number of samples) of t2s ({0}), '
+                         's0 ({1}), and mask ({2}) do not '
+                         'match'.format(t2s.shape[0], s0.shape[0], mask.shape[0]))
+    elif not (mmix.shape[1] == comptable.shape[0]):
+        raise ValueError('Second dimension (number of components) of mmix '
+                         '({0}) does not match first dimension of comptable '
+                         '({1})'.format(mmix.shape[1], comptable.shape[0]))
 
     """
     handwerkerd and others are working to "hypercomment" this function to
@@ -121,20 +129,20 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     this function continues.
 
     Intermediate Metrics:  seldict['F_S0_clmaps'] seldict['F_R2_clmaps']
-        seldict['Br_clmaps_S0'] seldict['Br_clmaps_R2'] seldict['Z_maps']
+        seldict['Br_S0_clmaps'] seldict['Br_R2_clmaps'] seldict['Z_maps']
         dice_tbl countnoise
         counts_FR2_Z tt_table mmix_kurt mmix_std
         spr fproj_arr_val fdist
         Rtz, Dz
 
-    Applied Metrices:
-        seldict['Rhos']
-        seldict['Kappas']
-        seldict['varex']
+    Applied Metrics:
+        comptable['rho']
+        comptable['kappa']
+        comptable['variance explained']
         countsigFS0
         countsigFR2
         fz (a combination of multiple z-scored metrics: tt_table,
-            seldict['varex'], seldict['Kappa'], seldict['Rho'], countnoise,
+            comptable['variance explained'], seldict['Kappa'], seldict['Rho'], countnoise,
             mmix_kurt, fdist)
         tt_table[:,0]
         spz (z score of spr)
@@ -163,16 +171,19 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
 
     """
     List of components
-    nc and ncl start out as an ordered list of the component numbers
-    nc is constant throughout the function.
-    ncl changes through his function as components are assigned to other
+    all_comps and acc_comps start out as an ordered list of the component numbers
+    all_comps is constant throughout the function.
+    acc_comps changes through his function as components are assigned to other
     categories (i.e. components that are classified as rejected are removed
-    from ncl)
+    from acc_comps)
     """
+    comptable['classification'] = 'accepted'
+    comptable['rationale'] = ''
+
     midk = []
     ign = []
-    nc = np.arange(len(seldict['Kappas']))
-    ncl = np.arange(len(seldict['Kappas']))
+    all_comps = np.arange(comptable.shape[0])
+    acc_comps = np.arange(comptable.shape[0])
 
     """
     If user has specified components to accept manually, just assign those
@@ -181,8 +192,12 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     if manacc:
         acc = sorted([int(vv) for vv in manacc.split(',')])
         midk = []
-        rej = sorted(np.setdiff1d(ncl, acc))
-        return acc, rej, midk, []  # Add string for ign
+        rej = sorted(np.setdiff1d(all_comps, acc))
+        ign = []
+        comptable.loc[acc, 'classification'] = 'accepted'
+        comptable.loc[rej, 'classification'] = 'rejected'
+        comptable.loc[rej, 'rationale'] += 'manual exclusion;'
+        return comptable
 
     """
     METRICS: countsigFS0 countsigFR2
@@ -193,16 +208,17 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     The cluster size is a function of the # of voxels in the mask.
     The cluster threshold is based on the # of echos acquired
     """
-    countsigFS0 = seldict['F_S0_clmaps'].sum(0)
     countsigFR2 = seldict['F_R2_clmaps'].sum(0)
-    countnoise = np.zeros(len(nc))
+    countsigFS0 = seldict['F_S0_clmaps'].sum(0)
+    comptable['countsigFR2'] = countsigFR2
+    comptable['countsigFS0'] = countsigFS0
 
     """
     Make table of dice values
     METRICS: dice_tbl
     dice_FR2, dice_FS0 are calculated for each component and the concatenated
     values are in dice_tbl
-    Br_clmaps_R2 and Br_clmaps_S0 are binarized clustered Z_maps.
+    Br_R2_clmaps and Br_S0_clmaps are binarized clustered Z_maps.
     The volume being clustered is the rank order indices of the absolute value
     of the beta values for the fit between the optimally combined time series
     and the mixing matrix (i.e. the lowest beta value is 1 and the highest is
@@ -221,14 +237,18 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     are also noiser so they have lower F values), then the dice coefficients
     will be lower
     """
-    dice_tbl = np.zeros([nc.shape[0], 2])
-    for ii in ncl:
-        dice_FR2 = utils.dice(utils.unmask(seldict['Br_clmaps_R2'][:, ii], mask)[t2s != 0],
-                              seldict['F_R2_clmaps'][:, ii])
-        dice_FS0 = utils.dice(utils.unmask(seldict['Br_clmaps_S0'][:, ii], mask)[t2s != 0],
-                              seldict['F_S0_clmaps'][:, ii])
-        dice_tbl[ii, :] = [dice_FR2, dice_FS0]  # step 3a here and above
+    dice_tbl = np.zeros([all_comps.shape[0], 2])
+    for comp_num in all_comps:
+        dice_FR2 = utils.dice(utils.unmask(seldict['Br_R2_clmaps'][:, comp_num],
+                                           mask)[t2s != 0],
+                              seldict['F_R2_clmaps'][:, comp_num])
+        dice_FS0 = utils.dice(utils.unmask(seldict['Br_S0_clmaps'][:, comp_num],
+                                           mask)[t2s != 0],
+                              seldict['F_S0_clmaps'][:, comp_num])
+        dice_tbl[comp_num, :] = [dice_FR2, dice_FS0]  # step 3a here and above
     dice_tbl[np.isnan(dice_tbl)] = 0
+    comptable['dict_FR2'] = dice_tbl[:, 0]
+    comptable['dict_FS0'] = dice_tbl[:, 1]
 
     """
     Make table of noise gain
@@ -254,28 +274,32 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     Because of the log10, values below 1 are negative, which is later used as
     a threshold. It doesn't seem like the p values are ever used.
     """
-    tt_table = np.zeros([len(nc), 4])
-    counts_FR2_Z = np.zeros([len(nc), 2])
-    for ii in nc:
-        comp_noise_sel = utils.andb([np.abs(seldict['Z_maps'][:, ii]) > 1.95,
-                                     seldict['Z_clmaps'][:, ii] == 0]) == 2
-        countnoise[ii] = np.array(comp_noise_sel, dtype=np.int).sum()
+    countnoise = np.zeros(len(all_comps))
+    tt_table = np.zeros([len(all_comps), 4])
+    counts_FR2_Z = np.zeros([len(all_comps), 2])
+    for comp_num in all_comps:
+        comp_noise_sel = utils.andb([np.abs(seldict['Z_maps'][:, comp_num]) > 1.95,
+                                     seldict['Z_clmaps'][:, comp_num] == 0]) == 2
+        countnoise[comp_num] = np.array(comp_noise_sel, dtype=np.int).sum()
         noise_FR2_Z_mask = utils.unmask(comp_noise_sel, mask)[t2s != 0]
-        noise_FR2_Z = np.log10(np.unique(seldict['F_R2_maps'][noise_FR2_Z_mask, ii]))
-        signal_FR2_Z_mask = utils.unmask(seldict['Z_clmaps'][:, ii], mask)[t2s != 0] == 1
-        signal_FR2_Z = np.log10(np.unique(seldict['F_R2_maps'][signal_FR2_Z_mask, ii]))
-        counts_FR2_Z[ii, :] = [len(signal_FR2_Z), len(noise_FR2_Z)]
+        noise_FR2_Z = np.log10(np.unique(seldict['F_R2_maps'][noise_FR2_Z_mask, comp_num]))
+        signal_FR2_Z_mask = utils.unmask(seldict['Z_clmaps'][:, comp_num], mask)[t2s != 0] == 1
+        signal_FR2_Z = np.log10(np.unique(seldict['F_R2_maps'][signal_FR2_Z_mask, comp_num]))
+        counts_FR2_Z[comp_num, :] = [len(signal_FR2_Z), len(noise_FR2_Z)]
         ttest = stats.ttest_ind(signal_FR2_Z, noise_FR2_Z, equal_var=True)
         # avoid DivideByZero RuntimeWarning
         if signal_FR2_Z.size > 0 and noise_FR2_Z.size > 0:
             mwu = stats.norm.ppf(stats.mannwhitneyu(signal_FR2_Z, noise_FR2_Z)[1])
         else:
             mwu = -np.inf
-        tt_table[ii, 0] = np.abs(mwu) * ttest[0] / np.abs(ttest[0])
-        tt_table[ii, 1] = ttest[1]
+        tt_table[comp_num, 0] = np.abs(mwu) * ttest[0] / np.abs(ttest[0])
+        tt_table[comp_num, 1] = ttest[1]
     tt_table[np.isnan(tt_table)] = 0
     tt_table[np.isinf(tt_table[:, 0]), 0] = np.percentile(tt_table[~np.isinf(tt_table[:, 0]), 0],
                                                           98)
+    comptable['countnoise'] = countnoise
+    comptable['tt0'] = tt_table[:, 0]
+    comptable['tt1'] = tt_table[:, 1]
 
     """
     Time series derivative kurtosis
@@ -285,9 +309,11 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     handwerkerd thinks these metrics are later used to calculate measures
     of time series spikiness and drift in the component time series.
     """
-    mmix_dt = (mmix[:-1] - mmix[1:])
+    mmix_dt = (mmix[:-1, :] - mmix[1:, :])
     mmix_kurt = stats.kurtosis(mmix_dt)
     mmix_std = np.std(mmix_dt, axis=0)
+    comptable['mmix_kurt'] = mmix_kurt
+    comptable['mmix_std'] = mmix_std
 
     """
     SELECTION #1 (prantikk labeled "Step 1")
@@ -295,9 +321,14 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     Obvious artifacts are components with Rho>Kappa or with more clustered,
     significant voxels for the S0 model than the R2 model
     """
-    LGR.debug('Rejecting gross artifacts based on Rho/Kappa values and S0/R2 counts')
-    rej = ncl[utils.andb([seldict['Rhos'] > seldict['Kappas'], countsigFS0 > countsigFR2]) > 0]
-    ncl = np.setdiff1d(ncl, rej)
+    LGR.debug('Rejecting gross artifacts based on Rho/Kappa values and S0/R2 '
+              'counts')
+    rej = acc_comps[utils.andb([comptable['rho'] > comptable['kappa'],
+                                countsigFS0 > countsigFR2]) > 0]
+    comptable.loc[rej, 'classification'] = 'rejected'
+    comptable.loc[rej, 'rationale'] += ('Rho>Kappa or more significant voxels '
+                                        'in S0 model than R2 model;')
+    acc_comps = np.setdiff1d(acc_comps, rej)
 
     """
     prantikk labeled "Step 2"
@@ -333,33 +364,24 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     """
     LGR.debug('Computing 3D spatial FFT of beta maps to detect high-spatial frequency artifacts')
     # spatial information is important so for NIFTI we convert back to 3D space
-    if utils.get_dtype(ref_img) == 'NIFTI':
-        dim1 = np.prod(check_niimg(ref_img).shape[:2])
-    else:
-        dim1 = mask.shape[0]
-    fproj_arr = np.zeros([dim1, len(nc)])
-    fproj_arr_val = np.zeros([dim1, len(nc)])
+    dim1 = np.prod(check_niimg(ref_img).shape[:2])
+    fproj_arr = np.zeros([dim1, len(all_comps)])
+    fproj_arr_val = np.zeros([dim1, len(all_comps)])
     spr = []
     fdist = []
-    for ii in nc:
+    for comp_num in all_comps:
         # convert data back to 3D array
-        if utils.get_dtype(ref_img) == 'NIFTI':
-            tproj = utils.new_nii_like(ref_img, utils.unmask(seldict['PSC'],
-                                                             mask)[:, ii]).get_data()
-        else:
-            tproj = utils.unmask(seldict['PSC'], mask)[:, ii]
+        tproj = utils.new_nii_like(ref_img, utils.unmask(seldict['PSC'],
+                                                         mask)[:, comp_num]).get_data()
         fproj = np.fft.fftshift(np.abs(np.fft.rfftn(tproj)))
         fproj_z = fproj.max(axis=-1)
         fproj[fproj == fproj.max()] = 0
         spr.append(np.array(fproj_z > fproj_z.max() / 4, dtype=np.int).sum())
-        fproj_arr[:, ii] = stats.rankdata(fproj_z.flatten())
-        fproj_arr_val[:, ii] = fproj_z.flatten()
-        if utils.get_dtype(ref_img) == 'NIFTI':
-            fprojr = np.array([fproj, fproj[:, :, ::-1]]).max(0)
-            fdist.append(np.max([utils.fitgaussian(fproj.max(jj))[3:].max() for
-                         jj in range(fprojr.ndim)]))
-        else:
-            fdist = np.load(os.path.join(RESOURCES, 'fdist.npy'))
+        fproj_arr[:, comp_num] = stats.rankdata(fproj_z.flatten())
+        fproj_arr_val[:, comp_num] = fproj_z.flatten()
+        fprojr = np.array([fproj, fproj[:, :, ::-1]]).max(0)
+        fdist.append(np.max([utils.fitgaussian(fproj.max(jj))[3:].max() for
+                             jj in range(fprojr.ndim)]))
     if type(fdist) is not np.ndarray:
         fdist = np.array(fdist)
     spr = np.array(spr)
@@ -403,18 +425,16 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     LGR.debug('Creating feature space of component properties')
     fdist_pre = fdist.copy()
     fdist_pre[fdist > np.median(fdist) * 3] = np.median(fdist) * 3
-    fdist_z = (fdist_pre - np.median(fdist_pre)) / fdist_pre.std()
-    spz = (spr-spr.mean())/spr.std()
-    Tz = (tt_table[:, 0] - tt_table[:, 0].mean()) / tt_table[:, 0].std()
-    varex_ = np.log(seldict['varex'])
-    Vz = (varex_-varex_.mean()) / varex_.std()
-    Rz = (seldict['Rhos'] - seldict['Rhos'].mean()) / seldict['Rhos'].std()
-    Ktz = np.log(seldict['Kappas']) / 2
-    Ktz = (Ktz-Ktz.mean()) / Ktz.std()
-    Rtz = np.log(seldict['Rhos']) / 2
-    Rtz = (Rtz-Rtz.mean())/Rtz.std()
-    KRr = stats.zscore(np.log(seldict['Kappas']) / np.log(seldict['Rhos']))
-    cnz = (countnoise-countnoise.mean()) / countnoise.std()
+    fdist_z = (fdist_pre - np.median(fdist_pre)) / fdist_pre.std()  # not z
+    spz = stats.zscore(spr)
+    Tz = stats.zscore(tt_table[:, 0])
+    varex_log = np.log(comptable['variance explained'])
+    Vz = stats.zscore(varex_log)
+    Rz = stats.zscore(comptable['rho'])
+    Ktz = stats.zscore(np.log(comptable['kappa']) / 2)
+    #  Rtz = stats.zscore(np.log(comptable['rho']) / 2)
+    KRr = stats.zscore(np.log(comptable['kappa']) / np.log(comptable['rho']))
+    cnz = stats.zscore(countnoise)
     Dz = stats.zscore(np.arctanh(dice_tbl[:, 0] + 0.001))
     fz = np.array([Tz, Vz, Ktz, KRr, cnz, Rz, mmix_kurt, fdist_z])
 
@@ -431,7 +451,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     # epsmap is [index,level of overlap with dicemask,
     # number of high Rho components]
     epsmap = []
-    Rhos_sorted = np.array(sorted(seldict['Rhos']))[::-1]
+    Rhos_sorted = np.array(sorted(comptable['rho']))[::-1]
     """
     Make an initial guess as to number of good components based on
      consensus of control points across Rhos and Kappas
@@ -445,9 +465,12 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
      set a common threhsold reference point for both? These are two different
      elbows on two different data sets.
     """
-    KRcutguesses = [getelbow_mod(seldict['Rhos']), getelbow_cons(seldict['Rhos']),
-                    getelbow_aggr(seldict['Rhos']), getelbow_mod(seldict['Kappas']),
-                    getelbow_cons(seldict['Kappas']), getelbow_aggr(seldict['Kappas'])]
+    KRcutguesses = [getelbow_mod(comptable['rho']),
+                    getelbow_cons(comptable['rho']),
+                    getelbow_aggr(comptable['rho']),
+                    getelbow_mod(comptable['kappa']),
+                    getelbow_cons(comptable['kappa']),
+                    getelbow_aggr(comptable['kappa'])]
     KRcut = np.median(KRcutguesses)
     """
     Also a bit weird to handwerkerd. This is the 75th percentile of Kappa F
@@ -456,9 +479,12 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     This is some type of way to get a significance criterion for a component
     fit, but it's include why this specific criterion is useful.
     """
-    Khighelbowval = stats.scoreatpercentile([getelbow_mod(seldict['Kappas'], val=True),
-                                             getelbow_cons(seldict['Kappas'], val=True),
-                                             getelbow_aggr(seldict['Kappas'], val=True)] +
+    Khighelbowval = stats.scoreatpercentile([getelbow_mod(comptable['kappa'],
+                                                          return_val=True),
+                                             getelbow_cons(comptable['kappa'],
+                                                           return_val=True),
+                                             getelbow_aggr(comptable['kappa'],
+                                                           return_val=True)] +
                                             list(utils.getfbounds(n_echos)),
                                             75, interpolation_method='lower')
     """
@@ -472,12 +498,12 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     prantikk's orig comment for this section is:
       "only use exclusive when inclusive is extremely inclusive - double KRcut"
     """
-    cond1 = getelbow_cons(seldict['Kappas']) > KRcut * 2
-    cond2 = getelbow_mod(seldict['Kappas'], val=True) < F01
+    cond1 = getelbow_cons(comptable['kappa']) > KRcut * 2
+    cond2 = getelbow_mod(comptable['kappa'], return_val=True) < F01
     if cond1 and cond2:
-        Kcut = getelbow_mod(seldict['Kappas'], val=True)
+        Kcut = getelbow_mod(comptable['kappa'], return_val=True)
     else:
-        Kcut = getelbow_cons(seldict['Kappas'], val=True)
+        Kcut = getelbow_cons(comptable['kappa'], return_val=True)
     """
     handwerkerd: The goal seems to be to maximize the rejected components
        based on the rho cut by defaulting to a lower Rcut value. Again, if
@@ -487,20 +513,21 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         (remember for Rho inclusive is higher, so want both Kappa and Rho
         to defaut to lower)
     """
-    if getelbow_cons(seldict['Rhos']) > KRcut * 2:
-        Rcut = getelbow_mod(seldict['Rhos'], val=True)
+    if getelbow_cons(comptable['rho']) > KRcut * 2:
+        Rcut = getelbow_mod(comptable['rho'], return_val=True)
     # for above, consider something like:
     # min([getelbow_mod(Rhos,True),sorted(Rhos)[::-1][KRguess] ])
     else:
-        Rcut = getelbow_cons(seldict['Rhos'], val=True)
+        Rcut = getelbow_cons(comptable['rho'], return_val=True)
 
     # Rcut should never be higher than Kcut (handwerkerd: not sure why)
     if Rcut > Kcut:
         Kcut = Rcut
 
-    # KRelbow has a 2 for componts that are above the Kappa accept threshold
+    # KRelbow has a 2 for components that are above the Kappa accept threshold
     # and below the rho reject threshold
-    KRelbow = utils.andb([seldict['Kappas'] > Kcut, seldict['Rhos'] < Rcut])
+    KRelbow = utils.andb([comptable['kappa'] > Kcut,
+                          comptable['rho'] < Rcut])
     """
     Make guess of Kundu et al 2011 plus remove high frequencies,
     generally high variance, and high variance given low Kappa
@@ -525,14 +552,15 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
              variance component
         B. Kappa is less than twice Kcut
     """
-    KRguess = np.setdiff1d(np.setdiff1d(nc[KRelbow == 2], rej),
-                           np.union1d(nc[tt_table[:, 0] < tt_lim],
-                           np.union1d(np.union1d(nc[spz > 1],
-                                                 nc[Vz > 2]),
-                                      nc[utils.andb([seldict['varex'] > 0.5 *
-                                         sorted(seldict['varex'])[::-1][int(KRcut)],
-                                                seldict['Kappas'] < 2*Kcut]) == 2])))
-    guessmask = np.zeros(len(nc))
+    temp = all_comps[utils.andb([comptable['variance explained'] > 0.5 *
+                                 sorted(comptable['variance explained'])[::-1][int(KRcut)],
+                                 comptable['kappa'] < 2*Kcut]) == 2]
+    KRguess = np.setdiff1d(np.setdiff1d(all_comps[KRelbow == 2], rej),
+                           np.union1d(all_comps[tt_table[:, 0] < tt_lim],
+                           np.union1d(np.union1d(all_comps[spz > 1],
+                                                 all_comps[Vz > 2]),
+                                      temp)))
+    guessmask = np.zeros(len(all_comps))
     guessmask[KRguess] = 1
     """
     Throw lower-risk bad components out based on 3 criteria all being true:
@@ -542,11 +570,18 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
       3. The component index is greater than the KRcut index. Since the
           components are sorted by kappa, this is another kappa thresholding)
     """
-    rejB = ncl[utils.andb([tt_table[ncl, 0] < 0,
-                           seldict['varex'][ncl] > np.median(seldict['varex']), ncl > KRcut]) == 3]
+    rejB = acc_comps[utils.andb([tt_table[acc_comps, 0] < 0,
+                                 (comptable['variance explained'][acc_comps] >
+                                  np.median(comptable['variance explained'])),
+                                 acc_comps > KRcut]) == 3]
+    comptable.loc[rejB, 'classification'] = 'rejected'
+    comptable.loc[rejB, 'rationale'] += ('tt_table < 0, component variance '
+                                         'explained > median variance '
+                                         'explained, and component index > '
+                                         'KRcut index;')
     rej = np.union1d(rej, rejB)
-    # adjust ncl again to only contain the remaining non-rejected components
-    ncl = np.setdiff1d(ncl, rej)
+    # adjust acc_comps again to only contain the remaining non-rejected components
+    acc_comps = np.setdiff1d(acc_comps, rej)
 
     """
     This is where handwerkerd has paused in hypercommenting the function.
@@ -560,20 +595,20 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         # DBSCAN found at least three non-noisy clusters
         cond1 = db.labels_.max() > 1
         # DBSCAN didn't detect more classes than the total # of components / 6
-        cond2 = db.labels_.max() < len(nc) / 6
+        cond2 = db.labels_.max() < len(all_comps) / 6
         # TODO: confirm if 0 is a special label for DBSCAN
         # my intuition here is that we're confirming DBSCAN labelled previously
         # rejected components as noise (i.e., no overlap between `rej` and
         # labelled DBSCAN components)
-        cond3 = np.intersect1d(rej, nc[db.labels_ == 0]).shape[0] == 0
+        cond3 = np.intersect1d(rej, all_comps[db.labels_ == 0]).shape[0] == 0
         # DBSCAN labelled less than half of the total components as noisy
-        cond4 = np.array(db.labels_ == -1, dtype=int).sum() / float(len(nc)) < .5
+        cond4 = np.array(db.labels_ == -1, dtype=int).sum() / float(len(all_comps)) < .5
 
         if cond1 and cond2 and cond3 and cond4:
             epsmap.append([ii, utils.dice(guessmask, db.labels_ == 0),
-                           np.intersect1d(nc[db.labels_ == 0],
-                           nc[seldict['Rhos'] > getelbow_mod(Rhos_sorted,
-                                                             val=True)]).shape[0]])
+                           np.intersect1d(all_comps[db.labels_ == 0],
+                           all_comps[comptable['rho'] > getelbow_mod(Rhos_sorted,
+                                                                     return_val=True)]).shape[0]])
         db = None
 
     epsmap = np.array(epsmap)
@@ -586,25 +621,28 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         ii = int(epsmap[np.argmax(epsmap[epsmap[:, 2] == np.min(epsmap[:, 2]), 1], 0), 0])
         LGR.debug('Component selection tuning: {:.05f}'.format(epsmap[:, 1].max()))
         db = DBSCAN(eps=.005+ii*.005, min_samples=3).fit(fz.T)
-        ncl = nc[db.labels_ == 0]
-        ncl = np.setdiff1d(ncl, rej)
-        ncl = np.setdiff1d(ncl, ncl[ncl > len(nc) - len(rej)])
-        group0 = ncl.copy()
-        group_n1 = nc[db.labels_ == -1]
-        to_clf = np.setdiff1d(nc, np.union1d(ncl, rej))
+        acc_comps = all_comps[db.labels_ == 0]
+        acc_comps = np.setdiff1d(acc_comps, rej)
+        acc_comps = np.setdiff1d(acc_comps, acc_comps[acc_comps > len(all_comps) - len(rej)])
+        group0 = acc_comps.copy()
+        group_n1 = all_comps[db.labels_ == -1]
+        to_clf = np.setdiff1d(all_comps, np.union1d(acc_comps, rej))
+
     if len(group0) == 0 or len(group0) < len(KRguess) * .5:
         dbscanfailed = True
         LGR.debug('DBSCAN guess failed; using elbow guess method instead')
-        ncl = np.setdiff1d(np.setdiff1d(nc[KRelbow == 2], rej),
-                           np.union1d(nc[tt_table[:, 0] < tt_lim],
-                           np.union1d(np.union1d(nc[spz > 1],
-                                      nc[Vz > 2]),
-                                      nc[utils.andb([seldict['varex'] > 0.5 *
-                                                     sorted(seldict['varex'])[::-1][int(KRcut)],
-                                                     seldict['Kappas'] < 2 * Kcut]) == 2])))
-        group0 = ncl.copy()
+        temp = all_comps[utils.andb([comptable['variance explained'] > 0.5 *
+                                     sorted(comptable['variance explained'])[::-1][int(KRcut)],
+                                     comptable['kappa'] < 2 * Kcut]) == 2]
+        acc_comps = np.setdiff1d(np.setdiff1d(all_comps[KRelbow == 2], rej),
+                                 np.union1d(all_comps[tt_table[:, 0] < tt_lim],
+                                 np.union1d(np.union1d(all_comps[spz > 1],
+                                                       all_comps[Vz > 2]),
+                                            temp)))
+        group0 = acc_comps.copy()
         group_n1 = []
-        to_clf = np.setdiff1d(nc, np.union1d(group0, rej))
+        to_clf = np.setdiff1d(all_comps, np.union1d(group0, rej))
+
     if len(group0) < 2 or (len(group0) < 4 and float(len(rej))/len(group0) > 3):
         LGR.warning('Extremely limited reliable BOLD signal space! '
                     'Not filtering components beyond BOLD/non-BOLD guesses.')
@@ -612,17 +650,20 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         min_acc = np.array([])
         if len(group0) != 0:
             # For extremes, building in a 20% tolerance
-            toacc_hi = np.setdiff1d(nc[utils.andb([fdist <= np.max(fdist[group0]),
-                                                   seldict['Rhos'] < F025, Vz > -2]) == 3],
+            toacc_hi = np.setdiff1d(all_comps[utils.andb([fdist <= np.max(fdist[group0]),
+                                                          comptable['rho'] < F025,
+                                                          Vz > -2]) == 3],
                                     np.union1d(group0, rej))
             min_acc = np.union1d(group0, toacc_hi)
-            to_clf = np.setdiff1d(nc, np.union1d(min_acc, rej))
+            to_clf = np.setdiff1d(all_comps, np.union1d(min_acc, rej))
         else:
             toacc_hi = []
             min_acc = []
         diagstep_keys = ['Rejected components', 'Kappa-Rho cut point',
-                         'Kappa cut point', 'Rho cut point', 'DBSCAN failed to converge',
-                         'Mid-Kappa failed (limited BOLD signal)', 'Kappa-Rho guess',
+                         'Kappa cut point', 'Rho cut point',
+                         'DBSCAN failed to converge',
+                         'Mid-Kappa failed (limited BOLD signal)',
+                         'Kappa-Rho guess',
                          'min_acc', 'toacc_hi']
         diagstep_vals = [list(rej), KRcut, Kcut, Rcut, dbscanfailed,
                          midkfailed, list(KRguess), list(min_acc), list(toacc_hi)]
@@ -635,11 +676,13 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     # since Dice is a little unstable, need to reference group0
     rej_supp = []
     dice_rej = False
-    if not dbscanfailed and len(rej) + len(group0) < 0.75 * len(nc):
+    if not dbscanfailed and len(rej) + len(group0) < 0.75 * len(all_comps):
         dice_rej = True
-        rej_supp = np.setdiff1d(np.setdiff1d(np.union1d(rej,
-                                                        nc[dice_tbl[nc, 0] <= dice_tbl[nc, 1]]),
+        temp = all_comps[dice_tbl[all_comps, 0] <= dice_tbl[all_comps, 1]]
+        rej_supp = np.setdiff1d(np.setdiff1d(np.union1d(rej, temp),
                                              group0), group_n1)
+        comptable.loc[rej_supp, 'classification'] = 'rejected'
+        comptable.loc[rej_supp, 'rationale'] += 'Dice is bad;'
         rej = np.union1d(rej, rej_supp)
 
     # Temporal features
@@ -650,7 +693,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     mmix_kurt_z_max = np.max([mmix_kurt_z, mmix_std_z], 0)
 
     """
-    Step 2: Classifiy midk and ignore using separte SVMs for
+    Step 2: Classifiy midk and ignore using separate SVMs for
     different variance regimes
     # To render hyperplane:
     min_x = np.min(spz2);max_x=np.max(spz2)
@@ -665,24 +708,33 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     LGR.debug('Attempting to classify midk components')
     # Tried getting rid of accepting based on SVM altogether,
     # now using only rejecting
-    toacc_hi = np.setdiff1d(nc[utils.andb([fdist <= np.max(fdist[group0]),
-                               seldict['Rhos'] < F025, Vz > -2]) == 3],
+    toacc_hi = np.setdiff1d(all_comps[utils.andb([fdist <= np.max(fdist[group0]),
+                                                  comptable['rho'] < F025, Vz > -2]) == 3],
                             np.union1d(group0, rej))
-    toacc_lo = np.intersect1d(to_clf,
-                              nc[utils.andb([spz < 1, Rz < 0, mmix_kurt_z_max < 5,
-                                             Dz > -1, Tz > -1, Vz < 0, seldict['Kappas'] >= F025,
-                                             fdist < 3 * np.percentile(fdist[group0], 98)]) == 8])
+    temp = utils.andb([spz < 1, Rz < 0,
+                       mmix_kurt_z_max < 5,
+                       Dz > -1, Tz > -1, Vz < 0,
+                       comptable['kappa'] >= F025,
+                       fdist < 3 * np.percentile(fdist[group0], 98)]) == 8
+    toacc_lo = np.intersect1d(to_clf, all_comps[temp])
     midk_clf, clf_ = do_svm(fproj_arr_val[:, np.union1d(group0, rej)].T,
                             [0] * len(group0) + [1] * len(rej),
                             fproj_arr_val[:, to_clf].T,
                             svmtype=2)
-    midk = np.setdiff1d(to_clf[utils.andb([midk_clf == 1, seldict['varex'][to_clf] >
-                                           np.median(seldict['varex'][group0])]) == 2],
-                        np.union1d(toacc_hi, toacc_lo))
+    midk = np.setdiff1d(
+        to_clf[utils.andb([
+            midk_clf == 1,
+            (comptable['variance explained'][to_clf] >
+             np.median(comptable['variance explained'][group0]))]) == 2],
+        np.union1d(toacc_hi, toacc_lo))
+    comptable.loc[midk, 'classification'] = 'rejected'
+    comptable.loc[midk, 'rationale'] += 'midk;'
+
     # only use SVM to augment toacc_hi only if toacc_hi isn't already
     # conflicting with SVM choice
     if len(np.intersect1d(to_clf[utils.andb([midk_clf == 1,
-                                             Vz[to_clf] > 0]) == 2], toacc_hi)) == 0:
+                                             Vz[to_clf] > 0]) == 2],
+                          toacc_hi)) == 0:
         svm_acc_fail = True
         toacc_hi = np.union1d(toacc_hi, to_clf[midk_clf == 0])
     else:
@@ -698,12 +750,13 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     veinBout = utils.unmask(veinmaskB, mask)
     utils.filewrite(veinBout, 'veins50', ref_img)
     """
-    LGR.debug('Computing variance associated with low T2* areas (e.g., draining veins)')
+    LGR.debug('Computing variance associated with low T2* areas (e.g., '
+              'draining veins)')
     tsoc_B_Zcl = np.zeros(seldict['tsoc_B'].shape)
     tsoc_B_Zcl[seldict['Z_clmaps'] != 0] = np.abs(seldict['tsoc_B'])[seldict['Z_clmaps'] != 0]
     sig_B = [stats.scoreatpercentile(tsoc_B_Zcl[tsoc_B_Zcl[:, ii] != 0, ii], 25)
              if len(tsoc_B_Zcl[tsoc_B_Zcl[:, ii] != 0, ii]) != 0
-             else 0 for ii in nc]
+             else 0 for ii in all_comps]
     sig_B = np.abs(seldict['tsoc_B']) > np.tile(sig_B, [seldict['tsoc_B'].shape[0], 1])
 
     veinmask = utils.andb([t2s < stats.scoreatpercentile(t2s[t2s != 0], 15,
@@ -737,7 +790,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         tsoc_Bp = seldict['tsoc_B'].copy()
         tsoc_Bp[tsoc_Bp < 0] = 0
         vvex = np.array([(tsoc_Bp[veinmaskB, ii]**2.).sum() /
-                         (tsoc_Bp[:, ii]**2.).sum() for ii in nc])
+                         (tsoc_Bp[:, ii]**2.).sum() for ii in all_comps])
         group0_res = np.intersect1d(KRguess, group0)
         phys_var_zs.append((vvex - vvex[group0_res].mean()) / vvex[group0_res].std())
         veinBout = utils.unmask(veinmaskB, mask)
@@ -745,7 +798,7 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
 
     # Mask to sample veins
     phys_var_z = np.array(phys_var_zs).max(0)
-    Vz2 = (varex_ - varex_[group0].mean())/varex_[group0].std()
+    Vz2 = (varex_log - varex_log[group0].mean())/varex_log[group0].std()
 
     """
     Step 4: Learn joint TE-dependence spatial and temporal models to move
@@ -753,55 +806,70 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
     """
     LGR.debug('Learning joint TE-dependence spatial/temporal models to ignore remaining artifacts')
 
-    to_ign = []
+    midkrej = np.union1d(midk, rej)
 
-    minK_ign = np.max([F05, getelbow_cons(seldict['Kappas'], val=True)])
-    newcest = len(group0) + len(toacc_hi[seldict['Kappas'][toacc_hi] > minK_ign])
-    phys_art = np.setdiff1d(nc[utils.andb([phys_var_z > 3.5,
-                                           seldict['Kappas'] < minK_ign]) == 2], group0)
-    rank_diff = stats.rankdata(phys_var_z) - stats.rankdata(seldict['Kappas'])
-    phys_art = np.union1d(np.setdiff1d(nc[utils.andb([phys_var_z > 2, rank_diff > newcest / 2,
-                                                      Vz2 > -1]) == 3],
+    minK_ign = np.max([F05, getelbow_cons(comptable['kappa'], return_val=True)])
+    newcest = len(group0) + len(toacc_hi[comptable['kappa'][toacc_hi] > minK_ign])
+    phys_art = np.setdiff1d(all_comps[utils.andb([phys_var_z > 3.5,
+                                                  comptable['kappa'] < minK_ign]) == 2], group0)
+    rank_diff = stats.rankdata(phys_var_z) - stats.rankdata(comptable['kappa'])
+    phys_art = np.union1d(np.setdiff1d(all_comps[utils.andb([phys_var_z > 2,
+                                                             rank_diff > newcest / 2,
+                                                             Vz2 > -1]) == 3],
                                        group0), phys_art)
+    phys_art = np.setdiff1d(phys_art, midkrej)
+
     # Want to replace field_art with an acf/SVM based approach
     # instead of a kurtosis/filter one
-    field_art = np.setdiff1d(nc[utils.andb([mmix_kurt_z_max > 5,
-                                            seldict['Kappas'] < minK_ign]) == 2], group0)
-    field_art = np.union1d(np.setdiff1d(nc[utils.andb([mmix_kurt_z_max > 2,
-                                           (stats.rankdata(mmix_kurt_z_max) -
-                                            stats.rankdata(seldict['Kappas'])) > newcest / 2,
-                                           Vz2 > 1, seldict['Kappas'] < F01]) == 4],
+    field_art = np.setdiff1d(all_comps[utils.andb([mmix_kurt_z_max > 5,
+                                                   comptable['kappa'] < minK_ign]) == 2], group0)
+    temp = (stats.rankdata(mmix_kurt_z_max) - stats.rankdata(comptable['kappa'])) > newcest / 2
+    field_art = np.union1d(np.setdiff1d(all_comps[utils.andb([mmix_kurt_z_max > 2,
+                                                              temp,
+                                                              Vz2 > 1,
+                                                              comptable['kappa'] < F01]) == 4],
                                         group0), field_art)
-    field_art = np.union1d(np.setdiff1d(nc[utils.andb([mmix_kurt_z_max > 3,
-                                                       Vz2 > 3, seldict['Rhos'] >
-                                                       np.percentile(seldict['Rhos'][group0],
-                                                                     75)]) == 3],
+    temp = comptable['rho'] > np.percentile(comptable['rho'][group0], 75)
+    field_art = np.union1d(np.setdiff1d(all_comps[utils.andb([mmix_kurt_z_max > 3,
+                                                              Vz2 > 3,
+                                                              temp]) == 3],
                                         group0), field_art)
-    field_art = np.union1d(np.setdiff1d(nc[utils.andb([mmix_kurt_z_max > 5, Vz2 > 5]) == 2],
+    field_art = np.union1d(np.setdiff1d(all_comps[utils.andb([mmix_kurt_z_max > 5, Vz2 > 5]) == 2],
                                         group0), field_art)
-    misc_art = np.setdiff1d(nc[utils.andb([(stats.rankdata(Vz) -
-                                            stats.rankdata(Ktz)) > newcest / 2,
-                            seldict['Kappas'] < Khighelbowval]) == 2], group0)
-    ign_cand = np.unique(list(field_art)+list(phys_art)+list(misc_art))
-    midkrej = np.union1d(midk, rej)
-    to_ign = np.setdiff1d(list(ign_cand), midkrej)
+    field_art = np.setdiff1d(field_art, midkrej)
+
+    misc_art = np.setdiff1d(all_comps[utils.andb([(stats.rankdata(Vz) -
+                                                   stats.rankdata(Ktz)) > newcest / 2,
+                            comptable['kappa'] < Khighelbowval]) == 2], group0)
+    misc_art = np.setdiff1d(misc_art, midkrej)
+    ign = np.unique(list(field_art) + list(phys_art) + list(misc_art))
+    comptable.loc[misc_art, 'rationale'] += 'misc artifact;'
+    comptable.loc[field_art, 'rationale'] += 'field artifact;'
+    comptable.loc[phys_art, 'rationale'] += 'physiological artifact;'
+    comptable.loc[ign, 'classification'] = 'ignored'
+
     toacc = np.union1d(toacc_hi, toacc_lo)
-    ncl = np.setdiff1d(np.union1d(ncl, toacc), np.union1d(to_ign, midkrej))
-    ign = np.setdiff1d(nc, list(ncl) + list(midk) + list(rej))
-    orphan = np.setdiff1d(nc, list(ncl) + list(to_ign) + list(midk) + list(rej))
+    acc_comps = np.setdiff1d(np.union1d(acc_comps, toacc), np.union1d(ign, midkrej))
+    # ign = np.setdiff1d(all_comps, list(acc_comps) + list(midk) + list(rej))
+    orphan = np.setdiff1d(all_comps, list(acc_comps) + list(ign) + list(midk) + list(rej))
 
     # Last ditch effort to save some transient components
     if not strict_mode:
-        Vz3 = (varex_ - varex_[ncl].mean())/varex_[ncl].std()
-        ncl = np.union1d(ncl, np.intersect1d(orphan,
-                                             nc[utils.andb([seldict['Kappas'] > F05,
-                                                            seldict['Rhos'] < F025,
-                                                            seldict['Kappas'] > seldict['Rhos'],
-                                                            Vz3 <= -1,
-                                                            Vz3 > -3,
-                                                            mmix_kurt_z_max < 2.5]) == 6]))
-        ign = np.setdiff1d(nc, list(ncl)+list(midk)+list(rej))
-        orphan = np.setdiff1d(nc, list(ncl) + list(to_ign) + list(midk) + list(rej))
+        Vz3 = (varex_log - varex_log[acc_comps].mean()) / varex_log[acc_comps].std()
+        temp = utils.andb([comptable['kappa'] > F05,
+                           comptable['rho'] < F025,
+                           comptable['kappa'] > comptable['rho'],
+                           Vz3 <= -1,
+                           Vz3 > -3,
+                           mmix_kurt_z_max < 2.5])
+        new_acc = np.intersect1d(orphan, all_comps[temp == 6])
+        comptable.loc[new_acc, 'rationale'] += 'Saved at the last second;'
+        acc_comps = np.union1d(acc_comps, new_acc)
+        # ign = np.setdiff1d(all_comps, list(acc_comps)+list(midk)+list(rej))
+        orphan = np.setdiff1d(all_comps, (list(acc_comps) + list(ign) +
+                                          list(midk) + list(rej)))
+    comptable.loc[orphan, 'classification'] = 'ignored'
+    comptable.loc[orphan, 'rationale'] += 'orphan;'
 
     if savecsdiag:
         diagstep_keys = ['Rejected components', 'Kappa-Rho cut point', 'Kappa cut',
@@ -809,13 +877,13 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
                          'Dice rejected', 'rej_supp', 'to_clf',
                          'Mid-kappa components', 'svm_acc_fail', 'toacc_hi', 'toacc_lo',
                          'Field artifacts', 'Physiological artifacts',
-                         'Miscellaneous artifacts', 'ncl', 'Ignored components']
+                         'Miscellaneous artifacts', 'acc_comps', 'Ignored components']
         diagstep_vals = [list(rej), KRcut.item(), Kcut.item(), Rcut.item(),
                          dbscanfailed, list(KRguess), dice_rej,
                          list(rej_supp), list(to_clf), list(midk),
                          svm_acc_fail, list(toacc_hi), list(toacc_lo),
                          list(field_art), list(phys_art),
-                         list(misc_art), list(ncl), list(ign)]
+                         list(misc_art), list(acc_comps), list(ign)]
 
         with open('csstepdata.json', 'w') as ofh:
             json.dump(dict(zip(diagstep_keys, diagstep_vals)), ofh,
@@ -823,4 +891,8 @@ def selcomps(seldict, mmix, mask, ref_img, manacc, n_echos, t2s, s0, olevel=2,
         allfz = np.array([Tz, Vz, Ktz, KRr, cnz, Rz, mmix_kurt, fdist_z])
         np.savetxt('csdata.txt', allfz)
 
-    return list(sorted(ncl)), list(sorted(rej)), list(sorted(midk)), list(sorted(ign))
+    # Move decision columns to end
+    cols_at_end = ['classification', 'rationale']
+    comptable = comptable[[c for c in comptable if c not in cols_at_end] +
+                          [c for c in cols_at_end if c in comptable]]
+    return comptable
