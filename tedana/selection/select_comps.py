@@ -746,9 +746,9 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     # To write out veinmask
     veinout = np.zeros(t2s.shape)
     veinout[t2s!=0] = veinmaskf
-    utils.filewrite(veinout, 'veinmaskf', ref_img)
+    io.filewrite(veinout, 'veinmaskf', ref_img)
     veinBout = utils.unmask(veinmaskB, mask)
-    utils.filewrite(veinBout, 'veins50', ref_img)
+    io.filewrite(veinBout, 'veins50', ref_img)
     """
     LGR.debug('Computing variance associated with low T2* areas (e.g., '
               'draining veins)')
