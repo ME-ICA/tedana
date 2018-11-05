@@ -120,8 +120,8 @@ This tells the development team that your pull request is a "work-in-progress",
 and that you plan to continue working on it.
 
 You can also combine the tags above, for example if you are updating both a test and
-the documentation: **[TST, DOC]**. If you're still working on the pull request that
-prefix would be **[WIP, TST, DOC]**.
+the documentation: **[TST, DOC]**.
+If you're still working on the pull request that prefix would be **[WIP, TST, DOC]**.
 
 ## Style Guide
 
