@@ -9,7 +9,10 @@ See here for more information and a list of available options:
 https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md#pull-requests
 -->
 
-<!-- Please indicate after the # which issue you're closing with this PR -->
+<!-- Please indicate after the # which issue you're closing with this PR.
+This is helpful for the maintainers AND will magically close the issue when this
+pull request is merged!
+https://help.github.com/articles/closing-issues-using-keywords -->
 Closes # .
 
 <!-- Please give a brief overview of what has changed in the PR.
