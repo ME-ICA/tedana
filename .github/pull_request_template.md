@@ -6,7 +6,7 @@ If there is other information that would be helpful to include, please don't hes
 
 Please also label your pull request with the relevant tags.
 See here for more information and a list of available options:
-http://tedana.readthedocs.io/en/latest/contributing.html#pull-requests
+https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md#pull-requests
 -->
 
 <!-- Please indicate after the # which issue you're closing with this PR -->
