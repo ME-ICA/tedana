@@ -51,12 +51,14 @@ One metric of success, then, is to develop documentation that includes:
 
 .. _a ReadTheDocs site: https://tedana.readthedocs.io
 
-**Associated Milestone**: `#6`_
+**`Associated Milestone`_**
+
+.. _Associated Milestone: https://github.com/ME-ICA/tedana/milestone/6
+
 This milestone will close when the online documentation contains the minimum necessary information
 to orient a complete newcomer to ME-EPI, both on the theoretical basis of the method as well as
 the practical steps used in ME-EPI denoising.
 
-.. _#6: https://github.com/ME-ICA/tedana/milestone/6
 
 .. _Transparent and Reproducible Processing:
 
@@ -84,12 +86,14 @@ A metric of success for ``tedana`` then, should be enhancements to the code such
 1. Non-deterministic steps are made reproducible by enabling access to a "seed value", and
 2. The decision process for individual component data is made accessible to the end user.
 
-**Associated Milestone**: `#4`_
+**`Associated Milestone`_**
+
+.. _Associated Milestone: https://github.com/ME-ICA/tedana/milestone/4
+
 This milestone will close when when the internal decision making process for
 component selection is made accessible to the end user,
 and an analysis can be reproduced by an independent researcher who has access to the same data.
 
-.. _#4: https://github.com/ME-ICA/tedana/milestone/4
 
 .. _Testing:
 
@@ -111,12 +115,14 @@ A metric of success should thus be:
 1. Achieving 90% test coverage for unit tests, as well as
 2. Three distinguishable integration tests over a range of possible acquisition conditions.
 
-**Associated Milestone**: `#7`_
+**`Associated Milestone`_**
+
+.. _Associated Milestone: https://github.com/ME-ICA/tedana/milestone/7
+
 This milestone will close when we have 90% test coverage for unit tests and
 three distinguishable integration tests,
 varying number of echos and acquisition type (i.e., task vs. rest).
 
-.. _#7: https://github.com/ME-ICA/tedana/milestone/7
 
 .. _Workflow Integrations:
 
@@ -140,12 +146,14 @@ and the ```afni_proc.py`` workflow, eliminating the need for an additional wrapp
 For example, ``tedana`` could directly accept BRIK/HEAD files,
 facilitating interoperability with other AFNI pipelines.
 
-**Associated Milestone**: `#8`_
+**`Associated Milestone`_**
+
+.. _Associated Milestone: https://github.com/ME-ICA/tedana/milestone/8
+
 This milestone will close when ``tedana`` is stable enough such that the recommended default in
  ``afni_proc.py`` is to access ME-EPI denoising via ``pip install tedana``,
  rather than maintaining the alternative version that is currently used.
 
-.. _#8: https://github.com/ME-ICA/tedana/milestone/8
 
 Workflow integration: BIDS
 ``````````````````````````
@@ -164,11 +172,13 @@ A metric of success, then, will be
 .. _FMRIPrep: https://github.com/poldracklab/fmriprep
 .. _BIDS derivatives specification: https://docs.google.com/document/d/1Wwc4A6Mow4ZPPszDIWfCUCRNstn7d_zzaWPcfcHmgI4/edit
 
-**Associated Milestone**: `#9`_
+**`Associated Milestone`_**
+
+.. _Associated Milestone: https://github.com/ME-ICA/tedana/milestone/9
+
 This milestone will close when the denoising steps of ``tedana`` are stable enough
 to integrate into ``FMRIPrep`` and the ```FMRIPrep`` project is updated to process ME-EPI scans.
 
-.. _#9: https://github.com/ME-ICA/tedana/milestone/9
 
 .. _Extensions and Improvements to ME-EPI processing:
 
@@ -183,11 +193,13 @@ A metric of success here would be
 * *EITHER* integrating a new decomposition method, beyond ICA
 * *OR* validating new selection criteria.
 
-**Associated Milestone**: `#10`_
+**`Associated Milestone`_**
+
+.. _Associated Milestone: https://github.com/ME-ICA/tedana/milestone/10
+
 This milestone will close when the codebase is stable enough to integrate novel methods
 into ``tedana``, and that happens!
 
-.. _#10: https://github.com/ME-ICA/tedana/milestone/10
 
 .. _Developing a healthy community:
 
@@ -203,8 +215,9 @@ we will enable new contributors to feel that their work is welcomed.
 We therefore have one additional metric of success:
 1. An outside contributor integrates an improvement to ME-EPI denoising.
 
-**Associated Milestone**: `#5`_
+**`Associated Milestone`_**
+
+.. _Associated Milestone: https://github.com/ME-ICA/tedana/milestone/5
+
 This milestone will probably never close,
 but will serve to track issues related to building and supporting the ``tedana`` community.
-
-.. _#5: https://github.com/ME-ICA/tedana/milestone/5
