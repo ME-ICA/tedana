@@ -62,8 +62,15 @@ Two common pipelines which support ME-EPI processing include `fMRIPrep`_ and `af
 .. _afni_proc.py: https://afni.nimh.nih.gov/pub/dist/doc/program_help/afni_proc.py.html
 
 Users can also construct their own preprocessing pipeline for ME-EPI data from which to call ``tedana``.
-There are several general principles to consider when constructing ME-EPI processing pipelines
-for use with ``tedana``:
+There are several general principles to keep in mind when constructing ME-EPI processing pipelines.
+
+In general, we recommend
+
+#. Performing slice timing correction and motion correction **before** ``tedana``, and
+#. Performing distortion correction, spatial normalization, smoothing,
+and any rescaling or filtering **after** ``tedana``.
+
+Other suggestions follow below.
 
 #. Calculating slice time correction for ME-EPI
 ```````````````````````````````````````````````
