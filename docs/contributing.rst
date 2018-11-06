@@ -8,6 +8,8 @@ For a more practical guide to the tedana development, please see our
 
 .. _contributing guide: https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md
 
+.. _governance:
+
 Governance
 ----------
 
@@ -32,7 +34,7 @@ during any interaction with the project.
 That includes---but is not limited to---online conversations,
 in-person workshops or development sprints, and when giving talks about the software.
 
-As it is stated in the code, severe or repeated violations by community members may result in exclusion
+As stated in the code, severe or repeated violations by community members may result in exclusion
 from collective decision-making and rejection of future contributions to the ``tedana`` project.
 
 .. _code of conduct: https://github.com/ME-ICA/tedana/blob/master/Code_of_Conduct.md
@@ -40,14 +42,15 @@ from collective decision-making and rejection of future contributions to the ``t
 ```tedana``'s development philosophy
 --------------------------------------
 
-In contributing to any open source proect,
-we have found that it is hugely valuable to understand the core maintainers's development philosophy.
+In contributing to any open source project,
+we have found that it is hugely valuable to understand the core maintainers' development philosophy.
 In order to aid other contributors in onboarding to ``tedana`` development,
 we have therefore laid out our shared opinion on several major decision points.
 These are:
 
 #. :ref:`exposing options to the user`,
 #. :ref:`prioritizing project developments`,
+#. :ref:`backwards compatibility with meica`,
 #. :ref:`future-proofing for continuous development`, and
 #. :ref:`when to release new software versions`
 
@@ -110,6 +113,33 @@ This allows us to
 
 1. Label individual issues as supporting specific aims and
 2. Helps us to measure progress towards each aim's concrete deliverable(s).
+
+
+.. _backwards compatibility with meica:
+
+Is ``tedana`` backwards compatible with MEICA?
+``````````````````````````````````````````````
+
+The short answer is no.
+
+There are two main reasons why. One is that the tool originally used to run the independent
+component analysis core to the MEICA method (`mdp`_) is no longer supported.
+In November 2018 the developers made the decision to switch to `scikit learn`_ to perform
+these analyses.
+Scikit learn is well supported and under long term development.
+``tedana`` will be more stable and have better performance going forwards as a result of
+this switch, but it also means that exactly reproducing MEICA analyses is not possible.
+
+The other reason is a choice of the core developers to look forwards rather than maintaining
+an older codebase.
+As described in the :ref:`governance` section, ``tedana`` is developed by a small team of
+volunteers and they have to allocate their time accordingly.
+If you'd like to use MEICA as has been previously published the code is available on
+ `bitbucket`_ and freely available under a LGPL2 license.
+
+.. _mdp: http://mdp-toolkit.sourceforge.net
+.. _scikit learn: http://scikit-learn.org/stable
+.. _bitbucket: https://bitbucket.org/prantikk/me-ica
 
 
 .. _future-proofing for continuous development:

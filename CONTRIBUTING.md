@@ -1,6 +1,6 @@
 # Contributing to `tedana`
 
-Welcome to the `tedana` repository! We're excited you're here and want to contribute.  
+Welcome to the `tedana` repository! We're excited you're here and want to contribute.
 
 These guidelines are designed to make it as easy as possible to get involved.
 If you have any questions that aren't discussed below, please let us know by opening an [issue][link_issues]!
@@ -118,6 +118,10 @@ Pull requests should be submitted early and often!
 If your pull request is not yet ready to be merged, please also include the **[WIP]** prefix.
 This tells the development team that your pull request is a "work-in-progress",
 and that you plan to continue working on it.
+
+You can also combine the tags above, for example if you are updating both a test and
+the documentation: **[TST, DOC]**.
+If you're still working on the pull request that prefix would be **[WIP, TST, DOC]**.
 
 ## Style Guide
 
