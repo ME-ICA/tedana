@@ -8,6 +8,8 @@ For a more practical guide to the tedana development, please see our
 
 .. _contributing guide: https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md
 
+.. _governance:
+
 Governance
 ----------
 
