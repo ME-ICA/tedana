@@ -18,7 +18,7 @@ def test_basic_tedana():
     """
     workflows.tedana_workflow([op.expanduser('~/data/zcat_ffd.nii.gz')],
                               [14.5, 38.5, 62.5])
-    assert op.isfile('comp_table.txt')
+    assert op.isfile('comp_table_ica.txt')
 
 
 def compare_nifti(fn, test_dir, res_dir):
@@ -66,6 +66,7 @@ def test_outputs():
     for fn in nifti_test_list:
         passed = compare_nifti(fn, Path(op.expanduser('~/data/TED/')),
                                Path(op.expanduser('~/code/TED.zcat_ffd/')))
+
         if not passed:
             out.append(fn)
 
