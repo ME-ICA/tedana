@@ -50,6 +50,11 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img):
     meica_mix_T1c.1D          T1 global signal-corrected mixing matrix
     ======================    =================================================
     """
+    all_comps = comptable['component'].values
+    acc = comptable.loc[comptable['classification'] == 'accepted', 'component']
+    ign = comptable.loc[comptable['classification'] == 'ignored', 'component']
+    not_ign = sorted(np.setdiff1d(all_comps, ign))
+
     optcom_masked = optcom_ts[mask, :]
     optcom_mu = optcom_masked.mean(axis=-1)[:, np.newaxis]
     optcom_std = optcom_masked.std(axis=-1)[:, np.newaxis]
@@ -59,14 +64,11 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img):
     """
     data_norm = (optcom_masked - optcom_mu) / optcom_std
     cbetas = lstsq(mmix, data_norm.T, rcond=None)[0].T
-    all_comps = np.arange(mmix.shape[1])
-    not_ign = sorted(np.setdiff1d(all_comps, ign))
     resid = data_norm - np.dot(cbetas[:, not_ign], mmix[:, not_ign].T)
 
     """
     Build BOLD time series without amplitudes, and save T1-like effect
     """
-    acc = comptable.loc[comptable['classification'] == 'accepted', 'component']
     bold_ts = np.dot(cbetas[:, acc], mmix[:, acc].T)
     t1_map = bold_ts.min(axis=-1)
     t1_map -= t1_map.mean()
