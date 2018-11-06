@@ -133,11 +133,11 @@ an older codebase.
 As described in the :ref:`governance` section, ``tedana`` is developed by a small team of
 volunteers and they have to allocate their time accordingly.
 If you'd like to use MEICA as has been previously published the code is available on
- `github`_ and freely available under a LGPL2 license.
+ `bitbucket`_ and freely available under a LGPL2 license.
 
 .. _mdp: http://mdp-toolkit.sourceforge.net
 .. _scikit learn: http://scikit-learn.org/stable
-.. _github: https://github.com/ME-ICA/me-ica
+.. _bitbucket: https://bitbucket.org/prantikk/me-ica
 
 
 .. _future-proofing for continuous development:
