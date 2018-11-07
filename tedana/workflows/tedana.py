@@ -14,7 +14,7 @@ from scipy import stats
 from tedana import (decay, combine, decomposition,
                     io, model, selection, utils)
 from tedana.workflows.parser_utils import is_valid_file
-from tedana.utils.io import gen_fname
+from tedana.io import gen_fname
 
 LGR = logging.getLogger(__name__)
 
