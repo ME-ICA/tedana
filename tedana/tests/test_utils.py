@@ -14,17 +14,6 @@ fnames = [op.join(datadir, 'echo{}.nii.gz'.format(n)) for n in range(1, 4)]
 tes = ['14.5', '38.5', '62.5']
 
 
-def test_generate_fname():
-    truefile = ('sub-01_task-rest_run-01_space-MNI152NLin2009cAsym_'
-                'desc-preproc_desc-thing_bold.nii.gz')
-    basefile = ('sub-01_task-rest_run-01_echo-1_space-MNI152NLin2009cAsym_'
-                'desc-preproc_bold.nii.gz')
-    desc = 'thing'
-    ext = '.nii.gz'
-    testfile = utils.io.generate_fname(basefile, extension=ext, desc=desc)
-    assert testfile == truefile
-
-
 def test_get_dtype():
     # various combinations of input types
     good_inputs = [
