@@ -5,17 +5,6 @@ from .fit import (
     fitmodels_direct, spatclust, gscontrol_raw, get_coeffs, computefeats2
 )
 
-from .combine import (
-    make_optcom
-)
-
-from .monoexponential import (
-    fit_decay, fit_decay_ts
-)
-
-
 __all__ = [
     'fitmodels_direct', 'spatclust', 'gscontrol_raw', 'get_coeffs',
-    'computefeats2',
-    'make_optcom',
-    'fit_decay', 'fit_decay_ts']
+    'computefeats2']

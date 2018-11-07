@@ -10,9 +10,11 @@ import argparse
 import numpy as np
 import pandas as pd
 from scipy import stats
-from tedana import (decomposition, model, selection, utils)
+
+from tedana import (decay, combine, decomposition,
+                    io, model, selection, utils)
 from tedana.workflows.parser_utils import is_valid_file
-from tedana.utils.io import generate_fname
+from tedana.utils.io import gen_fname
 
 LGR = logging.getLogger(__name__)
 
@@ -262,13 +264,14 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         data = [data]
 
     LGR.info('Loading input data: {}'.format([f for f in data]))
-    catd, ref_img = utils.load_data(data, n_echos=n_echos)
+    catd, ref_img = io.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
     kdaw, rdaw = float(kdaw), float(rdaw)
 
-    basefile = op.basename(data[0])
+    # Base file from which to extract prefix for output files
+    bf = op.basename(data[0])
 
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
@@ -278,14 +281,14 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         LGR.info('Using output directory: {}'.format(out_dir))
 
     if mixm is not None and op.isfile(mixm):
-        out_mixm_file = generate_fname(basefile, 'icammix', extension='.1D')
+        out_mixm_file = gen_fname(bf, 'icammix', extension='.1D')
         shutil.copyfile(mixm, op.join(out_dir, out_mixm_file))
         shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
     elif mixm is not None:
         raise IOError('Argument "mixm" must be an existing file.')
 
     if ctab is not None and op.isfile(ctab):
-        out_ctab_file = generate_fname(basefile, 'icacomptable',
+        out_ctab_file = gen_fname(bf, 'icacomptable',
                                        extension='.txt')
         shutil.copyfile(ctab, op.join(out_dir, out_ctab_file))
         shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
@@ -302,7 +305,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
 
     LGR.info('Computing T2* map')
-    t2s, s0, t2ss, s0s, t2sG, s0G = model.fit_decay(catd, tes, mask, masksum)
+    t2s, s0, t2ss, s0s, t2sG, s0G = decay.fit_decay(catd, tes, mask, masksum)
 
     # set a hard cap for the T2* map
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
@@ -310,21 +313,15 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                       interpolation_method='lower')
     LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
     t2s[t2s > cap_t2s * 10] = cap_t2s
-    t2sv_file = generate_fname(basefile, '.nii.gz', desc='t2sv')
-    s0v_file = generate_fname(basefile, '.nii.gz', desc='s0v')
-    t2ss_file = generate_fname(basefile, '.nii.gz', desc='t2ss')
-    s0vs_file = generate_fname(basefile, '.nii.gz', desc='s0vs')
-    t2svG_file = generate_fname(basefile, '.nii.gz', desc='t2svG')
-    s0vG_file = generate_fname(basefile, '.nii.gz', desc='s0vG')
-    utils.filewrite(t2s, op.join(out_dir, t2sv_file), ref_img)
-    utils.filewrite(s0, op.join(out_dir, s0v_file), ref_img)
-    utils.filewrite(t2ss, op.join(out_dir, t2ss_file), ref_img)
-    utils.filewrite(s0s, op.join(out_dir, s0vs_file), ref_img)
-    utils.filewrite(t2sG, op.join(out_dir, t2svG_file), ref_img)
-    utils.filewrite(s0G, op.join(out_dir, s0vG_file), ref_img)
+    io.filewrite(t2s, op.join(out_dir, gen_fname(bf, '.nii.gz', desc='t2sv')), ref_img)
+    io.filewrite(s0, op.join(out_dir, gen_fname(bf, '.nii.gz', desc='s0v')), ref_img)
+    io.filewrite(t2ss, op.join(out_dir, gen_fname(bf, '.nii.gz', desc='t2ss')), ref_img)
+    io.filewrite(s0s, op.join(out_dir, gen_fname(bf, '.nii.gz', desc='s0vs')), ref_img)
+    io.filewrite(t2sG, op.join(out_dir, gen_fname(bf, '.nii.gz', desc='t2svG')), ref_img)
+    io.filewrite(s0G, op.join(out_dir, gen_fname(bf, '.nii.gz', desc='s0vG')), ref_img)
 
     # optimally combine data
-    data_oc = model.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
+    data_oc = combine.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
 
     # regress out global signal unless explicitly not desired
     if gscontrol:
@@ -385,13 +382,13 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         LGR.warning('No BOLD components detected! Please check data and '
                     'results!')
 
-    utils.writeresults(data_oc, mask=mask, comptable=comptable, mmix=mmix,
-                       n_vols=n_vols, fixed_seed=fixed_seed,
-                       acc=acc, rej=rej, midk=midk, empty=ign,
-                       ref_img=ref_img)
-    utils.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
+    io.writeresults(data_oc, mask=mask, comptable=comptable, mmix=mmix,
+                    n_vols=n_vols, fixed_seed=fixed_seed,
+                    acc=acc, rej=rej, midk=midk, empty=ign,
+                    ref_img=ref_img)
+    io.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
     if dne:
-        utils.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
+        io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
 
 
 def _main(argv=None):
