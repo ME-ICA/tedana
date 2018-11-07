@@ -9,7 +9,7 @@ import numpy as np
 from scipy import stats
 from sklearn.decomposition import PCA
 
-from tedana import model, utils
+from tedana import model, utils, io
 from tedana.decomposition._utils import eimask, dwtmat, idwtmat
 from tedana.selection._utils import (getelbow_cons, getelbow_mod)
 from tedana.due import due, BibTeX
@@ -245,7 +245,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         temp_comp_ts = comp_ts[i_comp, :][:, None]
         comp_map = utils.unmask(model.computefeats2(OCcatd, temp_comp_ts, mask), mask)
         comp_maps[:, i_comp] = np.squeeze(comp_map)
-    utils.filewrite(comp_maps, 'mepca_OC_components.nii', ref_img)
+    io.filewrite(comp_maps, 'mepca_OC_components.nii', ref_img)
 
     fmin, fmid, fmax = utils.getfbounds(n_echos)
     kappa_thr = np.average(sorted([fmin,

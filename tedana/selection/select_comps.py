@@ -10,7 +10,7 @@ import numpy as np
 from scipy import stats
 from sklearn.cluster import DBSCAN
 
-from tedana import utils
+from tedana import (io, utils)
 from tedana.selection._utils import (getelbow_cons, getelbow_mod,
                                      getelbow_aggr, do_svm)
 
@@ -371,8 +371,8 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     fdist = []
     for comp_num in all_comps:
         # convert data back to 3D array
-        tproj = utils.new_nii_like(ref_img, utils.unmask(seldict['PSC'],
-                                                         mask)[:, comp_num]).get_data()
+        tproj = io.new_nii_like(ref_img, utils.unmask(seldict['PSC'],
+                                                      mask)[:, comp_num]).get_data()
         fproj = np.fft.fftshift(np.abs(np.fft.rfftn(tproj)))
         fproj_z = fproj.max(axis=-1)
         fproj[fproj == fproj.max()] = 0
@@ -746,9 +746,9 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     # To write out veinmask
     veinout = np.zeros(t2s.shape)
     veinout[t2s!=0] = veinmaskf
-    utils.filewrite(veinout, 'veinmaskf', ref_img)
+    io.filewrite(veinout, 'veinmaskf', ref_img)
     veinBout = utils.unmask(veinmaskB, mask)
-    utils.filewrite(veinBout, 'veins50', ref_img)
+    io.filewrite(veinBout, 'veins50', ref_img)
     """
     LGR.debug('Computing variance associated with low T2* areas (e.g., '
               'draining veins)')
@@ -794,7 +794,7 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
         group0_res = np.intersect1d(KRguess, group0)
         phys_var_zs.append((vvex - vvex[group0_res].mean()) / vvex[group0_res].std())
         veinBout = utils.unmask(veinmaskB, mask)
-        utils.filewrite(veinBout.astype(float), 'veins_l%i' % t2sl_i, ref_img)
+        io.filewrite(veinBout.astype(float), 'veins_l%i' % t2sl_i, ref_img)
 
     # Mask to sample veins
     phys_var_z = np.array(phys_var_zs).max(0)

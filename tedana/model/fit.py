@@ -11,7 +11,7 @@ import nilearn.image as niimg
 from nilearn._utils import check_niimg
 from nilearn.regions import connected_regions
 
-from tedana import model, utils
+from tedana import (combine, io, utils)
 
 LGR = logging.getLogger(__name__)
 
@@ -89,8 +89,8 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
                              't2s ({1})'.format(catd.shape[2], t2s.shape[1]))
 
     # compute optimal combination of raw data
-    tsoc = model.make_optcom(catd, tes, mask, t2s=t2s_full, combmode=combmode,
-                             verbose=False).astype(float)[mask]
+    tsoc = combine.make_optcom(catd, tes, mask, t2s=t2s_full, combmode=combmode,
+                               verbose=False).astype(float)[mask]
 
     # demean optimal combination
     tsoc_dm = tsoc - tsoc.mean(axis=-1, keepdims=True)
@@ -225,7 +225,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
                                                 t2s != 0))
             out[:, 3] = np.squeeze(utils.unmask(Z_maps[:, i_comp], mask))
 
-            ccimg = utils.new_nii_like(ref_img, out)
+            ccimg = io.new_nii_like(ref_img, out)
 
             # Do simple clustering on F
             sel = spatclust(ccimg, min_cluster_size=csize, threshold=int(fmin),
@@ -243,7 +243,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
             # Do simple clustering on ranked signal-change map
             spclust_input = utils.unmask(stats.rankdata(tsoc_Babs[:, i_comp]),
                                          mask)
-            spclust_input = utils.new_nii_like(ref_img, spclust_input)
+            spclust_input = io.new_nii_like(ref_img, spclust_input)
             Br_R2_clmaps[:, i_comp] = spatclust(
                 spclust_input, min_cluster_size=csize,
                 threshold=max(tsoc_Babs.shape)-countsigFR2, mask=mask)
@@ -437,7 +437,7 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     detr = dat - np.dot(sol.T, Lmix.T)[0]
     sphis = (detr).min(axis=1)
     sphis -= sphis.mean()
-    utils.filewrite(utils.unmask(sphis, Gmask), 'T1gs', ref_img)
+    io.filewrite(utils.unmask(sphis, Gmask), 'T1gs', ref_img)
 
     # find time course ofc the spatial global signal
     # make basis with the Legendre basis
@@ -451,9 +451,9 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     tsoc_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T,
                              np.atleast_2d(glbase.T[dtrank])) + Gmu[Gmask][:, np.newaxis]
 
-    utils.filewrite(optcom, 'tsoc_orig', ref_img)
+    io.filewrite(optcom, 'tsoc_orig', ref_img)
     dm_optcom = utils.unmask(tsoc_nogs, Gmask)
-    utils.filewrite(dm_optcom, 'tsoc_nogs', ref_img)
+    io.filewrite(dm_optcom, 'tsoc_nogs', ref_img)
 
     # Project glbase out of each echo
     dm_catd = catd.copy()  # don't overwrite catd
