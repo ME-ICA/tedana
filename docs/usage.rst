@@ -9,6 +9,15 @@ tedana minimally requires:
 But you can supply many other options, viewable with ``tedana -h`` or
 ``t2smap -h``.
 
+For most use cases, we recommend that users call tedana from within existing fMRI preprocessing
+pipelines such as `fMRIPrep`_ or `afni_proc.py`_..
+Users can also construct their own preprocessing pipelines from which to call tedana;
+for recommendations on doing so, see our general guidelines for
+:ref:`_constructing ME-EPI pipelines`.
+
+.. _fMRIPrep: https://fmriprep.readthedocs.io
+.. _afni_proc.py: https://afni.nimh.nih.gov/pub/dist/doc/program_help/afni_proc.py.html
+
 Run tedana
 ----------
 This is the full tedana workflow, which runs multi-echo ICA and outputs
@@ -39,3 +48,63 @@ documentation: :py:func:`tedana.workflows.t2smap_workflow`.
    :ref: tedana.workflows.t2smap._get_parser
    :prog: t2smap
    :func: _get_parser
+
+
+.. _constructing ME-EPI pipelines:
+
+Constructing ME-EPI pipelines
+-----------------------------
+
+``tedana`` must be called in the context of a larger ME-EPI preprocessing pipeline.
+Two common pipelines which support ME-EPI processing include `fMRIPrep`_ and `afni_proc.py`_.
+
+.. _fMRIPrep: https://fmriprep.readthedocs.io
+.. _afni_proc.py: https://afni.nimh.nih.gov/pub/dist/doc/program_help/afni_proc.py.html
+
+Users can also construct their own preprocessing pipeline for ME-EPI data from which to call ``tedana``.
+There are several general principles to keep in mind when constructing ME-EPI processing pipelines.
+
+In general, we recommend
+
+#. Performing slice timing correction and motion correction **before** ``tedana``, and
+#. Performing distortion correction, spatial normalization, smoothing,
+and any rescaling or filtering **after** ``tedana``.
+
+Other suggestions follow below.
+
+#. Calculating slice time correction for ME-EPI
+```````````````````````````````````````````````
+
+Similarly to single-echo EPI data, slice time correction allows us to assume that voxels across
+slices represent roughly simultaneous events.
+If the TR is slow enough to necessitate slice-timing (i.e., TR >= 1 sec., as a rule of thumb), then
+slice-timing correction should be done before ``tedana``.
+This is because slice timing differences may impact echo-dependent estimates.
+
+The slice time is generally defined as the excitation pulse time for each slice.
+For single-echo EPI data, that excitation time would be the same regardless of the echo time,
+and the same is true when one is collecting multiple echoes after a single excitation pulse.
+Therefore, we suggest using the same slice timing for all echoes in an ME-EPI series.
+
+#. Avoid applying individual transformations to each echo
+`````````````````````````````````````````````````````````
+
+When preparing ME-EPI data for multi-echo denoising as in ``tedana``, it is important
+not to do anything that mean shifts the data or otherwise separately
+scales the voxelwise values at each echo.
+
+For example, head-motion correction parameters should *not* be calculated and applied at an
+individual echo level.
+Instead, we reccommend that researchers apply the same transforms to all echoes in an ME-EPI series.
+That is, that they calculate head motion correction parameters from one echo
+and apply the resulting transformation to all echoes.
+
+Similarly, any intensity normalization or nuisance regressors should be applied to the data
+*after* ``tedana`` calculates the BOLD and non-BOLD weighting of components.
+
+If this is not considered, resulting intensity gradients (e.g., in the case of scaling)
+or alignment parameters (e.g., in the case of motion correction, normalization)
+are likely to differ across echos,
+and the subsequent calculation of voxelwise T2* values will be distorted.
+See the description of ``tedana``'s '`:doc: approach <\approach>` for more details
+on how T2* values are calculated.
