@@ -288,8 +288,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         raise IOError('Argument "mixm" must be an existing file.')
 
     if ctab is not None and op.isfile(ctab):
-        out_ctab_file = gen_fname(bf, 'icacomptable',
-                                       extension='.txt')
+        out_ctab_file = gen_fname(bf, 'icacomptable', extension='.txt')
         shutil.copyfile(ctab, op.join(out_dir, out_ctab_file))
         shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
     elif ctab is not None:
