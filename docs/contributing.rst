@@ -26,6 +26,11 @@ we hope to welcome more people into the contributing team.
 We are committed to continuing to update the governance structures as necessary.
 Every member of the ``tedana`` community is encouraged to comment on these processes and suggest improvements.
 
+As the first interim [Benevolent Dictator for Life (BDFL)](https://en.wikipedia.org/wiki/Benevolent_dictator_for_life),
+Elizabeth DuPre is ultimately responsible for any major decisions pertaining to tedana development.
+However, all potential changes are explicitly and openly discussed in the described channels of
+communication, and we strive for consensus amongst all community members.
+
 Code of conduct
 ```````````````
 
