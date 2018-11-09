@@ -3,10 +3,12 @@ Tests for tedana.utils
 """
 
 from os.path import join as pjoin, dirname
+
 import nibabel as nib
 import numpy as np
 import pytest
-from tedana import utils
+
+from tedana import (utils, io)
 
 rs = np.random.RandomState(1234)
 datadir = pjoin(dirname(__file__), 'data')
@@ -17,8 +19,6 @@ tes = ['14.5', '38.5', '62.5']
 def test_get_dtype():
     # various combinations of input types
     good_inputs = [
-        (['echo1.func.gii', 'echo2.func.gii', 'echo3.func.gii'], 'GIFTI'),
-        ('echo1.func.gii', 'GIFTI'),
         (['echo1.nii.gz', 'echo2.nii.gz', 'echo3.nii.gz'], 'NIFTI'),
         ('echo1.nii.gz', 'NIFTI'),
         (['echo1.unknown', 'echo2.unknown', 'echo3.unknown'], 'OTHER'),
@@ -31,7 +31,7 @@ def test_get_dtype():
         assert utils.get_dtype(input) == expected
 
     with pytest.raises(ValueError):  # mixed arrays don't work
-        utils.get_dtype(['echo1.func.gii', 'echo1.nii.gz'])
+        utils.get_dtype(['echo1.unknown', 'echo1.nii.gz'])
 
     with pytest.raises(TypeError):  # non-img_like inputs don't work
         utils.get_dtype(rs.rand(100, 100))
@@ -118,35 +118,9 @@ def test_load_image():
     assert utils.load_image(fimg.get_data()).shape == exp_shape
 
 
-def test_load_data():
-    fimg = [nib.load(f) for f in fnames]
-    exp_shape = (64350, 3, 5)
-
-    # list of filepath to images
-    d, ref = utils.load_data(fnames, n_echos=len(tes))
-    assert d.shape == exp_shape
-    assert isinstance(ref, str)
-    assert ref == fnames[0]
-
-    # list of img_like
-    d, ref = utils.load_data(fimg, n_echos=len(tes))
-    assert d.shape == exp_shape
-    assert isinstance(ref, nib.Nifti1Image)
-    assert ref == fimg[0]
-
-    # imagine z-cat img
-    d, ref = utils.load_data(fnames[0], n_echos=3)
-    assert d.shape == (21450, 3, 5)
-    assert isinstance(ref, nib.Nifti1Image)
-    assert ref.shape == (39, 50, 11)
-
-    with pytest.raises(ValueError):
-        utils.load_data(fnames[0])
-
-
 def test_make_adaptive_mask():
     # load data make masks
-    data = utils.load_data(fnames, n_echos=len(tes))[0]
+    data = io.load_data(fnames, n_echos=len(tes))[0]
     minmask = utils.make_adaptive_mask(data)
     mask, masksum = utils.make_adaptive_mask(data, minimum=False, getsum=True)
 
@@ -164,31 +138,18 @@ def test_make_adaptive_mask():
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
     assert np.allclose(counts, np.array([13564,  3977,  5060, 41749]))
 
+    # test user-defined mask
+    mask, masksum = utils.make_adaptive_mask(data, mask=pjoin(datadir,
+                                                              'mask.nii.gz'),
+                                             minimum=False, getsum=True)
+    assert np.allclose(mask, nib.load(pjoin(datadir,
+                                            'mask.nii.gz')).get_data().flatten())
+
 
 def test_make_min_mask():
     # load data make mask
-    data = utils.load_data(fnames, n_echos=len(tes))[0]
+    data = io.load_data(fnames, n_echos=len(tes))[0]
     minmask = utils.make_min_mask(data)
 
     assert minmask.shape == (64350,)
     assert minmask.sum() == 58378
-
-
-def test_new_nii_like():
-    data, ref = utils.load_data(fnames, n_echos=len(tes))
-    nimg = utils.new_nii_like(ref, data)
-
-    assert isinstance(nimg, nib.Nifti1Image)
-    assert nimg.shape == (39, 50, 33, 3, 5)
-
-
-def test_filewrite():
-    pass
-
-
-def test_new_gii_like():
-    pass
-
-
-def test_new_gii_darray():
-    pass

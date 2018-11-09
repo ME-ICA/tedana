@@ -2,11 +2,12 @@
 Tests for tedana.
 """
 
-import os.path
-import numpy as np
-import nibabel as nb
+import os.path as op
 from pathlib import Path
-from tedana.cli import run_tedana
+
+import numpy as np
+import nibabel as nib
+
 from tedana import workflows
 
 
@@ -15,11 +16,9 @@ def test_basic_tedana():
     A very simple test, to confirm that tedana creates output
     files.
     """
-    parser = run_tedana.get_parser()
-    options = parser.parse_args(['-d', os.path.expanduser('~/data/zcat_ffd.nii.gz'),
-                                 '-e', '14.5', '38.5', '62.5'])
-    workflows.tedana(**vars(options))
-    assert os.path.isfile('comp_table.txt')
+    workflows.tedana_workflow([op.expanduser('~/data/zcat_ffd.nii.gz')],
+                              [14.5, 38.5, 62.5])
+    assert op.isfile('comp_table_ica.txt')
 
 
 def compare_nifti(fn, test_dir, res_dir):
@@ -28,7 +27,9 @@ def compare_nifti(fn, test_dir, res_dir):
     """
     res_fp = (res_dir/fn).as_posix()
     test_fp = (test_dir/fn).as_posix()
-    assert np.allclose(nb.load(res_fp).get_data(), nb.load(test_fp).get_data())
+    passed = np.allclose(nib.load(res_fp).get_data(),
+                         nib.load(test_fp).get_data())
+    return passed
 
 
 def test_outputs():
@@ -61,6 +62,12 @@ def test_outputs():
         'hik_ts_OC_T1c.nii',
         'sphis_hik.nii'
     ]
+    out = []
     for fn in nifti_test_list:
-        compare_nifti(fn, Path(os.path.expanduser('~/data/TED/')),
-                      Path(os.path.expanduser('~/code/TED.zcat_ffd/')))
+        passed = compare_nifti(fn, Path(op.expanduser('~/data/TED/')),
+                               Path(op.expanduser('~/code/TED.zcat_ffd/')))
+
+        if not passed:
+            out.append(fn)
+
+    assert not out, ', '.join(out)

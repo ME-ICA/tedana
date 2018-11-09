@@ -1,0 +1,2 @@
+include versioneer.py
+include tedana/_version.py
