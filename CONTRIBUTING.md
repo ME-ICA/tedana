@@ -11,6 +11,9 @@ Here are some [instructions][link_signupinstructions].
 Already know what you're looking for in this guide? Jump to the following sections:
 
 * [Joining the conversation](#joining-the-conversation)
+* [Contributing through Github](#contributing-through-github)
+* [Writing in Markdown](#writing-in-markdown)
+* [Writing in ReStructuredText](#writing-in-restructuredtext)
 * [Understanding issues, milestones, and project boards](#explaining-issues-milestones-and-project-boards)
 * [Making a change](#making-a-change)
 * [Structuring contributions](#style-guide)
@@ -24,6 +27,41 @@ We also maintain a [gitter chat room][link_gitter] for more informal conversatio
 
 There is significant cross-talk between these two spaces, and we look forward to hearing from you in either venue!
 As a reminder, we expect all contributions to `tedana` to adhere to our [code of conduct][link_coc].
+
+<img align="right" width="50%" src="https://linuxcentro.com.br/wp-content/uploads/2017/04/github-520x350.jpg" alt="Two github cats working together"/>
+
+## Contributing through GitHub
+
+[git][link_git] is a really useful tool for version control. [GitHub][link_github] sits on top of git and supports collaborative and distributed working.
+
+We know that it can be daunting to start using git and GitHub if you haven't worked with them in the past, but the BIDS Starter Kit maintainers are here to help you figure out any of the jargon or confusing instructions you encounter! :heart:
+
+In order to contribute via GitHub you'll need to set up a free account and sign in. Here are some [instructions][link_signupinstructions] to help you get going. Remember that you can ask us any questions you need to along the way.
+
+## Writing in markdown
+
+GitHub has a helpful page on [getting started with writing and formatting on GitHub][writing_formatting_github].
+
+You'll use [Markdown][markdown] to chat in issues and pull requests.
+You can think of Markdown as a few little symbols around your text that will allow GitHub
+to render the text with a little bit of formatting.
+For example you could write words as bold (`**bold**`), or in italics (`*italics*`),
+or as a [link][rick_roll] (`[link](https://https://youtu.be/dQw4w9WgXcQ)`) to another webpage.
+
+## Writing in ReStructuredText
+
+The documentation for `tedana` is written using [ReStructuredText][restructuredtext].
+This is *another* markup language that interfaces with [sphinx][sphinx], a
+documentation generator.
+Sphinx is used on [ReadTheDocs][readthedocs], a documentation hosting service.
+Putting it all together, ReadTheDocs is an online documentation hosting service
+that uses sphinx, and sphinx is a documentation generation service that uses
+ReStructuredText to format the content.
+What a mouthful!
+
+It's lovely though, and easy once you know how.
+Here's a helpful guide to get you started writing in `rst`:
+http://docs.sphinxdocs.com/en/latest/step-1.html
 
 ## Understanding issues, milestones and project boards
 
@@ -145,9 +183,17 @@ You're awesome. :wave::smiley:
 
 *&mdash; Based on contributing guidelines from the [STEMMRoleModels][link_stemmrolemodels] project.*
 
+[link_git]: https://git-scm.com
 [link_github]: https://github.com/
 [link_tedana]: https://github.com/ME-ICA/tedana
 [link_signupinstructions]: https://help.github.com/articles/signing-up-for-a-new-github-account
+
+[writing_formatting_github]: https://help.github.com/articles/getting-started-with-writing-and-formatting-on-github
+[markdown]: https://daringfireball.net/projects/markdown
+[rick_roll]: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+[restructuredtext]: http://docutils.sourceforge.net/rst.html#user-documentation
+[sphinx]: http://www.sphinx-doc.org/en/master/index.html
+[readthedocs]: https://docs.readthedocs.io/en/latest/index.html
 
 [link_issues]: https://github.com/ME-ICA/tedana/issues
 [link_milestones]: https://github.com/ME-ICA/tedana/milestones/
