@@ -12,8 +12,6 @@ Already know what you're looking for in this guide? Jump to the following sectio
 
 * [Joining the conversation](#joining-the-conversation)
 * [Contributing through Github](#contributing-through-github)
-* [Writing in Markdown](#writing-in-markdown)
-* [Writing in ReStructuredText](#writing-in-restructuredtext)
 * [Understanding issues, milestones, and project boards](#explaining-issues-milestones-and-project-boards)
 * [Making a change](#making-a-change)
 * [Structuring contributions](#style-guide)
@@ -28,17 +26,11 @@ We also maintain a [gitter chat room][link_gitter] for more informal conversatio
 There is significant cross-talk between these two spaces, and we look forward to hearing from you in either venue!
 As a reminder, we expect all contributions to `tedana` to adhere to our [code of conduct][link_coc].
 
-<img align="right" width="50%" src="https://linuxcentro.com.br/wp-content/uploads/2017/04/github-520x350.jpg" alt="Two github cats working together"/>
 
 ## Contributing through GitHub
 
-[git][link_git] is a really useful tool for version control. [GitHub][link_github] sits on top of git and supports collaborative and distributed working.
-
-We know that it can be daunting to start using git and GitHub if you haven't worked with them in the past, but the BIDS Starter Kit maintainers are here to help you figure out any of the jargon or confusing instructions you encounter! :heart:
-
-In order to contribute via GitHub you'll need to set up a free account and sign in. Here are some [instructions][link_signupinstructions] to help you get going. Remember that you can ask us any questions you need to along the way.
-
-## Writing in markdown
+[git][link_git] is a really useful tool for version control.
+[GitHub][link_github] sits on top of git and supports collaborative and distributed working.
 
 GitHub has a helpful page on [getting started with writing and formatting on GitHub][writing_formatting_github].
 
@@ -48,20 +40,6 @@ to render the text with a little bit of formatting.
 For example you could write words as bold (`**bold**`), or in italics (`*italics*`),
 or as a [link][rick_roll] (`[link](https://https://youtu.be/dQw4w9WgXcQ)`) to another webpage.
 
-## Writing in ReStructuredText
-
-The documentation for `tedana` is written using [ReStructuredText][restructuredtext].
-This is *another* markup language that interfaces with [sphinx][sphinx], a
-documentation generator.
-Sphinx is used on [ReadTheDocs][readthedocs], a documentation hosting service.
-Putting it all together, ReadTheDocs is an online documentation hosting service
-that uses sphinx, and sphinx is a documentation generation service that uses
-ReStructuredText to format the content.
-What a mouthful!
-
-It's lovely though, and easy once you know how.
-Here's a helpful guide to get you started writing in `rst`:
-http://docs.sphinxdocs.com/en/latest/step-1.html
 
 ## Understanding issues, milestones and project boards
 
@@ -166,8 +144,26 @@ If you're still working on the pull request that prefix would be **[WIP, TST, DO
 Docstrings should follow [numpydoc][link_numpydoc] convention.
 We encourage extensive documentation.
 
-The code itself should follow [PEP8][link_pep8] convention
+The python code itself should follow [PEP8][link_pep8] convention
 whenever possible, with at most about 500 lines of code (not including docstrings) per script.
+
+Our documentation is written in [ReStructuredText](#writing-in-restructuredtext),
+which we explain in more detail below.
+
+### Writing in ReStructuredText
+
+The documentation for `tedana` is written using [ReStructuredText][restructuredtext].
+Using this markup language allows us to create an online site using the [Sphinx][sphinx]
+documentation generator.
+We then host the generated Sphinx site on [ReadTheDocs][readthedocs],
+to provide an easily accessible space for accessing `tedana` documentation.
+
+What this means is that we need to add any updates to the documentation in ReStructuredText,
+or `rst`.
+The resulting text looks slightly different from the markdown formatting you'll
+[use on github](#contributing-through-github), but we're excited to help you get started!
+Here's [one guide we've found particularly helpful][link_rst_guide] for starting with `rst`.
+And, if you have any questions, please don't hesitate to ask!
 
 
 ## Recognizing contributors
@@ -215,6 +211,7 @@ You're awesome. :wave::smiley:
 
 [link_numpydoc]: https://numpydoc.readthedocs.io/en/latest/format.html
 [link_pep8]: https://www.python.org/dev/peps/pep-0008/
+[link_rst_guide]: http://docs.sphinxdocs.com/en/latest/step-1.html
 
 [link_contributors]: https://github.com/ME-ICA/tedana/graphs/contributors
 [link_stemmrolemodels]: https://github.com/KirstieJane/STEMMRoleModels
