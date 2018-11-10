@@ -7,7 +7,7 @@ jobs:
   build:
     working_directory: ~/code
     docker:
-      - image: circleci/python:3.5
+      - image: circleci/python:3.6.1
 
     steps:
       - run:
