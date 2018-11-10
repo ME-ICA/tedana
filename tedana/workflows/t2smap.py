@@ -158,7 +158,7 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
 
     try:
         ref_label = os.path.basename(ref_img).split('.')[0]
-    except TypeError:
+    except TypeError or AttributeError:
         ref_label = os.path.basename(str(data[0])).split('.')[0]
 
     if label is not None:

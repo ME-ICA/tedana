@@ -271,7 +271,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     try:
         ref_label = op.basename(ref_img).split('.')[0]
-    except TypeError:
+    except TypeError or AttributeError:
         ref_label = op.basename(str(data[0])).split('.')[0]
 
     if label is not None:
