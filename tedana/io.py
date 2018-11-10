@@ -17,7 +17,7 @@ from tedana import model, utils
 LGR = logging.getLogger(__name__)
 
 
-def gen_fname(basefile, extension='.nii.gz', **kwargs):
+def gen_fname(basefile, extension='.nii.gz', suffix=None, **kwargs):
     """
     Generate BIDS derivatives-compatible filename from components.
 
@@ -28,6 +28,9 @@ def gen_fname(basefile, extension='.nii.gz', **kwargs):
         suffix.
     extension : :obj:`str`, optional
         Extension for file. Default is ".nii.gz".
+    suffix : :obj:`str` or :obj:`None`, optional
+        The datatype suffix (e.g., 'bold') to use in the generated filename.
+        If None or not provided, the suffix from the basefile is used.
     kwargs : :obj:`str`
         Additional keyword arguments are added to the filename in the order
         they appear.
@@ -48,8 +51,12 @@ def gen_fname(basefile, extension='.nii.gz', **kwargs):
     prefix = temp[:temp.rfind('_')]
 
     # Grab data type (should be "_bold")
-    suffix = temp[temp.rfind('_'):]
-    suffix = suffix.split('.')[0]
+    if suffix:
+        if not suffix.startswith('_'):
+            suffix = '_' + suffix
+    else:
+        suffix = temp[temp.rfind('_'):]
+        suffix = suffix.split('.')[0]
 
     # Check extension
     if not extension.startswith('.'):
