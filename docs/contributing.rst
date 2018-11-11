@@ -11,7 +11,7 @@ For a more general guide to the tedana development, please see our
 
 
 Style Guide
-===========
+-----------
 
 Code
 ````
@@ -25,7 +25,7 @@ most about 500 lines of code (not including docstrings) per script.
 .. _numpydoc: https://numpydoc.readthedocs.io/en/latest/format.html
 .. _PEP8: https://www.python.org/dev/peps/pep-0008/
 
-Pull Requests
+Pull requests
 `````````````
 
 We encourage the use of standardized tags for categorizing pull requests.
@@ -43,8 +43,8 @@ If your pull request is not yet ready to be merged, please also include the **[W
 This tells the development team that your pull request is a "work-in-progress",
 and that you plan to continue working on it.
 
-Release Checklist
-=================
+Release checklist
+-----------------
 
 This is the checklist of items that must be completed when cutting a new release of tedana.
 These steps can only be completed by a project maintainer, but they are a good resource for

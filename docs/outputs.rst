@@ -23,7 +23,8 @@ ts_OC.nii                 Optimally combined time series.
 dn_ts_OC.nii              Denoised optimally combined time series.
 lowk_ts_OC.nii            Combined time series from rejected components.
 midk_ts_OC.nii            Combined time series from "mid-k" rejected components.
-hik_ts_OC.nii             High-kappa time series.
+hik_ts_OC.nii             Time series of BOLD-like accepted components constructed
+                          from optimally combined data.
 t2ss.nii                  Voxel-wise T2* estimates using ascending numbers
                           of echoes, starting with 2.
 s0vs.nii                  Voxel-wise S0 estimates using ascending numbers
