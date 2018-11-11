@@ -12,7 +12,7 @@ Already know what you're looking for in this guide? Jump to the following sectio
 
 * [Joining the conversation](#joining-the-conversation)
 * [Contributing through Github](#contributing-through-github)
-* [Understanding issues, milestones, and project boards](#explaining-issues-milestones-and-project-boards)
+* [Understanding issues, milestones, and project boards](#understanding-issues-milestones-and-project-boards)
 * [Making a change](#making-a-change)
 * [Structuring contributions](#style-guide)
 * [Recognizing contributors](#recognizing-contributions)
@@ -121,13 +121,13 @@ We outline these below.
 To improve understanding pull requests "at a glance", we encourage the use of several standardized tags.
 When opening a pull request, please use at least one of the following prefixes:
 
+* **[BRK]** for changes which break existing builds or tests
+* **[DOC]** for new or updated documentation
 * **[ENH]** for enhancements
 * **[FIX]** for bug fixes
-* **[TST]** for new or updated tests
-* **[DOC]** for new or updated documentation
-* **[STY]** for stylistic changes
 * **[REF]** for refactoring existing code
-* **[BRK]** for changes which break existing builds or tests
+* **[STY]** for stylistic changes
+* **[TST]** for new or updated tests, and
 * **[WIP]** for changes which are not yet ready to be merged
 
 Pull requests should be submitted early and often!
