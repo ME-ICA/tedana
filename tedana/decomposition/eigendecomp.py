@@ -237,7 +237,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         varex_norm_min = pcastate['varex_norm_min']
         varex_norm_cum = pcastate['varex_norm_cum']
 
-    np.savetxt('mepca_mix.1D', comp_ts)
+    np.savetxt('mepca_mix.1D', comp_ts.T)
 
     # write component maps to 4D image
     comp_maps = np.zeros((OCcatd.shape[0], comp_ts.shape[0]))
