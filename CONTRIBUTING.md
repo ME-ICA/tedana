@@ -32,13 +32,14 @@ As a reminder, we expect all contributions to `tedana` to adhere to our [code of
 [git][link_git] is a really useful tool for version control.
 [GitHub][link_github] sits on top of git and supports collaborative and distributed working.
 
-GitHub has a helpful page on [getting started with writing and formatting on GitHub][writing_formatting_github].
-
-You'll use [Markdown][markdown] to chat in issues and pull requests.
+You'll use [Markdown][markdown] to chat in issues and pull requests on GitHub.
 You can think of Markdown as a few little symbols around your text that will allow GitHub
 to render the text with a little bit of formatting.
 For example you could write words as bold (`**bold**`), or in italics (`*italics*`),
 or as a [link][rick_roll] (`[link](https://https://youtu.be/dQw4w9WgXcQ)`) to another webpage.
+
+GitHub has a helpful page on
+[getting started with writing and formatting Markdown on GitHub][writing_formatting_github].
 
 
 ## Understanding issues, milestones and project boards
