@@ -66,7 +66,7 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     -------
     comptable : :obj:`pandas.DataFrame`
         Updated component table with additional metrics and with
-        classification (accepted, rejected, midk, or ignored)
+        classification (accepted, rejected, midk, or acceptedLowVariance)
 
     Notes
     -----
@@ -846,7 +846,7 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
     comptable.loc[misc_art, 'rationale'] += 'misc artifact;'
     comptable.loc[field_art, 'rationale'] += 'field artifact;'
     comptable.loc[phys_art, 'rationale'] += 'physiological artifact;'
-    comptable.loc[ign, 'classification'] = 'ignored'
+    comptable.loc[ign, 'classification'] = 'acceptedLowVariance'
 
     toacc = np.union1d(toacc_hi, toacc_lo)
     acc_comps = np.setdiff1d(np.union1d(acc_comps, toacc), np.union1d(ign, midkrej))
@@ -868,7 +868,7 @@ def selcomps(seldict, comptable, mmix, mask, ref_img, manacc, n_echos, t2s, s0,
         # ign = np.setdiff1d(all_comps, list(acc_comps)+list(midk)+list(rej))
         orphan = np.setdiff1d(all_comps, (list(acc_comps) + list(ign) +
                                           list(midk) + list(rej)))
-    comptable.loc[orphan, 'classification'] = 'ignored'
+    comptable.loc[orphan, 'classification'] = 'acceptedLowVariance'
     comptable.loc[orphan, 'rationale'] += 'orphan;'
 
     if savecsdiag:

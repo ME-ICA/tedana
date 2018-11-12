@@ -126,6 +126,12 @@ def _get_parser():
                         action='store_true',
                         help='Ignore low-variance ambiguous components',
                         default=False)
+    parser.add_argument('--tedort',
+                        dest='tedort',
+                        action='store_true',
+                        help=('Orthogonalize rejected components w.r.t. '
+                              'accepted components prior to denoising.'),
+                        default=False)
     parser.add_argument('--no_gscontrol',
                         dest='gscontrol',
                         action='store_false',
@@ -173,7 +179,8 @@ def _get_parser():
 
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
-                    strict=False, gscontrol=True, kdaw=10., rdaw=1., conv=2.5e-5,
+                    strict=False, tedort=False, gscontrol=True,
+                    kdaw=10., rdaw=1., conv=2.5e-5,
                     ste=-1, combmode='t2s', dne=False,
                     initcost='tanh', finalcost='tanh',
                     stabilize=False, filecsdata=False, wvpca=False,
@@ -202,8 +209,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Default is None.
     strict : :obj:`bool`, optional
         Ignore low-variance ambiguous components. Default is False.
-    orth : :obj:`bool`, optional
-        Orthogonalize rejected components wrt accepted ones. Default is False.
+    tedort : :obj:`bool`, optional
+        Orthogonalize rejected components w.r.t. accepted ones prior to
+        denoising. Default is False.
     gscontrol : :obj:`bool`, optional
         Control global signal using spatial approach. Default is True.
     kdaw : :obj:`float`, optional
@@ -383,12 +391,12 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     acc = comptable.loc[comptable['classification'] == 'accepted', 'component']
     rej = comptable.loc[comptable['classification'] == 'rejected', 'component']
     midk = comptable.loc[comptable['classification'] == 'midk', 'component']
-    ign = comptable.loc[comptable['classification'] == 'ignored', 'component']
+    ign = comptable.loc[comptable['classification'] == 'acceptedLowVariance', 'component']
     if len(acc) == 0:
         LGR.warning('No BOLD components detected! Please check data and '
                     'results!')
 
-    if orth:
+    if tedort:
         acc_idx = comptable.loc[
             comptable['classification'].str.contains('accepted'),
             'component']
