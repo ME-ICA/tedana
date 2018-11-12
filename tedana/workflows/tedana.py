@@ -397,7 +397,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
             'component']
         acc_ts = mmix[:, acc_idx]
         rej_ts = mmix[:, rej_idx]
-        b = mmix[:, midkrej]
         betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
         pred_rej_ts = np.dot(acc_ts, betas)
         resid = rej_ts - pred_rej_ts
