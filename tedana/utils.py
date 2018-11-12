@@ -46,7 +46,7 @@ def get_dtype(data):
 
 def getfbounds(n_echos):
     """
-    Gets estimated F-statistic boundaries based on number of echos
+    Gets F-statistic boundaries based on number of echos
 
     Parameters
     ----------
@@ -58,19 +58,10 @@ def getfbounds(n_echos):
     fmin, fmid, fmax : :obj:`float`
         Minimum, mid, and max F bounds
     """
-
-    if not isinstance(n_echos, int):
-        raise TypeError('Input n_echos must be type int. Type {} '
-                        'invalid'.format(type(n_echos)))
-    elif n_echos <= 0 or n_echos > 11:
-        raise ValueError('Input `n_echos` must be >0 and <12. Provided '
-                         'value: {}'.format(n_echos))
-    idx = n_echos - 1
-
-    F05s = [None, None, 18.5, 10.1, 7.7, 6.6, 6.0, 5.6, 5.3, 5.1, 5.0]
-    F025s = [None, None, 38.5, 17.4, 12.2, 10, 8.8, 8.1, 7.6, 7.2, 6.9]
-    F01s = [None, None, 98.5, 34.1, 21.2, 16.2, 13.8, 12.2, 11.3, 10.7, 10.]
-    return F05s[idx], F025s[idx], F01s[idx]
+    f05 = scipy.stats.f.ppf(q=1-0.05, dfn=1, dfd=n_echos-1)
+    f025 = scipy.stats.f.ppf(q=1-0.025, dfn=1, dfd=n_echos-1)
+    f01 = scipy.stats.f.ppf(q=1-0.01, dfn=1, dfd=n_echos-1)
+    return f05, f025, f01
 
 
 def load_image(data):
