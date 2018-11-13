@@ -333,8 +333,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     return n_components, kept_data
 
 
-def tedica(n_components, dd, conv, fixed_seed, cost, final_cost,
-           verbose=False):
+def tedica(n_components, dd, conv, fixed_seed, cost='logcosh'):
     """
     Performs ICA on `dd` and returns mixing matrix
 
@@ -347,16 +346,10 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost,
         samples and `T` is time
     conv : :obj:`float`
         Convergence limit for ICA
-    fixed_seed : :obj:`int`
-        Value passed to ``mdp.numx_rand.seed()``.
-        Set to an integer value for reproducible ICA results;
-        otherwise, set to -1 for varying results across calls.
-    cost : {'tanh', 'pow3', 'gaus', 'skew'}
-        Initial cost function for ICA.
-    final_cost : {'tanh', 'pow3', 'gaus', 'skew'}
-        Final cost function for ICA.
-    verbose : :obj:`bool`, optional
-        Whether to print messages regarding convergence process. Default: False
+    cost : {'logcosh', 'exp', 'cube'} str, optional
+        Cost function for ICA
+    fixed_seed : int
+        Seed for ensuring reproducibility of ICA results
 
     Returns
     -------
@@ -366,20 +359,22 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost,
 
     Notes
     -----
-    Uses `mdp` implementation of FastICA for decomposition
+    Uses `sklearn` implementation of FastICA for decomposition
     """
 
-    import mdp
+    from sklearn.decomposition import FastICA
+
+    if cost not in ('logcosh', 'cube', 'exp'):
+        LGR.error('ICA cost function not understood')
+        raise
+
     climit = float(conv)
     if fixed_seed == -1:
         fixed_seed = np.random.randint(low=1, high=1000)
-    mdp.numx_rand.seed(fixed_seed)
-    icanode = mdp.nodes.FastICANode(white_comp=n_components, approach='symm',
-                                    g=cost, fine_g=final_cost,
-                                    coarse_limit=climit*100, limit=climit,
-                                    verbose=verbose)
-    icanode.train(dd)
-    smaps = icanode.execute(dd)  # noqa
-    mmix = icanode.get_recmatrix().T
+    rand_state = np.random.RandomState(seed=fixed_seed)
+    ica = FastICA(n_components=n_components, algorithm='parallel',
+                  fun=cost, tol=climit, random_state=rand_state)
+    ica.fit(dd)
+    mmix = ica.mixing_
     mmix = stats.zscore(mmix, axis=0)
     return mmix, fixed_seed
