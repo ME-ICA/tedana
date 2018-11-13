@@ -1,12 +1,12 @@
-The ``tedana`` Roadmap
-======================
+The tedana Roadmap
+==================
 
 Project vision
 --------------
 
 ME-EPI processing is not well integrated into major preprocessing packages,
 yielding duplicated and unmaintained code.
-```tedana`` has been developed to address this need and will serve as a central repository
+``tedana`` has been developed to address this need and will serve as a central repository
 for standard ME-EPI denoising as well as a testing ground for novel ME-EPI denoising methods.
 This will jointly reduce the external burden on pipeline maintainers,
 facilitate increased ME-EPI adoption, and enable future development in ME-EPI denoising.
@@ -17,12 +17,12 @@ Metrics of success and corresponding milestones
 We will know that we have been successful in creating ``tedana`` when we have succeeded in providing
 several concrete deliverables, which can be broadly categorized into:
 
-1. *:ref:`Documentation`*,
-2. *:ref:`Transparent and Reproducible Processing`*,
-3. *:ref:`Testing`*,
-4. *:ref:`Workflow Integrations`*,
-5. *:ref:`Extensions and Improvements to ME-EPI processing`*, and
-6. *:ref:`Developing a healthy community`*
+1. :ref:`Documentation`,
+2. :ref:`Transparent and Reproducible Processing`,
+3. :ref:`Testing`,
+4. :ref:`Workflow Integrations`,
+5. :ref:`Extensions and Improvements to ME-EPI processing`, and
+6. :ref:`Developing a healthy community`
 
 Each deliverable has been synthesized into a milestone that gives the ``tedana`` community a link
 between the issues and the high level vision for the project.
@@ -35,7 +35,7 @@ Documentation
 One long-standing concern with ME-EPI denoising has been the availability of
 documentation for the method outside of published scientific papers.
 To address this, we have created `a ReadTheDocs site`_;
-however, there are still several sections either explicitly marked as "# TODO"
+however, there are still several sections either explicitly marked as "#TODO"
 or otherwise missing crucial information.
 
 We are committed to providing helpful documentation for all users of ``tedana``.
@@ -48,12 +48,17 @@ One metric of success, then, is to develop documentation that includes:
 4. The different processing steps that are conducted in each workflow,
 5. An up-to-date description of the API,
 6. A transparent explanation of the different decisions that are made
-   through the ```tedana`` pipeline, and
+   through the ``tedana`` pipeline, and
 7. Where to seek support
 
 .. _a ReadTheDocs site: https://tedana.readthedocs.io
 
-**`Associated Milestone <https://github.com/ME-ICA/tedana/milestone/6>`_**
+
+|milestone1|_
+
+.. _milestone1: https://github.com/ME-ICA/tedana/milestone/6
+
+.. |milestone1| replace:: **Associated Milestone**
 
 This milestone will close when the online documentation contains the minimum necessary information
 to orient a complete newcomer to ME-EPI, both on the theoretical basis of the method as well as
@@ -82,11 +87,17 @@ including the specific selection criteria used in making denoising decisions.
 This, combined with the reproducibility afforded by seeding all non-deterministic steps,
 will enable both increased confidence and better reporting of ME-EPI results.
 
-A metric of success for ``tedana`` then, should be enhancements to the code such that
+A metric of success for ``tedana`` then, should be enhancements to the code such that:
+
 1. Non-deterministic steps are made reproducible by enabling access to a "seed value", and
 2. The decision process for individual component data is made accessible to the end user.
 
-**`Associated Milestone <https://github.com/ME-ICA/tedana/milestone/4>`_**
+
+|milestone2|_
+
+.. _milestone2: https://github.com/ME-ICA/tedana/milestone/4
+
+.. |milestone2| replace:: **Associated Milestone**
 
 This milestone will close when when the internal decision making process for
 component selection is made accessible to the end user,
@@ -110,10 +121,16 @@ the unit test and integration test levels;
 that is, both in testing individual functions and broader workflows, respectively.
 
 A metric of success should thus be:
+
 1. Achieving 90% test coverage for unit tests, as well as
 2. Three distinguishable integration tests over a range of possible acquisition conditions.
 
-**`Associated Milestone <https://github.com/ME-ICA/tedana/milestone/7>`_**
+
+|milestone3|_
+
+.. _milestone3: https://github.com/ME-ICA/tedana/milestone/7
+
+.. |milestone3| replace:: **Associated Milestone**
 
 This milestone will close when we have 90% test coverage for unit tests and
 three distinguishable integration tests,
@@ -138,15 +155,20 @@ One metric of success, therefore, will be if we can demonstrate sufficient stabi
 such that the ``afni_proc.py`` maintainers are willing to switch to ``tedana`` as the recommended
 method of accessing ME-EPI denoising in AFNI.
 We will aim to aid in this process by increasing compatibility between ``tedana``
-and the ```afni_proc.py`` workflow, eliminating the need for an additional wrapper script.
+and the ``afni_proc.py`` workflow, eliminating the need for an additional wrapper script.
 For example, ``tedana`` could directly accept BRIK/HEAD files,
 facilitating interoperability with other AFNI pipelines.
 
-**`Associated Milestone <https://github.com/ME-ICA/tedana/milestone/8>`_**
+
+|milestone4|_
+
+.. _milestone4: https://github.com/ME-ICA/tedana/milestone/8
+
+.. |milestone4| replace:: **Associated Milestone**
 
 This milestone will close when ``tedana`` is stable enough such that the recommended default in
- ``afni_proc.py`` is to access ME-EPI denoising via ``pip install tedana``,
- rather than maintaining the alternative version that is currently used.
+``afni_proc.py`` is to access ME-EPI denoising via ``pip install tedana``,
+rather than maintaining the alternative version that is currently used.
 
 
 Workflow integration: BIDS
@@ -159,17 +181,23 @@ One promising opportunity is if ``tedana`` can be used natively in `FMRIPrep`_.
 Some of the work is not required at this repository, but other changes will need to happen here;
 for example, making sure the outputs are BIDS compliant.
 
-A metric of success, then, will be
+A metric of success, then, will be:
+
 1. Fully integrating ``tedana`` into ``FMRIPrep``, and
 2. Making ``tedana`` outputs compliant with the `BIDS derivatives specification`_.
 
 .. _FMRIPrep: https://github.com/poldracklab/fmriprep
 .. _BIDS derivatives specification: https://docs.google.com/document/d/1Wwc4A6Mow4ZPPszDIWfCUCRNstn7d_zzaWPcfcHmgI4/edit
 
-**`Associated Milestone <https://github.com/ME-ICA/tedana/milestone/9>`_**
+
+|milestone5|_
+
+.. _milestone5: https://github.com/ME-ICA/tedana/milestone/9
+
+.. |milestone5| replace:: **Associated Milestone**
 
 This milestone will close when the denoising steps of ``tedana`` are stable enough
-to integrate into ``FMRIPrep`` and the ```FMRIPrep`` project is updated to process ME-EPI scans.
+to integrate into ``FMRIPrep`` and the ``FMRIPrep`` project is updated to process ME-EPI scans.
 
 
 .. _Extensions and Improvements to ME-EPI processing:
@@ -188,7 +216,12 @@ A metric of success here would be
 To achieve either of these metrics, it is likely that we will need to incoporate a
 quality-assurance module into ``tedana``, possibly as visual reports.
 
-**`Associated Milestone <https://github.com/ME-ICA/tedana/milestone/10>`_**
+
+|milestone6|_
+
+.. _milestone6: https://github.com/ME-ICA/tedana/milestone/10
+
+.. |milestone6| replace:: **Associated Milestone**
 
 This milestone will close when the codebase is stable enough to integrate novel methods
 into ``tedana``, and that happens!
@@ -206,9 +239,15 @@ By making ``tedana`` stable and well-documented, with enough modularity to integ
 we will enable new contributors to feel that their work is welcomed.
 
 We therefore have one additional metric of success:
+
 1. An outside contributor integrates an improvement to ME-EPI denoising.
 
-**`Associated Milestone <https://github.com/ME-ICA/tedana/milestone/5>`_**
+
+|milestone7|_
+
+.. _milestone7: https://github.com/ME-ICA/tedana/milestone/5
+
+.. |milestone7| replace:: **Associated Milestone**
 
 This milestone will probably never close,
 but will serve to track issues related to building and supporting the ``tedana`` community.

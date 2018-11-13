@@ -17,7 +17,7 @@ Governance is a hugely important part of any project.
 It is especially important to have clear process and communication channels
 for open source projects that rely on a distributed network of volunteers, such as ``tedana``.
 
-```tedana`` is currently supported by a small group of five core developers.
+``tedana`` is currently supported by a small group of five core developers.
 Even with only five members involved in decision making processes,
 we've found that setting expectations and communicating a shared vision has great value.
 
@@ -26,10 +26,12 @@ we hope to welcome more people into the contributing team.
 We are committed to continuing to update the governance structures as necessary.
 Every member of the ``tedana`` community is encouraged to comment on these processes and suggest improvements.
 
-As the first interim [Benevolent Dictator for Life (BDFL)](https://en.wikipedia.org/wiki/Benevolent_dictator_for_life),
-Elizabeth DuPre is ultimately responsible for any major decisions pertaining to tedana development.
+As the first interim `Benevolent Dictator for Life (BDFL)`_,
+Elizabeth DuPre is ultimately responsible for any major decisions pertaining to ``tedana`` development.
 However, all potential changes are explicitly and openly discussed in the described channels of
 communication, and we strive for consensus amongst all community members.
+
+.. _Benevolent Dictator for Life (BDFL): https://en.wikipedia.org/wiki/Benevolent_dictator_for_life
 
 Code of conduct
 ```````````````
@@ -44,7 +46,7 @@ from collective decision-making and rejection of future contributions to the ``t
 
 .. _code of conduct: https://github.com/ME-ICA/tedana/blob/master/Code_of_Conduct.md
 
-```tedana``'s development philosophy
+tedana's development philosophy
 --------------------------------------
 
 In contributing to any open source project,
@@ -77,6 +79,7 @@ The ``tedana`` "opinionated approach" is therefore to provide reasonable default
 and to hide some options from the top level workflows.
 
 This decision has two key benefits:
+
 1. By default, users should get high quality results from running the pipelines, and
 2. The work required of the ``tedana``  developers to maintain the project is more focused and somewhat restricted.
 
@@ -131,6 +134,7 @@ There are two main reasons why. One is that the tool originally used to run the 
 component analysis core to the MEICA method (`mdp`_) is no longer supported.
 In November 2018 the developers made the decision to switch to `scikit learn`_ to perform
 these analyses.
+
 Scikit learn is well supported and under long term development.
 ``tedana`` will be more stable and have better performance going forwards as a result of
 this switch, but it also means that exactly reproducing MEICA analyses is not possible.
@@ -140,7 +144,7 @@ an older codebase.
 As described in the :ref:`governance` section, ``tedana`` is developed by a small team of
 volunteers and they have to allocate their time accordingly.
 If you'd like to use MEICA as has been previously published the code is available on
- `bitbucket`_ and freely available under a LGPL2 license.
+`bitbucket`_ and freely available under a LGPL2 license.
 
 .. _mdp: http://mdp-toolkit.sourceforge.net
 .. _scikit learn: http://scikit-learn.org/stable
@@ -187,6 +191,7 @@ To give two concrete examples of slightly less obvious cases:
 
 1. A substantial update to the documentation that makes ``tedana``  easier to use **would** count as
 a substantial change to ``tedana``  and a new release should be considered.
+
 2. In contrast, updating code coverage with additional unit tests does not affect the
 **user's** experience with ``tedana``  and therefore does not require a new release.
 
