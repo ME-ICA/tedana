@@ -30,7 +30,6 @@ DOWNLOAD_URL = (
 REQUIRES = [
     'numpy',
     'scikit-learn',
-    'mdp',
     'pywavelets',
     'nilearn',
     'nibabel>=2.1.0',
