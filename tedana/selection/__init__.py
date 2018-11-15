@@ -5,5 +5,4 @@ from .select_comps import (
     selcomps,
 )
 
-
 __all__ = ['selcomps']
