@@ -25,7 +25,10 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     Parameters
     ----------
     seldict : :obj:`dict`
-        Component-specific metrics and maps produced by `fitmodels_direct`
+        A dictionary with component-specific features used for classification.
+        As output from `fitmodels_direct`
+    comptable : (C x 5) :obj:`pandas.DataFrame`
+        Component metric table
     mmix : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the number of volumes in the original data
@@ -62,6 +65,14 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     """
     if mmix.ndim != 2:
         raise ValueError('Parameter mmix should be 2d, not {0}d'.format(mmix.ndim))
+    elif t2s.ndim != 1:  # FIT not necessarily supported
+        raise ValueError('Parameter t2s should be 1d, not {0}d'.format(t2s.ndim))
+    elif s0.ndim != 1:  # FIT not necessarily supported
+        raise ValueError('Parameter s0 should be 1d, not {0}d'.format(s0.ndim))
+    elif not (t2s.shape[0] == s0.shape[0] == mask.shape[0]):
+        raise ValueError('First dimensions (number of samples) of t2s ({0}), '
+                         's0 ({1}), and mask ({2}) do not '
+                         'match'.format(t2s.shape[0], s0.shape[0], mask.shape[0]))
     elif not (mmix.shape[1] == comptable.shape[0]):
         raise ValueError('Second dimension (number of components) of mmix '
                          '({0}) does not match first dimension of comptable '

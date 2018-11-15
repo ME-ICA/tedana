@@ -49,8 +49,18 @@ representative at an online or offline event.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by contacting Elizabeth DuPre at elizabeth.dupre@mail.mcgill.ca.
+reported by contacting Elizabeth DuPre at <elizabeth.dupre@mail.mcgill.ca>.
 Confidentiality will be respected in reporting.
+
+As the first interim [Benevolent Dictator for Life (BDFL)](https://en.wikipedia.org/wiki/Benevolent_dictator_for_life),
+Elizabeth DuPre can take any action she deems appropriate
+for the safety of the `tedana` community, including but not limited to:
+
+* facilitating a conversation between the two parties involved in the violation of the code of conduct
+* requesting a contributor apologize for their behaviour
+* asking a contributor or multiple contributors to enter a cooling off period that puts a
+  time-limited pause on a particular discussion topic
+* asking a contributor to no longer participate in the development of `tedana`
 
 ## Attribution
 

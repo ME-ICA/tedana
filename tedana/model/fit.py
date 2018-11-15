@@ -230,16 +230,16 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
             ccimg = io.new_nii_like(ref_img, out)
 
             # Do simple clustering on F
-            sel = spatclust(ccimg, min_cluster_size=csize,
-                            threshold=int(fmin), index=[1, 2], mask=(t2s != 0))
+            sel = spatclust(ccimg, min_cluster_size=csize, threshold=int(fmin),
+                            index=[1, 2], mask=(t2s != 0))
             F_R2_clmaps[:, i_comp] = sel[:, 0]
             F_S0_clmaps[:, i_comp] = sel[:, 1]
             countsigFR2 = F_R2_clmaps[:, i_comp].sum()
             countsigFS0 = F_S0_clmaps[:, i_comp].sum()
 
             # Do simple clustering on Z at p<0.05
-            sel = spatclust(ccimg, min_cluster_size=csize,
-                            threshold=1.95, index=3, mask=mask)
+            sel = spatclust(ccimg, min_cluster_size=csize, threshold=1.95,
+                            index=3, mask=mask)
             Z_clmaps[:, i_comp] = sel
 
             # Do simple clustering on ranked signal-change map
