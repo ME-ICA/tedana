@@ -63,20 +63,6 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     based on how similar metrics in one component are similar to metrics in
     other components.
     """
-    if mmix.ndim != 2:
-        raise ValueError('Parameter mmix should be 2d, not {0}d'.format(mmix.ndim))
-    elif t2s.ndim != 1:  # FIT not necessarily supported
-        raise ValueError('Parameter t2s should be 1d, not {0}d'.format(t2s.ndim))
-    elif s0.ndim != 1:  # FIT not necessarily supported
-        raise ValueError('Parameter s0 should be 1d, not {0}d'.format(s0.ndim))
-    elif not (t2s.shape[0] == s0.shape[0] == mask.shape[0]):
-        raise ValueError('First dimensions (number of samples) of t2s ({0}), '
-                         's0 ({1}), and mask ({2}) do not '
-                         'match'.format(t2s.shape[0], s0.shape[0], mask.shape[0]))
-    elif not (mmix.shape[1] == comptable.shape[0]):
-        raise ValueError('Second dimension (number of components) of mmix '
-                         '({0}) does not match first dimension of comptable '
-                         '({1})'.format(mmix.shape[1], comptable.shape[0]))
 
     cols_at_end = ['classification', 'rationale']
     comptable['classification'] = 'accepted'
