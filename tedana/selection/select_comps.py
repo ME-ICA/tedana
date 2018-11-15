@@ -6,7 +6,7 @@ import numpy as np
 from scipy import stats
 
 from tedana import utils
-from tedana.selection._utils import getelbow_mod
+from tedana.selection._utils import getelbow
 
 LGR = logging.getLogger(__name__)
 
@@ -114,17 +114,14 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
 
     """
     Make table of dice values
-    Step 3a
     """
     comptable['dice_FR2'] = np.zeros(all_comps.shape[0])
     comptable['dice_FS0'] = np.zeros(all_comps.shape[0])
     for i_comp in acc:
-        comptable.loc[i_comp, 'dice_FR2'] = utils.dice(
-            Br_R2_clmaps[:, i_comp],
-            F_R2_clmaps[:, i_comp])
-        comptable.loc[i_comp, 'dice_FS0'] = utils.dice(
-            Br_S0_clmaps[:, i_comp],
-            F_S0_clmaps[:, i_comp])
+        comptable.loc[i_comp, 'dice_FR2'] = utils.dice(Br_R2_clmaps[:, i_comp],
+                                                       F_R2_clmaps[:, i_comp])
+        comptable.loc[i_comp, 'dice_FS0'] = utils.dice(Br_S0_clmaps[:, i_comp],
+                                                       F_S0_clmaps[:, i_comp])
 
     comptable.loc[np.isnan(comptable['dice_FR2']), 'dice_FR2'] = 0
     comptable.loc[np.isnan(comptable['dice_FS0']), 'dice_FS0'] = 0
@@ -207,7 +204,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     """
     # Step 2a
     varex_ub_p = np.median(
-        comptable.loc[comptable['kappa'] > getelbow_mod(comptable['kappa'], return_val=True),
+        comptable.loc[comptable['kappa'] > getelbow(comptable['kappa'], return_val=True),
                       'variance explained'])
     ncls = acc.copy()
     # NOTE: We're not sure why this is done, nor why it's specifically done
@@ -220,10 +217,10 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
 
     # Compute elbows
     kappas_lim = comptable.loc[comptable['kappa'] < utils.getfbounds(n_echos)[-1], 'kappa']
-    kappa_elbow = np.min((getelbow_mod(kappas_lim, return_val=True),
-                          getelbow_mod(comptable['kappa'], return_val=True)))
-    rho_elbow = np.mean((getelbow_mod(comptable.loc[ncls, 'rho'], return_val=True),
-                         getelbow_mod(comptable['rho'], return_val=True),
+    kappa_elbow = np.min((getelbow(kappas_lim, return_val=True),
+                          getelbow(comptable['kappa'], return_val=True)))
+    rho_elbow = np.mean((getelbow(comptable.loc[ncls, 'rho'], return_val=True),
+                         getelbow(comptable['rho'], return_val=True),
                          utils.getfbounds(n_echos)[0]))
 
     # Initial guess of good components based on Kappa and Rho elbows
