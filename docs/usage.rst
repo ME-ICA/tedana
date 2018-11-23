@@ -56,7 +56,8 @@ Constructing ME-EPI pipelines
 -----------------------------
 
 ``tedana`` must be called in the context of a larger ME-EPI preprocessing pipeline.
-Two common pipelines which support ME-EPI processing include `fMRIPrep`_ and `afni_proc.py`_.
+One common pipeline which supports ME-EPI processing is `afni_proc.py`_.
+Additionally, there are plans currently underway to integrate ``tedana`` into `fMRIPrep`_.
 
 .. _fMRIPrep: https://fmriprep.readthedocs.io
 .. _afni_proc.py: https://afni.nimh.nih.gov/pub/dist/doc/program_help/afni_proc.py.html
