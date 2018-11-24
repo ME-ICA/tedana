@@ -61,7 +61,7 @@ If this is not considered, resulting intensity gradients (e.g., in the case of s
 or alignment parameters (e.g., in the case of motion correction, normalization)
 are likely to differ across echos,
 and the subsequent calculation of voxelwise T2* values will be distorted.
-See the description of ``tedana``'s `:doc: approach <\approach>` for more details
+See the description of ``tedana``'s :doc:`approach <\approach>` for more details
 on how T2* values are calculated.
 
 
