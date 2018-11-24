@@ -57,8 +57,6 @@ working with data which has been previously preprocessed.
 Citations
 ---------
 
-.. image:: /_static/tedana-poster.png
-
 When using tedana, please include the following citations:
 
    .. raw:: html
@@ -117,6 +115,11 @@ You can also learn more about `why citing software is important`_.
 .. _`why citing software is important`: https://www.software.ac.uk/how-cite-software
 
 
+Posters
+-------
+
+.. image:: /_static/tedana-poster.png
+
 License Information
 -------------------
 
@@ -131,8 +134,9 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
    usage
    approach
    outputs
-   support
    contributing
+   roadmap
+   support
    api
 
 Indices and tables
