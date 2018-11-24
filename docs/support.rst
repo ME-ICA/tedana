@@ -11,7 +11,7 @@ We will also attempt to archive certain common questions and associate answers i
 .. _multi-echo tag: https://neurostars.org/tags/multi-echo
 
 FAQ
----
+===
 
 .. _constructing ME-EPI pipelines:
 
