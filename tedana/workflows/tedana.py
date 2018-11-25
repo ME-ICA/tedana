@@ -281,14 +281,14 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         LGR.info('Using output directory: {}'.format(out_dir))
 
     if mixm is not None and op.isfile(mixm):
-        out_mixm_file = gen_fname(bf, 'icammix', extension='.1D')
+        out_mixm_file = gen_fname(bf, '.1D', 'timeseries', desc='icammix')
         shutil.copyfile(mixm, op.join(out_dir, out_mixm_file))
         shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
     elif mixm is not None:
         raise IOError('Argument "mixm" must be an existing file.')
 
     if ctab is not None and op.isfile(ctab):
-        out_ctab_file = gen_fname(bf, 'icacomptable', extension='.txt')
+        out_ctab_file = gen_fname(bf, '.txt', 'timeseries', desc='icacomptable')
         shutil.copyfile(ctab, op.join(out_dir, out_ctab_file))
         shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
     elif ctab is not None:
