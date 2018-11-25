@@ -281,14 +281,14 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         LGR.info('Using output directory: {}'.format(out_dir))
 
     if mixm is not None and op.isfile(mixm):
-        out_mixm_file = gen_fname(bf, '.1D', 'timeseries', desc='icammix')
+        out_mixm_file = gen_fname(bf, '_mixing.tsv', desc='TEDICA')
         shutil.copyfile(mixm, op.join(out_dir, out_mixm_file))
         shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
     elif mixm is not None:
         raise IOError('Argument "mixm" must be an existing file.')
 
     if ctab is not None and op.isfile(ctab):
-        out_ctab_file = gen_fname(bf, '.txt', 'timeseries', desc='icacomptable')
+        out_ctab_file = gen_fname(bf, '_comptable.tsv', desc='TEDICA')
         shutil.copyfile(ctab, op.join(out_dir, out_ctab_file))
         shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
     elif ctab is not None:
@@ -312,12 +312,12 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                       interpolation_method='lower')
     LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
     t2s[t2s > cap_t2s * 10] = cap_t2s
-    io.filewrite(t2s, op.join(out_dir, gen_fname(bf, '.nii.gz', desc='t2sv')), ref_img)
-    io.filewrite(s0, op.join(out_dir, gen_fname(bf, '.nii.gz', desc='s0v')), ref_img)
-    io.filewrite(t2ss, op.join(out_dir, gen_fname(bf, '.nii.gz', desc='t2ss')), ref_img)
-    io.filewrite(s0s, op.join(out_dir, gen_fname(bf, '.nii.gz', desc='s0vs')), ref_img)
-    io.filewrite(t2sG, op.join(out_dir, gen_fname(bf, '.nii.gz', desc='t2svG')), ref_img)
-    io.filewrite(s0G, op.join(out_dir, gen_fname(bf, '.nii.gz', desc='s0vG')), ref_img)
+    io.filewrite(t2s, op.join(out_dir, gen_fname(bf, desc='t2sv')), ref_img)
+    io.filewrite(s0, op.join(out_dir, gen_fname(bf, desc='s0v')), ref_img)
+    io.filewrite(t2ss, op.join(out_dir, gen_fname(bf, desc='t2ss')), ref_img)
+    io.filewrite(s0s, op.join(out_dir, gen_fname(bf, desc='s0vs')), ref_img)
+    io.filewrite(t2sG, op.join(out_dir, gen_fname(bf, desc='t2svG')), ref_img)
+    io.filewrite(s0G, op.join(out_dir, gen_fname(bf, desc='s0vG')), ref_img)
 
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
@@ -336,7 +336,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, conv, fixed_seed,
                                                      cost=initcost, final_cost=finalcost,
                                                      verbose=debug)
-        np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
+        np.savetxt(gen_fname(bf, '_mixing.tsv', desc='initialTEDICA'), mmix_orig)
         LGR.info('Making second component selection guess from ICA results')
         # Estimate betas and compute selection metrics for mixing matrix
         # generated from dimensionally reduced data using full data (i.e., data
@@ -346,7 +346,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                                  tes, combmode,
                                                                  ref_img,
                                                                  reindex=True)
-        np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
+        np.savetxt(gen_fname(bf, '_mixing.tsv', desc='TEDICA'), mmix)
 
         comptable = selection.selcomps(seldict, comptable, mmix,
                                        mask, ref_img, manacc,
@@ -355,7 +355,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                        filecsdata=filecsdata)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
-        mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
+        mmix_orig = np.loadtxt(gen_fname(bf, '_mixing.tsv', desc='TEDICA'))
         seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
                                                                  mask, t2s, t2sG,
                                                                  tes, combmode,
@@ -369,8 +369,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         else:
             comptable = pd.read_csv(ctab, sep='\t', index_col='component')
 
-    comptable.to_csv(op.join(out_dir, 'comp_table_ica.txt'), sep='\t',
-                     index=True, index_label='component', float_format='%.6f')
+    comptable.to_csv(gen_fname(bf, '_comptable.tsv', desc='TEDICA'),
+                     sep='\t', index=True, index_label='component',
+                     float_format='%.6f')
     if 'component' not in comptable.columns:
         comptable['component'] = comptable.index
     acc = comptable.loc[comptable['classification'] == 'accepted', 'component']

@@ -17,7 +17,7 @@ from tedana import model, utils
 LGR = logging.getLogger(__name__)
 
 
-def gen_fname(basefile, extension='.nii.gz', suffix=None, **kwargs):
+def gen_fname(basefile, extension='_bold.nii.gz', **kwargs):
     """
     Generate BIDS derivatives-compatible filename from components.
 
@@ -27,10 +27,8 @@ def gen_fname(basefile, extension='.nii.gz', suffix=None, **kwargs):
         Name of file from which to derive BIDSRawBase prefix and datatype
         suffix.
     extension : :obj:`str`, optional
-        Extension for file. Default is ".nii.gz".
-    suffix : :obj:`str` or :obj:`None`, optional
-        The datatype suffix (e.g., 'bold') to use in the generated filename.
-        If None or not provided, the suffix from the basefile is used.
+        Extension for file. Includes the datatype suffix. Default is
+        "_bold.nii.gz".
     kwargs : :obj:`str`
         Additional keyword arguments are added to the filename in the order
         they appear.
@@ -51,23 +49,15 @@ def gen_fname(basefile, extension='.nii.gz', suffix=None, **kwargs):
     prefix = temp[:temp.rfind('_')]
 
     # Grab data type (should be "_bold")
-    if suffix:
-        if not suffix.startswith('_'):
-            suffix = '_' + suffix
-    else:
-        suffix = temp[temp.rfind('_'):]
-        suffix = suffix.split('.')[0]
-
-    # Check extension
-    if not extension.startswith('.'):
-        extension = '.' + extension
+    if not extension.startswith('_'):
+        extension = '_' + extension
 
     # Create string with description-field pairs
     add_str = ''
     for k, v in kwargs.items():
         add_str += '_{0}-{1}'.format(k, v)
 
-    out_file = prefix+add_str+suffix+extension
+    out_file = prefix+add_str+extension
     return out_file
 
 
