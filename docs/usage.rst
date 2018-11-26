@@ -10,8 +10,10 @@ But you can supply many other options, viewable with ``tedana -h`` or
 ``t2smap -h``.
 
 For most use cases, we recommend that users call tedana from within existing fMRI preprocessing
-pipelines such as `fMRIPrep`_ or `afni_proc.py`_..
-Users can also construct their own preprocessing pipelines from which to call tedana;
+pipelines such as `fMRIPrep`_ or `afni_proc.py`_.
+fMRIPrep currently supports optimal combination through ``tedana``, but not the full multi-echo
+denoising pipeline, although there are plans underway to integrate it.
+Users can also construct their own preprocessing pipelines from which to call ``tedana``;
 for recommendations on doing so, see our general guidelines for
 :ref:`_constructing ME-EPI pipelines`.
 
