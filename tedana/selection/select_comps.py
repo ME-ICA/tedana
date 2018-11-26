@@ -13,14 +13,12 @@ LGR = logging.getLogger(__name__)
 
 def selcomps(seldict, comptable, mmix, manacc, n_echos):
     """
-    Classify components in seldict as accepted, rejected, midk, or ignored
-    based on Kundu approach v2.5.
+    Classify components in seldict as "accepted," "rejected," "midk," or "ignored."
 
-    The selection process uses pre-calculated parameters for each ICA component
-    inputted into this function in `seldict` such as Kappa (a T2* weighting
-    metric), Rho (an S0 weighting metric), and variance explained. Additional
-    selection metrics are calculated within this function and then used to
-    classify each component into one of four groups.
+    The selection process uses previously calculated parameters listed in `seldict`
+    for each ICA component such as Kappa (a T2* weighting metric), Rho (an S0 weighting metric),
+    and variance explained. See `Notes` for additional calculated metrics used to
+    classify each component into one of the four listed groups.
 
     Parameters
     ----------
@@ -45,23 +43,17 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
 
     Notes
     -----
-    The selection algorithm used in this function is from work by prantikk
-    It is from selcomps function in select_model.py in version 2.5 of MEICA at:
+    The selection algorithm used in this function was originated in ME-ICA
+    by Prantik Kundu, and his original implementation is available at:
     https://github.com/ME-ICA/me-ica/blob/b2781dd087ab9de99a2ec3925f04f02ce84f0adc/meica.libs/select_model.py
-    Some later publications using and evaluating the MEICA method used a
-    different selection algorithm by prantikk. The 3.2 version of that
-    algorithm in the selcomps function in select_model_fft20e.py at:
-    https://github.com/ME-ICA/me-ica/blob/b2781dd087ab9de99a2ec3925f04f02ce84f0adc/meica.libs/select_model_fft20e.py
-    In both algorithms, the ICA component selection process uses multiple
-    metrics that include: kappa, rho, variance explained, component spatial
-    weighting maps, noise and spatial frequency metrics, and measures of
-    spatial overlap across metrics. The precise calculations may vary between
-    algorithms. The most notable difference is that the v2.5 algorithm is a
-    fixed decision tree where all sections were made based on whether
-    combinations of metrics crossed various thresholds. In the v3.2 algorithm,
-    clustering and support vector machines are also used to classify components
-    based on how similar metrics in one component are similar to metrics in
-    other components.
+
+    This component selection process uses multiple, previously calculated metrics that include:
+    kappa, rho, variance explained, component spatial weighting maps, noise and spatial
+    frequency metrics, and measures of spatial overlap across metrics.
+
+    Prantik began to update these selection criteria to use SVMs to
+    distinguish components, a hypercommented version of this attempt is available at:
+    https://gist.github.com/emdupre/ca92d52d345d08ee85e104093b81482e
     """
 
     cols_at_end = ['classification', 'rationale']
@@ -130,9 +122,8 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     Make table of noise gain
     """
     comptable['countnoise'] = 0
-    comptable['tt0'] = 0  # needs better name
-    comptable['tt1'] = 0  # needs better name
-    counts_FR2_Z = np.zeros([n_comps, 2])  # unused
+    comptable['signal-noise_t'] = 0
+    comptable['signal-noise_p'] = 0
     for i_comp in all_comps:
         comp_noise_sel = ((np.abs(Z_maps[:, i_comp]) > 1.95) &
                           (Z_clmaps[:, i_comp] == 0))
@@ -141,14 +132,12 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
         noise_FR2_Z = np.log10(np.unique(F_R2_maps[comp_noise_sel, i_comp]))
         signal_FR2_Z = np.log10(np.unique(
             F_R2_maps[Z_clmaps[:, i_comp] == 1, i_comp]))
-        counts_FR2_Z[i_comp, :] = [len(signal_FR2_Z), len(noise_FR2_Z)]
-        (comptable.loc[i_comp, 'tt0'],
-         comptable.loc[i_comp, 'tt1']) = stats.ttest_ind(
+        (comptable.loc[i_comp, 'signal-noise_t'],
+         comptable.loc[i_comp, 'signal-noise_p']) = stats.ttest_ind(
              signal_FR2_Z, noise_FR2_Z, equal_var=False)
 
-    comptable.loc[np.isnan(comptable['tt0']), 'tt0'] = 0
-    comptable.loc[np.isnan(comptable['tt1']), 'tt1'] = 0
-    del noise_FR2_Z, signal_FR2_Z
+    comptable.loc[np.isnan(comptable['signal-noise_t']), 'signal-noise_t'] = 0
+    comptable.loc[np.isnan(comptable['signal-noise_p']), 'signal-noise_p'] = 0
 
     """
     Assemble decision table
@@ -156,12 +145,11 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     d_table_rank = np.vstack([
         n_comps-stats.rankdata(comptable['kappa'], method='ordinal'),
         n_comps-stats.rankdata(comptable['dice_FR2'], method='ordinal'),
-        n_comps-stats.rankdata(comptable['tt0'], method='ordinal'),
+        n_comps-stats.rankdata(comptable['signal-noise_t'], method='ordinal'),
         stats.rankdata(countnoise, method='ordinal'),
         n_comps-stats.rankdata(comptable['countsigFR2'], method='ordinal')]).T
     n_decision_metrics = d_table_rank.shape[1]
     comptable['d_table_score'] = d_table_rank.sum(axis=1)
-    del d_table_rank
 
     """
     Step 1: Reject anything that's obviously an artifact
@@ -182,11 +170,11 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
                                               'and high variance explained;')
     rej = np.union1d(temp_rej0, temp_rej1)
 
-    temp_rej2 = acc[(comptable.loc[acc, 'tt0'] < 0) &
+    temp_rej2 = acc[(comptable.loc[acc, 'signal-noise_t'] < 0) &
                     (comptable.loc[acc, 'variance explained'] >
                      np.median(comptable['variance explained']))]
     comptable.loc[temp_rej2, 'classification'] = 'rejected'
-    comptable.loc[temp_rej2, 'rationale'] += ('TT0 < 0 '
+    comptable.loc[temp_rej2, 'rationale'] += ('signal-noise_t < 0 '
                                               'and high variance explained;')
     rej = np.union1d(temp_rej2, rej)
 
@@ -203,7 +191,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     f. Estimate a low and high variance
     """
     # Step 2a
-    varex_ub_p = np.median(
+    varex_upper_p = np.median(
         comptable.loc[comptable['kappa'] > getelbow(comptable['kappa'], return_val=True),
                       'variance explained'])
     ncls = acc.copy()
@@ -213,7 +201,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     for nn in range(3):
         ncls = comptable.loc[ncls].loc[
             comptable.loc[
-                ncls, 'variance explained'].diff() < varex_ub_p].index.values
+                ncls, 'variance explained'].diff() < varex_upper_p].index.values
 
     # Compute elbows
     kappas_lim = comptable.loc[comptable['kappa'] < utils.getfbounds(n_echos)[-1], 'kappa']
@@ -243,9 +231,9 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
                   (np.max(comptable.loc[good_guess, 'variance explained']) -
                    np.min(comptable.loc[good_guess, 'variance explained'])))
     kappa_ratios = kappa_rate * comptable['variance explained'] / comptable['kappa']
-    varex_lb = stats.scoreatpercentile(
+    varex_lower = stats.scoreatpercentile(
         comptable.loc[good_guess, 'variance explained'], LOW_PERC)
-    varex_ub = stats.scoreatpercentile(
+    varex_upper = stats.scoreatpercentile(
         comptable.loc[good_guess, 'variance explained'], HIGH_PERC)
 
     """
@@ -254,7 +242,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     """
     max_good_d_score = EXTEND_FACTOR * len(good_guess) * n_decision_metrics
     midk = acc[(comptable.loc[acc, 'd_table_score'] > max_good_d_score) &
-               (comptable.loc[acc, 'variance explained'] > EXTEND_FACTOR * varex_ub)]
+               (comptable.loc[acc, 'variance explained'] > EXTEND_FACTOR * varex_upper)]
     comptable.loc[midk, 'classification'] = 'rejected'
     comptable.loc[midk, 'rationale'] += 'midk;'
     acc = np.setdiff1d(acc, midk)
@@ -263,7 +251,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     Step 4: Find components to ignore
     """
     good_guess = np.setdiff1d(good_guess, midk)
-    loaded = np.union1d(good_guess, acc[comptable.loc[acc, 'variance explained'] > varex_lb])
+    loaded = np.union1d(good_guess, acc[comptable.loc[acc, 'variance explained'] > varex_lower])
     ign = np.setdiff1d(acc, loaded)
     ign = np.setdiff1d(
         ign, ign[comptable.loc[ign, 'd_table_score'] < max_good_d_score])
@@ -280,7 +268,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
         d_table_rank = np.vstack([
             len(acc) - stats.rankdata(comptable.loc[acc, 'kappa'], method='ordinal'),
             len(acc) - stats.rankdata(comptable.loc[acc, 'dice_FR2'], method='ordinal'),
-            len(acc) - stats.rankdata(comptable.loc[acc, 'tt0'], method='ordinal'),
+            len(acc) - stats.rankdata(comptable.loc[acc, 'signal-noise_t'], method='ordinal'),
             stats.rankdata(countnoise[acc], method='ordinal'),
             len(acc) - stats.rankdata(comptable.loc[acc, 'countsigFR2'], method='ordinal')]).T
         comptable['d_table_score_scrub'] = np.nan
@@ -297,7 +285,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
             acc[kappa_ratios[acc] > EXTEND_FACTOR * 2])
         candartA = np.intersect1d(
             candartA,
-            candartA[comptable.loc[candartA, 'variance explained'] > varex_ub * EXTEND_FACTOR])
+            candartA[comptable.loc[candartA, 'variance explained'] > varex_upper * EXTEND_FACTOR])
         comptable.loc[candartA, 'classification'] = 'rejected'
         comptable.loc[candartA, 'rationale'] += 'candartA;'  # TODO: Better rationale
         midk = np.union1d(midk, candartA)
@@ -308,20 +296,20 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
             num_acc_guess * n_decision_metrics * HIGH_PERC / 100.].index.values
         candartB = np.intersect1d(
             candartB,
-            candartB[comptable.loc[candartB, 'variance explained'] > varex_lb * EXTEND_FACTOR])
+            candartB[comptable.loc[candartB, 'variance explained'] > varex_lower * EXTEND_FACTOR])
         midk = np.union1d(midk, candartB)
         comptable.loc[candartB, 'classification'] = 'rejected'
         comptable.loc[candartB, 'rationale'] += 'candartB;'  # TODO: Better rationale
 
         # Find comps to ignore
-        new_varex_lb = stats.scoreatpercentile(
+        new_varex_lower = stats.scoreatpercentile(
             comptable.loc[acc[:num_acc_guess], 'variance explained'],
             LOW_PERC)
         candart = comptable.loc[acc].loc[
             comptable.loc[acc, 'd_table_score'] >
             num_acc_guess * n_decision_metrics].index.values
         ign_add0 = np.intersect1d(
-            candart[comptable.loc[candart, 'variance explained'] > new_varex_lb],
+            candart[comptable.loc[candart, 'variance explained'] > new_varex_lower],
             candart)
         ign_add0 = np.setdiff1d(ign_add0, midk)
         comptable.loc[ign_add0, 'classification'] = 'ignored'
@@ -330,7 +318,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
 
         ign_add1 = np.intersect1d(
             acc[comptable.loc[acc, 'kappa'] <= kappa_elbow],
-            acc[comptable.loc[acc, 'variance explained'] > new_varex_lb])
+            acc[comptable.loc[acc, 'variance explained'] > new_varex_lower])
         ign_add1 = np.setdiff1d(ign_add1, midk)
         comptable.loc[ign_add1, 'classification'] = 'ignored'
         comptable.loc[ign_add1, 'rationale'] += 'ign_add1;'  # TODO: Better rationale
