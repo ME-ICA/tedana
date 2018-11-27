@@ -15,7 +15,7 @@ jobs:
       - persist_to_workspace:
           root: /tmp
           paths:
-              - src
+              - src/tedana/
 
   get_data:
     machine:
@@ -36,7 +36,8 @@ jobs:
       - persist_to_workspace:
           root: /tmp
           paths:
-              - data
+              - data/three_echo_Cornell/
+              - data/five_echo_NIH/
 
   get_regression_data:
     machine:
