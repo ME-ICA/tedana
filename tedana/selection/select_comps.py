@@ -279,7 +279,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
             np.sum(comptable.loc[acc, 'kappa'] > kappa_elbow)]))
         conservative_guess = num_acc_guess * n_decision_metrics / RESTRICT_FACTOR
 
-        # candartA
+        # Rejection candidate based on artifact type A: candartA
         candartA = np.intersect1d(
             acc[comptable.loc[acc, 'd_table_score_scrub'] > conservative_guess],
             acc[kappa_ratios[acc] > EXTEND_FACTOR * 2])
@@ -290,7 +290,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
         comptable.loc[candartA, 'rationale'] += 'candartA;'  # TODO: Better rationale
         midk = np.union1d(midk, candartA)
 
-        # candartB
+        # Rejection candidate based on artifact type B: candartB
         candartB = comptable.loc[acc].loc[
             comptable.loc[acc, 'd_table_score_scrub'] >
             num_acc_guess * n_decision_metrics * HIGH_PERC / 100.].index.values

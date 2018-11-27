@@ -1,0 +1,142 @@
+# Python CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-python/ for more details
+#
+version: 2
+jobs:
+
+  create_env:
+    machine:
+    # Ubuntu 14.04 with Docker 17.10.0-ce
+      image: circleci/classic:201711-01
+    working_directory: /tmp/src/fmriprep
+    steps:
+      - checkout
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+              - src
+
+  get_data:
+    machine:
+      # Ubuntu 14.04 with Docker 17.10.0-ce
+      image: circleci/classic:201711-01
+    steps:
+      - run:
+          name: Download test three-echo data
+          command: |
+            mkdir -p /tmp/data
+            curl -L --create-dirs -o \
+              /tmp/data/three_echo_Cornell/three_echo_Cornell_zcat.nii.gz https://osf.io/e3hsn/download
+      - run:
+          name: Download test five-echo data
+          command: |
+            curl -L -o five_echo_NIH.tar.xz https://osf.io/ea5v3/download
+            tar xf five_echo_NIH.tar.xz -C /tmp/data/
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+              - data
+
+  get_regression_data:
+    machine:
+      # Ubuntu 14.04 with Docker 17.10.0-ce
+      image: circleci/classic:201711-01
+    steps:
+      - run:
+          name: Download expected output for three-echo data
+          command: |
+            mkdir -p /tmp/three_echo_Cornell/test/
+            curl -L -o TED.Cornell_processed_three_echo_dataset.tar.xz https://osf.io/u65sq/download
+            tar xf TED.Cornell_processed_three_echo_dataset.tar.xz --no-same-owner -C /tmp/three_echo_Cornell/test/
+
+      - run:
+          name: Download expected output for five-echo data
+          command: |
+            mkdir -p /tmp/five_echo_NIH/test/
+            curl -L -o TED.p06.tar.xz https://osf.io/fr6mx/download
+            tar xf TED.p06.tar.xz --no-same-owner -C /tmp/five_echo_NIH/test/
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+              - three_echo_Cornell/test/
+              - five_echo_NIH/test/
+
+  three_echo_Cornell:
+    docker:
+      - image: circleci/python:3.6.1
+    working_directory: /tmp/data/three-echo/
+    steps:
+      - attach_workspace:
+          at: /tmp
+      - run:
+          name: Create test environment
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install pytest
+            pip install -r requirements.txt
+            python setup.py install
+      - run:
+          name: Run three-echo dataset
+          no_output_timeout: 40m
+          command: |
+            tedana -d three_echo_Cornell_zcat.nii.gz -e 14.5 38.5 62.5
+      - run:
+          name: Checking outputs
+          command: |
+            find /tmp/data/three-echo/TED.three_echo_Cornell_zcat/ \
+              -prune -o -name "*" -print | sed s+/tmp/data/three-echo/TED.three_echo_Cornell_zcat/++ | \
+              sort > /tmp/data/three-echo/TED.three_echo_Cornell_zcat/outputs.out
+            diff /tmp/src/tedana/.circleci/tedana_outputs.txt /tmp/data/three-echo/TED.three_echo_Cornell_zcat/outputs.out
+
+      - store_artifacts:
+          path: /tmp/data/three-echo
+
+  five_echo_NIH:
+    docker:
+      - image: circleci/python:3.6.1
+    working_directory: /tmp/data/five_echo_NIH
+    steps:
+      - attach_workspace:
+          at: /tmp
+      - run:
+          name: Create test environment
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install pytest
+            pip install -r requirements.txt
+            python setup.py install
+      - run:
+          name: Run five-echo dataset
+          no_output_timeout: 40m
+          command: |
+            tedana -d p06.SBJ01_S09_Task11_e[1,2,3,4,5].sm.nii.gz -e 15.4 29.7 44.0 58.3 72.6
+      - run:
+          name: Checking outputs
+          command: |
+            find /tmp/data/five_echo_NIH/TED.p06/ \
+              -prune -o -name "*" -print | sed s+/tmp/data/five_echo_NIH/TED.p06/++ | \
+              sort > /tmp/data/five_echo_NIH/TED.p06/outputs.out
+            diff /tmp/src/tedana/.circleci/tedana_outputs.txt /tmp/data/five_echo_NIH/TED.p06/outputs.out
+      - store_artifacts:
+          path: /tmp/data/five-echo
+
+workflows:
+  version: 2
+  build_test:
+    jobs:
+      - create_env
+      - get_data
+      - get_regression_data
+      - three_echo_Cornell:
+          requires:
+            - create_env
+            - get_data
+            - get_regression_data
+      - five_echo_NIH:
+          requires:
+            - create_env
+            - get_data
+            - get_regression_data
