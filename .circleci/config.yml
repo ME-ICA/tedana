@@ -66,7 +66,7 @@ jobs:
   three_echo_Cornell:
     docker:
       - image: circleci/python:3.6.1
-    working_directory: /tmp/data/three-echo/
+    working_directory: /tmp/src/tedana
     steps:
       - attach_workspace:
           at: /tmp
@@ -76,12 +76,13 @@ jobs:
             python3 -m venv venv
             . venv/bin/activate
             pip install pytest
-            pip install -r /tmp/src/tedana/requirements.txt
-            pip install /tmp/src/tedana/setup.py
+            pip install -r requirements.txt
+            pip install setup.py
       - run:
           name: Run three-echo dataset
           no_output_timeout: 40m
           command: |
+            chdir /tmp/data/three_echo_Cornell/
             tedana -d three_echo_Cornell_zcat.nii.gz -e 14.5 38.5 62.5
       - run:
           name: Checking outputs
@@ -97,7 +98,7 @@ jobs:
   five_echo_NIH:
     docker:
       - image: circleci/python:3.6.1
-    working_directory: /tmp/data/five_echo_NIH
+    working_directory: /tmp/src/tedana
     steps:
       - attach_workspace:
           at: /tmp
@@ -107,12 +108,13 @@ jobs:
             python3 -m venv venv
             . venv/bin/activate
             pip install pytest
-            pip install -r /tmp/src/tedana/requirements.txt
-            pip install /tmp/src/tedana/setup.py
+            pip install -r requirements.txt
+            pip install setup.py
       - run:
           name: Run five-echo dataset
           no_output_timeout: 40m
           command: |
+            chdir /tmp/data/five_echo_NIH/
             tedana -d p06.SBJ01_S09_Task11_e[1,2,3,4,5].sm.nii.gz -e 15.4 29.7 44.0 58.3 72.6
       - run:
           name: Checking outputs
