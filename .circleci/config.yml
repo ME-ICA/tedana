@@ -76,7 +76,7 @@ jobs:
             . venv/bin/activate
             pip install pytest
             pip install -r /tmp/src/tedana/requirements.txt
-            python setup.py install
+            pip install /tmp/src/tedana/setup.py
       - run:
           name: Run three-echo dataset
           no_output_timeout: 40m
@@ -107,7 +107,7 @@ jobs:
             . venv/bin/activate
             pip install pytest
             pip install -r /tmp/src/tedana/requirements.txt
-            python setup.py install
+            pip install /tmp/src/tedana/setup.py
       - run:
           name: Run five-echo dataset
           no_output_timeout: 40m
