@@ -9,7 +9,7 @@ jobs:
     machine:
     # Ubuntu 14.04 with Docker 17.10.0-ce
       image: circleci/classic:201711-01
-    working_directory: /tmp/src/fmriprep
+    working_directory: /tmp/src/tedana
     steps:
       - checkout
       - persist_to_workspace:
@@ -75,7 +75,7 @@ jobs:
             python3 -m venv venv
             . venv/bin/activate
             pip install pytest
-            pip install -r requirements.txt
+            pip install -r /tmp/src/tedana/requirements.txt
             python setup.py install
       - run:
           name: Run three-echo dataset
@@ -106,7 +106,7 @@ jobs:
             python3 -m venv venv
             . venv/bin/activate
             pip install pytest
-            pip install -r requirements.txt
+            pip install -r /tmp/src/tedana/requirements.txt
             python setup.py install
       - run:
           name: Run five-echo dataset
