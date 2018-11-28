@@ -23,7 +23,9 @@ jobs:
       image: circleci/classic:201711-01
     steps:
       - restore_cache:
-          key: v1-packages+datasets-{{ .Branch }
+          keys:
+              - data-v1-{{ .Branch }}
+              - data-v1-
       - run:
           name: Download test three-echo data
           command: |
@@ -50,10 +52,9 @@ jobs:
               - data/three-echo/
               - data/five-echo/
       - save_cache:
-          keys:
-              - v1-packages+datasets-{{ .Branch }}
+          key: data-v1-{{ .Branch }}
           paths:
-              - /tmp/cache/
+              - /tmp/data
 
   get_regression_data:
     machine:
@@ -61,38 +62,38 @@ jobs:
       image: circleci/classic:201711-01
     steps:
       - restore_cache:
-          key: v1-packages+datasets-{{ .Branch }
+          keys:
+              - test-v1-{{ .Branch }}
+              - test-v1-
       - run:
           name: Download expected output for three-echo data
           command: |
-            if [[ -e /tmp/three-echo/test ]]; then
+            if [[ -e /tmp/test/three-echo ]]; then
               echo "Restoring three-echo regression data from cache"
             else
-                mkdir -p /tmp/three-echo/test/
+                mkdir -p /tmp/test/three-echo/
                 curl -L -o TED.Cornell_processed_three_echo_dataset.tar.xz https://osf.io/u65sq/download
-                tar xf TED.Cornell_processed_three_echo_dataset.tar.xz --no-same-owner -C /tmp/three-echo/test/
+                tar xf TED.Cornell_processed_three_echo_dataset.tar.xz --no-same-owner -C /tmp/test/three-echo/
             fi
       - run:
           name: Download expected output for five-echo data
           command: |
-            if [[ -e /tmp/five-echo/test ]]
-            then
+            if [[ -e /tmp/test/five-echo ]]; then
               echo "Restoring five-echo regression data from cache"
             else
-                mkdir -p /tmp/five-echo/test/
+                mkdir -p /tmp/test/five-echo/
                 curl -L -o TED.p06.tar.xz https://osf.io/fr6mx/download
-                tar xf TED.p06.tar.xz --no-same-owner -C /tmp/five-echo/test/
+                tar xf TED.p06.tar.xz --no-same-owner -C /tmp/test/five-echo/
             fi
       - persist_to_workspace:
           root: /tmp
           paths:
-              - three-echo/test/
-              - five-echo/test/
+              - test/three-echo/
+              - test/five-echo/
       - save_cache:
-          keys:
-              - v1-packages+datasets-{{ .Branch }}
+          key: test-v1-{{ .Branch }}
           paths:
-              - /tmp/cache/
+              - /tmp/test
 
   three_echo_rest:
     docker:
