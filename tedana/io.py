@@ -273,7 +273,7 @@ def writefeats(data, mmix, mask, ref_img, suffix=''):
 
 
 def writeresults(ts, mask, comptable, mmix, n_vols, fixed_seed,
-                 acc, rej, midk, ign, ref_img):
+                 acc, rej, midk, empty, ref_img):
     """
     Denoises `ts` and saves all resulting files to disk
 
@@ -300,7 +300,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, fixed_seed,
         Indices of rejected (non-BOLD) components in `mmix`
     midk : :obj:`list`
         Indices of mid-K (questionable) components in `mmix`
-    ign : :obj:`list`
+    empty : :obj:`list`
         Indices of ignored components in `mmix`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
@@ -331,24 +331,20 @@ def writeresults(ts, mask, comptable, mmix, n_vols, fixed_seed,
     """
 
     fout = filewrite(ts, 'ts_OC', ref_img)
-    LGR.info('Writing optimally combined time series: '
-             '{}'.format(op.abspath(fout)))
+    LGR.info('Writing optimally combined time series: {}'.format(op.abspath(fout)))
 
     write_split_ts(ts, mmix, mask, acc, rej, midk, ref_img, suffix='OC')
 
     ts_B = model.get_coeffs(ts, mmix, mask)
     fout = filewrite(ts_B, 'betas_OC', ref_img)
-    LGR.info('Writing full ICA coefficient feature set: '
-             '{}'.format(op.abspath(fout)))
+    LGR.info('Writing full ICA coefficient feature set: {}'.format(op.abspath(fout)))
 
     if len(acc) != 0:
         fout = filewrite(ts_B[:, acc], 'betas_hik_OC', ref_img)
-        LGR.info('Writing denoised ICA coefficient feature set: '
-                 '{}'.format(op.abspath(fout)))
+        LGR.info('Writing denoised ICA coefficient feature set: {}'.format(op.abspath(fout)))
         fout = writefeats(split_ts(ts, mmix, mask, acc)[0],
                           mmix[:, acc], mask, ref_img, suffix='OC2')
-        LGR.info('Writing Z-normalized spatial component maps: '
-                 '{}'.format(op.abspath(fout)))
+        LGR.info('Writing Z-normalized spatial component maps: {}'.format(op.abspath(fout)))
 
 
 def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img):

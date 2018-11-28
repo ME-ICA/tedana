@@ -108,7 +108,7 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
     combmode : {'t2s', 'ste'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
     label : :obj:`str` or :obj:`None`, optional
-         Label for output directory. Default is None.
+        Label for output directory. Default is None.
 
     Other Parameters
     ----------------
