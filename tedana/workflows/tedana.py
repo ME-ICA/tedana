@@ -375,7 +375,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     acc = comptable.loc[comptable['classification'] == 'accepted', 'component']
     rej = comptable.loc[comptable['classification'] == 'rejected', 'component']
     midk = comptable.loc[comptable['classification'] == 'midk', 'component']
-    ign = comptable.loc[comptable['classification'] == 'acceptedLowVariance', 'component']
+    ign = comptable.loc[comptable['classification'] == 'ignored', 'component']
     if len(acc) == 0:
         LGR.warning('No BOLD components detected! Please check data and '
                     'results!')

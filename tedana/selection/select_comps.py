@@ -39,7 +39,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     -------
     comptable : :obj:`pandas.DataFrame`
         Updated component table with additional metrics and with
-        classification (accepted, rejected, midk, or acceptedLowVariance)
+        classification (accepted, rejected, midk, or ignored)
 
     Notes
     -----
