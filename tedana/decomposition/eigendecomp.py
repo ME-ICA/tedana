@@ -11,7 +11,7 @@ from sklearn.decomposition import PCA
 
 from tedana import model, utils, io
 from tedana.decomposition._utils import eimask, dwtmat, idwtmat
-from tedana.selection._utils import (getelbow_cons, getelbow_mod)
+from tedana.selection._utils import (getelbow_cons, getelbow)
 from tedana.due import due, BibTeX
 
 LGR = logging.getLogger(__name__)
@@ -180,7 +180,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
 
         # actual variance explained (normalized)
         varex_norm = varex / varex.sum()
-        eigenvalue_elbow = getelbow_mod(varex_norm, return_val=True)
+        eigenvalue_elbow = getelbow(varex_norm, return_val=True)
 
         diff_varex_norm = np.abs(np.diff(varex_norm))
         lower_diff_varex_norm = diff_varex_norm[(len(diff_varex_norm)//2):]
@@ -248,30 +248,24 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     io.filewrite(comp_maps, 'mepca_OC_components.nii', ref_img)
 
     fmin, fmid, fmax = utils.getfbounds(n_echos)
-    kappa_thr = np.average(sorted([fmin,
-                                   getelbow_mod(ct_df['kappa'],
-                                                return_val=True)/2,
-                                   fmid]),
+    kappa_thr = np.average(sorted([fmin, getelbow(ct_df['kappa'], return_val=True)/2, fmid]),
                            weights=[kdaw, 1, 1])
-    rho_thr = np.average(sorted([fmin,
-                                 getelbow_cons(ct_df['rho'],
-                                               return_val=True)/2,
-                                 fmid]),
+    rho_thr = np.average(sorted([fmin, getelbow_cons(ct_df['rho'], return_val=True)/2, fmid]),
                          weights=[rdaw, 1, 1])
     if int(kdaw) == -1:
         lim_idx = utils.andb([ct_df['kappa'] < fmid,
                               ct_df['kappa'] > fmin]) == 2
         kappa_lim = ct_df.loc[lim_idx, 'kappa'].values
-        kappa_thr = kappa_lim[getelbow_mod(kappa_lim)]
+        kappa_thr = kappa_lim[getelbow(kappa_lim)]
 
         lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
         rho_lim = ct_df.loc[lim_idx, 'rho'].values
-        rho_thr = rho_lim[getelbow_mod(rho_lim)]
+        rho_thr = rho_lim[getelbow(rho_lim)]
         stabilize = True
     elif int(rdaw) == -1:
         lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
         rho_lim = ct_df.loc[lim_idx, 'rho'].values
-        rho_thr = rho_lim[getelbow_mod(rho_lim)]
+        rho_thr = rho_lim[getelbow(rho_lim)]
 
     # Add new columns to comptable for classification
     ct_df['classification'] = 'accepted'
