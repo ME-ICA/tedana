@@ -67,11 +67,11 @@ def _get_parser():
                         help=('Combination scheme for TEs: '
                               't2s (Posse 1999, default), ste (Poser)'),
                         default='t2s')
-    parser.add_argument('--out',
-                        dest='out_dir',
+    parser.add_argument('--label',
+                        dest='label',
                         type=str,
                         help='Label for output directory.',
-                        default='.')
+                        default=None)
     parser.add_argument('--debug',
                         dest='debug',
                         help=argparse.SUPPRESS,
@@ -86,7 +86,7 @@ def _get_parser():
 
 
 def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
-                    out_dir='.', debug=False, quiet=False):
+                    label=None, debug=False, quiet=False):
     """
     Estimate T2 and S0, and optimally combine data across TEs.
 
@@ -107,9 +107,8 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
         Default is 'all'.
     combmode : {'t2s', 'ste'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
-    out_dir : :obj:`str`, optional
-        Output directory in which to save output files. Default is current
-        directory ('.').
+    label : :obj:`str` or :obj:`None`, optional
+         Label for output directory. Default is None.
 
     Other Parameters
     ----------------
@@ -121,7 +120,10 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
 
     Notes
     -----
-    This workflow writes out several files to ``out_dir``.
+    This workflow writes out several files, which are written out to a folder
+    named TED.[ref_label].[label] if ``label`` is provided and TED.[ref_label]
+    if not. ``ref_label`` is determined based on the name of the first ``data``
+    file.
 
     Files are listed below:
 

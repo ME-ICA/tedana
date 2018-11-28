@@ -16,7 +16,7 @@ from tedana import model, utils
 LGR = logging.getLogger(__name__)
 
 
-def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, out_dir='.'):
+def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img):
     """
     Perform minimum image regression to identify and remove global artifacts.
     This is an alternative to methods like GoDec with fewer parameters to tune.
@@ -34,8 +34,6 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, out_dir='.'):
         Indices of accepted (BOLD) components in `mmix`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
-    out_dir : :obj:`str`
-        Output directory in which to save output files
 
     Notes
     -----
@@ -69,8 +67,7 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, out_dir='.'):
     bold_ts = np.dot(cbetas[:, acc], mmix[:, acc].T)
     t1_map = bold_ts.min(axis=-1)
     t1_map -= t1_map.mean()
-    filewrite(utils.unmask(t1_map, mask),
-                    op.join(out_dir, 'sphis_hik.nii'), ref_img)
+    filewrite(utils.unmask(t1_map, mask), 'sphis_hik', ref_img)
     t1_map = t1_map[:, np.newaxis]
 
     """
@@ -84,14 +81,13 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, out_dir='.'):
     bold_noT1gs = bold_ts - np.dot(lstsq(glob_sig.T, bold_ts.T,
                                          rcond=None)[0].T, glob_sig)
     filewrite(utils.unmask(bold_noT1gs * optcom_std, mask),
-                    op.join(out_dir, 'hik_ts_OC_T1c.nii'), ref_img)
+              'hik_ts_OC_T1c.nii', ref_img)
 
     """
     Make denoised version of T1-corrected time series
     """
     medn_ts = optcom_mu + ((bold_noT1gs + resid) * optcom_std)
-    filewrite(utils.unmask(medn_ts, mask),
-                    op.join(out_dir, 'dn_ts_OC_T1c.nii'), ref_img)
+    filewrite(utils.unmask(medn_ts, mask), 'dn_ts_OC_T1c', ref_img)
 
     """
     Orthogonalize mixing matrix w.r.t. T1-GS
@@ -108,10 +104,9 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, out_dir='.'):
     Write T1-GS corrected components and mixing matrix
     """
     cbetas_norm = lstsq(mmixnogs_norm.T, data_norm.T, rcond=None)[0].T
-    filewrite(utils.unmask(cbetas_norm[:, 2:], mask),
-                    op.join(out_dir, 'betas_hik_OC_T1c.nii'),
-                    ref_img)
-    np.savetxt(op.join(out_dir, 'meica_mix_T1c.1D'), mmixnogs)
+    filewrite(utils.unmask(cbetas_norm[:, 2:], mask), 'betas_hik_OC_T1c',
+              ref_img)
+    np.savetxt('meica_mix_T1c.1D', mmixnogs)
 
 
 def split_ts(data, mmix, mask, acc):
@@ -151,8 +146,7 @@ def split_ts(data, mmix, mask, acc):
     return hikts, resid
 
 
-def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, suffix='',
-                   out_dir='.'):
+def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, suffix=''):
     """
     Splits `data` into denoised / noise / ignored time series and saves to disk
 
@@ -175,8 +169,6 @@ def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, suffix='',
         Reference image to dictate how outputs are saved to disk
     suffix : :obj:`str`, optional
         Appended to name of saved files (before extension). Default: ''
-    out_dir : :obj:`str`
-        Output directory in which to save output files
 
     Returns
     -------
@@ -219,34 +211,27 @@ def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, suffix='',
 
     if len(acc) != 0:
         fout = filewrite(utils.unmask(hikts, mask),
-                               op.join(out_dir,
-                                       'hik_ts_{0}.nii'.format(suffix)),
-                               ref_img)
+                         'hik_ts_{0}'.format(suffix), ref_img)
         LGR.info('Writing high-Kappa time series: {}'.format(op.abspath(fout)))
 
     if len(midk) != 0:
         fout = filewrite(utils.unmask(midkts, mask),
-                               op.join(out_dir,
-                                       'midk_ts_{0}.nii'.format(suffix)),
-                               ref_img)
+                         'midk_ts_{0}'.format(suffix), ref_img)
         LGR.info('Writing mid-Kappa time series: {}'.format(op.abspath(fout)))
 
     if len(rej) != 0:
         fout = filewrite(utils.unmask(lowkts, mask),
-                               op.join(out_dir,
-                                       'lowk_ts_{0}.nii'.format(suffix)),
-                               ref_img)
+                         'lowk_ts_{0}'.format(suffix), ref_img)
         LGR.info('Writing low-Kappa time series: {}'.format(op.abspath(fout)))
 
     fout = filewrite(utils.unmask(dnts, mask),
-                           op.join(out_dir,
-                                   'dn_ts_{0}.nii'.format(suffix)), ref_img)
+                     'dn_ts_{0}'.format(suffix), ref_img)
     LGR.info('Writing denoised time series: {}'.format(op.abspath(fout)))
 
     return varexpl
 
 
-def writefeats(data, mmix, mask, ref_img, suffix='', out_dir='.'):
+def writefeats(data, mmix, mask, ref_img, suffix=''):
     """
     Converts `data` to component space with `mmix` and saves to disk
 
@@ -263,8 +248,6 @@ def writefeats(data, mmix, mask, ref_img, suffix='', out_dir='.'):
         Reference image to dictate how outputs are saved to disk
     suffix : :obj:`str`, optional
         Appended to name of saved files (before extension). Default: ''
-    out_dir : :obj:`str`
-        Output directory in which to save output files
 
     Returns
     -------
@@ -284,15 +267,13 @@ def writefeats(data, mmix, mask, ref_img, suffix='', out_dir='.'):
 
     # write feature versions of components
     feats = utils.unmask(model.computefeats2(data, mmix, mask), mask)
-    fname = filewrite(feats, op.join(out_dir,
-                                           'feats_{0}.nii'.format(suffix)),
-                            ref_img)
+    fname = filewrite(feats, 'feats_{0}'.format(suffix), ref_img)
 
     return fname
 
 
 def writeresults(ts, mask, comptable, mmix, n_vols, fixed_seed,
-                 acc, rej, midk, ign, ref_img, out_dir='.'):
+                 acc, rej, midk, ign, ref_img):
     """
     Denoises `ts` and saves all resulting files to disk
 
@@ -323,8 +304,6 @@ def writeresults(ts, mask, comptable, mmix, n_vols, fixed_seed,
         Indices of ignored components in `mmix`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
-    out_dir : :obj:`str`
-        Output directory in which to save output files
 
     Notes
     -----
@@ -351,31 +330,28 @@ def writeresults(ts, mask, comptable, mmix, n_vols, fixed_seed,
     ======================    =================================================
     """
 
-    fout = filewrite(ts, op.join(out_dir, 'ts_OC.nii'), ref_img)
+    fout = filewrite(ts, 'ts_OC', ref_img)
     LGR.info('Writing optimally combined time series: '
              '{}'.format(op.abspath(fout)))
 
-    varexpl = write_split_ts(ts, mmix, mask, acc, rej, midk, ref_img,
-                             suffix='OC', out_dir=out_dir)
+    write_split_ts(ts, mmix, mask, acc, rej, midk, ref_img, suffix='OC')
 
     ts_B = model.get_coeffs(ts, mmix, mask)
-    fout = filewrite(ts_B, op.join(out_dir, 'betas_OC.nii'), ref_img)
+    fout = filewrite(ts_B, 'betas_OC', ref_img)
     LGR.info('Writing full ICA coefficient feature set: '
              '{}'.format(op.abspath(fout)))
 
     if len(acc) != 0:
-        fout = filewrite(ts_B[:, acc], op.join(out_dir, 'betas_hik_OC.nii'), ref_img)
+        fout = filewrite(ts_B[:, acc], 'betas_hik_OC', ref_img)
         LGR.info('Writing denoised ICA coefficient feature set: '
                  '{}'.format(op.abspath(fout)))
         fout = writefeats(split_ts(ts, mmix, mask, acc)[0],
-                          mmix[:, acc], mask, ref_img, suffix='OC2',
-                          out_dir=out_dir)
+                          mmix[:, acc], mask, ref_img, suffix='OC2')
         LGR.info('Writing Z-normalized spatial component maps: '
                  '{}'.format(op.abspath(fout)))
 
 
-def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img,
-                        out_dir='.'):
+def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img):
     """
     Saves individually denoised echos to disk
 
@@ -396,8 +372,6 @@ def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img,
         Indices of mid-K (questionable) components in `mmix`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
-    out_dir : :obj:`str`
-        Output directory in which to save output files
 
     Notes
     -----
@@ -420,10 +394,11 @@ def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img,
                               :py:func:`tedana.utils.io.write_split_ts`.
     ======================    =================================================
     """
+
     for i_echo in range(catd.shape[1]):
         LGR.info('Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo+1))
         write_split_ts(catd[:, i_echo, :], mmix, mask, acc, rej, midk, ref_img,
-                       suffix='e{}'.format(i_echo+1), out_dir=out_dir)
+                       suffix='e{}'.format(i_echo+1))
 
 
 def ctabsel(ctabfile):

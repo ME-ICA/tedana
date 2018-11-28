@@ -60,8 +60,7 @@ def run_svd(data):
 
 
 def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
-           ref_img, tes, kdaw, rdaw, ste=0, wvpca=False,
-           out_dir='.'):
+           ref_img, tes, kdaw, rdaw, ste=0, wvpca=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
     noise from multi-echo data.
@@ -96,8 +95,6 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         a subset of echos. Default: 0
     wvpca : :obj:`bool`, optional
         Whether to apply wavelet denoising to data. Default: False
-    out_dir : :obj:`str`, optional
-        Output directory in which to save output files
 
     Returns
     -------
@@ -214,7 +211,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         ct_df['normalized variance explained'] = varex_norm
 
         # Save state
-        fname = op.abspath(op.join(out_dir, 'pcastate.pkl'))
+        fname = op.abspath('pcastate.pkl')
         LGR.info('Saving PCA results to: {}'.format(fname))
         pcastate = {'voxel_comp_weights': voxel_comp_weights,
                     'varex': varex,
@@ -231,7 +228,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
 
     else:  # if loading existing state
         LGR.info('Loading PCA from: pcastate.pkl')
-        with open(op.join(out_dir, 'pcastate.pkl'), 'rb') as handle:
+        with open('pcastate.pkl', 'rb') as handle:
             pcastate = pickle.load(handle)
         voxel_comp_weights, varex = pcastate['voxel_comp_weights'], pcastate['varex']
         comp_ts = pcastate['comp_ts']

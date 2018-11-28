@@ -140,11 +140,11 @@ def _get_parser():
                         help='Perform PCA on wavelet-transformed data',
                         action='store_true',
                         default=False)
-    parser.add_argument('--out',
-                        dest='out_dir',
+    parser.add_argument('--label',
+                        dest='label',
                         type=str,
-                        help='Output directory.',
-                        default='.')
+                        help='Label for output directory.',
+                        default=None)
     parser.add_argument('--seed',
                         dest='fixed_seed',
                         type=int,
@@ -170,7 +170,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     kdaw=10., rdaw=1., conv=2.5e-5,
                     ste=-1, combmode='t2s', dne=False, cost='logcosh',
                     stabilize=False, filecsdata=False, wvpca=False,
-                    out_dir='.', fixed_seed=42, debug=False, quiet=False):
+                    label=None, fixed_seed=42, debug=False, quiet=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -224,9 +224,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     wvpca : :obj:`bool`, optional
         Whether or not to perform PCA on wavelet-transformed data.
         Default is False.
-    out_dir : :obj:`str`, optional
-        Output directory in which to save output files. Default is current
-        directory ('.').
+    label : :obj:`str` or :obj:`None`, optional
+        Label for output directory. Default is None.
 
     Other Parameters
     ----------------
@@ -291,6 +290,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
 
+    os.chdir(out_dir)
+
     if mask is None:
         LGR.info('Computing adaptive mask')
     else:
@@ -305,7 +306,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     # set a hard cap for the T2* map
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
-    cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5,
+    cap_t2s = stats.scoreatpercentile(t2s.flatten(), 99.5,
                                       interpolation_method='lower')
     LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
     t2s[t2s > cap_t2s * 10] = cap_t2s
@@ -349,10 +350,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
-        (seldict, comptable,
-         betas, mmix) = model.fitmodels_direct(catd, mmix_orig,
-                                               mask, t2s_limited, t2s_full,
-                                               tes, combmode, ref_img)
+        seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
+                                                                 mask, t2s, t2sG,
+                                                                 tes, combmode,
+                                                                 ref_img)
         if ctab is None:
             comptable = selection.selcomps(seldict, comptable, mmix, manacc,
                                            n_echos)
