@@ -43,24 +43,19 @@ multi-echo functional magnetic resonance imaging (fMRI) data.
 About
 -----
 
+.. image:: https://user-images.githubusercontent.com/7406227/40031156-57b7cbb8-57bc-11e8-8c51-5b29f2e86a48.png
+  :target: http://tedana.readthedocs.io/
+
 ``tedana`` originally came about as a part of the `ME-ICA`_ pipeline.
 The ME-ICA pipeline originally performed both pre-processing and TE-dependent
 analysis of multi-echo fMRI data; however, ``tedana`` now assumes that you're
 working with data which has been previously preprocessed.
-If you're in need of a preprocessing pipeline, we recommend
-`fmriprep`_, which has been tested
-for compatibility with multi-echo fMRI data and ``tedana``.
-
-.. image:: https://user-images.githubusercontent.com/7406227/40031156-57b7cbb8-57bc-11e8-8c51-5b29f2e86a48.png
-  :target: http://tedana.readthedocs.io/
 
 .. _ME-ICA: https://github.com/me-ica/me-ica
-.. _fmriprep: https://github.com/poldracklab/fmriprep/
+
 
 Citations
 ---------
-
-.. image:: /_static/tedana-poster.png
 
 When using tedana, please include the following citations:
 
@@ -120,6 +115,11 @@ You can also learn more about `why citing software is important`_.
 .. _`why citing software is important`: https://www.software.ac.uk/how-cite-software
 
 
+Posters
+-------
+
+.. image:: /_static/tedana-poster.png
+
 License Information
 -------------------
 
@@ -134,8 +134,9 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
    usage
    approach
    outputs
-   support
    contributing
+   roadmap
+   support
    api
 
 Indices and tables

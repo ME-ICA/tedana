@@ -30,12 +30,11 @@ More information and documentation can be found at https://tedana.readthedocs.io
 You'll need to set up a working development environment to use `tedana`.
 To set up a local environment, you will need Python >=3.6 and the following packages will need to be installed:
 
-[mdp](https://pypi.org/project/MDP/)  
-[numpy](http://www.numpy.org/)   
-[scikit-learn](http://scikit-learn.org/stable/)   
-[scipy](https://www.scipy.org/)    
-[nilearn](https://nilearn.github.io/)     
-[nibabel>=2.1.0](http://nipy.org/nibabel/)      
+[numpy](http://www.numpy.org/)
+[scipy](https://www.scipy.org/)
+[scikit-learn](http://scikit-learn.org/stable/)
+[nilearn](https://nilearn.github.io/)
+[nibabel>=2.1.0](http://nipy.org/nibabel/)
 
 You can then install `tedana` with
 
