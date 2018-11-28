@@ -1,18 +1,24 @@
 language: python
 sudo: false
 
-python:
-    - 3.6
-    - 3.7-dev
-
 matrix:
   include:
+    - python: 3.5
+      env:
+        - STYLE=0
+        - COVERAGE=0
     - python: 3.6
       env:
         - STYLE=1
+        - COVERAGE=0
     - python: 3.6
       env:
+        - STYLE=0
         - COVERAGE=1
+    - python : 3.7-dev
+      env:
+        - STYLE=0
+        - COVERAGE=0
 
 before_install:
     - python -m pip install --upgrade pip

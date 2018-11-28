@@ -30,7 +30,6 @@ DOWNLOAD_URL = (
 REQUIRES = [
     'numpy',
     'scikit-learn',
-    'mdp',
     'pywavelets',
     'nilearn',
     'nibabel>=2.1.0',
@@ -66,6 +65,7 @@ CLASSIFIERS = [
     'Intended Audience :: Science/Research',
     'Topic :: Scientific/Engineering :: Information Analysis',
     'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
+    'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
     'Programming Language :: Python :: 3.7'
 ]

@@ -11,7 +11,7 @@ from sklearn.decomposition import PCA
 
 from tedana import model, utils, io
 from tedana.decomposition._utils import eimask, dwtmat, idwtmat
-from tedana.selection._utils import (getelbow_cons, getelbow_mod)
+from tedana.selection._utils import (getelbow_cons, getelbow)
 from tedana.due import due, BibTeX
 
 LGR = logging.getLogger(__name__)
@@ -180,7 +180,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
 
         # actual variance explained (normalized)
         varex_norm = varex / varex.sum()
-        eigenvalue_elbow = getelbow_mod(varex_norm, return_val=True)
+        eigenvalue_elbow = getelbow(varex_norm, return_val=True)
 
         diff_varex_norm = np.abs(np.diff(varex_norm))
         lower_diff_varex_norm = diff_varex_norm[(len(diff_varex_norm)//2):]
@@ -237,7 +237,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         varex_norm_min = pcastate['varex_norm_min']
         varex_norm_cum = pcastate['varex_norm_cum']
 
-    np.savetxt('mepca_mix.1D', comp_ts)
+    np.savetxt('mepca_mix.1D', comp_ts.T)
 
     # write component maps to 4D image
     comp_maps = np.zeros((OCcatd.shape[0], comp_ts.shape[0]))
@@ -248,30 +248,24 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     io.filewrite(comp_maps, 'mepca_OC_components.nii', ref_img)
 
     fmin, fmid, fmax = utils.getfbounds(n_echos)
-    kappa_thr = np.average(sorted([fmin,
-                                   getelbow_mod(ct_df['kappa'],
-                                                return_val=True)/2,
-                                   fmid]),
+    kappa_thr = np.average(sorted([fmin, getelbow(ct_df['kappa'], return_val=True)/2, fmid]),
                            weights=[kdaw, 1, 1])
-    rho_thr = np.average(sorted([fmin,
-                                 getelbow_cons(ct_df['rho'],
-                                               return_val=True)/2,
-                                 fmid]),
+    rho_thr = np.average(sorted([fmin, getelbow_cons(ct_df['rho'], return_val=True)/2, fmid]),
                          weights=[rdaw, 1, 1])
     if int(kdaw) == -1:
         lim_idx = utils.andb([ct_df['kappa'] < fmid,
                               ct_df['kappa'] > fmin]) == 2
         kappa_lim = ct_df.loc[lim_idx, 'kappa'].values
-        kappa_thr = kappa_lim[getelbow_mod(kappa_lim)]
+        kappa_thr = kappa_lim[getelbow(kappa_lim)]
 
         lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
         rho_lim = ct_df.loc[lim_idx, 'rho'].values
-        rho_thr = rho_lim[getelbow_mod(rho_lim)]
+        rho_thr = rho_lim[getelbow(rho_lim)]
         stabilize = True
     elif int(rdaw) == -1:
         lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
         rho_lim = ct_df.loc[lim_idx, 'rho'].values
-        rho_thr = rho_lim[getelbow_mod(rho_lim)]
+        rho_thr = rho_lim[getelbow(rho_lim)]
 
     # Add new columns to comptable for classification
     ct_df['classification'] = 'accepted'
@@ -333,8 +327,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     return n_components, kept_data
 
 
-def tedica(n_components, dd, conv, fixed_seed, cost, final_cost,
-           verbose=False):
+def tedica(n_components, dd, conv, fixed_seed, cost='logcosh'):
     """
     Performs ICA on `dd` and returns mixing matrix
 
@@ -347,16 +340,10 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost,
         samples and `T` is time
     conv : :obj:`float`
         Convergence limit for ICA
-    fixed_seed : :obj:`int`
-        Value passed to ``mdp.numx_rand.seed()``.
-        Set to an integer value for reproducible ICA results;
-        otherwise, set to -1 for varying results across calls.
-    cost : {'tanh', 'pow3', 'gaus', 'skew'}
-        Initial cost function for ICA.
-    final_cost : {'tanh', 'pow3', 'gaus', 'skew'}
-        Final cost function for ICA.
-    verbose : :obj:`bool`, optional
-        Whether to print messages regarding convergence process. Default: False
+    cost : {'logcosh', 'exp', 'cube'} str, optional
+        Cost function for ICA
+    fixed_seed : int
+        Seed for ensuring reproducibility of ICA results
 
     Returns
     -------
@@ -366,20 +353,22 @@ def tedica(n_components, dd, conv, fixed_seed, cost, final_cost,
 
     Notes
     -----
-    Uses `mdp` implementation of FastICA for decomposition
+    Uses `sklearn` implementation of FastICA for decomposition
     """
 
-    import mdp
+    from sklearn.decomposition import FastICA
+
+    if cost not in ('logcosh', 'cube', 'exp'):
+        LGR.error('ICA cost function not understood')
+        raise
+
     climit = float(conv)
     if fixed_seed == -1:
         fixed_seed = np.random.randint(low=1, high=1000)
-    mdp.numx_rand.seed(fixed_seed)
-    icanode = mdp.nodes.FastICANode(white_comp=n_components, approach='symm',
-                                    g=cost, fine_g=final_cost,
-                                    coarse_limit=climit*100, limit=climit,
-                                    verbose=verbose)
-    icanode.train(dd)
-    smaps = icanode.execute(dd)  # noqa
-    mmix = icanode.get_recmatrix().T
+    rand_state = np.random.RandomState(seed=fixed_seed)
+    ica = FastICA(n_components=n_components, algorithm='parallel',
+                  fun=cost, tol=climit, random_state=rand_state)
+    ica.fit(dd)
+    mmix = ica.mixing_
     mmix = stats.zscore(mmix, axis=0)
     return mmix, fixed_seed
