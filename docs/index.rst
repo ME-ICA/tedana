@@ -57,8 +57,6 @@ working with data which has been previously preprocessed.
 Citations
 ---------
 
-.. image:: /_static/tedana-poster.png
-
 When using tedana, please include the following citations:
 
    .. raw:: html
@@ -116,6 +114,11 @@ You can also learn more about `why citing software is important`_.
 .. _duecredit: https://github.com/duecredit/duecredit
 .. _`why citing software is important`: https://www.software.ac.uk/how-cite-software
 
+
+Posters
+-------
+
+.. image:: /_static/tedana-poster.png
 
 License Information
 -------------------

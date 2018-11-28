@@ -353,11 +353,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                                  reindex=True)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        comptable = selection.selcomps(seldict, comptable, mmix,
-                                       mask, ref_img, manacc,
-                                       n_echos, t2s, s0,
-                                       strict_mode=strict,
-                                       filecsdata=filecsdata)
+        comptable = selection.selcomps(seldict, comptable, mmix, manacc,
+                                       n_echos)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
@@ -366,11 +363,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                                  tes, combmode,
                                                                  ref_img)
         if ctab is None:
-            comptable = selection.selcomps(seldict, comptable, mmix,
-                                           mask, ref_img, manacc,
-                                           n_echos, t2s, s0,
-                                           filecsdata=filecsdata,
-                                           strict_mode=strict)
+            comptable = selection.selcomps(seldict, comptable, mmix, manacc,
+                                           n_echos)
         else:
             comptable = pd.read_csv(ctab, sep='\t', index_col='component')
 
