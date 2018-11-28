@@ -381,7 +381,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         io.gscontrol_mmix(data_oc, mmix, mask, acc, ref_img,
                           out_dir=out_dir)
     elif ws_denoise == 'godec':
-        decomposition.tedgodec(data_oc, mmix, mask, acc, empty, ref_img,
+        decomposition.tedgodec(data_oc, mmix, mask, acc, ign, ref_img,
                                ranks=[2], wavelet=wvpca,
                                thresh=10, norm_mode='vn', power=2,
                                out_dir=out_dir)
