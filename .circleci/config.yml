@@ -113,9 +113,8 @@ jobs:
       - run:
           name: Checking outputs
           command: |
-            find /tmp/data/three-echo/TED.three_echo_Cornell_zcat/ \
-              -prune -o -name "*" -print | sed s+/tmp/data/three-echo/TED.three_echo_Cornell_zcat/++ | \
-              sort > /tmp/data/three-echo/TED.three_echo_Cornell_zcat/outputs.out
+            find /tmp/data/three-echo/TED.three_echo_Cornell_zcat/* \
+                -exec basename {} \; | sort > /tmp/data/three-echo/TED.three_echo_Cornell_zcat/outputs.out
             diff /tmp/src/tedana/.circleci/tedana_outputs.txt /tmp/data/three-echo/TED.three_echo_Cornell_zcat/outputs.out
 
       - store_artifacts:
@@ -170,9 +169,8 @@ jobs:
       - run:
           name: Checking outputs
           command: |
-            find /tmp/data/five-echo/TED.p06/ \
-              -prune -o -name "*" -print | sed s+/tmp/data/five-echo/TED.p06/++ | \
-              sort > /tmp/data/five-echo/TED.p06/outputs.out
+            find /tmp/data/five-echo/TED.p06/* \
+                -exec basename {} \; | sort > /tmp/data/five-echo/TED.p06/outputs.out
             diff /tmp/src/tedana/.circleci/tedana_outputs.txt /tmp/data/five-echo/TED.p06/outputs.out
       - store_artifacts:
           path: /tmp/data/five-echo
