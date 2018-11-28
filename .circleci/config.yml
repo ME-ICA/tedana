@@ -51,6 +51,7 @@ jobs:
               - data/five-echo/
       - save_cache:
           key: v1-packages+datasets-{{ .Branch }}
+          paths: /tmp/cache/
 
   get_regression_data:
     machine:
@@ -86,6 +87,7 @@ jobs:
               - five-echo/test/
       - save_cache:
           key: v1-packages+datasets-{{ .Branch }}
+          paths: /tmp/cache/
 
   three_echo_rest:
     docker:
