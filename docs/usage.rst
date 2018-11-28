@@ -66,13 +66,13 @@ There are several general principles to keep in mind when constructing ME-EPI pr
 
 In general, we recommend
 
-#. Performing slice timing correction and motion correction **before** ``tedana``, and
-#. Performing distortion correction, spatial normalization, smoothing,
+1. Performing slice timing correction and motion correction **before** ``tedana``, and
+2. Performing distortion correction, spatial normalization, smoothing,
 and any rescaling or filtering **after** ``tedana``.
 
 Other suggestions follow below.
 
-#. Calculating slice time correction for ME-EPI
+3. Calculating slice time correction for ME-EPI
 ```````````````````````````````````````````````
 
 Similarly to single-echo EPI data, slice time correction allows us to assume that voxels across
@@ -86,7 +86,7 @@ For single-echo EPI data, that excitation time would be the same regardless of t
 and the same is true when one is collecting multiple echoes after a single excitation pulse.
 Therefore, we suggest using the same slice timing for all echoes in an ME-EPI series.
 
-#. Avoid applying individual transformations to each echo
+4. Avoid applying individual transformations to each echo
 `````````````````````````````````````````````````````````
 
 When preparing ME-EPI data for multi-echo denoising as in ``tedana``, it is important

@@ -103,19 +103,12 @@ def _get_parser():
                         help=('Combination scheme for TEs: '
                               't2s (Posse 1999, default), ste (Poser)'),
                         default='t2s')
-    parser.add_argument('--initcost',
-                        dest='initcost',
-                        action='store',
-                        choices=['tanh', 'pow3', 'gaus', 'skew'],
-                        help=('Initial cost function for ICA.'),
-                        default='tanh')
-    parser.add_argument('--finalcost',
-                        dest='finalcost',
-                        action='store',
-                        choices=['tanh', 'pow3', 'gaus', 'skew'],
-                        help=('Final cost function for ICA. Same options as '
-                              'initcost.'),
-                        default='tanh')
+    parser.add_argument('--cost',
+                        dest='cost',
+                        help=('Cost func. for ICA: '
+                              'logcosh (default), cube, exp'),
+                        choices=['logcosh', 'cube', 'exp'],
+                        default='logcosh')
     parser.add_argument('--denoiseTEs',
                         dest='dne',
                         action='store_true',
@@ -174,8 +167,7 @@ def _get_parser():
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     strict=False, gscontrol=True, kdaw=10., rdaw=1., conv=2.5e-5,
-                    ste=-1, combmode='t2s', dne=False,
-                    initcost='tanh', finalcost='tanh',
+                    ste=-1, combmode='t2s', dne=False, cost='logcosh',
                     stabilize=False, filecsdata=False, wvpca=False,
                     label=None, fixed_seed=42, debug=False, quiet=False):
     """
@@ -219,10 +211,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
     dne : :obj:`bool`, optional
         Denoise each TE dataset separately. Default is False.
-    initcost : {'tanh', 'pow3', 'gaus', 'skew'}, optional
-        Initial cost function for ICA. Default is 'tanh'.
-    finalcost : {'tanh', 'pow3', 'gaus', 'skew'}, optional
-        Final cost function. Default is 'tanh'.
+    cost : {'logcosh', 'exp', 'cube'} str, optional
+        Cost function for ICA
     stabilize : :obj:`bool`, optional
         Stabilize convergence by reducing dimensionality, for low quality data.
         Default is False.
@@ -337,11 +327,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                 t2s, t2sG, stabilize, ref_img,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw,
                                                 ste=ste, wvpca=wvpca)
-        # Perform ICA on dimensionally reduced data (*without* thermal noise)
-        mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, conv, fixed_seed,
-                                                     cost=initcost, final_cost=finalcost,
-                                                     verbose=debug)
+        mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, conv,
+                                                     fixed_seed, cost=cost)
         np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
+
         LGR.info('Making second component selection guess from ICA results')
         # Estimate betas and compute selection metrics for mixing matrix
         # generated from dimensionally reduced data using full data (i.e., data
@@ -353,11 +342,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                                  reindex=True)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        comptable = selection.selcomps(seldict, comptable, mmix,
-                                       mask, ref_img, manacc,
-                                       n_echos, t2s, s0,
-                                       strict_mode=strict,
-                                       filecsdata=filecsdata)
+        comptable = selection.selcomps(seldict, comptable, mmix, manacc,
+                                       n_echos)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
@@ -366,11 +352,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                                  tes, combmode,
                                                                  ref_img)
         if ctab is None:
-            comptable = selection.selcomps(seldict, comptable, mmix,
-                                           mask, ref_img, manacc,
-                                           n_echos, t2s, s0,
-                                           filecsdata=filecsdata,
-                                           strict_mode=strict)
+            comptable = selection.selcomps(seldict, comptable, mmix, manacc,
+                                           n_echos)
         else:
             comptable = pd.read_csv(ctab, sep='\t', index_col='component')
 

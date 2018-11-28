@@ -88,6 +88,8 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
                              '({0}) does not match second dimension of '
                              't2s ({1})'.format(catd.shape[2], t2s.shape[1]))
 
+    mask = t2s != 0  # Override mask because problems
+
     # compute optimal combination of raw data
     tsoc = combine.make_optcom(catd, tes, mask, t2s=t2s_full, combmode=combmode,
                                verbose=False).astype(float)[mask]
