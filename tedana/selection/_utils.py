@@ -80,7 +80,7 @@ def getelbow_cons(arr, return_val=False):
         c_ = (c_ + d_) * d_
         dsum.append(c_)
     e2 = np.argmax(np.array(dsum))
-    elind = np.max([getelbow_mod(arr), e2])
+    elind = np.max([getelbow(arr), e2])
 
     if return_val:
         return arr[elind]
@@ -88,7 +88,7 @@ def getelbow_cons(arr, return_val=False):
         return elind
 
 
-def getelbow_mod(arr, return_val=False):
+def getelbow(arr, return_val=False):
     """
     Elbow using linear projection method - moderate
 
@@ -121,35 +121,3 @@ def getelbow_mod(arr, return_val=False):
         return arr[k_min_ind]
     else:
         return k_min_ind
-
-
-def getelbow_aggr(arr, return_val=False):
-    """
-    Elbow using curvature - aggressive
-
-    Parameters
-    ----------
-    arr : (C,) array_like
-        Metric (e.g., Kappa or Rho) values.
-    return_val : :obj:`bool`, optional
-        Return the value of the elbow instead of the index. Default: False
-
-    Returns
-    -------
-    :obj:`int` or :obj:`float`
-        Either the elbow index (if return_val is True) or the values at the
-        elbow index (if return_val is False)
-    """
-    if arr.ndim != 1:
-        raise ValueError('Parameter arr should be 1d, not {0}d'.format(arr.ndim))
-    arr = np.sort(arr)[::-1]
-    dKdt = arr[:-1] - arr[1:]
-    dKdt2 = dKdt[:-1] - dKdt[1:]
-    curv = np.abs((dKdt2 / (1 + dKdt[:-1]**2.) ** (3. / 2.)))
-    curv[np.isnan(curv)] = -1 * 10**6
-    maxcurv = np.argmax(curv) + 2
-
-    if return_val:
-        return arr[maxcurv]
-    else:
-        return maxcurv
