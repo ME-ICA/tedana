@@ -158,9 +158,7 @@ def fit_decay_ts(data, tes, mask, masksum):
     s0_full_ts = np.copy(t2s_limited_ts)
 
     for vol in range(n_vols):
-        (t2s_limited, s0_limited,
-         _, _,
-         t2s_full, s0_full) = fit_decay(
+        t2s_limited, s0_limited, _, _, t2s_full, s0_full = fit_decay(
             data[:, :, vol][:, :, None], tes, mask, masksum)
         t2s_limited_ts[:, vol] = t2s_limited
         s0_limited_ts[:, vol] = s0_limited
