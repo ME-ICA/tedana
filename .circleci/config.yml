@@ -63,7 +63,7 @@ jobs:
               - three_echo_Cornell/test/
               - five_echo_NIH/test/
 
-  three_echo_Cornell:
+  three_echo_rest:
     docker:
       - image: circleci/python:3.6
     working_directory: /tmp/src/tedana
@@ -120,10 +120,17 @@ jobs:
       - store_artifacts:
           path: /tmp/data/three-echo
 
-  five_echo_NIH:
+  five_echo_task:
     docker:
-      - image: circleci/python:3.6.1
+      - image: circleci/python:3.6
     working_directory: /tmp/src/tedana
+    environment:
+        DISTRIB: "conda"
+        PYTHON_VERSION: "3.6"
+        NUMPY_VERSION: "*"
+        SCIPY_VERSION: "*"
+        SCIKIT_LEARN_VERSION: "*"
+        MATPLOTLIB_VERSION: "*"
     steps:
       - attach_workspace:
           at: /tmp
@@ -131,11 +138,24 @@ jobs:
         # Trick found here:
         # https://discuss.circleci.com/t/disable-autodetection-of-project-or-application-of-python-venv/235/10
       - run: cd && rm -rf ~/.pyenv && rm -rf ~/virtualenvs
+        # We need to remove conflicting texlive packages.
+      - run: sudo -E apt-get -yq remove texlive-binaries --purge
+        # Installing required packages for `make -C doc check command` to work.
+      - run: sudo -E apt-get -yq update
+      - run: sudo -E apt-get -yq --no-install-suggests --no-install-recommends --force-yes install dvipng texlive-latex-base texlive-latex-extra
+      - run: wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
+      - run: chmod +x ~/miniconda.sh && ~/miniconda.sh -b
+      - run: echo 'export PATH="$HOME/miniconda3/bin:$PATH"'  >> $BASH_ENV
+      - run:
+          name: Create conda env
+          command: |
+            conda create -n venv python=3.6 numpy scipy scikit-learn matplotlib pandas \
+            flake8 lxml nose cython mkl sphinx coverage patsy boto3 pillow pandas -yq
+            conda install -n venv nibabel nilearn nose-timer -c conda-forge -yq
       - run:
           name: Create test environment
           command: |
-            python3 -m venv venv
-            . venv/bin/activate
+            source activate venv
             pip install pytest
             pip install -r requirements.txt
             python setup.py install
@@ -143,6 +163,7 @@ jobs:
           name: Run five-echo dataset
           no_output_timeout: 40m
           command: |
+            source activate venv
             cd /tmp/data/five_echo_NIH/
             tedana -d p06.SBJ01_S09_Task11_e[1,2,3,4,5].sm.nii.gz -e 15.4 29.7 44.0 58.3 72.6
       - run:
@@ -162,12 +183,12 @@ workflows:
       - build
       - get_data
       - get_regression_data
-      - three_echo_Cornell:
+      - three_echo_rest:
           requires:
             - build
             - get_data
             - get_regression_data
-      - five_echo_NIH:
+      - five_echo_task:
           requires:
             - build
             - get_data
