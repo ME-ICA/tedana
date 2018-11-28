@@ -1,7 +1,6 @@
 numpy>=1.14
 scikit-learn
 scipy
-mdp
 nilearn
 nibabel>=2.1.0
 pywavelets
@@ -9,3 +8,4 @@ duecredit
 sphinx-argparse
 numpydoc
 versioneer
+pandas
