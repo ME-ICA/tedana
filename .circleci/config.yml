@@ -27,17 +27,18 @@ jobs:
           command: |
             mkdir -p /tmp/data
             curl -L --create-dirs -o \
-              /tmp/data/three_echo_Cornell/three_echo_Cornell_zcat.nii.gz https://osf.io/e3hsn/download
+              /tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz https://osf.io/e3hsn/download
       - run:
           name: Download test five-echo data
           command: |
+            mkdir /tmp/data/five-echo
             curl -L -o five_echo_NIH.tar.xz https://osf.io/ea5v3/download
-            tar xf five_echo_NIH.tar.xz -C /tmp/data/
+            tar xf five_echo_NIH.tar.xz -C /tmp/data/five-echo
       - persist_to_workspace:
           root: /tmp
           paths:
-              - data/three_echo_Cornell/
-              - data/five_echo_NIH/
+              - data/three-echo/
+              - data/five-echo/
 
   get_regression_data:
     machine:
@@ -47,21 +48,21 @@ jobs:
       - run:
           name: Download expected output for three-echo data
           command: |
-            mkdir -p /tmp/three_echo_Cornell/test/
+            mkdir -p /tmp/three-echo/test/
             curl -L -o TED.Cornell_processed_three_echo_dataset.tar.xz https://osf.io/u65sq/download
-            tar xf TED.Cornell_processed_three_echo_dataset.tar.xz --no-same-owner -C /tmp/three_echo_Cornell/test/
+            tar xf TED.Cornell_processed_three_echo_dataset.tar.xz --no-same-owner -C /tmp/three-echo/test/
 
       - run:
           name: Download expected output for five-echo data
           command: |
-            mkdir -p /tmp/five_echo_NIH/test/
+            mkdir -p /tmp/five-echo/test/
             curl -L -o TED.p06.tar.xz https://osf.io/fr6mx/download
-            tar xf TED.p06.tar.xz --no-same-owner -C /tmp/five_echo_NIH/test/
+            tar xf TED.p06.tar.xz --no-same-owner -C /tmp/five-echo/test/
       - persist_to_workspace:
           root: /tmp
           paths:
-              - three_echo_Cornell/test/
-              - five_echo_NIH/test/
+              - three-echo/test/
+              - five-echo/test/
 
   three_echo_rest:
     docker:
@@ -107,7 +108,7 @@ jobs:
           no_output_timeout: 40m
           command: |
             source activate venv
-            cd /tmp/data/three_echo_Cornell/
+            cd /tmp/data/three-echo/
             tedana -d three_echo_Cornell_zcat.nii.gz -e 14.5 38.5 62.5
       - run:
           name: Checking outputs
@@ -164,15 +165,15 @@ jobs:
           no_output_timeout: 40m
           command: |
             source activate venv
-            cd /tmp/data/five_echo_NIH/
+            cd /tmp/data/five-echo/
             tedana -d p06.SBJ01_S09_Task11_e[1,2,3,4,5].sm.nii.gz -e 15.4 29.7 44.0 58.3 72.6
       - run:
           name: Checking outputs
           command: |
-            find /tmp/data/five_echo_NIH/TED.p06/ \
-              -prune -o -name "*" -print | sed s+/tmp/data/five_echo_NIH/TED.p06/++ | \
-              sort > /tmp/data/five_echo_NIH/TED.p06/outputs.out
-            diff /tmp/src/tedana/.circleci/tedana_outputs.txt /tmp/data/five_echo_NIH/TED.p06/outputs.out
+            find /tmp/data/five-echo/TED.p06/ \
+              -prune -o -name "*" -print | sed s+/tmp/data/five-echo/TED.p06/++ | \
+              sort > /tmp/data/five-echo/TED.p06/outputs.out
+            diff /tmp/src/tedana/.circleci/tedana_outputs.txt /tmp/data/five-echo/TED.p06/outputs.out
       - store_artifacts:
           path: /tmp/data/five-echo
 
