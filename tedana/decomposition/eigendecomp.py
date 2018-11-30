@@ -80,9 +80,6 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         Poser 2006
     mask : (S,) array_like
         Boolean mask array
-    stabilize : :obj:`bool`
-        Whether to attempt to stabilize convergence of ICA by returning
-        dimensionally-reduced data from PCA and component selection.
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
     tes : :obj:`list`
@@ -91,6 +88,8 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         Dimensionality augmentation weight for Kappa calculations
     rdaw : :obj:`float`
         Dimensionality augmentation weight for Rho calculations
+    method : {'mle', 'kundu', 'kundu-stabilize'}, optional
+        Method with which to select components in TEDPCA. Default is 'mle'.
     ste : :obj:`int` or :obj:`list` of :obj:`int`, optional
         Which echos to use in PCA. Values -1 and 0 are special, where a value
         of -1 will indicate using all the echos and 0 will indicate using the
@@ -275,7 +274,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
             lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
             rho_lim = ct_df.loc[lim_idx, 'rho'].values
             rho_thr = rho_lim[getelbow(rho_lim)]
-            stabilize = True
+            method = 'kundu-stabilize'
         elif int(rdaw) == -1:
             lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
             rho_lim = ct_df.loc[lim_idx, 'rho'].values
