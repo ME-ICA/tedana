@@ -114,26 +114,16 @@ def _get_parser():
                         action='store_true',
                         help='Denoise each TE dataset separately.',
                         default=False)
-    parser.add_argument('--strict',
-                        dest='strict',
-                        action='store_true',
-                        help='Ignore low-variance ambiguous components',
-                        default=False)
-    parser.add_argument('--no_gscontrol',
+    parser.add_argument('--gscontrol',
                         dest='gscontrol',
-                        action='store_false',
-                        help='Disable global signal regression.',
-                        default=True)
+                        action='store_true',
+                        help='Enable global signal regression.',
+                        default=False)
     parser.add_argument('--stabilize',
                         dest='stabilize',
                         action='store_true',
                         help=('Stabilize convergence by reducing '
                               'dimensionality, for low quality data'),
-                        default=False)
-    parser.add_argument('--filecsdata',
-                        dest='filecsdata',
-                        help='Save component selection data',
-                        action='store_true',
                         default=False)
     parser.add_argument('--wvpca',
                         dest='wvpca',
@@ -166,9 +156,9 @@ def _get_parser():
 
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
-                    strict=False, gscontrol=True, kdaw=10., rdaw=1., conv=2.5e-5,
+                    gscontrol=False, kdaw=10., rdaw=1., conv=2.5e-5,
                     ste=-1, combmode='t2s', dne=False, cost='logcosh',
-                    stabilize=False, filecsdata=False, wvpca=False,
+                    stabilize=False, wvpca=False,
                     label=None, fixed_seed=42, debug=False, quiet=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
@@ -192,10 +182,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     manacc : :obj:`str`, optional
         Comma separated list of manually accepted components in string form.
         Default is None.
-    strict : :obj:`bool`, optional
-        Ignore low-variance ambiguous components. Default is False.
     gscontrol : :obj:`bool`, optional
-        Control global signal using spatial approach. Default is True.
+        Control global signal using spatial approach. Default is False.
     kdaw : :obj:`float`, optional
         Dimensionality augmentation weight (Kappa). Default is 10.
         -1 for low-dimensional ICA.
@@ -216,8 +204,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     stabilize : :obj:`bool`, optional
         Stabilize convergence by reducing dimensionality, for low quality data.
         Default is False.
-    filecsdata : :obj:`bool`, optional
-        Save component selection data to file. Default is False.
     wvpca : :obj:`bool`, optional
         Whether or not to perform PCA on wavelet-transformed data.
         Default is False.
