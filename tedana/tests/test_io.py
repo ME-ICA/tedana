@@ -16,7 +16,7 @@ def test_gen_fname():
     basefile = ('sub-01_task-rest_run-01_echo-1_space-MNI152NLin2009cAsym_'
                 'desc-preproc_bold.nii.gz')
     desc = 'thing'
-    ext = '.nii.gz'
+    ext = 'bold.nii.gz'
     testfile = me.gen_fname(basefile, extension=ext, desc=desc)
     assert testfile == truefile
 
