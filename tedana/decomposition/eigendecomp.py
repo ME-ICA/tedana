@@ -360,7 +360,6 @@ def tedica(n_components, dd, fixed_seed, cost='logcosh'):
         LGR.error('ICA cost function not understood')
         raise
 
-    climit = float(conv)
     if fixed_seed == -1:
         fixed_seed = np.random.randint(low=1, high=1000)
     rand_state = np.random.RandomState(seed=fixed_seed)
