@@ -314,21 +314,26 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
             ct_df.loc[under_fmin2, 'classification'] = 'rejected'
             ct_df.loc[under_fmin2, 'rationale'] += 'rho below fmin;'
 
+        sel_idx = ct_df['classification'] == 'accepted'
+        n_components = np.sum(sel_idx)
+        LGR.info('Selected {0} components with Kappa threshold: {1:.02f}, '
+                 'Rho threshold: {2:.02f}'.format(n_components, kappa_thr,
+                                                  rho_thr))
+    elif method == 'mle':
+        sel_idx = ct_df['classification'] == 'accepted'
+        n_components = np.sum(sel_idx)
+        LGR.info('Selected {0} components with MLE dimensionality '
+                 'detection'.format(n_components))
+
     ct_df.to_csv('comp_table_pca.txt', sep='\t', index=True,
                  index_label='component', float_format='%.6f')
 
-    sel_idx = ct_df['classification'] == 'accepted'
-    n_components = np.sum(sel_idx)
     voxel_kept_comp_weighted = (voxel_comp_weights[:, sel_idx] *
                                 varex[None, sel_idx])
     kept_data = np.dot(voxel_kept_comp_weighted, comp_ts[sel_idx, :])
 
     if wvpca:
         kept_data = idwtmat(kept_data, cAl)
-
-    LGR.info('Selected {0} components with Kappa threshold: {1:.02f}, '
-             'Rho threshold: {2:.02f}'.format(n_components, kappa_thr,
-                                              rho_thr))
 
     kept_data = stats.zscore(kept_data, axis=1)  # variance normalize timeseries
     kept_data = stats.zscore(kept_data, axis=None)  # variance normalize everything
