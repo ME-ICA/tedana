@@ -367,7 +367,7 @@ def tedica(n_components, dd, conv, fixed_seed, cost='logcosh'):
         fixed_seed = np.random.randint(low=1, high=1000)
     rand_state = np.random.RandomState(seed=fixed_seed)
     ica = FastICA(n_components=n_components, algorithm='parallel',
-                  fun=cost, tol=climit, random_state=rand_state)
+                  fun=cost, tol=climit, max_iter=5000, random_state=rand_state)
     ica.fit(dd)
     mmix = ica.mixing_
     mmix = stats.zscore(mmix, axis=0)
