@@ -32,7 +32,7 @@ Z_MAX = 8
     """),
     description='Introduces method for choosing PCA dimensionality '
                 'automatically')
-def run_svd(data):
+def run_svd(data, mle=True):
     """
     Run Singular Value Decomposition (SVD) on input data.
 
@@ -51,7 +51,10 @@ def run_svd(data):
         Component timeseries.
     """
     # do PC dimension selection and get eigenvalue cutoff
-    ppca = PCA(n_components='mle', svd_solver='full')
+    if mle:
+        ppca = PCA(n_components='mle', svd_solver='full')
+    else:
+        ppca = PCA()
     ppca.fit(data)
     v = ppca.components_
     s = ppca.explained_variance_
@@ -59,8 +62,8 @@ def run_svd(data):
     return u, s, v
 
 
-def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
-           ref_img, tes, kdaw, rdaw, ste=0, wvpca=False):
+def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
+           ref_img, tes, kdaw, rdaw, method='mle', ste=0, wvpca=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
     noise from multi-echo data.
@@ -176,7 +179,10 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         dz, cAl = dwtmat(dz)
 
     if not op.exists('pcastate.pkl'):
-        voxel_comp_weights, varex, comp_ts = run_svd(dz)
+        if method == 'mle':
+            voxel_comp_weights, varex, comp_ts = run_svd(dz, mle=True)
+        elif 'kundu' in method:
+            voxel_comp_weights, varex, comp_ts = run_svd(dz, mle=False)
 
         # actual variance explained (normalized)
         varex_norm = varex / varex.sum()
@@ -210,9 +216,6 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         # varex_norm overrides normalized varex computed by fitmodels_direct
         ct_df['normalized variance explained'] = varex_norm
 
-        # Save state
-        fname = op.abspath('pcastate.pkl')
-        LGR.info('Saving PCA results to: {}'.format(fname))
         pcastate = {'voxel_comp_weights': voxel_comp_weights,
                     'varex': varex,
                     'comp_ts': comp_ts,
@@ -220,6 +223,11 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
                     'eigenvalue_elbow': eigenvalue_elbow,
                     'varex_norm_min': varex_norm_min,
                     'varex_norm_cum': varex_norm_cum}
+
+        # Save state
+        fname = op.abspath('pcastate.pkl')
+        LGR.info('Saving PCA results to: {}'.format(fname))
+
         try:
             with open(fname, 'wb') as handle:
                 pickle.dump(pcastate, handle)
@@ -247,63 +255,65 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         comp_maps[:, i_comp] = np.squeeze(comp_map)
     io.filewrite(comp_maps, 'mepca_OC_components.nii', ref_img)
 
-    fmin, fmid, fmax = utils.getfbounds(n_echos)
-    kappa_thr = np.average(sorted([fmin, getelbow(ct_df['kappa'], return_val=True)/2, fmid]),
-                           weights=[kdaw, 1, 1])
-    rho_thr = np.average(sorted([fmin, getelbow_cons(ct_df['rho'], return_val=True)/2, fmid]),
-                         weights=[rdaw, 1, 1])
-    if int(kdaw) == -1:
-        lim_idx = utils.andb([ct_df['kappa'] < fmid,
-                              ct_df['kappa'] > fmin]) == 2
-        kappa_lim = ct_df.loc[lim_idx, 'kappa'].values
-        kappa_thr = kappa_lim[getelbow(kappa_lim)]
-
-        lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
-        rho_lim = ct_df.loc[lim_idx, 'rho'].values
-        rho_thr = rho_lim[getelbow(rho_lim)]
-        stabilize = True
-    elif int(rdaw) == -1:
-        lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
-        rho_lim = ct_df.loc[lim_idx, 'rho'].values
-        rho_thr = rho_lim[getelbow(rho_lim)]
-
     # Add new columns to comptable for classification
     ct_df['classification'] = 'accepted'
     ct_df['rationale'] = ''
 
-    # Reject if low Kappa, Rho, and variance explained
-    is_lowk = ct_df['kappa'] <= kappa_thr
-    is_lowr = ct_df['rho'] <= rho_thr
-    is_lowe = ct_df['normalized variance explained'] <= eigenvalue_elbow
-    is_lowkre = is_lowk & is_lowr & is_lowe
-    ct_df.loc[is_lowkre, 'classification'] = 'rejected'
-    ct_df.loc[is_lowkre, 'rationale'] += 'low rho, kappa, and varex;'
+    # Select components using decision tree
+    if 'kundu' in method:
+        fmin, fmid, fmax = utils.getfbounds(n_echos)
+        kappa_thr = np.average(sorted([fmin, getelbow(ct_df['kappa'], return_val=True)/2, fmid]),
+                               weights=[kdaw, 1, 1])
+        rho_thr = np.average(sorted([fmin, getelbow_cons(ct_df['rho'], return_val=True)/2, fmid]),
+                             weights=[rdaw, 1, 1])
+        if int(kdaw) == -1:
+            lim_idx = utils.andb([ct_df['kappa'] < fmid,
+                                  ct_df['kappa'] > fmin]) == 2
+            kappa_lim = ct_df.loc[lim_idx, 'kappa'].values
+            kappa_thr = kappa_lim[getelbow(kappa_lim)]
 
-    # Reject if low variance explained
-    is_lows = ct_df['normalized variance explained'] <= varex_norm_min
-    ct_df.loc[is_lows, 'classification'] = 'rejected'
-    ct_df.loc[is_lows, 'rationale'] += 'low variance explained;'
+            lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
+            rho_lim = ct_df.loc[lim_idx, 'rho'].values
+            rho_thr = rho_lim[getelbow(rho_lim)]
+            stabilize = True
+        elif int(rdaw) == -1:
+            lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
+            rho_lim = ct_df.loc[lim_idx, 'rho'].values
+            rho_thr = rho_lim[getelbow(rho_lim)]
 
-    # Reject if Kappa over limit
-    is_fmax1 = ct_df['kappa'] == F_MAX
-    ct_df.loc[is_fmax1, 'classification'] = 'rejected'
-    ct_df.loc[is_fmax1, 'rationale'] += 'kappa equals fmax;'
+        # Reject if low Kappa, Rho, and variance explained
+        is_lowk = ct_df['kappa'] <= kappa_thr
+        is_lowr = ct_df['rho'] <= rho_thr
+        is_lowe = ct_df['normalized variance explained'] <= eigenvalue_elbow
+        is_lowkre = is_lowk & is_lowr & is_lowe
+        ct_df.loc[is_lowkre, 'classification'] = 'rejected'
+        ct_df.loc[is_lowkre, 'rationale'] += 'low rho, kappa, and varex;'
 
-    # Reject if Rho over limit
-    is_fmax2 = ct_df['rho'] == F_MAX
-    ct_df.loc[is_fmax2, 'classification'] = 'rejected'
-    ct_df.loc[is_fmax2, 'rationale'] += 'rho equals fmax;'
+        # Reject if low variance explained
+        is_lows = ct_df['normalized variance explained'] <= varex_norm_min
+        ct_df.loc[is_lows, 'classification'] = 'rejected'
+        ct_df.loc[is_lows, 'rationale'] += 'low variance explained;'
 
-    if stabilize:
-        temp7 = varex_norm_cum >= 0.95
-        ct_df.loc[temp7, 'classification'] = 'rejected'
-        ct_df.loc[temp7, 'rationale'] += 'cumulative var. explained above 95%;'
-        under_fmin1 = ct_df['kappa'] <= fmin
-        ct_df.loc[under_fmin1, 'classification'] = 'rejected'
-        ct_df.loc[under_fmin1, 'rationale'] += 'kappa below fmin;'
-        under_fmin2 = ct_df['rho'] <= fmin
-        ct_df.loc[under_fmin2, 'classification'] = 'rejected'
-        ct_df.loc[under_fmin2, 'rationale'] += 'rho below fmin;'
+        # Reject if Kappa over limit
+        is_fmax1 = ct_df['kappa'] == F_MAX
+        ct_df.loc[is_fmax1, 'classification'] = 'rejected'
+        ct_df.loc[is_fmax1, 'rationale'] += 'kappa equals fmax;'
+
+        # Reject if Rho over limit
+        is_fmax2 = ct_df['rho'] == F_MAX
+        ct_df.loc[is_fmax2, 'classification'] = 'rejected'
+        ct_df.loc[is_fmax2, 'rationale'] += 'rho equals fmax;'
+
+        if 'stabilize' in method:
+            temp7 = varex_norm_cum >= 0.95
+            ct_df.loc[temp7, 'classification'] = 'rejected'
+            ct_df.loc[temp7, 'rationale'] += 'cumulative var. explained above 95%;'
+            under_fmin1 = ct_df['kappa'] <= fmin
+            ct_df.loc[under_fmin1, 'classification'] = 'rejected'
+            ct_df.loc[under_fmin1, 'rationale'] += 'kappa below fmin;'
+            under_fmin2 = ct_df['rho'] <= fmin
+            ct_df.loc[under_fmin2, 'classification'] = 'rejected'
+            ct_df.loc[under_fmin2, 'rationale'] += 'rho below fmin;'
 
     ct_df.to_csv('comp_table_pca.txt', sep='\t', index=True,
                  index_label='component', float_format='%.6f')

@@ -124,12 +124,6 @@ def _get_parser():
                         action='store_false',
                         help='Disable global signal regression.',
                         default=True)
-    parser.add_argument('--stabilize',
-                        dest='stabilize',
-                        action='store_true',
-                        help=('Stabilize convergence by reducing '
-                              'dimensionality, for low quality data'),
-                        default=False)
     parser.add_argument('--filecsdata',
                         dest='filecsdata',
                         help='Save component selection data',
@@ -140,6 +134,11 @@ def _get_parser():
                         help='Perform PCA on wavelet-transformed data',
                         action='store_true',
                         default=False)
+    parser.add_argument('--tedpca',
+                        dest='tedpca',
+                        help='Method with which to select components in TEDPCA',
+                        choices=['mle', 'kundu', 'kundu-stabilize'],
+                        default='mle')
     parser.add_argument('--label',
                         dest='label',
                         type=str,
@@ -168,7 +167,7 @@ def _get_parser():
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     strict=False, gscontrol=True, kdaw=10., rdaw=1., conv=2.5e-5,
                     ste=-1, combmode='t2s', dne=False, cost='logcosh',
-                    stabilize=False, filecsdata=False, wvpca=False,
+                    filecsdata=False, wvpca=False, tedpca='mle',
                     label=None, fixed_seed=42, debug=False, quiet=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
@@ -213,14 +212,13 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Denoise each TE dataset separately. Default is False.
     cost : {'logcosh', 'exp', 'cube'} str, optional
         Cost function for ICA
-    stabilize : :obj:`bool`, optional
-        Stabilize convergence by reducing dimensionality, for low quality data.
-        Default is False.
     filecsdata : :obj:`bool`, optional
         Save component selection data to file. Default is False.
     wvpca : :obj:`bool`, optional
         Whether or not to perform PCA on wavelet-transformed data.
         Default is False.
+    tedpca : {'mle', 'kundu', 'kundu-stabilize'}, optional
+        Method with which to select components in TEDPCA. Default is 'mle'.
     label : :obj:`str` or :obj:`None`, optional
         Label for output directory. Default is None.
 
@@ -324,8 +322,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if mixm is None:
         # Identify and remove thermal noise from data
         n_components, dd = decomposition.tedpca(catd, data_oc, combmode, mask,
-                                                t2s, t2sG, stabilize, ref_img,
+                                                t2s, t2sG, ref_img,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw,
+                                                method=tedpca,
                                                 ste=ste, wvpca=wvpca)
         mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, conv,
                                                      fixed_seed, cost=cost)
