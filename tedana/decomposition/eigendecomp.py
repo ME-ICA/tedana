@@ -327,7 +327,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     return n_components, kept_data
 
 
-def tedica(n_components, dd, conv, fixed_seed, cost='logcosh'):
+def tedica(n_components, dd, fixed_seed, cost='logcosh'):
     """
     Performs ICA on `dd` and returns mixing matrix
 
@@ -338,8 +338,6 @@ def tedica(n_components, dd, conv, fixed_seed, cost='logcosh'):
     dd : (S x T) :obj:`numpy.ndarray`
         Dimensionally reduced optimally combined functional data, where `S` is
         samples and `T` is time
-    conv : :obj:`float`
-        Convergence limit for ICA
     cost : {'logcosh', 'exp', 'cube'} str, optional
         Cost function for ICA
     fixed_seed : int
@@ -367,7 +365,7 @@ def tedica(n_components, dd, conv, fixed_seed, cost='logcosh'):
         fixed_seed = np.random.randint(low=1, high=1000)
     rand_state = np.random.RandomState(seed=fixed_seed)
     ica = FastICA(n_components=n_components, algorithm='parallel',
-                  fun=cost, tol=climit, max_iter=5000, random_state=rand_state)
+                  fun=cost, max_iter=5000, random_state=rand_state)
     ica.fit(dd)
     mmix = ica.mixing_
     mmix = stats.zscore(mmix, axis=0)

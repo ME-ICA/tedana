@@ -84,11 +84,6 @@ def _get_parser():
                         help=('Dimensionality augmentation weight (Rho). '
                               'Default=1. -1 for low-dimensional ICA'),
                         default=1.)
-    parser.add_argument('--conv',
-                        dest='conv',
-                        type=float,
-                        help='Convergence limit. Default 2.5e-5',
-                        default='2.5e-5')
     parser.add_argument('--sourceTEs',
                         dest='ste',
                         type=str,
@@ -109,10 +104,10 @@ def _get_parser():
                               'logcosh (default), cube, exp'),
                         choices=['logcosh', 'cube', 'exp'],
                         default='logcosh')
-    parser.add_argument('--denoiseTEs',
-                        dest='dne',
+    parser.add_argument('--verbose',
+                        dest='verbose',
                         action='store_true',
-                        help='Denoise each TE dataset separately.',
+                        help='Generate intermediate and additional files.',
                         default=False)
     parser.add_argument('--gscontrol',
                         dest='gscontrol',
@@ -156,8 +151,8 @@ def _get_parser():
 
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
-                    gscontrol=False, kdaw=10., rdaw=1., conv=2.5e-5,
-                    ste=-1, combmode='t2s', dne=False, cost='logcosh',
+                    gscontrol=False, kdaw=10., rdaw=1.,
+                    ste=-1, combmode='t2s', verbose=False, cost='logcosh',
                     stabilize=False, wvpca=False,
                     label=None, fixed_seed=42, debug=False, quiet=False):
     """
@@ -190,15 +185,13 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     rdaw : :obj:`float`, optional
         Dimensionality augmentation weight (Rho). Default is 1.
         -1 for low-dimensional ICA.
-    conv : :obj:`float`, optional
-        Convergence limit. Default is 2.5e-5.
     ste : :obj:`int`, optional
         Source TEs for models. 0 for all, -1 for optimal combination.
         Default is -1.
     combmode : {'t2s', 'ste'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
-    dne : :obj:`bool`, optional
-        Denoise each TE dataset separately. Default is False.
+    verbose : :obj:`bool`, optional
+        Generate intermediate and additional files. Default is False.
     cost : {'logcosh', 'exp', 'cube'} str, optional
         Cost function for ICA
     stabilize : :obj:`bool`, optional
@@ -313,7 +306,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                 t2s, t2sG, stabilize, ref_img,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw,
                                                 ste=ste, wvpca=wvpca)
-        mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, conv,
+        mmix_orig, fixed_seed = decomposition.tedica(n_components, dd,
                                                      fixed_seed, cost=cost)
         np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
 
@@ -360,7 +353,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     acc=acc, rej=rej, midk=midk, empty=ign,
                     ref_img=ref_img)
     io.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
-    if dne:
+    if verbose:
         io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
 
 
