@@ -114,6 +114,12 @@ def _get_parser():
                         action='store_true',
                         help='Enable global signal regression.',
                         default=False)
+    parser.add_argument('--global_denoise',
+                        dest='global_denoise',
+                        help=('Perform additional denoising to remove '
+                              'spatially diffuse noise. Default is None.'),
+                        choices=[None, 't1c'],
+                        default=None)
     parser.add_argument('--stabilize',
                         dest='stabilize',
                         action='store_true',
@@ -151,7 +157,7 @@ def _get_parser():
 
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
-                    gscontrol=False, kdaw=10., rdaw=1.,
+                    gscontrol=False, global_denoise=None, kdaw=10., rdaw=1.,
                     ste=-1, combmode='t2s', verbose=False, cost='logcosh',
                     stabilize=False, wvpca=False,
                     label=None, fixed_seed=42, debug=False, quiet=False):
@@ -166,8 +172,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     tes : :obj:`list`
         List of echo times associated with data in milliseconds.
     mask : :obj:`str`, optional
-        Binary mask of voxels to include in TE Dependent ANAlysis. Must be spatially
-        aligned with `data`.
+        Binary mask of voxels to include in TE Dependent ANAlysis. Must be
+        spatially aligned with `data`.
     mixm : :obj:`str`, optional
         File containing mixing matrix. If not provided, ME-PCA and ME-ICA are
         done.
@@ -179,6 +185,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Default is None.
     gscontrol : :obj:`bool`, optional
         Control global signal using spatial approach. Default is False.
+    global_denoise : {None, 't1c'}, optional
+        Perform additional denoising to remove spatially diffuse noise. Default
+        is None.
     kdaw : :obj:`float`, optional
         Dimensionality augmentation weight (Kappa). Default is 10.
         -1 for low-dimensional ICA.
@@ -352,7 +361,12 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     n_vols=n_vols, fixed_seed=fixed_seed,
                     acc=acc, rej=rej, midk=midk, empty=ign,
                     ref_img=ref_img)
-    io.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
+
+    if global_denoise == 't1c':
+        LGR.info('Performing T1c global signal regression to remove spatially '
+                 'diffuse noise')
+        io.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
+
     if verbose:
         io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
 
