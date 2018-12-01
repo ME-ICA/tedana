@@ -72,18 +72,6 @@ def _get_parser():
                         help=('Comma separated list of manually '
                               'accepted components'),
                         default=None)
-    parser.add_argument('--kdaw',
-                        dest='kdaw',
-                        type=float,
-                        help=('Dimensionality augmentation weight (Kappa). '
-                              'Default=10. -1 for low-dimensional ICA'),
-                        default=10.)
-    parser.add_argument('--rdaw',
-                        dest='rdaw',
-                        type=float,
-                        help=('Dimensionality augmentation weight (Rho). '
-                              'Default=1. -1 for low-dimensional ICA'),
-                        default=1.)
     parser.add_argument('--conv',
                         dest='conv',
                         type=float,
@@ -161,6 +149,23 @@ def _get_parser():
                         help=argparse.SUPPRESS,
                         action='store_true',
                         default=False)
+    tedpca_args = parser.add_argument_group('Options for controlling TEDPCA')
+    tedpca_args.add_argument('--kdaw',
+                             dest='kdaw',
+                             type=float,
+                             help=('Dimensionality augmentation weight '
+                                   '(Kappa). Only used with Kundu decision '
+                                   'tree TEDPCA approach. Default=10. -1 for '
+                                   'low-dimensional ICA'),
+                             default=10.)
+    tedpca_args.add_argument('--rdaw',
+                             dest='rdaw',
+                             type=float,
+                             help=('Dimensionality augmentation weight (Rho). '
+                                   'Only used with Kundu decision tree TEDPCA '
+                                   'approach. Default=1. -1 for '
+                                   'low-dimensional ICA'),
+                             default=1.)
     return parser
 
 
@@ -326,6 +331,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw,
                                                 method=tedpca,
                                                 ste=ste, wvpca=wvpca)
+
         mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, conv,
                                                      fixed_seed, cost=cost)
         np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
