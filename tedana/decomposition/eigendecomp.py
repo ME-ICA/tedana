@@ -62,8 +62,71 @@ def run_svd(data, mle=True):
     return u, s, v
 
 
+def kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False):
+    fmin, fmid, fmax = utils.getfbounds(n_echos)
+    if int(kdaw) == -1:
+        lim_idx = utils.andb([ct_df['kappa'] < fmid,
+                              ct_df['kappa'] > fmin]) == 2
+        kappa_lim = ct_df.loc[lim_idx, 'kappa'].values
+        kappa_thr = kappa_lim[getelbow(kappa_lim)]
+
+        lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
+        rho_lim = ct_df.loc[lim_idx, 'rho'].values
+        rho_thr = rho_lim[getelbow(rho_lim)]
+        method = 'kundu-stabilize'
+        LGR.info('kdaw set to -1. Switching TEDPCA method to '
+                 'kundu-stabilize')
+    elif int(rdaw) == -1:
+        lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
+        rho_lim = ct_df.loc[lim_idx, 'rho'].values
+        rho_thr = rho_lim[getelbow(rho_lim)]
+    else:
+        kappa_thr = np.average(
+            sorted([fmin, getelbow(ct_df['kappa'], return_val=True)/2, fmid]),
+            weights=[kdaw, 1, 1])
+        rho_thr = np.average(
+            sorted([fmin, getelbow_cons(ct_df['rho'], return_val=True)/2, fmid]),
+            weights=[rdaw, 1, 1])
+
+    # Reject if low Kappa, Rho, and variance explained
+    is_lowk = ct_df['kappa'] <= kappa_thr
+    is_lowr = ct_df['rho'] <= rho_thr
+    is_lowe = ct_df['normalized variance explained'] <= eigenvalue_elbow
+    is_lowkre = is_lowk & is_lowr & is_lowe
+    ct_df.loc[is_lowkre, 'classification'] = 'rejected'
+    ct_df.loc[is_lowkre, 'rationale'] += 'low rho, kappa, and varex;'
+
+    # Reject if low variance explained
+    is_lows = ct_df['normalized variance explained'] <= varex_norm_min
+    ct_df.loc[is_lows, 'classification'] = 'rejected'
+    ct_df.loc[is_lows, 'rationale'] += 'low variance explained;'
+
+    # Reject if Kappa over limit
+    is_fmax1 = ct_df['kappa'] == F_MAX
+    ct_df.loc[is_fmax1, 'classification'] = 'rejected'
+    ct_df.loc[is_fmax1, 'rationale'] += 'kappa equals fmax;'
+
+    # Reject if Rho over limit
+    is_fmax2 = ct_df['rho'] == F_MAX
+    ct_df.loc[is_fmax2, 'classification'] = 'rejected'
+    ct_df.loc[is_fmax2, 'rationale'] += 'rho equals fmax;'
+
+    if 'stabilize' in method:
+        temp7 = varex_norm_cum >= 0.95
+        ct_df.loc[temp7, 'classification'] = 'rejected'
+        ct_df.loc[temp7, 'rationale'] += 'cumulative var. explained above 95%;'
+        under_fmin1 = ct_df['kappa'] <= fmin
+        ct_df.loc[under_fmin1, 'classification'] = 'rejected'
+        ct_df.loc[under_fmin1, 'rationale'] += 'kappa below fmin;'
+        under_fmin2 = ct_df['rho'] <= fmin
+        ct_df.loc[under_fmin2, 'classification'] = 'rejected'
+        ct_df.loc[under_fmin2, 'rationale'] += 'rho below fmin;'
+
+    return ct_df, kappa_thr, rho_thr
+
+
 def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
-           ref_img, tes, kdaw, rdaw, method='mle', ste=0, wvpca=False):
+           ref_img, tes, method='mle', ste=0, kdaw=10., rdaw=1., wvpca=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
     noise from multi-echo data.
@@ -73,7 +136,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
     catd : (S x E x T) array_like
         Input functional data
     OCcatd : (S x T) array_like
-        Optimally-combined time series data
+        Optimally combined time series data
     combmode : {'t2s', 'ste'} str
         How optimal combination of echos should be made, where 't2s' indicates
         using the method of Posse 1999 and 'ste' indicates using the method of
@@ -177,7 +240,23 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
     if wvpca:
         dz, cAl = dwtmat(dz)
 
-    if not op.exists('pcastate.pkl'):
+    fname = op.abspath('pcastate.pkl')
+    if op.exists('pcastate.pkl'):
+        LGR.info('Loading PCA from: pcastate.pkl')
+        with open('pcastate.pkl', 'rb') as handle:
+            pcastate = pickle.load(handle)
+
+        if pcastate['method'] != method:
+            LGR.warning('Method from PCA state file ({0}) does not match '
+                        'requested method ({1}).'.format(pcastate['method'],
+                                                         method))
+            state_found = False
+        else:
+            state_found = True
+    else:
+        state_found = False
+
+    if not state_found:
         if method == 'mle':
             voxel_comp_weights, varex, comp_ts = run_svd(dz, mle=True)
         elif 'kundu' in method:
@@ -215,7 +294,8 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         # varex_norm overrides normalized varex computed by fitmodels_direct
         ct_df['normalized variance explained'] = varex_norm
 
-        pcastate = {'voxel_comp_weights': voxel_comp_weights,
+        pcastate = {'method': method,
+                    'voxel_comp_weights': voxel_comp_weights,
                     'varex': varex,
                     'comp_ts': comp_ts,
                     'comptable': ct_df,
@@ -224,7 +304,6 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
                     'varex_norm_cum': varex_norm_cum}
 
         # Save state
-        fname = op.abspath('pcastate.pkl')
         LGR.info('Saving PCA results to: {}'.format(fname))
 
         try:
@@ -232,12 +311,9 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
                 pickle.dump(pcastate, handle)
         except TypeError:
             LGR.warning('Could not save PCA solution')
-
     else:  # if loading existing state
-        LGR.info('Loading PCA from: pcastate.pkl')
-        with open('pcastate.pkl', 'rb') as handle:
-            pcastate = pickle.load(handle)
-        voxel_comp_weights, varex = pcastate['voxel_comp_weights'], pcastate['varex']
+        voxel_comp_weights = pcastate['voxel_comp_weights']
+        varex = pcastate['varex']
         comp_ts = pcastate['comp_ts']
         ct_df = pcastate['comptable']
         eigenvalue_elbow = pcastate['eigenvalue_elbow']
@@ -259,61 +335,17 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
     ct_df['rationale'] = ''
 
     # Select components using decision tree
-    if 'kundu' in method:
-        fmin, fmid, fmax = utils.getfbounds(n_echos)
-        kappa_thr = np.average(sorted([fmin, getelbow(ct_df['kappa'], return_val=True)/2, fmid]),
-                               weights=[kdaw, 1, 1])
-        rho_thr = np.average(sorted([fmin, getelbow_cons(ct_df['rho'], return_val=True)/2, fmid]),
-                             weights=[rdaw, 1, 1])
-        if int(kdaw) == -1:
-            lim_idx = utils.andb([ct_df['kappa'] < fmid,
-                                  ct_df['kappa'] > fmin]) == 2
-            kappa_lim = ct_df.loc[lim_idx, 'kappa'].values
-            kappa_thr = kappa_lim[getelbow(kappa_lim)]
-
-            lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
-            rho_lim = ct_df.loc[lim_idx, 'rho'].values
-            rho_thr = rho_lim[getelbow(rho_lim)]
-            method = 'kundu-stabilize'
-        elif int(rdaw) == -1:
-            lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
-            rho_lim = ct_df.loc[lim_idx, 'rho'].values
-            rho_thr = rho_lim[getelbow(rho_lim)]
-
-        # Reject if low Kappa, Rho, and variance explained
-        is_lowk = ct_df['kappa'] <= kappa_thr
-        is_lowr = ct_df['rho'] <= rho_thr
-        is_lowe = ct_df['normalized variance explained'] <= eigenvalue_elbow
-        is_lowkre = is_lowk & is_lowr & is_lowe
-        ct_df.loc[is_lowkre, 'classification'] = 'rejected'
-        ct_df.loc[is_lowkre, 'rationale'] += 'low rho, kappa, and varex;'
-
-        # Reject if low variance explained
-        is_lows = ct_df['normalized variance explained'] <= varex_norm_min
-        ct_df.loc[is_lows, 'classification'] = 'rejected'
-        ct_df.loc[is_lows, 'rationale'] += 'low variance explained;'
-
-        # Reject if Kappa over limit
-        is_fmax1 = ct_df['kappa'] == F_MAX
-        ct_df.loc[is_fmax1, 'classification'] = 'rejected'
-        ct_df.loc[is_fmax1, 'rationale'] += 'kappa equals fmax;'
-
-        # Reject if Rho over limit
-        is_fmax2 = ct_df['rho'] == F_MAX
-        ct_df.loc[is_fmax2, 'classification'] = 'rejected'
-        ct_df.loc[is_fmax2, 'rationale'] += 'rho equals fmax;'
-
-        if 'stabilize' in method:
-            temp7 = varex_norm_cum >= 0.95
-            ct_df.loc[temp7, 'classification'] = 'rejected'
-            ct_df.loc[temp7, 'rationale'] += 'cumulative var. explained above 95%;'
-            under_fmin1 = ct_df['kappa'] <= fmin
-            ct_df.loc[under_fmin1, 'classification'] = 'rejected'
-            ct_df.loc[under_fmin1, 'rationale'] += 'kappa below fmin;'
-            under_fmin2 = ct_df['rho'] <= fmin
-            ct_df.loc[under_fmin2, 'classification'] = 'rejected'
-            ct_df.loc[under_fmin2, 'rationale'] += 'rho below fmin;'
-
+    if method == 'kundu':
+        ct_df, kappa_thr, rho_thr = kundu_tedpca(ct_df, n_echos, kdaw, rdaw,
+                                                 stabilize=False)
+        sel_idx = ct_df['classification'] == 'accepted'
+        n_components = np.sum(sel_idx)
+        LGR.info('Selected {0} components with Kappa threshold: {1:.02f}, '
+                 'Rho threshold: {2:.02f}'.format(n_components, kappa_thr,
+                                                  rho_thr))
+    elif method == 'kundu-stabilize':
+        ct_df, kappa_thr, rho_thr = kundu_tedpca(ct_df, n_echos, kdaw, rdaw,
+                                                 stabilize=True)
         sel_idx = ct_df['classification'] == 'accepted'
         n_components = np.sum(sel_idx)
         LGR.info('Selected {0} components with Kappa threshold: {1:.02f}, '
