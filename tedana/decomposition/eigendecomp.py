@@ -63,6 +63,32 @@ def run_svd(data, mle=True):
 
 
 def kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False):
+    """
+    Select PCA components using Kundu's decision tree approach.
+
+    Parameters
+    ----------
+    ct_df : :obj:`pandas.DataFrame`
+        Component table with relevant metrics: kappa, rho, and normalized
+        variance explained.
+    n_echos : :obj:`int`
+        Number of echoes in dataset.
+    kdaw : :obj:`float`
+        Kappa dimensionality augmentation weight. Must be a non-negative float,
+        or -1 (a special value).
+    rdaw : :obj:`float`
+        Rho dimensionality augmentation weight. Must be a non-negative float,
+        or -1 (a special value).
+    stabilize : :obj:`bool`, optional
+        Whether to stabilize convergence by reducing dimensionality, for low
+        quality data. Default is False.
+
+    Returns
+    -------
+    ct_df : :obj:`pandas.DataFrame`
+        Component table with components classified as 'accepted', 'rejected',
+        or 'ignored'.
+    """
     eigenvalue_elbow = getelbow(ct_df['normalized variance explained'],
                                 return_val=True)
 
@@ -134,7 +160,10 @@ def kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False):
         ct_df.loc[under_fmin2, 'classification'] = 'rejected'
         ct_df.loc[under_fmin2, 'rationale'] += 'rho below fmin;'
 
-    return ct_df, kappa_thr, rho_thr
+    n_components = ct_df.loc[ct_df['classification'] == 'accepted'].shape[0]
+    LGR.info('Selected {0} components with Kappa threshold: {1:.02f}, Rho '
+             'threshold: {2:.02f}'.format(n_components, kappa_thr, rho_thr))
+    return ct_df
 
 
 def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
@@ -332,30 +361,18 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
 
     # Select components using decision tree
     if method == 'kundu':
-        ct_df, kappa_thr, rho_thr = kundu_tedpca(ct_df, n_echos, kdaw, rdaw,
-                                                 stabilize=False)
-        sel_idx = ct_df['classification'] == 'accepted'
-        n_components = np.sum(sel_idx)
-        LGR.info('Selected {0} components with Kappa threshold: {1:.02f}, '
-                 'Rho threshold: {2:.02f}'.format(n_components, kappa_thr,
-                                                  rho_thr))
+        ct_df = kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False)
     elif method == 'kundu-stabilize':
-        ct_df, kappa_thr, rho_thr = kundu_tedpca(ct_df, n_echos, kdaw, rdaw,
-                                                 stabilize=True)
-        sel_idx = ct_df['classification'] == 'accepted'
-        n_components = np.sum(sel_idx)
-        LGR.info('Selected {0} components with Kappa threshold: {1:.02f}, '
-                 'Rho threshold: {2:.02f}'.format(n_components, kappa_thr,
-                                                  rho_thr))
+        ct_df = kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=True)
     elif method == 'mle':
-        sel_idx = ct_df['classification'] == 'accepted'
-        n_components = np.sum(sel_idx)
         LGR.info('Selected {0} components with MLE dimensionality '
-                 'detection'.format(n_components))
+                 'detection'.format(ct_df.shape[0]))
 
     ct_df.to_csv('comp_table_pca.txt', sep='\t', index=True,
                  index_label='component', float_format='%.6f')
 
+    sel_idx = ct_df['classification'] == 'accepted'
+    n_components = np.sum(sel_idx)
     voxel_kept_comp_weighted = (voxel_comp_weights[:, sel_idx] *
                                 varex[None, sel_idx])
     kept_data = np.dot(voxel_kept_comp_weighted, comp_ts[sel_idx, :])
