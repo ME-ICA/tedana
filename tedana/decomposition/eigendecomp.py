@@ -63,6 +63,18 @@ def run_svd(data, mle=True):
 
 
 def kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False):
+    eigenvalue_elbow = getelbow(ct_df['normalized variance explained'],
+                                return_val=True)
+
+    diff_varex_norm = np.abs(np.diff(varex_norm))
+    lower_diff_varex_norm = diff_varex_norm[(len(diff_varex_norm)//2):]
+    varex_norm_thr = np.mean([lower_diff_varex_norm.max(),
+                              diff_varex_norm.min()])
+    varex_norm_min = varex_norm[
+        (len(diff_varex_norm)//2) +
+        np.arange(len(lower_diff_varex_norm))[lower_diff_varex_norm >= varex_norm_thr][0] + 1]
+    varex_norm_cum = np.cumsum(varex_norm)
+
     fmin, fmid, fmax = utils.getfbounds(n_echos)
     if int(kdaw) == -1:
         lim_idx = utils.andb([ct_df['kappa'] < fmid,
@@ -264,16 +276,6 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
 
         # actual variance explained (normalized)
         varex_norm = varex / varex.sum()
-        eigenvalue_elbow = getelbow(varex_norm, return_val=True)
-
-        diff_varex_norm = np.abs(np.diff(varex_norm))
-        lower_diff_varex_norm = diff_varex_norm[(len(diff_varex_norm)//2):]
-        varex_norm_thr = np.mean([lower_diff_varex_norm.max(),
-                                  diff_varex_norm.min()])
-        varex_norm_min = varex_norm[
-            (len(diff_varex_norm)//2) +
-            np.arange(len(lower_diff_varex_norm))[lower_diff_varex_norm >= varex_norm_thr][0] + 1]
-        varex_norm_cum = np.cumsum(varex_norm)
 
         # Compute K and Rho for PCA comps
         eimum = np.atleast_2d(eim)
@@ -298,10 +300,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
                     'voxel_comp_weights': voxel_comp_weights,
                     'varex': varex,
                     'comp_ts': comp_ts,
-                    'comptable': ct_df,
-                    'eigenvalue_elbow': eigenvalue_elbow,
-                    'varex_norm_min': varex_norm_min,
-                    'varex_norm_cum': varex_norm_cum}
+                    'comptable': ct_df}
 
         # Save state
         LGR.info('Saving PCA results to: {}'.format(fname))
@@ -316,9 +315,6 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         varex = pcastate['varex']
         comp_ts = pcastate['comp_ts']
         ct_df = pcastate['comptable']
-        eigenvalue_elbow = pcastate['eigenvalue_elbow']
-        varex_norm_min = pcastate['varex_norm_min']
-        varex_norm_cum = pcastate['varex_norm_cum']
 
     np.savetxt('mepca_mix.1D', comp_ts.T)
 
