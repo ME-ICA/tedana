@@ -111,7 +111,7 @@ def kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False):
         lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
         rho_lim = ct_df.loc[lim_idx, 'rho'].values
         rho_thr = rho_lim[getelbow(rho_lim)]
-        method = 'kundu-stabilize'
+        stabilize = True
         LGR.info('kdaw set to -1. Switching TEDPCA method to '
                  'kundu-stabilize')
     elif int(rdaw) == -1:
@@ -149,7 +149,7 @@ def kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False):
     ct_df.loc[is_fmax2, 'classification'] = 'rejected'
     ct_df.loc[is_fmax2, 'rationale'] += 'rho equals fmax;'
 
-    if 'stabilize' in method:
+    if stabilize:
         temp7 = varex_norm_cum >= 0.95
         ct_df.loc[temp7, 'classification'] = 'rejected'
         ct_df.loc[temp7, 'rationale'] += 'cumulative var. explained above 95%;'
