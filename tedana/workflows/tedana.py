@@ -149,28 +149,11 @@ def _get_parser():
                         help=argparse.SUPPRESS,
                         action='store_true',
                         default=False)
-    tedpca_args = parser.add_argument_group('Options for controlling TEDPCA')
-    tedpca_args.add_argument('--kdaw',
-                             dest='kdaw',
-                             type=float,
-                             help=('Dimensionality augmentation weight '
-                                   '(Kappa). Only used with Kundu decision '
-                                   'tree TEDPCA approach. Default=10. -1 for '
-                                   'low-dimensional ICA'),
-                             default=10.)
-    tedpca_args.add_argument('--rdaw',
-                             dest='rdaw',
-                             type=float,
-                             help=('Dimensionality augmentation weight (Rho). '
-                                   'Only used with Kundu decision tree TEDPCA '
-                                   'approach. Default=1. -1 for '
-                                   'low-dimensional ICA'),
-                             default=1.)
     return parser
 
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
-                    strict=False, gscontrol=True, kdaw=10., rdaw=1., conv=2.5e-5,
+                    strict=False, gscontrol=True, conv=2.5e-5,
                     ste=-1, combmode='t2s', dne=False, cost='logcosh',
                     filecsdata=False, wvpca=False, tedpca='mle',
                     label=None, fixed_seed=42, debug=False, quiet=False):
@@ -200,12 +183,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Ignore low-variance ambiguous components. Default is False.
     gscontrol : :obj:`bool`, optional
         Control global signal using spatial approach. Default is True.
-    kdaw : :obj:`float`, optional
-        Dimensionality augmentation weight (Kappa). Default is 10.
-        -1 for low-dimensional ICA.
-    rdaw : :obj:`float`, optional
-        Dimensionality augmentation weight (Rho). Default is 1.
-        -1 for low-dimensional ICA.
     conv : :obj:`float`, optional
         Convergence limit. Default is 2.5e-5.
     ste : :obj:`int`, optional
@@ -259,8 +236,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     catd, ref_img = io.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
-
-    kdaw, rdaw = float(kdaw), float(rdaw)
 
     try:
         ref_label = op.basename(ref_img).split('.')[0]
@@ -329,7 +304,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         n_components, dd = decomposition.tedpca(catd, data_oc, combmode, mask,
                                                 t2s, t2sG, ref_img,
                                                 tes=tes, method=tedpca, ste=ste,
-                                                kdaw=kdaw, rdaw=rdaw, wvpca=wvpca)
+                                                kdaw=10., rdaw=1., wvpca=wvpca)
 
         mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, conv,
                                                      fixed_seed, cost=cost)
