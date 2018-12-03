@@ -196,7 +196,7 @@ jobs:
           command: |
             source activate venv
             cd /tmp/data/five-echo/
-            tedana -d p06.SBJ01_S09_Task11_e[1,2,3,4,5].sm.nii.gz -e 15.4 29.7 44.0 58.3 72.6
+            tedana -d p06.SBJ01_S09_Task11_e[1,2,3,4,5].sm.nii.gz -e 15.4 29.7 44.0 58.3 72.6 --verbose
       - run:
           name: Checking outputs
           command: |
