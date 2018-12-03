@@ -324,8 +324,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # generated from dimensionally reduced data using full data (i.e., data
         # with thermal noise)
         seldict, comptable, betas, mmix = model.fitmodels_direct(
-            catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
-            ref_img, reindex=True)
+                    catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
+                    ref_img, reindex=True)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
         comptable = selection.selcomps(seldict, comptable, mmix, manacc,
@@ -334,8 +334,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
         seldict, comptable, betas, mmix = model.fitmodels_direct(
-            catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
-            ref_img)
+                    catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
+                    ref_img)
         if ctab is None:
             comptable = selection.selcomps(seldict, comptable, mmix, manacc,
                                            n_echos)
