@@ -98,12 +98,6 @@ def _get_parser():
                         help=('Combination scheme for TEs: '
                               't2s (Posse 1999, default), ste (Poser)'),
                         default='t2s')
-    parser.add_argument('--cost',
-                        dest='cost',
-                        help=('Cost func. for ICA: '
-                              'logcosh (default), cube, exp'),
-                        choices=['logcosh', 'cube', 'exp'],
-                        default='logcosh')
     parser.add_argument('--verbose',
                         dest='verbose',
                         action='store_true',
@@ -158,9 +152,9 @@ def _get_parser():
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     gscontrol=False, global_denoise=None, kdaw=10., rdaw=1.,
-                    ste=-1, combmode='t2s', verbose=False, cost='logcosh',
-                    stabilize=False, wvpca=False,
-                    label=None, fixed_seed=42, debug=False, quiet=False):
+                    ste=-1, combmode='t2s', verbose=False, stabilize=False,
+                    wvpca=False, label=None, fixed_seed=42, debug=False,
+                    quiet=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -201,8 +195,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
-    cost : {'logcosh', 'exp', 'cube'} str, optional
-        Cost function for ICA
     stabilize : :obj:`bool`, optional
         Stabilize convergence by reducing dimensionality, for low quality data.
         Default is False.
@@ -285,9 +277,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     mask, masksum = utils.make_adaptive_mask(catd, mask=mask,
                                              minimum=False, getsum=True)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
-    if verbose:
-        io.filewrite(mask.astype(int), op.join(out_dir, 'mask.nii'), ref_img)
-        io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
 
     LGR.info('Computing T2* map')
     t2s, s0, t2ss, s0s, t2sG, s0G = decay.fit_decay(catd, tes, mask, masksum)
@@ -321,12 +310,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw,
                                                 ste=ste, wvpca=wvpca)
         mmix_orig, fixed_seed = decomposition.tedica(n_components, dd,
-                                                     fixed_seed, cost=cost)
+                                                     fixed_seed)
 
         if verbose:
             np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
-            if ste == -1:
-                io.filewrite(dd, op.join(out_dir, 'tsoc_whitened.nii'), ref_img)
 
         LGR.info('Making second component selection guess from ICA results')
         # Estimate betas and compute selection metrics for mixing matrix
@@ -334,7 +321,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # with thermal noise)
         seldict, comptable, betas, mmix = model.fitmodels_direct(
             catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
-            ref_img, reindex=True, label='ica', out_dir=out_dir, verbose=verbose)
+            ref_img, reindex=True)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
         comptable = selection.selcomps(seldict, comptable, mmix, manacc,
@@ -344,7 +331,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
         seldict, comptable, betas, mmix = model.fitmodels_direct(
             catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
-            ref_img, label='ica', out_dir=out_dir, verbose=verbose)
+            ref_img)
         if ctab is None:
             comptable = selection.selcomps(seldict, comptable, mmix, manacc,
                                            n_echos)
