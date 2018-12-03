@@ -20,7 +20,8 @@ Z_MAX = 8
 
 
 def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
-                     reindex=False, mmixN=None, full_sel=True):
+                     reindex=False, mmixN=None, full_sel=True, label=None,
+                     verbose=False):
     """
     Fit TE-dependence and -independence models to components.
 
@@ -187,6 +188,19 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
             utils.unmask(wtsZ, mask)[t2s != 0]**2.))
         kappas[i_comp] = np.average(F_R2, weights=norm_weights)
         rhos[i_comp] = np.average(F_S0, weights=norm_weights)
+
+    if verbose:
+        # Echo-specific weight maps for each of the ICA components.
+        io.filewrite(betas, op.join(out_dir, label+'betas_catd.nii'), ref_img)
+        # Echo-specific maps of predicted values for R2 and S0 models for each
+        # component.
+        io.filewrite(utils.unmask(pred_R2_maps, t2s != 0),
+                     op.join(out_dir, label+'R2_pred.nii'), ref_img)
+        io.filewrite(utils.unmask(pred_S0_maps, t2s != 0),
+                     op.join(out_dir, label+'S0_pred.nii'), ref_img)
+        # Weight maps used to average metrics across voxels
+        io.filewrite(utils.unmask(Z_maps ** 2., mask),
+                     op.join(out_dir, label+'metric_weights.nii'), ref_img)
 
     # tabulate component values
     comptab = np.vstack([kappas, rhos, varex, varex_norm]).T
