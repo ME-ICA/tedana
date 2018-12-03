@@ -105,14 +105,14 @@ def _get_parser():
                         default=False)
     parser.add_argument('--gscontrol',
                         dest='gscontrol',
-                        action='store_true',
-                        help='Enable global signal regression.',
-                        default=False)
-    parser.add_argument('--global_denoise',
-                        dest='global_denoise',
+                        required=False,
+                        action='store',
+                        nargs='+',
                         help=('Perform additional denoising to remove '
-                              'spatially diffuse noise. Default is None.'),
-                        choices=[None, 't1c'],
+                              'spatially diffuse noise. Default is None. '
+                              'This argument can be single value or a space '
+                              'delimited list'),
+                        choices=['t1c', 'gsr'],
                         default=None)
     parser.add_argument('--stabilize',
                         dest='stabilize',
@@ -151,7 +151,7 @@ def _get_parser():
 
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
-                    gscontrol=False, global_denoise=None, kdaw=10., rdaw=1.,
+                    gscontrol=None, kdaw=10., rdaw=1.,
                     ste=-1, combmode='t2s', verbose=False, stabilize=False,
                     wvpca=False, label=None, fixed_seed=42, debug=False,
                     quiet=False):
@@ -179,7 +179,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Default is None.
     gscontrol : :obj:`bool`, optional
         Control global signal using spatial approach. Default is False.
-    global_denoise : {None, 't1c'}, optional
+    global_denoise : {None, 't1c', 'gsr'} or :obj:`list`, optional
         Perform additional denoising to remove spatially diffuse noise. Default
         is None.
     kdaw : :obj:`float`, optional
@@ -227,6 +227,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
     n_echos = len(tes)
+
+    # Coerce gscontrol to list
+    if not isinstance(gscontrol, list):
+        gscontrol = [gscontrol]
 
     # coerce data to samples x echos x time array
     if isinstance(data, str):
@@ -300,7 +304,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     data_oc = combine.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
 
     # regress out global signal unless explicitly not desired
-    if gscontrol:
+    if 'gsr' in gscontrol:
         catd, data_oc = model.gscontrol_raw(catd, data_oc, n_echos, ref_img)
 
     if mixm is None:
@@ -355,7 +359,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     acc=acc, rej=rej, midk=midk, empty=ign,
                     ref_img=ref_img)
 
-    if global_denoise == 't1c':
+    if 't1c' in gscontrol:
         LGR.info('Performing T1c global signal regression to remove spatially '
                  'diffuse noise')
         io.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
