@@ -298,10 +298,8 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         state_found = False
 
     if not state_found:
-        if method == 'mle':
-            voxel_comp_weights, varex, comp_ts = run_svd(dz, mle=True)
-        elif 'kundu' in method:
-            voxel_comp_weights, varex, comp_ts = run_svd(dz, mle=False)
+        perform_mle = (method == 'mle')
+        voxel_comp_weights, varex, comp_ts = run_svd(dz, mle=perform_mle)
 
         # actual variance explained (normalized)
         varex_norm = varex / varex.sum()
