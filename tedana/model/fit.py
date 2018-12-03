@@ -170,20 +170,20 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
 
         # (E, S) sum of squared errors of prediction
         pred_S0 = X1 * np.tile(coeffs_S0, (n_echos, 1))
-        pred_S0_maps[:, :, i] = pred_S0.T
+        pred_S0_maps[:, :, i_comp] = pred_S0.T
         SSE_S0 = (B - pred_S0)**2
         SSE_S0 = SSE_S0.sum(axis=0)  # (S,) prediction error map
         F_S0 = (alpha - SSE_S0) * (n_echos - 1) / (SSE_S0)
-        F_S0_maps[:, i] = F_S0
+        F_S0_maps[:, i_comp] = F_S0
 
         # R2 Model
         coeffs_R2 = (B * X2).sum(axis=0) / (X2**2).sum(axis=0)
         pred_R2 = X2 * np.tile(coeffs_R2, (n_echos, 1))
-        pred_R2_maps[:, :, i] = pred_R2.T
+        pred_R2_maps[:, :, i_comp] = pred_R2.T
         SSE_R2 = (B - pred_R2)**2
         SSE_R2 = SSE_R2.sum(axis=0)
         F_R2 = (alpha - SSE_R2) * (n_echos - 1) / (SSE_R2)
-        F_R2_maps[:, i] = F_R2
+        F_R2_maps[:, i_comp] = F_R2
 
         # compute weights as Z-values
         wtsZ = (WTS[:, i_comp] - WTS[:, i_comp].mean()) / WTS[:, i_comp].std()
