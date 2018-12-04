@@ -11,11 +11,11 @@ But you can supply many other options, viewable with ``tedana -h`` or
 
 For most use cases, we recommend that users call tedana from within existing fMRI preprocessing
 pipelines such as `fMRIPrep`_ or `afni_proc.py`_.
-fMRIPrep currently supports optimal combination through ``tedana``, but not the full multi-echo
+fMRIPrep currently supports :ref:`optimal combination` through ``tedana``, but not the full multi-echo
 denoising pipeline, although there are plans underway to integrate it.
 Users can also construct their own preprocessing pipelines from which to call ``tedana``;
 for recommendations on doing so, see our general guidelines for
-:ref:`_constructing ME-EPI pipelines`.
+:ref:`constructing ME-EPI pipelines`.
 
 .. _fMRIPrep: https://fmriprep.readthedocs.io
 .. _afni_proc.py: https://afni.nimh.nih.gov/pub/dist/doc/program_help/afni_proc.py.html
@@ -133,10 +133,6 @@ I think that some BOLD ICA components have been misclassified as noise.
 ``tedana`` allows users to manually specify accepted components when calling the pipeline.
 You can use the ``--manacc`` argument to specify the indices of components to accept.
 
-However, if you feel that ``tedana`` is consistently misclassifying certain BOLD-related patterns, please feel free to submit a question to `NeuroStars`_.
-We may request access to relevant visual reports, metadata, and even the input data in order to figure out what's happening.
-We are always looking for ways to improve ``tedana``'s component selection methods, and having access to data with consistent issues may help us do so.
-
 
 Why isn't v3.2 of the component selection algorithm supported in ``tedana``?
 ````````````````````````````````````````````````````````````````````````````
@@ -147,7 +143,7 @@ with this method (e.g., misclassified components) and the method itself has yet
 to be validated in any papers, posters, etc., which is why we have chosen to archive
 the v3.2 code, with the goal of revisiting it when ``tedana`` is more stable.
 
-Anyone interested in using v3.2 may compile and install an earlier release of ``tedana``.
+Anyone interested in using v3.2 may compile and install an earlier release (<=0.0.4) of ``tedana``.
 
 .. _here: https://bitbucket.org/prantikk/me-ica/commits/906bd1f6db7041f88cd0efcac8a74074d673f4f5
 
