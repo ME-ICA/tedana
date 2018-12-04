@@ -103,17 +103,13 @@ def _get_parser():
                         action='store_true',
                         help='Generate intermediate and additional files.',
                         default=False)
-<<<<<<< HEAD
     parser.add_argument('--tedort',
                         dest='tedort',
                         action='store_true',
                         help=('Orthogonalize rejected components w.r.t. '
                               'accepted components prior to denoising.'),
                         default=False)
-    parser.add_argument('--no_gscontrol',
-=======
     parser.add_argument('--gscontrol',
->>>>>>> ME-ICA/master
                         dest='gscontrol',
                         required=False,
                         action='store',
@@ -161,19 +157,10 @@ def _get_parser():
 
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
-<<<<<<< HEAD
-                    strict=False, tedort=False, gscontrol=True,
-                    kdaw=10., rdaw=1., conv=2.5e-5,
-                    ste=-1, combmode='t2s', dne=False,
-                    cost='logcosh',
-                    stabilize=False, filecsdata=False, wvpca=False,
-                    label=None, fixed_seed=42, debug=False, quiet=False):
-=======
-                    gscontrol=None, kdaw=10., rdaw=1.,
+                    tedort=False, gscontrol=None, kdaw=10., rdaw=1.,
                     ste=-1, combmode='t2s', verbose=False, stabilize=False,
                     wvpca=False, label=None, fixed_seed=42, debug=False,
                     quiet=False):
->>>>>>> ME-ICA/master
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
