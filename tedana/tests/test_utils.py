@@ -39,18 +39,9 @@ def test_get_dtype():
 
 def test_getfbounds():
     good_inputs = range(1, 12)
-    bad_inputs = [
-        (0, ValueError),
-        (12, ValueError),
-        (10.5, TypeError)
-    ]
 
     for n_echos in good_inputs:
         utils.getfbounds(n_echos)
-
-    for (n_echos, err) in bad_inputs:
-        with pytest.raises(err):
-            utils.getfbounds(n_echos)
 
 
 def test_unmask():
