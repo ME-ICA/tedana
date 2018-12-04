@@ -281,6 +281,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     mask, masksum = utils.make_adaptive_mask(catd, mask=mask,
                                              minimum=False, getsum=True)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
+    if verbose:
+        io.filewrite(mask.astype(int), op.join(out_dir, 'mask.nii'), ref_img)
+        io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
 
     LGR.info('Computing T2* map')
     t2s, s0, t2ss, s0s, t2sG, s0G = decay.fit_decay(catd, tes, mask, masksum)
@@ -318,14 +321,17 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
         if verbose:
             np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
+            if ste == -1:
+                io.filewrite(dd, op.join(out_dir, 'tsoc_whitened.nii'), ref_img)
 
         LGR.info('Making second component selection guess from ICA results')
         # Estimate betas and compute selection metrics for mixing matrix
         # generated from dimensionally reduced data using full data (i.e., data
         # with thermal noise)
-        seldict, comptable, betas, mmix = model.fitmodels_direct(
+        seldict, comptable, mmix = model.fitmodels_direct(
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
-                    ref_img, reindex=True)
+                    ref_img, reindex=True, label='icamodel_', out_dir=out_dir,
+                    verbose=verbose)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
         comptable = selection.selcomps(seldict, comptable, mmix, manacc,
@@ -333,9 +339,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
-        seldict, comptable, betas, mmix = model.fitmodels_direct(
+        seldict, comptable, mmix = model.fitmodels_direct(
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
-                    ref_img)
+                    ref_img, label='icamodel_', out_dir=out_dir,
+                    verbose=verbose)
         if ctab is None:
             comptable = selection.selcomps(seldict, comptable, mmix, manacc,
                                            n_echos)
