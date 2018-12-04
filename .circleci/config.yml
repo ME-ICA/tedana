@@ -202,7 +202,7 @@ jobs:
           command: |
             find /tmp/data/five-echo/TED.p06/* \
                 -exec basename {} \; | sort > /tmp/data/five-echo/TED.p06/outputs.out
-            diff /tmp/src/tedana/.circleci/tedana_outputs.txt /tmp/data/five-echo/TED.p06/outputs.out
+            diff /tmp/src/tedana/.circleci/tedana_outputs_verbose.txt /tmp/data/five-echo/TED.p06/outputs.out
       - store_artifacts:
           path: /tmp/data/five-echo
 
