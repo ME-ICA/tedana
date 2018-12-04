@@ -161,15 +161,18 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
             totvar_norm * 100.
 
         # S0 Model
+        # (S,) model coefficient map
         coeffs_S0 = (B * X1).sum(axis=0) / (X1**2).sum(axis=0)
-        SSE_S0 = (B - X1 * np.tile(coeffs_S0, (n_echos, 1)))**2
-        SSE_S0 = SSE_S0.sum(axis=0)
+        pred_S0 = X1 * np.tile(coeffs_S0, (n_echos, 1))
+        SSE_S0 = (B - pred_S0)**2
+        SSE_S0 = SSE_S0.sum(axis=0)  # (S,) prediction error map
         F_S0 = (alpha - SSE_S0) * (n_echos - 1) / (SSE_S0)
         F_S0_maps[:, i_comp] = F_S0
 
         # R2 Model
         coeffs_R2 = (B * X2).sum(axis=0) / (X2**2).sum(axis=0)
-        SSE_R2 = (B - X2 * np.tile(coeffs_R2, (n_echos, 1)))**2
+        pred_R2 = X2 * np.tile(coeffs_R2, (n_echos, 1))
+        SSE_R2 = (B - pred_R2)**2
         SSE_R2 = SSE_R2.sum(axis=0)
         F_R2 = (alpha - SSE_R2) * (n_echos - 1) / (SSE_R2)
         F_R2_maps[:, i_comp] = F_R2

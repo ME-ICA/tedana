@@ -202,11 +202,9 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         vTmix = comp_ts.T
         vTmixN = ((vTmix.T - vTmix.T.mean(0)) / vTmix.T.std(0)).T
         LGR.info('Making initial component selection guess from PCA results')
-        _, ct_df, betasv, v_T = model.fitmodels_direct(catd, comp_ts.T, eimum,
-                                                       t2s, t2sG,
-                                                       tes, combmode, ref_img,
-                                                       mmixN=vTmixN,
-                                                       full_sel=False)
+        _, ct_df, betasv, v_T = model.fitmodels_direct(
+                    catd, comp_ts.T, eimum, t2s, t2sG, tes, combmode, ref_img,
+                    mmixN=vTmixN, full_sel=False)
         # varex_norm overrides normalized varex computed by fitmodels_direct
         ct_df['normalized variance explained'] = varex_norm
 
@@ -327,7 +325,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     return n_components, kept_data
 
 
-def tedica(n_components, dd, conv, fixed_seed, cost='logcosh'):
+def tedica(n_components, dd, fixed_seed):
     """
     Performs ICA on `dd` and returns mixing matrix
 
@@ -338,10 +336,6 @@ def tedica(n_components, dd, conv, fixed_seed, cost='logcosh'):
     dd : (S x T) :obj:`numpy.ndarray`
         Dimensionally reduced optimally combined functional data, where `S` is
         samples and `T` is time
-    conv : :obj:`float`
-        Convergence limit for ICA
-    cost : {'logcosh', 'exp', 'cube'} str, optional
-        Cost function for ICA
     fixed_seed : int
         Seed for ensuring reproducibility of ICA results
 
@@ -358,16 +352,11 @@ def tedica(n_components, dd, conv, fixed_seed, cost='logcosh'):
 
     from sklearn.decomposition import FastICA
 
-    if cost not in ('logcosh', 'cube', 'exp'):
-        LGR.error('ICA cost function not understood')
-        raise
-
-    climit = float(conv)
     if fixed_seed == -1:
         fixed_seed = np.random.randint(low=1, high=1000)
     rand_state = np.random.RandomState(seed=fixed_seed)
     ica = FastICA(n_components=n_components, algorithm='parallel',
-                  fun=cost, tol=climit, random_state=rand_state)
+                  fun='logcosh', max_iter=5000, random_state=rand_state)
     ica.fit(dd)
     mmix = ica.mixing_
     mmix = stats.zscore(mmix, axis=0)
