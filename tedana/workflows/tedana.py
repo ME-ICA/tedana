@@ -152,17 +152,10 @@ def _get_parser():
 
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
-<<<<<<< HEAD
-                    strict=False, gscontrol=True, kdaw=10., rdaw=1., conv=2.5e-5,
-                    ste=-1, combmode='t2s', dne=False, cost='logcosh',
-                    stabilize=False, filecsdata=False, wvpca=False,
-                    out_dir='.', fixed_seed=42, debug=False, quiet=False):
-=======
                     gscontrol=None, kdaw=10., rdaw=1.,
                     ste=-1, combmode='t2s', verbose=False, stabilize=False,
-                    wvpca=False, label=None, fixed_seed=42, debug=False,
+                    wvpca=False, out_dir='.', fixed_seed=42, debug=False,
                     quiet=False):
->>>>>>> ME-ICA/master
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
