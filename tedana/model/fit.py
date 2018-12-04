@@ -126,7 +126,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     n_data_voxels = (t2s != 0).sum()
     mu = catd.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))
-    fmin, fmid, fmax = utils.getfbounds(n_echos)
+    fmin, _, _ = utils.getfbounds(n_echos)
 
     # mask arrays
     mumask = mu[t2s != 0]
@@ -230,7 +230,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
             ccimg = io.new_nii_like(ref_img, out)
 
             # Do simple clustering on F
-            sel = spatclust(ccimg, min_cluster_size=csize, threshold=int(fmin),
+            sel = spatclust(ccimg, min_cluster_size=csize, threshold=fmin,
                             index=[1, 2], mask=(t2s != 0))
             F_R2_clmaps[:, i_comp] = sel[:, 0]
             F_S0_clmaps[:, i_comp] = sel[:, 1]
