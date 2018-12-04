@@ -89,13 +89,13 @@ When using tedana, please include the following citations:
 
       <p>
       2. Kundu, P., Inati, S. J., Evans, J. W., Luh, W. M. & Bandettini, P. A. (2011).
-      <a href=http://dx.doi.org/10.1016/j.neuroimage.2011.12.028>Differentiating BOLD and non-BOLD signals in fMRI time series using multi-echo EPI.</a>
+      <a href=https://doi.org/10.1016/j.neuroimage.2011.12.028>Differentiating BOLD and non-BOLD signals in fMRI time series using multi-echo EPI.</a>
       <i>NeuroImage</i>, <i>60</i>, 1759-1770.
       </p>
       <p>
       3. Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E., Inati, S. J.,
       Saad, Z. S., Bandettini, P. A., & Bullmore, E. T. (2013).
-      <a href=http://dx.doi.org/10.1073/pnas.1301725110>Integrated strategy for improving functional connectivity mapping using multiecho fMRI.</a>
+      <a href=https://doi.org/10.1073/pnas.1301725110>Integrated strategy for improving functional connectivity mapping using multiecho fMRI.</a>
       <i>Proceedings of the National Academy of Sciences</i>, <i>110</i>, 16187-16192.
       </p>
 
@@ -109,8 +109,8 @@ tedana (in this case, ``tedana_script.py``):
 
 You can also learn more about `why citing software is important`_.
 
-.. _Differentiating BOLD and non-BOLD signals in fMRI time series using multi-echo EPI.: http://dx.doi.org/10.1016/j.neuroimage.2011.12.028
-.. _Integrated strategy for improving functional connectivity mapping using multiecho fMRI.: http://dx.doi.org/10.1073/pnas.1301725110
+.. _Differentiating BOLD and non-BOLD signals in fMRI time series using multi-echo EPI.: https://doi.org/10.1016/j.neuroimage.2011.12.028
+.. _Integrated strategy for improving functional connectivity mapping using multiecho fMRI.: https://doi.org/10.1073/pnas.1301725110
 .. _duecredit: https://github.com/duecredit/duecredit
 .. _`why citing software is important`: https://www.software.ac.uk/how-cite-software
 
