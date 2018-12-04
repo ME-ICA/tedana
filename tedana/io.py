@@ -29,10 +29,9 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img):
         is components and `T` is the same as in `optcom_ts`
     mask : (S,) array_like
         Boolean mask array
-    acc : :obj:`list`
-        Indices of accepted (BOLD) components in `mmix`
-    ign : :obj:`list`
-        Indices of all ignored components in `mmix`
+    comptable : :obj:`pandas.DataFrame`
+        Component table with metrics and with classification (accepted,
+        rejected, midk, or ignored)
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
 
