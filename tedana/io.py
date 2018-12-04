@@ -69,13 +69,14 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img):
     ----------
     optcom_ts : (S x T) array_like
         Optimally combined time series data
-    mmix : (C x T) array_like
+    mmix : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `optcom_ts`
     mask : (S,) array_like
         Boolean mask array
-    acc : :obj:`list`
-        Indices of accepted (BOLD) components in `mmix`
+    comptable : :obj:`pandas.DataFrame`
+        Component table with metrics and with classification (accepted,
+        rejected, midk, or ignored)
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
 
@@ -86,13 +87,18 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img):
     ======================    =================================================
     Filename                  Content
     ======================    =================================================
-    sphis_hik.nii             T1-like effect.
-    hik_ts_OC_T1c.nii         T1 corrected time series.
-    dn_ts_OC_T1c.nii          Denoised version of T1 corrected time series
-    betas_hik_OC_T1c.nii      T1-GS corrected components
-    meica_mix_T1c.1D          T1-GS corrected mixing matrix
+    sphis_hik.nii             T1-like effect
+    hik_ts_OC_T1c.nii         T1-corrected BOLD (high-Kappa) time series
+    dn_ts_OC_T1c.nii          Denoised version of T1-corrected time series
+    betas_hik_OC_T1c.nii      T1 global signal-corrected components
+    meica_mix_T1c.1D          T1 global signal-corrected mixing matrix
     ======================    =================================================
     """
+    all_comps = comptable['component'].values
+    acc = comptable.loc[comptable['classification'] == 'accepted', 'component']
+    ign = comptable.loc[comptable['classification'] == 'ignored', 'component']
+    not_ign = sorted(np.setdiff1d(all_comps, ign))
+
     optcom_masked = optcom_ts[mask, :]
     optcom_mu = optcom_masked.mean(axis=-1)[:, np.newaxis]
     optcom_std = optcom_masked.std(axis=-1)[:, np.newaxis]
@@ -102,12 +108,11 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img):
     """
     data_norm = (optcom_masked - optcom_mu) / optcom_std
     cbetas = lstsq(mmix, data_norm.T, rcond=None)[0].T
-    resid = data_norm - np.dot(cbetas, mmix.T)
+    resid = data_norm - np.dot(cbetas[:, not_ign], mmix[:, not_ign].T)
 
     """
     Build BOLD time series without amplitudes, and save T1-like effect
     """
-    acc = comptable.loc[comptable['classification'] == 'accepted', 'component']
     bold_ts = np.dot(cbetas[:, acc], mmix[:, acc].T)
     t1_map = bold_ts.min(axis=-1)
     t1_map -= t1_map.mean()
@@ -124,14 +129,14 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img):
     """
     bold_noT1gs = bold_ts - np.dot(lstsq(glob_sig.T, bold_ts.T,
                                          rcond=None)[0].T, glob_sig)
-    filewrite(utils.unmask(bold_noT1gs * optcom_std, mask),
-              'hik_ts_OC_T1c.nii', ref_img)
+    hik_ts = bold_noT1gs * optcom_std
+    filewrite(utils.unmask(hik_ts, mask), 'hik_ts_OC_T1c.nii', ref_img)
 
     """
     Make denoised version of T1-corrected time series
     """
     medn_ts = optcom_mu + ((bold_noT1gs + resid) * optcom_std)
-    filewrite(utils.unmask(medn_ts, mask), 'dn_ts_OC_T1c', ref_img)
+    filewrite(utils.unmask(medn_ts, mask), 'dn_ts_OC_T1c.nii', ref_img)
 
     """
     Orthogonalize mixing matrix w.r.t. T1-GS
@@ -148,8 +153,8 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img):
     Write T1-GS corrected components and mixing matrix
     """
     cbetas_norm = lstsq(mmixnogs_norm.T, data_norm.T, rcond=None)[0].T
-    filewrite(utils.unmask(cbetas_norm[:, 2:], mask), 'betas_hik_OC_T1c',
-              ref_img)
+    filewrite(utils.unmask(cbetas_norm[:, 2:], mask),
+              'betas_hik_OC_T1c.nii', ref_img)
     np.savetxt('meica_mix_T1c.1D', mmixnogs)
 
 
