@@ -20,28 +20,15 @@ s0v.nii                   Limited S0 3D map.
                           uses the single echo's value while the limited
                           map has a NaN.
 ts_OC.nii                 Optimally combined time series.
-dn_ts_OC.nii              Denoised optimally combined time series.
+dn_ts_OC.nii              Denoised optimally combined time series. Recommended
+                          dataset for analysis.
 lowk_ts_OC.nii            Combined time series from rejected components.
 midk_ts_OC.nii            Combined time series from "mid-k" rejected components.
 hik_ts_OC.nii             High-kappa time series.
-t2ss.nii                  Voxel-wise T2* estimates using ascending numbers
-                          of echoes, starting with 2.
-s0vs.nii                  Voxel-wise S0 estimates using ascending numbers
-                          of echoes, starting with 2.
-t2svG.nii                 Full T2* map/time series. The difference between
-                          the limited and full maps is that, for voxels
-                          affected by dropout where only one echo contains
-                          good data, the full map uses the single echo's
-                          value while the limited map has a NaN. Only used
-                          for optimal combination.
-s0vG.nii                  Full S0 map/time series. Only used for optimal
-                          combination.
 comp_table_pca.txt        TEDPCA component table. A tab-delimited file with
                           summary metrics and inclusion/exclusion information
                           for each component from the PCA decomposition.
 mepca_mix.1D              Mixing matrix (component time series) from PCA
-                          decomposition.
-__meica_mix.1D            Mixing matrix (component time series) from ICA
                           decomposition.
 meica_mix.1D              Mixing matrix (component time series) from ICA
                           decomposition. The only differences between this
@@ -54,11 +41,34 @@ feats_OC2.nii             Z-normalized spatial component maps
 comp_table_ica.txt        TEDICA component table. A tab-delimited file with
                           summary metrics and inclusion/exclusion information
                           for each component from the ICA decomposition.
-veins_l0.nii              ???
-veins_l1.nii              ???
 ======================    =====================================================
 
-If global signal correction is employed:
+If ``verbose`` is set to True:
+
+======================    =====================================================
+Filename                  Content
+======================    =====================================================
+t2ss.nii                  Voxel-wise T2* estimates using ascending numbers
+                          of echoes, starting with 2.
+s0vs.nii                  Voxel-wise S0 estimates using ascending numbers
+                          of echoes, starting with 2.
+t2svG.nii                 Full T2* map/time series. The difference between
+                          the limited and full maps is that, for voxels
+                          affected by dropout where only one echo contains
+                          good data, the full map uses the single echo's
+                          value while the limited map has a NaN. Only used
+                          for optimal combination.
+s0vG.nii                  Full S0 map/time series. Only used for optimal
+                          combination.
+__meica_mix.1D            Mixing matrix (component time series) from ICA
+                          decomposition.
+hik_ts_e[echo].nii        High-Kappa time series for echo number ``echo``
+midk_ts_e[echo].nii       Mid-Kappa time series for echo number ``echo``
+lowk_ts_e[echo].nii       Low-Kappa time series for echo number ``echo``
+dn_ts_e[echo].nii         Denoised time series for echo number ``echo``
+======================    =====================================================
+
+If ``gscontrol`` includes 'gsr':
 
 ======================    =====================================================
 Filename                  Content
@@ -72,7 +82,7 @@ tsoc_nogs.nii             Optimally combined time series with global signal
                           removed.
 ======================    =====================================================
 
-If T1-GS correction is employed:
+If ``gscontrol`` includes 't1c':
 
 ======================    =====================================================
 Filename                  Content
@@ -84,16 +94,67 @@ betas_hik_OC_T1c.nii      T1-GS corrected high-kappa components
 meica_mix_T1c.1D          T1-GS corrected mixing matrix
 ======================    =====================================================
 
-If ``dne`` is set to True:
+Component tables
+----------------
+TEDPCA and TEDICA use tab-delimited tables to track relevant metrics, component
+classifications, and rationales behind classifications.
+TEDPCA rationale codes start with a "P", while TEDICA codes start with an "I".
 
-======================    =====================================================
-Filename                  Content
-======================    =====================================================
-hik_ts_e[echo].nii        High-Kappa time series for echo number ``echo``
-midk_ts_e[echo].nii       Mid-Kappa time series for echo number ``echo``
-lowk_ts_e[echo].nii       Low-Kappa time series for echo number ``echo``
-dn_ts_e[echo].nii         Denoised time series for echo number ``echo``
-======================    =====================================================
+===============    =============================================================
+Classification     Description
+===============    =============================================================
+accepted           BOLD-like components retained in denoised and high-Kappa data
+rejected           Non-BOLD components removed from denoised and high-Kappa data
+retained           Low-variance components retained in denoised, but not
+                   high-Kappa, data
+===============    =============================================================
+
+TEDPCA codes
+````````````
+
+=====  ===============  ===============================  =======================
+Code   Classification   Description                      Algorithm(s)
+=====  ===============  ===============================  =======================
+P001   rejected         Low Rho, Kappa, and variance     Kundu decision tree
+                        explained
+P002   rejected         Low variance explained           Kundu decision tree
+P003   rejected         Kappa equals fmax                Kundu decision tree
+P004   rejected         Rho equals fmax                  Kundu decision tree
+P101   rejected         Cumulative variance explained    Kundu decision tree
+                        above 95%                        (stabilized version)
+P102   rejected         Kappa below fmin                 Kundu decision tree
+                                                         (stabilized version)
+P103   rejected         Rho below fmin                   Kundu decision tree
+                                                         (stabilized version)
+=====  ===============  ===============================  =======================
+
+TEDICA codes
+````````````
+=====  ===============  ===============================  =======================
+Code   Classification   Description                      Algorithm(s)
+=====  ===============  ===============================  =======================
+I001   rejected         Manual exclusion                 All
+I002   rejected         Rho greater than Kappa or        Kundu v2.5, Kundu v3.2
+                        more significant voxels
+                        in S0 model than R2 model
+I003   rejected         S0 Dice is higher than R2 Dice   Kundu v2.5, Kundu v3.2
+                        and high variance explained
+I004   rejected         Noise F-value is higher than     Kundu v2.5, Kundu v3.2
+                        signal F-value and
+                        high variance explained
+I005   retained         No good components found         Kundu v2.5
+I006   rejected         Mid-Kappa component              Kundu v2.5, Kundu v3.2
+I007   retained         Low variance explained           Kundu v2.5
+I008   rejected         Artifact candidate type A        Kundu v2.5
+I009   rejected         Artifact candidate type B        Kundu v2.5
+I010   retained         ign_add0                         Kundu v2.5
+I011   retained         ign_add1                         Kundu v2.5
+I101   retained         Miscellaneous artifact           Kundu v3.2
+I102   retained         Field artifact                   Kundu v3.2
+I103   retained         Physiological artifact           Kundu v3.2
+I104   retained         Saved at the last second         Kundu v3.2
+I105   retained         Orphan component                 Kundu v3.2
+=====  ===============  ===============================  =======================
 
 Visual reports
 --------------
