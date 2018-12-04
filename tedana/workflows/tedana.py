@@ -84,11 +84,6 @@ def _get_parser():
                         help=('Dimensionality augmentation weight (Rho). '
                               'Default=1. -1 for low-dimensional ICA'),
                         default=1.)
-    parser.add_argument('--conv',
-                        dest='conv',
-                        type=float,
-                        help='Convergence limit. Default 2.5e-5',
-                        default='2.5e-5')
     parser.add_argument('--sourceTEs',
                         dest='ste',
                         type=str,
@@ -103,22 +98,12 @@ def _get_parser():
                         help=('Combination scheme for TEs: '
                               't2s (Posse 1999, default), ste (Poser)'),
                         default='t2s')
-    parser.add_argument('--cost',
-                        dest='cost',
-                        help=('Cost func. for ICA: '
-                              'logcosh (default), cube, exp'),
-                        choices=['logcosh', 'cube', 'exp'],
-                        default='logcosh')
-    parser.add_argument('--denoiseTEs',
-                        dest='dne',
+    parser.add_argument('--verbose',
+                        dest='verbose',
                         action='store_true',
-                        help='Denoise each TE dataset separately.',
+                        help='Generate intermediate and additional files.',
                         default=False)
-    parser.add_argument('--strict',
-                        dest='strict',
-                        action='store_true',
-                        help='Ignore low-variance ambiguous components',
-                        default=False)
+<<<<<<< HEAD
     parser.add_argument('--tedort',
                         dest='tedort',
                         action='store_true',
@@ -126,20 +111,24 @@ def _get_parser():
                               'accepted components prior to denoising.'),
                         default=False)
     parser.add_argument('--no_gscontrol',
+=======
+    parser.add_argument('--gscontrol',
+>>>>>>> ME-ICA/master
                         dest='gscontrol',
-                        action='store_false',
-                        help='Disable global signal regression.',
-                        default=True)
+                        required=False,
+                        action='store',
+                        nargs='+',
+                        help=('Perform additional denoising to remove '
+                              'spatially diffuse noise. Default is None. '
+                              'This argument can be single value or a space '
+                              'delimited list'),
+                        choices=['t1c', 'gsr'],
+                        default=None)
     parser.add_argument('--stabilize',
                         dest='stabilize',
                         action='store_true',
                         help=('Stabilize convergence by reducing '
                               'dimensionality, for low quality data'),
-                        default=False)
-    parser.add_argument('--filecsdata',
-                        dest='filecsdata',
-                        help='Save component selection data',
-                        action='store_true',
                         default=False)
     parser.add_argument('--wvpca',
                         dest='wvpca',
@@ -172,12 +161,19 @@ def _get_parser():
 
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
+<<<<<<< HEAD
                     strict=False, tedort=False, gscontrol=True,
                     kdaw=10., rdaw=1., conv=2.5e-5,
                     ste=-1, combmode='t2s', dne=False,
                     cost='logcosh',
                     stabilize=False, filecsdata=False, wvpca=False,
                     label=None, fixed_seed=42, debug=False, quiet=False):
+=======
+                    gscontrol=None, kdaw=10., rdaw=1.,
+                    ste=-1, combmode='t2s', verbose=False, stabilize=False,
+                    wvpca=False, label=None, fixed_seed=42, debug=False,
+                    quiet=False):
+>>>>>>> ME-ICA/master
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -189,8 +185,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     tes : :obj:`list`
         List of echo times associated with data in milliseconds.
     mask : :obj:`str`, optional
-        Binary mask of voxels to include in TE Dependent ANAlysis. Must be spatially
-        aligned with `data`.
+        Binary mask of voxels to include in TE Dependent ANAlysis. Must be
+        spatially aligned with `data`.
     mixm : :obj:`str`, optional
         File containing mixing matrix. If not provided, ME-PCA and ME-ICA are
         done.
@@ -200,35 +196,30 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     manacc : :obj:`str`, optional
         Comma separated list of manually accepted components in string form.
         Default is None.
-    strict : :obj:`bool`, optional
-        Ignore low-variance ambiguous components. Default is False.
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
         denoising. Default is False.
     gscontrol : :obj:`bool`, optional
-        Control global signal using spatial approach. Default is True.
+        Control global signal using spatial approach. Default is False.
+    global_denoise : {None, 't1c', 'gsr'} or :obj:`list`, optional
+        Perform additional denoising to remove spatially diffuse noise. Default
+        is None.
     kdaw : :obj:`float`, optional
         Dimensionality augmentation weight (Kappa). Default is 10.
         -1 for low-dimensional ICA.
     rdaw : :obj:`float`, optional
         Dimensionality augmentation weight (Rho). Default is 1.
         -1 for low-dimensional ICA.
-    conv : :obj:`float`, optional
-        Convergence limit. Default is 2.5e-5.
     ste : :obj:`int`, optional
         Source TEs for models. 0 for all, -1 for optimal combination.
         Default is -1.
     combmode : {'t2s', 'ste'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
-    dne : :obj:`bool`, optional
-        Denoise each TE dataset separately. Default is False.
-    cost : {'logcosh', 'exp', 'cube'} str, optional
-        Cost function for ICA
+    verbose : :obj:`bool`, optional
+        Generate intermediate and additional files. Default is False.
     stabilize : :obj:`bool`, optional
         Stabilize convergence by reducing dimensionality, for low quality data.
         Default is False.
-    filecsdata : :obj:`bool`, optional
-        Save component selection data to file. Default is False.
     wvpca : :obj:`bool`, optional
         Whether or not to perform PCA on wavelet-transformed data.
         Default is False.
@@ -258,6 +249,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
     n_echos = len(tes)
+
+    # Coerce gscontrol to list
+    if not isinstance(gscontrol, list):
+        gscontrol = [gscontrol]
 
     # coerce data to samples x echos x time array
     if isinstance(data, str):
@@ -320,16 +315,18 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     t2s[t2s > cap_t2s * 10] = cap_t2s
     io.filewrite(t2s, op.join(out_dir, 't2sv.nii'), ref_img)
     io.filewrite(s0, op.join(out_dir, 's0v.nii'), ref_img)
-    io.filewrite(t2ss, op.join(out_dir, 't2ss.nii'), ref_img)
-    io.filewrite(s0s, op.join(out_dir, 's0vs.nii'), ref_img)
-    io.filewrite(t2sG, op.join(out_dir, 't2svG.nii'), ref_img)
-    io.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
+
+    if verbose:
+        io.filewrite(t2ss, op.join(out_dir, 't2ss.nii'), ref_img)
+        io.filewrite(s0s, op.join(out_dir, 's0vs.nii'), ref_img)
+        io.filewrite(t2sG, op.join(out_dir, 't2svG.nii'), ref_img)
+        io.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
 
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
 
     # regress out global signal unless explicitly not desired
-    if gscontrol:
+    if 'gsr' in gscontrol:
         catd, data_oc = model.gscontrol_raw(catd, data_oc, n_echos, ref_img)
 
     if mixm is None:
@@ -338,19 +335,19 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                 t2s, t2sG, stabilize, ref_img,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw,
                                                 ste=ste, wvpca=wvpca)
-        mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, conv,
-                                                     fixed_seed, cost=cost)
-        np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
+        mmix_orig, fixed_seed = decomposition.tedica(n_components, dd,
+                                                     fixed_seed)
+
+        if verbose:
+            np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
 
         LGR.info('Making second component selection guess from ICA results')
         # Estimate betas and compute selection metrics for mixing matrix
         # generated from dimensionally reduced data using full data (i.e., data
         # with thermal noise)
-        seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
-                                                                 mask, t2s, t2sG,
-                                                                 tes, combmode,
-                                                                 ref_img,
-                                                                 reindex=True)
+        seldict, comptable, betas, mmix = model.fitmodels_direct(
+                    catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
+                    ref_img, reindex=True)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
         comptable = selection.selcomps(seldict, comptable, mmix, manacc,
@@ -358,10 +355,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
-        seldict, comptable, betas, mmix = model.fitmodels_direct(catd, mmix_orig,
-                                                                 mask, t2s, t2sG,
-                                                                 tes, combmode,
-                                                                 ref_img)
+        seldict, comptable, betas, mmix = model.fitmodels_direct(
+                    catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
+                    ref_img)
         if ctab is None:
             comptable = selection.selcomps(seldict, comptable, mmix, manacc,
                                            n_echos)
@@ -399,8 +395,13 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     n_vols=n_vols, fixed_seed=fixed_seed,
                     acc=acc, rej=rej, midk=midk, empty=ign,
                     ref_img=ref_img)
-    io.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
-    if dne:
+
+    if 't1c' in gscontrol:
+        LGR.info('Performing T1c global signal regression to remove spatially '
+                 'diffuse noise')
+        io.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
+
+    if verbose:
         io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
 
 
