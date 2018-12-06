@@ -140,13 +140,14 @@ jobs:
           command: |
             source activate venv
             cd /tmp/data/three-echo/
-            tedana -d three_echo_Cornell_zcat.nii.gz -e 14.5 38.5 62.5
+            tedana -d three_echo_Cornell_zcat.nii.gz -e 14.5 38.5 62.5 \
+                --out /tmp/data/three-echo/TED.three-echo/
       - run:
           name: Checking outputs
           command: |
-            find /tmp/data/three-echo/TED.three_echo_Cornell_zcat/* \
-                -exec basename {} \; | sort > /tmp/data/three-echo/TED.three_echo_Cornell_zcat/outputs.out
-            diff /tmp/src/tedana/.circleci/tedana_outputs.txt /tmp/data/three-echo/TED.three_echo_Cornell_zcat/outputs.out
+            find /tmp/data/three-echo/TED.three-echo/* \
+                -exec basename {} \; | sort > /tmp/data/three-echo/TED.three-echo/outputs.out
+            diff /tmp/src/tedana/.circleci/tedana_outputs.txt /tmp/data/three-echo/TED.three-echo/outputs.out
 
       - store_artifacts:
           path: /tmp/data/three-echo
@@ -196,13 +197,15 @@ jobs:
           command: |
             source activate venv
             cd /tmp/data/five-echo/
-            tedana -d p06.SBJ01_S09_Task11_e[1,2,3,4,5].sm.nii.gz -e 15.4 29.7 44.0 58.3 72.6 --verbose
+            tedana -d p06.SBJ01_S09_Task11_e[1,2,3,4,5].sm.nii.gz \
+                -e 15.4 29.7 44.0 58.3 72.6 --verbose \
+                --out /tmp/data/five-echo/TED.five-echo/
       - run:
           name: Checking outputs
           command: |
-            find /tmp/data/five-echo/TED.p06/* \
-                -exec basename {} \; | sort > /tmp/data/five-echo/TED.p06/outputs.out
-            diff /tmp/src/tedana/.circleci/tedana_outputs_verbose.txt /tmp/data/five-echo/TED.p06/outputs.out
+            find /tmp/data/five-echo/TED.five-echo/* \
+                -exec basename {} \; | sort > /tmp/data/five-echo/TED.five-echo/outputs.out
+            diff /tmp/src/tedana/.circleci/tedana_outputs_verbose.txt /tmp/data/five-echo/TED.five-echo/outputs.out
       - store_artifacts:
           path: /tmp/data/five-echo
 
