@@ -132,33 +132,33 @@ def kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False):
     is_lowe = ct_df['normalized variance explained'] <= eigenvalue_elbow
     is_lowkre = is_lowk & is_lowr & is_lowe
     ct_df.loc[is_lowkre, 'classification'] = 'rejected'
-    ct_df.loc[is_lowkre, 'rationale'] += 'low rho, kappa, and varex;'
+    ct_df.loc[is_lowkre, 'rationale'] += 'P001;'
 
     # Reject if low variance explained
     is_lows = ct_df['normalized variance explained'] <= varex_norm_min
     ct_df.loc[is_lows, 'classification'] = 'rejected'
-    ct_df.loc[is_lows, 'rationale'] += 'low variance explained;'
+    ct_df.loc[is_lows, 'rationale'] += 'P002;'
 
     # Reject if Kappa over limit
     is_fmax1 = ct_df['kappa'] == F_MAX
     ct_df.loc[is_fmax1, 'classification'] = 'rejected'
-    ct_df.loc[is_fmax1, 'rationale'] += 'kappa equals fmax;'
+    ct_df.loc[is_fmax1, 'rationale'] += 'P003;'
 
     # Reject if Rho over limit
     is_fmax2 = ct_df['rho'] == F_MAX
     ct_df.loc[is_fmax2, 'classification'] = 'rejected'
-    ct_df.loc[is_fmax2, 'rationale'] += 'rho equals fmax;'
+    ct_df.loc[is_fmax2, 'rationale'] += 'P004;'
 
     if stabilize:
         temp7 = varex_norm_cum >= 0.95
         ct_df.loc[temp7, 'classification'] = 'rejected'
-        ct_df.loc[temp7, 'rationale'] += 'cumulative var. explained above 95%;'
+        ct_df.loc[temp7, 'rationale'] += 'P005;'
         under_fmin1 = ct_df['kappa'] <= fmin
         ct_df.loc[under_fmin1, 'classification'] = 'rejected'
-        ct_df.loc[under_fmin1, 'rationale'] += 'kappa below fmin;'
+        ct_df.loc[under_fmin1, 'rationale'] += 'P006;'
         under_fmin2 = ct_df['rho'] <= fmin
         ct_df.loc[under_fmin2, 'classification'] = 'rejected'
-        ct_df.loc[under_fmin2, 'rationale'] += 'rho below fmin;'
+        ct_df.loc[under_fmin2, 'rationale'] += 'P007;'
 
     n_components = ct_df.loc[ct_df['classification'] == 'accepted'].shape[0]
     LGR.info('Selected {0} components with Kappa threshold: {1:.02f}, Rho '

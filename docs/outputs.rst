@@ -77,7 +77,7 @@ T1gs.nii                  Spatial global signal
 glsig.1D                  Time series of global signal from optimally combined
                           data.
 tsoc_orig.nii             Optimally combined time series with global signal
-                          retained.
+                          ignored .
 tsoc_nogs.nii             Optimally combined time series with global signal
                           removed.
 ======================    =====================================================
@@ -103,58 +103,48 @@ TEDPCA rationale codes start with a "P", while TEDICA codes start with an "I".
 ===============    =============================================================
 Classification     Description
 ===============    =============================================================
-accepted           BOLD-like components retained in denoised and high-Kappa data
+accepted           BOLD-like components ignored  in denoised and high-Kappa data
 rejected           Non-BOLD components removed from denoised and high-Kappa data
-retained           Low-variance components retained in denoised, but not
+ignored            Low-variance components ignored in denoised, but not
                    high-Kappa, data
 ===============    =============================================================
 
 TEDPCA codes
 ````````````
 
-=====  ===============  ===============================  =======================
-Code   Classification   Description                      Algorithm(s)
-=====  ===============  ===============================  =======================
-P001   rejected         Low Rho, Kappa, and variance     Kundu decision tree
-                        explained
-P002   rejected         Low variance explained           Kundu decision tree
-P003   rejected         Kappa equals fmax                Kundu decision tree
-P004   rejected         Rho equals fmax                  Kundu decision tree
-P101   rejected         Cumulative variance explained    Kundu decision tree
-                        above 95%                        (stabilized version)
-P102   rejected         Kappa below fmin                 Kundu decision tree
-                                                         (stabilized version)
-P103   rejected         Rho below fmin                   Kundu decision tree
-                                                         (stabilized version)
-=====  ===============  ===============================  =======================
+=====  ===============  ========================================================
+Code   Classification   Description
+=====  ===============  ========================================================
+P001   rejected         Low Rho, Kappa, and variance explained
+P002   rejected         Low variance explained
+P003   rejected         Kappa equals fmax
+P004   rejected         Rho equals fmax
+P005   rejected         Cumulative variance explained above 95% (only in
+                        stabilized PCA decision tree)
+P006   rejected         Kappa below fmin (only in stabilized PCA decision tree)
+P007   rejected         Rho below fmin (only in stabilized PCA decision tree)
+=====  ===============  ========================================================
 
 TEDICA codes
 ````````````
-=====  ===============  ===============================  =======================
-Code   Classification   Description                      Algorithm(s)
-=====  ===============  ===============================  =======================
-I001   rejected         Manual exclusion                 All
-I002   rejected         Rho greater than Kappa or        Kundu v2.5, Kundu v3.2
-                        more significant voxels
+=====  ===============  ========================================================
+Code   Classification   Description
+=====  ===============  ========================================================
+I001   rejected         Manual exclusion
+I002   rejected         Rho greater than Kappa or more significant voxels
                         in S0 model than R2 model
-I003   rejected         S0 Dice is higher than R2 Dice   Kundu v2.5, Kundu v3.2
-                        and high variance explained
-I004   rejected         Noise F-value is higher than     Kundu v2.5, Kundu v3.2
-                        signal F-value and
-                        high variance explained
-I005   retained         No good components found         Kundu v2.5
-I006   rejected         Mid-Kappa component              Kundu v2.5, Kundu v3.2
-I007   retained         Low variance explained           Kundu v2.5
-I008   rejected         Artifact candidate type A        Kundu v2.5
-I009   rejected         Artifact candidate type B        Kundu v2.5
-I010   retained         ign_add0                         Kundu v2.5
-I011   retained         ign_add1                         Kundu v2.5
-I101   retained         Miscellaneous artifact           Kundu v3.2
-I102   retained         Field artifact                   Kundu v3.2
-I103   retained         Physiological artifact           Kundu v3.2
-I104   retained         Saved at the last second         Kundu v3.2
-I105   retained         Orphan component                 Kundu v3.2
-=====  ===============  ===============================  =======================
+I003   rejected         S0 Dice is higher than R2 Dice and high variance
+                        explained
+I004   rejected         Noise F-value is higher than signal F-value and high
+                        variance explained
+I005   ignored          No good components found
+I006   rejected         Mid-Kappa component
+I007   ignored          Low variance explained
+I008   rejected         Artifact candidate type A
+I009   rejected         Artifact candidate type B
+I010   ignored          ign_add0
+I011   ignored          ign_add1
+=====  ===============  ========================================================
 
 Visual reports
 --------------
