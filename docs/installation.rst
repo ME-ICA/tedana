@@ -16,3 +16,6 @@ You can then install ``tedana`` with:
 .. code-block:: bash
 
   pip install tedana
+
+In addition to the Python package, installing ``tedana`` will add the ``tedana``
+and ``t2smap`` workflow CLIs to your path.
