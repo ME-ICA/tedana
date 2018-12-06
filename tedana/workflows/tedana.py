@@ -372,7 +372,13 @@ def _main(argv=None):
     """Tedana entry point"""
     options = _get_parser().parse_args(argv)
     if options.debug and not options.quiet:
-        logging.basicConfig(level=logging.DEBUG)
+        formatter = logging.Formatter(
+            '%(asctime)s\t%(name)-12s\t%(levelname)-8s\t%(message)s',
+            datefmt='%Y-%m-%dT%H:%M:%S')
+        fh = logging.FileHandler('example.log')
+        fh.setFormatter(formatter)
+        logging.basicConfig(level=logging.DEBUG,
+                            handlers=[fh, logging.StreamHandler()])
     elif options.quiet:
         logging.basicConfig(level=logging.WARNING)
     else:

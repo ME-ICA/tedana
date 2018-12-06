@@ -3,6 +3,7 @@ Signal decomposition methods for tedana
 """
 import pickle
 import logging
+import warnings
 import os.path as op
 
 import numpy as np
@@ -315,7 +316,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     if wvpca:
         kept_data = idwtmat(kept_data, cAl)
 
-    LGR.info('Selected {0} components with Kappa threshold: {1:.02f}, '
+    LGR.info('Selected {0} PCA components with Kappa threshold: {1:.02f}, '
              'Rho threshold: {2:.02f}'.format(n_components, kappa_thr,
                                               rho_thr))
 
@@ -351,13 +352,25 @@ def tedica(n_components, dd, fixed_seed):
     """
 
     from sklearn.decomposition import FastICA
+    warnings.filterwarnings(action='ignore', module='scipy',
+                            message='^internal gelsd')
 
     if fixed_seed == -1:
         fixed_seed = np.random.randint(low=1, high=1000)
     rand_state = np.random.RandomState(seed=fixed_seed)
     ica = FastICA(n_components=n_components, algorithm='parallel',
                   fun='logcosh', max_iter=5000, random_state=rand_state)
-    ica.fit(dd)
+
+    with warnings.catch_warnings(record=True) as w:
+        # Cause all warnings to always be triggered.
+        warnings.simplefilter('always')
+
+        ica.fit(dd)
+
+        w = list(filter(lambda i: issubclass(i.category, UserWarning), w))
+        if len(w):
+            LGR.warning('ICA failed to converge')
+
     mmix = ica.mixing_
     mmix = stats.zscore(mmix, axis=0)
     return mmix, fixed_seed
