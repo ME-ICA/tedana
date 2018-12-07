@@ -369,6 +369,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if verbose:
         io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
 
+    LGR.info('Workflow completed')
+
 
 def _main(argv=None):
     """Tedana entry point"""
