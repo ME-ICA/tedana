@@ -273,16 +273,17 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
 
-    os.chdir(out_dir)
-
     if mask is None:
         LGR.info('Computing adaptive mask')
     else:
         # TODO: add affine check
         LGR.info('Using user-defined mask')
+
     mask, masksum = utils.make_adaptive_mask(catd, mask=mask,
                                              minimum=False, getsum=True)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
+
+    os.chdir(out_dir)
 
     LGR.info('Computing T2* map')
     t2s, s0, t2ss, s0s, t2sG, s0G = decay.fit_decay(catd, tes, mask, masksum)
