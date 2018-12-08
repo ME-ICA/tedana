@@ -136,7 +136,6 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
    outputs
    contributing
    roadmap
-   support
    api
 
 Indices and tables

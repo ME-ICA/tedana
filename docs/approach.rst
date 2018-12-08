@@ -101,6 +101,8 @@ We can also see where :math:`T_{2}^*` lands on this curve.
   :width: 400 px
   :align: center
 
+.. _optimal combination:
+
 Optimal combination
 ```````````````````
 Using the :math:`T_{2}^*` estimates, ``tedana`` combines signal across echoes using a

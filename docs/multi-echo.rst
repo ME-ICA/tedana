@@ -31,8 +31,10 @@ Resources
 Journal articles
 ****************
 * A `review`_ on multi-echo fMRI and its applications
+* A `spreadsheet`_ cataloguing papers using multi-echo fMRI, with information about acquisition parameters.
 
 .. _review: https://www.ncbi.nlm.nih.gov/pubmed/28363836
+.. _spreadsheet: https://docs.google.com/spreadsheets/d/1WERojJyxFoqcg_tndUm5Kj0H1UfUc9Ban0jFGGfPaBk/edit#gid=0
 
 Videos
 ******
