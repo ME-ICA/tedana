@@ -125,10 +125,10 @@ def _get_parser():
                         help='Perform PCA on wavelet-transformed data',
                         action='store_true',
                         default=False)
-    parser.add_argument('--label',
-                        dest='label',
+    parser.add_argument('--outdir',
+                        dest='out_dir',
                         type=str,
-                        help='Label for output directory.',
+                        help='Output directory.',
                         default=None)
     parser.add_argument('--seed',
                         dest='fixed_seed',
@@ -153,7 +153,7 @@ def _get_parser():
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     gscontrol=None, kdaw=10., rdaw=1.,
                     ste=-1, combmode='t2s', verbose=False, stabilize=False,
-                    wvpca=False, label=None, fixed_seed=42, debug=False,
+                    wvpca=False, out_dir='.', fixed_seed=42, debug=False,
                     quiet=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
@@ -243,15 +243,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     kdaw, rdaw = float(kdaw), float(rdaw)
 
-    try:
-        ref_label = op.basename(ref_img).split('.')[0]
-    except (TypeError, AttributeError):
-        ref_label = op.basename(str(data[0])).split('.')[0]
-
-    if label is not None:
-        out_dir = 'TED.{0}.{1}'.format(ref_label, label)
-    else:
-        out_dir = 'TED.{0}'.format(ref_label)
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
         LGR.info('Creating output directory: {}'.format(out_dir))
@@ -315,14 +306,16 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         n_components, dd = decomposition.tedpca(catd, data_oc, combmode, mask,
                                                 t2s, t2sG, stabilize, ref_img,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw,
-                                                ste=ste, wvpca=wvpca)
+                                                ste=ste, wvpca=wvpca,
+                                                verbose=verbose)
         mmix_orig, fixed_seed = decomposition.tedica(n_components, dd,
                                                      fixed_seed)
 
         if verbose:
             np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
             if ste == -1:
-                io.filewrite(dd, op.join(out_dir, 'tsoc_whitened.nii'), ref_img)
+                io.filewrite(utils.unmask(dd, mask),
+                             op.join(out_dir, 'tsoc_whitened.nii'), ref_img)
 
         LGR.info('Making second component selection guess from ICA results')
         # Estimate betas and compute selection metrics for mixing matrix
@@ -330,7 +323,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # with thermal noise)
         seldict, comptable, mmix = model.fitmodels_direct(
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
-                    ref_img, reindex=True, label='icamodel_', out_dir=out_dir,
+                    ref_img, reindex=True, label='meica_', out_dir=out_dir,
                     verbose=verbose)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
@@ -341,7 +334,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
         seldict, comptable, mmix = model.fitmodels_direct(
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
-                    ref_img, label='icamodel_', out_dir=out_dir,
+                    ref_img, label='meica_', out_dir=out_dir,
                     verbose=verbose)
         if ctab is None:
             comptable = selection.selcomps(seldict, comptable, mmix, manacc,
