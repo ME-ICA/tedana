@@ -371,6 +371,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
 
     LGR.info('Workflow completed')
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
 
 
 def _main(argv=None):
