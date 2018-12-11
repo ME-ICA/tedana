@@ -5,6 +5,7 @@ import os
 import os.path as op
 import shutil
 import logging
+from datetime import datetime
 
 import argparse
 import numpy as np
@@ -231,7 +232,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         formatter = logging.Formatter(
                     '%(asctime)s\t%(name)-12s\t%(levelname)-8s\t%(message)s',
                     datefmt='%Y-%m-%dT%H:%M:%S')
-        fh = logging.FileHandler(op.join(out_dir, 'runlog.tsv'))
+        fh = logging.FileHandler(op.join(
+            out_dir,
+            'runlog-{0}.tsv'.format(datetime.now().isoformat().replace(':', '.'))))
         fh.setFormatter(formatter)
         logging.basicConfig(level=logging.DEBUG,
                             handlers=[fh, logging.StreamHandler()])
