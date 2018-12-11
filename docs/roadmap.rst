@@ -1,4 +1,4 @@
-The tedana Roadmap
+The tedana roadmap
 ==================
 
 Project vision
