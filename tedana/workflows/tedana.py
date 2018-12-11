@@ -125,7 +125,7 @@ def _get_parser():
                         help='Perform PCA on wavelet-transformed data',
                         action='store_true',
                         default=False)
-    parser.add_argument('--out',
+    parser.add_argument('--out-dir',
                         dest='out_dir',
                         type=str,
                         help='Output directory.',

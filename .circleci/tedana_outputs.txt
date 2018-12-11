@@ -10,6 +10,7 @@ meica_mix.1D
 mepca_OC_components.nii
 mepca_mix.1D
 pcastate.pkl
+runlog.tsv
 s0v.nii
 t2sv.nii
 ts_OC.nii
