@@ -24,7 +24,9 @@ dn_ts_OC.nii              Denoised optimally combined time series. Recommended
                           dataset for analysis.
 lowk_ts_OC.nii            Combined time series from rejected components.
 midk_ts_OC.nii            Combined time series from "mid-k" rejected components.
-hik_ts_OC.nii             High-kappa time series.
+hik_ts_OC.nii             High-kappa time series. This dataset does not
+                          include thermal noise or low variance components.
+                          Not the recommended dataset for analysis.
 comp_table_pca.txt        TEDPCA component table. A tab-delimited file with
                           summary metrics and inclusion/exclusion information
                           for each component from the PCA decomposition.
