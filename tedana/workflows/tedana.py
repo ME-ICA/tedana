@@ -319,6 +319,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                 t2s, t2sG, stabilize, ref_img,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw,
                                                 ste=ste, wvpca=wvpca)
+
+        LGR.info('Computing ICA of dimensionally reduced data')
         mmix_orig, fixed_seed = decomposition.tedica(n_components, dd,
                                                      fixed_seed)
 
