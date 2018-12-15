@@ -133,8 +133,7 @@ def test_make_adaptive_mask():
     mask, masksum = utils.make_adaptive_mask(data, mask=pjoin(datadir,
                                                               'mask.nii.gz'),
                                              minimum=False, getsum=True)
-    assert np.allclose(mask, nib.load(pjoin(datadir,
-                                            'mask.nii.gz')).get_data().flatten())
+    assert np.allclose(mask, masksum.astype(bool))
 
 
 def test_make_min_mask():
