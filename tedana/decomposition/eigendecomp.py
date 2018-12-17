@@ -303,7 +303,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
             ppca.fit(dz)
             comp_ts = ppca.components_
             varex = ppca.explained_variance_
-            voxel_comp_weights = np.dot(np.dot(data, comp_ts.T),
+            voxel_comp_weights = np.dot(np.dot(dz, comp_ts.T),
                                         np.diag(1. / varex))
 
         # actual variance explained (normalized)
