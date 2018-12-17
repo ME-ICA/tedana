@@ -33,7 +33,7 @@ Z_MAX = 8
     """),
     description='Introduces method for choosing PCA dimensionality '
                 'automatically')
-def run_svd(data, mle=True):
+def run_mlepca(data):
     """
     Run Singular Value Decomposition (SVD) on input data.
 
@@ -52,10 +52,7 @@ def run_svd(data, mle=True):
         Component timeseries.
     """
     # do PC dimension selection and get eigenvalue cutoff
-    if mle:
-        ppca = PCA(n_components='mle', svd_solver='full')
-    else:
-        ppca = PCA()
+    ppca = PCA(n_components='mle', svd_solver='full')
     ppca.fit(data)
     v = ppca.components_
     s = ppca.explained_variance_
@@ -299,8 +296,15 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         state_found = False
 
     if not state_found:
-        perform_mle = (method == 'mle')
-        voxel_comp_weights, varex, comp_ts = run_svd(dz, mle=perform_mle)
+        if method == 'mle':
+            voxel_comp_weights, varex, comp_ts = run_mlepca(dz)
+        else:
+            ppca = PCA()
+            ppca.fit(dz)
+            comp_ts = ppca.components_
+            varex = ppca.explained_variance_
+            voxel_comp_weights = np.dot(np.dot(data, comp_ts.T),
+                                        np.diag(1. / varex))
 
         # actual variance explained (normalized)
         varex_norm = varex / varex.sum()
@@ -377,7 +381,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
     if wvpca:
         kept_data = idwtmat(kept_data, cAl)
 
-    kept_data = stats.zscore(kept_data, axis=1)  # variance normalize timeseries
+    kept_data = stats.zscore(kept_data, axis=1)  # variance normalize time series
     kept_data = stats.zscore(kept_data, axis=None)  # variance normalize everything
 
     return n_components, kept_data
