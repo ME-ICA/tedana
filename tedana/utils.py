@@ -154,6 +154,7 @@ def make_adaptive_mask(data, mask=None, minimum=True, getsum=False):
         mask = load_image(mask).astype(bool)
         masksum = masksum * mask
         # reduce mask based on masksum
+        # TODO: Use visual report to make checking the reduced mask easier
         if np.any(masksum[mask] == 0):
             n_bad_voxels = np.sum(masksum[mask] == 0)
             LGR.warning('{0} voxels in user-defined mask do not have good '

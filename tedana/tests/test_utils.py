@@ -130,6 +130,7 @@ def test_make_adaptive_mask():
     assert np.allclose(counts, np.array([13564,  3977,  5060, 41749]))
 
     # test user-defined mask
+    # TODO: Add mask file with no bad voxels to test against
     mask, masksum = utils.make_adaptive_mask(data, mask=pjoin(datadir,
                                                               'mask.nii.gz'),
                                              minimum=False, getsum=True)
