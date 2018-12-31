@@ -1,17 +1,20 @@
 """
 Utilities for tedana package
 """
-import nibabel as nib
+import logging
+
 import numpy as np
-from nibabel.filename_parser import splitext_addext
-from nilearn._utils import check_niimg
 from scipy import stats
 from scipy.optimize import leastsq
+import nibabel as nib
+from nilearn._utils import check_niimg
+from nibabel.filename_parser import splitext_addext
 from sklearn.utils import check_array
 
 from tedana.due import due, BibTeX
 
 FORMATS = {'.nii': 'NIFTI'}
+LGR = logging.getLogger(__name__)
 
 
 def get_dtype(data):
@@ -150,6 +153,13 @@ def make_adaptive_mask(data, mask=None, minimum=True, getsum=False):
         # if the user has supplied a binary mask
         mask = load_image(mask).astype(bool)
         masksum = masksum * mask
+        # reduce mask based on masksum
+        # TODO: Use visual report to make checking the reduced mask easier
+        if np.any(masksum[mask] == 0):
+            n_bad_voxels = np.sum(masksum[mask] == 0)
+            LGR.warning('{0} voxels in user-defined mask do not have good '
+                        'signal. Removing voxels from mask.'.format(n_bad_voxels))
+            mask = masksum.astype(bool)
 
     if getsum:
         return mask, masksum
