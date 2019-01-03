@@ -1,4 +1,5 @@
 __meica_mix.1D
+adaptive_mask.nii
 betas_OC.nii
 betas_hik_OC.nii
 comp_table_ica.txt
