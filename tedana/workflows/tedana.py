@@ -286,7 +286,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                              minimum=False, getsum=True)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
     if verbose:
-        io.filewrite(mask.astype(int), op.join(out_dir, 'mask.nii'), ref_img)
         io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
 
     os.chdir(out_dir)
@@ -323,6 +322,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                 tes=tes, kdaw=kdaw, rdaw=rdaw,
                                                 ste=ste, wvpca=wvpca,
                                                 verbose=verbose)
+
+        LGR.info('Computing ICA of dimensionally reduced data')
         mmix_orig, fixed_seed = decomposition.tedica(n_components, dd,
                                                      fixed_seed)
 
