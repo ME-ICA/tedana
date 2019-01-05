@@ -404,6 +404,8 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, bf, dtrank=4):
         Number of echos in data. Should be the same as `E` dimension of `catd`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
+    bf : :obj:`str`
+        Base filename for outputs.
     dtrank : :obj:`int`, optional
         Specifies degree of Legendre polynomial basis function for estimating
         spatial global signal. Default: 4

@@ -92,6 +92,8 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, bf):
         rejected, midk, or ignored)
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
+    bf : :obj:`str`
+        Base filename for outputs.
 
     Notes
     -----
@@ -234,8 +236,8 @@ def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, bf, **kwargs):
         Indices of mid-K (questionable) components in `mmix`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
-    suffix : :obj:`str`, optional
-        Appended to name of saved files (before extension). Default: ''
+    bf : :obj:`str`
+        Base filename for outputs.
 
     Returns
     -------
@@ -328,6 +330,8 @@ def writefeats(data, mmix, mask, ref_img, bf):
         Boolean mask array
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
+    bf : :obj:`str`
+        Base filename for outputs.
 
     Returns
     -------
@@ -338,11 +342,12 @@ def writefeats(data, mmix, mask, ref_img, bf):
     -----
     This function writes out a file:
 
-    ======================    =================================================
-    Filename                  Content
-    ======================    =================================================
-    feats_[suffix].nii        Z-normalized spatial component maps.
-    ======================    =================================================
+    ========================================    ===============================
+    Filename                                    Content
+    ========================================    ===============================
+    *_desc-TEDICAAcceptedZ_components.nii.gz    Z-normalized spatial component
+                                                maps.
+    ========================================    ===============================
     """
 
     # write feature versions of components
@@ -387,6 +392,8 @@ def writeresults(ts, mask, comptable, mmix, n_vols, fixed_seed,
         Indices of ignored components in `mmix`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
+    bf : :obj:`str`
+        Base filename for outputs.
 
     Notes
     -----
@@ -453,6 +460,8 @@ def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img, bf):
         Indices of mid-K (questionable) components in `mmix`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
+    bf : :obj:`str`
+        Base filename for outputs.
 
     Notes
     -----

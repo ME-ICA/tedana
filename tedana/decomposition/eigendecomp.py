@@ -84,7 +84,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
     bf : :obj:`str`
-        Base file for outputs.
+        Base filename for outputs.
     tes : :obj:`list`
         List of echo times associated with `catd`, in milliseconds
     kdaw : :obj:`float`
