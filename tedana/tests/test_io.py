@@ -12,7 +12,7 @@ from tedana.tests.test_utils import fnames, tes
 
 def test_gen_fname():
     truefile = ('sub-01_task-rest_run-01_space-MNI152NLin2009cAsym_'
-                'desc-preproc_desc-thing_bold.nii.gz')
+                'desc-thing_bold.nii.gz')
     basefile = ('sub-01_task-rest_run-01_echo-1_space-MNI152NLin2009cAsym_'
                 'desc-preproc_bold.nii.gz')
     desc = 'thing'
