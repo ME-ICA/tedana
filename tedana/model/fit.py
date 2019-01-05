@@ -64,6 +64,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         Array with columns denoting (1) index of component, (2) Kappa score of
         component, (3) Rho score of component, (4) variance explained by
         component, and (5) normalized variance explained by component
+    betas : :obj:`numpy.ndarray`
     mmix_new : :obj:`numpy.ndarray`
     """
     if not (catd.shape[0] == t2s.shape[0] == t2s_full.shape[0] == mask.shape[0]):
@@ -285,7 +286,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         for vv in selvars:
             seldict[vv] = eval(vv)
 
-    return seldict, comptab, mmix_new
+    return seldict, comptab, betas, mmix_new
 
 
 def computefeats2(data, mmix, mask, normalize=True):
