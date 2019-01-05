@@ -41,9 +41,15 @@ def gen_fname(basefile, extension='_bold.nii.gz', **kwargs):
     if not all([isinstance(v, str) for k, v in kwargs.items()]):
         raise ValueError("All keyword arguments must be strings")
 
+    bf_dir, bf_name = op.split(basefile)
     # Remove echo field from filename
     echo_regex = re.compile('_echo-[0-9+]_')
-    temp = re.sub(echo_regex, '_', basefile)
+    temp = re.sub(echo_regex, '_', bf_name)
+
+    # Remove duplicate keys
+    for key in kwargs.keys():
+        key_regex = re.compile('_{0}-[a-zA-Z0-9]+_'.format(key))
+        temp = re.sub(key_regex, '_', temp)
 
     # Get prefix
     prefix = temp[:temp.rfind('_')]
@@ -54,14 +60,21 @@ def gen_fname(basefile, extension='_bold.nii.gz', **kwargs):
 
     # Create string with description-field pairs
     add_str = ''
+
+    # Add echo first if provided
+    if 'echo' in kwargs.keys():
+        add_str += '_echo-{0}'.format(kwargs['echo'])
+        del kwargs['echo']
+
+    # Add rest of fields
     for k, v in kwargs.items():
         add_str += '_{0}-{1}'.format(k, v)
 
-    out_file = prefix+add_str+extension
+    out_file = op.join(bf_dir, prefix+add_str+extension)
     return out_file
 
 
-def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img):
+def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, bf):
     """
     Perform global signal regression.
 
@@ -116,7 +129,8 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img):
     bold_ts = np.dot(cbetas[:, acc], mmix[:, acc].T)
     t1_map = bold_ts.min(axis=-1)
     t1_map -= t1_map.mean()
-    filewrite(utils.unmask(t1_map, mask), 'sphis_hik', ref_img)
+    filewrite(utils.unmask(t1_map, mask),
+              gen_fname(bf, '_min.nii.gz', desc='optcomAccepted'), ref_img)
     t1_map = t1_map[:, np.newaxis]
 
     """
@@ -130,13 +144,15 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img):
     bold_noT1gs = bold_ts - np.dot(lstsq(glob_sig.T, bold_ts.T,
                                          rcond=None)[0].T, glob_sig)
     hik_ts = bold_noT1gs * optcom_std
-    filewrite(utils.unmask(hik_ts, mask), 'hik_ts_OC_T1c.nii', ref_img)
+    filewrite(utils.unmask(hik_ts, mask),
+              gen_fname(bf, desc='optcomAcceptedT1cDenoised'), ref_img)
 
     """
     Make denoised version of T1-corrected time series
     """
     medn_ts = optcom_mu + ((bold_noT1gs + resid) * optcom_std)
-    filewrite(utils.unmask(medn_ts, mask), 'dn_ts_OC_T1c.nii', ref_img)
+    filewrite(utils.unmask(medn_ts, mask),
+              gen_fname(bf, desc='optcomT1cDenoised'), ref_img)
 
     """
     Orthogonalize mixing matrix w.r.t. T1-GS
@@ -154,8 +170,10 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img):
     """
     cbetas_norm = lstsq(mmixnogs_norm.T, data_norm.T, rcond=None)[0].T
     filewrite(utils.unmask(cbetas_norm[:, 2:], mask),
-              'betas_hik_OC_T1c.nii', ref_img)
-    np.savetxt('meica_mix_T1c.1D', mmixnogs)
+              gen_fname(bf, '_components.nii.gz',
+                        desc='TEDICAAcceptedT1cDenoised'), ref_img)
+    np.savetxt(gen_fname(bf, '_mixing.tsv', desc='TEDICAT1cDenoised'),
+               mmixnogs, delimiter='\t')
 
 
 def split_ts(data, mmix, mask, acc):
@@ -195,7 +213,7 @@ def split_ts(data, mmix, mask, acc):
     return hikts, resid
 
 
-def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, suffix=''):
+def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, bf, **kwargs):
     """
     Splits `data` into denoised / noise / ignored time series and saves to disk
 
@@ -255,29 +273,47 @@ def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, suffix=''):
     lowkts = betas[:, rej].dot(mmix.T[rej, :])
     dnts = data[mask] - lowkts - midkts
 
+    if 'desc' in kwargs.keys():
+        prefix = 'optcom'
+        del kwargs['desc']
+    else:
+        prefix = None
+
     if len(acc) != 0:
-        fout = filewrite(utils.unmask(hikts, mask),
-                         'hik_ts_{0}'.format(suffix), ref_img)
-        LGR.info('Writing high-Kappa time series: {}'.format(op.abspath(fout)))
+        if prefix:
+            fout = gen_fname(bf, desc='{0}Accepted'.format(prefix))
+        else:
+            fout = gen_fname(bf, desc='accepted', **kwargs)
+        filewrite(utils.unmask(hikts, mask), fout, ref_img)
+        LGR.info('Writing high-Kappa time series: {}'.format(fout))
 
     if len(midk) != 0:
-        fout = filewrite(utils.unmask(midkts, mask),
-                         'midk_ts_{0}'.format(suffix), ref_img)
-        LGR.info('Writing mid-Kappa time series: {}'.format(op.abspath(fout)))
+        if prefix:
+            fout = gen_fname(bf, desc='{0}RejectedMidK'.format(prefix))
+        else:
+            fout = gen_fname(bf, desc='rejectedMidK', **kwargs)
+        filewrite(utils.unmask(midkts, mask), fout, ref_img)
+        LGR.info('Writing mid-Kappa time series: {}'.format(fout))
 
     if len(rej) != 0:
-        fout = filewrite(utils.unmask(lowkts, mask),
-                         'lowk_ts_{0}'.format(suffix), ref_img)
-        LGR.info('Writing low-Kappa time series: {}'.format(op.abspath(fout)))
+        if prefix:
+            fout = gen_fname(bf, desc='{0}Rejected'.format(prefix))
+        else:
+            fout = gen_fname(bf, desc='rejected', **kwargs)
+        filewrite(utils.unmask(lowkts, mask), fout, ref_img)
+        LGR.info('Writing low-Kappa time series: {}'.format(fout))
 
-    fout = filewrite(utils.unmask(dnts, mask),
-                     'dn_ts_{0}'.format(suffix), ref_img)
-    LGR.info('Writing denoised time series: {}'.format(op.abspath(fout)))
+    if prefix:
+        fout = gen_fname(bf, desc='{0}Denoised'.format(prefix))
+    else:
+        fout = gen_fname(bf, desc='denoised', **kwargs)
+    filewrite(utils.unmask(dnts, mask), fout, ref_img)
+    LGR.info('Writing denoised time series: {}'.format(fout))
 
     return varexpl
 
 
-def writefeats(data, mmix, mask, ref_img, suffix=''):
+def writefeats(data, mmix, mask, ref_img, bf):
     """
     Converts `data` to component space with `mmix` and saves to disk
 
@@ -292,8 +328,6 @@ def writefeats(data, mmix, mask, ref_img, suffix=''):
         Boolean mask array
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
-    suffix : :obj:`str`, optional
-        Appended to name of saved files (before extension). Default: ''
 
     Returns
     -------
@@ -312,14 +346,17 @@ def writefeats(data, mmix, mask, ref_img, suffix=''):
     """
 
     # write feature versions of components
+    fname = gen_fname(bf, '_components.nii.gz', desc='TEDICAAcceptedZ')
+    LGR.info('Writing Z-normalized spatial maps for accepted components: '
+             '{}'.format(fname))
     feats = utils.unmask(model.computefeats2(data, mmix, mask), mask)
-    fname = filewrite(feats, 'feats_{0}'.format(suffix), ref_img)
+    filewrite(feats, fname, ref_img)
 
     return fname
 
 
 def writeresults(ts, mask, comptable, mmix, n_vols, fixed_seed,
-                 acc, rej, midk, empty, ref_img):
+                 acc, rej, midk, empty, ref_img, bf):
     """
     Denoises `ts` and saves all resulting files to disk
 
@@ -376,24 +413,26 @@ def writeresults(ts, mask, comptable, mmix, n_vols, fixed_seed,
     ======================    =================================================
     """
 
-    fout = filewrite(ts, 'ts_OC', ref_img)
-    LGR.info('Writing optimally-combined time series: {}'.format(op.abspath(fout)))
+    fout = gen_fname(bf, desc='optcom')
+    filewrite(ts, fout, ref_img)
+    LGR.info('Writing optimally-combined time series: {}'.format(fout))
 
-    write_split_ts(ts, mmix, mask, acc, rej, midk, ref_img, suffix='OC')
+    write_split_ts(ts, mmix, mask, acc, rej, midk, ref_img, bf, desc='optcom')
 
     ts_B = model.get_coeffs(ts, mmix, mask)
-    fout = filewrite(ts_B, 'betas_OC', ref_img)
-    LGR.info('Writing full ICA coefficient feature set: {}'.format(op.abspath(fout)))
+    fout = gen_fname(bf, '_components.nii.gz', desc='TEDICA')
+    filewrite(ts_B, fout, ref_img)
+    LGR.info('Writing full ICA coefficient feature set: {}'.format(fout))
 
     if len(acc) != 0:
-        fout = filewrite(ts_B[:, acc], 'betas_hik_OC', ref_img)
-        LGR.info('Writing denoised ICA coefficient feature set: {}'.format(op.abspath(fout)))
-        fout = writefeats(split_ts(ts, mmix, mask, acc)[0],
-                          mmix[:, acc], mask, ref_img, suffix='OC2')
-        LGR.info('Writing Z-normalized spatial component maps: {}'.format(op.abspath(fout)))
+        fout = gen_fname(bf, '_components.nii.gz', desc='TEDICAAccepted')
+        filewrite(ts_B[:, acc], fout, ref_img)
+        LGR.info('Writing denoised ICA coefficient feature set: {}'.format(fout))
+        hikts = split_ts(ts, mmix, mask, acc)[0]
+        writefeats(hikts, mmix[:, acc], mask, ref_img, bf)
 
 
-def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img):
+def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img, bf):
     """
     Saves individually denoised echos to disk
 
@@ -440,34 +479,7 @@ def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img):
     for i_echo in range(catd.shape[1]):
         LGR.info('Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo+1))
         write_split_ts(catd[:, i_echo, :], mmix, mask, acc, rej, midk, ref_img,
-                       suffix='e%i' % (i_echo+1))
-
-
-def ctabsel(ctabfile):
-    """
-    Loads a pre-existing component table file
-
-    Parameters
-    ----------
-    ctabfile : :obj:`str`
-        Filepath to existing component table
-
-    Returns
-    -------
-    ctab : (4,) :obj:`tuple` of :obj:`numpy.ndarray`
-        Tuple containing arrays of (1) accepted, (2) rejected, (3) mid, and (4)
-        ignored components
-    """
-
-    with open(ctabfile, 'r') as src:
-        ctlines = src.readlines()
-    class_tags = ['#ACC', '#REJ', '#MID', '#IGN']
-    class_dict = {}
-    for ii, ll in enumerate(ctlines):
-        for kk in class_tags:
-            if ll[:4] is kk and ll[4:].strip() is not '':
-                class_dict[kk] = ll[4:].split('#')[0].split(',')
-    return tuple([np.array(class_dict[kk], dtype=int) for kk in class_tags])
+                       bf, echo=str(i_echo+1))
 
 
 def new_nii_like(ref_img, data, affine=None, copy_header=True):
@@ -533,6 +545,9 @@ def filewrite(data, filename, ref_img, gzip=False, copy_header=True):
     # get reference image for comparison
     if isinstance(ref_img, list):
         ref_img = ref_img[0]
+
+    if filename.endswith('gz'):
+        gzip = True
 
     # generate out file for saving
     out = new_nii_like(ref_img, data, copy_header=copy_header)

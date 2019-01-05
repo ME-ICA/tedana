@@ -384,7 +384,7 @@ def get_coeffs(data, X, mask=None, add_const=False):
     return betas
 
 
-def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
+def gscontrol_raw(catd, optcom, n_echos, ref_img, bf, dtrank=4):
     """
     Removes global signal from individual echo `catd` and `optcom` time series
 
@@ -442,13 +442,15 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     detr = dat - np.dot(sol.T, Lmix.T)[0]
     sphis = (detr).min(axis=1)
     sphis -= sphis.mean()
-    io.filewrite(utils.unmask(sphis, Gmask), 'T1gs', ref_img)
+    io.filewrite(utils.unmask(sphis, Gmask), io.gen_fname(bf, desc='T1gs'),
+                 ref_img)
 
     # find time course ofc the spatial global signal
     # make basis with the Legendre basis
     glsig = np.linalg.lstsq(np.atleast_2d(sphis).T, dat, rcond=None)[0]
     glsig = stats.zscore(glsig, axis=None)
-    np.savetxt('glsig.1D', glsig)
+    np.savetxt(io.gen_fname(bf, '_regressors.tsv', desc='globalSignal'), glsig,
+               delimiter='\t')
     glbase = np.hstack([Lmix, glsig.T])
 
     # Project global signal out of optimally combined data
@@ -456,9 +458,9 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     tsoc_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T,
                              np.atleast_2d(glbase.T[dtrank])) + Gmu[Gmask][:, np.newaxis]
 
-    io.filewrite(optcom, 'tsoc_orig', ref_img)
+    io.filewrite(optcom, io.gen_fname(bf, desc='optcomWithGlobalSignal'), ref_img)
     dm_optcom = utils.unmask(tsoc_nogs, Gmask)
-    io.filewrite(dm_optcom, 'tsoc_nogs', ref_img)
+    io.filewrite(dm_optcom, io.gen_fname(bf, desc='optcomNoGlobalSignal'), ref_img)
 
     # Project glbase out of each echo
     dm_catd = catd.copy()  # don't overwrite catd

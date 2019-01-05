@@ -229,6 +229,12 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
 
+    if isinstance(data, str):
+        data = [data]
+
+    # Base file from which to extract prefix for output files
+    bf = op.join(out_dir, op.basename(data[0]))
+
     if debug and not quiet:
         formatter = logging.Formatter(
                     '%(asctime)s\t%(name)-12s\t%(levelname)-8s\t%(message)s',
@@ -255,9 +261,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         gscontrol = [gscontrol]
 
     # coerce data to samples x echos x time array
-    if isinstance(data, str):
-        data = [data]
-
     LGR.info('Loading input data: {}'.format([f for f in data]))
     catd, ref_img = io.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
@@ -265,20 +268,17 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     kdaw, rdaw = float(kdaw), float(rdaw)
 
-    # Base file from which to extract prefix for output files
-    bf = op.basename(data[0])
-
     if mixm is not None and op.isfile(mixm):
         out_mixm_file = gen_fname(bf, '_mixing.tsv', desc='TEDICA')
-        shutil.copyfile(mixm, op.join(out_dir, out_mixm_file))
+        shutil.copyfile(mixm, out_mixm_file)
         shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
     elif mixm is not None:
         raise IOError('Argument "mixm" must be an existing file.')
 
     if ctab is not None and op.isfile(ctab):
         out_ctab_file = gen_fname(bf, '_comptable.tsv', desc='TEDICA')
-        shutil.copyfile(ctab, op.join(out_dir, out_ctab_file))
-        shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
+        shutil.copyfile(ctab, out_ctab_file)
+        shutil.copyfile(ctab, op.basename(ctab))
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
 
@@ -292,9 +292,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                              minimum=False, getsum=True)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
     if verbose:
-        io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
-
-    os.chdir(out_dir)
+        io.filewrite(masksum,
+                     gen_fname(bf, '_mask.nii.gz', desc='adaptiveGoodSignal'),
+                     ref_img)
 
     LGR.info('Computing T2* map')
     t2s, s0, t2ss, s0s, t2sG, s0G = decay.fit_decay(catd, tes, mask, masksum)
@@ -305,34 +305,36 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                       interpolation_method='lower')
     LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
     t2s[t2s > cap_t2s * 10] = cap_t2s
-    io.filewrite(t2s, op.join(out_dir, gen_fname(bf, desc='t2sv')), ref_img)
-    io.filewrite(s0, op.join(out_dir, gen_fname(bf, desc='s0v')), ref_img)
+    io.filewrite(t2s, gen_fname(bf, '_t2s.nii.gz', desc='limited'), ref_img)
+    io.filewrite(s0, gen_fname(bf, '_s0.nii.gz', desc='limited'), ref_img)
     if verbose:
-        io.filewrite(t2ss, op.join(out_dir, gen_fname(bf, desc='t2ss')), ref_img)
-        io.filewrite(s0s, op.join(out_dir, gen_fname(bf, desc='s0vs')), ref_img)
-        io.filewrite(t2sG, op.join(out_dir, gen_fname(bf, desc='t2svG')), ref_img)
-        io.filewrite(s0G, op.join(out_dir, gen_fname(bf, desc='s0vG')), ref_img)
+        io.filewrite(t2ss, gen_fname(bf, '_t2s.nii.gz', desc='ascendingEstimates'), ref_img)
+        io.filewrite(s0s, gen_fname(bf, '_s0.nii.gz', desc='ascendingEstimates'), ref_img)
+        io.filewrite(t2sG, gen_fname(bf, '_t2s.nii.gz', desc='full'), ref_img)
+        io.filewrite(s0G, gen_fname(bf, '_s0.nii.gz', desc='full'), ref_img)
 
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
 
     # regress out global signal unless explicitly not desired
     if 'gsr' in gscontrol:
-        catd, data_oc = model.gscontrol_raw(catd, data_oc, n_echos, ref_img)
+        catd, data_oc = model.gscontrol_raw(catd, data_oc, n_echos, ref_img, bf)
 
     if mixm is None:
         # Identify and remove thermal noise from data
         n_components, dd = decomposition.tedpca(catd, data_oc, combmode, mask,
                                                 t2s, t2sG, stabilize, ref_img,
-                                                tes=tes, kdaw=kdaw, rdaw=rdaw,
-                                                ste=ste, wvpca=wvpca)
+                                                bf, tes=tes, kdaw=kdaw,
+                                                rdaw=rdaw, ste=ste,
+                                                wvpca=wvpca)
 
         LGR.info('Computing ICA of dimensionally reduced data')
         mmix_orig, fixed_seed = decomposition.tedica(n_components, dd,
                                                      fixed_seed)
 
         if verbose:
-            np.savetxt(gen_fname(bf, '_mixing.tsv', desc='initialTEDICA'), mmix_orig)
+            np.savetxt(gen_fname(bf, '_mixing.tsv', desc='initialTEDICA'),
+                       mmix_orig, delimiter='\t')
 
         LGR.info('Making second component selection guess from ICA results')
         # Estimate betas and compute selection metrics for mixing matrix
@@ -341,7 +343,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         seldict, comptable, betas, mmix = model.fitmodels_direct(
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
                     ref_img, reindex=True)
-        np.savetxt(gen_fname(bf, '_mixing.tsv', desc='TEDICA'), mmix)
+        np.savetxt(gen_fname(bf, '_mixing.tsv', desc='TEDICA'), mmix,
+                   delimiter='\t')
 
         comptable = selection.selcomps(seldict, comptable, mmix, manacc,
                                        n_echos)
@@ -350,7 +353,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         mmix_orig = np.loadtxt(gen_fname(bf, '_mixing.tsv', desc='TEDICA'))
         seldict, comptable, betas, mmix = model.fitmodels_direct(
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
-                    ref_img)
+                    ref_img, reindex=False)
         if ctab is None:
             comptable = selection.selcomps(seldict, comptable, mmix, manacc,
                                            n_echos)
@@ -373,15 +376,15 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     io.writeresults(data_oc, mask=mask, comptable=comptable, mmix=mmix,
                     n_vols=n_vols, fixed_seed=fixed_seed,
                     acc=acc, rej=rej, midk=midk, empty=ign,
-                    ref_img=ref_img)
+                    ref_img=ref_img, bf=bf)
 
     if 't1c' in gscontrol:
         LGR.info('Performing T1c global signal regression to remove spatially '
                  'diffuse noise')
-        io.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
+        io.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img, bf)
 
     if verbose:
-        io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
+        io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img, bf)
 
     LGR.info('Workflow completed')
     for handler in logging.root.handlers[:]:

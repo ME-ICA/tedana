@@ -61,7 +61,7 @@ def run_svd(data):
 
 
 def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
-           ref_img, tes, kdaw, rdaw, ste=0, wvpca=False):
+           ref_img, bf, tes, kdaw, rdaw, ste=0, wvpca=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
     noise from multi-echo data.
@@ -83,6 +83,8 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         dimensionally-reduced data from PCA and component selection.
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
+    bf : :obj:`str`
+        Base file for outputs.
     tes : :obj:`list`
         List of echo times associated with `catd`, in milliseconds
     kdaw : :obj:`float`
@@ -176,7 +178,8 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     if wvpca:
         dz, cAl = dwtmat(dz)
 
-    if not op.exists('pcastate.pkl'):
+    state_file = io.gen_fname(bf, '_variables.pkl', desc='TEDPCAState')
+    if not op.exists(state_file):
         voxel_comp_weights, varex, comp_ts = run_svd(dz)
 
         # actual variance explained (normalized)
@@ -210,8 +213,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         ct_df['normalized variance explained'] = varex_norm
 
         # Save state
-        fname = op.abspath('pcastate.pkl')
-        LGR.info('Saving PCA results to: {}'.format(fname))
+        LGR.info('Saving PCA results to: {}'.format(state_file))
         pcastate = {'voxel_comp_weights': voxel_comp_weights,
                     'varex': varex,
                     'comp_ts': comp_ts,
@@ -220,14 +222,14 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
                     'varex_norm_min': varex_norm_min,
                     'varex_norm_cum': varex_norm_cum}
         try:
-            with open(fname, 'wb') as handle:
+            with open(state_file, 'wb') as handle:
                 pickle.dump(pcastate, handle)
         except TypeError:
             LGR.warning('Could not save PCA solution')
 
     else:  # if loading existing state
         LGR.info('Loading PCA from: pcastate.pkl')
-        with open('pcastate.pkl', 'rb') as handle:
+        with open(state_file, 'rb') as handle:
             pcastate = pickle.load(handle)
         voxel_comp_weights, varex = pcastate['voxel_comp_weights'], pcastate['varex']
         comp_ts = pcastate['comp_ts']
@@ -236,7 +238,8 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         varex_norm_min = pcastate['varex_norm_min']
         varex_norm_cum = pcastate['varex_norm_cum']
 
-    np.savetxt('mepca_mix.1D', comp_ts.T)
+    np.savetxt(io.gen_fname(bf, '_mixing.tsv', desc='TEDPCA'),
+               comp_ts.T, delimiter='\t')
 
     # write component maps to 4D image
     comp_maps = np.zeros((OCcatd.shape[0], comp_ts.shape[0]))
@@ -244,7 +247,9 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         temp_comp_ts = comp_ts[i_comp, :][:, None]
         comp_map = utils.unmask(model.computefeats2(OCcatd, temp_comp_ts, mask), mask)
         comp_maps[:, i_comp] = np.squeeze(comp_map)
-    io.filewrite(comp_maps, 'mepca_OC_components.nii', ref_img)
+    io.filewrite(comp_maps,
+                 io.gen_fname(bf, '_components.nii.gz', desc='TEDPCA'),
+                 ref_img)
 
     fmin, fmid, fmax = utils.getfbounds(n_echos)
     kappa_thr = np.average(sorted([fmin, getelbow(ct_df['kappa'], return_val=True)/2, fmid]),
@@ -304,8 +309,9 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         ct_df.loc[under_fmin2, 'classification'] = 'rejected'
         ct_df.loc[under_fmin2, 'rationale'] += 'rho below fmin;'
 
-    ct_df.to_csv('comp_table_pca.txt', sep='\t', index=True,
-                 index_label='component', float_format='%.6f')
+    ct_df.to_csv(io.gen_fname(bf, '_comptable.tsv', desc='TEDPCA'),
+                 sep='\t', index=True, index_label='component',
+                 float_format='%.6f')
 
     sel_idx = ct_df['classification'] == 'accepted'
     n_components = np.sum(sel_idx)
