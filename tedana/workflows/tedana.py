@@ -375,10 +375,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     if tedort:
         acc_idx = comptable.loc[
-            comptable['classification'].str.contains('accepted'),
+            ~comptable['classification'].str.contains('rejected'),
             'component']
         rej_idx = comptable.loc[
-            ~comptable['classification'].str.contains('accepted'),
+            comptable['classification'].str.contains('rejected'),
             'component']
         acc_ts = mmix[:, acc_idx]
         rej_ts = mmix[:, rej_idx]
