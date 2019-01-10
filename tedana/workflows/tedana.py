@@ -104,6 +104,12 @@ def _get_parser():
                         action='store_true',
                         help='Generate intermediate and additional files.',
                         default=False)
+    parser.add_argument('--tedort',
+                        dest='tedort',
+                        action='store_true',
+                        help=('Orthogonalize rejected components w.r.t. '
+                              'accepted components prior to denoising.'),
+                        default=False)
     parser.add_argument('--gscontrol',
                         dest='gscontrol',
                         required=False,
@@ -152,7 +158,7 @@ def _get_parser():
 
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
-                    gscontrol=None, kdaw=10., rdaw=1.,
+                    tedort=False, gscontrol=None, kdaw=10., rdaw=1.,
                     ste=-1, combmode='t2s', verbose=False, stabilize=False,
                     wvpca=False, out_dir='.', fixed_seed=42, debug=False,
                     quiet=False):
@@ -178,6 +184,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     manacc : :obj:`str`, optional
         Comma separated list of manually accepted components in string form.
         Default is None.
+    tedort : :obj:`bool`, optional
+        Orthogonalize rejected components w.r.t. accepted ones prior to
+        denoising. Default is False.
     gscontrol : :obj:`bool`, optional
         Control global signal using spatial approach. Default is False.
     global_denoise : {None, 't1c', 'gsr'} or :obj:`list`, optional
@@ -363,6 +372,21 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if len(acc) == 0:
         LGR.warning('No BOLD components detected! Please check data and '
                     'results!')
+
+    if tedort:
+        acc_idx = comptable.loc[
+            ~comptable['classification'].str.contains('rejected'),
+            'component']
+        rej_idx = comptable.loc[
+            comptable['classification'].str.contains('rejected'),
+            'component']
+        acc_ts = mmix[:, acc_idx]
+        rej_ts = mmix[:, rej_idx]
+        betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
+        pred_rej_ts = np.dot(acc_ts, betas)
+        resid = rej_ts - pred_rej_ts
+        mmix[:, rej_idx] = resid
+        np.savetxt(op.join(out_dir, 'meica_mix_orth.1D'), mmix)
 
     io.writeresults(data_oc, mask=mask, comptable=comptable, mmix=mmix,
                     n_vols=n_vols, fixed_seed=fixed_seed,
