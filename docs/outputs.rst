@@ -105,7 +105,7 @@ TEDPCA rationale codes start with a "P", while TEDICA codes start with an "I".
 ===============    =============================================================
 Classification     Description
 ===============    =============================================================
-accepted           BOLD-like components ignored  in denoised and high-Kappa data
+accepted           BOLD-like components retained in denoised and high-Kappa data
 rejected           Non-BOLD components removed from denoised and high-Kappa data
 ignored            Low-variance components ignored in denoised, but not
                    high-Kappa, data
