@@ -79,7 +79,7 @@ T1gs.nii                  Spatial global signal
 glsig.1D                  Time series of global signal from optimally combined
                           data.
 tsoc_orig.nii             Optimally combined time series with global signal
-                          ignored .
+                          retained.
 tsoc_nogs.nii             Optimally combined time series with global signal
                           removed.
 ======================    =====================================================
