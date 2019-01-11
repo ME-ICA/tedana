@@ -96,6 +96,58 @@ betas_hik_OC_T1c.nii      T1-GS corrected high-kappa components
 meica_mix_T1c.1D          T1-GS corrected mixing matrix
 ======================    =====================================================
 
+Component tables
+----------------
+TEDPCA and TEDICA use tab-delimited tables to track relevant metrics, component
+classifications, and rationales behind classifications.
+TEDPCA rationale codes start with a "P", while TEDICA codes start with an "I".
+
+===============    =============================================================
+Classification     Description
+===============    =============================================================
+accepted           BOLD-like components retained in denoised and high-Kappa data
+rejected           Non-BOLD components removed from denoised and high-Kappa data
+ignored            Low-variance components ignored in denoised, but not
+                   high-Kappa, data
+===============    =============================================================
+
+TEDPCA codes
+````````````
+
+=====  ===============  ========================================================
+Code   Classification   Description
+=====  ===============  ========================================================
+P001   rejected         Low Rho, Kappa, and variance explained
+P002   rejected         Low variance explained
+P003   rejected         Kappa equals fmax
+P004   rejected         Rho equals fmax
+P005   rejected         Cumulative variance explained above 95% (only in
+                        stabilized PCA decision tree)
+P006   rejected         Kappa below fmin (only in stabilized PCA decision tree)
+P007   rejected         Rho below fmin (only in stabilized PCA decision tree)
+=====  ===============  ========================================================
+
+TEDICA codes
+````````````
+=====  ===============  ========================================================
+Code   Classification   Description
+=====  ===============  ========================================================
+I001   rejected         Manual exclusion
+I002   rejected         Rho greater than Kappa or more significant voxels
+                        in S0 model than R2 model
+I003   rejected         S0 Dice is higher than R2 Dice and high variance
+                        explained
+I004   rejected         Noise F-value is higher than signal F-value and high
+                        variance explained
+I005   ignored          No good components found
+I006   rejected         Mid-Kappa component
+I007   ignored          Low variance explained
+I008   rejected         Artifact candidate type A
+I009   rejected         Artifact candidate type B
+I010   ignored          ign_add0
+I011   ignored          ign_add1
+=====  ===============  ========================================================
+
 Visual reports
 --------------
 We're working on it.
