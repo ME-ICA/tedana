@@ -33,7 +33,7 @@ Z_MAX = 8
     """),
     description='Introduces method for choosing PCA dimensionality '
                 'automatically')
-def run_svd(data):
+def run_mlepca(data):
     """
     Run Singular Value Decomposition (SVD) on input data.
 
@@ -60,8 +60,113 @@ def run_svd(data):
     return u, s, v
 
 
-def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
-           ref_img, tes, kdaw, rdaw, ste=0, wvpca=False, verbose=False):
+def kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False):
+    """
+    Select PCA components using Kundu's decision tree approach.
+
+    Parameters
+    ----------
+    ct_df : :obj:`pandas.DataFrame`
+        Component table with relevant metrics: kappa, rho, and normalized
+        variance explained.
+    n_echos : :obj:`int`
+        Number of echoes in dataset.
+    kdaw : :obj:`float`
+        Kappa dimensionality augmentation weight. Must be a non-negative float,
+        or -1 (a special value).
+    rdaw : :obj:`float`
+        Rho dimensionality augmentation weight. Must be a non-negative float,
+        or -1 (a special value).
+    stabilize : :obj:`bool`, optional
+        Whether to stabilize convergence by reducing dimensionality, for low
+        quality data. Default is False.
+
+    Returns
+    -------
+    ct_df : :obj:`pandas.DataFrame`
+        Component table with components classified as 'accepted', 'rejected',
+        or 'ignored'.
+    """
+    eigenvalue_elbow = getelbow(ct_df['normalized variance explained'],
+                                return_val=True)
+
+    diff_varex_norm = np.abs(np.diff(ct_df['normalized variance explained']))
+    lower_diff_varex_norm = diff_varex_norm[(len(diff_varex_norm)//2):]
+    varex_norm_thr = np.mean([lower_diff_varex_norm.max(),
+                              diff_varex_norm.min()])
+    varex_norm_min = ct_df['normalized variance explained'][
+        (len(diff_varex_norm)//2) +
+        np.arange(len(lower_diff_varex_norm))[lower_diff_varex_norm >= varex_norm_thr][0] + 1]
+    varex_norm_cum = np.cumsum(ct_df['normalized variance explained'])
+
+    fmin, fmid, fmax = utils.getfbounds(n_echos)
+    if int(kdaw) == -1:
+        lim_idx = utils.andb([ct_df['kappa'] < fmid,
+                              ct_df['kappa'] > fmin]) == 2
+        kappa_lim = ct_df.loc[lim_idx, 'kappa'].values
+        kappa_thr = kappa_lim[getelbow(kappa_lim)]
+
+        lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
+        rho_lim = ct_df.loc[lim_idx, 'rho'].values
+        rho_thr = rho_lim[getelbow(rho_lim)]
+        stabilize = True
+        LGR.info('kdaw set to -1. Switching TEDPCA method to '
+                 'kundu-stabilize')
+    elif int(rdaw) == -1:
+        lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
+        rho_lim = ct_df.loc[lim_idx, 'rho'].values
+        rho_thr = rho_lim[getelbow(rho_lim)]
+    else:
+        kappa_thr = np.average(
+            sorted([fmin, getelbow(ct_df['kappa'], return_val=True)/2, fmid]),
+            weights=[kdaw, 1, 1])
+        rho_thr = np.average(
+            sorted([fmin, getelbow_cons(ct_df['rho'], return_val=True)/2, fmid]),
+            weights=[rdaw, 1, 1])
+
+    # Reject if low Kappa, Rho, and variance explained
+    is_lowk = ct_df['kappa'] <= kappa_thr
+    is_lowr = ct_df['rho'] <= rho_thr
+    is_lowe = ct_df['normalized variance explained'] <= eigenvalue_elbow
+    is_lowkre = is_lowk & is_lowr & is_lowe
+    ct_df.loc[is_lowkre, 'classification'] = 'rejected'
+    ct_df.loc[is_lowkre, 'rationale'] += 'P001;'
+
+    # Reject if low variance explained
+    is_lows = ct_df['normalized variance explained'] <= varex_norm_min
+    ct_df.loc[is_lows, 'classification'] = 'rejected'
+    ct_df.loc[is_lows, 'rationale'] += 'P002;'
+
+    # Reject if Kappa over limit
+    is_fmax1 = ct_df['kappa'] == F_MAX
+    ct_df.loc[is_fmax1, 'classification'] = 'rejected'
+    ct_df.loc[is_fmax1, 'rationale'] += 'P003;'
+
+    # Reject if Rho over limit
+    is_fmax2 = ct_df['rho'] == F_MAX
+    ct_df.loc[is_fmax2, 'classification'] = 'rejected'
+    ct_df.loc[is_fmax2, 'rationale'] += 'P004;'
+
+    if stabilize:
+        temp7 = varex_norm_cum >= 0.95
+        ct_df.loc[temp7, 'classification'] = 'rejected'
+        ct_df.loc[temp7, 'rationale'] += 'P005;'
+        under_fmin1 = ct_df['kappa'] <= fmin
+        ct_df.loc[under_fmin1, 'classification'] = 'rejected'
+        ct_df.loc[under_fmin1, 'rationale'] += 'P006;'
+        under_fmin2 = ct_df['rho'] <= fmin
+        ct_df.loc[under_fmin2, 'classification'] = 'rejected'
+        ct_df.loc[under_fmin2, 'rationale'] += 'P007;'
+
+    n_components = ct_df.loc[ct_df['classification'] == 'accepted'].shape[0]
+    LGR.info('Selected {0} components with Kappa threshold: {1:.02f}, Rho '
+             'threshold: {2:.02f}'.format(n_components, kappa_thr, rho_thr))
+    return ct_df
+
+
+def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
+           ref_img, tes, method='mle', ste=0, kdaw=10., rdaw=1., wvpca=False,
+           verbose=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
     noise from multi-echo data.
@@ -71,16 +176,13 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     catd : (S x E x T) array_like
         Input functional data
     OCcatd : (S x T) array_like
-        Optimally-combined time series data
+        Optimally combined time series data
     combmode : {'t2s', 'ste'} str
         How optimal combination of echos should be made, where 't2s' indicates
         using the method of Posse 1999 and 'ste' indicates using the method of
         Poser 2006
     mask : (S,) array_like
         Boolean mask array
-    stabilize : :obj:`bool`
-        Whether to attempt to stabilize convergence of ICA by returning
-        dimensionally-reduced data from PCA and component selection.
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
     tes : :obj:`list`
@@ -89,6 +191,8 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         Dimensionality augmentation weight for Kappa calculations
     rdaw : :obj:`float`
         Dimensionality augmentation weight for Rho calculations
+    method : {'mle', 'kundu', 'kundu-stabilize'}, optional
+        Method with which to select components in TEDPCA. Default is 'mle'.
     ste : :obj:`int` or :obj:`list` of :obj:`int`, optional
         Which echos to use in PCA. Values -1 and 0 are special, where a value
         of -1 will indicate using all the echos and 0 will indicate using the
@@ -96,6 +200,8 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         a subset of echos. Default: 0
     wvpca : :obj:`bool`, optional
         Whether to apply wavelet denoising to data. Default: False
+    verbose : :obj:`bool`, optional
+        Whether to output files from fitmodels_direct or not. Default: False
 
     Returns
     -------
@@ -176,21 +282,35 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     if wvpca:
         dz, cAl = dwtmat(dz)
 
-    if not op.exists('pcastate.pkl'):
-        voxel_comp_weights, varex, comp_ts = run_svd(dz)
+    fname = op.abspath('pcastate.pkl')
+    if op.exists('pcastate.pkl'):
+        LGR.info('Loading PCA from: pcastate.pkl')
+        with open('pcastate.pkl', 'rb') as handle:
+            pcastate = pickle.load(handle)
+
+        if pcastate['method'] != method:
+            LGR.warning('Method from PCA state file ({0}) does not match '
+                        'requested method ({1}).'.format(pcastate['method'],
+                                                         method))
+            state_found = False
+        else:
+            state_found = True
+    else:
+        state_found = False
+
+    if not state_found:
+        if method == 'mle':
+            voxel_comp_weights, varex, comp_ts = run_mlepca(dz)
+        else:
+            ppca = PCA()
+            ppca.fit(dz)
+            comp_ts = ppca.components_
+            varex = ppca.explained_variance_
+            voxel_comp_weights = np.dot(np.dot(dz, comp_ts.T),
+                                        np.diag(1. / varex))
 
         # actual variance explained (normalized)
         varex_norm = varex / varex.sum()
-        eigenvalue_elbow = getelbow(varex_norm, return_val=True)
-
-        diff_varex_norm = np.abs(np.diff(varex_norm))
-        lower_diff_varex_norm = diff_varex_norm[(len(diff_varex_norm)//2):]
-        varex_norm_thr = np.mean([lower_diff_varex_norm.max(),
-                                  diff_varex_norm.min()])
-        varex_norm_min = varex_norm[
-            (len(diff_varex_norm)//2) +
-            np.arange(len(lower_diff_varex_norm))[lower_diff_varex_norm >= varex_norm_thr][0] + 1]
-        varex_norm_cum = np.cumsum(varex_norm)
 
         # Compute K and Rho for PCA comps
         eimum = np.atleast_2d(eim)
@@ -210,32 +330,25 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         # varex_norm overrides normalized varex computed by fitmodels_direct
         ct_df['normalized variance explained'] = varex_norm
 
-        # Save state
-        fname = op.abspath('pcastate.pkl')
-        LGR.info('Saving PCA results to: {}'.format(fname))
-        pcastate = {'voxel_comp_weights': voxel_comp_weights,
+        pcastate = {'method': method,
+                    'voxel_comp_weights': voxel_comp_weights,
                     'varex': varex,
                     'comp_ts': comp_ts,
-                    'comptable': ct_df,
-                    'eigenvalue_elbow': eigenvalue_elbow,
-                    'varex_norm_min': varex_norm_min,
-                    'varex_norm_cum': varex_norm_cum}
+                    'comptable': ct_df}
+
+        # Save state
+        LGR.info('Saving PCA results to: {}'.format(fname))
+
         try:
             with open(fname, 'wb') as handle:
                 pickle.dump(pcastate, handle)
         except TypeError:
             LGR.warning('Could not save PCA solution')
-
     else:  # if loading existing state
-        LGR.info('Loading PCA from: pcastate.pkl')
-        with open('pcastate.pkl', 'rb') as handle:
-            pcastate = pickle.load(handle)
-        voxel_comp_weights, varex = pcastate['voxel_comp_weights'], pcastate['varex']
+        voxel_comp_weights = pcastate['voxel_comp_weights']
+        varex = pcastate['varex']
         comp_ts = pcastate['comp_ts']
         ct_df = pcastate['comptable']
-        eigenvalue_elbow = pcastate['eigenvalue_elbow']
-        varex_norm_min = pcastate['varex_norm_min']
-        varex_norm_cum = pcastate['varex_norm_cum']
 
     np.savetxt('mepca_mix.1D', comp_ts.T)
 
@@ -247,63 +360,18 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
         comp_maps[:, i_comp] = np.squeeze(comp_map)
     io.filewrite(comp_maps, 'mepca_OC_components.nii', ref_img)
 
-    fmin, fmid, fmax = utils.getfbounds(n_echos)
-    kappa_thr = np.average(sorted([fmin, getelbow(ct_df['kappa'], return_val=True)/2, fmid]),
-                           weights=[kdaw, 1, 1])
-    rho_thr = np.average(sorted([fmin, getelbow_cons(ct_df['rho'], return_val=True)/2, fmid]),
-                         weights=[rdaw, 1, 1])
-    if int(kdaw) == -1:
-        lim_idx = utils.andb([ct_df['kappa'] < fmid,
-                              ct_df['kappa'] > fmin]) == 2
-        kappa_lim = ct_df.loc[lim_idx, 'kappa'].values
-        kappa_thr = kappa_lim[getelbow(kappa_lim)]
-
-        lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
-        rho_lim = ct_df.loc[lim_idx, 'rho'].values
-        rho_thr = rho_lim[getelbow(rho_lim)]
-        stabilize = True
-    elif int(rdaw) == -1:
-        lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
-        rho_lim = ct_df.loc[lim_idx, 'rho'].values
-        rho_thr = rho_lim[getelbow(rho_lim)]
-
     # Add new columns to comptable for classification
     ct_df['classification'] = 'accepted'
     ct_df['rationale'] = ''
 
-    # Reject if low Kappa, Rho, and variance explained
-    is_lowk = ct_df['kappa'] <= kappa_thr
-    is_lowr = ct_df['rho'] <= rho_thr
-    is_lowe = ct_df['normalized variance explained'] <= eigenvalue_elbow
-    is_lowkre = is_lowk & is_lowr & is_lowe
-    ct_df.loc[is_lowkre, 'classification'] = 'rejected'
-    ct_df.loc[is_lowkre, 'rationale'] += 'low rho, kappa, and varex;'
-
-    # Reject if low variance explained
-    is_lows = ct_df['normalized variance explained'] <= varex_norm_min
-    ct_df.loc[is_lows, 'classification'] = 'rejected'
-    ct_df.loc[is_lows, 'rationale'] += 'low variance explained;'
-
-    # Reject if Kappa over limit
-    is_fmax1 = ct_df['kappa'] == F_MAX
-    ct_df.loc[is_fmax1, 'classification'] = 'rejected'
-    ct_df.loc[is_fmax1, 'rationale'] += 'kappa equals fmax;'
-
-    # Reject if Rho over limit
-    is_fmax2 = ct_df['rho'] == F_MAX
-    ct_df.loc[is_fmax2, 'classification'] = 'rejected'
-    ct_df.loc[is_fmax2, 'rationale'] += 'rho equals fmax;'
-
-    if stabilize:
-        temp7 = varex_norm_cum >= 0.95
-        ct_df.loc[temp7, 'classification'] = 'rejected'
-        ct_df.loc[temp7, 'rationale'] += 'cumulative var. explained above 95%;'
-        under_fmin1 = ct_df['kappa'] <= fmin
-        ct_df.loc[under_fmin1, 'classification'] = 'rejected'
-        ct_df.loc[under_fmin1, 'rationale'] += 'kappa below fmin;'
-        under_fmin2 = ct_df['rho'] <= fmin
-        ct_df.loc[under_fmin2, 'classification'] = 'rejected'
-        ct_df.loc[under_fmin2, 'rationale'] += 'rho below fmin;'
+    # Select components using decision tree
+    if method == 'kundu':
+        ct_df = kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False)
+    elif method == 'kundu-stabilize':
+        ct_df = kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=True)
+    elif method == 'mle':
+        LGR.info('Selected {0} components with MLE dimensionality '
+                 'detection'.format(ct_df.shape[0]))
 
     ct_df.to_csv('comp_table_pca.txt', sep='\t', index=True,
                  index_label='component', float_format='%.6f')
@@ -317,11 +385,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG, stabilize,
     if wvpca:
         kept_data = idwtmat(kept_data, cAl)
 
-    LGR.info('Selected {0} PCA components with Kappa threshold: {1:.02f}, '
-             'Rho threshold: {2:.02f}'.format(n_components, kappa_thr,
-                                              rho_thr))
-
-    kept_data = stats.zscore(kept_data, axis=1)  # variance normalize timeseries
+    kept_data = stats.zscore(kept_data, axis=1)  # variance normalize time series
     kept_data = stats.zscore(kept_data, axis=None)  # variance normalize everything
 
     return n_components, kept_data

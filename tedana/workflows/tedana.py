@@ -12,8 +12,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from tedana import (decay, combine, decomposition,
-                    io, model, selection, utils)
+from tedana import decay, combine, decomposition, io, model, selection, utils
 from tedana.workflows.parser_utils import is_valid_file
 
 LGR = logging.getLogger(__name__)
@@ -73,18 +72,6 @@ def _get_parser():
                         help=('Comma separated list of manually '
                               'accepted components'),
                         default=None)
-    parser.add_argument('--kdaw',
-                        dest='kdaw',
-                        type=float,
-                        help=('Dimensionality augmentation weight (Kappa). '
-                              'Default=10. -1 for low-dimensional ICA'),
-                        default=10.)
-    parser.add_argument('--rdaw',
-                        dest='rdaw',
-                        type=float,
-                        help=('Dimensionality augmentation weight (Rho). '
-                              'Default=1. -1 for low-dimensional ICA'),
-                        default=1.)
     parser.add_argument('--sourceTEs',
                         dest='ste',
                         type=str,
@@ -104,6 +91,12 @@ def _get_parser():
                         action='store_true',
                         help='Generate intermediate and additional files.',
                         default=False)
+    parser.add_argument('--tedort',
+                        dest='tedort',
+                        action='store_true',
+                        help=('Orthogonalize rejected components w.r.t. '
+                              'accepted components prior to denoising.'),
+                        default=False)
     parser.add_argument('--gscontrol',
                         dest='gscontrol',
                         required=False,
@@ -115,17 +108,16 @@ def _get_parser():
                               'delimited list'),
                         choices=['t1c', 'gsr'],
                         default=None)
-    parser.add_argument('--stabilize',
-                        dest='stabilize',
-                        action='store_true',
-                        help=('Stabilize convergence by reducing '
-                              'dimensionality, for low quality data'),
-                        default=False)
     parser.add_argument('--wvpca',
                         dest='wvpca',
                         help='Perform PCA on wavelet-transformed data',
                         action='store_true',
                         default=False)
+    parser.add_argument('--tedpca',
+                        dest='tedpca',
+                        help='Method with which to select components in TEDPCA',
+                        choices=['mle', 'kundu', 'kundu-stabilize'],
+                        default='mle')
     parser.add_argument('--out-dir',
                         dest='out_dir',
                         type=str,
@@ -152,7 +144,7 @@ def _get_parser():
 
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
-                    gscontrol=None, kdaw=10., rdaw=1.,
+                    tedort=False, gscontrol=None, tedpca='mle',
                     ste=-1, combmode='t2s', verbose=False, stabilize=False,
                     wvpca=False, out_dir='.', fixed_seed=42, debug=False,
                     quiet=False):
@@ -178,17 +170,14 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     manacc : :obj:`str`, optional
         Comma separated list of manually accepted components in string form.
         Default is None.
-    gscontrol : :obj:`bool`, optional
-        Control global signal using spatial approach. Default is False.
-    global_denoise : {None, 't1c', 'gsr'} or :obj:`list`, optional
+    tedort : :obj:`bool`, optional
+        Orthogonalize rejected components w.r.t. accepted ones prior to
+        denoising. Default is False.
+    gscontrol : {None, 't1c', 'gsr'} or :obj:`list`, optional
         Perform additional denoising to remove spatially diffuse noise. Default
         is None.
-    kdaw : :obj:`float`, optional
-        Dimensionality augmentation weight (Kappa). Default is 10.
-        -1 for low-dimensional ICA.
-    rdaw : :obj:`float`, optional
-        Dimensionality augmentation weight (Rho). Default is 1.
-        -1 for low-dimensional ICA.
+    tedpca : {'mle', 'kundu', 'kundu-stabilize'}, optional
+        Method with which to select components in TEDPCA. Default is 'mle'.
     ste : :obj:`int`, optional
         Source TEs for models. 0 for all, -1 for optimal combination.
         Default is -1.
@@ -196,9 +185,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
-    stabilize : :obj:`bool`, optional
-        Stabilize convergence by reducing dimensionality, for low quality data.
-        Default is False.
     wvpca : :obj:`bool`, optional
         Whether or not to perform PCA on wavelet-transformed data.
         Default is False.
@@ -218,11 +204,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     Notes
     -----
-    This workflow writes out several files, which are written out to a folder
-    named TED.[ref_label].[label] if ``label`` is provided and TED.[ref_label]
-    if not. ``ref_label`` is determined based on the name of the first ``data``
-    file. For a complete list of the files generated by this workflow, please
-    visit https://tedana.readthedocs.io/en/latest/outputs.html
+    This workflow writes out several files. For a complete list of the files
+    generated by this workflow, please visit
+    https://tedana.readthedocs.io/en/latest/outputs.html
     """
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
@@ -261,8 +245,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     catd, ref_img = io.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
-
-    kdaw, rdaw = float(kdaw), float(rdaw)
 
     if mixm is not None and op.isfile(mixm):
         shutil.copyfile(mixm, op.join(out_dir, 'meica_mix.1D'))
@@ -318,12 +300,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if mixm is None:
         # Identify and remove thermal noise from data
         n_components, dd = decomposition.tedpca(catd, data_oc, combmode, mask,
-                                                t2s, t2sG, stabilize, ref_img,
-                                                tes=tes, kdaw=kdaw, rdaw=rdaw,
-                                                ste=ste, wvpca=wvpca,
+                                                t2s, t2sG, ref_img,
+                                                tes=tes, method=tedpca, ste=ste,
+                                                kdaw=10., rdaw=1., wvpca=wvpca,
                                                 verbose=verbose)
-
-        LGR.info('Computing ICA of dimensionally reduced data')
         mmix_orig, fixed_seed = decomposition.tedica(n_components, dd,
                                                      fixed_seed)
 
@@ -369,6 +349,21 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if len(acc) == 0:
         LGR.warning('No BOLD components detected! Please check data and '
                     'results!')
+
+    if tedort:
+        acc_idx = comptable.loc[
+            ~comptable['classification'].str.contains('rejected'),
+            'component']
+        rej_idx = comptable.loc[
+            comptable['classification'].str.contains('rejected'),
+            'component']
+        acc_ts = mmix[:, acc_idx]
+        rej_ts = mmix[:, rej_idx]
+        betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
+        pred_rej_ts = np.dot(acc_ts, betas)
+        resid = rej_ts - pred_rej_ts
+        mmix[:, rej_idx] = resid
+        np.savetxt(op.join(out_dir, 'meica_mix_orth.1D'), mmix)
 
     io.writeresults(data_oc, mask=mask, comptable=comptable, mmix=mmix,
                     n_vols=n_vols, fixed_seed=fixed_seed,
