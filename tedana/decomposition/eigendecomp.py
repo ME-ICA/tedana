@@ -283,6 +283,21 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
 
     state_file = io.gen_fname(bf, '_variables.pkl', desc='TEDPCAState')
     if not op.exists(state_file):
+        LGR.info('Loading PCA from: {}'.format(state_file))
+        with open(state_file, 'rb') as handle:
+            pcastate = pickle.load(handle)
+
+        if pcastate['method'] != method:
+            LGR.warning('Method from PCA state file ({0}) does not match '
+                        'requested method ({1}).'.format(pcastate['method'],
+                                                         method))
+            state_found = False
+        else:
+            state_found = True
+    else:
+        state_found = False
+
+    if not state_found:
         if method == 'mle':
             voxel_comp_weights, varex, comp_ts = run_mlepca(dz)
         else:
@@ -327,15 +342,6 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         except TypeError:
             LGR.warning('Could not save PCA solution')
     else:  # if loading existing state
-        LGR.info('Loading PCA from: {}'.format(state_file))
-        with open(state_file, 'rb') as handle:
-            pcastate = pickle.load(handle)
-
-        run_method = pcastate['method']
-        if run_method != method:
-            raise ValueError('Argument "method" ({0}) does not match method '
-                             'from PCA state file ({1})'.format(method,
-                                                                run_method))
         voxel_comp_weights = pcastate['voxel_comp_weights']
         varex = pcastate['varex']
         comp_ts = pcastate['comp_ts']
