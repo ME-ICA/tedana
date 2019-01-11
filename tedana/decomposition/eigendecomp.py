@@ -282,7 +282,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         dz, cAl = dwtmat(dz)
 
     state_file = io.gen_fname(bf, '_variables.pkl', desc='TEDPCAState')
-    if not op.exists(state_file):
+    if op.exists(state_file):
         LGR.info('Loading PCA from: {}'.format(state_file))
         with open(state_file, 'rb') as handle:
             pcastate = pickle.load(handle)
