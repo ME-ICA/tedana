@@ -165,7 +165,8 @@ def kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False):
 
 
 def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
-           ref_img, tes, method='mle', ste=0, kdaw=10., rdaw=1., wvpca=False):
+           ref_img, tes, method='mle', ste=0, kdaw=10., rdaw=1., wvpca=False,
+           verbose=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
     noise from multi-echo data.
@@ -199,6 +200,8 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         a subset of echos. Default: 0
     wvpca : :obj:`bool`, optional
         Whether to apply wavelet denoising to data. Default: False
+    verbose : :obj:`bool`, optional
+        Whether to output files from fitmodels_direct or not. Default: False
 
     Returns
     -------
@@ -322,7 +325,8 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         LGR.info('Making initial component selection guess from PCA results')
         _, ct_df, betasv, v_T = model.fitmodels_direct(
                     catd, comp_ts.T, eimum, t2s, t2sG, tes, combmode, ref_img,
-                    mmixN=vTmixN, full_sel=False)
+                    mmixN=vTmixN, full_sel=False, label='mepca_',
+                    verbose=verbose)
         # varex_norm overrides normalized varex computed by fitmodels_direct
         ct_df['normalized variance explained'] = varex_norm
 
