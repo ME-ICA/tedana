@@ -311,7 +311,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
             np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
             if ste == -1:
                 io.filewrite(utils.unmask(dd, mask),
-                             op.join(out_dir, 'tsoc_whitened.nii'), ref_img)
+                             op.join(out_dir, 'ts_OC_whitened.nii'), ref_img)
 
         LGR.info('Making second component selection guess from ICA results')
         # Estimate betas and compute selection metrics for mixing matrix
