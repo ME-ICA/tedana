@@ -308,13 +308,16 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                 t2s, t2sG, ref_img,
                                                 bf, tes=tes, method=tedpca,
                                                 ste=ste, kdaw=10., rdaw=1.,
-                                                wvpca=wvpca)
+                                                wvpca=wvpca, verbose=verbose)
         LGR.info('Computing ICA of dimensionally reduced data')
         mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, fixed_seed)
 
         if verbose:
             np.savetxt(gen_fname(bf, '_mixing.tsv', desc='initialTEDICA'),
                        mmix_orig, delimiter='\t')
+            if ste == -1:
+                io.filewrite(utils.unmask(dd, mask),
+                             op.join(out_dir, 'ts_OC_whitened.nii'), ref_img)
 
         LGR.info('Making second component selection guess from ICA results')
         # Estimate betas and compute selection metrics for mixing matrix
@@ -322,7 +325,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # with thermal noise)
         seldict, comptable, betas, mmix = model.fitmodels_direct(
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
-                    ref_img, reindex=True)
+                    ref_img, reindex=True, label='meica_', out_dir=out_dir,
+                    verbose=verbose)
         np.savetxt(gen_fname(bf, '_mixing.tsv', desc='TEDICA'), mmix,
                    delimiter='\t')
 
@@ -333,7 +337,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         mmix_orig = np.loadtxt(gen_fname(bf, '_mixing.tsv', desc='TEDICA'))
         seldict, comptable, betas, mmix = model.fitmodels_direct(
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
-                    ref_img, reindex=False)
+                    ref_img, reindex=False, label='meica_', out_dir=out_dir,
+                    verbose=verbose)
         if ctab is None:
             comptable = selection.selcomps(seldict, comptable, mmix, manacc,
                                            n_echos)
