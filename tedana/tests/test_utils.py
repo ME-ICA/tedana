@@ -3,10 +3,12 @@ Tests for tedana.utils
 """
 
 from os.path import join as pjoin, dirname
+
 import nibabel as nib
 import numpy as np
 import pytest
-from tedana import utils
+
+from tedana import (utils, io)
 
 rs = np.random.RandomState(1234)
 datadir = pjoin(dirname(__file__), 'data')
@@ -37,18 +39,9 @@ def test_get_dtype():
 
 def test_getfbounds():
     good_inputs = range(1, 12)
-    bad_inputs = [
-        (0, ValueError),
-        (12, ValueError),
-        (10.5, TypeError)
-    ]
 
     for n_echos in good_inputs:
         utils.getfbounds(n_echos)
-
-    for (n_echos, err) in bad_inputs:
-        with pytest.raises(err):
-            utils.getfbounds(n_echos)
 
 
 def test_unmask():
@@ -116,35 +109,9 @@ def test_load_image():
     assert utils.load_image(fimg.get_data()).shape == exp_shape
 
 
-def test_load_data():
-    fimg = [nib.load(f) for f in fnames]
-    exp_shape = (64350, 3, 5)
-
-    # list of filepath to images
-    d, ref = utils.load_data(fnames, n_echos=len(tes))
-    assert d.shape == exp_shape
-    assert isinstance(ref, nib.Nifti1Image)
-    assert np.allclose(ref.get_data(), nib.load(fnames[0]).get_data())
-
-    # list of img_like
-    d, ref = utils.load_data(fimg, n_echos=len(tes))
-    assert d.shape == exp_shape
-    assert isinstance(ref, nib.Nifti1Image)
-    assert ref == fimg[0]
-
-    # imagine z-cat img
-    d, ref = utils.load_data(fnames[0], n_echos=3)
-    assert d.shape == (21450, 3, 5)
-    assert isinstance(ref, nib.Nifti1Image)
-    assert ref.shape == (39, 50, 11)
-
-    with pytest.raises(ValueError):
-        utils.load_data(fnames[0])
-
-
 def test_make_adaptive_mask():
     # load data make masks
-    data = utils.load_data(fnames, n_echos=len(tes))[0]
+    data = io.load_data(fnames, n_echos=len(tes))[0]
     minmask = utils.make_adaptive_mask(data)
     mask, masksum = utils.make_adaptive_mask(data, minimum=False, getsum=True)
 
@@ -163,29 +130,17 @@ def test_make_adaptive_mask():
     assert np.allclose(counts, np.array([13564,  3977,  5060, 41749]))
 
     # test user-defined mask
+    # TODO: Add mask file with no bad voxels to test against
     mask, masksum = utils.make_adaptive_mask(data, mask=pjoin(datadir,
                                                               'mask.nii.gz'),
                                              minimum=False, getsum=True)
-    assert np.allclose(mask, nib.load(pjoin(datadir,
-                                            'mask.nii.gz')).get_data().flatten())
+    assert np.allclose(mask, masksum.astype(bool))
 
 
 def test_make_min_mask():
     # load data make mask
-    data = utils.load_data(fnames, n_echos=len(tes))[0]
+    data = io.load_data(fnames, n_echos=len(tes))[0]
     minmask = utils.make_min_mask(data)
 
     assert minmask.shape == (64350,)
     assert minmask.sum() == 58378
-
-
-def test_new_nii_like():
-    data, ref = utils.load_data(fnames, n_echos=len(tes))
-    nimg = utils.new_nii_like(ref, data)
-
-    assert isinstance(nimg, nib.Nifti1Image)
-    assert nimg.shape == (39, 50, 33, 3, 5)
-
-
-def test_filewrite():
-    pass

@@ -5,9 +5,25 @@ multiple time series for each voxel.
 
 The physics of multi-echo fMRI
 ------------------------------
+Multi-echo fMRI data is obtained by acquiring multiple TEs (commonly called
+`echo times`_) for each MRI volume
+during data collection.
+While fMRI signal contains important neural information (termed the blood
+oxygen-level dependent, or `BOLD signal`_,
+it also contains "noise" (termed non-BOLD signal) caused by things like
+participant motion and changes in breathing.
+Because the BOLD signal is known to decay at a set rate, collecting multiple
+echos allows us to assess whether components of the fMRI signal are BOLD- or
+non-BOLD.
+For a comprehensive review, see `Kundu et al. (2017)`_.
+
+.. _echo times: http://mriquestions.com/tr-and-te.html
+.. _BOLD signal: http://www.fil.ion.ucl.ac.uk/spm/course/slides10-zurich/Kerstin_BOLD.pdf
+.. _Kundu et al. (2017): https://paperpile.com/shared/eH3PPu
 
 Why use multi-echo?
 -------------------
+ME-EPI exhibits higher SNR and improves statistical power of analyses.
 
 Resources
 ---------
@@ -15,8 +31,10 @@ Resources
 Journal articles
 ****************
 * A `review`_ on multi-echo fMRI and its applications
+* A `spreadsheet`_ cataloguing papers using multi-echo fMRI, with information about acquisition parameters.
 
 .. _review: https://www.ncbi.nlm.nih.gov/pubmed/28363836
+.. _spreadsheet: https://docs.google.com/spreadsheets/d/1WERojJyxFoqcg_tndUm5Kj0H1UfUc9Ban0jFGGfPaBk/edit#gid=0
 
 Videos
 ******
@@ -39,7 +57,9 @@ find more.
 * `Multi-echo fMRI replication sample of autobiographical memory, prospection and theory of mind reasoning tasks`_
 * `Multi-echo Cambridge`_
 * `Multiband multi-echo imaging of simultaneous oxygenation and flow timeseries for resting state connectivity`_
+* `Valence processing differs across stimulus modalities`_
 
 .. _Multi-echo fMRI replication sample of autobiographical memory, prospection and theory of mind reasoning tasks: https://openneuro.org/datasets/ds000210/
 .. _Multi-echo Cambridge: https://openneuro.org/datasets/ds000258
 .. _Multiband multi-echo imaging of simultaneous oxygenation and flow timeseries for resting state connectivity: https://openneuro.org/datasets/ds000254
+.. _Valence processing differs across stimulus modalities: https://openneuro.org/datasets/ds001491

@@ -4,7 +4,7 @@ Tests for tedana.model.combine
 
 import numpy as np
 
-from tedana.model import combine
+from tedana import combine
 
 
 def test__combine_t2s():
