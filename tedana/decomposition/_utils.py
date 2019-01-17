@@ -10,7 +10,7 @@ from scipy import stats
 LGR = logging.getLogger(__name__)
 
 
-def eimask(dd, ees=None, ste=-1):
+def eimask(dd, ees=None):
     """
     Returns mask for data between [0.001, 5] * 98th percentile of dd
 
@@ -20,13 +20,7 @@ def eimask(dd, ees=None, ste=-1):
         Input data, where `S` is samples, `E` is echos, and `T` is time
     ees : (N,) :obj:`list`
         Indices of echos to assess from `dd` in calculating output
-    ste : :obj:`int` or :obj:`list` of :obj:`int`, optional
-        Which echos were used in PCA. Values -1 and 0 are special, where a value
-        of -1 will indicate using the optimal combination of the echos
-        and 0  will indicate using all the echos. A list can be provided
-        to indicate a subset of echos.
-        Default: -1
-
+    
     Returns
     -------
     imask : (S x N) :obj:`numpy.ndarray`
@@ -37,7 +31,7 @@ def eimask(dd, ees=None, ste=-1):
         ees = range(dd.shape[1])
     imask = np.zeros((dd.shape[0], len(ees)), dtype=bool)
     for ee in ees:
-        if ste[0] == -1:
+        if len(ees) == 1:
             LGR.debug('Creating eimask for optimal combination')
         else:
             LGR.debug('Creating eimask for echo {}'.format(ee))
