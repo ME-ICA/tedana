@@ -20,7 +20,7 @@ def eimask(dd, ees=None):
         Input data, where `S` is samples, `E` is echos, and `T` is time
     ees : (N,) :obj:`list`
         Indices of echos to assess from `dd` in calculating output
-    
+
     Returns
     -------
     imask : (S x N) :obj:`numpy.ndarray`

@@ -195,9 +195,9 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         Method with which to select components in TEDPCA. Default is 'mle'.
     ste : :obj:`int` or :obj:`list` of :obj:`int`, optional
         Which echos to use in PCA. Values -1 and 0 are special, where a value
-        of -1 will indicate using the optimal combination of the echos 
+        of -1 will indicate using the optimal combination of the echos
         and 0  will indicate using all the echos. A list can be provided
-        to indicate a subset of echos. 
+        to indicate a subset of echos.
         Default: -1
     wvpca : :obj:`bool`, optional
         Whether to apply wavelet denoising to data. Default: False
