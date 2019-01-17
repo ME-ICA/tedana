@@ -22,10 +22,10 @@ def eimask(dd, ees=None, ste=-1):
         Indices of echos to assess from `dd` in calculating output
     ste : :obj:`int` or :obj:`list` of :obj:`int`, optional
         Which echos were used in PCA. Values -1 and 0 are special, where a value
-        of -1 will indicate using the optimal combination of the echos 
+        of -1 will indicate using the optimal combination of the echos
         and 0  will indicate using all the echos. A list can be provided
-        to indicate a subset of echos. 
-        Default: -1 
+        to indicate a subset of echos.
+        Default: -1
 
     Returns
     -------
