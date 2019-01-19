@@ -2,6 +2,7 @@
 Fit models.
 """
 import logging
+import os.path as op
 
 import numpy as np
 import pandas as pd
@@ -20,7 +21,8 @@ Z_MAX = 8
 
 
 def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
-                     reindex=False, mmixN=None, full_sel=True):
+                     reindex=False, mmixN=None, full_sel=True, label=None,
+                     out_dir='.', verbose=False):
     """
     Fit TE-dependence and -independence models to components.
 
@@ -150,6 +152,8 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     F_S0_clmaps = np.zeros([n_data_voxels, n_components])
     Br_R2_clmaps = np.zeros([n_voxels, n_components])
     Br_S0_clmaps = np.zeros([n_voxels, n_components])
+    pred_R2_maps = np.zeros([n_data_voxels, n_echos, n_components])
+    pred_S0_maps = np.zeros([n_data_voxels, n_echos, n_components])
 
     LGR.info('Fitting TE- and S0-dependent models to components')
     for i_comp in range(n_components):
@@ -164,6 +168,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         # (S,) model coefficient map
         coeffs_S0 = (B * X1).sum(axis=0) / (X1**2).sum(axis=0)
         pred_S0 = X1 * np.tile(coeffs_S0, (n_echos, 1))
+        pred_S0_maps[:, :, i_comp] = pred_S0.T
         SSE_S0 = (B - pred_S0)**2
         SSE_S0 = SSE_S0.sum(axis=0)  # (S,) prediction error map
         F_S0 = (alpha - SSE_S0) * (n_echos - 1) / (SSE_S0)
@@ -172,6 +177,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         # R2 Model
         coeffs_R2 = (B * X2).sum(axis=0) / (X2**2).sum(axis=0)
         pred_R2 = X2 * np.tile(coeffs_R2, (n_echos, 1))
+        pred_R2_maps[:, :, i_comp] = pred_R2.T
         SSE_R2 = (B - pred_R2)**2
         SSE_R2 = SSE_R2.sum(axis=0)
         F_R2 = (alpha - SSE_R2) * (n_echos - 1) / (SSE_R2)
@@ -198,6 +204,9 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         sort_idx = comptab[:, 0].argsort()[::-1]
         comptab = comptab[sort_idx, :]
         mmix_new = mmix[:, sort_idx]
+        betas = betas[..., sort_idx]
+        pred_R2_maps = pred_R2_maps[:, :, sort_idx]
+        pred_S0_maps = pred_S0_maps[:, :, sort_idx]
         F_S0_maps = F_S0_maps[:, sort_idx]
         F_R2_maps = F_R2_maps[:, sort_idx]
         Z_maps = Z_maps[:, sort_idx]
@@ -207,6 +216,19 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         tsoc_Babs = tsoc_Babs[:, sort_idx]
     else:
         mmix_new = mmix
+
+    if verbose:
+        # Echo-specific weight maps for each of the ICA components.
+        io.filewrite(betas, op.join(out_dir, label+'betas_catd.nii'), ref_img)
+        # Echo-specific maps of predicted values for R2 and S0 models for each
+        # component.
+        io.filewrite(utils.unmask(pred_R2_maps, mask),
+                     op.join(out_dir, label+'R2_pred.nii'), ref_img)
+        io.filewrite(utils.unmask(pred_S0_maps, mask),
+                     op.join(out_dir, label+'S0_pred.nii'), ref_img)
+        # Weight maps used to average metrics across voxels
+        io.filewrite(utils.unmask(Z_maps ** 2., mask),
+                     op.join(out_dir, label+'metric_weights.nii'), ref_img)
 
     comptab = pd.DataFrame(comptab,
                            columns=['kappa', 'rho',
