@@ -29,63 +29,63 @@ def _get_parser():
     optional = parser._action_groups.pop()
     required = parser.add_argument_group('required arguments')
     required.add_argument('-d',
-                        dest='data',
-                        nargs='+',
-                        metavar='FILE',
-                        type=lambda x: is_valid_file(parser, x),
-                        help=('Multi-echo dataset for analysis. May be a '
-                              'single file with spatially concatenated data '
-                              'or a set of echo-specific files, in the same '
-                              'order as the TEs are listed in the -e '
-                              'argument.'),
-                        required=True)
+                          dest='data',
+                          nargs='+',
+                          metavar='FILE',
+                          type=lambda x: is_valid_file(parser, x),
+                          help=('Multi-echo dataset for analysis. May be a '
+                                'single file with spatially concatenated data '
+                                'or a set of echo-specific files, in the same '
+                                'order as the TEs are listed in the -e '
+                                'argument.'),
+                          required=True)
     required.add_argument('-e',
-                        dest='tes',
-                        nargs='+',
-                        metavar='TE',
-                        type=float,
-                        help='Echo times (in ms). E.g., 15.0 39.0 63.0',
-                        required=True)
+                          dest='tes',
+                          nargs='+',
+                          metavar='TE',
+                          type=float,
+                          help='Echo times (in ms). E.g., 15.0 39.0 63.0',
+                          required=True)
     optional.add_argument('--mask',
-                        dest='mask',
-                        metavar='FILE',
-                        type=lambda x: is_valid_file(parser, x),
-                        help=('Binary mask of voxels to include in TE '
-                              'Dependent ANAlysis. Must be in the same '
-                              'space as `data`.'),
-                        default=None)
+                          dest='mask',
+                          metavar='FILE',
+                          type=lambda x: is_valid_file(parser, x),
+                          help=('Binary mask of voxels to include in TE '
+                                'Dependent ANAlysis. Must be in the same '
+                                'space as `data`.'),
+                          default=None)
     optional.add_argument('--fitmode',
-                        dest='fitmode',
-                        action='store',
-                        choices=['all', 'ts'],
-                        help=('Monoexponential model fitting scheme. '
-                              '"all" means that the model is fit, per voxel, '
-                              'across all timepoints. '
-                              '"ts" means that the model is fit, per voxel '
-                              'and per timepoint.'),
-                        default='all')
+                          dest='fitmode',
+                          action='store',
+                          choices=['all', 'ts'],
+                          help=('Monoexponential model fitting scheme. '
+                                '"all" means that the model is fit, per voxel, '
+                                'across all timepoints. '
+                                '"ts" means that the model is fit, per voxel '
+                                'and per timepoint.'),
+                          default='all')
     optional.add_argument('--combmode',
-                        dest='combmode',
-                        action='store',
-                        choices=['t2s', 'ste'],
-                        help=('Combination scheme for TEs: '
-                              't2s (Posse 1999, default), ste (Poser)'),
-                        default='t2s')
+                          dest='combmode',
+                          action='store',
+                          choices=['t2s', 'ste'],
+                          help=('Combination scheme for TEs: '
+                                't2s (Posse 1999, default), ste (Poser)'),
+                          default='t2s')
     optional.add_argument('--label',
-                        dest='label',
-                        type=str,
-                        help='Label for output directory.',
-                        default=None)
+                          dest='label',
+                          type=str,
+                          help='Label for output directory.',
+                          default=None)
     optional.add_argument('--debug',
-                        dest='debug',
-                        help=argparse.SUPPRESS,
-                        action='store_true',
-                        default=False)
+                          dest='debug',
+                          help=argparse.SUPPRESS,
+                          action='store_true',
+                          default=False)
     optional.add_argument('--quiet',
-                        dest='quiet',
-                        help=argparse.SUPPRESS,
-                        action='store_true',
-                        default=False)
+                          dest='quiet',
+                          help=argparse.SUPPRESS,
+                          action='store_true',
+                          default=False)
     parser._action_groups.append(optional)
     return parser
 
