@@ -27,7 +27,9 @@ def _get_parser():
     parser.parse_args() : argparse dict
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d',
+    optional = parser._action_groups.pop()
+    required = parser.add_argument_group('required arguments')
+    required.add_argument('-d',
                         dest='data',
                         nargs='+',
                         metavar='FILE',
@@ -38,14 +40,14 @@ def _get_parser():
                               'order as the TEs are listed in the -e '
                               'argument.'),
                         required=True)
-    parser.add_argument('-e',
+    required.add_argument('-e',
                         dest='tes',
                         nargs='+',
                         metavar='TE',
                         type=float,
                         help='Echo times (in ms). E.g., 15.0 39.0 63.0',
                         required=True)
-    parser.add_argument('--mask',
+    optional.add_argument('--mask',
                         dest='mask',
                         metavar='FILE',
                         type=lambda x: is_valid_file(parser, x),
@@ -53,51 +55,51 @@ def _get_parser():
                               'Dependent ANAlysis. Must be in the same '
                               'space as `data`.'),
                         default=None)
-    parser.add_argument('--mix',
+    optional.add_argument('--mix',
                         dest='mixm',
                         metavar='FILE',
                         type=lambda x: is_valid_file(parser, x),
                         help=('File containing mixing matrix. If not '
                               'provided, ME-PCA & ME-ICA is done.'),
                         default=None)
-    parser.add_argument('--ctab',
+    optional.add_argument('--ctab',
                         dest='ctab',
                         metavar='FILE',
                         type=lambda x: is_valid_file(parser, x),
                         help=('File containing a component table from which '
                               'to extract pre-computed classifications.'),
                         default=None)
-    parser.add_argument('--manacc',
+    optional.add_argument('--manacc',
                         dest='manacc',
                         help=('Comma separated list of manually '
                               'accepted components'),
                         default=None)
-    parser.add_argument('--sourceTEs',
+    optional.add_argument('--sourceTEs',
                         dest='ste',
                         type=str,
                         help=('Source TEs for models. E.g., 0 for all, '
                               '-1 for opt. com., and 1,2 for just TEs 1 and '
                               '2. Default=-1.'),
                         default=-1)
-    parser.add_argument('--combmode',
+    optional.add_argument('--combmode',
                         dest='combmode',
                         action='store',
                         choices=['t2s', 'ste'],
                         help=('Combination scheme for TEs: '
                               't2s (Posse 1999, default), ste (Poser)'),
                         default='t2s')
-    parser.add_argument('--verbose',
+    optional.add_argument('--verbose',
                         dest='verbose',
                         action='store_true',
                         help='Generate intermediate and additional files.',
                         default=False)
-    parser.add_argument('--tedort',
+    optional.add_argument('--tedort',
                         dest='tedort',
                         action='store_true',
                         help=('Orthogonalize rejected components w.r.t. '
                               'accepted components prior to denoising.'),
                         default=False)
-    parser.add_argument('--gscontrol',
+    optional.add_argument('--gscontrol',
                         dest='gscontrol',
                         required=False,
                         action='store',
@@ -108,39 +110,40 @@ def _get_parser():
                               'delimited list'),
                         choices=['t1c', 'gsr'],
                         default=None)
-    parser.add_argument('--wvpca',
+    optional.add_argument('--wvpca',
                         dest='wvpca',
                         help='Perform PCA on wavelet-transformed data',
                         action='store_true',
                         default=False)
-    parser.add_argument('--tedpca',
+    optional.add_argument('--tedpca',
                         dest='tedpca',
                         help='Method with which to select components in TEDPCA',
                         choices=['mle', 'kundu', 'kundu-stabilize'],
                         default='mle')
-    parser.add_argument('--out-dir',
+    optional.add_argument('--out-dir',
                         dest='out_dir',
                         type=str,
                         help='Output directory.',
                         default='.')
-    parser.add_argument('--seed',
+    optional.add_argument('--seed',
                         dest='fixed_seed',
                         type=int,
                         help=('Value passed to repr(mdp.numx_rand.seed()) '
                               'Set to an integer value for reproducible ICA results; '
                               'otherwise, set to -1 for varying results across calls.'),
                         default=42)
-    parser.add_argument('--debug',
+    optional.add_argument('--debug',
                         dest='debug',
                         help=argparse.SUPPRESS,
                         action='store_true',
                         default=False)
-    parser.add_argument('--quiet',
+    optional.add_argument('--quiet',
                         dest='quiet',
                         help=argparse.SUPPRESS,
                         action='store_true',
                         default=False)
-    return parser
+    parser._action_groups.append(optional)
+    return parser.parse_args()
 
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
