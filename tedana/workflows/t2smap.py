@@ -24,7 +24,11 @@ def _get_parser():
     parser.parse_args() : argparse dict
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d',
+    # Argument parser follow templtate provided by RalphyZ
+    # https://stackoverflow.com/a/43456577
+    optional = parser._action_groups.pop()
+    required = parser.add_argument_group('required arguments')
+    required.add_argument('-d',
                         dest='data',
                         nargs='+',
                         metavar='FILE',
@@ -35,14 +39,14 @@ def _get_parser():
                               'order as the TEs are listed in the -e '
                               'argument.'),
                         required=True)
-    parser.add_argument('-e',
+    required.add_argument('-e',
                         dest='tes',
                         nargs='+',
                         metavar='TE',
                         type=float,
                         help='Echo times (in ms). E.g., 15.0 39.0 63.0',
                         required=True)
-    parser.add_argument('--mask',
+    optional.add_argument('--mask',
                         dest='mask',
                         metavar='FILE',
                         type=lambda x: is_valid_file(parser, x),
@@ -50,7 +54,7 @@ def _get_parser():
                               'Dependent ANAlysis. Must be in the same '
                               'space as `data`.'),
                         default=None)
-    parser.add_argument('--fitmode',
+    optional.add_argument('--fitmode',
                         dest='fitmode',
                         action='store',
                         choices=['all', 'ts'],
@@ -60,24 +64,24 @@ def _get_parser():
                               '"ts" means that the model is fit, per voxel '
                               'and per timepoint.'),
                         default='all')
-    parser.add_argument('--combmode',
+    optional.add_argument('--combmode',
                         dest='combmode',
                         action='store',
                         choices=['t2s', 'ste'],
                         help=('Combination scheme for TEs: '
                               't2s (Posse 1999, default), ste (Poser)'),
                         default='t2s')
-    parser.add_argument('--label',
+    optional.add_argument('--label',
                         dest='label',
                         type=str,
                         help='Label for output directory.',
                         default=None)
-    parser.add_argument('--debug',
+    optional.add_argument('--debug',
                         dest='debug',
                         help=argparse.SUPPRESS,
                         action='store_true',
                         default=False)
-    parser.add_argument('--quiet',
+    optional.add_argument('--quiet',
                         dest='quiet',
                         help=argparse.SUPPRESS,
                         action='store_true',
