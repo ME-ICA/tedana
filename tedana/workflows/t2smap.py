@@ -86,6 +86,7 @@ def _get_parser():
                         help=argparse.SUPPRESS,
                         action='store_true',
                         default=False)
+    parser._action_groups.append(optional)
     return parser
 
 
