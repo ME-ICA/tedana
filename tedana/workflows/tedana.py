@@ -143,7 +143,7 @@ def _get_parser():
                         action='store_true',
                         default=False)
     parser._action_groups.append(optional)
-    return parser.parse_args()
+    return parser
 
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
