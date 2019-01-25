@@ -110,11 +110,13 @@ Try to keep the changes focused. We've found that working on a [new branch][link
 
 When you're creating your pull request, please make sure to review the tedana [style conventions](#style-guide).
 
-Note that to test a change, you may need to set up your local repository to run a tedana workflow. To do so, run
+Note that to test a change, you may need to set up your local repository to run a tedana workflow. 
+To do so, run
 ```
 python setup.py develop
 ```
-which should ensure all packages are correctly organized and linked on your user profile. Once you've run this, your repository should be set for most changes (i.e., you do not have to re-run with every change). 
+which should ensure all packages are correctly organized and linked on your user profile. 
+Once you've run this, your repository should be set for most changes (i.e., you do not have to re-run with every change). 
 
 **4. Submit a [pull request][link_pullrequest].**
 
