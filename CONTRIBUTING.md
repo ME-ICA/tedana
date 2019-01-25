@@ -196,7 +196,7 @@ You're awesome. :wave::smiley:
 [link_milestones]: https://github.com/ME-ICA/tedana/milestones/
 [link_project_boards]: https://github.com/ME-ICA/tedana/projects
 [link_gitter]: https://gitter.im/me-ica/tedana
-[link_coc]: https://github.com/ME-ICA/tedana/blob/master/Code_of_Conduct.md
+[link_coc]: https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md
 
 [link_labels]: https://github.com/ME-ICA/tedana/labels
 [link_bugs]: https://github.com/ME-ICA/tedana/labels/bug
