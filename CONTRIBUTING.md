@@ -88,7 +88,6 @@ The current list of labels are [here][link_labels] and include:
     Please try to make sure that your enhancement is distinct from any others that have already been requested or implemented.
     If you find one that's similar but there are subtle differences please reference the other request in your issue.
 
-
 ## Making a change
 
 We appreciate all contributions to tedana, but those accepted fastest will follow a workflow similar to the following:
@@ -110,6 +109,14 @@ Make sure to [keep your fork up to date][link_updateupstreamwiki] with the maste
 Try to keep the changes focused. We've found that working on a [new branch][link_branches] makes it easier to keep your changes targeted.
 
 When you're creating your pull request, please make sure to review the tedana [style conventions](#style-guide).
+
+Note that to test a change, you may need to set up your local repository to run a tedana workflow. 
+To do so, run
+```
+python setup.py develop
+```
+which should ensure all packages are correctly organized and linked on your user profile. 
+Once you've run this, your repository should be set for most changes (i.e., you do not have to re-run with every change). 
 
 **4. Submit a [pull request][link_pullrequest].**
 
@@ -196,7 +203,7 @@ You're awesome. :wave::smiley:
 [link_milestones]: https://github.com/ME-ICA/tedana/milestones/
 [link_project_boards]: https://github.com/ME-ICA/tedana/projects
 [link_gitter]: https://gitter.im/me-ica/tedana
-[link_coc]: https://github.com/ME-ICA/tedana/blob/master/Code_of_Conduct.md
+[link_coc]: https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md
 
 [link_labels]: https://github.com/ME-ICA/tedana/labels
 [link_bugs]: https://github.com/ME-ICA/tedana/labels/bug
