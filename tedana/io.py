@@ -504,12 +504,12 @@ def filewrite(data, filename, ref_img, gzip=False, copy_header=True):
     return name
 
 def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
-                 acc, rej, midk, empty, ref_img):
+                 acc, rej, midk, empty, ref_img, tr):
 
                 # regenerate the beta images
                 ts_B = model.get_coeffs(ts, mmix, mask)
                 ts_B = ts_B.reshape(ref_img.shape[:3] + ts_B.shape[1:])
-                # import pdb; pdb.set_trace()
+                import pdb; pdb.set_trace()
 
                 # Start making some really ugly pluts
                 import os
@@ -519,6 +519,12 @@ def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
                 os.chdir('./simple_plots')
 
                 timepoints = mmix.shape[1]
+                T = tr
+                # Sample Frequency
+                Fs = 1.0/T
+                f = Fs * np.arange(0, N // 2 + 1) / N; # resampled frequency vector
+                x = np.linspace(0.0, N*T, N)
+
                 for compnum in range(0,mmix.shape[1],1):
 
                     allplot = plt.figure(figsize=(10,9));
@@ -564,13 +570,6 @@ def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
                     y = mmix[:,compnum]
                     N = len(y)
 
-                    # The TR
-                    T = 1.25
-                    # Sample Frequency
-                    Fs = 1.0/T
-                    f = Fs * np.arange(0, N // 2 + 1) / N; # resampled frequency vector
-                    x = np.linspace(0.0, N*T, N)
-                    x.shape
                     Y= scipy.fftpack.fft(y)
 
                     P2 = np.abs(Y/N)
@@ -617,6 +616,7 @@ def load_data(data, n_echos=None):
         raise ValueError('Number of echos must be specified. '
                          'Confirm that TE times are provided with the `-e` argument.')
 
+    import pdb; pdb.set_trace()
     if isinstance(data, list):
         if len(data) == 1:  # a z-concatenated file was provided
             data = data[0]
@@ -632,11 +632,13 @@ def load_data(data, n_echos=None):
     img = check_niimg(data)
     (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
     fdata = utils.load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1, order='F'))
-
+    # capture tr for later usage
+    img_header = img.header
+    tr = img_header.get_zooms()[-1]
     # create reference image
     ref_img = img.__class__(np.zeros((nx, ny, nz)), affine=img.affine,
                             header=img.header, extra=img.extra)
     ref_img.header.extensions = []
     ref_img.header.set_sform(ref_img.header.get_sform(), code=1)
 
-    return fdata, ref_img
+    return fdata, ref_img, tr
