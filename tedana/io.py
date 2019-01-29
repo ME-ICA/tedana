@@ -544,7 +544,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
                 T = tr
                 # Sample Frequency
                 Fs = 1.0/T
-                f = Fs * np.arange(0, n_tps // 2 + 1) / N; # resampled frequency vector
+                f = Fs * np.arange(0, n_tps // 2 + 1) / n_tps; # resampled frequency vector
                 x = np.linspace(0.0, n_tps*T, n_tps)
 
                 for compnum in range(0,mmix.shape[1],1):
