@@ -515,12 +515,18 @@ def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
                 import os
                 if not os.path.exists('./simple_plots'):
                     os.mkdir('simple_plots')
-                os.chdir('./simple_plots')
-                for compnum in range(0,mmix.shape[1],1):
 
-                    fig = plt.figure(figsize=(10,5));
-                    ax0 = plt.subplot2grid((5,6), (0,0), rowspan = 1, colspan = 6);
-                    ax0.plot(mmix[:,compnum]);
+                os.chdir('./simple_plots')
+
+                timepoints = mmix.shape[1]
+                for compnum in range(0,1,1):
+
+                    allplot = plt.figure(figsize=(10,9));
+                    ax_ts = plt.subplot2grid((5,6), (0,0), rowspan = 1, colspan = 6, fig = allplot);
+                    ax_ts.plot(mmix[:,compnum]);
+                    ax_ts.set_title('Component Timeseries')
+                    ax_ts.set_xlabel('TRs')
+                    ax_ts.set_xbound(0, timepoints)
 
                     imgmax = ts_B[:, :, :, compnum].max()*.3
                     imgmin = ts_B[:, :, :, compnum].min()*.3
@@ -536,37 +542,33 @@ def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
 
                     count = 0;
                     for imgslice in range(xcut,xdim+1,xcut):
-                        axx = plt.subplot2grid((5,6), (1,count), rowspan = 1, colspan = 1);
-                        axx.imshow(ts_B[:, :, imgslice, compnum], vmin = imgmin, vmax = imgmax);
-                        axx.axis('off')
+                        ax_x = plt.subplot2grid((5,6), (1,count), rowspan = 1, colspan = 1);
+                        ax_x.imshow(ts_B[:, :, imgslice, compnum], vmin = imgmin, vmax = imgmax, aspect = 'equal');
+                        ax_x.axis('off');
                         count = count + 1;
 
                     count = 0
                     for imgslice in range(ycut,ydim+1,ycut):
-                        axy = plt.subplot2grid((5,6), (2,count), rowspan = 1, colspan = 1);
-                        axy.imshow(ts_B[:,imgslice, :, compnum], vmin = imgmin, vmax = imgmax);
-                        axy.axis('off')
+                        ax_y = plt.subplot2grid((5,6), (2,count), rowspan = 1, colspan = 1);
+                        ax_y.imshow(np.rot90(ts_B[:,imgslice, :, compnum], k =1), vmin = imgmin, vmax = imgmax, aspect = 'equal');
+                        ax_y.axis('off')
                         count = count + 1;
 
                     count = 0
                     for imgslice in range(zcut,zdim+1,zcut):
-                        axz = plt.subplot2grid((5,6), (3,count), rowspan = 1, colspan = 1);
-                        axz.imshow(ts_B[imgslice, :, :, compnum], vmin = imgmin, vmax = imgmax);
-                        axz.axis('off')
+                        ax_z = plt.subplot2grid((5,6), (3,count), rowspan = 1, colspan = 1);
+                        ax_z.imshow(np.rot90(ts_B[imgslice, :, :, compnum],k =1), vmin = imgmin, vmax = imgmax, aspect = 'equal');
+                        ax_z.axis('off');
                         count = count + 1;
 
                     y = mmix[:,compnum]
                     N = len(y)
-
-                    mean_removed = np.ones_like(y)*np.mean(y)
-                    y = y - mean_removed
 
                     # The TR
                     T = 1.25
                     # Sample Frequency
                     Fs = 1.0/T
                     f = Fs * np.arange(0, N // 2 + 1) / N; # resampled frequency vector
-                    N_fft = 240
                     x = np.linspace(0.0, N*T, N)
                     x.shape
                     Y= scipy.fftpack.fft(y)
@@ -576,9 +578,12 @@ def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
                     P1[1 : -2] = 2 * P1[1 :-2]
                     axfft = plt.subplot2grid((5,6), (4,0), rowspan = 1, colspan = 6)
                     axfft.plot(f,P1)
+                    axfft.set_title('One Sided fft')
+                    axfft.set_xlabel('Hz')
+                    axfft.set_xbound(f[0],f[-1])
 
 
-                    fig.tight_layout(h_pad=0.2);
+                    allplot.subplots_adjust(hspace = .4)
                     fname = 'comp_' + str(compnum) + '.png'
                     plt.savefig(fname)
 
