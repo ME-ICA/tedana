@@ -509,8 +509,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
                 # regenerate the beta images
                 ts_B = model.get_coeffs(ts, mmix, mask)
                 ts_B = ts_B.reshape(ref_img.shape[:3] + ts_B.shape[1:])
-                import pdb; pdb.set_trace()
-
+                
                 # Start making some really ugly pluts
                 import os
                 if not os.path.exists('./simple_plots'):
@@ -616,7 +615,6 @@ def load_data(data, n_echos=None):
         raise ValueError('Number of echos must be specified. '
                          'Confirm that TE times are provided with the `-e` argument.')
 
-    import pdb; pdb.set_trace()
     if isinstance(data, list):
         if len(data) == 1:  # a z-concatenated file was provided
             data = data[0]
