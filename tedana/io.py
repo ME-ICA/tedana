@@ -559,7 +559,8 @@ def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
                         line_color = 'k'
 
                     ax_ts.plot(mmix[:,compnum], color = line_color);
-                    ax_ts.set_title('Component Timeseries')
+                    plt_title = 'Component #' + str(compnum) + ' timeseries'
+                    ax_ts.set_title(plt_title)
                     ax_ts.set_xlabel('TRs')
                     ax_ts.set_xbound(0, timepoints)
 
