@@ -662,7 +662,6 @@ def load_data(data, n_echos=None):
     # capture tr for later usage
     img_header = img.header
     tr = img_header.get_zooms()[-1]
-    import pdb; pdb.set_trace()
     # create reference image
     ref_img = img.__class__(np.zeros((nx, ny, nz)), affine=img.affine,
                             header=img.header, extra=img.extra)
