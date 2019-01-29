@@ -503,26 +503,33 @@ def filewrite(data, filename, ref_img, gzip=False, copy_header=True):
 
     return name
 
-def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
+def writefigures(ts, mask, comptable, mmix, n_vols,
                  acc, rej, midk, empty, ref_img, tr):
                 """
                 Creates some really simple plots useful for debugging
-
                 Parameters
                 ----------
-                ts : (S [x T]) array_like
-                    Data from which the ICA betas are extracted
+                ts : (S x T) array_like
+                    Time series from which to derive ICA betas
+                mask : (S,) array_like
+                    Boolean mask array
+                comptable : (N x 5) array_like
+                    Array with columns denoting (1) index of component, (2) Kappa score of
+                    component, (3) Rho score of component, (4) variance explained by
+                    component, and (5) normalized variance explained by component
                 mmix : (C x T) array_like
                     Mixing matrix for converting input data to component space, where `C`
                     is components and `T` is the same as in `data`
-                mask : (S,) array_like
-                    Boolean mask array
+                n_vols : :obj:`int`
+                    Number of volumes in original time series
                 acc : :obj:`list`
                     Indices of accepted (BOLD) components in `mmix`
                 rej : :obj:`list`
                     Indices of rejected (non-BOLD) components in `mmix`
                 midk : :obj:`list`
                     Indices of mid-K (questionable) components in `mmix`
+                empty : :obj:`list`
+                    Indices of ignored components in `mmix`
                 ref_img : :obj:`str` or img_like
                     Reference image to dictate how outputs are saved to disk
                 tr : :obj:'float32'
@@ -540,21 +547,20 @@ def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
 
                 os.chdir('./simple_plots')
 
-                n_tps = mmix.shape[1]
-                T = tr
-                # Sample Frequency
-                Fs = 1.0/T
-                f = Fs * np.arange(0, n_tps // 2 + 1) / n_tps; # resampled frequency vector
-                x = np.linspace(0.0, n_tps*T, n_tps)
+                Fs = 1.0/tr
+                f = Fs * np.arange(0, n_vols // 2 + 1) / n_vols; # resampled frequency vector
+                x = np.linspace(0.0, n_vols*tr, n_vols)
 
                 for compnum in range(0,mmix.shape[1],1):
 
                     allplot = plt.figure(figsize=(10,9));
                     ax_ts = plt.subplot2grid((5,6), (0,0), rowspan = 1, colspan = 6, fig = allplot);
-                    if compnum in comptable[comptable.classification == 'accepted'].component.values:
+                    if compnum in acc:
                         line_color = 'g'
-                    elif compnum in comptable[comptable.classification == 'rejected'].component.values:
+                    elif compnum in rej:
                         line_color = 'r'
+                    elif compnum in midk:
+                        line_color = 'm'
                     else:
                         line_color = 'k'
 
@@ -562,7 +568,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
                     plt_title = 'Component #' + str(compnum) + ' timeseries'
                     ax_ts.set_title(plt_title)
                     ax_ts.set_xlabel('TRs')
-                    ax_ts.set_xbound(0, n_tps)
+                    ax_ts.set_xbound(0, n_vols)
 
                     imgmax = ts_B[:, :, :, compnum].max()*.3
                     imgmin = ts_B[:, :, :, compnum].min()*.3
@@ -600,8 +606,8 @@ def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
                     y = mmix[:,compnum]
                     Y= scipy.fftpack.fft(y)
 
-                    P2 = np.abs(Y/n_tps)
-                    P1  = P2[0 : n_tps // 2 + 1]
+                    P2 = np.abs(Y/n_vols)
+                    P1  = P2[0 : n_vols // 2 + 1]
                     P1[1 : -2] = 2 * P1[1 :-2]
                     axfft = plt.subplot2grid((5,6), (4,0), rowspan = 1, colspan = 6)
                     axfft.plot(f,P1)
