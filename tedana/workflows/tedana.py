@@ -393,8 +393,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if viewer:
          LGR.info('Creating simple figures.')
          io.writefigures(data_oc, mask=mask, comptable=comptable, mmix=mmix,
-                         n_vols=n_vols, fixed_seed=fixed_seed,
-                         acc=acc, rej=rej, midk=midk,
+                         n_vols=n_vols, acc=acc, rej=rej, midk=midk,
                          empty=ign, ref_img=ref_img, tr=tr)
 
 
