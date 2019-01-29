@@ -541,14 +541,14 @@ def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
                         axx.axis('off')
                         count = count + 1;
 
-                        count = 0
+                    count = 0
                     for imgslice in range(ycut,ydim+1,ycut):
                         axy = plt.subplot2grid((5,6), (2,count), rowspan = 1, colspan = 1);
                         axy.imshow(ts_B[:,imgslice, :, compnum], vmin = imgmin, vmax = imgmax);
                         axy.axis('off')
                         count = count + 1;
 
-                        count = 0
+                    count = 0
                     for imgslice in range(zcut,zdim+1,zcut):
                         axz = plt.subplot2grid((5,6), (3,count), rowspan = 1, colspan = 1);
                         axz.imshow(ts_B[imgslice, :, :, compnum], vmin = imgmin, vmax = imgmax);
