@@ -276,7 +276,6 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
 
     eim = np.squeeze(eimask(d))
     d = np.squeeze(d[eim])
-    d = np.squeeze(d)
 
     dz = ((d.T - d.T.mean(axis=0)) / d.T.std(axis=0)).T  # var normalize ts
     dz = (dz - dz.mean()) / dz.std()  # var normalize everything
