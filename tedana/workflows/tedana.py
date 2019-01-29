@@ -391,7 +391,12 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
 
     if viewer:
-        LGR.info('This is where figures would be made.')
+         LGR.info('Creating simple figures.')
+         io.writefigures(data_oc, mask=mask, comptable=comptable, mmix=mmix,
+                         n_vols=n_vols, fixed_seed=fixed_seed,
+                         acc=acc, rej=rej, midk=midk,
+                         empty=ign, ref_img=ref_img)
+
 
     LGR.info('Workflow completed')
     for handler in logging.root.handlers[:]:
