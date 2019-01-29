@@ -562,7 +562,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
                     plt_title = 'Component #' + str(compnum) + ' timeseries'
                     ax_ts.set_title(plt_title)
                     ax_ts.set_xlabel('TRs')
-                    ax_ts.set_xbound(0, timepoints)
+                    ax_ts.set_xbound(0, n_tps)
 
                     imgmax = ts_B[:, :, :, compnum].max()*.3
                     imgmin = ts_B[:, :, :, compnum].min()*.3
