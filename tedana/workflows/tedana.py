@@ -254,7 +254,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         data = [data]
 
     LGR.info('Loading input data: {}'.format([f for f in data]))
-    catd, ref_img = io.load_data(data, n_echos=n_echos)
+    catd, ref_img, tr = io.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
@@ -395,7 +395,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
          io.writefigures(data_oc, mask=mask, comptable=comptable, mmix=mmix,
                          n_vols=n_vols, fixed_seed=fixed_seed,
                          acc=acc, rej=rej, midk=midk,
-                         empty=ign, ref_img=ref_img)
+                         empty=ign, ref_img=ref_img, tr=tr)
 
 
     LGR.info('Workflow completed')
