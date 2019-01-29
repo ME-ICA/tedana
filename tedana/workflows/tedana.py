@@ -134,6 +134,11 @@ def _get_parser():
                                 'Set to an integer value for reproducible ICA results; '
                                 'otherwise, set to -1 for varying results across calls.'),
                           default=42)
+    optional.add_argument('--viewer',
+                          dest='viewer',
+                          action='store_true',
+                          help='Generate simple plots to visualize output.',
+                          default=False)
     optional.add_argument('--debug',
                           dest='debug',
                           help=argparse.SUPPRESS,
@@ -150,9 +155,9 @@ def _get_parser():
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     tedort=False, gscontrol=None, tedpca='mle',
-                    ste=-1, combmode='t2s', verbose=False, stabilize=False,
-                    wvpca=False, out_dir='.', fixed_seed=42, debug=False,
-                    quiet=False):
+                    ste=-1, combmode='t2s', verbose=False, viwer=False,
+                    stabilize=False, wvpca=False, out_dir='.', fixed_seed=42,
+                    debug=False, quiet=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -190,6 +195,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
+    viewer : obj:'bool', optional
+        Generate simple plots and figures. Default is false.
     wvpca : :obj:`bool`, optional
         Whether or not to perform PCA on wavelet-transformed data.
         Default is False.
@@ -383,6 +390,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if verbose:
         io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
 
+    if viewer:
+        LGR.info('This is where figures would be made.')
+        
     LGR.info('Workflow completed')
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
