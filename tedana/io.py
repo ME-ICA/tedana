@@ -507,6 +507,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
                  acc, rej, midk, empty, ref_img, tr):
                 """
                 Creates some really simple plots useful for debugging
+
                 Parameters
                 ----------
                 ts : (S x T) array_like
@@ -533,7 +534,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
                 ref_img : :obj:`str` or img_like
                     Reference image to dictate how outputs are saved to disk
                 tr : :obj:'float32'
-                    Repetition time of collected data
+                    Repetition time of collected data, used in fft
                 """
 
                 # regenerate the beta images
@@ -547,9 +548,9 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
 
                 os.chdir('./simple_plots')
 
+                # This precalculates the Hz for the fft plots
                 Fs = 1.0/tr
                 f = Fs * np.arange(0, n_vols // 2 + 1) / n_vols; # resampled frequency vector
-                x = np.linspace(0.0, n_vols*tr, n_vols)
 
                 for compnum in range(0,mmix.shape[1],1):
 
@@ -603,19 +604,21 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
                         ax_z.axis('off');
                         count = count + 1;
 
+                    # Get fft for this subject
                     y = mmix[:,compnum]
                     Y= scipy.fftpack.fft(y)
-
                     P2 = np.abs(Y/n_vols)
                     P1  = P2[0 : n_vols // 2 + 1]
                     P1[1 : -2] = 2 * P1[1 :-2]
+
+                    # Plot it
                     axfft = plt.subplot2grid((5,6), (4,0), rowspan = 1, colspan = 6)
                     axfft.plot(f,P1)
                     axfft.set_title('One Sided fft')
                     axfft.set_xlabel('Hz')
                     axfft.set_xbound(f[0],f[-1])
 
-
+                    # Fix spacing so TR isn't overlapped
                     allplot.subplots_adjust(hspace = .4)
                     fname = 'comp_' + str(compnum) + '.png'
                     plt.savefig(fname)
