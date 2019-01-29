@@ -505,11 +505,34 @@ def filewrite(data, filename, ref_img, gzip=False, copy_header=True):
 
 def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
                  acc, rej, midk, empty, ref_img, tr):
+                """
+                Creates some really simple plots useful for debugging
+
+                Parameters
+                ----------
+                ts : (S [x T]) array_like
+                    Data from which the ICA betas are extracted
+                mmix : (C x T) array_like
+                    Mixing matrix for converting input data to component space, where `C`
+                    is components and `T` is the same as in `data`
+                mask : (S,) array_like
+                    Boolean mask array
+                acc : :obj:`list`
+                    Indices of accepted (BOLD) components in `mmix`
+                rej : :obj:`list`
+                    Indices of rejected (non-BOLD) components in `mmix`
+                midk : :obj:`list`
+                    Indices of mid-K (questionable) components in `mmix`
+                ref_img : :obj:`str` or img_like
+                    Reference image to dictate how outputs are saved to disk
+                tr : :obj:'float32'
+                    Repetition time of collected data
+                """
 
                 # regenerate the beta images
                 ts_B = model.get_coeffs(ts, mmix, mask)
                 ts_B = ts_B.reshape(ref_img.shape[:3] + ts_B.shape[1:])
-                
+
                 # Start making some really ugly pluts
                 import os
                 if not os.path.exists('./simple_plots'):
@@ -517,18 +540,25 @@ def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
 
                 os.chdir('./simple_plots')
 
-                timepoints = mmix.shape[1]
+                n_tps = mmix.shape[1]
                 T = tr
                 # Sample Frequency
                 Fs = 1.0/T
-                f = Fs * np.arange(0, N // 2 + 1) / N; # resampled frequency vector
-                x = np.linspace(0.0, N*T, N)
+                f = Fs * np.arange(0, n_tps // 2 + 1) / N; # resampled frequency vector
+                x = np.linspace(0.0, n_tps*T, n_tps)
 
                 for compnum in range(0,mmix.shape[1],1):
 
                     allplot = plt.figure(figsize=(10,9));
                     ax_ts = plt.subplot2grid((5,6), (0,0), rowspan = 1, colspan = 6, fig = allplot);
-                    ax_ts.plot(mmix[:,compnum]);
+                    if compnum in comp_table_ica[comp_table_ica.classification == 'accepted'].component.values:
+                        line_color = 'g'
+                    elif compnum in comp_table_ica[comp_table_ica.classification == 'rejected'].component.values:
+                        line_color = 'r'
+                    else:
+                        line_color = 'k'
+
+                    ax_ts.plot(mmix[:,compnum], color = line_color);
                     ax_ts.set_title('Component Timeseries')
                     ax_ts.set_xlabel('TRs')
                     ax_ts.set_xbound(0, timepoints)
@@ -567,12 +597,10 @@ def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
                         count = count + 1;
 
                     y = mmix[:,compnum]
-                    N = len(y)
-
                     Y= scipy.fftpack.fft(y)
 
-                    P2 = np.abs(Y/N)
-                    P1  = P2[0 : N // 2 + 1]
+                    P2 = np.abs(Y/n_tps)
+                    P1  = P2[0 : n_tps // 2 + 1]
                     P1[1 : -2] = 2 * P1[1 :-2]
                     axfft = plt.subplot2grid((5,6), (4,0), rowspan = 1, colspan = 6)
                     axfft.plot(f,P1)
@@ -633,6 +661,7 @@ def load_data(data, n_echos=None):
     # capture tr for later usage
     img_header = img.header
     tr = img_header.get_zooms()[-1]
+    import pdb; pdb.set_trace()
     # create reference image
     ref_img = img.__class__(np.zeros((nx, ny, nz)), affine=img.affine,
                             header=img.header, extra=img.extra)
