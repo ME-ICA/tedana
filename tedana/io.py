@@ -519,7 +519,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
                 os.chdir('./simple_plots')
 
                 timepoints = mmix.shape[1]
-                for compnum in range(0,1,1):
+                for compnum in range(0,mmix.shape[1],1):
 
                     allplot = plt.figure(figsize=(10,9));
                     ax_ts = plt.subplot2grid((5,6), (0,0), rowspan = 1, colspan = 6, fig = allplot);
