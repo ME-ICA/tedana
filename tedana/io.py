@@ -551,9 +551,9 @@ def writefigures(ts, mask, comptable, mmix, n_vols, fixed_seed,
 
                     allplot = plt.figure(figsize=(10,9));
                     ax_ts = plt.subplot2grid((5,6), (0,0), rowspan = 1, colspan = 6, fig = allplot);
-                    if compnum in comp_table_ica[comp_table_ica.classification == 'accepted'].component.values:
+                    if compnum in comptable[comptable.classification == 'accepted'].component.values:
                         line_color = 'g'
-                    elif compnum in comp_table_ica[comp_table_ica.classification == 'rejected'].component.values:
+                    elif compnum in comptable[comptable.classification == 'rejected'].component.values:
                         line_color = 'r'
                     else:
                         line_color = 'k'
