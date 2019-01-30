@@ -503,6 +503,7 @@ def filewrite(data, filename, ref_img, gzip=False, copy_header=True):
 
     return name
 
+
 def writefigures(ts, mask, comptable, mmix, n_vols,
                  acc, rej, midk, empty, ref_img):
                 """
@@ -553,12 +554,12 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
                 # This precalculates the Hz for the fft plots
                 Fs = 1.0/tr
                 # resampled frequency vector
-                f = Fs * np.arange(0, n_vols // 2 + 1) / n_vols;
+                f = Fs * np.arange(0, n_vols // 2 + 1) / n_vols
 
-                for compnum in range(0,mmix.shape[1],1):
+                for compnum in range(0, mmix.shape[1], 1):
 
-                    allplot = plt.figure(figsize=(10,9));
-                    ax_ts = plt.subplot2grid((5,6), (0,0), rowspan = 1, colspan = 6, fig = allplot);
+                    allplot = plt.figure(figsize=(10,9))
+                    ax_ts = plt.subplot2grid((5,6), (0,0), rowspan=1, colspan=6, fig=allplot)
                     if compnum in acc:
                         line_color = 'g'
                     elif compnum in rej:
@@ -568,7 +569,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
                     else:
                         line_color = 'k'
 
-                    ax_ts.plot(mmix[:,compnum], color = line_color);
+                    ax_ts.plot(mmix[:,compnum], color = line_color)
 
                     # Title will include variance from comptable
                     plt_title = 'Component ' + str(compnum) + ' timeseries, ' + "{0:.2f}".format(comptable.iloc[compnum][3]) + "% variance"
@@ -590,26 +591,26 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
                     zdim = ts_B.shape[2]
                     zcut = int(zdim/6)
 
-                    count = 0;
+                    count = 0
                     for imgslice in range(xcut,xdim+1,xcut):
-                        ax_x = plt.subplot2grid((5,6), (1,count), rowspan = 1, colspan = 1);
-                        ax_x.imshow(ts_B[:, :, imgslice, compnum], vmin = imgmin, vmax = imgmax, aspect = 'equal');
-                        ax_x.axis('off');
-                        count = count + 1;
+                        ax_x = plt.subplot2grid((5,6), (1,count), rowspan=1, colspan=1)
+                        ax_x.imshow(ts_B[:, :, imgslice, compnum], vmin = imgmin, vmax = imgmax, aspect = 'equal')
+                        ax_x.axis('off')
+                        count = count + 1
 
                     count = 0
                     for imgslice in range(ycut,ydim+1,ycut):
-                        ax_y = plt.subplot2grid((5,6), (2,count), rowspan = 1, colspan = 1);
-                        ax_y.imshow(np.rot90(ts_B[:,imgslice, :, compnum], k =1), vmin = imgmin, vmax = imgmax, aspect = 'equal');
+                        ax_y = plt.subplot2grid((5,6), (2,count), rowspan=1, colspan=1)
+                        ax_y.imshow(np.rot90(ts_B[:,imgslice, :, compnum], k =1), vmin = imgmin, vmax = imgmax, aspect = 'equal')
                         ax_y.axis('off')
-                        count = count + 1;
+                        count = count + 1
 
                     count = 0
                     for imgslice in range(zcut,zdim+1,zcut):
-                        ax_z = plt.subplot2grid((5,6), (3,count), rowspan = 1, colspan = 1);
-                        ax_z.imshow(np.rot90(ts_B[imgslice, :, :, compnum],k =1), vmin = imgmin, vmax = imgmax, aspect = 'equal');
-                        ax_z.axis('off');
-                        count = count + 1;
+                        ax_z = plt.subplot2grid((5,6), (3,count), rowspan=1, colspan=1)
+                        ax_z.imshow(np.rot90(ts_B[imgslice, :, :, compnum],k =1), vmin = imgmin, vmax = imgmax, aspect = 'equal')
+                        ax_z.axis('off')
+                        count = count + 1
 
                     # Get fft for this subject, change to one sided amplitude
                     # adapted from
@@ -621,14 +622,14 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
                     P1[1 : -2] = 2 * P1[1 :-2]
 
                     # Plot it
-                    ax_fft = plt.subplot2grid((5,6), (4,0), rowspan = 1, colspan = 6)
+                    ax_fft = plt.subplot2grid((5,6), (4,0), rowspan=1, colspan=6)
                     ax_fft.plot(f,P1)
                     ax_fft.set_title('One Sided fft')
                     ax_fft.set_xlabel('Hz')
-                    ax_fft.set_xbound(f[0],f[-1])
+                    ax_fft.set_xbound(f[0], f[-1])
 
                     # Fix spacing so TR label isn't overlapped
-                    allplot.subplots_adjust(hspace = .4)
+                    allplot.subplots_adjust(hspace=0.4)
                     fname = 'comp_' + str(compnum).zfill(3) + '.png'
                     plt.savefig(fname)
 
