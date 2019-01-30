@@ -573,9 +573,9 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
         ax_ts.plot(mmix[:, compnum], color=line_color)
 
         # Title will include variance from comptable
-        plt_title = str('Component ', str(compnum), ' timeseries, ',
-                        "{0:.2f}".format(comptable.iloc[compnum][3]),
-                        "% variance")
+        plt_title = ('Component ', str(compnum), ' timeseries, ',
+                     "{0:.2f}".format(comptable.iloc[compnum][3]),
+                     "% variance")
         ax_ts.set_title(plt_title)
         ax_ts.set_xlabel('TRs')
         ax_ts.set_xbound(0, n_vols)
