@@ -541,8 +541,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
                 ts_B = ts_B.reshape(ref_img.shape[:3] + ts_B.shape[1:])
 
                 # Get repitition time from ref_img
-                ref_header = ref_img.header
-                tr = ref_header.get_zooms()[-1]
+                tr = ref_img.header.get_zooms()[-1]
 
                 # Start making some really ugly pluts
                 import os
