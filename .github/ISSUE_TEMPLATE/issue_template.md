@@ -15,7 +15,7 @@ If there is other information that would be helpful to include, please don not h
 Before submitting, please check to make sure that the issue is not already addressed; if there is a related issue, then please cross-reference it by #.
 If this is a usage question, please checkout NeuroStars here:
 https://neurostars.org/
-and tag your topic with "multi-echo" so that we can see it.
+and tag your topic with "multi-echo"
 -->
 
 <!--
