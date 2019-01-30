@@ -550,7 +550,8 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
 
                 # This precalculates the Hz for the fft plots
                 Fs = 1.0/tr
-                f = Fs * np.arange(0, n_vols // 2 + 1) / n_vols; # resampled frequency vector
+                # resampled frequency vector
+                f = Fs * np.arange(0, n_vols // 2 + 1) / n_vols;
 
                 for compnum in range(0,mmix.shape[1],1):
 
@@ -566,14 +567,18 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
                         line_color = 'k'
 
                     ax_ts.plot(mmix[:,compnum], color = line_color);
-                    plt_title = 'Component #' + str(compnum) + ' timeseries'
+
+                    # Title will include variance from comptable
+                    plt_title = 'Component ' + str(compnum) + ' timeseries, ' + "{0:.2f}".format(comptable.iloc[compnum][3]) + "% variance"
                     ax_ts.set_title(plt_title)
                     ax_ts.set_xlabel('TRs')
                     ax_ts.set_xbound(0, n_vols)
 
+                    # Set range to ~1/3rd of max beta
                     imgmax = ts_B[:, :, :, compnum].max()*.3
                     imgmin = ts_B[:, :, :, compnum].min()*.3
 
+                    # Create indices for 6 cuts, based on dimensions
                     xdim = ts_B.shape[0]
                     xcut = int(xdim/6)
 
@@ -604,7 +609,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
                         ax_z.axis('off');
                         count = count + 1;
 
-                    # Get fft for this subject
+                    # Get fft for this subject, change to one sided power
                     y = mmix[:,compnum]
                     Y= scipy.fftpack.fft(y)
                     P2 = np.abs(Y/n_vols)
@@ -612,13 +617,13 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
                     P1[1 : -2] = 2 * P1[1 :-2]
 
                     # Plot it
-                    axfft = plt.subplot2grid((5,6), (4,0), rowspan = 1, colspan = 6)
-                    axfft.plot(f,P1)
-                    axfft.set_title('One Sided fft')
-                    axfft.set_xlabel('Hz')
-                    axfft.set_xbound(f[0],f[-1])
+                    ax_fft = plt.subplot2grid((5,6), (4,0), rowspan = 1, colspan = 6)
+                    ax_fft.plot(f,P1)
+                    ax_fft.set_title('One Sided fft')
+                    ax_fft.set_xlabel('Hz')
+                    ax_fft.set_xbound(f[0],f[-1])
 
-                    # Fix spacing so TR isn't overlapped
+                    # Fix spacing so TR label isn't overlapped
                     allplot.subplots_adjust(hspace = .4)
                     fname = 'comp_' + str(compnum) + '.png'
                     plt.savefig(fname)
