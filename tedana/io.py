@@ -558,8 +558,8 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
 
     for compnum in range(0, mmix.shape[1], 1):
 
-        allplot = plt.figure(figsize=(10,9))
-        ax_ts = plt.subplot2grid((5,6), (0,0), rowspan=1, colspan=6,
+        allplot = plt.figure(figsize=(10, 9))
+        ax_ts = plt.subplot2grid((5, 6), (0, 0), rowspan=1, colspan=6,
                                  fig=allplot)
         if compnum in acc:
             line_color = 'g'
@@ -570,12 +570,12 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
         else:
             line_color = 'k'
 
-        ax_ts.plot(mmix[:,compnum], color = line_color)
+        ax_ts.plot(mmix[:, compnum], color=line_color)
 
         # Title will include variance from comptable
         plt_title = str('Component ', str(compnum), ' timeseries, ',
-                      "{0:.2f}".format(comptable.iloc[compnum][3]),
-                      "% variance")
+                        "{0:.2f}".format(comptable.iloc[compnum][3]),
+                        "% variance")
         ax_ts.set_title(plt_title)
         ax_ts.set_xlabel('TRs')
         ax_ts.set_xbound(0, n_vols)
@@ -595,26 +595,26 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
         zcut = int(zdim/6)
 
         count = 0
-        for imgslice in range(xcut,xdim+1,xcut):
-            ax_x = plt.subplot2grid((5,6), (1,count), rowspan=1, colspan=1)
-            ax_x.imshow(ts_B[:, :, imgslice, compnum], vmin = imgmin,
-                        vmax = imgmax, aspect = 'equal')
+        for imgslice in range(xcut, xdim+1, xcut):
+            ax_x = plt.subplot2grid((5, 6), (1, count), rowspan=1, colspan=1)
+            ax_x.imshow(ts_B[:, :, imgslice, compnum], vmin=imgmin,
+                        vmax=imgmax, aspect='equal')
             ax_x.axis('off')
             count = count + 1
 
         count = 0
-        for imgslice in range(ycut,ydim+1,ycut):
-            ax_y = plt.subplot2grid((5,6), (2,count), rowspan=1, colspan=1)
-            ax_y.imshow(np.rot90(ts_B[:,imgslice, :, compnum], k =1),
-                        vmin = imgmin, vmax = imgmax, aspect = 'equal')
+        for imgslice in range(ycut, ydim+1, ycut):
+            ax_y = plt.subplot2grid((5, 6), (2, count), rowspan=1, colspan=1)
+            ax_y.imshow(np.rot90(ts_B[:, imgslice, :, compnum], k=1),
+                        vmin=imgmin, vmax=imgmax, aspect='equal')
             ax_y.axis('off')
             count = count + 1
 
         count = 0
-        for imgslice in range(zcut,zdim+1,zcut):
-            ax_z = plt.subplot2grid((5,6), (3,count), rowspan=1, colspan=1)
+        for imgslice in range(zcut, zdim+1, zcut):
+            ax_z = plt.subplot2grid((5, 6), (3,count), rowspan=1, colspan=1)
             ax_z.imshow(np.rot90(ts_B[imgslice, :, :, compnum],k =1),
-                        vmin = imgmin, vmax = imgmax, aspect = 'equal')
+                        vmin=imgmin, vmax=imgmax, aspect='equal')
             ax_z.axis('off')
             count = count + 1
 
@@ -622,14 +622,14 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
         # adapted from
         # https://stackoverflow.com/questions/25735153/plotting-a-fast-fourier-transform-in-python
         y = mmix[:, compnum]
-        Y= scipy.fftpack.fft(y)
+        Y = scipy.fftpack.fft(y)
         P2 = np.abs(Y/n_vols)
-        P1  = P2[0:n_vols // 2 + 1]
+        P1 = P2[0:n_vols // 2 + 1]
         P1[1 : -2] = 2 * P1[1:-2]
 
         # Plot it
-        ax_fft = plt.subplot2grid((5,6), (4,0), rowspan=1, colspan=6)
-        ax_fft.plot(f,P1)
+        ax_fft = plt.subplot2grid((5, 6), (4, 0), rowspan=1, colspan=6)
+        ax_fft.plot(f, P1)
         ax_fft.set_title('One Sided fft')
         ax_fft.set_xlabel('Hz')
         ax_fft.set_xbound(f[0], f[-1])
@@ -684,9 +684,6 @@ def load_data(data, n_echos=None):
     img = check_niimg(data)
     (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
     fdata = utils.load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1, order='F'))
-    # capture tr for later usage
-    img_header = img.header
-    tr = img_header.get_zooms()[-1]
     # create reference image
     ref_img = img.__class__(np.zeros((nx, ny, nz, 1)), affine=img.affine,
                             header=img.header, extra=img.extra)
