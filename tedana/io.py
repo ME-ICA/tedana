@@ -574,7 +574,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
 
         # Title will include variance from comptable
         comp_var = "{0:.2f}".format(comptable.iloc[compnum][3])
-        plt_title = 'Comp. ' + str(compnum), + ': ' + comp_var + '% variance'
+        plt_title = 'Comp. ' + str(compnum) + ': ' + comp_var + '% variance'
         ax_ts.set_title(plt_title)
         ax_ts.set_xlabel('TRs')
         ax_ts.set_xbound(0, n_vols)
