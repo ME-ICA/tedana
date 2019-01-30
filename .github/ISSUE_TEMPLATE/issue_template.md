@@ -28,7 +28,7 @@ Note: simply typing # will prompt you for open issues to select from
 <!--
 If needed, add additional detail for:
 1. Recreating a bug/problem
-2. Context
+2. Any additional context necessary to understand the issue
 -->
 ### Additional Detail
 
