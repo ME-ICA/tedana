@@ -612,6 +612,8 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
                         count = count + 1;
 
                     # Get fft for this subject, change to one sided amplitude
+                    # adapted from
+                    # https://stackoverflow.com/questions/25735153/plotting-a-fast-fourier-transform-in-python
                     y = mmix[:,compnum]
                     Y= scipy.fftpack.fft(y)
                     P2 = np.abs(Y/n_vols)
