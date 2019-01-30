@@ -504,7 +504,7 @@ def filewrite(data, filename, ref_img, gzip=False, copy_header=True):
     return name
 
 def writefigures(ts, mask, comptable, mmix, n_vols,
-                 acc, rej, midk, empty, ref_img, tr):
+                 acc, rej, midk, empty, ref_img):
                 """
                 Creates some really simple plots useful for debugging
 
@@ -533,13 +533,16 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
                     Indices of ignored components in `mmix`
                 ref_img : :obj:`str` or img_like
                     Reference image to dictate how outputs are saved to disk
-                tr : :obj:'float32'
-                    Repetition time of collected data, used in fft
+
                 """
 
                 # regenerate the beta images
                 ts_B = model.get_coeffs(ts, mmix, mask)
                 ts_B = ts_B.reshape(ref_img.shape[:3] + ts_B.shape[1:])
+
+                # Get repitition time from ref_img
+                ref_header = ref_img.header
+                tr = ref_header.get_zooms()[-1]
 
                 # Start making some really ugly pluts
                 import os
@@ -677,9 +680,9 @@ def load_data(data, n_echos=None):
     img_header = img.header
     tr = img_header.get_zooms()[-1]
     # create reference image
-    ref_img = img.__class__(np.zeros((nx, ny, nz)), affine=img.affine,
+    ref_img = img.__class__(np.zeros((nx, ny, nz, 1)), affine=img.affine,
                             header=img.header, extra=img.extra)
     ref_img.header.extensions = []
     ref_img.header.set_sform(ref_img.header.get_sform(), code=1)
 
-    return fdata, ref_img, tr
+    return fdata, ref_img
