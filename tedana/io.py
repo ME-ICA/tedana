@@ -621,11 +621,11 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
         # Get fft for this subject, change to one sided amplitude
         # adapted from
         # https://stackoverflow.com/questions/25735153/plotting-a-fast-fourier-transform-in-python
-        y = mmix[:,compnum]
+        y = mmix[:, compnum]
         Y= scipy.fftpack.fft(y)
         P2 = np.abs(Y/n_vols)
-        P1  = P2[0 : n_vols // 2 + 1]
-        P1[1 : -2] = 2 * P1[1 :-2]
+        P1  = P2[0:n_vols // 2 + 1]
+        P1[1 : -2] = 2 * P1[1:-2]
 
         # Plot it
         ax_fft = plt.subplot2grid((5,6), (4,0), rowspan=1, colspan=6)
