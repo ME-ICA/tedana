@@ -559,7 +559,8 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
     for compnum in range(0, mmix.shape[1], 1):
 
         allplot = plt.figure(figsize=(10,9))
-        ax_ts = plt.subplot2grid((5,6), (0,0), rowspan=1, colspan=6, fig=allplot)
+        ax_ts = plt.subplot2grid((5,6), (0,0), rowspan=1, colspan=6,
+                                 fig=allplot)
         if compnum in acc:
             line_color = 'g'
         elif compnum in rej:
@@ -573,7 +574,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
 
         # Title will include variance from comptable
         plt_title = str('Component ', str(compnum), ' timeseries, ',
-                      "{0:.2f}".format(comptable.iloc[compnum][3]), 
+                      "{0:.2f}".format(comptable.iloc[compnum][3]),
                       "% variance")
         ax_ts.set_title(plt_title)
         ax_ts.set_xlabel('TRs')
