@@ -134,8 +134,8 @@ def _get_parser():
                                 'Set to an integer value for reproducible ICA results; '
                                 'otherwise, set to -1 for varying results across calls.'),
                           default=42)
-    optional.add_argument('--viewer',
-                          dest='viewer',
+    optional.add_argument('--figure',
+                          dest='figure',
                           action='store_true',
                           help='Generate simple plots to visualize output.',
                           default=False)
@@ -195,7 +195,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
-    viewer : obj:'bool', optional
+    figure : obj:'bool', optional
         Generate simple plots and figures. Default is false.
     wvpca : :obj:`bool`, optional
         Whether or not to perform PCA on wavelet-transformed data.
@@ -390,8 +390,11 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if verbose:
         io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
 
-    if viewer:
-        LGR.info('This is where figures would be made.')
+    if figure:
+        LGR.info('Creating simple figures.')
+        io.writefigures(data_oc, mask=mask, comptable=comptable, mmix=mmix,
+                        n_vols=n_vols, acc=acc, rej=rej, midk=midk,
+                        empty=ign, ref_img=ref_img)):
 
     LGR.info('Workflow completed')
     for handler in logging.root.handlers[:]:
