@@ -611,7 +611,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
                         ax_z.axis('off');
                         count = count + 1;
 
-                    # Get fft for this subject, change to one sided power
+                    # Get fft for this subject, change to one sided amplitude
                     y = mmix[:,compnum]
                     Y= scipy.fftpack.fft(y)
                     P2 = np.abs(Y/n_vols)
