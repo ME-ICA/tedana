@@ -543,10 +543,10 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
 
                 # Start making some really ugly pluts
                 import os
-                if not os.path.exists('./simple_plots'):
-                    os.mkdir('simple_plots')
+                if not os.path.exists('./figures'):
+                    os.mkdir('figures')
 
-                os.chdir('./simple_plots')
+                os.chdir('./figures')
 
                 # This precalculates the Hz for the fft plots
                 Fs = 1.0/tr
