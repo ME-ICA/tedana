@@ -266,7 +266,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
 
     if len(ste) == 1 and ste[0] == -1:
         LGR.info('Computing PCA of optimally combined multi-echo data')
-        d = OCcatd[mask, :][:, np.newaxis, :]
+        d = OCcatd[mask, :][:, np.newaxis, :].astype('float64')
     elif len(ste) == 1 and ste[0] == 0:
         LGR.info('Computing PCA of spatially concatenated multi-echo data')
         d = catd[mask, ...].astype('float64')
