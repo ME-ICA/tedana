@@ -506,134 +506,134 @@ def filewrite(data, filename, ref_img, gzip=False, copy_header=True):
 
 def writefigures(ts, mask, comptable, mmix, n_vols,
                  acc, rej, midk, empty, ref_img):
-                """
-                Creates some really simple plots useful for debugging
+    """
+    Creates some really simple plots useful for debugging
 
-                Parameters
-                ----------
-                ts : (S x T) array_like
-                    Time series from which to derive ICA betas
-                mask : (S,) array_like
-                    Boolean mask array
-                comptable : (N x 5) array_like
-                    Array with columns denoting (1) index of component, (2) Kappa score of
-                    component, (3) Rho score of component, (4) variance explained by
-                    component, and (5) normalized variance explained by component
-                mmix : (C x T) array_like
-                    Mixing matrix for converting input data to component space, where `C`
-                    is components and `T` is the same as in `data`
-                n_vols : :obj:`int`
-                    Number of volumes in original time series
-                acc : :obj:`list`
-                    Indices of accepted (BOLD) components in `mmix`
-                rej : :obj:`list`
-                    Indices of rejected (non-BOLD) components in `mmix`
-                midk : :obj:`list`
-                    Indices of mid-K (questionable) components in `mmix`
-                empty : :obj:`list`
-                    Indices of ignored components in `mmix`
-                ref_img : :obj:`str` or img_like
-                    Reference image to dictate how outputs are saved to disk
+    Parameters
+    ----------
+    ts : (S x T) array_like
+        Time series from which to derive ICA betas
+    mask : (S,) array_like
+        Boolean mask array
+    comptable : (N x 5) array_like
+        Array with columns denoting (1) index of component, (2) Kappa score of
+        component, (3) Rho score of component, (4) variance explained by
+        component, and (5) normalized variance explained by component
+    mmix : (C x T) array_like
+        Mixing matrix for converting input data to component space, where `C`
+        is components and `T` is the same as in `data`
+    n_vols : :obj:`int`
+        Number of volumes in original time series
+    acc : :obj:`list`
+        Indices of accepted (BOLD) components in `mmix`
+    rej : :obj:`list`
+        Indices of rejected (non-BOLD) components in `mmix`
+    midk : :obj:`list`
+        Indices of mid-K (questionable) components in `mmix`
+    empty : :obj:`list`
+        Indices of ignored components in `mmix`
+    ref_img : :obj:`str` or img_like
+        Reference image to dictate how outputs are saved to disk
 
-                """
+    """
 
-                # regenerate the beta images
-                ts_B = model.get_coeffs(ts, mmix, mask)
-                ts_B = ts_B.reshape(ref_img.shape[:3] + ts_B.shape[1:])
+    # regenerate the beta images
+    ts_B = model.get_coeffs(ts, mmix, mask)
+    ts_B = ts_B.reshape(ref_img.shape[:3] + ts_B.shape[1:])
 
-                # Get repitition time from ref_img
-                tr = ref_img.header.get_zooms()[-1]
+    # Get repitition time from ref_img
+    tr = ref_img.header.get_zooms()[-1]
 
-                # Start making some really ugly pluts
-                import os
-                if not os.path.exists('./figures'):
-                    os.mkdir('figures')
+    # Start making some really ugly pluts
+    import os
+    if not os.path.exists('./figures'):
+        os.mkdir('figures')
 
-                os.chdir('./figures')
+    os.chdir('./figures')
 
-                # This precalculates the Hz for the fft plots
-                Fs = 1.0/tr
-                # resampled frequency vector
-                f = Fs * np.arange(0, n_vols // 2 + 1) / n_vols
+    # This precalculates the Hz for the fft plots
+    Fs = 1.0/tr
+    # resampled frequency vector
+    f = Fs * np.arange(0, n_vols // 2 + 1) / n_vols
 
-                for compnum in range(0, mmix.shape[1], 1):
+    for compnum in range(0, mmix.shape[1], 1):
 
-                    allplot = plt.figure(figsize=(10,9))
-                    ax_ts = plt.subplot2grid((5,6), (0,0), rowspan=1, colspan=6, fig=allplot)
-                    if compnum in acc:
-                        line_color = 'g'
-                    elif compnum in rej:
-                        line_color = 'r'
-                    elif compnum in midk:
-                        line_color = 'm'
-                    else:
-                        line_color = 'k'
+        allplot = plt.figure(figsize=(10,9))
+        ax_ts = plt.subplot2grid((5,6), (0,0), rowspan=1, colspan=6, fig=allplot)
+        if compnum in acc:
+            line_color = 'g'
+        elif compnum in rej:
+            line_color = 'r'
+        elif compnum in midk:
+            line_color = 'm'
+        else:
+            line_color = 'k'
 
-                    ax_ts.plot(mmix[:,compnum], color = line_color)
+        ax_ts.plot(mmix[:,compnum], color = line_color)
 
-                    # Title will include variance from comptable
-                    plt_title = 'Component ' + str(compnum) + ' timeseries, ' + "{0:.2f}".format(comptable.iloc[compnum][3]) + "% variance"
-                    ax_ts.set_title(plt_title)
-                    ax_ts.set_xlabel('TRs')
-                    ax_ts.set_xbound(0, n_vols)
+        # Title will include variance from comptable
+        plt_title = 'Component ' + str(compnum) + ' timeseries, ' + "{0:.2f}".format(comptable.iloc[compnum][3]) + "% variance"
+        ax_ts.set_title(plt_title)
+        ax_ts.set_xlabel('TRs')
+        ax_ts.set_xbound(0, n_vols)
 
-                    # Set range to ~1/3rd of max beta
-                    imgmax = ts_B[:, :, :, compnum].max()*.3
-                    imgmin = ts_B[:, :, :, compnum].min()*.3
+        # Set range to ~1/3rd of max beta
+        imgmax = ts_B[:, :, :, compnum].max()*.3
+        imgmin = ts_B[:, :, :, compnum].min()*.3
 
-                    # Create indices for 6 cuts, based on dimensions
-                    xdim = ts_B.shape[0]
-                    xcut = int(xdim/6)
+        # Create indices for 6 cuts, based on dimensions
+        xdim = ts_B.shape[0]
+        xcut = int(xdim/6)
 
-                    ydim = ts_B.shape[1]
-                    ycut = int(ydim/6)
+        ydim = ts_B.shape[1]
+        ycut = int(ydim/6)
 
-                    zdim = ts_B.shape[2]
-                    zcut = int(zdim/6)
+        zdim = ts_B.shape[2]
+        zcut = int(zdim/6)
 
-                    count = 0
-                    for imgslice in range(xcut,xdim+1,xcut):
-                        ax_x = plt.subplot2grid((5,6), (1,count), rowspan=1, colspan=1)
-                        ax_x.imshow(ts_B[:, :, imgslice, compnum], vmin = imgmin, vmax = imgmax, aspect = 'equal')
-                        ax_x.axis('off')
-                        count = count + 1
+        count = 0
+        for imgslice in range(xcut,xdim+1,xcut):
+            ax_x = plt.subplot2grid((5,6), (1,count), rowspan=1, colspan=1)
+            ax_x.imshow(ts_B[:, :, imgslice, compnum], vmin = imgmin, vmax = imgmax, aspect = 'equal')
+            ax_x.axis('off')
+            count = count + 1
 
-                    count = 0
-                    for imgslice in range(ycut,ydim+1,ycut):
-                        ax_y = plt.subplot2grid((5,6), (2,count), rowspan=1, colspan=1)
-                        ax_y.imshow(np.rot90(ts_B[:,imgslice, :, compnum], k =1), vmin = imgmin, vmax = imgmax, aspect = 'equal')
-                        ax_y.axis('off')
-                        count = count + 1
+        count = 0
+        for imgslice in range(ycut,ydim+1,ycut):
+            ax_y = plt.subplot2grid((5,6), (2,count), rowspan=1, colspan=1)
+            ax_y.imshow(np.rot90(ts_B[:,imgslice, :, compnum], k =1), vmin = imgmin, vmax = imgmax, aspect = 'equal')
+            ax_y.axis('off')
+            count = count + 1
 
-                    count = 0
-                    for imgslice in range(zcut,zdim+1,zcut):
-                        ax_z = plt.subplot2grid((5,6), (3,count), rowspan=1, colspan=1)
-                        ax_z.imshow(np.rot90(ts_B[imgslice, :, :, compnum],k =1), vmin = imgmin, vmax = imgmax, aspect = 'equal')
-                        ax_z.axis('off')
-                        count = count + 1
+        count = 0
+        for imgslice in range(zcut,zdim+1,zcut):
+            ax_z = plt.subplot2grid((5,6), (3,count), rowspan=1, colspan=1)
+            ax_z.imshow(np.rot90(ts_B[imgslice, :, :, compnum],k =1), vmin = imgmin, vmax = imgmax, aspect = 'equal')
+            ax_z.axis('off')
+            count = count + 1
 
-                    # Get fft for this subject, change to one sided amplitude
-                    # adapted from
-                    # https://stackoverflow.com/questions/25735153/plotting-a-fast-fourier-transform-in-python
-                    y = mmix[:,compnum]
-                    Y= scipy.fftpack.fft(y)
-                    P2 = np.abs(Y/n_vols)
-                    P1  = P2[0 : n_vols // 2 + 1]
-                    P1[1 : -2] = 2 * P1[1 :-2]
+        # Get fft for this subject, change to one sided amplitude
+        # adapted from
+        # https://stackoverflow.com/questions/25735153/plotting-a-fast-fourier-transform-in-python
+        y = mmix[:,compnum]
+        Y= scipy.fftpack.fft(y)
+        P2 = np.abs(Y/n_vols)
+        P1  = P2[0 : n_vols // 2 + 1]
+        P1[1 : -2] = 2 * P1[1 :-2]
 
-                    # Plot it
-                    ax_fft = plt.subplot2grid((5,6), (4,0), rowspan=1, colspan=6)
-                    ax_fft.plot(f,P1)
-                    ax_fft.set_title('One Sided fft')
-                    ax_fft.set_xlabel('Hz')
-                    ax_fft.set_xbound(f[0], f[-1])
+        # Plot it
+        ax_fft = plt.subplot2grid((5,6), (4,0), rowspan=1, colspan=6)
+        ax_fft.plot(f,P1)
+        ax_fft.set_title('One Sided fft')
+        ax_fft.set_xlabel('Hz')
+        ax_fft.set_xbound(f[0], f[-1])
 
-                    # Fix spacing so TR label isn't overlapped
-                    allplot.subplots_adjust(hspace=0.4)
-                    fname = 'comp_' + str(compnum).zfill(3) + '.png'
-                    plt.savefig(fname)
+        # Fix spacing so TR label isn't overlapped
+        allplot.subplots_adjust(hspace=0.4)
+        fname = 'comp_' + str(compnum).zfill(3) + '.png'
+        plt.savefig(fname)
 
-                os.chdir('..')
+    os.chdir('..')
 
 
 
