@@ -572,7 +572,9 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
         ax_ts.plot(mmix[:,compnum], color = line_color)
 
         # Title will include variance from comptable
-        plt_title = 'Component ' + str(compnum) + ' timeseries, ' + "{0:.2f}".format(comptable.iloc[compnum][3]) + "% variance"
+        plt_title = 'Component ' + str(compnum) + ' timeseries, ',
+                    + "{0:.2f}".format(comptable.iloc[compnum][3]), 
+                    + "% variance"
         ax_ts.set_title(plt_title)
         ax_ts.set_xlabel('TRs')
         ax_ts.set_xbound(0, n_vols)
@@ -594,21 +596,24 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
         count = 0
         for imgslice in range(xcut,xdim+1,xcut):
             ax_x = plt.subplot2grid((5,6), (1,count), rowspan=1, colspan=1)
-            ax_x.imshow(ts_B[:, :, imgslice, compnum], vmin = imgmin, vmax = imgmax, aspect = 'equal')
+            ax_x.imshow(ts_B[:, :, imgslice, compnum], vmin = imgmin,
+                        vmax = imgmax, aspect = 'equal')
             ax_x.axis('off')
             count = count + 1
 
         count = 0
         for imgslice in range(ycut,ydim+1,ycut):
             ax_y = plt.subplot2grid((5,6), (2,count), rowspan=1, colspan=1)
-            ax_y.imshow(np.rot90(ts_B[:,imgslice, :, compnum], k =1), vmin = imgmin, vmax = imgmax, aspect = 'equal')
+            ax_y.imshow(np.rot90(ts_B[:,imgslice, :, compnum], k =1),
+                        vmin = imgmin, vmax = imgmax, aspect = 'equal')
             ax_y.axis('off')
             count = count + 1
 
         count = 0
         for imgslice in range(zcut,zdim+1,zcut):
             ax_z = plt.subplot2grid((5,6), (3,count), rowspan=1, colspan=1)
-            ax_z.imshow(np.rot90(ts_B[imgslice, :, :, compnum],k =1), vmin = imgmin, vmax = imgmax, aspect = 'equal')
+            ax_z.imshow(np.rot90(ts_B[imgslice, :, :, compnum],k =1),
+                        vmin = imgmin, vmax = imgmax, aspect = 'equal')
             ax_z.axis('off')
             count = count + 1
 
