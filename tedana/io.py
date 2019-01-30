@@ -612,8 +612,8 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
 
         count = 0
         for imgslice in range(zcut, zdim+1, zcut):
-            ax_z = plt.subplot2grid((5, 6), (3,count), rowspan=1, colspan=1)
-            ax_z.imshow(np.rot90(ts_B[imgslice, :, :, compnum],k =1),
+            ax_z = plt.subplot2grid((5, 6), (3, count), rowspan=1, colspan=1)
+            ax_z.imshow(np.rot90(ts_B[imgslice, :, :, compnum], k=1),
                         vmin=imgmin, vmax=imgmax, aspect='equal')
             ax_z.axis('off')
             count = count + 1
@@ -625,7 +625,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
         Y = scipy.fftpack.fft(y)
         P2 = np.abs(Y/n_vols)
         P1 = P2[0:n_vols // 2 + 1]
-        P1[1 : -2] = 2 * P1[1:-2]
+        P1[1:-2] = 2 * P1[1:-2]
 
         # Plot it
         ax_fft = plt.subplot2grid((5, 6), (4, 0), rowspan=1, colspan=6)
@@ -640,7 +640,6 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
         plt.savefig(fname)
 
     os.chdir('..')
-
 
 
 def load_data(data, n_echos=None):
