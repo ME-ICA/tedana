@@ -627,7 +627,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
 
                     # Fix spacing so TR label isn't overlapped
                     allplot.subplots_adjust(hspace = .4)
-                    fname = 'comp_' + str(compnum) + '.png'
+                    fname = 'comp_' + str(compnum).zfill(3)) + '.png'
                     plt.savefig(fname)
 
                 os.chdir('..')
