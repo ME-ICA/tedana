@@ -642,7 +642,6 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
         plt.savefig(fname)
 
     # Creating Kappa Vs Rho plot
-    
     ax_scatter = plt.gca()
 
     # Prebuild legend so that the marker sizes are uniform
