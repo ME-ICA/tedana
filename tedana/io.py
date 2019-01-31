@@ -540,6 +540,8 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
     # regenerate the beta images
     ts_B = model.get_coeffs(ts, mmix, mask)
     ts_B = ts_B.reshape(ref_img.shape[:3] + ts_B.shape[1:])
+    # Mask out zeros
+    ts_B = np.ma.masked_where(ts_B == 0, ts_B)
 
     # Get repitition time from ref_img
     tr = ref_img.header.get_zooms()[-1]
@@ -579,9 +581,9 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
         ax_ts.set_xlabel('TRs')
         ax_ts.set_xbound(0, n_vols)
 
-        # Set range to ~1/3rd of max beta
-        imgmax = ts_B[:, :, :, compnum].max()*.3
-        imgmin = ts_B[:, :, :, compnum].min()*.3
+        # Set range to ~1/10th of max beta
+        imgmax = ts_B[:, :, :, compnum].max()*.1
+        imgmin = ts_B[:, :, :, compnum].min()*.1
 
         # Create indices for 6 cuts, based on dimensions
         xdim = ts_B.shape[0]
@@ -598,7 +600,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
             ax_x = plt.subplot2grid((5, 6), (1, count), rowspan=1, colspan=1)
             ax_x.imshow(ts_B[:, :, imgslice, compnum], vmin=imgmin,
                         vmax=imgmax, aspect='equal',
-                        cmap='Spectral')
+                        cmap='coolwarm')
             ax_x.axis('off')
             count = count + 1
 
@@ -607,7 +609,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
             ax_y = plt.subplot2grid((5, 6), (2, count), rowspan=1, colspan=1)
             ax_y.imshow(np.rot90(ts_B[:, imgslice, :, compnum], k=1),
                         vmin=imgmin, vmax=imgmax, aspect='equal',
-                        cmap='Spectral')
+                        cmap='coolwarm')
             ax_y.axis('off')
             count = count + 1
 
@@ -616,7 +618,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
             ax_z = plt.subplot2grid((5, 6), (3, count), rowspan=1, colspan=1)
             ax_z.imshow(np.rot90(ts_B[imgslice, :, :, compnum], k=1),
                         vmin=imgmin, vmax=imgmax, aspect='equal',
-                        cmap='Spectral')
+                        cmap='coolwarm')
             ax_z.axis('off')
             count = count + 1
 
