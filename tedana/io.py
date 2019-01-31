@@ -641,6 +641,32 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
         fname = 'comp_' + str(compnum).zfill(3) + '.png'
         plt.savefig(fname)
 
+    # Creating Kappa Vs Rho plot
+    scatter = plt.figure(figsize=(10, 10))
+    ax_scatter = plt.gca()
+
+    # Prebuild legend so that the marker sizes are uniform
+    plt.scatter([],[],s=1, marker='*', c='g', label='accepted', alpha=0.5)
+    plt.scatter([],[],s=1, marker='v', c='r', label='rejected', alpha=0.5)
+    plt.scatter([],[],s=1, marker='d', c='k', label='ignored', alpha=0.5)
+    plt.scatter([],[],s=1, marker='^', c='m', label='midk', alpha=0.5)
+    ax_scatter.legend(markerscale=10)
+
+    mkr_dict = {'accepted': '*', 'rejected': 'v', 'ignored': 'd', 'midk': '^'}
+    col_dict = {'accepted': 'g', 'rejected': 'r', 'ignored': 'k', 'midk': 'm'}
+    for kind in mkr_dict:
+        d = comptable[comptable.classification==kind]
+        plt.scatter(d.kappa, d.rho,
+                    s=150 * d['variance explained'], marker=mkr_dict[kind],
+                    c=col_dict[kind], alpha=0.5)
+
+    ax_scatter.set_xlabel('kappa')
+    ax_scatter.set_ylabel('rho')
+    ax_scatter.set_title('Kappa vs Rho')
+    ax_scatter.xaxis.label.set_fontsize(20)
+    ax_scatter.yaxis.label.set_fontsize(20)
+    ax_scatter.title.set_fontsize(25)
+    plt.savefig('Kappa_vs_Rho_Scatter.png')    
     os.chdir('..')
 
 
