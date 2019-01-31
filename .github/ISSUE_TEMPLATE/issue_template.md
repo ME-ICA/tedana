@@ -40,4 +40,6 @@ If you foresee them in a particular order or priority, please use numbering
 
 <!-- 
 Thank you for submitting your issue!
+If you do not receive a response within a calendar week, please post a comment on this issue to catch our attention. 
+Some issues may not be resolved right away due to the volunteer nature of the project; thank you for your patience!
 -->
