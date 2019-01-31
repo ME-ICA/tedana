@@ -544,7 +544,7 @@ def load_data(data, n_echos=None):
     fdata = utils.load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1, order='F'))
 
     # create reference image
-    ref_img = img.__class__(np.zeros((nx, ny, nz)), affine=img.affine,
+    ref_img = img.__class__(np.zeros((nx, ny, nz, 1)), affine=img.affine,
                             header=img.header, extra=img.extra)
     ref_img.header.extensions = []
     ref_img.header.set_sform(ref_img.header.get_sform(), code=1)
