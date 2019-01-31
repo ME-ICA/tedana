@@ -597,7 +597,8 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
         for imgslice in range(xcut, xdim+1, xcut):
             ax_x = plt.subplot2grid((5, 6), (1, count), rowspan=1, colspan=1)
             ax_x.imshow(ts_B[:, :, imgslice, compnum], vmin=imgmin,
-                        vmax=imgmax, aspect='equal')
+                        vmax=imgmax, aspect='equal',
+                        cmap='Spectral')
             ax_x.axis('off')
             count = count + 1
 
@@ -605,7 +606,8 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
         for imgslice in range(ycut, ydim+1, ycut):
             ax_y = plt.subplot2grid((5, 6), (2, count), rowspan=1, colspan=1)
             ax_y.imshow(np.rot90(ts_B[:, imgslice, :, compnum], k=1),
-                        vmin=imgmin, vmax=imgmax, aspect='equal')
+                        vmin=imgmin, vmax=imgmax, aspect='equal',
+                        cmap='Spectral')
             ax_y.axis('off')
             count = count + 1
 
@@ -613,7 +615,8 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
         for imgslice in range(zcut, zdim+1, zcut):
             ax_z = plt.subplot2grid((5, 6), (3, count), rowspan=1, colspan=1)
             ax_z.imshow(np.rot90(ts_B[imgslice, :, :, compnum], k=1),
-                        vmin=imgmin, vmax=imgmax, aspect='equal')
+                        vmin=imgmin, vmax=imgmax, aspect='equal',
+                        cmap='Spectral')
             ax_z.axis('off')
             count = count + 1
 
