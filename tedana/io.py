@@ -587,16 +587,32 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
         # Title will include variance from comptable
         comp_var = "{0:.2f}".format(comptable.iloc[compnum][3])
         plt_title = 'Comp. ' + str(compnum) + ': ' + comp_var + '% variance'
-        ax_ts.set_title(plt_title)
+        title = ax_ts.set_title(plt_title)
+        title.set_y(1.5)
         ax_ts.set_xlabel('TRs')
         ax_ts.set_xbound(0, n_vols)
+        # Make a second axis with units of time (s)
+        max_xticks = 10
+        xloc = plt.MaxNLocator(max_xticks)
+        ax_ts.xaxis.set_major_locator(xloc)
+
+        ax_ts2 = ax_ts.twiny()
+        ax1Xs = ax_ts.get_xticks()
+
+        ax2Xs = []
+        for X in ax1Xs:
+            ax2Xs.append(X * tr)
+        ax_ts2.set_xticks(ax1Xs)
+        ax_ts2.set_xbound(ax_ts.get_xbound())
+        ax_ts2.set_xticklabels(ax2Xs)
+        ax_ts2.set_xlabel('seconds')
 
         # Set range to ~1/10th of max beta
         imgmax = ts_B[:, :, :, compnum].max()*.1
         imgmin = ts_B[:, :, :, compnum].min()*.1
 
         count = 0
-        for imgslice in range(xcut, xdim, xcut):
+        for imgslice in range(xcut, xdim-xcut, xcut):
             ax_x = plt.subplot2grid((5, 6), (1, count), rowspan=1, colspan=1)
             ax_x.imshow(np.rot90(ts_B[imgslice, :, :, compnum], k=1),
                         vmin=imgmin, vmax=imgmax, aspect='equal',
@@ -605,7 +621,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
             count = count + 1
 
         count = 0
-        for imgslice in range(ycut, ydim, ycut):
+        for imgslice in range(ycut, ydim-ycut, ycut):
             ax_y = plt.subplot2grid((5, 6), (2, count), rowspan=1, colspan=1)
             ax_y.imshow(np.rot90(ts_B[:, imgslice, :, compnum], k=1),
                         vmin=imgmin, vmax=imgmax, aspect='equal',
@@ -614,14 +630,19 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
             count = count + 1
 
         count = 0
-        for imgslice in range(zcut, zdim, zcut):
+        for imgslice in range(zcut, zdim-zcut, zcut):
             ax_z = plt.subplot2grid((5, 6), (3, count), rowspan=1, colspan=1)
-            ax_z.imshow(ts_B[:, :, imgslice, compnum],
+            ax_z_im = ax_z.imshow(ts_B[:, :, imgslice, compnum],
                         vmin=imgmin, vmax=imgmax, aspect='equal',
                         cmap='coolwarm')
             ax_z.axis('off')
             count = count + 1
 
+        # Add a color bar to the plot.
+        ax_cbar = allplot.add_axes([0.8, 0.3, 0.03, 0.37])
+        cbar = allplot.colorbar(ax_z_im, ax_cbar)
+        cbar.set_label('Component Beta', rotation=90)
+        cbar.ax.yaxis.set_label_position('left')
         # Get fft for this subject, change to one sided amplitude
         # adapted from
         # https://stackoverflow.com/questions/25735153/plotting-a-fast-fourier-transform-in-python
