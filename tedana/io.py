@@ -633,8 +633,8 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
         for imgslice in range(zcut, zdim-zcut, zcut):
             ax_z = plt.subplot2grid((5, 6), (3, count), rowspan=1, colspan=1)
             ax_z_im = ax_z.imshow(ts_B[:, :, imgslice, compnum],
-                        vmin=imgmin, vmax=imgmax, aspect='equal',
-                        cmap='coolwarm')
+                                  vmin=imgmin, vmax=imgmax, aspect='equal',
+                                  cmap='coolwarm')
             ax_z.axis('off')
             count = count + 1
 
