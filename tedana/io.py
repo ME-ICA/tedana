@@ -558,6 +558,16 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
     # resampled frequency vector
     f = Fs * np.arange(0, n_vols // 2 + 1) / n_vols
 
+    # Create indices for 6 cuts, based on dimensions
+    xdim = ts_B.shape[0]
+    xcut = int(xdim/6)
+
+    ydim = ts_B.shape[1]
+    ycut = int(ydim/6)
+
+    zdim = ts_B.shape[2]
+    zcut = int(zdim/6)
+
     for compnum in range(0, mmix.shape[1], 1):
 
         allplot = plt.figure(figsize=(10, 9))
@@ -585,27 +595,17 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
         imgmax = ts_B[:, :, :, compnum].max()*.1
         imgmin = ts_B[:, :, :, compnum].min()*.1
 
-        # Create indices for 6 cuts, based on dimensions
-        xdim = ts_B.shape[0]
-        xcut = int(xdim/6)
-
-        ydim = ts_B.shape[1]
-        ycut = int(ydim/6)
-
-        zdim = ts_B.shape[2]
-        zcut = int(zdim/6)
-
         count = 0
-        for imgslice in range(xcut, xdim+1, xcut):
+        for imgslice in range(xcut, xdim, xcut):
             ax_x = plt.subplot2grid((5, 6), (1, count), rowspan=1, colspan=1)
-            ax_x.imshow(ts_B[:, :, imgslice, compnum], vmin=imgmin,
-                        vmax=imgmax, aspect='equal',
+            ax_x.imshow(np.rot90(ts_B[imgslice, :, :, compnum], k=1),
+                        vmin=imgmin, vmax=imgmax, aspect='equal',
                         cmap='coolwarm')
             ax_x.axis('off')
             count = count + 1
 
         count = 0
-        for imgslice in range(ycut, ydim+1, ycut):
+        for imgslice in range(ycut, ydim, ycut):
             ax_y = plt.subplot2grid((5, 6), (2, count), rowspan=1, colspan=1)
             ax_y.imshow(np.rot90(ts_B[:, imgslice, :, compnum], k=1),
                         vmin=imgmin, vmax=imgmax, aspect='equal',
@@ -614,9 +614,9 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
             count = count + 1
 
         count = 0
-        for imgslice in range(zcut, zdim+1, zcut):
+        for imgslice in range(zcut, zdim, zcut):
             ax_z = plt.subplot2grid((5, 6), (3, count), rowspan=1, colspan=1)
-            ax_z.imshow(np.rot90(ts_B[imgslice, :, :, compnum], k=1),
+            ax_z.imshow(ts_B[:, :, imgslice, compnum],
                         vmin=imgmin, vmax=imgmax, aspect='equal',
                         cmap='coolwarm')
             ax_z.axis('off')
@@ -642,6 +642,7 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
         allplot.subplots_adjust(hspace=0.4)
         fname = 'comp_' + str(compnum).zfill(3) + '.png'
         plt.savefig(fname)
+        plt.close()
 
     # Creating Kappa Vs Rho plot
     ax_scatter = plt.gca()
