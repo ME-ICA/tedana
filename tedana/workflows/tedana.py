@@ -134,8 +134,8 @@ def _get_parser():
                                 'Set to an integer value for reproducible ICA results; '
                                 'otherwise, set to -1 for varying results across calls.'),
                           default=42)
-    optional.add_argument('--figures',
-                          dest='figures',
+    optional.add_argument('--png',
+                          dest='png',
                           action='store_true',
                           help='Generate simple plots to visualize output.',
                           default=False)
@@ -157,7 +157,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     tedort=False, gscontrol=None, tedpca='mle',
                     ste=-1, combmode='t2s', verbose=False, viwer=False,
                     stabilize=False, wvpca=False, out_dir='.', fixed_seed=42,
-                    debug=False, quiet=False, figures=False):
+                    debug=False, quiet=False, png=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -195,7 +195,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
-    figures : obj:'bool', optional
+    png : obj:'bool', optional
         Generate simple plots and figures. Default is false.
     wvpca : :obj:`bool`, optional
         Whether or not to perform PCA on wavelet-transformed data.
@@ -390,7 +390,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if verbose:
         io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
 
-    if figures:
+    if png:
         LGR.info('Creating simple figures.')
         io.writefigures(data_oc, mask=mask, comptable=comptable, mmix=mmix,
                         n_vols=n_vols, acc=acc, rej=rej, midk=midk,
