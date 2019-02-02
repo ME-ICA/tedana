@@ -49,8 +49,9 @@ We recommend using [miniconda3](https://conda.io/miniconda.html).
 After installation, you can use the following commands to create an environment for `tedana`:
 
 ```bash
-conda create -n ENVIRONMENT_NAME python=3 pip mdp numpy scikit-learn scipy nilearn nibabel
+conda create -n ENVIRONMENT_NAME python=3 pip mdp numpy scikit-learn scipy 
 source activate ENVIRONMENT_NAME
+pip install nilearn nibabel
 pip install tedana
 ```
 

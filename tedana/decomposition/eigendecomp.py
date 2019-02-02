@@ -266,13 +266,13 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
 
     if len(ste) == 1 and ste[0] == -1:
         LGR.info('Computing PCA of optimally combined multi-echo data')
-        d = OCcatd[utils.make_min_mask(OCcatd[:, np.newaxis, :])][:, np.newaxis, :]
+        d = OCcatd[mask, :][:, np.newaxis, :]
     elif len(ste) == 1 and ste[0] == 0:
         LGR.info('Computing PCA of spatially concatenated multi-echo data')
-        d = catd[mask].astype('float64')
+        d = catd[mask, ...]
     else:
         LGR.info('Computing PCA of echo #%s' % ','.join([str(ee) for ee in ste]))
-        d = np.stack([catd[mask, ee] for ee in ste - 1], axis=1).astype('float64')
+        d = np.stack([catd[mask, ee, :] for ee in ste - 1], axis=1)
 
     eim = np.squeeze(eimask(d))
     d = np.squeeze(d[eim])
@@ -318,7 +318,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         eimum = np.transpose(eimum, np.argsort(eimum.shape)[::-1])
         eimum = eimum.prod(axis=1)
         o = np.zeros((mask.shape[0], *eimum.shape[1:]))
-        o[mask] = eimum
+        o[mask, ...] = eimum
         eimum = np.squeeze(o).astype(bool)
 
         vTmix = comp_ts.T
