@@ -5,11 +5,9 @@ import logging
 import os
 import os.path as op
 
-import nibabel as nib
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.fftpack
-from nibabel.filename_parser import splitext_addext
 
 from tedana import model, utils
 
