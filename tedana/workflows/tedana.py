@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from tedana import decay, combine, decomposition, io, model, selection, utils
+from tedana import decay, combine, decomposition, io, model, selection, utils, viz
 from tedana.workflows.parser_utils import is_valid_file
 
 LGR = logging.getLogger(__name__)
@@ -395,9 +395,15 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if png:
         LGR.info('Making figures folder with static component maps and '
                 'timecourse plots.')
-        io.writefigures(data_oc, mask=mask, comptable=comptable, mmix=mmix,
+        viz.writefigures(data_oc, mask=mask, comptable=comptable, mmix=mmix,
                         n_vols=n_vols, acc=acc, rej=rej, midk=midk,
                         empty=ign, ref_img=ref_img)
+
+        LGR.info('Making Kappa vs Rho Scatter plot')
+        viz.writekappascatter(comptable=comptable)
+
+        LGR.info('Making overall summary figure')
+        viz.writesummaryfig(comptable=comptable)
 
     LGR.info('Workflow completed')
     for handler in logging.root.handlers[:]:
