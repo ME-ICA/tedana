@@ -155,7 +155,7 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
         ax_fft.set_xlabel('Hz')
         ax_fft.set_xbound(f[0], f[-1])
 
-        # Fix spacing so TR label isn't overlapped
+        # Fix spacing so TR label does overlap with other plots
         allplot.subplots_adjust(hspace=0.4)
         plot_name = 'comp_{}.png'.format(str(compnum).zfill(3))
         compplot_name = os.path.join('figures', plot_name)
@@ -163,10 +163,7 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
         plt.close()
 
 
-
-
-def writekappascatter(ts, mask, comptable, mmix, n_vols,
-                 acc, rej, midk, empty, ref_img):
+def writekappascatter(comptable):
     """
     Creates a scatter plot of Kappa vs Rho values. The shape and size of the
     points is based on classification and variance explained, respectively.
