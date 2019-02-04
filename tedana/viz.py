@@ -71,15 +71,6 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
     # Create indices for 6 cuts, based on dimensions
     cuts =[ts_B.shape[dim] // 6 for dim in range(3)]
 
-    xdim = ts_B.shape[0]
-    xcut = int(xdim/6)
-
-    ydim = ts_B.shape[1]
-    ycut = int(ydim/6)
-
-    zdim = ts_B.shape[2]
-    zcut = int(zdim/6)
-
     for compnum in range(0, mmix.shape[1], 1):
 
         allplot = plt.figure(figsize=(10, 9))
@@ -142,7 +133,6 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
                                   vmin=imgmin, vmax=imgmax, aspect='equal',
                                   cmap='coolwarm')
             ax.axis('off')
-
 
         # Add a color bar to the plot.
         ax_cbar = allplot.add_axes([0.8, 0.3, 0.03, 0.37])
