@@ -155,8 +155,8 @@ def _get_parser():
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     tedort=False, gscontrol=None, tedpca='mle',
-                    ste=-1, combmode='t2s', verbose=False, viwer=False,
-                    stabilize=False, wvpca=False, out_dir='.', fixed_seed=42,
+                    ste=-1, combmode='t2s', verbose=False, stabilize=False,
+                    wvpca=False, out_dir='.', fixed_seed=42,
                     debug=False, quiet=False, png=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
