@@ -13,7 +13,6 @@ from nilearn._utils import check_niimg
 from nilearn.image import new_img_like
 from numpy.linalg import lstsq
 
-
 from tedana import model, utils
 
 LGR = logging.getLogger(__name__)
@@ -690,7 +689,28 @@ def writefigures(ts, mask, comptable, mmix, n_vols,
     ax_scatter.yaxis.label.set_fontsize(20)
     ax_scatter.title.set_fontsize(25)
     plt.savefig('Kappa_vs_Rho_Scatter.png')
+
+    plt.close()
+    var_acc = np.sum(comptable[comptable.classification == 'accepted']['variance explained'])
+    var_rej = np.sum(comptable[comptable.classification == 'rejected']['variance explained'])
+    var_ign = np.sum(comptable[comptable.classification == 'ignored']['variance explained'])
+    count_acc = np.count_nonzero(comptable[comptable.classification == 'accepted']['classification'])
+    count_rej = np.count_nonzero(comptable[comptable.classification == 'rejected']['classification'])
+    count_ign = np.count_nonzero(comptable[comptable.classification == 'ignored']['classification'])
+
+    fig, ax = plt.subplots(figsize=(10,7))
+    acc_label = str(count_acc) + ' Accepted'
+    rej_label = str(count_rej) + ' Rejected'
+    ign_label = str(count_ign) + ' Ignored'
+    print(acc_label)
+    plt.bar([1,2,3], [var_acc, var_rej, var_ign], color=['g', 'r', 'k'])
+    plt.xticks([1, 2, 3], (acc_label, rej_label, ign_label))
+    plt.ylabel('Variance Explained')
+    plt.title('Component Overview')
+    plt.savefig('Component_Overview.png')
+
     os.chdir('..')
+
 
 
 def load_data(data, n_echos=None):
@@ -735,7 +755,7 @@ def load_data(data, n_echos=None):
     (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
     fdata = utils.load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1, order='F'))
     # create reference image
-    ref_img = img.__class__(np.zeros((nx, ny, nz, 1)), affine=img.affine,
+    ref_img = img.__class__(np.zeros((nx, ny, nz)), affine=img.affine,
                             header=img.header, extra=img.extra)
     ref_img.header.extensions = []
     ref_img.header.set_sform(ref_img.header.get_sform(), code=1)
