@@ -60,7 +60,7 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
     tr = ref_img.header.get_zooms()[-1]
 
     # Start making plots
-    if not os.path.exists('./figures'):
+    if not os.path.exists('figures'):
         os.mkdir('figures')
 
     # This precalculates the Hz for the fft plots
