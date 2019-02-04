@@ -391,7 +391,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
 
     if png:
-        LGR.info('Creating component weight maps and timecourse plots.')
+        LGR.info('Creating static component weight maps and timecourse plots.')
         io.writefigures(data_oc, mask=mask, comptable=comptable, mmix=mmix,
                         n_vols=n_vols, acc=acc, rej=rej, midk=midk,
                         empty=ign, ref_img=ref_img)
