@@ -395,11 +395,11 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if png:
         LGR.info('Making figures folder with static component maps and '
                 'timecourse plots.')
-        viz.writefigures(data_oc, mask=mask, comptable=comptable, mmix=mmix,
-                        n_vols=n_vols, acc=acc, rej=rej, midk=midk,
-                        empty=ign, ref_img=ref_img)
+        viz.writecompfigs(data_oc, mask=mask, comptable=comptable, mmix=mmix,
+                          n_vols=n_vols, acc=acc, rej=rej, midk=midk,
+                          empty=ign, ref_img=ref_img)
 
-        LGR.info('Making Kappa vs Rho Scatter plot')
+        LGR.info('Making Kappa vs Rho scatter plot')
         viz.writekappascatter(comptable=comptable)
 
         LGR.info('Making overall summary figure')
