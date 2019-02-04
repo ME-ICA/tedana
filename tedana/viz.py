@@ -69,6 +69,8 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
     f = Fs * np.arange(0, n_vols // 2 + 1) / n_vols
 
     # Create indices for 6 cuts, based on dimensions
+    cuts =[ts_B.shape[dim] // 6 for dim in range(3)]
+
     xdim = ts_B.shape[0]
     xcut = int(xdim/6)
 
@@ -118,39 +120,33 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
         ax_ts2.set_xlabel('seconds')
 
         # Set range to ~1/10th of max beta
-        imgmax = ts_B[:, :, :, compnum].max()*.1
-        imgmin = ts_B[:, :, :, compnum].min()*.1
+        imgmax = ts_B[:, :, :, compnum].max() * .1
+        imgmin = ts_B[:, :, :, compnum].min() * .1
 
-        count = 0
-        for imgslice in range(xcut, xdim-xcut, xcut):
-            ax_x = plt.subplot2grid((5, 6), (1, count), rowspan=1, colspan=1)
-            ax_x.imshow(np.rot90(ts_B[imgslice, :, :, compnum], k=1),
+        for imgslice in range(1, 6, 1):
+            # First row
+            ax = plt.subplot2grid((5, 6), (1, imgslice - 1), rowspan=1, colspan=1)
+            ax.imshow(np.rot90(ts_B[imgslice * cuts[0], :, :, compnum], k=1),
                         vmin=imgmin, vmax=imgmax, aspect='equal',
                         cmap='coolwarm')
-            ax_x.axis('off')
-            count = count + 1
 
-        count = 0
-        for imgslice in range(ycut, ydim-ycut, ycut):
-            ax_y = plt.subplot2grid((5, 6), (2, count), rowspan=1, colspan=1)
-            ax_y.imshow(np.rot90(ts_B[:, imgslice, :, compnum], k=1),
+            # Second row
+            ax = plt.subplot2grid((5, 6), (2, imgslice - 1), rowspan=1, colspan=1)
+            ax.imshow(np.rot90(ts_B[:, imgslice * cuts[1], :, compnum], k=1),
                         vmin=imgmin, vmax=imgmax, aspect='equal',
                         cmap='coolwarm')
-            ax_y.axis('off')
-            count = count + 1
 
-        count = 0
-        for imgslice in range(zcut, zdim-zcut, zcut):
-            ax_z = plt.subplot2grid((5, 6), (3, count), rowspan=1, colspan=1)
-            ax_z_im = ax_z.imshow(ts_B[:, :, imgslice, compnum],
+            # Third Row
+            ax = plt.subplot2grid((5, 6), (3, imgslice - 1), rowspan=1, colspan=1)
+            ax_im = ax_z.imshow(ts_B[:, :, imgslice * cuts[2], compnum],
                                   vmin=imgmin, vmax=imgmax, aspect='equal',
                                   cmap='coolwarm')
-            ax_z.axis('off')
-            count = count + 1
+            ax.axis('off')
+
 
         # Add a color bar to the plot.
         ax_cbar = allplot.add_axes([0.8, 0.3, 0.03, 0.37])
-        cbar = allplot.colorbar(ax_z_im, ax_cbar)
+        cbar = allplot.colorbar(ax_im, ax_cbar)
         cbar.set_label('Component Beta', rotation=90)
         cbar.ax.yaxis.set_label_position('left')
         # Get fft for this subject, change to one sided amplitude
