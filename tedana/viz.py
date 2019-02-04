@@ -63,8 +63,6 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
     if not os.path.exists('./figures'):
         os.mkdir('figures')
 
-    os.chdir('./figures')
-
     # This precalculates the Hz for the fft plots
     Fs = 1.0/tr
     # resampled frequency vector
@@ -173,11 +171,12 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
 
         # Fix spacing so TR label isn't overlapped
         allplot.subplots_adjust(hspace=0.4)
-        fname = 'comp_' + str(compnum).zfill(3) + '.png'
+        plot_name = 'comp_{}.png'.format(str(compnum).zfill(3))
+        compplot_name = os.path.join('figures', plot_name)
         plt.savefig(fname)
         plt.close()
 
-    os.chdir('..')
+
 
 
 def writekappascatter(ts, mask, comptable, mmix, n_vols,
@@ -219,7 +218,8 @@ def writekappascatter(ts, mask, comptable, mmix, n_vols,
     ax_scatter.xaxis.label.set_fontsize(20)
     ax_scatter.yaxis.label.set_fontsize(20)
     ax_scatter.title.set_fontsize(25)
-    plt.savefig('Kappa_vs_Rho_Scatter.png')
+    scatter_title = os.path.join('figures', 'Kappa_vs_Rho_Scatter.png')
+    plt.savefig(scatter_title)
 
     plt.close()
 
@@ -253,4 +253,5 @@ def writesummaryfig(comptable):
     plt.xticks([1, 2, 3], (acc_label, rej_label, ign_label))
     plt.ylabel('Variance Explained')
     plt.title('Component Overview')
-    plt.savefig('Component_Overview.png')
+    sumfig_title = os.path.join('figures', 'Component_Overview.png')
+    plt.savefig(sumfig_title)
