@@ -183,35 +183,16 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
 def writekappascatter(ts, mask, comptable, mmix, n_vols,
                  acc, rej, midk, empty, ref_img):
     """
-    Creates static figures that highlight certain aspects of tedana processing
-    This includes figure for each component showing the component time course,
-    the spatial weight map and a fast Fourier transform of the time course
+    Creates a scatter plot of Kappa vs Rho values. The shape and size of the
+    points is based on classification and variance explained, respectively.
 
     Parameters
     ----------
-    ts : (S x T) array_like
-        Time series from which to derive ICA betas
-    mask : (S,) array_like
-        Boolean mask array
     comptable : (N x 5) array_like
         Array with columns denoting (1) index of component, (2) Kappa score of
         component, (3) Rho score of component, (4) variance explained by
         component, and (5) normalized variance explained by component
-    mmix : (C x T) array_like
-        Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `data`
-    n_vols : :obj:`int`
-        Number of volumes in original time series
-    acc : :obj:`list`
-        Indices of accepted (BOLD) components in `mmix`
-    rej : :obj:`list`
-        Indices of rejected (non-BOLD) components in `mmix`
-    midk : :obj:`list`
-        Indices of mid-K (questionable) components in `mmix`
-    empty : :obj:`list`
-        Indices of ignored components in `mmix`
-    ref_img : :obj:`str` or img_like
-        Reference image to dictate how outputs are saved to disk
+
     """
 
     # Creating Kappa Vs Rho plot
