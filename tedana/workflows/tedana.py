@@ -137,7 +137,9 @@ def _get_parser():
     optional.add_argument('--png',
                           dest='png',
                           action='store_true',
-                          help='Generate simple plots to visualize output.',
+                          help=('Creates a figures folder with static component '
+                                'maps, timecourse plots and other diagnostic '
+                                'images'),
                           default=False)
     optional.add_argument('--debug',
                           dest='debug',
