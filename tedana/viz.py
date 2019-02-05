@@ -6,7 +6,6 @@ import os
 
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy.fftpack
 
 from tedana import model
 
@@ -135,7 +134,7 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
 
         # Get fft and freqs for this subject
         # adapted from @dangom
-        spectrum, freqs = get_spectrum(signal, tr)
+        spectrum, freqs = get_spectrum(mmix[:, compnum], tr)
 
         # Plot it
         ax_fft = plt.subplot2grid((5, 6), (4, 0), rowspan=1, colspan=6)
@@ -229,6 +228,7 @@ def writesummaryfig(comptable):
     plt.title('Component Overview')
     sumfig_title = os.path.join('figures', 'Component_Overview.png')
     plt.savefig(sumfig_title)
+
 
 def get_spectrum(data: np.array, tr: float = 1):
     """
