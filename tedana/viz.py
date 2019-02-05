@@ -135,7 +135,7 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
 
         # Get fft and freqs for this subject
         # adapted from @dangom
-        spectrum, freqs = get_spectrum(signal, tr) plt.plot(freqs, spectrum)
+        spectrum, freqs = get_spectrum(signal, tr)
 
         # Plot it
         ax_fft = plt.subplot2grid((5, 6), (4, 0), rowspan=1, colspan=6)
