@@ -212,9 +212,12 @@ def writesummaryfig(comptable):
         component, and (5) normalized variance explained by component
     """
 
+    # Get the variance associated with each classification
     var_acc = np.sum(comptable[comptable.classification == 'accepted']['variance explained'])
     var_rej = np.sum(comptable[comptable.classification == 'rejected']['variance explained'])
     var_ign = np.sum(comptable[comptable.classification == 'ignored']['variance explained'])
+
+    #Get the count of the number of components in each classification
     count_acc = comptable[comptable.classification == 'accepted'].count()[0]
     count_rej = comptable[comptable.classification == 'rejected'].count()[0]
     count_ign = comptable[comptable.classification == 'ignored'].count()[0]
@@ -223,18 +226,18 @@ def writesummaryfig(comptable):
     acc_label = str(count_acc) + ' Accepted'
     rej_label = str(count_rej) + ' Rejected'
     ign_label = str(count_ign) + ' Ignored'
-    print(acc_label)
     plt.bar([1, 2, 3], [var_acc, var_rej, var_ign], color=['g', 'r', 'k'])
-    plt.xticks([1, 2, 3], (acc_label, rej_label, ign_label))
-    plt.ylabel('Variance Explained')
-    plt.title('Component Overview')
+    plt.xticks([1, 2, 3], (acc_label, rej_label, ign_label), fontsize = 20)
+    plt.yticks(fontsize = 15)
+    plt.ylabel('Variance Explained', fontsize = 20)
+    plt.title('Component Overview', fontsize = 25)
     sumfig_title = os.path.join('figures', 'Component_Overview.png')
     plt.savefig(sumfig_title)
 
 
 def get_spectrum(data: np.array, tr: float = 1):
     """
-    returns the power spectrum and corresponding frequencies when provided
+    Returns the power spectrum and corresponding frequencies when provided
     with a component time course and repitition time.
 
     Parameters
