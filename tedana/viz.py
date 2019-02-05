@@ -3,7 +3,6 @@ Functions to creating figures to inspect tedana output
 """
 import logging
 import os
-import os.path as op
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -137,6 +136,7 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
         cbar = allplot.colorbar(ax_im, ax_cbar)
         cbar.set_label('Component Beta', rotation=90)
         cbar.ax.yaxis.set_label_position('left')
+
         # Get fft for this subject, change to one sided amplitude
         # adapted from
         # https://stackoverflow.com/questions/25735153/plotting-a-fast-fourier-transform-in-python
@@ -185,6 +185,7 @@ def writekappascatter(comptable):
     plt.scatter([], [], s=1, marker='^', c='m', label='midk', alpha=0.5)
     ax_scatter.legend(markerscale=10)
 
+    # Set up for varying marker shape and color
     mkr_dict = {'accepted': '*', 'rejected': 'v', 'ignored': 'd', 'midk': '^'}
     col_dict = {'accepted': 'g', 'rejected': 'r', 'ignored': 'k', 'midk': 'm'}
     for kind in mkr_dict:
@@ -193,6 +194,7 @@ def writekappascatter(comptable):
                     s=150 * d['variance explained'], marker=mkr_dict[kind],
                     c=col_dict[kind], alpha=0.5)
 
+    # Finish labeling the plot.
     ax_scatter.set_xlabel('kappa')
     ax_scatter.set_ylabel('rho')
     ax_scatter.set_title('Kappa vs Rho')
