@@ -109,22 +109,24 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
         for imgslice in range(1, 6, 1):
             # First row
             ax = plt.subplot2grid((5, 6), (1, imgslice - 1), rowspan=1, colspan=1)
+            ax.axis('off')
             ax.imshow(np.rot90(ts_B[imgslice * cuts[0], :, :, compnum], k=1),
                       vmin=imgmin, vmax=imgmax, aspect='equal',
                       cmap='coolwarm')
 
             # Second row
             ax = plt.subplot2grid((5, 6), (2, imgslice - 1), rowspan=1, colspan=1)
+            ax.axis('off')
             ax.imshow(np.rot90(ts_B[:, imgslice * cuts[1], :, compnum], k=1),
                       vmin=imgmin, vmax=imgmax, aspect='equal',
                       cmap='coolwarm')
 
             # Third Row
             ax = plt.subplot2grid((5, 6), (3, imgslice - 1), rowspan=1, colspan=1)
+            ax.axis('off')
             ax_im = ax.imshow(ts_B[:, :, imgslice * cuts[2], compnum],
                               vmin=imgmin, vmax=imgmax, aspect='equal',
                               cmap='coolwarm')
-            ax.axis('off')
 
         # Add a color bar to the plot.
         ax_cbar = allplot.add_axes([0.8, 0.3, 0.03, 0.37])
