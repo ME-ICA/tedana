@@ -6,7 +6,6 @@ import os.path as op
 
 import nibabel as nib
 import numpy as np
-import scipy.fftpack
 from nibabel.filename_parser import splitext_addext
 from nilearn._utils import check_niimg
 from nilearn.image import new_img_like
