@@ -12,8 +12,9 @@ from tedana import model
 
 LGR = logging.getLogger(__name__)
 
+
 def writecompfigs(ts, mask, comptable, mmix, n_vols,
-                 acc, rej, midk, empty, ref_img):
+                  acc, rej, midk, empty, ref_img):
     """
     Creates static figures that highlight certain aspects of tedana processing
     This includes figure for each component showing the component time course,
@@ -66,7 +67,7 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
     f = Fs * np.arange(0, n_vols // 2 + 1) / n_vols
 
     # Create indices for 6 cuts, based on dimensions
-    cuts =[ts_B.shape[dim] // 6 for dim in range(3)]
+    cuts = [ts_B.shape[dim] // 6 for dim in range(3)]
 
     for compnum in range(0, mmix.shape[1], 1):
 
@@ -115,20 +116,20 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
             # First row
             ax = plt.subplot2grid((5, 6), (1, imgslice - 1), rowspan=1, colspan=1)
             ax.imshow(np.rot90(ts_B[imgslice * cuts[0], :, :, compnum], k=1),
-                        vmin=imgmin, vmax=imgmax, aspect='equal',
-                        cmap='coolwarm')
+                      vmin=imgmin, vmax=imgmax, aspect='equal',
+                      cmap='coolwarm')
 
             # Second row
             ax = plt.subplot2grid((5, 6), (2, imgslice - 1), rowspan=1, colspan=1)
             ax.imshow(np.rot90(ts_B[:, imgslice * cuts[1], :, compnum], k=1),
-                        vmin=imgmin, vmax=imgmax, aspect='equal',
-                        cmap='coolwarm')
+                      vmin=imgmin, vmax=imgmax, aspect='equal',
+                      cmap='coolwarm')
 
             # Third Row
             ax = plt.subplot2grid((5, 6), (3, imgslice - 1), rowspan=1, colspan=1)
-            ax_im = ax_z.imshow(ts_B[:, :, imgslice * cuts[2], compnum],
-                                  vmin=imgmin, vmax=imgmax, aspect='equal',
-                                  cmap='coolwarm')
+            ax_im = ax.imshow(ts_B[:, :, imgslice * cuts[2], compnum],
+                                vmin=imgmin, vmax=imgmax, aspect='equal',
+                                cmap='coolwarm')
             ax.axis('off')
 
         # Add a color bar to the plot.
