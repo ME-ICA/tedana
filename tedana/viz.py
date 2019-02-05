@@ -128,8 +128,8 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
             # Third Row
             ax = plt.subplot2grid((5, 6), (3, imgslice - 1), rowspan=1, colspan=1)
             ax_im = ax.imshow(ts_B[:, :, imgslice * cuts[2], compnum],
-                                vmin=imgmin, vmax=imgmax, aspect='equal',
-                                cmap='coolwarm')
+                              vmin=imgmin, vmax=imgmax, aspect='equal',
+                              cmap='coolwarm')
             ax.axis('off')
 
         # Add a color bar to the plot.
