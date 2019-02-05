@@ -61,11 +61,6 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
     if not os.path.exists('figures'):
         os.mkdir('figures')
 
-    # This precalculates the Hz for the fft plots
-    Fs = 1.0/tr
-    # resampled frequency vector
-    f = Fs * np.arange(0, n_vols // 2 + 1) / n_vols
-
     # Create indices for 6 cuts, based on dimensions
     cuts = [ts_B.shape[dim] // 6 for dim in range(3)]
 
@@ -138,21 +133,16 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
         cbar.set_label('Component Beta', rotation=90)
         cbar.ax.yaxis.set_label_position('left')
 
-        # Get fft for this subject, change to one sided amplitude
-        # adapted from
-        # https://stackoverflow.com/questions/25735153/plotting-a-fast-fourier-transform-in-python
-        y = mmix[:, compnum]
-        Y = scipy.fftpack.fft(y)
-        P2 = np.abs(Y/n_vols)
-        P1 = P2[0:n_vols // 2 + 1]
-        P1[1:-2] = 2 * P1[1:-2]
+        # Get fft and freqs for this subject
+        # adapted from @dangom
+        spectrum, freqs = get_spectrum(signal, tr) plt.plot(freqs, spectrum)
 
         # Plot it
         ax_fft = plt.subplot2grid((5, 6), (4, 0), rowspan=1, colspan=6)
-        ax_fft.plot(f, P1)
+        ax_fft.plot(freqs, spectrum)
         ax_fft.set_title('One Sided fft')
         ax_fft.set_xlabel('Hz')
-        ax_fft.set_xbound(f[0], f[-1])
+        ax_fft.set_xbound(freqs[0], freqs[-1])
 
         # Fix spacing so TR label does overlap with other plots
         allplot.subplots_adjust(hspace=0.4)
@@ -239,3 +229,22 @@ def writesummaryfig(comptable):
     plt.title('Component Overview')
     sumfig_title = os.path.join('figures', 'Component_Overview.png')
     plt.savefig(sumfig_title)
+
+def get_spectrum(data: np.array, tr: float = 1):
+    """
+    returns the power spectrum and corresponding frequencies when provided
+    with a component time course and repitition time.
+
+    Parameters
+    ----------
+    data : (S, ) array_like
+            A timeseries S, on which you would like to perform an fft.
+    tr : :obj:`float`
+            Reptition time (TR) of the data
+    """
+
+    # adapted from @dangom
+    power_spectrum = np.abs(np.fft.rfft(data)) ** 2
+    freqs = np.fft.rfftfreq(power_spectrum.size * 2 - 1, tr)
+    idx = np.argsort(freqs)
+    return power_spectrum[idx], freqs[idx]
