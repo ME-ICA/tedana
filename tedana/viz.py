@@ -157,7 +157,7 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
         allplot.subplots_adjust(hspace=0.4)
         plot_name = 'comp_{}.png'.format(str(compnum).zfill(3))
         compplot_name = os.path.join('figures', plot_name)
-        plt.savefig(fname)
+        plt.savefig(compplot_name)
         plt.close()
 
 
