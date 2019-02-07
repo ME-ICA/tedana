@@ -96,7 +96,9 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
 
         ax2Xs = []
         for X in ax1Xs:
-            ax2Xs.append(X * tr)
+            # Limit to 2 decimal places
+            seconds_val = round(X * tr, 2)
+            ax2Xs.append(seconds_value)
         ax_ts2.set_xticks(ax1Xs)
         ax_ts2.set_xbound(ax_ts.get_xbound())
         ax_ts2.set_xticklabels(ax2Xs)
