@@ -91,11 +91,11 @@ def kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False):
                                 return_val=True)
 
     diff_varex_norm = np.abs(np.diff(ct_df['normalized variance explained']))
-    lower_diff_varex_norm = diff_varex_norm[(len(diff_varex_norm)//2):]
+    lower_diff_varex_norm = diff_varex_norm[(len(diff_varex_norm) // 2):]
     varex_norm_thr = np.mean([lower_diff_varex_norm.max(),
                               diff_varex_norm.min()])
     varex_norm_min = ct_df['normalized variance explained'][
-        (len(diff_varex_norm)//2) +
+        (len(diff_varex_norm) // 2) +
         np.arange(len(lower_diff_varex_norm))[lower_diff_varex_norm >= varex_norm_thr][0] + 1]
     varex_norm_cum = np.cumsum(ct_df['normalized variance explained'])
 

@@ -219,16 +219,18 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
 
     if verbose:
         # Echo-specific weight maps for each of the ICA components.
-        io.filewrite(betas, op.join(out_dir, label+'betas_catd.nii'), ref_img)
+        io.filewrite(betas, op.join(out_dir, '{0}betas_catd.nii'.format(label)),
+                     ref_img)
         # Echo-specific maps of predicted values for R2 and S0 models for each
         # component.
         io.filewrite(utils.unmask(pred_R2_maps, mask),
-                     op.join(out_dir, label+'R2_pred.nii'), ref_img)
+                     op.join(out_dir, '{0}R2_pred.nii'.format(label)), ref_img)
         io.filewrite(utils.unmask(pred_S0_maps, mask),
-                     op.join(out_dir, label+'S0_pred.nii'), ref_img)
+                     op.join(out_dir, '{0}S0_pred.nii'.format(label)), ref_img)
         # Weight maps used to average metrics across voxels
         io.filewrite(utils.unmask(Z_maps ** 2., mask),
-                     op.join(out_dir, label+'metric_weights.nii'), ref_img)
+                     op.join(out_dir, '{0}metric_weights.nii'.format(label)),
+                     ref_img)
 
     comptab = pd.DataFrame(comptab,
                            columns=['kappa', 'rho',
