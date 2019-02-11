@@ -63,9 +63,9 @@ def getfbounds(n_echos):
         F-statistic thresholds for alphas of 0.05, 0.025, and 0.01,
         respectively.
     """
-    f05 = stats.f.ppf(q=1-0.05, dfn=1, dfd=n_echos-1)
-    f025 = stats.f.ppf(q=1-0.025, dfn=1, dfd=n_echos-1)
-    f01 = stats.f.ppf(q=1-0.01, dfn=1, dfd=n_echos-1)
+    f05 = stats.f.ppf(q=(1 - 0.05), dfn=1, dfd=(n_echos - 1))
+    f025 = stats.f.ppf(q=(1 - 0.025), dfn=1, dfd=(n_echos - 1))
+    f01 = stats.f.ppf(q=(1 - 0.01), dfn=1, dfd=(n_echos - 1))
     return f05, f025, f01
 
 
