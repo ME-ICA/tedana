@@ -2,6 +2,13 @@
 Run the "canonical" TE-Dependent ANAlysis workflow.
 """
 import os
+
+os.environ['MKL_NUM_THREADS'] = '1'
+os.environ['NUMEXPR_NUM_THREADS'] = '1'
+os.environ['OMP_NUM_THREADS'] = '1'
+os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
+os.environ['OPENBLAS_NUM_THREADS'] = '1'
+
 import os.path as op
 import shutil
 import logging
@@ -12,8 +19,8 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from tedana import decay, combine, decomposition, io, model, selection, utils
 from tedana.workflows.parser_utils import is_valid_file
+from tedana import decay, combine, decomposition, io, model, selection, utils
 
 LGR = logging.getLogger(__name__)
 
