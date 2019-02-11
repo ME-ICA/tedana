@@ -393,9 +393,9 @@ def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img):
     """
 
     for i_echo in range(catd.shape[1]):
-        LGR.info('Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo+1))
+        LGR.info('Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo + 1))
         write_split_ts(catd[:, i_echo, :], mmix, mask, acc, rej, midk, ref_img,
-                       suffix='e%i' % (i_echo+1))
+                       suffix='e%i' % (i_echo + 1))
 
 
 def ctabsel(ctabfile):

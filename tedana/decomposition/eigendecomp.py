@@ -118,10 +118,10 @@ def kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False):
         rho_thr = rho_lim[getelbow(rho_lim)]
     else:
         kappa_thr = np.average(
-            sorted([fmin, getelbow(ct_df['kappa'], return_val=True)/2, fmid]),
+            sorted([fmin, (getelbow(ct_df['kappa'], return_val=True) / 2), fmid]),
             weights=[kdaw, 1, 1])
         rho_thr = np.average(
-            sorted([fmin, getelbow_cons(ct_df['rho'], return_val=True)/2, fmid]),
+            sorted([fmin, (getelbow_cons(ct_df['rho'], return_val=True) / 2), fmid]),
             weights=[rdaw, 1, 1])
 
     # Reject if low Kappa, Rho, and variance explained

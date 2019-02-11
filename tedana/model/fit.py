@@ -275,10 +275,10 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
             spclust_input = io.new_nii_like(ref_img, spclust_input)
             Br_R2_clmaps[:, i_comp] = spatclust(
                 spclust_input, min_cluster_size=csize,
-                threshold=max(tsoc_Babs.shape)-countsigFR2, mask=mask)
+                threshold=(max(tsoc_Babs.shape) - countsigFR2), mask=mask)
             Br_S0_clmaps[:, i_comp] = spatclust(
                 spclust_input, min_cluster_size=csize,
-                threshold=max(tsoc_Babs.shape)-countsigFS0, mask=mask)
+                threshold=(max(tsoc_Babs.shape) - countsigFS0), mask=mask)
 
         seldict = {}
         selvars = ['WTS', 'tsoc_B', 'PSC',
