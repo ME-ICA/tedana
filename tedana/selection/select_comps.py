@@ -143,11 +143,11 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     Assemble decision table
     """
     d_table_rank = np.vstack([
-        n_comps-stats.rankdata(comptable['kappa'], method='ordinal'),
-        n_comps-stats.rankdata(comptable['dice_FR2'], method='ordinal'),
-        n_comps-stats.rankdata(comptable['signal-noise_t'], method='ordinal'),
+        n_comps - stats.rankdata(comptable['kappa'], method='ordinal'),
+        n_comps - stats.rankdata(comptable['dice_FR2'], method='ordinal'),
+        n_comps - stats.rankdata(comptable['signal-noise_t'], method='ordinal'),
         stats.rankdata(countnoise, method='ordinal'),
-        n_comps-stats.rankdata(comptable['countsigFR2'], method='ordinal')]).T
+        n_comps - stats.rankdata(comptable['countsigFR2'], method='ordinal')]).T
     n_decision_metrics = d_table_rank.shape[1]
     comptable['d_table_score'] = d_table_rank.sum(axis=1)
 
