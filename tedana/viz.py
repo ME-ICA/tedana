@@ -162,15 +162,17 @@ def write_kappa_scatter(comptable):
     # Creating Kappa Vs Rho plot
     ax_scatter = plt.gca()
 
-    # Prebuild legend so that the marker sizes are uniform
-    plt.scatter([], [], s=1, marker='*', c='g', label='accepted', alpha=0.5)
-    plt.scatter([], [], s=1, marker='v', c='r', label='rejected', alpha=0.5)
-    plt.scatter([], [], s=1, marker='d', c='k', label='ignored', alpha=0.5)
-    plt.scatter([], [], s=1, marker='^', c='m', label='midk', alpha=0.5)
-    ax_scatter.legend(markerscale=10)
-
     # Set up for varying marker shape and color
     mkr_dict = {'accepted': ['*', 'g'], 'rejected': ['v', 'r'], 'ignored': ['d', 'k'], 'midk': ['^', 'm']}
+
+    # Prebuild legend so that the marker sizes are uniform
+    for kind in mkr_dict:
+            plt.scatter([], [], s=1, markermkr_dict[kind][0],
+                        c=mkr_dict[kind][1], label='accepted', alpha=0.5)
+    # Create legend
+    ax_scatter.legend(markerscale=10)
+
+    # Plot actual values
     for kind in mkr_dict:
         d = comptable[comptable.classification == kind]
         plt.scatter(d.kappa, d.rho,
