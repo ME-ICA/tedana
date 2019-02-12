@@ -205,7 +205,7 @@ def write_summary_fig(comptable):
         component, and (5) normalized variance explained by component
     """
 
-    # Get the variance associated with each classification
+    # Get the variance and count of each classification
     var_expl = []
     counts = {}
     for clf in ['accepted', 'rejected', 'ignored']:
