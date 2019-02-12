@@ -7,5 +7,4 @@ from .eigendecomp import (
 
 
 __all__ = [
-    'tedpca', 'tedica',
-    ]
+    'tedpca', 'tedica']
