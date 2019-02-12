@@ -13,7 +13,7 @@ LGR = logging.getLogger(__name__)
 
 
 def write_comp_figs(ts, mask, comptable, mmix, n_vols,
-                  acc, rej, midk, empty, ref_img):
+                    acc, rej, midk, empty, ref_img):
     """
     Creates static figures that highlight certain aspects of tedana processing
     This includes a figure for each component showing the component time course,
@@ -113,11 +113,14 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
                 ax = plt.subplot2grid((5, 6), (1, imgslice - 1), rowspan=1, colspan=1)
                 ax.axis('off')
 
-                if idx == 0: to_plot = np.rot90(ts_B[imgslice * cuts[idx], :, :, compnum])
-                if idx == 1: to_plot = np.rot90(ts_B[:, imgslice * cuts[idx], :, compnum])
-                if idx == 2: to_plot = ts_B[:, :, imgslice * cuts[idx], compnum]
+                if idx == 0:
+                    to_plot = np.rot90(ts_B[imgslice * cuts[idx], :, :, compnum])
+                if idx == 1:
+                    to_plot = np.rot90(ts_B[:, imgslice * cuts[idx], :, compnum])
+                if idx == 2:
+                    to_plot = ts_B[:, :, imgslice * cuts[idx], compnum]
 
-                ax.imshow(to_plot, vmin=imgmin, vmax=imgmax, aspect='equal',
+                ax_im = ax.imshow(to_plot, vmin=imgmin, vmax=imgmax, aspect='equal',
                           cmap='coolwarm')
 
         # Add a color bar to the plot.
@@ -163,7 +166,8 @@ def write_kappa_scatter(comptable):
     ax_scatter = plt.gca()
 
     # Set up for varying marker shape and color
-    mkr_dict = {'accepted': ['*', 'g'], 'rejected': ['v', 'r'], 'ignored': ['d', 'k'], 'midk': ['^', 'm']}
+    mkr_dict = {'accepted': ['*', 'g'], 'rejected': ['v', 'r'],
+                'ignored': ['d', 'k'], 'midk': ['^', 'm']}
 
     # Prebuild legend so that the marker sizes are uniform
     for kind in mkr_dict:
@@ -209,8 +213,8 @@ def write_summary_fig(comptable):
     var_expl = []
     counts = {}
     for clf in ['accepted', 'rejected', 'ignored']:
-        var_expl,append(np.sum(comptable[comptable.classification == clf]['variance explained']))
-        counts[clf] =  comptable[comptable.classification == clf].count()[0] + ' ' + clf
+        var_expl.append(np.sum(comptable[comptable.classification == clf]['variance explained']))
+        counts[clf] = comptable[comptable.classification == clf].count()[0] + ' ' + clf
 
     fig, ax = plt.subplots(figsize=(10, 7))
     plt.bar([1, 2, 3], var_expl, color=['g', 'r', 'k'])

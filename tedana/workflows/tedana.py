@@ -403,8 +403,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         LGR.info('Making figures folder with static component maps and '
                  'timecourse plots.')
         viz.write_comp_figs(data_oc, mask=mask, comptable=comptable, mmix=mmix,
-                          n_vols=n_vols, acc=acc, rej=rej, midk=midk,
-                          empty=ign, ref_img=ref_img)
+                            n_vols=n_vols, acc=acc, rej=rej, midk=midk,
+                            empty=ign, ref_img=ref_img)
 
         LGR.info('Making Kappa vs Rho scatter plot')
         viz.write_kappa_scatter(comptable=comptable)
