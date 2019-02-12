@@ -57,7 +57,7 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
     tr = ref_img.header.get_zooms()[-1]
 
     # Start making plots
-    if not os.path.exists('figures'):
+    if not os.path.isdir('figures'):
         os.mkdir('figures')
 
     # Create indices for 6 cuts, based on dimensions
