@@ -16,7 +16,7 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
                   acc, rej, midk, empty, ref_img):
     """
     Creates static figures that highlight certain aspects of tedana processing
-    This includes figure for each component showing the component time course,
+    This includes a figure for each component showing the component time course,
     the spatial weight map and a fast Fourier transform of the time course
 
     Parameters
@@ -53,7 +53,7 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
     # Mask out zeros
     ts_B = np.ma.masked_where(ts_B == 0, ts_B)
 
-    # Get repitition time from ref_img
+    # Get repetition time from ref_img
     tr = ref_img.header.get_zooms()[-1]
 
     # Start making plots
