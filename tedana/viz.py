@@ -12,7 +12,7 @@ from tedana import model
 LGR = logging.getLogger(__name__)
 
 
-def writecompfigs(ts, mask, comptable, mmix, n_vols,
+def write_comp_figs(ts, mask, comptable, mmix, n_vols,
                   acc, rej, midk, empty, ref_img):
     """
     Creates static figures that highlight certain aspects of tedana processing
@@ -155,7 +155,7 @@ def writecompfigs(ts, mask, comptable, mmix, n_vols,
         plt.close()
 
 
-def writekappascatter(comptable):
+def write_kappa_scatter(comptable):
     """
     Creates a scatter plot of Kappa vs Rho values. The shape and size of the
     points is based on classification and variance explained, respectively.
@@ -201,7 +201,7 @@ def writekappascatter(comptable):
     plt.close()
 
 
-def writesummaryfig(comptable):
+def write_summary_fig(comptable):
     """
     Creates a bar graph showing total variance explained by each component
     as well as the number of components identified for each category.
