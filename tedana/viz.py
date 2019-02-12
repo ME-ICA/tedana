@@ -113,9 +113,9 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
                 ax = plt.subplot2grid((5, 6), (1, imgslice - 1), rowspan=1, colspan=1)
                 ax.axis('off')
 
-                to_plot = ts_B[imgslice * cuts[0], :, :, compnum]
-                if idx in [0, 1]: # only for first 2 dimensions
-                    to_plot = np.rot90(to_plot) # rotate the plotted slices by 90-deg
+                if idx == 0: to_plot = np.rot90(ts_B[imgslice * cuts[idx], :, :, compnum])
+                if idx == 1: to_plot = np.rot90(ts_B[:, imgslice * cuts[idx], :, compnum])
+                if idx == 2: to_plot = ts_B[:, :, imgslice * cuts[idx], compnum]
 
                 ax.imshow(to_plot, vmin=imgmin, vmax=imgmax, aspect='equal',
                           cmap='coolwarm')
