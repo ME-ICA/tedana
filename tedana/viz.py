@@ -110,7 +110,7 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
 
         for idx, cut in enumerate(cuts):
             for imgslice in range(1, 6):
-                ax = plt.subplot2grid((5, 6), (1, imgslice - 1), rowspan=1, colspan=1)
+                ax = plt.subplot2grid((5, 6), (idx + 1, imgslice - 1), rowspan=1, colspan=1)
                 ax.axis('off')
 
                 if idx == 0:
