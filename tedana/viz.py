@@ -210,7 +210,7 @@ def write_summary_fig(comptable):
     counts = {}
     for clf in ['accepted', 'rejected', 'ignored']:
         var_expl,append(np.sum(comptable[comptable.classification == clf]['variance explained']))
-        counts[clf] =  comptable[comptable.classification == clf].count()[0]
+        counts[clf] =  comptable[comptable.classification == clf].count()[0] + ' ' + clf
 
     fig, ax = plt.subplots(figsize=(10, 7))
     plt.bar([1, 2, 3], var_expl, color=['g', 'r', 'k'])
