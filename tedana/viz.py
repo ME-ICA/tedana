@@ -170,13 +170,12 @@ def write_kappa_scatter(comptable):
     ax_scatter.legend(markerscale=10)
 
     # Set up for varying marker shape and color
-    mkr_dict = {'accepted': '*', 'rejected': 'v', 'ignored': 'd', 'midk': '^'}
-    col_dict = {'accepted': 'g', 'rejected': 'r', 'ignored': 'k', 'midk': 'm'}
+    mkr_dict = {'accepted': ['*', 'g'], 'rejected': ['v', 'r'], 'ignored': ['d', 'k'], 'midk': ['^', 'm']}
     for kind in mkr_dict:
         d = comptable[comptable.classification == kind]
         plt.scatter(d.kappa, d.rho,
-                    s=150 * d['variance explained'], marker=mkr_dict[kind],
-                    c=col_dict[kind], alpha=0.5)
+                    s=150 * d['variance explained'], marker=mkr_dict[kind][0],
+                    c=mkr_dict[kind][1], alpha=0.5)
 
     # Finish labeling the plot.
     ax_scatter.set_xlabel('kappa')
