@@ -121,7 +121,7 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
                     to_plot = ts_B[:, :, imgslice * cuts[idx], compnum]
 
                 ax_im = ax.imshow(to_plot, vmin=imgmin, vmax=imgmax, aspect='equal',
-                          cmap='coolwarm')
+                                  cmap='coolwarm')
 
         # Add a color bar to the plot.
         ax_cbar = allplot.add_axes([0.8, 0.3, 0.03, 0.37])
