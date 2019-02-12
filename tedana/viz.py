@@ -108,27 +108,17 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
         imgmax = ts_B[:, :, :, compnum].max() * .1
         imgmin = ts_B[:, :, :, compnum].min() * .1
 
-        for imgslice in range(1, 6, 1):
-            # First row
-            ax = plt.subplot2grid((5, 6), (1, imgslice - 1), rowspan=1, colspan=1)
-            ax.axis('off')
-            ax.imshow(np.rot90(ts_B[imgslice * cuts[0], :, :, compnum], k=1),
-                      vmin=imgmin, vmax=imgmax, aspect='equal',
-                      cmap='coolwarm')
+        for idx, cut in enumerate(cuts):
+            for imgslice in range(1, 6):
+                ax = plt.subplot2grid((5, 6), (1, imgslice - 1), rowspan=1, colspan=1)
+                ax.axis('off')
 
-            # Second row
-            ax = plt.subplot2grid((5, 6), (2, imgslice - 1), rowspan=1, colspan=1)
-            ax.axis('off')
-            ax.imshow(np.rot90(ts_B[:, imgslice * cuts[1], :, compnum], k=1),
-                      vmin=imgmin, vmax=imgmax, aspect='equal',
-                      cmap='coolwarm')
+                to_plot = ts_B[imgslice * cuts[0], :, :, compnum]
+                if idx in [0, 1]: # only for first 2 dimensions
+                    to_plot = np.rot90(to_plot) # rotate the plotted slices by 90-deg
 
-            # Third Row
-            ax = plt.subplot2grid((5, 6), (3, imgslice - 1), rowspan=1, colspan=1)
-            ax.axis('off')
-            ax_im = ax.imshow(ts_B[:, :, imgslice * cuts[2], compnum],
-                              vmin=imgmin, vmax=imgmax, aspect='equal',
-                              cmap='coolwarm')
+                ax.imshow(to_plot, vmin=imgmin, vmax=imgmax, aspect='equal',
+                          cmap='coolwarm')
 
         # Add a color bar to the plot.
         ax_cbar = allplot.add_axes([0.8, 0.3, 0.03, 0.37])
