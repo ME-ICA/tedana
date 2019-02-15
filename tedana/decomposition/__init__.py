@@ -11,4 +11,4 @@ from .godecomp import (
 
 __all__ = [
     'tedpca', 'tedica', 'tedgodec',
-    ]
+]

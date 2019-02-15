@@ -52,7 +52,7 @@ def godec(data, thresh=.03, rank=2, power=1, tol=1e-3, max_iter=100,
     random_state = np.random.RandomState(random_seed)
     while True:
         Y2 = random_state.randn(n_vols, rank)
-        for i in range(power+1):
+        for i in range(power + 1):
             Y1 = np.dot(L, Y2)
             Y2 = np.dot(L.T, Y1)
         Q, R = qr(Y2)
@@ -64,12 +64,12 @@ def godec(data, thresh=.03, rank=2, power=1, tol=1e-3, max_iter=100,
         err = np.linalg.norm(T.ravel(), 2)
         if err < tol:
             if verbose:
-                LGR.info('Successful convergence after %i iterations', itr+1)
+                LGR.info('Successful convergence after %i iterations', itr + 1)
             break
         elif itr >= max_iter:
             if verbose:
                 LGR.warning('Model failed to converge after %i iterations',
-                            itr+1)
+                            itr + 1)
             break
         L += T
         itr += 1
@@ -106,7 +106,7 @@ def _tedgodec(data, wavelet=False, rank=2, power=2, tol=1e-3,
     # GoDec
     if wavelet:
         data_wt, cal = dwtmat(data_norm)
-        L, S, G = godec(data_wt, thresh=data_wt.std()*thresh, rank=rank,
+        L, S, G = godec(data_wt, thresh=(data_wt.std() * thresh), rank=rank,
                         power=power, tol=tol, max_iter=max_iter,
                         random_seed=random_seed, verbose=verbose)
         L = idwtmat(L, cal)
