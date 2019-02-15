@@ -110,13 +110,13 @@ Try to keep the changes focused. We've found that working on a [new branch][link
 
 When you're creating your pull request, please make sure to review the tedana [style conventions](#style-guide).
 
-Note that to test a change, you may need to set up your local repository to run a tedana workflow. 
+Note that to test a change, you may need to set up your local repository to run a tedana workflow.
 To do so, run
 ```
 python setup.py develop
 ```
-which should ensure all packages are correctly organized and linked on your user profile. 
-Once you've run this, your repository should be set for most changes (i.e., you do not have to re-run with every change). 
+which should ensure all packages are correctly organized and linked on your user profile.
+Once you've run this, your repository should be set for most changes (i.e., you do not have to re-run with every change).
 
 **4. Submit a [pull request][link_pullrequest].**
 
@@ -136,16 +136,17 @@ When opening a pull request, please use at least one of the following prefixes:
 * **[REF]** for refactoring existing code
 * **[STY]** for stylistic changes
 * **[TST]** for new or updated tests, and
-* **[WIP]** for changes which are not yet ready to be merged
 
 Pull requests should be submitted early and often!
-If your pull request is not yet ready to be merged, please also include the **[WIP]** prefix.
-This tells the development team that your pull request is a "work-in-progress",
+If your pull request is not yet ready to be merged, please open your pull request as a draft.
+More information about doing this is [available in GitHub's documentation](link_drafts).
+This tells the development team that your pull request is a "work in progress",
 and that you plan to continue working on it.
+When your pull request is ready for review, you can select this option on the PR's page,
+and a project maintainer will review your proposed changes.
 
 You can also combine the tags above, for example if you are updating both a test and
 the documentation: **[TST, DOC]**.
-If you're still working on the pull request that prefix would be **[WIP, TST, DOC]**.
 
 ## Style Guide
 
@@ -216,6 +217,7 @@ You're awesome. :wave::smiley:
 [link_pushpullblog]: https://www.igvita.com/2011/12/19/dont-push-your-pull-requests/
 [link_updateupstreamwiki]: https://help.github.com/articles/syncing-a-fork/
 [link_branches]: https://help.github.com/articles/creating-and-deleting-branches-within-your-repository/
+[link_drafts]: https://help.github.com/articles/about-pull-requests/#draft-pull-requests
 
 [link_numpydoc]: https://numpydoc.readthedocs.io/en/latest/format.html
 [link_pep8]: https://www.python.org/dev/peps/pep-0008/
