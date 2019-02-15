@@ -53,18 +53,18 @@ def test_make_optcom():
 
     # Voxel- and volume-wise T2* estimates
     t2s = np.random.random((n_voxels, n_trs))
-    comb = combine.make_optcom(data, tes, mask, t2s=t2s, combmode='t2s')
+    comb = combine.make_optcom(data, tes, mask, t2s=t2s, combmode="t2s")
     assert comb.shape == (n_voxels, n_trs)
 
     # Voxel-wise T2* estimates
     t2s = np.random.random((n_voxels))
-    comb = combine.make_optcom(data, tes, mask, t2s=t2s, combmode='t2s')
+    comb = combine.make_optcom(data, tes, mask, t2s=t2s, combmode="t2s")
     assert comb.shape == (n_voxels, n_trs)
 
     # STE with erroneously included T2* argument
-    comb = combine.make_optcom(data, tes, mask, t2s=t2s, combmode='ste')
+    comb = combine.make_optcom(data, tes, mask, t2s=t2s, combmode="ste")
     assert comb.shape == (n_voxels, n_trs)
 
     # Normal STE call
-    comb = combine.make_optcom(data, tes, mask, t2s=None, combmode='ste')
+    comb = combine.make_optcom(data, tes, mask, t2s=None, combmode="ste")
     assert comb.shape == (n_voxels, n_trs)

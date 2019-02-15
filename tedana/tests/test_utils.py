@@ -8,30 +8,29 @@ import nibabel as nib
 import numpy as np
 import pytest
 
-from tedana import (utils, io)
+from tedana import utils, io
 
 rs = np.random.RandomState(1234)
-datadir = pjoin(dirname(__file__), 'data')
-fnames = [pjoin(datadir, 'echo{}.nii.gz'.format(n)) for n in range(1, 4)]
-tes = ['14.5', '38.5', '62.5']
+datadir = pjoin(dirname(__file__), "data")
+fnames = [pjoin(datadir, "echo{}.nii.gz".format(n)) for n in range(1, 4)]
+tes = ["14.5", "38.5", "62.5"]
 
 
 def test_get_dtype():
     # various combinations of input types
     good_inputs = [
-        (['echo1.nii.gz', 'echo2.nii.gz', 'echo3.nii.gz'], 'NIFTI'),
-        ('echo1.nii.gz', 'NIFTI'),
-        (['echo1.unknown', 'echo2.unknown', 'echo3.unknown'], 'OTHER'),
-        ('echo1.unknown', 'OTHER'),
-        (nib.Nifti1Image(np.zeros((10,)*3),
-                         affine=np.diag(np.ones(4))), 'NIFTI')
+        (["echo1.nii.gz", "echo2.nii.gz", "echo3.nii.gz"], "NIFTI"),
+        ("echo1.nii.gz", "NIFTI"),
+        (["echo1.unknown", "echo2.unknown", "echo3.unknown"], "OTHER"),
+        ("echo1.unknown", "OTHER"),
+        (nib.Nifti1Image(np.zeros((10,) * 3), affine=np.diag(np.ones(4))), "NIFTI"),
     ]
 
     for (input, expected) in good_inputs:
         assert utils.get_dtype(input) == expected
 
     with pytest.raises(ValueError):  # mixed arrays don't work
-        utils.get_dtype(['echo1.unknown', 'echo1.nii.gz'])
+        utils.get_dtype(["echo1.unknown", "echo1.nii.gz"])
 
     with pytest.raises(TypeError):  # non-img_like inputs don't work
         utils.get_dtype(rs.rand(100, 100))
@@ -53,7 +52,7 @@ def test_unmask():
         (rs.rand(n_data, 3), float),  # 2D float
         (rs.rand(n_data, 3, 3), float),  # 3D float
         (rs.randint(10, size=(n_data, 3)), int),  # 2D int
-        (rs.randint(10, size=(n_data, 3, 3)), int)  # 3D int
+        (rs.randint(10, size=(n_data, 3, 3)), int),  # 3D int
     ]
 
     for (input, dtype) in inputs:
@@ -93,8 +92,7 @@ def test_andb():
 
     # confirm error raised when dimensions are not the same
     with pytest.raises(ValueError):
-        utils.andb([rs.randint(10, size=(10, 10)),
-                    rs.randint(10, size=(20, 20))])
+        utils.andb([rs.randint(10, size=(10, 10)), rs.randint(10, size=(20, 20))])
 
 
 def test_load_image():
@@ -127,13 +125,13 @@ def test_make_adaptive_mask():
     # masksum has correct values
     vals, counts = np.unique(masksum, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([13564,  3977,  5060, 41749]))
+    assert np.allclose(counts, np.array([13564, 3977, 5060, 41749]))
 
     # test user-defined mask
     # TODO: Add mask file with no bad voxels to test against
-    mask, masksum = utils.make_adaptive_mask(data, mask=pjoin(datadir,
-                                                              'mask.nii.gz'),
-                                             minimum=False, getsum=True)
+    mask, masksum = utils.make_adaptive_mask(
+        data, mask=pjoin(datadir, "mask.nii.gz"), minimum=False, getsum=True
+    )
     assert np.allclose(mask, masksum.astype(bool))
 
 

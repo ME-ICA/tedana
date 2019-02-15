@@ -12,7 +12,7 @@ import nilearn.image as niimg
 from nilearn._utils import check_niimg
 from nilearn.regions import connected_regions
 
-from tedana import (combine, io, utils)
+from tedana import combine, io, utils
 
 LGR = logging.getLogger(__name__)
 
@@ -20,9 +20,22 @@ F_MAX = 500
 Z_MAX = 8
 
 
-def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
-                     reindex=False, mmixN=None, full_sel=True, label=None,
-                     out_dir='.', verbose=False):
+def fitmodels_direct(
+    catd,
+    mmix,
+    mask,
+    t2s,
+    t2s_full,
+    tes,
+    combmode,
+    ref_img,
+    reindex=False,
+    mmixN=None,
+    full_sel=True,
+    label=None,
+    out_dir=".",
+    verbose=False,
+):
     """
     Fit TE-dependence and -independence models to components.
 
@@ -68,33 +81,42 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     mmix_new : :obj:`numpy.ndarray`
     """
     if not (catd.shape[0] == t2s.shape[0] == t2s_full.shape[0] == mask.shape[0]):
-        raise ValueError('First dimensions (number of samples) of catd ({0}), '
-                         't2s ({1}), and mask ({2}) do not '
-                         'match'.format(catd.shape[0], t2s.shape[0],
-                                        mask.shape[0]))
+        raise ValueError(
+            "First dimensions (number of samples) of catd ({0}), "
+            "t2s ({1}), and mask ({2}) do not "
+            "match".format(catd.shape[0], t2s.shape[0], mask.shape[0])
+        )
     elif catd.shape[1] != len(tes):
-        raise ValueError('Second dimension of catd ({0}) does not match '
-                         'number of echoes provided (tes; '
-                         '{1})'.format(catd.shape[1], len(tes)))
+        raise ValueError(
+            "Second dimension of catd ({0}) does not match "
+            "number of echoes provided (tes; "
+            "{1})".format(catd.shape[1], len(tes))
+        )
     elif catd.shape[2] != mmix.shape[0]:
-        raise ValueError('Third dimension (number of volumes) of catd ({0}) '
-                         'does not match first dimension of '
-                         'mmix ({1})'.format(catd.shape[2], mmix.shape[0]))
+        raise ValueError(
+            "Third dimension (number of volumes) of catd ({0}) "
+            "does not match first dimension of "
+            "mmix ({1})".format(catd.shape[2], mmix.shape[0])
+        )
     elif t2s.shape != t2s_full.shape:
-        raise ValueError('Shape of t2s array {0} does not match shape of '
-                         't2s_full array {1}'.format(t2s.shape,
-                                                     t2s_full.shape))
+        raise ValueError(
+            "Shape of t2s array {0} does not match shape of "
+            "t2s_full array {1}".format(t2s.shape, t2s_full.shape)
+        )
     elif t2s.ndim == 2:
         if catd.shape[2] != t2s.shape[1]:
-            raise ValueError('Third dimension (number of volumes) of catd '
-                             '({0}) does not match second dimension of '
-                             't2s ({1})'.format(catd.shape[2], t2s.shape[1]))
+            raise ValueError(
+                "Third dimension (number of volumes) of catd "
+                "({0}) does not match second dimension of "
+                "t2s ({1})".format(catd.shape[2], t2s.shape[1])
+            )
 
     mask = t2s != 0  # Override mask because problems
 
     # compute optimal combination of raw data
-    tsoc = combine.make_optcom(catd, tes, mask, t2s=t2s_full, combmode=combmode,
-                               verbose=False).astype(float)[mask]
+    tsoc = combine.make_optcom(
+        catd, tes, mask, t2s=t2s_full, combmode=combmode, verbose=False
+    ).astype(float)[mask]
 
     # demean optimal combination
     tsoc_dm = tsoc - tsoc.mean(axis=-1, keepdims=True)
@@ -117,12 +139,11 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     mmix *= signs
     WTS *= signs
     PSC *= signs
-    totvar = (tsoc_B**2).sum()
-    totvar_norm = (WTS**2).sum()
+    totvar = (tsoc_B ** 2).sum()
+    totvar_norm = (WTS ** 2).sum()
 
     # compute Betas and means over TEs for TE-dependence analysis
-    betas = get_coeffs(catd, mmix, np.repeat(mask[:, np.newaxis], len(tes),
-                                             axis=1))
+    betas = get_coeffs(catd, mmix, np.repeat(mask[:, np.newaxis], len(tes), axis=1))
     n_samp, n_echos, n_components = betas.shape
     n_voxels = mask.sum()
     n_data_voxels = (t2s != 0).sum()
@@ -155,30 +176,33 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     pred_R2_maps = np.zeros([n_data_voxels, n_echos, n_components])
     pred_S0_maps = np.zeros([n_data_voxels, n_echos, n_components])
 
-    LGR.info('Fitting TE- and S0-dependent models to components')
+    LGR.info("Fitting TE- and S0-dependent models to components")
     for i_comp in range(n_components):
         # size of B is (n_echoes, n_samples)
         B = np.atleast_3d(betamask)[:, :, i_comp].T
-        alpha = (np.abs(B)**2).sum(axis=0)
-        varex[i_comp] = (tsoc_B[:, i_comp]**2).sum() / totvar * 100.
-        varex_norm[i_comp] = (utils.unmask(WTS, mask)[t2s != 0][:, i_comp]**2).sum() /\
-            totvar_norm * 100.
+        alpha = (np.abs(B) ** 2).sum(axis=0)
+        varex[i_comp] = (tsoc_B[:, i_comp] ** 2).sum() / totvar * 100.0
+        varex_norm[i_comp] = (
+            (utils.unmask(WTS, mask)[t2s != 0][:, i_comp] ** 2).sum()
+            / totvar_norm
+            * 100.0
+        )
 
         # S0 Model
         # (S,) model coefficient map
-        coeffs_S0 = (B * X1).sum(axis=0) / (X1**2).sum(axis=0)
+        coeffs_S0 = (B * X1).sum(axis=0) / (X1 ** 2).sum(axis=0)
         pred_S0 = X1 * np.tile(coeffs_S0, (n_echos, 1))
         pred_S0_maps[:, :, i_comp] = pred_S0.T
-        SSE_S0 = (B - pred_S0)**2
+        SSE_S0 = (B - pred_S0) ** 2
         SSE_S0 = SSE_S0.sum(axis=0)  # (S,) prediction error map
         F_S0 = (alpha - SSE_S0) * (n_echos - 1) / (SSE_S0)
         F_S0_maps[:, i_comp] = F_S0
 
         # R2 Model
-        coeffs_R2 = (B * X2).sum(axis=0) / (X2**2).sum(axis=0)
+        coeffs_R2 = (B * X2).sum(axis=0) / (X2 ** 2).sum(axis=0)
         pred_R2 = X2 * np.tile(coeffs_R2, (n_echos, 1))
         pred_R2_maps[:, :, i_comp] = pred_R2.T
-        SSE_R2 = (B - pred_R2)**2
+        SSE_R2 = (B - pred_R2) ** 2
         SSE_R2 = SSE_R2.sum(axis=0)
         F_R2 = (alpha - SSE_R2) * (n_echos - 1) / (SSE_R2)
         F_R2_maps[:, i_comp] = F_R2
@@ -186,14 +210,14 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         # compute weights as Z-values
         wtsZ = (WTS[:, i_comp] - WTS[:, i_comp].mean()) / WTS[:, i_comp].std()
         wtsZ[np.abs(wtsZ) > Z_MAX] = (Z_MAX * (np.abs(wtsZ) / wtsZ))[
-            np.abs(wtsZ) > Z_MAX]
+            np.abs(wtsZ) > Z_MAX
+        ]
         Z_maps[:, i_comp] = wtsZ
 
         # compute Kappa and Rho
         F_S0[F_S0 > F_MAX] = F_MAX
         F_R2[F_R2 > F_MAX] = F_MAX
-        norm_weights = np.abs(np.squeeze(
-            utils.unmask(wtsZ, mask)[t2s != 0]**2.))
+        norm_weights = np.abs(np.squeeze(utils.unmask(wtsZ, mask)[t2s != 0] ** 2.0))
         kappas[i_comp] = np.average(F_R2, weights=norm_weights)
         rhos[i_comp] = np.average(F_S0, weights=norm_weights)
 
@@ -219,72 +243,99 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
 
     if verbose:
         # Echo-specific weight maps for each of the ICA components.
-        io.filewrite(betas, op.join(out_dir, '{0}betas_catd.nii'.format(label)),
-                     ref_img)
+        io.filewrite(
+            betas, op.join(out_dir, "{0}betas_catd.nii".format(label)), ref_img
+        )
         # Echo-specific maps of predicted values for R2 and S0 models for each
         # component.
-        io.filewrite(utils.unmask(pred_R2_maps, mask),
-                     op.join(out_dir, '{0}R2_pred.nii'.format(label)), ref_img)
-        io.filewrite(utils.unmask(pred_S0_maps, mask),
-                     op.join(out_dir, '{0}S0_pred.nii'.format(label)), ref_img)
+        io.filewrite(
+            utils.unmask(pred_R2_maps, mask),
+            op.join(out_dir, "{0}R2_pred.nii".format(label)),
+            ref_img,
+        )
+        io.filewrite(
+            utils.unmask(pred_S0_maps, mask),
+            op.join(out_dir, "{0}S0_pred.nii".format(label)),
+            ref_img,
+        )
         # Weight maps used to average metrics across voxels
-        io.filewrite(utils.unmask(Z_maps ** 2., mask),
-                     op.join(out_dir, '{0}metric_weights.nii'.format(label)),
-                     ref_img)
+        io.filewrite(
+            utils.unmask(Z_maps ** 2.0, mask),
+            op.join(out_dir, "{0}metric_weights.nii".format(label)),
+            ref_img,
+        )
 
-    comptab = pd.DataFrame(comptab,
-                           columns=['kappa', 'rho',
-                                    'variance explained',
-                                    'normalized variance explained'])
-    comptab.index.name = 'component'
+    comptab = pd.DataFrame(
+        comptab,
+        columns=["kappa", "rho", "variance explained", "normalized variance explained"],
+    )
+    comptab.index.name = "component"
 
     # full selection including clustering criteria
     seldict = None
     if full_sel:
-        LGR.info('Performing spatial clustering of components')
+        LGR.info("Performing spatial clustering of components")
         csize = np.max([int(n_voxels * 0.0005) + 5, 20])
-        LGR.debug('Using minimum cluster size: {}'.format(csize))
+        LGR.debug("Using minimum cluster size: {}".format(csize))
         for i_comp in range(n_components):
             # save out files
             out = np.zeros((n_samp, 4))
             out[:, 0] = np.squeeze(utils.unmask(PSC[:, i_comp], mask))
-            out[:, 1] = np.squeeze(utils.unmask(F_R2_maps[:, i_comp],
-                                                t2s != 0))
-            out[:, 2] = np.squeeze(utils.unmask(F_S0_maps[:, i_comp],
-                                                t2s != 0))
+            out[:, 1] = np.squeeze(utils.unmask(F_R2_maps[:, i_comp], t2s != 0))
+            out[:, 2] = np.squeeze(utils.unmask(F_S0_maps[:, i_comp], t2s != 0))
             out[:, 3] = np.squeeze(utils.unmask(Z_maps[:, i_comp], mask))
 
             ccimg = io.new_nii_like(ref_img, out)
 
             # Do simple clustering on F
-            sel = spatclust(ccimg, min_cluster_size=csize, threshold=fmin,
-                            index=[1, 2], mask=(t2s != 0))
+            sel = spatclust(
+                ccimg,
+                min_cluster_size=csize,
+                threshold=fmin,
+                index=[1, 2],
+                mask=(t2s != 0),
+            )
             F_R2_clmaps[:, i_comp] = sel[:, 0]
             F_S0_clmaps[:, i_comp] = sel[:, 1]
             countsigFR2 = F_R2_clmaps[:, i_comp].sum()
             countsigFS0 = F_S0_clmaps[:, i_comp].sum()
 
             # Do simple clustering on Z at p<0.05
-            sel = spatclust(ccimg, min_cluster_size=csize, threshold=1.95,
-                            index=3, mask=mask)
+            sel = spatclust(
+                ccimg, min_cluster_size=csize, threshold=1.95, index=3, mask=mask
+            )
             Z_clmaps[:, i_comp] = sel
 
             # Do simple clustering on ranked signal-change map
-            spclust_input = utils.unmask(stats.rankdata(tsoc_Babs[:, i_comp]),
-                                         mask)
+            spclust_input = utils.unmask(stats.rankdata(tsoc_Babs[:, i_comp]), mask)
             spclust_input = io.new_nii_like(ref_img, spclust_input)
             Br_R2_clmaps[:, i_comp] = spatclust(
-                spclust_input, min_cluster_size=csize,
-                threshold=(max(tsoc_Babs.shape) - countsigFR2), mask=mask)
+                spclust_input,
+                min_cluster_size=csize,
+                threshold=(max(tsoc_Babs.shape) - countsigFR2),
+                mask=mask,
+            )
             Br_S0_clmaps[:, i_comp] = spatclust(
-                spclust_input, min_cluster_size=csize,
-                threshold=(max(tsoc_Babs.shape) - countsigFS0), mask=mask)
+                spclust_input,
+                min_cluster_size=csize,
+                threshold=(max(tsoc_Babs.shape) - countsigFS0),
+                mask=mask,
+            )
 
         seldict = {}
-        selvars = ['WTS', 'tsoc_B', 'PSC',
-                   'Z_maps', 'F_R2_maps', 'F_S0_maps',
-                   'Z_clmaps', 'F_R2_clmaps', 'F_S0_clmaps',
-                   'Br_R2_clmaps', 'Br_S0_clmaps']
+        selvars = [
+            "WTS",
+            "tsoc_B",
+            "PSC",
+            "Z_maps",
+            "F_R2_maps",
+            "F_S0_maps",
+            "Z_clmaps",
+            "F_R2_clmaps",
+            "F_S0_clmaps",
+            "Br_R2_clmaps",
+            "Br_S0_clmaps",
+        ]
         for vv in selvars:
             seldict[vv] = eval(vv)
 
@@ -313,20 +364,21 @@ def computefeats2(data, mmix, mask, normalize=True):
         Data in component space
     """
     if data.ndim != 2:
-        raise ValueError('Parameter data should be 2d, not {0}d'.format(data.ndim))
+        raise ValueError("Parameter data should be 2d, not {0}d".format(data.ndim))
     elif mmix.ndim not in [2]:
-        raise ValueError('Parameter mmix should be 2d, not '
-                         '{0}d'.format(mmix.ndim))
+        raise ValueError("Parameter mmix should be 2d, not " "{0}d".format(mmix.ndim))
     elif mask.ndim != 1:
-        raise ValueError('Parameter mask should be 1d, not {0}d'.format(mask.ndim))
+        raise ValueError("Parameter mask should be 1d, not {0}d".format(mask.ndim))
     elif data.shape[0] != mask.shape[0]:
-        raise ValueError('First dimensions (number of samples) of data ({0}) '
-                         'and mask ({1}) do not match.'.format(data.shape[0],
-                                                               mask.shape[0]))
+        raise ValueError(
+            "First dimensions (number of samples) of data ({0}) "
+            "and mask ({1}) do not match.".format(data.shape[0], mask.shape[0])
+        )
     elif data.shape[1] != mmix.shape[0]:
-        raise ValueError('Second dimensions (number of volumes) of data ({0}) '
-                         'and mmix ({1}) do not match.'.format(data.shape[0],
-                                                               mmix.shape[0]))
+        raise ValueError(
+            "Second dimensions (number of volumes) of data ({0}) "
+            "and mmix ({1}) do not match.".format(data.shape[0], mmix.shape[0])
+        )
 
     # demean masked data
     data_vn = stats.zscore(data[mask], axis=-1)
@@ -344,8 +396,9 @@ def computefeats2(data, mmix, mask, normalize=True):
     # normalize data
     if normalize:
         data_Zm = stats.zscore(data_Z, axis=0)
-        data_Z = data_Zm + (data_Z.mean(axis=0, keepdims=True) /
-                            data_Z.std(axis=0, keepdims=True))
+        data_Z = data_Zm + (
+            data_Z.mean(axis=0, keepdims=True) / data_Z.std(axis=0, keepdims=True)
+        )
     return data_Z
 
 
@@ -370,21 +423,29 @@ def get_coeffs(data, X, mask=None, add_const=False):
         Array of `S` sample betas for `C` predictors
     """
     if data.ndim not in [2, 3]:
-        raise ValueError('Parameter data should be 2d or 3d, not {0}d'.format(data.ndim))
+        raise ValueError(
+            "Parameter data should be 2d or 3d, not {0}d".format(data.ndim)
+        )
     elif X.ndim not in [2]:
-        raise ValueError('Parameter X should be 2d, not {0}d'.format(X.ndim))
+        raise ValueError("Parameter X should be 2d, not {0}d".format(X.ndim))
     elif data.shape[-1] != X.shape[0]:
-        raise ValueError('Last dimension (dimension {0}) of data ({1}) does not '
-                         'match first dimension of '
-                         'X ({2})'.format(data.ndim, data.shape[-1], X.shape[0]))
+        raise ValueError(
+            "Last dimension (dimension {0}) of data ({1}) does not "
+            "match first dimension of "
+            "X ({2})".format(data.ndim, data.shape[-1], X.shape[0])
+        )
 
     # mask data and flip (time x samples)
     if mask is not None:
         if mask.ndim not in [1, 2]:
-            raise ValueError('Parameter data should be 1d or 2d, not {0}d'.format(mask.ndim))
+            raise ValueError(
+                "Parameter data should be 1d or 2d, not {0}d".format(mask.ndim)
+            )
         elif data.shape[0] != mask.shape[0]:
-            raise ValueError('First dimensions of data ({0}) and mask ({1}) do not '
-                             'match'.format(data.shape[0], mask.shape[0]))
+            raise ValueError(
+                "First dimensions of data ({0}) and mask ({1}) do not "
+                "match".format(data.shape[0], mask.shape[0])
+            )
         mdata = data[mask, :].T
     else:
         mdata = data.T
@@ -439,17 +500,23 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     dm_optcom : (S x T) array_like
         Input `optcom` with global signal removed from time series
     """
-    LGR.info('Applying amplitude-based T1 equilibration correction')
+    LGR.info("Applying amplitude-based T1 equilibration correction")
     if catd.shape[0] != optcom.shape[0]:
-        raise ValueError('First dimensions of catd ({0}) and optcom ({1}) do not '
-                         'match'.format(catd.shape[0], optcom.shape[0]))
+        raise ValueError(
+            "First dimensions of catd ({0}) and optcom ({1}) do not "
+            "match".format(catd.shape[0], optcom.shape[0])
+        )
     elif catd.shape[1] != n_echos:
-        raise ValueError('Second dimension of catd ({0}) does not match '
-                         'n_echos ({1})'.format(catd.shape[1], n_echos))
+        raise ValueError(
+            "Second dimension of catd ({0}) does not match "
+            "n_echos ({1})".format(catd.shape[1], n_echos)
+        )
     elif catd.shape[2] != optcom.shape[1]:
-        raise ValueError('Third dimension of catd ({0}) does not match '
-                         'second dimension of optcom '
-                         '({1})'.format(catd.shape[2], optcom.shape[1]))
+        raise ValueError(
+            "Third dimension of catd ({0}) does not match "
+            "second dimension of optcom "
+            "({1})".format(catd.shape[2], optcom.shape[1])
+        )
 
     # Legendre polynomial basis for denoising
     bounds = np.linspace(-1, 1, optcom.shape[-1])
@@ -466,31 +533,35 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     detr = dat - np.dot(sol.T, Lmix.T)[0]
     sphis = (detr).min(axis=1)
     sphis -= sphis.mean()
-    io.filewrite(utils.unmask(sphis, Gmask), 'T1gs', ref_img)
+    io.filewrite(utils.unmask(sphis, Gmask), "T1gs", ref_img)
 
     # find time course ofc the spatial global signal
     # make basis with the Legendre basis
     glsig = np.linalg.lstsq(np.atleast_2d(sphis).T, dat, rcond=None)[0]
     glsig = stats.zscore(glsig, axis=None)
-    np.savetxt('glsig.1D', glsig)
+    np.savetxt("glsig.1D", glsig)
     glbase = np.hstack([Lmix, glsig.T])
 
     # Project global signal out of optimally combined data
     sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T, rcond=None)[0]
-    tsoc_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T,
-                             np.atleast_2d(glbase.T[dtrank])) + Gmu[Gmask][:, np.newaxis]
+    tsoc_nogs = (
+        dat
+        - np.dot(np.atleast_2d(sol[dtrank]).T, np.atleast_2d(glbase.T[dtrank]))
+        + Gmu[Gmask][:, np.newaxis]
+    )
 
-    io.filewrite(optcom, 'tsoc_orig', ref_img)
+    io.filewrite(optcom, "tsoc_orig", ref_img)
     dm_optcom = utils.unmask(tsoc_nogs, Gmask)
-    io.filewrite(dm_optcom, 'tsoc_nogs', ref_img)
+    io.filewrite(dm_optcom, "tsoc_nogs", ref_img)
 
     # Project glbase out of each echo
     dm_catd = catd.copy()  # don't overwrite catd
     for echo in range(n_echos):
         dat = dm_catd[:, echo, :][Gmask]
         sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T, rcond=None)[0]
-        e_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T,
-                              np.atleast_2d(glbase.T[dtrank]))
+        e_nogs = dat - np.dot(
+            np.atleast_2d(sol[dtrank]).T, np.atleast_2d(glbase.T[dtrank])
+        )
         dm_catd[:, echo, :] = utils.unmask(e_nogs, Gmask)
 
     return dm_catd, dm_optcom
@@ -544,17 +615,18 @@ def spatclust(img, min_cluster_size, threshold=None, index=None, mask=None):
         # `min_region_size` is not inclusive (as in AFNI's `3dmerge`)
         # subtract one voxel to ensure we aren't hitting this thresholding issue
         try:
-            clsts = connected_regions(subbrick,
-                                      min_region_size=int(min_cluster_size) - 1,
-                                      smoothing_fwhm=None,
-                                      extract_type='connected_components')[0]
+            clsts = connected_regions(
+                subbrick,
+                min_region_size=int(min_cluster_size) - 1,
+                smoothing_fwhm=None,
+                extract_type="connected_components",
+            )[0]
         # if no clusters are detected we get a TypeError; create a blank 4D
         # image object as a placeholder instead
         except TypeError:
-            clsts = niimg.new_img_like(subbrick,
-                                       np.zeros(subbrick.shape + (1,)))
+            clsts = niimg.new_img_like(subbrick, np.zeros(subbrick.shape + (1,)))
         # if multiple clusters detected, collapse into one volume
-        clout += [niimg.math_img('np.sum(a, axis=-1)', a=clsts)]
+        clout += [niimg.math_img("np.sum(a, axis=-1)", a=clsts)]
 
     # convert back to data array and make boolean
     clustered = utils.load_image(niimg.concat_imgs(clout).get_data()) != 0

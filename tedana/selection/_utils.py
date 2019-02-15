@@ -36,13 +36,13 @@ def do_svm(X_train, y_train, X_test, svmtype=0):
     """
 
     if svmtype == 0:
-        clf = svm.SVC(kernel='linear')
+        clf = svm.SVC(kernel="linear")
     elif svmtype == 1:
-        clf = svm.LinearSVC(loss='squared_hinge', penalty='l1', dual=False)
+        clf = svm.LinearSVC(loss="squared_hinge", penalty="l1", dual=False)
     elif svmtype == 2:
-        clf = svm.SVC(kernel='linear', probability=True)
+        clf = svm.SVC(kernel="linear", probability=True)
     else:
-        raise ValueError('Input svmtype not in [0, 1, 2]: {}'.format(svmtype))
+        raise ValueError("Input svmtype not in [0, 1, 2]: {}".format(svmtype))
 
     clf.fit(X_train, y_train)
     y_pred = clf.predict(X_test)
@@ -68,11 +68,16 @@ def getelbow_cons(arr, return_val=False):
         elbow index (if return_val is False)
     """
     if arr.ndim != 1:
-        raise ValueError('Parameter arr should be 1d, not {0}d'.format(arr.ndim))
+        raise ValueError("Parameter arr should be 1d, not {0}d".format(arr.ndim))
     arr = np.sort(arr)[::-1]
     nk = len(arr)
-    temp1 = [(arr[nk - 5 - ii - 1] > arr[nk - 5 - ii:nk].mean() + 2 * arr[nk - 5 - ii:nk].std())
-             for ii in range(nk - 5)]
+    temp1 = [
+        (
+            arr[nk - 5 - ii - 1]
+            > arr[nk - 5 - ii : nk].mean() + 2 * arr[nk - 5 - ii : nk].std()
+        )
+        for ii in range(nk - 5)
+    ]
     ds = np.array(temp1[::-1], dtype=np.int)
     dsum = []
     c_ = 0
@@ -106,7 +111,7 @@ def getelbow(arr, return_val=False):
         elbow index (if return_val is False)
     """
     if arr.ndim != 1:
-        raise ValueError('Parameter arr should be 1d, not {0}d'.format(arr.ndim))
+        raise ValueError("Parameter arr should be 1d, not {0}d".format(arr.ndim))
     arr = np.sort(arr)[::-1]
     n_components = arr.shape[0]
     coords = np.array([np.arange(n_components), arr])

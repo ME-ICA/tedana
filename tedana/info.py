@@ -6,66 +6,65 @@ Base module variables
 """
 
 from ._version import get_versions
-__version__ = get_versions()['version']
+
+__version__ = get_versions()["version"]
 del get_versions
 
-__author__ = 'tedana developers'
-__copyright__ = 'Copyright 2018, tedana developers'
-__credits__ = ['Elizabeth DuPre', 'Prantik Kundu', 'Ross Markello',
-               'Taylor Salo', 'Kirstie Whitaker', 'Dan Handwerker']
-__license__ = 'LGPL 2.1'
-__maintainer__ = 'Elizabeth DuPre'
-__email__ = 'emd222@cornell.edu'
-__status__ = 'Prototype'
-__url__ = 'https://github.com/me-ica/tedana'
-__packagename__ = 'tedana'
-__description__ = ('TE-Dependent Analysis (tedana) of multi-echo functional '
-                   'magnetic resonance imaging (fMRI) data.')
-__longdesc__ = ('To do.')
+__author__ = "tedana developers"
+__copyright__ = "Copyright 2018, tedana developers"
+__credits__ = [
+    "Elizabeth DuPre",
+    "Prantik Kundu",
+    "Ross Markello",
+    "Taylor Salo",
+    "Kirstie Whitaker",
+    "Dan Handwerker",
+]
+__license__ = "LGPL 2.1"
+__maintainer__ = "Elizabeth DuPre"
+__email__ = "emd222@cornell.edu"
+__status__ = "Prototype"
+__url__ = "https://github.com/me-ica/tedana"
+__packagename__ = "tedana"
+__description__ = (
+    "TE-Dependent Analysis (tedana) of multi-echo functional "
+    "magnetic resonance imaging (fMRI) data."
+)
+__longdesc__ = "To do."
 
-DOWNLOAD_URL = (
-    'https://github.com/ME-ICA/{name}/archive/{ver}.tar.gz'.format(
-        name=__packagename__, ver=__version__))
+DOWNLOAD_URL = "https://github.com/ME-ICA/{name}/archive/{ver}.tar.gz".format(
+    name=__packagename__, ver=__version__
+)
 
 REQUIRES = [
-    'numpy',
-    'scikit-learn',
-    'pywavelets',
-    'nilearn',
-    'nibabel>=2.1.0',
-    'scipy',
-    'versioneer',
-    'pandas'
+    "numpy",
+    "scikit-learn",
+    "pywavelets",
+    "nilearn",
+    "nibabel>=2.1.0",
+    "scipy",
+    "versioneer",
+    "pandas",
 ]
 
-TESTS_REQUIRES = [
-    'codecov',
-    'pytest',
-    'pytest-cov'
-]
+TESTS_REQUIRES = ["codecov", "pytest", "pytest-cov"]
 
 EXTRA_REQUIRES = {
-    'doc': [
-        'sphinx>=1.5.3',
-        'sphinx_rtd_theme',
-        'sphinx-argparse',
-        'numpydoc'
-    ],
-    'tests': TESTS_REQUIRES,
-    'duecredit': ['duecredit'],
+    "doc": ["sphinx>=1.5.3", "sphinx_rtd_theme", "sphinx-argparse", "numpydoc"],
+    "tests": TESTS_REQUIRES,
+    "duecredit": ["duecredit"],
 }
 
 # Enable a handle to install all extra dependencies at once
-EXTRA_REQUIRES['all'] = list(set([
-    v for deps in EXTRA_REQUIRES.values() for v in deps]))
+EXTRA_REQUIRES["all"] = list(set([v for deps in EXTRA_REQUIRES.values() for v in deps]))
 
 # Package classifiers
 CLASSIFIERS = [
-    'Development Status :: 4 - Beta',
-    'Intended Audience :: Science/Research',
-    'Topic :: Scientific/Engineering :: Information Analysis',
-    'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
-    'Programming Language :: Python :: 3.5',
-    'Programming Language :: Python :: 3.6',
-    'Programming Language :: Python :: 3.7'
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
 ]

@@ -9,9 +9,11 @@ from tedana.due import due, Doi
 LGR = logging.getLogger(__name__)
 
 
-@due.dcite(Doi('10.1002/(SICI)1522-2594(199907)42:1<87::AID-MRM13>3.0.CO;2-O'),
-           description='T2* method of combining data across echoes using '
-                       'monoexponential equation.')
+@due.dcite(
+    Doi("10.1002/(SICI)1522-2594(199907)42:1<87::AID-MRM13>3.0.CO;2-O"),
+    description="T2* method of combining data across echoes using "
+    "monoexponential equation.",
+)
 def _combine_t2s(data, tes, ft2s):
     """
     Combine data across echoes using weighted averaging according to voxel-
@@ -44,14 +46,16 @@ def _combine_t2s(data, tes, ft2s):
         # If all values across echos are 0, set to 1 to avoid
         # divide-by-zero errors
         ax0_idx, ax2_idx = np.where(np.all(alpha == 0, axis=1))
-        alpha[ax0_idx, :, ax2_idx] = 1.
+        alpha[ax0_idx, :, ax2_idx] = 1.0
     combined = np.average(data, axis=1, weights=alpha)
     return combined
 
 
-@due.dcite(Doi('10.1002/mrm.20900'),
-           description='STE method of combining data across echoes using just '
-                       'SNR/signal and TE.')
+@due.dcite(
+    Doi("10.1002/mrm.20900"),
+    description="STE method of combining data across echoes using just "
+    "SNR/signal and TE.",
+)
 def _combine_ste(data, tes):
     """
     Combine data across echoes using SNR/signal and TE.
@@ -75,7 +79,7 @@ def _combine_ste(data, tes):
     return combined
 
 
-def make_optcom(data, tes, mask, t2s=None, combmode='t2s', verbose=True):
+def make_optcom(data, tes, mask, t2s=None, combmode="t2s", verbose=True):
     """
     Optimally combine BOLD data across TEs.
 
@@ -113,44 +117,49 @@ def make_optcom(data, tes, mask, t2s=None, combmode='t2s', verbose=True):
         estimated in the previous step.
     """
     if data.ndim != 3:
-        raise ValueError('Input data must be 3D (S x E x T)')
+        raise ValueError("Input data must be 3D (S x E x T)")
 
     if len(tes) != data.shape[1]:
-        raise ValueError('Number of echos provided does not match second '
-                         'dimension of input data: {0} != '
-                         '{1}'.format(len(tes), data.shape[1]))
+        raise ValueError(
+            "Number of echos provided does not match second "
+            "dimension of input data: {0} != "
+            "{1}".format(len(tes), data.shape[1])
+        )
 
     if mask.ndim != 1:
-        raise ValueError('Mask is not 1D')
+        raise ValueError("Mask is not 1D")
     elif mask.shape[0] != data.shape[0]:
-        raise ValueError('Mask and data do not have same number of '
-                         'voxels/samples: {0} != {1}'.format(mask.shape[0],
-                                                             data.shape[0]))
+        raise ValueError(
+            "Mask and data do not have same number of "
+            "voxels/samples: {0} != {1}".format(mask.shape[0], data.shape[0])
+        )
 
-    if combmode not in ['t2s', 'ste']:
+    if combmode not in ["t2s", "ste"]:
         raise ValueError("Argument 'combmode' must be either 't2s' or 'ste'")
-    elif combmode == 't2s' and t2s is None:
-        raise ValueError("Argument 't2s' must be supplied if 'combmode' is "
-                         "set to 't2s'.")
-    elif combmode == 'ste' and t2s is not None:
-        LGR.warning("Argument 't2s' is not required if 'combmode' is 'ste'. "
-                    "'t2s' array will not be used.")
+    elif combmode == "t2s" and t2s is None:
+        raise ValueError(
+            "Argument 't2s' must be supplied if 'combmode' is " "set to 't2s'."
+        )
+    elif combmode == "ste" and t2s is not None:
+        LGR.warning(
+            "Argument 't2s' is not required if 'combmode' is 'ste'. "
+            "'t2s' array will not be used."
+        )
 
     data = data[mask, :, :]  # mask out empty voxels/samples
     tes = np.array(tes)[np.newaxis, ...]  # (1 x E) array_like
 
     if t2s is not None:
         if t2s.ndim == 1:
-            msg = 'Optimally combining data with voxel-wise T2 estimates'
+            msg = "Optimally combining data with voxel-wise T2 estimates"
         else:
-            msg = ('Optimally combining data with voxel- and volume-wise T2 '
-                   'estimates')
+            msg = "Optimally combining data with voxel- and volume-wise T2 " "estimates"
         t2s = t2s[mask, ..., np.newaxis]  # mask out empty voxels/samples
 
         if verbose:
             LGR.info(msg)
 
-    if combmode == 'ste':
+    if combmode == "ste":
         combined = _combine_ste(data, tes)
     else:
         combined = _combine_t2s(data, tes, t2s)

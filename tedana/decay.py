@@ -62,12 +62,16 @@ def fit_decay(data, tes, mask, masksum):
     3.  Generate limited :math:`T_2^*` and :math:`S_0` maps by doing something.
     """
     if data.shape[1] != len(tes):
-        raise ValueError('Second dimension of data ({0}) does not match number '
-                         'of echoes provided (tes; {1})'.format(data.shape[1], len(tes)))
+        raise ValueError(
+            "Second dimension of data ({0}) does not match number "
+            "of echoes provided (tes; {1})".format(data.shape[1], len(tes))
+        )
     elif not (data.shape[0] == mask.shape[0] == masksum.shape[0]):
-        raise ValueError('First dimensions (number of samples) of data ({0}), '
-                         'mask ({1}), and masksum ({2}) do not '
-                         'match'.format(data.shape[0], mask.shape[0], masksum.shape[0]))
+        raise ValueError(
+            "First dimensions (number of samples) of data ({0}), "
+            "mask ({1}), and masksum ({2}) do not "
+            "match".format(data.shape[0], mask.shape[0], masksum.shape[0])
+        )
 
     if len(data.shape) == 3:
         n_samp, n_echos, n_vols = data.shape
@@ -82,17 +86,17 @@ def fit_decay(data, tes, mask, masksum):
     for echo in range(1, n_echos):
         # perform log linear fit of echo times against MR signal
         # make DV matrix: samples x (time series * echos)
-        log_data = np.log((np.abs(data[:, :echo + 1, :]) + 1).reshape(len(data), -1).T)
+        log_data = np.log((np.abs(data[:, : echo + 1, :]) + 1).reshape(len(data), -1).T)
         # make IV matrix: intercept/TEs x (time series * echos)
-        x = np.column_stack([np.ones(echo + 1), [-te for te in tes[:echo + 1]]])
+        x = np.column_stack([np.ones(echo + 1), [-te for te in tes[: echo + 1]]])
         X = np.repeat(x, n_vols, axis=0)
 
         betas = np.linalg.lstsq(X, log_data, rcond=None)[0]
-        t2s = 1. / betas[1, :].T
+        t2s = 1.0 / betas[1, :].T
         s0 = np.exp(betas[0, :]).T
 
-        t2s[np.isinf(t2s)] = 500.  # why 500?
-        s0[np.isnan(s0)] = 0.      # why 0?
+        t2s[np.isinf(t2s)] = 500.0  # why 500?
+        s0[np.isnan(s0)] = 0.0  # why 0?
 
         t2ss[..., echo - 1] = np.squeeze(utils.unmask(t2s, mask))
         s0vs[..., echo - 1] = np.squeeze(utils.unmask(s0, mask))
@@ -159,7 +163,8 @@ def fit_decay_ts(data, tes, mask, masksum):
 
     for vol in range(n_vols):
         t2s_limited, s0_limited, _, _, t2s_full, s0_full = fit_decay(
-            data[:, :, vol][:, :, None], tes, mask, masksum)
+            data[:, :, vol][:, :, None], tes, mask, masksum
+        )
         t2s_limited_ts[:, vol] = t2s_limited
         s0_limited_ts[:, vol] = s0_limited
         t2s_full_ts[:, vol] = t2s_full

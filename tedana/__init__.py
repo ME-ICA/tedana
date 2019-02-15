@@ -5,7 +5,7 @@
 tedana: A Python package for TE-dependent analysis of multi-echo data.
 """
 
-from .due import (due, Doi)
+from .due import due, Doi
 
 from .info import (
     __version__,
@@ -19,23 +19,33 @@ from .info import (
     __url__,
     __packagename__,
     __description__,
-    __longdesc__
+    __longdesc__,
 )
 
 import warnings
 
 # cmp is not used, so ignore nipype-generated warnings
-warnings.filterwarnings('ignore', r'cmp not installed')
+warnings.filterwarnings("ignore", r"cmp not installed")
 
 # Citation for the algorithm.
-due.cite(Doi('10.1016/j.neuroimage.2011.12.028'),
-         description='Introduces MEICA and tedana.',
-         path='tedana', cite_module=True)
-due.cite(Doi('10.1073/pnas.1301725110'),
-         description='Improves MEICA and tedana.',
-         path='tedana', cite_module=True)
+due.cite(
+    Doi("10.1016/j.neuroimage.2011.12.028"),
+    description="Introduces MEICA and tedana.",
+    path="tedana",
+    cite_module=True,
+)
+due.cite(
+    Doi("10.1073/pnas.1301725110"),
+    description="Improves MEICA and tedana.",
+    path="tedana",
+    cite_module=True,
+)
 
 # Citation for package version.
-due.cite(Doi('10.5281/zenodo.1250561'),
-         description='The tedana package',
-         version=__version__, path='tedana', cite_module=True)
+due.cite(
+    Doi("10.5281/zenodo.1250561"),
+    description="The tedana package",
+    version=__version__,
+    path="tedana",
+    cite_module=True,
+)

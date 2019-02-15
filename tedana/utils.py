@@ -13,7 +13,7 @@ from sklearn.utils import check_array
 
 from tedana.due import due, BibTeX
 
-FORMATS = {'.nii': 'NIFTI'}
+FORMATS = {".nii": "NIFTI"}
 LGR = logging.getLogger(__name__)
 
 
@@ -35,17 +35,18 @@ def get_dtype(data):
     if isinstance(data, list):
         dtypes = np.unique([get_dtype(d) for d in data])
         if dtypes.size > 1:
-            raise ValueError('Provided data detected to have varying formats: '
-                             '{}'.format(dtypes))
+            raise ValueError(
+                "Provided data detected to have varying formats: " "{}".format(dtypes)
+            )
         return dtypes[0]
     elif isinstance(data, str):
         dtype = splitext_addext(data)[1]
     else:  # img_like?
-        if not hasattr(data, 'valid_exts'):
-            raise TypeError('Input data format cannot be detected.')
+        if not hasattr(data, "valid_exts"):
+            raise TypeError("Input data format cannot be detected.")
         dtype = data.valid_exts[0]
 
-    return FORMATS.get(dtype, 'OTHER')
+    return FORMATS.get(dtype, "OTHER")
 
 
 def getfbounds(n_echos):
@@ -131,8 +132,8 @@ def make_adaptive_mask(data, mask=None, minimum=True, getsum=False):
 
     # get 33rd %ile of `first_echo` and find corresponding index
     # NOTE: percentile is arbitrary
-    perc = np.percentile(first_echo, 33, interpolation='higher')
-    perc_val = (echo_means[:, 0] == perc)
+    perc = np.percentile(first_echo, 33, interpolation="higher")
+    perc_val = echo_means[:, 0] == perc
 
     # extract values from all echos at relevant index
     # NOTE: threshold of 1/3 voxel value is arbitrary
@@ -157,8 +158,10 @@ def make_adaptive_mask(data, mask=None, minimum=True, getsum=False):
         # TODO: Use visual report to make checking the reduced mask easier
         if np.any(masksum[mask] == 0):
             n_bad_voxels = np.sum(masksum[mask] == 0)
-            LGR.warning('{0} voxels in user-defined mask do not have good '
-                        'signal. Removing voxels from mask.'.format(n_bad_voxels))
+            LGR.warning(
+                "{0} voxels in user-defined mask do not have good "
+                "signal. Removing voxels from mask.".format(n_bad_voxels)
+            )
             mask = masksum.astype(bool)
 
     if getsum:
@@ -250,9 +253,13 @@ def moments(data):
     center_x = (X * data).sum() / total
     center_y = (Y * data).sum() / total
     col = data[:, int(center_y)]
-    width_x = np.sqrt(abs((np.arange(col.size) - center_y)**2 * col).sum() / col.sum())
+    width_x = np.sqrt(
+        abs((np.arange(col.size) - center_y) ** 2 * col).sum() / col.sum()
+    )
     row = data[int(center_x), :]
-    width_y = np.sqrt(abs((np.arange(row.size) - center_x)**2 * row).sum() / row.sum())
+    width_y = np.sqrt(
+        abs((np.arange(row.size) - center_x) ** 2 * row).sum() / row.sum()
+    )
     height = data.max()
     return height, center_x, center_y, width_x, width_y
 
@@ -283,8 +290,9 @@ def gaussian(height, center_x, center_y, width_x, width_y):
 
     width_x = float(width_x)
     width_y = float(width_y)
-    return lambda x, y: height * np.exp(-(((center_x - x) / width_x)**2 +
-                                        ((center_y - y) / width_y)**2) / 2)
+    return lambda x, y: height * np.exp(
+        -(((center_x - x) / width_x) ** 2 + ((center_y - y) / width_y) ** 2) / 2
+    )
 
 
 def fitgaussian(data):
@@ -317,27 +325,35 @@ def fitgaussian(data):
     return p
 
 
-@due.dcite(BibTeX('@article{dice1945measures,'
-                  'author={Dice, Lee R},'
-                  'title={Measures of the amount of ecologic association between species},'
-                  'year = {1945},'
-                  'publisher = {Wiley Online Library},'
-                  'journal = {Ecology},'
-                  'volume={26},'
-                  'number={3},'
-                  'pages={297--302}}'),
-           description='Introduction of Sorenson-Dice index by Dice in 1945.')
-@due.dcite(BibTeX('@article{sorensen1948method,'
-                  'author={S{\\o}rensen, Thorvald},'
-                  'title={A method of establishing groups of equal amplitude '
-                  'in plant sociology based on similarity of species and its '
-                  'application to analyses of the vegetation on Danish commons},'
-                  'year = {1948},'
-                  'publisher = {Wiley Online Library},'
-                  'journal = {Biol. Skr.},'
-                  'volume={5},'
-                  'pages={1--34}}'),
-           description='Introduction of Sorenson-Dice index by Sorenson in 1948.')
+@due.dcite(
+    BibTeX(
+        "@article{dice1945measures,"
+        "author={Dice, Lee R},"
+        "title={Measures of the amount of ecologic association between species},"
+        "year = {1945},"
+        "publisher = {Wiley Online Library},"
+        "journal = {Ecology},"
+        "volume={26},"
+        "number={3},"
+        "pages={297--302}}"
+    ),
+    description="Introduction of Sorenson-Dice index by Dice in 1945.",
+)
+@due.dcite(
+    BibTeX(
+        "@article{sorensen1948method,"
+        "author={S{\\o}rensen, Thorvald},"
+        "title={A method of establishing groups of equal amplitude "
+        "in plant sociology based on similarity of species and its "
+        "application to analyses of the vegetation on Danish commons},"
+        "year = {1948},"
+        "publisher = {Wiley Online Library},"
+        "journal = {Biol. Skr.},"
+        "volume={5},"
+        "pages={1--34}}"
+    ),
+    description="Introduction of Sorenson-Dice index by Sorenson in 1948.",
+)
 def dice(arr1, arr2):
     """
     Compute Dice's similarity index between two numpy arrays. Arrays will be
@@ -363,14 +379,14 @@ def dice(arr1, arr2):
     arr2 = np.array(arr2 != 0).astype(int)
 
     if arr1.shape != arr2.shape:
-        raise ValueError('Shape mismatch: arr1 and arr2 must have the same shape.')
+        raise ValueError("Shape mismatch: arr1 and arr2 must have the same shape.")
 
     arr_sum = arr1.sum() + arr2.sum()
     if arr_sum == 0:
         dsi = 0
     else:
         intersection = np.logical_and(arr1, arr2)
-        dsi = (2. * intersection.sum()) / arr_sum
+        dsi = (2.0 * intersection.sum()) / arr_sum
 
     return dsi
 
@@ -393,7 +409,7 @@ def andb(arrs):
     # coerce to integer and ensure all arrays are the same shape
     arrs = [check_array(arr, dtype=int, ensure_2d=False, allow_nd=True) for arr in arrs]
     if not np.all([arr1.shape == arr2.shape for arr1 in arrs for arr2 in arrs]):
-        raise ValueError('All input arrays must have same shape.')
+        raise ValueError("All input arrays must have same shape.")
 
     # sum across arrays
     result = np.sum(arrs, axis=0)
