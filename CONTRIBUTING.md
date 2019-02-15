@@ -110,15 +110,32 @@ Try to keep the changes focused. We've found that working on a [new branch][link
 
 When you're creating your pull request, please make sure to review the tedana [style conventions](#style-guide).
 
-Note that to test a change, you may need to set up your local repository to run a tedana workflow. 
+Note that to test a change, you may need to set up your local repository to run a tedana workflow.
 To do so, run
 ```
 python setup.py develop
 ```
-which should ensure all packages are correctly organized and linked on your user profile. 
-Once you've run this, your repository should be set for most changes (i.e., you do not have to re-run with every change). 
+which should ensure all packages are correctly organized and linked on your user profile.
+Once you've run this, your repository should be set for most changes (i.e., you do not have to re-run with every change).
 
-**4. Submit a [pull request][link_pullrequest].**
+**4. Run Black code formatter.**
+
+We employ the [Black code formatter][link_black] to ensure PEP8 compatibility.
+Using an automated code formatter limits changes in the code to content.
+To run Black on ``tedana``, you must have it installed.
+To do so, run
+```
+pip install black
+```
+Then, to run Black on ``tedana``, navigate to where you have the repository stored locally,
+and run
+```
+black .
+```
+Black will automatically update the files in the repository.
+You can then commit these changes.
+
+**5. Submit a [pull request][link_pullrequest].**
 
 A member of the development team will review your changes to confirm that they can be merged into the main code base.
 When opening the pull request, we ask that you follow some [specific conventions](#pull-requests).
@@ -217,6 +234,7 @@ You're awesome. :wave::smiley:
 [link_updateupstreamwiki]: https://help.github.com/articles/syncing-a-fork/
 [link_branches]: https://help.github.com/articles/creating-and-deleting-branches-within-your-repository/
 
+[link_black]: https://black.readthedocs.io/en/stable/
 [link_numpydoc]: https://numpydoc.readthedocs.io/en/latest/format.html
 [link_pep8]: https://www.python.org/dev/peps/pep-0008/
 [link_rst_guide]: http://docs.sphinxdocs.com/en/latest/step-1.html
