@@ -42,7 +42,7 @@ def test_load_data():
     d, ref = me.load_data(fnames[0], n_echos=3)
     assert d.shape == (21450, 3, 5)
     assert isinstance(ref, nib.Nifti1Image)
-    assert ref.shape == (39, 50, 11)
+    assert ref.shape == (39, 50, 11, 1)
 
     with pytest.raises(ValueError):
         me.load_data(fnames[0])

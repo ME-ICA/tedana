@@ -44,7 +44,7 @@ in-person workshops or development sprints, and when giving talks about the soft
 As stated in the code, severe or repeated violations by community members may result in exclusion
 from collective decision-making and rejection of future contributions to the ``tedana`` project.
 
-.. _code of conduct: https://github.com/ME-ICA/tedana/blob/master/Code_of_Conduct.md
+.. _code of conduct: https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md
 
 tedana's development philosophy
 --------------------------------------
