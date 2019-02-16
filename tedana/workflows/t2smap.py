@@ -83,7 +83,7 @@ def _get_parser():
         dest="combmode",
         action="store",
         choices=["t2s", "ste"],
-        help=("Combination scheme for TEs: " "t2s (Posse 1999, default), ste (Poser)"),
+        help="Combination scheme for TEs: t2s (Posse 1999, default), ste (Poser)",
         default="t2s",
     )
     optional.add_argument(

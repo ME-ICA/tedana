@@ -99,7 +99,7 @@ def _get_parser():
     optional.add_argument(
         "--manacc",
         dest="manacc",
-        help=("Comma separated list of manually " "accepted components"),
+        help="Comma separated list of manually accepted components",
         default=None,
     )
     optional.add_argument(
@@ -118,7 +118,7 @@ def _get_parser():
         dest="combmode",
         action="store",
         choices=["t2s", "ste"],
-        help=("Combination scheme for TEs: " "t2s (Posse 1999, default), ste (Poser)"),
+        help="Combination scheme for TEs: t2s (Posse 1999, default), ste (Poser)",
         default="t2s",
     )
     optional.add_argument(
@@ -456,7 +456,7 @@ def tedana_workflow(
     midk = comptable.loc[comptable["classification"] == "midk", "component"]
     ign = comptable.loc[comptable["classification"] == "ignored", "component"]
     if len(acc) == 0:
-        LGR.warning("No BOLD components detected! Please check data and " "results!")
+        LGR.warning("No BOLD components detected! Please check data and results!")
 
     if tedort:
         acc_idx = comptable.loc[

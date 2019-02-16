@@ -39,7 +39,7 @@ def eimask(dd, ees=None):
             dd[:, ee, :].flatten(), 98, interpolation_method="lower"
         )
         lthr, hthr = 0.001 * perc98, 5 * perc98
-        LGR.debug("Eimask threshold boundaries: " "{:.03f} {:.03f}".format(lthr, hthr))
+        LGR.debug("Eimask threshold boundaries: {:.03f} {:.03f}".format(lthr, hthr))
         m = dd[:, ee, :].mean(axis=1)
         imask[np.logical_and(m > lthr, m < hthr), ee] = True
 

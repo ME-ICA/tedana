@@ -201,7 +201,7 @@ def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, suffix=""):
     varexpl = (
         1 - ((dmdata.T - betas.dot(mmix.T)) ** 2.0).sum() / (dmdata ** 2.0).sum()
     ) * 100
-    LGR.info("Variance explained by ICA decomposition: " "{:.02f}%".format(varexpl))
+    LGR.info("Variance explained by ICA decomposition: {:.02f}%".format(varexpl))
 
     # create component and de-noised time series and save to files
     hikts = betas[:, acc].dot(mmix.T[acc, :])
@@ -547,7 +547,7 @@ def load_data(data, n_echos=None):
             data = data[0]
         elif len(data) == 2:  # inviable -- need more than 2 echos
             raise ValueError(
-                "Cannot run `tedana` with only two echos: " "{}".format(data)
+                "Cannot run `tedana` with only two echos: {}".format(data)
             )
         else:  # individual echo files were provided (surface or volumetric)
             fdata = np.stack([utils.load_image(f) for f in data], axis=1)
