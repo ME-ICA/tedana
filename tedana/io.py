@@ -70,7 +70,7 @@ def gen_fname(basefile, extension='_bold.nii.gz', **kwargs):
     for k, v in kwargs.items():
         add_str += '_{0}-{1}'.format(k, v)
 
-    out_file = op.join(bf_dir, prefix+add_str+extension)
+    out_file = op.join(bf_dir, prefix + add_str + extension)
     return out_file
 
 
@@ -488,7 +488,7 @@ def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img, bf):
     for i_echo in range(catd.shape[1]):
         LGR.info('Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo + 1))
         write_split_ts(catd[:, i_echo, :], mmix, mask, acc, rej, midk, ref_img,
-                       bf, echo=str(i_echo+1))
+                       bf, echo=str(i_echo + 1))
 
 
 def new_nii_like(ref_img, data, affine=None, copy_header=True):
