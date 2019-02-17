@@ -41,7 +41,7 @@ def test_break_fitmodels_direct():
     with pytest.raises(ValueError) as e_info:
         fit.fitmodels_direct(catd=catd, mmix=mmix, mask=mask, t2s=t2s,
                              t2s_full=t2s_full, tes=tes, combmode=combmode,
-                             ref_img=ref_img,
+                             ref_img=ref_img, bf=bf,
                              reindex=False, mmixN=None, full_sel=True)
     assert str(e_info.value) == ('First dimensions (number of samples) of '
                                  'catd ({0}), '
@@ -54,7 +54,7 @@ def test_break_fitmodels_direct():
     with pytest.raises(ValueError) as e_info:
         fit.fitmodels_direct(catd=catd, mmix=mmix, mask=mask, t2s=t2s,
                              t2s_full=t2s_full, tes=tes, combmode=combmode,
-                             ref_img=ref_img,
+                             ref_img=ref_img, bf=bf,
                              reindex=False, mmixN=None, full_sel=True)
     assert str(e_info.value) == ('First dimensions (number of samples) of '
                                  'catd ({0}), '
@@ -67,7 +67,7 @@ def test_break_fitmodels_direct():
     with pytest.raises(ValueError) as e_info:
         fit.fitmodels_direct(catd=catd, mmix=mmix, mask=mask, t2s=t2s,
                              t2s_full=t2s_full, tes=tes, combmode=combmode,
-                             ref_img=ref_img,
+                             ref_img=ref_img, bf=bf,
                              reindex=False, mmixN=None, full_sel=True)
     assert str(e_info.value) == ('Second dimension of catd ({0}) does not '
                                  'match number '
@@ -78,7 +78,7 @@ def test_break_fitmodels_direct():
     with pytest.raises(ValueError) as e_info:
         fit.fitmodels_direct(catd=catd, mmix=mmix, mask=mask, t2s=t2s,
                              t2s_full=t2s_full, tes=tes, combmode=combmode,
-                             ref_img=ref_img,
+                             ref_img=ref_img, bf=bf,
                              reindex=False, mmixN=None, full_sel=True)
     assert str(e_info.value) == ('Third dimension (number of volumes) of catd ({0}) '
                                  'does not match first dimension of '
@@ -89,7 +89,7 @@ def test_break_fitmodels_direct():
     with pytest.raises(ValueError) as e_info:
         fit.fitmodels_direct(catd=catd, mmix=mmix, mask=mask, t2s=t2s,
                              t2s_full=t2s_full, tes=tes, combmode=combmode,
-                             ref_img=ref_img,
+                             ref_img=ref_img, bf=bf,
                              reindex=False, mmixN=None, full_sel=True)
     assert str(e_info.value) == ('Shape of t2s array {0} does not match shape of '
                                  't2s_full array {1}'.format(t2s.shape, t2s_full.shape))
@@ -98,7 +98,7 @@ def test_break_fitmodels_direct():
     with pytest.raises(ValueError) as e_info:
         fit.fitmodels_direct(catd=catd, mmix=mmix, mask=mask, t2s=t2s,
                              t2s_full=t2s_full, tes=tes, combmode=combmode,
-                             ref_img=ref_img,
+                             ref_img=ref_img, bf=bf,
                              reindex=False, mmixN=None, full_sel=True)
     assert str(e_info.value) == ('Third dimension (number of volumes) of catd ({0}) '
                                  'does not match second dimension of '
