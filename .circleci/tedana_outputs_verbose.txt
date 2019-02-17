@@ -1,3 +1,4 @@
+p06.SBJ01_S09_Task11_desc-T1gs_bold.nii.gz
 p06.SBJ01_S09_Task11_desc-TEDICAAcceptedT1cDenoised_components.nii.gz
 p06.SBJ01_S09_Task11_desc-TEDICAAcceptedZ_components.nii.gz
 p06.SBJ01_S09_Task11_desc-TEDICAAccepted_components.nii.gz
@@ -9,7 +10,6 @@ p06.SBJ01_S09_Task11_desc-TEDPCAState_variables.pkl
 p06.SBJ01_S09_Task11_desc-TEDPCA_components.nii.gz
 p06.SBJ01_S09_Task11_desc-TEDPCA_comptable.tsv
 p06.SBJ01_S09_Task11_desc-TEDPCA_mixing.tsv
-p06.SBJ01_S09_Task11_desc-T1gs_bold.nii.gz
 p06.SBJ01_S09_Task11_desc-adaptiveGoodSignal_mask.nii.gz
 p06.SBJ01_S09_Task11_desc-ascendingEstimates_S0map.nii.gz
 p06.SBJ01_S09_Task11_desc-ascendingEstimates_T2Starmap.nii.gz
@@ -33,8 +33,6 @@ p06.SBJ01_S09_Task11_desc-optcom_bold.nii.gz
 p06.SBJ01_S09_Task11_echo-1_desc-TEDICA_components.nii.gz
 p06.SBJ01_S09_Task11_echo-1_desc-TEDPCA_components.nii.gz
 p06.SBJ01_S09_Task11_echo-1_desc-accepted_bold.nii.gz
-p06.SBJ01_S09_Task11_echo-1_desc-componentTEDICA_weights.nii.gz
-p06.SBJ01_S09_Task11_echo-1_desc-componentTEDPCA_weights.nii.gz
 p06.SBJ01_S09_Task11_echo-1_desc-denoised_bold.nii.gz
 p06.SBJ01_S09_Task11_echo-1_desc-predictedR2ModelTEDICA_weights.nii.gz
 p06.SBJ01_S09_Task11_echo-1_desc-predictedR2ModelTEDPCA_weights.nii.gz
@@ -44,8 +42,6 @@ p06.SBJ01_S09_Task11_echo-1_desc-rejected_bold.nii.gz
 p06.SBJ01_S09_Task11_echo-2_desc-TEDICA_components.nii.gz
 p06.SBJ01_S09_Task11_echo-2_desc-TEDPCA_components.nii.gz
 p06.SBJ01_S09_Task11_echo-2_desc-accepted_bold.nii.gz
-p06.SBJ01_S09_Task11_echo-2_desc-componentTEDICA_weights.nii.gz
-p06.SBJ01_S09_Task11_echo-2_desc-componentTEDPCA_weights.nii.gz
 p06.SBJ01_S09_Task11_echo-2_desc-denoised_bold.nii.gz
 p06.SBJ01_S09_Task11_echo-2_desc-predictedR2ModelTEDICA_weights.nii.gz
 p06.SBJ01_S09_Task11_echo-2_desc-predictedR2ModelTEDPCA_weights.nii.gz
@@ -55,8 +51,6 @@ p06.SBJ01_S09_Task11_echo-2_desc-rejected_bold.nii.gz
 p06.SBJ01_S09_Task11_echo-3_desc-TEDICA_components.nii.gz
 p06.SBJ01_S09_Task11_echo-3_desc-TEDPCA_components.nii.gz
 p06.SBJ01_S09_Task11_echo-3_desc-accepted_bold.nii.gz
-p06.SBJ01_S09_Task11_echo-3_desc-componentTEDICA_weights.nii.gz
-p06.SBJ01_S09_Task11_echo-3_desc-componentTEDPCA_weights.nii.gz
 p06.SBJ01_S09_Task11_echo-3_desc-denoised_bold.nii.gz
 p06.SBJ01_S09_Task11_echo-3_desc-predictedR2ModelTEDICA_weights.nii.gz
 p06.SBJ01_S09_Task11_echo-3_desc-predictedR2ModelTEDPCA_weights.nii.gz
@@ -66,8 +60,6 @@ p06.SBJ01_S09_Task11_echo-3_desc-rejected_bold.nii.gz
 p06.SBJ01_S09_Task11_echo-4_desc-TEDICA_components.nii.gz
 p06.SBJ01_S09_Task11_echo-4_desc-TEDPCA_components.nii.gz
 p06.SBJ01_S09_Task11_echo-4_desc-accepted_bold.nii.gz
-p06.SBJ01_S09_Task11_echo-4_desc-componentTEDICA_weights.nii.gz
-p06.SBJ01_S09_Task11_echo-4_desc-componentTEDPCA_weights.nii.gz
 p06.SBJ01_S09_Task11_echo-4_desc-denoised_bold.nii.gz
 p06.SBJ01_S09_Task11_echo-4_desc-predictedR2ModelTEDICA_weights.nii.gz
 p06.SBJ01_S09_Task11_echo-4_desc-predictedR2ModelTEDPCA_weights.nii.gz
@@ -77,8 +69,6 @@ p06.SBJ01_S09_Task11_echo-4_desc-rejected_bold.nii.gz
 p06.SBJ01_S09_Task11_echo-5_desc-TEDICA_components.nii.gz
 p06.SBJ01_S09_Task11_echo-5_desc-TEDPCA_components.nii.gz
 p06.SBJ01_S09_Task11_echo-5_desc-accepted_bold.nii.gz
-p06.SBJ01_S09_Task11_echo-5_desc-componentTEDICA_weights.nii.gz
-p06.SBJ01_S09_Task11_echo-5_desc-componentTEDPCA_weights.nii.gz
 p06.SBJ01_S09_Task11_echo-5_desc-denoised_bold.nii.gz
 p06.SBJ01_S09_Task11_echo-5_desc-predictedR2ModelTEDICA_weights.nii.gz
 p06.SBJ01_S09_Task11_echo-5_desc-predictedR2ModelTEDPCA_weights.nii.gz
