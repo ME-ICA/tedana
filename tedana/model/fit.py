@@ -20,9 +20,9 @@ F_MAX = 500
 Z_MAX = 8
 
 
-def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
+def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img, bf,
                      reindex=False, mmixN=None, full_sel=True, label=None,
-                     out_dir='.', verbose=False):
+                     verbose=False):
     """
     Fit TE-dependence and -independence models to components.
 
@@ -218,19 +218,35 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         mmix_new = mmix
 
     if verbose:
-        # Echo-specific weight maps for each of the ICA components.
-        io.filewrite(betas, op.join(out_dir, '{0}betas_catd.nii'.format(label)),
-                     ref_img)
-        # Echo-specific maps of predicted values for R2 and S0 models for each
-        # component.
-        io.filewrite(utils.unmask(pred_R2_maps, mask),
-                     op.join(out_dir, '{0}R2_pred.nii'.format(label)), ref_img)
-        io.filewrite(utils.unmask(pred_S0_maps, mask),
-                     op.join(out_dir, '{0}S0_pred.nii'.format(label)), ref_img)
         # Weight maps used to average metrics across voxels
         io.filewrite(utils.unmask(Z_maps ** 2., mask),
-                     op.join(out_dir, '{0}metric_weights.nii'.format(label)),
+                     io.gen_fname(bf, '_weights.nii.gz',
+                                  desc='metricAveraging{0}'.format(label)),
                      ref_img)
+
+        for echo in range(len(tes)):
+            # Echo-specific weight maps for each of the ICA components.
+            temp_betas = betas[:, echo, :]
+            io.filewrite(temp_betas,
+                         io.gen_fname(bf, '_weights.nii.gz',
+                                      desc='component{0}'.format(label),
+                                      echo=str(echo + 1)),
+                         ref_img)
+
+            # Echo-specific maps of predicted values for R2 and S0 models for
+            # each component.
+            temp_pred_R2_maps = pred_R2_maps[:, echo, :]
+            io.filewrite(utils.unmask(temp_pred_R2_maps, mask),
+                         io.gen_fname(bf, '_weights.nii.gz',
+                                      desc='predictedR2Model{0}'.format(label),
+                                      echo=str(echo + 1)),
+                         ref_img)
+            temp_pred_S0_maps = pred_S0_maps[:, echo, :]
+            io.filewrite(utils.unmask(temp_pred_S0_maps, mask),
+                         io.gen_fname(bf, '_weights.nii.gz',
+                                      desc='predictedS0Model{0}'.format(label),
+                                      echo=str(echo + 1)),
+                         ref_img)
 
     comptab = pd.DataFrame(comptab,
                            columns=['kappa', 'rho',

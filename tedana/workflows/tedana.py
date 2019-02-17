@@ -298,13 +298,13 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                       interpolation_method='lower')
     LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
     t2s[t2s > cap_t2s * 10] = cap_t2s
-    io.filewrite(t2s, io.gen_fname(bf, '_t2s.nii.gz', desc='limited'), ref_img)
-    io.filewrite(s0, io.gen_fname(bf, '_s0.nii.gz', desc='limited'), ref_img)
+    io.filewrite(t2s, io.gen_fname(bf, '_T2Starmap.nii.gz', desc='limited'), ref_img)
+    io.filewrite(s0, io.gen_fname(bf, '_S0map.nii.gz', desc='limited'), ref_img)
     if verbose:
-        io.filewrite(t2ss, io.gen_fname(bf, '_t2s.nii.gz', desc='ascendingEstimates'), ref_img)
-        io.filewrite(s0s, io.gen_fname(bf, '_s0.nii.gz', desc='ascendingEstimates'), ref_img)
-        io.filewrite(t2sG, io.gen_fname(bf, '_t2s.nii.gz', desc='full'), ref_img)
-        io.filewrite(s0G, io.gen_fname(bf, '_s0.nii.gz', desc='full'), ref_img)
+        io.filewrite(t2ss, io.gen_fname(bf, '_T2Starmap.nii.gz', desc='ascendingEstimates'), ref_img)
+        io.filewrite(s0s, io.gen_fname(bf, '_S0map.nii.gz', desc='ascendingEstimates'), ref_img)
+        io.filewrite(t2sG, io.gen_fname(bf, '_T2Starmap.nii.gz', desc='full'), ref_img)
+        io.filewrite(s0G, io.gen_fname(bf, '_S0map.nii.gz', desc='full'), ref_img)
 
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
@@ -328,7 +328,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                        mmix_orig, delimiter='\t')
             if ste == -1:
                 io.filewrite(utils.unmask(dd, mask),
-                             op.join(out_dir, 'ts_OC_whitened.nii'), ref_img)
+                             io.gen_fname(bf, '_bold.nii.gz', desc='optcomReduced'),
+                             ref_img)
 
         LGR.info('Making second component selection guess from ICA results')
         # Estimate betas and compute selection metrics for mixing matrix
@@ -336,7 +337,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # with thermal noise)
         seldict, comptable, betas, mmix = model.fitmodels_direct(
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
-                    ref_img, reindex=True, label='meica_', out_dir=out_dir,
+                    ref_img, bf, reindex=True, label='TEDICA',
                     verbose=verbose)
         np.savetxt(io.gen_fname(bf, '_mixing.tsv', desc='TEDICA'), mmix,
                    delimiter='\t')
@@ -348,7 +349,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         mmix_orig = np.loadtxt(io.gen_fname(bf, '_mixing.tsv', desc='TEDICA'))
         seldict, comptable, betas, mmix = model.fitmodels_direct(
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
-                    ref_img, reindex=False, label='meica_', out_dir=out_dir,
+                    ref_img, bf, reindex=False, label='TEDICA',
                     verbose=verbose)
         if ctab is None:
             comptable = selection.selcomps(seldict, comptable, mmix, manacc,
