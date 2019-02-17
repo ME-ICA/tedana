@@ -22,12 +22,13 @@ def test_break_fitmodels_direct():
     tes = np.empty((n_echos))
     combmode = 't2s'
     ref_img = ''
+    bf = 'sub-01_task-rest_bold.nii.gz'
 
     catd = np.empty((n_samples+1, n_echos, n_vols))
     with pytest.raises(ValueError) as e_info:
         fit.fitmodels_direct(catd=catd, mmix=mmix, mask=mask, t2s=t2s,
                              t2s_full=t2s_full, tes=tes, combmode=combmode,
-                             ref_img=ref_img,
+                             ref_img=ref_img, bf=bf,
                              reindex=False, mmixN=None, full_sel=True)
     assert str(e_info.value) == ('First dimensions (number of samples) of '
                                  'catd ({0}), '

@@ -301,7 +301,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     io.filewrite(t2s, io.gen_fname(bf, '_T2Starmap.nii.gz', desc='limited'), ref_img)
     io.filewrite(s0, io.gen_fname(bf, '_S0map.nii.gz', desc='limited'), ref_img)
     if verbose:
-        io.filewrite(t2ss, io.gen_fname(bf, '_T2Starmap.nii.gz', desc='ascendingEstimates'), ref_img)
+        io.filewrite(t2ss, io.gen_fname(bf, '_T2Starmap.nii.gz',
+                                        desc='ascendingEstimates'),
+                     ref_img)
         io.filewrite(s0s, io.gen_fname(bf, '_S0map.nii.gz', desc='ascendingEstimates'), ref_img)
         io.filewrite(t2sG, io.gen_fname(bf, '_T2Starmap.nii.gz', desc='full'), ref_img)
         io.filewrite(s0G, io.gen_fname(bf, '_S0map.nii.gz', desc='full'), ref_img)
