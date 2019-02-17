@@ -23,6 +23,7 @@ p06.SBJ01_S09_Task11_desc-metricAveragingTEDICA_weights.nii.gz
 p06.SBJ01_S09_Task11_desc-metricAveragingTEDPCA_weights.nii.gz
 p06.SBJ01_S09_Task11_desc-optcomAcceptedT1cDenoised_bold.nii.gz
 p06.SBJ01_S09_Task11_desc-optcomAccepted_bold.nii.gz
+p06.SBJ01_S09_Task11_desc-optcomAccepted_min.nii.gz
 p06.SBJ01_S09_Task11_desc-optcomDenoised_bold.nii.gz
 p06.SBJ01_S09_Task11_desc-optcomNoGlobalSignal_bold.nii.gz
 p06.SBJ01_S09_Task11_desc-optcomReduced_bold.nii.gz
