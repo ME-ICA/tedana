@@ -2,6 +2,13 @@
 Run the "canonical" TE-Dependent ANAlysis workflow.
 """
 import os
+
+os.environ['MKL_NUM_THREADS'] = '1'
+os.environ['NUMEXPR_NUM_THREADS'] = '1'
+os.environ['OMP_NUM_THREADS'] = '1'
+os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
+os.environ['OPENBLAS_NUM_THREADS'] = '1'
+
 import os.path as op
 import shutil
 import logging
@@ -12,9 +19,8 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from tedana import decay, combine, decomposition, io, model, selection, utils
 from tedana.workflows.parser_utils import is_valid_file
-from tedana.io import gen_fname
+from tedana import decay, combine, decomposition, io, model, selection, utils
 
 LGR = logging.getLogger(__name__)
 
@@ -28,119 +34,124 @@ def _get_parser():
     parser.parse_args() : argparse dict
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d',
-                        dest='data',
-                        nargs='+',
-                        metavar='FILE',
-                        type=lambda x: is_valid_file(parser, x),
-                        help=('Multi-echo dataset for analysis. May be a '
-                              'single file with spatially concatenated data '
-                              'or a set of echo-specific files, in the same '
-                              'order as the TEs are listed in the -e '
-                              'argument.'),
-                        required=True)
-    parser.add_argument('-e',
-                        dest='tes',
-                        nargs='+',
-                        metavar='TE',
-                        type=float,
-                        help='Echo times (in ms). E.g., 15.0 39.0 63.0',
-                        required=True)
-    parser.add_argument('--mask',
-                        dest='mask',
-                        metavar='FILE',
-                        type=lambda x: is_valid_file(parser, x),
-                        help=('Binary mask of voxels to include in TE '
-                              'Dependent ANAlysis. Must be in the same '
-                              'space as `data`.'),
-                        default=None)
-    parser.add_argument('--mix',
-                        dest='mixm',
-                        metavar='FILE',
-                        type=lambda x: is_valid_file(parser, x),
-                        help=('File containing mixing matrix. If not '
-                              'provided, ME-PCA & ME-ICA is done.'),
-                        default=None)
-    parser.add_argument('--ctab',
-                        dest='ctab',
-                        metavar='FILE',
-                        type=lambda x: is_valid_file(parser, x),
-                        help=('File containing a component table from which '
-                              'to extract pre-computed classifications.'),
-                        default=None)
-    parser.add_argument('--manacc',
-                        dest='manacc',
-                        help=('Comma separated list of manually '
-                              'accepted components'),
-                        default=None)
-    parser.add_argument('--sourceTEs',
-                        dest='ste',
-                        type=str,
-                        help=('Source TEs for models. E.g., 0 for all, '
-                              '-1 for opt. com., and 1,2 for just TEs 1 and '
-                              '2. Default=-1.'),
-                        default=-1)
-    parser.add_argument('--combmode',
-                        dest='combmode',
-                        action='store',
-                        choices=['t2s', 'ste'],
-                        help=('Combination scheme for TEs: '
-                              't2s (Posse 1999, default), ste (Poser)'),
-                        default='t2s')
-    parser.add_argument('--verbose',
-                        dest='verbose',
-                        action='store_true',
-                        help='Generate intermediate and additional files.',
-                        default=False)
-    parser.add_argument('--tedort',
-                        dest='tedort',
-                        action='store_true',
-                        help=('Orthogonalize rejected components w.r.t. '
-                              'accepted components prior to denoising.'),
-                        default=False)
-    parser.add_argument('--gscontrol',
-                        dest='gscontrol',
-                        required=False,
-                        action='store',
-                        nargs='+',
-                        help=('Perform additional denoising to remove '
-                              'spatially diffuse noise. Default is None. '
-                              'This argument can be single value or a space '
-                              'delimited list'),
-                        choices=['t1c', 'gsr'],
-                        default=None)
-    parser.add_argument('--wvpca',
-                        dest='wvpca',
-                        help='Perform PCA on wavelet-transformed data',
-                        action='store_true',
-                        default=False)
-    parser.add_argument('--tedpca',
-                        dest='tedpca',
-                        help='Method with which to select components in TEDPCA',
-                        choices=['mle', 'kundu', 'kundu-stabilize'],
-                        default='mle')
-    parser.add_argument('--out-dir',
-                        dest='out_dir',
-                        type=str,
-                        help='Output directory.',
-                        default='.')
-    parser.add_argument('--seed',
-                        dest='fixed_seed',
-                        type=int,
-                        help=('Value passed to repr(mdp.numx_rand.seed()) '
-                              'Set to an integer value for reproducible ICA results; '
-                              'otherwise, set to -1 for varying results across calls.'),
-                        default=42)
-    parser.add_argument('--debug',
-                        dest='debug',
-                        help=argparse.SUPPRESS,
-                        action='store_true',
-                        default=False)
-    parser.add_argument('--quiet',
-                        dest='quiet',
-                        help=argparse.SUPPRESS,
-                        action='store_true',
-                        default=False)
+    # Argument parser follow templtate provided by RalphyZ
+    # https://stackoverflow.com/a/43456577
+    optional = parser._action_groups.pop()
+    required = parser.add_argument_group('required arguments')
+    required.add_argument('-d',
+                          dest='data',
+                          nargs='+',
+                          metavar='FILE',
+                          type=lambda x: is_valid_file(parser, x),
+                          help=('Multi-echo dataset for analysis. May be a '
+                                'single file with spatially concatenated data '
+                                'or a set of echo-specific files, in the same '
+                                'order as the TEs are listed in the -e '
+                                'argument.'),
+                          required=True)
+    required.add_argument('-e',
+                          dest='tes',
+                          nargs='+',
+                          metavar='TE',
+                          type=float,
+                          help='Echo times (in ms). E.g., 15.0 39.0 63.0',
+                          required=True)
+    optional.add_argument('--mask',
+                          dest='mask',
+                          metavar='FILE',
+                          type=lambda x: is_valid_file(parser, x),
+                          help=('Binary mask of voxels to include in TE '
+                                'Dependent ANAlysis. Must be in the same '
+                                'space as `data`.'),
+                          default=None)
+    optional.add_argument('--mix',
+                          dest='mixm',
+                          metavar='FILE',
+                          type=lambda x: is_valid_file(parser, x),
+                          help=('File containing mixing matrix. If not '
+                                'provided, ME-PCA & ME-ICA is done.'),
+                          default=None)
+    optional.add_argument('--ctab',
+                          dest='ctab',
+                          metavar='FILE',
+                          type=lambda x: is_valid_file(parser, x),
+                          help=('File containing a component table from which '
+                                'to extract pre-computed classifications.'),
+                          default=None)
+    optional.add_argument('--manacc',
+                          dest='manacc',
+                          help=('Comma separated list of manually '
+                                'accepted components'),
+                          default=None)
+    optional.add_argument('--sourceTEs',
+                          dest='ste',
+                          type=str,
+                          help=('Source TEs for models. E.g., 0 for all, '
+                                '-1 for opt. com., and 1,2 for just TEs 1 and '
+                                '2. Default=-1.'),
+                          default=-1)
+    optional.add_argument('--combmode',
+                          dest='combmode',
+                          action='store',
+                          choices=['t2s', 'ste'],
+                          help=('Combination scheme for TEs: '
+                                't2s (Posse 1999, default), ste (Poser)'),
+                          default='t2s')
+    optional.add_argument('--verbose',
+                          dest='verbose',
+                          action='store_true',
+                          help='Generate intermediate and additional files.',
+                          default=False)
+    optional.add_argument('--tedort',
+                          dest='tedort',
+                          action='store_true',
+                          help=('Orthogonalize rejected components w.r.t. '
+                                'accepted components prior to denoising.'),
+                          default=False)
+    optional.add_argument('--gscontrol',
+                          dest='gscontrol',
+                          required=False,
+                          action='store',
+                          nargs='+',
+                          help=('Perform additional denoising to remove '
+                                'spatially diffuse noise. Default is None. '
+                                'This argument can be single value or a space '
+                                'delimited list'),
+                          choices=['t1c', 'gsr'],
+                          default=None)
+    optional.add_argument('--wvpca',
+                          dest='wvpca',
+                          help='Perform PCA on wavelet-transformed data',
+                          action='store_true',
+                          default=False)
+    optional.add_argument('--tedpca',
+                          dest='tedpca',
+                          help='Method with which to select components in TEDPCA',
+                          choices=['mle', 'kundu', 'kundu-stabilize'],
+                          default='mle')
+    optional.add_argument('--out-dir',
+                          dest='out_dir',
+                          type=str,
+                          help='Output directory.',
+                          default='.')
+    optional.add_argument('--seed',
+                          dest='fixed_seed',
+                          type=int,
+                          help=('Value passed to repr(mdp.numx_rand.seed()) '
+                                'Set to an integer value for reproducible ICA results; '
+                                'otherwise, set to -1 for varying results across calls.'),
+                          default=42)
+    optional.add_argument('--debug',
+                          dest='debug',
+                          help=argparse.SUPPRESS,
+                          action='store_true',
+                          default=False)
+    optional.add_argument('--quiet',
+                          dest='quiet',
+                          help=argparse.SUPPRESS,
+                          action='store_true',
+                          default=False)
+    parser._action_groups.append(optional)
     return parser
 
 
@@ -251,14 +262,14 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
     if mixm is not None and op.isfile(mixm):
-        out_mixm_file = gen_fname(bf, '_mixing.tsv', desc='TEDICA')
+        out_mixm_file = io.gen_fname(bf, '_mixing.tsv', desc='TEDICA')
         shutil.copyfile(mixm, out_mixm_file)
         shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
     elif mixm is not None:
         raise IOError('Argument "mixm" must be an existing file.')
 
     if ctab is not None and op.isfile(ctab):
-        out_ctab_file = gen_fname(bf, '_comptable.tsv', desc='TEDICA')
+        out_ctab_file = io.gen_fname(bf, '_comptable.tsv', desc='TEDICA')
         shutil.copyfile(ctab, out_ctab_file)
         shutil.copyfile(ctab, op.basename(ctab))
     elif ctab is not None:
@@ -275,7 +286,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
     if verbose:
         io.filewrite(masksum,
-                     gen_fname(bf, '_mask.nii.gz', desc='adaptiveGoodSignal'),
+                     io.gen_fname(bf, '_mask.nii.gz', desc='adaptiveGoodSignal'),
                      ref_img)
 
     LGR.info('Computing T2* map')
@@ -287,13 +298,13 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                       interpolation_method='lower')
     LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
     t2s[t2s > cap_t2s * 10] = cap_t2s
-    io.filewrite(t2s, gen_fname(bf, '_t2s.nii.gz', desc='limited'), ref_img)
-    io.filewrite(s0, gen_fname(bf, '_s0.nii.gz', desc='limited'), ref_img)
+    io.filewrite(t2s, io.gen_fname(bf, '_t2s.nii.gz', desc='limited'), ref_img)
+    io.filewrite(s0, io.gen_fname(bf, '_s0.nii.gz', desc='limited'), ref_img)
     if verbose:
-        io.filewrite(t2ss, gen_fname(bf, '_t2s.nii.gz', desc='ascendingEstimates'), ref_img)
-        io.filewrite(s0s, gen_fname(bf, '_s0.nii.gz', desc='ascendingEstimates'), ref_img)
-        io.filewrite(t2sG, gen_fname(bf, '_t2s.nii.gz', desc='full'), ref_img)
-        io.filewrite(s0G, gen_fname(bf, '_s0.nii.gz', desc='full'), ref_img)
+        io.filewrite(t2ss, io.gen_fname(bf, '_t2s.nii.gz', desc='ascendingEstimates'), ref_img)
+        io.filewrite(s0s, io.gen_fname(bf, '_s0.nii.gz', desc='ascendingEstimates'), ref_img)
+        io.filewrite(t2sG, io.gen_fname(bf, '_t2s.nii.gz', desc='full'), ref_img)
+        io.filewrite(s0G, io.gen_fname(bf, '_s0.nii.gz', desc='full'), ref_img)
 
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
@@ -313,7 +324,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, fixed_seed)
 
         if verbose:
-            np.savetxt(gen_fname(bf, '_mixing.tsv', desc='initialTEDICA'),
+            np.savetxt(io.gen_fname(bf, '_mixing.tsv', desc='initialTEDICA'),
                        mmix_orig, delimiter='\t')
             if ste == -1:
                 io.filewrite(utils.unmask(dd, mask),
@@ -327,14 +338,14 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
                     ref_img, reindex=True, label='meica_', out_dir=out_dir,
                     verbose=verbose)
-        np.savetxt(gen_fname(bf, '_mixing.tsv', desc='TEDICA'), mmix,
+        np.savetxt(io.gen_fname(bf, '_mixing.tsv', desc='TEDICA'), mmix,
                    delimiter='\t')
 
         comptable = selection.selcomps(seldict, comptable, mmix, manacc,
                                        n_echos)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
-        mmix_orig = np.loadtxt(gen_fname(bf, '_mixing.tsv', desc='TEDICA'))
+        mmix_orig = np.loadtxt(io.gen_fname(bf, '_mixing.tsv', desc='TEDICA'))
         seldict, comptable, betas, mmix = model.fitmodels_direct(
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
                     ref_img, reindex=False, label='meica_', out_dir=out_dir,
@@ -345,7 +356,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         else:
             comptable = pd.read_csv(ctab, sep='\t', index_col='component')
 
-    comptable.to_csv(gen_fname(bf, '_comptable.tsv', desc='TEDICA'),
+    comptable.to_csv(io.gen_fname(bf, '_comptable.tsv', desc='TEDICA'),
                      sep='\t', index=True, index_label='component',
                      float_format='%.6f')
     if 'component' not in comptable.columns:

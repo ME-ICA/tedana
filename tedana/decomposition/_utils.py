@@ -31,7 +31,10 @@ def eimask(dd, ees=None):
         ees = range(dd.shape[1])
     imask = np.zeros((dd.shape[0], len(ees)), dtype=bool)
     for ee in ees:
-        LGR.debug('Creating eimask for echo {}'.format(ee))
+        if len(ees) == 1:
+            LGR.debug('Creating eimask for optimal combination')
+        else:
+            LGR.debug('Creating eimask for echo {}'.format(ee))
         perc98 = stats.scoreatpercentile(dd[:, ee, :].flatten(), 98,
                                          interpolation_method='lower')
         lthr, hthr = 0.001 * perc98, 5 * perc98

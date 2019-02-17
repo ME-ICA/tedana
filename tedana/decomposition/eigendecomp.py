@@ -91,11 +91,11 @@ def kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False):
                                 return_val=True)
 
     diff_varex_norm = np.abs(np.diff(ct_df['normalized variance explained']))
-    lower_diff_varex_norm = diff_varex_norm[(len(diff_varex_norm)//2):]
+    lower_diff_varex_norm = diff_varex_norm[(len(diff_varex_norm) // 2):]
     varex_norm_thr = np.mean([lower_diff_varex_norm.max(),
                               diff_varex_norm.min()])
     varex_norm_min = ct_df['normalized variance explained'][
-        (len(diff_varex_norm)//2) +
+        (len(diff_varex_norm) // 2) +
         np.arange(len(lower_diff_varex_norm))[lower_diff_varex_norm >= varex_norm_thr][0] + 1]
     varex_norm_cum = np.cumsum(ct_df['normalized variance explained'])
 
@@ -118,10 +118,10 @@ def kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False):
         rho_thr = rho_lim[getelbow(rho_lim)]
     else:
         kappa_thr = np.average(
-            sorted([fmin, getelbow(ct_df['kappa'], return_val=True)/2, fmid]),
+            sorted([fmin, (getelbow(ct_df['kappa'], return_val=True) / 2), fmid]),
             weights=[kdaw, 1, 1])
         rho_thr = np.average(
-            sorted([fmin, getelbow_cons(ct_df['rho'], return_val=True)/2, fmid]),
+            sorted([fmin, (getelbow_cons(ct_df['rho'], return_val=True) / 2), fmid]),
             weights=[rdaw, 1, 1])
 
     # Reject if low Kappa, Rho, and variance explained
@@ -197,9 +197,10 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         Method with which to select components in TEDPCA. Default is 'mle'.
     ste : :obj:`int` or :obj:`list` of :obj:`int`, optional
         Which echos to use in PCA. Values -1 and 0 are special, where a value
-        of -1 will indicate using all the echos and 0 will indicate using the
-        optimal combination of the echos. A list can be provided to indicate
-        a subset of echos. Default: 0
+        of -1 will indicate using the optimal combination of the echos
+        and 0  will indicate using all the echos. A list can be provided
+        to indicate a subset of echos.
+        Default: -1
     wvpca : :obj:`bool`, optional
         Whether to apply wavelet denoising to data. Default: False
     verbose : :obj:`bool`, optional
@@ -267,13 +268,13 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
 
     if len(ste) == 1 and ste[0] == -1:
         LGR.info('Computing PCA of optimally combined multi-echo data')
-        d = OCcatd[utils.make_min_mask(OCcatd[:, np.newaxis, :])][:, np.newaxis, :]
+        d = OCcatd[mask, :][:, np.newaxis, :]
     elif len(ste) == 1 and ste[0] == 0:
         LGR.info('Computing PCA of spatially concatenated multi-echo data')
-        d = catd[mask].astype('float64')
+        d = catd[mask, ...]
     else:
         LGR.info('Computing PCA of echo #%s' % ','.join([str(ee) for ee in ste]))
-        d = np.stack([catd[mask, ee] for ee in ste - 1], axis=1).astype('float64')
+        d = np.stack([catd[mask, ee, :] for ee in ste - 1], axis=1)
 
     eim = np.squeeze(eimask(d))
     d = np.squeeze(d[eim])
@@ -319,7 +320,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         eimum = np.transpose(eimum, np.argsort(eimum.shape)[::-1])
         eimum = eimum.prod(axis=1)
         o = np.zeros((mask.shape[0], *eimum.shape[1:]))
-        o[mask] = eimum
+        o[mask, ...] = eimum
         eimum = np.squeeze(o).astype(bool)
 
         vTmix = comp_ts.T
