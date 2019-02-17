@@ -7,8 +7,8 @@ three_echo_Cornell_desc-TEDPCAState_variables.pkl
 three_echo_Cornell_desc-TEDPCA_components.nii.gz
 three_echo_Cornell_desc-TEDPCA_comptable.tsv
 three_echo_Cornell_desc-TEDPCA_mixing.tsv
-three_echo_Cornell_desc-limited_s0.nii.gz
-three_echo_Cornell_desc-limited_t2s.nii.gz
+three_echo_Cornell_desc-limited_S0map.nii.gz
+three_echo_Cornell_desc-limited_T2Starmap.nii.gz
 three_echo_Cornell_desc-optcomAccepted_bold.nii.gz
 three_echo_Cornell_desc-optcomDenoised_bold.nii.gz
 three_echo_Cornell_desc-optcomRejected_bold.nii.gz

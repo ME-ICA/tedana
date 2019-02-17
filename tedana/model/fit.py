@@ -227,8 +227,8 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img, bf
             # Echo-specific weight maps for each of the ICA components.
             temp_betas = betas[:, echo, :]
             io.filewrite(temp_betas,
-                         io.gen_fname(bf, '_weights.nii.gz',
-                                      desc='component{0}'.format(label),
+                         io.gen_fname(bf, '_components.nii.gz',
+                                      desc='{0}'.format(label),
                                       echo=str(echo + 1)),
                          ref_img)
 
