@@ -135,7 +135,7 @@ When opening a pull request, please use at least one of the following prefixes:
 * **[FIX]** for bug fixes
 * **[REF]** for refactoring existing code
 * **[STY]** for stylistic changes
-* **[TST]** for new or updated tests, and
+* **[TST]** for new or updated tests
 
 Pull requests should be submitted early and often!
 If your pull request is not yet ready to be merged, please open your pull request as a draft.
