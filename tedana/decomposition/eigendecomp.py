@@ -414,7 +414,7 @@ def tedica(n_components, dd, fixed_seed, maxit=5000, maxrestart=5):
 
     Returns
     -------
-    mmix : (C x T) :obj:`numpy.ndarray`
+    mmix : (T x C) :obj:`numpy.ndarray`
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `dd`
 
