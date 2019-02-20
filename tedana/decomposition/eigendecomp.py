@@ -392,7 +392,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
     return n_components, kept_data
 
 
-def tedica(n_components, dd, fixed_seed):
+def tedica(n_components, dd, fixed_seed, maxit=5000, maxrestart=5):
     """
     Performs ICA on `dd` and returns mixing matrix
 
@@ -403,8 +403,14 @@ def tedica(n_components, dd, fixed_seed):
     dd : (S x T) :obj:`numpy.ndarray`
         Dimensionally reduced optimally combined functional data, where `S` is
         samples and `T` is time
-    fixed_seed : int
+    fixed_seed : :obj:`int`
         Seed for ensuring reproducibility of ICA results
+    maxit : :obj:`int`, optional
+        Maximum number of iterations for ICA. Default is 500.
+    maxrestart : :obj:`int`, optional
+        Maximum number of attempted decompositions to perform with different
+        random seeds. ICA will stop running if there is convergence prior to
+        reaching this limit. Default is 5.
 
     Returns
     -------
@@ -423,20 +429,28 @@ def tedica(n_components, dd, fixed_seed):
 
     if fixed_seed == -1:
         fixed_seed = np.random.randint(low=1, high=1000)
-    rand_state = np.random.RandomState(seed=fixed_seed)
-    ica = FastICA(n_components=n_components, algorithm='parallel',
-                  fun='logcosh', max_iter=5000, random_state=rand_state)
 
-    with warnings.catch_warnings(record=True) as w:
-        # Cause all warnings to always be triggered.
-        warnings.simplefilter('always')
+    for i_attempt in range(maxrestart):
+        ica = FastICA(n_components=n_components, algorithm='parallel',
+                      fun='logcosh', max_iter=maxit, random_state=fixed_seed)
 
-        ica.fit(dd)
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter('always')
 
-        w = list(filter(lambda i: issubclass(i.category, UserWarning), w))
-        if len(w):
-            LGR.warning('ICA failed to converge')
+            ica.fit(dd)
+
+            w = list(filter(lambda i: issubclass(i.category, UserWarning), w))
+            if len(w):
+                LGR.warning('ICA attempt {0} failed to converge after {1} '
+                            'iterations'.format(i_attempt + 1, ica.n_iter_))
+                fixed_seed += 1
+                LGR.warning('Random seed updated to {0}'.format(fixed_seed))
+            else:
+                LGR.debug('ICA attempt {0} converged in {1} '
+                          'iterations'.format(i_attempt + 1, ica.n_iter_))
+                break
 
     mmix = ica.mixing_
     mmix = stats.zscore(mmix, axis=0)
-    return mmix, fixed_seed
+    return mmix

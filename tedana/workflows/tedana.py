@@ -141,6 +141,20 @@ def _get_parser():
                                 'Set to an integer value for reproducible ICA results; '
                                 'otherwise, set to -1 for varying results across calls.'),
                           default=42)
+    optional.add_argument('--maxit',
+                          dest='maxit',
+                          type=int,
+                          help=('Maximum number of iterations for ICA.'),
+                          default=500)
+    optional.add_argument('--maxrestart',
+                          dest='maxrestart',
+                          type=int,
+                          help=('Maximum number of attempts for ICA. If ICA '
+                                'fails to converge, the fixed seed will be '
+                                'updated and ICA will be run again. If '
+                                'convergence is achieved before maxrestart '
+                                'attempts, ICA will finish early.'),
+                          default=5)
     optional.add_argument('--debug',
                           dest='debug',
                           help=argparse.SUPPRESS,
@@ -158,8 +172,9 @@ def _get_parser():
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     tedort=False, gscontrol=None, tedpca='mle',
                     ste=-1, combmode='t2s', verbose=False, stabilize=False,
-                    wvpca=False, out_dir='.', fixed_seed=42, debug=False,
-                    quiet=False):
+                    wvpca=False, out_dir='.',
+                    fixed_seed=42, maxit=500, maxrestart=5,
+                    debug=False, quiet=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -209,6 +224,13 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Value passed to ``mdp.numx_rand.seed()``.
         Set to a positive integer value for reproducible ICA results;
         otherwise, set to -1 for varying results across calls.
+    maxit : :obj:`int`, optional
+        Maximum number of iterations for ICA. Default is 500.
+    maxrestart : :obj:`int`, optional
+        Maximum number of attempts for ICA. If ICA fails to converge, the
+        fixed seed will be updated and ICA will be run again. If convergence
+        is achieved before maxrestart attempts, ICA will finish early.
+        Default is 5.
     debug : :obj:`bool`, optional
         Whether to run in debugging mode or not. Default is False.
     quiet : :obj:`bool`, optional
@@ -316,8 +338,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                 tes=tes, method=tedpca, ste=ste,
                                                 kdaw=10., rdaw=1., wvpca=wvpca,
                                                 verbose=verbose)
-        mmix_orig, fixed_seed = decomposition.tedica(n_components, dd,
-                                                     fixed_seed)
+        mmix_orig = decomposition.tedica(n_components, dd, fixed_seed,
+                                         maxit, maxrestart)
 
         if verbose:
             np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
@@ -378,7 +400,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         np.savetxt(op.join(out_dir, 'meica_mix_orth.1D'), mmix)
 
     io.writeresults(data_oc, mask=mask, comptable=comptable, mmix=mmix,
-                    n_vols=n_vols, fixed_seed=fixed_seed,
+                    n_vols=n_vols,
                     acc=acc, rej=rej, midk=midk, empty=ign,
                     ref_img=ref_img)
 
