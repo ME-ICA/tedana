@@ -447,8 +447,8 @@ def tedica(n_components, dd, fixed_seed, maxit=5000, maxrestart=5):
                 fixed_seed += 1
                 LGR.warning('Random seed updated to {0}'.format(fixed_seed))
             else:
-                LGR.debug('ICA attempt {0} converged in {1} '
-                          'iterations'.format(i_attempt + 1, ica.n_iter_))
+                LGR.info('ICA attempt {0} converged in {1} '
+                         'iterations'.format(i_attempt + 1, ica.n_iter_))
                 break
 
     mmix = ica.mixing_
