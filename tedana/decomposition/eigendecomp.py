@@ -392,7 +392,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
     return n_components, kept_data
 
 
-def tedica(n_components, dd, fixed_seed, maxit=5000, maxrestart=5):
+def tedica(n_components, dd, fixed_seed, maxit=500, maxrestart=5):
     """
     Performs ICA on `dd` and returns mixing matrix
 
