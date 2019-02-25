@@ -198,7 +198,7 @@ jobs:
             source activate venv
             cd /tmp/data/five-echo/
             tedana -d p06.SBJ01_S09_Task11_e[1,2,3,4,5].sm.nii.gz \
-                -e 15.4 29.7 44.0 58.3 72.6 --verbose --maxit 500 --maxrestart 10 \
+                -e 15.4 29.7 44.0 58.3 72.6 --verbose \
                 --out-dir /tmp/data/five-echo/TED.five-echo/
       - run:
           name: Checking outputs
