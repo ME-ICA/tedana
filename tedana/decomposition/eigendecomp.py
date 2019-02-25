@@ -392,7 +392,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
     return n_components, kept_data
 
 
-def tedica(n_components, dd, fixed_seed, maxit=500, maxrestart=5):
+def tedica(n_components, dd, fixed_seed, maxit=500, maxrestart=10):
     """
     Performs ICA on `dd` and returns mixing matrix
 
@@ -410,7 +410,7 @@ def tedica(n_components, dd, fixed_seed, maxit=500, maxrestart=5):
     maxrestart : :obj:`int`, optional
         Maximum number of attempted decompositions to perform with different
         random seeds. ICA will stop running if there is convergence prior to
-        reaching this limit. Default is 5.
+        reaching this limit. Default is 10.
 
     Returns
     -------

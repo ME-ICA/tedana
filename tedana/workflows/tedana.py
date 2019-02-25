@@ -154,7 +154,7 @@ def _get_parser():
                                 'updated and ICA will be run again. If '
                                 'convergence is achieved before maxrestart '
                                 'attempts, ICA will finish early.'),
-                          default=5)
+                          default=10)
     optional.add_argument('--debug',
                           dest='debug',
                           help=argparse.SUPPRESS,
@@ -173,7 +173,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     tedort=False, gscontrol=None, tedpca='mle',
                     ste=-1, combmode='t2s', verbose=False, stabilize=False,
                     wvpca=False, out_dir='.',
-                    fixed_seed=42, maxit=500, maxrestart=5,
+                    fixed_seed=42, maxit=500, maxrestart=10,
                     debug=False, quiet=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
@@ -230,7 +230,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Maximum number of attempts for ICA. If ICA fails to converge, the
         fixed seed will be updated and ICA will be run again. If convergence
         is achieved before maxrestart attempts, ICA will finish early.
-        Default is 5.
+        Default is 10.
     debug : :obj:`bool`, optional
         Whether to run in debugging mode or not. Default is False.
     quiet : :obj:`bool`, optional
