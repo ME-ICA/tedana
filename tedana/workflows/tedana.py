@@ -18,6 +18,7 @@ import argparse
 import numpy as np
 import pandas as pd
 from scipy import stats
+from nilearn.masking import compute_epi_mask
 
 from tedana.workflows.parser_utils import is_valid_file
 from tedana import decay, combine, decomposition, io, model, selection, utils
@@ -293,7 +294,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         raise IOError('Argument "ctab" must be an existing file.')
 
     if mask is None:
-        LGR.info('Computing adaptive mask')
+        LGR.info('Computing EPI mask from first echo')
+        mask = compute_epi_mask(data[0])
     else:
         # TODO: add affine check
         LGR.info('Using user-defined mask')
