@@ -274,9 +274,7 @@ def writefeats(data, mmix, mask, ref_img, suffix=""):
     return fname
 
 
-def writeresults(
-    ts, mask, comptable, mmix, n_vols, fixed_seed, acc, rej, midk, empty, ref_img
-):
+def writeresults(ts, mask, comptable, mmix, n_vols, acc, rej, midk, empty, ref_img):
     """
     Denoises `ts` and saves all resulting files to disk
 
@@ -295,8 +293,6 @@ def writeresults(
         is components and `T` is the same as in `data`
     n_vols : :obj:`int`
         Number of volumes in original time series
-    fixed_seed: :obj:`int`
-        Integer value used in seeding ICA
     acc : :obj:`list`
         Indices of accepted (BOLD) components in `mmix`
     rej : :obj:`list`
@@ -546,9 +542,7 @@ def load_data(data, n_echos=None):
         if len(data) == 1:  # a z-concatenated file was provided
             data = data[0]
         elif len(data) == 2:  # inviable -- need more than 2 echos
-            raise ValueError(
-                "Cannot run `tedana` with only two echos: {}".format(data)
-            )
+            raise ValueError("Cannot run `tedana` with only two echos: {}".format(data))
         else:  # individual echo files were provided (surface or volumetric)
             fdata = np.stack([utils.load_image(f) for f in data], axis=1)
             ref_img = check_niimg(data[0])

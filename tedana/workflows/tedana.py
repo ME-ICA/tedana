@@ -99,7 +99,7 @@ def _get_parser():
     optional.add_argument(
         "--manacc",
         dest="manacc",
-        help="Comma separated list of manually accepted components",
+        help=("Comma separated list of manually " "accepted components"),
         default=None,
     )
     optional.add_argument(
@@ -118,7 +118,7 @@ def _get_parser():
         dest="combmode",
         action="store",
         choices=["t2s", "ste"],
-        help="Combination scheme for TEs: t2s (Posse 1999, default), ste (Poser)",
+        help=("Combination scheme for TEs: " "t2s (Posse 1999, default), ste (Poser)"),
         default="t2s",
     )
     optional.add_argument(
@@ -182,6 +182,26 @@ def _get_parser():
         default=42,
     )
     optional.add_argument(
+        "--maxit",
+        dest="maxit",
+        type=int,
+        help=("Maximum number of iterations for ICA."),
+        default=500,
+    )
+    optional.add_argument(
+        "--maxrestart",
+        dest="maxrestart",
+        type=int,
+        help=(
+            "Maximum number of attempts for ICA. If ICA "
+            "fails to converge, the fixed seed will be "
+            "updated and ICA will be run again. If "
+            "convergence is achieved before maxrestart "
+            "attempts, ICA will finish early."
+        ),
+        default=10,
+    )
+    optional.add_argument(
         "--debug",
         dest="debug",
         help=argparse.SUPPRESS,
@@ -216,6 +236,8 @@ def tedana_workflow(
     wvpca=False,
     out_dir=".",
     fixed_seed=42,
+    maxit=500,
+    maxrestart=10,
     debug=False,
     quiet=False,
 ):
@@ -268,6 +290,13 @@ def tedana_workflow(
         Value passed to ``mdp.numx_rand.seed()``.
         Set to a positive integer value for reproducible ICA results;
         otherwise, set to -1 for varying results across calls.
+    maxit : :obj:`int`, optional
+        Maximum number of iterations for ICA. Default is 500.
+    maxrestart : :obj:`int`, optional
+        Maximum number of attempts for ICA. If ICA fails to converge, the
+        fixed seed will be updated and ICA will be run again. If convergence
+        is achieved before maxrestart attempts, ICA will finish early.
+        Default is 10.
     debug : :obj:`bool`, optional
         Whether to run in debugging mode or not. Default is False.
     quiet : :obj:`bool`, optional
@@ -389,7 +418,9 @@ def tedana_workflow(
             wvpca=wvpca,
             verbose=verbose,
         )
-        mmix_orig, fixed_seed = decomposition.tedica(n_components, dd, fixed_seed)
+        mmix_orig = decomposition.tedica(
+            n_components, dd, fixed_seed, maxit, maxrestart
+        )
 
         if verbose:
             np.savetxt(op.join(out_dir, "__meica_mix.1D"), mmix_orig)
@@ -479,7 +510,6 @@ def tedana_workflow(
         comptable=comptable,
         mmix=mmix,
         n_vols=n_vols,
-        fixed_seed=fixed_seed,
         acc=acc,
         rej=rej,
         midk=midk,
