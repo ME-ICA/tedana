@@ -298,8 +298,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # TODO: add affine check
         LGR.info('Using user-defined mask')
 
-    mask, masksum = utils.make_adaptive_mask(catd, mask=mask,
-                                             minimum=False, getsum=True)
+    mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
     if verbose:
         io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)

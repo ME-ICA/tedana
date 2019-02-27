@@ -60,7 +60,7 @@ def load_image(data):
     return fdata
 
 
-def make_adaptive_mask(data, mask=None, minimum=True, getsum=False):
+def make_adaptive_mask(data, mask=None, getsum=False):
     """
     Makes map of `data` specifying longest echo a voxel can be sampled with
 
@@ -72,9 +72,6 @@ def make_adaptive_mask(data, mask=None, minimum=True, getsum=False):
     mask : :obj:`str` or img_like, optional
         Binary mask for voxels to consider in TE Dependent ANAlysis. Default is
         to generate mask from data with good signal across echoes
-    minimum : :obj:`bool`, optional
-        Use `make_min_mask()` instead of generating a map with echo-specific
-        times. Default: True
     getsum : :obj:`bool`, optional
         Return `masksum` in addition to `mask`. Default: False
 
@@ -87,10 +84,6 @@ def make_adaptive_mask(data, mask=None, minimum=True, getsum=False):
         Valued array indicating the number of echos with sufficient signal in a
         given voxel. Only returned if `getsum = True`
     """
-
-    if minimum:
-        return make_min_mask(data, roi=mask)
-
     # take temporal mean of echos and extract non-zero values in first echo
     echo_means = data.mean(axis=-1)  # temporal mean of echos
     first_echo = echo_means[echo_means[:, 0] != 0, 0]
@@ -131,37 +124,6 @@ def make_adaptive_mask(data, mask=None, minimum=True, getsum=False):
         return mask, masksum
 
     return mask
-
-
-def make_min_mask(data, roi=None):
-    """
-    Generates a 3D mask of `data`
-
-    Only samples that are consistently (i.e., across time AND echoes) non-zero
-    in `data` are True in output
-
-    Parameters
-    ----------
-    data : (S x E x T) array_like
-        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
-        time
-    roi : :obj:`str`, optional
-        Binary mask for region-of-interest to consider in TE Dependent ANAlysis
-
-    Returns
-    -------
-    mask : (S,) :obj:`numpy.ndarray`
-        Boolean array
-    """
-
-    data = np.asarray(data).astype(bool)
-    mask = data.prod(axis=-1).prod(axis=-1).astype(bool)
-
-    if roi is None:
-        return mask
-    else:
-        roi = load_image(roi).astype(bool)
-        return np.logical_and(mask, roi)
 
 
 def unmask(data, mask):
