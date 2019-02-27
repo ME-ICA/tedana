@@ -17,7 +17,7 @@ def testdata1():
     in_files = [op.join(get_test_data_path(), 'echo{0}.nii.gz'.format(i+1))
                 for i in range(3)]
     data, _ = io.load_data(in_files, n_echos=len(tes))
-    mask, mask_sum = utils.make_adaptive_mask(data, getsum=True)
+    mask, mask_sum = utils.make_adaptive_mask(data, minimum=False, getsum=True)
     data_dict = {'data': data,
                  'tes': tes,
                  'mask': mask,
