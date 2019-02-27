@@ -295,7 +295,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     if mask is None:
         LGR.info('Computing EPI mask from first echo')
-        mask = compute_epi_mask(data[0])
+        first_echo_img = io.new_nii_like(ref_img, catd[:, 0, :])
+        mask = compute_epi_mask(first_echo_img)
     else:
         # TODO: add affine check
         LGR.info('Using user-defined mask')
