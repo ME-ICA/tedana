@@ -105,12 +105,3 @@ def test_make_adaptive_mask():
                                                               'mask.nii.gz'),
                                              getsum=True)
     assert np.allclose(mask, masksum.astype(bool))
-
-
-def test_make_min_mask():
-    # load data make mask
-    data = io.load_data(fnames, n_echos=len(tes))[0]
-    minmask = utils.make_min_mask(data)
-
-    assert minmask.shape == (64350,)
-    assert minmask.sum() == 58378
