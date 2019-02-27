@@ -5,47 +5,13 @@ import logging
 
 import numpy as np
 from scipy import stats
-from scipy.optimize import leastsq
 import nibabel as nib
 from nilearn._utils import check_niimg
-from nibabel.filename_parser import splitext_addext
 from sklearn.utils import check_array
 
 from tedana.due import due, BibTeX
 
-FORMATS = {'.nii': 'NIFTI'}
 LGR = logging.getLogger(__name__)
-
-
-def get_dtype(data):
-    """
-    Determines neuroimaging format of `data`
-
-    Parameters
-    ----------
-    data : :obj:`list` of :obj:`str` or :obj:`str` or img_like
-        Data to determine format of
-
-    Returns
-    -------
-    dtype : {'NIFTI', 'OTHER'} str
-        Format of input data
-    """
-
-    if isinstance(data, list):
-        dtypes = np.unique([get_dtype(d) for d in data])
-        if dtypes.size > 1:
-            raise ValueError('Provided data detected to have varying formats: '
-                             '{}'.format(dtypes))
-        return dtypes[0]
-    elif isinstance(data, str):
-        dtype = splitext_addext(data)[1]
-    else:  # img_like?
-        if not hasattr(data, 'valid_exts'):
-            raise TypeError('Input data format cannot be detected.')
-        dtype = data.valid_exts[0]
-
-    return FORMATS.get(dtype, 'OTHER')
 
 
 def getfbounds(n_echos):
@@ -219,102 +185,6 @@ def unmask(data, mask):
     out = np.zeros(mask.shape + data.shape[1:], dtype=data.dtype)
     out[mask] = data
     return out
-
-
-def moments(data):
-    """
-    Returns gaussian parameters of a 2D distribution by calculating its moments
-
-    Parameters
-    ----------
-    data : array_like
-        2D data array
-
-    Returns
-    -------
-    height : :obj:`float`
-    center_x : :obj:`float`
-    center_y : :obj:`float`
-    width_x : :obj:`float`
-    width_y : :obj:`float`
-
-    References
-    ----------
-    `Scipy Cookbook`_
-
-    .. _Scipy Cookbook: http://scipy-cookbook.readthedocs.io/items/FittingData.html#Fitting-a-2D-gaussian  # noqa
-    """
-
-    total = data.sum()
-    X, Y = np.indices(data.shape)
-    center_x = (X * data).sum() / total
-    center_y = (Y * data).sum() / total
-    col = data[:, int(center_y)]
-    width_x = np.sqrt(abs((np.arange(col.size) - center_y)**2 * col).sum() / col.sum())
-    row = data[int(center_x), :]
-    width_y = np.sqrt(abs((np.arange(row.size) - center_x)**2 * row).sum() / row.sum())
-    height = data.max()
-    return height, center_x, center_y, width_x, width_y
-
-
-def gaussian(height, center_x, center_y, width_x, width_y):
-    """
-    Returns gaussian function
-
-    Parameters
-    ----------
-    height : :obj:`float`
-    center_x : :obj:`float`
-    center_y : :obj:`float`
-    width_x : :obj:`float`
-    width_y : :obj:`float`
-
-    Returns
-    -------
-    lambda
-        Gaussian function with provided parameters
-
-    References
-    ----------
-    `Scipy Cookbook`_
-
-    .. _Scipy Cookbook: http://scipy-cookbook.readthedocs.io/items/FittingData.html#Fitting-a-2D-gaussian  # noqa
-    """
-
-    width_x = float(width_x)
-    width_y = float(width_y)
-    return lambda x, y: height * np.exp(-(((center_x - x) / width_x)**2 +
-                                        ((center_y - y) / width_y)**2) / 2)
-
-
-def fitgaussian(data):
-    """
-    Returns estimated gaussian parameters of a 2D distribution found by a fit
-
-    Parameters
-    ----------
-    data : array_like
-        2D data array
-
-    Returns
-    -------
-    p : array_like
-        Array with height, center_x, center_y, width_x, width_y of `data`
-
-    References
-    ----------
-    `Scipy Cookbook`_
-
-    .. _Scipy Cookbook: http://scipy-cookbook.readthedocs.io/items/FittingData.html#Fitting-a-2D-gaussian  # noqa
-    """
-
-    params = moments(data)
-
-    def errorfunction(p, data):
-        return np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
-
-    (p, _) = leastsq(errorfunction, params, data)
-    return p
 
 
 @due.dcite(BibTeX('@article{dice1945measures,'

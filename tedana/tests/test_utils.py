@@ -16,27 +16,6 @@ fnames = [pjoin(datadir, 'echo{}.nii.gz'.format(n)) for n in range(1, 4)]
 tes = ['14.5', '38.5', '62.5']
 
 
-def test_get_dtype():
-    # various combinations of input types
-    good_inputs = [
-        (['echo1.nii.gz', 'echo2.nii.gz', 'echo3.nii.gz'], 'NIFTI'),
-        ('echo1.nii.gz', 'NIFTI'),
-        (['echo1.unknown', 'echo2.unknown', 'echo3.unknown'], 'OTHER'),
-        ('echo1.unknown', 'OTHER'),
-        (nib.Nifti1Image(np.zeros((10,)*3),
-                         affine=np.diag(np.ones(4))), 'NIFTI')
-    ]
-
-    for (input, expected) in good_inputs:
-        assert utils.get_dtype(input) == expected
-
-    with pytest.raises(ValueError):  # mixed arrays don't work
-        utils.get_dtype(['echo1.unknown', 'echo1.nii.gz'])
-
-    with pytest.raises(TypeError):  # non-img_like inputs don't work
-        utils.get_dtype(rs.rand(100, 100))
-
-
 def test_getfbounds():
     good_inputs = range(1, 12)
 
@@ -60,12 +39,6 @@ def test_unmask():
         out = utils.unmask(input, mask)
         assert out.shape == (100,) + input.shape[1:]
         assert out.dtype == dtype
-
-
-def test_fitgaussian():
-    # not sure a good way to test this
-    # it's straight out of the scipy cookbook, so hopefully its robust?
-    assert utils.fitgaussian(rs.rand(100, 100)).size == 5
 
 
 def test_dice():
