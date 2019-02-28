@@ -81,7 +81,10 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
 
         # Title will include variance from comptable
         comp_var = "{0:.2f}".format(comptable.iloc[compnum][3])
-        plt_title = 'Comp. {}: {}% variance'.format(compnum, comp_var)
+        comp_kappa = "{0:.2f}".format(comptable.iloc[compnum][1])
+        comp_rho = "{0:.2f}".format(comptable.iloc[compnum][2])
+        plt_title = 'Comp. {}: variance: {}%, kappa: {}, rho: {}'.format(compnum, comp_var,
+                                                                         comp_kappa, comp_rho)
         title = ax_ts.set_title(plt_title)
         title.set_y(1.5)
         ax_ts.set_xlabel('TRs')
