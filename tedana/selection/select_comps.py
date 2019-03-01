@@ -250,7 +250,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
                (comptable.loc[acc, 'variance explained'] > EXTEND_FACTOR * varex_upper)]
     comptable.loc[midk, 'classification'] = 'rejected'
     comptable.loc[midk, 'rationale'] += 'I006;'
-    LGR.info('Midk: {0}'.format(','.join([str(mk) for mk in midk])))
+    LGR.info('Midk: {0}'.format(','.join(midk)))
     acc = np.setdiff1d(acc, midk)
 
     """
