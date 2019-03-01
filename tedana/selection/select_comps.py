@@ -211,6 +211,10 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     # Initial guess of good components based on Kappa and Rho elbows
     good_guess = ncls[(comptable.loc[ncls, 'kappa'] >= kappa_elbow) &
                       (comptable.loc[ncls, 'rho'] < rho_elbow)]
+    LGR.info('len(ncls): {0}'.format(len(ncls)))
+    LGR.info('kappa_elbow: {0}'.format(kappa_elbow))
+    LGR.info('rho_elbow: {0}'.format(rho_elbow))
+    LGR.info('good_guess: {0}'.format(good_guess))
 
     if len(good_guess) == 0:
         LGR.warning('No BOLD-like components detected')
@@ -238,8 +242,13 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     max decision score and high variance
     """
     max_good_d_score = EXTEND_FACTOR * len(good_guess) * n_decision_metrics
+    LGR.info('n_decision_metrics: {0}'.format(n_decision_metrics))
+    LGR.info('len(good_guess): {0}'.format(len(good_guess)))
+    LGR.info('max_good_d_score: {0}'.format(max_good_d_score))
+    LGR.info('max_varex: {0}'.format(EXTEND_FACTOR * varex_upper))
     midk = acc[(comptable.loc[acc, 'd_table_score'] > max_good_d_score) &
                (comptable.loc[acc, 'variance explained'] > EXTEND_FACTOR * varex_upper)]
+    LGR.info('midk: {0}'.format(','.join([str(mk) for mk in midk])))
     comptable.loc[midk, 'classification'] = 'rejected'
     comptable.loc[midk, 'rationale'] += 'I006;'
     acc = np.setdiff1d(acc, midk)
