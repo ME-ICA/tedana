@@ -61,9 +61,12 @@ def _get_parser():
                           dest='mask',
                           metavar='FILE',
                           type=lambda x: is_valid_file(parser, x),
-                          help=('Binary mask of voxels to include in TE '
-                                'Dependent ANAlysis. Must be in the same '
-                                'space as `data`.'),
+                          help=("Binary mask of voxels to include in TE "
+                                "Dependent ANAlysis. Must be in the same "
+                                "space as `data`. If an explicit mask is not "
+                                "provided, then Nilearn's compute_epi_mask "
+                                "function will be used to derive a mask "
+                                "from the first echo's data."),
                           default=None)
     optional.add_argument('--mix',
                           dest='mixm',
@@ -188,7 +191,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         List of echo times associated with data in milliseconds.
     mask : :obj:`str`, optional
         Binary mask of voxels to include in TE Dependent ANAlysis. Must be
-        spatially aligned with `data`.
+        spatially aligned with `data`. If an explicit mask is not provided,
+        then Nilearn's compute_epi_mask function will be used to derive a mask
+        from the first echo's data.
     mixm : :obj:`str`, optional
         File containing mixing matrix. If not provided, ME-PCA and ME-ICA are
         done.
