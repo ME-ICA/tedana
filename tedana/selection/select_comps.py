@@ -209,6 +209,9 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
                          utils.getfbounds(n_echos)[0]))
 
     # Initial guess of good components based on Kappa and Rho elbows
+    LGR.info('len(ncls): {0}'.format(len(ncls)))
+    LGR.info('kappa_elbow: {0}'.format(kappa_elbow))
+    LGR.info('rho_elbow: {0}'.format(rho_elbow))
     good_guess = ncls[(comptable.loc[ncls, 'kappa'] >= kappa_elbow) &
                       (comptable.loc[ncls, 'rho'] < rho_elbow)]
 
@@ -238,10 +241,16 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     max decision score and high variance
     """
     max_good_d_score = EXTEND_FACTOR * len(good_guess) * n_decision_metrics
+    LGR.info('n_decision_metrics: {0}'.format(n_decision_metrics))
+    LGR.info('len(good_guess): {0}'.format(len(good_guess)))
+    LGR.info('max_good_d_score: {0}'.format(max_good_d_score))
+    LGR.info('varex_upper: {0}'.format(varex_upper))
+    LGR.info('max varex: {0}'.format(EXTEND_FACTOR * varex_upper))
     midk = acc[(comptable.loc[acc, 'd_table_score'] > max_good_d_score) &
                (comptable.loc[acc, 'variance explained'] > EXTEND_FACTOR * varex_upper)]
     comptable.loc[midk, 'classification'] = 'rejected'
     comptable.loc[midk, 'rationale'] += 'I006;'
+    LGR.info('Midk: {0}'.format(','.join(midk)))
     acc = np.setdiff1d(acc, midk)
 
     """
