@@ -84,6 +84,18 @@ def make_adaptive_mask(data, mask=None, getsum=False):
         Valued array indicating the number of echos with sufficient signal in a
         given voxel. Only returned if `getsum = True`
     """
+    masksum = np.zeros(data.shape[0])
+    old_mean_echo_data = np.mean(data[:, 0, :], axis=-1)
+    for i_echo in range(1, data.shape[1]):
+        echo_data = data[:, i_echo, :]
+        mean_echo_data = np.mean(echo_data, axis=-1)
+        # If a voxel's signal goes up from one echo to next, that's bad.
+        bad_voxels = mean_echo_data > old_mean_echo_data
+        old_mean_echo_data = mean_echo_data
+        open_voxels = masksum == 0
+        bad_voxels = np.logical_and(bad_voxels, open_voxels)
+        masksum[bad_voxels] = i_echo
+
     # take temporal mean of echos and extract non-zero values in first echo
     echo_means = data.mean(axis=-1)  # temporal mean of echos
     first_echo = echo_means[echo_means[:, 0] != 0, 0]
@@ -103,7 +115,8 @@ def make_adaptive_mask(data, mask=None, getsum=False):
 
     # determine samples where absolute value is greater than echo-specific thresholds
     # and count # of echos that pass criterion
-    masksum = (np.abs(echo_means) > lthrs).sum(axis=-1)
+    temp_masksum = (np.abs(echo_means) > lthrs).sum(axis=-1)
+    masksum[masksum == 0] = temp_masksum[masksum == 0]
 
     if mask is None:
         # make it a boolean mask to (where we have at least 1 echo with good signal)
