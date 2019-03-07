@@ -18,6 +18,7 @@ import argparse
 import numpy as np
 import pandas as pd
 from scipy import stats
+from nilearn.masking import compute_epi_mask
 
 from tedana.workflows.parser_utils import is_valid_file
 from tedana import decay, combine, decomposition, io, model, selection, utils
@@ -60,9 +61,12 @@ def _get_parser():
                           dest='mask',
                           metavar='FILE',
                           type=lambda x: is_valid_file(parser, x),
-                          help=('Binary mask of voxels to include in TE '
-                                'Dependent ANAlysis. Must be in the same '
-                                'space as `data`.'),
+                          help=("Binary mask of voxels to include in TE "
+                                "Dependent ANAlysis. Must be in the same "
+                                "space as `data`. If an explicit mask is not "
+                                "provided, then Nilearn's compute_epi_mask "
+                                "function will be used to derive a mask "
+                                "from the first echo's data."),
                           default=None)
     optional.add_argument('--mix',
                           dest='mixm',
@@ -187,7 +191,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         List of echo times associated with data in milliseconds.
     mask : :obj:`str`, optional
         Binary mask of voxels to include in TE Dependent ANAlysis. Must be
-        spatially aligned with `data`.
+        spatially aligned with `data`. If an explicit mask is not provided,
+        then Nilearn's compute_epi_mask function will be used to derive a mask
+        from the first echo's data.
     mixm : :obj:`str`, optional
         File containing mixing matrix. If not provided, ME-PCA and ME-ICA are
         done.
@@ -293,7 +299,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         raise IOError('Argument "ctab" must be an existing file.')
 
     if mask is None:
-        LGR.info('Computing adaptive mask')
+        LGR.info('Computing EPI mask from first echo')
+        first_echo_img = io.new_nii_like(ref_img, catd[:, 0, :])
+        mask = compute_epi_mask(first_echo_img)
     else:
         # TODO: add affine check
         LGR.info('Using user-defined mask')

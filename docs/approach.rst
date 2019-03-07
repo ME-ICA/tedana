@@ -45,6 +45,16 @@ number of echoes with "good" signal. When :math:`T_{2}^*` and :math:`S_{0}` are
 calculated below, each voxel's values are only calculated from the first :math:`n`
 echoes, where :math:`n` is the value for that voxel in the adaptive mask.
 
+.. note::
+    ``tedana`` allows users to provide their own mask. The adaptive mask will
+    be computed on this explicit mask, and may reduce it further based on the
+    data.
+    If a mask is not provided, ``tedana`` runs `nilearn.masking.compute_epi_mask`_
+    on the first echo's data to derive a mask prior to adaptive masking.
+    The workflow does this because the adaptive mask generation function
+    sometimes identifies almost the entire bounding box as "brain", and
+    ``compute_epi_mask`` restricts analysis to a more reasonable area.
+
 .. image:: /_static/03_adaptive_mask.png
   :width: 600 px
   :align: center
@@ -211,4 +221,5 @@ robust PCA.
 
 .. image:: /_static/16_t1c_denoised_data_timeseries.png
 
+.. _nilearn.masking.compute_epi_mask: https://nilearn.github.io/modules/generated/nilearn.masking.compute_epi_mask.html
 .. _Power et al. (2018): http://www.pnas.org/content/early/2018/02/07/1720985115.short
