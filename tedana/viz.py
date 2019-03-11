@@ -173,7 +173,7 @@ def write_kappa_scatter(comptable):
 
     # Set up for varying marker shape and color
     mkr_dict = {'accepted': ['*', 'g'], 'rejected': ['v', 'r'],
-                'ignored': ['d', 'k'], 'midk': ['^', 'm']}
+                'ignored': ['d', 'k']}
 
     # Prebuild legend so that the marker sizes are uniform
     for kind in mkr_dict:
