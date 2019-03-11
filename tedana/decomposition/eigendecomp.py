@@ -11,7 +11,7 @@ from scipy import stats
 from sklearn.decomposition import PCA
 
 from tedana import model, utils, io
-from tedana.decomposition._utils import eimask, dwtmat, idwtmat
+from tedana.decomposition._utils import eimask
 from tedana.selection._utils import (getelbow_cons, getelbow)
 from tedana.due import due, BibTeX
 
