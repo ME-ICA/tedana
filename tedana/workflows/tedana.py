@@ -123,11 +123,6 @@ def _get_parser():
                                 'delimited list'),
                           choices=['t1c', 'gsr'],
                           default=None)
-    optional.add_argument('--wvpca',
-                          dest='wvpca',
-                          help='Perform PCA on wavelet-transformed data',
-                          action='store_true',
-                          default=False)
     optional.add_argument('--tedpca',
                           dest='tedpca',
                           help='Method with which to select components in TEDPCA',
@@ -183,8 +178,7 @@ def _get_parser():
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     tedort=False, gscontrol=None, tedpca='mle',
                     ste=-1, combmode='t2s', verbose=False, stabilize=False,
-                    wvpca=False, out_dir='.',
-                    fixed_seed=42, maxit=500, maxrestart=10,
+                    out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
                     debug=False, quiet=False, png=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
@@ -227,9 +221,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Generate intermediate and additional files. Default is False.
     png : obj:'bool', optional
         Generate simple plots and figures. Default is false.
-    wvpca : :obj:`bool`, optional
-        Whether or not to perform PCA on wavelet-transformed data.
-        Default is False.
     out_dir : :obj:`str`, optional
         Output directory.
 
@@ -352,7 +343,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         n_components, dd = decomposition.tedpca(catd, data_oc, combmode, mask,
                                                 t2s, t2sG, ref_img,
                                                 tes=tes, method=tedpca, ste=ste,
-                                                kdaw=10., rdaw=1., wvpca=wvpca,
+                                                kdaw=10., rdaw=1.,
                                                 verbose=verbose)
         mmix_orig = decomposition.tedica(n_components, dd, fixed_seed,
                                          maxit, maxrestart)

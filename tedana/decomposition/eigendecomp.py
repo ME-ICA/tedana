@@ -11,7 +11,7 @@ from scipy import stats
 from sklearn.decomposition import PCA
 
 from tedana import model, utils, io
-from tedana.decomposition._utils import eimask, dwtmat, idwtmat
+from tedana.decomposition._utils import eimask
 from tedana.selection._utils import (getelbow_cons, getelbow)
 from tedana.due import due, BibTeX
 
@@ -165,7 +165,7 @@ def kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False):
 
 
 def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
-           ref_img, tes, method='mle', ste=-1, kdaw=10., rdaw=1., wvpca=False,
+           ref_img, tes, method='mle', ste=-1, kdaw=10., rdaw=1.,
            verbose=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
@@ -199,8 +199,6 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         and 0  will indicate using all the echos. A list can be provided
         to indicate a subset of echos.
         Default: -1
-    wvpca : :obj:`bool`, optional
-        Whether to apply wavelet denoising to data. Default: False
     verbose : :obj:`bool`, optional
         Whether to output files from fitmodels_direct or not. Default: False
 
@@ -279,9 +277,6 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
 
     dz = ((d.T - d.T.mean(axis=0)) / d.T.std(axis=0)).T  # var normalize ts
     dz = (dz - dz.mean()) / dz.std()  # var normalize everything
-
-    if wvpca:
-        dz, cAl = dwtmat(dz)
 
     fname = op.abspath('pcastate.pkl')
     if op.exists('pcastate.pkl'):
@@ -382,9 +377,6 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
     voxel_kept_comp_weighted = (voxel_comp_weights[:, sel_idx] *
                                 varex[None, sel_idx])
     kept_data = np.dot(voxel_kept_comp_weighted, comp_ts[sel_idx, :])
-
-    if wvpca:
-        kept_data = idwtmat(kept_data, cAl)
 
     kept_data = stats.zscore(kept_data, axis=1)  # variance normalize time series
     kept_data = stats.zscore(kept_data, axis=None)  # variance normalize everything
