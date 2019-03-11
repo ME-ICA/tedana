@@ -18,6 +18,7 @@ import argparse
 import numpy as np
 import pandas as pd
 from scipy import stats
+from nilearn.masking import compute_epi_mask
 
 from tedana import decay, combine, decomposition, io, model, selection, utils, viz
 from tedana.workflows.parser_utils import is_valid_file
@@ -60,9 +61,12 @@ def _get_parser():
                           dest='mask',
                           metavar='FILE',
                           type=lambda x: is_valid_file(parser, x),
-                          help=('Binary mask of voxels to include in TE '
-                                'Dependent ANAlysis. Must be in the same '
-                                'space as `data`.'),
+                          help=("Binary mask of voxels to include in TE "
+                                "Dependent ANAlysis. Must be in the same "
+                                "space as `data`. If an explicit mask is not "
+                                "provided, then Nilearn's compute_epi_mask "
+                                "function will be used to derive a mask "
+                                "from the first echo's data."),
                           default=None)
     optional.add_argument('--mix',
                           dest='mixm',
@@ -148,6 +152,20 @@ def _get_parser():
                                 'maps, timecourse plots and other diagnostic '
                                 'images'),
                           default=False)
+    optional.add_argument('--maxit',
+                          dest='maxit',
+                          type=int,
+                          help=('Maximum number of iterations for ICA.'),
+                          default=500)
+    optional.add_argument('--maxrestart',
+                          dest='maxrestart',
+                          type=int,
+                          help=('Maximum number of attempts for ICA. If ICA '
+                                'fails to converge, the fixed seed will be '
+                                'updated and ICA will be run again. If '
+                                'convergence is achieved before maxrestart '
+                                'attempts, ICA will finish early.'),
+                          default=10)
     optional.add_argument('--debug',
                           dest='debug',
                           help=argparse.SUPPRESS,
@@ -165,7 +183,8 @@ def _get_parser():
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     tedort=False, gscontrol=None, tedpca='mle',
                     ste=-1, combmode='t2s', verbose=False, stabilize=False,
-                    wvpca=False, out_dir='.', fixed_seed=42,
+                    wvpca=False, out_dir='.',
+                    fixed_seed=42, maxit=500, maxrestart=10,
                     debug=False, quiet=False, png=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
@@ -179,7 +198,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         List of echo times associated with data in milliseconds.
     mask : :obj:`str`, optional
         Binary mask of voxels to include in TE Dependent ANAlysis. Must be
-        spatially aligned with `data`.
+        spatially aligned with `data`. If an explicit mask is not provided,
+        then Nilearn's compute_epi_mask function will be used to derive a mask
+        from the first echo's data.
     mixm : :obj:`str`, optional
         File containing mixing matrix. If not provided, ME-PCA and ME-ICA are
         done.
@@ -218,6 +239,13 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Value passed to ``mdp.numx_rand.seed()``.
         Set to a positive integer value for reproducible ICA results;
         otherwise, set to -1 for varying results across calls.
+    maxit : :obj:`int`, optional
+        Maximum number of iterations for ICA. Default is 500.
+    maxrestart : :obj:`int`, optional
+        Maximum number of attempts for ICA. If ICA fails to converge, the
+        fixed seed will be updated and ICA will be run again. If convergence
+        is achieved before maxrestart attempts, ICA will finish early.
+        Default is 10.
     debug : :obj:`bool`, optional
         Whether to run in debugging mode or not. Default is False.
     quiet : :obj:`bool`, optional
@@ -280,13 +308,14 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         raise IOError('Argument "ctab" must be an existing file.')
 
     if mask is None:
-        LGR.info('Computing adaptive mask')
+        LGR.info('Computing EPI mask from first echo')
+        first_echo_img = io.new_nii_like(ref_img, catd[:, 0, :])
+        mask = compute_epi_mask(first_echo_img)
     else:
         # TODO: add affine check
         LGR.info('Using user-defined mask')
 
-    mask, masksum = utils.make_adaptive_mask(catd, mask=mask,
-                                             minimum=False, getsum=True)
+    mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
     if verbose:
         io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
@@ -325,8 +354,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                 tes=tes, method=tedpca, ste=ste,
                                                 kdaw=10., rdaw=1., wvpca=wvpca,
                                                 verbose=verbose)
-        mmix_orig, fixed_seed = decomposition.tedica(n_components, dd,
-                                                     fixed_seed)
+        mmix_orig = decomposition.tedica(n_components, dd, fixed_seed,
+                                         maxit, maxrestart)
 
         if verbose:
             np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
@@ -387,7 +416,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         np.savetxt(op.join(out_dir, 'meica_mix_orth.1D'), mmix)
 
     io.writeresults(data_oc, mask=mask, comptable=comptable, mmix=mmix,
-                    n_vols=n_vols, fixed_seed=fixed_seed,
+                    n_vols=n_vols,
                     acc=acc, rej=rej, midk=midk, empty=ign,
                     ref_img=ref_img)
 

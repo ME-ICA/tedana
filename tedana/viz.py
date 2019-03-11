@@ -65,9 +65,6 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
 
     for compnum in range(0, mmix.shape[1], 1):
 
-        allplot = plt.figure(figsize=(10, 9))
-        ax_ts = plt.subplot2grid((5, 6), (0, 0), rowspan=1, colspan=6,
-                                 fig=allplot)
         if compnum in acc:
             line_color = 'g'
         elif compnum in rej:
@@ -77,16 +74,11 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
         else:
             line_color = 'k'
 
-        ax_ts.plot(mmix[:, compnum], color=line_color)
+        allplot = plt.figure(figsize=(10, 9))
+        ax_ts = plt.subplot2grid((5, 6), (0, 0),
+                                 rowspan=1, colspan=6,
+                                 fig=allplot)
 
-        # Title will include variance from comptable
-        comp_var = "{0:.2f}".format(comptable.iloc[compnum][3])
-        comp_kappa = "{0:.2f}".format(comptable.iloc[compnum][1])
-        comp_rho = "{0:.2f}".format(comptable.iloc[compnum][2])
-        plt_title = 'Comp. {}: variance: {}%, kappa: {}, rho: {}'.format(compnum, comp_var,
-                                                                         comp_kappa, comp_rho)
-        title = ax_ts.set_title(plt_title)
-        title.set_y(1.5)
         ax_ts.set_xlabel('TRs')
         ax_ts.set_xbound(0, n_vols)
         # Make a second axis with units of time (s)
@@ -106,6 +98,17 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
         ax_ts2.set_xbound(ax_ts.get_xbound())
         ax_ts2.set_xticklabels(ax2Xs)
         ax_ts2.set_xlabel('seconds')
+
+        ax_ts.plot(mmix[:, compnum], color=line_color)
+
+        # Title will include variance from comptable
+        comp_var = "{0:.2f}".format(comptable.iloc[compnum][3])
+        comp_kappa = "{0:.2f}".format(comptable.iloc[compnum][1])
+        comp_rho = "{0:.2f}".format(comptable.iloc[compnum][2])
+        plt_title = 'Comp. {}: variance: {}%, kappa: {}, rho: {}'.format(compnum, comp_var,
+                                                                         comp_kappa, comp_rho)
+        title = ax_ts.set_title(plt_title)
+        title.set_y(1.5)
 
         # Set range to ~1/10th of max beta
         imgmax = ts_B[:, :, :, compnum].max() * .1
@@ -217,7 +220,7 @@ def write_summary_fig(comptable):
     counts = {}
     for clf in ['accepted', 'rejected', 'ignored']:
         var_expl.append(np.sum(comptable[comptable.classification == clf]['variance explained']))
-        counts[clf] = comptable[comptable.classification == clf].count()[0] + ' ' + clf
+        counts[clf] = '{0} {1}'.format(comptable[comptable.classification == clf].count()[0], clf)
 
     fig, ax = plt.subplots(figsize=(10, 7))
     plt.bar([1, 2, 3], var_expl, color=['g', 'r', 'k'])

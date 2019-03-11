@@ -5,47 +5,13 @@ import logging
 
 import numpy as np
 from scipy import stats
-from scipy.optimize import leastsq
 import nibabel as nib
 from nilearn._utils import check_niimg
-from nibabel.filename_parser import splitext_addext
 from sklearn.utils import check_array
 
 from tedana.due import due, BibTeX
 
-FORMATS = {'.nii': 'NIFTI'}
 LGR = logging.getLogger(__name__)
-
-
-def get_dtype(data):
-    """
-    Determines neuroimaging format of `data`
-
-    Parameters
-    ----------
-    data : :obj:`list` of :obj:`str` or :obj:`str` or img_like
-        Data to determine format of
-
-    Returns
-    -------
-    dtype : {'NIFTI', 'OTHER'} str
-        Format of input data
-    """
-
-    if isinstance(data, list):
-        dtypes = np.unique([get_dtype(d) for d in data])
-        if dtypes.size > 1:
-            raise ValueError('Provided data detected to have varying formats: '
-                             '{}'.format(dtypes))
-        return dtypes[0]
-    elif isinstance(data, str):
-        dtype = splitext_addext(data)[1]
-    else:  # img_like?
-        if not hasattr(data, 'valid_exts'):
-            raise TypeError('Input data format cannot be detected.')
-        dtype = data.valid_exts[0]
-
-    return FORMATS.get(dtype, 'OTHER')
 
 
 def getfbounds(n_echos):
@@ -94,7 +60,7 @@ def load_image(data):
     return fdata
 
 
-def make_adaptive_mask(data, mask=None, minimum=True, getsum=False):
+def make_adaptive_mask(data, mask=None, getsum=False):
     """
     Makes map of `data` specifying longest echo a voxel can be sampled with
 
@@ -106,9 +72,6 @@ def make_adaptive_mask(data, mask=None, minimum=True, getsum=False):
     mask : :obj:`str` or img_like, optional
         Binary mask for voxels to consider in TE Dependent ANAlysis. Default is
         to generate mask from data with good signal across echoes
-    minimum : :obj:`bool`, optional
-        Use `make_min_mask()` instead of generating a map with echo-specific
-        times. Default: True
     getsum : :obj:`bool`, optional
         Return `masksum` in addition to `mask`. Default: False
 
@@ -121,10 +84,6 @@ def make_adaptive_mask(data, mask=None, minimum=True, getsum=False):
         Valued array indicating the number of echos with sufficient signal in a
         given voxel. Only returned if `getsum = True`
     """
-
-    if minimum:
-        return make_min_mask(data, roi=mask)
-
     # take temporal mean of echos and extract non-zero values in first echo
     echo_means = data.mean(axis=-1)  # temporal mean of echos
     first_echo = echo_means[echo_means[:, 0] != 0, 0]
@@ -167,37 +126,6 @@ def make_adaptive_mask(data, mask=None, minimum=True, getsum=False):
     return mask
 
 
-def make_min_mask(data, roi=None):
-    """
-    Generates a 3D mask of `data`
-
-    Only samples that are consistently (i.e., across time AND echoes) non-zero
-    in `data` are True in output
-
-    Parameters
-    ----------
-    data : (S x E x T) array_like
-        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
-        time
-    roi : :obj:`str`, optional
-        Binary mask for region-of-interest to consider in TE Dependent ANAlysis
-
-    Returns
-    -------
-    mask : (S,) :obj:`numpy.ndarray`
-        Boolean array
-    """
-
-    data = np.asarray(data).astype(bool)
-    mask = data.prod(axis=-1).prod(axis=-1).astype(bool)
-
-    if roi is None:
-        return mask
-    else:
-        roi = load_image(roi).astype(bool)
-        return np.logical_and(mask, roi)
-
-
 def unmask(data, mask):
     """
     Unmasks `data` using non-zero entries of `mask`
@@ -219,102 +147,6 @@ def unmask(data, mask):
     out = np.zeros(mask.shape + data.shape[1:], dtype=data.dtype)
     out[mask] = data
     return out
-
-
-def moments(data):
-    """
-    Returns gaussian parameters of a 2D distribution by calculating its moments
-
-    Parameters
-    ----------
-    data : array_like
-        2D data array
-
-    Returns
-    -------
-    height : :obj:`float`
-    center_x : :obj:`float`
-    center_y : :obj:`float`
-    width_x : :obj:`float`
-    width_y : :obj:`float`
-
-    References
-    ----------
-    `Scipy Cookbook`_
-
-    .. _Scipy Cookbook: http://scipy-cookbook.readthedocs.io/items/FittingData.html#Fitting-a-2D-gaussian  # noqa
-    """
-
-    total = data.sum()
-    X, Y = np.indices(data.shape)
-    center_x = (X * data).sum() / total
-    center_y = (Y * data).sum() / total
-    col = data[:, int(center_y)]
-    width_x = np.sqrt(abs((np.arange(col.size) - center_y)**2 * col).sum() / col.sum())
-    row = data[int(center_x), :]
-    width_y = np.sqrt(abs((np.arange(row.size) - center_x)**2 * row).sum() / row.sum())
-    height = data.max()
-    return height, center_x, center_y, width_x, width_y
-
-
-def gaussian(height, center_x, center_y, width_x, width_y):
-    """
-    Returns gaussian function
-
-    Parameters
-    ----------
-    height : :obj:`float`
-    center_x : :obj:`float`
-    center_y : :obj:`float`
-    width_x : :obj:`float`
-    width_y : :obj:`float`
-
-    Returns
-    -------
-    lambda
-        Gaussian function with provided parameters
-
-    References
-    ----------
-    `Scipy Cookbook`_
-
-    .. _Scipy Cookbook: http://scipy-cookbook.readthedocs.io/items/FittingData.html#Fitting-a-2D-gaussian  # noqa
-    """
-
-    width_x = float(width_x)
-    width_y = float(width_y)
-    return lambda x, y: height * np.exp(-(((center_x - x) / width_x)**2 +
-                                        ((center_y - y) / width_y)**2) / 2)
-
-
-def fitgaussian(data):
-    """
-    Returns estimated gaussian parameters of a 2D distribution found by a fit
-
-    Parameters
-    ----------
-    data : array_like
-        2D data array
-
-    Returns
-    -------
-    p : array_like
-        Array with height, center_x, center_y, width_x, width_y of `data`
-
-    References
-    ----------
-    `Scipy Cookbook`_
-
-    .. _Scipy Cookbook: http://scipy-cookbook.readthedocs.io/items/FittingData.html#Fitting-a-2D-gaussian  # noqa
-    """
-
-    params = moments(data)
-
-    def errorfunction(p, data):
-        return np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
-
-    (p, _) = leastsq(errorfunction, params, data)
-    return p
 
 
 @due.dcite(BibTeX('@article{dice1945measures,'
