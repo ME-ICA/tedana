@@ -20,8 +20,8 @@ import pandas as pd
 from scipy import stats
 from nilearn.masking import compute_epi_mask
 
+from tedana import decay, combine, decomposition, io, model, selection, utils, viz
 from tedana.workflows.parser_utils import is_valid_file
-from tedana import decay, combine, decomposition, io, model, selection, utils
 
 LGR = logging.getLogger(__name__)
 
@@ -145,6 +145,13 @@ def _get_parser():
                                 'Set to an integer value for reproducible ICA results; '
                                 'otherwise, set to -1 for varying results across calls.'),
                           default=42)
+    optional.add_argument('--png',
+                          dest='png',
+                          action='store_true',
+                          help=('Creates a figures folder with static component '
+                                'maps, timecourse plots and other diagnostic '
+                                'images'),
+                          default=False)
     optional.add_argument('--maxit',
                           dest='maxit',
                           type=int,
@@ -178,7 +185,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     ste=-1, combmode='t2s', verbose=False, stabilize=False,
                     wvpca=False, out_dir='.',
                     fixed_seed=42, maxit=500, maxrestart=10,
-                    debug=False, quiet=False):
+                    debug=False, quiet=False, png=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -218,6 +225,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
+    png : obj:'bool', optional
+        Generate simple plots and figures. Default is false.
     wvpca : :obj:`bool`, optional
         Whether or not to perform PCA on wavelet-transformed data.
         Default is False.
@@ -418,6 +427,19 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     if verbose:
         io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
+
+    if png:
+        LGR.info('Making figures folder with static component maps and '
+                 'timecourse plots.')
+        viz.write_comp_figs(data_oc, mask=mask, comptable=comptable, mmix=mmix,
+                            n_vols=n_vols, acc=acc, rej=rej, midk=midk,
+                            empty=ign, ref_img=ref_img)
+
+        LGR.info('Making Kappa vs Rho scatter plot')
+        viz.write_kappa_scatter(comptable=comptable)
+
+        LGR.info('Making overall summary figure')
+        viz.write_summary_fig(comptable=comptable)
 
     LGR.info('Workflow completed')
     for handler in logging.root.handlers[:]:
