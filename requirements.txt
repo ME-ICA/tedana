@@ -9,3 +9,4 @@ sphinx-argparse
 numpydoc
 versioneer
 pandas
+matplotlib
