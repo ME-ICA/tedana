@@ -4,50 +4,8 @@ Utility functions for tedana.selection
 import logging
 
 import numpy as np
-from sklearn import svm
 
 LGR = logging.getLogger(__name__)
-
-
-def do_svm(X_train, y_train, X_test, svmtype=0):
-    """
-    Implements Support Vector Classification on provided data
-
-    Parameters
-    ----------
-    X_train : (N1 x F) array_like
-        Training vectors, where n_samples is the number of samples in the
-        training dataset and n_features is the number of features.
-    y_train : (N1,) array_like
-        Target values (class labels in classification, real numbers in
-        regression)
-    X_test : (N2 x F) array_like
-        Test vectors, where n_samples is the number of samples in the test
-        dataset and n_features is the number of features.
-    svmtype : :obj:`int`, optional
-        Desired support vector machine type. Must be in [0, 1, 2]. Default: 0
-
-    Returns
-    -------
-    y_pred : (N2,) :obj:`numpy.ndarray`
-        Predicted class labels for samples in `X_test`
-    clf : {:obj:`sklearn.svm.SVC`, :obj:`sklearn.svm.LinearSVC`}
-        Trained sklearn model instance
-    """
-
-    if svmtype == 0:
-        clf = svm.SVC(kernel='linear')
-    elif svmtype == 1:
-        clf = svm.LinearSVC(loss='squared_hinge', penalty='l1', dual=False)
-    elif svmtype == 2:
-        clf = svm.SVC(kernel='linear', probability=True)
-    else:
-        raise ValueError('Input svmtype not in [0, 1, 2]: {}'.format(svmtype))
-
-    clf.fit(X_train, y_train)
-    y_pred = clf.predict(X_test)
-
-    return y_pred, clf
 
 
 def getelbow_cons(arr, return_val=False):
