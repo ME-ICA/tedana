@@ -23,8 +23,15 @@ def trim_edge_zeros(arr):
 
     Parameters
     ----------
-    ndarray: (S x T) array like
-        the array on which the trimming should occur
+    ndarray: (S x T) array_like
+        an array with signal, surrounded by slices that contain only zeros
+        that should be removed.
+
+    Returnes
+    ---------
+    ndarray: (S x T) array_like
+        an array with reduced dimensions, such that the array contains only
+        non_zero values from edge to edge.
     """
 
 
