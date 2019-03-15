@@ -12,6 +12,23 @@ from tedana import model
 LGR = logging.getLogger(__name__)
 
 
+def trim_edge_zeros(arr):
+    mask = arr!=0
+    bounding_box = tuple(
+                         slice(np.min(indexes), np.max(indexes) + 1)
+                         for indexes in np.where(mask))
+    return arr[bounding_box]
+    """
+    Trims away the zero-filled slices that surround many 3/4D arrays
+
+    Parameters
+    ----------
+    ndarray: (S x T) array like
+        the array on which the trimming should occur
+    """
+
+
+
 def write_comp_figs(ts, mask, comptable, mmix, n_vols,
                     acc, rej, midk, empty, ref_img):
     """
@@ -50,7 +67,10 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
     # regenerate the beta images
     ts_B = model.get_coeffs(ts, mmix, mask)
     ts_B = ts_B.reshape(ref_img.shape[:3] + ts_B.shape[1:])
-    # Mask out zeros
+    # trim edges from ts_B array
+    ts_B = trim_edge_zeros(ts_B)
+
+    # Mask out remaining zeros
     ts_B = np.ma.masked_where(ts_B == 0, ts_B)
 
     # Get repetition time from ref_img
