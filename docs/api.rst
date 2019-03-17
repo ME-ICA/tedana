@@ -145,14 +145,11 @@ API
    :template: function.rst
 
    tedana.io.split_ts
-
-   tedana.io.ctabsel
    tedana.io.filewrite
    tedana.io.gscontrol_mmix
    tedana.io.load_data
    tedana.io.new_nii_like
    tedana.io.write_split_ts
-   tedana.io.writect
    tedana.io.writefeats
    tedana.io.writeresults
    tedana.io.writeresults_echoes
@@ -180,14 +177,9 @@ API
 
    tedana.utils.andb
    tedana.utils.dice
-   tedana.utils.fitgaussian
-   tedana.utils.gaussian
-   tedana.utils.get_dtype
    tedana.utils.getfbounds
    tedana.utils.load_image
    tedana.utils.make_adaptive_mask
-   tedana.utils.make_min_mask
-   tedana.utils.moments
    tedana.utils.unmask
 
    :template: module.rst

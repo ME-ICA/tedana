@@ -11,7 +11,7 @@ from scipy import stats
 from sklearn.decomposition import PCA
 
 from tedana import model, utils, io
-from tedana.decomposition._utils import eimask, dwtmat, idwtmat
+from tedana.decomposition._utils import eimask
 from tedana.selection._utils import (getelbow_cons, getelbow)
 from tedana.due import due, BibTeX
 
@@ -165,8 +165,8 @@ def kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False):
 
 
 def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
-           ref_img, bf, tes, method='mle', ste=0, kdaw=10., rdaw=1.,
-           wvpca=False, verbose=False):
+           ref_img, bf, tes, method='mle', ste=-1, kdaw=10., rdaw=1.,
+           verbose=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
     noise from multi-echo data.
@@ -201,8 +201,6 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         and 0  will indicate using all the echos. A list can be provided
         to indicate a subset of echos.
         Default: -1
-    wvpca : :obj:`bool`, optional
-        Whether to apply wavelet denoising to data. Default: False
     verbose : :obj:`bool`, optional
         Whether to output files from fitmodels_direct or not. Default: False
 
@@ -282,9 +280,6 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
     dz = ((d.T - d.T.mean(axis=0)) / d.T.std(axis=0)).T  # var normalize ts
     dz = (dz - dz.mean()) / dz.std()  # var normalize everything
 
-    if wvpca:
-        dz, cAl = dwtmat(dz)
-
     state_file = io.gen_fname(bf, '_variables.pkl', desc='TEDPCAState')
     if op.exists(state_file):
         LGR.info('Loading PCA from: {}'.format(state_file))
@@ -323,8 +318,8 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         o[mask, ...] = eimum
         eimum = np.squeeze(o).astype(bool)
 
-        vTmix = comp_ts.T
-        vTmixN = ((vTmix.T - vTmix.T.mean(0)) / vTmix.T.std(0)).T
+        # Normalize each component's time series
+        vTmixN = stats.zscore(comp_ts, axis=1).T
         LGR.info('Making initial component selection guess from PCA results')
         _, ct_df, betasv, v_T = model.fitmodels_direct(
                     catd, comp_ts.T, eimum, t2s, t2sG, tes, combmode, ref_img,
@@ -388,16 +383,13 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
                                 varex[None, sel_idx])
     kept_data = np.dot(voxel_kept_comp_weighted, comp_ts[sel_idx, :])
 
-    if wvpca:
-        kept_data = idwtmat(kept_data, cAl)
-
     kept_data = stats.zscore(kept_data, axis=1)  # variance normalize time series
     kept_data = stats.zscore(kept_data, axis=None)  # variance normalize everything
 
     return n_components, kept_data
 
 
-def tedica(n_components, dd, fixed_seed):
+def tedica(n_components, dd, fixed_seed, maxit=500, maxrestart=10):
     """
     Performs ICA on `dd` and returns mixing matrix
 
@@ -408,12 +400,18 @@ def tedica(n_components, dd, fixed_seed):
     dd : (S x T) :obj:`numpy.ndarray`
         Dimensionally reduced optimally combined functional data, where `S` is
         samples and `T` is time
-    fixed_seed : int
+    fixed_seed : :obj:`int`
         Seed for ensuring reproducibility of ICA results
+    maxit : :obj:`int`, optional
+        Maximum number of iterations for ICA. Default is 500.
+    maxrestart : :obj:`int`, optional
+        Maximum number of attempted decompositions to perform with different
+        random seeds. ICA will stop running if there is convergence prior to
+        reaching this limit. Default is 10.
 
     Returns
     -------
-    mmix : (C x T) :obj:`numpy.ndarray`
+    mmix : (T x C) :obj:`numpy.ndarray`
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `dd`
 
@@ -428,20 +426,28 @@ def tedica(n_components, dd, fixed_seed):
 
     if fixed_seed == -1:
         fixed_seed = np.random.randint(low=1, high=1000)
-    rand_state = np.random.RandomState(seed=fixed_seed)
-    ica = FastICA(n_components=n_components, algorithm='parallel',
-                  fun='logcosh', max_iter=5000, random_state=rand_state)
 
-    with warnings.catch_warnings(record=True) as w:
-        # Cause all warnings to always be triggered.
-        warnings.simplefilter('always')
+    for i_attempt in range(maxrestart):
+        ica = FastICA(n_components=n_components, algorithm='parallel',
+                      fun='logcosh', max_iter=maxit, random_state=fixed_seed)
 
-        ica.fit(dd)
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter('always')
 
-        w = list(filter(lambda i: issubclass(i.category, UserWarning), w))
-        if len(w):
-            LGR.warning('ICA failed to converge')
+            ica.fit(dd)
+
+            w = list(filter(lambda i: issubclass(i.category, UserWarning), w))
+            if len(w):
+                LGR.warning('ICA attempt {0} failed to converge after {1} '
+                            'iterations'.format(i_attempt + 1, ica.n_iter_))
+                fixed_seed += 1
+                LGR.warning('Random seed updated to {0}'.format(fixed_seed))
+            else:
+                LGR.info('ICA attempt {0} converged in {1} '
+                         'iterations'.format(i_attempt + 1, ica.n_iter_))
+                break
 
     mmix = ica.mixing_
     mmix = stats.zscore(mmix, axis=0)
-    return mmix, fixed_seed
+    return mmix

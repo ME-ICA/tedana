@@ -360,8 +360,8 @@ def writefeats(data, mmix, mask, ref_img, bf):
     return fname
 
 
-def writeresults(ts, mask, comptable, mmix, n_vols, fixed_seed,
-                 acc, rej, midk, empty, ref_img, bf):
+def writeresults(ts, mask, comptable, mmix, n_vols, acc, rej, midk, empty,
+                 ref_img, bf):
     """
     Denoises `ts` and saves all resulting files to disk
 
@@ -380,8 +380,6 @@ def writeresults(ts, mask, comptable, mmix, n_vols, fixed_seed,
         is components and `T` is the same as in `data`
     n_vols : :obj:`int`
         Number of volumes in original time series
-    fixed_seed: :obj:`int`
-        Integer value used in seeding ICA
     acc : :obj:`list`
         Indices of accepted (BOLD) components in `mmix`
     rej : :obj:`list`
@@ -611,7 +609,6 @@ def load_data(data, n_echos=None):
     img = check_niimg(data)
     (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
     fdata = utils.load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1, order='F'))
-
     # create reference image
     ref_img = img.__class__(np.zeros((nx, ny, nz, 1)), affine=img.affine,
                             header=img.header, extra=img.extra)
