@@ -297,7 +297,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         raise IOError('Argument "mixm" must be an existing file.')
 
     if ctab is not None and op.isfile(ctab):
-        out_ctab_file = io.gen_fname(bf, '_comptable.tsv', desc='TEDICA')
+        out_ctab_file = io.gen_fname(bf, '_comptable.json', desc='TEDICA')
         shutil.copyfile(ctab, out_ctab_file)
         shutil.copyfile(ctab, op.basename(ctab))
     elif ctab is not None:
@@ -387,11 +387,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
             comptable = selection.selcomps(seldict, comptable, mmix, manacc,
                                            n_echos)
         else:
-            comptable = pd.read_csv(ctab, sep='\t', index_col='component')
+            comptable = io.load_comptable(ctab)
 
-    comptable.to_csv(io.gen_fname(bf, '_comptable.tsv', desc='TEDICA'),
-                     sep='\t', index=True, index_label='component',
-                     float_format='%.6f')
+    io.save_comptable(comptable, io.gen_fname(bf, '_comptable.json', desc='TEDICA'))
+
     if 'component' not in comptable.columns:
         comptable['component'] = comptable.index
     acc = comptable.loc[comptable['classification'] == 'accepted', 'component']
@@ -415,7 +414,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         pred_rej_ts = np.dot(acc_ts, betas)
         resid = rej_ts - pred_rej_ts
         mmix[:, rej_idx] = resid
-        np.savetxt(op.join(out_dir, 'meica_mix_orth.1D'), mmix)
+        np.savetxt(io.gen_fname(bf, '_mixing.tsv', desc='orthTEDICA'), mmix,
+                   delimiter='\t')
 
     io.writeresults(data_oc, mask=mask, comptable=comptable, mmix=mmix,
                     n_vols=n_vols,

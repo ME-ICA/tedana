@@ -2,6 +2,7 @@
 Functions to handle file input/output
 """
 import re
+import json
 import logging
 import os.path as op
 
@@ -72,6 +73,45 @@ def gen_fname(basefile, extension='_bold.nii.gz', **kwargs):
 
     out_file = op.join(bf_dir, prefix + add_str + extension)
     return out_file
+
+
+def save_comptable(df, filename):
+    """
+    Save pandas DataFrame as a json file.
+
+    Parameters
+    ----------
+    df : :obj:`pandas.DataFrame`
+        DataFrame to save to file.
+    filename : :obj:`str`
+        File to which to output DataFrame.
+    """
+    if 'component' in df.columns:
+        data = df.set_index('component').to_dict(orient='index')
+    else:
+        data = df.to_dict(orient='index')
+
+    with open(filename, 'w') as fo:
+        json.dump(data, fo, sort_keys=True, indent=4)
+
+
+def load_comptable(filename):
+    """
+    Load pandas DataFrame from json file.
+
+    Parameters
+    ----------
+    filename : :obj:`str`
+        File from which to load DataFrame.
+
+    Returns
+    -------
+    df : :obj:`pandas.DataFrame`
+        DataFrame with contents from filename.
+    """
+    df = pd.read_json(filename, orient='index')
+    df.index.name = 'component'
+    return df
 
 
 def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, bf):

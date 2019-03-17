@@ -373,9 +373,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         LGR.info('Selected {0} components with MLE dimensionality '
                  'detection'.format(ct_df.shape[0]))
 
-    ct_df.to_csv(io.gen_fname(bf, '_comptable.tsv', desc='TEDPCA'),
-                 sep='\t', index=True, index_label='component',
-                 float_format='%.6f')
+    io.save_comptable(ct_df, io.gen_fname(bf, '_comptable.json', desc='TEDPCA'))
 
     sel_idx = ct_df['classification'] == 'accepted'
     n_components = np.sum(sel_idx)
