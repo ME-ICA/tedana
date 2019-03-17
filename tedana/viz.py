@@ -231,8 +231,10 @@ def write_kappa_scatter(comptable):
 
 def write_summary_fig(comptable):
     """
-    Creates a bar graph showing total variance explained by each component
-    as well as the number of components identified for each category.
+    Creates a pie chart showing 1) The total variance explained by each 
+    component in the outer ring, 2) the variance explained by each 
+    individual component in the inner ring, 3) counts of each classification 
+    and 4) the amount of unexplained variance.
 
     Parameters
     ----------
@@ -242,19 +244,55 @@ def write_summary_fig(comptable):
         component, and (5) normalized variance explained by component
     """
 
-    # Get the variance and count of each classification
     var_expl = []
+    ind_var_expl = {}
     counts = {}
+    # Get overall variance explained, each components variance and counts of comps
     for clf in ['accepted', 'rejected', 'ignored']:
         var_expl.append(np.sum(comptable[comptable.classification == clf]['variance explained']))
+        ind_var_expl[clf] = comptable[comptable.classification == clf]['variance explained'].values
         counts[clf] = '{0} {1}'.format(comptable[comptable.classification == clf].count()[0], clf)
+    
+    # Genereate Colormaps for individual components
+    acc_colors = plt.cm.Greens(np.linspace(0.2, .6, len(ind_var_expl['accepted'].tolist())))
+    rej_colors = plt.cm.Reds(np.linspace(0.2, .6, len(ind_var_expl['rejected'].tolist())))
+    ign_colors = plt.cm.Greys(np.linspace(0.2, .8, len(ind_var_expl['ignored'].tolist())))
+    unxp_colors = np.atleast_2d(np.array(plt.cm.Greys(0)))
 
-    fig, ax = plt.subplots(figsize=(10, 7))
-    plt.bar([1, 2, 3], var_expl, color=['g', 'r', 'k'])
-    plt.xticks([1, 2, 3], counts.values(), fontsize=20)
-    plt.yticks(fontsize=15)
-    plt.ylabel('Variance Explained', fontsize=20)
-    plt.title('Component Overview', fontsize=25)
+    # Shuffle the colors so that neighboring wedges are (perhaps) visually seperable
+    np.random.shuffle(rej_colors)
+    np.random.shuffle(acc_colors)
+    np.random.shuffle(ign_colors)
+
+    # Decision on whether to include the unexplained variance in figure
+    unexpl_var = [100 - np.sum(var_expl)]
+    if unexpl_var >= [0.001]:
+        var_expl += unexpl_var
+        counts['unexplained'] = 'unexplained variance'
+        all_var_expl = ind_var_expl['accepted'].tolist() + ind_var_expl['rejected'].tolist() + ind_var_expl['ignored'].tolist()  + unexpl_var
+        outer_colors = np.stack((plt.cm.Greens(0.7), plt.cm.Reds(0.7), plt.cm.Greys(0.7),plt.cm.Greys(0)))
+        inner_colors = np.concatenate((acc_colors, rej_colors, ign_colors, unxp_colors), axis = 0)
+    else: 
+        all_var_expl = ind_var_expl['accepted'].tolist() + ind_var_expl['rejected'].tolist() + ind_var_expl['ignored'].tolist() 
+        outer_colors = np.stack((plt.cm.Greens(0.7), plt.cm.Reds(0.7), plt.cm.Greys(0.7)))
+        inner_colors = np.concatenate((acc_colors, rej_colors, ign_colors), axis = 0)
+
+    labels = counts.values()
+    
+    fig, ax = plt.subplots(figsize=(20, 10))
+    size = 0.3
+    # Build outer, overall pie chart, and then inner individual comp pie
+    ax.pie(var_expl, radius=1, colors=outer_colors, labels=labels,
+           autopct='%1.1f%%', pctdistance = 0.85, textprops={'fontsize': 20},
+           wedgeprops=dict(width=size, edgecolor='w'))
+
+    ax.pie(all_var_expl, radius=1-size, colors = inner_colors,
+           wedgeprops=dict(width=size))
+
+    ax.set(aspect="equal")
+    ax.set_title('Variance Explained By Classification', fontdict={'fontsize': 28})
+    if unexpl_var < [0.001]: 
+        plt.text(1, -1, '*Unexplained Variance less than 0.001', fontdict={'fontsize': 12})
     sumfig_title = os.path.join('figures', 'Component_Overview.png')
     plt.savefig(sumfig_title)
 
