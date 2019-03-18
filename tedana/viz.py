@@ -90,17 +90,20 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
 
     # Create indices for 6 cuts, based on dimensions
     cuts = [ts_B.shape[dim] // 6 for dim in range(3)]
-
+    expl_text = ''
     for compnum in range(0, mmix.shape[1], 1):
 
         if compnum in acc:
             line_color = 'g'
+            expl_text = 'accepted'
         elif compnum in rej:
             line_color = 'r'
+            expl_text = 'rejection reason: ' + comptable.iloc[compnum]["rationale"])
         elif compnum in midk:
             line_color = 'm'
         else:
             line_color = 'k'
+            expl_text = 'ignored'
 
         allplot = plt.figure(figsize=(10, 9))
         ax_ts = plt.subplot2grid((5, 6), (0, 0),
@@ -134,8 +137,9 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
         comp_var = "{0:.2f}".format(comptable.iloc[compnum]["variance explained"])
         comp_kappa = "{0:.2f}".format(comptable.iloc[compnum]["kappa"])
         comp_rho = "{0:.2f}".format(comptable.iloc[compnum]["rho"])
-        plt_title = 'Comp. {}: variance: {}%, kappa: {}, rho: {}'.format(compnum, comp_var,
-                                                                         comp_kappa, comp_rho)
+        plt_title = 'Comp. {}: variance: {}%, kappa: {}, rho: {}, {}'.format(compnum, comp_var,
+                                                                            comp_kappa, comp_rho,
+                                                                            expl_text)
         title = ax_ts.set_title(plt_title)
         title.set_y(1.5)
 
