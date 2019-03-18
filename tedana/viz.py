@@ -278,7 +278,7 @@ def write_summary_fig(comptable, out_dir):
         # Combine individual variances from giant list
         for value in all_var_expl.values():
             all_var_expl += value
-        # Add in unexplained variance    
+        # Add in unexplained variance
         all_var_expl += unexpl_var
         outer_colors = np.stack((plt.cm.Greens(0.7), plt.cm.Reds(0.7),
                                  plt.cm.Greys(0.7), plt.cm.Greys(0)))
