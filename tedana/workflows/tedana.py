@@ -226,7 +226,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Generate intermediate and additional files. Default is False.
     png : obj:'bool', optional
         Generate simple plots and figures. Default is false.
-    png-cmap : obj:'str', optional
+    png_cmap : obj:'str', optional
             Name of a matplotlib colormap to be used when generating figures.
             --png must still be used to request figures. Default is 'coolwarm'
     out_dir : :obj:`str`, optional
