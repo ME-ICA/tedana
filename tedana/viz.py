@@ -96,17 +96,20 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
     expl_text = ''
     for compnum in range(0, mmix.shape[1], 1):
 
-        if compnum in acc:
+        if comptable.iloc[compnum]["classification"] == 'accepted':
             line_color = 'g'
             expl_text = 'accepted'
-        elif compnum in rej:
+        elif comptable.iloc[compnum]["classification"] == 'rejected':
             line_color = 'r'
             expl_text = 'rejection reason(s): ' + comptable.iloc[compnum]["rationale"]
-        elif compnum in midk:
-            line_color = 'm'
-        else:
+        elif comptable.iloc[compnum]["classification"] == 'ignored':
             line_color = 'k'
             expl_text = 'ignored reason(s): ' + comptable.iloc[compnum]["rationale"]
+        else:
+            # Classification not added
+            # If new, this will keep code running
+            line_color = '0.75'
+            expl_text = 'unknown classification'
 
         allplot = plt.figure(figsize=(10, 9))
         ax_ts = plt.subplot2grid((5, 6), (0, 0),
