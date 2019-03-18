@@ -41,7 +41,8 @@ def trim_edge_zeros(arr):
 
 
 def write_comp_figs(ts, mask, comptable, mmix, n_vols,
-                    acc, rej, midk, empty, ref_img, out_dir):
+                    acc, rej, midk, empty, ref_img, out_dir,
+                    png_cmap):
     """
     Creates static figures that highlight certain aspects of tedana processing
     This includes a figure for each component showing the component time course,
@@ -74,7 +75,10 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
         Reference image to dictate how outputs are saved to disk
 
     """
-
+    # Check that colormap provided exists
+    if png_cmap not in mplt.colormaps():
+        LGR.info('Provided colormap is not valid, proceeding with coolwarm')
+        png_cmap = 'coolwarm'
     # regenerate the beta images
     ts_B = model.get_coeffs(ts, mmix, mask)
     ts_B = ts_B.reshape(ref_img.shape[:3] + ts_B.shape[1:])
@@ -159,7 +163,7 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
                     to_plot = ts_B[:, :, imgslice * cuts[idx], compnum]
 
                 ax_im = ax.imshow(to_plot, vmin=imgmin, vmax=imgmax, aspect='equal',
-                                  cmap='coolwarm')
+                                  cmap=png_cmap)
 
         # Add a color bar to the plot.
         ax_cbar = allplot.add_axes([0.8, 0.3, 0.03, 0.37])
