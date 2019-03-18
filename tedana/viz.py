@@ -88,10 +88,6 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
     # Get repetition time from ref_img
     tr = ref_img.header.get_zooms()[-1]
 
-    # Start making plots
-    if not os.path.isdir('figures'):
-        os.mkdir('figures')
-
     # Create indices for 6 cuts, based on dimensions
     cuts = [ts_B.shape[dim] // 6 for dim in range(3)]
 
