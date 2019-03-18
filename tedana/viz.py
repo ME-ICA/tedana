@@ -5,11 +5,16 @@ import logging
 import os
 
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 
 from tedana import model
 
+matplotlib.use('AGG')
+
 LGR = logging.getLogger(__name__)
+MPL_LGR = logging.getLogger('matplotlib')
+MPL_LGR.setLevel(logging.WARNING)
 
 
 def trim_edge_zeros(arr):
