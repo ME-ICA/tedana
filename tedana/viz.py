@@ -129,9 +129,9 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
         ax_ts.plot(mmix[:, compnum], color=line_color)
 
         # Title will include variance from comptable
-        comp_var = "{0:.2f}".format(comptable.iloc[compnum][3])
-        comp_kappa = "{0:.2f}".format(comptable.iloc[compnum][1])
-        comp_rho = "{0:.2f}".format(comptable.iloc[compnum][2])
+        comp_var = "{0:.2f}".format(comptable.iloc[compnum]["variance explained"])
+        comp_kappa = "{0:.2f}".format(comptable.iloc[compnum]["kappa"])
+        comp_rho = "{0:.2f}".format(comptable.iloc[compnum]["rho"])
         plt_title = 'Comp. {}: variance: {}%, kappa: {}, rho: {}'.format(compnum, comp_var,
                                                                          comp_kappa, comp_rho)
         title = ax_ts.set_title(plt_title)
@@ -231,9 +231,9 @@ def write_kappa_scatter(comptable):
 
 def write_summary_fig(comptable):
     """
-    Creates a pie chart showing 1) The total variance explained by each 
-    component in the outer ring, 2) the variance explained by each 
-    individual component in the inner ring, 3) counts of each classification 
+    Creates a pie chart showing 1) The total variance explained by each
+    component in the outer ring, 2) the variance explained by each
+    individual component in the inner ring, 3) counts of each classification
     and 4) the amount of unexplained variance.
 
     Parameters
@@ -252,7 +252,7 @@ def write_summary_fig(comptable):
         var_expl.append(np.sum(comptable[comptable.classification == clf]['variance explained']))
         ind_var_expl[clf] = comptable[comptable.classification == clf]['variance explained'].values
         counts[clf] = '{0} {1}'.format(comptable[comptable.classification == clf].count()[0], clf)
-    
+
     # Genereate Colormaps for individual components
     acc_colors = plt.cm.Greens(np.linspace(0.2, .6, len(ind_var_expl['accepted'].tolist())))
     rej_colors = plt.cm.Reds(np.linspace(0.2, .6, len(ind_var_expl['rejected'].tolist())))
@@ -272,13 +272,13 @@ def write_summary_fig(comptable):
         all_var_expl = ind_var_expl['accepted'].tolist() + ind_var_expl['rejected'].tolist() + ind_var_expl['ignored'].tolist()  + unexpl_var
         outer_colors = np.stack((plt.cm.Greens(0.7), plt.cm.Reds(0.7), plt.cm.Greys(0.7),plt.cm.Greys(0)))
         inner_colors = np.concatenate((acc_colors, rej_colors, ign_colors, unxp_colors), axis = 0)
-    else: 
-        all_var_expl = ind_var_expl['accepted'].tolist() + ind_var_expl['rejected'].tolist() + ind_var_expl['ignored'].tolist() 
+    else:
+        all_var_expl = ind_var_expl['accepted'].tolist() + ind_var_expl['rejected'].tolist() + ind_var_expl['ignored'].tolist()
         outer_colors = np.stack((plt.cm.Greens(0.7), plt.cm.Reds(0.7), plt.cm.Greys(0.7)))
         inner_colors = np.concatenate((acc_colors, rej_colors, ign_colors), axis = 0)
 
     labels = counts.values()
-    
+
     fig, ax = plt.subplots(figsize=(20, 10))
     size = 0.3
     # Build outer, overall pie chart, and then inner individual comp pie
@@ -291,7 +291,7 @@ def write_summary_fig(comptable):
 
     ax.set(aspect="equal")
     ax.set_title('Variance Explained By Classification', fontdict={'fontsize': 28})
-    if unexpl_var < [0.001]: 
+    if unexpl_var < [0.001]:
         plt.text(1, -1, '*Unexplained Variance less than 0.001', fontdict={'fontsize': 12})
     sumfig_title = os.path.join('figures', 'Component_Overview.png')
     plt.savefig(sumfig_title)
