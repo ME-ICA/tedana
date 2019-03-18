@@ -10,6 +10,7 @@ matplotlib.use('AGG')
 import matplotlib.pyplot as plt
 
 from tedana import model
+from tedana.utils import get_spectrum
 
 LGR = logging.getLogger(__name__)
 MPL_LGR = logging.getLogger('matplotlib')
@@ -305,23 +306,3 @@ def write_summary_fig(comptable, out_dir):
         plt.text(1, -1, '*Unexplained Variance less than 0.001', fontdict={'fontsize': 12})
     sumfig_title = os.path.join(out_dir, 'figures', 'Component_Overview.png')
     plt.savefig(sumfig_title)
-
-
-def get_spectrum(data: np.array, tr: float = 1):
-    """
-    Returns the power spectrum and corresponding frequencies when provided
-    with a component time course and repitition time.
-
-    Parameters
-    ----------
-    data : (S, ) array_like
-            A timeseries S, on which you would like to perform an fft.
-    tr : :obj:`float`
-            Reptition time (TR) of the data
-    """
-
-    # adapted from @dangom
-    power_spectrum = np.abs(np.fft.rfft(data)) ** 2
-    freqs = np.fft.rfftfreq(power_spectrum.size * 2 - 1, tr)
-    idx = np.argsort(freqs)
-    return power_spectrum[idx], freqs[idx]
