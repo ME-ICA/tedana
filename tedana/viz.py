@@ -275,7 +275,8 @@ def write_summary_fig(comptable, out_dir):
         var_expl += unexpl_var
         counts['unexplained'] = 'unexplained variance'
         all_var_expl = ind_var_expl['accepted'].tolist() + ind_var_expl['rejected'].tolist() + ind_var_expl['ignored'].tolist() + unexpl_var
-        outer_colors = np.stack((plt.cm.Greens(0.7), plt.cm.Reds(0.7), plt.cm.Greys(0.7), plt.cm.Greys(0)))
+        outer_colors = np.stack((plt.cm.Greens(0.7), plt.cm.Reds(0.7),
+                                 plt.cm.Greys(0.7), plt.cm.Greys(0)))
         inner_colors = np.concatenate((acc_colors, rej_colors, ign_colors, unxp_colors), axis=0)
     else:
         all_var_expl = ind_var_expl['accepted'].tolist() + ind_var_expl['rejected'].tolist() + ind_var_expl['ignored'].tolist()
