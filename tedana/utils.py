@@ -232,6 +232,7 @@ def andb(arrs):
 
     return result
 
+
 def get_spectrum(data: np.array, tr: float = 1):
     """
     Returns the power spectrum and corresponding frequencies when provided

@@ -18,7 +18,7 @@ MPL_LGR.setLevel(logging.WARNING)
 
 
 def trim_edge_zeros(arr):
-    mask = arr!=0
+    mask = arr != 0
     bounding_box = tuple(
                          slice(np.min(indexes), np.max(indexes) + 1)
                          for indexes in np.where(mask))
@@ -38,7 +38,6 @@ def trim_edge_zeros(arr):
         an array with reduced dimensions, such that the array contains only
         non_zero values from edge to edge.
     """
-
 
 
 def write_comp_figs(ts, mask, comptable, mmix, n_vols,
@@ -142,8 +141,8 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
         comp_kappa = "{0:.2f}".format(comptable.iloc[compnum]["kappa"])
         comp_rho = "{0:.2f}".format(comptable.iloc[compnum]["rho"])
         plt_title = 'Comp. {}: variance: {}%, kappa: {}, rho: {}, {}'.format(compnum, comp_var,
-                                                                            comp_kappa, comp_rho,
-                                                                            expl_text)
+                                                                             comp_kappa, comp_rho,
+                                                                             expl_text)
         title = ax_ts.set_title(plt_title)
         title.set_y(1.5)
 
@@ -280,13 +279,13 @@ def write_summary_fig(comptable, out_dir):
     if unexpl_var >= [0.001]:
         var_expl += unexpl_var
         counts['unexplained'] = 'unexplained variance'
-        all_var_expl = ind_var_expl['accepted'].tolist() + ind_var_expl['rejected'].tolist() + ind_var_expl['ignored'].tolist()  + unexpl_var
-        outer_colors = np.stack((plt.cm.Greens(0.7), plt.cm.Reds(0.7), plt.cm.Greys(0.7),plt.cm.Greys(0)))
-        inner_colors = np.concatenate((acc_colors, rej_colors, ign_colors, unxp_colors), axis = 0)
+        all_var_expl = ind_var_expl['accepted'].tolist() + ind_var_expl['rejected'].tolist() + ind_var_expl['ignored'].tolist() + unexpl_var
+        outer_colors = np.stack((plt.cm.Greens(0.7), plt.cm.Reds(0.7), plt.cm.Greys(0.7), plt.cm.Greys(0)))
+        inner_colors = np.concatenate((acc_colors, rej_colors, ign_colors, unxp_colors), axis=0)
     else:
         all_var_expl = ind_var_expl['accepted'].tolist() + ind_var_expl['rejected'].tolist() + ind_var_expl['ignored'].tolist()
         outer_colors = np.stack((plt.cm.Greens(0.7), plt.cm.Reds(0.7), plt.cm.Greys(0.7)))
-        inner_colors = np.concatenate((acc_colors, rej_colors, ign_colors), axis = 0)
+        inner_colors = np.concatenate((acc_colors, rej_colors, ign_colors), axis=0)
 
     labels = counts.values()
 
@@ -294,10 +293,10 @@ def write_summary_fig(comptable, out_dir):
     size = 0.3
     # Build outer, overall pie chart, and then inner individual comp pie
     ax.pie(var_expl, radius=1, colors=outer_colors, labels=labels,
-           autopct='%1.1f%%', pctdistance = 0.85, textprops={'fontsize': 20},
+           autopct='%1.1f%%', pctdistance=0.85, textprops={'fontsize': 20},
            wedgeprops=dict(width=size, edgecolor='w'))
 
-    ax.pie(all_var_expl, radius=1-size, colors = inner_colors,
+    ax.pie(all_var_expl, radius=1 - size, colors=inner_colors,
            wedgeprops=dict(width=size))
 
     ax.set(aspect="equal")
