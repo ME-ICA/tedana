@@ -89,7 +89,6 @@ def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
 
     # Remove trailing ';' from rationale column
     comptable['rationale'] = comptable['rationale'].str.rstrip(';')
-    
     for compnum in range(0, mmix.shape[1], 1):
 
         if comptable.iloc[compnum]["classification"] == 'accepted':
