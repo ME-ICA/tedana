@@ -98,7 +98,7 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
             expl_text = 'accepted'
         elif compnum in rej:
             line_color = 'r'
-            expl_text = 'rejection reason: ' + comptable.iloc[compnum]["rationale"])
+            expl_text = 'rejection reason: ' + comptable.iloc[compnum]["rationale"]
         elif compnum in midk:
             line_color = 'm'
         else:
