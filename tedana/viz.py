@@ -289,7 +289,7 @@ def write_summary_fig(comptable, out_dir):
 
     labels = counts.values()
 
-    fig, ax = plt.subplots(figsize=(20, 10))
+    fig, ax = plt.subplots(figsize=(16, 10))
     size = 0.3
     # Build outer, overall pie chart, and then inner individual comp pie
     ax.pie(var_expl, radius=1, colors=outer_colors, labels=labels,
