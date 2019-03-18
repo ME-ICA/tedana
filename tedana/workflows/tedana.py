@@ -432,7 +432,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                  'timecourse plots.')
         # make figure folder first
         if not os.path.isdir('figures'):
-            os.mkdir('figures')
+        if not op.isdir(op.join(out_dir, 'figures')):
+            os.mkdir(op.join(out_dir, 'figures'))
 
         viz.write_comp_figs(data_oc, mask=mask, comptable=comptable, mmix=mmix,
                             n_vols=n_vols, acc=acc, rej=rej, midk=midk,
