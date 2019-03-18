@@ -93,10 +93,10 @@ def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
             expl_text = 'accepted'
         elif comptable.iloc[compnum]["classification"] == 'rejected':
             line_color = 'r'
-            expl_text = 'rejection reason(s): ' + comptable.iloc[compnum]["rationale"]
+            expl_text = 'rejection reason(s): ' + comptable.iloc[compnum]["rationale"].str.rstrip(';')
         elif comptable.iloc[compnum]["classification"] == 'ignored':
             line_color = 'k'
-            expl_text = 'ignored reason(s): ' + comptable.iloc[compnum]["rationale"]
+            expl_text = 'ignored reason(s): ' + comptable.iloc[compnum]["rationale"].str.rstrip(';')
         else:
             # Classification not added
             # If new, this will keep code running
