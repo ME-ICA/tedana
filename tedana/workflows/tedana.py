@@ -435,8 +435,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
             os.mkdir(op.join(out_dir, 'figures'))
 
         viz.write_comp_figs(data_oc, mask=mask, comptable=comptable, mmix=mmix,
-                            n_vols=n_vols, acc=acc, rej=rej, midk=midk,
-                            empty=ign, ref_img=ref_img,
+                            ref_img=ref_img,
                             out_dir=op.join(out_dir, 'figures'),
                             png_cmap=png_cmap)
 

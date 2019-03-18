@@ -40,8 +40,7 @@ def trim_edge_zeros(arr):
     """
 
 
-def write_comp_figs(ts, mask, comptable, mmix, n_vols,
-                    acc, rej, midk, empty, ref_img, out_dir,
+def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
                     png_cmap):
     """
     Creates static figures that highlight certain aspects of tedana processing
@@ -61,20 +60,13 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
     mmix : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    n_vols : :obj:`int`
-        Number of volumes in original time series
-    acc : :obj:`list`
-        Indices of accepted (BOLD) components in `mmix`
-    rej : :obj:`list`
-        Indices of rejected (non-BOLD) components in `mmix`
-    midk : :obj:`list`
-        Indices of mid-K (questionable) components in `mmix`
-    empty : :obj:`list`
-        Indices of ignored components in `mmix`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
 
     """
+    # Get the lenght of the timeseries
+    n_vols = len(mmix)
+
     # Check that colormap provided exists
     if png_cmap not in plt.colormaps():
         LGR.warning('Provided colormap is not valid, proceeding with coolwarm')
