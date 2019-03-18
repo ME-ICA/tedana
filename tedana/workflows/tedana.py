@@ -428,13 +428,13 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
         viz.write_comp_figs(data_oc, mask=mask, comptable=comptable, mmix=mmix,
                             n_vols=n_vols, acc=acc, rej=rej, midk=midk,
-                            empty=ign, ref_img=ref_img)
+                            empty=ign, ref_img=ref_img, out_dir=out_dir)
 
         LGR.info('Making Kappa vs Rho scatter plot')
-        viz.write_kappa_scatter(comptable=comptable)
+        viz.write_kappa_scatter(comptable=comptable, out_dir=out_dir)
 
         LGR.info('Making overall summary figure')
-        viz.write_summary_fig(comptable=comptable)
+        viz.write_summary_fig(comptable=comptable, out_dir=out_dir)
 
     LGR.info('Workflow completed')
     for handler in logging.root.handlers[:]:

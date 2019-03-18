@@ -42,7 +42,7 @@ def trim_edge_zeros(arr):
 
 
 def write_comp_figs(ts, mask, comptable, mmix, n_vols,
-                    acc, rej, midk, empty, ref_img):
+                    acc, rej, midk, empty, ref_img, out_dir):
     """
     Creates static figures that highlight certain aspects of tedana processing
     This includes a figure for each component showing the component time course,
@@ -179,12 +179,12 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
         # Fix spacing so TR label does overlap with other plots
         allplot.subplots_adjust(hspace=0.4)
         plot_name = 'comp_{}.png'.format(str(compnum).zfill(3))
-        compplot_name = os.path.join('figures', plot_name)
+        compplot_name = os.path.join(out_dir, 'figures', plot_name)
         plt.savefig(compplot_name)
         plt.close()
 
 
-def write_kappa_scatter(comptable):
+def write_kappa_scatter(comptable, out_dir):
     """
     Creates a scatter plot of Kappa vs Rho values. The shape and size of the
     points is based on classification and variance explained, respectively.
@@ -226,13 +226,13 @@ def write_kappa_scatter(comptable):
     ax_scatter.xaxis.label.set_fontsize(20)
     ax_scatter.yaxis.label.set_fontsize(20)
     ax_scatter.title.set_fontsize(25)
-    scatter_title = os.path.join('figures', 'Kappa_vs_Rho_Scatter.png')
+    scatter_title = os.path.join(out_dir, 'figures', 'Kappa_vs_Rho_Scatter.png')
     plt.savefig(scatter_title)
 
     plt.close()
 
 
-def write_summary_fig(comptable):
+def write_summary_fig(comptable, out_dir):
     """
     Creates a pie chart showing 1) The total variance explained by each
     component in the outer ring, 2) the variance explained by each
@@ -296,7 +296,7 @@ def write_summary_fig(comptable):
     ax.set_title('Variance Explained By Classification', fontdict={'fontsize': 28})
     if unexpl_var < [0.001]:
         plt.text(1, -1, '*Unexplained Variance less than 0.001', fontdict={'fontsize': 12})
-    sumfig_title = os.path.join('figures', 'Component_Overview.png')
+    sumfig_title = os.path.join(out_dir, 'figures', 'Component_Overview.png')
     plt.savefig(sumfig_title)
 
 
