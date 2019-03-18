@@ -86,6 +86,10 @@ def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
     # Create indices for 6 cuts, based on dimensions
     cuts = [ts_B.shape[dim] // 6 for dim in range(3)]
     expl_text = ''
+
+    # Remove trailing ';' from rationale column
+    comptable['rationale'] = comptable['rationale'].str.rstrip(';')
+    
     for compnum in range(0, mmix.shape[1], 1):
 
         if comptable.iloc[compnum]["classification"] == 'accepted':
@@ -93,10 +97,10 @@ def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
             expl_text = 'accepted'
         elif comptable.iloc[compnum]["classification"] == 'rejected':
             line_color = 'r'
-            expl_text = 'rejection reason(s): ' + comptable.iloc[compnum]["rationale"].str.rstrip(';')
+            expl_text = 'rejection reason(s): ' + comptable.iloc[compnum]["rationale"]
         elif comptable.iloc[compnum]["classification"] == 'ignored':
             line_color = 'k'
-            expl_text = 'ignored reason(s): ' + comptable.iloc[compnum]["rationale"].str.rstrip(';')
+            expl_text = 'ignored reason(s): ' + comptable.iloc[compnum]["rationale"]
         else:
             # Classification not added
             # If new, this will keep code running
