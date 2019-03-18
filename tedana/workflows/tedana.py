@@ -431,20 +431,22 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         LGR.info('Making figures folder with static component maps and '
                  'timecourse plots.')
         # make figure folder first
-        if not os.path.isdir('figures'):
         if not op.isdir(op.join(out_dir, 'figures')):
             os.mkdir(op.join(out_dir, 'figures'))
 
         viz.write_comp_figs(data_oc, mask=mask, comptable=comptable, mmix=mmix,
                             n_vols=n_vols, acc=acc, rej=rej, midk=midk,
-                            empty=ign, ref_img=ref_img, out_dir=out_dir,
+                            empty=ign, ref_img=ref_img,
+                            out_dir=op.join(out_dir, 'figures'),
                             png_cmap=png_cmap)
 
         LGR.info('Making Kappa vs Rho scatter plot')
-        viz.write_kappa_scatter(comptable=comptable, out_dir=out_dir)
+        viz.write_kappa_scatter(comptable=comptable,
+                                out_dir=op.join(out_dir, 'figures'))
 
         LGR.info('Making overall summary figure')
-        viz.write_summary_fig(comptable=comptable, out_dir=out_dir)
+        viz.write_summary_fig(comptable=comptable,
+                              out_dir=op.join(out_dir, 'figures'))
 
     LGR.info('Workflow completed')
     for handler in logging.root.handlers[:]:

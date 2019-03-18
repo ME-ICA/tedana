@@ -77,7 +77,7 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
     """
     # Check that colormap provided exists
     if png_cmap not in plt.colormaps():
-        LGR.info('Provided colormap is not valid, proceeding with coolwarm')
+        LGR.warning('Provided colormap is not valid, proceeding with coolwarm')
         png_cmap = 'coolwarm'
     # regenerate the beta images
     ts_B = model.get_coeffs(ts, mmix, mask)
@@ -101,12 +101,12 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
             expl_text = 'accepted'
         elif compnum in rej:
             line_color = 'r'
-            expl_text = 'rejection reason: ' + comptable.iloc[compnum]["rationale"]
+            expl_text = 'rejection reason(s): ' + comptable.iloc[compnum]["rationale"]
         elif compnum in midk:
             line_color = 'm'
         else:
             line_color = 'k'
-            expl_text = 'ignored'
+            expl_text = 'ignored reason(s): ' + comptable.iloc[compnum]["rationale"]
 
         allplot = plt.figure(figsize=(10, 9))
         ax_ts = plt.subplot2grid((5, 6), (0, 0),
@@ -186,7 +186,7 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
         # Fix spacing so TR label does overlap with other plots
         allplot.subplots_adjust(hspace=0.4)
         plot_name = 'comp_{}.png'.format(str(compnum).zfill(3))
-        compplot_name = os.path.join(out_dir, 'figures', plot_name)
+        compplot_name = os.path.join(out_dir, plot_name)
         plt.savefig(compplot_name)
         plt.close()
 
@@ -233,7 +233,7 @@ def write_kappa_scatter(comptable, out_dir):
     ax_scatter.xaxis.label.set_fontsize(20)
     ax_scatter.yaxis.label.set_fontsize(20)
     ax_scatter.title.set_fontsize(25)
-    scatter_title = os.path.join(out_dir, 'figures', 'Kappa_vs_Rho_Scatter.png')
+    scatter_title = os.path.join(out_dir, 'Kappa_vs_Rho_Scatter.png')
     plt.savefig(scatter_title)
 
     plt.close()
@@ -303,5 +303,5 @@ def write_summary_fig(comptable, out_dir):
     ax.set_title('Variance Explained By Classification', fontdict={'fontsize': 28})
     if unexpl_var < [0.001]:
         plt.text(1, -1, '*Unexplained Variance less than 0.001', fontdict={'fontsize': 12})
-    sumfig_title = os.path.join(out_dir, 'figures', 'Component_Overview.png')
+    sumfig_title = os.path.join(out_dir, 'Component_Overview.png')
     plt.savefig(sumfig_title)
