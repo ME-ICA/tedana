@@ -107,7 +107,8 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
                                  fig=allplot)
 
         ax_ts.set_xlabel('TRs')
-        ax_ts.set_xbound(0, n_vols)
+        ax_ts.set_xlim(0, n_vols)
+        plt.yticks([])
         # Make a second axis with units of time (s)
         max_xticks = 10
         xloc = plt.MaxNLocator(max_xticks)
@@ -122,7 +123,7 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
             seconds_val = round(X * tr, 2)
             ax2Xs.append(seconds_val)
         ax_ts2.set_xticks(ax1Xs)
-        ax_ts2.set_xbound(ax_ts.get_xbound())
+        ax_ts2.set_xlim(ax_ts.get_xbound())
         ax_ts2.set_xticklabels(ax2Xs)
         ax_ts2.set_xlabel('seconds')
 
@@ -171,7 +172,8 @@ def write_comp_figs(ts, mask, comptable, mmix, n_vols,
         ax_fft.plot(freqs, spectrum)
         ax_fft.set_title('One Sided fft')
         ax_fft.set_xlabel('Hz')
-        ax_fft.set_xbound(freqs[0], freqs[-1])
+        ax_fft.set_xlim(freqs[0], freqs[-1])
+        plt.yticks([])
 
         # Fix spacing so TR label does overlap with other plots
         allplot.subplots_adjust(hspace=0.4)
