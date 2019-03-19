@@ -76,7 +76,7 @@ def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
 
     # Check that colormap provided exists
     if png_cmap not in plt.colormaps():
-        LGR.warning('Provided colormap is not valid, proceeding with coolwarm')
+        LGR.warning('Provided colormap is not recognized, proceeding with default')
         png_cmap = 'coolwarm'
     # regenerate the beta images
     ts_B = model.get_coeffs(ts, mmix, mask)
