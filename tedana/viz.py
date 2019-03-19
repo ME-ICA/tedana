@@ -261,7 +261,7 @@ def write_summary_fig(comptable, out_dir):
         ind_var_expl[clf] = comptable[comptable.classification == clf]['variance explained'].values
         counts[clf] = '{0} {1}'.format(comptable[comptable.classification == clf].count()[0], clf)
 
-    # Genereate Colormaps for individual components
+    # Generate Colormaps for individual components
     acc_colors = plt.cm.Greens(np.linspace(0.2, .6, len(ind_var_expl['accepted'].tolist())))
     rej_colors = plt.cm.Reds(np.linspace(0.2, .6, len(ind_var_expl['rejected'].tolist())))
     ign_colors = plt.cm.Greys(np.linspace(0.2, .8, len(ind_var_expl['ignored'].tolist())))
