@@ -18,11 +18,6 @@ MPL_LGR.setLevel(logging.WARNING)
 
 
 def trim_edge_zeros(arr):
-    mask = arr != 0
-    bounding_box = tuple(
-                         slice(np.min(indexes), np.max(indexes) + 1)
-                         for indexes in np.where(mask))
-    return arr[bounding_box]
     """
     Trims away the zero-filled slices that surround many 3/4D arrays
 
@@ -32,12 +27,19 @@ def trim_edge_zeros(arr):
         an array with signal, surrounded by slices that contain only zeros
         that should be removed.
 
-    Returnes
+    Returns
     ---------
     ndarray: (S x T) array_like
         an array with reduced dimensions, such that the array contains only
         non_zero values from edge to edge.
     """
+
+    mask = arr != 0
+    bounding_box = tuple(
+                         slice(np.min(indexes), np.max(indexes) + 1)
+                         for indexes in np.where(mask))
+    return arr[bounding_box]
+
 
 
 def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
@@ -62,6 +64,11 @@ def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
         is components and `T` is the same as in `data`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
+    out_dir : :obj:`str`
+        Figures folder within output directory
+    png_cmap : :obj:`str`
+        The name of a matplotlib colormap to use when making figures. Optional.
+        Default colormap is 'coolwarm'
 
     """
     # Get the lenght of the timeseries
@@ -104,7 +111,7 @@ def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
             # Classification not added
             # If new, this will keep code running
             line_color = '0.75'
-            expl_text = 'unknown classification'
+            expl_text = 'other classification'
 
         allplot = plt.figure(figsize=(10, 9))
         ax_ts = plt.subplot2grid((5, 6), (0, 0),
@@ -200,6 +207,8 @@ def write_kappa_scatter(comptable, out_dir):
         Array with columns denoting (1) index of component, (2) Kappa score of
         component, (3) Rho score of component, (4) variance explained by
         component, and (5) normalized variance explained by component
+    out_dir : :obj:`str`
+        Figures folder within output directory
 
     """
 
@@ -250,6 +259,8 @@ def write_summary_fig(comptable, out_dir):
         Array with columns denoting (1) index of component, (2) Kappa score of
         component, (3) Rho score of component, (4) variance explained by
         component, and (5) normalized variance explained by component
+    out_dir : :obj:`str`
+        Figures folder within output directory
     """
 
     var_expl = []
