@@ -41,7 +41,6 @@ def trim_edge_zeros(arr):
     return arr[bounding_box]
 
 
-
 def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
                     png_cmap):
     """
