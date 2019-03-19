@@ -233,7 +233,7 @@ def andb(arrs):
     return result
 
 
-def get_spectrum(data: np.array, tr: float = 1):
+def get_spectrum(data: np.array, tr: float = 1.0):
     """
     Returns the power spectrum and corresponding frequencies when provided
     with a component time course and repitition time.
