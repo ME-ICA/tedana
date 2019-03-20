@@ -95,17 +95,23 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
         # Move decision columns to end
         comptable = comptable[[c for c in comptable if c not in cols_at_end] +
                               [c for c in cols_at_end if c in comptable]]
+        comptable['rationale'] = comptable['rationale'].str.rstrip(';')
         return comptable
 
     """
-    Do some tallies for no. of significant voxels
+    Tally number of significant voxels for cluster-extent thresholded R2 and S0
+    model F-statistic maps.
     """
     countnoise = np.zeros(n_comps)
     comptable['countsigFR2'] = F_R2_clmaps.sum(axis=0)
     comptable['countsigFS0'] = F_S0_clmaps.sum(axis=0)
 
     """
-    Make table of dice values
+    Generate Dice values for R2 and S0 models
+    - dice_FR2: Dice value of cluster-extent thresholded maps of R2-model betas
+      and F-statistics.
+    - dice_FS0: Dice value of cluster-extent thresholded maps of S0-model betas
+      and F-statistics.
     """
     comptable['dice_FR2'] = np.zeros(all_comps.shape[0])
     comptable['dice_FS0'] = np.zeros(all_comps.shape[0])
@@ -119,16 +125,24 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     comptable.loc[np.isnan(comptable['dice_FS0']), 'dice_FS0'] = 0
 
     """
-    Make table of noise gain
+    Generate three metrics of component noise:
+    - countnoise: Number of "noise" voxels (voxels highly weighted for
+      component, but not from clusters)
+    - signal-noise_t: T-statistic for two-sample t-test of F-statistics from
+      "signal" voxels (voxels in clusters) against "noise" voxels (voxels not
+      in clusters) for R2 model.
+    - signal-noise_p: P-value from t-test.
     """
     comptable['countnoise'] = 0
     comptable['signal-noise_t'] = 0
     comptable['signal-noise_p'] = 0
     for i_comp in all_comps:
+        # index voxels significantly loading on component but not from clusters
         comp_noise_sel = ((np.abs(Z_maps[:, i_comp]) > 1.95) &
                           (Z_clmaps[:, i_comp] == 0))
         comptable.loc[i_comp, 'countnoise'] = np.array(
             comp_noise_sel, dtype=np.int).sum()
+        # NOTE: Why only compare distributions of *unique* F-statistics?
         noise_FR2_Z = np.log10(np.unique(F_R2_maps[comp_noise_sel, i_comp]))
         signal_FR2_Z = np.log10(np.unique(
             F_R2_maps[Z_clmaps[:, i_comp] == 1, i_comp]))
@@ -140,7 +154,16 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     comptable.loc[np.isnan(comptable['signal-noise_p']), 'signal-noise_p'] = 0
 
     """
-    Assemble decision table
+    Assemble decision table with five metrics:
+    - Kappa values ranked from largest to smallest
+    - R2-model F-score map/beta map Dice scores ranked from largest to smallest
+    - Signal F > Noise F t-statistics ranked from largest to smallest
+    - Number of "noise" voxels (voxels highly weighted for component, but not
+      from clusters) ranked from smallest to largest
+    - Number of voxels with significant R2-model F-scores within clusters
+      ranked from largest to smallest
+
+    Larger values across metrics indicate more BOLD dependence and less noise.
     """
     d_table_rank = np.vstack([
         n_comps - stats.rankdata(comptable['kappa'], method='ordinal'),
@@ -155,19 +178,30 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     Step 1: Reject anything that's obviously an artifact
     a. Estimate a null variance
     """
-    temp_rej0 = all_comps[(comptable['rho'] > comptable['kappa']) |
-                          ((comptable['countsigFS0'] > comptable['countsigFR2']) &
-                           (comptable['countsigFR2'] > 0))]
-    comptable.loc[temp_rej0, 'classification'] = 'rejected'
-    comptable.loc[temp_rej0, 'rationale'] += 'I002;'
+    # Rho is higher than Kappa
+    temp_rej0a = all_comps[(comptable['rho'] > comptable['kappa'])]
+    comptable.loc[temp_rej0a, 'classification'] = 'rejected'
+    comptable.loc[temp_rej0a, 'rationale'] += 'I002;'
 
+    # Number of significant voxels for S0 model is higher than number for R2
+    # model *and* number for R2 model is greater than zero.
+    temp_rej0b = all_comps[((comptable['countsigFS0'] > comptable['countsigFR2']) &
+                            (comptable['countsigFR2'] > 0))]
+    comptable.loc[temp_rej0b, 'classification'] = 'rejected'
+    comptable.loc[temp_rej0b, 'rationale'] += 'I002;'
+    rej = np.union1d(temp_rej0a, temp_rej0b)
+
+    # Dice score for S0 maps is higher than Dice score for R2 maps and variance
+    # explained is higher than the median across components.
     temp_rej1 = all_comps[(comptable['dice_FS0'] > comptable['dice_FR2']) &
                           (comptable['variance explained'] >
                            np.median(comptable['variance explained']))]
     comptable.loc[temp_rej1, 'classification'] = 'rejected'
     comptable.loc[temp_rej1, 'rationale'] += 'I003;'
-    rej = np.union1d(temp_rej0, temp_rej1)
+    rej = np.union1d(temp_rej1, rej)
 
+    # T-value is less than zero (noise has higher F-statistics than signal in
+    # map) and variance explained is higher than the median across components.
     temp_rej2 = acc[(comptable.loc[acc, 'signal-noise_t'] < 0) &
                     (comptable.loc[acc, 'variance explained'] >
                      np.median(comptable['variance explained']))]
@@ -188,6 +222,8 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     f. Estimate a low and high variance
     """
     # Step 2a
+    # Upper limit for variance explained is median across components with high
+    # Kappa values. High Kappa is defined as Kappa above Kappa elbow.
     varex_upper_p = np.median(
         comptable.loc[comptable['kappa'] > getelbow(comptable['kappa'], return_val=True),
                       'variance explained'])
@@ -195,14 +231,17 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     # NOTE: We're not sure why this is done, nor why it's specifically done
     # three times. Need to look into this deeper, esp. to make sure the 3
     # isn't a hard-coded reference to the number of echoes.
+    # Reduce components to investigate as "good" to ones in which change in
+    # variance explained is less than the limit defined above.... What?
     for nn in range(3):
         ncls = comptable.loc[ncls].loc[
             comptable.loc[
                 ncls, 'variance explained'].diff() < varex_upper_p].index.values
 
-    # Compute elbows
-    kappas_lim = comptable.loc[comptable['kappa'] < utils.getfbounds(n_echos)[-1], 'kappa']
-    kappa_elbow = np.min((getelbow(kappas_lim, return_val=True),
+    # Compute elbows from other elbows
+    kappas_under_f01 = (comptable.loc[comptable['kappa'] <
+                        utils.getfbounds(n_echos)[-1], 'kappa'])
+    kappa_elbow = np.min((getelbow(kappas_under_f01, return_val=True),
                           getelbow(comptable['kappa'], return_val=True)))
     rho_elbow = np.mean((getelbow(comptable.loc[ncls, 'rho'], return_val=True),
                          getelbow(comptable['rho'], return_val=True),
@@ -298,7 +337,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
         comptable.loc[candartB, 'classification'] = 'rejected'
         comptable.loc[candartB, 'rationale'] += 'I009;'
 
-        # Find comps to ignore
+        # Find components to ignore
         new_varex_lower = stats.scoreatpercentile(
             comptable.loc[acc[:num_acc_guess], 'variance explained'],
             LOW_PERC)
@@ -325,4 +364,5 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     # Move decision columns to end
     comptable = comptable[[c for c in comptable if c not in cols_at_end] +
                           [c for c in cols_at_end if c in comptable]]
+    comptable['rationale'] = comptable['rationale'].str.rstrip(';')
     return comptable
