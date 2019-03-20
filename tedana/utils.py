@@ -231,3 +231,23 @@ def andb(arrs):
     result = np.sum(arrs, axis=0)
 
     return result
+
+
+def get_spectrum(data: np.array, tr: float = 1.0):
+    """
+    Returns the power spectrum and corresponding frequencies when provided
+    with a component time course and repitition time.
+
+    Parameters
+    ----------
+    data : (S, ) array_like
+            A timeseries S, on which you would like to perform an fft.
+    tr : :obj:`float`
+            Reptition time (TR) of the data
+    """
+
+    # adapted from @dangom
+    power_spectrum = np.abs(np.fft.rfft(data)) ** 2
+    freqs = np.fft.rfftfreq(power_spectrum.size * 2 - 1, tr)
+    idx = np.argsort(freqs)
+    return power_spectrum[idx], freqs[idx]
