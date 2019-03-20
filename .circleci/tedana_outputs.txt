@@ -135,11 +135,11 @@ figures
 three_echo_Cornell_desc-TEDICAAcceptedZ_components.nii.gz
 three_echo_Cornell_desc-TEDICAAccepted_components.nii.gz
 three_echo_Cornell_desc-TEDICA_components.nii.gz
-three_echo_Cornell_desc-TEDICA_comptable.tsv
+three_echo_Cornell_desc-TEDICA_comptable.json
 three_echo_Cornell_desc-TEDICA_mixing.tsv
 three_echo_Cornell_desc-TEDPCAState_variables.pkl
 three_echo_Cornell_desc-TEDPCA_components.nii.gz
-three_echo_Cornell_desc-TEDPCA_comptable.tsv
+three_echo_Cornell_desc-TEDPCA_comptable.json
 three_echo_Cornell_desc-TEDPCA_mixing.tsv
 three_echo_Cornell_desc-limited_S0map.nii.gz
 three_echo_Cornell_desc-limited_T2Starmap.nii.gz
