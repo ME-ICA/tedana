@@ -83,6 +83,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     midk = []
     ign = []
     all_comps = np.arange(comptable.shape[0])
+    # acc remains a full list that is whittled down over criteria
     acc = np.arange(comptable.shape[0])
 
     # If user has specified
@@ -102,7 +103,6 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     Tally number of significant voxels for cluster-extent thresholded R2 and S0
     model F-statistic maps.
     """
-    countnoise = np.zeros(n_comps)
     comptable['countsigFR2'] = F_R2_clmaps.sum(axis=0)
     comptable['countsigFS0'] = F_S0_clmaps.sum(axis=0)
 
@@ -169,7 +169,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
         n_comps - stats.rankdata(comptable['kappa'], method='ordinal'),
         n_comps - stats.rankdata(comptable['dice_FR2'], method='ordinal'),
         n_comps - stats.rankdata(comptable['signal-noise_t'], method='ordinal'),
-        stats.rankdata(countnoise, method='ordinal'),
+        stats.rankdata(comptable['countnoise'], method='ordinal'),
         n_comps - stats.rankdata(comptable['countsigFR2'], method='ordinal')]).T
     n_decision_metrics = d_table_rank.shape[1]
     comptable['d_table_score'] = d_table_rank.sum(axis=1)
@@ -188,7 +188,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     temp_rej0b = all_comps[((comptable['countsigFS0'] > comptable['countsigFR2']) &
                             (comptable['countsigFR2'] > 0))]
     comptable.loc[temp_rej0b, 'classification'] = 'rejected'
-    comptable.loc[temp_rej0b, 'rationale'] += 'I002;'
+    comptable.loc[temp_rej0b, 'rationale'] += 'I003;'
     rej = np.union1d(temp_rej0a, temp_rej0b)
 
     # Dice score for S0 maps is higher than Dice score for R2 maps and variance
@@ -197,7 +197,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
                           (comptable['variance explained'] >
                            np.median(comptable['variance explained']))]
     comptable.loc[temp_rej1, 'classification'] = 'rejected'
-    comptable.loc[temp_rej1, 'rationale'] += 'I003;'
+    comptable.loc[temp_rej1, 'rationale'] += 'I004;'
     rej = np.union1d(temp_rej1, rej)
 
     # T-value is less than zero (noise has higher F-statistics than signal in
@@ -206,7 +206,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
                     (comptable.loc[acc, 'variance explained'] >
                      np.median(comptable['variance explained']))]
     comptable.loc[temp_rej2, 'classification'] = 'rejected'
-    comptable.loc[temp_rej2, 'rationale'] += 'I004;'
+    comptable.loc[temp_rej2, 'rationale'] += 'I005;'
     rej = np.union1d(temp_rej2, rej)
 
     acc = np.setdiff1d(acc, rej)
@@ -247,67 +247,72 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
                          getelbow(comptable['rho'], return_val=True),
                          utils.getfbounds(n_echos)[0]))
 
-    # Initial guess of good components based on Kappa and Rho elbows
-    good_guess = ncls[(comptable.loc[ncls, 'kappa'] >= kappa_elbow) &
-                      (comptable.loc[ncls, 'rho'] < rho_elbow)]
+    # Initial guess of accepted components based on Kappa and Rho elbows
+    acc_poss = ncls[(comptable.loc[ncls, 'kappa'] >= kappa_elbow) &
+                    (comptable.loc[ncls, 'rho'] < rho_elbow)]
 
-    if len(good_guess) == 0:
+    if len(acc_poss) == 0:
         LGR.warning('No BOLD-like components detected')
         ign = sorted(np.setdiff1d(all_comps, rej))
         comptable.loc[ign, 'classification'] = 'ignored'
-        comptable.loc[ign, 'rationale'] += 'I005;'
+        comptable.loc[ign, 'rationale'] += 'I006;'
 
         # Move decision columns to end
         comptable = comptable[[c for c in comptable if c not in cols_at_end] +
                               [c for c in cols_at_end if c in comptable]]
+        comptable['rationale'] = comptable['rationale'].str.rstrip(';')
         return comptable
 
-    kappa_rate = ((np.max(comptable.loc[good_guess, 'kappa']) -
-                   np.min(comptable.loc[good_guess, 'kappa'])) /
-                  (np.max(comptable.loc[good_guess, 'variance explained']) -
-                   np.min(comptable.loc[good_guess, 'variance explained'])))
+    # Calculate "rate" for kappa: kappa range divided by variance explained
+    # range, for potentially accepted components
+    # NOTE: What is the logic behind this?
+    kappa_rate = ((np.max(comptable.loc[acc_poss, 'kappa']) -
+                   np.min(comptable.loc[acc_poss, 'kappa'])) /
+                  (np.max(comptable.loc[acc_poss, 'variance explained']) -
+                   np.min(comptable.loc[acc_poss, 'variance explained'])))
     kappa_ratios = kappa_rate * comptable['variance explained'] / comptable['kappa']
     varex_lower = stats.scoreatpercentile(
-        comptable.loc[good_guess, 'variance explained'], LOW_PERC)
+        comptable.loc[acc_poss, 'variance explained'], LOW_PERC)
     varex_upper = stats.scoreatpercentile(
-        comptable.loc[good_guess, 'variance explained'], HIGH_PERC)
+        comptable.loc[acc_poss, 'variance explained'], HIGH_PERC)
 
     """
     Step 3: Get rid of midk components; i.e., those with higher than
     max decision score and high variance
     """
-    max_good_d_score = EXTEND_FACTOR * len(good_guess) * n_decision_metrics
+    max_good_d_score = EXTEND_FACTOR * len(acc_poss) * n_decision_metrics
     midk = acc[(comptable.loc[acc, 'd_table_score'] > max_good_d_score) &
                (comptable.loc[acc, 'variance explained'] > EXTEND_FACTOR * varex_upper)]
     comptable.loc[midk, 'classification'] = 'rejected'
-    comptable.loc[midk, 'rationale'] += 'I006;'
+    comptable.loc[midk, 'rationale'] += 'I007;'
     acc = np.setdiff1d(acc, midk)
+    acc_poss = np.setdiff1d(acc_poss, midk)
 
     """
     Step 4: Find components to ignore
     """
-    good_guess = np.setdiff1d(good_guess, midk)
-    loaded = np.union1d(good_guess, acc[comptable.loc[acc, 'variance explained'] > varex_lower])
-    ign = np.setdiff1d(acc, loaded)
+    high_varex = np.union1d(acc_poss, acc[comptable.loc[acc, 'variance explained'] > varex_lower])
+    ign = np.setdiff1d(acc, high_varex)  # ignore low variance components
     ign = np.setdiff1d(
         ign, ign[comptable.loc[ign, 'd_table_score'] < max_good_d_score])
     ign = np.setdiff1d(ign, ign[comptable.loc[ign, 'kappa'] > kappa_elbow])
     comptable.loc[ign, 'classification'] = 'ignored'
-    comptable.loc[ign, 'rationale'] += 'I007;'
+    comptable.loc[ign, 'rationale'] += 'I008;'
     acc = np.setdiff1d(acc, ign)
 
     """
-    Step 5: Scrub the set
+    Step 5: Scrub the set if there are components that haven't been rejected or
+    ignored, but are still not listed in the possible accepted group.
     """
-    if len(acc) > len(good_guess):
+    if len(acc) > len(acc_poss):
+        comptable['d_table_score_scrub'] = np.nan
         # Recompute the midk steps on the limited set to clean up the tail
         d_table_rank = np.vstack([
             len(acc) - stats.rankdata(comptable.loc[acc, 'kappa'], method='ordinal'),
             len(acc) - stats.rankdata(comptable.loc[acc, 'dice_FR2'], method='ordinal'),
             len(acc) - stats.rankdata(comptable.loc[acc, 'signal-noise_t'], method='ordinal'),
-            stats.rankdata(countnoise[acc], method='ordinal'),
+            stats.rankdata(comptable.loc[acc, 'countnoise'], method='ordinal'),
             len(acc) - stats.rankdata(comptable.loc[acc, 'countsigFR2'], method='ordinal')]).T
-        comptable['d_table_score_scrub'] = np.nan
         comptable.loc[acc, 'd_table_score_scrub'] = d_table_rank.sum(1)
         num_acc_guess = int(np.mean([
             np.sum((comptable.loc[acc, 'kappa'] > kappa_elbow) &
@@ -316,6 +321,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
         conservative_guess = num_acc_guess * n_decision_metrics / RESTRICT_FACTOR
 
         # Rejection candidate based on artifact type A: candartA
+        # NOTE: These seem like good things. Why are they rejected?
         candartA = np.intersect1d(
             acc[comptable.loc[acc, 'd_table_score_scrub'] > conservative_guess],
             acc[kappa_ratios[acc] > EXTEND_FACTOR * 2])
@@ -323,7 +329,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
             candartA,
             candartA[comptable.loc[candartA, 'variance explained'] > varex_upper * EXTEND_FACTOR])
         comptable.loc[candartA, 'classification'] = 'rejected'
-        comptable.loc[candartA, 'rationale'] += 'I008;'
+        comptable.loc[candartA, 'rationale'] += 'I009;'
         midk = np.union1d(midk, candartA)
 
         # Rejection candidate based on artifact type B: candartB
@@ -333,9 +339,9 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
         candartB = np.intersect1d(
             candartB,
             candartB[comptable.loc[candartB, 'variance explained'] > varex_lower * EXTEND_FACTOR])
-        midk = np.union1d(midk, candartB)
         comptable.loc[candartB, 'classification'] = 'rejected'
-        comptable.loc[candartB, 'rationale'] += 'I009;'
+        comptable.loc[candartB, 'rationale'] += 'I010;'
+        midk = np.union1d(midk, candartB)
 
         # Find components to ignore
         new_varex_lower = stats.scoreatpercentile(
@@ -349,7 +355,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
             candart)
         ign_add0 = np.setdiff1d(ign_add0, midk)
         comptable.loc[ign_add0, 'classification'] = 'ignored'
-        comptable.loc[ign_add0, 'rationale'] += 'I010;'
+        comptable.loc[ign_add0, 'rationale'] += 'I011;'
         ign = np.union1d(ign, ign_add0)
 
         ign_add1 = np.intersect1d(
@@ -357,9 +363,9 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
             acc[comptable.loc[acc, 'variance explained'] > new_varex_lower])
         ign_add1 = np.setdiff1d(ign_add1, midk)
         comptable.loc[ign_add1, 'classification'] = 'ignored'
-        comptable.loc[ign_add1, 'rationale'] += 'I011;'
-        ign = np.union1d(ign, ign_add1)
-        acc = np.setdiff1d(acc, np.union1d(midk, ign))
+        comptable.loc[ign_add1, 'rationale'] += 'I012;'
+        ign = np.union1d(ign, ign_add1)  # unnecessary
+        acc = np.setdiff1d(acc, np.union1d(midk, ign))  # unnecessary
 
     # Move decision columns to end
     comptable = comptable[[c for c in comptable if c not in cols_at_end] +
