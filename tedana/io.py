@@ -6,12 +6,13 @@ import json
 import logging
 import os.path as op
 
-import nibabel as nib
 import numpy as np
+from numpy.linalg import lstsq
+import pandas as pd
+import nibabel as nib
 from nibabel.filename_parser import splitext_addext
 from nilearn._utils import check_niimg
 from nilearn.image import new_img_like
-from numpy.linalg import lstsq
 
 from tedana import model, utils
 
