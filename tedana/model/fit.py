@@ -8,9 +8,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from scipy.special import lpmv
-import nilearn.image as niimg
-from nilearn._utils import check_niimg
-from nilearn.regions import connected_regions
+from scipy.ndimage import label
 
 from tedana import (combine, io, utils)
 
@@ -245,39 +243,37 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         csize = np.max([int(n_voxels * 0.0005) + 5, 20])
         LGR.debug('Using minimum cluster size: {}'.format(csize))
         for i_comp in range(n_components):
-            # save out files
-            out = np.zeros((n_samp, 4))
-            out[:, 0] = np.squeeze(utils.unmask(PSC[:, i_comp], mask))
-            out[:, 1] = np.squeeze(utils.unmask(F_R2_maps[:, i_comp],
-                                                t2s != 0))
-            out[:, 2] = np.squeeze(utils.unmask(F_S0_maps[:, i_comp],
-                                                t2s != 0))
-            out[:, 3] = np.squeeze(utils.unmask(Z_maps[:, i_comp], mask))
-
-            ccimg = io.new_nii_like(ref_img, out)
-
-            # Do simple clustering on F
-            sel = spatclust(ccimg, min_cluster_size=csize, threshold=fmin,
-                            index=[1, 2], mask=(t2s != 0))
-            F_R2_clmaps[:, i_comp] = sel[:, 0]
-            F_S0_clmaps[:, i_comp] = sel[:, 1]
+            # Cluster-extent threshold and binarize F-maps
+            ccimg = io.new_nii_like(
+                ref_img,
+                np.squeeze(utils.unmask(F_R2_maps[:, i_comp], t2s != 0)))
+            F_R2_clmaps[:, i_comp] = spatclust(
+                ccimg, min_cluster_size=csize, threshold=fmin, mask=mask)
             countsigFR2 = F_R2_clmaps[:, i_comp].sum()
+
+            ccimg = io.new_nii_like(
+                ref_img,
+                np.squeeze(utils.unmask(F_S0_maps[:, i_comp], t2s != 0)))
+            F_S0_clmaps[:, i_comp] = spatclust(
+                ccimg, min_cluster_size=csize, threshold=fmin, mask=mask)
             countsigFS0 = F_S0_clmaps[:, i_comp].sum()
 
-            # Do simple clustering on Z at p<0.05
-            sel = spatclust(ccimg, min_cluster_size=csize, threshold=1.95,
-                            index=3, mask=mask)
-            Z_clmaps[:, i_comp] = sel
+            # Cluster-extent threshold and binarize Z-maps with CDT of p < 0.05
+            ccimg = io.new_nii_like(
+                ref_img,
+                np.squeeze(utils.unmask(Z_maps[:, i_comp], t2s != 0)))
+            Z_clmaps[:, i_comp] = spatclust(
+                ccimg, min_cluster_size=csize, threshold=1.95, mask=mask)
 
-            # Do simple clustering on ranked signal-change map
-            spclust_input = utils.unmask(stats.rankdata(tsoc_Babs[:, i_comp]),
-                                         mask)
-            spclust_input = io.new_nii_like(ref_img, spclust_input)
+            # Cluster-extent threshold and binarize ranked signal-change map
+            ccimg = io.new_nii_like(
+                ref_img,
+                utils.unmask(stats.rankdata(tsoc_Babs[:, i_comp]), t2s != 0))
             Br_R2_clmaps[:, i_comp] = spatclust(
-                spclust_input, min_cluster_size=csize,
+                ccimg, min_cluster_size=csize,
                 threshold=(max(tsoc_Babs.shape) - countsigFR2), mask=mask)
             Br_S0_clmaps[:, i_comp] = spatclust(
-                spclust_input, min_cluster_size=csize,
+                ccimg, min_cluster_size=csize,
                 threshold=(max(tsoc_Babs.shape) - countsigFS0), mask=mask)
 
         seldict = {}
@@ -496,71 +492,72 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     return dm_catd, dm_optcom
 
 
-def spatclust(img, min_cluster_size, threshold=None, index=None, mask=None):
+def spatclust(img, min_cluster_size, threshold=None, mask=None):
     """
-    Spatially clusters `img`
+    Cluster-extent threshold and binarize image.
 
     Parameters
     ----------
-    img : str or img_like
-        Image file or object to be clustered
+    img : img_like or array_like
+        Image object or 3D array to be clustered
     min_cluster_size : int
         Minimum cluster size (in voxels)
-    threshold : float, optional
-        Whether to threshold `img` before clustering
-    index : array_like, optional
-        Whether to extract volumes from `img` for clustering
-    mask : (S,) array_like, optional
-        Boolean array for masking resultant data array
-
-    Returns
-    -------
-    clustered : :obj:`numpy.ndarray`
-        Binarized array (values are 0 or 1) of clustered (and thresholded)
-        `img` data
+    threshold : float or None, optional
+        Cluster-defining threshold for img. If None (default), assume img is
+        already thresholded.
+    mask : (S,) array_like or None, optional
+        Boolean array for masking resultant data array. Default is None.
     """
+    if not isinstance(img, np.ndarray):
+        arr = img.get_data()
+    else:
+        arr = img.copy()
 
-    # we need a 4D image for `niimg.iter_img`, below
-    img = niimg.copy_img(check_niimg(img, atleast_4d=True))
+    if mask is not None:
+        mask = mask.astype(bool)
+        arr *= mask.reshape(arr.shape)
 
-    # temporarily set voxel sizes to 1mm isotropic so that `min_cluster_size`
-    # represents the minimum number of voxels we want to be in a cluster,
-    # rather than the minimum size of the desired clusters in mm^3
-    if not np.all(np.abs(np.diag(img.affine)) == 1):
-        img.set_sform(np.sign(img.affine))
+    # 6 connectivity
+    conn_mat = np.zeros((3, 3, 3), int)
+    conn_mat[1, 1, :] = 1
+    conn_mat[1, :, 1] = 1
+    conn_mat[:, 1, 1] = 1
 
-    # grab desired volumes from provided image
-    if index is not None:
-        if not isinstance(index, list):
-            index = [index]
-        img = niimg.index_img(img, index)
+    clust_thresholded = np.zeros(arr.shape, int)
 
-    # threshold image
+    # Positive values first
     if threshold is not None:
-        img = niimg.threshold_img(img, float(threshold))
+        thresh_arr = arr >= threshold
+    else:
+        thresh_arr = arr > 0
 
-    clout = []
-    for subbrick in niimg.iter_img(img):
-        # `min_region_size` is not inclusive (as in AFNI's `3dmerge`)
-        # subtract one voxel to ensure we aren't hitting this thresholding issue
-        try:
-            clsts = connected_regions(subbrick,
-                                      min_region_size=int(min_cluster_size) - 1,
-                                      smoothing_fwhm=None,
-                                      extract_type='connected_components')[0]
-        # if no clusters are detected we get a TypeError; create a blank 4D
-        # image object as a placeholder instead
-        except TypeError:
-            clsts = niimg.new_img_like(subbrick,
-                                       np.zeros(subbrick.shape + (1,)))
-        # if multiple clusters detected, collapse into one volume
-        clout += [niimg.math_img('np.sum(a, axis=-1)', a=clsts)]
+    labeled, _ = label(thresh_arr, conn_mat)
+    unique, counts = np.unique(labeled, return_counts=True)
+    clust_sizes = dict(zip(unique, counts))
+    clust_sizes = {k: v for k, v in clust_sizes.items() if v >= min_cluster_size}
+    for i_clust in clust_sizes.keys():
+        if np.all(thresh_arr[labeled == i_clust] == 1):
+            clust_thresholded[labeled == i_clust] = 1
 
-    # convert back to data array and make boolean
-    clustered = utils.load_image(niimg.concat_imgs(clout).get_data()) != 0
+    # Now negative values
+    if threshold is not None:
+        thresh_arr = arr <= (-1 * threshold)
+    else:
+        thresh_arr = arr < 0
+
+    labeled, _ = label(thresh_arr, conn_mat)
+    unique, counts = np.unique(labeled, return_counts=True)
+    clust_sizes = dict(zip(unique, counts))
+    clust_sizes = {k: v for k, v in clust_sizes.items() if v >= min_cluster_size}
+    for i_clust in clust_sizes.keys():
+        if np.all(thresh_arr[labeled == i_clust] == 1):
+            clust_thresholded[labeled == i_clust] = 1
+
+    # reshape to (S,)
+    clust_thresholded = clust_thresholded.ravel()
 
     # if mask provided, mask output
     if mask is not None:
-        clustered = clustered[mask]
+        clust_thresholded = clust_thresholded[mask]
 
-    return clustered
+    return clust_thresholded
