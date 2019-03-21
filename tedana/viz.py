@@ -2,8 +2,6 @@
 Functions to creating figures to inspect tedana output
 """
 import logging
-import os
-import os.path as op
 
 import numpy as np
 import matplotlib
