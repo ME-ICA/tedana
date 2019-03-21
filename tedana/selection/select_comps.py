@@ -163,7 +163,8 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     - Number of voxels with significant R2-model F-scores within clusters
       ranked from largest to smallest
 
-    Larger values across metrics indicate more BOLD dependence and less noise.
+    Smaller values (i.e., higher ranks) across metrics indicate more BOLD
+    dependence and less noise.
     """
     d_table_rank = np.vstack([
         n_comps - stats.rankdata(comptable['kappa'], method='ordinal'),
@@ -241,6 +242,8 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     # Compute elbows from other elbows
     kappas_under_f01 = (comptable.loc[comptable['kappa'] <
                         utils.getfbounds(n_echos)[-1], 'kappa'])
+    # NOTE: Would an elbow from all Kappa values *ever* be lower than one from
+    # a subset of lower values?
     kappa_elbow = np.min((getelbow(kappas_under_f01, return_val=True),
                           getelbow(comptable['kappa'], return_val=True)))
     rho_elbow = np.mean((getelbow(comptable.loc[ncls, 'rho'], return_val=True),
@@ -321,7 +324,6 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
         conservative_guess = num_acc_guess * n_decision_metrics / RESTRICT_FACTOR
 
         # Rejection candidate based on artifact type A: candartA
-        # NOTE: These seem like good things. Why are they rejected?
         candartA = np.intersect1d(
             acc[comptable.loc[acc, 'd_table_score_scrub'] > conservative_guess],
             acc[kappa_ratios[acc] > EXTEND_FACTOR * 2])
