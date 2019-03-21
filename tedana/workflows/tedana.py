@@ -444,18 +444,20 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         if not op.isdir(op.join(out_dir, 'figures')):
             os.mkdir(op.join(out_dir, 'figures'))
 
+        fig_bf = op.join(op.dirname(bf), 'figures', op.basename(bf))
+
         viz.write_comp_figs(data_oc, mask=mask, comptable=comptable, mmix=mmix,
                             ref_img=ref_img,
-                            out_dir=op.join(out_dir, 'figures'),
+                            bf=fig_bf,
                             png_cmap=png_cmap)
 
         LGR.info('Making Kappa vs Rho scatter plot')
         viz.write_kappa_scatter(comptable=comptable,
-                                out_dir=op.join(out_dir, 'figures'))
+                                bf=fig_bf)
 
         LGR.info('Making overall summary figure')
         viz.write_summary_fig(comptable=comptable,
-                              out_dir=op.join(out_dir, 'figures'))
+                              bf=fig_bf)
 
     LGR.info('Workflow completed')
     for handler in logging.root.handlers[:]:

@@ -3,13 +3,14 @@ Functions to creating figures to inspect tedana output
 """
 import logging
 import os
+import os.path as op
 
 import numpy as np
 import matplotlib
 matplotlib.use('AGG')
 import matplotlib.pyplot as plt
 
-from tedana import model
+from tedana import model, io
 from tedana.utils import get_spectrum
 
 LGR = logging.getLogger(__name__)
@@ -41,8 +42,8 @@ def trim_edge_zeros(arr):
     return arr[bounding_box]
 
 
-def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
-                    png_cmap):
+def write_comp_figs(ts, mask, comptable, mmix, ref_img, bf,
+                    png_cmap='coolwarm'):
     """
     Creates static figures that highlight certain aspects of tedana processing
     This includes a figure for each component showing the component time course,
@@ -63,12 +64,11 @@ def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
         is components and `T` is the same as in `data`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
-    out_dir : :obj:`str`
-        Figures folder within output directory
+    bf : :obj:`str`
+        Base filename for outputs.
     png_cmap : :obj:`str`
         The name of a matplotlib colormap to use when making figures. Optional.
         Default colormap is 'coolwarm'
-
     """
     # Get the lenght of the timeseries
     n_vols = len(mmix)
@@ -189,13 +189,12 @@ def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
 
         # Fix spacing so TR label does overlap with other plots
         allplot.subplots_adjust(hspace=0.4)
-        plot_name = 'comp_{}.png'.format(str(compnum).zfill(3))
-        compplot_name = os.path.join(out_dir, plot_name)
-        plt.savefig(compplot_name)
+        fname = io.gen_fname(bf, '_componentplot.png', desc='comp{0:03d}'.format(compnum))
+        plt.savefig(fname)
         plt.close()
 
 
-def write_kappa_scatter(comptable, out_dir):
+def write_kappa_scatter(comptable, bf):
     """
     Creates a scatter plot of Kappa vs Rho values. The shape and size of the
     points is based on classification and variance explained, respectively.
@@ -206,8 +205,8 @@ def write_kappa_scatter(comptable, out_dir):
         Array with columns denoting (1) index of component, (2) Kappa score of
         component, (3) Rho score of component, (4) variance explained by
         component, and (5) normalized variance explained by component
-    out_dir : :obj:`str`
-        Figures folder within output directory
+    bf : :obj:`str`
+        Base filename for outputs.
 
     """
 
@@ -239,13 +238,12 @@ def write_kappa_scatter(comptable, out_dir):
     ax_scatter.xaxis.label.set_fontsize(20)
     ax_scatter.yaxis.label.set_fontsize(20)
     ax_scatter.title.set_fontsize(25)
-    scatter_title = os.path.join(out_dir, 'Kappa_vs_Rho_Scatter.png')
-    plt.savefig(scatter_title)
-
+    fname = io.gen_fname(bf, '_scatterplot.png', desc='metrics')
+    plt.savefig(fname)
     plt.close()
 
 
-def write_summary_fig(comptable, out_dir):
+def write_summary_fig(comptable, bf):
     """
     Creates a pie chart showing 1) The total variance explained by each
     component in the outer ring, 2) the variance explained by each
@@ -258,8 +256,8 @@ def write_summary_fig(comptable, out_dir):
         Array with columns denoting (1) index of component, (2) Kappa score of
         component, (3) Rho score of component, (4) variance explained by
         component, and (5) normalized variance explained by component
-    out_dir : :obj:`str`
-        Figures folder within output directory
+    bf : :obj:`str`
+        Base filename for outputs.
     """
 
     var_expl = []
@@ -318,5 +316,5 @@ def write_summary_fig(comptable, out_dir):
     ax.set_title('Variance Explained By Classification', fontdict={'fontsize': 28})
     if unexpl_var < [0.001]:
         plt.text(1, -1, '*Unexplained Variance less than 0.001', fontdict={'fontsize': 12})
-    sumfig_title = os.path.join(out_dir, 'Component_Overview.png')
-    plt.savefig(sumfig_title)
+    fname = io.gen_fname(bf, '_donutplot.png', desc='varianceExplained')
+    plt.savefig(fname)
