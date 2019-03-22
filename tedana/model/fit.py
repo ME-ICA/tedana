@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from scipy.special import lpmv
-from scipy.ndimage import label
 
 from tedana import (combine, io, utils)
 
@@ -247,34 +246,39 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
             ccimg = io.new_nii_like(
                 ref_img,
                 np.squeeze(utils.unmask(F_R2_maps[:, i_comp], t2s != 0)))
-            F_R2_clmaps[:, i_comp] = spatclust(
-                ccimg, min_cluster_size=csize, threshold=fmin, mask=mask)
+            F_R2_clmaps[:, i_comp] = utils.threshold_map(
+                ccimg, min_cluster_size=csize, threshold=fmin, mask=mask,
+                binarize=True)
             countsigFR2 = F_R2_clmaps[:, i_comp].sum()
 
             ccimg = io.new_nii_like(
                 ref_img,
                 np.squeeze(utils.unmask(F_S0_maps[:, i_comp], t2s != 0)))
-            F_S0_clmaps[:, i_comp] = spatclust(
-                ccimg, min_cluster_size=csize, threshold=fmin, mask=mask)
+            F_S0_clmaps[:, i_comp] = utils.threshold_map(
+                ccimg, min_cluster_size=csize, threshold=fmin, mask=mask,
+                binarize=True)
             countsigFS0 = F_S0_clmaps[:, i_comp].sum()
 
             # Cluster-extent threshold and binarize Z-maps with CDT of p < 0.05
             ccimg = io.new_nii_like(
                 ref_img,
                 np.squeeze(utils.unmask(Z_maps[:, i_comp], t2s != 0)))
-            Z_clmaps[:, i_comp] = spatclust(
-                ccimg, min_cluster_size=csize, threshold=1.95, mask=mask)
+            Z_clmaps[:, i_comp] = utils.threshold_map(
+                ccimg, min_cluster_size=csize, threshold=1.95, mask=mask,
+                binarize=True)
 
             # Cluster-extent threshold and binarize ranked signal-change map
             ccimg = io.new_nii_like(
                 ref_img,
                 utils.unmask(stats.rankdata(tsoc_Babs[:, i_comp]), t2s != 0))
-            Br_R2_clmaps[:, i_comp] = spatclust(
+            Br_R2_clmaps[:, i_comp] = utils.threshold_map(
                 ccimg, min_cluster_size=csize,
-                threshold=(max(tsoc_Babs.shape) - countsigFR2), mask=mask)
-            Br_S0_clmaps[:, i_comp] = spatclust(
+                threshold=(max(tsoc_Babs.shape) - countsigFR2), mask=mask,
+                binarize=True)
+            Br_S0_clmaps[:, i_comp] = utils.threshold_map(
                 ccimg, min_cluster_size=csize,
-                threshold=(max(tsoc_Babs.shape) - countsigFS0), mask=mask)
+                threshold=(max(tsoc_Babs.shape) - countsigFS0), mask=mask,
+                binarize=True)
 
         seldict = {}
         selvars = ['WTS', 'tsoc_B', 'PSC',
@@ -490,74 +494,3 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
         dm_catd[:, echo, :] = utils.unmask(e_nogs, Gmask)
 
     return dm_catd, dm_optcom
-
-
-def spatclust(img, min_cluster_size, threshold=None, mask=None):
-    """
-    Cluster-extent threshold and binarize image.
-
-    Parameters
-    ----------
-    img : img_like or array_like
-        Image object or 3D array to be clustered
-    min_cluster_size : int
-        Minimum cluster size (in voxels)
-    threshold : float or None, optional
-        Cluster-defining threshold for img. If None (default), assume img is
-        already thresholded.
-    mask : (S,) array_like or None, optional
-        Boolean array for masking resultant data array. Default is None.
-    """
-    if not isinstance(img, np.ndarray):
-        arr = img.get_data()
-    else:
-        arr = img.copy()
-
-    if mask is not None:
-        mask = mask.astype(bool)
-        arr *= mask.reshape(arr.shape)
-
-    # 6 connectivity
-    conn_mat = np.zeros((3, 3, 3), int)
-    conn_mat[1, 1, :] = 1
-    conn_mat[1, :, 1] = 1
-    conn_mat[:, 1, 1] = 1
-
-    clust_thresholded = np.zeros(arr.shape, int)
-
-    # Positive values first
-    if threshold is not None:
-        thresh_arr = arr >= threshold
-    else:
-        thresh_arr = arr > 0
-
-    labeled, _ = label(thresh_arr, conn_mat)
-    unique, counts = np.unique(labeled, return_counts=True)
-    clust_sizes = dict(zip(unique, counts))
-    clust_sizes = {k: v for k, v in clust_sizes.items() if v >= min_cluster_size}
-    for i_clust in clust_sizes.keys():
-        if np.all(thresh_arr[labeled == i_clust] == 1):
-            clust_thresholded[labeled == i_clust] = 1
-
-    # Now negative values
-    if threshold is not None:
-        thresh_arr = arr <= (-1 * threshold)
-    else:
-        thresh_arr = arr < 0
-
-    labeled, _ = label(thresh_arr, conn_mat)
-    unique, counts = np.unique(labeled, return_counts=True)
-    clust_sizes = dict(zip(unique, counts))
-    clust_sizes = {k: v for k, v in clust_sizes.items() if v >= min_cluster_size}
-    for i_clust in clust_sizes.keys():
-        if np.all(thresh_arr[labeled == i_clust] == 1):
-            clust_thresholded[labeled == i_clust] = 1
-
-    # reshape to (S,)
-    clust_thresholded = clust_thresholded.ravel()
-
-    # if mask provided, mask output
-    if mask is not None:
-        clust_thresholded = clust_thresholded[mask]
-
-    return clust_thresholded
