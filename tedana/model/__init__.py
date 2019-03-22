@@ -6,5 +6,4 @@ from .fit import (
 )
 
 __all__ = [
-    'fitmodels_direct', 'spatclust', 'get_coeffs', 'computefeats2'
-    ]
+    'fitmodels_direct', 'spatclust', 'get_coeffs', 'computefeats2']
