@@ -4,113 +4,15 @@ Functions to handle file input/output
 import logging
 import os.path as op
 
-import nibabel as nib
 import numpy as np
+import nibabel as nib
 from nibabel.filename_parser import splitext_addext
 from nilearn._utils import check_niimg
 from nilearn.image import new_img_like
-from numpy.linalg import lstsq
 
 from tedana import model, utils
 
 LGR = logging.getLogger(__name__)
-
-
-def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img):
-    """
-    Perform global signal regression.
-
-    Parameters
-    ----------
-    optcom_ts : (S x T) array_like
-        Optimally combined time series data
-    mmix : (T x C) array_like
-        Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `optcom_ts`
-    mask : (S,) array_like
-        Boolean mask array
-    comptable : :obj:`pandas.DataFrame`
-        Component table with metrics and with classification (accepted,
-        rejected, midk, or ignored)
-    ref_img : :obj:`str` or img_like
-        Reference image to dictate how outputs are saved to disk
-
-    Notes
-    -----
-    This function writes out several files:
-
-    ======================    =================================================
-    Filename                  Content
-    ======================    =================================================
-    sphis_hik.nii             T1-like effect
-    hik_ts_OC_T1c.nii         T1-corrected BOLD (high-Kappa) time series
-    dn_ts_OC_T1c.nii          Denoised version of T1-corrected time series
-    betas_hik_OC_T1c.nii      T1 global signal-corrected components
-    meica_mix_T1c.1D          T1 global signal-corrected mixing matrix
-    ======================    =================================================
-    """
-    all_comps = comptable['component'].values
-    acc = comptable.loc[comptable['classification'] == 'accepted', 'component']
-    ign = comptable.loc[comptable['classification'] == 'ignored', 'component']
-    not_ign = sorted(np.setdiff1d(all_comps, ign))
-
-    optcom_masked = optcom_ts[mask, :]
-    optcom_mu = optcom_masked.mean(axis=-1)[:, np.newaxis]
-    optcom_std = optcom_masked.std(axis=-1)[:, np.newaxis]
-
-    """
-    Compute temporal regression
-    """
-    data_norm = (optcom_masked - optcom_mu) / optcom_std
-    cbetas = lstsq(mmix, data_norm.T, rcond=None)[0].T
-    resid = data_norm - np.dot(cbetas[:, not_ign], mmix[:, not_ign].T)
-
-    """
-    Build BOLD time series without amplitudes, and save T1-like effect
-    """
-    bold_ts = np.dot(cbetas[:, acc], mmix[:, acc].T)
-    t1_map = bold_ts.min(axis=-1)
-    t1_map -= t1_map.mean()
-    filewrite(utils.unmask(t1_map, mask), 'sphis_hik', ref_img)
-    t1_map = t1_map[:, np.newaxis]
-
-    """
-    Find the global signal based on the T1-like effect
-    """
-    glob_sig = lstsq(t1_map, data_norm, rcond=None)[0]
-
-    """
-    T1-correct time series by regression
-    """
-    bold_noT1gs = bold_ts - np.dot(lstsq(glob_sig.T, bold_ts.T,
-                                         rcond=None)[0].T, glob_sig)
-    hik_ts = bold_noT1gs * optcom_std
-    filewrite(utils.unmask(hik_ts, mask), 'hik_ts_OC_T1c.nii', ref_img)
-
-    """
-    Make denoised version of T1-corrected time series
-    """
-    medn_ts = optcom_mu + ((bold_noT1gs + resid) * optcom_std)
-    filewrite(utils.unmask(medn_ts, mask), 'dn_ts_OC_T1c.nii', ref_img)
-
-    """
-    Orthogonalize mixing matrix w.r.t. T1-GS
-    """
-    mmixnogs = mmix.T - np.dot(lstsq(glob_sig.T, mmix, rcond=None)[0].T,
-                               glob_sig)
-    mmixnogs_mu = mmixnogs.mean(-1)[:, np.newaxis]
-    mmixnogs_std = mmixnogs.std(-1)[:, np.newaxis]
-    mmixnogs_norm = (mmixnogs - mmixnogs_mu) / mmixnogs_std
-    mmixnogs_norm = np.vstack([np.atleast_2d(np.ones(max(glob_sig.shape))),
-                               glob_sig, mmixnogs_norm])
-
-    """
-    Write T1-GS corrected components and mixing matrix
-    """
-    cbetas_norm = lstsq(mmixnogs_norm.T, data_norm.T, rcond=None)[0].T
-    filewrite(utils.unmask(cbetas_norm[:, 2:], mask),
-              'betas_hik_OC_T1c.nii', ref_img)
-    np.savetxt('meica_mix_T1c.1D', mmixnogs)
 
 
 def split_ts(data, mmix, mask, acc):

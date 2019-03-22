@@ -20,7 +20,9 @@ import pandas as pd
 from scipy import stats
 from nilearn.masking import compute_epi_mask
 
-from tedana import decay, combine, decomposition, io, model, selection, utils, viz
+from tedana import (decay, combine, decomposition, io, model, selection, utils,
+                    viz)
+import tedana.gscontrol as gsc
 from tedana.workflows.parser_utils import is_valid_file
 
 LGR = logging.getLogger(__name__)
@@ -344,7 +346,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     # regress out global signal unless explicitly not desired
     if 'gsr' in gscontrol:
-        catd, data_oc = model.gscontrol_raw(catd, data_oc, n_echos, ref_img)
+        catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, ref_img)
 
     if mixm is None:
         # Identify and remove thermal noise from data
@@ -422,7 +424,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if 't1c' in gscontrol:
         LGR.info('Performing T1c global signal regression to remove spatially '
                  'diffuse noise')
-        io.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
+        gsc.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
 
     if verbose:
         io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
