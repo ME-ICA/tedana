@@ -374,7 +374,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
                  'detection'.format(comptable.shape[0]))
 
     comptable['rationale'] = comptable['rationale'].str.rstrip(';')
-    io.save_comptable(ct_df, io.gen_fname(bf, '_comptable.json', desc='TEDPCA'))
+    io.save_comptable(comptable, io.gen_fname(bf, '_comptable.json', desc='TEDPCA'))
 
     sel_idx = comptable['classification'] == 'accepted'
     n_components = np.sum(sel_idx)
