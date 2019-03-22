@@ -250,11 +250,11 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
                          getelbow(comptable['rho'], return_val=True),
                          utils.getfbounds(n_echos)[0]))
 
-    # Initial guess of accepted components based on Kappa and Rho elbows
-    acc_poss = ncls[(comptable.loc[ncls, 'kappa'] >= kappa_elbow) &
+    # Provisionally accept components based on Kappa and Rho elbows
+    acc_prov = ncls[(comptable.loc[ncls, 'kappa'] >= kappa_elbow) &
                     (comptable.loc[ncls, 'rho'] < rho_elbow)]
 
-    if len(acc_poss) == 0:
+    if len(acc_prov) == 0:
         LGR.warning('No BOLD-like components detected')
         ign = sorted(np.setdiff1d(all_comps, rej))
         comptable.loc[ign, 'classification'] = 'ignored'
@@ -269,32 +269,32 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     # Calculate "rate" for kappa: kappa range divided by variance explained
     # range, for potentially accepted components
     # NOTE: What is the logic behind this?
-    kappa_rate = ((np.max(comptable.loc[acc_poss, 'kappa']) -
-                   np.min(comptable.loc[acc_poss, 'kappa'])) /
-                  (np.max(comptable.loc[acc_poss, 'variance explained']) -
-                   np.min(comptable.loc[acc_poss, 'variance explained'])))
+    kappa_rate = ((np.max(comptable.loc[acc_prov, 'kappa']) -
+                   np.min(comptable.loc[acc_prov, 'kappa'])) /
+                  (np.max(comptable.loc[acc_prov, 'variance explained']) -
+                   np.min(comptable.loc[acc_prov, 'variance explained'])))
     kappa_ratios = kappa_rate * comptable['variance explained'] / comptable['kappa']
     varex_lower = stats.scoreatpercentile(
-        comptable.loc[acc_poss, 'variance explained'], LOW_PERC)
+        comptable.loc[acc_prov, 'variance explained'], LOW_PERC)
     varex_upper = stats.scoreatpercentile(
-        comptable.loc[acc_poss, 'variance explained'], HIGH_PERC)
+        comptable.loc[acc_prov, 'variance explained'], HIGH_PERC)
 
     """
     Step 3: Get rid of midk components; i.e., those with higher than
     max decision score and high variance
     """
-    max_good_d_score = EXTEND_FACTOR * len(acc_poss) * n_decision_metrics
+    max_good_d_score = EXTEND_FACTOR * len(acc_prov) * n_decision_metrics
     midk = acc[(comptable.loc[acc, 'd_table_score'] > max_good_d_score) &
                (comptable.loc[acc, 'variance explained'] > EXTEND_FACTOR * varex_upper)]
     comptable.loc[midk, 'classification'] = 'rejected'
     comptable.loc[midk, 'rationale'] += 'I007;'
     acc = np.setdiff1d(acc, midk)
-    acc_poss = np.setdiff1d(acc_poss, midk)
+    acc_prov = np.setdiff1d(acc_prov, midk)
 
     """
     Step 4: Find components to ignore
     """
-    high_varex = np.union1d(acc_poss, acc[comptable.loc[acc, 'variance explained'] > varex_lower])
+    high_varex = np.union1d(acc_prov, acc[comptable.loc[acc, 'variance explained'] > varex_lower])
     ign = np.setdiff1d(acc, high_varex)  # ignore low variance components
     ign = np.setdiff1d(
         ign, ign[comptable.loc[ign, 'd_table_score'] < max_good_d_score])
@@ -307,7 +307,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     Step 5: Scrub the set if there are components that haven't been rejected or
     ignored, but are still not listed in the possible accepted group.
     """
-    if len(acc) > len(acc_poss):
+    if len(acc) > len(acc_prov):
         comptable['d_table_score_scrub'] = np.nan
         # Recompute the midk steps on the limited set to clean up the tail
         d_table_rank = np.vstack([
@@ -366,8 +366,6 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
         ign_add1 = np.setdiff1d(ign_add1, midk)
         comptable.loc[ign_add1, 'classification'] = 'ignored'
         comptable.loc[ign_add1, 'rationale'] += 'I012;'
-        ign = np.union1d(ign, ign_add1)  # unnecessary
-        acc = np.setdiff1d(acc, np.union1d(midk, ign))  # unnecessary
 
     # Move decision columns to end
     comptable = comptable[[c for c in comptable if c not in cols_at_end] +
