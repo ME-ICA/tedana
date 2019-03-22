@@ -153,7 +153,7 @@ def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
         # Set range to ~1/10th of max positive or negative beta
         temp_max = np.abs(ts_B[:, :, :, compnum].max())
         temp_min = np.abs(ts_B[:, :, :, compnum].min())
-        imgmax = np.max([temp_max, temp_min])*.1
+        imgmax = np.max([temp_max, temp_min]) * .1
         imgmin = imgmax * -1
 
         for idx, cut in enumerate(cuts):
