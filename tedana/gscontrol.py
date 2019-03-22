@@ -161,8 +161,8 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, bf):
     bold_ts = np.dot(cbetas[:, acc], mmix[:, acc].T)
     t1_map = bold_ts.min(axis=-1)
     t1_map -= t1_map.mean()
-    filewrite(utils.unmask(t1_map, mask),
-              gen_fname(bf, '_min.nii.gz', desc='optcomAccepted'), ref_img)
+    io.filewrite(utils.unmask(t1_map, mask),
+                 io.gen_fname(bf, '_min.nii.gz', desc='optcomAccepted'), ref_img)
     t1_map = t1_map[:, np.newaxis]
 
     """
@@ -176,15 +176,15 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, bf):
     bold_noT1gs = bold_ts - np.dot(lstsq(glob_sig.T, bold_ts.T,
                                          rcond=None)[0].T, glob_sig)
     hik_ts = bold_noT1gs * optcom_std
-    filewrite(utils.unmask(hik_ts, mask),
-              gen_fname(bf, desc='optcomAcceptedT1cDenoised'), ref_img)
+    io.filewrite(utils.unmask(hik_ts, mask),
+                 io.gen_fname(bf, desc='optcomAcceptedT1cDenoised'), ref_img)
 
     """
     Make denoised version of T1-corrected time series
     """
     medn_ts = optcom_mu + ((bold_noT1gs + resid) * optcom_std)
-    filewrite(utils.unmask(medn_ts, mask),
-              gen_fname(bf, desc='optcomT1cDenoised'), ref_img)
+    io.filewrite(utils.unmask(medn_ts, mask),
+                 io.gen_fname(bf, desc='optcomT1cDenoised'), ref_img)
 
     """
     Orthogonalize mixing matrix w.r.t. T1-GS
@@ -201,8 +201,8 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, bf):
     Write T1-GS corrected components and mixing matrix
     """
     cbetas_norm = lstsq(mmixnogs_norm.T, data_norm.T, rcond=None)[0].T
-    filewrite(utils.unmask(cbetas_norm[:, 2:], mask),
-              gen_fname(bf, '_components.nii.gz',
-                        desc='TEDICAAcceptedT1cDenoised'), ref_img)
-    np.savetxt(gen_fname(bf, '_mixing.tsv', desc='TEDICAT1cDenoised'),
+    io.filewrite(utils.unmask(cbetas_norm[:, 2:], mask),
+                 io.gen_fname(bf, '_components.nii.gz',
+                              desc='TEDICAAcceptedT1cDenoised'), ref_img)
+    np.savetxt(io.gen_fname(bf, '_mixing.tsv', desc='TEDICAT1cDenoised'),
                mmixnogs, delimiter='\t')
