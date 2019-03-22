@@ -150,9 +150,9 @@ def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
         title = ax_ts.set_title(plt_title)
         title.set_y(1.5)
 
-        # Set range to ~1/10th of max beta
-        imgmax = ts_B[:, :, :, compnum].max() * .1
-        imgmin = ts_B[:, :, :, compnum].min() * .1
+        # Set range to ~1/10th of max positive or negative beta
+        imgmax = 0.1 * np.abs(ts_B[:, :, :, compnum]).max()
+        imgmin = imgmax * -1
 
         for idx, cut in enumerate(cuts):
             for imgslice in range(1, 6):
