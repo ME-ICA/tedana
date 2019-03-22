@@ -2,9 +2,8 @@
 # ex: set sts=4 ts=4 sw=4 et:
 
 from .fit import (
-    fitmodels_direct, spatclust, gscontrol_raw, get_coeffs, computefeats2
+    fitmodels_direct, spatclust, get_coeffs, computefeats2
 )
 
 __all__ = [
-    'fitmodels_direct', 'spatclust', 'gscontrol_raw', 'get_coeffs',
-    'computefeats2']
+    'fitmodels_direct', 'spatclust', 'get_coeffs', 'computefeats2']

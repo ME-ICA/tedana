@@ -60,13 +60,13 @@ def run_mlepca(data):
     return u, s, v
 
 
-def kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False):
+def kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=False):
     """
     Select PCA components using Kundu's decision tree approach.
 
     Parameters
     ----------
-    ct_df : :obj:`pandas.DataFrame`
+    comptable : :obj:`pandas.DataFrame`
         Component table with relevant metrics: kappa, rho, and normalized
         variance explained.
     n_echos : :obj:`int`
@@ -83,85 +83,85 @@ def kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False):
 
     Returns
     -------
-    ct_df : :obj:`pandas.DataFrame`
+    comptable : :obj:`pandas.DataFrame`
         Component table with components classified as 'accepted', 'rejected',
         or 'ignored'.
     """
-    eigenvalue_elbow = getelbow(ct_df['normalized variance explained'],
+    eigenvalue_elbow = getelbow(comptable['normalized variance explained'],
                                 return_val=True)
 
-    diff_varex_norm = np.abs(np.diff(ct_df['normalized variance explained']))
+    diff_varex_norm = np.abs(np.diff(comptable['normalized variance explained']))
     lower_diff_varex_norm = diff_varex_norm[(len(diff_varex_norm) // 2):]
     varex_norm_thr = np.mean([lower_diff_varex_norm.max(),
                               diff_varex_norm.min()])
-    varex_norm_min = ct_df['normalized variance explained'][
+    varex_norm_min = comptable['normalized variance explained'][
         (len(diff_varex_norm) // 2) +
         np.arange(len(lower_diff_varex_norm))[lower_diff_varex_norm >= varex_norm_thr][0] + 1]
-    varex_norm_cum = np.cumsum(ct_df['normalized variance explained'])
+    varex_norm_cum = np.cumsum(comptable['normalized variance explained'])
 
     fmin, fmid, fmax = utils.getfbounds(n_echos)
     if int(kdaw) == -1:
-        lim_idx = utils.andb([ct_df['kappa'] < fmid,
-                              ct_df['kappa'] > fmin]) == 2
-        kappa_lim = ct_df.loc[lim_idx, 'kappa'].values
+        lim_idx = utils.andb([comptable['kappa'] < fmid,
+                              comptable['kappa'] > fmin]) == 2
+        kappa_lim = comptable.loc[lim_idx, 'kappa'].values
         kappa_thr = kappa_lim[getelbow(kappa_lim)]
 
-        lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
-        rho_lim = ct_df.loc[lim_idx, 'rho'].values
+        lim_idx = utils.andb([comptable['rho'] < fmid, comptable['rho'] > fmin]) == 2
+        rho_lim = comptable.loc[lim_idx, 'rho'].values
         rho_thr = rho_lim[getelbow(rho_lim)]
         stabilize = True
         LGR.info('kdaw set to -1. Switching TEDPCA method to '
                  'kundu-stabilize')
     elif int(rdaw) == -1:
-        lim_idx = utils.andb([ct_df['rho'] < fmid, ct_df['rho'] > fmin]) == 2
-        rho_lim = ct_df.loc[lim_idx, 'rho'].values
+        lim_idx = utils.andb([comptable['rho'] < fmid, comptable['rho'] > fmin]) == 2
+        rho_lim = comptable.loc[lim_idx, 'rho'].values
         rho_thr = rho_lim[getelbow(rho_lim)]
     else:
         kappa_thr = np.average(
-            sorted([fmin, (getelbow(ct_df['kappa'], return_val=True) / 2), fmid]),
+            sorted([fmin, (getelbow(comptable['kappa'], return_val=True) / 2), fmid]),
             weights=[kdaw, 1, 1])
         rho_thr = np.average(
-            sorted([fmin, (getelbow_cons(ct_df['rho'], return_val=True) / 2), fmid]),
+            sorted([fmin, (getelbow_cons(comptable['rho'], return_val=True) / 2), fmid]),
             weights=[rdaw, 1, 1])
 
     # Reject if low Kappa, Rho, and variance explained
-    is_lowk = ct_df['kappa'] <= kappa_thr
-    is_lowr = ct_df['rho'] <= rho_thr
-    is_lowe = ct_df['normalized variance explained'] <= eigenvalue_elbow
+    is_lowk = comptable['kappa'] <= kappa_thr
+    is_lowr = comptable['rho'] <= rho_thr
+    is_lowe = comptable['normalized variance explained'] <= eigenvalue_elbow
     is_lowkre = is_lowk & is_lowr & is_lowe
-    ct_df.loc[is_lowkre, 'classification'] = 'rejected'
-    ct_df.loc[is_lowkre, 'rationale'] += 'P001;'
+    comptable.loc[is_lowkre, 'classification'] = 'rejected'
+    comptable.loc[is_lowkre, 'rationale'] += 'P001;'
 
     # Reject if low variance explained
-    is_lows = ct_df['normalized variance explained'] <= varex_norm_min
-    ct_df.loc[is_lows, 'classification'] = 'rejected'
-    ct_df.loc[is_lows, 'rationale'] += 'P002;'
+    is_lows = comptable['normalized variance explained'] <= varex_norm_min
+    comptable.loc[is_lows, 'classification'] = 'rejected'
+    comptable.loc[is_lows, 'rationale'] += 'P002;'
 
     # Reject if Kappa over limit
-    is_fmax1 = ct_df['kappa'] == F_MAX
-    ct_df.loc[is_fmax1, 'classification'] = 'rejected'
-    ct_df.loc[is_fmax1, 'rationale'] += 'P003;'
+    is_fmax1 = comptable['kappa'] == F_MAX
+    comptable.loc[is_fmax1, 'classification'] = 'rejected'
+    comptable.loc[is_fmax1, 'rationale'] += 'P003;'
 
     # Reject if Rho over limit
-    is_fmax2 = ct_df['rho'] == F_MAX
-    ct_df.loc[is_fmax2, 'classification'] = 'rejected'
-    ct_df.loc[is_fmax2, 'rationale'] += 'P004;'
+    is_fmax2 = comptable['rho'] == F_MAX
+    comptable.loc[is_fmax2, 'classification'] = 'rejected'
+    comptable.loc[is_fmax2, 'rationale'] += 'P004;'
 
     if stabilize:
         temp7 = varex_norm_cum >= 0.95
-        ct_df.loc[temp7, 'classification'] = 'rejected'
-        ct_df.loc[temp7, 'rationale'] += 'P005;'
-        under_fmin1 = ct_df['kappa'] <= fmin
-        ct_df.loc[under_fmin1, 'classification'] = 'rejected'
-        ct_df.loc[under_fmin1, 'rationale'] += 'P006;'
-        under_fmin2 = ct_df['rho'] <= fmin
-        ct_df.loc[under_fmin2, 'classification'] = 'rejected'
-        ct_df.loc[under_fmin2, 'rationale'] += 'P007;'
+        comptable.loc[temp7, 'classification'] = 'rejected'
+        comptable.loc[temp7, 'rationale'] += 'P005;'
+        under_fmin1 = comptable['kappa'] <= fmin
+        comptable.loc[under_fmin1, 'classification'] = 'rejected'
+        comptable.loc[under_fmin1, 'rationale'] += 'P006;'
+        under_fmin2 = comptable['rho'] <= fmin
+        comptable.loc[under_fmin2, 'classification'] = 'rejected'
+        comptable.loc[under_fmin2, 'rationale'] += 'P007;'
 
-    n_components = ct_df.loc[ct_df['classification'] == 'accepted'].shape[0]
+    n_components = comptable.loc[comptable['classification'] == 'accepted'].shape[0]
     LGR.info('Selected {0} components with Kappa threshold: {1:.02f}, Rho '
              'threshold: {2:.02f}'.format(n_components, kappa_thr, rho_thr))
-    return ct_df
+    return comptable
 
 
 def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
@@ -321,12 +321,12 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         # Normalize each component's time series
         vTmixN = stats.zscore(comp_ts, axis=1).T
         LGR.info('Making initial component selection guess from PCA results')
-        _, ct_df, betasv, v_T = model.fitmodels_direct(
+        _, comptable, betasv, v_T = model.fitmodels_direct(
                     catd, comp_ts.T, eimum, t2s, t2sG, tes, combmode, ref_img,
                     bf, mmixN=vTmixN, full_sel=False, label='TEDPCA',
                     verbose=verbose)
         # varex_norm overrides normalized varex computed by fitmodels_direct
-        ct_df['normalized variance explained'] = varex_norm
+        comptable['normalized variance explained'] = varex_norm
 
         # Save state
         LGR.info('Saving PCA results to: {}'.format(state_file))
@@ -334,7 +334,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
                     'voxel_comp_weights': voxel_comp_weights,
                     'varex': varex,
                     'comp_ts': comp_ts,
-                    'comptable': ct_df}
+                    'comptable': comptable}
 
         try:
             with open(state_file, 'wb') as handle:
@@ -345,7 +345,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         voxel_comp_weights = pcastate['voxel_comp_weights']
         varex = pcastate['varex']
         comp_ts = pcastate['comp_ts']
-        ct_df = pcastate['comptable']
+        comptable = pcastate['comptable']
 
     np.savetxt(io.gen_fname(bf, '_mixing.tsv', desc='TEDPCA'),
                comp_ts.T, delimiter='\t')
@@ -361,21 +361,22 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
                  ref_img)
 
     # Add new columns to comptable for classification
-    ct_df['classification'] = 'accepted'
-    ct_df['rationale'] = ''
+    comptable['classification'] = 'accepted'
+    comptable['rationale'] = ''
 
     # Select components using decision tree
     if method == 'kundu':
-        ct_df = kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=False)
+        comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=False)
     elif method == 'kundu-stabilize':
-        ct_df = kundu_tedpca(ct_df, n_echos, kdaw, rdaw, stabilize=True)
+        comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=True)
     elif method == 'mle':
         LGR.info('Selected {0} components with MLE dimensionality '
-                 'detection'.format(ct_df.shape[0]))
+                 'detection'.format(comptable.shape[0]))
 
+    comptable['rationale'] = comptable['rationale'].str.rstrip(';')
     io.save_comptable(ct_df, io.gen_fname(bf, '_comptable.json', desc='TEDPCA'))
 
-    sel_idx = ct_df['classification'] == 'accepted'
+    sel_idx = comptable['classification'] == 'accepted'
     n_components = np.sum(sel_idx)
     voxel_kept_comp_weighted = (voxel_comp_weights[:, sel_idx] *
                                 varex[None, sel_idx])
