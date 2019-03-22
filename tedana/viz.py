@@ -151,8 +151,6 @@ def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
         title.set_y(1.5)
 
         # Set range to ~1/10th of max positive or negative beta
-        temp_max = np.abs(ts_B[:, :, :, compnum].max())
-        temp_min = np.abs(ts_B[:, :, :, compnum].min())
         imgmax = 0.1 * np.abs(ts_B[:, :, :, compnum]).max()
         imgmin = imgmax * -1
 
