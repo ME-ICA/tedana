@@ -133,19 +133,19 @@ TEDICA codes
 Code   Classification   Description
 =====  ===============  ========================================================
 I001   rejected         Manual exclusion
-I002   rejected         Rho greater than Kappa or more significant voxels
-                        in S0 model than R2 model
-I003   rejected         S0 Dice is higher than R2 Dice and high variance
+I002   rejected         Rho greater than Kappa
+I003   rejected         More significant voxels in S0 model than R2 model
+I004   rejected         S0 Dice is higher than R2 Dice and high variance
                         explained
-I004   rejected         Noise F-value is higher than signal F-value and high
+I005   rejected         Noise F-value is higher than signal F-value and high
                         variance explained
-I005   ignored          No good components found
-I006   rejected         Mid-Kappa component
-I007   ignored          Low variance explained
-I008   rejected         Artifact candidate type A
-I009   rejected         Artifact candidate type B
-I010   ignored          ign_add0
-I011   ignored          ign_add1
+I006   ignored          No good components found
+I007   rejected         Mid-Kappa component
+I008   ignored          Low variance explained
+I009   rejected         Mid-Kappa artifact type A
+I010   rejected         Mid-Kappa artifact type B
+I011   ignored          ign_add0
+I012   ignored          ign_add1
 =====  ===============  ========================================================
 
 Visual reports
