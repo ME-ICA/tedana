@@ -54,10 +54,9 @@ def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
         Time series from which to derive ICA betas
     mask : (S,) array_like
         Boolean mask array
-    comptable : (N x 5) array_like
-        Array with columns denoting (1) index of component, (2) Kappa score of
-        component, (3) Rho score of component, (4) variance explained by
-        component, and (5) normalized variance explained by component
+    comptable : (C x X) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component, with a column for
+        each metric. The index should be the component number.
     mmix : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
@@ -95,17 +94,16 @@ def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
 
     # Remove trailing ';' from rationale column
     comptable['rationale'] = comptable['rationale'].str.rstrip(';')
-    for compnum in range(0, mmix.shape[1], 1):
-
-        if comptable.iloc[compnum]["classification"] == 'accepted':
+    for compnum in comptable.index.values:
+        if comptable.loc[compnum, "classification"] == 'accepted':
             line_color = 'g'
             expl_text = 'accepted'
-        elif comptable.iloc[compnum]["classification"] == 'rejected':
+        elif comptable.loc[compnum, "classification"] == 'rejected':
             line_color = 'r'
-            expl_text = 'rejection reason(s): ' + comptable.iloc[compnum]["rationale"]
-        elif comptable.iloc[compnum]["classification"] == 'ignored':
+            expl_text = 'rejection reason(s): ' + comptable.loc[compnum, "rationale"]
+        elif comptable.loc[compnum, "classification"] == 'ignored':
             line_color = 'k'
-            expl_text = 'ignored reason(s): ' + comptable.iloc[compnum]["rationale"]
+            expl_text = 'ignored reason(s): ' + comptable.loc[compnum, "rationale"]
         else:
             # Classification not added
             # If new, this will keep code running
@@ -141,12 +139,12 @@ def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
         ax_ts.plot(mmix[:, compnum], color=line_color)
 
         # Title will include variance from comptable
-        comp_var = "{0:.2f}".format(comptable.iloc[compnum]["variance explained"])
-        comp_kappa = "{0:.2f}".format(comptable.iloc[compnum]["kappa"])
-        comp_rho = "{0:.2f}".format(comptable.iloc[compnum]["rho"])
-        plt_title = 'Comp. {}: variance: {}%, kappa: {}, rho: {}, {}'.format(compnum, comp_var,
-                                                                             comp_kappa, comp_rho,
-                                                                             expl_text)
+        comp_var = "{0:.2f}".format(comptable.loc[compnum, "variance explained"])
+        comp_kappa = "{0:.2f}".format(comptable.loc[compnum, "kappa"])
+        comp_rho = "{0:.2f}".format(comptable.loc[compnum, "rho"])
+        plt_title = ('Comp. {}: variance: {}%, kappa: {}, rho: {}, '
+                     '{}'.format(compnum, comp_var, comp_kappa, comp_rho,
+                                 expl_text))
         title = ax_ts.set_title(plt_title)
         title.set_y(1.5)
 
@@ -202,10 +200,10 @@ def write_kappa_scatter(comptable, out_dir):
 
     Parameters
     ----------
-    comptable : (N x 5) array_like
-        Array with columns denoting (1) index of component, (2) Kappa score of
-        component, (3) Rho score of component, (4) variance explained by
-        component, and (5) normalized variance explained by component
+    comptable : (C x X) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component, with a column for
+        each metric. Requires at least four columns: "classification",
+        "kappa", "rho", and "variance explained".
     out_dir : :obj:`str`
         Figures folder within output directory
 
@@ -254,10 +252,10 @@ def write_summary_fig(comptable, out_dir):
 
     Parameters
     ----------
-    comptable : (N x 5) array_like
-        Array with columns denoting (1) index of component, (2) Kappa score of
-        component, (3) Rho score of component, (4) variance explained by
-        component, and (5) normalized variance explained by component
+    comptable : (C x X) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component, with a column for
+        each metric. Requires at least two columns: "variance explained" and
+        "classification".
     out_dir : :obj:`str`
         Figures folder within output directory
     """
