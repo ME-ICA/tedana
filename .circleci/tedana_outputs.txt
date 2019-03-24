@@ -1,12 +1,16 @@
 figures
+three_echo_Cornell_S0map.nii.gz
+three_echo_Cornell_T2Starmap.nii.gz
 three_echo_Cornell_desc-TEDICAAcceptedZ_components.nii.gz
 three_echo_Cornell_desc-TEDICAAccepted_components.nii.gz
 three_echo_Cornell_desc-TEDICA_components.nii.gz
 three_echo_Cornell_desc-TEDICA_comptable.json
+three_echo_Cornell_desc-TEDICA_description.json
 three_echo_Cornell_desc-TEDICA_mixing.tsv
 three_echo_Cornell_desc-TEDPCAState_variables.pkl
 three_echo_Cornell_desc-TEDPCA_components.nii.gz
 three_echo_Cornell_desc-TEDPCA_comptable.json
+three_echo_Cornell_desc-TEDPCA_description.json
 three_echo_Cornell_desc-TEDPCA_mixing.tsv
 three_echo_Cornell_desc-comp000_componentplot.png
 three_echo_Cornell_desc-comp001_componentplot.png
@@ -139,8 +143,6 @@ three_echo_Cornell_desc-comp127_componentplot.png
 three_echo_Cornell_desc-comp128_componentplot.png
 three_echo_Cornell_desc-comp129_componentplot.png
 three_echo_Cornell_desc-comp130_componentplot.png
-three_echo_Cornell_desc-limited_S0map.nii.gz
-three_echo_Cornell_desc-limited_T2Starmap.nii.gz
 three_echo_Cornell_desc-metrics_scatterplot.png
 three_echo_Cornell_desc-optcomAccepted_bold.nii.gz
 three_echo_Cornell_desc-optcomDenoised_bold.nii.gz

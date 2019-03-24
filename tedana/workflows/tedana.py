@@ -10,12 +10,14 @@ os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 
 import os.path as op
+import json
 import shutil
 import logging
 from datetime import datetime
 
 import argparse
 import numpy as np
+import pandas as pd
 from scipy import stats
 from nilearn.masking import compute_epi_mask
 
@@ -323,8 +325,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
     if verbose:
-        io.filewrite(masksum,
-                     io.gen_fname(bf, '_mask.nii.gz', desc='adaptiveGoodSignal'),
+        io.filewrite(masksum, io.gen_fname(bf, '_mask.nii.gz', desc='adaptive'),
                      ref_img)
 
     LGR.info('Computing T2* map')
@@ -336,15 +337,15 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                       interpolation_method='lower')
     LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
     t2s[t2s > cap_t2s * 10] = cap_t2s
-    io.filewrite(t2s, io.gen_fname(bf, '_T2Starmap.nii.gz', desc='limited'), ref_img)
-    io.filewrite(s0, io.gen_fname(bf, '_S0map.nii.gz', desc='limited'), ref_img)
+    io.filewrite(t2s, io.gen_fname(bf, '_T2Starmap.nii.gz'), ref_img)
+    io.filewrite(s0, io.gen_fname(bf, '_S0map.nii.gz'), ref_img)
     if verbose:
         io.filewrite(t2ss, io.gen_fname(bf, '_T2Starmap.nii.gz',
                                         desc='ascendingEstimates'),
                      ref_img)
         io.filewrite(s0s, io.gen_fname(bf, '_S0map.nii.gz', desc='ascendingEstimates'), ref_img)
-        io.filewrite(t2sG, io.gen_fname(bf, '_T2Starmap.nii.gz', desc='full'), ref_img)
-        io.filewrite(s0G, io.gen_fname(bf, '_S0map.nii.gz', desc='full'), ref_img)
+        io.filewrite(t2sG, io.gen_fname(bf, '_T2Starmap.nii.gz', desc='liberal'), ref_img)
+        io.filewrite(s0G, io.gen_fname(bf, '_S0map.nii.gz', desc='liberal'), ref_img)
 
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
@@ -364,13 +365,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         mmix_orig = decomposition.tedica(n_components, dd, fixed_seed,
                                          maxit, maxrestart)
 
-        if verbose:
-            np.savetxt(io.gen_fname(bf, '_mixing.tsv', desc='initialTEDICA'),
-                       mmix_orig, delimiter='\t')
-            if ste == -1:
-                io.filewrite(utils.unmask(dd, mask),
-                             io.gen_fname(bf, '_bold.nii.gz', desc='optcomReduced'),
-                             ref_img)
+        if verbose and ste == -1:
+            io.filewrite(utils.unmask(dd, mask),
+                         io.gen_fname(bf, '_bold.nii.gz', desc='optcomReduced'),
+                         ref_img)
 
         LGR.info('Making second component selection guess from ICA results')
         # Estimate betas and compute selection metrics for mixing matrix
@@ -380,14 +378,11 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
                     ref_img, bf, reindex=True, label='TEDICA',
                     verbose=verbose)
-        np.savetxt(io.gen_fname(bf, '_mixing.tsv', desc='TEDICA'), mmix,
-                   delimiter='\t')
-
-        comptable = selection.selcomps(seldict, comptable, mmix, manacc,
-                                       n_echos)
+        comptable = selection.selcomps(seldict, comptable, mmix, manacc, n_echos)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
-        mmix_orig = np.loadtxt(io.gen_fname(bf, '_mixing.tsv', desc='TEDICA'))
+        mmix_df = pd.read_csv(io.gen_fname(bf, '_mixing.tsv', desc='TEDICA'), sep='\t')
+        mmix_orig = mmix_df.values
         seldict, comptable, betas, mmix = model.fitmodels_direct(
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
                     ref_img, bf, reindex=False, label='TEDICA',
@@ -399,6 +394,26 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
             comptable = io.load_comptable(ctab)
 
     io.save_comptable(comptable, io.gen_fname(bf, '_comptable.json', desc='TEDICA'))
+
+    # Save decomposition
+    comp_names = ['ica_{0:03d}'.format(i_comp) for i_comp in range(mmix.shape[1])]
+    mmix_df = pd.DataFrame(data=mmix, columns=comp_names)
+    mmix_df.to_csv(io.gen_fname(bf, '_mixing.tsv', desc='TEDICA'), sep='\t',
+                   index=False)
+    base_str = 'ICA fit to dimensionally reduced {0}. Classified as {1}.'
+    data_type = 'optimally combined data' if ste == -1 else 'z-concatenated data'
+    mmix_dict = {}
+    for i_comp, comp_name in enumerate(comp_names):
+        mmix_dict[comp_name] = base_str.format(
+            data_type, comptable.loc[i_comp, 'classification'])
+    mmix_dict['Method'] = ('Independent components analysis with FastICA '
+                           'algorithm implemented by sklearn. Components '
+                           'are sorted by Kappa in descending order. '
+                           'Component signs are flipped to best match the '
+                           'data.')
+    mmix_json_file = io.gen_fname(bf, '_decomposition.json', desc='TEDICA')
+    with open(mmix_json_file, 'w') as fo:
+        json.dump(mmix_dict, fo, indent=4, sort_keys=True)
 
     if 'component' not in comptable.columns:
         comptable['component'] = comptable.index
@@ -423,8 +438,29 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         pred_rej_ts = np.dot(acc_ts, betas)
         resid = rej_ts - pred_rej_ts
         mmix[:, rej_idx] = resid
-        np.savetxt(io.gen_fname(bf, '_mixing.tsv', desc='orthTEDICA'), mmix,
-                   delimiter='\t')
+
+        # Save updated decomposition
+        comp_names = ['ica_{0:03d}'.format(i_comp) for i_comp in range(mmix.shape[1])]
+        mmix_df = pd.DataFrame(data=mmix, columns=comp_names)
+        mmix_df.to_csv(io.gen_fname(bf, '_mixing.tsv', desc='orthTEDICA'), sep='\t',
+                       index=False)
+        base_str = 'ICA fit to dimensionally reduced {0}. Classified as {1}.'
+        data_type = 'optimally combined data' if ste == -1 else 'z-concatenated data'
+        mmix_dict = {}
+        for i_comp, comp_name in enumerate(comp_names):
+            clf = comptable.loc[i_comp, 'classification']
+            if clf == 'rejected':
+                clf += ' and orthogonalized with respect to accepted components.'
+            mmix_dict[comp_name] = base_str.format(data_type, clf)
+        mmix_dict['Method'] = ('Independent components analysis with FastICA '
+                               'algorithm implemented by sklearn. Components '
+                               'are sorted by Kappa in descending order. '
+                               'Component signs are flipped to best match the '
+                               'data and rejected components are orthogonalized '
+                               'with respect to accepted components.')
+        mmix_json_file = io.gen_fname(bf, '_decomposition.json', desc='orthTEDICA')
+        with open(mmix_json_file, 'w') as fo:
+            json.dump(mmix_dict, fo, indent=4, sort_keys=True)
 
     io.writeresults(data_oc, mask=mask, comptable=comptable, mmix=mmix,
                     n_vols=n_vols,
