@@ -167,11 +167,11 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     dependence and less noise.
     """
     d_table_rank = np.vstack([
-        n_comps - stats.rankdata(comptable['kappa'], method='ordinal'),
-        n_comps - stats.rankdata(comptable['dice_FR2'], method='ordinal'),
-        n_comps - stats.rankdata(comptable['signal-noise_t'], method='ordinal'),
-        stats.rankdata(comptable['countnoise'], method='ordinal'),
-        n_comps - stats.rankdata(comptable['countsigFR2'], method='ordinal')]).T
+        n_comps - stats.rankdata(comptable['kappa']),
+        n_comps - stats.rankdata(comptable['dice_FR2']),
+        n_comps - stats.rankdata(comptable['signal-noise_t']),
+        stats.rankdata(comptable['countnoise']),
+        n_comps - stats.rankdata(comptable['countsigFR2'])]).T
     comptable['d_table_score'] = d_table_rank.mean(axis=1)
 
     """
@@ -319,11 +319,11 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
         comptable['d_table_score_scrub'] = np.nan
         # Recompute the midk steps on the limited set to clean up the tail
         d_table_rank = np.vstack([
-            len(unclf) - stats.rankdata(comptable.loc[unclf, 'kappa'], method='ordinal'),
-            len(unclf) - stats.rankdata(comptable.loc[unclf, 'dice_FR2'], method='ordinal'),
-            len(unclf) - stats.rankdata(comptable.loc[unclf, 'signal-noise_t'], method='ordinal'),
-            stats.rankdata(comptable.loc[unclf, 'countnoise'], method='ordinal'),
-            len(unclf) - stats.rankdata(comptable.loc[unclf, 'countsigFR2'], method='ordinal')]).T
+            len(unclf) - stats.rankdata(comptable.loc[unclf, 'kappa']),
+            len(unclf) - stats.rankdata(comptable.loc[unclf, 'dice_FR2']),
+            len(unclf) - stats.rankdata(comptable.loc[unclf, 'signal-noise_t']),
+            stats.rankdata(comptable.loc[unclf, 'countnoise']),
+            len(unclf) - stats.rankdata(comptable.loc[unclf, 'countsigFR2'])]).T
         comptable.loc[unclf, 'd_table_score_scrub'] = d_table_rank.mean(1)
         num_acc_guess = int(np.mean([
             np.sum((comptable.loc[unclf, 'kappa'] > kappa_elbow) &
@@ -372,6 +372,8 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
         ign_add1 = np.setdiff1d(ign_add1, midk)
         comptable.loc[ign_add1, 'classification'] = 'ignored'
         comptable.loc[ign_add1, 'rationale'] += 'I012;'
+
+    # at this point, unclf is equivalent to accepted
 
     # Move decision columns to end
     comptable = comptable[[c for c in comptable if c not in cols_at_end] +
