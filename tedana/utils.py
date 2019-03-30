@@ -286,12 +286,6 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None,
         mask = mask.astype(bool)
         arr *= mask.reshape(arr.shape)
 
-    # 6 connectivity
-    conn_mat = np.zeros((3, 3, 3), int)
-    conn_mat[1, 1, :] = 1
-    conn_mat[1, :, 1] = 1
-    conn_mat[:, 1, 1] = 1
-
     clust_thresholded = np.zeros(arr.shape, int)
 
     if sided == 'two':
@@ -305,7 +299,9 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None,
     else:
         thresh_arr = test_arr > 0
 
-    labeled, _ = label(thresh_arr, conn_mat)
+    # 6 connectivity
+    struc = ndimage.generate_binary_structure(3, 1)
+    labeled, _ = label(thresh_arr, struc)
     unique, counts = np.unique(labeled, return_counts=True)
     clust_sizes = dict(zip(unique, counts))
     clust_sizes = {k: v for k, v in clust_sizes.items() if v >= min_cluster_size}
@@ -323,7 +319,7 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None,
         else:
             thresh_arr = test_arr < 0
 
-        labeled, _ = label(thresh_arr, conn_mat)
+        labeled, _ = label(thresh_arr, struc)
         unique, counts = np.unique(labeled, return_counts=True)
         clust_sizes = dict(zip(unique, counts))
         clust_sizes = {k: v for k, v in clust_sizes.items() if v >= min_cluster_size}
