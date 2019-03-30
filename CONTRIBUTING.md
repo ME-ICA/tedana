@@ -173,6 +173,9 @@ The resulting text looks slightly different from the markdown formatting you'll
 Here's [one guide we've found particularly helpful][link_rst_guide] for starting with `rst`.
 And, if you have any questions, please don't hesitate to ask!
 
+### Creating Binder Link
+A Binder is a Git repository that has been outfitted with the appropriate build files so that its content can be connected with a BinderHub instance.
+[To create binder link:(https://mybinder.readthedocs.io/en/latest/)]
 
 ## Recognizing contributors
 

@@ -22,9 +22,8 @@ __packagename__ = 'tedana'
 __description__ = ('TE-Dependent Analysis (tedana) of multi-echo functional '
                    'magnetic resonance imaging (fMRI) data.')
 __longdesc__ = ('To do.')
-
 DOWNLOAD_URL = (
-    'https://github.com/ME-ICA/{name}/archive/{ver}.tar.gz'.format(
+    'https://github.com/ME-ICA/{name}/example/{ver}.tar.gz'.format(
         name=__packagename__, ver=__version__))
 
 REQUIRES = [
@@ -35,7 +34,9 @@ REQUIRES = [
     'scipy',
     'versioneer',
     'pandas',
-    'matplotlib'
+    'matplotlib',
+    'seaborn',
+    'nilearn'
 ]
 
 TESTS_REQUIRES = [
