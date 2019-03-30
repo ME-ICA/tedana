@@ -136,17 +136,15 @@ When opening a pull request, please use at least one of the following prefixes:
 * **[REF]** for refactoring existing code
 * **[STY]** for stylistic changes
 * **[TST]** for new or updated tests, and
-* **[WIP]** for changes which are not yet ready to be merged
+* **[DPR]** for creating draft pull requests
 
 Pull requests should be submitted early and often!
-If your pull request is not yet ready to be merged, please also include the **[WIP]** prefix.
-This tells the development team that your pull request is a "work-in-progress",
-and that you plan to continue working on it.
+In order to use draft PR's include the **[DPR]** prefix.
+For more information on draft pull requests visit (https://github.blog/2019-02-14-introducing-draft-pull-requests/)
 
 You can also combine the tags above, for example if you are updating both a test and
 the documentation: **[TST, DOC]**.
-If you're still working on the pull request that prefix would be **[WIP, TST, DOC]**.
-
+If you're still working on the pull request that prefix would be **[TST, DOC]**.
 ## Style Guide
 
 Docstrings should follow [numpydoc][link_numpydoc] convention.
