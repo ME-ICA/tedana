@@ -75,7 +75,27 @@ def gen_fname(basefile, extension='_bold.nii.gz', **kwargs):
     return out_file
 
 
-def save_comptable(df, filename):
+def add_decomp_prefix(name, prefix, max_value):
+    # Create component name with leading zeros matching number of components
+    n_digits = int(np.log10(max_value)) + 1
+    comp_name = '{0:08d}'.format(int(name))
+    comp_name = '{0}_{1}'.format(prefix, comp_name[8-n_digits:])
+    return comp_name
+
+
+def _rem_column_prefix(name):
+    return int(name.split('_')[-1])
+
+
+def _find_comp_rows(name):
+    is_valid = False
+    temp = name.split('_')
+    if len(temp) == 2 and temp[-1].isdigit():
+        is_valid = True
+    return is_valid
+
+
+def save_comptable(df, filename, label='ica', metadata=None):
     """
     Save pandas DataFrame as a json file.
 
@@ -85,11 +105,28 @@ def save_comptable(df, filename):
         DataFrame to save to file.
     filename : :obj:`str`
         File to which to output DataFrame.
+    label : :obj:`str`, optional
+        Prefix to add to component names in json file. Generally either "ica"
+        or "pca".
+    metadata : :obj:`dict` or None, optional
+        Additional top-level metadata (e.g., decomposition description) to add
+        to json file. Default is None.
     """
-    if 'component' in df.columns:
-        data = df.set_index('component').to_dict(orient='index')
-    else:
-        data = df.to_dict(orient='index')
+    save_df = df.copy()
+
+    if 'component' not in save_df.columns:
+        save_df['component'] = save_df.index
+
+    # Rename components
+    max_value = save_df['component'].max()
+    save_df['component'] = save_df['component'].apply(
+        add_decomp_prefix, prefix=label, max_value=max_value)
+    save_df = save_df.set_index('component')
+
+    data = save_df.to_dict(orient='index')
+
+    if metadata is not None:
+        data = {**data, **metadata}
 
     with open(filename, 'w') as fo:
         json.dump(data, fo, sort_keys=True, indent=4)
@@ -110,6 +147,10 @@ def load_comptable(filename):
         DataFrame with contents from filename.
     """
     df = pd.read_json(filename, orient='index')
+    df['component'] = df.index
+    df = df.loc[df['component'].apply(_find_comp_rows)]
+    df['component'] = df['component'].apply(_rem_column_prefix)
+    df = df.set_index('component')
     df.index.name = 'component'
     return df
 

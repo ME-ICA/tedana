@@ -308,7 +308,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         raise IOError('Argument "mixm" must be an existing file.')
 
     if ctab is not None and op.isfile(ctab):
-        out_ctab_file = io.gen_fname(bf, '_comptable.json', desc='TEDICA')
+        out_ctab_file = io.gen_fname(bf, '_decomposition.json', desc='TEDICA')
         shutil.copyfile(ctab, out_ctab_file)
         shutil.copyfile(ctab, op.basename(ctab))
     elif ctab is not None:
@@ -393,27 +393,26 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         else:
             comptable = io.load_comptable(ctab)
 
-    io.save_comptable(comptable, io.gen_fname(bf, '_comptable.json', desc='TEDICA'))
-
     # Save decomposition
-    comp_names = ['ica_{0:03d}'.format(i_comp) for i_comp in range(mmix.shape[1])]
+    comp_names = [io.add_decomp_prefix(comp, prefix='ica', max_value=comptable.index.max())
+                  for comp in comptable.index.values]
+
     mmix_df = pd.DataFrame(data=mmix, columns=comp_names)
     mmix_df.to_csv(io.gen_fname(bf, '_mixing.tsv', desc='TEDICA'), sep='\t',
                    index=False)
-    base_str = 'ICA fit to dimensionally reduced {0}. Classified as {1}.'
+
     data_type = 'optimally combined data' if ste == -1 else 'z-concatenated data'
+    comptable['Description'] = 'ICA fit to dimensionally reduced {0}.'.format(data_type)
     mmix_dict = {}
-    for i_comp, comp_name in enumerate(comp_names):
-        mmix_dict[comp_name] = base_str.format(
-            data_type, comptable.loc[i_comp, 'classification'])
     mmix_dict['Method'] = ('Independent components analysis with FastICA '
                            'algorithm implemented by sklearn. Components '
                            'are sorted by Kappa in descending order. '
                            'Component signs are flipped to best match the '
                            'data.')
-    mmix_json_file = io.gen_fname(bf, '_decomposition.json', desc='TEDICA')
-    with open(mmix_json_file, 'w') as fo:
-        json.dump(mmix_dict, fo, indent=4, sort_keys=True)
+    io.save_comptable(
+        comptable,
+        io.gen_fname(bf, '_decomposition.json', desc='TEDICA'),
+        label='ica', metadata=mmix_dict)
 
     if 'component' not in comptable.columns:
         comptable['component'] = comptable.index
@@ -440,27 +439,26 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         mmix[:, rej_idx] = resid
 
         # Save updated decomposition
-        comp_names = ['ica_{0:03d}'.format(i_comp) for i_comp in range(mmix.shape[1])]
+        comp_names = [io.add_decomp_prefix(comp, prefix='ica', max_value=comptable.index.max())
+                      for comp in comptable.index.values]
+
         mmix_df = pd.DataFrame(data=mmix, columns=comp_names)
         mmix_df.to_csv(io.gen_fname(bf, '_mixing.tsv', desc='orthTEDICA'), sep='\t',
                        index=False)
-        base_str = 'ICA fit to dimensionally reduced {0}. Classified as {1}.'
+
         data_type = 'optimally combined data' if ste == -1 else 'z-concatenated data'
+        comptable['Description'] = 'ICA fit to dimensionally reduced {0}.'.format(data_type)
         mmix_dict = {}
-        for i_comp, comp_name in enumerate(comp_names):
-            clf = comptable.loc[i_comp, 'classification']
-            if clf == 'rejected':
-                clf += ' and orthogonalized with respect to accepted components.'
-            mmix_dict[comp_name] = base_str.format(data_type, clf)
         mmix_dict['Method'] = ('Independent components analysis with FastICA '
                                'algorithm implemented by sklearn. Components '
                                'are sorted by Kappa in descending order. '
                                'Component signs are flipped to best match the '
                                'data and rejected components are orthogonalized '
                                'with respect to accepted components.')
-        mmix_json_file = io.gen_fname(bf, '_decomposition.json', desc='orthTEDICA')
-        with open(mmix_json_file, 'w') as fo:
-            json.dump(mmix_dict, fo, indent=4, sort_keys=True)
+        io.save_comptable(
+            comptable,
+            io.gen_fname(bf, '_decomposition.json', desc='orthTEDICA'),
+            label='ica', metadata=mmix_dict)
 
     io.writeresults(data_oc, mask=mask, comptable=comptable, mmix=mmix,
                     n_vols=n_vols,

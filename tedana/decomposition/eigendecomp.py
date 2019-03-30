@@ -363,27 +363,27 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
                  'detection'.format(comptable.shape[0]))
 
     comptable['rationale'] = comptable['rationale'].str.rstrip(';')
-    io.save_comptable(comptable, io.gen_fname(bf, '_comptable.json', desc='TEDPCA'))
 
     # Save decomposition
-    comp_names = ['pca_{0:03d}'.format(i_comp) for i_comp in range(comp_ts.shape[0])]
+    comp_names = [io.add_decomp_prefix(comp, prefix='pca', max_value=comptable.index.max())
+                  for comp in comptable.index.values]
+
     mmix_df = pd.DataFrame(data=comp_ts.T, columns=comp_names)
     mmix_df.to_csv(io.gen_fname(bf, '_mixing.tsv', desc='TEDPCA'),
                    sep='\t', index=False)
-    base_str = 'PCA fit to dimensionally reduced {0}. Classified as {1}.'
+
     data_type = 'optimally combined data' if ste == -1 else 'z-concatenated data'
+    comptable['Description'] = 'PCA fit to {0}.'.format(data_type)
     mmix_dict = {}
-    for i_comp, comp_name in enumerate(comp_names):
-        mmix_dict[comp_name] = base_str.format(
-            data_type, comptable.loc[i_comp, 'classification'])
     mmix_dict['Method'] = ('Principal components analysis implemented by '
                            'sklearn. Components are sorted by variance '
                            'explained in descending order. '
                            'Component signs are flipped to best match the '
                            'data.')
-    mmix_json_file = io.gen_fname(bf, '_decomposition.json', desc='TEDPCA')
-    with open(mmix_json_file, 'w') as fo:
-        json.dump(mmix_dict, fo, indent=4, sort_keys=True)
+    io.save_comptable(
+        comptable,
+        io.gen_fname(bf, '_decomposition.json', desc='TEDPCA'),
+        label='pca', metadata=mmix_dict)
 
     # write component maps to 4D image
     comp_maps = np.zeros((OCcatd.shape[0], comp_ts.shape[0]))

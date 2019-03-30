@@ -6,12 +6,10 @@ p06.SBJ01_S09_Task11_desc-TEDICAAcceptedZ_components.nii.gz
 p06.SBJ01_S09_Task11_desc-TEDICAAccepted_components.nii.gz
 p06.SBJ01_S09_Task11_desc-TEDICAT1cDenoised_mixing.tsv
 p06.SBJ01_S09_Task11_desc-TEDICA_components.nii.gz
-p06.SBJ01_S09_Task11_desc-TEDICA_comptable.json
 p06.SBJ01_S09_Task11_desc-TEDICA_decomposition.json
 p06.SBJ01_S09_Task11_desc-TEDICA_mixing.tsv
 p06.SBJ01_S09_Task11_desc-TEDPCAState_variables.pkl
 p06.SBJ01_S09_Task11_desc-TEDPCA_components.nii.gz
-p06.SBJ01_S09_Task11_desc-TEDPCA_comptable.json
 p06.SBJ01_S09_Task11_desc-TEDPCA_decomposition.json
 p06.SBJ01_S09_Task11_desc-TEDPCA_mixing.tsv
 p06.SBJ01_S09_Task11_desc-adaptive_mask.nii.gz
