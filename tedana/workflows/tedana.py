@@ -10,7 +10,6 @@ os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 
 import os.path as op
-import json
 import shutil
 import logging
 from datetime import datetime

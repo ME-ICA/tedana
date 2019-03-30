@@ -79,7 +79,7 @@ def add_decomp_prefix(name, prefix, max_value):
     # Create component name with leading zeros matching number of components
     n_digits = int(np.log10(max_value)) + 1
     comp_name = '{0:08d}'.format(int(name))
-    comp_name = '{0}_{1}'.format(prefix, comp_name[8-n_digits:])
+    comp_name = '{0}_{1}'.format(prefix, comp_name[8 - n_digits:])
     return comp_name
 
 

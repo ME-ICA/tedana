@@ -1,7 +1,6 @@
 """
 Signal decomposition methods for tedana
 """
-import json
 import pickle
 import logging
 import warnings
