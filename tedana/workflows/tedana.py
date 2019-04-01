@@ -384,7 +384,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         comptable, seldict, betas, mmix = model.fitmodels_direct(
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
                     ref_img, reindex=True, label='meica_', out_dir=out_dir,
-                    verbose=verbose)
+                    method='kundu_v2.5', verbose=verbose)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
         comptable = selection.selcomps(comptable, seldict, mmix, n_echos)
@@ -397,7 +397,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
         comptable, seldict, betas, mmix = model.fitmodels_direct(
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
-                    ref_img, label='meica_', out_dir=out_dir, verbose=verbose)
+                    ref_img, label='meica_', out_dir=out_dir,
+                    method='kundu_v2.5', verbose=verbose)
         if len(manacc):
             comptable = selection.manual_selection(comptable, manacc)
         else:

@@ -322,7 +322,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         comptable, _, _, _ = model.fitmodels_direct(
                     catd, comp_ts.T, eimum, t2s, t2sG, tes, combmode, ref_img,
                     mmixN=vTmixN, full_sel=False, label='mepca_',
-                    verbose=verbose)
+                    method=None, verbose=verbose)
         # varex_norm overrides normalized varex computed by fitmodels_direct
         comptable['normalized variance explained'] = varex_norm
 

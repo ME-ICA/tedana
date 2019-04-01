@@ -20,7 +20,7 @@ Z_MAX = 8
 
 
 def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
-                     reindex=False, mmixN=None, full_sel=True, label=None,
+                     reindex=False, mmixN=None, method=None, label=None,
                      out_dir='.', verbose=False):
     """
     Fit TE-dependence and -independence models to components.
@@ -49,20 +49,21 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     ref_img : str or img_like
         Reference image to dictate how outputs are saved to disk
     reindex : bool, optional
-        Default: False
-    mmixN : array_like, optional
-        Default: None
-    full_sel : bool, optional
-        Whether to perform selection of components based on Rho/Kappa scores.
-        Default: True
+        Whether to sort components in descending order by Kappa. Default: False
+    mmixN : (T x C) array_like, optional
+        Z-scored mixing matrix. Default: None
+    method : {'kundu_v2.5', 'kundu_v3.2', None}, optional
+        Decision tree to be applied to metrics. Determines which maps will be
+        generated and stored in seldict. Default: None
 
     Returns
     -------
-    seldict : dict
-    comptab : (N x 5) :obj:`pandas.DataFrame`
-        Array with columns denoting (1) index of component, (2) Kappa score of
-        component, (3) Rho score of component, (4) variance explained by
-        component, and (5) normalized variance explained by component
+    comptab : (C x M) :obj:`pandas.DataFrame`
+        Component metrics to be used for component selection.
+    seldict : :obj:`dict` or None
+        Dictionary containing component-specific metric maps to be used for
+        component selection. If `method` is None, then seldict will be None as
+        well.
     betas : :obj:`numpy.ndarray`
     mmix_new : :obj:`numpy.ndarray`
     """
@@ -146,11 +147,6 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     Z_maps = np.zeros([n_voxels, n_components])
     F_R2_maps = np.zeros([n_data_voxels, n_components])
     F_S0_maps = np.zeros([n_data_voxels, n_components])
-    Z_clmaps = np.zeros([n_voxels, n_components])
-    F_R2_clmaps = np.zeros([n_data_voxels, n_components])
-    F_S0_clmaps = np.zeros([n_data_voxels, n_components])
-    Br_R2_clmaps = np.zeros([n_voxels, n_components])
-    Br_S0_clmaps = np.zeros([n_voxels, n_components])
     pred_R2_maps = np.zeros([n_data_voxels, n_echos, n_components])
     pred_S0_maps = np.zeros([n_data_voxels, n_echos, n_components])
 
@@ -199,7 +195,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     # tabulate component values
     comptab = np.vstack([kappas, rhos, varex, varex_norm]).T
     if reindex:
-        # re-index all components in Kappa order
+        # re-index all components in descending Kappa order
         sort_idx = comptab[:, 0].argsort()[::-1]
         comptab = comptab[sort_idx, :]
         mmix_new = mmix[:, sort_idx]
@@ -237,9 +233,14 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
                                     'normalized variance explained'])
     comptab.index.name = 'component'
 
-    # full selection including clustering criteria
-    seldict = None
-    if full_sel:
+    # Generate clustering criteria for component selection
+    if method in ['kundu_v2.5', 'kundu_v3.2']:
+        Z_clmaps = np.zeros([n_voxels, n_components])
+        F_R2_clmaps = np.zeros([n_data_voxels, n_components])
+        F_S0_clmaps = np.zeros([n_data_voxels, n_components])
+        Br_R2_clmaps = np.zeros([n_voxels, n_components])
+        Br_S0_clmaps = np.zeros([n_voxels, n_components])
+
         LGR.info('Performing spatial clustering of components')
         csize = np.max([int(n_voxels * 0.0005) + 5, 20])
         LGR.debug('Using minimum cluster size: {}'.format(csize))
@@ -279,14 +280,22 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
                 spclust_input, min_cluster_size=csize,
                 threshold=(max(tsoc_Babs.shape) - countsigFS0), mask=mask)
 
-        # WTS, tsoc_B, PSC, and F_S0_maps are not used by Kundu v2.5
+        if method == 'kundu_v2.5':
+            # WTS, tsoc_B, PSC, and F_S0_maps are not used by Kundu v2.5
+            selvars = ['Z_maps', 'F_R2_maps',
+                       'Z_clmaps', 'F_R2_clmaps', 'F_S0_clmaps',
+                       'Br_R2_clmaps', 'Br_S0_clmaps']
+        elif method == 'kundu_v3.2':
+            selvars = ['WTS', 'tsoc_B', 'PSC',
+                       'Z_maps', 'F_R2_maps', 'F_S0_maps',
+                       'Z_clmaps', 'F_R2_clmaps', 'F_S0_clmaps',
+                       'Br_R2_clmaps', 'Br_S0_clmaps']
+
         seldict = {}
-        selvars = ['WTS', 'tsoc_B', 'PSC',
-                   'Z_maps', 'F_R2_maps', 'F_S0_maps',
-                   'Z_clmaps', 'F_R2_clmaps', 'F_S0_clmaps',
-                   'Br_R2_clmaps', 'Br_S0_clmaps']
         for vv in selvars:
             seldict[vv] = eval(vv)
+    else:
+        seldict = None
 
     return comptab, seldict, betas, mmix_new
 
