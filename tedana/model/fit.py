@@ -279,6 +279,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
                 spclust_input, min_cluster_size=csize,
                 threshold=(max(tsoc_Babs.shape) - countsigFS0), mask=mask)
 
+        # WTS, tsoc_B, PSC, and F_S0_maps are not used by Kundu v2.5
         seldict = {}
         selvars = ['WTS', 'tsoc_B', 'PSC',
                    'Z_maps', 'F_R2_maps', 'F_S0_maps',
@@ -287,7 +288,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         for vv in selvars:
             seldict[vv] = eval(vv)
 
-    return seldict, comptab, betas, mmix_new
+    return comptab, seldict, betas, mmix_new
 
 
 def computefeats2(data, mmix, mask, normalize=True):

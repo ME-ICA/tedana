@@ -208,9 +208,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     ctab : :obj:`str`, optional
         File containing component table from which to extract pre-computed
         classifications.
-    manacc : :obj:`str`, optional
-        Comma separated list of manually accepted components in string form.
-        Default is None.
+    manacc : :obj:`list`, :obj:`str`, or None, optional
+        List of manually accepted components. Can be a list of the components,
+        a comma-separated string with component numbers, or None. Default is
+        None.
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
         denoising. Default is False.
@@ -308,6 +309,19 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
 
+    if isinstance(manacc, str):
+        manacc = [int(comp) for comp in manacc.split(',')]
+
+    if ctab and not mixm:
+        LGR.warning('Argument "ctab" requires argument "mixm".')
+        ctab = None
+    elif ctab and not len(manacc):
+        LGR.warning('Argument "ctab" requires argument "manacc".')
+        ctab = None
+    elif len(manacc) and not mixm:
+        LGR.warning('Argument "manacc" requires argument "mixm".')
+        manacc = None
+
     if mask is None:
         LGR.info('Computing EPI mask from first echo')
         first_echo_img = io.new_nii_like(ref_img, catd[:, 0, :])
@@ -364,30 +378,30 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                 io.filewrite(utils.unmask(dd, mask),
                              op.join(out_dir, 'ts_OC_whitened.nii'), ref_img)
 
-        LGR.info('Making second component selection guess from ICA results')
         # Estimate betas and compute selection metrics for mixing matrix
         # generated from dimensionally reduced data using full data (i.e., data
         # with thermal noise)
-        seldict, comptable, betas, mmix = model.fitmodels_direct(
+        comptable, seldict, betas, mmix = model.fitmodels_direct(
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
                     ref_img, reindex=True, label='meica_', out_dir=out_dir,
                     verbose=verbose)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        comptable = selection.selcomps(seldict, comptable, mmix, manacc,
-                                       n_echos)
+        comptable = selection.selcomps(comptable, seldict, mmix, n_echos)
+    elif ctab is not None and len(manacc):
+        mmix = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
+        comptable = pd.read_csv(ctab, sep='\t', index_col='component')
+        comptable = selection.manual_selection(comptable, manacc)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
-        seldict, comptable, betas, mmix = model.fitmodels_direct(
+        comptable, seldict, betas, mmix = model.fitmodels_direct(
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
-                    ref_img, label='meica_', out_dir=out_dir,
-                    verbose=verbose)
-        if ctab is None:
-            comptable = selection.selcomps(seldict, comptable, mmix, manacc,
-                                           n_echos)
+                    ref_img, label='meica_', out_dir=out_dir, verbose=verbose)
+        if len(manacc):
+            comptable = selection.manual_selection(comptable, manacc)
         else:
-            comptable = pd.read_csv(ctab, sep='\t', index_col='component')
+            comptable = selection.selcomps(comptable, seldict, mmix, n_echos)
 
     comptable.to_csv(op.join(out_dir, 'comp_table_ica.txt'), sep='\t',
                      index=True, index_label='component', float_format='%.6f')
@@ -402,6 +416,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     'results!')
 
     if tedort:
+        LGR.info('Orthogonalizing rejected components with respect to '
+                 'accepted components.')
         acc_idx = comptable.loc[
             ~comptable['classification'].str.contains('rejected'),
             'component']

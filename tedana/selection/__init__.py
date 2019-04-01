@@ -2,7 +2,7 @@
 # ex: set sts=4 ts=4 sw=4 et:
 
 from .select_comps import (
-    selcomps,
+    selcomps, manual_selection,
 )
 
-__all__ = ['selcomps']
+__all__ = ['selcomps', 'manual_selection']
