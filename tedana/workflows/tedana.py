@@ -364,11 +364,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     if mixm is None:
         # Identify and remove thermal noise from data
-        n_components, dd = decomposition.tedpca(catd, data_oc, combmode, mask,
-                                                t2s, t2sG, ref_img,
-                                                tes=tes, method=tedpca, ste=ste,
-                                                kdaw=10., rdaw=1.,
-                                                verbose=verbose)
+        n_components, dd = decomposition.tedpca(
+                catd, data_oc, combmode, mask, t2s, t2sG, ref_img,
+                tes=tes, method=tedpca, ste=ste, kdaw=10., rdaw=1.,
+                out_dir=out_dir, verbose=verbose)
         mmix_orig = decomposition.tedica(n_components, dd, fixed_seed,
                                          maxit, maxrestart)
 
