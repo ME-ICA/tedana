@@ -320,7 +320,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         vTmixN = stats.zscore(comp_ts, axis=1).T
         LGR.info('Making initial component selection guess from PCA results')
         comptable, _, _, _ = model.fitmodels_direct(
-                    catd, comp_ts.T, eimum, t2s, t2sG, tes, combmode, ref_img,
+                    catd, OCcatd, comp_ts.T, eimum, t2s, tes, ref_img,
                     mmixN=vTmixN, full_sel=False, label='mepca_',
                     method=None, out_dir=out_dir, verbose=verbose)
         # varex_norm overrides normalized varex computed by fitmodels_direct

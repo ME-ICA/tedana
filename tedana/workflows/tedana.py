@@ -381,12 +381,12 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # generated from dimensionally reduced data using full data (i.e., data
         # with thermal noise)
         comptable, seldict, betas, mmix = model.fitmodels_direct(
-                    catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
+                    catd, data_oc, mmix_orig, mask, t2s, tes,
                     ref_img, reindex=True, label='meica_', out_dir=out_dir,
                     method='kundu_v2.5', verbose=verbose)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        comptable = selection.selcomps(comptable, seldict, mmix, n_echos)
+        comptable = selection.kundu_selection_v2_5(comptable, seldict, mmix, n_echos)
     elif ctab is not None and len(manacc):
         mmix = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
         comptable = pd.read_csv(ctab, sep='\t', index_col='component')
@@ -395,13 +395,14 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
         comptable, seldict, betas, mmix = model.fitmodels_direct(
-                    catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
+                    catd, data_oc, mmix_orig, mask, t2s, tes,
                     ref_img, label='meica_', out_dir=out_dir,
                     method='kundu_v2.5', verbose=verbose)
         if len(manacc):
             comptable = selection.manual_selection(comptable, manacc)
         else:
-            comptable = selection.selcomps(comptable, seldict, mmix, n_echos)
+            comptable = model.kundu_metrics(comptable, seldict)
+            comptable = selection.kundu_selection_v2_5(comptable, n_echos, n_vols)
 
     comptable.to_csv(op.join(out_dir, 'comp_table_ica.txt'), sep='\t',
                      index=True, index_label='component', float_format='%.6f')
