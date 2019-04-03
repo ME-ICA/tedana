@@ -31,7 +31,8 @@ API
    :toctree: generated/
    :template: function.rst
 
-   tedana.model.fitmodels_direct
+   tedana.model.dependence_metrics
+   tedana.model.kundu_metrics
 
    :template: module.rst
 
@@ -121,7 +122,8 @@ API
    :toctree: generated/
    :template: function.rst
 
-   tedana.selection.selcomps
+   tedana.selection.kundu_selection_v2
+   tedana.selection.manual_selection
 
    :template: module.rst
 

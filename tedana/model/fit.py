@@ -61,19 +61,20 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
     betas : :obj:`numpy.ndarray`
     mmix_new : :obj:`numpy.ndarray`
     """
-    if not (catd.shape[0] == t2s.shape[0] == mask.shape[0]):
+    if not (catd.shape[0] == t2s.shape[0] == mask.shape[0] == tsoc.shape[0]):
         raise ValueError('First dimensions (number of samples) of catd ({0}), '
-                         't2s ({1}), and mask ({2}) do not '
-                         'match'.format(catd.shape[0], t2s.shape[0],
-                                        mask.shape[0]))
+                         'tsoc ({1}), t2s ({2}), and mask ({3}) do not '
+                         'match'.format(catd.shape[0], tsoc.shape[0],
+                                        t2s.shape[0], mask.shape[0]))
     elif catd.shape[1] != len(tes):
         raise ValueError('Second dimension of catd ({0}) does not match '
                          'number of echoes provided (tes; '
                          '{1})'.format(catd.shape[1], len(tes)))
-    elif catd.shape[2] != mmix.shape[0]:
-        raise ValueError('Third dimension (number of volumes) of catd ({0}) '
-                         'does not match first dimension of '
-                         'mmix ({1})'.format(catd.shape[2], mmix.shape[0]))
+    elif not (catd.shape[2] == tsoc.shape[1] == mmix.shape[0]):
+        raise ValueError('Third dimension (number of volumes) of catd ({0}), '
+                         'second dimension of tsoc ({1}), and first dimension '
+                         'of mmix ({2}) do not match.'.format(
+                            catd.shape[2], tsoc.shape[1], mmix.shape[0]))
     elif t2s.ndim == 2:
         if catd.shape[2] != t2s.shape[1]:
             raise ValueError('Third dimension (number of volumes) of catd '
