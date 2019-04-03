@@ -298,7 +298,7 @@ def kundu_metrics(comptable, metric_maps):
 
     Parameters
     ----------
-    comptable : (C x M):obj:`pandas.DataFrame`
+    comptable : (C x M) :obj:`pandas.DataFrame`
         Component metric table, where `C` is components and `M` is metrics
     metric_maps : :obj:`dict`
         A dictionary with component-specific feature maps used for
