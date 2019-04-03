@@ -394,7 +394,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, ref_img, bf):
         fout = gen_fname(bf, '_components.nii.gz', desc='TEDICAAccepted')
         filewrite(ts_B[:, acc], fout, ref_img)
         LGR.info('Writing denoised ICA coefficient feature set: {}'.format(fout))
-        hikts = split_ts(ts, mmix, mask, acc)[0]
+        hikts = split_ts(ts, mmix, mask, comptable)[0]
         writefeats(hikts, mmix[:, acc], mask, ref_img, bf)
 
 
