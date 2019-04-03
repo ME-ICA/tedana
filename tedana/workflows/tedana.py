@@ -453,11 +453,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
             label='ica', metadata=mmix_dict)
 
     io.writeresults(data_oc, mask=mask, comptable=comptable, mmix=mmix,
-<<<<<<< HEAD
                     n_vols=n_vols, ref_img=ref_img, bf=bf)
-=======
-                    n_vols=n_vols, ref_img=ref_img)
->>>>>>> ME-ICA/master
 
     if 't1c' in gscontrol:
         LGR.info('Performing T1c global signal regression to remove spatially '
@@ -465,11 +461,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         gsc.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img, bf)
 
     if verbose:
-<<<<<<< HEAD
         io.writeresults_echoes(catd, mmix, mask, comptable, ref_img, bf=bf)
-=======
-        io.writeresults_echoes(catd, mmix, mask, comptable, ref_img)
->>>>>>> ME-ICA/master
 
     if png:
         LGR.info('Making figures folder with static component maps and '
@@ -478,16 +470,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         if not op.isdir(op.join(out_dir, 'figures')):
             os.mkdir(op.join(out_dir, 'figures'))
 
-<<<<<<< HEAD
         fig_bf = op.join(op.dirname(bf), 'figures', op.basename(bf))
 
         viz.write_comp_figs(data_oc, mask=mask, comptable=comptable,
                             mmix=mmix_orig, ref_img=ref_img, bf=fig_bf,
-=======
-        viz.write_comp_figs(data_oc, mask=mask, comptable=comptable,
-                            mmix=mmix_orig, ref_img=ref_img,
-                            out_dir=op.join(out_dir, 'figures'),
->>>>>>> ME-ICA/master
                             png_cmap=png_cmap)
 
         LGR.info('Making Kappa vs Rho scatter plot')
