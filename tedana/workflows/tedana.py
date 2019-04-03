@@ -401,6 +401,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         LGR.warning('No BOLD components detected! Please check data and '
                     'results!')
 
+    mmix_orig = mmix.copy()
     if tedort:
         acc_idx = comptable.loc[
             ~comptable['classification'].str.contains('rejected'),
@@ -436,8 +437,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         if not op.isdir(op.join(out_dir, 'figures')):
             os.mkdir(op.join(out_dir, 'figures'))
 
-        viz.write_comp_figs(data_oc, mask=mask, comptable=comptable, mmix=mmix,
-                            ref_img=ref_img,
+        viz.write_comp_figs(data_oc, mask=mask, comptable=comptable,
+                            mmix=mmix_orig, ref_img=ref_img,
                             out_dir=op.join(out_dir, 'figures'),
                             png_cmap=png_cmap)
 
