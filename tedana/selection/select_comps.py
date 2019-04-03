@@ -81,8 +81,9 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
 
     Parameters
     ----------
-    comptable : (C x M):obj:`pandas.DataFrame`
-        Component metric table, where `C` is components and `M` is metrics
+    comptable : (C x X) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component, with a column for
+        each metric. The index should be the component number.
     n_echos : :obj:`int`
         Number of echos in original data
     n_vols : :obj:`int`
@@ -92,7 +93,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     -------
     comptable : :obj:`pandas.DataFrame`
         Updated component table with additional metrics and with
-        classification (accepted, rejected, midk, or ignored)
+        classification (accepted, rejected, or ignored)
 
     Notes
     -----

@@ -4,8 +4,9 @@ Utilities for tedana package
 import logging
 
 import numpy as np
-from scipy import stats
 import nibabel as nib
+from scipy import stats
+from scipy import ndimage
 from nilearn._utils import check_niimg
 from sklearn.utils import check_array
 
@@ -251,3 +252,89 @@ def get_spectrum(data: np.array, tr: float = 1.0):
     freqs = np.fft.rfftfreq(power_spectrum.size * 2 - 1, tr)
     idx = np.argsort(freqs)
     return power_spectrum[idx], freqs[idx]
+
+
+def threshold_map(img, min_cluster_size, threshold=None, mask=None,
+                  binarize=True, sided='two'):
+    """
+    Cluster-extent threshold and binarize image.
+
+    Parameters
+    ----------
+    img : img_like or array_like
+        Image object or 3D array to be clustered
+    min_cluster_size : int
+        Minimum cluster size (in voxels)
+    threshold : float or None, optional
+        Cluster-defining threshold for img. If None (default), assume img is
+        already thresholded.
+    mask : (S,) array_like or None, optional
+        Boolean array for masking resultant data array. Default is None.
+    binarize : bool, optional
+        Default is True.
+    sided : {'two', 'one', 'bi'}, optional
+        How to apply thresholding. One-sided thresholds on the positive side.
+        Two-sided thresholds positive and negative values together. Bi-sided
+        thresholds positive and negative values separately. Default is 'two'.
+    """
+    if not isinstance(img, np.ndarray):
+        arr = img.get_data()
+    else:
+        arr = img.copy()
+
+    if mask is not None:
+        mask = mask.astype(bool)
+        arr *= mask.reshape(arr.shape)
+
+    clust_thresholded = np.zeros(arr.shape, int)
+
+    if sided == 'two':
+        test_arr = np.abs(arr)
+    else:
+        test_arr = arr.copy()
+
+    # Positive values (or absolute values) first
+    if threshold is not None:
+        thresh_arr = test_arr >= threshold
+    else:
+        thresh_arr = test_arr > 0
+
+    # 6 connectivity
+    struc = ndimage.generate_binary_structure(3, 1)
+    labeled, _ = ndimage.label(thresh_arr, struc)
+    unique, counts = np.unique(labeled, return_counts=True)
+    clust_sizes = dict(zip(unique, counts))
+    clust_sizes = {k: v for k, v in clust_sizes.items() if v >= min_cluster_size}
+    for i_clust in clust_sizes.keys():
+        if np.all(thresh_arr[labeled == i_clust] == 1):
+            if binarize:
+                clust_thresholded[labeled == i_clust] = 1
+            else:
+                clust_thresholded[labeled == i_clust] = arr[labeled == i_clust]
+
+    # Now negative values *if bi-sided*
+    if sided == 'bi':
+        if threshold is not None:
+            thresh_arr = test_arr <= (-1 * threshold)
+        else:
+            thresh_arr = test_arr < 0
+
+        labeled, _ = ndimage.label(thresh_arr, struc)
+        unique, counts = np.unique(labeled, return_counts=True)
+        clust_sizes = dict(zip(unique, counts))
+        clust_sizes = {k: v for k, v in clust_sizes.items() if v >= min_cluster_size}
+        for i_clust in clust_sizes.keys():
+            if np.all(thresh_arr[labeled == i_clust] == 1):
+                if binarize:
+                    clust_thresholded[labeled == i_clust] = 1
+                else:
+                    clust_thresholded[labeled == i_clust] = arr[labeled == i_clust]
+
+    # reshape to (S,)
+    clust_thresholded = clust_thresholded.ravel()
+
+    # if mask provided, mask output
+    if mask is not None:
+        clust_thresholded = clust_thresholded[mask]
+
+    return clust_thresholded

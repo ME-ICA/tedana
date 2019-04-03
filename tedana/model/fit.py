@@ -7,9 +7,6 @@ import os.path as op
 import numpy as np
 import pandas as pd
 from scipy import stats
-import nilearn.image as niimg
-from nilearn._utils import check_niimg
-from nilearn.regions import connected_regions
 
 from tedana import io, utils
 
@@ -52,8 +49,9 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
 
     Returns
     -------
-    comptab : (C x M) :obj:`pandas.DataFrame`
-        Component metrics to be used for component selection.
+    comptable : (C x X) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component, with a column for
+        each metric. The index is the component number.
     seldict : :obj:`dict` or None
         Dictionary containing component-specific metric maps to be used for
         component selection. If `method` is None, then seldict will be None as
@@ -181,11 +179,11 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
         rhos[i_comp] = np.average(F_S0, weights=norm_weights)
 
     # tabulate component values
-    comptab = np.vstack([kappas, rhos, varex, varex_norm]).T
+    comptable = np.vstack([kappas, rhos, varex, varex_norm]).T
     if reindex:
         # re-index all components in descending Kappa order
-        sort_idx = comptab[:, 0].argsort()[::-1]
-        comptab = comptab[sort_idx, :]
+        sort_idx = comptable[:, 0].argsort()[::-1]
+        comptable = comptable[sort_idx, :]
         mmix_new = mmix[:, sort_idx]
         betas = betas[..., sort_idx]
         pred_R2_maps = pred_R2_maps[:, :, sort_idx]
@@ -215,11 +213,11 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
                      op.join(out_dir, '{0}metric_weights.nii'.format(label)),
                      ref_img)
 
-    comptab = pd.DataFrame(comptab,
-                           columns=['kappa', 'rho',
-                                    'variance explained',
-                                    'normalized variance explained'])
-    comptab.index.name = 'component'
+    comptable = pd.DataFrame(comptable,
+                             columns=['kappa', 'rho',
+                                      'variance explained',
+                                      'normalized variance explained'])
+    comptable.index.name = 'component'
 
     # Generate clustering criteria for component selection
     if method in ['kundu_v2', 'kundu_v3']:
@@ -233,40 +231,43 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
         csize = np.max([int(n_voxels * 0.0005) + 5, 20])
         LGR.debug('Using minimum cluster size: {}'.format(csize))
         for i_comp in range(n_components):
-            # save out files
-            out = np.zeros((n_samp, 4))
-            out[:, 0] = np.squeeze(utils.unmask(PSC[:, i_comp], mask))
-            out[:, 1] = np.squeeze(utils.unmask(F_R2_maps[:, i_comp],
-                                                t2s != 0))
-            out[:, 2] = np.squeeze(utils.unmask(F_S0_maps[:, i_comp],
-                                                t2s != 0))
-            out[:, 3] = np.squeeze(utils.unmask(Z_maps[:, i_comp], mask))
-
-            ccimg = io.new_nii_like(ref_img, out)
-
-            # Do simple clustering on F
-            sel = spatclust(ccimg, min_cluster_size=csize, threshold=fmin,
-                            index=[1, 2], mask=(t2s != 0))
-            F_R2_clmaps[:, i_comp] = sel[:, 0]
-            F_S0_clmaps[:, i_comp] = sel[:, 1]
+            # Cluster-extent threshold and binarize F-maps
+            ccimg = io.new_nii_like(
+                ref_img,
+                np.squeeze(utils.unmask(F_R2_maps[:, i_comp], t2s != 0)))
+            F_R2_clmaps[:, i_comp] = utils.threshold_map(
+                ccimg, min_cluster_size=csize, threshold=fmin, mask=mask,
+                binarize=True)
             countsigFR2 = F_R2_clmaps[:, i_comp].sum()
+
+            ccimg = io.new_nii_like(
+                ref_img,
+                np.squeeze(utils.unmask(F_S0_maps[:, i_comp], t2s != 0)))
+            F_S0_clmaps[:, i_comp] = utils.threshold_map(
+                ccimg, min_cluster_size=csize, threshold=fmin, mask=mask,
+                binarize=True)
             countsigFS0 = F_S0_clmaps[:, i_comp].sum()
 
-            # Do simple clustering on Z at p<0.05
-            sel = spatclust(ccimg, min_cluster_size=csize, threshold=1.95,
-                            index=3, mask=mask)
-            Z_clmaps[:, i_comp] = sel
+            # Cluster-extent threshold and binarize Z-maps with CDT of p < 0.05
+            ccimg = io.new_nii_like(
+                ref_img,
+                np.squeeze(utils.unmask(Z_maps[:, i_comp], t2s != 0)))
+            Z_clmaps[:, i_comp] = utils.threshold_map(
+                ccimg, min_cluster_size=csize, threshold=1.95, mask=mask,
+                binarize=True)
 
-            # Do simple clustering on ranked signal-change map
-            spclust_input = utils.unmask(stats.rankdata(tsoc_Babs[:, i_comp]),
-                                         mask)
-            spclust_input = io.new_nii_like(ref_img, spclust_input)
-            Br_R2_clmaps[:, i_comp] = spatclust(
-                spclust_input, min_cluster_size=csize,
-                threshold=(max(tsoc_Babs.shape) - countsigFR2), mask=mask)
-            Br_S0_clmaps[:, i_comp] = spatclust(
-                spclust_input, min_cluster_size=csize,
-                threshold=(max(tsoc_Babs.shape) - countsigFS0), mask=mask)
+            # Cluster-extent threshold and binarize ranked signal-change map
+            ccimg = io.new_nii_like(
+                ref_img,
+                utils.unmask(stats.rankdata(tsoc_Babs[:, i_comp]), t2s != 0))
+            Br_R2_clmaps[:, i_comp] = utils.threshold_map(
+                ccimg, min_cluster_size=csize,
+                threshold=(max(tsoc_Babs.shape) - countsigFR2), mask=mask,
+                binarize=True)
+            Br_S0_clmaps[:, i_comp] = utils.threshold_map(
+                ccimg, min_cluster_size=csize,
+                threshold=(max(tsoc_Babs.shape) - countsigFS0), mask=mask,
+                binarize=True)
 
         if method == 'kundu_v2':
             # WTS, tsoc_B, PSC, and F_S0_maps are not used by Kundu v2.5
@@ -289,7 +290,7 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
     else:
         seldict = None
 
-    return comptab, seldict, betas, mmix_new
+    return comptable, seldict, betas, mmix_new
 
 
 def kundu_metrics(comptable, metric_maps):
@@ -512,73 +513,3 @@ def get_coeffs(data, X, mask=None, add_const=False):
         betas = utils.unmask(betas, mask)
 
     return betas
-
-
-def spatclust(img, min_cluster_size, threshold=None, index=None, mask=None):
-    """
-    Spatially clusters `img`
-
-    Parameters
-    ----------
-    img : str or img_like
-        Image file or object to be clustered
-    min_cluster_size : int
-        Minimum cluster size (in voxels)
-    threshold : float, optional
-        Whether to threshold `img` before clustering
-    index : array_like, optional
-        Whether to extract volumes from `img` for clustering
-    mask : (S,) array_like, optional
-        Boolean array for masking resultant data array
-
-    Returns
-    -------
-    clustered : :obj:`numpy.ndarray`
-        Binarized array (values are 0 or 1) of clustered (and thresholded)
-        `img` data
-    """
-
-    # we need a 4D image for `niimg.iter_img`, below
-    img = niimg.copy_img(check_niimg(img, atleast_4d=True))
-
-    # temporarily set voxel sizes to 1mm isotropic so that `min_cluster_size`
-    # represents the minimum number of voxels we want to be in a cluster,
-    # rather than the minimum size of the desired clusters in mm^3
-    if not np.all(np.abs(np.diag(img.affine)) == 1):
-        img.set_sform(np.sign(img.affine))
-
-    # grab desired volumes from provided image
-    if index is not None:
-        if not isinstance(index, list):
-            index = [index]
-        img = niimg.index_img(img, index)
-
-    # threshold image
-    if threshold is not None:
-        img = niimg.threshold_img(img, float(threshold))
-
-    clout = []
-    for subbrick in niimg.iter_img(img):
-        # `min_region_size` is not inclusive (as in AFNI's `3dmerge`)
-        # subtract one voxel to ensure we aren't hitting this thresholding issue
-        try:
-            clsts = connected_regions(subbrick,
-                                      min_region_size=int(min_cluster_size) - 1,
-                                      smoothing_fwhm=None,
-                                      extract_type='connected_components')[0]
-        # if no clusters are detected we get a TypeError; create a blank 4D
-        # image object as a placeholder instead
-        except TypeError:
-            clsts = niimg.new_img_like(subbrick,
-                                       np.zeros(subbrick.shape + (1,)))
-        # if multiple clusters detected, collapse into one volume
-        clout += [niimg.math_img('np.sum(a, axis=-1)', a=clsts)]
-
-    # convert back to data array and make boolean
-    clustered = utils.load_image(niimg.concat_imgs(clout).get_data()) != 0
-
-    # if mask provided, mask output
-    if mask is not None:
-        clustered = clustered[mask]
-
-    return clustered
