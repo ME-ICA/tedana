@@ -413,7 +413,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         io.gen_fname(bf, '_decomposition.json', desc='TEDICA'),
         label='ica', metadata=mmix_dict)
 
-
     if comptable[comptable.classification == 'accepted'].shape[0] == 0:
         LGR.warning('No BOLD components detected! Please check data and '
                     'results!')
