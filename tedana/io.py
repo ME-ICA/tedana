@@ -155,7 +155,7 @@ def load_comptable(filename):
     return df
 
 
-def split_ts(data, mmix, mask, acc):
+def split_ts(data, mmix, mask, comptable):
     """
     Splits `data` time series into accepted component time series and remainder
 
@@ -168,8 +168,10 @@ def split_ts(data, mmix, mask, acc):
         is components and `T` is the same as in `data`
     mask : (S,) array_like
         Boolean mask array
-    acc : :obj:`list`
-        List of accepted components used to subset `mmix`
+    comptable : (C x X) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component, with a column for
+        each metric. Requires at least two columns: "component" and
+        "classification".
 
     Returns
     -------
@@ -178,6 +180,7 @@ def split_ts(data, mmix, mask, acc):
     rest : (S x T) :obj:`numpy.ndarray`
         Original data with `hikts` removed
     """
+    acc = comptable[comptable.classification == 'accepted'].index.values
 
     cbetas = model.get_coeffs(data - data.mean(axis=-1, keepdims=True),
                               mmix, mask)
@@ -192,7 +195,7 @@ def split_ts(data, mmix, mask, acc):
     return hikts, resid
 
 
-def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, bf, **kwargs):
+def write_split_ts(data, mmix, mask, comptable, ref_img, bf, **kwargs):
     """
     Splits `data` into denoised / noise / ignored time series and saves to disk
 
@@ -205,12 +208,9 @@ def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, bf, **kwargs):
         is components and `T` is the same as in `data`
     mask : (S,) array_like
         Boolean mask array
-    acc : :obj:`list`
-        Indices of accepted (BOLD) components in `mmix`
-    rej : :obj:`list`
-        Indices of rejected (non-BOLD) components in `mmix`
-    midk : :obj:`list`
-        Indices of mid-K (questionable) components in `mmix`
+    comptable : (C x X) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component, with a column for
+        each metric. The index should be the component number.
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
     bf : :obj:`str`
@@ -234,6 +234,8 @@ def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, bf, **kwargs):
     dn_ts_[suffix].nii        Denoised time series.
     ======================    =================================================
     """
+    acc = comptable[comptable.classification == 'accepted'].index.values
+    rej = comptable[comptable.classification == 'rejected'].index.values
 
     # mask and de-mean data
     mdata = data[mask]
@@ -243,14 +245,12 @@ def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, bf, **kwargs):
     betas = model.get_coeffs(dmdata.T, mmix, mask=None)
     varexpl = (1 - ((dmdata.T - betas.dot(mmix.T))**2.).sum() /
                (dmdata**2.).sum()) * 100
-    LGR.info('Variance explained by ICA decomposition: '
-             '{:.02f}%'.format(varexpl))
+    LGR.info('Variance explained by ICA decomposition: {:.02f}%'.format(varexpl))
 
     # create component and de-noised time series and save to files
     hikts = betas[:, acc].dot(mmix.T[acc, :])
-    midkts = betas[:, midk].dot(mmix.T[midk, :])
     lowkts = betas[:, rej].dot(mmix.T[rej, :])
-    dnts = data[mask] - lowkts - midkts
+    dnts = data[mask] - lowkts
 
     if 'desc' in kwargs.keys():
         prefix = 'optcom'
@@ -265,14 +265,6 @@ def write_split_ts(data, mmix, mask, acc, rej, midk, ref_img, bf, **kwargs):
             fout = gen_fname(bf, desc='accepted', **kwargs)
         filewrite(utils.unmask(hikts, mask), fout, ref_img)
         LGR.info('Writing high-Kappa time series: {}'.format(fout))
-
-    if len(midk) != 0:
-        if prefix:
-            fout = gen_fname(bf, desc='{0}RejectedMidK'.format(prefix))
-        else:
-            fout = gen_fname(bf, desc='rejectedMidK', **kwargs)
-        filewrite(utils.unmask(midkts, mask), fout, ref_img)
-        LGR.info('Writing mid-Kappa time series: {}'.format(fout))
 
     if len(rej) != 0:
         if prefix:
@@ -337,8 +329,7 @@ def writefeats(data, mmix, mask, ref_img, bf):
     return fname
 
 
-def writeresults(ts, mask, comptable, mmix, n_vols, acc, rej, midk, empty,
-                 ref_img, bf):
+def writeresults(ts, mask, comptable, mmix, n_vols, ref_img, bf):
     """
     Denoises `ts` and saves all resulting files to disk
 
@@ -348,23 +339,15 @@ def writeresults(ts, mask, comptable, mmix, n_vols, acc, rej, midk, empty,
         Time series to denoise and save to disk
     mask : (S,) array_like
         Boolean mask array
-    comptable : (N x 5) array_like
-        Array with columns denoting (1) index of component, (2) Kappa score of
-        component, (3) Rho score of component, (4) variance explained by
-        component, and (5) normalized variance explained by component
+    comptable : (C x X) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component, with a column for
+        each metric. Requires at least two columns: "component" and
+        "classification".
     mmix : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
     n_vols : :obj:`int`
         Number of volumes in original time series
-    acc : :obj:`list`
-        Indices of accepted (BOLD) components in `mmix`
-    rej : :obj:`list`
-        Indices of rejected (non-BOLD) components in `mmix`
-    midk : :obj:`list`
-        Indices of mid-K (questionable) components in `mmix`
-    empty : :obj:`list`
-        Indices of ignored components in `mmix`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
     bf : :obj:`str`
@@ -394,12 +377,13 @@ def writeresults(ts, mask, comptable, mmix, n_vols, acc, rej, midk, empty,
                               :py:func:`tedana.utils.io.writect`.
     ======================    =================================================
     """
+    acc = comptable[comptable.classification == 'accepted'].index.values
 
     fout = gen_fname(bf, desc='optcom')
     filewrite(ts, fout, ref_img)
     LGR.info('Writing optimally-combined time series: {}'.format(fout))
 
-    write_split_ts(ts, mmix, mask, acc, rej, midk, ref_img, bf, desc='optcom')
+    write_split_ts(ts, mmix, mask, comptable, ref_img, bf, desc='optcom')
 
     ts_B = model.get_coeffs(ts, mmix, mask)
     fout = gen_fname(bf, '_components.nii.gz', desc='TEDICA')
@@ -414,7 +398,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, acc, rej, midk, empty,
         writefeats(hikts, mmix[:, acc], mask, ref_img, bf)
 
 
-def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img, bf):
+def writeresults_echoes(catd, mmix, mask, comptable, ref_img, bf):
     """
     Saves individually denoised echos to disk
 
@@ -427,12 +411,9 @@ def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img, bf):
         is components and `T` is the same as in `data`
     mask : (S,) array_like
         Boolean mask array
-    acc : :obj:`list`
-        Indices of accepted (BOLD) components in `mmix`
-    rej : :obj:`list`
-        Indices of rejected (non-BOLD) components in `mmix`
-    midk : :obj:`list`
-        Indices of mid-K (questionable) components in `mmix`
+    comptable : (C x X) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component, with a column for
+        each metric. The index should be the component number.
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
     bf : :obj:`str`
@@ -462,7 +443,7 @@ def writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img, bf):
 
     for i_echo in range(catd.shape[1]):
         LGR.info('Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo + 1))
-        write_split_ts(catd[:, i_echo, :], mmix, mask, acc, rej, midk, ref_img,
+        write_split_ts(catd[:, i_echo, :], mmix, mask, comptable, ref_img,
                        bf, echo=str(i_echo + 1))
 
 

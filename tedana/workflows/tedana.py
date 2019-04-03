@@ -413,23 +413,17 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         io.gen_fname(bf, '_decomposition.json', desc='TEDICA'),
         label='ica', metadata=mmix_dict)
 
-    if 'component' not in comptable.columns:
-        comptable['component'] = comptable.index
-    acc = comptable.loc[comptable['classification'] == 'accepted', 'component']
-    rej = comptable.loc[comptable['classification'] == 'rejected', 'component']
-    midk = comptable.loc[comptable['classification'] == 'midk', 'component']
-    ign = comptable.loc[comptable['classification'] == 'ignored', 'component']
-    if len(acc) == 0:
+
+    if comptable[comptable.classification == 'accepted'].shape[0] == 0:
         LGR.warning('No BOLD components detected! Please check data and '
                     'results!')
 
+    mmix_orig = mmix.copy()
     if tedort:
         acc_idx = comptable.loc[
-            ~comptable['classification'].str.contains('rejected'),
-            'component']
+            ~comptable.classification.str.contains('rejected')].index.values
         rej_idx = comptable.loc[
-            comptable['classification'].str.contains('rejected'),
-            'component']
+            comptable.classification.str.contains('rejected')].index.values
         acc_ts = mmix[:, acc_idx]
         rej_ts = mmix[:, rej_idx]
         betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
@@ -460,9 +454,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
             label='ica', metadata=mmix_dict)
 
     io.writeresults(data_oc, mask=mask, comptable=comptable, mmix=mmix,
-                    n_vols=n_vols,
-                    acc=acc, rej=rej, midk=midk, empty=ign,
-                    ref_img=ref_img, bf=bf)
+                    n_vols=n_vols, ref_img=ref_img, bf=bf)
 
     if 't1c' in gscontrol:
         LGR.info('Performing T1c global signal regression to remove spatially '
@@ -470,7 +462,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         gsc.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img, bf)
 
     if verbose:
-        io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img, bf)
+        io.writeresults_echoes(catd, mmix, mask, comptable, ref_img, bf=bf)
 
     if png:
         LGR.info('Making figures folder with static component maps and '
@@ -481,9 +473,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
         fig_bf = op.join(op.dirname(bf), 'figures', op.basename(bf))
 
-        viz.write_comp_figs(data_oc, mask=mask, comptable=comptable, mmix=mmix,
-                            ref_img=ref_img,
-                            bf=fig_bf,
+        viz.write_comp_figs(data_oc, mask=mask, comptable=comptable,
+                            mmix=mmix_orig, ref_img=ref_img, bf=fig_bf,
                             png_cmap=png_cmap)
 
         LGR.info('Making Kappa vs Rho scatter plot')

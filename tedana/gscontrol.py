@@ -118,9 +118,9 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, bf):
         is components and `T` is the same as in `optcom_ts`
     mask : (S,) array_like
         Boolean mask array
-    comptable : :obj:`pandas.DataFrame`
-        Component table with metrics and with classification (accepted,
-        rejected, midk, or ignored)
+    comptable : (C x X) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component, with a column for
+        each metric. The index should be the component number.
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
     bf : :obj:`str`
@@ -139,9 +139,9 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, bf):
     meica_mix_T1c.1D          T1 global signal-corrected mixing matrix
     ======================    =================================================
     """
-    all_comps = comptable['component'].values
-    acc = comptable.loc[comptable['classification'] == 'accepted', 'component']
-    ign = comptable.loc[comptable['classification'] == 'ignored', 'component']
+    all_comps = comptable.index.values
+    acc = comptable[comptable.classification == 'accepted'].index.values
+    ign = comptable[comptable.classification == 'ignored'].index.values
     not_ign = sorted(np.setdiff1d(all_comps, ign))
 
     optcom_masked = optcom_ts[mask, :]
