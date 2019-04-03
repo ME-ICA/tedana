@@ -68,7 +68,7 @@ def kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=False):
     ----------
     comptable : :obj:`pandas.DataFrame`
         Component table with relevant metrics: kappa, rho, and normalized
-        variance explained.
+        variance explained. Component number should be the index.
     n_echos : :obj:`int`
         Number of echoes in dataset.
     kdaw : :obj:`float`
@@ -373,11 +373,11 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
     comptable.to_csv('comp_table_pca.txt', sep='\t', index=True,
                      index_label='component', float_format='%.6f')
 
-    sel_idx = comptable['classification'] == 'accepted'
-    n_components = np.sum(sel_idx)
-    voxel_kept_comp_weighted = (voxel_comp_weights[:, sel_idx] *
-                                varex[None, sel_idx])
-    kept_data = np.dot(voxel_kept_comp_weighted, comp_ts[sel_idx, :])
+    acc = comptable[comptable.classification == 'accepted'].index.values
+    n_components = acc.size
+    voxel_kept_comp_weighted = (voxel_comp_weights[:, acc] *
+                                varex[None, acc])
+    kept_data = np.dot(voxel_kept_comp_weighted, comp_ts[acc, :])
 
     kept_data = stats.zscore(kept_data, axis=1)  # variance normalize time series
     kept_data = stats.zscore(kept_data, axis=None)  # variance normalize everything
@@ -428,7 +428,8 @@ def tedica(n_components, dd, fixed_seed, maxit=500, maxrestart=10):
                       fun='logcosh', max_iter=maxit, random_state=fixed_seed)
 
         with warnings.catch_warnings(record=True) as w:
-            # Cause all warnings to always be triggered.
+            # Cause all warnings to always be triggered in order to capture
+            # convergence failures.
             warnings.simplefilter('always')
 
             ica.fit(dd)
@@ -437,8 +438,9 @@ def tedica(n_components, dd, fixed_seed, maxit=500, maxrestart=10):
             if len(w):
                 LGR.warning('ICA attempt {0} failed to converge after {1} '
                             'iterations'.format(i_attempt + 1, ica.n_iter_))
-                fixed_seed += 1
-                LGR.warning('Random seed updated to {0}'.format(fixed_seed))
+                if i_attempt < maxrestart - 1:
+                    fixed_seed += 1
+                    LGR.warning('Random seed updated to {0}'.format(fixed_seed))
             else:
                 LGR.info('ICA attempt {0} converged in {1} '
                          'iterations'.format(i_attempt + 1, ica.n_iter_))

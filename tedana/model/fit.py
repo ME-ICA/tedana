@@ -59,10 +59,9 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
     Returns
     -------
     seldict : dict
-    comptab : (N x 5) :obj:`pandas.DataFrame`
-        Array with columns denoting (1) index of component, (2) Kappa score of
-        component, (3) Rho score of component, (4) variance explained by
-        component, and (5) normalized variance explained by component
+    comptable : (C x X) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component, with a column for
+        each metric. The index is the component number.
     betas : :obj:`numpy.ndarray`
     mmix_new : :obj:`numpy.ndarray`
     """
@@ -197,11 +196,11 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         rhos[i_comp] = np.average(F_S0, weights=norm_weights)
 
     # tabulate component values
-    comptab = np.vstack([kappas, rhos, varex, varex_norm]).T
+    comptable = np.vstack([kappas, rhos, varex, varex_norm]).T
     if reindex:
         # re-index all components in Kappa order
-        sort_idx = comptab[:, 0].argsort()[::-1]
-        comptab = comptab[sort_idx, :]
+        sort_idx = comptable[:, 0].argsort()[::-1]
+        comptable = comptable[sort_idx, :]
         mmix_new = mmix[:, sort_idx]
         betas = betas[..., sort_idx]
         pred_R2_maps = pred_R2_maps[:, :, sort_idx]
@@ -231,11 +230,11 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
                      op.join(out_dir, '{0}metric_weights.nii'.format(label)),
                      ref_img)
 
-    comptab = pd.DataFrame(comptab,
-                           columns=['kappa', 'rho',
-                                    'variance explained',
-                                    'normalized variance explained'])
-    comptab.index.name = 'component'
+    comptable = pd.DataFrame(comptable,
+                             columns=['kappa', 'rho',
+                                      'variance explained',
+                                      'normalized variance explained'])
+    comptable.index.name = 'component'
 
     # full selection including clustering criteria
     seldict = None
@@ -287,7 +286,7 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         for vv in selvars:
             seldict[vv] = eval(vv)
 
-    return seldict, comptab, betas, mmix_new
+    return seldict, comptable, betas, mmix_new
 
 
 def computefeats2(data, mmix, mask, normalize=True):
