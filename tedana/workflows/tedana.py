@@ -87,7 +87,8 @@ def _get_parser():
     optional.add_argument('--manacc',
                           dest='manacc',
                           help=('Comma separated list of manually '
-                                'accepted components'),
+                                'accepted components. Component numbers start '
+                                'with zero'),
                           default=None)
     optional.add_argument('--sourceTEs',
                           dest='ste',
@@ -298,14 +299,20 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
     if mixm is not None and op.isfile(mixm):
-        shutil.copyfile(mixm, op.join(out_dir, 'meica_mix.1D'))
-        shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
+        mixm = op.abspath(mixm)
+        # Allow users to re-run on same folder
+        if mixm != op.join(out_dir, 'meica_mix.1D'):
+            shutil.copyfile(mixm, op.join(out_dir, 'meica_mix.1D'))
+            shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
     elif mixm is not None:
         raise IOError('Argument "mixm" must be an existing file.')
 
     if ctab is not None and op.isfile(ctab):
-        shutil.copyfile(ctab, op.join(out_dir, 'comp_table_ica.txt'))
-        shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
+        ctab = op.abspath(ctab)
+        # Allow users to re-run on same folder
+        if ctab != op.join(out_dir, 'comp_table_ica.txt'):
+            shutil.copyfile(ctab, op.join(out_dir, 'comp_table_ica.txt'))
+            shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
 
@@ -315,10 +322,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if ctab and not mixm:
         LGR.warning('Argument "ctab" requires argument "mixm".')
         ctab = None
-    elif ctab and not len(manacc):
+    elif ctab and (manacc is None):
         LGR.warning('Argument "ctab" requires argument "manacc".')
         ctab = None
-    elif len(manacc) and not mixm:
+    elif manacc is not None and not mixm:
         LGR.warning('Argument "manacc" requires argument "mixm".')
         manacc = None
 
@@ -380,29 +387,30 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # Estimate betas and compute selection metrics for mixing matrix
         # generated from dimensionally reduced data using full data (i.e., data
         # with thermal noise)
-        comptable, seldict, betas, mmix = model.fitmodels_direct(
+        comptable, metric_maps, betas, mmix = model.dependence_metrics(
                     catd, data_oc, mmix_orig, mask, t2s, tes,
                     ref_img, reindex=True, label='meica_', out_dir=out_dir,
-                    method='kundu_v2.5', verbose=verbose)
+                    method='kundu_v2', verbose=verbose)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        comptable = selection.kundu_selection_v2_5(comptable, seldict, mmix, n_echos)
-    elif ctab is not None and len(manacc):
+        comptable = model.kundu_metrics(comptable, metric_maps)
+        comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
+    elif ctab is not None and manacc is not None:
         mmix = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
         comptable = pd.read_csv(ctab, sep='\t', index_col='component')
-        comptable = selection.manual_selection(comptable, manacc)
+        comptable = selection.manual_selection(comptable, acc=manacc)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
-        comptable, seldict, betas, mmix = model.fitmodels_direct(
+        comptable, metric_maps, betas, mmix = model.dependence_metrics(
                     catd, data_oc, mmix_orig, mask, t2s, tes,
                     ref_img, label='meica_', out_dir=out_dir,
-                    method='kundu_v2.5', verbose=verbose)
-        if len(manacc):
-            comptable = selection.manual_selection(comptable, manacc)
+                    method='kundu_v2', verbose=verbose)
+        if manacc is not None:
+            comptable = selection.manual_selection(comptable, acc=manacc)
         else:
-            comptable = model.kundu_metrics(comptable, seldict)
-            comptable = selection.kundu_selection_v2_5(comptable, n_echos, n_vols)
+            comptable = model.kundu_metrics(comptable, metric_maps)
+            comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
 
     comptable.to_csv(op.join(out_dir, 'comp_table_ica.txt'), sep='\t',
                      index=True, index_label='component', float_format='%.6f')
@@ -413,8 +421,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     midk = comptable.loc[comptable['classification'] == 'midk', 'component']
     ign = comptable.loc[comptable['classification'] == 'ignored', 'component']
     if len(acc) == 0:
-        LGR.warning('No BOLD components detected! Please check data and '
-                    'results!')
+        LGR.warning('No BOLD components detected! Please check data and results!')
 
     if tedort:
         LGR.info('Orthogonalizing rejected components with respect to '

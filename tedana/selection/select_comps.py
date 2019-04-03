@@ -11,7 +11,7 @@ from tedana.selection._utils import getelbow
 LGR = logging.getLogger(__name__)
 
 
-def manual_selection(comptable, acc):
+def manual_selection(comptable, acc=None, rej=None):
     """
     Perform manual selection of components.
 
@@ -21,36 +21,55 @@ def manual_selection(comptable, acc):
         Component metric table, where `C` is components and `M` is metrics
     acc : :obj:`list`
         List of accepted components
+    rej : :obj:`list`
+        List of rejected components.
 
     Returns
     -------
     comptable : (C x M) :obj:`pandas.DataFrame`
         Component metric table with classification.
     """
-    LGR.info('Performing manual component selection.')
-    if 'classification' in comptable.columns:
-        comptable['old_classification'] = comptable['classification']
-        comptable['old_rationale'] = comptable['rationale']
+    LGR.info('Performing manual component selection')
+    if ('classification' in comptable.columns and
+            'original_classification' not in comptable.columns):
+        comptable['original_classification'] = comptable['classification']
+        comptable['original_rationale'] = comptable['rationale']
 
     comptable['classification'] = 'accepted'
     comptable['rationale'] = ''
 
-    # If user has specified
     all_comps = comptable.index.values
-    acc = [int(comp) for comp in acc]
-    rej = sorted(np.setdiff1d(all_comps, acc))
+    if acc is not None:
+        acc = [int(comp) for comp in acc]
+
+    if rej is not None:
+        rej = [int(comp) for comp in rej]
+
+    if acc is not None and rej is None:
+        rej = sorted(np.setdiff1d(all_comps, acc))
+    elif acc is None and rej is not None:
+        acc = sorted(np.setdiff1d(all_comps, rej))
+    elif acc is None and rej is None:
+        # Accept all components if no manual selection provided
+        acc = all_comps[:]
+        rej = []
+
+    ign = np.setdiff1d(all_comps, np.union1d(acc, rej))
     comptable.loc[acc, 'classification'] = 'accepted'
     comptable.loc[rej, 'classification'] = 'rejected'
     comptable.loc[rej, 'rationale'] += 'I001;'
+    comptable.loc[ign, 'classification'] = 'ignored'
+    comptable.loc[ign, 'rationale'] += 'I001;'
 
     # Move decision columns to end
+    cols_at_end = ['classification', 'rationale']
     comptable = comptable[[c for c in comptable if c not in cols_at_end] +
                           [c for c in cols_at_end if c in comptable]]
     comptable['rationale'] = comptable['rationale'].str.rstrip(';')
     return comptable
 
 
-def kundu_selection_v2_5(comptable, n_echos, n_vols):
+def kundu_selection_v2(comptable, n_echos, n_vols):
     """
     Classify components in seldict as "accepted," "rejected," or "ignored."
 
@@ -82,16 +101,14 @@ def kundu_selection_v2_5(comptable, n_echos, n_vols):
     https://github.com/ME-ICA/me-ica/blob/b2781dd087ab9de99a2ec3925f04f02ce84f0adc/meica.libs/select_model.py
 
     This component selection process uses multiple, previously calculated
-    metrics that include kappa, rho, variance explained,
-    component spatial weighting maps, noise and spatial frequency metrics,
-    and measures of spatial overlap across metrics.
+    metrics that include kappa, rho, variance explained, noise and spatial
+    frequency metrics, and measures of spatial overlap across metrics.
 
     Prantik began to update these selection criteria to use SVMs to distinguish
     components, a hypercommented version of this attempt is available at:
     https://gist.github.com/emdupre/ca92d52d345d08ee85e104093b81482e
     """
-    LGR.info('Performing component selection with Kundu decision tree v2.5.')
-    cols_at_end = ['classification', 'rationale']
+    LGR.info('Performing component selection with Kundu decision tree v2.5')
     comptable['classification'] = 'accepted'
     comptable['rationale'] = ''
 
@@ -202,6 +219,7 @@ def kundu_selection_v2_5(comptable, n_echos, n_vols):
         comptable.loc[ign, 'rationale'] += 'I006;'
 
         # Move decision columns to end
+        cols_at_end = ['classification', 'rationale']
         comptable = comptable[[c for c in comptable if c not in cols_at_end] +
                               [c for c in cols_at_end if c in comptable]]
         comptable['rationale'] = comptable['rationale'].str.rstrip(';')
@@ -318,6 +336,7 @@ def kundu_selection_v2_5(comptable, n_echos, n_vols):
     # at this point, unclf is equivalent to accepted
 
     # Move decision columns to end
+    cols_at_end = ['classification', 'rationale']
     comptable = comptable[[c for c in comptable if c not in cols_at_end] +
                           [c for c in cols_at_end if c in comptable]]
     comptable['rationale'] = comptable['rationale'].str.rstrip(';')

@@ -200,7 +200,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         to indicate a subset of echos.
         Default: -1
     verbose : :obj:`bool`, optional
-        Whether to output files from fitmodels_direct or not. Default: False
+        Whether to output files from dependence_metrics or not. Default: False
 
     Returns
     -------
@@ -319,12 +319,12 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         # Normalize each component's time series
         vTmixN = stats.zscore(comp_ts, axis=1).T
         LGR.info('Making initial component selection guess from PCA results')
-        comptable, _, _, _ = model.fitmodels_direct(
+        comptable, _, _, _ = model.dependence_metrics(
                     catd, OCcatd, comp_ts.T, eimum, t2s, tes, ref_img,
-                    mmixN=vTmixN, full_sel=False, label='mepca_',
-                    method=None, out_dir=out_dir, verbose=verbose)
-        # varex_norm overrides normalized varex computed by fitmodels_direct
-        comptable['normalized variance explained'] = varex_norm
+                    reindex=False, mmixN=vTmixN, method=None,
+                    label='mepca_', out_dir=out_dir, verbose=verbose)
+        # varex_norm overrides normalized varex computed by dependence_metrics
+        comptable['real normalized variance explained'] = varex_norm
 
         pcastate = {'method': method,
                     'voxel_comp_weights': voxel_comp_weights,

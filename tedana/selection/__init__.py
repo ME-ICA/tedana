@@ -2,7 +2,7 @@
 # ex: set sts=4 ts=4 sw=4 et:
 
 from .select_comps import (
-    kundu_selection_v2_5, manual_selection,
+    kundu_selection_v2, manual_selection,
 )
 
-__all__ = ['kundu_selection_v2_5', 'manual_selection']
+__all__ = ['kundu_selection_v2', 'manual_selection']
