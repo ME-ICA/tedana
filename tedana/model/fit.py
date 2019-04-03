@@ -11,7 +11,7 @@ import nilearn.image as niimg
 from nilearn._utils import check_niimg
 from nilearn.regions import connected_regions
 
-from tedana import (combine, io, utils)
+from tedana import io, utils
 
 LGR = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
         raise ValueError('Third dimension (number of volumes) of catd ({0}), '
                          'second dimension of tsoc ({1}), and first dimension '
                          'of mmix ({2}) do not match.'.format(
-                            catd.shape[2], tsoc.shape[1], mmix.shape[0]))
+                             catd.shape[2], tsoc.shape[1], mmix.shape[0]))
     elif t2s.ndim == 2:
         if catd.shape[2] != t2s.shape[1]:
             raise ValueError('Third dimension (number of volumes) of catd '

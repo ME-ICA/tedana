@@ -112,8 +112,6 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     comptable['classification'] = 'accepted'
     comptable['rationale'] = ''
 
-    n_comps = comptable.shape[0]
-
     # Set knobs
     LOW_PERC = 25
     HIGH_PERC = 90
