@@ -29,7 +29,7 @@ def manual_selection(comptable, acc=None, rej=None):
     comptable : (C x M) :obj:`pandas.DataFrame`
         Component metric table with classification.
     """
-    LGR.info('Performing manual component selection')
+    LGR.info('Performing manual ICA component selection')
     if ('classification' in comptable.columns and
             'original_classification' not in comptable.columns):
         comptable['original_classification'] = comptable['classification']
@@ -109,7 +109,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     components, a hypercommented version of this attempt is available at:
     https://gist.github.com/emdupre/ca92d52d345d08ee85e104093b81482e
     """
-    LGR.info('Performing component selection with Kundu decision tree v2.5')
+    LGR.info('Performing ICA component selection with Kundu decision tree v2.5')
     comptable['classification'] = 'accepted'
     comptable['rationale'] = ''
 

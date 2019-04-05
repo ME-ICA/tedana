@@ -211,7 +211,6 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
 
         # Normalize each component's time series
         vTmixN = stats.zscore(comp_ts, axis=1).T
-        LGR.info('Making initial component selection guess from PCA results')
         comptable, _, _, _ = model.dependence_metrics(
                     catd, OCcatd, comp_ts.T, eimum, t2s, tes, ref_img,
                     reindex=False, mmixN=vTmixN, method=None,

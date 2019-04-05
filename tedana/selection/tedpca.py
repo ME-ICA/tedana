@@ -39,6 +39,10 @@ def kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=False):
         Component table with components classified as 'accepted', 'rejected',
         or 'ignored'.
     """
+    LGR.info('Performing PCA component selection with Kundu decision tree')
+    comptable['classification'] = 'accepted'
+    comptable['rationale'] = ''
+
     eigenvalue_elbow = getelbow(comptable['normalized variance explained'],
                                 return_val=True)
 
