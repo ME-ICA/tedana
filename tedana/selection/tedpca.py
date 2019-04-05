@@ -3,12 +3,13 @@ Functions to identify TE-dependent and TE-independent components.
 """
 import logging
 import numpy as np
-from scipy import stats
 
 from tedana import utils
 from tedana.selection._utils import (getelbow_cons, getelbow)
 
 LGR = logging.getLogger(__name__)
+
+F_MAX = 500
 
 
 def kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=False):

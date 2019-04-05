@@ -17,9 +17,6 @@ from tedana.due import due, BibTeX
 
 LGR = logging.getLogger(__name__)
 
-F_MAX = 500
-Z_MAX = 8
-
 
 @due.dcite(BibTeX(
     """
