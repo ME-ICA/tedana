@@ -5,6 +5,5 @@ from .eigendecomp import (
     tedpca, tedica,
 )
 
-
 __all__ = [
     'tedpca', 'tedica']
