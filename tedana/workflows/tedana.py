@@ -336,14 +336,16 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                       interpolation_method='lower')
     LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
     t2s[t2s > cap_t2s * 10] = cap_t2s
-    io.filewrite(t2s, io.gen_fname(bf, '_T2Starmap.nii.gz'), ref_img)
+    io.filewrite(t2s / 1000., io.gen_fname(bf, '_T2Starmap.nii.gz'), ref_img)
     io.filewrite(s0, io.gen_fname(bf, '_S0map.nii.gz'), ref_img)
     if verbose:
-        io.filewrite(t2ss, io.gen_fname(bf, '_T2Starmap.nii.gz',
-                                        desc='ascendingEstimates'),
+        io.filewrite(t2ss / 1000., io.gen_fname(bf, '_T2Starmap.nii.gz',
+                                                desc='ascendingEstimates'),
                      ref_img)
-        io.filewrite(s0s, io.gen_fname(bf, '_S0map.nii.gz', desc='ascendingEstimates'), ref_img)
-        io.filewrite(t2sG, io.gen_fname(bf, '_T2Starmap.nii.gz', desc='liberal'), ref_img)
+        io.filewrite(s0s, io.gen_fname(bf, '_S0map.nii.gz',
+                                       desc='ascendingEstimates'), ref_img)
+        io.filewrite(t2sG / 1000., io.gen_fname(bf, '_T2Starmap.nii.gz',
+                                                desc='liberal'), ref_img)
         io.filewrite(s0G, io.gen_fname(bf, '_S0map.nii.gz', desc='liberal'), ref_img)
 
     # optimally combine data

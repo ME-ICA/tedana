@@ -211,9 +211,9 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
     s0_limited[s0_limited < 0] = 0
     t2s_limited[t2s_limited < 0] = 0
 
-    io.filewrite(t2s_limited, op.join(out_dir, 't2sv.nii'), ref_img)
+    io.filewrite(t2s_limited / 1000., op.join(out_dir, 't2sv.nii'), ref_img)
     io.filewrite(s0_limited, op.join(out_dir, 's0v.nii'), ref_img)
-    io.filewrite(t2s_full, op.join(out_dir, 't2svG.nii'), ref_img)
+    io.filewrite(t2s_full / 1000., op.join(out_dir, 't2svG.nii'), ref_img)
     io.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
     io.filewrite(OCcatd, op.join(out_dir, 'ts_OC.nii'), ref_img)
 
