@@ -175,6 +175,7 @@ def tedpca(data_cat, data_oc, mask, t2s, ref_img, tes, method='mle', ste=-1,
     if method == 'mle':
         voxel_comp_weights, varex, comp_ts = run_mlepca(data_z)
     else:
+        ppca = PCA()
         ppca.fit(data_z)
         comp_ts = ppca.components_.T
         varex = ppca.explained_variance_
