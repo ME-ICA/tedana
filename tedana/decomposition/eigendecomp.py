@@ -51,7 +51,7 @@ def run_mlepca(data):
     ppca.fit(data)
     v = ppca.components_.T
     s = ppca.explained_variance_
-    u = np.dot(np.dot(data, v.T), np.diag(1. / s))
+    u = np.dot(np.dot(data, v), np.diag(1. / s))
     return u, s, v
 
 
