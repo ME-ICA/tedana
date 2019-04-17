@@ -1,10 +1,8 @@
 """
 Signal decomposition methods for tedana
 """
-import pickle
 import logging
 import warnings
-import os.path as op
 
 import numpy as np
 from scipy import stats
