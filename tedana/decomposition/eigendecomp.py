@@ -45,45 +45,38 @@ def run_mlepca(data):
         Component weight map for each component.
     s : (C,) array_like
         Variance explained for each component.
-    v : (C x T) array_like
+    v : (T x C) array_like
         Component timeseries.
     """
     # do PC dimension selection and get eigenvalue cutoff
     ppca = PCA(n_components='mle', svd_solver='full')
     ppca.fit(data)
-    v = ppca.components_
+    v = ppca.components_.T
     s = ppca.explained_variance_
     u = np.dot(np.dot(data, v.T), np.diag(1. / s))
     return u, s, v
 
 
-def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
-           ref_img, tes, method='mle', ste=-1, kdaw=10., rdaw=1.,
-           out_dir='.', verbose=False):
+def tedpca(data_cat, data_oc, mask, t2s, ref_img, tes, method='mle', ste=-1,
+           kdaw=10., rdaw=1., out_dir='.', verbose=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
     noise from multi-echo data.
 
     Parameters
     ----------
-    catd : (S x E x T) array_like
+    data_cat : (S x E x T) array_like
         Input functional data
-    OCcatd : (S x T) array_like
+    data_oc : (S x T) array_like
         Optimally combined time series data
-    combmode : {'t2s', 'ste'} str
-        How optimal combination of echos should be made, where 't2s' indicates
-        using the method of Posse 1999 and 'ste' indicates using the method of
-        Poser 2006
     mask : (S,) array_like
         Boolean mask array
+    t2s : (S,) array_like
+        Map of voxel-wise T2* estimates.
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
     tes : :obj:`list`
-        List of echo times associated with `catd`, in milliseconds
-    kdaw : :obj:`float`
-        Dimensionality augmentation weight for Kappa calculations
-    rdaw : :obj:`float`
-        Dimensionality augmentation weight for Rho calculations
+        List of echo times associated with `data_cat`, in milliseconds
     method : {'mle', 'kundu', 'kundu-stabilize'}, optional
         Method with which to select components in TEDPCA. Default is 'mle'.
     ste : :obj:`int` or :obj:`list` of :obj:`int`, optional
@@ -92,6 +85,14 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         and 0  will indicate using all the echos. A list can be provided
         to indicate a subset of echos.
         Default: -1
+    kdaw : :obj:`float`, optional
+        Dimensionality augmentation weight for Kappa calculations. Must be a
+        non-negative float, or -1 (a special value). Default is 10.
+    rdaw : :obj:`float`, optional
+        Dimensionality augmentation weight for Rho calculations. Must be a
+        non-negative float, or -1 (a special value). Default is 1.
+    out_dir : :obj:`str`, optional
+        Output directory.
     verbose : :obj:`bool`, optional
         Whether to output files from dependence_metrics or not. Default: False
 
@@ -152,99 +153,61 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
     ======================    =================================================
     """
 
-    n_samp, n_echos, n_vols = catd.shape
+    n_samp, n_echos, n_vols = data_cat.shape
     ste = np.array([int(ee) for ee in str(ste).split(',')])
 
     if len(ste) == 1 and ste[0] == -1:
         LGR.info('Computing PCA of optimally combined multi-echo data')
-        d = OCcatd[mask, :][:, np.newaxis, :]
+        data = data_oc[mask, :][:, np.newaxis, :]
     elif len(ste) == 1 and ste[0] == 0:
         LGR.info('Computing PCA of spatially concatenated multi-echo data')
-        d = catd[mask, ...]
+        data = data_cat[mask, ...]
     else:
         LGR.info('Computing PCA of echo #%s' % ','.join([str(ee) for ee in ste]))
-        d = np.stack([catd[mask, ee, :] for ee in ste - 1], axis=1)
+        data = np.stack([data_cat[mask, ee, :] for ee in ste - 1], axis=1)
 
-    eim = np.squeeze(eimask(d))
-    d = np.squeeze(d[eim])
+    eim = np.squeeze(eimask(data))
+    data = np.squeeze(data[eim])
 
-    dz = ((d.T - d.T.mean(axis=0)) / d.T.std(axis=0)).T  # var normalize ts
-    dz = (dz - dz.mean()) / dz.std()  # var normalize everything
+    data_z = ((data.T - data.T.mean(axis=0)) / data.T.std(axis=0)).T  # var normalize ts
+    data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
 
-    fname = op.abspath('pcastate.pkl')
-    if op.exists('pcastate.pkl'):
-        LGR.info('Loading PCA from: pcastate.pkl')
-        with open('pcastate.pkl', 'rb') as handle:
-            pcastate = pickle.load(handle)
-
-        if pcastate['method'] != method:
-            LGR.warning('Method from PCA state file ({0}) does not match '
-                        'requested method ({1}).'.format(pcastate['method'],
-                                                         method))
-            state_found = False
-        else:
-            state_found = True
+    if method == 'mle':
+        voxel_comp_weights, varex, comp_ts = run_mlepca(data_z)
     else:
-        state_found = False
+        ppca.fit(data_z)
+        comp_ts = ppca.components_.T
+        varex = ppca.explained_variance_
+        voxel_comp_weights = np.dot(np.dot(data_z, comp_ts),
+                                    np.diag(1. / varex))
 
-    if not state_found:
-        if method == 'mle':
-            voxel_comp_weights, varex, comp_ts = run_mlepca(dz)
-        else:
-            ppca = PCA()
-            ppca.fit(dz)
-            comp_ts = ppca.components_
-            varex = ppca.explained_variance_
-            voxel_comp_weights = np.dot(np.dot(dz, comp_ts.T),
-                                        np.diag(1. / varex))
+    # actual variance explained (normalized)
+    varex_norm = varex / varex.sum()
 
-        # actual variance explained (normalized)
-        varex_norm = varex / varex.sum()
+    # Compute Kappa and Rho for PCA comps
+    eimum = np.atleast_2d(eim)
+    eimum = np.transpose(eimum, np.argsort(eimum.shape)[::-1])
+    eimum = eimum.prod(axis=1)
+    o = np.zeros((mask.shape[0], *eimum.shape[1:]))
+    o[mask, ...] = eimum
+    eimum = np.squeeze(o).astype(bool)
 
-        # Compute K and Rho for PCA comps
-        eimum = np.atleast_2d(eim)
-        eimum = np.transpose(eimum, np.argsort(eimum.shape)[::-1])
-        eimum = eimum.prod(axis=1)
-        o = np.zeros((mask.shape[0], *eimum.shape[1:]))
-        o[mask, ...] = eimum
-        eimum = np.squeeze(o).astype(bool)
+    # Normalize each component's time series
+    vTmixN = stats.zscore(comp_ts, axis=0)
+    comptable, _, _, _ = model.dependence_metrics(
+                data_cat, data_oc, comp_ts, eimum, t2s, tes, ref_img,
+                reindex=False, mmixN=vTmixN, method=None,
+                label='mepca_', out_dir=out_dir, verbose=verbose)
+    # varex_norm overrides normalized varex computed by dependence_metrics
+    comptable['real normalized variance explained'] = varex_norm
 
-        # Normalize each component's time series
-        vTmixN = stats.zscore(comp_ts, axis=1).T
-        comptable, _, _, _ = model.dependence_metrics(
-                    catd, OCcatd, comp_ts.T, eimum, t2s, tes, ref_img,
-                    reindex=False, mmixN=vTmixN, method=None,
-                    label='mepca_', out_dir=out_dir, verbose=verbose)
-        # varex_norm overrides normalized varex computed by dependence_metrics
-        comptable['real normalized variance explained'] = varex_norm
-
-        pcastate = {'method': method,
-                    'voxel_comp_weights': voxel_comp_weights,
-                    'varex': varex,
-                    'comp_ts': comp_ts,
-                    'comptable': comptable}
-
-        # Save state
-        LGR.info('Saving PCA results to: {}'.format(fname))
-
-        try:
-            with open(fname, 'wb') as handle:
-                pickle.dump(pcastate, handle)
-        except TypeError:
-            LGR.warning('Could not save PCA solution')
-    else:  # if loading existing state
-        voxel_comp_weights = pcastate['voxel_comp_weights']
-        varex = pcastate['varex']
-        comp_ts = pcastate['comp_ts']
-        comptable = pcastate['comptable']
-
-    np.savetxt('mepca_mix.1D', comp_ts.T)
+    np.savetxt('mepca_mix.1D', comp_ts)
 
     # write component maps to 4D image
-    comp_maps = np.zeros((OCcatd.shape[0], comp_ts.shape[0]))
-    for i_comp in range(comp_ts.shape[0]):
-        temp_comp_ts = comp_ts[i_comp, :][:, None]
-        comp_map = utils.unmask(model.computefeats2(OCcatd, temp_comp_ts, mask), mask)
+    comp_maps = np.zeros((data_oc.shape[0], comp_ts.shape[1]))
+    for i_comp in range(comp_ts.shape[1]):
+        temp_comp_ts = comp_ts[:, i_comp][:, None]
+        comp_map = utils.unmask(model.computefeats2(data_oc, temp_comp_ts, mask), mask)
         comp_maps[:, i_comp] = np.squeeze(comp_map)
     io.filewrite(comp_maps, 'mepca_OC_components.nii', ref_img)
 
@@ -266,7 +229,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
     n_components = acc.size
     voxel_kept_comp_weighted = (voxel_comp_weights[:, acc] *
                                 varex[None, acc])
-    kept_data = np.dot(voxel_kept_comp_weighted, comp_ts[acc, :])
+    kept_data = np.dot(voxel_kept_comp_weighted, comp_ts[:, acc].T)
 
     kept_data = stats.zscore(kept_data, axis=1)  # variance normalize time series
     kept_data = stats.zscore(kept_data, axis=None)  # variance normalize everything
@@ -274,17 +237,17 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
     return n_components, kept_data
 
 
-def tedica(n_components, data, fixed_seed, maxit=500, maxrestart=10):
+def tedica(data, n_components, fixed_seed, maxit=500, maxrestart=10):
     """
     Perform ICA on `data` and returns mixing matrix
 
     Parameters
     ----------
-    n_components : :obj:`int`
-        Number of components retained from PCA decomposition
     data : (S x T) :obj:`numpy.ndarray`
         Dimensionally reduced optimally combined functional data, where `S` is
         samples and `T` is time
+    n_components : :obj:`int`
+        Number of components retained from PCA decomposition
     fixed_seed : :obj:`int`
         Seed for ensuring reproducibility of ICA results
     maxit : :obj:`int`, optional

@@ -5,14 +5,15 @@ import logging
 import numpy as np
 
 from tedana import utils
-from tedana.selection._utils import (getelbow_cons, getelbow)
+from tedana.selection._utils import (getelbow_cons, getelbow,
+                                     reorder_dataframe)
 
 LGR = logging.getLogger(__name__)
 
 F_MAX = 500
 
 
-def kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=False):
+def kundu_tedpca(comptable, n_echos, kdaw=10., rdaw=1., stabilize=False):
     """
     Select PCA components using Kundu's decision tree approach.
 
@@ -23,12 +24,12 @@ def kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=False):
         variance explained. Component number should be the index.
     n_echos : :obj:`int`
         Number of echoes in dataset.
-    kdaw : :obj:`float`
+    kdaw : :obj:`float`, optional
         Kappa dimensionality augmentation weight. Must be a non-negative float,
-        or -1 (a special value).
-    rdaw : :obj:`float`
+        or -1 (a special value). Default is 10.
+    rdaw : :obj:`float`, optional
         Rho dimensionality augmentation weight. Must be a non-negative float,
-        or -1 (a special value).
+        or -1 (a special value). Default is 1.
     stabilize : :obj:`bool`, optional
         Whether to stabilize convergence by reducing dimensionality, for low
         quality data. Default is False.
@@ -119,8 +120,5 @@ def kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=False):
              'threshold: {2:.02f}'.format(n_components, kappa_thr, rho_thr))
 
     # Move decision columns to end
-    cols_at_end = ['classification', 'rationale']
-    comptable = comptable[[c for c in comptable if c not in cols_at_end] +
-                          [c for c in cols_at_end if c in comptable]]
-    comptable['rationale'] = comptable['rationale'].str.rstrip(';')
+    comptable = reorder_dataframe(comptable)
     return comptable

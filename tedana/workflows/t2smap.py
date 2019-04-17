@@ -157,14 +157,14 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
         data = [data]
 
     LGR.info('Loading input data: {}'.format([f for f in data]))
-    catd, ref_img = io.load_data(data, n_echos=n_echos)
-    n_samp, n_echos, n_vols = catd.shape
-    LGR.debug('Resulting data shape: {}'.format(catd.shape))
+    data_cat, ref_img = io.load_data(data, n_echos=n_echos)
+    n_samp, n_echos, n_vols = data_cat.shape
+    LGR.debug('Resulting data shape: {}'.format(data_cat.shape))
 
     try:
-        ref_label = os.path.basename(ref_img).split('.')[0]
+        ref_label = op.basename(ref_img).split('.')[0]
     except (TypeError, AttributeError):
-        ref_label = os.path.basename(str(data[0])).split('.')[0]
+        ref_label = op.basename(str(data[0])).split('.')[0]
 
     if label is not None:
         out_dir = 'TED.{0}.{1}'.format(ref_label, label)
@@ -181,16 +181,16 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
         LGR.info('Computing adaptive mask')
     else:
         LGR.info('Using user-defined mask')
-    mask, masksum = utils.make_adaptive_mask(catd, getsum=True)
+    mask, masksum = utils.make_adaptive_mask(data_cat, getsum=True)
 
     LGR.info('Computing adaptive T2* map')
     if fitmode == 'all':
         (t2s_limited, s0_limited,
          t2ss, s0s,
-         t2s_full, s0_full) = decay.fit_decay(catd, tes, mask, masksum)
+         t2s_full, s0_full) = decay.fit_decay(data_cat, tes, mask, masksum)
     else:
         (t2s_limited, s0_limited,
-         t2s_full, s0_full) = decay.fit_decay_ts(catd, tes, mask, masksum)
+         t2s_full, s0_full) = decay.fit_decay_ts(data_cat, tes, mask, masksum)
 
     # set a hard cap for the T2* map/timeseries
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
@@ -201,11 +201,11 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
 
     LGR.info('Computing optimal combination')
     # optimally combine data
-    OCcatd = combine.make_optcom(catd, tes, mask, t2s=t2s_full,
-                                 combmode=combmode)
+    data_oc = combine.make_optcom(data_cat, tes, mask, t2s=t2s_full,
+                                  combmode=combmode)
 
     # clean up numerical errors
-    for arr in (OCcatd, s0_limited, t2s_limited):
+    for arr in (data_oc, s0_limited, t2s_limited):
         np.nan_to_num(arr, copy=False)
 
     s0_limited[s0_limited < 0] = 0
@@ -215,7 +215,7 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
     io.filewrite(s0_limited, op.join(out_dir, 's0v.nii'), ref_img)
     io.filewrite(t2s_full, op.join(out_dir, 't2svG.nii'), ref_img)
     io.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
-    io.filewrite(OCcatd, op.join(out_dir, 'ts_OC.nii'), ref_img)
+    io.filewrite(data_oc, op.join(out_dir, 'ts_OC.nii'), ref_img)
 
 
 def _main(argv=None):

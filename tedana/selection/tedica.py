@@ -6,7 +6,7 @@ import numpy as np
 from scipy import stats
 
 from tedana import utils
-from tedana.selection._utils import getelbow
+from tedana.selection._utils import getelbow, reorder_dataframe
 
 LGR = logging.getLogger(__name__)
 
@@ -19,10 +19,10 @@ def manual_selection(comptable, acc=None, rej=None):
     ----------
     comptable : (C x M) :obj:`pandas.DataFrame`
         Component metric table, where `C` is components and `M` is metrics
-    acc : :obj:`list`
-        List of accepted components
-    rej : :obj:`list`
-        List of rejected components.
+    acc : :obj:`list`, optional
+        List of accepted components. Default is None.
+    rej : :obj:`list`, optional
+        List of rejected components. Default is None.
 
     Returns
     -------
@@ -50,6 +50,8 @@ def manual_selection(comptable, acc=None, rej=None):
     elif acc is None and rej is not None:
         acc = sorted(np.setdiff1d(all_comps, rej))
     elif acc is None and rej is None:
+        LGR.info('No manually accepted or rejected components supplied. '
+                 'Accepting all components.')
         # Accept all components if no manual selection provided
         acc = all_comps[:]
         rej = []
@@ -62,19 +64,17 @@ def manual_selection(comptable, acc=None, rej=None):
     comptable.loc[ign, 'rationale'] += 'I001;'
 
     # Move decision columns to end
-    cols_at_end = ['classification', 'rationale']
-    comptable = comptable[[c for c in comptable if c not in cols_at_end] +
-                          [c for c in cols_at_end if c in comptable]]
-    comptable['rationale'] = comptable['rationale'].str.rstrip(';')
+    comptable = reorder_dataframe(comptable)
     return comptable
 
 
 def kundu_selection_v2(comptable, n_echos, n_vols):
     """
-    Classify components in seldict as "accepted," "rejected," or "ignored."
+    Classify components as "accepted," "rejected," or "ignored" based on
+    relevant metrics.
 
     The selection process uses previously calculated parameters listed in
-    `seldict` for each ICA component such as Kappa (a T2* weighting metric),
+    comptable for each ICA component such as Kappa (a T2* weighting metric),
     Rho (an S0 weighting metric), and variance explained.
     See `Notes` for additional calculated metrics used to classify each
     component into one of the listed groups.
@@ -212,16 +212,14 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
                     (comptable.loc[ncls, 'rho'] < rho_elbow)]
 
     if len(acc_prov) == 0:
-        LGR.warning('No BOLD-like components detected')
+        LGR.warning('No BOLD-like components detected. Ignoring all remaining '
+                    'components.')
         ign = sorted(np.setdiff1d(all_comps, rej))
         comptable.loc[ign, 'classification'] = 'ignored'
         comptable.loc[ign, 'rationale'] += 'I006;'
 
         # Move decision columns to end
-        cols_at_end = ['classification', 'rationale']
-        comptable = comptable[[c for c in comptable if c not in cols_at_end] +
-                              [c for c in cols_at_end if c in comptable]]
-        comptable['rationale'] = comptable['rationale'].str.rstrip(';')
+        comptable = reorder_dataframe(comptable)
         return comptable
 
     # Calculate "rate" for kappa: kappa range divided by variance explained
@@ -335,8 +333,5 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     # at this point, unclf is equivalent to accepted
 
     # Move decision columns to end
-    cols_at_end = ['classification', 'rationale']
-    comptable = comptable[[c for c in comptable if c not in cols_at_end] +
-                          [c for c in cols_at_end if c in comptable]]
-    comptable['rationale'] = comptable['rationale'].str.rstrip(';')
+    comptable = reorder_dataframe(comptable)
     return comptable

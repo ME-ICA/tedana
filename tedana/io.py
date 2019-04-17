@@ -216,7 +216,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, ref_img):
     acc = comptable[comptable.classification == 'accepted'].index.values
 
     fout = filewrite(ts, 'ts_OC', ref_img)
-    LGR.info('Writing optimally-combined time series: {}'.format(op.abspath(fout)))
+    LGR.info('Writing optimally combined time series: {}'.format(op.abspath(fout)))
 
     write_split_ts(ts, mmix, mask, comptable, ref_img, suffix='OC')
 

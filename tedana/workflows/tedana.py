@@ -294,9 +294,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         data = [data]
 
     LGR.info('Loading input data: {}'.format([f for f in data]))
-    catd, ref_img = io.load_data(data, n_echos=n_echos)
-    n_samp, n_echos, n_vols = catd.shape
-    LGR.debug('Resulting data shape: {}'.format(catd.shape))
+    data_cat, ref_img = io.load_data(data, n_echos=n_echos)
+    n_samp, n_echos, n_vols = data_cat.shape
+    LGR.debug('Resulting data shape: {}'.format(data_cat.shape))
 
     if mixm is not None and op.isfile(mixm):
         mixm = op.abspath(mixm)
@@ -331,13 +331,13 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     if mask is None:
         LGR.info('Computing EPI mask from first echo')
-        first_echo_img = io.new_nii_like(ref_img, catd[:, 0, :])
+        first_echo_img = io.new_nii_like(ref_img, data_cat[:, 0, :])
         mask = compute_epi_mask(first_echo_img)
     else:
         # TODO: add affine check
         LGR.info('Using user-defined mask')
 
-    mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True)
+    mask, masksum = utils.make_adaptive_mask(data_cat, mask=mask, getsum=True)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
     if verbose:
         io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
@@ -345,7 +345,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     os.chdir(out_dir)
 
     LGR.info('Computing T2* map')
-    t2s, s0, t2ss, s0s, t2sG, s0G = decay.fit_decay(catd, tes, mask, masksum)
+    t2s, s0, t2ss, s0s, t2sG, s0G = decay.fit_decay(data_cat, tes, mask, masksum)
 
     # set a hard cap for the T2* map
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
@@ -363,32 +363,32 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         io.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
 
     # optimally combine data
-    data_oc = combine.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
+    data_oc = combine.make_optcom(data_cat, tes, mask, t2s=t2sG, combmode=combmode)
 
     # regress out global signal unless explicitly not desired
     if 'gsr' in gscontrol:
-        catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, ref_img)
+        data_cat, data_oc = gsc.gscontrol_raw(data_cat, data_oc, n_echos, ref_img)
 
     if mixm is None:
         # Identify and remove thermal noise from data
-        n_components, dd = decomposition.tedpca(
-                catd, data_oc, combmode, mask, t2s, t2sG, ref_img,
+        n_components, data_red = decomposition.tedpca(
+                data_cat, data_oc, mask, t2s, ref_img,
                 tes=tes, method=tedpca, ste=ste, kdaw=10., rdaw=1.,
                 out_dir=out_dir, verbose=verbose)
-        mmix_orig = decomposition.tedica(n_components, dd, fixed_seed,
+        mmix_orig = decomposition.tedica(data_red, n_components, fixed_seed,
                                          maxit, maxrestart)
 
         if verbose:
             np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
             if ste == -1:
-                io.filewrite(utils.unmask(dd, mask),
+                io.filewrite(utils.unmask(data_red, mask),
                              op.join(out_dir, 'ts_OC_whitened.nii'), ref_img)
 
         # Estimate betas and compute selection metrics for mixing matrix
         # generated from dimensionally reduced data using full data (i.e., data
         # with thermal noise)
         comptable, metric_maps, betas, mmix = model.dependence_metrics(
-                    catd, data_oc, mmix_orig, mask, t2s, tes,
+                    data_cat, data_oc, mmix_orig, mask, t2s, tes,
                     ref_img, reindex=True, label='meica_', out_dir=out_dir,
                     method='kundu_v2', verbose=verbose)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
@@ -403,7 +403,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
         comptable, metric_maps, betas, mmix = model.dependence_metrics(
-                    catd, data_oc, mmix_orig, mask, t2s, tes,
+                    data_cat, data_oc, mmix_orig, mask, t2s, tes,
                     ref_img, label='meica_', out_dir=out_dir,
                     method='kundu_v2', verbose=verbose)
         if manacc is not None:
@@ -444,7 +444,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         gsc.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
 
     if verbose:
-        io.writeresults_echoes(catd, mmix, mask, comptable, ref_img)
+        io.writeresults_echoes(data_cat, mmix, mask, comptable, ref_img)
 
     if png:
         LGR.info('Making figures folder with static component maps and '
