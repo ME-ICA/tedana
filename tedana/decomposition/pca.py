@@ -2,7 +2,6 @@
 Signal decomposition methods for tedana
 """
 import logging
-import warnings
 
 import numpy as np
 from scipy import stats
@@ -55,8 +54,8 @@ def run_mlepca(data):
     return u, s, v
 
 
-def tedpca(data_cat, data_oc, mask, t2s, ref_img, tes, method='mle', ste=-1,
-           kdaw=10., rdaw=1., out_dir='.', verbose=False):
+def tedpca(data_cat, data_oc, mask, t2s, ref_img, tes, method='mle',
+           source_tes=-1, kdaw=10., rdaw=1., out_dir='.', verbose=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
     noise from multi-echo data.
@@ -77,7 +76,7 @@ def tedpca(data_cat, data_oc, mask, t2s, ref_img, tes, method='mle', ste=-1,
         List of echo times associated with `data_cat`, in milliseconds
     method : {'mle', 'kundu', 'kundu-stabilize'}, optional
         Method with which to select components in TEDPCA. Default is 'mle'.
-    ste : :obj:`int` or :obj:`list` of :obj:`int`, optional
+    source_tes : :obj:`int` or :obj:`list` of :obj:`int`, optional
         Which echos to use in PCA. Values -1 and 0 are special, where a value
         of -1 will indicate using the optimal combination of the echos
         and 0  will indicate using all the echos. A list can be provided
@@ -152,17 +151,17 @@ def tedpca(data_cat, data_oc, mask, t2s, ref_img, tes, method='mle', ste=-1,
     """
 
     n_samp, n_echos, n_vols = data_cat.shape
-    ste = np.array([int(ee) for ee in str(ste).split(',')])
+    source_tes = np.array([int(ee) for ee in str(source_tes).split(',')])
 
-    if len(ste) == 1 and ste[0] == -1:
+    if len(source_tes) == 1 and source_tes[0] == -1:
         LGR.info('Computing PCA of optimally combined multi-echo data')
         data = data_oc[mask, :][:, np.newaxis, :]
-    elif len(ste) == 1 and ste[0] == 0:
+    elif len(source_tes) == 1 and source_tes[0] == 0:
         LGR.info('Computing PCA of spatially concatenated multi-echo data')
         data = data_cat[mask, ...]
     else:
-        LGR.info('Computing PCA of echo #%s' % ','.join([str(ee) for ee in ste]))
-        data = np.stack([data_cat[mask, ee, :] for ee in ste - 1], axis=1)
+        LGR.info('Computing PCA of echo #{0}'.format(','.join([str(ee) for ee in source_tes])))
+        data = np.stack([data_cat[mask, ee, :] for ee in source_tes - 1], axis=1)
 
     eim = np.squeeze(eimask(data))
     data = np.squeeze(data[eim])
@@ -233,70 +232,4 @@ def tedpca(data_cat, data_oc, mask, t2s, ref_img, tes, method='mle', ste=-1,
     kept_data = stats.zscore(kept_data, axis=1)  # variance normalize time series
     kept_data = stats.zscore(kept_data, axis=None)  # variance normalize everything
 
-    return n_components, kept_data
-
-
-def tedica(data, n_components, fixed_seed, maxit=500, maxrestart=10):
-    """
-    Perform ICA on `data` and returns mixing matrix
-
-    Parameters
-    ----------
-    data : (S x T) :obj:`numpy.ndarray`
-        Dimensionally reduced optimally combined functional data, where `S` is
-        samples and `T` is time
-    n_components : :obj:`int`
-        Number of components retained from PCA decomposition
-    fixed_seed : :obj:`int`
-        Seed for ensuring reproducibility of ICA results
-    maxit : :obj:`int`, optional
-        Maximum number of iterations for ICA. Default is 500.
-    maxrestart : :obj:`int`, optional
-        Maximum number of attempted decompositions to perform with different
-        random seeds. ICA will stop running if there is convergence prior to
-        reaching this limit. Default is 10.
-
-    Returns
-    -------
-    mmix : (T x C) :obj:`numpy.ndarray`
-        Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `data`
-
-    Notes
-    -----
-    Uses `sklearn` implementation of FastICA for decomposition
-    """
-
-    from sklearn.decomposition import FastICA
-    warnings.filterwarnings(action='ignore', module='scipy',
-                            message='^internal gelsd')
-
-    if fixed_seed == -1:
-        fixed_seed = np.random.randint(low=1, high=1000)
-
-    for i_attempt in range(maxrestart):
-        ica = FastICA(n_components=n_components, algorithm='parallel',
-                      fun='logcosh', max_iter=maxit, random_state=fixed_seed)
-
-        with warnings.catch_warnings(record=True) as w:
-            # Cause all warnings to always be triggered in order to capture
-            # convergence failures.
-            warnings.simplefilter('always')
-
-            ica.fit(data)
-
-            w = list(filter(lambda i: issubclass(i.category, UserWarning), w))
-            if len(w):
-                LGR.warning('ICA attempt {0} failed to converge after {1} '
-                            'iterations'.format(i_attempt + 1, ica.n_iter_))
-                if i_attempt < maxrestart - 1:
-                    fixed_seed += 1
-                    LGR.warning('Random seed updated to {0}'.format(fixed_seed))
-            else:
-                LGR.info('ICA attempt {0} converged in {1} '
-                         'iterations'.format(i_attempt + 1, ica.n_iter_))
-                break
-
-    mmix = ica.mixing_
-    mmix = stats.zscore(mmix, axis=0)
-    return mmix
+    return kept_data, n_components

@@ -13,9 +13,9 @@ from tedana import io, utils
 LGR = logging.getLogger(__name__)
 
 
-def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
+def gscontrol_raw(data_cat, data_oc, n_echos, ref_img, dtrank=4):
     """
-    Removes global signal from individual echo `catd` and `optcom` time series
+    Removes global signal from individual echo `data_cat` and `data_oc` time series
 
     This function uses the spatial global signal estimation approach to
     to removal global signal out of individual echo time series datasets. The
@@ -25,12 +25,12 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
 
     Parameters
     ----------
-    catd : (S x E x T) array_like
+    data_cat : (S x E x T) array_like
         Input functional data
-    optcom : (S x T) array_like
+    data_oc : (S x T) array_like
         Optimally combined functional data (i.e., the output of `make_optcom`)
     n_echos : :obj:`int`
-        Number of echos in data. Should be the same as `E` dimension of `catd`
+        Number of echos in data. Should be the same as `E` dimension of `data_cat`
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
     dtrank : :obj:`int`, optional
@@ -39,34 +39,34 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
 
     Returns
     -------
-    dm_catd : (S x E x T) array_like
-        Input `catd` with global signal removed from time series
-    dm_optcom : (S x T) array_like
-        Input `optcom` with global signal removed from time series
+    data_cat_dm : (S x E x T) array_like
+        Input `data_cat` with global signal removed from time series
+    data_oc_dm : (S x T) array_like
+        Input `data_oc` with global signal removed from time series
     """
     LGR.info('Applying amplitude-based T1 equilibration correction')
-    if catd.shape[0] != optcom.shape[0]:
-        raise ValueError('First dimensions of catd ({0}) and optcom ({1}) do not '
-                         'match'.format(catd.shape[0], optcom.shape[0]))
-    elif catd.shape[1] != n_echos:
-        raise ValueError('Second dimension of catd ({0}) does not match '
-                         'n_echos ({1})'.format(catd.shape[1], n_echos))
-    elif catd.shape[2] != optcom.shape[1]:
-        raise ValueError('Third dimension of catd ({0}) does not match '
-                         'second dimension of optcom '
-                         '({1})'.format(catd.shape[2], optcom.shape[1]))
+    if data_cat.shape[0] != data_oc.shape[0]:
+        raise ValueError('First dimensions of data_cat ({0}) and data_oc ({1}) do not '
+                         'match'.format(data_cat.shape[0], data_oc.shape[0]))
+    elif data_cat.shape[1] != n_echos:
+        raise ValueError('Second dimension of data_cat ({0}) does not match '
+                         'n_echos ({1})'.format(data_cat.shape[1], n_echos))
+    elif data_cat.shape[2] != data_oc.shape[1]:
+        raise ValueError('Third dimension of data_cat ({0}) does not match '
+                         'second dimension of data_oc '
+                         '({1})'.format(data_cat.shape[2], data_oc.shape[1]))
 
     # Legendre polynomial basis for denoising
-    bounds = np.linspace(-1, 1, optcom.shape[-1])
+    bounds = np.linspace(-1, 1, data_oc.shape[-1])
     Lmix = np.column_stack([lpmv(0, vv, bounds) for vv in range(dtrank)])
 
     # compute mean, std, mask local to this function
     # inefficient, but makes this function a bit more modular
-    Gmu = optcom.mean(axis=-1)  # temporal mean
+    Gmu = data_oc.mean(axis=-1)  # temporal mean
     Gmask = Gmu != 0
 
     # find spatial global signal
-    dat = optcom[Gmask] - Gmu[Gmask][:, np.newaxis]
+    dat = data_oc[Gmask] - Gmu[Gmask][:, np.newaxis]
     sol = np.linalg.lstsq(Lmix, dat.T, rcond=None)[0]  # Legendre basis for detrending
     detr = dat - np.dot(sol.T, Lmix.T)[0]
     sphis = (detr).min(axis=1)
@@ -85,33 +85,33 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
     tsoc_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T,
                              np.atleast_2d(glbase.T[dtrank])) + Gmu[Gmask][:, np.newaxis]
 
-    io.filewrite(optcom, 'tsoc_orig', ref_img)
-    dm_optcom = utils.unmask(tsoc_nogs, Gmask)
-    io.filewrite(dm_optcom, 'tsoc_nogs', ref_img)
+    io.filewrite(data_oc, 'tsoc_orig', ref_img)
+    data_oc_dm = utils.unmask(tsoc_nogs, Gmask)
+    io.filewrite(data_oc_dm, 'tsoc_nogs', ref_img)
 
     # Project glbase out of each echo
-    dm_catd = catd.copy()  # don't overwrite catd
+    data_cat_dm = data_cat.copy()  # don't overwrite data_cat
     for echo in range(n_echos):
-        dat = dm_catd[:, echo, :][Gmask]
+        dat = data_cat_dm[:, echo, :][Gmask]
         sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T, rcond=None)[0]
         e_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T,
                               np.atleast_2d(glbase.T[dtrank]))
-        dm_catd[:, echo, :] = utils.unmask(e_nogs, Gmask)
+        data_cat_dm[:, echo, :] = utils.unmask(e_nogs, Gmask)
 
-    return dm_catd, dm_optcom
+    return data_cat_dm, data_oc_dm
 
 
-def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img):
+def gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img):
     """
     Perform global signal regression.
 
     Parameters
     ----------
-    optcom_ts : (S x T) array_like
+    data_oc : (S x T) array_like
         Optimally combined time series data
     mmix : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `optcom_ts`
+        is components and `T` is the same as in `data_oc`
     mask : (S,) array_like
         Boolean mask array
     comptable : (C x X) :obj:`pandas.DataFrame`
@@ -139,7 +139,7 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img):
     ign = comptable[comptable.classification == 'ignored'].index.values
     not_ign = sorted(np.setdiff1d(all_comps, ign))
 
-    optcom_masked = optcom_ts[mask, :]
+    optcom_masked = data_oc[mask, :]
     optcom_mu = optcom_masked.mean(axis=-1)[:, np.newaxis]
     optcom_std = optcom_masked.std(axis=-1)[:, np.newaxis]
 

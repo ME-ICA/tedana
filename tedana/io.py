@@ -167,13 +167,13 @@ def writefeats(data, mmix, mask, ref_img, suffix=''):
     return fname
 
 
-def writeresults(ts, mask, comptable, mmix, n_vols, ref_img):
+def writeresults(data_oc, mask, comptable, mmix, n_vols, ref_img):
     """
-    Denoises `ts` and saves all resulting files to disk
+    Denoises `data_oc` and saves all resulting files to disk
 
     Parameters
     ----------
-    ts : (S x T) array_like
+    data_oc : (S x T) array_like
         Time series to denoise and save to disk
     mask : (S,) array_like
         Boolean mask array
@@ -183,7 +183,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, ref_img):
         "classification".
     mmix : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `data`
+        is components and `T` is the same as in `data_oc`
     n_vols : :obj:`int`
         Number of volumes in original time series
     ref_img : :obj:`str` or img_like
@@ -215,30 +215,30 @@ def writeresults(ts, mask, comptable, mmix, n_vols, ref_img):
     """
     acc = comptable[comptable.classification == 'accepted'].index.values
 
-    fout = filewrite(ts, 'ts_OC', ref_img)
+    fout = filewrite(data_oc, 'ts_OC', ref_img)
     LGR.info('Writing optimally combined time series: {}'.format(op.abspath(fout)))
 
-    write_split_ts(ts, mmix, mask, comptable, ref_img, suffix='OC')
+    write_split_ts(data_oc, mmix, mask, comptable, ref_img, suffix='OC')
 
-    ts_B = model.get_coeffs(ts, mmix, mask)
+    ts_B = model.get_coeffs(data_oc, mmix, mask)
     fout = filewrite(ts_B, 'betas_OC', ref_img)
     LGR.info('Writing full ICA coefficient feature set: {}'.format(op.abspath(fout)))
 
     if len(acc) != 0:
         fout = filewrite(ts_B[:, acc], 'betas_hik_OC', ref_img)
         LGR.info('Writing denoised ICA coefficient feature set: {}'.format(op.abspath(fout)))
-        fout = writefeats(split_ts(ts, mmix, mask, comptable)[0],
+        fout = writefeats(split_ts(data_oc, mmix, mask, comptable)[0],
                           mmix[:, acc], mask, ref_img, suffix='OC2')
         LGR.info('Writing Z-normalized spatial component maps: {}'.format(op.abspath(fout)))
 
 
-def writeresults_echoes(catd, mmix, mask, comptable, ref_img):
+def writeresults_echoes(data_cat, mmix, mask, comptable, ref_img):
     """
     Saves individually denoised echos to disk
 
     Parameters
     ----------
-    catd : (S x E x T) array_like
+    data_cat : (S x E x T) array_like
         Input data time series
     mmix : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
@@ -273,9 +273,9 @@ def writeresults_echoes(catd, mmix, mask, comptable, ref_img):
     ======================    =================================================
     """
 
-    for i_echo in range(catd.shape[1]):
+    for i_echo in range(data_cat.shape[1]):
         LGR.info('Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo + 1))
-        write_split_ts(catd[:, i_echo, :], mmix, mask, comptable, ref_img,
+        write_split_ts(data_cat[:, i_echo, :], mmix, mask, comptable, ref_img,
                        suffix='e%i' % (i_echo + 1))
 
 
