@@ -13,7 +13,7 @@ LGR = logging.getLogger(__name__)
 
 def selcomps(seldict, comptable, mmix, manacc, n_echos):
     """
-    Classify components in seldict as "accepted," "rejected," "midk," or "ignored."
+    Classify components in seldict as "accepted," "rejected," or "ignored."
 
     The selection process uses previously calculated parameters listed in `seldict`
     for each ICA component such as Kappa (a T2* weighting metric), Rho (an S0 weighting metric),
@@ -39,7 +39,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     -------
     comptable : :obj:`pandas.DataFrame`
         Updated component table with additional metrics and with
-        classification (accepted, rejected, midk, or ignored)
+        classification (accepted, rejected, or ignored)
 
     Notes
     -----
@@ -79,11 +79,11 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
         EXTEND_FACTOR = 2
     RESTRICT_FACTOR = 2
 
-    # List of components
-    midk = []
-    ign = []
+    # Lists of components
     all_comps = np.arange(comptable.shape[0])
-    # unclf remains a full list that is whittled down over criteria
+    # unclf is a full list that is whittled down over criteria
+    # since the default classification is "accepted", at the end of the tree
+    # the remaining elements in unclf match up to the accepted components
     unclf = np.arange(comptable.shape[0])
 
     # If user has specified
@@ -115,7 +115,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     """
     comptable['dice_FR2'] = np.zeros(all_comps.shape[0])
     comptable['dice_FS0'] = np.zeros(all_comps.shape[0])
-    for i_comp in unclf:
+    for i_comp in all_comps:
         comptable.loc[i_comp, 'dice_FR2'] = utils.dice(Br_R2_clmaps[:, i_comp],
                                                        F_R2_clmaps[:, i_comp])
         comptable.loc[i_comp, 'dice_FS0'] = utils.dice(Br_S0_clmaps[:, i_comp],
