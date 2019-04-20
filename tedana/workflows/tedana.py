@@ -208,9 +208,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     ctab : :obj:`str`, optional
         File containing component table from which to extract pre-computed
         classifications.
-    manacc : :obj:`str`, optional
-        Comma separated list of manually accepted components in string form.
-        Default is None.
+    manacc : :obj:`list`, :obj:`str`, or None, optional
+        List of manually accepted components. Can be a list of the components,
+        a comma-separated string with component numbers, or None. Default is
+        None.
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
         denoising. Default is False.
@@ -297,16 +298,35 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
     if mixm is not None and op.isfile(mixm):
-        shutil.copyfile(mixm, op.join(out_dir, 'meica_mix.1D'))
-        shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
+        mixm = op.abspath(mixm)
+        # Allow users to re-run on same folder
+        if mixm != op.join(out_dir, 'meica_mix.1D'):
+            shutil.copyfile(mixm, op.join(out_dir, 'meica_mix.1D'))
+            shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
     elif mixm is not None:
         raise IOError('Argument "mixm" must be an existing file.')
 
     if ctab is not None and op.isfile(ctab):
-        shutil.copyfile(ctab, op.join(out_dir, 'comp_table_ica.txt'))
-        shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
+        ctab = op.abspath(ctab)
+        # Allow users to re-run on same folder
+        if ctab != op.join(out_dir, 'comp_table_ica.txt'):
+            shutil.copyfile(ctab, op.join(out_dir, 'comp_table_ica.txt'))
+            shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
+
+    if isinstance(manacc, str):
+        manacc = [int(comp) for comp in manacc.split(',')]
+
+    if ctab and not mixm:
+        LGR.warning('Argument "ctab" requires argument "mixm".')
+        ctab = None
+    elif ctab and (manacc is None):
+        LGR.warning('Argument "ctab" requires argument "manacc".')
+        ctab = None
+    elif manacc is not None and not mixm:
+        LGR.warning('Argument "manacc" requires argument "mixm".')
+        manacc = None
 
     if mask is None:
         LGR.info('Computing EPI mask from first echo')
@@ -374,8 +394,13 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     verbose=verbose)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        comptable = selection.selcomps(seldict, comptable, mmix, manacc,
-                                       n_echos)
+        comptable = selection.selcomps(seldict, comptable, mmix, manacc, n_echos)
+    elif ctab is not None and manacc is not None:
+        LGR.info('Using supplied ICA mixing matrix, component table, and '
+                 'accepted components')
+        mmix = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
+        comptable = pd.read_csv(ctab, sep='\t', index_col='component')
+        comptable = selection.selcomps({}, comptable, mmix, manacc, n_echos)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
@@ -383,11 +408,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
                     ref_img, label='meica_', out_dir=out_dir,
                     verbose=verbose)
-        if ctab is None:
-            comptable = selection.selcomps(seldict, comptable, mmix, manacc,
-                                           n_echos)
-        else:
-            comptable = pd.read_csv(ctab, sep='\t', index_col='component')
+        comptable = selection.selcomps(seldict, comptable, mmix, manacc, n_echos)
 
     comptable.to_csv(op.join(out_dir, 'comp_table_ica.txt'), sep='\t',
                      index=True, index_label='component', float_format='%.6f')

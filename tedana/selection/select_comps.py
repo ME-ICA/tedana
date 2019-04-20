@@ -89,7 +89,12 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
 
     # If user has specified
     if manacc:
-        acc = sorted([int(vv) for vv in manacc.split(',')])
+        LGR.info('Performing manual ICA component selection')
+        if ('classification' in comptable.columns and
+                'original_classification' not in comptable.columns):
+            comptable['original_classification'] = comptable['classification']
+            comptable['original_rationale'] = comptable['rationale']
+        acc = [int(comp) for comp in manacc]
         rej = sorted(np.setdiff1d(all_comps, acc))
         comptable.loc[acc, 'classification'] = 'accepted'
         comptable.loc[rej, 'classification'] = 'rejected'
