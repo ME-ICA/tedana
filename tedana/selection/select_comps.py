@@ -230,15 +230,13 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
         comptable.loc[comptable['kappa'] > getelbow(comptable['kappa'], return_val=True),
                       'variance explained'])
     ncls = acc.copy()
-    # NOTE: We're not sure why this is done, nor why it's specifically done
-    # three times. Need to look into this deeper, esp. to make sure the 3
-    # isn't a hard-coded reference to the number of echoes.
-    # Reduce components to investigate as "good" to ones in which change in
-    # variance explained is less than the limit defined above.... What?
-    for nn in range(3):
-        ncls = comptable.loc[ncls].loc[
-            comptable.loc[
-                ncls, 'variance explained'].diff() < varex_upper_p].index.values
+    # Sort component table by variance explained and find outlier components by
+    # change in variance explained from one component to the next.
+    for i_loop in range(3):
+        temp_comptable = comptable.loc[ncls].sort_values(by=['variance explained'],
+                                                         ascending=False)
+        ncls = temp_comptable.loc[
+            temp_comptable['variance explained'].diff() < varex_upper_p].index.values
 
     # Compute elbows from other elbows
     kappas_under_f01 = (comptable.loc[comptable['kappa'] <
