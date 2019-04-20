@@ -90,7 +90,7 @@ def _get_parser():
                                 'accepted components'),
                           default=None)
     optional.add_argument('--sourceTEs',
-                          dest='ste',
+                          dest='source_tes',
                           type=str,
                           help=('Source TEs for models. E.g., 0 for all, '
                                 '-1 for opt. com., and 1,2 for just TEs 1 and '
@@ -99,9 +99,9 @@ def _get_parser():
     optional.add_argument('--combmode',
                           dest='combmode',
                           action='store',
-                          choices=['t2s', 'ste'],
+                          choices=['t2s'],
                           help=('Combination scheme for TEs: '
-                                't2s (Posse 1999, default), ste (Poser)'),
+                                't2s (Posse 1999, default)'),
                           default='t2s')
     optional.add_argument('--verbose',
                           dest='verbose',
@@ -184,7 +184,7 @@ def _get_parser():
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     tedort=False, gscontrol=None, tedpca='mle',
-                    ste=-1, combmode='t2s', verbose=False, stabilize=False,
+                    source_tes=-1, combmode='t2s', verbose=False, stabilize=False,
                     out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
                     debug=False, quiet=False, png=False, png_cmap='coolwarm'):
     """
@@ -219,11 +219,11 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         is None.
     tedpca : {'mle', 'kundu', 'kundu-stabilize'}, optional
         Method with which to select components in TEDPCA. Default is 'mle'.
-    ste : :obj:`int`, optional
+    source_tes : :obj:`int`, optional
         Source TEs for models. 0 for all, -1 for optimal combination.
         Default is -1.
-    combmode : {'t2s', 'ste'}, optional
-        Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
+    combmode : {'t2s'}, optional
+        Combination scheme for TEs: 't2s' (Posse 1999, default).
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
     png : obj:'bool', optional
@@ -352,7 +352,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # Identify and remove thermal noise from data
         n_components, dd = decomposition.tedpca(catd, data_oc, combmode, mask,
                                                 t2s, t2sG, ref_img,
-                                                tes=tes, method=tedpca, ste=ste,
+                                                tes=tes, method=tedpca,
+                                                source_tes=source_tes,
                                                 kdaw=10., rdaw=1.,
                                                 verbose=verbose)
         mmix_orig = decomposition.tedica(n_components, dd, fixed_seed,
@@ -360,7 +361,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
         if verbose:
             np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
-            if ste == -1:
+            if source_tes == -1:
                 io.filewrite(utils.unmask(dd, mask),
                              op.join(out_dir, 'ts_OC_whitened.nii'), ref_img)
 
