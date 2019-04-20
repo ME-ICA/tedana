@@ -140,6 +140,15 @@ of the other echoes (which it is).
 .. image:: /_static/10_optimal_combination_timeseries.png
   :align: center
 
+.. note::
+    The tedana package also supports another method for optimal combination that
+    does not use :math:`T_{2}^*`, known as the parallel-acquired inhomogeneity
+    desensitized (PAID) ME-fMRI combination method (`Poser et al., 2006`_).
+    This method is not supported in the tedana workflow, however, because
+    it assumes that noise is "isotropic and homogeneous throughout the image",
+    and so can only be run on smoothed data. This is not compatible with the
+    multi-echo denoising procedure, but can be used in the t2smap workflow.
+
 TEDPCA
 ``````
 The next step is to identify and temporarily remove Gaussian (thermal) noise
@@ -223,3 +232,4 @@ robust PCA.
 
 .. _nilearn.masking.compute_epi_mask: https://nilearn.github.io/modules/generated/nilearn.masking.compute_epi_mask.html
 .. _Power et al. (2018): http://www.pnas.org/content/early/2018/02/07/1720985115.short
+.. _Poser et al., 2006: https://onlinelibrary.wiley.com/doi/full/10.1002/mrm.20900
