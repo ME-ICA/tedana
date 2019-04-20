@@ -229,9 +229,15 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     varex_upper_p = np.median(
         comptable.loc[comptable['kappa'] > getelbow(comptable['kappa'], return_val=True),
                       'variance explained'])
-    ncls = acc.copy()
+
     # Sort component table by variance explained and find outlier components by
     # change in variance explained from one component to the next.
+    # Remove variance-explained outliers from list of components to consider
+    # for acceptance. These components will have another chance to be accepted
+    # later on.
+    # NOTE: We're not sure why this is done this way, nor why it's specifically
+    # done three times.
+    ncls = acc.copy()
     for i_loop in range(3):
         temp_comptable = comptable.loc[ncls].sort_values(by=['variance explained'],
                                                          ascending=False)
