@@ -56,31 +56,10 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     distinguish components, a hypercommented version of this attempt is available at:
     https://gist.github.com/emdupre/ca92d52d345d08ee85e104093b81482e
     """
-
     cols_at_end = ['classification', 'rationale']
-    comptable['classification'] = 'accepted'
-    comptable['rationale'] = ''
-
-    Z_maps = seldict['Z_maps']
-    Z_clmaps = seldict['Z_clmaps']
-    F_R2_maps = seldict['F_R2_maps']
-    F_S0_clmaps = seldict['F_S0_clmaps']
-    F_R2_clmaps = seldict['F_R2_clmaps']
-    Br_S0_clmaps = seldict['Br_S0_clmaps']
-    Br_R2_clmaps = seldict['Br_R2_clmaps']
-
-    n_vols, n_comps = mmix.shape
-
-    # Set knobs
-    LOW_PERC = 25
-    HIGH_PERC = 90
-    if n_vols < 100:
-        EXTEND_FACTOR = 3
-    else:
-        EXTEND_FACTOR = 2
-    RESTRICT_FACTOR = 2
 
     # List of components
+    n_vols, n_comps = mmix.shape
     midk = []
     ign = []
     all_comps = np.arange(comptable.shape[0])
@@ -94,6 +73,8 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
                 'original_classification' not in comptable.columns):
             comptable['original_classification'] = comptable['classification']
             comptable['original_rationale'] = comptable['rationale']
+        comptable['classification'] = 'accepted'
+        comptable['rationale'] = ''
         acc = [int(comp) for comp in manacc]
         rej = sorted(np.setdiff1d(all_comps, acc))
         comptable.loc[acc, 'classification'] = 'accepted'
@@ -104,6 +85,26 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
                               [c for c in cols_at_end if c in comptable]]
         comptable['rationale'] = comptable['rationale'].str.rstrip(';')
         return comptable
+
+    comptable['classification'] = 'accepted'
+    comptable['rationale'] = ''
+
+    Z_maps = seldict['Z_maps']
+    Z_clmaps = seldict['Z_clmaps']
+    F_R2_maps = seldict['F_R2_maps']
+    F_S0_clmaps = seldict['F_S0_clmaps']
+    F_R2_clmaps = seldict['F_R2_clmaps']
+    Br_S0_clmaps = seldict['Br_S0_clmaps']
+    Br_R2_clmaps = seldict['Br_R2_clmaps']
+
+    # Set knobs
+    LOW_PERC = 25
+    HIGH_PERC = 90
+    if n_vols < 100:
+        EXTEND_FACTOR = 3
+    else:
+        EXTEND_FACTOR = 2
+    RESTRICT_FACTOR = 2
 
     """
     Tally number of significant voxels for cluster-extent thresholded R2 and S0
