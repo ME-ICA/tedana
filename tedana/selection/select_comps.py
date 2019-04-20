@@ -354,7 +354,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
         new_varex_lower = stats.scoreatpercentile(
             comptable.loc[unclf[:num_acc_guess], 'variance explained'],
             LOW_PERC)
-        candart = unclf[comptable.loc[unclf, 'd_table_score'] > num_acc_guess]
+        candart = unclf[comptable.loc[unclf, 'd_table_score_scrub'] > num_acc_guess]
         ign_add0 = candart[comptable.loc[candart, 'variance explained'] > new_varex_lower]
         ign_add0 = np.setdiff1d(ign_add0, midk)
         comptable.loc[ign_add0, 'classification'] = 'ignored'
