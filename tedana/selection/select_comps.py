@@ -351,7 +351,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
             comptable.loc[acc[:num_acc_guess], 'variance explained'],
             LOW_PERC)
         candart = comptable.loc[acc].loc[
-            comptable.loc[acc, 'd_table_score'] >
+            comptable.loc[acc, 'd_table_score_scrub'] >
             num_acc_guess * n_decision_metrics].index.values
         ign_add0 = np.intersect1d(
             candart[comptable.loc[candart, 'variance explained'] > new_varex_lower],
