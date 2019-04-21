@@ -197,7 +197,7 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG, ref_img, tes, method='m
     # Normalize each component's time series
     vTmixN = stats.zscore(comp_ts, axis=0)
     comptable, _, _, _ = model.fitmodels_direct(
-                data_cat, data_oc, combmode, comp_ts, eimum, t2s, t2sG, tes, ref_img,
+                data_cat, comp_ts, eimum, t2s, t2sG, tes, combmode, ref_img,
                 reindex=False, mmixN=vTmixN, method=None,
                 label='mepca_', out_dir=out_dir, verbose=verbose)
     # varex_norm overrides normalized varex computed by fitmodels_direct
