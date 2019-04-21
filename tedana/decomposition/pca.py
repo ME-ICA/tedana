@@ -198,7 +198,7 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG, ref_img, tes, method='m
     vTmixN = stats.zscore(comp_ts, axis=0)
     _, comptable, _, _ = model.fitmodels_direct(
                 data_cat, comp_ts, eimum, t2s, t2sG, tes, combmode, ref_img,
-                reindex=False, mmixN=vTmixN,
+                reindex=False, mmixN=vTmixN, full_sel=False,
                 label='mepca_', out_dir=out_dir, verbose=verbose)
     # varex_norm overrides normalized varex computed by fitmodels_direct
     comptable['real normalized variance explained'] = varex_norm
