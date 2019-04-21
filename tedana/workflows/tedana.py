@@ -308,6 +308,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
 
+    if isinstance(manacc, str):
+        manacc = [int(comp) for comp in manacc.split(',')]
+
     if mask is None:
         LGR.info('Computing EPI mask from first echo')
         first_echo_img = io.new_nii_like(ref_img, catd[:, 0, :])
@@ -368,26 +371,27 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # Estimate betas and compute selection metrics for mixing matrix
         # generated from dimensionally reduced data using full data (i.e., data
         # with thermal noise)
-        seldict, comptable, betas, mmix = model.fitmodels_direct(
-                    catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
+        comptable, metric_maps, betas, mmix = model.dependence_metrics(
+                    catd, data_oc, mmix_orig, mask, t2s, tes,
                     ref_img, reindex=True, label='meica_', out_dir=out_dir,
-                    verbose=verbose)
+                    method='kundu_v2', verbose=verbose)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        comptable = selection.selcomps(seldict, comptable, mmix, manacc,
-                                       n_echos)
+        comptable = model.kundu_metrics(comptable, metric_maps)
+        comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
-        seldict, comptable, betas, mmix = model.fitmodels_direct(
-                    catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
+        comptable, metric_maps, betas, mmix = model.dependence_metrics(
+                    catd, data_oc, mmix_orig, mask, t2s, tes,
                     ref_img, label='meica_', out_dir=out_dir,
-                    verbose=verbose)
+                    method='kundu_v2', verbose=verbose)
         if ctab is None:
-            comptable = selection.selcomps(seldict, comptable, mmix, manacc,
-                                           n_echos)
+            comptable = model.kundu_metrics(comptable, metric_maps)
+            comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
         else:
             comptable = pd.read_csv(ctab, sep='\t', index_col='component')
+            comptable = selection.manual_selection(comptable, acc=manacc)
 
     comptable.to_csv(op.join(out_dir, 'comp_table_ica.txt'), sep='\t',
                      index=True, index_label='component', float_format='%.6f')

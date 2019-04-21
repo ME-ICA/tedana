@@ -319,12 +319,12 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         # Normalize each component's time series
         vTmixN = stats.zscore(comp_ts, axis=1).T
         LGR.info('Making initial component selection guess from PCA results')
-        _, comptable, betasv, v_T = model.fitmodels_direct(
-                    catd, comp_ts.T, eimum, t2s, t2sG, tes, combmode, ref_img,
-                    mmixN=vTmixN, full_sel=False, label='mepca_',
-                    verbose=verbose)
+        comptable, _, _, _ = model.dependence_metrics(
+                catd, OCcatd, comp_ts.T, eimum, t2s, tes, ref_img,
+                reindex=False, mmixN=vTmixN, method=None,
+                label='mepca_', verbose=verbose)
         # varex_norm overrides normalized varex computed by fitmodels_direct
-        comptable['normalized variance explained'] = varex_norm
+        comptable['original normalized variance explained'] = varex_norm
 
         pcastate = {'method': method,
                     'voxel_comp_weights': voxel_comp_weights,

@@ -8,6 +8,17 @@ import numpy as np
 LGR = logging.getLogger(__name__)
 
 
+def reorder_dataframe(comptable):
+    """
+    Reorder columns in component table and clean up rationale column.
+    """
+    cols_at_end = ['classification', 'rationale']
+    comptable = comptable[[c for c in comptable if c not in cols_at_end] +
+                          [c for c in cols_at_end if c in comptable]]
+    comptable['rationale'] = comptable['rationale'].str.rstrip(';')
+    return comptable
+
+
 def getelbow_cons(arr, return_val=False):
     """
     Elbow using mean/variance method - conservative
