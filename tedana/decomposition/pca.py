@@ -54,8 +54,8 @@ def run_mlepca(data):
     return u, s, v
 
 
-def tedpca(data_cat, data_oc, mask, t2s, ref_img, tes, method='mle',
-           source_tes=-1, kdaw=10., rdaw=1., out_dir='.', verbose=False):
+def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG, ref_img, tes, method='mle',
+           ste=-1, kdaw=10., rdaw=1., out_dir='.', verbose=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
     noise from multi-echo data.
@@ -66,9 +66,13 @@ def tedpca(data_cat, data_oc, mask, t2s, ref_img, tes, method='mle',
         Input functional data
     data_oc : (S x T) array_like
         Optimally combined time series data
+    combmode : :obj:`str`
+        Combination method
     mask : (S,) array_like
         Boolean mask array
     t2s : (S,) array_like
+        Map of voxel-wise T2* estimates.
+    t2sG : (S,) array_like
         Map of voxel-wise T2* estimates.
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
@@ -76,7 +80,7 @@ def tedpca(data_cat, data_oc, mask, t2s, ref_img, tes, method='mle',
         List of echo times associated with `data_cat`, in milliseconds
     method : {'mle', 'kundu', 'kundu-stabilize'}, optional
         Method with which to select components in TEDPCA. Default is 'mle'.
-    source_tes : :obj:`int` or :obj:`list` of :obj:`int`, optional
+    ste : :obj:`int` or :obj:`list` of :obj:`int`, optional
         Which echos to use in PCA. Values -1 and 0 are special, where a value
         of -1 will indicate using the optimal combination of the echos
         and 0  will indicate using all the echos. A list can be provided
@@ -91,7 +95,7 @@ def tedpca(data_cat, data_oc, mask, t2s, ref_img, tes, method='mle',
     out_dir : :obj:`str`, optional
         Output directory.
     verbose : :obj:`bool`, optional
-        Whether to output files from dependence_metrics or not. Default: False
+        Whether to output files from fitmodels_direct or not. Default: False
 
     Returns
     -------
@@ -151,17 +155,17 @@ def tedpca(data_cat, data_oc, mask, t2s, ref_img, tes, method='mle',
     """
 
     n_samp, n_echos, n_vols = data_cat.shape
-    source_tes = np.array([int(ee) for ee in str(source_tes).split(',')])
+    ste = np.array([int(ee) for ee in str(ste).split(',')])
 
-    if len(source_tes) == 1 and source_tes[0] == -1:
+    if len(ste) == 1 and ste[0] == -1:
         LGR.info('Computing PCA of optimally combined multi-echo data')
         data = data_oc[mask, :][:, np.newaxis, :]
-    elif len(source_tes) == 1 and source_tes[0] == 0:
+    elif len(ste) == 1 and ste[0] == 0:
         LGR.info('Computing PCA of spatially concatenated multi-echo data')
         data = data_cat[mask, ...]
     else:
-        LGR.info('Computing PCA of echo #{0}'.format(','.join([str(ee) for ee in source_tes])))
-        data = np.stack([data_cat[mask, ee, :] for ee in source_tes - 1], axis=1)
+        LGR.info('Computing PCA of echo #{0}'.format(','.join([str(ee) for ee in ste])))
+        data = np.stack([data_cat[mask, ee, :] for ee in ste - 1], axis=1)
 
     eim = np.squeeze(eimask(data))
     data = np.squeeze(data[eim])
@@ -192,11 +196,11 @@ def tedpca(data_cat, data_oc, mask, t2s, ref_img, tes, method='mle',
 
     # Normalize each component's time series
     vTmixN = stats.zscore(comp_ts, axis=0)
-    comptable, _, _, _ = model.dependence_metrics(
-                data_cat, data_oc, comp_ts, eimum, t2s, tes, ref_img,
+    comptable, _, _, _ = model.fitmodels_direct(
+                data_cat, data_oc, combmode, comp_ts, eimum, t2s, t2sG, tes, ref_img,
                 reindex=False, mmixN=vTmixN, method=None,
                 label='mepca_', out_dir=out_dir, verbose=verbose)
-    # varex_norm overrides normalized varex computed by dependence_metrics
+    # varex_norm overrides normalized varex computed by fitmodels_direct
     comptable['real normalized variance explained'] = varex_norm
 
     np.savetxt('mepca_mix.1D', comp_ts)

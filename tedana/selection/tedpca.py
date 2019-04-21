@@ -5,8 +5,7 @@ import logging
 import numpy as np
 
 from tedana import utils
-from tedana.selection._utils import (getelbow_cons, getelbow,
-                                     reorder_dataframe)
+from tedana.selection._utils import (getelbow_cons, getelbow)
 
 LGR = logging.getLogger(__name__)
 
