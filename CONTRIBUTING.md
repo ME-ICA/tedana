@@ -30,7 +30,7 @@ As a reminder, we expect all contributions to `tedana` to adhere to our [code of
 ### Monthly developer calls
 
 We run monthly developer calls via Zoom.
-You can see the schedule via the `tedana` [google calendar](https://calendar.google.com/calendar/embed?src=pl6vb4t9fck3k6mdo2mok53iss%40group.calendar.google.com&ctz=Europe%2FLondon).
+You can see the schedule via the `tedana` [google calendar](https://calendar.google.com/calendar/embed?src=pl6vb4t9fck3k6mdo2mok53iss%40group.calendar.google.com).
 An agenda will be circulated in the gitter channel in advance of the meeting.
 
 Everyone is welcome.
