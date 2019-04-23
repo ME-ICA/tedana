@@ -11,6 +11,7 @@ Here are some [instructions][link_signupinstructions].
 Already know what you're looking for in this guide? Jump to the following sections:
 
 * [Joining the conversation](#joining-the-conversation)
+  * [Monthly developer calls](#monthly-developer-calls)
 * [Contributing through Github](#contributing-through-github)
 * [Understanding issues, milestones, and project boards](#understanding-issues-milestones-and-project-boards)
 * [Making a change](#making-a-change)
@@ -26,6 +27,14 @@ We also maintain a [gitter chat room][link_gitter] for more informal conversatio
 There is significant cross-talk between these two spaces, and we look forward to hearing from you in either venue!
 As a reminder, we expect all contributions to `tedana` to adhere to our [code of conduct][link_coc].
 
+### Monthly developer calls
+
+We run monthly developer calls via Zoom.
+You can see the schedule via the `tedana` [google calendar](https://calendar.google.com/calendar/embed?src=pl6vb4t9fck3k6mdo2mok53iss%40group.calendar.google.com&ctz=Europe%2FLondon).
+An agenda will be circulated in the gitter channel in advance of the meeting.
+
+Everyone is welcome.
+We look forward to meeting you there :hibiscus:
 
 ## Contributing through GitHub
 
