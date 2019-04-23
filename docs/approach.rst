@@ -144,10 +144,12 @@ of the other echoes (which it is).
     An alternative method for optimal combination that
     does not use :math:`T_{2}^*`, is the parallel-acquired inhomogeneity
     desensitized (PAID) ME-fMRI combination method (`Poser et al., 2006`_).
-    This method is not supported in the tedana workflow, however, because
-    it assumes that noise is "isotropic and homogeneous throughout the image",
-    and so can only be run on smoothed data. This is not compatible with the
-    multi-echo denoising procedure, but can be used in the t2smap workflow.
+    This method specifically assumes that noise in the acquired echoes is "isotopic and 
+    homogeneous throughout the image," meaning it should be used on smoothed data. 
+    As we do not recommend performing tedana denoising  on smoothed data, 
+    we discourage using PAID within the tedana workflow.
+    We do, however, make it accessible as an alternative combination method 
+    in the t2smap workflow.
 
 TEDPCA
 ``````
