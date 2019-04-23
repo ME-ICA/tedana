@@ -46,9 +46,9 @@ calculated below, each voxel's values are only calculated from the first :math:`
 echoes, where :math:`n` is the value for that voxel in the adaptive mask.
 
 .. note::
-    ``tedana`` allows users to provide their own mask. The adaptive mask will
-    be computed on this explicit mask, and may reduce it further based on the
-    data.
+    ``tedana`` allows users to provide their own mask.
+    The adaptive mask will be computed on this explicit mask, and may reduce
+    it further based on the data.
     If a mask is not provided, ``tedana`` runs `nilearn.masking.compute_epi_mask`_
     on the first echo's data to derive a mask prior to adaptive masking.
     The workflow does this because the adaptive mask generation function
@@ -140,6 +140,17 @@ of the other echoes (which it is).
 .. image:: /_static/10_optimal_combination_timeseries.png
   :align: center
 
+.. note::
+    An alternative method for optimal combination that
+    does not use :math:`T_{2}^*`, is the parallel-acquired inhomogeneity
+    desensitized (PAID) ME-fMRI combination method (`Poser et al., 2006`_).
+    This method specifically assumes that noise in the acquired echoes is "isotopic and 
+    homogeneous throughout the image," meaning it should be used on smoothed data. 
+    As we do not recommend performing tedana denoising  on smoothed data, 
+    we discourage using PAID within the tedana workflow.
+    We do, however, make it accessible as an alternative combination method 
+    in the t2smap workflow.
+
 TEDPCA
 ``````
 The next step is to identify and temporarily remove Gaussian (thermal) noise
@@ -223,3 +234,4 @@ robust PCA.
 
 .. _nilearn.masking.compute_epi_mask: https://nilearn.github.io/modules/generated/nilearn.masking.compute_epi_mask.html
 .. _Power et al. (2018): http://www.pnas.org/content/early/2018/02/07/1720985115.short
+.. _Poser et al., 2006: https://onlinelibrary.wiley.com/doi/full/10.1002/mrm.20900
