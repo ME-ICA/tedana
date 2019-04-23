@@ -142,7 +142,7 @@ of the other echoes (which it is).
 
 .. note::
     An alternative method for optimal combination that
-    does not use :math:`T_{2}^*`, known as the parallel-acquired inhomogeneity
+    does not use :math:`T_{2}^*`, is the parallel-acquired inhomogeneity
     desensitized (PAID) ME-fMRI combination method (`Poser et al., 2006`_).
     This method is not supported in the tedana workflow, however, because
     it assumes that noise is "isotropic and homogeneous throughout the image",
