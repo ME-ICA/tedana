@@ -6,6 +6,7 @@ import numpy as np
 from scipy import stats
 
 from tedana import utils
+from tedana.stats import getfbounds
 from tedana.selection._utils import getelbow
 
 LGR = logging.getLogger(__name__)
@@ -242,14 +243,14 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
 
     # Compute elbows from other elbows
     kappas_under_f01 = (comptable.loc[comptable['kappa'] <
-                        utils.getfbounds(n_echos)[-1], 'kappa'])
+                        getfbounds(n_echos)[-1], 'kappa'])
     # NOTE: Would an elbow from all Kappa values *ever* be lower than one from
     # a subset of lower values?
     kappa_elbow = np.min((getelbow(kappas_under_f01, return_val=True),
                           getelbow(comptable['kappa'], return_val=True)))
     rho_elbow = np.mean((getelbow(comptable.loc[ncls, 'rho'], return_val=True),
                          getelbow(comptable['rho'], return_val=True),
-                         utils.getfbounds(n_echos)[0]))
+                         getfbounds(n_echos)[0]))
 
     # Provisionally accept components based on Kappa and Rho elbows
     acc_prov = ncls[(comptable.loc[ncls, 'kappa'] >= kappa_elbow) &

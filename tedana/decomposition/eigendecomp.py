@@ -11,6 +11,7 @@ from scipy import stats
 from sklearn.decomposition import PCA
 
 from tedana import model, utils, io
+from tedana.stats import getfbounds, computefeats2
 from tedana.decomposition._utils import eimask
 from tedana.selection._utils import (getelbow_cons, getelbow)
 from tedana.due import due, BibTeX
@@ -99,7 +100,7 @@ def kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=False):
         np.arange(len(lower_diff_varex_norm))[lower_diff_varex_norm >= varex_norm_thr][0] + 1]
     varex_norm_cum = np.cumsum(comptable['normalized variance explained'])
 
-    fmin, fmid, fmax = utils.getfbounds(n_echos)
+    fmin, fmid, fmax = getfbounds(n_echos)
     if int(kdaw) == -1:
         lim_idx = utils.andb([comptable['kappa'] < fmid,
                               comptable['kappa'] > fmin]) == 2
@@ -352,7 +353,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
     comp_maps = np.zeros((OCcatd.shape[0], comp_ts.shape[0]))
     for i_comp in range(comp_ts.shape[0]):
         temp_comp_ts = comp_ts[i_comp, :][:, None]
-        comp_map = utils.unmask(model.computefeats2(OCcatd, temp_comp_ts, mask), mask)
+        comp_map = utils.unmask(computefeats2(OCcatd, temp_comp_ts, mask), mask)
         comp_maps[:, i_comp] = np.squeeze(comp_map)
     io.filewrite(comp_maps, 'mepca_OC_components.nii', ref_img)
 
