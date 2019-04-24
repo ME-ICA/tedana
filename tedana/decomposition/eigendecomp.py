@@ -165,7 +165,7 @@ def kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=False):
 
 
 def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
-           ref_img, tes, method='mle', ste=-1, kdaw=10., rdaw=1.,
+           ref_img, tes, method='mle', source_tes=-1, kdaw=10., rdaw=1.,
            verbose=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
@@ -177,9 +177,9 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         Input functional data
     OCcatd : (S x T) array_like
         Optimally combined time series data
-    combmode : {'t2s', 'ste'} str
+    combmode : {'t2s', 'paid'} str
         How optimal combination of echos should be made, where 't2s' indicates
-        using the method of Posse 1999 and 'ste' indicates using the method of
+        using the method of Posse 1999 and 'paid' indicates using the method of
         Poser 2006
     mask : (S,) array_like
         Boolean mask array
@@ -193,7 +193,7 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
         Dimensionality augmentation weight for Rho calculations
     method : {'mle', 'kundu', 'kundu-stabilize'}, optional
         Method with which to select components in TEDPCA. Default is 'mle'.
-    ste : :obj:`int` or :obj:`list` of :obj:`int`, optional
+    source_tes : :obj:`int` or :obj:`list` of :obj:`int`, optional
         Which echos to use in PCA. Values -1 and 0 are special, where a value
         of -1 will indicate using the optimal combination of the echos
         and 0  will indicate using all the echos. A list can be provided
@@ -260,17 +260,17 @@ def tedpca(catd, OCcatd, combmode, mask, t2s, t2sG,
     """
 
     n_samp, n_echos, n_vols = catd.shape
-    ste = np.array([int(ee) for ee in str(ste).split(',')])
+    source_tes = np.array([int(ee) for ee in str(source_tes).split(',')])
 
-    if len(ste) == 1 and ste[0] == -1:
+    if len(source_tes) == 1 and source_tes[0] == -1:
         LGR.info('Computing PCA of optimally combined multi-echo data')
         d = OCcatd[mask, :][:, np.newaxis, :]
-    elif len(ste) == 1 and ste[0] == 0:
+    elif len(source_tes) == 1 and source_tes[0] == 0:
         LGR.info('Computing PCA of spatially concatenated multi-echo data')
         d = catd[mask, ...]
     else:
-        LGR.info('Computing PCA of echo #%s' % ','.join([str(ee) for ee in ste]))
-        d = np.stack([catd[mask, ee, :] for ee in ste - 1], axis=1)
+        LGR.info('Computing PCA of echo #%s' % ','.join([str(ee) for ee in source_tes]))
+        d = np.stack([catd[mask, ee, :] for ee in source_tes - 1], axis=1)
 
     eim = np.squeeze(eimask(d))
     d = np.squeeze(d[eim])

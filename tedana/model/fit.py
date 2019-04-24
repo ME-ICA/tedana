@@ -37,6 +37,10 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
         Limited T2* map or timeseries.
     tes : list
         List of echo times associated with `catd`, in milliseconds
+    combmode : {'t2s', 'paid'} str
+        How optimal combination of echos should be made, where 't2s' indicates
+        using the method of Posse 1999 and 'paid' indicates using the method of
+        Poser 2006
     ref_img : str or img_like
         Reference image to dictate how outputs are saved to disk
     reindex : bool, optional
