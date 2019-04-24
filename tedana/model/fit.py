@@ -39,9 +39,9 @@ def fitmodels_direct(catd, mmix, mask, t2s, t2s_full, tes, combmode, ref_img,
         estimate using the first two echoes.
     tes : list
         List of echo times associated with `catd`, in milliseconds
-    combmode : {'t2s', 'ste'} str
+    combmode : {'t2s', 'paid'} str
         How optimal combination of echos should be made, where 't2s' indicates
-        using the method of Posse 1999 and 'ste' indicates using the method of
+        using the method of Posse 1999 and 'paid' indicates using the method of
         Poser 2006
     ref_img : str or img_like
         Reference image to dictate how outputs are saved to disk
