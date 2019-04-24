@@ -6,6 +6,8 @@ import logging
 import numpy as np
 from scipy import stats
 
+from tedana import utils
+
 LGR = logging.getLogger(__name__)
 
 
