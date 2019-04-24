@@ -29,7 +29,8 @@ LGR = logging.getLogger(__name__)
                 'automatically')
 def run_mlepca(data):
     """
-    Run Singular Value Decomposition (SVD) on input data.
+    Run Singular Value Decomposition (SVD) on input data,
+    automatically select components on MLE variance cut-off.
 
     Parameters
     ----------
