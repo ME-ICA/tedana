@@ -1,5 +1,5 @@
 """
-Signal decomposition methods for tedana
+PCA and related signal decomposition methods for tedana
 """
 import logging
 
