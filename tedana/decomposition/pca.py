@@ -103,10 +103,10 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
 
     Returns
     -------
-    n_components : :obj:`int`
-        Number of components retained from PCA decomposition
     kept_data : (S x T) :obj:`numpy.ndarray`
         Dimensionally reduced optimally combined functional data
+    n_components : :obj:`int`
+        Number of components retained from PCA decomposition
 
     Notes
     -----

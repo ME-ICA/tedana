@@ -34,8 +34,8 @@ def tedica(data, n_components, fixed_seed, maxit=500, maxrestart=10):
     Returns
     -------
     mmix : (T x C) :obj:`numpy.ndarray`
-        Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `data`
+        Z-scored mixing matrix for converting input data to component space,
+        where `C` is components and `T` is the same as in `data`
 
     Notes
     -----
