@@ -200,10 +200,11 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
 
     # Normalize each component's time series
     vTmixN = stats.zscore(comp_ts, axis=0)
-    _, comptable, _, _ = model.fitmodels_direct(
-                data_cat, comp_ts, eimum, t2s, t2sG, tes, combmode, ref_img,
-                reindex=False, mmixN=vTmixN, full_sel=False,
+    comptable, _, _, _ = model.dependence_metrics(
+                data_cat, data_oc, comp_ts, eimum, t2s, tes, ref_img,
+                reindex=False, mmixN=vTmixN, method=None,
                 label='mepca_', out_dir=out_dir, verbose=verbose)
+
     # varex_norm from PCA retained on top of varex from fitmodels_direct
     comptable['original normalized variance explained'] = varex_norm
 

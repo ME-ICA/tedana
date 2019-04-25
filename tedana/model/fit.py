@@ -37,10 +37,6 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
         Limited T2* map or timeseries.
     tes : list
         List of echo times associated with `catd`, in milliseconds
-    combmode : {'t2s', 'paid'} str
-        How optimal combination of echos should be made, where 't2s' indicates
-        using the method of Posse 1999 and 'paid' indicates using the method of
-        Poser 2006
     ref_img : str or img_like
         Reference image to dictate how outputs are saved to disk
     reindex : bool, optional
@@ -50,6 +46,13 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
     method : {'kundu_v2', 'kundu_v3', None}, optional
         Decision tree to be applied to metrics. Determines which maps will be
         generated and stored in seldict. Default: None
+    label : :obj:`str` or None, optional
+        Prefix to apply to generated files. Default is None.
+    out_dir : :obj:`str`, optional
+        Output directory for generated files. Default is current working
+        directory.
+    verbose : :obj:`bool`, optional
+        Whether or not to generate additional files. Default is False.
 
     Returns
     -------
