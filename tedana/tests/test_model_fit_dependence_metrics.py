@@ -75,7 +75,7 @@ def test_break_dependence_metrics():
         fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix, mask=mask,
                                t2s=t2s, tes=tes, ref_img=ref_img,
                                reindex=False, mmixN=None, method='kundu_v3')
-    assert str(e_info.value) == ('Number of volumes of catd '
+    assert str(e_info.value) == ('Number of volumes in catd '
                                  '({0}), tsoc ({1}), and '
                                  'mmix ({2}) do not '
                                  'match.'.format(catd.shape[2], tsoc.shape[1],
