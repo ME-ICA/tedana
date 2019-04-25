@@ -73,14 +73,13 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
                          'number of echoes provided (tes; '
                          '{1})'.format(catd.shape[1], len(tes)))
     elif not (catd.shape[2] == tsoc.shape[1] == mmix.shape[0]):
-        raise ValueError('Third dimension (number of volumes) of catd ({0}), '
-                         'second dimension of tsoc ({1}), and first dimension '
-                         'of mmix ({2}) do not match.'.format(
-                             catd.shape[2], tsoc.shape[1], mmix.shape[0]))
+        raise ValueError('Number of volumes in catd ({0}), '
+                         'tsoc ({1}), and mmix ({2}) do not '
+                         'match.'.format(catd.shape[2], tsoc.shape[1], mmix.shape[0]))
     elif t2s.ndim == 2:
         if catd.shape[2] != t2s.shape[1]:
-            raise ValueError('Third dimension (number of volumes) of catd '
-                             '({0}) does not match second dimension of '
+            raise ValueError('Number of volumes in catd '
+                             '({0}) does not match number of volumes in '
                              't2s ({1})'.format(catd.shape[2], t2s.shape[1]))
 
     mask = t2s != 0  # Override mask because problems
