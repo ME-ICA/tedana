@@ -87,6 +87,6 @@ def test_break_dependence_metrics():
         fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix, mask=mask,
                                t2s=t2s, tes=tes, ref_img=ref_img,
                                reindex=False, mmixN=None, method='kundu_v3')
-    assert str(e_info.value) == ('Third dimension (number of volumes) of catd ({0}) '
-                                 'does not match second dimension of '
+    assert str(e_info.value) == ('Number of volumes in catd ({0}) '
+                                 'does not match number of volumes in '
                                  't2s ({1})'.format(catd.shape[2], t2s.shape[1]))
