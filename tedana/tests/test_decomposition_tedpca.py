@@ -26,4 +26,4 @@ def test_break_tedpca():
     
     with pytest.raises(ValueError) as e_info:
         tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG, ref_img, tes, method)
-    assert str(e_info.value) == ('Parameter data should be 2d, not {0}d'.format(data.ndim))
+    assert str(e_info.value) == ('Parameter data should be 2d, not {0}d'.format(data_oc.ndim))
