@@ -97,6 +97,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     Br_R2_clmaps = seldict['Br_R2_clmaps']
 
     # Set knobs
+    n_vols, n_comps = mmix.shape
     LOW_PERC = 25
     HIGH_PERC = 90
     if n_vols < 100:
