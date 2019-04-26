@@ -84,7 +84,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     all_comps = np.arange(comptable.shape[0])
     # unclf is a full list that is whittled down over criteria
     # since the default classification is "accepted", at the end of the tree
-    # the remaining elements in unclf match up to the accepted components
+    # the remaining elements in unclf are classified as accepted
     unclf = np.arange(comptable.shape[0])
 
     # If user has specified
