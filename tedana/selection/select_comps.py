@@ -25,8 +25,9 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     seldict : :obj:`dict`
         A dictionary with component-specific features used for classification.
         As output from `fitmodels_direct`
-    comptable : (C x 5) :obj:`pandas.DataFrame`
-        Component metric table
+    comptable : (C x X) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component, with a column for
+        each metric. The index should be the component number.
     mmix : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the number of volumes in the original data
