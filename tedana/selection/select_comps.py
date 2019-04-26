@@ -85,7 +85,7 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     # unclf is a full list that is whittled down over criteria
     # since the default classification is "accepted", at the end of the tree
     # the remaining elements in unclf are classified as accepted
-    unclf = all_comps.deepcopy()
+    unclf = all_comps.copy()
 
     # If user has specified
     if manacc:
