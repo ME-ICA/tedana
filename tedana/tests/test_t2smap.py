@@ -67,13 +67,13 @@ class TestT2smap():
     def test_basic_t2smap3(self):
         """
         A very simple test, to confirm that t2smap creates output
-        files when combmode is set to 'ste'.
+        files when combmode is set to 'paid'.
         """
         data_dir = get_test_data_path()
         data = [op.join(data_dir, 'echo1.nii.gz'),
                 op.join(data_dir, 'echo2.nii.gz'),
                 op.join(data_dir, 'echo3.nii.gz')]
-        workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='ste',
+        workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='paid',
                                   fitmode='all', label='t2smap')
         out_dir = 'TED.echo1.t2smap'
 
@@ -93,7 +93,7 @@ class TestT2smap():
     def test_basic_t2smap4(self):
         """
         A very simple test, to confirm that t2smap creates output
-        files when combmode is set to 'ste' and fitmode is set to 'ts'.
+        files when combmode is set to 'paid' and fitmode is set to 'ts'.
 
         Not sure why this fails.
         """
@@ -101,7 +101,7 @@ class TestT2smap():
         data = [op.join(data_dir, 'echo1.nii.gz'),
                 op.join(data_dir, 'echo2.nii.gz'),
                 op.join(data_dir, 'echo3.nii.gz')]
-        workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='ste',
+        workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='paid',
                                   fitmode='ts', label='t2smap')
         out_dir = 'TED.echo1.t2smap'
 

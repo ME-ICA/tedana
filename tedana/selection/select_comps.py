@@ -56,8 +56,35 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     distinguish components, a hypercommented version of this attempt is available at:
     https://gist.github.com/emdupre/ca92d52d345d08ee85e104093b81482e
     """
-
     cols_at_end = ['classification', 'rationale']
+
+    # Lists of components
+    all_comps = np.arange(comptable.shape[0])
+    # unclf is a full list that is whittled down over criteria
+    # since the default classification is "accepted", at the end of the tree
+    # the remaining elements in unclf are classified as accepted
+    unclf = all_comps.copy()
+
+    # If user has specified
+    if manacc:
+        LGR.info('Performing manual ICA component selection')
+        if ('classification' in comptable.columns and
+                'original_classification' not in comptable.columns):
+            comptable['original_classification'] = comptable['classification']
+            comptable['original_rationale'] = comptable['rationale']
+        comptable['classification'] = 'accepted'
+        comptable['rationale'] = ''
+        acc = [int(comp) for comp in manacc]
+        rej = sorted(np.setdiff1d(all_comps, acc))
+        comptable.loc[acc, 'classification'] = 'accepted'
+        comptable.loc[rej, 'classification'] = 'rejected'
+        comptable.loc[rej, 'rationale'] += 'I001;'
+        # Move decision columns to end
+        comptable = comptable[[c for c in comptable if c not in cols_at_end] +
+                              [c for c in cols_at_end if c in comptable]]
+        comptable['rationale'] = comptable['rationale'].str.rstrip(';')
+        return comptable
+
     comptable['classification'] = 'accepted'
     comptable['rationale'] = ''
 
@@ -69,8 +96,6 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     Br_S0_clmaps = seldict['Br_S0_clmaps']
     Br_R2_clmaps = seldict['Br_R2_clmaps']
 
-    n_vols, n_comps = mmix.shape
-
     # Set knobs
     LOW_PERC = 25
     HIGH_PERC = 90
@@ -79,26 +104,6 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     else:
         EXTEND_FACTOR = 2
     RESTRICT_FACTOR = 2
-
-    # Lists of components
-    all_comps = np.arange(comptable.shape[0])
-    # unclf is a full list that is whittled down over criteria
-    # since the default classification is "accepted", at the end of the tree
-    # the remaining elements in unclf are classified as accepted
-    unclf = all_comps.copy()
-
-    # If user has specified
-    if manacc:
-        acc = sorted([int(vv) for vv in manacc.split(',')])
-        rej = sorted(np.setdiff1d(all_comps, acc))
-        comptable.loc[acc, 'classification'] = 'accepted'
-        comptable.loc[rej, 'classification'] = 'rejected'
-        comptable.loc[rej, 'rationale'] += 'I001;'
-        # Move decision columns to end
-        comptable = comptable[[c for c in comptable if c not in cols_at_end] +
-                              [c for c in cols_at_end if c in comptable]]
-        comptable['rationale'] = comptable['rationale'].str.rstrip(';')
-        return comptable
 
     """
     Tally number of significant voxels for cluster-extent thresholded R2 and S0

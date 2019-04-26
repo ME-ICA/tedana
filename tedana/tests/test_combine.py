@@ -27,15 +27,15 @@ def test__combine_t2s():
     assert comb.shape == (n_voxels, n_trs)
 
 
-def test__combine_ste():
+def test__combine_paid():
     """
-    Test tedana.model.combine._combine_ste
+    Test tedana.model.combine._combine_paid
     """
     np.random.seed(0)
     n_voxels, n_echos, n_trs = 20, 3, 10
     data = np.random.random((n_voxels, n_echos, n_trs))
     tes = np.array([[10, 20, 30]])  # 1 x E
-    comb = combine._combine_ste(data, tes)
+    comb = combine._combine_paid(data, tes)
     assert comb.shape == (n_voxels, n_trs)
 
 
@@ -62,9 +62,9 @@ def test_make_optcom():
     assert comb.shape == (n_voxels, n_trs)
 
     # STE with erroneously included T2* argument
-    comb = combine.make_optcom(data, tes, mask, t2s=t2s, combmode='ste')
+    comb = combine.make_optcom(data, tes, mask, t2s=t2s, combmode='paid')
     assert comb.shape == (n_voxels, n_trs)
 
     # Normal STE call
-    comb = combine.make_optcom(data, tes, mask, t2s=None, combmode='ste')
+    comb = combine.make_optcom(data, tes, mask, t2s=None, combmode='paid')
     assert comb.shape == (n_voxels, n_trs)
