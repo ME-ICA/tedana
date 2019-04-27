@@ -146,7 +146,7 @@ I009   rejected           Mid-Kappa artifact type A
 I010   rejected           Mid-Kappa artifact type B
 I011   ignored            ign_add0
 I012   ignored            ign_add1
-=====  =================    ========================================================
+=====  =================  ========================================================
 
 Visual reports
 --------------
