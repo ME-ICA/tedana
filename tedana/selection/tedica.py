@@ -81,7 +81,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
 
     Parameters
     ----------
-    comptable : (C x X) :obj:`pandas.DataFrame`
+    comptable : (C x M) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
     n_echos : :obj:`int`
@@ -126,8 +126,8 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     all_comps = np.arange(comptable.shape[0])
     # unclf is a full list that is whittled down over criteria
     # since the default classification is "accepted", at the end of the tree
-    # the remaining elements in unclf match up to the accepted components
-    unclf = np.arange(comptable.shape[0])
+    # the remaining elements in unclf are classified as accepted
+    unclf = all_comps.copy()
 
     """
     Step 1: Reject anything that's obviously an artifact
@@ -189,12 +189,9 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     # done three times.
     ncls = unclf.copy()
     for i_loop in range(3):
-        temp_comptable = comptable.loc[ncls].sort_values(by=['variance explained'],
-                                                         ascending=False)
+        temp_comptable = comptable.loc[ncls]
         ncls = temp_comptable.loc[
             temp_comptable['variance explained'].diff() < varex_upper_p].index.values
-    temp_something = np.setdiff1d(unclf, ncls)
-    comptable.loc[temp_something, 'rationale'] += 'I013;'
 
     # Compute elbows from other elbows
     f05, _, f01 = utils.getfbounds(n_echos)
