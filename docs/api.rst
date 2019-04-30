@@ -80,7 +80,7 @@ API
 .. _calibration_ref:
 
 
-:mod:`tedana.model`: Computing TE-dependence metrics
+:mod:`tedana.metrics`: Computing TE-dependence metrics
 ----------------------------------------------------
 
 .. automodule:: tedana.model
