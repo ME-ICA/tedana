@@ -87,6 +87,11 @@ The current list of labels are [here][link_labels] and include:
 
     If you feel that you can contribute to one of these issues, we especially encourage you to do so!
 
+* [![Paused](https://img.shields.io/badge/-paused-%23ddcc5f.svg)][link_paused] *These issues should not be worked on until the resolution of other issues or Pull Requests.*
+
+    These are issues that are paused pending resolution of a related issue or Pull Request.
+    Please do not open any Pull Requests to resolve these issues.
+
 * [![Bugs](https://img.shields.io/badge/-bugs-fc2929.svg)][link_bugs] *These issues point to problems in the project.*
 
     If you find new a bug, please give as much detail as possible in your issue, including steps to recreate the error.
@@ -215,6 +220,7 @@ You're awesome. :wave::smiley:
 [link_coc]: https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md
 
 [link_labels]: https://github.com/ME-ICA/tedana/labels
+[link_paused]: https://github.com/ME-ICA/tedana/labels/paused
 [link_bugs]: https://github.com/ME-ICA/tedana/labels/bug
 [link_helpwanted]: https://github.com/ME-ICA/tedana/labels/help%20wanted
 [link_enhancement]: https://github.com/ME-ICA/tedana/labels/enhancement
