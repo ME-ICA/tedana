@@ -138,9 +138,10 @@ def _get_parser():
     optional.add_argument('--seed',
                           dest='fixed_seed',
                           type=int,
-                          help=('Value passed to repr(mdp.numx_rand.seed()) '
-                                'Set to an integer value for reproducible ICA results; '
-                                'otherwise, set to -1 for varying results across calls.'),
+                          help=('Value passed to repr(mdp.numx_rand.seed()). '
+                                'Set to an integer value for reproducible ICA results. '
+                                'Set to -1 for varying results across ICA calls. '
+                                'Default=42.'),
                           default=42)
     optional.add_argument('--png',
                           dest='png',
