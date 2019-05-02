@@ -12,7 +12,6 @@ os.environ['OPENBLAS_NUM_THREADS'] = '1'
 import os.path as op
 import shutil
 import logging
-from datetime import datetime
 
 import argparse
 import numpy as np
@@ -264,12 +263,21 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         os.mkdir(out_dir)
 
     if debug and not quiet:
+        # ensure old logs aren't over-written
+        logname = op.join(
+                out_dir,
+                'tedana_run')
+
+        while op.isfile(logname):
+            logname += '_old'
+
+        # set logging format
         formatter = logging.Formatter(
                     '%(asctime)s\t%(name)-12s\t%(levelname)-8s\t%(message)s',
                     datefmt='%Y-%m-%dT%H:%M:%S')
-        fh = logging.FileHandler(op.join(
-            out_dir,
-            'runlog-{0}.tsv'.format(datetime.now().isoformat().replace(':', '.'))))
+
+        # set up logging file and open it for writing
+        fh = logging.FileHandler(logname)
         fh.setFormatter(formatter)
         logging.basicConfig(level=logging.DEBUG,
                             handlers=[fh, logging.StreamHandler()])
