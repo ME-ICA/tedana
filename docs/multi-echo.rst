@@ -48,6 +48,16 @@ Sequences
 *********
 * Multi-echo sequences: who has them and how to get them.
 
+Acquisition Parameter Recommendations
+************************************
+There is no empirically tested best parameter set for multi-echo acquisition. The guidelines for optimizing parameters are similar to single-echo fMRI. Parameter choices require balancing the needs of specific studies with regards to spatial resolution and coverage, sampling rate, signal-to-noise ratio, signal drop-out, distortion, and artifacts. Optimize these parameters based on whatever a study's priorities are. The compromise for transitioning to multi-echo is either losing a few slices, increasing the TR, or increasing within-slice or multi-slice acceleration. A rough rule of thumb is that collecting 3 echoes with a similar parameter set to single-echo will involve a loss of 10% of slices (36 instead of 40 slices), a 10% increase in TR (2.2sec instead of 2s) or an increase in acceleration. If one increases acceleration to avoid compromises in spatial coverage or time, it is worth doing an empirical comparison to make sure there isn't a non-trivial loss in SNR or an increase of artifacts.
+
+A minimum of 3 echoes is recommended for running TE-dependent denoising. More echoes may be useful, because that would allow for more accurate estimates of BOLD and non-BOLD weighted fluctuations, but more echoes would require additional compromises in spatiotemporal coverage or more acceleration. Whether the benefits of more echoes balance out the additional acquisition compromises is an open research question. While there are successful studies that don’t follow this rule, it may be useful to have at least one echo that is earlier and one echo that is later than TE one would use for single-echo T2* weighted fMRI. 
+
+The `spreadsheet`_ spreadsheet of journal articles that use multi-echo fMRI is a useful place to find acqusition parameters.
+
+.. _spreadsheet: https://docs.google.com/spreadsheets/d/1WERojJyxFoqcg_tndUm5Kj0H1UfUc9Ban0jFGGfPaBk/edit#gid=0
+
 Datasets
 ********
 A small number of multi-echo datasets have been made public so far. This list is
