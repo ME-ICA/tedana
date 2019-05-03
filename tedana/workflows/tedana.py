@@ -267,14 +267,14 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # ensure old logs aren't over-written
         basename = 'tedana_run'
         extension = 'txt'
-        logname = op.join(out_dir,(basename + '.' + extension))
-        logex = op.join(out_dir,(basename + '*'))
+        logname = op.join(out_dir, (basename + '.' + extension))
+        logex = op.join(out_dir, (basename + '*'))
         previouslogs = glob.glob(logex)
         previouslogs.sort(reverse=True)
         for f in previouslogs:
             previousparts = op.splitext(f)
             newname = previousparts[0] + '_old' + previousparts[1]
-            os.rename(f,newname)
+            os.rename(f, newname)
 
         # set logging format
         formatter = logging.Formatter(
