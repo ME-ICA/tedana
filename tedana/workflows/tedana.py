@@ -10,6 +10,7 @@ os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 
 import os.path as op
+import glob
 import shutil
 import logging
 
@@ -264,12 +265,16 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     if debug and not quiet:
         # ensure old logs aren't over-written
-        logname = op.join(
-                out_dir,
-                'tedana_run')
-
-        while op.isfile(logname):
-            logname += '_old'
+        basename = 'tedana_run'
+        extension = 'txt'
+        logname = op.join(out_dir,(basename + '.' + extension))
+        logex = op.join(out_dir,(basename + '*'))
+        previouslogs = glob.glob(logex)
+        previouslogs.sort(reverse=True)
+        for f in previouslogs:
+            previousparts = op.splitext(f)
+            newname = previousparts[0] + '_old' + previousparts[1]
+            os.rename(f,newname)
 
         # set logging format
         formatter = logging.Formatter(
