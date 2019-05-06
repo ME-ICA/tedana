@@ -65,6 +65,13 @@ is difficult to describe as one unit of work, please consider splitting it into 
     Issues are assigned [labels](#issue-labels) which explain how they relate to the overall project's
     goals and immediate next steps.
 
+    Sometimes issues may not produce action items, and conversation will stall after a few months.
+    When this happens, they may be marked stale by [stale-bot][link_stale-bot],
+    and will be closed after a week unless there is more discussion.
+    This helps us keep the issue tracker organized.
+    Any new discussion on the issue will remove the `stale` label, and prevent it from closing.
+    So, if theres's a discussion you think it not yet resolved, please jump in !
+
 * **Milestones** are the link between the issues and the high level strategy for the ``tedana`` project.
 Contributors new and old are encouraged to take a look at the milestones to see how we are progressing
 towards ``tedana``'s shared vision.
@@ -213,6 +220,7 @@ You're awesome. :wave::smiley:
 [link_project_boards]: https://github.com/ME-ICA/tedana/projects
 [link_gitter]: https://gitter.im/me-ica/tedana
 [link_coc]: https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md
+[link_stale-bot]: https://github.com/probot/stale
 
 [link_labels]: https://github.com/ME-ICA/tedana/labels
 [link_bugs]: https://github.com/ME-ICA/tedana/labels/bug
