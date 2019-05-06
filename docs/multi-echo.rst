@@ -48,6 +48,52 @@ Sequences
 *********
 * Multi-echo sequences: who has them and how to get them.
 
+Acquisition Parameter Recommendations
+************************************
+There is no empirically tested best parameter set for multi-echo acquisition.
+The guidelines for optimizing parameters are similar to single-echo fMRI.
+For multi-echo fMRI, the same factors that may guide priorities for single echo
+fMRI sequence are also relevant. Choose sequence parameters that meet the
+priorities of a study with regards to spatial resolution, spatial coverage,
+sample rate, signal-to-noise ratio, signal drop-out, distortion, and artifacts.
+
+The one difference with multi-echo is a slight time cost. For multi-echo fMRI,
+the shortest echo time (TE) is essentially free since it is collected in the
+gap between the radio frequency (RF) pulse and the single-echo acquisition.
+The second echo tends to roughly match the single-echo TE.
+Additional echoes require more time. For example, on a 3T MRI, if the
+T2* weighted TE is 30ms for single echo fMRI, a multi-echo sequence may
+have TEs of 15.4, 29.7, and 44.0ms. In this example, the extra 14ms of
+acquisition time per RF pulse is the cost of multi-echo fMRI.
+
+One way to think about this cost is in comparison to single-echo fMRI.
+If a multi-echo sequence has identical spatial resolution and acceleration as
+a single-echo sequence, then a rough rule of thumb is that the multi-echo
+sequence will have 10% fewer slices or 10% longer TR. Instead of compromising
+on slice coverage or TR, one can increase acceleration. If one increases
+acceleration, it is worth doing an empirical comparison to make sure there
+isn't a non-trivial loss in SNR or an increase of artifacts.
+
+A minimum of 3 echoes is recommended for running TE-dependent denoising.
+While there are successful studies that don’t follow this rule, it may be useful
+to have at least one echo that is earlier and one echo that is later than the
+TE one would use for single-echo T2* weighted fMRI.
+
+More than 3 echoes may be useful, because that would allow for more accurate
+estimates of BOLD and non-BOLD weighted fluctuations, but more echoes have an
+additional time cost, which would result in either less spatiotemporal coverage
+or more acceleration. Where the benefits of more echoes balance out the additional
+costs is an open research question.
+
+We are not recommending specific parameter options at this time. There are
+multiple ways to balance the slight time cost from the added echoes that have
+resulted in research publications. We suggest new multi-echo fMRI users examine
+the `spreadsheet`_ of journal articles that use multi-echo fMRI to identify
+studies with similar acquisition priorities, and use the parameters from those
+studies as a starting point.
+
+.. _spreadsheet: https://docs.google.com/spreadsheets/d/1WERojJyxFoqcg_tndUm5Kj0H1UfUc9Ban0jFGGfPaBk/edit#gid=0
+
 Datasets
 ********
 A small number of multi-echo datasets have been made public so far. This list is
