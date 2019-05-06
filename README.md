@@ -64,6 +64,11 @@ To exit this conda environment, use
 conda deactivate
 ```
 
+NOTE: Conda < 4.6 users will need to use the soon-to-be-deprecated option
+`source` rather than `conda` for the activation and deactivation steps.
+You can read more about managing conda environments and this discrepancy here:
+[here](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html)
+
 ## Getting involved
 
 We :yellow_heart: new contributors!
