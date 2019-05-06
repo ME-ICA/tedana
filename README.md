@@ -50,7 +50,7 @@ After installation, you can use the following commands to create an environment 
 
 ```bash
 conda create -n ENVIRONMENT_NAME python=3 pip mdp numpy scikit-learn scipy 
-source activate ENVIRONMENT_NAME
+conda activate ENVIRONMENT_NAME
 pip install nilearn nibabel
 pip install tedana
 ```
@@ -61,7 +61,7 @@ This will also allow any previously existing tedana installations to remain unto
 To exit this conda environment, use
 
 ```bash
-source deactivate
+conda deactivate
 ```
 
 ## Getting involved
