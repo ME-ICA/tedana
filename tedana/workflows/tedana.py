@@ -20,7 +20,9 @@ import pandas as pd
 from scipy import stats
 from nilearn.masking import compute_epi_mask
 
-from tedana import decay, combine, decomposition, io, model, selection, utils, viz
+from tedana import (decay, combine, decomposition, io, model, selection, utils,
+                    viz)
+import tedana.gscontrol as gsc
 from tedana.workflows.parser_utils import is_valid_file
 
 LGR = logging.getLogger(__name__)
@@ -88,7 +90,7 @@ def _get_parser():
                                 'accepted components'),
                           default=None)
     optional.add_argument('--sourceTEs',
-                          dest='ste',
+                          dest='source_tes',
                           type=str,
                           help=('Source TEs for models. E.g., 0 for all, '
                                 '-1 for opt. com., and 1,2 for just TEs 1 and '
@@ -97,9 +99,9 @@ def _get_parser():
     optional.add_argument('--combmode',
                           dest='combmode',
                           action='store',
-                          choices=['t2s', 'ste'],
+                          choices=['t2s'],
                           help=('Combination scheme for TEs: '
-                                't2s (Posse 1999, default), ste (Poser)'),
+                                't2s (Posse 1999, default)'),
                           default='t2s')
     optional.add_argument('--verbose',
                           dest='verbose',
@@ -136,9 +138,10 @@ def _get_parser():
     optional.add_argument('--seed',
                           dest='fixed_seed',
                           type=int,
-                          help=('Value passed to repr(mdp.numx_rand.seed()) '
-                                'Set to an integer value for reproducible ICA results; '
-                                'otherwise, set to -1 for varying results across calls.'),
+                          help=('Value passed to repr(mdp.numx_rand.seed()). '
+                                'Set to an integer value for reproducible ICA results. '
+                                'Set to -1 for varying results across ICA calls. '
+                                'Default=42.'),
                           default=42)
     optional.add_argument('--png',
                           dest='png',
@@ -147,6 +150,11 @@ def _get_parser():
                                 'maps, timecourse plots and other diagnostic '
                                 'images'),
                           default=False)
+    optional.add_argument('--png-cmap',
+                          dest='png_cmap',
+                          type=str,
+                          help=('Colormap for figures'),
+                          default='coolwarm')
     optional.add_argument('--maxit',
                           dest='maxit',
                           type=int,
@@ -177,9 +185,9 @@ def _get_parser():
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     tedort=False, gscontrol=None, tedpca='mle',
-                    ste=-1, combmode='t2s', verbose=False, stabilize=False,
+                    source_tes=-1, combmode='t2s', verbose=False, stabilize=False,
                     out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
-                    debug=False, quiet=False, png=False):
+                    debug=False, quiet=False, png=False, png_cmap='coolwarm'):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -201,9 +209,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     ctab : :obj:`str`, optional
         File containing component table from which to extract pre-computed
         classifications.
-    manacc : :obj:`str`, optional
-        Comma separated list of manually accepted components in string form.
-        Default is None.
+    manacc : :obj:`list`, :obj:`str`, or None, optional
+        List of manually accepted components. Can be a list of the components,
+        a comma-separated string with component numbers, or None. Default is
+        None.
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
         denoising. Default is False.
@@ -212,15 +221,18 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         is None.
     tedpca : {'mle', 'kundu', 'kundu-stabilize'}, optional
         Method with which to select components in TEDPCA. Default is 'mle'.
-    ste : :obj:`int`, optional
+    source_tes : :obj:`int`, optional
         Source TEs for models. 0 for all, -1 for optimal combination.
         Default is -1.
-    combmode : {'t2s', 'ste'}, optional
-        Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
+    combmode : {'t2s'}, optional
+        Combination scheme for TEs: 't2s' (Posse 1999, default).
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
     png : obj:'bool', optional
         Generate simple plots and figures. Default is false.
+    png_cmap : obj:'str', optional
+            Name of a matplotlib colormap to be used when generating figures.
+            --png must still be used to request figures. Default is 'coolwarm'
     out_dir : :obj:`str`, optional
         Output directory.
 
@@ -287,16 +299,35 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
     if mixm is not None and op.isfile(mixm):
-        shutil.copyfile(mixm, op.join(out_dir, 'meica_mix.1D'))
-        shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
+        mixm = op.abspath(mixm)
+        # Allow users to re-run on same folder
+        if mixm != op.join(out_dir, 'meica_mix.1D'):
+            shutil.copyfile(mixm, op.join(out_dir, 'meica_mix.1D'))
+            shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
     elif mixm is not None:
         raise IOError('Argument "mixm" must be an existing file.')
 
     if ctab is not None and op.isfile(ctab):
-        shutil.copyfile(ctab, op.join(out_dir, 'comp_table_ica.txt'))
-        shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
+        ctab = op.abspath(ctab)
+        # Allow users to re-run on same folder
+        if ctab != op.join(out_dir, 'comp_table_ica.txt'):
+            shutil.copyfile(ctab, op.join(out_dir, 'comp_table_ica.txt'))
+            shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
+
+    if isinstance(manacc, str):
+        manacc = [int(comp) for comp in manacc.split(',')]
+
+    if ctab and not mixm:
+        LGR.warning('Argument "ctab" requires argument "mixm".')
+        ctab = None
+    elif ctab and (manacc is None):
+        LGR.warning('Argument "ctab" requires argument "manacc".')
+        ctab = None
+    elif manacc is not None and not mixm:
+        LGR.warning('Argument "manacc" requires argument "mixm".')
+        manacc = None
 
     if mask is None:
         LGR.info('Computing EPI mask from first echo')
@@ -336,21 +367,22 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     # regress out global signal unless explicitly not desired
     if 'gsr' in gscontrol:
-        catd, data_oc = model.gscontrol_raw(catd, data_oc, n_echos, ref_img)
+        catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, ref_img)
 
     if mixm is None:
         # Identify and remove thermal noise from data
-        n_components, dd = decomposition.tedpca(catd, data_oc, combmode, mask,
+        dd, n_components = decomposition.tedpca(catd, data_oc, combmode, mask,
                                                 t2s, t2sG, ref_img,
-                                                tes=tes, method=tedpca, ste=ste,
+                                                tes=tes, method=tedpca,
+                                                source_tes=source_tes,
                                                 kdaw=10., rdaw=1.,
-                                                verbose=verbose)
-        mmix_orig = decomposition.tedica(n_components, dd, fixed_seed,
+                                                out_dir=out_dir, verbose=verbose)
+        mmix_orig = decomposition.tedica(dd, n_components, fixed_seed,
                                          maxit, maxrestart)
 
         if verbose:
             np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
-            if ste == -1:
+            if source_tes == -1:
                 io.filewrite(utils.unmask(dd, mask),
                              op.join(out_dir, 'ts_OC_whitened.nii'), ref_img)
 
@@ -364,8 +396,13 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     verbose=verbose)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        comptable = selection.selcomps(seldict, comptable, mmix, manacc,
-                                       n_echos)
+        comptable = selection.selcomps(seldict, comptable, mmix, manacc, n_echos)
+    elif ctab is not None and manacc is not None:
+        LGR.info('Using supplied ICA mixing matrix, component table, and '
+                 'accepted components')
+        mmix = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
+        comptable = pd.read_csv(ctab, sep='\t', index_col='component')
+        comptable = selection.selcomps({}, comptable, mmix, manacc, n_echos)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
@@ -373,31 +410,21 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
                     ref_img, label='meica_', out_dir=out_dir,
                     verbose=verbose)
-        if ctab is None:
-            comptable = selection.selcomps(seldict, comptable, mmix, manacc,
-                                           n_echos)
-        else:
-            comptable = pd.read_csv(ctab, sep='\t', index_col='component')
+        comptable = selection.selcomps(seldict, comptable, mmix, manacc, n_echos)
 
     comptable.to_csv(op.join(out_dir, 'comp_table_ica.txt'), sep='\t',
                      index=True, index_label='component', float_format='%.6f')
-    if 'component' not in comptable.columns:
-        comptable['component'] = comptable.index
-    acc = comptable.loc[comptable['classification'] == 'accepted', 'component']
-    rej = comptable.loc[comptable['classification'] == 'rejected', 'component']
-    midk = comptable.loc[comptable['classification'] == 'midk', 'component']
-    ign = comptable.loc[comptable['classification'] == 'ignored', 'component']
-    if len(acc) == 0:
+
+    if comptable[comptable.classification == 'accepted'].shape[0] == 0:
         LGR.warning('No BOLD components detected! Please check data and '
                     'results!')
 
+    mmix_orig = mmix.copy()
     if tedort:
         acc_idx = comptable.loc[
-            ~comptable['classification'].str.contains('rejected'),
-            'component']
+            ~comptable.classification.str.contains('rejected')].index.values
         rej_idx = comptable.loc[
-            comptable['classification'].str.contains('rejected'),
-            'component']
+            comptable.classification.str.contains('rejected')].index.values
         acc_ts = mmix[:, acc_idx]
         rej_ts = mmix[:, rej_idx]
         betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
@@ -407,30 +434,35 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         np.savetxt(op.join(out_dir, 'meica_mix_orth.1D'), mmix)
 
     io.writeresults(data_oc, mask=mask, comptable=comptable, mmix=mmix,
-                    n_vols=n_vols,
-                    acc=acc, rej=rej, midk=midk, empty=ign,
-                    ref_img=ref_img)
+                    n_vols=n_vols, ref_img=ref_img)
 
     if 't1c' in gscontrol:
         LGR.info('Performing T1c global signal regression to remove spatially '
                  'diffuse noise')
-        io.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
+        gsc.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
 
     if verbose:
-        io.writeresults_echoes(catd, mmix, mask, acc, rej, midk, ref_img)
+        io.writeresults_echoes(catd, mmix, mask, comptable, ref_img)
 
     if png:
         LGR.info('Making figures folder with static component maps and '
                  'timecourse plots.')
-        viz.write_comp_figs(data_oc, mask=mask, comptable=comptable, mmix=mmix,
-                            n_vols=n_vols, acc=acc, rej=rej, midk=midk,
-                            empty=ign, ref_img=ref_img)
+        # make figure folder first
+        if not op.isdir(op.join(out_dir, 'figures')):
+            os.mkdir(op.join(out_dir, 'figures'))
+
+        viz.write_comp_figs(data_oc, mask=mask, comptable=comptable,
+                            mmix=mmix_orig, ref_img=ref_img,
+                            out_dir=op.join(out_dir, 'figures'),
+                            png_cmap=png_cmap)
 
         LGR.info('Making Kappa vs Rho scatter plot')
-        viz.write_kappa_scatter(comptable=comptable)
+        viz.write_kappa_scatter(comptable=comptable,
+                                out_dir=op.join(out_dir, 'figures'))
 
         LGR.info('Making overall summary figure')
-        viz.write_summary_fig(comptable=comptable)
+        viz.write_summary_fig(comptable=comptable,
+                              out_dir=op.join(out_dir, 'figures'))
 
     LGR.info('Workflow completed')
     for handler in logging.root.handlers[:]:
