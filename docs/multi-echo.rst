@@ -25,8 +25,8 @@ Why use multi-echo?
 -------------------
 There are many potential reasons an investigator would be interested in using multi-echo EPI (ME-EPI).
 Among these are the different levels of analysis ME-EPI enables.
-Specifically, by collecting multi-echo data, researchers are able to compare results for (1) single-echo,
-(2) optimally combined, and (3) denoised data.
+Specifically, by collecting multi-echo data, researchers are able to compare results for
+(1) single-echo, (2) optimally combined, and (3) denoised data.
 Each of these levels of analysis have their own advantages.
 
 For single-echo: currently, field standards are largely set using single-echo EPI.
@@ -41,8 +41,9 @@ traditionally affected by drop-out.
 
 For denoised: Collecting multi-echo data allows access to unique denoising metrics.
 ``tedana`` is one ICA-based denoising pipeline built on this information.
-Other ICA-based denoising methods like ICA-AROMA (`Pruim et al. (2015)`_) have been shown to significantly improve the quality of
-cleaned signal.
+Other ICA-based denoising methods like ICA-AROMA (`Pruim et al. (2015)`_)
+have been shown to significantly improve the quality of cleaned signal.
+
 These methods, however, have comparably limited information, as they are designed to work with single-echo EPI.
 Collecting multi-echo EPI allows us to leverage all of the information available for single-echo datasets,
 as well as additional information only available when looking at signal decay across multiple TEs.
@@ -55,7 +56,7 @@ Acquisition Parameter Recommendations
 There is no empirically tested best parameter set for multi-echo acquisition.
 The guidelines for optimizing parameters are similar to single-echo fMRI.
 For multi-echo fMRI, the same factors that may guide priorities for single echo
-fMRI sequence are also relevant.
+fMRI sequences are also relevant.
 Choose sequence parameters that meet the priorities of a study with regards to spatial resolution,
 spatial coverage, sample rate, signal-to-noise ratio, signal drop-out, distortion, and artifacts.
 
