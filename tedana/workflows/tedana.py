@@ -372,7 +372,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # Identify and remove thermal noise from data
         dd, n_components = decomposition.tedpca(catd, data_oc, combmode, mask,
                                                 t2s, t2sG, ref_img,
-                                                tes=tes, method=tedpca,
+                                                tes=tes, algorithm=tedpca,
                                                 source_tes=source_tes,
                                                 kdaw=10., rdaw=1.,
                                                 out_dir=out_dir, verbose=verbose)
@@ -392,7 +392,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         comptable, metric_maps, betas, mmix = model.dependence_metrics(
                     catd, data_oc, mmix_orig, mask, t2s, tes,
                     ref_img, reindex=True, label='meica_', out_dir=out_dir,
-                    method='kundu_v2', verbose=verbose)
+                    algorithm='kundu_v2', verbose=verbose)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
         comptable = model.kundu_metrics(comptable, metric_maps)
@@ -403,7 +403,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         comptable, metric_maps, betas, mmix = model.dependence_metrics(
                     catd, data_oc, mmix_orig, mask, t2s, tes,
                     ref_img, label='meica_', out_dir=out_dir,
-                    method='kundu_v2', verbose=verbose)
+                    algorithm='kundu_v2', verbose=verbose)
         if ctab is None:
             comptable = model.kundu_metrics(comptable, metric_maps)
             comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)

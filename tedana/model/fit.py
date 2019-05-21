@@ -17,7 +17,7 @@ Z_MAX = 8
 
 
 def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
-                       reindex=False, mmixN=None, method=None, label=None,
+                       reindex=False, mmixN=None, algorithm=None, label=None,
                        out_dir='.', verbose=False):
     """
     Fit TE-dependence and -independence models to components.
@@ -43,7 +43,7 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
         Whether to sort components in descending order by Kappa. Default: False
     mmixN : (T x C) array_like, optional
         Z-scored mixing matrix. Default: None
-    method : {'kundu_v2', 'kundu_v3', None}, optional
+    algorithm : {'kundu_v2', 'kundu_v3', None}, optional
         Decision tree to be applied to metrics. Determines which maps will be
         generated and stored in seldict. Default: None
     label : :obj:`str` or None, optional
@@ -61,7 +61,7 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
         each metric. The index is the component number.
     seldict : :obj:`dict` or None
         Dictionary containing component-specific metric maps to be used for
-        component selection. If `method` is None, then seldict will be None as
+        component selection. If `algorithm` is None, then seldict will be None as
         well.
     betas : :obj:`numpy.ndarray`
     mmix_new : :obj:`numpy.ndarray`
@@ -226,7 +226,7 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
     comptable.index.name = 'component'
 
     # Generate clustering criteria for component selection
-    if method in ['kundu_v2', 'kundu_v3']:
+    if algorithm in ['kundu_v2', 'kundu_v3']:
         Z_clmaps = np.zeros([n_voxels, n_components])
         F_R2_clmaps = np.zeros([n_data_voxels, n_components])
         F_S0_clmaps = np.zeros([n_data_voxels, n_components])
@@ -275,20 +275,20 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
                 threshold=(max(tsoc_Babs.shape) - countsigFS0), mask=mask,
                 binarize=True)
 
-        if method == 'kundu_v2':
+        if algorithm == 'kundu_v2':
             # WTS, tsoc_B, PSC, and F_S0_maps are not used by Kundu v2.5
             selvars = ['Z_maps', 'F_R2_maps',
                        'Z_clmaps', 'F_R2_clmaps', 'F_S0_clmaps',
                        'Br_R2_clmaps', 'Br_S0_clmaps']
-        elif method == 'kundu_v3':
+        elif algorithm == 'kundu_v3':
             selvars = ['WTS', 'tsoc_B', 'PSC',
                        'Z_maps', 'F_R2_maps', 'F_S0_maps',
                        'Z_clmaps', 'F_R2_clmaps', 'F_S0_clmaps',
                        'Br_R2_clmaps', 'Br_S0_clmaps']
-        elif method is None:
+        elif algorithm is None:
             selvars = []
         else:
-            raise ValueError('Method "{0}" not recognized.'.format(method))
+            raise ValueError('Algorithm "{0}" not recognized.'.format(algorithm))
 
         seldict = {}
         for vv in selvars:

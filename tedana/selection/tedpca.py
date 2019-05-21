@@ -66,7 +66,7 @@ def kundu_tedpca(comptable, n_echos, kdaw=10., rdaw=1., stabilize=False):
         rho_lim = comptable.loc[lim_idx, 'rho'].values
         rho_thr = rho_lim[getelbow(rho_lim)]
         stabilize = True
-        LGR.info('kdaw set to -1. Switching TEDPCA method to '
+        LGR.info('kdaw set to -1. Switching TEDPCA algorithm to '
                  'kundu-stabilize')
     elif int(rdaw) == -1:
         lim_idx = utils.andb([comptable['rho'] < fmid, comptable['rho'] > fmin]) == 2
