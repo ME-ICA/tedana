@@ -68,7 +68,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'tedana'
-copyright = '2017-2018, tedana developers'
+copyright = '2017-2019, tedana developers'
 author = 'tedana developers'
 
 # The version info for the project you're documenting, acts as replacement for
