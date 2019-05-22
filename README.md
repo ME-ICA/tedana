@@ -79,3 +79,8 @@ Have a question, comment, or suggestion?
 Open or comment on one of [our issues](https://github.com/ME-ICA/tedana/issues)!
 
 We ask that all contributions to ``tedana`` respect our [code of conduct](https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md).
+
+If you're not sure where to begin, 
+feel free to pop into [Gitter](https://gitter.im/ME-ICA/tedana) and 
+introduce yourself! We will be happy to help you find somewhere to get
+started. 
