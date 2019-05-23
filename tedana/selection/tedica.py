@@ -182,6 +182,8 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
         comptable.loc[comptable['kappa'] > getelbow(comptable['kappa'], return_val=True),
                       'variance explained'])
 
+    # Sort component table by variance explained and find outlier components by
+    # change in variance explained from one component to the next.
     # Remove variance-explained outliers from list of components to consider
     # for acceptance. These components will have another chance to be accepted
     # later on.
@@ -189,7 +191,8 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     # done three times.
     ncls = unclf.copy()
     for i_loop in range(3):
-        temp_comptable = comptable.loc[ncls]
+        temp_comptable = comptable.loc[ncls].sort_values(by=['variance explained'],
+                                                         ascending=False)
         ncls = temp_comptable.loc[
             temp_comptable['variance explained'].diff() < varex_upper_p].index.values
 
