@@ -20,8 +20,8 @@ Already know what you're looking for in this guide? Jump to the following sectio
 
 Don't know where to get started? 
 Read [Joining the conversation](#joining-the-conversation) and pop into 
-Gitter to introduce yourself! Let us know what your skills are and we will
-help you find an issue to contribute to. Thanks so much!
+Gitter to introduce yourself! Let us know what your interests are and we 
+will help you find an issue to contribute to. Thanks so much!
 
 ## Joining the conversation
 
