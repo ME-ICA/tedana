@@ -6,7 +6,7 @@ import numpy as np
 from scipy import stats
 
 from tedana import utils
-from tedana.selection._utils import getelbow, reorder_dataframe
+from tedana.selection._utils import getelbow, clean_dataframe
 
 LGR = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ def manual_selection(comptable, acc=None, rej=None):
     comptable.loc[ign, 'rationale'] += 'I001;'
 
     # Move decision columns to end
-    comptable = reorder_dataframe(comptable)
+    comptable = clean_dataframe(comptable)
     return comptable
 
 
@@ -216,7 +216,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
         comptable.loc[ign, 'rationale'] += 'I006;'
 
         # Move decision columns to end
-        comptable = reorder_dataframe(comptable)
+        comptable = clean_dataframe(comptable)
         return comptable
 
     # Calculate "rate" for kappa: kappa range divided by variance explained
@@ -330,5 +330,5 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     # at this point, unclf is equivalent to accepted
 
     # Move decision columns to end
-    comptable = reorder_dataframe(comptable)
+    comptable = clean_dataframe(comptable)
     return comptable

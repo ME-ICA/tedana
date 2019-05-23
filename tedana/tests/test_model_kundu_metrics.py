@@ -11,7 +11,8 @@ from tedana.model import fit
 
 def test_smoke_kundu_metrics():
     """
-    Smoke test for kundu metrics function
+    Smoke test for kundu metrics function. Just make sure that kundu_metrics
+    runs without breaking when fed random data in the right formats.
     """
     n_comps = 100
     n_voxels = 10000
