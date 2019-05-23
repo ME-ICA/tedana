@@ -50,11 +50,13 @@ def _combine_t2s(data, tes, ft2s):
 
 
 @due.dcite(Doi('10.1002/mrm.20900'),
-           description='STE method of combining data across echoes using just '
+           description='PAID method of combining data across echoes using just '
                        'SNR/signal and TE.')
-def _combine_ste(data, tes):
+def _combine_paid(data, tes):
     """
-    Combine data across echoes using SNR/signal and TE.
+    Combine data across echoes using SNR/signal and TE via the
+    parallel-acquired inhomogeneity desensitized (PAID) ME-fMRI combination
+    method.
 
     Parameters
     ----------
@@ -90,9 +92,9 @@ def make_optcom(data, tes, mask, t2s=None, combmode='t2s', verbose=True):
     t2s : (S [x T]) :obj:`numpy.ndarray` or None, optional
         Estimated T2* values. Only required if combmode = 't2s'.
         Default is None.
-    combmode : {'t2s', 'ste'}, optional
-        How to combine data. Either 'ste' or 't2s'. If 'ste', argument 't2s' is
-        not required. Default is 't2s'.
+    combmode : {'t2s', 'paid'}, optional
+        How to combine data. Either 'paid' or 't2s'. If 'paid', argument 't2s'
+        is not required. Default is 't2s'.
     verbose : :obj:`bool`, optional
         Whether to print status updates. Default is True.
 
@@ -127,19 +129,23 @@ def make_optcom(data, tes, mask, t2s=None, combmode='t2s', verbose=True):
                          'voxels/samples: {0} != {1}'.format(mask.shape[0],
                                                              data.shape[0]))
 
-    if combmode not in ['t2s', 'ste']:
-        raise ValueError("Argument 'combmode' must be either 't2s' or 'ste'")
+    if combmode not in ['t2s', 'paid']:
+        raise ValueError("Argument 'combmode' must be either 't2s' or 'paid'")
     elif combmode == 't2s' and t2s is None:
         raise ValueError("Argument 't2s' must be supplied if 'combmode' is "
                          "set to 't2s'.")
-    elif combmode == 'ste' and t2s is not None:
-        LGR.warning("Argument 't2s' is not required if 'combmode' is 'ste'. "
+    elif combmode == 'paid' and t2s is not None:
+        LGR.warning("Argument 't2s' is not required if 'combmode' is 'paid'. "
                     "'t2s' array will not be used.")
 
     data = data[mask, :, :]  # mask out empty voxels/samples
     tes = np.array(tes)[np.newaxis, ...]  # (1 x E) array_like
 
-    if t2s is not None:
+    if combmode == 'paid':
+        LGR.info('Optimally combining data with parallel-acquired inhomogeneity '
+                 'desensitized (PAID) method')
+        combined = _combine_paid(data, tes)
+    else:
         if t2s.ndim == 1:
             msg = 'Optimally combining data with voxel-wise T2 estimates'
         else:
@@ -147,12 +153,7 @@ def make_optcom(data, tes, mask, t2s=None, combmode='t2s', verbose=True):
                    'estimates')
         t2s = t2s[mask, ..., np.newaxis]  # mask out empty voxels/samples
 
-        if verbose:
-            LGR.info(msg)
-
-    if combmode == 'ste':
-        combined = _combine_ste(data, tes)
-    else:
+        LGR.info(msg)
         combined = _combine_t2s(data, tes, t2s)
 
     combined = unmask(combined, mask)

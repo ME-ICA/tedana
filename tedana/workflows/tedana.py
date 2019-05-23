@@ -10,9 +10,9 @@ os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 
 import os.path as op
+import glob
 import shutil
 import logging
-from datetime import datetime
 
 import argparse
 import numpy as np
@@ -90,7 +90,7 @@ def _get_parser():
                                 'accepted components'),
                           default=None)
     optional.add_argument('--sourceTEs',
-                          dest='ste',
+                          dest='source_tes',
                           type=str,
                           help=('Source TEs for models. E.g., 0 for all, '
                                 '-1 for opt. com., and 1,2 for just TEs 1 and '
@@ -99,9 +99,9 @@ def _get_parser():
     optional.add_argument('--combmode',
                           dest='combmode',
                           action='store',
-                          choices=['t2s', 'ste'],
+                          choices=['t2s'],
                           help=('Combination scheme for TEs: '
-                                't2s (Posse 1999, default), ste (Poser)'),
+                                't2s (Posse 1999, default)'),
                           default='t2s')
     optional.add_argument('--verbose',
                           dest='verbose',
@@ -138,9 +138,10 @@ def _get_parser():
     optional.add_argument('--seed',
                           dest='fixed_seed',
                           type=int,
-                          help=('Value passed to repr(mdp.numx_rand.seed()) '
-                                'Set to an integer value for reproducible ICA results; '
-                                'otherwise, set to -1 for varying results across calls.'),
+                          help=('Value passed to repr(mdp.numx_rand.seed()). '
+                                'Set to an integer value for reproducible ICA results. '
+                                'Set to -1 for varying results across ICA calls. '
+                                'Default=42.'),
                           default=42)
     optional.add_argument('--png',
                           dest='png',
@@ -184,7 +185,7 @@ def _get_parser():
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     tedort=False, gscontrol=None, tedpca='mle',
-                    ste=-1, combmode='t2s', verbose=False, stabilize=False,
+                    source_tes=-1, combmode='t2s', verbose=False, stabilize=False,
                     out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
                     debug=False, quiet=False, png=False, png_cmap='coolwarm'):
     """
@@ -208,9 +209,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     ctab : :obj:`str`, optional
         File containing component table from which to extract pre-computed
         classifications.
-    manacc : :obj:`str`, optional
-        Comma separated list of manually accepted components in string form.
-        Default is None.
+    manacc : :obj:`list`, :obj:`str`, or None, optional
+        List of manually accepted components. Can be a list of the components,
+        a comma-separated string with component numbers, or None. Default is
+        None.
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
         denoising. Default is False.
@@ -219,11 +221,11 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         is None.
     tedpca : {'mle', 'kundu', 'kundu-stabilize'}, optional
         Method with which to select components in TEDPCA. Default is 'mle'.
-    ste : :obj:`int`, optional
+    source_tes : :obj:`int`, optional
         Source TEs for models. 0 for all, -1 for optimal combination.
         Default is -1.
-    combmode : {'t2s', 'ste'}, optional
-        Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
+    combmode : {'t2s'}, optional
+        Combination scheme for TEs: 't2s' (Posse 1999, default).
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
     png : obj:'bool', optional
@@ -263,12 +265,25 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         os.mkdir(out_dir)
 
     if debug and not quiet:
+        # ensure old logs aren't over-written
+        basename = 'tedana_run'
+        extension = 'txt'
+        logname = op.join(out_dir, (basename + '.' + extension))
+        logex = op.join(out_dir, (basename + '*'))
+        previouslogs = glob.glob(logex)
+        previouslogs.sort(reverse=True)
+        for f in previouslogs:
+            previousparts = op.splitext(f)
+            newname = previousparts[0] + '_old' + previousparts[1]
+            os.rename(f, newname)
+
+        # set logging format
         formatter = logging.Formatter(
                     '%(asctime)s\t%(name)-12s\t%(levelname)-8s\t%(message)s',
                     datefmt='%Y-%m-%dT%H:%M:%S')
-        fh = logging.FileHandler(op.join(
-            out_dir,
-            'runlog-{0}.tsv'.format(datetime.now().isoformat().replace(':', '.'))))
+
+        # set up logging file and open it for writing
+        fh = logging.FileHandler(logname)
         fh.setFormatter(formatter)
         logging.basicConfig(level=logging.DEBUG,
                             handlers=[fh, logging.StreamHandler()])
@@ -297,16 +312,35 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
     if mixm is not None and op.isfile(mixm):
-        shutil.copyfile(mixm, op.join(out_dir, 'meica_mix.1D'))
-        shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
+        mixm = op.abspath(mixm)
+        # Allow users to re-run on same folder
+        if mixm != op.join(out_dir, 'meica_mix.1D'):
+            shutil.copyfile(mixm, op.join(out_dir, 'meica_mix.1D'))
+            shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
     elif mixm is not None:
         raise IOError('Argument "mixm" must be an existing file.')
 
     if ctab is not None and op.isfile(ctab):
-        shutil.copyfile(ctab, op.join(out_dir, 'comp_table_ica.txt'))
-        shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
+        ctab = op.abspath(ctab)
+        # Allow users to re-run on same folder
+        if ctab != op.join(out_dir, 'comp_table_ica.txt'):
+            shutil.copyfile(ctab, op.join(out_dir, 'comp_table_ica.txt'))
+            shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
+
+    if isinstance(manacc, str):
+        manacc = [int(comp) for comp in manacc.split(',')]
+
+    if ctab and not mixm:
+        LGR.warning('Argument "ctab" requires argument "mixm".')
+        ctab = None
+    elif ctab and (manacc is None):
+        LGR.warning('Argument "ctab" requires argument "manacc".')
+        ctab = None
+    elif manacc is not None and not mixm:
+        LGR.warning('Argument "manacc" requires argument "mixm".')
+        manacc = None
 
     if mask is None:
         LGR.info('Computing EPI mask from first echo')
@@ -350,17 +384,18 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     if mixm is None:
         # Identify and remove thermal noise from data
-        n_components, dd = decomposition.tedpca(catd, data_oc, combmode, mask,
+        dd, n_components = decomposition.tedpca(catd, data_oc, combmode, mask,
                                                 t2s, t2sG, ref_img,
-                                                tes=tes, method=tedpca, ste=ste,
+                                                tes=tes, method=tedpca,
+                                                source_tes=source_tes,
                                                 kdaw=10., rdaw=1.,
-                                                verbose=verbose)
-        mmix_orig = decomposition.tedica(n_components, dd, fixed_seed,
+                                                out_dir=out_dir, verbose=verbose)
+        mmix_orig = decomposition.tedica(dd, n_components, fixed_seed,
                                          maxit, maxrestart)
 
         if verbose:
             np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
-            if ste == -1:
+            if source_tes == -1:
                 io.filewrite(utils.unmask(dd, mask),
                              op.join(out_dir, 'ts_OC_whitened.nii'), ref_img)
 
@@ -374,8 +409,13 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     verbose=verbose)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        comptable = selection.selcomps(seldict, comptable, mmix, manacc,
-                                       n_echos)
+        comptable = selection.selcomps(seldict, comptable, mmix, manacc, n_echos)
+    elif ctab is not None and manacc is not None:
+        LGR.info('Using supplied ICA mixing matrix, component table, and '
+                 'accepted components')
+        mmix = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
+        comptable = pd.read_csv(ctab, sep='\t', index_col='component')
+        comptable = selection.selcomps({}, comptable, mmix, manacc, n_echos)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
@@ -383,11 +423,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
                     ref_img, label='meica_', out_dir=out_dir,
                     verbose=verbose)
-        if ctab is None:
-            comptable = selection.selcomps(seldict, comptable, mmix, manacc,
-                                           n_echos)
-        else:
-            comptable = pd.read_csv(ctab, sep='\t', index_col='component')
+        comptable = selection.selcomps(seldict, comptable, mmix, manacc, n_echos)
 
     comptable.to_csv(op.join(out_dir, 'comp_table_ica.txt'), sep='\t',
                      index=True, index_label='component', float_format='%.6f')

@@ -34,12 +34,12 @@ mepca_S0_pred.nii
 mepca_betas_catd.nii
 mepca_metric_weights.nii
 mepca_mix.1D
-pcastate.pkl
 s0v.nii
 s0vG.nii
 s0vs.nii
 t2ss.nii
 t2sv.nii
 t2svG.nii
+tedana_run.txt
 ts_OC.nii
 ts_OC_whitened.nii
