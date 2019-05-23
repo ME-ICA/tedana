@@ -9,6 +9,7 @@ from sklearn.decomposition import PCA
 
 from tedana import model, utils, io
 from tedana.decomposition._utils import eimask
+from tedana.stats import computefeats2
 from tedana.selection import kundu_tedpca
 from tedana.due import due, BibTeX
 
@@ -214,7 +215,7 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     comp_maps = np.zeros((data_oc.shape[0], comp_ts.shape[1]))
     for i_comp in range(comp_ts.shape[1]):
         temp_comp_ts = comp_ts[:, i_comp][:, None]
-        comp_map = utils.unmask(model.computefeats2(data_oc, temp_comp_ts, mask), mask)
+        comp_map = utils.unmask(computefeats2(data_oc, temp_comp_ts, mask), mask)
         comp_maps[:, i_comp] = np.squeeze(comp_map)
     io.filewrite(comp_maps, 'mepca_OC_components.nii', ref_img)
 

@@ -5,7 +5,7 @@ import logging
 import numpy as np
 from scipy import stats
 
-from tedana import utils
+from tedana.stats import getfbounds
 from tedana.selection._utils import getelbow, clean_dataframe
 
 LGR = logging.getLogger(__name__)
@@ -197,7 +197,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
             temp_comptable['variance explained'].diff() < varex_upper_p].index.values
 
     # Compute elbows from other elbows
-    f05, _, f01 = utils.getfbounds(n_echos)
+    f05, _, f01 = getfbounds(n_echos)
     kappas_nonsig = comptable.loc[comptable['kappa'] < f01, 'kappa']
     # NOTE: Would an elbow from all Kappa values *ever* be lower than one from
     # a subset of lower values?

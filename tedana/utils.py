@@ -5,7 +5,6 @@ import logging
 
 import numpy as np
 import nibabel as nib
-from scipy import stats
 from scipy import ndimage
 from nilearn._utils import check_niimg
 from sklearn.utils import check_array
@@ -13,27 +12,6 @@ from sklearn.utils import check_array
 from tedana.due import due, BibTeX
 
 LGR = logging.getLogger(__name__)
-
-
-def getfbounds(n_echos):
-    """
-    Gets F-statistic boundaries based on number of echos
-
-    Parameters
-    ----------
-    n_echos : :obj:`int`
-        Number of echoes
-
-    Returns
-    -------
-    fmin, fmid, fmax : :obj:`float`
-        F-statistic thresholds for alphas of 0.05, 0.025, and 0.01,
-        respectively.
-    """
-    f05 = stats.f.ppf(q=(1 - 0.05), dfn=1, dfd=(n_echos - 1))
-    f025 = stats.f.ppf(q=(1 - 0.025), dfn=1, dfd=(n_echos - 1))
-    f01 = stats.f.ppf(q=(1 - 0.01), dfn=1, dfd=(n_echos - 1))
-    return f05, f025, f01
 
 
 def load_image(data):

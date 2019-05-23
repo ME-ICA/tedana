@@ -5,6 +5,7 @@ import logging
 import numpy as np
 
 from tedana import utils
+from tedana.stats import getfbounds
 from tedana.selection._utils import (getelbow_cons, getelbow, clean_dataframe)
 
 LGR = logging.getLogger(__name__)
@@ -55,7 +56,7 @@ def kundu_tedpca(comptable, n_echos, kdaw=10., rdaw=1., stabilize=False):
         np.arange(len(lower_diff_varex_norm))[lower_diff_varex_norm >= varex_norm_thr][0] + 1]
     varex_norm_cum = np.cumsum(comptable['normalized variance explained'])
 
-    fmin, fmid, fmax = utils.getfbounds(n_echos)
+    fmin, fmid, fmax = getfbounds(n_echos)
     if int(kdaw) == -1:
         lim_idx = utils.andb([comptable['kappa'] < fmid,
                               comptable['kappa'] > fmin]) == 2

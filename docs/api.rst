@@ -171,6 +171,26 @@ API
 .. _calibration_ref:
 
 
+:mod:`tedana.stats`: Statistical functions
+--------------------------------------------------
+
+.. automodule:: tedana.stats
+   :no-members:
+   :no-inherited-members:
+
+.. autosummary:: tedana.stats
+   :toctree: generated/
+   :template: function.rst
+
+   tedana.stats.get_coeffs
+   tedana.stats.computefeats2
+   tedana.stats.getfbounds
+
+.. currentmodule:: tedana
+
+.. _calibration_ref:
+
+
 :mod:`tedana.utils`: Utility functions
 --------------------------------------------------
 
@@ -185,7 +205,6 @@ API
 
    tedana.utils.andb
    tedana.utils.dice
-   tedana.utils.getfbounds
    tedana.utils.load_image
    tedana.utils.make_adaptive_mask
    tedana.utils.unmask
