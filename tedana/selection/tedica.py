@@ -6,35 +6,88 @@ import numpy as np
 from scipy import stats
 
 from tedana import utils
-from tedana.selection._utils import getelbow
+from tedana.selection._utils import getelbow, clean_dataframe
 
 LGR = logging.getLogger(__name__)
 
 
-def selcomps(seldict, comptable, mmix, manacc, n_echos):
+def manual_selection(comptable, acc=None, rej=None):
     """
-    Classify components in seldict as "accepted," "rejected," or "ignored."
-
-    The selection process uses previously calculated parameters listed in `seldict`
-    for each ICA component such as Kappa (a T2* weighting metric), Rho (an S0 weighting metric),
-    and variance explained. See `Notes` for additional calculated metrics used to
-    classify each component into one of the four listed groups.
+    Perform manual selection of components.
 
     Parameters
     ----------
-    seldict : :obj:`dict`
-        A dictionary with component-specific features used for classification.
-        As output from `fitmodels_direct`
-    comptable : (C x X) :obj:`pandas.DataFrame`
+    comptable : (C x M) :obj:`pandas.DataFrame`
+        Component metric table, where `C` is components and `M` is metrics
+    acc : :obj:`list`, optional
+        List of accepted components. Default is None.
+    rej : :obj:`list`, optional
+        List of rejected components. Default is None.
+
+    Returns
+    -------
+    comptable : (C x M) :obj:`pandas.DataFrame`
+        Component metric table with classification.
+    """
+    LGR.info('Performing manual ICA component selection')
+    if ('classification' in comptable.columns and
+            'original_classification' not in comptable.columns):
+        comptable['original_classification'] = comptable['classification']
+        comptable['original_rationale'] = comptable['rationale']
+
+    comptable['classification'] = 'accepted'
+    comptable['rationale'] = ''
+
+    all_comps = comptable.index.values
+    if acc is not None:
+        acc = [int(comp) for comp in acc]
+
+    if rej is not None:
+        rej = [int(comp) for comp in rej]
+
+    if acc is not None and rej is None:
+        rej = sorted(np.setdiff1d(all_comps, acc))
+    elif acc is None and rej is not None:
+        acc = sorted(np.setdiff1d(all_comps, rej))
+    elif acc is None and rej is None:
+        LGR.info('No manually accepted or rejected components supplied. '
+                 'Accepting all components.')
+        # Accept all components if no manual selection provided
+        acc = all_comps[:]
+        rej = []
+
+    ign = np.setdiff1d(all_comps, np.union1d(acc, rej))
+    comptable.loc[acc, 'classification'] = 'accepted'
+    comptable.loc[rej, 'classification'] = 'rejected'
+    comptable.loc[rej, 'rationale'] += 'I001;'
+    comptable.loc[ign, 'classification'] = 'ignored'
+    comptable.loc[ign, 'rationale'] += 'I001;'
+
+    # Move decision columns to end
+    comptable = clean_dataframe(comptable)
+    return comptable
+
+
+def kundu_selection_v2(comptable, n_echos, n_vols):
+    """
+    Classify components as "accepted," "rejected," or "ignored" based on
+    relevant metrics.
+
+    The selection process uses previously calculated parameters listed in
+    comptable for each ICA component such as Kappa (a T2* weighting metric),
+    Rho (an S0 weighting metric), and variance explained.
+    See `Notes` for additional calculated metrics used to classify each
+    component into one of the listed groups.
+
+    Parameters
+    ----------
+    comptable : (C x M) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
-    mmix : (T x C) array_like
-        Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the number of volumes in the original data
-    manacc : :obj:`list`
-        Comma-separated list of indices of manually accepted components
     n_echos : :obj:`int`
         Number of echos in original data
+    n_vols : :obj:`int`
+        Number of volumes in dataset
 
     Returns
     -------
@@ -48,56 +101,19 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     by Prantik Kundu, and his original implementation is available at:
     https://github.com/ME-ICA/me-ica/blob/b2781dd087ab9de99a2ec3925f04f02ce84f0adc/meica.libs/select_model.py
 
-    This component selection process uses multiple, previously calculated metrics that include:
-    kappa, rho, variance explained, component spatial weighting maps, noise and spatial
+    This component selection process uses multiple, previously calculated
+    metrics that include kappa, rho, variance explained, noise and spatial
     frequency metrics, and measures of spatial overlap across metrics.
 
-    Prantik began to update these selection criteria to use SVMs to
-    distinguish components, a hypercommented version of this attempt is available at:
+    Prantik began to update these selection criteria to use SVMs to distinguish
+    components, a hypercommented version of this attempt is available at:
     https://gist.github.com/emdupre/ca92d52d345d08ee85e104093b81482e
     """
-    cols_at_end = ['classification', 'rationale']
-
-    # Lists of components
-    all_comps = np.arange(comptable.shape[0])
-    # unclf is a full list that is whittled down over criteria
-    # since the default classification is "accepted", at the end of the tree
-    # the remaining elements in unclf are classified as accepted
-    unclf = all_comps.copy()
-
-    # If user has specified
-    if manacc:
-        LGR.info('Performing manual ICA component selection')
-        if ('classification' in comptable.columns and
-                'original_classification' not in comptable.columns):
-            comptable['original_classification'] = comptable['classification']
-            comptable['original_rationale'] = comptable['rationale']
-        comptable['classification'] = 'accepted'
-        comptable['rationale'] = ''
-        acc = [int(comp) for comp in manacc]
-        rej = sorted(np.setdiff1d(all_comps, acc))
-        comptable.loc[acc, 'classification'] = 'accepted'
-        comptable.loc[rej, 'classification'] = 'rejected'
-        comptable.loc[rej, 'rationale'] += 'I001;'
-        # Move decision columns to end
-        comptable = comptable[[c for c in comptable if c not in cols_at_end] +
-                              [c for c in cols_at_end if c in comptable]]
-        comptable['rationale'] = comptable['rationale'].str.rstrip(';')
-        return comptable
-
+    LGR.info('Performing ICA component selection with Kundu decision tree v2.5')
     comptable['classification'] = 'accepted'
     comptable['rationale'] = ''
 
-    Z_maps = seldict['Z_maps']
-    Z_clmaps = seldict['Z_clmaps']
-    F_R2_maps = seldict['F_R2_maps']
-    F_S0_clmaps = seldict['F_S0_clmaps']
-    F_R2_clmaps = seldict['F_R2_clmaps']
-    Br_S0_clmaps = seldict['Br_S0_clmaps']
-    Br_R2_clmaps = seldict['Br_R2_clmaps']
-
     # Set knobs
-    n_vols, n_comps = mmix.shape
     LOW_PERC = 25
     HIGH_PERC = 90
     if n_vols < 100:
@@ -106,80 +122,12 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
         EXTEND_FACTOR = 2
     RESTRICT_FACTOR = 2
 
-    """
-    Tally number of significant voxels for cluster-extent thresholded R2 and S0
-    model F-statistic maps.
-    """
-    comptable['countsigFR2'] = F_R2_clmaps.sum(axis=0)
-    comptable['countsigFS0'] = F_S0_clmaps.sum(axis=0)
-
-    """
-    Generate Dice values for R2 and S0 models
-    - dice_FR2: Dice value of cluster-extent thresholded maps of R2-model betas
-      and F-statistics.
-    - dice_FS0: Dice value of cluster-extent thresholded maps of S0-model betas
-      and F-statistics.
-    """
-    comptable['dice_FR2'] = np.zeros(all_comps.shape[0])
-    comptable['dice_FS0'] = np.zeros(all_comps.shape[0])
-    for i_comp in all_comps:
-        comptable.loc[i_comp, 'dice_FR2'] = utils.dice(Br_R2_clmaps[:, i_comp],
-                                                       F_R2_clmaps[:, i_comp])
-        comptable.loc[i_comp, 'dice_FS0'] = utils.dice(Br_S0_clmaps[:, i_comp],
-                                                       F_S0_clmaps[:, i_comp])
-
-    comptable.loc[np.isnan(comptable['dice_FR2']), 'dice_FR2'] = 0
-    comptable.loc[np.isnan(comptable['dice_FS0']), 'dice_FS0'] = 0
-
-    """
-    Generate three metrics of component noise:
-    - countnoise: Number of "noise" voxels (voxels highly weighted for
-      component, but not from clusters)
-    - signal-noise_t: T-statistic for two-sample t-test of F-statistics from
-      "signal" voxels (voxels in clusters) against "noise" voxels (voxels not
-      in clusters) for R2 model.
-    - signal-noise_p: P-value from t-test.
-    """
-    comptable['countnoise'] = 0
-    comptable['signal-noise_t'] = 0
-    comptable['signal-noise_p'] = 0
-    for i_comp in all_comps:
-        # index voxels significantly loading on component but not from clusters
-        comp_noise_sel = ((np.abs(Z_maps[:, i_comp]) > 1.95) &
-                          (Z_clmaps[:, i_comp] == 0))
-        comptable.loc[i_comp, 'countnoise'] = np.array(
-            comp_noise_sel, dtype=np.int).sum()
-        # NOTE: Why only compare distributions of *unique* F-statistics?
-        noise_FR2_Z = np.log10(np.unique(F_R2_maps[comp_noise_sel, i_comp]))
-        signal_FR2_Z = np.log10(np.unique(
-            F_R2_maps[Z_clmaps[:, i_comp] == 1, i_comp]))
-        (comptable.loc[i_comp, 'signal-noise_t'],
-         comptable.loc[i_comp, 'signal-noise_p']) = stats.ttest_ind(
-             signal_FR2_Z, noise_FR2_Z, equal_var=False)
-
-    comptable.loc[np.isnan(comptable['signal-noise_t']), 'signal-noise_t'] = 0
-    comptable.loc[np.isnan(comptable['signal-noise_p']), 'signal-noise_p'] = 0
-
-    """
-    Assemble decision table with five metrics:
-    - Kappa values ranked from largest to smallest
-    - R2-model F-score map/beta map Dice scores ranked from largest to smallest
-    - Signal F > Noise F t-statistics ranked from largest to smallest
-    - Number of "noise" voxels (voxels highly weighted for component, but not
-      from clusters) ranked from smallest to largest
-    - Number of voxels with significant R2-model F-scores within clusters
-      ranked from largest to smallest
-
-    Smaller values (i.e., higher ranks) across metrics indicate more BOLD
-    dependence and less noise.
-    """
-    d_table_rank = np.vstack([
-        n_comps - stats.rankdata(comptable['kappa']),
-        n_comps - stats.rankdata(comptable['dice_FR2']),
-        n_comps - stats.rankdata(comptable['signal-noise_t']),
-        stats.rankdata(comptable['countnoise']),
-        n_comps - stats.rankdata(comptable['countsigFR2'])]).T
-    comptable['d_table_score'] = d_table_rank.mean(axis=1)
+    # Lists of components
+    all_comps = np.arange(comptable.shape[0])
+    # unclf is a full list that is whittled down over criteria
+    # since the default classification is "accepted", at the end of the tree
+    # the remaining elements in unclf are classified as accepted
+    unclf = all_comps.copy()
 
     """
     Step 1: Reject anything that's obviously an artifact
@@ -233,16 +181,17 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     varex_upper_p = np.median(
         comptable.loc[comptable['kappa'] > getelbow(comptable['kappa'], return_val=True),
                       'variance explained'])
+
+    # Remove variance-explained outliers from list of components to consider
+    # for acceptance. These components will have another chance to be accepted
+    # later on.
+    # NOTE: We're not sure why this is done this way, nor why it's specifically
+    # done three times.
     ncls = unclf.copy()
-    # NOTE: We're not sure why this is done, nor why it's specifically done
-    # three times. Need to look into this deeper, esp. to make sure the 3
-    # isn't a hard-coded reference to the number of echoes.
-    # Reduce components to investigate as "good" to ones in which change in
-    # variance explained is less than the limit defined above.... What?
     for i_loop in range(3):
-        ncls = comptable.loc[ncls].loc[
-            comptable.loc[
-                ncls, 'variance explained'].diff() < varex_upper_p].index.values
+        temp_comptable = comptable.loc[ncls]
+        ncls = temp_comptable.loc[
+            temp_comptable['variance explained'].diff() < varex_upper_p].index.values
 
     # Compute elbows from other elbows
     f05, _, f01 = utils.getfbounds(n_echos)
@@ -260,15 +209,14 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
                     (comptable.loc[ncls, 'rho'] < rho_elbow)]
 
     if len(acc_prov) == 0:
-        LGR.warning('No BOLD-like components detected')
+        LGR.warning('No BOLD-like components detected. Ignoring all remaining '
+                    'components.')
         ign = sorted(np.setdiff1d(all_comps, rej))
         comptable.loc[ign, 'classification'] = 'ignored'
         comptable.loc[ign, 'rationale'] += 'I006;'
 
         # Move decision columns to end
-        comptable = comptable[[c for c in comptable if c not in cols_at_end] +
-                              [c for c in cols_at_end if c in comptable]]
-        comptable['rationale'] = comptable['rationale'].str.rstrip(';')
+        comptable = clean_dataframe(comptable)
         return comptable
 
     # Calculate "rate" for kappa: kappa range divided by variance explained
@@ -279,6 +227,8 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
                   (np.max(comptable.loc[acc_prov, 'variance explained']) -
                    np.min(comptable.loc[acc_prov, 'variance explained'])))
     comptable['kappa ratio'] = kappa_rate * comptable['variance explained'] / comptable['kappa']
+
+    # Calculate bounds for variance explained
     varex_lower = stats.scoreatpercentile(
         comptable.loc[acc_prov, 'variance explained'], LOW_PERC)
     varex_upper = stats.scoreatpercentile(
@@ -380,7 +330,5 @@ def selcomps(seldict, comptable, mmix, manacc, n_echos):
     # at this point, unclf is equivalent to accepted
 
     # Move decision columns to end
-    comptable = comptable[[c for c in comptable if c not in cols_at_end] +
-                          [c for c in cols_at_end if c in comptable]]
-    comptable['rationale'] = comptable['rationale'].str.rstrip(';')
+    comptable = clean_dataframe(comptable)
     return comptable

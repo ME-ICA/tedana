@@ -2,8 +2,6 @@
 # ex: set sts=4 ts=4 sw=4 et:
 
 from .tedpca import kundu_tedpca
-from .select_comps import (
-    selcomps,
-)
+from .tedica import kundu_selection_v2, manual_selection
 
-__all__ = ['kundu_tedpca', 'selcomps']
+__all__ = ['kundu_tedpca', 'kundu_selection_v2', 'manual_selection']

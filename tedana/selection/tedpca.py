@@ -5,7 +5,7 @@ import logging
 import numpy as np
 
 from tedana import utils
-from tedana.selection._utils import (getelbow_cons, getelbow)
+from tedana.selection._utils import (getelbow_cons, getelbow, clean_dataframe)
 
 LGR = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ def kundu_tedpca(comptable, n_echos, kdaw=10., rdaw=1., stabilize=False):
         rho_lim = comptable.loc[lim_idx, 'rho'].values
         rho_thr = rho_lim[getelbow(rho_lim)]
         stabilize = True
-        LGR.info('kdaw set to -1. Switching TEDPCA method to '
+        LGR.info('kdaw set to -1. Switching TEDPCA algorithm to '
                  'kundu-stabilize')
     elif int(rdaw) == -1:
         lim_idx = utils.andb([comptable['rho'] < fmid, comptable['rho'] > fmin]) == 2
@@ -119,8 +119,5 @@ def kundu_tedpca(comptable, n_echos, kdaw=10., rdaw=1., stabilize=False):
              'threshold: {2:.02f}'.format(n_components, kappa_thr, rho_thr))
 
     # Move decision columns to end
-    cols_at_end = ['classification', 'rationale']
-    comptable = comptable[[c for c in comptable if c not in cols_at_end] +
-                          [c for c in cols_at_end if c in comptable]]
-    comptable['rationale'] = comptable['rationale'].str.rstrip(';')
+    comptable = clean_dataframe(comptable)
     return comptable
