@@ -10,9 +10,9 @@ os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 
 import os.path as op
+import glob
 import shutil
 import logging
-from datetime import datetime
 
 import argparse
 import numpy as np
@@ -138,9 +138,10 @@ def _get_parser():
     optional.add_argument('--seed',
                           dest='fixed_seed',
                           type=int,
-                          help=('Value passed to repr(mdp.numx_rand.seed()) '
-                                'Set to an integer value for reproducible ICA results; '
-                                'otherwise, set to -1 for varying results across calls.'),
+                          help=('Value passed to repr(mdp.numx_rand.seed()). '
+                                'Set to an integer value for reproducible ICA results. '
+                                'Set to -1 for varying results across ICA calls. '
+                                'Default=42.'),
                           default=42)
     optional.add_argument('--png',
                           dest='png',
@@ -208,9 +209,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     ctab : :obj:`str`, optional
         File containing component table from which to extract pre-computed
         classifications.
-    manacc : :obj:`str`, optional
-        Comma separated list of manually accepted components in string form.
-        Default is None.
+    manacc : :obj:`list`, :obj:`str`, or None, optional
+        List of manually accepted components. Can be a list of the components,
+        a comma-separated string with component numbers, or None. Default is
+        None.
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
         denoising. Default is False.
@@ -263,12 +265,25 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         os.mkdir(out_dir)
 
     if debug and not quiet:
+        # ensure old logs aren't over-written
+        basename = 'tedana_run'
+        extension = 'txt'
+        logname = op.join(out_dir, (basename + '.' + extension))
+        logex = op.join(out_dir, (basename + '*'))
+        previouslogs = glob.glob(logex)
+        previouslogs.sort(reverse=True)
+        for f in previouslogs:
+            previousparts = op.splitext(f)
+            newname = previousparts[0] + '_old' + previousparts[1]
+            os.rename(f, newname)
+
+        # set logging format
         formatter = logging.Formatter(
                     '%(asctime)s\t%(name)-12s\t%(levelname)-8s\t%(message)s',
                     datefmt='%Y-%m-%dT%H:%M:%S')
-        fh = logging.FileHandler(op.join(
-            out_dir,
-            'runlog-{0}.tsv'.format(datetime.now().isoformat().replace(':', '.'))))
+
+        # set up logging file and open it for writing
+        fh = logging.FileHandler(logname)
         fh.setFormatter(formatter)
         logging.basicConfig(level=logging.DEBUG,
                             handlers=[fh, logging.StreamHandler()])
@@ -297,16 +312,35 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
     if mixm is not None and op.isfile(mixm):
-        shutil.copyfile(mixm, op.join(out_dir, 'meica_mix.1D'))
-        shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
+        mixm = op.abspath(mixm)
+        # Allow users to re-run on same folder
+        if mixm != op.join(out_dir, 'meica_mix.1D'):
+            shutil.copyfile(mixm, op.join(out_dir, 'meica_mix.1D'))
+            shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
     elif mixm is not None:
         raise IOError('Argument "mixm" must be an existing file.')
 
     if ctab is not None and op.isfile(ctab):
-        shutil.copyfile(ctab, op.join(out_dir, 'comp_table_ica.txt'))
-        shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
+        ctab = op.abspath(ctab)
+        # Allow users to re-run on same folder
+        if ctab != op.join(out_dir, 'comp_table_ica.txt'):
+            shutil.copyfile(ctab, op.join(out_dir, 'comp_table_ica.txt'))
+            shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
+
+    if isinstance(manacc, str):
+        manacc = [int(comp) for comp in manacc.split(',')]
+
+    if ctab and not mixm:
+        LGR.warning('Argument "ctab" requires argument "mixm".')
+        ctab = None
+    elif ctab and (manacc is None):
+        LGR.warning('Argument "ctab" requires argument "manacc".')
+        ctab = None
+    elif manacc is not None and not mixm:
+        LGR.warning('Argument "manacc" requires argument "mixm".')
+        manacc = None
 
     if mask is None:
         LGR.info('Computing EPI mask from first echo')
@@ -352,7 +386,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # Identify and remove thermal noise from data
         dd, n_components = decomposition.tedpca(catd, data_oc, combmode, mask,
                                                 t2s, t2sG, ref_img,
-                                                tes=tes, method=tedpca,
+                                                tes=tes, algorithm=tedpca,
                                                 source_tes=source_tes,
                                                 kdaw=10., rdaw=1.,
                                                 out_dir=out_dir, verbose=verbose)
@@ -369,26 +403,27 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # Estimate betas and compute selection metrics for mixing matrix
         # generated from dimensionally reduced data using full data (i.e., data
         # with thermal noise)
-        seldict, comptable, betas, mmix = model.fitmodels_direct(
-                    catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
+        comptable, metric_maps, betas, mmix = model.dependence_metrics(
+                    catd, data_oc, mmix_orig, mask, t2s, tes,
                     ref_img, reindex=True, label='meica_', out_dir=out_dir,
-                    verbose=verbose)
+                    algorithm='kundu_v2', verbose=verbose)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        comptable = selection.selcomps(seldict, comptable, mmix, manacc,
-                                       n_echos)
+        comptable = model.kundu_metrics(comptable, metric_maps)
+        comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
-        seldict, comptable, betas, mmix = model.fitmodels_direct(
-                    catd, mmix_orig, mask, t2s, t2sG, tes, combmode,
+        comptable, metric_maps, betas, mmix = model.dependence_metrics(
+                    catd, data_oc, mmix_orig, mask, t2s, tes,
                     ref_img, label='meica_', out_dir=out_dir,
-                    verbose=verbose)
+                    algorithm='kundu_v2', verbose=verbose)
         if ctab is None:
-            comptable = selection.selcomps(seldict, comptable, mmix, manacc,
-                                           n_echos)
+            comptable = model.kundu_metrics(comptable, metric_maps)
+            comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
         else:
             comptable = pd.read_csv(ctab, sep='\t', index_col='component')
+            comptable = selection.manual_selection(comptable, acc=manacc)
 
     comptable.to_csv(op.join(out_dir, 'comp_table_ica.txt'), sep='\t',
                      index=True, index_label='component', float_format='%.6f')

@@ -129,24 +129,24 @@ P007   rejected         Rho below fmin (only in stabilized PCA decision tree)
 
 TEDICA codes
 ````````````
-=====  ===============  ========================================================
-Code   Classification   Description
-=====  ===============  ========================================================
-I001   rejected         Manual exclusion
-I002   rejected         Rho greater than Kappa
-I003   rejected         More significant voxels in S0 model than R2 model
-I004   rejected         S0 Dice is higher than R2 Dice and high variance
-                        explained
-I005   rejected         Noise F-value is higher than signal F-value and high
-                        variance explained
-I006   ignored          No good components found
-I007   rejected         Mid-Kappa component
-I008   ignored          Low variance explained
-I009   rejected         Mid-Kappa artifact type A
-I010   rejected         Mid-Kappa artifact type B
-I011   ignored          ign_add0
-I012   ignored          ign_add1
-=====  ===============  ========================================================
+=====  =================  ========================================================
+Code   Classification     Description
+=====  =================  ========================================================
+I001   rejected|accepted  Manual classification
+I002   rejected           Rho greater than Kappa
+I003   rejected           More significant voxels in S0 model than R2 model
+I004   rejected           S0 Dice is higher than R2 Dice and high variance
+                          explained
+I005   rejected           Noise F-value is higher than signal F-value and high
+                          variance explained
+I006   ignored            No good components found
+I007   rejected           Mid-Kappa component
+I008   ignored            Low variance explained
+I009   rejected           Mid-Kappa artifact type A
+I010   rejected           Mid-Kappa artifact type B
+I011   ignored            ign_add0
+I012   ignored            ign_add1
+=====  =================  ========================================================
 
 Visual reports
 --------------
