@@ -165,6 +165,18 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     rej = np.union1d(temp_rej2, rej)
     unclf = np.setdiff1d(unclf, rej)
 
+    # Quit early if no potentially accepted components remain
+    if len(unclf) == 0:
+        LGR.warning('No BOLD-like components detected. Ignoring all remaining '
+                    'components.')
+        ign = sorted(np.setdiff1d(all_comps, rej))
+        comptable.loc[ign, 'classification'] = 'ignored'
+        comptable.loc[ign, 'rationale'] += 'I006;'
+
+        # Move decision columns to end
+        comptable = clean_dataframe(comptable)
+        return comptable
+
     """
     Step 2: Make a guess for what the good components are, in order to
     estimate good component properties
@@ -211,6 +223,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     acc_prov = ncls[(comptable.loc[ncls, 'kappa'] >= kappa_elbow) &
                     (comptable.loc[ncls, 'rho'] < rho_elbow)]
 
+    # Quit early if no potentially accepted components remain
     if len(acc_prov) == 0:
         LGR.warning('No BOLD-like components detected. Ignoring all remaining '
                     'components.')
