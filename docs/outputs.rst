@@ -181,6 +181,7 @@ with ``--png-cmap``. For example, to use the bone colormap, you would simply add
 ``--png-cmap bone``. 
 
 Finally, the bottom of the image shows the Fast Fourier Transform of the component timeseries.
+
 Tip: Look for your fundamental task frequencies here!
 
 
@@ -198,7 +199,8 @@ Kappa vs Rho Scatter Plot
 This diagnostic plot shows the relationship between kappa and rho values for each 
 component. 
 
-This can be useful for getting a big picture view of your data.
+This can be useful for getting a big picture view of your data or for comparing
+how different variants of an fMRI sequence are performing. 
 
 Double Pie Chart
 ````````````
@@ -210,4 +212,4 @@ This diagnostic plot shows the relative variance explained by each classificatio
 in the outer ring, with individual components on the inner ring. If a low amount of 
 variance is explained, this will be shown as a gap in the ring. 
 
-Tip:Sometimes large variance is due to singular components, which can be easily seen here. 
+Tip: Sometimes large variance is due to singular components, which can be easily seen here. 
