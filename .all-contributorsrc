@@ -28,6 +28,19 @@
         "review",
         "talk"
       ]
+    },
+    {
+      "login": "tsalo",
+      "name": "Taylor Salo",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/8228902?v=4",
+      "profile": "http://tsalo.github.io",
+      "contributions": [
+        "code",
+        "ideas",
+        "doc",
+        "tutorial",
+        "question"
+      ]
     }
   ],
   "contributorsPerLine": 7,
