@@ -1,0 +1,26 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "jbteves",
+      "name": "Joshua Teves",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/26722533?v=4",
+      "profile": "https://github.com/jbteves",
+      "contributions": [
+        "projectManagement",
+        "doc",
+        "review",
+        "maintenance"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "tedana",
+  "projectOwner": "ME-ICA",
+  "repoType": "github",
+  "repoHost": "https://github.com"
+}
