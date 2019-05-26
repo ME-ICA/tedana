@@ -158,8 +158,11 @@ These reports consist of three main types of images.
 
 Component Images
 ````````````
-For each component identified by tedana, a single image will be created. Examples
-of these are shown below. These are designed for an up-close inspection of both
+.. image:: /_static/example_good_component.png
+  :align: center
+  
+For each component identified by tedana, a single image will be created. Above is an
+example of an accepted component. These are designed for an up-close inspection of both
 the spatial and temporal aspects of the component, as well as ancilliary information. 
 
 The title of the plot provides information about variance, kappa and rho values
@@ -180,8 +183,18 @@ with ``--png-cmap``. For example, to use the bone colormap, you would simply add
 Finally, the bottom of the image shows the Fast Fourier Transform of the component timeseries.
 Tip: Look for your fundamental task frequencies here!
 
+
+.. image:: /_static/example_bad_component.png
+  :align: center
+  
+Above, you can appreciate a component that was rejected. In this case, the subject
+moved each time the task was performed - which affected single slice groups. 
+
 Kappa vs Rho Scatter Plot
 ````````````
+.. image:: /_static/example_Kappa_vs_Rho_Scatter.png
+  :align: center
+  
 This diagnostic plot shows the relationship between kappa and rho values for each 
 component. 
 
@@ -189,6 +202,10 @@ This can be useful for getting a big picture view of your data.
 
 Double Pie Chart
 ````````````
+.. image:: /_static/example_Component_Overview.png
+  :align: center
+  
+
 This diagnostic plot shows the relative variance explained by each classification type
 in the outer ring, with individual components on the inner ring. If a low amount of 
 variance is explained, this will be shown as a gap in the ring. 
