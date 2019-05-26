@@ -14,7 +14,8 @@
         "projectManagement",
         "doc",
         "review",
-        "maintenance"
+        "maintenance",
+        "bug"
       ]
     }
   ],
