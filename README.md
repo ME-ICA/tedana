@@ -1,4 +1,5 @@
 # tedana: TE Dependent ANAlysis
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors)
 
 The ``tedana`` package is part of the ME-ICA pipeline, performing TE-dependent
 analysis of multi-echo functional magnetic resonance imaging (fMRI) data.
@@ -79,3 +80,15 @@ Have a question, comment, or suggestion?
 Open or comment on one of [our issues](https://github.com/ME-ICA/tedana/issues)!
 
 We ask that all contributions to ``tedana`` respect our [code of conduct](https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md).
+
+## Contributors
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore -->
+<table><tr><td align="center"><a href="https://github.com/jbteves"><img src="https://avatars3.githubusercontent.com/u/26722533?v=4" width="100px;" alt="Joshua Teves"/><br /><sub><b>Joshua Teves</b></sub></a><br /><a href="#projectManagement-jbteves" title="Project Management">📆</a> <a href="https://github.com/ME-ICA/tedana/commits?author=jbteves" title="Documentation">📖</a> <a href="#review-jbteves" title="Reviewed Pull Requests">👀</a> <a href="#maintenance-jbteves" title="Maintenance">🚧</a></td></tr></table>
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
