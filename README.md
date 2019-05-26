@@ -85,6 +85,7 @@ We ask that all contributions to ``tedana`` respect our [code of conduct](https:
 If you're not sure where to begin, 
 feel free to pop into [Gitter](https://gitter.im/ME-ICA/tedana) and 
 introduce yourself! We will be happy to help you find somewhere to get
+started.
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
 
