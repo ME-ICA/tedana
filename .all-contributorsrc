@@ -53,6 +53,18 @@
         "example",
         "review"
       ]
+    },
+    {
+      "login": "dowdlelt",
+      "name": "Logan Dowdle",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/15126366?v=4",
+      "profile": "https://github.com/dowdlelt",
+      "contributions": [
+        "code",
+        "question",
+        "design",
+        "bug"
+      ]
     }
   ],
   "contributorsPerLine": 7,
