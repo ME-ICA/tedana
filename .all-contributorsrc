@@ -76,6 +76,16 @@
         "review",
         "talk"
       ]
+    },
+    {
+      "login": "prantikk",
+      "name": "prantikk",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/1636689?v=4",
+      "profile": "https://github.com/prantikk",
+      "contributions": [
+        "code",
+        "ideas"
+      ]
     }
   ],
   "contributorsPerLine": 4,
