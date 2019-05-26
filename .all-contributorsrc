@@ -41,6 +41,18 @@
         "tutorial",
         "question"
       ]
+    },
+    {
+      "login": "handwerkerd",
+      "name": "handwerkerd",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/7406227?v=4",
+      "profile": "https://github.com/handwerkerd",
+      "contributions": [
+        "design",
+        "doc",
+        "example",
+        "review"
+      ]
     }
   ],
   "contributorsPerLine": 7,
