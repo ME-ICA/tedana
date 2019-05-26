@@ -18,6 +18,31 @@
       ]
     },
     {
+      "login": "emdupre",
+      "name": "Elizabeth DuPre",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/15017191?v=4",
+      "profile": "http://emdupre.me",
+      "contributions": [
+        "code",
+        "doc",
+        "ideas",
+        "infra",
+        "review",
+        "example",
+        "test",
+        "question"
+      ]
+    },
+    {
+      "login": "javiergcas",
+      "name": "Javier Gonzalez-Castillo",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/7314358?v=4",
+      "profile": "https://github.com/javiergcas",
+      "contributions": [
+        "ideas"
+      ]
+    },
+    {
       "login": "handwerkerd",
       "name": "Dan Handwerker",
       "avatar_url": "https://avatars3.githubusercontent.com/u/7406227?v=4",
@@ -27,6 +52,16 @@
         "doc",
         "example",
         "review"
+      ]
+    },
+    {
+      "login": "prantikk",
+      "name": "Prantik Kundu",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/1636689?v=4",
+      "profile": "https://github.com/prantikk",
+      "contributions": [
+        "code",
+        "ideas"
       ]
     },
     {
@@ -76,44 +111,9 @@
         "review",
         "talk"
       ]
-    },
-    {
-      "login": "prantikk",
-      "name": "prantikk",
-      "avatar_url": "https://avatars0.githubusercontent.com/u/1636689?v=4",
-      "profile": "https://github.com/prantikk",
-      "contributions": [
-        "code",
-        "ideas"
-      ]
-    },
-    {
-      "login": "javiergcas",
-      "name": "javiergcas",
-      "avatar_url": "https://avatars1.githubusercontent.com/u/7314358?v=4",
-      "profile": "https://github.com/javiergcas",
-      "contributions": [
-        "ideas"
-      ]
-    },
-    {
-      "login": "emdupre",
-      "name": "Elizabeth DuPre",
-      "avatar_url": "https://avatars3.githubusercontent.com/u/15017191?v=4",
-      "profile": "http://emdupre.me",
-      "contributions": [
-        "code",
-        "doc",
-        "ideas",
-        "infra",
-        "review",
-        "example",
-        "test",
-        "question"
-      ]
     }
   ],
-  "contributorsPerLine": 4,
+  "contributorsPerLine": 5,
   "projectName": "tedana",
   "projectOwner": "ME-ICA",
   "repoType": "github",
