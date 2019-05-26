@@ -163,7 +163,7 @@ Component Images
   
 For each component identified by tedana, a single image will be created. Above is an
 example of an accepted component. These are designed for an up-close inspection of both
-the spatial and temporal aspects of the component, as well as ancillary information. 
+the spatial and temporal aspects of the component, as well as ancilliary information. 
 
 The title of the plot provides information about variance, kappa and rho values
 as well as the reasons for rejection, if any (see above for codes). 
@@ -176,9 +176,9 @@ Slices are then selected from sagittal, axial and coronal planes, to highlight t
 component pattern. By default these images used the red-blue colormap and are scaled
 to 10% of the max beta value. 
 
-Note: You can select your own colormap to use by specifying its name when calling tedana
-with ``--png-cmap``. For example, to use the bone colormap, you would simply add 
-``--png-cmap bone``. 
+.. note:: 
+  You can select your own colormap to use by specifying its name when calling tedana with ``--png-cmap``. 
+  For example, to use the bone colormap, you would simply add ``--png-cmap bone``. 
 
 Finally, the bottom of the image shows the Fast Fourier Transform of the component timeseries.
 
