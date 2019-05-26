@@ -163,7 +163,7 @@ Component Images
   
 For each component identified by tedana, a single image will be created. Above is an
 example of an accepted component. These are designed for an up-close inspection of both
-the spatial and temporal aspects of the component, as well as ancilliary information. 
+the spatial and temporal aspects of the component, as well as ancillary information. 
 
 The title of the plot provides information about variance, kappa and rho values
 as well as the reasons for rejection, if any (see above for codes). 
