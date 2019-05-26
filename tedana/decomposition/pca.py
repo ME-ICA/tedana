@@ -9,6 +9,7 @@ from sklearn.decomposition import PCA
 
 from tedana import model, utils, io
 from tedana.decomposition._utils import eimask
+from tedana.stats import computefeats2
 from tedana.selection import kundu_tedpca
 from tedana.due import due, BibTeX
 
@@ -56,7 +57,7 @@ def run_mlepca(data):
 
 
 def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
-           ref_img, tes, method='mle', source_tes=-1, kdaw=10., rdaw=1.,
+           ref_img, tes, algorithm='mle', source_tes=-1, kdaw=10., rdaw=1.,
            out_dir='.', verbose=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
@@ -82,7 +83,7 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
         Reference image to dictate how outputs are saved to disk
     tes : :obj:`list`
         List of echo times associated with `data_cat`, in milliseconds
-    method : {'mle', 'kundu', 'kundu-stabilize'}, optional
+    algorithm : {'mle', 'kundu', 'kundu-stabilize'}, optional
         Method with which to select components in TEDPCA. Default is 'mle'.
     source_tes : :obj:`int` or :obj:`list` of :obj:`int`, optional
         Which echos to use in PCA. Values -1 and 0 are special, where a value
@@ -177,7 +178,7 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     data_z = ((data.T - data.T.mean(axis=0)) / data.T.std(axis=0)).T  # var normalize ts
     data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
 
-    if method == 'mle':
+    if algorithm == 'mle':
         voxel_comp_weights, varex, comp_ts = run_mlepca(data_z)
     else:
         ppca = PCA()
@@ -200,10 +201,11 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
 
     # Normalize each component's time series
     vTmixN = stats.zscore(comp_ts, axis=0)
-    _, comptable, _, _ = model.fitmodels_direct(
-                data_cat, comp_ts, eimum, t2s, t2sG, tes, combmode, ref_img,
-                reindex=False, mmixN=vTmixN, full_sel=False,
+    comptable, _, _, _ = model.dependence_metrics(
+                data_cat, data_oc, comp_ts, eimum, t2s, tes, ref_img,
+                reindex=False, mmixN=vTmixN, algorithm=None,
                 label='mepca_', out_dir=out_dir, verbose=verbose)
+
     # varex_norm from PCA retained on top of varex from fitmodels_direct
     comptable['original normalized variance explained'] = varex_norm
 
@@ -213,16 +215,16 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     comp_maps = np.zeros((data_oc.shape[0], comp_ts.shape[1]))
     for i_comp in range(comp_ts.shape[1]):
         temp_comp_ts = comp_ts[:, i_comp][:, None]
-        comp_map = utils.unmask(model.computefeats2(data_oc, temp_comp_ts, mask), mask)
+        comp_map = utils.unmask(computefeats2(data_oc, temp_comp_ts, mask), mask)
         comp_maps[:, i_comp] = np.squeeze(comp_map)
     io.filewrite(comp_maps, 'mepca_OC_components.nii', ref_img)
 
     # Select components using decision tree
-    if method == 'kundu':
+    if algorithm == 'kundu':
         comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=False)
-    elif method == 'kundu-stabilize':
+    elif algorithm == 'kundu-stabilize':
         comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=True)
-    elif method == 'mle':
+    elif algorithm == 'mle':
         LGR.info('Selected {0} components with MLE dimensionality '
                  'detection'.format(comptable.shape[0]))
         comptable['classification'] = 'accepted'

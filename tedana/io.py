@@ -10,7 +10,8 @@ from nibabel.filename_parser import splitext_addext
 from nilearn._utils import check_niimg
 from nilearn.image import new_img_like
 
-from tedana import model, utils
+from tedana import utils
+from tedana.stats import computefeats2, get_coeffs
 
 LGR = logging.getLogger(__name__)
 
@@ -42,8 +43,8 @@ def split_ts(data, mmix, mask, comptable):
     """
     acc = comptable[comptable.classification == 'accepted'].index.values
 
-    cbetas = model.get_coeffs(data - data.mean(axis=-1, keepdims=True),
-                              mmix, mask)
+    cbetas = get_coeffs(data - data.mean(axis=-1, keepdims=True),
+                        mmix, mask)
     betas = cbetas[mask]
     if len(acc) != 0:
         hikts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
@@ -99,7 +100,7 @@ def write_split_ts(data, mmix, mask, comptable, ref_img, suffix=''):
     dmdata = mdata.T - mdata.T.mean(axis=0)
 
     # get variance explained by retained components
-    betas = model.get_coeffs(dmdata.T, mmix, mask=None)
+    betas = get_coeffs(dmdata.T, mmix, mask=None)
     varexpl = (1 - ((dmdata.T - betas.dot(mmix.T))**2.).sum() /
                (dmdata**2.).sum()) * 100
     LGR.info('Variance explained by ICA decomposition: {:.02f}%'.format(varexpl))
@@ -161,7 +162,7 @@ def writefeats(data, mmix, mask, ref_img, suffix=''):
     """
 
     # write feature versions of components
-    feats = utils.unmask(model.computefeats2(data, mmix, mask), mask)
+    feats = utils.unmask(computefeats2(data, mmix, mask), mask)
     fname = filewrite(feats, 'feats_{0}'.format(suffix), ref_img)
 
     return fname
@@ -220,7 +221,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, ref_img):
 
     write_split_ts(ts, mmix, mask, comptable, ref_img, suffix='OC')
 
-    ts_B = model.get_coeffs(ts, mmix, mask)
+    ts_B = get_coeffs(ts, mmix, mask)
     fout = filewrite(ts_B, 'betas_OC', ref_img)
     LGR.info('Writing full ICA coefficient feature set: {}'.format(op.abspath(fout)))
 

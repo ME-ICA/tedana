@@ -16,13 +16,6 @@ fnames = [pjoin(datadir, 'echo{}.nii.gz'.format(n)) for n in range(1, 4)]
 tes = ['14.5', '38.5', '62.5']
 
 
-def test_getfbounds():
-    good_inputs = range(1, 12)
-
-    for n_echos in good_inputs:
-        utils.getfbounds(n_echos)
-
-
 def test_unmask():
     # generate boolean mask + get number of True values
     mask = rs.choice([0, 1], size=(100,)).astype(bool)
