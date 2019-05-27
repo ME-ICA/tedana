@@ -195,7 +195,10 @@ Tip: Look for your fundamental task frequencies here!
 
 Above, you can appreciate a component that was rejected.
 In this case, the subject moved each time the task was performed - which
-affected single slice groups.
+affected single slices of the fMRI volume. 
+As this scan used multiband imaging (collecting multiple slices at once)
+the motion artifact occurs in more than once slice.
+
 
 Kappa vs Rho Scatter Plot
 ````````````
