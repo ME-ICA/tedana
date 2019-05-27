@@ -1,7 +1,11 @@
 Multi-echo fMRI
 ===============
-In multi-echo (ME) fMRI, data are acquired for multiple echo times, resulting in
-multiple time series for each voxel.
+Functional MRI (fMRI) uses the change in blood flow, 
+and specifically blood oxygen level, in the brain to measure brain activity. 
+Only one unit of data, in units of voxel, 
+is collected per radio frequency (RF) pulse for most fMRI echo-planar imaging (EPI). 
+In contrast, in multi-echo (ME) fMRI, data are acquired for multiple echo times, 
+resulting in multiple time series for each voxel.
 
 The physics of multi-echo fMRI
 ------------------------------
@@ -62,7 +66,7 @@ spatial coverage, sample rate, signal-to-noise ratio, signal drop-out, distortio
 
 The one difference with multi-echo is a slight time cost.
 For multi-echo fMRI, the shortest echo time (TE) is essentially free since it is collected in the
-gap between the radio frequency (RF) pulse and the single-echo acquisition.
+gap between the RF pulse and the single-echo acquisition.
 The second echo tends to roughly match the single-echo TE.
 Additional echoes require more time.
 For example, on a 3T MRI, if the T2* weighted TE is 30ms for single echo fMRI,
