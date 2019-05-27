@@ -55,7 +55,7 @@ For a summary of multi-echo fMRI, which is the technology ``tedana`` builds on,
 visit `Multi-echo fMRI`_. 
 
 For a detailed procedure of how ``tedana`` analyzes the data from multi-echo fMRI, 
-visit `Processing pipline details`_.
+visit `Processing pipeline details`_.
 
 .. _ME-ICA: https://github.com/me-ica/me-ica
 .. _Multi-echo fMRI: https://tedana.readthedocs.io/en/latest/multi-echo.html
