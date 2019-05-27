@@ -39,7 +39,7 @@ This allows researchers to benchmark their results.
 
 For optimally combined: Rather than analyzing single-echo time series separately,
 we can combine them into a "optimally combined time series".
-For more information on this combination, see :ref:`approach`.
+For more information on this combination, see `processing pipeline details`_.
 Optimally combined data exhibits higher SNR and improves statistical power of analyses in regions
 traditionally affected by drop-out.
 
@@ -53,7 +53,8 @@ Collecting multi-echo EPI allows us to leverage all of the information available
 as well as additional information only available when looking at signal decay across multiple TEs.
 We can use this information to denoise the optimally combined time series.
 
-.. _Pruim et al., 2015: https://www.sciencedirect.com/science/article/pii/S1053811915001822
+.. _processing pipeline details: https://tedana.readthedocs.io/en/latest/approach.html#optimal-combination
+.. _Pruim et al. (2015): https://www.sciencedirect.com/science/article/pii/S1053811915001822
 
 Acquisition Parameter Recommendations
 -------------------------------------
