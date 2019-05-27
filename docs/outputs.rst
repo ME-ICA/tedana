@@ -193,10 +193,10 @@ Tip: Look for your fundamental task frequencies here!
 .. image:: /_static/example_bad_component.png
   :align: center
 
-Above, you can appreciate a component that was rejected.
+Above, you can review a component that was rejected.
 In this case, the subject moved each time the task was performed - which
 affected single slices of the fMRI volume. 
-As this scan used multiband imaging (collecting multiple slices at once)
+This scan used multiband imaging (collecting multiple slices at once), so
 the motion artifact occurs in more than once slice.
 
 
@@ -209,7 +209,7 @@ This diagnostic plot shows the relationship between kappa and rho values for
 each component.
 
 This can be useful for getting a big picture view of your data or for comparing
-how different variants of an fMRI sequence are performing.
+denoising performance with various fMRI sequences.
 
 Double Pie Chart
 ````````````
