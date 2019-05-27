@@ -59,7 +59,7 @@ visit `Processing pipeline details`_.
 
 .. _ME-ICA: https://github.com/me-ica/me-ica
 .. _Multi-echo fMRI: https://tedana.readthedocs.io/en/latest/multi-echo.html
-.. _Processing pipline details: https://tedana.readthedocs.io/en/latest/multi-echo.html
+.. _Processing pipeline details: https://tedana.readthedocs.io/en/latest/approach.html#
 
 Citations
 ---------
