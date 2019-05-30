@@ -79,8 +79,15 @@ To get started, check out [our contributing guidelines](https://github.com/ME-IC
 Want to learn more about our plans for developing ``tedana``?
 Have a question, comment, or suggestion?
 Open or comment on one of [our issues](https://github.com/ME-ICA/tedana/issues)!
+If you're not sure where to begin, 
+feel free to pop into [Gitter](https://gitter.im/ME-ICA/tedana) and 
+introduce yourself! We will be happy to help you find somewhere to get
+started.
 
-We ask that all contributions to ``tedana`` respect our [code of conduct](https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md).
+We ask that all contributors to ``tedana`` across all project-related 
+spaces (including but not limited to: GitHub, Gitter, and project emails),
+adhere to our
+[code of conduct](https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md).
 
 ## Contributors
 

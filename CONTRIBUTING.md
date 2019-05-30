@@ -18,6 +18,11 @@ Already know what you're looking for in this guide? Jump to the following sectio
 * [Structuring contributions](#style-guide)
 * [Recognizing contributors](#recognizing-contributions)
 
+Don't know where to get started? 
+Read [Joining the conversation](#joining-the-conversation) and pop into 
+Gitter to introduce yourself! Let us know what your interests are and we 
+will help you find an issue to contribute to. Thanks so much!
+
 ## Joining the conversation
 
 `tedana` is a young project maintained by a growing group of enthusiastic developers&mdash; and we're excited to have you join!
