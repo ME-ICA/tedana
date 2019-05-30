@@ -84,7 +84,10 @@ feel free to pop into [Gitter](https://gitter.im/ME-ICA/tedana) and
 introduce yourself! We will be happy to help you find somewhere to get
 started.
 
-We ask that all contributions to ``tedana`` respect our [code of conduct](https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md).
+We ask that all contributors to ``tedana`` across all project-related 
+spaces (including but not limited to GitHub, Gittter and project e-mails),
+adhere to our
+[code of conduct](https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md).
 
 ## Contributors
 
