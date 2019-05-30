@@ -163,6 +163,8 @@ Pull requests should be submitted early and often!
 If your pull request is not yet ready to be merged, please also include the **[WIP]** prefix.
 This tells the development team that your pull request is a "work-in-progress",
 and that you plan to continue working on it.
+We request that you do not use the Draft PR feature at this time, 
+as it interferes with our Continuous Integration tool, Travis.
 
 You can also combine the tags above, for example if you are updating both a test and
 the documentation: **[TST, DOC]**.
