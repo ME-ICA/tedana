@@ -200,7 +200,7 @@ And, if you have any questions, please don't hesitate to ask!
 We welcome and recognize [all contributions][link_all-contributors-spec] 
 from documentation to testing to code development.
 You can see a list of current contributors in the 
-[contributors tab][link_contributors] and in this document 
+README
 (kept up to date by the [all contributors bot][link_all-contributors-bot]). 
 You can see [here][link_all-contributors-bot-usage] for instructions on
 how to use the bot.
