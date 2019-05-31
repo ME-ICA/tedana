@@ -1,11 +1,9 @@
 Multi-echo fMRI
 ===============
-Functional MRI (fMRI) uses the change in blood flow, 
-and specifically blood oxygen level, in the brain to measure brain activity. 
-Only one unit of data, in units of voxel, 
-is collected per radio frequency (RF) pulse for most fMRI echo-planar imaging (EPI). 
+In most echo-planar image (EPI) fMRI sequences, 
+only one brain image is acquired at each repetition time, at the rate of radio frequency (RF).
 In contrast, in multi-echo (ME) fMRI, data are acquired for multiple echo times, 
-resulting in multiple time series for each voxel.
+resulting in multiple volumes with varying levels of contrast acquired per RF.
 
 The physics of multi-echo fMRI
 ------------------------------
