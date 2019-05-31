@@ -51,7 +51,7 @@ The ME-ICA pipeline originally performed both pre-processing and TE-dependent
 analysis of multi-echo fMRI data; however, ``tedana`` now assumes that you're
 working with data which has been previously preprocessed.
 
-For a summary of multi-echo fMRI, which is the technology ``tedana`` builds on, 
+For a summary of multi-echo fMRI, which is the imaging technique ``tedana`` builds on, 
 visit `Multi-echo fMRI`_. 
 
 For a detailed procedure of how ``tedana`` analyzes the data from multi-echo fMRI, 
