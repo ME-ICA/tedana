@@ -111,6 +111,15 @@
         "review",
         "talk"
       ]
+    },
+    {
+      "login": "monicayao",
+      "name": "monicayao",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/35382166?v=4",
+      "profile": "https://github.com/monicayao",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 5,
