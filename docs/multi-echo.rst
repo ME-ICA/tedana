@@ -1,7 +1,9 @@
 Multi-echo fMRI
 ===============
-In multi-echo (ME) fMRI, data are acquired for multiple echo times, resulting in
-multiple time series for each voxel.
+In most echo-planar image (EPI) fMRI sequences, 
+only one brain image is acquired at each repetition time, at the rate of radio frequency (RF).
+In contrast, in multi-echo (ME) fMRI, data are acquired for multiple echo times, 
+resulting in multiple volumes with varying levels of contrast acquired per RF.
 
 The physics of multi-echo fMRI
 ------------------------------
@@ -35,7 +37,7 @@ This allows researchers to benchmark their results.
 
 For optimally combined: Rather than analyzing single-echo time series separately,
 we can combine them into a "optimally combined time series".
-For more information on this combination, see :ref:`approach`.
+For more information on this combination, see `processing pipeline details`_.
 Optimally combined data exhibits higher SNR and improves statistical power of analyses in regions
 traditionally affected by drop-out.
 
@@ -49,7 +51,8 @@ Collecting multi-echo EPI allows us to leverage all of the information available
 as well as additional information only available when looking at signal decay across multiple TEs.
 We can use this information to denoise the optimally combined time series.
 
-.. _Pruim et al., 2015: https://www.sciencedirect.com/science/article/pii/S1053811915001822
+.. _processing pipeline details: https://tedana.readthedocs.io/en/latest/approach.html#optimal-combination
+.. _Pruim et al. (2015): https://www.sciencedirect.com/science/article/pii/S1053811915001822
 
 Acquisition Parameter Recommendations
 -------------------------------------
@@ -62,7 +65,7 @@ spatial coverage, sample rate, signal-to-noise ratio, signal drop-out, distortio
 
 The one difference with multi-echo is a slight time cost.
 For multi-echo fMRI, the shortest echo time (TE) is essentially free since it is collected in the
-gap between the radio frequency (RF) pulse and the single-echo acquisition.
+gap between the RF pulse and the single-echo acquisition.
 The second echo tends to roughly match the single-echo TE.
 Additional echoes require more time.
 For example, on a 3T MRI, if the T2* weighted TE is 30ms for single echo fMRI,
