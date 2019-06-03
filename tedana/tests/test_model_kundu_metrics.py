@@ -6,7 +6,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from tedana.metrics import fit
+from tedana.metrics import kundu_fit
 
 
 def test_smoke_kundu_metrics():
@@ -34,5 +34,5 @@ def test_smoke_kundu_metrics():
     metric_maps['Br_R2_clmaps'] = np.random.randint(low=0, high=2,
                                                     size=(n_voxels, n_comps))
 
-    comptable = fit.kundu_metrics(comptable, metric_maps)
+    comptable = kundu_fit.kundu_metrics(comptable, metric_maps)
     assert comptable is not None
