@@ -204,8 +204,13 @@ And, if you have any questions, please don't hesitate to ask!
 
 ## Recognizing contributors
 
-We welcome and recognize all contributions from documentation to testing to code development.
-You can see a list of current contributors in the [contributors tab][link_contributors].
+We welcome and recognize [all contributions][link_all-contributors-spec] 
+from documentation to testing to code development.
+You can see a list of current contributors in the 
+README
+(kept up to date by the [all contributors bot][link_all-contributors-bot]). 
+You can see [here][link_all-contributors-bot-usage] for instructions on
+how to use the bot.
 
 ## Thank you!
 
@@ -252,4 +257,7 @@ You're awesome. :wave::smiley:
 [link_rst_guide]: http://docs.sphinxdocs.com/en/latest/step-1.html
 
 [link_contributors]: https://github.com/ME-ICA/tedana/graphs/contributors
+[link_all-contributors-spec]: https://allcontributors.org/docs/en/specification
+[link_all-contributors-bot]: https://allcontributors.org/docs/en/bot/overview
+[link_all-contributors-bot-usage]: https://allcontributors.org/docs/en/bot/usage
 [link_stemmrolemodels]: https://github.com/KirstieJane/STEMMRoleModels
