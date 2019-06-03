@@ -86,7 +86,9 @@
         "doc",
         "tutorial",
         "question",
-        "bug"
+        "bug",
+        "test",
+        "review"
       ]
     },
     {
