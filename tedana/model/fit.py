@@ -18,7 +18,7 @@ F_MAX = 500
 Z_MAX = 8
 
 
-def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
+def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
                        reindex=False, mmixN=None, algorithm=None, label=None,
                        out_dir='.', verbose=False):
     """
@@ -33,8 +33,6 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
     mmix : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `catd`
-    mask : (S [x E]) array_like
-        Boolean mask array
     t2s : (S [x T]) array_like
         Limited T2* map or timeseries.
     tes : list
@@ -68,9 +66,11 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
     betas : :obj:`numpy.ndarray`
     mmix_new : :obj:`numpy.ndarray`
     """
+    # Use t2s as mask
+    mask = t2s != 0
     if not (catd.shape[0] == t2s.shape[0] == mask.shape[0] == tsoc.shape[0]):
         raise ValueError('First dimensions (number of samples) of catd ({0}), '
-                         'tsoc ({1}), t2s ({2}), and mask ({3}) do not '
+                         'tsoc ({1}), and t2s ({2}) do not '
                          'match'.format(catd.shape[0], tsoc.shape[0],
                                         t2s.shape[0], mask.shape[0]))
     elif catd.shape[1] != len(tes):
@@ -86,8 +86,6 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
             raise ValueError('Number of volumes in catd '
                              '({0}) does not match number of volumes in '
                              't2s ({1})'.format(catd.shape[2], t2s.shape[1]))
-
-    mask = t2s != 0  # Override mask because problems
 
     # demean optimal combination
     tsoc = tsoc[mask, :]
