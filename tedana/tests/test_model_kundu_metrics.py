@@ -6,7 +6,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from tedana.model import fit
+from tedana.metrics import fit
 
 
 def test_smoke_kundu_metrics():

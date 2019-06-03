@@ -1,11 +1,11 @@
 """
-Tests for tedana.model.fit
+Tests for tedana.metrics.fit
 """
 
 import numpy as np
 import pytest
 
-from tedana.model import fit
+from tedana.metrics import fit
 
 
 def test_break_dependence_metrics():
