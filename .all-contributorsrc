@@ -6,6 +6,90 @@
   "commit": false,
   "contributors": [
     {
+      "login": "dowdlelt",
+      "name": "Logan Dowdle",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/15126366?v=4",
+      "profile": "https://github.com/dowdlelt",
+      "contributions": [
+        "code",
+        "question",
+        "design",
+        "bug"
+      ]
+    },
+    {
+      "login": "emdupre",
+      "name": "Elizabeth DuPre",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/15017191?v=4",
+      "profile": "http://emdupre.me",
+      "contributions": [
+        "code",
+        "doc",
+        "ideas",
+        "infra",
+        "review",
+        "example",
+        "test",
+        "question"
+      ]
+    },
+    {
+      "login": "javiergcas",
+      "name": "Javier Gonzalez-Castillo",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/7314358?v=4",
+      "profile": "https://github.com/javiergcas",
+      "contributions": [
+        "ideas"
+      ]
+    },
+    {
+      "login": "handwerkerd",
+      "name": "Dan Handwerker",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/7406227?v=4",
+      "profile": "https://github.com/handwerkerd",
+      "contributions": [
+        "design",
+        "doc",
+        "example",
+        "review"
+      ]
+    },
+    {
+      "login": "prantikk",
+      "name": "Prantik Kundu",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/1636689?v=4",
+      "profile": "https://github.com/prantikk",
+      "contributions": [
+        "code",
+        "ideas"
+      ]
+    },
+    {
+      "login": "rmarkello",
+      "name": "Ross Markello",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/14265705?v=4",
+      "profile": "http://rossmarkello.me",
+      "contributions": [
+        "code",
+        "infra",
+        "question"
+      ]
+    },
+    {
+      "login": "tsalo",
+      "name": "Taylor Salo",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/8228902?v=4",
+      "profile": "http://tsalo.github.io",
+      "contributions": [
+        "code",
+        "ideas",
+        "doc",
+        "tutorial",
+        "question",
+        "bug"
+      ]
+    },
+    {
       "login": "jbteves",
       "name": "Joshua Teves",
       "avatar_url": "https://avatars3.githubusercontent.com/u/26722533?v=4",
@@ -30,21 +114,16 @@
       ]
     },
     {
-      "login": "tsalo",
-      "name": "Taylor Salo",
-      "avatar_url": "https://avatars3.githubusercontent.com/u/8228902?v=4",
-      "profile": "http://tsalo.github.io",
+      "login": "monicayao",
+      "name": "Monica Yao",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/35382166?v=4",
+      "profile": "https://github.com/monicayao",
       "contributions": [
-        "code",
-        "ideas",
-        "doc",
-        "tutorial",
-        "question",
-        "bug"
+        "doc"
       ]
     }
   ],
-  "contributorsPerLine": 7,
+  "contributorsPerLine": 5,
   "projectName": "tedana",
   "projectOwner": "ME-ICA",
   "repoType": "github",
