@@ -53,6 +53,7 @@ EXTRA_REQUIRES = {
     ],
     'tests': TESTS_REQUIRES,
     'duecredit': ['duecredit'],
+    'binder': ['seaborn']
 }
 
 # Enable a handle to install all extra dependencies at once
