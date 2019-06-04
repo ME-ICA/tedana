@@ -6,4 +6,4 @@ scipy
 versioneer
 pandas
 matplotlib
-binder
+seaborn
