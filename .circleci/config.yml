@@ -34,7 +34,7 @@ jobs:
             else
                 mkdir -p /tmp/data
                 curl -L --create-dirs -o \
-                  /tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz https://osf.io/e3hsn/download
+                  /tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz https://osf.io/8fzse/download
             fi
       - run:
           name: Download test five-echo data
