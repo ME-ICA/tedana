@@ -80,23 +80,23 @@ API
 .. _calibration_ref:
 
 
-:mod:`tedana.model`: Computing TE-dependence metrics
+:mod:`tedana.metrics`: Computing TE-dependence metrics
 ----------------------------------------------------
 
-.. automodule:: tedana.model
+.. automodule:: tedana.metrics
    :no-members:
    :no-inherited-members:
 
-.. autosummary:: tedana.model
+.. autosummary:: tedana.metrics
    :toctree: generated/
    :template: function.rst
 
-   tedana.model.dependence_metrics
-   tedana.model.kundu_metrics
+   tedana.metrics.dependence_metrics
+   tedana.metrics.kundu_metrics
 
    :template: module.rst
 
-   tedana.model.fit
+   tedana.metrics.fit
 
 .. currentmodule:: tedana
 

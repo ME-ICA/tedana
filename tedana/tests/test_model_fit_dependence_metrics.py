@@ -1,11 +1,11 @@
 """
-Tests for tedana.model.fit
+Tests for tedana.metrics.fit
 """
 
 import numpy as np
 import pytest
 
-from tedana.model import fit
+from tedana.metrics import kundu_fit
 
 
 def test_break_dependence_metrics():
@@ -27,7 +27,7 @@ def test_break_dependence_metrics():
     # Shape of catd is wrong
     catd = np.empty((n_samples+1, n_echos, n_vols))
     with pytest.raises(ValueError) as e_info:
-        fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix, mask=mask,
+        kundu_fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix, mask=mask,
                                t2s=t2s, tes=tes, ref_img=ref_img,
                                reindex=False, mmixN=None, algorithm='kundu_v3')
     assert str(e_info.value) == ('First dimensions (number of samples) of '
@@ -40,7 +40,7 @@ def test_break_dependence_metrics():
     catd = np.empty((n_samples, n_echos, n_vols))
     t2s = np.empty((n_samples+1, n_vols))
     with pytest.raises(ValueError) as e_info:
-        fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix, mask=mask,
+        kundu_fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix, mask=mask,
                                t2s=t2s, tes=tes, ref_img=ref_img,
                                reindex=False, mmixN=None, algorithm='kundu_v3')
     assert str(e_info.value) == ('First dimensions (number of samples) of '
@@ -53,7 +53,7 @@ def test_break_dependence_metrics():
     t2s = np.empty((n_samples, n_vols))
     tsoc = np.empty((n_samples+1, n_vols))
     with pytest.raises(ValueError) as e_info:
-        fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix, mask=mask,
+        kundu_fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix, mask=mask,
                                t2s=t2s, tes=tes, ref_img=ref_img,
                                reindex=False, mmixN=None, algorithm='kundu_v3')
     assert str(e_info.value) == ('First dimensions (number of samples) of '
@@ -66,7 +66,7 @@ def test_break_dependence_metrics():
     catd = np.empty((n_samples, n_echos+1, n_vols))
     tsoc = np.empty((n_samples, n_vols))
     with pytest.raises(ValueError) as e_info:
-        fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix, mask=mask,
+        kundu_fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix, mask=mask,
                                t2s=t2s, tes=tes, ref_img=ref_img,
                                reindex=False, mmixN=None, algorithm='kundu_v3')
     assert str(e_info.value) == ('Second dimension of catd ({0}) does not '
@@ -77,7 +77,7 @@ def test_break_dependence_metrics():
     # Shape of catd is wrong
     catd = np.empty((n_samples, n_echos, n_vols+1))
     with pytest.raises(ValueError) as e_info:
-        fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix, mask=mask,
+        kundu_fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix, mask=mask,
                                t2s=t2s, tes=tes, ref_img=ref_img,
                                reindex=False, mmixN=None, algorithm='kundu_v3')
     assert str(e_info.value) == ('Number of volumes in catd '
@@ -90,7 +90,7 @@ def test_break_dependence_metrics():
     catd = np.empty((n_samples, n_echos, n_vols))
     t2s = np.empty((n_samples, n_vols+1))
     with pytest.raises(ValueError) as e_info:
-        fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix, mask=mask,
+        kundu_fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix, mask=mask,
                                t2s=t2s, tes=tes, ref_img=ref_img,
                                reindex=False, mmixN=None, algorithm='kundu_v3')
     assert str(e_info.value) == ('Number of volumes in catd ({0}) '
