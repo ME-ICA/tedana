@@ -7,7 +7,7 @@ import numpy as np
 from scipy import stats
 from sklearn.decomposition import PCA
 
-from tedana import model, utils, io
+from tedana import metrics, utils, io
 from tedana.decomposition._utils import eimask
 from tedana.stats import computefeats2
 from tedana.selection import kundu_tedpca
@@ -201,7 +201,7 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
 
     # Normalize each component's time series
     vTmixN = stats.zscore(comp_ts, axis=0)
-    comptable, _, _, _ = model.dependence_metrics(
+    comptable, _, _, _ = metrics.dependence_metrics(
                 data_cat, data_oc, comp_ts, t2s, tes, ref_img,
                 reindex=False, mmixN=vTmixN, algorithm=None,
                 label='mepca_', out_dir=out_dir, verbose=verbose)

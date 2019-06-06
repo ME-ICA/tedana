@@ -20,7 +20,7 @@ import pandas as pd
 from scipy import stats
 from nilearn.masking import compute_epi_mask
 
-from tedana import (decay, combine, decomposition, io, model, selection, utils,
+from tedana import (decay, combine, decomposition, io, metrics, selection, utils,
                     viz)
 import tedana.gscontrol as gsc
 from tedana.workflows.parser_utils import is_valid_file
@@ -403,23 +403,23 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # Estimate betas and compute selection metrics for mixing matrix
         # generated from dimensionally reduced data using full data (i.e., data
         # with thermal noise)
-        comptable, metric_maps, betas, mmix = model.dependence_metrics(
+        comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
                     catd, data_oc, mmix_orig, t2s, tes,
                     ref_img, reindex=True, label='meica_', out_dir=out_dir,
                     algorithm='kundu_v2', verbose=verbose)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
 
-        comptable = model.kundu_metrics(comptable, metric_maps)
+        comptable = metrics.kundu_metrics(comptable, metric_maps)
         comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
-        comptable, metric_maps, betas, mmix = model.dependence_metrics(
+        comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
                     catd, data_oc, mmix_orig, t2s, tes,
                     ref_img, label='meica_', out_dir=out_dir,
                     algorithm='kundu_v2', verbose=verbose)
         if ctab is None:
-            comptable = model.kundu_metrics(comptable, metric_maps)
+            comptable = metrics.kundu_metrics(comptable, metric_maps)
             comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
         else:
             comptable = pd.read_csv(ctab, sep='\t', index_col='component')
