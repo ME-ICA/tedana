@@ -13,7 +13,6 @@ import os.path as op
 import glob
 import shutil
 import logging
-import warnings
 
 import argparse
 import numpy as np
@@ -336,8 +335,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         ref_img.header.set_zooms(new_zooms)
 
         if tr != 0 and user_tr != 0:
-            warnings.warn('Mismatch in header TR and user-supplied TR,'
-                          'please verify. Proceeding anyway.')
+            LGR.warning('Mismatch in header TR and user-supplied TR,'
+                          ' please verify. Proceeding anyway.')
 
     if mixm is not None and op.isfile(mixm):
         mixm = op.abspath(mixm)
