@@ -202,7 +202,7 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     # Normalize each component's time series
     vTmixN = stats.zscore(comp_ts, axis=0)
     comptable, _, _, _ = metrics.dependence_metrics(
-                data_cat, data_oc, comp_ts, eimum, t2s, tes, ref_img,
+                data_cat, data_oc, comp_ts, t2s, tes, ref_img,
                 reindex=False, mmixN=vTmixN, algorithm=None,
                 label='mepca_', out_dir=out_dir, verbose=verbose)
 
