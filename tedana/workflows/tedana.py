@@ -335,7 +335,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         new_zooms = (zooms[0], zooms[1], zooms[2], user_tr)
         ref_img.header.set_zooms(new_zooms)
 
-        if tr != 0:
+        if tr != user_tr:
             LGR.warning('Mismatch in header TR and user-supplied TR,'
                         ' please verify. Proceeding anyway.')
 
