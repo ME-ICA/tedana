@@ -72,7 +72,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
         raise ValueError('First dimensions (number of samples) of catd ({0}), '
                          'tsoc ({1}), and t2s ({2}) do not '
                          'match'.format(catd.shape[0], tsoc.shape[0],
-                                        t2s.shape[0], mask.shape[0]))
+                                        t2s.shape[0]))
     elif catd.shape[1] != len(tes):
         raise ValueError('Second dimension of catd ({0}) does not match '
                          'number of echoes provided (tes; '
