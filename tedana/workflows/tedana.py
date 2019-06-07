@@ -169,8 +169,8 @@ def _get_parser():
                                 'convergence is achieved before maxrestart '
                                 'attempts, ICA will finish early.'),
                           default=10)
+                          dest='user_tr',
     optional.add_argument('--tr',
-                          dest='t_r',
                           type=float,
                           help=('A TR in seconds that you supply if you '
                                 'suspect your header reflects a TR of 0. '
@@ -197,7 +197,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     source_tes=-1, combmode='t2s', verbose=False, stabilize=False,
                     out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
                     debug=False, quiet=False,
-                    png=False, png_cmap='coolwarm', t_r=0.0
+                    png=False, png_cmap='coolwarm', user_tr=0.0
                     ):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
@@ -322,28 +322,22 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
-    # check if TR is 0 or 1
-    # Note: we're anticipating that 0 or 1 are typical values from
-    # improperly constructed/edited files
-    img_t_r = ref_img.header.get_zooms()[-1]
-    if img_t_r == 0 and t_r == 0:
-        raise IOError('Dataset has a TR of 0. This indicates incorrect'
+    # check if TR is 0
+    tr = ref_img.header.get_zooms()[-1]
+    if tr == 0 and user_tr == 0:
+        raise IOError(' Dataset has a TR of 0. This indicates incorrect'
                       ' header information. Please override the TR value'
                       ' with the --TR flag (see tedana -h for more help)'
                       ' or fix your file header.')
-    elif img_t_r == 1 and t_r == 0:
-        LGR.warning('Image TR (1) is common in files with incorrect header '
-                    ' info, please double-check.')
-    elif t_r != 0:
+    elif user_tr != 0:
         # Coerce TR to be user-supplied value
         zooms = ref_img.header.get_zooms()
-        new_zooms = (zooms[0], zooms[1], zooms[2], t_r)
+        new_zooms = (zooms[0], zooms[1], zooms[2], user_tr)
         ref_img.header.set_zooms(new_zooms)
 
-        if img_t_r != t_r:
+        if tr != user_tr:
             LGR.warning('Mismatch in header TR and user-supplied TR,'
-                        ' please verify. Proceeding with user-supplied'
-                        ' value: {0}'.format(t_r))
+                        ' please verify. Proceeding anyway.')
 
     if mixm is not None and op.isfile(mixm):
         mixm = op.abspath(mixm)
