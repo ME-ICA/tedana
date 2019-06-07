@@ -13,6 +13,7 @@ import os.path as op
 import glob
 import shutil
 import logging
+import warnings
 
 import argparse
 import numpy as np
@@ -169,6 +170,15 @@ def _get_parser():
                                 'convergence is achieved before maxrestart '
                                 'attempts, ICA will finish early.'),
                           default=10)
+    optional.add_argument('--TR',
+                          dest='user_tr',
+                          type=float,
+                          help=('A TR in seconds that you supply if you '
+                                'suspect your header reflects a TR of 0. '
+                                'Will cause a warning to be thrown if it '
+                                'mismatches a nonzero TR in the header.'),
+                          default=0.0
+                          )
     optional.add_argument('--debug',
                           dest='debug',
                           help=argparse.SUPPRESS,
@@ -187,7 +197,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     tedort=False, gscontrol=None, tedpca='mle',
                     source_tes=-1, combmode='t2s', verbose=False, stabilize=False,
                     out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
-                    debug=False, quiet=False, png=False, png_cmap='coolwarm'):
+                    debug=False, quiet=False, 
+                    png=False, png_cmap='coolwarm', user_tr=0.0
+                    ):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -310,6 +322,22 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     catd, ref_img = io.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
+
+    # check if TR is 0
+    tr = ref_img.header.get_zooms()[-1]
+    if tr == 0 and user_tr == 0:
+        raise IOError('Dataset has a TR of 0. This indicates incorrect'
+                      'header information. Please override the TR value'
+                      'with the --TR flag (see tedana -h for more help).')
+    else:
+        # Coerce TR to be user-supplied value
+        zooms = ref_img.header.get_zooms()
+        new_zooms = (zooms[0],zooms[1],zooms[2],user_tr)
+        ref_img.header.set_zooms(new_zooms)
+
+        if tr != 0 and user_tr != 0:
+            warnings.warn('Mismatch in header TR and user-supplied TR,'
+                          'please verify. Proceeding anyway.')
 
     if mixm is not None and op.isfile(mixm):
         mixm = op.abspath(mixm)
