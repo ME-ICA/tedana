@@ -169,8 +169,8 @@ def _get_parser():
                                 'convergence is achieved before maxrestart '
                                 'attempts, ICA will finish early.'),
                           default=10)
-    optional.add_argument('--TR',
                           dest='user_tr',
+    optional.add_argument('--tr',
                           type=float,
                           help=('A TR in seconds that you supply if you '
                                 'suspect your header reflects a TR of 0. '
