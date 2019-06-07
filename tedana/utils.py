@@ -14,6 +14,26 @@ from tedana.due import due, BibTeX
 LGR = logging.getLogger(__name__)
 
 
+def apply_xforms(in_file, out_file, xforms):
+    """
+    Apply some transformations to an input file.
+    """
+    from nipype.interfaces.ants.resampling import ApplyTransforms
+    if not isinstance(xforms, list):
+        xforms = [xforms]
+
+    for xform in xforms:
+        assert op.isfile(xform)
+
+    at = ApplyTransforms()
+    at.inputs.input_image = in_file
+    at.inputs.reference_image = in_file
+    at.inputs.transforms = xforms
+    at.inputs.invert_transform_flags = [False for _ in range(len(xforms))]
+    at.inputs.output_image = out_file
+    at.run()
+
+
 def load_image(data):
     """
     Takes input `data` and returns a sample x time array
