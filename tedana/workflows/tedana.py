@@ -341,9 +341,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         ref_img.header.set_zooms(new_zooms)
 
         if img_t_r != t_r:
-            LGR.warning('Mismatch in header TR and user-supplied TR,'
-                        ' please verify. Proceeding with user-supplied'
-                        ' value: {0}'.format(t_r))
+            LGR.info('Mismatch in header TR and user-supplied TR,'
+                     ' please verify. Proceeding with user-supplied'
+                     ' value: {0}'.format(t_r))
 
     if mixm is not None and op.isfile(mixm):
         mixm = op.abspath(mixm)
