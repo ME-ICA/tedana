@@ -325,18 +325,19 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     # check if TR is 0
     tr = ref_img.header.get_zooms()[-1]
     if tr == 0 and user_tr == 0:
-        raise IOError('Dataset has a TR of 0. This indicates incorrect'
-                      'header information. Please override the TR value'
-                      'with the --TR flag (see tedana -h for more help).')
-    else:
+        raise IOError(' Dataset has a TR of 0. This indicates incorrect'
+                      ' header information. Please override the TR value'
+                      ' with the --TR flag (see tedana -h for more help)'
+                      ' or fix your file header.')
+    elif user_tr != 0:
         # Coerce TR to be user-supplied value
         zooms = ref_img.header.get_zooms()
         new_zooms = (zooms[0],zooms[1],zooms[2],user_tr)
         ref_img.header.set_zooms(new_zooms)
 
-        if tr != 0 and user_tr != 0:
+        if tr != 0:
             LGR.warning('Mismatch in header TR and user-supplied TR,'
-                          ' please verify. Proceeding anyway.')
+                        ' please verify. Proceeding anyway.')
 
     if mixm is not None and op.isfile(mixm):
         mixm = op.abspath(mixm)
