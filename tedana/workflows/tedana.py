@@ -196,7 +196,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     tedort=False, gscontrol=None, tedpca='mle',
                     source_tes=-1, combmode='t2s', verbose=False, stabilize=False,
                     out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
-                    debug=False, quiet=False, 
+                    debug=False, quiet=False,
                     png=False, png_cmap='coolwarm', user_tr=0.0
                     ):
     """
@@ -332,7 +332,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     elif user_tr != 0:
         # Coerce TR to be user-supplied value
         zooms = ref_img.header.get_zooms()
-        new_zooms = (zooms[0],zooms[1],zooms[2],user_tr)
+        new_zooms = (zooms[0], zooms[1], zooms[2], user_tr)
         ref_img.header.set_zooms(new_zooms)
 
         if tr != 0:
