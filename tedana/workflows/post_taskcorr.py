@@ -9,6 +9,7 @@ import pandas as pd
 
 LGR = logging.getLogger(__name__)
 
+
 def _get_parser():
     """
     Parses command line inputs for this function
@@ -34,26 +35,14 @@ def _get_parser():
                           type=str,
                           help=('Directory containing the design matrices.'),
                           required=True)
-    optional.add_argument('--mix',
-                          dest='mixm',
-                          nargs=1,
-                          metavar='FILE',
-                          type=lambda x: is_valid_file(parser, x),
-                          help=('File containing ME-ICA mixing matrix.'),
-                          default='meica_mix.1D')
-    optional.add_argument('--ctab',
-                          dest='ctab',
-                          metavar='FILE',
-                          type=lambda x: is_valid_file(parser, x),
-                          help='File containing TEDICA component table',
-                          default='comp_table_ica.txt')
     optional.add_argument('-gts','--good_ts',
                           dest='good_ts',
                           metavar='FILE',
                           type=lambda x: is_valid_file(parser, x),
                           help=('File containing timeseries that should'
                                 'be accepted. It can be a 1D array or a'
-                                'matrix, where columns are the timeseries'),
+                                'matrix, where columns are the timeseries.'
+                                'Specify with path.'),
                           default=None)
     optional.add_argument('-bts','--bad_ts',
                           dest='bad_ts',
@@ -61,7 +50,8 @@ def _get_parser():
                           type=lambda x: is_valid_file(parser, x),
                           help=('File containing timeseries that should'
                                 'be rejected. It can be a 1D array or a'
-                                'matrix, where columns are the timeseries'),
+                                'matrix, where columns are the timeseries'
+                                'Specify with path.'),
                           default=None)
     optional.add_argument('-t','--thr',
                           dest='thr',
@@ -71,6 +61,7 @@ def _get_parser():
     parser._action_groups.append(optional)
     return parser
 
+
 def import_file(file_name):
     """
     Importing files and normalising them for Normalised Cross-Correlation
@@ -79,7 +70,8 @@ def import_file(file_name):
     norm_ts = sct.zscore(timeseries,axis=0)
     return norm_ts
 
-def check_orientation(ts,mixmat):
+
+def check_dimensionality(ts,mixmat):
     """
     Just checking ts is rightly oriented
     """
@@ -87,10 +79,16 @@ def check_orientation(ts,mixmat):
     ts_shape = ts.shape
     # Add a general check on matching at least one dimension
     if ts_shape[0] != ntr:
+    	if np.size(ts.shape) == 1 or ts_shape[1] != ntr:
+    		LGR.info('Input matrix has wrong dimensionality.')
+
+    	else:
+        _,nts = ts.shape
         LGR.info('Wrong orientation, transposing the design matrix.')
         ts = ts.T
 
     return ts
+
 
 def correlate_ts(ts,mixmat,thr=0.6):
     """
@@ -118,14 +116,15 @@ def correlate_ts(ts,mixmat,thr=0.6):
 
     return selcomp
 
-def modify_comp_table(ctab,selcomp,flag='accepted'):
+
+def modify_comp_table(ctab_fullpath,selcomp,flag='accepted'):
     """
     This function requires as input the component table,
     the index of the selected components and a flag that will overwrite that in the table.
 
     """
 
-    comptable = pd.read_csv(ctab,sep='\t', index_col='component')
+    comptable = pd.read_csv(ctab_fullpath,sep='\t', index_col='component')
 
     comptable['original_classification'] = comptable['classification']
     comptable['original_rationale'] = comptable['rationale']
@@ -137,29 +136,28 @@ def modify_comp_table(ctab,selcomp,flag='accepted'):
         comptable.loc[selcomp, 'rationale'] = 'I098'
 
     LGR.info('Overwriting original component table.')
-    comptable.to_csv(ctab, sep='\t', index_label='component')
+    comptable.to_csv(ctab_fullpath, sep='\t', index_label='component')
 
-def check_task_corr(mixmat,ctab_fullpath,ts_fullpath,thr,flag='accepted'):
-    norm_ts = import_file(ts_fullpath)
-    checked_ts = check_orientation(norm_ts,mixmat)
+
+def check_task_corr(mixmat,ctab_fullpath,ts,thr,flag='accepted'):
+    norm_ts = import_file(ts)
+    checked_ts = check_dimensionality(norm_ts,mixmat)
     selcomp = correlate_ts(checked_ts,mixmat,thr)
     modify_comp_table(ctab_fullpath,selcomp,flag)
 
+
 def _main(argv=None):
     options = _get_parser().parse_args(argv)
-    ctab_fullpath = op.join(tedana_dir, ctab)
-    mixm_fullpath = op.join(tedana_dir, mixm)
+    ctab_fullpath = op.join(tedana_dir, 'comp_table_ica.txt')
+    mixm_fullpath = op.join(tedana_dir, '__meica_mix.1D')
 
     mixmat = import_file(mixm_fullpath)
 
-    if good_ts != None:
-        good_ts_fullpath = op.join(dmat_dir, good_ts)
-        modify_comp_table(mixmat,ctab_fullpath,good_ts_fullpath,thr,flag='accepted')
-
     if bad_ts != None:
-        bad_ts_fullpath = op.join(dmat_dir, bad_ts)
-        modify_comp_table(mixmat,ctab_fullpath,bad_ts_fullpath,thr,flag='rejected')
+        modify_comp_table(mixmat,ctab_fullpath,bad_ts,thr,flag='rejected')
 
+    if good_ts != None:
+        modify_comp_table(mixmat,ctab_fullpath,good_ts,thr,flag='accepted')
 
 if __name__ == '__main__':
     _main()
