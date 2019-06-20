@@ -138,7 +138,7 @@ def _get_parser():
     optional.add_argument('--seed',
                           dest='fixed_seed',
                           type=int,
-                          help=('Value random initialization of ICA algorithm. '
+                          help=('Value used for random initialization of ICA algorithm. '
                                 'Set to an integer value for reproducible ICA results. '
                                 'Set to -1 for varying results across ICA calls. '
                                 'Default=42.'),
