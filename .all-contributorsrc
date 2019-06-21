@@ -85,7 +85,10 @@
         "ideas",
         "doc",
         "tutorial",
-        "question"
+        "question",
+        "bug",
+        "test",
+        "review"
       ]
     },
     {
@@ -110,6 +113,15 @@
         "projectManagement",
         "review",
         "talk"
+      ]
+    },
+    {
+      "login": "monicayao",
+      "name": "Monica Yao",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/35382166?v=4",
+      "profile": "https://github.com/monicayao",
+      "contributions": [
+        "doc"
       ]
     }
   ],
