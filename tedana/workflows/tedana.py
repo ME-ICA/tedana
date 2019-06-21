@@ -169,15 +169,6 @@ def _get_parser():
                                 'convergence is achieved before maxrestart '
                                 'attempts, ICA will finish early.'),
                           default=10)
-    optional.add_argument('--tr',
-                          dest='t_r',
-                          type=float,
-                          help=('A TR in seconds that you supply if you '
-                                'suspect your header reflects a TR of 0. '
-                                'Will cause a warning to be thrown if it '
-                                'mismatches a nonzero TR in the header.'),
-                          default=0.0
-                          )
     optional.add_argument('--debug',
                           dest='debug',
                           help=argparse.SUPPRESS,
@@ -322,28 +313,16 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
-    # check if TR is 0 or 1
-    # Note: we're anticipating that 0 or 1 are typical values from
-    # improperly constructed/edited files
+    # check if TR is 0
     img_t_r = ref_img.header.get_zooms()[-1]
-    if img_t_r == 0 and t_r == 0:
+    if img_t_r == 0:
         raise IOError('Dataset has a TR of 0. This indicates incorrect'
-                      ' header information. Please override the TR value'
-                      ' with the --TR flag (see tedana -h for more help)'
-                      ' or fix your file header.')
-    elif img_t_r == 1 and t_r == 0:
-        LGR.warning('Image TR (1) is common in files with incorrect header '
-                    ' info, please double-check.')
-    elif t_r != 0:
-        # Coerce TR to be user-supplied value
-        zooms = ref_img.header.get_zooms()
-        new_zooms = (zooms[0], zooms[1], zooms[2], t_r)
-        ref_img.header.set_zooms(new_zooms)
-
-        if img_t_r != t_r:
-            LGR.info('Mismatch in header TR and user-supplied TR,'
-                     ' please verify. Proceeding with user-supplied'
-                     ' value: {0}'.format(t_r))
+                      ' header information. To correct this, we recommend'
+                ' using this snippet:'
+                '\n'
+                'https://gist.github.com/jbteves/032c87aeb080dd8de8861cb151bff5d6'
+                '\n'
+                'to correct your TR to the value it should be.');
 
     if mixm is not None and op.isfile(mixm):
         mixm = op.abspath(mixm)
