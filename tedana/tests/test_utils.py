@@ -16,34 +16,6 @@ fnames = [pjoin(datadir, 'echo{}.nii.gz'.format(n)) for n in range(1, 4)]
 tes = ['14.5', '38.5', '62.5']
 
 
-def test_get_dtype():
-    # various combinations of input types
-    good_inputs = [
-        (['echo1.nii.gz', 'echo2.nii.gz', 'echo3.nii.gz'], 'NIFTI'),
-        ('echo1.nii.gz', 'NIFTI'),
-        (['echo1.unknown', 'echo2.unknown', 'echo3.unknown'], 'OTHER'),
-        ('echo1.unknown', 'OTHER'),
-        (nib.Nifti1Image(np.zeros((10,)*3),
-                         affine=np.diag(np.ones(4))), 'NIFTI')
-    ]
-
-    for (input, expected) in good_inputs:
-        assert utils.get_dtype(input) == expected
-
-    with pytest.raises(ValueError):  # mixed arrays don't work
-        utils.get_dtype(['echo1.unknown', 'echo1.nii.gz'])
-
-    with pytest.raises(TypeError):  # non-img_like inputs don't work
-        utils.get_dtype(rs.rand(100, 100))
-
-
-def test_getfbounds():
-    good_inputs = range(1, 12)
-
-    for n_echos in good_inputs:
-        utils.getfbounds(n_echos)
-
-
 def test_unmask():
     # generate boolean mask + get number of True values
     mask = rs.choice([0, 1], size=(100,)).astype(bool)
@@ -60,12 +32,6 @@ def test_unmask():
         out = utils.unmask(input, mask)
         assert out.shape == (100,) + input.shape[1:]
         assert out.dtype == dtype
-
-
-def test_fitgaussian():
-    # not sure a good way to test this
-    # it's straight out of the scipy cookbook, so hopefully its robust?
-    assert utils.fitgaussian(rs.rand(100, 100)).size == 5
 
 
 def test_dice():
@@ -112,13 +78,10 @@ def test_load_image():
 def test_make_adaptive_mask():
     # load data make masks
     data = io.load_data(fnames, n_echos=len(tes))[0]
-    minmask = utils.make_adaptive_mask(data)
-    mask, masksum = utils.make_adaptive_mask(data, minimum=False, getsum=True)
+    mask, masksum = utils.make_adaptive_mask(data, getsum=True)
 
-    # minimum mask different than adaptive mask
-    assert not np.allclose(minmask, mask)
     # getsum doesn't change mask values
-    assert np.allclose(mask, utils.make_adaptive_mask(data, minimum=False))
+    assert np.allclose(mask, utils.make_adaptive_mask(data))
     # shapes are all the same
     assert mask.shape == masksum.shape == (64350,)
     assert np.allclose(mask, masksum.astype(bool))
@@ -133,14 +96,5 @@ def test_make_adaptive_mask():
     # TODO: Add mask file with no bad voxels to test against
     mask, masksum = utils.make_adaptive_mask(data, mask=pjoin(datadir,
                                                               'mask.nii.gz'),
-                                             minimum=False, getsum=True)
+                                             getsum=True)
     assert np.allclose(mask, masksum.astype(bool))
-
-
-def test_make_min_mask():
-    # load data make mask
-    data = io.load_data(fnames, n_echos=len(tes))[0]
-    minmask = utils.make_min_mask(data)
-
-    assert minmask.shape == (64350,)
-    assert minmask.sum() == 58378

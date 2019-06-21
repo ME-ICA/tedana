@@ -30,12 +30,12 @@ DOWNLOAD_URL = (
 REQUIRES = [
     'numpy',
     'scikit-learn',
-    'pywavelets',
     'nilearn',
     'nibabel>=2.1.0',
     'scipy',
     'versioneer',
-    'pandas'
+    'pandas',
+    'matplotlib'
 ]
 
 TESTS_REQUIRES = [

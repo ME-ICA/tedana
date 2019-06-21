@@ -13,6 +13,8 @@ multi-echo functional magnetic resonance imaging (fMRI) data.
 [![Documentation Status](https://readthedocs.org/projects/tedana/badge/?version=latest)](http://tedana.readthedocs.io/en/latest/?badge=latest)
 [![Codecov](https://codecov.io/gh/me-ica/tedana/branch/master/graph/badge.svg)](https://codecov.io/gh/me-ica/tedana)
 [![Join the chat at https://gitter.im/ME-ICA/tedana](https://badges.gitter.im/ME-ICA/tedana.svg)](https://gitter.im/ME-ICA/tedana?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![All Contributors](https://img.shields.io/badge/all_contributors-9-orange.svg?style=flat-square)](#contributors)
+
 
 ## About
 
@@ -49,8 +51,9 @@ We recommend using [miniconda3](https://conda.io/miniconda.html).
 After installation, you can use the following commands to create an environment for `tedana`:
 
 ```bash
-conda create -n ENVIRONMENT_NAME python=3 pip mdp numpy scikit-learn scipy nilearn nibabel
-source activate ENVIRONMENT_NAME
+conda create -n ENVIRONMENT_NAME python=3 pip mdp numpy scikit-learn scipy 
+conda activate ENVIRONMENT_NAME
+pip install nilearn nibabel
 pip install tedana
 ```
 
@@ -60,8 +63,13 @@ This will also allow any previously existing tedana installations to remain unto
 To exit this conda environment, use
 
 ```bash
-source deactivate
+conda deactivate
 ```
+
+NOTE: Conda < 4.6 users will need to use the soon-to-be-deprecated option
+`source` rather than `conda` for the activation and deactivation steps.
+You can read more about managing conda environments and this discrepancy here:
+[here](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html)
 
 ## Getting involved
 
@@ -73,3 +81,15 @@ Have a question, comment, or suggestion?
 Open or comment on one of [our issues](https://github.com/ME-ICA/tedana/issues)!
 
 We ask that all contributions to ``tedana`` respect our [code of conduct](https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md).
+
+## Contributors
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore -->
+<table><tr><td align="center"><a href="https://github.com/dowdlelt"><img src="https://avatars2.githubusercontent.com/u/15126366?v=4" width="100px;" alt="Logan Dowdle"/><br /><sub><b>Logan Dowdle</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=dowdlelt" title="Code">💻</a> <a href="#question-dowdlelt" title="Answering Questions">💬</a> <a href="#design-dowdlelt" title="Design">🎨</a> <a href="https://github.com/ME-ICA/tedana/issues?q=author%3Adowdlelt" title="Bug reports">🐛</a></td><td align="center"><a href="http://emdupre.me"><img src="https://avatars3.githubusercontent.com/u/15017191?v=4" width="100px;" alt="Elizabeth DuPre"/><br /><sub><b>Elizabeth DuPre</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=emdupre" title="Code">💻</a> <a href="https://github.com/ME-ICA/tedana/commits?author=emdupre" title="Documentation">📖</a> <a href="#ideas-emdupre" title="Ideas, Planning, & Feedback">🤔</a> <a href="#infra-emdupre" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#review-emdupre" title="Reviewed Pull Requests">👀</a> <a href="#example-emdupre" title="Examples">💡</a> <a href="https://github.com/ME-ICA/tedana/commits?author=emdupre" title="Tests">⚠️</a> <a href="#question-emdupre" title="Answering Questions">💬</a></td><td align="center"><a href="https://github.com/javiergcas"><img src="https://avatars1.githubusercontent.com/u/7314358?v=4" width="100px;" alt="javiergcas"/><br /><sub><b>Javier Gonzalez-Castillo</b></sub></a><br /><a href="#ideas-javiergcas" title="Ideas, Planning, & Feedback">🤔</a></td><td align="center"><a href="https://github.com/handwerkerd"><img src="https://avatars3.githubusercontent.com/u/7406227?v=4" width="100px;" alt="Dan Handwerker"/><br /><sub><b>Dan Handwerker</b></sub></a><br /><a href="#design-handwerkerd" title="Design">🎨</a> <a href="https://github.com/ME-ICA/tedana/commits?author=handwerkerd" title="Documentation">📖</a> <a href="#example-handwerkerd" title="Examples">💡</a> <a href="#review-handwerkerd" title="Reviewed Pull Requests">👀</a></td><td align="center"><a href="https://github.com/prantikk"><img src="https://avatars0.githubusercontent.com/u/1636689?v=4" width="100px;" alt="prantikk"/><br /><sub><b>Prantik Kundu</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=prantikk" title="Code">💻</a> <a href="#ideas-prantikk" title="Ideas, Planning, & Feedback">🤔</a></td></tr><tr><td align="center"><a href="http://rossmarkello.me"><img src="https://avatars0.githubusercontent.com/u/14265705?v=4" width="100px;" alt="Ross Markello"/><br /><sub><b>Ross Markello</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=rmarkello" title="Code">💻</a> <a href="#infra-rmarkello" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#question-rmarkello" title="Answering Questions">💬</a></td><td align="center"><a href="http://tsalo.github.io"><img src="https://avatars3.githubusercontent.com/u/8228902?v=4" width="100px;" alt="Taylor Salo"/><br /><sub><b>Taylor Salo</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=tsalo" title="Code">💻</a> <a href="#ideas-tsalo" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/ME-ICA/tedana/commits?author=tsalo" title="Documentation">📖</a> <a href="#tutorial-tsalo" title="Tutorials">✅</a> <a href="#question-tsalo" title="Answering Questions">💬</a></td><td align="center"><a href="https://github.com/jbteves"><img src="https://avatars3.githubusercontent.com/u/26722533?v=4" width="100px;" alt="Joshua Teves"/><br /><sub><b>Joshua Teves</b></sub></a><br /><a href="#projectManagement-jbteves" title="Project Management">📆</a> <a href="https://github.com/ME-ICA/tedana/commits?author=jbteves" title="Documentation">📖</a> <a href="#review-jbteves" title="Reviewed Pull Requests">👀</a> <a href="#maintenance-jbteves" title="Maintenance">🚧</a></td><td align="center"><a href="https://whitakerlab.github.io"><img src="https://avatars1.githubusercontent.com/u/3626306?v=4" width="100px;" alt="Kirstie Whitaker"/><br /><sub><b>Kirstie Whitaker</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=KirstieJane" title="Documentation">📖</a> <a href="#projectManagement-KirstieJane" title="Project Management">📆</a> <a href="#review-KirstieJane" title="Reviewed Pull Requests">👀</a> <a href="#talk-KirstieJane" title="Talks">📢</a></td></tr></table>
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!

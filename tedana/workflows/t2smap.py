@@ -67,9 +67,9 @@ def _get_parser():
     optional.add_argument('--combmode',
                           dest='combmode',
                           action='store',
-                          choices=['t2s', 'ste'],
+                          choices=['t2s', 'paid'],
                           help=('Combination scheme for TEs: '
-                                't2s (Posse 1999, default), ste (Poser)'),
+                                't2s (Posse 1999, default), paid (Poser)'),
                           default='t2s')
     optional.add_argument('--label',
                           dest='label',
@@ -110,8 +110,8 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
         'all' means that the model is fit, per voxel, across all timepoints.
         'ts' means that the model is fit, per voxel and per timepoint.
         Default is 'all'.
-    combmode : {'t2s', 'ste'}, optional
-        Combination scheme for TEs: 't2s' (Posse 1999, default), 'ste' (Poser).
+    combmode : {'t2s', 'paid'}, optional
+        Combination scheme for TEs: 't2s' (Posse 1999, default), 'paid' (Poser).
     label : :obj:`str` or :obj:`None`, optional
         Label for output directory. Default is None.
 
@@ -162,9 +162,9 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
     try:
-        ref_label = os.path.basename(ref_img).split('.')[0]
+        ref_label = op.basename(ref_img).split('.')[0]
     except (TypeError, AttributeError):
-        ref_label = os.path.basename(str(data[0])).split('.')[0]
+        ref_label = op.basename(str(data[0])).split('.')[0]
 
     if label is not None:
         out_dir = 'TED.{0}.{1}'.format(ref_label, label)
@@ -181,7 +181,7 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
         LGR.info('Computing adaptive mask')
     else:
         LGR.info('Using user-defined mask')
-    mask, masksum = utils.make_adaptive_mask(catd, minimum=False, getsum=True)
+    mask, masksum = utils.make_adaptive_mask(catd, getsum=True)
 
     LGR.info('Computing adaptive T2* map')
     if fitmode == 'all':

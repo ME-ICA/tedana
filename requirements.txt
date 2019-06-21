@@ -3,9 +3,9 @@ scikit-learn
 scipy
 nilearn
 nibabel>=2.1.0
-pywavelets
 duecredit
 sphinx-argparse
 numpydoc
 versioneer
 pandas
+matplotlib

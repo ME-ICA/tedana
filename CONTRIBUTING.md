@@ -11,6 +11,7 @@ Here are some [instructions][link_signupinstructions].
 Already know what you're looking for in this guide? Jump to the following sections:
 
 * [Joining the conversation](#joining-the-conversation)
+  * [Monthly developer calls](#monthly-developer-calls)
 * [Contributing through Github](#contributing-through-github)
 * [Understanding issues, milestones, and project boards](#understanding-issues-milestones-and-project-boards)
 * [Making a change](#making-a-change)
@@ -26,6 +27,14 @@ We also maintain a [gitter chat room][link_gitter] for more informal conversatio
 There is significant cross-talk between these two spaces, and we look forward to hearing from you in either venue!
 As a reminder, we expect all contributions to `tedana` to adhere to our [code of conduct][link_coc].
 
+### Monthly developer calls
+
+We run monthly developer calls via Zoom.
+You can see the schedule via the `tedana` [google calendar](https://calendar.google.com/calendar/embed?src=pl6vb4t9fck3k6mdo2mok53iss%40group.calendar.google.com).
+An agenda will be circulated in the gitter channel in advance of the meeting.
+
+Everyone is welcome.
+We look forward to meeting you there :hibiscus:
 
 ## Contributing through GitHub
 
@@ -56,6 +65,13 @@ is difficult to describe as one unit of work, please consider splitting it into 
     Issues are assigned [labels](#issue-labels) which explain how they relate to the overall project's
     goals and immediate next steps.
 
+    Sometimes issues may not produce action items, and conversation will stall after a few months.
+    When this happens, they may be marked stale by [stale-bot][link_stale-bot],
+    and will be closed after a week unless there is more discussion.
+    This helps us keep the issue tracker organized.
+    Any new discussion on the issue will remove the `stale` label, and prevent it from closing.
+    So, if theres's a discussion you think it not yet resolved, please jump in !
+
 * **Milestones** are the link between the issues and the high level strategy for the ``tedana`` project.
 Contributors new and old are encouraged to take a look at the milestones to see how we are progressing
 towards ``tedana``'s shared vision.
@@ -78,6 +94,11 @@ The current list of labels are [here][link_labels] and include:
 
     If you feel that you can contribute to one of these issues, we especially encourage you to do so!
 
+* [![Paused](https://img.shields.io/badge/-paused-%23ddcc5f.svg)][link_paused] *These issues should not be worked on until the resolution of other issues or Pull Requests.*
+
+    These are issues that are paused pending resolution of a related issue or Pull Request.
+    Please do not open any Pull Requests to resolve these issues.
+
 * [![Bugs](https://img.shields.io/badge/-bugs-fc2929.svg)][link_bugs] *These issues point to problems in the project.*
 
     If you find new a bug, please give as much detail as possible in your issue, including steps to recreate the error.
@@ -87,7 +108,6 @@ The current list of labels are [here][link_labels] and include:
 
     Please try to make sure that your enhancement is distinct from any others that have already been requested or implemented.
     If you find one that's similar but there are subtle differences please reference the other request in your issue.
-
 
 ## Making a change
 
@@ -110,6 +130,14 @@ Make sure to [keep your fork up to date][link_updateupstreamwiki] with the maste
 Try to keep the changes focused. We've found that working on a [new branch][link_branches] makes it easier to keep your changes targeted.
 
 When you're creating your pull request, please make sure to review the tedana [style conventions](#style-guide).
+
+Note that to test a change, you may need to set up your local repository to run a tedana workflow. 
+To do so, run
+```
+python setup.py develop
+```
+which should ensure all packages are correctly organized and linked on your user profile. 
+Once you've run this, your repository should be set for most changes (i.e., you do not have to re-run with every change). 
 
 **4. Submit a [pull request][link_pullrequest].**
 
@@ -196,9 +224,11 @@ You're awesome. :wave::smiley:
 [link_milestones]: https://github.com/ME-ICA/tedana/milestones/
 [link_project_boards]: https://github.com/ME-ICA/tedana/projects
 [link_gitter]: https://gitter.im/me-ica/tedana
-[link_coc]: https://github.com/ME-ICA/tedana/blob/master/Code_of_Conduct.md
+[link_coc]: https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md
+[link_stale-bot]: https://github.com/probot/stale
 
 [link_labels]: https://github.com/ME-ICA/tedana/labels
+[link_paused]: https://github.com/ME-ICA/tedana/labels/paused
 [link_bugs]: https://github.com/ME-ICA/tedana/labels/bug
 [link_helpwanted]: https://github.com/ME-ICA/tedana/labels/help%20wanted
 [link_enhancement]: https://github.com/ME-ICA/tedana/labels/enhancement

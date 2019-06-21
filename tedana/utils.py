@@ -4,69 +4,14 @@ Utilities for tedana package
 import logging
 
 import numpy as np
-from scipy import stats
-from scipy.optimize import leastsq
 import nibabel as nib
+from scipy import ndimage
 from nilearn._utils import check_niimg
-from nibabel.filename_parser import splitext_addext
 from sklearn.utils import check_array
 
 from tedana.due import due, BibTeX
 
-FORMATS = {'.nii': 'NIFTI'}
 LGR = logging.getLogger(__name__)
-
-
-def get_dtype(data):
-    """
-    Determines neuroimaging format of `data`
-
-    Parameters
-    ----------
-    data : :obj:`list` of :obj:`str` or :obj:`str` or img_like
-        Data to determine format of
-
-    Returns
-    -------
-    dtype : {'NIFTI', 'OTHER'} str
-        Format of input data
-    """
-
-    if isinstance(data, list):
-        dtypes = np.unique([get_dtype(d) for d in data])
-        if dtypes.size > 1:
-            raise ValueError('Provided data detected to have varying formats: '
-                             '{}'.format(dtypes))
-        return dtypes[0]
-    elif isinstance(data, str):
-        dtype = splitext_addext(data)[1]
-    else:  # img_like?
-        if not hasattr(data, 'valid_exts'):
-            raise TypeError('Input data format cannot be detected.')
-        dtype = data.valid_exts[0]
-
-    return FORMATS.get(dtype, 'OTHER')
-
-
-def getfbounds(n_echos):
-    """
-    Gets F-statistic boundaries based on number of echos
-
-    Parameters
-    ----------
-    n_echos : :obj:`int`
-        Number of echoes
-
-    Returns
-    -------
-    fmin, fmid, fmax : :obj:`float`
-        F-statistic thresholds for alphas of 0.05, 0.025, and 0.01,
-        respectively.
-    """
-    f05 = stats.f.ppf(q=1-0.05, dfn=1, dfd=n_echos-1)
-    f025 = stats.f.ppf(q=1-0.025, dfn=1, dfd=n_echos-1)
-    f01 = stats.f.ppf(q=1-0.01, dfn=1, dfd=n_echos-1)
-    return f05, f025, f01
 
 
 def load_image(data):
@@ -94,7 +39,7 @@ def load_image(data):
     return fdata
 
 
-def make_adaptive_mask(data, mask=None, minimum=True, getsum=False):
+def make_adaptive_mask(data, mask=None, getsum=False):
     """
     Makes map of `data` specifying longest echo a voxel can be sampled with
 
@@ -106,9 +51,6 @@ def make_adaptive_mask(data, mask=None, minimum=True, getsum=False):
     mask : :obj:`str` or img_like, optional
         Binary mask for voxels to consider in TE Dependent ANAlysis. Default is
         to generate mask from data with good signal across echoes
-    minimum : :obj:`bool`, optional
-        Use `make_min_mask()` instead of generating a map with echo-specific
-        times. Default: True
     getsum : :obj:`bool`, optional
         Return `masksum` in addition to `mask`. Default: False
 
@@ -121,10 +63,6 @@ def make_adaptive_mask(data, mask=None, minimum=True, getsum=False):
         Valued array indicating the number of echos with sufficient signal in a
         given voxel. Only returned if `getsum = True`
     """
-
-    if minimum:
-        return make_min_mask(data, roi=mask)
-
     # take temporal mean of echos and extract non-zero values in first echo
     echo_means = data.mean(axis=-1)  # temporal mean of echos
     first_echo = echo_means[echo_means[:, 0] != 0, 0]
@@ -167,37 +105,6 @@ def make_adaptive_mask(data, mask=None, minimum=True, getsum=False):
     return mask
 
 
-def make_min_mask(data, roi=None):
-    """
-    Generates a 3D mask of `data`
-
-    Only samples that are consistently (i.e., across time AND echoes) non-zero
-    in `data` are True in output
-
-    Parameters
-    ----------
-    data : (S x E x T) array_like
-        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
-        time
-    roi : :obj:`str`, optional
-        Binary mask for region-of-interest to consider in TE Dependent ANAlysis
-
-    Returns
-    -------
-    mask : (S,) :obj:`numpy.ndarray`
-        Boolean array
-    """
-
-    data = np.asarray(data).astype(bool)
-    mask = data.prod(axis=-1).prod(axis=-1).astype(bool)
-
-    if roi is None:
-        return mask
-    else:
-        roi = load_image(roi).astype(bool)
-        return np.logical_and(mask, roi)
-
-
 def unmask(data, mask):
     """
     Unmasks `data` using non-zero entries of `mask`
@@ -219,102 +126,6 @@ def unmask(data, mask):
     out = np.zeros(mask.shape + data.shape[1:], dtype=data.dtype)
     out[mask] = data
     return out
-
-
-def moments(data):
-    """
-    Returns gaussian parameters of a 2D distribution by calculating its moments
-
-    Parameters
-    ----------
-    data : array_like
-        2D data array
-
-    Returns
-    -------
-    height : :obj:`float`
-    center_x : :obj:`float`
-    center_y : :obj:`float`
-    width_x : :obj:`float`
-    width_y : :obj:`float`
-
-    References
-    ----------
-    `Scipy Cookbook`_
-
-    .. _Scipy Cookbook: http://scipy-cookbook.readthedocs.io/items/FittingData.html#Fitting-a-2D-gaussian  # noqa
-    """
-
-    total = data.sum()
-    X, Y = np.indices(data.shape)
-    center_x = (X * data).sum() / total
-    center_y = (Y * data).sum() / total
-    col = data[:, int(center_y)]
-    width_x = np.sqrt(abs((np.arange(col.size) - center_y)**2 * col).sum() / col.sum())
-    row = data[int(center_x), :]
-    width_y = np.sqrt(abs((np.arange(row.size) - center_x)**2 * row).sum() / row.sum())
-    height = data.max()
-    return height, center_x, center_y, width_x, width_y
-
-
-def gaussian(height, center_x, center_y, width_x, width_y):
-    """
-    Returns gaussian function
-
-    Parameters
-    ----------
-    height : :obj:`float`
-    center_x : :obj:`float`
-    center_y : :obj:`float`
-    width_x : :obj:`float`
-    width_y : :obj:`float`
-
-    Returns
-    -------
-    lambda
-        Gaussian function with provided parameters
-
-    References
-    ----------
-    `Scipy Cookbook`_
-
-    .. _Scipy Cookbook: http://scipy-cookbook.readthedocs.io/items/FittingData.html#Fitting-a-2D-gaussian  # noqa
-    """
-
-    width_x = float(width_x)
-    width_y = float(width_y)
-    return lambda x, y: height * np.exp(-(((center_x - x) / width_x)**2 +
-                                        ((center_y - y) / width_y)**2) / 2)
-
-
-def fitgaussian(data):
-    """
-    Returns estimated gaussian parameters of a 2D distribution found by a fit
-
-    Parameters
-    ----------
-    data : array_like
-        2D data array
-
-    Returns
-    -------
-    p : array_like
-        Array with height, center_x, center_y, width_x, width_y of `data`
-
-    References
-    ----------
-    `Scipy Cookbook`_
-
-    .. _Scipy Cookbook: http://scipy-cookbook.readthedocs.io/items/FittingData.html#Fitting-a-2D-gaussian  # noqa
-    """
-
-    params = moments(data)
-
-    def errorfunction(p, data):
-        return np.ravel(gaussian(*p)(*np.indices(data.shape)) - data)
-
-    (p, _) = leastsq(errorfunction, params, data)
-    return p
 
 
 @due.dcite(BibTeX('@article{dice1945measures,'
@@ -399,3 +210,109 @@ def andb(arrs):
     result = np.sum(arrs, axis=0)
 
     return result
+
+
+def get_spectrum(data: np.array, tr: float = 1.0):
+    """
+    Returns the power spectrum and corresponding frequencies when provided
+    with a component time course and repitition time.
+
+    Parameters
+    ----------
+    data : (S, ) array_like
+            A timeseries S, on which you would like to perform an fft.
+    tr : :obj:`float`
+            Reptition time (TR) of the data
+    """
+
+    # adapted from @dangom
+    power_spectrum = np.abs(np.fft.rfft(data)) ** 2
+    freqs = np.fft.rfftfreq(power_spectrum.size * 2 - 1, tr)
+    idx = np.argsort(freqs)
+    return power_spectrum[idx], freqs[idx]
+
+
+def threshold_map(img, min_cluster_size, threshold=None, mask=None,
+                  binarize=True, sided='two'):
+    """
+    Cluster-extent threshold and binarize image.
+
+    Parameters
+    ----------
+    img : img_like or array_like
+        Image object or 3D array to be clustered
+    min_cluster_size : int
+        Minimum cluster size (in voxels)
+    threshold : float or None, optional
+        Cluster-defining threshold for img. If None (default), assume img is
+        already thresholded.
+    mask : (S,) array_like or None, optional
+        Boolean array for masking resultant data array. Default is None.
+    binarize : bool, optional
+        Default is True.
+    sided : {'two', 'one', 'bi'}, optional
+        How to apply thresholding. One-sided thresholds on the positive side.
+        Two-sided thresholds positive and negative values together. Bi-sided
+        thresholds positive and negative values separately. Default is 'two'.
+    """
+    if not isinstance(img, np.ndarray):
+        arr = img.get_data()
+    else:
+        arr = img.copy()
+
+    if mask is not None:
+        mask = mask.astype(bool)
+        arr *= mask.reshape(arr.shape)
+
+    clust_thresholded = np.zeros(arr.shape, int)
+
+    if sided == 'two':
+        test_arr = np.abs(arr)
+    else:
+        test_arr = arr.copy()
+
+    # Positive values (or absolute values) first
+    if threshold is not None:
+        thresh_arr = test_arr >= threshold
+    else:
+        thresh_arr = test_arr > 0
+
+    # 6 connectivity
+    struc = ndimage.generate_binary_structure(3, 1)
+    labeled, _ = ndimage.label(thresh_arr, struc)
+    unique, counts = np.unique(labeled, return_counts=True)
+    clust_sizes = dict(zip(unique, counts))
+    clust_sizes = {k: v for k, v in clust_sizes.items() if v >= min_cluster_size}
+    for i_clust in clust_sizes.keys():
+        if np.all(thresh_arr[labeled == i_clust] == 1):
+            if binarize:
+                clust_thresholded[labeled == i_clust] = 1
+            else:
+                clust_thresholded[labeled == i_clust] = arr[labeled == i_clust]
+
+    # Now negative values *if bi-sided*
+    if sided == 'bi':
+        if threshold is not None:
+            thresh_arr = test_arr <= (-1 * threshold)
+        else:
+            thresh_arr = test_arr < 0
+
+        labeled, _ = ndimage.label(thresh_arr, struc)
+        unique, counts = np.unique(labeled, return_counts=True)
+        clust_sizes = dict(zip(unique, counts))
+        clust_sizes = {k: v for k, v in clust_sizes.items() if v >= min_cluster_size}
+        for i_clust in clust_sizes.keys():
+            if np.all(thresh_arr[labeled == i_clust] == 1):
+                if binarize:
+                    clust_thresholded[labeled == i_clust] = 1
+                else:
+                    clust_thresholded[labeled == i_clust] = arr[labeled == i_clust]
+
+    # reshape to (S,)
+    clust_thresholded = clust_thresholded.ravel()
+
+    # if mask provided, mask output
+    if mask is not None:
+        clust_thresholded = clust_thresholded[mask]
+
+    return clust_thresholded
