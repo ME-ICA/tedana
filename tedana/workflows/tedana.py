@@ -316,11 +316,11 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if img_t_r == 0 and png:
         raise IOError('Dataset has a TR of 0. This indicates incorrect'
                       ' header information. To correct this, we recommend'
-                ' using this snippet:'
-                '\n'
-                'https://gist.github.com/jbteves/032c87aeb080dd8de8861cb151bff5d6'
-                '\n'
-                'to correct your TR to the value it should be.');
+                      ' using this snippet:'
+                      '\n'
+                      'https://gist.github.com/jbteves/032c87aeb080dd8de8861cb151bff5d6'
+                      '\n'
+                      'to correct your TR to the value it should be.');
 
     if mixm is not None and op.isfile(mixm):
         mixm = op.abspath(mixm)
