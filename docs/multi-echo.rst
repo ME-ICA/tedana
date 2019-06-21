@@ -60,12 +60,13 @@ Multi-echo fMRI acquisition sequences and analysis methods are rapidly maturing.
 to a multi-echo fMRI sequence should seriously consider using it. Multiple studies have shown that a
 weighted average of the echoes to optimize T2* weighting, sometimes called "optimally combined,"
 gives a reliable, modest boost in data quality. The optimal combination of echoes can currently be
-calculated in several software packages including AFNI, fMRIPrep, and tedana. If no other acquisition
-compromises are necessary to acquire multi-echo data, this boost is worthwhile. If other compromises are
-necessary, consider the life of the data set. If data is being acquired for a discrete study that
-will be acquired, analyzed, and published in a year or two, it might not be worth making compromises
-to acquire multi-echo data. If a data set is expected to be used for future analyses in later years,
-it is likely that more powerful approaches to multi-echo denoising will sufficiently mature and add
+calculated in several software packages including AFNI, fMRIPrep, and tedana. In tedana, the weighted
+average can be calculated with https://tedana.readthedocs.io/en/latest/usage.html#run-t2smap If no other
+acquisition compromises are necessary to acquire multi-echo data, this boost is worthwhile. If other
+compromises are necessary, consider the life of the data set. If data is being acquired for a discrete
+study that will be acquired, analyzed, and published in a year or two, it might not be worth making
+compromises to acquire multi-echo data. If a data set is expected to be used for future analyses in later
+years, it is likely that more powerful approaches to multi-echo denoising will sufficiently mature and add
 even more value to a data set.
 
 Other multi-echo denoising methods, such as MEICA, the predecessor to tedana, have shown the potential for
@@ -152,7 +153,7 @@ Multi-echo preprocessing software
 
 tedana requires data that has already been preprocessed for head motion, alignment, etc.
 More details on software packages that include preprocessing options specifically for multi-echo
-fMRI data, such as AFNI and FMRI_PREP will be added here.
+fMRI data, such as AFNI and fMRIPrep will be added here.
 
 Other software that uses multi-echo fMRI
 ****************************************
