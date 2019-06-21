@@ -60,7 +60,7 @@ Multi-echo fMRI acquisition sequences and analysis methods are rapidly maturing.
 to a multi-echo fMRI sequence should seriously consider using it. Multiple studies have shown that a
 weighted average of the echoes to optimize T2* weighting, sometimes called "optimally combined,"
 gives a reliable, modest boost in data quality. The optimal combination of echoes can currently be
-calculated in several software packages including AFNI, FMRI_PREP, and tedana. If no other acquisition
+calculated in several software packages including AFNI, fMRIPrep, and tedana. If no other acquisition
 compromises are necessary to acquire multi-echo data, this boost is worthwhile. If other compromises are
 necessary, consider the life of the data set. If data is being acquired for a discrete study that
 will be acquired, analyzed, and published in a year or two, it might not be worth making compromises
