@@ -209,8 +209,10 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
 
     if verbose:
         # Echo-specific weight maps for each of the ICA components.
-        io.filewrite(betas, op.join(out_dir, '{0}betas_catd.nii'.format(label)),
+        io.filewrite(utils.unmask(betas, mask),
+                     op.join(out_dir, '{0}betas_catd.nii'.format(label)),
                      ref_img)
+
         # Echo-specific maps of predicted values for R2 and S0 models for each
         # component.
         io.filewrite(utils.unmask(pred_R2_maps, mask),
