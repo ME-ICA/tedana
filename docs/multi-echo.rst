@@ -58,25 +58,25 @@ Recommendations on multi-echo use for someone planning a new study
 ------------------------------------------------------------------
 Multi-echo fMRI acquisition sequences and analysis methods are rapidly maturing. Someone who has access
 to a multi-echo fMRI sequence should seriously consider using it. Multiple studies have shown that a
-weighted average of the echoes to optimize T2* weighting, sometimes called "optimally combined," 
+weighted average of the echoes to optimize T2* weighting, sometimes called "optimally combined,"
 gives a reliable, modest boost in data quality. The optimal combination of echoes can currently be
 calculated in several software packages including AFNI, FMRI_PREP, and tedana. If no other acquisition
-need to be compromised to acquire multi-echo data, this boost is worthwhile. If other compromises are 
-necessary, consider the life of the data set. If data is being acquired for a discrete study that 
-will be acquired, analyzed, and published in a year or two, it might not be worth making compromises 
-to acquire multi-echo data. If a data set is expected to be used for future analyses in later years, 
-it is very likely that more powerful approaches to multi-echo denoising will sufficiently mature and add 
+compromises are necessary to acquire multi-echo data, this boost is worthwhile. If other compromises are
+necessary, consider the life of the data set. If data is being acquired for a discrete study that
+will be acquired, analyzed, and published in a year or two, it might not be worth making compromises
+to acquire multi-echo data. If a data set is expected to be used for future analyses in later years,
+it is likely that more powerful approaches to multi-echo denoising will sufficiently mature and add
 even more value to a data set.
 
-Other multi-echo denoising methods, such as MEICA, the predecessor to tedana, have shown the potential for 
-much greater data quality improvements, as well as the ability to more accurately separate visually similar 
-signal vs noise, such as scanner based drifts vs slow changes in BOLD signal. These more powerful methods are 
-still being improved and the algorithms are still changing. Users need to have the time and knowledge to look 
-at the denoising output from every run to make sure everything worked. If someone wants a push-button way to
-use multi-echo data to improve data quality, that doesn't require as deep an inspection of every output, stick 
-with using the weighted average. The developers of tedana look forward to when tedana and other methods have 
-sufficiently stable algorithms that has been validated on a wide range data data sets that we can recommended 
-the push-button use of tedana.
+Other multi-echo denoising methods, such as MEICA, the predecessor to tedana, have shown the potential for
+much greater data quality improvements, as well as the ability to more accurately separate visually similar
+signal vs noise, such as scanner based drifts vs slow changes in BOLD signal. These more powerful methods are
+still being improved, and the algorithms are still changing. Users need to have the time and knowledge to look
+at the denoising output from every run to make sure denoising worked as intended. If someone wants a push-button
+way to use multi-echo data to improve data quality, that doesn't require as deep an inspection of every output,
+stick with using the weighted average. The developers of tedana look forward to when tedana and other methods
+have sufficiently stable algorithms, which have been validated on a wide range data data sets, so that we can
+recommended the wide use of tedana.
 
 Acquisition Parameter Recommendations
 -------------------------------------
@@ -152,7 +152,7 @@ Multi-echo preprocessing software
 
 tedana requires data that has already been preprocessed for head motion, alignment, etc.
 More details on software packages that include preprocessing options specifically for multi-echo
-fMRI data, such as AFNI and FMRI_PREP will be added here. 
+fMRI data, such as AFNI and FMRI_PREP will be added here.
 
 Other software that uses multi-echo fMRI
 ****************************************
