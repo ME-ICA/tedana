@@ -61,7 +61,7 @@ to a multi-echo fMRI sequence should seriously consider using it. Multiple studi
 weighted average of the echoes to optimize T2* weighting, sometimes called "optimally combined,"
 gives a reliable, modest boost in data quality. The optimal combination of echoes can currently be
 calculated in several software packages including AFNI, fMRIPrep, and tedana. In tedana, the weighted
-average can be calculated with t2smap_ If no other
+average can be calculated with `t2smap`_ If no other
 acquisition compromises are necessary to acquire multi-echo data, this boost is worthwhile. If other
 compromises are necessary, consider the life of the data set. If data is being acquired for a discrete
 study that will be acquired, analyzed, and published in a year or two, it might not be worth making
@@ -78,6 +78,8 @@ way to use multi-echo data to improve data quality, that doesn't require as deep
 stick with using the weighted average. The developers of tedana look forward to when tedana and other methods
 have sufficiently stable algorithms, which have been validated on a wide range data data sets, so that we can
 recommended the wide use of tedana.
+
+.. _t2smap: https://tedana.readthedocs.io/en/latest/usage.html#run-t2smap
 
 Acquisition Parameter Recommendations
 -------------------------------------
