@@ -77,9 +77,9 @@ def low_mem_pca(data):
     from sklearn.decomposition import IncrementalPCA
     ppca = IncrementalPCA(n_components=(data.shape[-1] - 1))
     ppca.fit(data)
-    v = ppca.components_
+    v = ppca.components_.T
     s = ppca.explained_variance_
-    u = np.dot(np.dot(data, v.T), np.diag(1. / s))
+    u = np.dot(np.dot(data, v), np.diag(1. / s))
     return u, s, v
 
 
