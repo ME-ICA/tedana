@@ -32,7 +32,7 @@ def getfbounds(n_echos):
     return f05, f025, f01
 
 
-def computefeats2(data, mmix, mask, normalize=True):
+def computefeats2(data, mmix, mask=None, normalize=True):
     """
     Converts `data` to component space using `mmix`
 
@@ -43,8 +43,8 @@ def computefeats2(data, mmix, mask, normalize=True):
     mmix : (T [x C]) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    mask : (S,) array_like
-        Boolean mask array
+    mask : (S,) array_like or None, optional
+        Boolean mask array. Default: None
     normalize : bool, optional
         Whether to z-score output. Default: True
 
@@ -58,9 +58,9 @@ def computefeats2(data, mmix, mask, normalize=True):
     elif mmix.ndim not in [2]:
         raise ValueError('Parameter mmix should be 2d, not '
                          '{0}d'.format(mmix.ndim))
-    elif mask.ndim != 1:
+    elif (mask is not None) and (mask.ndim != 1):
         raise ValueError('Parameter mask should be 1d, not {0}d'.format(mask.ndim))
-    elif data.shape[0] != mask.shape[0]:
+    elif (mask is not None) and (data.shape[0] != mask.shape[0]):
         raise ValueError('First dimensions (number of samples) of data ({0}) '
                          'and mask ({1}) do not match.'.format(data.shape[0],
                                                                mask.shape[0]))
@@ -70,7 +70,9 @@ def computefeats2(data, mmix, mask, normalize=True):
                                                                mmix.shape[0]))
 
     # demean masked data
-    data_vn = stats.zscore(data[mask], axis=-1)
+    if mask is not None:
+        data = data[mask, ...]
+    data_vn = stats.zscore(data, axis=-1)
 
     # get betas of `data`~`mmix` and limit to range [-0.999, 0.999]
     data_R = get_coeffs(data_vn, mmix, mask=None)
@@ -87,6 +89,7 @@ def computefeats2(data, mmix, mask, normalize=True):
         data_Zm = stats.zscore(data_Z, axis=0)
         data_Z = data_Zm + (data_Z.mean(axis=0, keepdims=True) /
                             data_Z.std(axis=0, keepdims=True))
+
     return data_Z
 
 
