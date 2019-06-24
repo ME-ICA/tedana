@@ -48,7 +48,7 @@ def run_mlepca(data):
         Component timeseries.
     """
     # do PC dimension selection and get eigenvalue cutoff
-    ppca = PCA(n_components='mle', svd_solver='full')
+    ppca = PCA(n_components='mle', svd_solver='full', copy=False)
     ppca.fit(data)
     v = ppca.components_.T
     s = ppca.explained_variance_
@@ -218,7 +218,7 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     elif low_mem:
         voxel_comp_weights, varex, comp_ts = low_mem_pca(data_z)
     else:
-        ppca = PCA()
+        ppca = PCA(copy=False)
         ppca.fit(data_z)
         comp_ts = ppca.components_.T
         varex = ppca.explained_variance_
