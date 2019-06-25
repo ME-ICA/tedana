@@ -13,30 +13,29 @@ multi-echo functional magnetic resonance imaging (fMRI) data.
 [![Documentation Status](https://readthedocs.org/projects/tedana/badge/?version=latest)](http://tedana.readthedocs.io/en/latest/?badge=latest)
 [![Codecov](https://codecov.io/gh/me-ica/tedana/branch/master/graph/badge.svg)](https://codecov.io/gh/me-ica/tedana)
 [![Join the chat at https://gitter.im/ME-ICA/tedana](https://badges.gitter.im/ME-ICA/tedana.svg)](https://gitter.im/ME-ICA/tedana?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![All Contributors](https://img.shields.io/badge/all_contributors-10-orange.svg?style=flat-square)](#contributors)
+[![Join our tinyletter mailing list](https://img.shields.io/badge/receive-our%20newsletter%20❤%EF%B8%8F-blueviolet.svg)](https://tinyletter.com/tedana-devs)
+[![All Contributors](https://img.shields.io/badge/all_contributors-10-orange.svg)](#contributors)
 
 
 ## About
 
 ``tedana`` originally came about as a part of the [ME-ICA](https://github.com/me-ica/me-ica) pipeline.
-The ME-ICA pipeline originally performed both pre-processing and TE-dependent
-analysis of multi-echo fMRI data; however, ``tedana`` now assumes that you're
-working with data which has been previously preprocessed.
+The ME-ICA pipeline originally performed both pre-processing and TE-dependent analysis of multi-echo fMRI data; however, ``tedana`` now assumes that you're working with data which has been previously preprocessed.
 
 ![http://tedana.readthedocs.io/](https://user-images.githubusercontent.com/7406227/40031156-57b7cbb8-57bc-11e8-8c51-5b29f2e86a48.png)
 
-More information and documentation can be found at https://tedana.readthedocs.io/.
+More information and documentation can be found at https://tedana.readthedocs.io.
 
 ## Installation
 
 You'll need to set up a working development environment to use `tedana`.
 To set up a local environment, you will need Python >=3.5 and the following packages will need to be installed:
 
-[numpy](http://www.numpy.org/)
-[scipy](https://www.scipy.org/)
-[scikit-learn](http://scikit-learn.org/stable/)
-[nilearn](https://nilearn.github.io/)
-[nibabel>=2.1.0](http://nipy.org/nibabel/)
+* [numpy](http://www.numpy.org/)
+* [scipy](https://www.scipy.org/)
+* [scikit-learn](http://scikit-learn.org/stable/)
+* [nilearn](https://nilearn.github.io/)
+* [nibabel>=2.1.0](http://nipy.org/nibabel/)
 
 You can then install `tedana` with
 
@@ -45,6 +44,7 @@ pip install tedana
 ```
 
 ### Creating a miniconda environment for use with `tedana`
+
 In using `tedana`, you can optionally configure [a conda environment](https://conda.io/docs/user-guide/tasks/manage-environments.html).
 
 We recommend using [miniconda3](https://conda.io/miniconda.html).
@@ -58,7 +58,7 @@ pip install tedana
 ```
 
 `tedana` will then be available in your path.
-This will also allow any previously existing tedana installations to remain untouched.
+This will also allow any previously existing `tedana` installations to remain untouched.
 
 To exit this conda environment, use
 
@@ -66,10 +66,8 @@ To exit this conda environment, use
 conda deactivate
 ```
 
-NOTE: Conda < 4.6 users will need to use the soon-to-be-deprecated option
-`source` rather than `conda` for the activation and deactivation steps.
-You can read more about managing conda environments and this discrepancy here:
-[here](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html)
+NOTE: Conda < 4.6 users will need to use the soon-to-be-deprecated option `source` rather than `conda` for the activation and deactivation steps.
+You can read more about managing conda environments and this discrepancy [here](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html).
 
 ## Getting involved
 
@@ -79,15 +77,14 @@ To get started, check out [our contributing guidelines](https://github.com/ME-IC
 Want to learn more about our plans for developing ``tedana``?
 Have a question, comment, or suggestion?
 Open or comment on one of [our issues](https://github.com/ME-ICA/tedana/issues)!
-If you're not sure where to begin,
-feel free to pop into [Gitter](https://gitter.im/ME-ICA/tedana) and
-introduce yourself! We will be happy to help you find somewhere to get
-started.
 
-We ask that all contributors to ``tedana`` across all project-related
-spaces (including but not limited to: GitHub, Gitter, and project emails),
-adhere to our
-[code of conduct](https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md).
+If you're not sure where to begin, feel free to pop into [Gitter](https://gitter.im/ME-ICA/tedana) and introduce yourself!
+We will be happy to help you find somewhere to get started.
+
+If you don't want to get lots of notifications, we send out newsletters approximately once per month though our TinyLetter mailing list.
+You can view the [previous newsletters](https://tinyletter.com/tedana-devs/archive) and/or sign up to receive future ones at [https://tinyletter.com/tedana-devs](https://tinyletter.com/tedana-devs).
+
+We ask that all contributors to ``tedana`` across all project-related spaces (including but not limited to: GitHub, Gitter, and project emails), adhere to our [code of conduct](https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md).
 
 ## Contributors
 
