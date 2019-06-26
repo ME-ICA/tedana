@@ -18,6 +18,11 @@ Already know what you're looking for in this guide? Jump to the following sectio
 * [Structuring contributions](#style-guide)
 * [Recognizing contributors](#recognizing-contributions)
 
+Don't know where to get started? 
+Read [Joining the conversation](#joining-the-conversation) and pop into 
+Gitter to introduce yourself! Let us know what your interests are and we 
+will help you find an issue to contribute to. Thanks so much!
+
 ## Joining the conversation
 
 `tedana` is a young project maintained by a growing group of enthusiastic developers&mdash; and we're excited to have you join!
@@ -163,6 +168,8 @@ Pull requests should be submitted early and often!
 If your pull request is not yet ready to be merged, please also include the **[WIP]** prefix.
 This tells the development team that your pull request is a "work-in-progress",
 and that you plan to continue working on it.
+We request that you do not use the Draft PR feature at this time, 
+as it interferes with our Continuous Integration tool, Travis.
 
 You can also combine the tags above, for example if you are updating both a test and
 the documentation: **[TST, DOC]**.
@@ -197,8 +204,13 @@ And, if you have any questions, please don't hesitate to ask!
 
 ## Recognizing contributors
 
-We welcome and recognize all contributions from documentation to testing to code development.
-You can see a list of current contributors in the [contributors tab][link_contributors].
+We welcome and recognize [all contributions][link_all-contributors-spec] 
+from documentation to testing to code development.
+You can see a list of current contributors in the 
+README
+(kept up to date by the [all contributors bot][link_all-contributors-bot]). 
+You can see [here][link_all-contributors-bot-usage] for instructions on
+how to use the bot.
 
 ## Thank you!
 
@@ -245,4 +257,7 @@ You're awesome. :wave::smiley:
 [link_rst_guide]: http://docs.sphinxdocs.com/en/latest/step-1.html
 
 [link_contributors]: https://github.com/ME-ICA/tedana/graphs/contributors
+[link_all-contributors-spec]: https://allcontributors.org/docs/en/specification
+[link_all-contributors-bot]: https://allcontributors.org/docs/en/bot/overview
+[link_all-contributors-bot-usage]: https://allcontributors.org/docs/en/bot/usage
 [link_stemmrolemodels]: https://github.com/KirstieJane/STEMMRoleModels

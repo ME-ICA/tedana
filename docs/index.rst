@@ -40,6 +40,10 @@ multi-echo functional magnetic resonance imaging (fMRI) data.
    :target: https://gitter.im/ME-ICA/tedana
    :alt: Join the chat
 
+.. image:: https://img.shields.io/badge/receive-our%20newsletter%20❤%EF%B8%8F-blueviolet.svg
+   :target: https://tinyletter.com/tedana-devs
+   :alt: Join our tinyletter mailing list
+
 About
 -----
 
@@ -51,8 +55,15 @@ The ME-ICA pipeline originally performed both pre-processing and TE-dependent
 analysis of multi-echo fMRI data; however, ``tedana`` now assumes that you're
 working with data which has been previously preprocessed.
 
-.. _ME-ICA: https://github.com/me-ica/me-ica
+For a summary of multi-echo fMRI, which is the imaging technique ``tedana`` builds on, 
+visit `Multi-echo fMRI`_. 
 
+For a detailed procedure of how ``tedana`` analyzes the data from multi-echo fMRI, 
+visit `Processing pipeline details`_.
+
+.. _ME-ICA: https://github.com/me-ica/me-ica
+.. _Multi-echo fMRI: https://tedana.readthedocs.io/en/latest/multi-echo.html
+.. _Processing pipeline details: https://tedana.readthedocs.io/en/latest/approach.html#
 
 Citations
 ---------

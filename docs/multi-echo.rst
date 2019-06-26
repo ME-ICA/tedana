@@ -1,7 +1,9 @@
 Multi-echo fMRI
 ===============
-In multi-echo (ME) fMRI, data are acquired for multiple echo times, resulting in
-multiple time series for each voxel.
+In most echo-planar image (EPI) fMRI sequences, only one brain image is acquired
+at each repetition time, at the rate of radio frequency (RF). In contrast, in
+multi-echo (ME) fMRI, data are acquired for multiple echo times, resulting in
+multiple volumes with varying levels of contrast acquired per RF.
 
 The physics of multi-echo fMRI
 ------------------------------
@@ -35,7 +37,7 @@ This allows researchers to benchmark their results.
 
 For optimally combined: Rather than analyzing single-echo time series separately,
 we can combine them into a "optimally combined time series".
-For more information on this combination, see :ref:`approach`.
+For more information on this combination, see `processing pipeline details`_.
 Optimally combined data exhibits higher SNR and improves statistical power of analyses in regions
 traditionally affected by drop-out.
 
@@ -49,7 +51,35 @@ Collecting multi-echo EPI allows us to leverage all of the information available
 as well as additional information only available when looking at signal decay across multiple TEs.
 We can use this information to denoise the optimally combined time series.
 
-.. _Pruim et al., 2015: https://www.sciencedirect.com/science/article/pii/S1053811915001822
+.. _processing pipeline details: https://tedana.readthedocs.io/en/latest/approach.html#optimal-combination
+.. _Pruim et al. (2015): https://www.sciencedirect.com/science/article/pii/S1053811915001822
+
+Recommendations on multi-echo use for someone planning a new study
+------------------------------------------------------------------
+Multi-echo fMRI acquisition sequences and analysis methods are rapidly maturing. Someone who has access
+to a multi-echo fMRI sequence should seriously consider using it. Multiple studies have shown that a
+weighted average of the echoes to optimize T2* weighting, sometimes called "optimally combined,"
+gives a reliable, modest boost in data quality. The optimal combination of echoes can currently be
+calculated in several software packages including AFNI, fMRIPrep, and tedana. In tedana, the weighted
+average can be calculated with `t2smap`_ If no other
+acquisition compromises are necessary to acquire multi-echo data, this boost is worthwhile. If other
+compromises are necessary, consider the life of the data set. If data is being acquired for a discrete
+study that will be acquired, analyzed, and published in a year or two, it might not be worth making
+compromises to acquire multi-echo data. If a data set is expected to be used for future analyses in later
+years, it is likely that more powerful approaches to multi-echo denoising will sufficiently mature and add
+even more value to a data set.
+
+Other multi-echo denoising methods, such as MEICA, the predecessor to tedana, have shown the potential for
+much greater data quality improvements, as well as the ability to more accurately separate visually similar
+signal vs noise, such as scanner based drifts vs slow changes in BOLD signal. These more powerful methods are
+still being improved, and the algorithms are still changing. Users need to have the time and knowledge to look
+at the denoising output from every run to make sure denoising worked as intended. If someone wants a push-button
+way to use multi-echo data to improve data quality, that doesn't require as deep an inspection of every output,
+stick with using the weighted average. The developers of tedana look forward to when tedana and other methods
+have sufficiently stable algorithms, which have been validated on a wide range data data sets, so that we can
+recommended the wide use of tedana.
+
+.. _t2smap: https://tedana.readthedocs.io/en/latest/usage.html#run-t2smap
 
 Acquisition Parameter Recommendations
 -------------------------------------
@@ -62,7 +92,7 @@ spatial coverage, sample rate, signal-to-noise ratio, signal drop-out, distortio
 
 The one difference with multi-echo is a slight time cost.
 For multi-echo fMRI, the shortest echo time (TE) is essentially free since it is collected in the
-gap between the radio frequency (RF) pulse and the single-echo acquisition.
+gap between the RF pulse and the single-echo acquisition.
 The second echo tends to roughly match the single-echo TE.
 Additional echoes require more time.
 For example, on a 3T MRI, if the T2* weighted TE is 30ms for single echo fMRI,
@@ -115,6 +145,22 @@ Videos
 .. _educational session from OHBM 2017: https://www.pathlms.com/ohbm/courses/5158/sections/7788/video_presentations/75977
 .. _series of lectures from the OHBM 2017 multi-echo session: https://www.pathlms.com/ohbm/courses/5158/sections/7822
 
+Available multi-echo fMRI sequences for multiple vendors
+********************************************************
+
+Information on multi-echo sequences from Siemens, GE, and Phillips will be added here.
+
+Multi-echo preprocessing software
+*********************************
+
+tedana requires data that has already been preprocessed for head motion, alignment, etc.
+More details on software packages that include preprocessing options specifically for multi-echo
+fMRI data, such as AFNI and fMRIPrep will be added here.
+
+Other software that uses multi-echo fMRI
+****************************************
+
+Information and links to other approaches for denoising multi-echo fMRI data will be added here.
 
 Datasets
 ********
