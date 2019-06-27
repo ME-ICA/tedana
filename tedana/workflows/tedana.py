@@ -9,10 +9,10 @@ os.environ['OMP_NUM_THREADS'] = '1'
 os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 
-import os.path as op
-import glob
 import shutil
 import logging
+import os.path as op
+from glob import glob
 
 import argparse
 import numpy as np
@@ -264,7 +264,18 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
 
+    # boilerplate
     refs = []
+    basename = 'report'
+    extension = 'txt'
+    repname = op.join(out_dir, (basename + '.' + extension))
+    repex = op.join(out_dir, (basename + '*'))
+    previousreps = glob(repex)
+    previousreps.sort(reverse=True)
+    for f in previousreps:
+        previousparts = op.splitext(f)
+        newname = previousparts[0] + '_old' + previousparts[1]
+        os.rename(f, newname)
 
     if debug and not quiet:
         # ensure old logs aren't over-written
@@ -272,7 +283,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         extension = 'txt'
         logname = op.join(out_dir, (basename + '.' + extension))
         logex = op.join(out_dir, (basename + '*'))
-        previouslogs = glob.glob(logex)
+        previouslogs = glob(logex)
         previouslogs.sort(reverse=True)
         for f in previouslogs:
             previousparts = op.splitext(f)
@@ -584,7 +595,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     bp_str += '\n\nReferences\n\n'
     refs.sort()
     bp_str += '\n\n'.join(refs)
-    with open(op.join(out_dir, 'report.txt'), 'w') as fo:
+    with open(repname, 'w') as fo:
         fo.write(bp_str)
 
     for handler in logging.root.handlers[:]:
