@@ -593,7 +593,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
              "nipy/nibabel. Zenodo. http://doi.org/10.5281/zenodo.3233118"]
 
     bp_str += '\n\nReferences\n\n'
-    refs.sort()
+    refs = sorted(list(set(refs)))
     bp_str += '\n\n'.join(refs)
     with open(repname, 'w') as fo:
         fo.write(bp_str)
