@@ -76,8 +76,8 @@ still being improved, and the algorithms are still changing. Users need to have 
 at the denoising output from every run to make sure denoising worked as intended. If someone wants a push-button
 way to use multi-echo data to improve data quality, that doesn't require as deep an inspection of every output,
 stick with using the weighted average. The developers of tedana look forward to when tedana and other methods
-have sufficiently stable algorithms, which have been validated on a wide range data data sets, so that we can
-recommended the wide use of tedana.
+have sufficiently stable algorithms, which have been validated on a wide range of data sets, so that we can
+recommend the wide use of tedana.
 
 .. _t2smap: https://tedana.readthedocs.io/en/latest/usage.html#run-t2smap
 
