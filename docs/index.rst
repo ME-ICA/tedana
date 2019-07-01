@@ -40,6 +40,10 @@ multi-echo functional magnetic resonance imaging (fMRI) data.
    :target: https://gitter.im/ME-ICA/tedana
    :alt: Join the chat
 
+.. image:: https://img.shields.io/badge/receive-our%20newsletter%20❤%EF%B8%8F-blueviolet.svg
+   :target: https://tinyletter.com/tedana-devs
+   :alt: Join our tinyletter mailing list
+
 About
 -----
 
