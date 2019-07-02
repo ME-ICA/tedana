@@ -129,7 +129,8 @@ Resources
 
 Journal articles
 ****************
-* | A :ref:`spreadsheet of publications` cataloguing papers using multi-echo fMRI, with information about acquisition parameters.
+* | :ref:`spreadsheet of publications` catalogues papers using multi-echo fMRI,
+    with information about acquisition parameters.
 * | `Multi-echo acquisition`_
   | Posse, NeuroImage 2012
   | Includes an historical overview of multi-echo acquisition and research

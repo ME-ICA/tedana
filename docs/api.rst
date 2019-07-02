@@ -81,7 +81,7 @@ API
 
 
 :mod:`tedana.metrics`: Computing TE-dependence metrics
-----------------------------------------------------
+--------------------------------------------------------
 
 .. automodule:: tedana.metrics
    :no-members:
@@ -96,7 +96,7 @@ API
 
    :template: module.rst
 
-   tedana.metrics.fit
+   tedana.metrics.kundu_fit
 
 .. currentmodule:: tedana
 
