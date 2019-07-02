@@ -22,6 +22,7 @@ from tedana.workflows.parser_utils import is_valid_file
 LGR = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
+
 def _get_parser():
     """
     Parses command line inputs for this function
