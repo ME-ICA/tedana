@@ -120,30 +120,45 @@ Where the benefits of more echoes balance out the additional costs is an open re
 We are not recommending specific parameter options at this time.
 There are multiple ways to balance the slight time cost from the added echoes that have
 resulted in research publications.
-We suggest new multi-echo fMRI users examine the `spreadsheet`_ of journal articles that use
+We suggest new multi-echo fMRI users examine the :ref:`spreadsheet of publications` that use
 multi-echo fMRI to identify studies with similar acquisition priorities,
 and use the parameters from those studies as a starting point.
-
-.. _spreadsheet: https://docs.google.com/spreadsheets/d/1WERojJyxFoqcg_tndUm5Kj0H1UfUc9Ban0jFGGfPaBk/edit#gid=0
 
 Resources
 ---------
 
 Journal articles
 ****************
-* A `review`_ on multi-echo fMRI and its applications
-* A `spreadsheet`_ cataloguing papers using multi-echo fMRI, with information about acquisition parameters.
+* | A :ref:`spreadsheet of publications` cataloguing papers using multi-echo fMRI, with information about acquisition parameters.
+* | `Multi-echo acquisition`_
+  | Posse, NeuroImage 2012
+  | Includes an historical overview of multi-echo acquisition and research
+* | `Multi-Echo fMRI A Review of Applications in fMRI Denoising and Analysis of BOLD Signals`_
+  |  Kundu et al, NeuroImage 2017
+  |  A review of multi-echo denoising with a focus on the MEICA algorithm
+* | `Enhanced identification of BOLD-like componenents with MESMS and MEICA`_
+  |  Olafsson et al, NeuroImage 2015
+  |  The appendix includes a good explanation of the math underlying MEICA denoising
+* | `Comparing resting state fMRI de-noising approaches using multi- and single-echo acqusitions`_
+  |  Dipasquale et al, PLoS One 2017
+  |  The appendix includes some recommendations for multi-echo acqusition
 
-.. _review: https://www.ncbi.nlm.nih.gov/pubmed/28363836
-.. _spreadsheet: https://docs.google.com/spreadsheets/d/1WERojJyxFoqcg_tndUm5Kj0H1UfUc9Ban0jFGGfPaBk/edit#gid=0
+.. _Multi-echo acquisition: https://www.ncbi.nlm.nih.gov/pubmed/22056458
+.. _Multi-Echo fMRI A Review of Applications in fMRI Denoising and Analysis of BOLD Signals: https://www.ncbi.nlm.nih.gov/pubmed/28363836
+.. _Enhanced identification of BOLD-like componenents with MESMS and MEICA: https://www.ncbi.nlm.nih.gov/pubmed/25743045
+.. _Comparing resting state fMRI de-noising approaches using multi- and single-echo acqusitions: https://www.ncbi.nlm.nih.gov/pubmed/28323821
 
 Videos
 ******
 * An `educational session from OHBM 2017`_ by Dr. Prantik Kundu about multi-echo denoising
 * A `series of lectures from the OHBM 2017 multi-echo session`_ on multiple facets of multi-echo data analysis
+* | Multi-echo fMRI lecture from the `2018 NIH FMRI Summer Course`_ by Javier Gonzalez-Castillo
+  | `Slides from 2018 NIH FMRI Summer Course`_
 
 .. _educational session from OHBM 2017: https://www.pathlms.com/ohbm/courses/5158/sections/7788/video_presentations/75977
 .. _series of lectures from the OHBM 2017 multi-echo session: https://www.pathlms.com/ohbm/courses/5158/sections/7822
+.. _2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/course/fmrif_course/2018/14_Javier_20180713
+.. _Slides from 2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/COURSE/fmrif_course/2018/content/14_Javier_20180713.pdf
 
 Available multi-echo fMRI sequences for multiple vendors
 ********************************************************
