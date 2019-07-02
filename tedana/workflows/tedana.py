@@ -444,10 +444,23 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                      "for PCA. In Advances in neural information processing "
                      "systems (pp. 598-604)."]
         elif tedpca == 'kundu':
-            alg_str = "followed by the Kundu component selection decision tree"
+            alg_str = ("followed by the Kundu component selection decision "
+                       "tree (Kundu et al., 2013)")
+            refs += ["Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
+                     "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
+                     "(2013). Integrated strategy for improving functional "
+                     "connectivity mapping using multiecho fMRI. Proceedings "
+                     "of the National Academy of Sciences, 110(40), "
+                     "16187-16192."]
         elif tedpca == 'kundu-stabilize':
             alg_str = ("followed by the 'stabilized' Kundu component "
-                       "selection decision tree")
+                       "selection decision tree (Kundu et al., 2013)")
+            refs += ["Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
+                     "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
+                     "(2013). Integrated strategy for improving functional "
+                     "connectivity mapping using multiecho fMRI. Proceedings "
+                     "of the National Academy of Sciences, 110(40), "
+                     "16187-16192."]
 
         if source_tes == -1:
             dat_str = "the optimally combined data"
@@ -489,8 +502,13 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         bp_str += (" Next, component selection was performed to identify "
                    "BOLD (TE-dependent), non-BOLD (TE-independent), and "
                    "uncertain (low-variance) components using the Kundu "
-                   "decision tree (v2.5; Kundu CITATION).")
-        refs += ["Kundu CITATION"]
+                   "decision tree (v2.5; Kundu et al., 2013).")
+        refs += ["Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
+                 "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
+                 "(2013). Integrated strategy for improving functional "
+                 "connectivity mapping using multiecho fMRI. Proceedings "
+                 "of the National Academy of Sciences, 110(40), "
+                 "16187-16192."]
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
@@ -504,8 +522,13 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
             bp_str += (" Next, component selection was performed to identify "
                        "BOLD (TE-dependent), non-BOLD (TE-independent), and "
                        "uncertain (low-variance) components using the Kundu "
-                       "decision tree (v2.5; Kundu CITATION).")
-            refs += ["Kundu CITATION"]
+                       "decision tree (v2.5; Kundu et al., 2013).")
+            refs += ["Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
+                     "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
+                     "(2013). Integrated strategy for improving functional "
+                     "connectivity mapping using multiecho fMRI. Proceedings "
+                     "of the National Academy of Sciences, 110(40), "
+                     "16187-16192."]
         else:
             comptable = pd.read_csv(ctab, sep='\t', index_col='component')
             comptable = selection.manual_selection(comptable, acc=manacc)
