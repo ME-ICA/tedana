@@ -311,6 +311,17 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
+    # check if TR is 0
+    img_t_r = ref_img.header.get_zooms()[-1]
+    if img_t_r == 0 and png:
+        raise IOError('Dataset has a TR of 0. This indicates incorrect'
+                      ' header information. To correct this, we recommend'
+                      ' using this snippet:'
+                      '\n'
+                      'https://gist.github.com/jbteves/032c87aeb080dd8de8861cb151bff5d6'
+                      '\n'
+                      'to correct your TR to the value it should be.')
+
     if mixm is not None and op.isfile(mixm):
         mixm = op.abspath(mixm)
         # Allow users to re-run on same folder
@@ -404,7 +415,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # generated from dimensionally reduced data using full data (i.e., data
         # with thermal noise)
         comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                    catd, data_oc, mmix_orig, mask, t2s, tes,
+                    catd, data_oc, mmix_orig, t2s, tes,
                     ref_img, reindex=True, label='meica_', out_dir=out_dir,
                     algorithm='kundu_v2', verbose=verbose)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
@@ -415,7 +426,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
         comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                    catd, data_oc, mmix_orig, mask, t2s, tes,
+                    catd, data_oc, mmix_orig, t2s, tes,
                     ref_img, label='meica_', out_dir=out_dir,
                     algorithm='kundu_v2', verbose=verbose)
         if ctab is None:
