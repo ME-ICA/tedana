@@ -53,6 +53,16 @@ documentation: :py:func:`tedana.workflows.t2smap_workflow`.
 
 .. _constructing ME-EPI pipelines:
 
+Run post_taskcorr
+-----------------
+This workflow has to be called after tedana has been run on your multi-echo dataset.
+It uses timeseries that are known to be noise or signal of interest, and it computes
+`Normalised Cross Correlation`_ between them and the IC signals, to automatically reject or accept
+components.
+It overwrites the original comp_table_ica.txt, adding specific rationale labels (I098 and I099).
+
+.. _Normalised Cross Correlation: https://en.wikipedia.org/wiki/Cross-correlation#Normalized_cross-correlation_(NCC)
+
 Constructing ME-EPI pipelines
 -----------------------------
 
