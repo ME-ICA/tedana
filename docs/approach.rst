@@ -217,7 +217,7 @@ This results in echo- and voxel-specific betas for each of the components.
 
 TE-dependence (:math:`R_2`) and TE-independence (:math:`S_0`) models can then
 be fit to these betas.
-For more information on how these models are estimated, see `Dependence metrics`_.
+For more information on how these models are estimated, see :ref:`dependence models`.
 These models allow calculation of F-statistics for the :math:`R_2` and :math:`S_0`
 models (referred to as :math:`\kappa` and :math:`\rho`, respectively).
 
