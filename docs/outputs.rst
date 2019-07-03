@@ -146,6 +146,10 @@ I009   rejected           Mid-Kappa artifact type A
 I010   rejected           Mid-Kappa artifact type B
 I011   ignored            ign_add0
 I012   ignored            ign_add1
+I098   rejected           post_taskcorr.py classification: rejected components due
+                          to their similarity to provided timeseries
+I099   accepted           post_taskcorr.py classification: accepted components due
+                          to their similarity to provided timeseries
 =====  =================  ========================================================
 
 Visual reports
