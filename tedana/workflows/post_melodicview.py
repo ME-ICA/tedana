@@ -7,10 +7,15 @@ import logging
 
 import sys
 import argparse
+import shutil
+import gzip
 
+import numpy as np
 import pandas as pd
 
 import os.path as op
+
+from os import mkdir
 
 LGR = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -47,147 +52,100 @@ def _get_parser():
     return parser
 
 
-def check_dimensionality(ts, mixmat):
+def create_melview_folder(tedana_dir, outdir):
     """
-    Just checking that ts is rightly oriented
+    Function to create a melodic view folder.
+    To be used for FSLeyes use.
 
     Parameters
     ----------
-    ts: T x N or N x T numpy.array
-        Array of unkown dimensionality to be compared with mixmat.
-        Its first dimension length should match mixmat.
-    mixmat: T x N numpy.array
-        Array of known dimensionality, to which ts is compared to.
-
-    Returns
-    -------
-    ts: T x N numpy.array
-        Array of known dimensionality. Its first dimension is the same as mixmat.
-
-    Raise
-    -----
-    sys.exit if ts and mixmat don't have any dimension of same length.
-
-    """
-    ntr, _ = mixmat.shape
-    ts_shape = ts.shape
-    # Add a general check on matching at least one dimension
-    if ts_shape[0] != ntr:
-        if np.size(ts.shape) == 1 or ts_shape[1] != ntr:
-            LGR.error('Input matrix has wrong dimensionality.')
-            sys.exit()
-        else:
-            LGR.warning('Wrong orientation, transposing the design matrix.')
-            ts = ts.T
-
-    return ts
-
-
-def correlate_ts(ts, mixmat, thr=0.6):
-    """
-    Run (normalised) cross correlation of the signals
-    And then selects maximum NCC to decide which one to flag.
-    Also threshold components and then save their index.
-
-    Parameters
-    ----------
-    ts: T x N numpy.array
-        Timeseries to compare components to.
-    mixmat: T x N numpy.array
-        Timeseries of MEICA components.
-    thr: float, Optional
-        Threshold for NCC value considered significant. Default = 0.6.
-
-    Returns
-    -------
-    selcomp: list
-        List of indexes of components that are significantly similar to any of the N
-        timeseries of ts.
-
-    """
-    _, ncomp = mixmat.shape
-
-    if np.size(ts.shape) != 1:
-        _, nts = ts.shape
-    else:
-        nts = 1
-
-    corr_mtx = np.empty((ncomp, nts))
-
-    for ts_num in range(0, nts):
-        for comp_num in range(0, ncomp):
-            ncc = np.correlate(mixmat[:, comp_num], ts[:, ts_num], mode='same')
-            corr_mtx[comp_num, ts_num] = np.max(ncc)
-
-    thr_mtx = corr_mtx > thr
-    mix_mask = thr_mtx.any(axis=1)
-    selcomp = [i for i, x in enumerate(mix_mask) if x]
-
-    return selcomp
-
-
-def modify_comp_table(ctab_fullpath, selcomp, flag='accepted'):
-    """
-    Function to change flag of components in the components table.
-
-    Parameters
-    ----------
-    ctab_fullpath: string
-        Full path to components table as of tedana output.
-        !!! It will be overwritten !!!
-    selcomp: list
-        List of indexes of components to be flagged with flag.
-    flag: string, Optional
-        Flag to change the label of the components with index
-        selcomp, in the components table.
+    tedana_dir: string
+        Full path to the tedana output folder.
+    outdir: string
+        Full path to where the melodic folder should be
 
     Note
     ----
-    The file output is the same ctab_fullpath
+    Output will be a me.ica folder. See:
+    https://users.fmrib.ox.ac.uk/~paulmc/fsleyes/userdoc/latest/ic_classification.html#loading-a-melodic-analysis
 
     """
 
-    comptable = pd.read_csv(ctab_fullpath, sep='\t', index_col='component')
+    ctab = op.join(tedana_dir, 'comp_table_ica.txt')
+    mmat = op.join(tedana_dir, 'meica_mix.1D')
+    fvol = op.join(tedana_dir, 'betas_OC.nii')
+    out_fvol = op.join(outdir, 'melodic_IC.nii.gz')
+    out_mmat = op.join(outdir, 'melodic_mix')
+    out_ftmat = op.join(outdir, 'melodic_FTmix')
+    out_ctab = op.join(outdir, 'melodic_class')
 
-    comptable['original_classification'] = comptable['classification']
-    comptable['original_rationale'] = comptable['rationale']
-    LGR.info('Overriding original classifications with correlation with'
-             'input timeseries (%s components)', flag)
-    comptable.loc[selcomp, 'classification'] = flag
-    if flag == 'accepted':
-        comptable.loc[selcomp, 'rationale'] = 'I099'
+    if not op.exists(mmat):
+        LGR.error('%s not found. Check tedana\'s output folder' % mmat)
+        sys.exit()
+    elif not op.exists(ctab):
+        LGR.error('%s not found. Check tedana\'s output folder' % ctab)
+        sys.exit()
+
+    if op.exists(outdir):
+        shutil.rmtree(outdir)
+        LGR.warning('Removing %s' % outdir)
+
+    mkdir(outdir)
+    LGR.info('The files will be stored in %s' % outdir)
+
+    if not op.exists(fvol):
+        fvol = op.join(tedana_dir, 'betas_OC.nii.gz')
+
+        if not op.exists(fvol):
+            LGR.error('%s not found. Check tedana\'s output folder' % fvol)
+            sys.exit()
+
+        LGR.info('Copying betas_OC in me.ica folder')
+        shutil.copyfile(fvol,out_fvol)
     else:
-        comptable.loc[selcomp, 'rationale'] = 'I098'
+        LGR.info('Compressing and copying betas_OC in me.ica folder')
+        with open(fvol, 'rb') as f_in:
+            with gzip.open(out_fvol, 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
 
-    LGR.info('Overwriting original component table.')
-    comptable.to_csv(ctab_fullpath, sep='\t', index_label='component')
+    LGR.info('Copying meica_mix in me.ica folder and generating melodic_FTmix')
+    ts = np.genfromtxt(mmat)
+    power_spectrum = np.abs(np.fft.rfft(ts.T)) ** 2
 
+    np.savetxt(out_ftmat, power_spectrum.T, fmt='%.08e')
+    np.savetxt(out_mmat, ts, fmt='%.08e')
 
-def check_task_corr(mixmat, ctab_fullpath, ts, thr, flag='accepted'):
-    """
-    This function is the workflow of the component selection.
-    """
-    norm_ts = import_file(ts)
-    checked_ts = check_dimensionality(norm_ts, mixmat)
-    selcomp = correlate_ts(checked_ts, mixmat, thr)
-    if selcomp:
-        modify_comp_table(ctab_fullpath, selcomp, flag)
-    else:
-        LGR.info('No component to flag as %s', flag)
+    LGR.info('Reading comp_table_ica and extracting labels')
+    comptable = pd.read_csv(ctab, sep='\t')
+
+    comptable = comptable.drop(labels=['kappa', 'rho', 'variance explained',
+                                       'normalized variance explained',
+                                       'countsigFR2', 'countsigFS0',
+                                       'dice_FR2', 'dice_FS0', 'countnoise',
+                                       'signal-noise_t', 'signal-noise_p',
+                                       'd_table_score', 'd_table_score_scrub'], axis=1)
+    comptable['true'] = 'True'
+    comptable.component = comptable.component + 1
+
+    compstr = str(list(comptable.component))
+
+    f = open(out_ctab, 'w+')
+    f.write('.\n')
+    comptable.to_csv(f, header=False, index=False)
+    f.write('%s' % compstr)
+    f.close()
+    LGR.info('Folder ready. Open with \"fsleyes -ad -s melodic %s\"' % outdir)
 
 
 def _main(argv=None):
     options = _get_parser().parse_args(argv)
-    ctab_fullpath = op.join(options.tedana_dir, 'comp_table_ica.txt')
-    mixm_fullpath = op.join(options.tedana_dir, 'meica_mix.1D')
 
-    mixmat = import_file(mixm_fullpath)
+    if options.out_dir is None:
+        outdir = op.join(options.tedana_dir,'me.ica')
+    else:
+        outdir = op.join(options.out_dir,'me.ica')
 
-    if options.bad_ts is not None:
-        check_task_corr(mixmat, ctab_fullpath, options.bad_ts, options.thr, flag='rejected')
-
-    if options.good_ts is not None:
-        check_task_corr(mixmat, ctab_fullpath, options.good_ts, options.thr, flag='accepted')
+    create_melview_folder(options.tedana_dir, outdir)
 
 
 if __name__ == '__main__':
