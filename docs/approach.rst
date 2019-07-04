@@ -66,6 +66,11 @@ Monoexponential decay model fit
 ```````````````````````````````
 The next step is to fit a monoexponential decay model to the data in order to
 estimate voxel-wise :math:`T_{2}^*` and :math:`S_0`.
+While :math:`T_{2}^*` and :math:`S_0` in fact fluctuate over time, estimating
+them on a volume-by-volume basis with only a small number of echoes is not
+feasible (i.e., the estimates would be extremely noisy).
+As such, we estimate average :math:`T_{2}^*` and :math:`S_0` maps and use those
+throughout the workflow.
 
 In order to make it easier to fit the decay model to the data, ``tedana``
 transforms the data.
@@ -212,6 +217,7 @@ This results in echo- and voxel-specific betas for each of the components.
 
 TE-dependence (:math:`R_2`) and TE-independence (:math:`S_0`) models can then
 be fit to these betas.
+For more information on how these models are estimated, see :ref:`dependence models`.
 These models allow calculation of F-statistics for the :math:`R_2` and :math:`S_0`
 models (referred to as :math:`\kappa` and :math:`\rho`, respectively).
 
