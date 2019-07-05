@@ -162,7 +162,7 @@ Images are created and placed within the output directory, in a folder labeled
 These reports consist of three main types of images.
 
 Component Images
-````````````
+````````````````
 .. image:: /_static/example_good_component.png
   :align: center
 
@@ -199,13 +199,13 @@ Tip: Look for your fundamental task frequencies here!
 
 Above, you can review a component that was rejected.
 In this case, the subject moved each time the task was performed - which
-affected single slices of the fMRI volume. 
+affected single slices of the fMRI volume.
 This scan used multiband imaging (collecting multiple slices at once), so
 the motion artifact occurs in more than once slice.
 
 
 Kappa vs Rho Scatter Plot
-````````````
+`````````````````````````
 .. image:: /_static/example_Kappa_vs_Rho_Scatter.png
   :align: center
 
@@ -216,7 +216,7 @@ This can be useful for getting a big picture view of your data or for comparing
 denoising performance with various fMRI sequences.
 
 Double Pie Chart
-````````````
+````````````````
 .. image:: /_static/example_Component_Overview.png
   :align: center
 
@@ -226,6 +226,5 @@ ring.
 If a low amount of variance is explained, this will be shown as a gap in the
 ring.
 
-Tip: Sometimes large variance is due to singular components, which can be easily
-seen here.
- 
+Tip: Sometimes large variance is due to singular components, which can be
+easily seen here.
