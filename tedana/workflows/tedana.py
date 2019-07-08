@@ -615,6 +615,15 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
              "Cipollini, B., McCarthy, P., … freec84. (2019, May 28). "
              "nipy/nibabel. Zenodo. http://doi.org/10.5281/zenodo.3233118"]
 
+    bp_str += ("\n\nThis workflow also used the Dice similarity index "
+               "(Dice, 1945; Sørensen, 1948).")
+    refs += ["Dice, L. R. (1945). Measures of the amount of ecologic "
+             "association between species. Ecology, 26(3), 297-302.",
+             "Sørensen, T. J. (1948). A method of establishing groups of "
+             "equal amplitude in plant sociology based on similarity of "
+             "species content and its application to analyses of the "
+             "vegetation on Danish commons. I kommission hos E. Munksgaard."]
+
     bp_str += '\n\nReferences\n\n'
     refs = sorted(list(set(refs)))
     bp_str += '\n\n'.join(refs)
