@@ -76,7 +76,7 @@ In the other, only R2* will fluctuate.
   Real signal from each echo will be contaminated with random noise and will
   have influences from both S0 and R2*.
 
-.. image:: /_static/simulated_fluctuations.png
+.. image:: /_static/b01_simulated_fluctuations.png
 
 We can see that :math:`{\Delta}S(TE_k)` has very different curves for the two
 simulated datasets.
@@ -88,7 +88,7 @@ We then fit our TE-dependence and TE-independence models to the
 :math:`{\Delta}S(TE_k)` data, which gives us predicted data for each model for
 each dataset.
 
-.. image:: /_static/model_fits.png
+.. image:: /_static/b02_model_fits.png
 
 As expected, the S0 model fits perfectly to the S0-fluctuating dataset, while
 the R2* model fits quite well to the R2*-fluctuating dataset.

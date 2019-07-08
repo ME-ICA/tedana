@@ -25,13 +25,13 @@ Multi-echo data
 Here are the echo-specific time series for a single voxel in an example
 resting-state scan with 5 echoes.
 
-.. image:: /_static/01_echo_timeseries.png
+.. image:: /_static/a01_echo_timeseries.png
   :align: center
 
 The values across volumes for this voxel scale with echo time in a predictable
 manner.
 
-.. image:: /_static/02_echo_value_distributions.png
+.. image:: /_static/a02_echo_value_distributions.png
   :width: 400 px
   :align: center
 
@@ -58,7 +58,7 @@ value for that voxel in the adaptive mask.
     sometimes identifies almost the entire bounding box as "brain", and
     ``compute_epi_mask`` restricts analysis to a more reasonable area.
 
-.. image:: /_static/03_adaptive_mask.png
+.. image:: /_static/a03_adaptive_mask.png
   :width: 600 px
   :align: center
 
@@ -77,7 +77,7 @@ transforms the data.
 The BOLD data are transformed as :math:`log(|S|+1)`, where :math:`S` is the BOLD signal.
 The echo times are also multiplied by -1.
 
-.. image:: /_static/04_echo_log_value_distributions.png
+.. image:: /_static/a04_echo_log_value_distributions.png
   :width: 400 px
   :align: center
 
@@ -97,7 +97,7 @@ this voxel), so the line is fit to all available data.
     The resulting "full" :math:`T_{2}^*` and :math:`S_0` maps are used to generate the
     optimally combined data.
 
-.. image:: /_static/05_loglinear_regression.png
+.. image:: /_static/a05_loglinear_regression.png
   :width: 400 px
   :align: center
 
@@ -112,13 +112,13 @@ slope (:math:`B_{1}`), respectively:
 The resulting values can be used to show the fitted monoexponential decay model
 on the original data.
 
-.. image:: /_static/06_monoexponential_decay_model.png
+.. image:: /_static/a06_monoexponential_decay_model.png
   :width: 400 px
   :align: center
 
 We can also see where :math:`T_{2}^*` lands on this curve.
 
-.. image:: /_static/07_monoexponential_decay_model_with_t2.png
+.. image:: /_static/a07_monoexponential_decay_model_with_t2.png
   :width: 400 px
   :align: center
 
@@ -135,21 +135,21 @@ The echoes are weighted according to the formula
 The weights are then normalized across echoes.
 For the example voxel, the resulting weights are:
 
-.. image:: /_static/08_optimal_combination_echo_weights.png
+.. image:: /_static/a08_optimal_combination_echo_weights.png
   :width: 400 px
   :align: center
 
 The distribution of values for the optimally combined data lands somewhere
 between the distributions for other echoes.
 
-.. image:: /_static/09_optimal_combination_value_distributions.png
+.. image:: /_static/a09_optimal_combination_value_distributions.png
   :width: 400 px
   :align: center
 
 The time series for the optimally combined data also looks like a combination
 of the other echoes (which it is).
 
-.. image:: /_static/10_optimal_combination_timeseries.png
+.. image:: /_static/a10_optimal_combination_timeseries.png
   :align: center
 
 .. note::
@@ -173,7 +173,7 @@ TEDPCA applies PCA to the optimally combined data in order to decompose it into 
 time series.
 Here we can see time series for some example components (we don't really care about the maps):
 
-.. image:: /_static/11_pca_component_timeseries.png
+.. image:: /_static/a11_pca_component_timeseries.png
 
 These components are subjected to component selection, the specifics of which
 vary according to algorithm.
@@ -198,7 +198,7 @@ After component selection is performed, the retained components and their
 associated betas are used to reconstruct the optimally combined data, resulting
 in a dimensionally reduced version of the dataset.
 
-.. image:: /_static/12_pca_reduced_data.png
+.. image:: /_static/a12_pca_reduced_data.png
 
 TEDICA
 ``````
@@ -207,7 +207,7 @@ order to identify and remove TE-independent (i.e., non-BOLD noise) components.
 The dimensionally reduced optimally combined data are first subjected to ICA in
 order to fit a mixing matrix to the whitened data.
 
-.. image:: /_static/13_ica_component_timeseries.png
+.. image:: /_static/a13_ica_component_timeseries.png
 
 Linear regression is used to fit the component time series to each voxel in each
 echo from the original, echo-specific data.
@@ -221,15 +221,15 @@ For more information on how these models are estimated, see :ref:`dependence mod
 These models allow calculation of F-statistics for the :math:`R_2` and :math:`S_0`
 models (referred to as :math:`\kappa` and :math:`\rho`, respectively).
 
-.. image:: /_static/14_te_dependence_models_component_0.png
+.. image:: /_static/a14_te_dependence_models_component_0.png
   :width: 400 px
   :align: center
 
-.. image:: /_static/14_te_dependence_models_component_1.png
+.. image:: /_static/a14_te_dependence_models_component_1.png
   :width: 400 px
   :align: center
 
-.. image:: /_static/14_te_dependence_models_component_2.png
+.. image:: /_static/a14_te_dependence_models_component_2.png
   :width: 400 px
   :align: center
 
@@ -241,7 +241,7 @@ The actual decision tree is dependent on the component selection algorithm emplo
 applied to each of the metrics) and `kundu_v3_2` (which trains a classifier to
 select components).
 
-.. image:: /_static/15_denoised_data_timeseries.png
+.. image:: /_static/a15_denoised_data_timeseries.png
 
 Removal of spatially diffuse noise (optional)
 `````````````````````````````````````````````
@@ -257,7 +257,7 @@ regression (GSR), T1c-GSR, anatomical CompCor, Go Decomposition (GODEC), and
 robust PCA.
 Currently, ``tedana`` implements GSR and T1c-GSR.
 
-.. image:: /_static/16_t1c_denoised_data_timeseries.png
+.. image:: /_static/a16_t1c_denoised_data_timeseries.png
 
 .. _nilearn.masking.compute_epi_mask: https://nilearn.github.io/modules/generated/nilearn.masking.compute_epi_mask.html
 .. _Power et al. (2018): http://www.pnas.org/content/early/2018/02/07/1720985115.short
