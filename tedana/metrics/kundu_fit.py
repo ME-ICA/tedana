@@ -249,7 +249,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
                 np.squeeze(utils.unmask(F_R2_maps[:, i_comp], mask)))
             F_R2_clmaps[:, i_comp] = utils.threshold_map(
                 ccimg, min_cluster_size=csize, threshold=fmin, mask=mask,
-                binarize=True).astype(bool)
+                binarize=True)
             countsigFR2 = F_R2_clmaps[:, i_comp].sum()
 
             ccimg = io.new_nii_like(
@@ -257,7 +257,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
                 np.squeeze(utils.unmask(F_S0_maps[:, i_comp], mask)))
             F_S0_clmaps[:, i_comp] = utils.threshold_map(
                 ccimg, min_cluster_size=csize, threshold=fmin, mask=mask,
-                binarize=True).astype(bool)
+                binarize=True)
             countsigFS0 = F_S0_clmaps[:, i_comp].sum()
 
             # Cluster-extent threshold and binarize Z-maps with CDT of p < 0.05
@@ -266,7 +266,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
                 np.squeeze(utils.unmask(Z_maps[:, i_comp], mask)))
             Z_clmaps[:, i_comp] = utils.threshold_map(
                 ccimg, min_cluster_size=csize, threshold=1.95, mask=mask,
-                binarize=True).astype(bool)
+                binarize=True)
 
             # Cluster-extent threshold and binarize ranked signal-change map
             ccimg = io.new_nii_like(
@@ -275,11 +275,11 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
             Br_R2_clmaps[:, i_comp] = utils.threshold_map(
                 ccimg, min_cluster_size=csize,
                 threshold=(max(tsoc_Babs.shape) - countsigFR2), mask=mask,
-                binarize=True).astype(bool)
+                binarize=True)
             Br_S0_clmaps[:, i_comp] = utils.threshold_map(
                 ccimg, min_cluster_size=csize,
                 threshold=(max(tsoc_Babs.shape) - countsigFS0), mask=mask,
-                binarize=True).astype(bool)
+                binarize=True)
         del ccimg, tsoc_Babs
 
         if algorithm == 'kundu_v2':
