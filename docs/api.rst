@@ -1,5 +1,11 @@
+.. _api_ref:
+
+.. currentmodule:: tedana
+
 API
 ===
+
+.. _api_workflows_ref:
 
 :mod:`tedana.workflows`: Common workflows
 --------------------------------------------------
@@ -8,17 +14,17 @@ API
    :no-members:
    :no-inherited-members:
 
-.. autosummary:: tedana.workflows
+.. currentmodule:: tedana.workflows
+
+.. autosummary::
    :template: function.rst
    :toctree: generated/
 
    tedana.workflows.tedana_workflow
    tedana.workflows.t2smap_workflow
 
-.. currentmodule:: tedana
 
-.. _calibration_ref:
-
+.. _api_decay_ref:
 
 :mod:`tedana.decay`: Modeling signal decay across echoes
 --------------------------------------------------------
@@ -27,17 +33,17 @@ API
    :no-members:
    :no-inherited-members:
 
-.. autosummary:: tedana.decay
+.. currentmodule:: tedana.decay
+
+.. autosummary::
    :template: function.rst
    :toctree: generated/
 
    tedana.decay.fit_decay
    tedana.decay.fit_decay_ts
 
-.. currentmodule:: tedana
 
-.. _calibration_ref:
-
+.. _api_combine_ref:
 
 :mod:`tedana.combine`: Combining time series across echoes
 ----------------------------------------------------------
@@ -46,16 +52,16 @@ API
    :no-members:
    :no-inherited-members:
 
-.. autosummary:: tedana.combine
+.. currentmodule:: tedana.combine
+
+.. autosummary::
    :toctree: generated/
    :template: function.rst
 
    tedana.combine.make_optcom
 
-.. currentmodule:: tedana
 
-.. _calibration_ref:
-
+.. _api_decomposition_ref:
 
 :mod:`tedana.decomposition`: Data decomposition
 --------------------------------------------------
@@ -64,21 +70,17 @@ API
    :no-members:
    :no-inherited-members:
 
-.. autosummary:: tedana.decomposition
+.. currentmodule:: tedana.decomposition
+
+.. autosummary::
    :toctree: generated/
    :template: function.rst
 
    tedana.decomposition.tedpca
    tedana.decomposition.tedica
 
-   :template: module.rst
 
-   tedana.decomposition._utils
-
-.. currentmodule:: tedana
-
-.. _calibration_ref:
-
+.. _api_metrics_ref:
 
 :mod:`tedana.metrics`: Computing TE-dependence metrics
 --------------------------------------------------------
@@ -87,21 +89,17 @@ API
    :no-members:
    :no-inherited-members:
 
-.. autosummary:: tedana.metrics
+.. currentmodule:: tedana.metrics
+
+.. autosummary::
    :toctree: generated/
    :template: function.rst
 
    tedana.metrics.dependence_metrics
    tedana.metrics.kundu_metrics
 
-   :template: module.rst
 
-   tedana.metrics.kundu_fit
-
-.. currentmodule:: tedana
-
-.. _calibration_ref:
-
+.. _api_selection_ref:
 
 :mod:`tedana.selection`: Component selection
 --------------------------------------------------
@@ -110,21 +108,17 @@ API
    :no-members:
    :no-inherited-members:
 
-.. autosummary:: tedana.selection
+.. currentmodule:: tedana.selection
+
+.. autosummary::
    :toctree: generated/
    :template: function.rst
 
    tedana.selection.manual_selection
    tedana.selection.kundu_selection_v2
 
-   :template: module.rst
 
-   tedana.selection._utils
-
-.. currentmodule:: tedana
-
-.. _calibration_ref:
-
+.. _api_gscontrol_ref:
 
 :mod:`tedana.gscontrol`: Global signal control
 --------------------------------------------------
@@ -133,28 +127,29 @@ API
    :no-members:
    :no-inherited-members:
 
-.. autosummary:: tedana.gscontrol
+.. currentmodule:: tedana.gscontrol
+
+.. autosummary::
    :toctree: generated/
    :template: function.rst
 
    tedana.gscontrol.gscontrol_raw
    tedana.gscontrol.gscontrol_mmix
 
-.. currentmodule:: tedana
 
-.. _calibration_ref:
-
+.. _api_io_ref:
 
 :mod:`tedana.io`: Reading and writing data
---------------------------------------------------
+------------------------------------------
 
 .. automodule:: tedana.io
    :no-members:
    :no-inherited-members:
 
-.. autosummary:: tedana.io
-   :toctree: generated/
+.. currentmodule:: tedana.io
 
+.. autosummary::
+   :toctree: generated/
    :template: function.rst
 
    tedana.io.split_ts
@@ -166,10 +161,8 @@ API
    tedana.io.writeresults
    tedana.io.writeresults_echoes
 
-.. currentmodule:: tedana
 
-.. _calibration_ref:
-
+.. _api_stats_ref:
 
 :mod:`tedana.stats`: Statistical functions
 --------------------------------------------------
@@ -178,7 +171,9 @@ API
    :no-members:
    :no-inherited-members:
 
-.. autosummary:: tedana.stats
+.. currentmodule:: tedana.stats
+
+.. autosummary::
    :toctree: generated/
    :template: function.rst
 
@@ -186,21 +181,20 @@ API
    tedana.stats.computefeats2
    tedana.stats.getfbounds
 
-.. currentmodule:: tedana
 
-.. _calibration_ref:
-
+.. _api_utils_ref:
 
 :mod:`tedana.utils`: Utility functions
---------------------------------------------------
+--------------------------------------
 
 .. automodule:: tedana.utils
    :no-members:
    :no-inherited-members:
 
-.. autosummary:: tedana.utils
-   :toctree: generated/
+.. currentmodule:: tedana.utils
 
+.. autosummary::
+   :toctree: generated/
    :template: function.rst
 
    tedana.utils.andb
@@ -208,7 +202,3 @@ API
    tedana.utils.load_image
    tedana.utils.make_adaptive_mask
    tedana.utils.unmask
-
-.. currentmodule:: tedana
-
-.. _calibration_ref:
