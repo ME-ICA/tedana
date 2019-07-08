@@ -96,3 +96,35 @@ the R2* model fits quite well to the R2*-fluctuating dataset.
 The actual model fits can be calculated as F-statistics.
 Then, the F-statistics per voxel are averaged across voxels into the Kappa and
 Rho pseudo-F-statistics.
+
+Now let us see how this extends to time series, components, and component
+parameter estimates.
+
+We have the means to simulate T2*- and S0-based fluctuations, so here we have
+compiled two component time series- one T2*-based and one S0-based.
+Both time series share the same level of percent signal change (a standard
+deviation equivalent to 5% of the mean), although the mean S0 (16000) is very
+different from the mean T2* (30).
+We can then average those two components with different weights to create
+components that are T2*- or S0-based to various degrees.
+In this case, both T2* and S0 contribute equally to the component.
+
+.. image:: /_static/b03_component_timeseries.png
+
+We also simulate multi-echo data for a single voxel with both the T2* and S0
+fluctuations.
+Here we show time series for a subset of echo times.
+
+.. image:: /_static/b04_echo_timeseries.png
+
+We then fit parameter estimates for echo data against the component time
+series.
+We can compare predicted T2* and S0 model values against the parameter estimates
+in order to calculate single-voxel :math:`\rho` and :math:`\kappa` values.
+You may notice that the metric values are extremely high, due to the inflated
+degrees of freedom resulting from using so many echoes in the simulations.
+You may also notice that, despite the fact that T2* and S0 fluctuate the same
+amount and that both contributed equally to the component, :math:`\rho` is
+much higher than :math:`\kappa`.
+
+.. image:: /_static/b05_component_model_fits.png
