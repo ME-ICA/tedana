@@ -121,7 +121,7 @@ We then fit parameter estimates for echo data against the component time
 series.
 We can compare predicted T2* and S0 model values against the parameter estimates
 in order to calculate single-voxel :math:`\rho` and :math:`\kappa` values.
-You may notice that the metric values are extremely high, due to the inflated
+Note that the metric values are extremely high, due to the inflated
 degrees of freedom resulting from using so many echoes in the simulations.
 You may also notice that, despite the fact that T2* and S0 fluctuate the same
 amount and that both contributed equally to the component, :math:`\rho` is
