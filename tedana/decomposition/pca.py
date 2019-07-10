@@ -217,7 +217,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     elif low_mem:
         voxel_comp_weights, varex, comp_ts = low_mem_pca(data_z)
     else:
-        ppca = PCA(copy=False)
+        ppca = PCA(copy=False, n_components=(n_vols - 1))
         ppca.fit(data_z)
         comp_ts = ppca.components_.T
         varex = ppca.explained_variance_

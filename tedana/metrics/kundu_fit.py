@@ -148,7 +148,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         varex[i_comp] = (tsoc_pes[:, i_comp]**2).sum() / totvar * 100.
         varex_norm[i_comp] = (WTS[:, i_comp]**2).sum() / totvar_norm * 100.
 
-        for j_echo in np.unique(adaptive_mask):
+        for j_echo in np.unique(adaptive_mask[adaptive_mask >= 3]):
             mask_idx = adaptive_mask == j_echo
             alpha = (np.abs(comp_pes[:j_echo])**2).sum(axis=0)
 
@@ -197,12 +197,15 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         comptable = comptable[sort_idx, :]
         mmix_new = mmix[:, sort_idx]
         pes = pes[..., sort_idx]
-        pred_R2_maps = pred_R2_maps[:, :, sort_idx]
-        pred_S0_maps = pred_S0_maps[:, :, sort_idx]
         F_R2_maps = F_R2_maps[:, sort_idx]
         F_S0_maps = F_S0_maps[:, sort_idx]
         Z_maps = Z_maps[:, sort_idx]
         tsoc_Babs = tsoc_Babs[:, sort_idx]
+
+        if verbose:
+            pred_R2_maps = pred_R2_maps[:, :, sort_idx]
+            pred_S0_maps = pred_S0_maps[:, :, sort_idx]
+
         if algorithm == 'kundu_v3':
             WTS = WTS[:, sort_idx]
             PSC = PSC[:, sort_idx]
@@ -227,7 +230,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         io.filewrite(utils.unmask(Z_maps ** 2., mask),
                      op.join(out_dir, '{0}metric_weights.nii'.format(label)),
                      ref_img)
-    del pred_R2_maps, pred_S0_maps
+        del pred_R2_maps, pred_S0_maps
 
     comptable = pd.DataFrame(comptable,
                              columns=['kappa', 'rho',
