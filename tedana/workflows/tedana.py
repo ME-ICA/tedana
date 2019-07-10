@@ -138,7 +138,7 @@ def _get_parser():
     optional.add_argument('--seed',
                           dest='fixed_seed',
                           type=int,
-                          help=('Value passed to repr(mdp.numx_rand.seed()). '
+                          help=('Value used for random initialization of ICA algorithm. '
                                 'Set to an integer value for reproducible ICA results. '
                                 'Set to -1 for varying results across ICA calls. '
                                 'Default=42.'),
@@ -169,6 +169,13 @@ def _get_parser():
                                 'convergence is achieved before maxrestart '
                                 'attempts, ICA will finish early.'),
                           default=10)
+    optional.add_argument('--lowmem',
+                          dest='low_mem',
+                          action='store_true',
+                          help=('Enables low-memory processing, including the '
+                                'use of IncrementalPCA. May increase workflow '
+                                'duration.'),
+                          default=False)
     optional.add_argument('--debug',
                           dest='debug',
                           help=argparse.SUPPRESS,
@@ -187,7 +194,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     tedort=False, gscontrol=None, tedpca='mle',
                     source_tes=-1, combmode='t2s', verbose=False, stabilize=False,
                     out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
-                    debug=False, quiet=False, png=False, png_cmap='coolwarm'):
+                    debug=False, quiet=False, png=False, png_cmap='coolwarm',
+                    low_mem=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -249,6 +257,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         fixed seed will be updated and ICA will be run again. If convergence
         is achieved before maxrestart attempts, ICA will finish early.
         Default is 10.
+    low_mem : :obj:`bool`, optional
+        Enables low-memory processing, including the use of IncrementalPCA.
+        May increase workflow duration. Default is False.
     debug : :obj:`bool`, optional
         Whether to run in debugging mode or not. Default is False.
     quiet : :obj:`bool`, optional
@@ -437,7 +448,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                                                 tes=tes, algorithm=tedpca,
                                                 source_tes=source_tes,
                                                 kdaw=10., rdaw=1.,
-                                                out_dir=out_dir, verbose=verbose)
+                                                out_dir=out_dir,
+                                                verbose=verbose,
+                                                low_mem=low_mem)
         if tedpca == 'mle':
             alg_str = "using MLE dimensionality estimation (Minka, 2001)"
             refs += ["Minka, T. P. (2001). Automatic choice of dimensionality "

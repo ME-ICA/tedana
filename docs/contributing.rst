@@ -95,7 +95,7 @@ We understand that it is possible to build the software to provide more
 options within the existing framework, but we have chosen to focus on `the 80 percent use cases`_.
 
 You can provide feedback on this philosophy through any of the channels
-listed on the ``tedana`` :doc:`support` page.
+listed on the ``tedana`` :ref:`support_ref` page.
 
 .. _an LGPL2 license: https://github.com/ME-ICA/tedana/blob/master/LICENSE
 .. _the 80 percent use cases: https://en.wikipedia.org/wiki/Pareto_principle#In_software
@@ -112,7 +112,7 @@ prioritize what work needs to be completed.
 
 We have outlined our goals for ``tedana`` in our :doc:`roadmap`,
 which we encourage all contributors to read and give feedback on.
-Feedback can be provided through any of the channels listed on our :doc:`support` page.
+Feedback can be provided through any of the channels listed on our :ref:`support_ref` page.
 
 In order to more directly map between our :doc:`roadmap` and ongoing `project issues`_,
 we have also created `milestones in our github repository`_.
