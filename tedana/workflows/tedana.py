@@ -398,7 +398,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         io.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
 
     # optimally combine data
-    data_oc = combine.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
+    data_oc = combine.make_optcom(catd, tes, masksum, t2s=t2sG, combmode=combmode)
 
     # regress out global signal unless explicitly not desired
     if 'gsr' in gscontrol:
@@ -407,7 +407,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if mixm is None:
         # Identify and remove thermal noise from data
         dd, n_components = decomposition.tedpca(catd, data_oc, combmode, mask,
-                                                t2s, t2sG, ref_img,
+                                                masksum, t2sG, ref_img,
                                                 tes=tes, algorithm=tedpca,
                                                 source_tes=source_tes,
                                                 kdaw=10., rdaw=1.,
@@ -428,7 +428,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # generated from dimensionally reduced data using full data (i.e., data
         # with thermal noise)
         comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                    catd, data_oc, mmix_orig, t2s, tes,
+                    catd, data_oc, mmix_orig, masksum, tes,
                     ref_img, reindex=True, label='meica_', out_dir=out_dir,
                     algorithm='kundu_v2', verbose=verbose)
         np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
@@ -439,7 +439,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
         comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                    catd, data_oc, mmix_orig, t2s, tes,
+                    catd, data_oc, mmix_orig, masksum, tes,
                     ref_img, label='meica_', out_dir=out_dir,
                     algorithm='kundu_v2', verbose=verbose)
         if ctab is None:

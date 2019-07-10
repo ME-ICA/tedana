@@ -77,7 +77,7 @@ def _combine_paid(data, tes):
     return combined
 
 
-def make_optcom(data, tes, mask, t2s=None, combmode='t2s', verbose=True):
+def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True):
     """
     Optimally combine BOLD data across TEs.
 
@@ -87,8 +87,8 @@ def make_optcom(data, tes, mask, t2s=None, combmode='t2s', verbose=True):
         Concatenated BOLD data.
     tes : (E,) :obj:`numpy.ndarray`
         Array of TEs, in seconds.
-    mask : (S,) :obj:`numpy.ndarray`
-        Brain mask in 3D array.
+    adaptive_mask : (S,) :obj:`numpy.ndarray`
+        Brain adaptive_mask in 3D array.
     t2s : (S [x T]) :obj:`numpy.ndarray` or None, optional
         Estimated T2* values. Only required if combmode = 't2s'.
         Default is None.
@@ -122,12 +122,12 @@ def make_optcom(data, tes, mask, t2s=None, combmode='t2s', verbose=True):
                          'dimension of input data: {0} != '
                          '{1}'.format(len(tes), data.shape[1]))
 
-    if mask.ndim != 1:
+    if adaptive_mask.ndim != 1:
         raise ValueError('Mask is not 1D')
-    elif mask.shape[0] != data.shape[0]:
+    elif adaptive_mask.shape[0] != data.shape[0]:
         raise ValueError('Mask and data do not have same number of '
-                         'voxels/samples: {0} != {1}'.format(mask.shape[0],
-                                                             data.shape[0]))
+                         'voxels/samples: {0} != {1}'.format(
+                            adaptive_mask.shape[0], data.shape[0]))
 
     if combmode not in ['t2s', 'paid']:
         raise ValueError("Argument 'combmode' must be either 't2s' or 'paid'")
@@ -138,23 +138,32 @@ def make_optcom(data, tes, mask, t2s=None, combmode='t2s', verbose=True):
         LGR.warning("Argument 't2s' is not required if 'combmode' is 'paid'. "
                     "'t2s' array will not be used.")
 
-    data = data[mask, :, :]  # mask out empty voxels/samples
-    tes = np.array(tes)[np.newaxis, ...]  # (1 x E) array_like
-
     if combmode == 'paid':
-        LGR.info('Optimally combining data with parallel-acquired inhomogeneity '
-                 'desensitized (PAID) method')
-        combined = _combine_paid(data, tes)
+        LGR.info('Optimally combining data with parallel-acquired '
+                 'inhomogeneity desensitized (PAID) method')
     else:
         if t2s.ndim == 1:
             msg = 'Optimally combining data with voxel-wise T2 estimates'
         else:
             msg = ('Optimally combining data with voxel- and volume-wise T2 '
                    'estimates')
-        t2s = t2s[mask, ..., np.newaxis]  # mask out empty voxels/samples
-
         LGR.info(msg)
-        combined = _combine_t2s(data, tes, t2s)
+
+    mask = adaptive_mask >= 3
+    data = data[mask, :, :]  # mask out empty voxels/samples
+    tes = np.array(tes)[np.newaxis, ...]  # (1 x E) array_like
+    combined = np.zeros((data.shape[0], data.shape[2]))
+    for echo in np.unique(adaptive_mask[mask]):
+        echo_idx = adaptive_mask[mask] == echo
+
+        if combmode == 'paid':
+            combined[echo_idx, :] = _combine_paid(data[echo_idx, :echo, :],
+                                                  tes[:echo])
+        else:
+            t2s_ = t2s[mask, ..., np.newaxis]  # mask out empty voxels/samples
+
+            combined[echo_idx, :] = _combine_t2s(
+                data[echo_idx, :echo, :], tes[:, :echo], t2s_[echo_idx, ...])
 
     combined = unmask(combined, mask)
     return combined
