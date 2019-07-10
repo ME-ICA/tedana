@@ -264,7 +264,10 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None,
         mask = mask.astype(bool)
         arr *= mask.reshape(arr.shape)
 
-    clust_thresholded = np.zeros(arr.shape, int)
+    if binarize:
+        clust_thresholded = np.zeros(arr.shape, bool)
+    else:
+        clust_thresholded = np.zeros(arr.shape, int)
 
     if sided == 'two':
         test_arr = np.abs(arr)
@@ -286,7 +289,7 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None,
     for i_clust in clust_sizes.keys():
         if np.all(thresh_arr[labeled == i_clust] == 1):
             if binarize:
-                clust_thresholded[labeled == i_clust] = 1
+                clust_thresholded[labeled == i_clust] = True
             else:
                 clust_thresholded[labeled == i_clust] = arr[labeled == i_clust]
 
@@ -304,7 +307,7 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None,
         for i_clust in clust_sizes.keys():
             if np.all(thresh_arr[labeled == i_clust] == 1):
                 if binarize:
-                    clust_thresholded[labeled == i_clust] = 1
+                    clust_thresholded[labeled == i_clust] = True
                 else:
                     clust_thresholded[labeled == i_clust] = arr[labeled == i_clust]
 

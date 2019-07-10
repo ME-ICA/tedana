@@ -48,7 +48,34 @@ def run_mlepca(data):
         Component timeseries.
     """
     # do PC dimension selection and get eigenvalue cutoff
-    ppca = PCA(n_components='mle', svd_solver='full')
+    ppca = PCA(n_components='mle', svd_solver='full', copy=False)
+    ppca.fit(data)
+    v = ppca.components_.T
+    s = ppca.explained_variance_
+    u = np.dot(np.dot(data, v), np.diag(1. / s))
+    return u, s, v
+
+
+def low_mem_pca(data):
+    """
+    Run Singular Value Decomposition (SVD) on input data.
+
+    Parameters
+    ----------
+    data : (S [*E] x T) array_like
+        Optimally combined (S x T) or full multi-echo (S*E x T) data.
+
+    Returns
+    -------
+    u : (S [*E] x C) array_like
+        Component weight map for each component.
+    s : (C,) array_like
+        Variance explained for each component.
+    v : (C x T) array_like
+        Component timeseries.
+    """
+    from sklearn.decomposition import IncrementalPCA
+    ppca = IncrementalPCA(n_components=(data.shape[-1] - 1))
     ppca.fit(data)
     v = ppca.components_.T
     s = ppca.explained_variance_
@@ -58,7 +85,7 @@ def run_mlepca(data):
 
 def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
            ref_img, tes, algorithm='mle', source_tes=-1, kdaw=10., rdaw=1.,
-           out_dir='.', verbose=False):
+           out_dir='.', verbose=False, low_mem=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
     noise from multi-echo data.
@@ -101,6 +128,9 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
         Output directory.
     verbose : :obj:`bool`, optional
         Whether to output files from fitmodels_direct or not. Default: False
+    low_mem : :obj:`bool`, optional
+        Whether to use incremental PCA (for low-memory systems) or not.
+        Default: False
 
     Returns
     -------
@@ -158,6 +188,11 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     mepca_mix.1D              PCA mixing matrix.
     ======================    =================================================
     """
+    if low_mem and algorithm == 'mle':
+        LGR.warning('Low memory option is not compatible with MLE '
+                    'dimensionality estimation. Switching to Kundu decision '
+                    'tree.')
+        algorithm = 'kundu'
 
     n_samp, n_echos, n_vols = data_cat.shape
     source_tes = np.array([int(ee) for ee in str(source_tes).split(',')])
@@ -180,8 +215,10 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
 
     if algorithm == 'mle':
         voxel_comp_weights, varex, comp_ts = run_mlepca(data_z)
+    elif low_mem:
+        voxel_comp_weights, varex, comp_ts = low_mem_pca(data_z)
     else:
-        ppca = PCA()
+        ppca = PCA(copy=False)
         ppca.fit(data_z)
         comp_ts = ppca.components_.T
         varex = ppca.explained_variance_
