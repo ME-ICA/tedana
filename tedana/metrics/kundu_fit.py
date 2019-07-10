@@ -154,7 +154,8 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
 
             # S0 Model
             # (S,) model coefficient map
-            coeffs_S0 = (comp_pes[:j_echo] * X1[:j_echo, :]).sum(axis=0) / (X1[:j_echo, :]**2).sum(axis=0)
+            coeffs_S0 = (comp_pes[:j_echo] * X1[:j_echo, :]).sum(axis=0) /\
+                (X1[:j_echo, :]**2).sum(axis=0)
             pred_S0 = X1[:j_echo, :] * np.tile(coeffs_S0, (j_echo, 1))
             SSE_S0 = (comp_pes[:j_echo] - pred_S0)**2
             SSE_S0 = SSE_S0.sum(axis=0)  # (S,) prediction error map
@@ -162,7 +163,8 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
             F_S0_maps[mask_idx[mask], i_comp] = F_S0[mask_idx[mask]]
 
             # R2 Model
-            coeffs_R2 = (comp_pes[:j_echo] * X2[:j_echo, :]).sum(axis=0) / (X2[:j_echo, :]**2).sum(axis=0)
+            coeffs_R2 = (comp_pes[:j_echo] * X2[:j_echo, :]).sum(axis=0) /\
+                (X2[:j_echo, :]**2).sum(axis=0)
             pred_R2 = X2[:j_echo] * np.tile(coeffs_R2, (j_echo, 1))
             SSE_R2 = (comp_pes[:j_echo] - pred_R2)**2
             SSE_R2 = SSE_R2.sum(axis=0)

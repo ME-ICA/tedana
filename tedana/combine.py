@@ -127,7 +127,7 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
     elif adaptive_mask.shape[0] != data.shape[0]:
         raise ValueError('Mask and data do not have same number of '
                          'voxels/samples: {0} != {1}'.format(
-                            adaptive_mask.shape[0], data.shape[0]))
+                             adaptive_mask.shape[0], data.shape[0]))
 
     if combmode not in ['t2s', 'paid']:
         raise ValueError("Argument 'combmode' must be either 't2s' or 'paid'")
