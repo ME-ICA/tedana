@@ -116,7 +116,8 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
 
     # compute parameter estimates and means over TEs for TE-dependence analysis
     pes = get_coeffs(utils.unmask(catd, mask), mmix,
-                     np.repeat(mask[:, np.newaxis], len(tes), axis=1))
+                     np.repeat(mask[:, np.newaxis], len(tes), axis=1),
+                     add_const=True)
     pes = pes[mask, ...]
     n_voxels, n_echos, n_components = pes.shape
     mu = catd.mean(axis=-1, dtype=float)
@@ -135,8 +136,9 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
     Z_maps = np.zeros([n_voxels, n_components])
     F_R2_maps = np.zeros([n_voxels, n_components])
     F_S0_maps = np.zeros([n_voxels, n_components])
-    pred_R2_maps = np.zeros([n_voxels, n_echos, n_components])
-    pred_S0_maps = np.zeros([n_voxels, n_echos, n_components])
+    if verbose:
+        pred_R2_maps = np.zeros([n_voxels, n_echos, n_components])
+        pred_S0_maps = np.zeros([n_voxels, n_echos, n_components])
 
     LGR.info('Fitting TE- and S0-dependent models to components')
     for i_comp in range(n_components):
@@ -154,7 +156,6 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
             # (S,) model coefficient map
             coeffs_S0 = (comp_pes[:j_echo] * X1[:j_echo, :]).sum(axis=0) / (X1[:j_echo, :]**2).sum(axis=0)
             pred_S0 = X1[:j_echo, :] * np.tile(coeffs_S0, (j_echo, 1))
-            pred_S0_maps[mask_idx[mask], :j_echo, i_comp] = pred_S0.T[mask_idx[mask], :]
             SSE_S0 = (comp_pes[:j_echo] - pred_S0)**2
             SSE_S0 = SSE_S0.sum(axis=0)  # (S,) prediction error map
             F_S0 = (alpha - SSE_S0) * (j_echo - 1) / (SSE_S0)
@@ -163,11 +164,14 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
             # R2 Model
             coeffs_R2 = (comp_pes[:j_echo] * X2[:j_echo, :]).sum(axis=0) / (X2[:j_echo, :]**2).sum(axis=0)
             pred_R2 = X2[:j_echo] * np.tile(coeffs_R2, (j_echo, 1))
-            pred_R2_maps[mask_idx[mask], :j_echo, i_comp] = pred_R2.T[mask_idx[mask], :]
             SSE_R2 = (comp_pes[:j_echo] - pred_R2)**2
             SSE_R2 = SSE_R2.sum(axis=0)
             F_R2 = (alpha - SSE_R2) * (j_echo - 1) / (SSE_R2)
             F_R2_maps[mask_idx[mask], i_comp] = F_R2[mask_idx[mask]]
+
+            if verbose:
+                pred_S0_maps[mask_idx[mask], :j_echo, i_comp] = pred_S0.T[mask_idx[mask], :]
+                pred_R2_maps[mask_idx[mask], :j_echo, i_comp] = pred_R2.T[mask_idx[mask], :]
 
         # compute weights as Z-values
         wtsZ = (WTS[:, i_comp] - WTS[:, i_comp].mean()) / WTS[:, i_comp].std()
