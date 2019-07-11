@@ -122,17 +122,6 @@ comp_116.png
 comp_117.png
 comp_118.png
 comp_119.png
-comp_120.png
-comp_121.png
-comp_122.png
-comp_123.png
-comp_124.png
-comp_125.png
-comp_126.png
-comp_127.png
-comp_128.png
-comp_129.png
-comp_130.png
 comp_table_ica.txt
 comp_table_pca.txt
 dn_ts_OC.nii
