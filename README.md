@@ -43,6 +43,8 @@ You can then install `tedana` with
 pip install tedana
 ```
 
+If you aim to contribute to the `tedana` code base and/or documentation, please read the developer installation instructions in [our contributing section](https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md).
+
 ### Creating a miniconda environment for use with `tedana`
 
 In using `tedana`, you can optionally configure [a conda environment](https://conda.io/docs/user-guide/tasks/manage-environments.html).
