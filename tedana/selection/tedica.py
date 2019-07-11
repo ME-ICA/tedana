@@ -157,7 +157,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
 
     # T-value is less than zero (noise has higher F-statistics than signal in
     # map) and variance explained is higher than the median across components.
-    temp_rej2 = unclf[(comptable.loc[unclf, 'signal-noise_t'] < 0) &
+    temp_rej2 = unclf[(comptable.loc[unclf, 'signal-noise_z'] < 0) &
                       (comptable.loc[unclf, 'variance explained'] >
                       np.median(comptable['variance explained']))]
     comptable.loc[temp_rej2, 'classification'] = 'rejected'
@@ -291,7 +291,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
         d_table_rank = np.vstack([
             len(unclf) - stats.rankdata(comptable.loc[unclf, 'kappa']),
             len(unclf) - stats.rankdata(comptable.loc[unclf, 'dice_FR2']),
-            len(unclf) - stats.rankdata(comptable.loc[unclf, 'signal-noise_t']),
+            len(unclf) - stats.rankdata(comptable.loc[unclf, 'signal-noise_z']),
             stats.rankdata(comptable.loc[unclf, 'countnoise']),
             len(unclf) - stats.rankdata(comptable.loc[unclf, 'countsigFR2'])]).T
         comptable.loc[unclf, 'd_table_score_scrub'] = d_table_rank.mean(1)

@@ -9,7 +9,7 @@ import pandas as pd
 from scipy import stats
 
 from tedana import io, utils
-from tedana.stats import getfbounds, computefeats2, get_coeffs
+from tedana.stats import getfbounds, computefeats2, get_coeffs, t_to_z
 
 
 LGR = logging.getLogger(__name__)
@@ -339,6 +339,7 @@ def kundu_metrics(comptable, metric_maps):
     """
     comptable['countsigFR2'] = F_R2_clmaps.sum(axis=0)
     comptable['countsigFS0'] = F_S0_clmaps.sum(axis=0)
+    comptable['countsignal'] = Z_clmaps.sum(axis=0)
 
     """
     Generate Dice values for R2 and S0 models
@@ -362,36 +363,36 @@ def kundu_metrics(comptable, metric_maps):
     Generate three metrics of component noise:
     - countnoise: Number of "noise" voxels (voxels highly weighted for
       component, but not from clusters)
-    - signal-noise_t: T-statistic for two-sample t-test of F-statistics from
+    - countsignal: Number of "signal" voxels (voxels highly weighted for
+      component, from clusters)
+    - signal-noise_z: Z-statistic for two-sample t-test of F-statistics from
       "signal" voxels (voxels in clusters) against "noise" voxels (voxels not
       in clusters) for R2 model.
     - signal-noise_p: P-value from t-test.
     """
     comptable['countnoise'] = 0
-    comptable['signal-noise_t'] = 0
+    comptable['signal-noise_z'] = 0
     comptable['signal-noise_p'] = 0
     for i_comp in comptable.index:
         # index voxels significantly loading on component but not from clusters
-        comp_noise_sel = ((np.abs(Z_maps[:, i_comp]) > 1.95) &
+        comp_noise_idx = ((np.abs(Z_maps[:, i_comp]) > 1.95) &
                           (Z_clmaps[:, i_comp] == 0))
-        comptable.loc[i_comp, 'countnoise'] = np.array(
-            comp_noise_sel, dtype=np.int).sum()
-        # NOTE: Why only compare distributions of *unique* F-statistics?
-        noise_FR2_Z = np.log10(np.unique(F_R2_maps[comp_noise_sel, i_comp]))
-        signal_FR2_Z = np.log10(np.unique(
-            F_R2_maps[Z_clmaps[:, i_comp] == 1, i_comp]))
-        (comptable.loc[i_comp, 'signal-noise_t'],
-         comptable.loc[i_comp, 'signal-noise_p']) = stats.ttest_ind(
+        comptable.loc[i_comp, 'countnoise'] = int(np.sum(comp_noise_idx))
+        noise_FR2_Z = 0.5 * np.log(F_R2_maps[comp_noise_idx, i_comp])
+        signal_FR2_Z = 0.5 * np.log(F_R2_maps[Z_clmaps[:, i_comp], i_comp])
+        dof = np.sum(comp_noise_idx) + comptable.loc[i_comp, 'countsignal'] - 2
+        t_value, comptable.loc[i_comp, 'signal-noise_p'] = stats.ttest_ind(
              signal_FR2_Z, noise_FR2_Z, equal_var=False)
+        comptable.loc[i_comp, 'signal-noise_z'] = t_to_z(t_value, dof)
 
-    comptable.loc[np.isnan(comptable['signal-noise_t']), 'signal-noise_t'] = 0
+    comptable.loc[np.isnan(comptable['signal-noise_z']), 'signal-noise_z'] = 0
     comptable.loc[np.isnan(comptable['signal-noise_p']), 'signal-noise_p'] = 0
 
     """
     Assemble decision table with five metrics:
     - Kappa values ranked from largest to smallest
     - R2-model F-score map/beta map Dice scores ranked from largest to smallest
-    - Signal F > Noise F t-statistics ranked from largest to smallest
+    - Signal F > Noise F z-statistics ranked from largest to smallest
     - Number of "noise" voxels (voxels highly weighted for component, but not
       from clusters) ranked from smallest to largest
     - Number of voxels with significant R2-model F-scores within clusters
@@ -403,7 +404,7 @@ def kundu_metrics(comptable, metric_maps):
     d_table_rank = np.vstack([
         comptable.shape[0] - stats.rankdata(comptable['kappa']),
         comptable.shape[0] - stats.rankdata(comptable['dice_FR2']),
-        comptable.shape[0] - stats.rankdata(comptable['signal-noise_t']),
+        comptable.shape[0] - stats.rankdata(comptable['signal-noise_z']),
         stats.rankdata(comptable['countnoise']),
         comptable.shape[0] - stats.rankdata(comptable['countsigFR2'])]).T
     comptable['d_table_score'] = d_table_rank.mean(axis=1)
