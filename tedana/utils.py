@@ -91,6 +91,7 @@ def make_adaptive_mask(data, mask=None, getsum=False):
         # if the user has supplied a binary mask
         mask = load_image(mask).astype(bool)
         masksum = masksum * mask
+        mask = (masksum >= 3).astype(bool)
         # reduce mask based on masksum
         # TODO: Use visual report to make checking the reduced mask easier
         if np.any(masksum[mask] < 3):
