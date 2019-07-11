@@ -86,15 +86,15 @@ def make_adaptive_mask(data, mask=None, getsum=False):
 
     if mask is None:
         # make it a boolean mask to (where we have at least 1 echo with good signal)
-        mask = masksum.astype(bool)
+        mask = (masksum >= 3).astype(bool)
     else:
         # if the user has supplied a binary mask
         mask = load_image(mask).astype(bool)
         masksum = masksum * mask
         # reduce mask based on masksum
         # TODO: Use visual report to make checking the reduced mask easier
-        if np.any(masksum[mask] == 0):
-            n_bad_voxels = np.sum(masksum[mask] == 0)
+        if np.any(masksum[mask] < 3):
+            n_bad_voxels = np.sum(masksum[mask] < 3)
             LGR.warning('{0} voxels in user-defined mask do not have good '
                         'signal. Removing voxels from mask.'.format(n_bad_voxels))
             mask = masksum.astype(bool)
