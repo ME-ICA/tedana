@@ -118,13 +118,13 @@ The current list of labels are [here][link_labels] and include:
 
 We appreciate all contributions to `tedana`, but those accepted fastest will follow a workflow similar to the following:
 
-**1. Comment on an existing issue or [open a new issue][link_createissue] referencing your addition.**
+### 1. Comment on an existing issue or [open a new issue][link_createissue] referencing your addition
 
 This allows other members of the `tedana` development team to confirm that you aren't overlapping with work that's currently underway and that everyone is on the same page with the goal of the work you're going to carry out.
 
 [This blog][link_pushpullblog] is a nice explanation of why putting this work in up front is so useful to everyone involved.
 
-**2. [Fork][link_fork] the [tedana repository][link_tedana] to your GitHub profile.**
+### 2. [Fork][link_fork] the [tedana repository][link_tedana] to your GitHub profile
 
 This is now your own unique and online copy of `tedana`. Changes here won't affect anyone else's work, so it's a safe space to explore edits to the code!
 
@@ -132,7 +132,7 @@ Remember to [clone your fork][link_clonerepo] of `tedana` to your local machine,
 
 Make sure to always [keep your fork up to date][link_updateupstreamwiki] with the master repository before and after making changes.
 
-**3. Run the developer setup
+### 3. Run the developer setup
 
 To test a change, you may need to set up your local repository to run a `tedana` workflow. 
 To do so, run
@@ -143,7 +143,7 @@ from within your local `tedana` repository. This should ensure all packages are 
 
 Once you've run this, your repository should be set for most changes (i.e., you do not have to re-run with every change). 
 
-**4. Make the changes you've discussed.**
+### 4. Make the changes you've discussed
 
 Try to keep the changes focused to the issue. We've found that working on a [new branch][link_branches] for each issue makes it easier to keep your changes targeted. 
 
@@ -151,7 +151,7 @@ Using a new branch allows you to follow the standard "fork/branch/commit/pull-re
 
 Before creating your pull request, please make sure to review the `tedana` [style conventions](#style-guide).
 
-**5. Submit a [pull request][link_pullrequest].**
+### 5. Submit a [pull request][link_pullrequest]
 
 When opening the pull request, we ask that you follow some [specific conventions](#pull-requests). We outline these below.
 
