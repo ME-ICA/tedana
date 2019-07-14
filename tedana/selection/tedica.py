@@ -169,9 +169,6 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     if len(unclf) == 0:
         LGR.warning('No BOLD-like components detected. Ignoring all remaining '
                     'components.')
-        ign = sorted(np.setdiff1d(all_comps, rej))
-        comptable.loc[ign, 'classification'] = 'ignored'
-        comptable.loc[ign, 'rationale'] += 'I006;'
 
         # Move decision columns to end
         comptable = clean_dataframe(comptable)
