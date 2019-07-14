@@ -210,11 +210,12 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     kappas_nonsig = comptable.loc[comptable['kappa'] < f01, 'kappa']
     # NOTE: Would an elbow from all Kappa values *ever* be lower than one from
     # a subset of lower values?
-    kappa_elbow = np.min((getelbow(kappas_nonsig, return_val=True),
-                          getelbow(comptable['kappa'], return_val=True)))
-    rho_elbow = np.mean((getelbow(comptable.loc[ncls, 'rho'], return_val=True),
-                         getelbow(comptable['rho'], return_val=True),
-                         f05))
+    kappa_elbow = np.nanmin((getelbow(kappas_nonsig, return_val=True),
+                             getelbow(comptable['kappa'], return_val=True)))
+    rho_elbow = np.nanmean((getelbow(comptable.loc[ncls, 'rho'], return_val=True),
+                            getelbow(comptable['rho'], return_val=True),
+                            f05))
+    print(kappa_elbow)
 
     # Provisionally accept components based on Kappa and Rho elbows
     acc_prov = ncls[(comptable.loc[ncls, 'kappa'] >= kappa_elbow) &

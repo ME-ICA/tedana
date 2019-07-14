@@ -77,7 +77,12 @@ def getelbow(arr, return_val=False):
     """
     if arr.ndim != 1:
         raise ValueError('Parameter arr should be 1d, not {0}d'.format(arr.ndim))
-    arr = np.sort(arr)[::-1]
+
+    if arr.size == 0:
+        LGR.warning('Empty array inputted to getelbow. Returning NaN.')
+        return np.nan
+
+    arr = np.sort(arr)[::-1].astype(float)
     n_components = arr.shape[0]
     coords = np.array([np.arange(n_components), arr])
     p = coords - coords[:, 0].reshape(2, 1)
