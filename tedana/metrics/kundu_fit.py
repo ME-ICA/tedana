@@ -45,7 +45,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
         Z-scored mixing matrix. Default: None
     algorithm : {'kundu_v2', 'kundu_v3', None}, optional
         Decision tree to be applied to metrics. Determines which maps will be
-        generated and stored in seldict. Default: None
+        generated and stored in metric_maps. Default: None
     label : :obj:`str` or None, optional
         Prefix to apply to generated files. Default is None.
     out_dir : :obj:`str`, optional
@@ -59,9 +59,9 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
     comptable : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index is the component number.
-    seldict : :obj:`dict` or None
+    metric_maps : :obj:`dict` or None
         Dictionary containing component-specific metric maps to be used for
-        component selection. If `algorithm` is None, then seldict will be None as
+        component selection. If `algorithm` is None, then metric_maps will be None as
         well.
     betas : :obj:`numpy.ndarray`
     mmix_new : :obj:`numpy.ndarray`
@@ -131,11 +131,13 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
     X1 = mu.T  # Model 1
     X2 = np.tile(tes, (1, n_voxels)) * mu.T / t2s.T  # Model 2
 
+    comptable = pd.DataFrame(
+        columns=['kappa', 'rho', 'variance explained',
+                 'normalized variance explained'],
+        index=np.arange(n_components, dtype=int))
+    comptable.index.name = 'component'
+
     # tables for component selection
-    kappas = np.zeros([n_components])
-    rhos = np.zeros([n_components])
-    varex = np.zeros([n_components])
-    varex_norm = np.zeros([n_components])
     Z_maps = np.zeros([n_voxels, n_components])
     F_R2_maps = np.zeros([n_voxels, n_components])
     F_S0_maps = np.zeros([n_voxels, n_components])
@@ -147,8 +149,8 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
         # size of comp_betas is (n_echoes, n_samples)
         comp_betas = np.atleast_3d(betas)[:, :, i_comp].T
         alpha = (np.abs(comp_betas)**2).sum(axis=0)
-        varex[i_comp] = (tsoc_B[:, i_comp]**2).sum() / totvar * 100.
-        varex_norm[i_comp] = (WTS[:, i_comp]**2).sum() / totvar_norm * 100.
+        comptable.loc[i_comp, 'variance explained'] = (tsoc_B[:, i_comp]**2).sum() / totvar * 100.
+        comptable.loc[i_comp, 'normalized variance explained'] = (WTS[:, i_comp]**2).sum() / totvar_norm * 100.
 
         # S0 Model
         # (S,) model coefficient map
@@ -179,18 +181,18 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
         F_S0[F_S0 > F_MAX] = F_MAX
         F_R2[F_R2 > F_MAX] = F_MAX
         norm_weights = np.abs(wtsZ ** 2.)
-        kappas[i_comp] = np.average(F_R2, weights=norm_weights)
-        rhos[i_comp] = np.average(F_S0, weights=norm_weights)
+        comptable.loc[i_comp, 'kappa'] = np.average(F_R2, weights=norm_weights)
+        comptable.loc[i_comp, 'rho'] = np.average(F_S0, weights=norm_weights)
     del SSE_S0, SSE_R2, wtsZ, F_S0, F_R2, norm_weights, comp_betas
     if algorithm != 'kundu_v3':
         del WTS, PSC, tsoc_B
 
-    # tabulate component values
-    comptable = np.vstack([kappas, rhos, varex, varex_norm]).T
     if reindex:
         # re-index all components in descending Kappa order
-        sort_idx = comptable[:, 0].argsort()[::-1]
-        comptable = comptable[sort_idx, :]
+        sort_idx = comptable['kappa'].argsort()[::-1]
+        comptable = comptable.loc[sort_idx]
+        comptable = comptable.reset_index(drop=True)
+        comptable.index.name = 'component'
         mmix_new = mmix[:, sort_idx]
         betas = betas[..., sort_idx]
         pred_R2_maps = pred_R2_maps[:, :, sort_idx]
@@ -224,12 +226,6 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
                      op.join(out_dir, '{0}metric_weights.nii'.format(label)),
                      ref_img)
     del pred_R2_maps, pred_S0_maps
-
-    comptable = pd.DataFrame(comptable,
-                             columns=['kappa', 'rho',
-                                      'variance explained',
-                                      'normalized variance explained'])
-    comptable.index.name = 'component'
 
     # Generate clustering criteria for component selection
     if algorithm in ['kundu_v2', 'kundu_v3']:
@@ -297,13 +293,15 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
         else:
             raise ValueError('Algorithm "{0}" not recognized.'.format(algorithm))
 
-        seldict = {}
+        metric_maps = {}
         for vv in selvars:
-            seldict[vv] = eval(vv)
+            metric_maps[vv] = eval(vv)
     else:
-        seldict = None
+        metric_maps = None
 
-    return comptable, seldict, betas, mmix_new
+    comptable = comptable.astype(float)
+
+    return comptable, metric_maps, betas, mmix_new
 
 
 def kundu_metrics(comptable, metric_maps):
