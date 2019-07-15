@@ -42,6 +42,7 @@ Optimally combined data exhibits higher SNR and improves statistical power of an
 traditionally affected by drop-out.
 
 For denoised: Collecting multi-echo data allows access to unique denoising metrics.
+For more information on these metrics, see :ref:`dependence models`.
 ``tedana`` is one ICA-based denoising pipeline built on this information.
 Other ICA-based denoising methods like ICA-AROMA (`Pruim et al. (2015)`_)
 have been shown to significantly improve the quality of cleaned signal.

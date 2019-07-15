@@ -215,7 +215,6 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     rho_elbow = np.nanmean((getelbow(comptable.loc[ncls, 'rho'], return_val=True),
                             getelbow(comptable['rho'], return_val=True),
                             f05))
-    print(kappa_elbow)
 
     # Provisionally accept components based on Kappa and Rho elbows
     acc_prov = ncls[(comptable.loc[ncls, 'kappa'] >= kappa_elbow) &

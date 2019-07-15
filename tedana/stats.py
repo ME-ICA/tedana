@@ -139,6 +139,9 @@ def get_coeffs(data, X, mask=None):
     if len(X) == 1:
         X = X.T
 
+    # mean-center design matrix
+    X = X - np.mean(X, axis=-1, keepdims=True)
+
     # add intercept
     X = np.column_stack([X, np.ones((len(X), 1))])
 
