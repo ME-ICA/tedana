@@ -43,8 +43,7 @@ def split_ts(data, mmix, mask, comptable):
     """
     acc = comptable[comptable.classification == 'accepted'].index.values
 
-    cbetas = get_coeffs(data - data.mean(axis=-1, keepdims=True),
-                        mmix, mask)
+    cbetas = get_coeffs(data, mmix, mask)
     betas = cbetas[mask]
     if len(acc) != 0:
         hikts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
