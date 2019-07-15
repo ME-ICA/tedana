@@ -43,6 +43,8 @@ feats_OC2.nii             Z-normalized spatial component maps
 comp_table_ica.txt        TEDICA component table. A tab-delimited file with
                           summary metrics and inclusion/exclusion information
                           for each component from the ICA decomposition.
+report.txt                A summary report for the workflow with relevant
+                          citations.
 ======================    =====================================================
 
 If ``verbose`` is set to True:
@@ -147,6 +149,40 @@ I010   rejected           Mid-Kappa artifact type B
 I011   ignored            ign_add0
 I012   ignored            ign_add1
 =====  =================  ========================================================
+
+Citable workflow summaries
+--------------------------
+
+``tedana`` generates a report for the workflow, customized based on the parameters used and including relevant citations.
+The report is saved in a plain-text file, report.txt, in the output directory.
+
+An example report
+
+  TE-dependence analysis was performed on input data. An initial mask was generated from the first echo using nilearn's compute_epi_mask function. An adaptive mask was then generated, in which each voxel's value reflects the number of echoes with 'good' data. A monoexponential model was fit to the data at each voxel using log-linear regression in order to estimate T2* and S0 maps. For each voxel, the value from the adaptive mask was used to determine which echoes would be used to estimate T2* and S0. Multi-echo data were then optimally combined using the 't2s' (Posse et al., 1999) combination method. Global signal regression was applied to the multi-echo and optimally combined datasets. Principal component analysis followed by the Kundu component selection decision tree (Kundu et al., 2013) was applied to the optimally combined data for dimensionality reduction. Independent component analysis was then used to decompose the dimensionally reduced dataset. A series of TE-dependence metrics were calculated for each ICA component, including Kappa, Rho, and variance explained. Next, component selection was performed to identify BOLD (TE-dependent), non-BOLD (TE-independent), and uncertain (low-variance) components using the Kundu decision tree (v2.5; Kundu et al., 2013). T1c global signal regression was then applied to the data in order to remove spatially diffuse noise.
+
+  This workflow used numpy (Van Der Walt, Colbert, & Varoquaux, 2011), scipy (Jones et al., 2001), pandas (McKinney, 2010), scikit-learn (Pedregosa et al., 2011), nilearn, and nibabel (Brett et al., 2019).
+
+  This workflow also used the Dice similarity index (Dice, 1945; Sørensen, 1948).
+
+  References
+
+  Brett, M., Markiewicz, C. J., Hanke, M., Côté, M.-A., Cipollini, B., McCarthy, P., … freec84. (2019, May 28). nipy/nibabel. Zenodo. http://doi.org/10.5281/zenodo.3233118
+
+  Dice, L. R. (1945). Measures of the amount of ecologic association between species. Ecology, 26(3), 297-302.
+
+  Jones E, Oliphant E, Peterson P, et al. SciPy: Open Source Scientific Tools for Python, 2001-, http://www.scipy.org/
+
+  Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. (2013). Integrated strategy for improving functional connectivity mapping using multiecho fMRI. Proceedings of the National Academy of Sciences, 110(40), 16187-16192.
+
+  McKinney, W. (2010, June). Data structures for statistical computing in python. In Proceedings of the 9th Python in Science Conference (Vol. 445, pp. 51-56).
+
+  Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., ... & Vanderplas, J. (2011). Scikit-learn: Machine learning in Python. Journal of machine learning research, 12(Oct), 2825-2830.
+
+  Posse, S., Wiese, S., Gembris, D., Mathiak, K., Kessler, C., Grosse‐Ruyken, M. L., ... & Kiselev, V. G. (1999). Enhancement of BOLD‐contrast sensitivity by single‐shot multi‐echo functional MR imaging. Magnetic Resonance in Medicine: An Official Journal of the International Society for Magnetic Resonance in Medicine, 42(1), 87-97.
+
+  Sørensen, T. J. (1948). A method of establishing groups of equal amplitude in plant sociology based on similarity of species content and its application to analyses of the vegetation on Danish commons. I kommission hos E. Munksgaard.
+
+  Van Der Walt, S., Colbert, S. C., & Varoquaux, G. (2011). The NumPy array: a structure for efficient numerical computation. Computing in Science & Engineering, 13(2), 22.
 
 Visual reports
 --------------
