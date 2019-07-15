@@ -92,17 +92,13 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
     catd = catd[mask, ...]
     t2s = t2s[mask]
 
-    # demean optimal combination
-    tsoc_dm = tsoc - tsoc.mean(axis=-1, keepdims=True)
-
     # compute un-normalized weight dataset (features)
     if mmixN is None:
         mmixN = mmix
     WTS = computefeats2(tsoc, mmixN, mask=None, normalize=False)
 
     # compute PSC dataset - shouldn't have to refit data
-    tsoc_B = get_coeffs(tsoc_dm, mmix, mask=None)
-    del tsoc_dm
+    tsoc_B = get_coeffs(tsoc, mmix, mask=None)
     tsoc_Babs = np.abs(tsoc_B)
     PSC = tsoc_B / tsoc.mean(axis=-1, keepdims=True) * 100
 
