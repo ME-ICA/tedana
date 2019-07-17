@@ -145,8 +145,10 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
         # size of comp_betas is (n_echoes, n_samples)
         comp_betas = np.atleast_3d(betas)[:, :, i_comp].T
         alpha = (np.abs(comp_betas)**2).sum(axis=0)
-        comptable.loc[i_comp, 'variance_explained'] = (tsoc_B[:, i_comp]**2).sum() / totvar * 100.
-        comptable.loc[i_comp, 'normalized variance explained'] = (WTS[:, i_comp]**2).sum() / totvar_norm
+        comptable.loc[i_comp, 'variance_explained'] = \
+            (tsoc_B[:, i_comp]**2).sum() / totvar * 100.
+        comptable.loc[i_comp, 'normalized variance explained'] = \
+            (WTS[:, i_comp]**2).sum() / totvar_norm
 
         # S0 Model
         # (S,) model coefficient map
