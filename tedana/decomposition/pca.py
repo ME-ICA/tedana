@@ -53,7 +53,8 @@ def run_mlepca(data):
     v = ppca.components_.T
     s = ppca.explained_variance_
     u = np.dot(np.dot(data, v), np.diag(1. / s))
-    return u, s, v
+    varex_norm = np.cumsum(ppca.explained_variance_ratio_)
+    return u, s, varex_norm, v
 
 
 def low_mem_pca(data):
@@ -214,9 +215,10 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
 
     if algorithm == 'mle':
-        voxel_comp_weights, varex, comp_ts = run_mlepca(data_z)
+        voxel_comp_weights, varex, varex_norm, comp_ts = run_mlepca(data_z)
     elif low_mem:
         voxel_comp_weights, varex, comp_ts = low_mem_pca(data_z)
+        varex_norm = varex / varex.sum()
     else:
         ppca = PCA(copy=False)
         ppca.fit(data_z)
@@ -224,9 +226,7 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
         varex = ppca.explained_variance_
         voxel_comp_weights = np.dot(np.dot(data_z, comp_ts),
                                     np.diag(1. / varex))
-
-    # actual variance explained (normalized)
-    varex_norm = varex / varex.sum()
+        varex_norm = varex / varex.sum()
 
     # Compute Kappa and Rho for PCA comps
     eimum = np.atleast_2d(eim)
@@ -243,8 +243,10 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
                 reindex=False, mmixN=vTmixN, algorithm=None,
                 label='mepca_', out_dir=out_dir, verbose=verbose)
 
-    # varex_norm from PCA retained on top of varex from fitmodels_direct
-    comptable['original normalized variance explained'] = varex_norm
+    # varex_norm from PCA overrides varex_norm from dependence_metrics,
+    # but we retain the original
+    comptable['estimated normalized variance explained'] = comptable['normalized variance explained']
+    comptable['normalized variance explained'] = varex_norm
 
     np.savetxt('mepca_mix.1D', comp_ts)
 
