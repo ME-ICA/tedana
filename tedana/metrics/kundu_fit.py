@@ -148,7 +148,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
         comp_betas = np.atleast_3d(betas)[:, :, i_comp].T
         alpha = (np.abs(comp_betas)**2).sum(axis=0)
         varex[i_comp] = (tsoc_B[:, i_comp]**2).sum() / totvar * 100.
-        varex_norm[i_comp] = (WTS[:, i_comp]**2).sum() / totvar_norm * 100.
+        varex_norm[i_comp] = (WTS[:, i_comp]**2).sum() / totvar_norm
 
         # S0 Model
         # (S,) model coefficient map
