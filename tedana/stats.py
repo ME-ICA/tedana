@@ -136,17 +136,18 @@ def get_coeffs(data, X, mask=None):
     # coerce X to >=2d
     X = np.atleast_2d(X)
 
-    if len(X) == 1:
+    if X.shape[0] == 1:
         X = X.T
 
     # mean-center design matrix
-    X = X - np.mean(X, axis=-1, keepdims=True)
+    X = X - np.mean(X, axis=0, keepdims=True)
 
     # add intercept
     X = np.column_stack([X, np.ones((len(X), 1))])
 
     param_estimates = np.linalg.lstsq(X, mdata, rcond=None)[0].T
-    # drop beta for intercept, if specified
+
+    # drop beta for intercept
     param_estimates = param_estimates[:, :-1]
 
     if mask is not None:
