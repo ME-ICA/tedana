@@ -245,7 +245,8 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
 
     # varex_norm from PCA overrides varex_norm from dependence_metrics,
     # but we retain the original
-    comptable['estimated normalized variance explained'] = comptable['normalized variance explained']
+    comptable['estimated normalized variance explained'] = \
+        comptable['normalized variance explained']
     comptable['normalized variance explained'] = varex_norm
 
     np.savetxt('mepca_mix.1D', comp_ts)
