@@ -146,7 +146,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         comp_pes = np.atleast_3d(pes)[:, :, i_comp].T
         alpha = (np.abs(comp_pes)**2).sum(axis=0)
         varex[i_comp] = (tsoc_pes[:, i_comp]**2).sum() / totvar * 100.
-        varex_norm[i_comp] = (WTS[:, i_comp]**2).sum() / totvar_norm * 100.
+        varex_norm[i_comp] = (WTS[:, i_comp]**2).sum() / totvar_norm
 
         for j_echo in np.unique(adaptive_mask[adaptive_mask >= 3]):
             mask_idx = adaptive_mask == j_echo
