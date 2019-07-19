@@ -69,7 +69,7 @@ master_doc = 'index'
 # General information about the project.
 from datetime import datetime #access current time and date
 project = 'tedana'
-copyright = datetime.today().strftime("%Y") + ', tedana developers'
+copyright = '2017-' + datetime.today().strftime("%Y") + ', tedana developers'
 author = 'tedana developers'
 
 # The version info for the project you're documenting, acts as replacement for
