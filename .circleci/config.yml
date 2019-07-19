@@ -174,6 +174,79 @@ jobs:
       - store_artifacts:
           path: /tmp/data/five-echo
 
+  py35_unit_tests:
+    working_directory: /tmp/src/tedana
+    docker:
+      - image: continuumio/miniconda3
+    steps:
+      - checkout
+      - run:
+          name: Generate environment
+          command: |
+            conda create -n py35_env python=3.5 -yq
+            source activate py35_env
+            pip install -r requirements.txt
+       - run:
+           name: Run unit tests
+           command: |
+             source activate py35_env
+             python setup.py install
+             py.test --ignore=tedana/tests/test_tedana.py tedana
+
+  py36_unit_tests_and_coverage:
+    working_directory: /tmp/src/tedana
+    docker:
+      - image: continuumio/miniconda3
+    steps:
+      - checkout
+      - run:
+          name: Generate environment
+          command: |
+            conda create -n py36_env python=3.6 -yq
+            source activate py36_env
+            pip install pytest pytest-cov codecov coverage coveralls flake8
+            pip install -r requirements.txt
+       - run:
+           name: Run unit tests
+           command: |
+             source activate py36_env
+             python setup.py install
+             py.test --ignore=tedana/tests/test_tedana.py --cov-report term-missing --cov=tedana tedana
+
+  py37_unit_tests:
+    working_directory: /tmp/src/tedana
+    docker:
+      - image: continuumio/miniconda3
+    steps:
+      - checkout
+      - run:
+          name: Generate environment
+          command: |
+            conda create -n py37_env python=3.7-dev -yq
+            source activate py37_env
+            pip install -r requirements.txt
+       - run:
+           name: Run unit tests
+           command: |
+             source activate py37_env
+             python setup.py install
+             py.test --ignore=tedana/tests/test_tedana.py tedana
+
+  style_check:
+    working_directory: /tmp/src/tedana
+    docker:
+      - image: continuumio/miniconda3
+    steps:
+      - attach_workspace:
+          at: /tmp/src/tedana
+      - restore_cache:  # load environment
+          key: test-v1-{{ checksum "requirements.txt" }}
+       - run:
+           name: Run unit tests
+           command: |
+             source activate venv
+             flake8 tedana
+
 workflows:
   version: 2
   build_test:
@@ -181,6 +254,12 @@ workflows:
       - build
       - get_data
       - get_regression_data
+      - py35_unit_tests
+      - py36_unit_tests_and_coverage
+      - py37_unit_tests
+      - style_check:
+          requires:
+            - build
       - three_echo_rest:
           requires:
             - build
