@@ -186,12 +186,12 @@ jobs:
             conda create -n py35_env python=3.5 -yq
             source activate py35_env
             pip install -r requirements.txt
-       - run:
-           name: Run unit tests
-           command: |
-             source activate py35_env
-             python setup.py install
-             py.test --ignore=tedana/tests/test_tedana.py tedana
+      - run:
+          name: Run unit tests
+          command: |
+            source activate py35_env
+            python setup.py install
+            py.test --ignore=tedana/tests/test_tedana.py tedana
 
   py36_unit_tests_and_coverage:
     working_directory: /tmp/src/tedana
@@ -207,12 +207,12 @@ jobs:
             source activate py36_env
             pip install pytest pytest-cov codecov coverage coveralls flake8
             pip install -r requirements.txt
-       - run:
-           name: Run unit tests
-           command: |
-             source activate py36_env
-             python setup.py install
-             py.test --ignore=tedana/tests/test_tedana.py --cov-report term-missing --cov=tedana tedana
+      - run:
+          name: Run unit tests
+          command: |
+            source activate py36_env
+            python setup.py install
+            py.test --ignore=tedana/tests/test_tedana.py --cov-report term-missing --cov=tedana tedana
 
   py37_unit_tests:
     working_directory: /tmp/src/tedana
@@ -227,12 +227,12 @@ jobs:
             conda create -n py37_env python=3.7-dev -yq
             source activate py37_env
             pip install -r requirements.txt
-       - run:
-           name: Run unit tests
-           command: |
-             source activate py37_env
-             python setup.py install
-             py.test --ignore=tedana/tests/test_tedana.py tedana
+      - run:
+          name: Run unit tests
+          command: |
+            source activate py37_env
+            python setup.py install
+            py.test --ignore=tedana/tests/test_tedana.py tedana
 
   style_check:
     working_directory: /tmp/src/tedana
@@ -243,11 +243,11 @@ jobs:
           at: /tmp/src/tedana
       - restore_cache:  # load environment
           key: test-v1-{{ checksum "requirements.txt" }}
-       - run:
-           name: Run unit tests
-           command: |
-             source activate venv
-             flake8 tedana
+      - run:
+          name: Run unit tests
+          command: |
+            source activate venv
+            flake8 tedana
 
 workflows:
   version: 2
