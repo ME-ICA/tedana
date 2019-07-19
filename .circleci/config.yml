@@ -199,7 +199,7 @@ jobs:
       - image: continuumio/miniconda3
     steps:
       - attach_workspace:
-          at: /tmp/src/tedana
+          at: /tmp
       - run:
           name: Generate environment
           command: |
@@ -220,7 +220,7 @@ jobs:
       - image: continuumio/miniconda3
     steps:
       - attach_workspace:
-          at: /tmp/src/tedana
+          at: /tmp
       - run:
           name: Generate environment
           command: |
@@ -240,7 +240,7 @@ jobs:
       - image: continuumio/miniconda3
     steps:
       - attach_workspace:
-          at: /tmp/src/tedana
+          at: /tmp
       - restore_cache:  # load environment
           key: test-v1-{{ checksum "requirements.txt" }}
       - run:
@@ -256,9 +256,15 @@ workflows:
       - build
       - get_data
       - get_regression_data
-      - py35_unit_tests
-      - py36_unit_tests_and_coverage
-      - py37_unit_tests
+      - py35_unit_tests:
+          requires:
+            - build
+      - py36_unit_tests_and_coverage:
+          requires:
+            - build
+      - py37_unit_tests:
+          requires:
+            - build
       - style_check:
           requires:
             - build
