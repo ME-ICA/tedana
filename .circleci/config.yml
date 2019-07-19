@@ -32,6 +32,7 @@ jobs:
                 pip install -r requirements.txt
             fi
             python setup.py install
+            echo `which tedana`
       - save_cache:
           key: test-v1-{{ checksum "requirements.txt" }}
           paths:
