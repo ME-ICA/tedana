@@ -6,10 +6,10 @@ version: 2
 jobs:
 
   build:
+    working_directory: /tmp/src/tedana
     docker:
       # Ubuntu 14.04 with Docker 17.10.0-ce
-      image: continuumio/miniconda3
-    working_directory: /tmp/src/tedana
+      - image: continuumio/miniconda3
     steps:
       - checkout
       - persist_to_workspace:
@@ -18,9 +18,10 @@ jobs:
               - src/tedana/
 
   get_data:
+    working_directory: /tmp/src/tedana
     docker:
       # Ubuntu 14.04 with Docker 17.10.0-ce
-      image: continuumio/miniconda3
+      - image: continuumio/miniconda3
     steps:
       - restore_cache:
           keys:
@@ -57,9 +58,10 @@ jobs:
               - /tmp/data
 
   get_regression_data:
+    working_directory: /tmp/src/tedana
     docker:
       # Ubuntu 14.04 with Docker 17.10.0-ce
-      image: continuumio/miniconda3
+      - image: continuumio/miniconda3
     steps:
       - restore_cache:
           keys:
@@ -96,9 +98,9 @@ jobs:
               - /tmp/test
 
   make_environment:
+    working_directory: /tmp/src/tedana
     docker:
       - image: continuumio/miniconda3
-    working_directory: /tmp/src/tedana
     steps:
       - attach_workspace:
           at: /tmp
@@ -124,9 +126,9 @@ jobs:
             - "/opt/conda/envs/venv"
 
   three_echo_rest:
+    working_directory: /tmp/src/tedana
     docker:
       - image: continuumio/miniconda3
-    working_directory: /tmp/src/tedana
     steps:
       - attach_workspace:
           at: /tmp
@@ -152,9 +154,9 @@ jobs:
           path: /tmp/data/three-echo
 
   five_echo_task:
+    working_directory: /tmp/src/tedana
     docker:
       - image: continuumio/miniconda3
-    working_directory: /tmp/src/tedana
     steps:
       - attach_workspace:
           at: /tmp
