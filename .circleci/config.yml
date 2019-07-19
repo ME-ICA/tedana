@@ -145,7 +145,7 @@ jobs:
       - save_cache:
           key: test-v1-{{ .Revision }}
           paths:
-              - /tmp/src/tedana/.coverage.*
+              - /tmp/src/tedana/.coverage.1
 
   five_echo_task:
     working_directory: /tmp/src/tedana
@@ -176,7 +176,7 @@ jobs:
       - save_cache:
           key: test-v1-{{ .Revision }}
           paths:
-              - /tmp/src/tedana/.coverage.*
+              - /tmp/src/tedana/.coverage.2
 
   py36_unit_tests_and_coverage:
     working_directory: /tmp/src/tedana
@@ -203,7 +203,7 @@ jobs:
       - save_cache:
           key: test-v1-{{ .Revision }}
           paths:
-              - /tmp/src/tedana/.coverage.*
+              - /tmp/src/tedana/.coverage.3
 
   py35_unit_tests:
     working_directory: /tmp/src/tedana
