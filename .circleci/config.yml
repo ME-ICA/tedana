@@ -261,6 +261,8 @@ jobs:
     docker:
       - image: continuumio/miniconda3
     steps:
+      - attach_workspace:
+          at: /tmp
       - restore_cache:  # load environment
           key: test-v1-{{ checksum "requirements.txt" }}
       - restore_cache:  # get coverage reports
@@ -270,8 +272,6 @@ jobs:
           command: |
             source activate venv
             coverage combine
-
-
 
 workflows:
   version: 2.1
