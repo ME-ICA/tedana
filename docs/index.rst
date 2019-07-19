@@ -129,7 +129,9 @@ You can also learn more about `why citing software is important`_.
 Posters
 -------
 
-.. image:: /_static/tedana-poster.png
+.. image:: /_static/tedana-ohbm2019-poster.png
+
+.. image:: /_static/tedana-ohbm2018-poster.png
 
 License Information
 -------------------
@@ -142,6 +144,7 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
 
    installation
    multi-echo
+   publications
    usage
    approach
    outputs
