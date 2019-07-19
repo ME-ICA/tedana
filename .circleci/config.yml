@@ -197,6 +197,9 @@ jobs:
             python setup.py install
             py.test --ignore-glob=tedana/tests/test_integration*.py \
               --cov-append --cov-report term-missing --cov=tedana tedana
+            echo `ls -la`
+            echo
+            echo `ls -la /tmp/src/tedana/`
       - save_cache:
           key: test-v1-{{ .Revision }}
           paths:
@@ -271,6 +274,7 @@ jobs:
           name: Coverage
           command: |
             source activate venv
+            echo `ls -la`
             coverage combine
 
 workflows:
