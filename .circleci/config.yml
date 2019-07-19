@@ -171,8 +171,7 @@ jobs:
     docker:
       - image: continuumio/miniconda3
     steps:
-      - attach_workspace:
-          at: /tmp
+      - checkout
       - run:
           name: Generate environment
           command: |
@@ -184,7 +183,7 @@ jobs:
           command: |
             source activate py35_env
             python setup.py install
-            py.test --ignore=tedana/tests/test_integration*.py tedana
+            py.test --ignore-glob=tedana/tests/test_integration*.py tedana
 
   py36_unit_tests_and_coverage:
     working_directory: /tmp/src/tedana
@@ -205,15 +204,14 @@ jobs:
           command: |
             source activate py36_env
             python setup.py install
-            py.test --ignore=tedana/tests/test_integration*.py --cov-report term-missing --cov=tedana tedana
+            py.test --ignore-glob=tedana/tests/test_integration*.py --cov-report term-missing --cov=tedana tedana
 
   py37_unit_tests:
     working_directory: /tmp/src/tedana
     docker:
       - image: continuumio/miniconda3
     steps:
-      - attach_workspace:
-          at: /tmp
+      - checkout
       - run:
           name: Generate environment
           command: |
@@ -225,7 +223,7 @@ jobs:
           command: |
             source activate py37_env
             python setup.py install
-            py.test --ignore=tedana/tests/test_integration*.py tedana
+            py.test --ignore-glob=tedana/tests/test_integration*.py tedana
 
   style_check:
     working_directory: /tmp/src/tedana
@@ -237,7 +235,7 @@ jobs:
       - restore_cache:  # load environment
           key: test-v1-{{ checksum "requirements.txt" }}
       - run:
-          name: Run unit tests
+          name: Run style check
           command: |
             source activate venv
             flake8 .
@@ -249,15 +247,11 @@ workflows:
       - build
       - get_data
       - get_regression_data
-      - py35_unit_tests:
-          requires:
-            - build
+      - py35_unit_tests
       - py36_unit_tests_and_coverage:
           requires:
             - build
-      - py37_unit_tests:
-          requires:
-            - build
+      - py37_unit_tests
       - style_check:
           requires:
             - build
