@@ -6,7 +6,7 @@ version: 2
 jobs:
 
   build:
-    machine:
+    docker:
       # Ubuntu 14.04 with Docker 17.10.0-ce
       image: continuumio/miniconda3
     working_directory: /tmp/src/tedana
@@ -18,7 +18,7 @@ jobs:
               - src/tedana/
 
   get_data:
-    machine:
+    docker:
       # Ubuntu 14.04 with Docker 17.10.0-ce
       image: continuumio/miniconda3
     steps:
@@ -57,7 +57,7 @@ jobs:
               - /tmp/data
 
   get_regression_data:
-    machine:
+    docker:
       # Ubuntu 14.04 with Docker 17.10.0-ce
       image: continuumio/miniconda3
     steps:
