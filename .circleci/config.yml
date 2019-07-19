@@ -2,7 +2,9 @@
 #
 # Check https://circleci.com/docs/2.0/language-python/ for more details
 #
-version: 2
+version: 2.1
+orbs:
+  codecov: codecov/codecov@1.0.2
 jobs:
 
   build:
@@ -131,7 +133,8 @@ jobs:
           command: |
             source activate venv
             python setup.py install
-            py.test tedana/tests/test_integration_three_echo.py
+            py.test tedana/tests/test_integration_three_echo.py \
+              --cov-append --cov-report xml:coverage.xml --cov=tedana tedana
       - run:
           name: Checking outputs
           command: |
@@ -140,6 +143,8 @@ jobs:
             diff /tmp/src/tedana/.circleci/tedana_outputs.txt /tmp/data/three-echo/TED.three-echo/outputs.out
       - store_artifacts:
           path: /tmp/data/three-echo
+      - store_artifacts:
+          path: /tmp/src/tedana/coverage.xml
 
   five_echo_task:
     working_directory: /tmp/src/tedana
@@ -156,7 +161,8 @@ jobs:
           command: |
             source activate venv
             python setup.py install
-            py.test tedana/tests/test_integration_five_echo.py
+            py.test tedana/tests/test_integration_five_echo.py \
+              --cov-append --cov-report xml:coverage.xml --cov=tedana tedana
       - run:
           name: Checking outputs
           command: |
@@ -165,26 +171,8 @@ jobs:
             diff /tmp/src/tedana/.circleci/tedana_outputs_verbose.txt /tmp/data/five-echo/TED.five-echo/outputs.out
       - store_artifacts:
           path: /tmp/data/five-echo
-
-  py35_unit_tests:
-    working_directory: /tmp/src/tedana
-    docker:
-      - image: continuumio/miniconda3
-    steps:
-      - checkout
-      - run:
-          name: Generate environment
-          command: |
-            conda create -n py35_env python=3.5 pytest -yq
-            source activate py35_env
-            pip install -r requirements.txt
-      - run:
-          name: Run unit tests
-          command: |
-            source activate py35_env
-            python setup.py install
-            py.test --ignore=tedana/tests/test_integration_five_echo.py \
-              --ignore=tedana/tests/test_integration_three_echo.py tedana
+      - store_artifacts:
+          path: /tmp/src/tedana/coverage.xml
 
   py36_unit_tests_and_coverage:
     working_directory: /tmp/src/tedana
@@ -205,7 +193,30 @@ jobs:
           command: |
             source activate py36_env
             python setup.py install
-            py.test --ignore-glob=tedana/tests/test_integration*.py --cov-report term-missing --cov=tedana tedana
+            py.test --ignore-glob=tedana/tests/test_integration*.py \
+              --cov-append --cov-report xml:coverage.xml --cov=tedana tedana
+      - store_artifacts:
+          path: /tmp/src/tedana/coverage.xml
+
+  py35_unit_tests:
+    working_directory: /tmp/src/tedana
+    docker:
+      - image: continuumio/miniconda3
+    steps:
+      - checkout
+      - run:
+          name: Generate environment
+          command: |
+            conda create -n py35_env python=3.5 pytest -yq
+            source activate py35_env
+            pip install -r requirements.txt
+      - run:
+          name: Run unit tests
+          command: |
+            source activate py35_env
+            python setup.py install
+            py.test --ignore=tedana/tests/test_integration_five_echo.py \
+              --ignore=tedana/tests/test_integration_three_echo.py tedana
 
   py37_unit_tests:
     working_directory: /tmp/src/tedana
@@ -242,7 +253,7 @@ jobs:
             flake8 .
 
 workflows:
-  version: 2
+  version: 2.1
   build_test:
     jobs:
       - build
