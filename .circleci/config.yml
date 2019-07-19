@@ -132,7 +132,7 @@ jobs:
             source activate venv
             python setup.py install
             py.test tedana/tests/test_integration_three_echo.py \
-              --cov-append --cov-report xml:/tmp/src/tedana/coverage.xml --cov=tedana
+              --cov-append --cov-report term-missing --cov=tedana
       - run:
           name: Checking outputs
           command: |
@@ -141,8 +141,10 @@ jobs:
             diff /tmp/src/tedana/.circleci/tedana_outputs.txt /tmp/data/three-echo/TED.three-echo/outputs.out
       - store_artifacts:
           path: /tmp/data/three-echo
-      - store_artifacts:
-          path: /tmp/src/tedana/coverage.xml
+      - save_cache:
+          key: test-v1-{{ .Revision }}
+          paths:
+              - /tmp/src/tedana/.coverage.*
 
   five_echo_task:
     working_directory: /tmp/src/tedana
@@ -160,7 +162,7 @@ jobs:
             source activate venv
             python setup.py install
             py.test tedana/tests/test_integration_five_echo.py \
-              --cov-append --cov-report xml:/tmp/src/tedana/coverage.xml --cov=tedana
+              --cov-append --cov-report term-missing --cov=tedana
       - run:
           name: Checking outputs
           command: |
@@ -169,8 +171,10 @@ jobs:
             diff /tmp/src/tedana/.circleci/tedana_outputs_verbose.txt /tmp/data/five-echo/TED.five-echo/outputs.out
       - store_artifacts:
           path: /tmp/data/five-echo
-      - store_artifacts:
-          path: /tmp/src/tedana/coverage.xml
+      - save_cache:
+          key: test-v1-{{ .Revision }}
+          paths:
+              - /tmp/src/tedana/.coverage.*
 
   py36_unit_tests_and_coverage:
     working_directory: /tmp/src/tedana
@@ -192,9 +196,11 @@ jobs:
             source activate py36_env
             python setup.py install
             py.test --ignore-glob=tedana/tests/test_integration*.py \
-              --cov-append --cov-report xml:coverage.xml --cov=tedana tedana
-      - store_artifacts:
-          path: /tmp/src/tedana/coverage.xml
+              --cov-append --cov-report term-missing --cov=tedana tedana
+      - save_cache:
+          key: test-v1-{{ .Revision }}
+          paths:
+              - /tmp/src/tedana/.coverage.*
 
   py35_unit_tests:
     working_directory: /tmp/src/tedana
@@ -250,6 +256,23 @@ jobs:
             source activate venv
             flake8 .
 
+  merge_coverage:
+    working_directory: /tmp/src/tedana
+    docker:
+      - image: continuumio/miniconda3
+    steps:
+      - restore_cache:  # load environment
+          key: test-v1-{{ checksum "requirements.txt" }}
+      - restore_cache:  # get coverage reports
+          key: test-v1-{{ .Revision }}
+      - run:
+          name: Coverage
+          command: |
+            source activate venv
+            coverage combine
+
+
+
 workflows:
   version: 2.1
   build_test:
@@ -275,3 +298,8 @@ workflows:
             - build
             - get_data
             - get_regression_data
+      - merge_coverage:
+          requires:
+            - py36_unit_tests_and_coverage
+            - three_echo_rest
+            - five_echo_NIH
