@@ -133,6 +133,7 @@ jobs:
             python setup.py install
             py.test tedana/tests/test_integration_three_echo.py \
               --cov-append --cov-report term-missing --cov=tedana
+            mv /tmp/src/tedana/.coverage /tmp/src/tedana/.coverage.1
       - run:
           name: Checking outputs
           command: |
@@ -163,6 +164,7 @@ jobs:
             python setup.py install
             py.test tedana/tests/test_integration_five_echo.py \
               --cov-append --cov-report term-missing --cov=tedana
+            mv /tmp/src/tedana/.coverage /tmp/src/tedana/.coverage.2
       - run:
           name: Checking outputs
           command: |
@@ -197,9 +199,7 @@ jobs:
             python setup.py install
             py.test --ignore-glob=tedana/tests/test_integration*.py \
               --cov-append --cov-report term-missing --cov=tedana tedana
-            echo `ls -la`
-            echo
-            echo `ls -la /tmp/src/tedana/`
+            mv /tmp/src/tedana/.coverage /tmp/src/tedana/.coverage.3
       - save_cache:
           key: test-v1-{{ .Revision }}
           paths:
