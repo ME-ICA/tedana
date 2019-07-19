@@ -109,13 +109,6 @@ jobs:
       - run:
           name: Generate environment
           command: |
-            echo test0
-            echo `ls /tmp`
-            echo test1
-            echo `ls /tmp/src`
-            echo test2
-            echo `ls /tmp/src/tedana`
-            echo test3
             if [[ -e /opt/conda/envs/venv ]]; then
                 echo "Restoring environment from cache"
                 source activate venv
@@ -194,6 +187,8 @@ workflows:
     jobs:
       - build
       - make_environment
+          requires:
+            - build
       - get_data
       - get_regression_data
       - three_echo_rest:
