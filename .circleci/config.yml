@@ -126,11 +126,14 @@ jobs:
       - restore_cache:  # load environment
           key: test-v1-{{ checksum "requirements.txt" }}
       - run:
-          name: Run three-echo dataset
-          no_output_timeout: 40m
+          name: Activate environment and install tedana
           command: |
             source activate venv
             python setup.py install
+      - run:
+          name: Run three-echo dataset
+          no_output_timeout: 40m
+          command: |
             cd /tmp/data/three-echo/
             tedana -d three_echo_Cornell_zcat.nii.gz -e 14.5 38.5 62.5 \
                 --out-dir /tmp/data/three-echo/TED.three-echo/ \
@@ -155,11 +158,14 @@ jobs:
       - restore_cache:  # load environment
           key: test-v1-{{ checksum "requirements.txt" }}
       - run:
-          name: Run five-echo dataset
-          no_output_timeout: 40m
+          name: Activate environment and install tedana
           command: |
             source activate venv
             python setup.py install
+      - run:
+          name: Run five-echo dataset
+          no_output_timeout: 40m
+          command: |
             cd /tmp/data/five-echo/
             tedana -d p06.SBJ01_S09_Task11_e[1,2,3,4,5].sm.nii.gz \
                 -e 15.4 29.7 44.0 58.3 72.6 --verbose \
