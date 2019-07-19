@@ -141,7 +141,6 @@ jobs:
             find /tmp/data/three-echo/TED.three-echo/* \
                 -exec basename {} \; | sort > /tmp/data/three-echo/TED.three-echo/outputs.out
             diff /tmp/src/tedana/.circleci/tedana_outputs.txt /tmp/data/three-echo/TED.three-echo/outputs.out
-
       - store_artifacts:
           path: /tmp/data/three-echo
 
@@ -180,7 +179,7 @@ jobs:
       - image: continuumio/miniconda3
     steps:
       - attach_workspace:
-          at: /tmp/src/tedana
+          at: /tmp
       - run:
           name: Generate environment
           command: |
