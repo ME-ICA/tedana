@@ -54,3 +54,51 @@ def test_fit_decay_ts(testdata1):
     assert s0v.ndim == 2
     assert t2svG.ndim == 2
     assert s0vG.ndim == 2
+
+
+def test_smoke_fit_decay():
+    """
+    test_smoke_fit_decay tests that the function fit_decay returns reasonable 
+    objects with random inputs in the correct format 
+    """
+    n_samples = 100
+    n_echos = 5
+    n_times = 20
+    data = np.random.random((n_samples, n_echos, n_times))
+    tes = np.random.random((n_echos)).tolist()
+    mask = np.random.randint(2, size=n_samples) # masks are only bools of 0 or 1
+    masksum = np.random.random((n_samples))
+    t2s_limited, s0_limited, t2ss, s0vs, t2s_full, s0_full = me.fit_decay(data, 
+                                                                        tes,
+                                                                        mask,
+                                                                        masksum)
+    assert t2s_limited is not None
+    assert s0_limited is not None
+    assert t2ss is not None
+    assert s0vs is not None
+    assert t2s_full is not None
+    assert s0_full is not None
+
+
+def test_smoke_fit_decay_ts():
+    """
+    test_smoke_fit_decay_ts tests that the function fit_decay_ts returns reasonable 
+    objects with random inputs in the correct format 
+    """
+    n_samples = 100
+    n_echos = 5
+    n_times = 20
+    data = np.random.random((n_samples, n_echos, n_times))
+    tes = np.random.random((n_echos)).tolist()
+    mask = np.random.randint(2, size=n_samples)
+    masksum = np.random.random((n_samples))
+    t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts = me.fit_decay_ts(data, 
+                                                                        tes,
+                                                                        mask,
+                                                                        masksum)
+    assert t2s_limited_ts is not None
+    assert s0_limited_ts is not None
+    assert t2s_full_ts is not None
+    assert s0_full_ts is not None
+
+    
