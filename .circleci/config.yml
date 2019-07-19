@@ -16,6 +16,26 @@ jobs:
           root: /tmp
           paths:
               - src/tedana/
+      - restore_cache:  # ensure this step occurs *before* installing dependencies
+          key: test-v1-{{ checksum "requirements.txt" }}
+      - run:
+          name: Generate environment
+          command: |
+            if [[ -e /opt/conda/envs/venv ]]; then
+                echo "Restoring environment from cache"
+                source activate venv
+            else
+                conda create -n venv python=3.6 lxml nose cython mkl sphinx patsy boto3 pillow -yq
+                conda install -n venv nose-timer -c conda-forge -yq
+                source activate venv
+                pip install pytest pytest-cov codecov coverage coveralls flake8
+                pip install -r requirements.txt
+            fi
+            python setup.py install
+      - save_cache:
+          key: test-v1-{{ checksum "requirements.txt" }}
+          paths:
+            - "/opt/conda/envs/venv"
 
   get_data:
     working_directory: /tmp/src/tedana
@@ -97,34 +117,6 @@ jobs:
           paths:
               - /tmp/test
 
-  make_environment:
-    working_directory: /tmp/src/tedana
-    docker:
-      - image: continuumio/miniconda3
-    steps:
-      - attach_workspace:
-          at: /tmp
-      - restore_cache:  # ensure this step occurs *before* installing dependencies
-          key: test-v1-{{ checksum "requirements.txt" }}
-      - run:
-          name: Generate environment
-          command: |
-            if [[ -e /opt/conda/envs/venv ]]; then
-                echo "Restoring environment from cache"
-                source activate venv
-            else
-                conda create -n venv python=3.6 lxml nose cython mkl sphinx patsy boto3 pillow -yq
-                conda install -n venv nose-timer -c conda-forge -yq
-                source activate venv
-                pip install pytest pytest-cov codecov coverage coveralls flake8
-                pip install -r requirements.txt
-            fi
-            python setup.py install --user
-      - save_cache:
-          key: test-v1-{{ checksum "requirements.txt" }}
-          paths:
-            - "/opt/conda/envs/venv"
-
   three_echo_rest:
     working_directory: /tmp/src/tedana
     docker:
@@ -186,20 +178,15 @@ workflows:
   build_test:
     jobs:
       - build
-      - make_environment:
-          requires:
-            - build
       - get_data
       - get_regression_data
       - three_echo_rest:
           requires:
             - build
-            - make_environment
             - get_data
             - get_regression_data
       - five_echo_task:
           requires:
             - build
-            - make_environment
             - get_data
             - get_regression_data
