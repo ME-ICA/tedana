@@ -179,7 +179,8 @@ jobs:
     docker:
       - image: continuumio/miniconda3
     steps:
-      - checkout
+      - attach_workspace:
+          at: /tmp/src/tedana
       - run:
           name: Generate environment
           command: |
@@ -198,7 +199,8 @@ jobs:
     docker:
       - image: continuumio/miniconda3
     steps:
-      - checkout
+      - attach_workspace:
+          at: /tmp/src/tedana
       - run:
           name: Generate environment
           command: |
@@ -218,7 +220,8 @@ jobs:
     docker:
       - image: continuumio/miniconda3
     steps:
-      - checkout
+      - attach_workspace:
+          at: /tmp/src/tedana
       - run:
           name: Generate environment
           command: |
