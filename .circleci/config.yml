@@ -3,6 +3,8 @@
 # Check https://circleci.com/docs/2.0/language-python/ for more details
 #
 version: 2.1
+orbs:
+  codecov: codecov/codecov@1.0.5
 jobs:
 
   build:
@@ -28,7 +30,7 @@ jobs:
                 conda create -n venv python=3.6 lxml nose cython mkl sphinx patsy boto3 pillow -yq
                 conda install -n venv nose-timer -c conda-forge -yq
                 source activate venv
-                pip install pytest pytest-cov codecov coverage coveralls flake8
+                pip install pytest pytest-cov codecov coverage coveralls flake8<3.0 flake8-putty
                 pip install -r requirements.txt
             fi
       - save_cache:
@@ -257,7 +259,7 @@ jobs:
           name: Run style check
           command: |
             source activate venv
-            flake8 .
+            flake8 tedana
 
   merge_coverage:
     working_directory: /tmp/src/tedana
@@ -272,8 +274,9 @@ jobs:
           name: Coverage
           command: |
             source activate venv
-            echo `ls -a`
             coverage combine
+      - codecov/upload:
+          file: /tmp/src/tedana/.coverage
 
 workflows:
   version: 2.1
