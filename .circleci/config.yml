@@ -271,7 +271,7 @@ jobs:
       - restore_cache:  # load environment
           key: test-v1-{{ checksum "requirements.txt" }}
       - run:
-          name: Coverage
+          name: Merge coverage files
           command: |
             source activate venv
             coverage combine
