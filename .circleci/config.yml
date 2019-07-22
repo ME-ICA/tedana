@@ -176,7 +176,7 @@ jobs:
       - persist_to_workspace:
           root: /tmp
           paths:
-              - src/tedana/.coverage.1
+              - src/tedana/.coverage.2
 
   py36_unit_tests_and_coverage:
     working_directory: /tmp/src/tedana
@@ -203,7 +203,7 @@ jobs:
       - persist_to_workspace:
           root: /tmp
           paths:
-              - src/tedana/.coverage.1
+              - src/tedana/.coverage.3
 
   py35_unit_tests:
     working_directory: /tmp/src/tedana
