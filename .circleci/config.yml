@@ -142,10 +142,10 @@ jobs:
             diff /tmp/src/tedana/.circleci/tedana_outputs.txt /tmp/data/three-echo/TED.three-echo/outputs.out
       - store_artifacts:
           path: /tmp/data/three-echo
-      - save_cache:
-          key: test-v1-{{ .Revision }}
+      - persist_to_workspace:
+          root: /tmp
           paths:
-              - /tmp/src/tedana/.coverage.1
+              - src/tedana/.coverage.1
 
   five_echo_task:
     working_directory: /tmp/src/tedana
@@ -173,10 +173,10 @@ jobs:
             diff /tmp/src/tedana/.circleci/tedana_outputs_verbose.txt /tmp/data/five-echo/TED.five-echo/outputs.out
       - store_artifacts:
           path: /tmp/data/five-echo
-      - save_cache:
-          key: test-v1-{{ .Revision }}
+      - persist_to_workspace:
+          root: /tmp
           paths:
-              - /tmp/src/tedana/.coverage.2
+              - src/tedana/.coverage.1
 
   py36_unit_tests_and_coverage:
     working_directory: /tmp/src/tedana
@@ -200,10 +200,10 @@ jobs:
             py.test --ignore-glob=tedana/tests/test_integration*.py \
               --cov-append --cov-report term-missing --cov=tedana tedana
             mv /tmp/src/tedana/.coverage /tmp/src/tedana/.coverage.3
-      - save_cache:
-          key: test-v1-{{ .Revision }}
+      - persist_to_workspace:
+          root: /tmp
           paths:
-              - /tmp/src/tedana/.coverage.3
+              - src/tedana/.coverage.1
 
   py35_unit_tests:
     working_directory: /tmp/src/tedana
@@ -268,13 +268,11 @@ jobs:
           at: /tmp
       - restore_cache:  # load environment
           key: test-v1-{{ checksum "requirements.txt" }}
-      - restore_cache:  # get coverage reports
-          key: test-v1-{{ .Revision }}
       - run:
           name: Coverage
           command: |
             source activate venv
-            echo `ls -la`
+            echo `ls -a`
             coverage combine
 
 workflows:
