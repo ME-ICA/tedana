@@ -280,10 +280,11 @@ jobs:
             source activate venv
             cd /tmp/src/coverage/
             coverage combine
+            coverage xml
       - store_artifacts:
           path: /tmp/src/coverage
       - codecov/upload:
-          file: /tmp/src/coverage/.coverage
+          file: /tmp/src/coverage/coverage.xml
 
 workflows:
   version: 2.1

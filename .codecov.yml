@@ -2,9 +2,6 @@ codecov:
   notify:
     require_ci_to_pass: yes
 
-fixes:
-  - "/tmp/src/tedana/tedana/::tedana/"  # move path
-
 coverage:
   status:
     project:
