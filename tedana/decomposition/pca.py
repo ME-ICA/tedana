@@ -53,7 +53,7 @@ def run_mlepca(data):
     v = ppca.components_.T
     s = ppca.explained_variance_
     u = np.dot(np.dot(data, v), np.diag(1. / s))
-    varex_norm = np.cumsum(ppca.explained_variance_ratio_)
+    varex_norm = ppca.explained_variance_ratio_
     return u, s, varex_norm, v
 
 
@@ -164,11 +164,11 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     3.  Compute :math:`{\\kappa}` and :math:`{\\rho}`:
 
             .. math::
-                {\\kappa}_c = \\frac{\sum_{v}^V {\\zeta}_{c,v}^p * \
-                      F_{c,v,R_2^*}}{\sum {\\zeta}_{c,v}^p}
+                {\\kappa}_c = \\frac{\\sum_{v}^V {\\zeta}_{c,v}^p * \
+                      F_{c,v,R_2^*}}{\\sum {\\zeta}_{c,v}^p}
 
-                {\\rho}_c = \\frac{\sum_{v}^V {\\zeta}_{c,v}^p * \
-                      F_{c,v,S_0}}{\sum {\\zeta}_{c,v}^p}
+                {\\rho}_c = \\frac{\\sum_{v}^V {\\zeta}_{c,v}^p * \
+                      F_{c,v,S_0}}{\\sum {\\zeta}_{c,v}^p}
 
     4.  Some other stuff. Something about elbows.
     5.  Classify components as thermal noise if they meet both of the
