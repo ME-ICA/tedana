@@ -53,7 +53,7 @@ def run_mlepca(data):
     v = ppca.components_.T
     s = ppca.explained_variance_
     u = np.dot(np.dot(data, v), np.diag(1. / s))
-    varex_norm = np.cumsum(ppca.explained_variance_ratio_)
+    varex_norm = ppca.explained_variance_ratio_
     return u, s, varex_norm, v
 
 
