@@ -18,7 +18,7 @@ F_MAX = 500
 Z_MAX = 8
 
 
-def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
+def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
                        reindex=False, mmixN=None, algorithm=None, label=None,
                        out_dir='.', verbose=False):
     """
@@ -33,8 +33,6 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
     mmix : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `catd`
-    mask : (S [x E]) array_like
-        Boolean mask array
     t2s : (S [x T]) array_like
         Limited T2* map or timeseries.
     tes : list
@@ -68,11 +66,13 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
     betas : :obj:`numpy.ndarray`
     mmix_new : :obj:`numpy.ndarray`
     """
+    # Use t2s as mask
+    mask = t2s != 0
     if not (catd.shape[0] == t2s.shape[0] == mask.shape[0] == tsoc.shape[0]):
         raise ValueError('First dimensions (number of samples) of catd ({0}), '
-                         'tsoc ({1}), t2s ({2}), and mask ({3}) do not '
+                         'tsoc ({1}), and t2s ({2}) do not '
                          'match'.format(catd.shape[0], tsoc.shape[0],
-                                        t2s.shape[0], mask.shape[0]))
+                                        t2s.shape[0]))
     elif catd.shape[1] != len(tes):
         raise ValueError('Second dimension of catd ({0}) does not match '
                          'number of echoes provided (tes; '
@@ -87,19 +87,22 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
                              '({0}) does not match number of volumes in '
                              't2s ({1})'.format(catd.shape[2], t2s.shape[1]))
 
-    mask = t2s != 0  # Override mask because problems
+    # mask everything we can
+    tsoc = tsoc[mask, :]
+    catd = catd[mask, ...]
+    t2s = t2s[mask]
 
     # demean optimal combination
-    tsoc = tsoc[mask, :]
     tsoc_dm = tsoc - tsoc.mean(axis=-1, keepdims=True)
 
     # compute un-normalized weight dataset (features)
     if mmixN is None:
         mmixN = mmix
-    WTS = computefeats2(utils.unmask(tsoc, mask), mmixN, mask, normalize=False)
+    WTS = computefeats2(tsoc, mmixN, mask=None, normalize=False)
 
     # compute PSC dataset - shouldn't have to refit data
     tsoc_B = get_coeffs(tsoc_dm, mmix, mask=None)
+    del tsoc_dm
     tsoc_Babs = np.abs(tsoc_B)
     PSC = tsoc_B / tsoc.mean(axis=-1, keepdims=True) * 100
 
@@ -115,23 +118,18 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
     totvar_norm = (WTS**2).sum()
 
     # compute Betas and means over TEs for TE-dependence analysis
-    betas = get_coeffs(catd, mmix, np.repeat(mask[:, np.newaxis], len(tes),
-                                             axis=1))
-    n_samp, n_echos, n_components = betas.shape
-    n_voxels = mask.sum()
-    n_data_voxels = (t2s != 0).sum()
+    betas = get_coeffs(utils.unmask(catd, mask),
+                       mmix,
+                       np.repeat(mask[:, np.newaxis], len(tes), axis=1))
+    betas = betas[mask, ...]
+    n_voxels, n_echos, n_components = betas.shape
     mu = catd.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))
     fmin, _, _ = getfbounds(n_echos)
 
-    # mask arrays
-    mumask = mu[t2s != 0]
-    t2smask = t2s[t2s != 0]
-    betamask = betas[t2s != 0]
-
     # set up Xmats
-    X1 = mumask.T  # Model 1
-    X2 = np.tile(tes, (1, n_data_voxels)) * mumask.T / t2smask.T  # Model 2
+    X1 = mu.T  # Model 1
+    X2 = np.tile(tes, (1, n_voxels)) * mu.T / t2s.T  # Model 2
 
     # tables for component selection
     kappas = np.zeros([n_components])
@@ -139,35 +137,34 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
     varex = np.zeros([n_components])
     varex_norm = np.zeros([n_components])
     Z_maps = np.zeros([n_voxels, n_components])
-    F_R2_maps = np.zeros([n_data_voxels, n_components])
-    F_S0_maps = np.zeros([n_data_voxels, n_components])
-    pred_R2_maps = np.zeros([n_data_voxels, n_echos, n_components])
-    pred_S0_maps = np.zeros([n_data_voxels, n_echos, n_components])
+    F_R2_maps = np.zeros([n_voxels, n_components])
+    F_S0_maps = np.zeros([n_voxels, n_components])
+    pred_R2_maps = np.zeros([n_voxels, n_echos, n_components])
+    pred_S0_maps = np.zeros([n_voxels, n_echos, n_components])
 
     LGR.info('Fitting TE- and S0-dependent models to components')
     for i_comp in range(n_components):
-        # size of B is (n_echoes, n_samples)
-        B = np.atleast_3d(betamask)[:, :, i_comp].T
-        alpha = (np.abs(B)**2).sum(axis=0)
+        # size of comp_betas is (n_echoes, n_samples)
+        comp_betas = np.atleast_3d(betas)[:, :, i_comp].T
+        alpha = (np.abs(comp_betas)**2).sum(axis=0)
         varex[i_comp] = (tsoc_B[:, i_comp]**2).sum() / totvar * 100.
-        varex_norm[i_comp] = (utils.unmask(WTS, mask)[t2s != 0][:, i_comp]**2).sum() /\
-            totvar_norm * 100.
+        varex_norm[i_comp] = (WTS[:, i_comp]**2).sum() / totvar_norm
 
         # S0 Model
         # (S,) model coefficient map
-        coeffs_S0 = (B * X1).sum(axis=0) / (X1**2).sum(axis=0)
+        coeffs_S0 = (comp_betas * X1).sum(axis=0) / (X1**2).sum(axis=0)
         pred_S0 = X1 * np.tile(coeffs_S0, (n_echos, 1))
         pred_S0_maps[:, :, i_comp] = pred_S0.T
-        SSE_S0 = (B - pred_S0)**2
+        SSE_S0 = (comp_betas - pred_S0)**2
         SSE_S0 = SSE_S0.sum(axis=0)  # (S,) prediction error map
         F_S0 = (alpha - SSE_S0) * (n_echos - 1) / (SSE_S0)
         F_S0_maps[:, i_comp] = F_S0
 
         # R2 Model
-        coeffs_R2 = (B * X2).sum(axis=0) / (X2**2).sum(axis=0)
+        coeffs_R2 = (comp_betas * X2).sum(axis=0) / (X2**2).sum(axis=0)
         pred_R2 = X2 * np.tile(coeffs_R2, (n_echos, 1))
         pred_R2_maps[:, :, i_comp] = pred_R2.T
-        SSE_R2 = (B - pred_R2)**2
+        SSE_R2 = (comp_betas - pred_R2)**2
         SSE_R2 = SSE_R2.sum(axis=0)
         F_R2 = (alpha - SSE_R2) * (n_echos - 1) / (SSE_R2)
         F_R2_maps[:, i_comp] = F_R2
@@ -181,10 +178,12 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
         # compute Kappa and Rho
         F_S0[F_S0 > F_MAX] = F_MAX
         F_R2[F_R2 > F_MAX] = F_MAX
-        norm_weights = np.abs(np.squeeze(
-            utils.unmask(wtsZ, mask)[t2s != 0]**2.))
+        norm_weights = np.abs(wtsZ ** 2.)
         kappas[i_comp] = np.average(F_R2, weights=norm_weights)
         rhos[i_comp] = np.average(F_S0, weights=norm_weights)
+    del SSE_S0, SSE_R2, wtsZ, F_S0, F_R2, norm_weights, comp_betas
+    if algorithm != 'kundu_v3':
+        del WTS, PSC, tsoc_B
 
     # tabulate component values
     comptable = np.vstack([kappas, rhos, varex, varex_norm]).T
@@ -196,20 +195,24 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
         betas = betas[..., sort_idx]
         pred_R2_maps = pred_R2_maps[:, :, sort_idx]
         pred_S0_maps = pred_S0_maps[:, :, sort_idx]
-        F_S0_maps = F_S0_maps[:, sort_idx]
         F_R2_maps = F_R2_maps[:, sort_idx]
+        F_S0_maps = F_S0_maps[:, sort_idx]
         Z_maps = Z_maps[:, sort_idx]
-        WTS = WTS[:, sort_idx]
-        PSC = PSC[:, sort_idx]
-        tsoc_B = tsoc_B[:, sort_idx]
         tsoc_Babs = tsoc_Babs[:, sort_idx]
+        if algorithm == 'kundu_v3':
+            WTS = WTS[:, sort_idx]
+            PSC = PSC[:, sort_idx]
+            tsoc_B = tsoc_B[:, sort_idx]
     else:
         mmix_new = mmix
+    del mmix
 
     if verbose:
         # Echo-specific weight maps for each of the ICA components.
-        io.filewrite(betas, op.join(out_dir, '{0}betas_catd.nii'.format(label)),
+        io.filewrite(utils.unmask(betas, mask),
+                     op.join(out_dir, '{0}betas_catd.nii'.format(label)),
                      ref_img)
+
         # Echo-specific maps of predicted values for R2 and S0 models for each
         # component.
         io.filewrite(utils.unmask(pred_R2_maps, mask),
@@ -220,6 +223,7 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
         io.filewrite(utils.unmask(Z_maps ** 2., mask),
                      op.join(out_dir, '{0}metric_weights.nii'.format(label)),
                      ref_img)
+    del pred_R2_maps, pred_S0_maps
 
     comptable = pd.DataFrame(comptable,
                              columns=['kappa', 'rho',
@@ -229,11 +233,11 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
 
     # Generate clustering criteria for component selection
     if algorithm in ['kundu_v2', 'kundu_v3']:
-        Z_clmaps = np.zeros([n_voxels, n_components])
-        F_R2_clmaps = np.zeros([n_data_voxels, n_components])
-        F_S0_clmaps = np.zeros([n_data_voxels, n_components])
-        Br_R2_clmaps = np.zeros([n_voxels, n_components])
-        Br_S0_clmaps = np.zeros([n_voxels, n_components])
+        Z_clmaps = np.zeros([n_voxels, n_components], bool)
+        F_R2_clmaps = np.zeros([n_voxels, n_components], bool)
+        F_S0_clmaps = np.zeros([n_voxels, n_components], bool)
+        Br_R2_clmaps = np.zeros([n_voxels, n_components], bool)
+        Br_S0_clmaps = np.zeros([n_voxels, n_components], bool)
 
         LGR.info('Performing spatial clustering of components')
         csize = np.max([int(n_voxels * 0.0005) + 5, 20])
@@ -242,7 +246,7 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
             # Cluster-extent threshold and binarize F-maps
             ccimg = io.new_nii_like(
                 ref_img,
-                np.squeeze(utils.unmask(F_R2_maps[:, i_comp], t2s != 0)))
+                np.squeeze(utils.unmask(F_R2_maps[:, i_comp], mask)))
             F_R2_clmaps[:, i_comp] = utils.threshold_map(
                 ccimg, min_cluster_size=csize, threshold=fmin, mask=mask,
                 binarize=True)
@@ -250,7 +254,7 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
 
             ccimg = io.new_nii_like(
                 ref_img,
-                np.squeeze(utils.unmask(F_S0_maps[:, i_comp], t2s != 0)))
+                np.squeeze(utils.unmask(F_S0_maps[:, i_comp], mask)))
             F_S0_clmaps[:, i_comp] = utils.threshold_map(
                 ccimg, min_cluster_size=csize, threshold=fmin, mask=mask,
                 binarize=True)
@@ -259,7 +263,7 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
             # Cluster-extent threshold and binarize Z-maps with CDT of p < 0.05
             ccimg = io.new_nii_like(
                 ref_img,
-                np.squeeze(utils.unmask(Z_maps[:, i_comp], t2s != 0)))
+                np.squeeze(utils.unmask(Z_maps[:, i_comp], mask)))
             Z_clmaps[:, i_comp] = utils.threshold_map(
                 ccimg, min_cluster_size=csize, threshold=1.95, mask=mask,
                 binarize=True)
@@ -267,7 +271,7 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
             # Cluster-extent threshold and binarize ranked signal-change map
             ccimg = io.new_nii_like(
                 ref_img,
-                utils.unmask(stats.rankdata(tsoc_Babs[:, i_comp]), t2s != 0))
+                utils.unmask(stats.rankdata(tsoc_Babs[:, i_comp]), mask))
             Br_R2_clmaps[:, i_comp] = utils.threshold_map(
                 ccimg, min_cluster_size=csize,
                 threshold=(max(tsoc_Babs.shape) - countsigFR2), mask=mask,
@@ -276,6 +280,7 @@ def dependence_metrics(catd, tsoc, mmix, mask, t2s, tes, ref_img,
                 ccimg, min_cluster_size=csize,
                 threshold=(max(tsoc_Babs.shape) - countsigFS0), mask=mask,
                 binarize=True)
+        del ccimg, tsoc_Babs
 
         if algorithm == 'kundu_v2':
             # WTS, tsoc_B, PSC, and F_S0_maps are not used by Kundu v2.5

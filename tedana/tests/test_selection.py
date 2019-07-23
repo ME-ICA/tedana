@@ -1,5 +1,5 @@
 """
-Tests for tedana.model.monoexponential
+Tests for tedana.selection
 """
 
 import os.path as op
