@@ -187,17 +187,12 @@ jobs:
     steps:
       - attach_workspace:
           at: /tmp
-      - run:
-          name: Generate environment
-          command: |
-            conda create -n py36_env python=3.6 -yq
-            source activate py36_env
-            pip install pytest pytest-cov codecov coverage coveralls flake8
-            pip install -r requirements.txt
+      - restore_cache:  # load environment
+          key: test-v1-{{ checksum "requirements.txt" }}
       - run:
           name: Run unit tests
           command: |
-            source activate py36_env
+            source activate venv
             python setup.py install
             py.test --ignore-glob=tedana/tests/test_integration*.py \
               --cov-append --cov-report term-missing --cov=tedana tedana
