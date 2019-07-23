@@ -26,14 +26,11 @@ Here are the echo-specific time series for a single voxel in an example
 resting-state scan with 5 echoes.
 
 .. image:: /_static/a01_echo_timeseries.png
-  :align: center
 
 The values across volumes for this voxel scale with echo time in a predictable
 manner.
 
 .. image:: /_static/a02_echo_value_distributions.png
-  :width: 400 px
-  :align: center
 
 Adaptive mask generation
 ````````````````````````
@@ -78,8 +75,6 @@ The BOLD data are transformed as :math:`log(|S|+1)`, where :math:`S` is the BOLD
 The echo times are also multiplied by -1.
 
 .. image:: /_static/a04_echo_log_value_distributions.png
-  :width: 400 px
-  :align: center
 
 A simple line can then be fit to the transformed data with linear regression.
 For the sake of this introduction, we can assume that the example voxel has
@@ -98,8 +93,6 @@ this voxel), so the line is fit to all available data.
     optimally combined data.
 
 .. image:: /_static/a05_loglinear_regression.png
-  :width: 400 px
-  :align: center
 
 The values of interest for the decay model, :math:`S_0` and :math:`T_{2}^*`,
 are then simple transformations of the line's intercept (:math:`B_{0}`) and
@@ -113,14 +106,10 @@ The resulting values can be used to show the fitted monoexponential decay model
 on the original data.
 
 .. image:: /_static/a06_monoexponential_decay_model.png
-  :width: 400 px
-  :align: center
 
 We can also see where :math:`T_{2}^*` lands on this curve.
 
 .. image:: /_static/a07_monoexponential_decay_model_with_t2.png
-  :width: 400 px
-  :align: center
 
 .. _optimal combination:
 
@@ -143,14 +132,11 @@ The distribution of values for the optimally combined data lands somewhere
 between the distributions for other echoes.
 
 .. image:: /_static/a09_optimal_combination_value_distributions.png
-  :width: 400 px
-  :align: center
 
 The time series for the optimally combined data also looks like a combination
 of the other echoes (which it is).
 
 .. image:: /_static/a10_optimal_combination_timeseries.png
-  :align: center
 
 .. note::
     An alternative method for optimal combination that
@@ -222,16 +208,10 @@ These models allow calculation of F-statistics for the :math:`R_2` and :math:`S_
 models (referred to as :math:`\kappa` and :math:`\rho`, respectively).
 
 .. image:: /_static/a14_te_dependence_models_component_0.png
-  :width: 400 px
-  :align: center
 
 .. image:: /_static/a14_te_dependence_models_component_1.png
-  :width: 400 px
-  :align: center
 
 .. image:: /_static/a14_te_dependence_models_component_2.png
-  :width: 400 px
-  :align: center
 
 A decision tree is applied to :math:`\kappa`, :math:`\rho`, and other metrics in order to
 classify ICA components as TE-dependent (BOLD signal), TE-independent

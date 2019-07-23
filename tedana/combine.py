@@ -110,7 +110,7 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
 
             .. math::
                 w(T_2^*)_n = \\frac{TE_n * exp(\\frac{-TE}\
-                {T_{2(est)}^*})}{\sum TE_n * exp(\\frac{-TE}{T_{2(est)}^*})}
+                {T_{2(est)}^*})}{\\sum TE_n * exp(\\frac{-TE}{T_{2(est)}^*})}
     2.  Perform weighted average per voxel and TR across TEs based on weights
         estimated in the previous step.
     """
