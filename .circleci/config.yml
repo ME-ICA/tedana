@@ -30,7 +30,7 @@ jobs:
                 conda create -n venv python=3.6 lxml nose cython mkl sphinx patsy boto3 pillow -yq
                 conda install -n venv nose-timer -c conda-forge -yq
                 source activate venv
-                pip install pytest pytest-cov codecov coverage coveralls flake8<3.0 flake8-putty
+                pip install pytest pytest-cov codecov coverage coveralls 'flake8<3.0' flake8-putty
                 pip install -r requirements.txt
             fi
       - save_cache:
