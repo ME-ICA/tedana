@@ -3,9 +3,9 @@ scikit-learn
 scipy
 nilearn
 nibabel>=2.1.0
-duecredit
-sphinx-argparse
-numpydoc
 versioneer
 pandas
 matplotlib
+duecredit
+sphinx-argparse
+numpydoc
