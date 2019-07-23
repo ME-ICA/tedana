@@ -135,7 +135,8 @@ jobs:
             python setup.py install
             py.test tedana/tests/test_integration_three_echo.py \
               --cov-append --cov-report term-missing --cov=tedana
-            mv /tmp/src/tedana/.coverage /tmp/src/tedana/.coverage.1
+            mkdir /tmp/src/coverage/
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.1
       - run:
           name: Checking outputs
           command: |
@@ -144,10 +145,12 @@ jobs:
             diff /tmp/src/tedana/.circleci/tedana_outputs.txt /tmp/data/three-echo/TED.three-echo/outputs.out
       - store_artifacts:
           path: /tmp/data/three-echo
+      - store_artifacts:
+          path: /tmp/src/coverage
       - persist_to_workspace:
           root: /tmp
           paths:
-              - src/tedana/.coverage.1
+              - src/coverage/.coverage.1
 
   five_echo_task:
     working_directory: /tmp/src/tedana
@@ -166,7 +169,8 @@ jobs:
             python setup.py install
             py.test tedana/tests/test_integration_five_echo.py \
               --cov-append --cov-report term-missing --cov=tedana
-            mv /tmp/src/tedana/.coverage /tmp/src/tedana/.coverage.2
+            mkdir /tmp/src/coverage/
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.2
       - run:
           name: Checking outputs
           command: |
@@ -175,10 +179,12 @@ jobs:
             diff /tmp/src/tedana/.circleci/tedana_outputs_verbose.txt /tmp/data/five-echo/TED.five-echo/outputs.out
       - store_artifacts:
           path: /tmp/data/five-echo
+      - store_artifacts:
+          path: /tmp/src/coverage
       - persist_to_workspace:
           root: /tmp
           paths:
-              - src/tedana/.coverage.2
+              - src/coverage/.coverage.2
 
   py36_unit_tests_and_coverage:
     working_directory: /tmp/src/tedana
@@ -196,11 +202,14 @@ jobs:
             python setup.py install
             py.test --ignore-glob=tedana/tests/test_integration*.py \
               --cov-append --cov-report term-missing --cov=tedana tedana
-            mv /tmp/src/tedana/.coverage /tmp/src/tedana/.coverage.3
+            mkdir /tmp/src/coverage/
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.3
+      - store_artifacts:
+          path: /tmp/src/coverage
       - persist_to_workspace:
           root: /tmp
           paths:
-              - src/tedana/.coverage.3
+              - src/coverage/.coverage.3
 
   py35_unit_tests:
     working_directory: /tmp/src/tedana
@@ -269,9 +278,13 @@ jobs:
           name: Merge coverage files
           command: |
             source activate venv
+            cd /tmp/src/coverage/
             coverage combine
+            coverage xml
+      - store_artifacts:
+          path: /tmp/src/coverage
       - codecov/upload:
-          file: /tmp/src/tedana/.coverage
+          file: /tmp/src/coverage/coverage.xml
 
 workflows:
   version: 2.1
