@@ -12,6 +12,7 @@ Already know what you're looking for in this guide? Jump to the following sectio
 
 * [Joining the conversation](#joining-the-conversation)
   * [Monthly developer calls](#monthly-developer-calls)
+* [Contributing small documentation changes](#contributing-small-documentation-changes)
 * [Contributing through Github](#contributing-through-github)
 * [Understanding issues, milestones, and project boards](#understanding-issues-milestones-and-project-boards)
 * [Making a change](#making-a-change)
@@ -40,6 +41,10 @@ An agenda will be circulated in the gitter channel in advance of the meeting.
 
 Everyone is welcome.
 We look forward to meeting you there :hibiscus:
+
+## Contributing small documentation changes
+If you are new to GitHub and just have a small documentation change
+recommendation, please submit it to [our e-mail address](mailto:tedana.devs@gmail.com).
 
 ## Contributing through GitHub
 
