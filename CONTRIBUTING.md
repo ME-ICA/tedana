@@ -44,7 +44,8 @@ We look forward to meeting you there :hibiscus:
 
 ## Contributing small documentation changes
 If you are new to GitHub and just have a small documentation change
-recommendation, please submit it to [our e-mail address](mailto:tedana.devs@gmail.com).
+recommendation, please submit it to [our e-mail address](mailto:tedana.devs@gmail.com)
+and one of our developers will add it to the documentation directly.
 
 ## Contributing through GitHub
 
