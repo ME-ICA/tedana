@@ -151,7 +151,16 @@ Using a new branch allows you to follow the standard "fork/branch/commit/pull-re
 
 Before creating your pull request, please make sure to review the `tedana` [style conventions](#style-guide).
 
-### 5. Submit a [pull request][link_pullrequest]
+### 5. Test your changes
+
+For changes to documentation, we suggest rendering the HTML files locally in order to review the changes before submitting a pull request. This can be done by running
+```
+html make
+```
+from the `docs` directory in your local `tedana` repository. You should then be able to access the rendered files in the `docs/_build` directory, and view them in your browser.
+
+
+### 6. Submit a [pull request][link_pullrequest]
 
 When opening the pull request, we ask that you follow some [specific conventions](#pull-requests). We outline these below.
 
