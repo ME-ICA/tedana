@@ -5,7 +5,7 @@ import numpy as np
 from tedana import utils
 
 
-def fit_decay(data, tes, mask, masksum):
+def fit_decay(data, tes, mask, masksum, fittype):
     """
     Fit voxel-wise monoexponential decay models to `data`
 
@@ -114,7 +114,7 @@ def fit_decay(data, tes, mask, masksum):
     return t2s_limited, s0_limited, t2ss, s0vs, t2s_full, s0_full
 
 
-def fit_decay_ts(data, tes, mask, masksum):
+def fit_decay_ts(data, tes, mask, masksum, fittype):
     """
     Fit voxel- and timepoint-wise monoexponential decay models to `data`
 
@@ -159,7 +159,7 @@ def fit_decay_ts(data, tes, mask, masksum):
 
     for vol in range(n_vols):
         t2s_limited, s0_limited, _, _, t2s_full, s0_full = fit_decay(
-            data[:, :, vol][:, :, None], tes, mask, masksum)
+            data[:, :, vol][:, :, None], tes, mask, masksum, fittype)
         t2s_limited_ts[:, vol] = t2s_limited
         s0_limited_ts[:, vol] = s0_limited
         t2s_full_ts[:, vol] = t2s_full
