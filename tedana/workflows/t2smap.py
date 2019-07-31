@@ -101,7 +101,7 @@ def _get_parser():
 
 
 def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
-                    label=None, debug=False, quiet=False):
+                    label=None, debug=False, fittype='loglin', quiet=False):
     """
     Estimate T2 and S0, and optimally combine data across TEs.
 
@@ -124,6 +124,12 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'paid' (Poser).
     label : :obj:`str` or :obj:`None`, optional
         Label for output directory. Default is None.
+    fittype : {'loglin', 'curvefit'}, optional
+        Monoexponential fitting method. 
+        'loglin' means to use the the default linear fit to the log of 
+        the data.
+        'curvefit' means to use a monoexponential fit on the raw data,
+        which will take substantially longer.
 
     Other Parameters
     ----------------
@@ -197,10 +203,10 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
     if fitmode == 'all':
         (t2s_limited, s0_limited,
          t2ss, s0s,
-         t2s_full, s0_full) = decay.fit_decay(catd, tes, mask, masksum)
+         t2s_full, s0_full) = decay.fit_decay(catd, tes, mask, masksum, fittype)
     else:
         (t2s_limited, s0_limited,
-         t2s_full, s0_full) = decay.fit_decay_ts(catd, tes, mask, masksum)
+         t2s_full, s0_full) = decay.fit_decay_ts(catd, tes, mask, masksum, fittype)
 
     # set a hard cap for the T2* map/timeseries
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
