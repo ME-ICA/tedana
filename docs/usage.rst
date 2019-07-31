@@ -101,6 +101,8 @@ and the subsequent calculation of voxelwise T2* values will be distorted.
 See the description of ``tedana``'s :doc:`approach <\approach>` for more details
 on how T2* values are calculated.
 
+.. _support_ref:
+
 Support and communication
 -------------------------
 All bugs, concerns and enhancement requests for this software can be submitted here: https://github.com/ME-ICA/tedana/issues.

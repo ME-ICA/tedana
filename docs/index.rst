@@ -40,6 +40,10 @@ multi-echo functional magnetic resonance imaging (fMRI) data.
    :target: https://gitter.im/ME-ICA/tedana
    :alt: Join the chat
 
+.. image:: https://img.shields.io/badge/receive-our%20newsletter%20❤%EF%B8%8F-blueviolet.svg
+   :target: https://tinyletter.com/tedana-devs
+   :alt: Join our tinyletter mailing list
+
 About
 -----
 
@@ -125,7 +129,9 @@ You can also learn more about `why citing software is important`_.
 Posters
 -------
 
-.. image:: /_static/tedana-poster.png
+.. image:: /_static/tedana-ohbm2019-poster.png
+
+.. image:: /_static/tedana-ohbm2018-poster.png
 
 License Information
 -------------------
@@ -138,6 +144,7 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
 
    installation
    multi-echo
+   publications
    usage
    approach
    outputs
