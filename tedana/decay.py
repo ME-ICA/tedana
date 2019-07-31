@@ -80,7 +80,7 @@ def fit_decay(data, tes, mask, masksum, fittype):
     data = data[mask]
     t2ss = np.zeros([n_samp, n_echos - 1])
     s0vs = np.zeros([n_samp, n_echos - 1])
-
+    
     for echo in range(1, n_echos):
         # perform log linear fit of echo times against MR signal
         # make DV matrix: samples x (time series * echos)
@@ -98,6 +98,13 @@ def fit_decay(data, tes, mask, masksum, fittype):
 
         t2ss[..., echo - 1] = np.squeeze(utils.unmask(t2s, mask))
         s0vs[..., echo - 1] = np.squeeze(utils.unmask(s0, mask))
+
+    if fittype == 'curvefit':
+        # perform a monoexponential fit of echo times against MR signal
+        # using the mean of the signal, using loglin estimate
+        # as initial estimates
+        temp_variable = 5
+            
 
     # create limited T2* and S0 maps
     echo_masks = np.zeros([n_samp, n_echos - 1], dtype=bool)
