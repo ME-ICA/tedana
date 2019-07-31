@@ -22,6 +22,8 @@ def fit_decay(data, tes, mask, masksum, fittype):
     masksum : (S,) array_like
         Valued array indicating number of echos that have sufficient signal in
         given sample
+    fittype : :obj: `str`
+        The type of model fit to use 
 
     Returns
     -------
@@ -131,6 +133,8 @@ def fit_decay_ts(data, tes, mask, masksum, fittype):
     masksum : (S,) array_like
         Valued array indicating number of echos that have sufficient signal in
         given sample
+    fittype : :obj: `str`
+        The type of model fit to use 
 
     Returns
     -------
