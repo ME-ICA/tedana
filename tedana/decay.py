@@ -2,6 +2,7 @@
 Functions to estimate S0 and T2* from multi-echo data.
 """
 import numpy as np
+import scipy
 from tedana import utils
 
 def mono_exp(tes, s0, t2star):
@@ -19,7 +20,7 @@ def mono_exp(tes, s0, t2star):
 
     """
     return tes * np.exp(-tes/t2star)
-    
+
 def fit_decay(data, tes, mask, masksum, fittype):
     """
     Fit voxel-wise monoexponential decay models to `data`
@@ -88,13 +89,17 @@ def fit_decay(data, tes, mask, masksum, fittype):
 
     if len(data.shape) == 3:
         n_samp, n_echos, n_vols = data.shape
+        fit_data = np.mean(data, axis = 2)
     else:
         n_samp, n_echos = data.shape
         n_vols = 1
 
     data = data[mask]
+    fit_data = fit_data[mask]
     t2ss = np.zeros([n_samp, n_echos - 1])
     s0vs = np.zeros([n_samp, n_echos - 1])
+
+    
     
     for echo in range(1, n_echos):
         # perform log linear fit of echo times against MR signal
@@ -117,10 +122,23 @@ def fit_decay(data, tes, mask, masksum, fittype):
     if fittype == 'curvefit':
         # perform a monoexponential fit of echo times against MR signal
         # using the mean of the signal, using loglin estimate
-        # as initial estimates
-        temp_variable = 5
+        # as initial starting points for fit
+        
+        t2scf = np.zeros([t2s.size,])
+        s0cf = np.zeros([t2s.size,])
 
+        for voxel in range(0, t2s.size):
+            popt, cov = scipy.optimize.curve_fit(mono_exp, tes, fit_data[voxel, :],
+                                                 p0=(s0[voxel],
+                                                 t2s[voxel]))
+            s0cf[voxel] = popt[0]
+            t2scf[voxel] = popt[1]
 
+                
+        s0cf_unmask = np.squeeze(utils.unmask(s0cf, mask))
+        t2scf_unmask = np.squeeze(utils.unmask(t2scf, mask))        
+
+    
     # create limited T2* and S0 maps
     echo_masks = np.zeros([n_samp, n_echos - 1], dtype=bool)
     for echo in range(2, n_echos + 1):
@@ -134,6 +152,11 @@ def fit_decay(data, tes, mask, masksum, fittype):
     t2s_full, s0_full = t2s_limited.copy(), s0_limited.copy()
     t2s_full[masksum == 1] = t2ss[masksum == 1, 0]
     s0_full[masksum == 1] = s0vs[masksum == 1, 0]
+    
+    if fittype == 'curvefit':
+        # Replace the full map with the curve fit estimates
+        t2s_full = s0cf_unmask
+        s0_full = t2scf_unmask
 
     return t2s_limited, s0_limited, t2ss, s0vs, t2s_full, s0_full
 
