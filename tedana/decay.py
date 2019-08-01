@@ -4,7 +4,22 @@ Functions to estimate S0 and T2* from multi-echo data.
 import numpy as np
 from tedana import utils
 
+def mono_exp(tes, s0, t2star):
+    """
+    Specifies a monoexponential model for fitting
 
+    Parameters
+    ----------
+    tes : (E,) :obj:`list`
+        Echo times
+    s0 : :obj:`float`
+        Initial signal parameter
+    t2star : :oj:`float`
+        T2* parameter  
+
+    """
+    return tes * np.exp(-tes/t2star)
+    
 def fit_decay(data, tes, mask, masksum, fittype):
     """
     Fit voxel-wise monoexponential decay models to `data`
@@ -104,7 +119,7 @@ def fit_decay(data, tes, mask, masksum, fittype):
         # using the mean of the signal, using loglin estimate
         # as initial estimates
         temp_variable = 5
-            
+
 
     # create limited T2* and S0 maps
     echo_masks = np.zeros([n_samp, n_echos - 1], dtype=bool)
