@@ -19,7 +19,7 @@ def mono_exp(tes, s0, t2star):
         T2* parameter  
 
     """
-    return tes * np.exp(-tes/t2star)
+    return s0 * np.exp(-tes/t2star)
 
 def fit_decay(data, tes, mask, masksum, fittype):
     """
