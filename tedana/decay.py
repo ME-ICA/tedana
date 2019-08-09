@@ -128,11 +128,15 @@ def fit_decay(data, tes, mask, masksum, fittype):
         s0cf = np.zeros([t2s.size,])
 
         for voxel in range(0, t2s.size):
-            popt, cov = scipy.optimize.curve_fit(mono_exp, tes, fit_data[voxel, :],
-                                                 p0=(s0[voxel],
-                                                 t2s[voxel]))
-            s0cf[voxel] = popt[0]
-            t2scf[voxel] = popt[1]
+            try:
+                popt, cov = scipy.optimize.curve_fit(mono_exp, tes, fit_data[voxel, :],
+                                                     p0=(s0[voxel],
+                                                     t2s[voxel]))
+                s0cf[voxel] = popt[0]
+                t2scf[voxel] = popt[1]
+            except RuntimeError:
+                s0cf[voxel] = s0[voxel]
+                t2scf[voxel] = t2s[voxel]
 
                 
         s0cf_unmask = np.squeeze(utils.unmask(s0cf, mask))
