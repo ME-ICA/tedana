@@ -155,8 +155,8 @@ def fit_decay(data, tes, mask, masksum, fittype):
     
     if fittype == 'curvefit':
         # Replace the full map with the curve fit estimates
-        t2s_full = s0cf_unmask
-        s0_full = t2scf_unmask
+        t2s_full = t2scf_unmask
+        s0_full = s0cf_unmask
 
     return t2s_limited, s0_limited, t2ss, s0vs, t2s_full, s0_full
 
