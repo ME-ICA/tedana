@@ -86,7 +86,7 @@ def test_smoke_get_coeffs():
     """
     n_samples, n_echos, n_times, n_components = 100, 5, 20, 6
     data_2d = np.random.random((n_samples, n_times))
-    data_3d = np.random.random((n_samples, n_echos, n_times)) 
+    #data_3d = np.random.random((n_samples, n_echos, n_times)) 
     x = np.random.random((n_times, n_components))
     mask = np.random.randint(2, size=n_samples)     
 
