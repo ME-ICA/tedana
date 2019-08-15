@@ -28,6 +28,8 @@ More information and documentation can be found at https://tedana.readthedocs.io
 
 ## Installation
 
+### Use `tedana` with your local Python environment
+
 You'll need to set up a working development environment to use `tedana`.
 To set up a local environment, you will need Python >=3.5 and the following packages will need to be installed:
 
@@ -68,6 +70,10 @@ conda deactivate
 
 NOTE: Conda < 4.6 users will need to use the soon-to-be-deprecated option `source` rather than `conda` for the activation and deactivation steps.
 You can read more about managing conda environments and this discrepancy [here](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html).
+
+### Use and contribute to `tedana` as a developer
+
+If you aim to contribute to the `tedana` code base and/or documentation, please first read the developer installation instructions in [our contributing section](https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md). You can then continue to set up your preferred development environment.
 
 ## Getting involved
 
