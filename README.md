@@ -1,3 +1,4 @@
+DUMMY
 # tedana: TE Dependent ANAlysis
 
 The ``tedana`` package is part of the ME-ICA pipeline, performing TE-dependent
