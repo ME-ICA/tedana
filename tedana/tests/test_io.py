@@ -88,7 +88,7 @@ def test_smoke_write_split_ts():
     data = np.random.random((n_samples, n_times))
     mmix = np.random.random((n_times, n_components))
     mask = np.random.randint(2, size=n_samples)
-    ref_img = "data/mask.nii.gz"  # ref_img has shape of (39, 50, 33) so data is 64350 (39*33*50) x 10
+    ref_img = os.path.join('..', 'data', 'mask.nii.gz')  # ref_img has shape of (39, 50, 33) so data is 64350 (39*33*50) x 10
 
     # creating the component table with component as random floats, a "metric," and random classification
     component = np.random.random((n_components))
@@ -116,7 +116,7 @@ def test_smoke_writefeats():
     data = np.random.random((n_samples, n_times))
     mmix = np.random.random((n_times, n_components))
     mask = np.random.randint(2, size=n_samples)
-    ref_img = "data/mask.nii.gz"
+    ref_img = os.path.join('..', 'data', 'mask.nii.gz')
 
     assert me.writefeats(data, mmix, mask, ref_img) is not None
     
