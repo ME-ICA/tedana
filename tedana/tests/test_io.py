@@ -88,7 +88,7 @@ def test_smoke_write_split_ts():
     data = np.random.random((n_samples, n_times))
     mmix = np.random.random((n_times, n_components))
     mask = np.random.randint(2, size=n_samples)
-    ref_img = os.path.join('..', 'data', 'mask.nii.gz')  # ref_img has shape of (39, 50, 33) so data is 64350 (39*33*50) x 10
+    ref_img = os.path.join('data', 'mask.nii.gz')  # ref_img has shape of (39, 50, 33) so data is 64350 (39*33*50) x 10
 
     # creating the component table with component as random floats, a "metric," and random classification
     component = np.random.random((n_components))
@@ -116,7 +116,7 @@ def test_smoke_writefeats():
     data = np.random.random((n_samples, n_times))
     mmix = np.random.random((n_times, n_components))
     mask = np.random.randint(2, size=n_samples)
-    ref_img = os.path.join('..', 'data', 'mask.nii.gz')
+    ref_img = os.path.join('data', 'mask.nii.gz')
 
     assert me.writefeats(data, mmix, mask, ref_img) is not None
     
@@ -136,7 +136,7 @@ def test_smoke_filewrite():
     data_1d = np.random.random((n_samples))
     data_2d = np.random.random((n_samples, n_times))
     filename = ""
-    ref_img = 'data/mask.nii.gz'
+    ref_img = os.path.join('data', 'mask.nii.gz')
 
     assert me.filewrite(data_1d, filename, ref_img) is not None
     assert me.filewrite(data_2d, filename, ref_img) is not None
@@ -151,7 +151,7 @@ def test_smoke_load_data():
     """ 
     Ensures that data is loaded when given a random neuroimage 
     """
-    data = "data/mask.nii.gz"
+    data = os.path.join('data', 'mask.nii.gz')
     n_echos = 1
 
     fdata, ref_img = me.load_data(data, n_echos)
