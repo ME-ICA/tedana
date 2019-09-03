@@ -15,7 +15,7 @@ import pandas as pd
 
 import os.path as op
 
-from os import mkdir
+from os import makedirs
 
 LGR = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -45,14 +45,56 @@ def _get_parser():
     optional.add_argument('-o', '--out-dir',
                           dest='out_dir',
                           type=str,
-                          help=('Output folder, i.e. where'
-                                'the meica.ica folder should be.'),
+                          help=('Output folder, i.e. where '
+                                'the me.ica folder should be found.'
+                                '\n Default: tedana directory'),
+                          default=None)
+    optional.add_argument('-a', '--anat',
+                          dest='anat',
+                          type=str,
+                          help=('Anatomical volume, in the same worldspace as '
+                                'tedana\'s outputs'),
                           default=None)
     parser._action_groups.append(optional)
     return parser
 
 
-def create_melview_folder(tedana_dir, outdir):
+def check_gzip_and_copy_volume(vol, out_vol):
+    """
+    Function to copy a volume from source to destination.
+    It also check hat the file exists and is zipped, or it zip it while copying.
+
+    Parameters
+    ----------
+    vol: string
+        File with full path of copy source.
+    out_vol: string
+        File with full path of copy destination.
+
+    Note
+    ----
+    Output will be a me.ica folder. See:
+    https://users.fmrib.ox.ac.uk/~paulmc/fsleyes/userdoc/latest/ic_classification.html#loading-a-melodic-analysis
+
+    """
+
+    if not op.exists(vol):
+        vol = vol + '.gz'
+
+        if not op.exists(vol):
+            LGR.error('%s not found. Check tedana\'s output folder' % vol)
+            sys.exit()
+
+        LGR.info('Copying betas_OC in me.ica folder')
+        shutil.copyfile(vol,out_vol)
+    else:
+        LGR.info('Compressing and copying betas_OC in me.ica folder')
+        with open(vol, 'rb') as f_in:
+            with gzip.open(out_vol, 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+
+
+def create_melview_folder(tedana_dir, outdir, anat):
     """
     Function to create a melodic view folder.
     To be used for FSLeyes use.
@@ -62,7 +104,9 @@ def create_melview_folder(tedana_dir, outdir):
     tedana_dir: string
         Full path to the tedana output folder.
     outdir: string
-        Full path to where the melodic folder should be
+        Full path to where the melodic folder should be.
+    anat: string
+        Full path to the anatomical file to move to the melodic folder.
 
     Note
     ----
@@ -90,23 +134,18 @@ def create_melview_folder(tedana_dir, outdir):
         shutil.rmtree(outdir)
         LGR.warning('Removing %s' % outdir)
 
-    mkdir(outdir)
+    makedirs(outdir)
     LGR.info('The files will be stored in %s' % outdir)
 
-    if not op.exists(fvol):
-        fvol = op.join(tedana_dir, 'betas_OC.nii.gz')
+    check_gzip_and_copy_volume(fvol, out_fvol)
 
-        if not op.exists(fvol):
-            LGR.error('%s not found. Check tedana\'s output folder' % fvol)
-            sys.exit()
+    if anat:
+        if anat[-7:] != '.nii.gz':
+            if anat[-4:] != '.nii':
+                anat = anat + '.nii'
 
-        LGR.info('Copying betas_OC in me.ica folder')
-        shutil.copyfile(fvol,out_fvol)
-    else:
-        LGR.info('Compressing and copying betas_OC in me.ica folder')
-        with open(fvol, 'rb') as f_in:
-            with gzip.open(out_fvol, 'wb') as f_out:
-                shutil.copyfileobj(f_in, f_out)
+        out_anat = op.join(outdir, 'anat.nii.gz')
+        check_gzip_and_copy_volume(anat, out_anat)
 
     LGR.info('Copying meica_mix in me.ica folder and generating melodic_FTmix')
     ts = np.genfromtxt(mmat)
@@ -140,12 +179,12 @@ def create_melview_folder(tedana_dir, outdir):
 def _main(argv=None):
     options = _get_parser().parse_args(argv)
 
-    if options.out_dir is None:
-        outdir = op.join(options.tedana_dir,'me.ica')
-    else:
+    if options.out_dir:
         outdir = op.join(options.out_dir,'me.ica')
+    else:
+        outdir = op.join(options.tedana_dir,'me.ica')
 
-    create_melview_folder(options.tedana_dir, outdir)
+    create_melview_folder(options.tedana_dir, outdir, options.anat)
 
 
 if __name__ == '__main__':
