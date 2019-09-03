@@ -208,9 +208,29 @@ def modify_comp_table(ctab_fullpath, selcomp, flag='accepted'):
     comptable.to_csv(ctab_fullpath, sep='\t', index_label='component')
 
 
-def check_task_corr(mixmat, ctab_fullpath, ts, thr, flag='accepted'):
+def check_task_corr(mixmat, ctab_fullpath, ts, thr=0.6, flag='accepted'):
     """
     This function is the workflow of the component selection.
+
+    Parameters
+    ----------
+    mixmat: T x N :obj:`numpy.array`
+        Timeseries of MEICA components.
+    ctab_fullpath: :obj:`string`
+        Full path to components table as of tedana output.
+        !!! It will be overwritten !!!
+    ts: T x N :obj:`numpy.array`
+        Timeseries to compare components to.
+    thr: :obj:`float`, Optional
+        Threshold for NCC value considered significant. Default = 0.6.
+    flag: :obj:`string`, Optional
+        Flag to change the label of the components with index
+        selcomp, in the components table. Default = 'accepted'
+
+    Note
+    ----
+    The file output is the same ctab_fullpath
+
     """
     norm_ts = import_file(ts)
     checked_ts = check_dimensionality(norm_ts, mixmat)

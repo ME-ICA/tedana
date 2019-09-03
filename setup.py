@@ -66,6 +66,7 @@ def main():
         entry_points={'console_scripts': [
             't2smap=tedana.workflows.t2smap:_main',
             'tedana=tedana.workflows.tedana:_main',
+
             'post_taskcorr=tedana.workflows.post_taskcorr:_main',
             'post_melodicview=tedana.workflows.post_melodicview:_main'
         ]},
