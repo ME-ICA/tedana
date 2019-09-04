@@ -59,7 +59,7 @@ def _get_parser():
     return parser
 
 
-def check_gzip_and_copy_volume(vol, out_vol, name):
+def check_gzip_and_copy_volume(vol, out_vol, name=''):
     """
     Function to copy a volume from source to destination.
     It also check hat the file exists and is zipped, or it zip it while copying.
@@ -70,6 +70,8 @@ def check_gzip_and_copy_volume(vol, out_vol, name):
         File with full path of copy source.
     out_vol: string
         File with full path of copy destination.
+    name: string
+        Name of volume for messages
 
     Note
     ----
