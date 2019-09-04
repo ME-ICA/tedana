@@ -81,7 +81,7 @@ def check_gzip_and_copy_volume(vol, out_vol, name=''):
     """
 
     if vol[-3:] == '.gz':
-        vol = vol[-3:]
+        vol = vol[:-3]
 
     if not op.exists(vol):
         vol = vol + '.gz'
