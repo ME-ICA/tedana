@@ -59,7 +59,7 @@ def _get_parser():
     return parser
 
 
-def check_gzip_and_copy_volume(vol, out_vol):
+def check_gzip_and_copy_volume(vol, out_vol, name):
     """
     Function to copy a volume from source to destination.
     It also check hat the file exists and is zipped, or it zip it while copying.
@@ -82,13 +82,13 @@ def check_gzip_and_copy_volume(vol, out_vol):
         vol = vol + '.gz'
 
         if not op.exists(vol):
-            LGR.error('%s not found. Check tedana\'s output folder' % vol)
+            LGR.error('%s not found. Check the relevant folder', vol)
             sys.exit()
 
-        LGR.info('Copying betas_OC in me.ica folder')
-        shutil.copyfile(vol,out_vol)
+        LGR.info('Copying %s in me.ica folder', name)
+        shutil.copyfile(vol, out_vol)
     else:
-        LGR.info('Compressing and copying betas_OC in me.ica folder')
+        LGR.info('Compressing and copying %s in me.ica folder', name)
         with open(vol, 'rb') as f_in:
             with gzip.open(out_vol, 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
@@ -124,28 +124,28 @@ def create_melview_folder(tedana_dir, outdir, anat):
     out_ctab = op.join(outdir, 'melodic_class')
 
     if not op.exists(mmat):
-        LGR.error('%s not found. Check tedana\'s output folder' % mmat)
+        LGR.error('%s not found. Check tedana\'s output folder', mmat)
         sys.exit()
     elif not op.exists(ctab):
-        LGR.error('%s not found. Check tedana\'s output folder' % ctab)
+        LGR.error('%s not found. Check tedana\'s output folder', ctab)
         sys.exit()
 
     if op.exists(outdir):
         shutil.rmtree(outdir)
-        LGR.warning('Removing %s' % outdir)
+        LGR.warning('Removing %s', outdir)
 
     makedirs(outdir)
-    LGR.info('The files will be stored in %s' % outdir)
+    LGR.info('The files will be stored in %s', outdir)
 
-    check_gzip_and_copy_volume(fvol, out_fvol)
+    check_gzip_and_copy_volume(fvol, out_fvol, 'betas_OC')
 
     if anat:
         if anat[-7:] != '.nii.gz':
             if anat[-4:] != '.nii':
                 anat = anat + '.nii'
 
-        out_anat = op.join(outdir, 'anat.nii.gz')
-        check_gzip_and_copy_volume(anat, out_anat)
+        out_anat = op.join(outdir, 'mean.nii.gz')
+        check_gzip_and_copy_volume(anat, out_anat, 'anat')
 
     LGR.info('Copying meica_mix in me.ica folder and generating melodic_FTmix')
     ts = np.genfromtxt(mmat)
@@ -171,9 +171,9 @@ def create_melview_folder(tedana_dir, outdir, anat):
     f = open(out_ctab, 'w+')
     f.write('.\n')
     comptable.to_csv(f, header=False, index=False)
-    f.write('%s' % compstr)
+    f.write('%s', compstr)
     f.close()
-    LGR.info('Folder ready. Open with \"fsleyes -ad -s melodic %s\"' % outdir)
+    LGR.info('Folder ready. Open with \"fsleyes -ad -s melodic %s\"', outdir)
 
 
 def _main(argv=None):
