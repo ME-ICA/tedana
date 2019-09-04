@@ -173,7 +173,7 @@ def create_melview_folder(tedana_dir, outdir, anat):
     f = open(out_ctab, 'w+')
     f.write('.\n')
     comptable.to_csv(f, header=False, index=False)
-    f.write('%s', compstr)
+    f.write('%s' % compstr)
     f.close()
     LGR.info('Folder ready. Open with \"fsleyes -ad -s melodic %s\"', outdir)
 
