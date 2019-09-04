@@ -122,12 +122,12 @@ def make_optcom(data, tes, mask, t2s=None, combmode='t2s', verbose=True):
                          'dimension of input data: {0} != '
                          '{1}'.format(len(tes), data.shape[1]))
 
-    if mask.ndim != 1:
-        raise ValueError('Mask is not 1D')
-    elif mask.shape[0] != data.shape[0]:
-        raise ValueError('Mask and data do not have same number of '
-                         'voxels/samples: {0} != {1}'.format(mask.shape[0],
-                                                             data.shape[0]))
+    # if mask.ndim != 1:
+    #     raise ValueError('Mask is not 1D')
+    # elif mask.shape[0] != data.shape[0]:
+    #     raise ValueError('Mask and data do not have same number of '
+    #                      'voxels/samples: {0} != {1}'.format(mask.shape[0],
+    #                                                          data.shape[0]))
 
     if combmode not in ['t2s', 'paid']:
         raise ValueError("Argument 'combmode' must be either 't2s' or 'paid'")
@@ -138,7 +138,7 @@ def make_optcom(data, tes, mask, t2s=None, combmode='t2s', verbose=True):
         LGR.warning("Argument 't2s' is not required if 'combmode' is 'paid'. "
                     "'t2s' array will not be used.")
 
-    data = data[mask, :, :]  # mask out empty voxels/samples
+    # data = data[mask, :, :]  # mask out empty voxels/samples
     tes = np.array(tes)[np.newaxis, ...]  # (1 x E) array_like
 
     if combmode == 'paid':
@@ -151,10 +151,10 @@ def make_optcom(data, tes, mask, t2s=None, combmode='t2s', verbose=True):
         else:
             msg = ('Optimally combining data with voxel- and volume-wise T2 '
                    'estimates')
-        t2s = t2s[mask, ..., np.newaxis]  # mask out empty voxels/samples
+        t2s = t2s[..., np.newaxis]  # mask out empty voxels/samples
 
         LGR.info(msg)
         combined = _combine_t2s(data, tes, t2s)
 
-    combined = unmask(combined, mask)
+    # combined = unmask(combined, mask)
     return combined
