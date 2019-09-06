@@ -379,17 +379,16 @@ def kundu_metrics(comptable, metric_maps):
                           (Z_clmaps[:, i_comp] == 0))
         comptable.loc[i_comp, 'countnoise'] = int(np.sum(comp_noise_idx))
         noise_FR2_Z = 0.5 * np.log(F_R2_maps[comp_noise_idx, i_comp])
-        unique_noise_FR2_Z = np.unique(noise_FR2_Z)
         signal_FR2_Z = 0.5 * np.log(F_R2_maps[Z_clmaps[:, i_comp], i_comp])
-        unique_signal_FR2_Z = np.unique(signal_FR2_Z)
-        if noise_FR2_Z.size != unique_noise_FR2_Z.size:
+        n_noise_dupes = noise_FR2_Z.size - np.unique(noise_FR2_Z).size
+        if n_noise_dupes:
             LGR.debug('For component {}, {} duplicate noise F-values '
-                      'detected.'.format(
-                        i_comp, noise_FR2_Z.size - unique_noise_FR2_Z.size))
-        if signal_FR2_Z.size != unique_signal_FR2_Z.size:
+                      'detected.'.format(i_comp, n_noise_dupes))
+
+        n_signal_dupes = signal_FR2_Z.size - np.unique(signal_FR2_Z).size
+        if n_signal_dupes:
             LGR.debug('For component {}, {} duplicate signal F-values '
-                      'detected.'.format(
-                        i_comp, signal_FR2_Z.size - unique_signal_FR2_Z.size))
+                      'detected.'.format(i_comp, n_signal_dupes))
         dof = np.sum(comp_noise_idx) + comptable.loc[i_comp, 'countsignal'] - 2
         t_value, comptable.loc[i_comp, 'signal-noise_p'] = stats.ttest_ind(
              signal_FR2_Z, noise_FR2_Z, equal_var=False)
