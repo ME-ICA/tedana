@@ -180,9 +180,9 @@ def _get_parser():
                           dest='debug',
                           action='store_true',
                           help=('Logs in the terminal will have increased '
-                                'verbosity, and also will also be written  '
-                                'into a .txt file in the output directory.'),
-                          default=True)
+                                'verbosity, and will also be written into '
+                                'a .txt file in the output directory.'),
+                          default=False)
     optional.add_argument('--quiet',
                           dest='quiet',
                           help=argparse.SUPPRESS,
@@ -196,7 +196,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     tedort=False, gscontrol=None, tedpca='mle',
                     source_tes=-1, combmode='t2s', verbose=False, stabilize=False,
                     out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
-                    debug=True, quiet=False, png=False, png_cmap='coolwarm',
+                    debug=False, quiet=False, png=False, png_cmap='coolwarm',
                     low_mem=False):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
