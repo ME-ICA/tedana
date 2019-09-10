@@ -319,5 +319,5 @@ workflows:
       - merge_coverage:
           requires:
             - py36_unit_tests_and_coverage
-            - three_echo_rest
-            - five_echo_task
+              #            - three_echo_rest
+              #            - five_echo_task
