@@ -55,7 +55,7 @@ jobs:
               echo "Restoring three-echo data from cache"
             else
                 mkdir -p /tmp/data
-                apt-get install curl
+                yes | apt-get install curl
                 curl -L --create-dirs -o \
                   /tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz https://osf.io/8fzse/download
             fi
@@ -66,7 +66,7 @@ jobs:
               echo "Restoring five-echo data from cache"
             else
                 mkdir /tmp/data/five-echo
-                apt-get install curl
+                yes | apt-get install curl
                 curl -L -o five_echo_NIH.tar.xz https://osf.io/ea5v3/download
                 tar xf five_echo_NIH.tar.xz -C /tmp/data/five-echo
             fi
@@ -97,7 +97,7 @@ jobs:
               echo "Restoring three-echo regression data from cache"
             else
                 mkdir -p /tmp/test/three-echo/
-                apt-get install curl
+                yes | apt-get install curl
                 curl -L -o TED.Cornell_processed_three_echo_dataset.tar.xz https://osf.io/u65sq/download
                 tar xf TED.Cornell_processed_three_echo_dataset.tar.xz --no-same-owner -C /tmp/test/three-echo/
             fi
@@ -108,7 +108,7 @@ jobs:
               echo "Restoring five-echo regression data from cache"
             else
                 mkdir -p /tmp/test/five-echo/
-                apt-get install curl
+                yes | apt-get install curl
                 curl -L -o TED.p06.tar.xz https://osf.io/fr6mx/download
                 tar xf TED.p06.tar.xz --no-same-owner -C /tmp/test/five-echo/
             fi
@@ -281,7 +281,7 @@ jobs:
       - run:
           name: Merge coverage files
           command: |
-            apt-get install curl
+            yes | apt-get install curl
             source activate venv
             cd /tmp/src/coverage/
             coverage combine
