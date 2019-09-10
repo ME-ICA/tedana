@@ -316,8 +316,8 @@ workflows:
             - build
             - get_data
             - get_regression_data
-      - merge_coverage:
-          requires:
-            - py36_unit_tests_and_coverage
-            - three_echo_rest
-            - five_echo_task
+      - merge_coverage
+          #          requires:
+          #            - py36_unit_tests_and_coverage
+          #            - three_echo_rest
+          #            - five_echo_task
