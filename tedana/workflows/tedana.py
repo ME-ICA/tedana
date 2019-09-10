@@ -13,6 +13,7 @@ import shutil
 import logging
 import os.path as op
 from glob import glob
+import datetime
 
 import argparse
 import numpy as np
@@ -288,27 +289,22 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         newname = previousparts[0] + '_old' + previousparts[1]
         os.rename(f, newname)
 
-    if debug and not quiet:
-        # ensure old logs aren't over-written
-        basename = 'tedana_run'
-        extension = 'txt'
-        logname = op.join(out_dir, (basename + '.' + extension))
-        logex = op.join(out_dir, (basename + '*'))
-        previouslogs = glob(logex)
-        previouslogs.sort(reverse=True)
-        for f in previouslogs:
-            previousparts = op.splitext(f)
-            newname = previousparts[0] + '_old' + previousparts[1]
-            os.rename(f, newname)
+    # create logfile name
+    basename = 'tedana_'
+    extension = 'txt'
+    isotime = datetime.datetime.now().replace(microsecond=0).isoformat()
+    logname = op.join(out_dir, (basename + isotime + '.' + extension))
 
-        # set logging format
-        formatter = logging.Formatter(
-                    '%(asctime)s\t%(name)-12s\t%(levelname)-8s\t%(message)s',
-                    datefmt='%Y-%m-%dT%H:%M:%S')
+    # set logging format
+    formatter = logging.Formatter(
+                '%(asctime)s\t%(name)-12s\t%(levelname)-8s\t%(message)s',
+                datefmt='%Y-%m-%dT%H:%M:%S')
 
-        # set up logging file and open it for writing
-        fh = logging.FileHandler(logname)
-        fh.setFormatter(formatter)
+    # set up logging file and open it for writing
+    fh = logging.FileHandler(logname)
+    fh.setFormatter(formatter)
+
+    if debug:
         logging.basicConfig(level=logging.DEBUG,
                             handlers=[fh, logging.StreamHandler()])
     elif quiet:
