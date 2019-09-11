@@ -200,6 +200,9 @@ jobs:
             if [[ ! $myval -eq 1 ]];
             then
                 printf "Incorrect number of logfiles: %s" $myval
+            else
+                printf "I succeeded!"
+                true
             fi
       - store_artifacts:
           path: /tmp/data/five-echo
