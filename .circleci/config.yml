@@ -154,6 +154,10 @@ jobs:
             echo "Made it through setting files"
             # sort both files, pipe into grep to check for tedana
             # logfile format; should only see one
+            comm -13 <(sort -u $f1) <(sort -u $f2)
+            echo "comm works"
+            comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana-\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.txt$'
+            echo "grep maybe works"
             numlogs=$(comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana-\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.txt$' | wc -l)
             echo "Made it through counting files"
             if [[ ! $myval -eq 1 ]];
