@@ -12,7 +12,7 @@ LGR = logging.getLogger(__name__)
 @due.dcite(Doi('10.1002/(SICI)1522-2594(199907)42:1<87::AID-MRM13>3.0.CO;2-O'),
            description='T2* method of combining data across echoes using '
                        'monoexponential equation.')
-def _combine_t2s(data, tes, ft2s):
+def _combine_t2s(data, mask, tes, ft2s):
     """
     Combine data across echoes using weighted averaging according to voxel-
     (and sometimes volume-) wise estimates of T2*.
@@ -33,6 +33,8 @@ def _combine_t2s(data, tes, ft2s):
     """
     n_vols = data.shape[-1]
     alpha = tes * np.exp(-tes / ft2s)
+    mdata = data[mask, :, :]
+
     if alpha.ndim == 2:
         # Voxel-wise T2 estimates
         alpha = np.tile(alpha[:, :, np.newaxis], (1, 1, n_vols))
@@ -40,12 +42,14 @@ def _combine_t2s(data, tes, ft2s):
         # Voxel- and volume-wise T2 estimates
         # alpha is currently (S, T, E) but should be (S, E, T) like mdata
         alpha = np.swapaxes(alpha, 1, 2)
-
         # If all values across echos are 0, set to 1 to avoid
         # divide-by-zero errors
         ax0_idx, ax2_idx = np.where(np.all(alpha == 0, axis=1))
         alpha[ax0_idx, :, ax2_idx] = 1.
-    combined = np.average(data, axis=1, weights=alpha)
+    
+    combined = np.average(mdata, axis=1, weights=alpha)
+    combined = unmask(combined, mask)
+    combined[~mask] = data[~mask, 0, :]
     return combined
 
 
@@ -138,7 +142,6 @@ def make_optcom(data, tes, mask, t2s=None, combmode='t2s', verbose=True):
         LGR.warning("Argument 't2s' is not required if 'combmode' is 'paid'. "
                     "'t2s' array will not be used.")
 
-    data = data[mask, :, :]  # mask out empty voxels/samples
     tes = np.array(tes)[np.newaxis, ...]  # (1 x E) array_like
 
     if combmode == 'paid':
@@ -151,10 +154,9 @@ def make_optcom(data, tes, mask, t2s=None, combmode='t2s', verbose=True):
         else:
             msg = ('Optimally combining data with voxel- and volume-wise T2 '
                    'estimates')
-        t2s = t2s[mask, ..., np.newaxis]  # mask out empty voxels/samples
+        t2s = t2s[mask, ..., np.newaxis]  # add new axis
 
         LGR.info(msg)
-        combined = _combine_t2s(data, tes, t2s)
+        combined = _combine_t2s(data, mask, tes, t2s)
 
-    combined = unmask(combined, mask)
     return combined
