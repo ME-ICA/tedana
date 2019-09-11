@@ -152,10 +152,8 @@ jobs:
             f2=/tmp/data/three-echo/TED.three-echo/outputs.out
             # sort both files, pipe into grep to check for tedana
             # logfile format; should only see one
-            comm -13 <(sort -u $f1) <(sort -u $f2)
-            grep --help
-            comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana_\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.txt$'
-            numlogs=$(comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana_\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.txt$' | wc -l)
+            comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana_[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.txt$'
+            numlogs=$(comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana_[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.txt$' | wc -l)
             if [[ ! $numlogs -eq 1 ]];
             then
                 printf "Incorrect number of logfiles: %s" $numlogs
@@ -199,9 +197,8 @@ jobs:
             f2=/tmp/data/five-echo/TED.five-echo/outputs.out
             # sort both files, pipe into grep to check for tedana
             # logfile format; should only see one
-            comm -13 <(sort -u $f1) <(sort -u $f2)
-            echo "tedana_DDDD-MM-DDTHH:MM:SS.txt"
-            numlogs=$(comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana_\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.txt$' | wc -l)
+            comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana_[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.txt$'
+            numlogs=$(comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana_[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.txt$' | wc -l)
             if [[ ! $numlogs -eq 1 ]];
             then
                 printf "Incorrect number of logfiles: %s" $numlogs
