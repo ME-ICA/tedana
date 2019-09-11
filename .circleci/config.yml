@@ -148,7 +148,7 @@ jobs:
             find /tmp/data/three-echo/TED.three-echo/* \
                 -exec basename {} \; > /tmp/data/three-echo/TED.three-echo/outputs.out
             # set filenames
-            f1=/tmp/src/tedana/.circleci/tedana_outputs_verbose.txt
+            f1=/tmp/src/tedana/.circleci/tedana_outputs.txt
             f2=/tmp/data/three-echo/TED.three-echo/outputs.out
             # sort both files, pipe into grep to check for tedana
             # logfile format; should only see one
@@ -212,7 +212,7 @@ jobs:
             # verify that non-log outputs match exactly
             f3=/tmp/data/five-echo/TED.five-echo/outputs_nolog.txt
             find /tmp/data/five-echo/TED.five-echo/* \
-                -exec basename {} \; | sort > /tmp/data/five-echo/TED.five-echo/outputs.out
+                -exec basename {} \; | grep -v outputs.out | sort > /tmp/data/five-echo/TED.five-echo/outputs.out
             cat $f2 | grep -v -E -e '^tedana_[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.txt$' > $f3
             diff $f1 $f3
 
