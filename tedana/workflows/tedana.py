@@ -304,15 +304,18 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     fh = logging.FileHandler(logname)
     fh.setFormatter(formatter)
 
-    if debug:
+    if quiet:
+        logging.basicConfig(level=logging.WARNING,
+                            handlers=[fh, logging.StreamHandler()])
+    elif debug:
         logging.basicConfig(level=logging.DEBUG,
                             handlers=[fh, logging.StreamHandler()])
-    elif quiet:
-        logging.basicConfig(level=logging.WARNING)
     else:
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(level=logging.INFO,
+                            handlers=[fh, logging.StreamHandler()])
 
     LGR.info('Using output directory: {}'.format(out_dir))
+    return
 
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
