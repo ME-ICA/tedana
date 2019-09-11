@@ -188,6 +188,8 @@ jobs:
       - run:
           name: Checking outputs
           command: |
+            # sanity check
+            echo "Is there anybody out there?"
             # find file
             find /tmp/data/five-echo/TED.five-echo/* \
                 -exec basename {} \; > /tmp/data/five-echo/TED.five-echo/outputs.out
