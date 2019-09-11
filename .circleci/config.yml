@@ -147,15 +147,21 @@ jobs:
             # find file
             find /tmp/data/three-echo/TED.three-echo/* \
                 -exec basename {} \; > /tmp/data/three-echo/TED.three-echo/outputs.out
+            echo "Made it through find"
             # set filenames
             f1=/tmp/src/tedana/.circleci/tedana_outputs_verbose.txt
             f2=/tmp/data/three-echo/TED.three-echo/outputs.out
+            echo "Made it through setting files"
             # sort both files, pipe into grep to check for tedana
             # logfile format; should only see one
             numlogs=$(comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana-\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.txt$' | wc -l)
+            echo "Made it through counting files"
             if [[ ! $myval -eq 1 ]];
             then
                 printf "Incorrect number of logfiles: %s" $myval
+            else
+                echo "Successfully found only one file"
+                exit true
             fi
       - store_artifacts:
           path: /tmp/data/three-echo
