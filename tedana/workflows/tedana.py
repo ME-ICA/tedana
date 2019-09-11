@@ -315,7 +315,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                             handlers=[fh, logging.StreamHandler()])
 
     LGR.info('Using output directory: {}'.format(out_dir))
-    return
 
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
