@@ -152,7 +152,7 @@ jobs:
             f2=/tmp/data/three-echo/TED.three-echo/outputs.out
             # sort both files, pipe into grep to check for tedana
             # logfile format; should only see one
-            numlogs=$(comm -13 <(sort -u f1) <(sort -u f2) | grep -E -e '^tedana-\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.txt$' | wc -l)
+            numlogs=$(comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana-\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.txt$' | wc -l)
             if [[ ! $myval -eq 1 ]];
             then
                 printf "Incorrect number of logfiles: %s" $myval
@@ -196,7 +196,7 @@ jobs:
             f2=/tmp/data/five-echo/TED.five-echo/outputs.out
             # sort both files, pipe into grep to check for tedana
             # logfile format; should only see one
-            numlogs=$(comm -13 <(sort -u f1) <(sort -u f2) | grep -E -e '^tedana-\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.txt$' | wc -l)
+            numlogs=$(comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana-\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.txt$' | wc -l)
             if [[ ! $myval -eq 1 ]];
             then
                 printf "Incorrect number of logfiles: %s" $myval
