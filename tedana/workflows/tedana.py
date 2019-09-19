@@ -179,8 +179,10 @@ def _get_parser():
                           default=False)
     optional.add_argument('--debug',
                           dest='debug',
-                          help=argparse.SUPPRESS,
                           action='store_true',
+                          help=('Logs in the terminal will have increased '
+                                'verbosity, and will also be written into '
+                                'a .txt file in the output directory.'),
                           default=False)
     optional.add_argument('--quiet',
                           dest='quiet',
