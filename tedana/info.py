@@ -28,7 +28,7 @@ DOWNLOAD_URL = (
         name=__packagename__, ver=__version__))
 
 REQUIRES = [
-    'numpy',
+    'numpy >=1.14',
     'scikit-learn',
     'nilearn',
     'nibabel>=2.1.0',
@@ -58,6 +58,10 @@ EXTRA_REQUIRES = {
 # Enable a handle to install all extra dependencies at once
 EXTRA_REQUIRES['all'] = list(set([
     v for deps in EXTRA_REQUIRES.values() for v in deps]))
+
+# Supported Python versions using PEP 440 version specifiers
+# Should match the same set of Python versions as classifiers
+PYTHON_REQUIRES = ">=3.5"
 
 # Package classifiers
 CLASSIFIERS = [
