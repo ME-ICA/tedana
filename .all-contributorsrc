@@ -133,6 +133,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "benoitberanger",
+      "name": "Benoît Béranger",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/16976839?v=4",
+      "profile": "https://www.linkedin.com/in/benoit-beranger/",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 5,
