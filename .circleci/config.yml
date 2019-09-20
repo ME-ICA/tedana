@@ -55,6 +55,7 @@ jobs:
               echo "Restoring three-echo data from cache"
             else
                 mkdir -p /tmp/data
+                apt-get install -y curl
                 curl -L --create-dirs -o \
                   /tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz https://osf.io/8fzse/download
             fi
@@ -65,6 +66,7 @@ jobs:
               echo "Restoring five-echo data from cache"
             else
                 mkdir /tmp/data/five-echo
+                apt-get install -y curl
                 curl -L -o five_echo_NIH.tar.xz https://osf.io/ea5v3/download
                 tar xf five_echo_NIH.tar.xz -C /tmp/data/five-echo
             fi
@@ -95,6 +97,7 @@ jobs:
               echo "Restoring three-echo regression data from cache"
             else
                 mkdir -p /tmp/test/three-echo/
+                apt-get install -y curl
                 curl -L -o TED.Cornell_processed_three_echo_dataset.tar.xz https://osf.io/u65sq/download
                 tar xf TED.Cornell_processed_three_echo_dataset.tar.xz --no-same-owner -C /tmp/test/three-echo/
             fi
@@ -105,6 +108,7 @@ jobs:
               echo "Restoring five-echo regression data from cache"
             else
                 mkdir -p /tmp/test/five-echo/
+                apt-get install -y curl
                 curl -L -o TED.p06.tar.xz https://osf.io/fr6mx/download
                 tar xf TED.p06.tar.xz --no-same-owner -C /tmp/test/five-echo/
             fi
@@ -140,9 +144,26 @@ jobs:
       - run:
           name: Checking outputs
           command: |
+            # find file
             find /tmp/data/three-echo/TED.three-echo/* \
-                -exec basename {} \; | sort > /tmp/data/three-echo/TED.three-echo/outputs.out
-            diff /tmp/src/tedana/.circleci/tedana_outputs.txt /tmp/data/three-echo/TED.three-echo/outputs.out
+                -exec basename {} \; > /tmp/data/three-echo/TED.three-echo/outputs.out
+            # set filenames
+            f1=/tmp/src/tedana/.circleci/tedana_outputs.txt
+            f2=/tmp/data/three-echo/TED.three-echo/outputs.out
+            # sort both files, pipe into grep to check for tedana
+            # logfile format; should only see one
+            comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana_[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.txt$'
+            numlogs=$(comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana_[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.txt$' | wc -l)
+            if [[ ! $numlogs -eq 1 ]];
+            then
+                printf "Incorrect number of logfiles: %s" $numlogs
+            fi
+            # verify non-log outputs match exactly
+            find /tmp/data/three-echo/TED.three-echo/* \
+                -exec basename {} \; | grep -v outputs.out | sort > /tmp/data/three-echo/TED.three-echo/outputs.out
+            f3=/tmp/data/three-echo/TED.three-echo/outputs_nolog.txt
+            cat $f2 | grep -v -E -e '^tedana_[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.txt$' > $f3
+            diff $f1 $f3
       - store_artifacts:
           path: /tmp/data/three-echo
       - store_artifacts:
@@ -174,9 +195,27 @@ jobs:
       - run:
           name: Checking outputs
           command: |
+            # find file
             find /tmp/data/five-echo/TED.five-echo/* \
-                -exec basename {} \; | sort > /tmp/data/five-echo/TED.five-echo/outputs.out
-            diff /tmp/src/tedana/.circleci/tedana_outputs_verbose.txt /tmp/data/five-echo/TED.five-echo/outputs.out
+                -exec basename {} \; > /tmp/data/five-echo/TED.five-echo/outputs.out
+            # set filenames
+            f1=/tmp/src/tedana/.circleci/tedana_outputs_verbose.txt
+            f2=/tmp/data/five-echo/TED.five-echo/outputs.out
+            # sort both files, pipe into grep to check for tedana
+            # logfile format; should only see one
+            comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana_[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.txt$'
+            numlogs=$(comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana_[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.txt$' | wc -l)
+            if [[ ! $numlogs -eq 1 ]];
+            then
+                printf "Incorrect number of logfiles: %s" $numlogs
+            fi
+            # verify that non-log outputs match exactly
+            f3=/tmp/data/five-echo/TED.five-echo/outputs_nolog.txt
+            find /tmp/data/five-echo/TED.five-echo/* \
+                -exec basename {} \; | grep -v outputs.out | sort > /tmp/data/five-echo/TED.five-echo/outputs.out
+            cat $f2 | grep -v -E -e '^tedana_[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.txt$' > $f3
+            diff $f1 $f3
+
       - store_artifacts:
           path: /tmp/data/five-echo
       - store_artifacts:
@@ -277,6 +316,7 @@ jobs:
       - run:
           name: Merge coverage files
           command: |
+            apt-get install -y curl
             source activate venv
             cd /tmp/src/coverage/
             coverage combine

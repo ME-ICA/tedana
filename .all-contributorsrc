@@ -121,7 +121,26 @@
       "avatar_url": "https://avatars1.githubusercontent.com/u/35382166?v=4",
       "profile": "https://github.com/monicayao",
       "contributions": [
+        "doc",
+        "test"
+      ]
+    },
+    {
+      "login": "jsheunis",
+      "name": "Stephan Heunis",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/10141237?v=4",
+      "profile": "http://www.fmrwhy.com/",
+      "contributions": [
         "doc"
+      ]
+    },
+    {
+      "login": "benoitberanger",
+      "name": "Benoît Béranger",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/16976839?v=4",
+      "profile": "https://www.linkedin.com/in/benoit-beranger/",
+      "contributions": [
+        "code"
       ]
     }
   ],
