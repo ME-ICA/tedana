@@ -177,6 +177,17 @@ def _get_parser():
                                 'use of IncrementalPCA. May increase workflow '
                                 'duration.'),
                           default=False)
+    optional.add_argument('--fittype',
+                          dest='fittype',
+                          action='store',
+                          choices=['loglin', 'curvefit'],
+                          help='Desired Fitting Method'
+                                '"loglin" means that a linear model is fit'
+                                ' to the log of the data, default'
+                                '"curvefit" means that a more computationally'
+                                'demanding monoexponential model is fit'
+                                'to the raw data',
+                          default='loglin')
     optional.add_argument('--debug',
                           dest='debug',
                           action='store_true',
@@ -399,7 +410,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     os.chdir(out_dir)
 
     LGR.info('Computing T2* map')
-    t2s, s0, t2ss, s0s, t2sG, s0G = decay.fit_decay(catd, tes, mask, masksum)
+    t2s, s0, t2ss, s0s, t2sG, s0G = decay.fit_decay(catd, tes, mask, masksum, fittype)
     bp_str += (" A monoexponential model was fit to the data at each voxel "
                "using log-linear regression in order to estimate T2* and S0 "
                "maps. For each voxel, the value from the adaptive mask was "
