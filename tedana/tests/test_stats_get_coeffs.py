@@ -76,3 +76,21 @@ def test_break_get_coeffs():
         get_coeffs(data, X, mask, add_const=False)
     assert str(e_info.value) == ('First dimensions of data ({0}) and mask ({1}) do not '
                                  'match'.format(data.shape[0], mask.shape[0]))
+
+
+
+# SMOKE TEST 
+def test_smoke_get_coeffs():
+    """
+    Ensure that get_coeffs returns outputs with different inputs and optional paramters
+    """
+    n_samples, n_echos, n_times, n_components = 100, 5, 20, 6
+    data_2d = np.random.random((n_samples, n_times))
+    #data_3d = np.random.random((n_samples, n_echos, n_times)) 
+    x = np.random.random((n_times, n_components))
+    mask = np.random.randint(2, size=n_samples)     
+
+    assert get_coeffs(data_2d, x) is not None
+    # assert get_coeffs(data_3d, x) is not None TODO: submit an issue for the bug 
+    assert get_coeffs(data_2d, x, mask=mask) is not None
+    assert get_coeffs(data_2d, x, add_const=True) is not None
