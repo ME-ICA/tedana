@@ -234,6 +234,17 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
         # Move decision columns to end
         comptable = clean_dataframe(comptable)
         return comptable
+    if len(acc_prov) == 1:
+        LGR.warning('Only 1 BOLD-like component detected. Ignoring all '
+                    'remaining components.')
+
+        ign = sorted(np.setdiff1d(all_comps, rej))
+        comptable.loc[ign, 'classification'] = 'ignored'
+        comptable.loc[ign, 'rationale'] += 'I006'
+
+        # Move decision columns to end
+        comptable = clean_dataframe(comptable)
+        return comptable
 
     # Calculate "rate" for kappa: kappa range divided by variance explained
     # range, for potentially accepted components
