@@ -492,7 +492,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                    "decompose the dimensionally reduced dataset.")
 
         if verbose:
-            np.savetxt(op.join(out_dir, '__meica_mix.1D'), mmix_orig)
             if source_tes == -1:
                 io.filewrite(utils.unmask(dd, mask),
                              op.join(out_dir, 'ts_OC_whitened.nii'), ref_img)
