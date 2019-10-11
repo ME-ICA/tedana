@@ -64,8 +64,6 @@ t2svG.nii                 Full T2* map/time series. The difference between
                           for optimal combination.
 s0vG.nii                  Full S0 map/time series. Only used for optimal
                           combination.
-__meica_mix.1D            Mixing matrix (component time series) from ICA
-                          decomposition.
 hik_ts_e[echo].nii        High-Kappa time series for echo number ``echo``
 midk_ts_e[echo].nii       Mid-Kappa time series for echo number ``echo``
 lowk_ts_e[echo].nii       Low-Kappa time series for echo number ``echo``
