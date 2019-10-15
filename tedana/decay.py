@@ -138,10 +138,10 @@ def fit_decay(data, tes, mask, masksum, fittype):
                 # If curve_fit fails to converge, fallback to loglinear estimate
                 s0cf[voxel] = s0[voxel]
                 t2scf[voxel] = t2s[voxel]
-                
+        
         s0cf_unmask = np.squeeze(utils.unmask(s0cf, mask))
         t2scf_unmask = np.squeeze(utils.unmask(t2scf, mask))
-    
+
     # create limited T2* and S0 maps
     echo_masks = np.zeros([n_samp, n_echos - 1], dtype=bool)
     for echo in range(2, n_echos + 1):
