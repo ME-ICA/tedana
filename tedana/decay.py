@@ -133,6 +133,7 @@ def fit_decay(data, tes, mask, masksum, fittype):
                 s0cf[voxel] = popt[0]
                 t2scf[voxel] = popt[1]
             except RuntimeError:
+                # If curve_fit fails to converge, fallback to loglinear estimate
                 s0cf[voxel] = s0[voxel]
                 t2scf[voxel] = t2s[voxel]
 
