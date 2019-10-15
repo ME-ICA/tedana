@@ -182,11 +182,11 @@ def _get_parser():
                           action='store',
                           choices=['loglin', 'curvefit'],
                           help='Desired Fitting Method'
-                                '"loglin" means that a linear model is fit'
-                                ' to the log of the data, default'
-                                '"curvefit" means that a more computationally'
-                                'demanding monoexponential model is fit'
-                                'to the raw data',
+                               '"loglin" means that a linear model is fit'
+                               ' to the log of the data, default'
+                               '"curvefit" means that a more computationally'
+                               'demanding monoexponential model is fit'
+                               'to the raw data',
                           default='loglin')
     optional.add_argument('--debug',
                           dest='debug',

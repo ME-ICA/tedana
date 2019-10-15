@@ -5,6 +5,7 @@ import numpy as np
 import scipy
 from tedana import utils
 
+
 def mono_exp(tes, s0, t2star):
     """
     Specifies a monoexponential model for fitting
@@ -16,10 +17,11 @@ def mono_exp(tes, s0, t2star):
     s0 : :obj:`float`
         Initial signal parameter
     t2star : :oj:`float`
-        T2* parameter  
+        T2* parameter
 
     """
-    return s0 * np.exp(-tes/t2star)
+    return s0 * np.exp(-tes / t2star)
+
 
 def fit_decay(data, tes, mask, masksum, fittype):
     """
@@ -39,7 +41,7 @@ def fit_decay(data, tes, mask, masksum, fittype):
         Valued array indicating number of echos that have sufficient signal in
         given sample
     fittype : :obj: `str`
-        The type of model fit to use 
+        The type of model fit to use
 
     Returns
     -------
@@ -89,7 +91,7 @@ def fit_decay(data, tes, mask, masksum, fittype):
 
     if len(data.shape) == 3:
         n_samp, n_echos, n_vols = data.shape
-        fit_data = np.mean(data, axis = 2)
+        fit_data = np.mean(data, axis=2)
     else:
         n_samp, n_echos = data.shape
         n_vols = 1
@@ -98,7 +100,7 @@ def fit_decay(data, tes, mask, masksum, fittype):
     fit_data = fit_data[mask]
     t2ss = np.zeros([n_samp, n_echos - 1])
     s0vs = np.zeros([n_samp, n_echos - 1])
-    
+
     for echo in range(1, n_echos):
         # perform log linear fit of echo times against MR signal
         # make DV matrix: samples x (time series * echos)
@@ -121,9 +123,9 @@ def fit_decay(data, tes, mask, masksum, fittype):
         # perform a monoexponential fit of echo times against MR signal
         # using the mean of the signal, using loglin estimate
         # as initial starting points for fit
-        
-        t2scf = np.zeros([t2s.size,])
-        s0cf = np.zeros([t2s.size,])
+
+        t2scf = np.zeros([t2s.size, ])
+        s0cf = np.zeros([t2s.size, ])
 
         for voxel in range(0, t2s.size):
             try:
@@ -136,11 +138,9 @@ def fit_decay(data, tes, mask, masksum, fittype):
                 # If curve_fit fails to converge, fallback to loglinear estimate
                 s0cf[voxel] = s0[voxel]
                 t2scf[voxel] = t2s[voxel]
-
                 
         s0cf_unmask = np.squeeze(utils.unmask(s0cf, mask))
-        t2scf_unmask = np.squeeze(utils.unmask(t2scf, mask))        
-
+        t2scf_unmask = np.squeeze(utils.unmask(t2scf, mask))
     
     # create limited T2* and S0 maps
     echo_masks = np.zeros([n_samp, n_echos - 1], dtype=bool)
@@ -155,7 +155,7 @@ def fit_decay(data, tes, mask, masksum, fittype):
     t2s_full, s0_full = t2s_limited.copy(), s0_limited.copy()
     t2s_full[masksum == 1] = t2ss[masksum == 1, 0]
     s0_full[masksum == 1] = s0vs[masksum == 1, 0]
-    
+
     if fittype == 'curvefit':
         # Replace the full map with the curve fit estimates
         t2s_full = t2scf_unmask
@@ -182,7 +182,7 @@ def fit_decay_ts(data, tes, mask, masksum, fittype):
         Valued array indicating number of echos that have sufficient signal in
         given sample
     fittype : :obj: `str`
-        The type of model fit to use 
+        The type of model fit to use
 
     Returns
     -------

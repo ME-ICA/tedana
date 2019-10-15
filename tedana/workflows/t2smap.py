@@ -126,8 +126,8 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
     label : :obj:`str` or :obj:`None`, optional
         Label for output directory. Default is None.
     fittype : {'loglin', 'curvefit'}, optional
-        Monoexponential fitting method. 
-        'loglin' means to use the the default linear fit to the log of 
+        Monoexponential fitting method.
+        'loglin' means to use the the default linear fit to the log of
         the data.
         'curvefit' means to use a monoexponential fit on the raw data,
         which will take substantially longer.
