@@ -74,6 +74,7 @@ def test_smoke_fit_decay():
     tes = np.random.random((n_echos)).tolist()
     mask = np.random.randint(2, size=n_samples) # generate binary mask of random 0s and 1s
     masksum = np.random.random((n_samples))
+    fittype='loglin'
     t2s_limited, s0_limited, t2ss, s0vs, t2s_full, s0_full = me.fit_decay(data, 
                                                                         tes,
                                                                         mask,
@@ -99,6 +100,7 @@ def test_smoke_fit_decay_ts():
     tes = np.random.random((n_echos)).tolist()
     mask = np.random.randint(2, size=n_samples) # generate binary mask of random 0s and 1s
     masksum = np.random.random((n_samples))
+    fittype='loglin'
     t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts = me.fit_decay_ts(data, 
                                                                         tes,
                                                                         mask,
