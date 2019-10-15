@@ -8,7 +8,7 @@ from tedana import utils
 
 def mono_exp(tes, s0, t2star):
     """
-    Specifies a monoexponential model for fitting
+    Specifies a monoexponential model for use with scipy curve fitting
 
     Parameters
     ----------
