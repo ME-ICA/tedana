@@ -138,7 +138,7 @@ def fit_decay(data, tes, mask, masksum, fittype):
                 # If curve_fit fails to converge, fall back to loglinear estimate
                 s0cf[voxel] = s0[voxel]
                 t2scf[voxel] = t2s[voxel]
-        
+
         s0cf_unmask = np.squeeze(utils.unmask(s0cf, mask))
         t2scf_unmask = np.squeeze(utils.unmask(t2scf, mask))
 
