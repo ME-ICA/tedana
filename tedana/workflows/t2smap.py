@@ -129,8 +129,8 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
         Monoexponential fitting method.
         'loglin' means to use the the default linear fit to the log of
         the data.
-        'curvefit' means to use a monoexponential fit on the raw data,
-        which will take substantially longer.
+        'curvefit' means to use a monoexponential fit to the raw data,
+        which is slightly slower but may be more accurate.
 
     Other Parameters
     ----------------

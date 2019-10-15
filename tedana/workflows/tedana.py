@@ -248,6 +248,12 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Default is -1.
     combmode : {'t2s'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default).
+    fittype : {'loglin', 'curvefit'}, optional
+        Monoexponential fitting method.
+        'loglin' means to use the the default linear fit to the log of
+        the data.
+        'curvefit' means to use a monoexponential fit to the raw data,
+        which is slightly slower but may be more accurate.
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
     png : obj:'bool', optional
