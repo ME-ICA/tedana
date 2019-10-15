@@ -71,25 +71,6 @@ def _get_parser():
                                 "function will be used to derive a mask "
                                 "from the first echo's data."),
                           default=None)
-    optional.add_argument('--mix',
-                          dest='mixm',
-                          metavar='FILE',
-                          type=lambda x: is_valid_file(parser, x),
-                          help=('File containing mixing matrix. If not '
-                                'provided, ME-PCA & ME-ICA is done.'),
-                          default=None)
-    optional.add_argument('--ctab',
-                          dest='ctab',
-                          metavar='FILE',
-                          type=lambda x: is_valid_file(parser, x),
-                          help=('File containing a component table from which '
-                                'to extract pre-computed classifications.'),
-                          default=None)
-    optional.add_argument('--manacc',
-                          dest='manacc',
-                          help=('Comma separated list of manually '
-                                'accepted components'),
-                          default=None)
     optional.add_argument('--sourceTEs',
                           dest='source_tes',
                           type=str,
@@ -190,10 +171,38 @@ def _get_parser():
                           action='store_true',
                           default=False)
     parser._action_groups.append(optional)
+
+    rerungrp = parser.add_argument_group('arguments for rerunning the workflow')
+    rerungrp.add_argument('--t2smap',
+                          dest='t2smap',
+                          metavar='FILE',
+                          type=lambda x: is_valid_file(parser, x),
+                          help=('Precalculated T2* map'),
+                          default=None)
+    rerungrp.add_argument('--mix',
+                          dest='mixm',
+                          metavar='FILE',
+                          type=lambda x: is_valid_file(parser, x),
+                          help=('File containing mixing matrix. If not '
+                                'provided, ME-PCA & ME-ICA is done.'),
+                          default=None)
+    rerungrp.add_argument('--ctab',
+                          dest='ctab',
+                          metavar='FILE',
+                          type=lambda x: is_valid_file(parser, x),
+                          help=('File containing a component table from which '
+                                'to extract pre-computed classifications.'),
+                          default=None)
+    rerungrp.add_argument('--manacc',
+                          dest='manacc',
+                          help=('Comma separated list of manually '
+                                'accepted components'),
+                          default=None)
     return parser
 
 
-def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
+def tedana_workflow(data, tes, mask=None,
+                    mixm=None, ctab=None, manacc=None, t2smap=None,
                     tedort=False, gscontrol=None, tedpca='mle',
                     source_tes=-1, combmode='t2s', verbose=False, stabilize=False,
                     out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
@@ -224,6 +233,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         List of manually accepted components. Can be a list of the components,
         a comma-separated string with component numbers, or None. Default is
         None.
+    t2smap : :obj:`str`, optional
+        Precalculated T2* map.
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
         denoising. Default is False.
@@ -370,12 +381,18 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if ctab and not mixm:
         LGR.warning('Argument "ctab" requires argument "mixm".')
         ctab = None
-    elif ctab and (manacc is None):
-        LGR.warning('Argument "ctab" requires argument "manacc".')
-        ctab = None
     elif manacc is not None and not mixm:
         LGR.warning('Argument "manacc" requires argument "mixm".')
         manacc = None
+
+    if t2smap is not None and op.isfile(t2smap):
+        t2smap = op.abspath(t2smap)
+        # Allow users to re-run on same folder
+        if t2smap != op.join(out_dir, 't2sv.nii'):
+            shutil.copyfile(t2smap, op.join(out_dir, 't2sv.nii'))
+            shutil.copyfile(t2smap, op.join(out_dir, op.basename(t2smap)))
+    elif t2smap is not None:
+        raise IOError('Argument "t2smap" must be an existing file.')
 
     bp_str = ("TE-dependence analysis was performed on input data.")
     if mask is None:
@@ -398,28 +415,35 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     os.chdir(out_dir)
 
-    LGR.info('Computing T2* map')
-    t2s, s0, t2ss, s0s, t2sG, s0G = decay.fit_decay(catd, tes, mask, masksum)
-    bp_str += (" A monoexponential model was fit to the data at each voxel "
-               "using log-linear regression in order to estimate T2* and S0 "
-               "maps. For each voxel, the value from the adaptive mask was "
-               "used to determine which echoes would be used to estimate T2* "
-               "and S0.")
+    if t2smap is None:
+        LGR.info('Computing T2* map')
+        t2s, s0, t2ss, s0s, t2sG, s0G = decay.fit_decay(catd, tes, mask, masksum)
+        bp_str += (" A monoexponential model was fit to the data at each voxel "
+                   "using log-linear regression in order to estimate T2* and S0 "
+                   "maps. For each voxel, the value from the adaptive mask was "
+                   "used to determine which echoes would be used to estimate T2* "
+                   "and S0.")
 
-    # set a hard cap for the T2* map
-    # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
-    cap_t2s = stats.scoreatpercentile(t2s.flatten(), 99.5,
-                                      interpolation_method='lower')
-    LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
-    t2s[t2s > cap_t2s * 10] = cap_t2s
-    io.filewrite(t2s, op.join(out_dir, 't2sv.nii'), ref_img)
-    io.filewrite(s0, op.join(out_dir, 's0v.nii'), ref_img)
+        # set a hard cap for the T2* map
+        # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
+        cap_t2s = stats.scoreatpercentile(t2s.flatten(), 99.5,
+                                          interpolation_method='lower')
+        LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
+        t2s[t2s > cap_t2s * 10] = cap_t2s
+        io.filewrite(t2s, op.join(out_dir, 't2sv.nii'), ref_img)
+        io.filewrite(s0, op.join(out_dir, 's0v.nii'), ref_img)
 
-    if verbose:
-        io.filewrite(t2ss, op.join(out_dir, 't2ss.nii'), ref_img)
-        io.filewrite(s0s, op.join(out_dir, 's0vs.nii'), ref_img)
-        io.filewrite(t2sG, op.join(out_dir, 't2svG.nii'), ref_img)
-        io.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
+        if verbose:
+            io.filewrite(t2ss, op.join(out_dir, 't2ss.nii'), ref_img)
+            io.filewrite(s0s, op.join(out_dir, 's0vs.nii'), ref_img)
+            io.filewrite(t2sG, op.join(out_dir, 't2svG.nii'), ref_img)
+            io.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
+    else:
+        LGR.info('Loading provided T2* map')
+        t2s = utils.load_image(t2smap)
+        t2sG = t2s.copy()
+        bp_str += (" Pregenerated voxelwise T2* estimates were read "
+                   "into memory.")
 
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
@@ -543,7 +567,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                      "16187-16192."]
         else:
             comptable = pd.read_csv(ctab, sep='\t', index_col='component')
-            comptable = selection.manual_selection(comptable, acc=manacc)
+            if manacc is not None:
+                comptable = selection.manual_selection(comptable, acc=manacc)
             bp_str += (" Next, components were manually classified as "
                        "BOLD (TE-dependent), non-BOLD (TE-independent), or "
                        "uncertain (low-variance).")
