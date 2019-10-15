@@ -98,8 +98,6 @@ def fit_decay(data, tes, mask, masksum, fittype):
     fit_data = fit_data[mask]
     t2ss = np.zeros([n_samp, n_echos - 1])
     s0vs = np.zeros([n_samp, n_echos - 1])
-
-    
     
     for echo in range(1, n_echos):
         # perform log linear fit of echo times against MR signal
