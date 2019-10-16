@@ -129,7 +129,7 @@ def fit_decay(data, tes, mask, masksum, fittype):
 
         for voxel in range(t2s.size):
             try:
-                popt = scipy.optimize.curve_fit(mono_exp, tes, fit_data[voxel, :],
+                popt, cov = scipy.optimize.curve_fit(mono_exp, tes, fit_data[voxel, :],
                                                 p0=(s0[voxel],
                                                 t2s[voxel]))
                 s0cf[voxel] = popt[0]
