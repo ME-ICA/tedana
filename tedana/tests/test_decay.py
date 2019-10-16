@@ -88,7 +88,7 @@ def test_smoke_fit_decay():
     assert s0_full is not None
 
 
-    def test_smoke_fit_decay_curvefit():
+def test_smoke_fit_decay_curvefit():
     """
     test_smoke_fit_decay tests that the function fit_decay returns reasonable 
     objects with random inputs in the correct format when using the direct
