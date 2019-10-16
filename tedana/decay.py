@@ -124,8 +124,8 @@ def fit_decay(data, tes, mask, masksum, fittype):
         # using the mean of the signal, using loglin estimates
         # as initial starting points for fit
 
-        t2scf = np.zeros([t2s.size])
-        s0cf = np.zeros([t2s.size])
+        t2scf = np.zeros(t2s.size)
+        s0cf = np.zeros(t2s.size)
 
         for voxel in range(t2s.size):
             try:
