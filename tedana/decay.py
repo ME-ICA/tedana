@@ -92,12 +92,14 @@ def fit_decay(data, tes, mask, masksum, fittype):
     if len(data.shape) == 3:
         n_samp, n_echos, n_vols = data.shape
         fit_data = np.mean(data, axis=2)
+        fit_sigma = np.std(data, axis=2)
     else:
         n_samp, n_echos = data.shape
         n_vols = 1
 
     data = data[mask]
     fit_data = fit_data[mask]
+    fit_sigma = fit_sigma[mask]
     t2ss = np.zeros([n_samp, n_echos - 1])
     s0vs = np.zeros([n_samp, n_echos - 1])
 
@@ -130,6 +132,7 @@ def fit_decay(data, tes, mask, masksum, fittype):
         for voxel in range(t2s.size):
             try:
                 popt, cov = scipy.optimize.curve_fit(mono_exp, tes, fit_data[voxel, :],
+                                                     sigma=fit_sigma[voxel, :],
                                                      p0=(s0[voxel],
                                                      t2s[voxel]))
                 s0cf[voxel] = popt[0]
