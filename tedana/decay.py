@@ -40,7 +40,7 @@ def fit_decay(data, tes, mask, masksum, fittype):
     masksum : (S,) array_like
         Valued array indicating number of echos that have sufficient signal in
         given sample
-    fittype : :obj: `str`
+    fittype : {loglin, curvefit}
         The type of model fit to use
 
     Returns
@@ -124,10 +124,10 @@ def fit_decay(data, tes, mask, masksum, fittype):
         # using the mean of the signal, using loglin estimates
         # as initial starting points for fit
 
-        t2scf = np.zeros([t2s.size, ])
-        s0cf = np.zeros([t2s.size, ])
+        t2scf = np.zeros([t2s.size])
+        s0cf = np.zeros([t2s.size])
 
-        for voxel in range(0, t2s.size):
+        for voxel in range(t2s.size):
             try:
                 popt = scipy.optimize.curve_fit(mono_exp, tes, fit_data[voxel, :],
                                                 p0=(s0[voxel],
