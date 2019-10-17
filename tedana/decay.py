@@ -137,7 +137,6 @@ def fit_decay(data, tes, mask, masksum, fittype):
                 except RuntimeError:
                     # If curve_fit fails to converge, fall back to loglinear estimate
                     fail_count += 1
-                    pass
             if fail_count:
                 fail_percent = 100 * fail_count / t2s.size
                 LGR.debug('With {0} echoes, monoexponential fit failed on {1} ({2:.2f}%) voxel(s),'
