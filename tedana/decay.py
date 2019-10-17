@@ -1,9 +1,12 @@
 """
 Functions to estimate S0 and T2* from multi-echo data.
 """
-import numpy as np
+import logging
 import scipy
+import numpy as np
 from tedana import utils
+
+LGR = logging.getLogger(__name__)
 
 
 def mono_exp(tes, s0, t2star):
@@ -103,47 +106,42 @@ def fit_decay(data, tes, mask, masksum, fittype):
     t2ss = np.zeros([n_samp, n_echos - 1])
     s0vs = np.zeros([n_samp, n_echos - 1])
 
-    for echo in range(1, n_echos):
+    for i_echo, echo_num in enumerate(range(2, n_echos + 1)):
         # perform log linear fit of echo times against MR signal
         # make DV matrix: samples x (time series * echos)
-        log_data = np.log((np.abs(data[:, :echo + 1, :]) + 1).reshape(len(data), -1).T)
-        # make IV matrix: intercept/TEs x (time series * echos)
-        x = np.column_stack([np.ones(echo + 1), [-te for te in tes[:echo + 1]]])
-        X = np.repeat(x, n_vols, axis=0)
+        data_2d = data[:, :echo_num, :].reshape(len(data), -1).T
+        log_data = np.log(np.abs(data_2d) + 1)
 
+        # make IV matrix: intercept/TEs x (time series * echos)
+        x = np.column_stack([np.ones(echo_num), [-te for te in tes[:echo_num]]])
+        X = np.repeat(x, n_vols, axis=0)
+        echo_times_1d = X[:, 1] * -1
+
+        # Log-linear fit
         betas = np.linalg.lstsq(X, log_data, rcond=None)[0]
         t2s = 1. / betas[1, :].T
         s0 = np.exp(betas[0, :]).T
 
+        if fittype == 'curvefit':
+            # perform a monoexponential fit of echo times against MR signal
+            # using loglin estimates as initial starting points for fit
+            for voxel in range(t2s.size):
+                try:
+                    popt, cov = scipy.optimize.curve_fit(
+                        mono_exp, echo_times_1d, data_2d[:, voxel],
+                        p0=(s0[voxel], t2s[voxel]))
+                    s0[voxel] = popt[0]
+                    t2s[voxel] = popt[1]
+                except RuntimeError:
+                    # If curve_fit fails to converge, fall back to loglinear estimate
+                    pass
+
         t2s[np.isinf(t2s)] = 500.  # why 500?
+        t2s[t2s <= 0] = 1.  # let's get rid of negative values!
         s0[np.isnan(s0)] = 0.      # why 0?
 
-        t2ss[..., echo - 1] = np.squeeze(utils.unmask(t2s, mask))
-        s0vs[..., echo - 1] = np.squeeze(utils.unmask(s0, mask))
-
-    if fittype == 'curvefit':
-        # perform a monoexponential fit of echo times against MR signal
-        # using the mean of the signal, using loglin estimates
-        # as initial starting points for fit
-
-        t2scf = np.zeros(t2s.size)
-        s0cf = np.zeros(t2s.size)
-
-        for voxel in range(t2s.size):
-            try:
-                popt, cov = scipy.optimize.curve_fit(mono_exp, tes, fit_data[voxel, :],
-                                                     sigma=fit_sigma[voxel, :],
-                                                     p0=(s0[voxel],
-                                                     t2s[voxel]))
-                s0cf[voxel] = popt[0]
-                t2scf[voxel] = popt[1]
-            except RuntimeError:
-                # If curve_fit fails to converge, fall back to loglinear estimate
-                s0cf[voxel] = s0[voxel]
-                t2scf[voxel] = t2s[voxel]
-
-        s0cf_unmask = np.squeeze(utils.unmask(s0cf, mask))
-        t2scf_unmask = np.squeeze(utils.unmask(t2scf, mask))
+        t2ss[..., i_echo] = np.squeeze(utils.unmask(t2s, mask))
+        s0vs[..., i_echo] = np.squeeze(utils.unmask(s0, mask))
 
     # create limited T2* and S0 maps
     echo_masks = np.zeros([n_samp, n_echos - 1], dtype=bool)
@@ -158,11 +156,6 @@ def fit_decay(data, tes, mask, masksum, fittype):
     t2s_full, s0_full = t2s_limited.copy(), s0_limited.copy()
     t2s_full[masksum == 1] = t2ss[masksum == 1, 0]
     s0_full[masksum == 1] = s0vs[masksum == 1, 0]
-
-    if fittype == 'curvefit':
-        # Replace the full map with the curve fit estimates
-        t2s_full = t2scf_unmask
-        s0_full = s0cf_unmask
 
     return t2s_limited, s0_limited, t2ss, s0vs, t2s_full, s0_full
 
