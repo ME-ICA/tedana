@@ -125,6 +125,8 @@ def fit_decay(data, tes, mask, masksum, fittype):
         if fittype == 'curvefit':
             # perform a monoexponential fit of echo times against MR signal
             # using loglin estimates as initial starting points for fit
+
+            fail_count = 0
             for voxel in range(t2s.size):
                 try:
                     popt, cov = scipy.optimize.curve_fit(
@@ -134,7 +136,12 @@ def fit_decay(data, tes, mask, masksum, fittype):
                     t2s[voxel] = popt[1]
                 except RuntimeError:
                     # If curve_fit fails to converge, fall back to loglinear estimate
+                    fail_count +=1
                     pass
+            if fail_count:
+                LGR.info('With {0} echoes, monoexponential fit failed on {1} ({2:.2f}%) voxel(s),'
+                         ' used log linear estimate instead'.format(echo_num+1, fail_count,
+                         (fail_count/t2s.size *100)))
 
         t2s[np.isinf(t2s)] = 500.  # why 500?
         t2s[t2s <= 0] = 1.  # let's get rid of negative values!
