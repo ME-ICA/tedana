@@ -142,7 +142,7 @@ def fit_decay(data, tes, mask, masksum, fittype):
                 fail_percent = (fail_count / t2s.size * 100))
                 LGR.debug('With {0} echoes, monoexponential fit failed on {1} ({2:.2f}%) voxel(s),'
                           ' used log linear estimate instead'.format(echo_num + 1, fail_count,
-                                                                     fail_percent)
+                                                                     fail_percent))
 
         t2s[np.isinf(t2s)] = 500.  # why 500?
         t2s[t2s <= 0] = 1.  # let's get rid of negative values!
