@@ -177,6 +177,17 @@ def _get_parser():
                                 'use of IncrementalPCA. May increase workflow '
                                 'duration.'),
                           default=False)
+    optional.add_argument('--fittype',
+                          dest='fittype',
+                          action='store',
+                          choices=['loglin', 'curvefit'],
+                          help='Desired Fitting Method '
+                               '"loglin" means that a linear model is fit '
+                               'to the log of the data, default '
+                               '"curvefit" means that a more computationally '
+                               'demanding monoexponential model is fit '
+                               'to the raw data',
+                          default='loglin')
     optional.add_argument('--debug',
                           dest='debug',
                           action='store_true',
@@ -198,7 +209,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     source_tes=-1, combmode='t2s', verbose=False, stabilize=False,
                     out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
                     debug=False, quiet=False, png=False, png_cmap='coolwarm',
-                    low_mem=False):
+                    low_mem=False, fittype='loglin'):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -237,6 +248,12 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Default is -1.
     combmode : {'t2s'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default).
+    fittype : {'loglin', 'curvefit'}, optional
+        Monoexponential fitting method.
+        'loglin' means to use the the default linear fit to the log of
+        the data.
+        'curvefit' means to use a monoexponential fit to the raw data,
+        which is slightly slower but may be more accurate.
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
     png : obj:'bool', optional
@@ -399,7 +416,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     os.chdir(out_dir)
 
     LGR.info('Computing T2* map')
-    t2s, s0, t2ss, s0s, t2sG, s0G = decay.fit_decay(catd, tes, mask, masksum)
+    t2s, s0, t2ss, s0s, t2sG, s0G = decay.fit_decay(catd, tes, mask, masksum, fittype)
     bp_str += (" A monoexponential model was fit to the data at each voxel "
                "using log-linear regression in order to estimate T2* and S0 "
                "maps. For each voxel, the value from the adaptive mask was "
