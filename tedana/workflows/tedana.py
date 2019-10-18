@@ -271,8 +271,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Enables low-memory processing, including the use of IncrementalPCA.
         May increase workflow duration. Default is False.
     ext_reg : :obj:`bool`, optional
-        Setting to true writes out the rejected components to a text file for
-        usage as exteranl regressors. Default is False.
+        Writes out a text file of rejected components. These can be used as
+        as nuisance regressors in other software. Default is False.
     debug : :obj:`bool`, optional
         Whether to run in debugging mode or not. Default is False.
     quiet : :obj:`bool`, optional
