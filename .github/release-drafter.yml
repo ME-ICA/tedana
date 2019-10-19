@@ -1,7 +1,10 @@
 template: |
   ## Release Notes
 
-  
+
+  ## Breaking Changes
+
+
   ## Changes
 
   $CHANGES
