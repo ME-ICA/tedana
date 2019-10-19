@@ -71,6 +71,11 @@ def _get_parser():
                                 "function will be used to derive a mask "
                                 "from the first echo's data."),
                           default=None)
+    optional.add_argument('--out-dir',
+                          dest='out_dir',
+                          type=str,
+                          help='Output directory.',
+                          default='.')
     optional.add_argument('--sourceTEs',
                           dest='source_tes',
                           type=str,
@@ -78,6 +83,17 @@ def _get_parser():
                                 '-1 for opt. com., and 1,2 for just TEs 1 and '
                                 '2. Default=-1.'),
                           default=-1)
+    optional.add_argument('--fittype',
+                          dest='fittype',
+                          action='store',
+                          choices=['loglin', 'curvefit'],
+                          help='Desired Fitting Method '
+                               '"loglin" means that a linear model is fit '
+                               'to the log of the data, default '
+                               '"curvefit" means that a more computationally '
+                               'demanding monoexponential model is fit '
+                               'to the raw data',
+                          default='loglin')
     optional.add_argument('--combmode',
                           dest='combmode',
                           action='store',
@@ -85,17 +101,6 @@ def _get_parser():
                           help=('Combination scheme for TEs: '
                                 't2s (Posse 1999, default)'),
                           default='t2s')
-    optional.add_argument('--verbose',
-                          dest='verbose',
-                          action='store_true',
-                          help='Generate intermediate and additional files.',
-                          default=False)
-    optional.add_argument('--tedort',
-                          dest='tedort',
-                          action='store_true',
-                          help=('Orthogonalize rejected components w.r.t. '
-                                'accepted components prior to denoising.'),
-                          default=False)
     optional.add_argument('--gscontrol',
                           dest='gscontrol',
                           required=False,
@@ -112,19 +117,37 @@ def _get_parser():
                           help='Method with which to select components in TEDPCA',
                           choices=['mle', 'kundu', 'kundu-stabilize'],
                           default='mle')
-    optional.add_argument('--out-dir',
-                          dest='out_dir',
-                          type=str,
-                          help='Output directory.',
-                          default='.')
     optional.add_argument('--seed',
                           dest='fixed_seed',
+                          metavar='INT',
                           type=int,
                           help=('Value used for random initialization of ICA algorithm. '
                                 'Set to an integer value for reproducible ICA results. '
                                 'Set to -1 for varying results across ICA calls. '
                                 'Default=42.'),
                           default=42)
+    optional.add_argument('--maxit',
+                          dest='maxit',
+                          metavar='INT',
+                          type=int,
+                          help=('Maximum number of iterations for ICA.'),
+                          default=500)
+    optional.add_argument('--maxrestart',
+                          dest='maxrestart',
+                          metavar='INT',
+                          type=int,
+                          help=('Maximum number of attempts for ICA. If ICA '
+                                'fails to converge, the fixed seed will be '
+                                'updated and ICA will be run again. If '
+                                'convergence is achieved before maxrestart '
+                                'attempts, ICA will finish early.'),
+                          default=10)
+    optional.add_argument('--tedort',
+                          dest='tedort',
+                          action='store_true',
+                          help=('Orthogonalize rejected components w.r.t. '
+                                'accepted components prior to denoising.'),
+                          default=False)
     optional.add_argument('--png',
                           dest='png',
                           action='store_true',
@@ -134,23 +157,10 @@ def _get_parser():
                           default=False)
     optional.add_argument('--png-cmap',
                           dest='png_cmap',
+                          metavar='CMAP',
                           type=str,
                           help=('Colormap for figures'),
                           default='coolwarm')
-    optional.add_argument('--maxit',
-                          dest='maxit',
-                          type=int,
-                          help=('Maximum number of iterations for ICA.'),
-                          default=500)
-    optional.add_argument('--maxrestart',
-                          dest='maxrestart',
-                          type=int,
-                          help=('Maximum number of attempts for ICA. If ICA '
-                                'fails to converge, the fixed seed will be '
-                                'updated and ICA will be run again. If '
-                                'convergence is achieved before maxrestart '
-                                'attempts, ICA will finish early.'),
-                          default=10)
     optional.add_argument('--lowmem',
                           dest='low_mem',
                           action='store_true',
@@ -158,17 +168,11 @@ def _get_parser():
                                 'use of IncrementalPCA. May increase workflow '
                                 'duration.'),
                           default=False)
-    optional.add_argument('--fittype',
-                          dest='fittype',
-                          action='store',
-                          choices=['loglin', 'curvefit'],
-                          help='Desired Fitting Method '
-                               '"loglin" means that a linear model is fit '
-                               'to the log of the data, default '
-                               '"curvefit" means that a more computationally '
-                               'demanding monoexponential model is fit '
-                               'to the raw data',
-                          default='loglin')
+    optional.add_argument('--verbose',
+                          dest='verbose',
+                          action='store_true',
+                          help='Generate intermediate and additional files.',
+                          default=False)
     optional.add_argument('--debug',
                           dest='debug',
                           action='store_true',
@@ -213,13 +217,15 @@ def _get_parser():
     return parser
 
 
-def tedana_workflow(data, tes, mask=None,
-                    mixm=None, ctab=None, manacc=None, t2smap=None,
-                    tedort=False, gscontrol=None, tedpca='mle',
-                    source_tes=-1, combmode='t2s', verbose=False, stabilize=False,
-                    out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
-                    debug=False, quiet=False, png=False, png_cmap='coolwarm',
-                    low_mem=False, fittype='loglin'):
+def tedana_workflow(data, tes, mask=None, out_dir='.',
+                    fittype='loglin', combmode='t2s',
+                    gscontrol=None, tedpca='mle',
+                    source_tes=-1, tedort=False,
+                    fixed_seed=42, maxit=500, maxrestart=10,
+                    png=False, png_cmap='coolwarm',
+                    low_mem=False,
+                    debug=False, quiet=False, verbose=False,
+                    t2smap=None, mixm=None, ctab=None, manacc=None):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -235,18 +241,8 @@ def tedana_workflow(data, tes, mask=None,
         spatially aligned with `data`. If an explicit mask is not provided,
         then Nilearn's compute_epi_mask function will be used to derive a mask
         from the first echo's data.
-    mixm : :obj:`str`, optional
-        File containing mixing matrix. If not provided, ME-PCA and ME-ICA are
-        done.
-    ctab : :obj:`str`, optional
-        File containing component table from which to extract pre-computed
-        classifications.
-    manacc : :obj:`list`, :obj:`str`, or None, optional
-        List of manually accepted components. Can be a list of the components,
-        a comma-separated string with component numbers, or None. Default is
-        None.
-    t2smap : :obj:`str`, optional
-        Precalculated T2* map.
+    out_dir : :obj:`str`, optional
+        Output directory.
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
         denoising. Default is False.
@@ -271,10 +267,20 @@ def tedana_workflow(data, tes, mask=None,
     png : obj:'bool', optional
         Generate simple plots and figures. Default is false.
     png_cmap : obj:'str', optional
-            Name of a matplotlib colormap to be used when generating figures.
-            --png must still be used to request figures. Default is 'coolwarm'
-    out_dir : :obj:`str`, optional
-        Output directory.
+        Name of a matplotlib colormap to be used when generating figures.
+        --png must still be used to request figures. Default is 'coolwarm'.
+    t2smap : :obj:`str`, optional
+        Precalculated T2* map in the same space as the input data.
+    mixm : :obj:`str`, optional
+        File containing mixing matrix. If not provided, ME-PCA and ME-ICA are
+        done.
+    ctab : :obj:`str`, optional
+        File containing component table from which to extract pre-computed
+        classifications.
+    manacc : :obj:`list`, :obj:`str`, or None, optional
+        List of manually accepted components. Can be a list of the components,
+        a comma-separated string with component numbers, or None. Default is
+        None.
 
     Other Parameters
     ----------------
