@@ -177,7 +177,8 @@ def _get_parser():
                           dest='t2smap',
                           metavar='FILE',
                           type=lambda x: is_valid_file(parser, x),
-                          help=('Precalculated T2* map'),
+                          help=('Precalculated T2* map in the same space as '
+                                'the input data.'),
                           default=None)
     rerungrp.add_argument('--mix',
                           dest='mixm',
@@ -195,8 +196,8 @@ def _get_parser():
                           default=None)
     rerungrp.add_argument('--manacc',
                           dest='manacc',
-                          help=('Comma separated list of manually '
-                                'accepted components'),
+                          help=('Comma-separated list of manually '
+                                'accepted components.'),
                           default=None)
     return parser
 
@@ -442,6 +443,7 @@ def tedana_workflow(data, tes, mask=None,
         LGR.info('Loading provided T2* map')
         t2s = utils.load_image(t2smap)
         t2sG = t2s.copy()
+        mask[t2s == 0] = 0  # reduce mask based on T2* map
         bp_str += (" Pregenerated voxelwise T2* estimates were read "
                    "into memory.")
 
