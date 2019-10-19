@@ -419,21 +419,33 @@ def tedana_workflow(data, tes, mask=None, out_dir='.',
         raise IOError('Argument "t2smap" must be an existing file.')
 
     bp_str = ("TE-dependence analysis was performed on input data.")
-    if mask is None:
+    if mask and not t2smap:
+        # TODO: add affine check
+        LGR.info('Using user-defined mask')
+        bp_str += (" A user-defined mask was applied to the data.")
+    elif t2smap and not mask:
+        LGR.info('Using user-defined T2* map to generate mask')
+        t2s = utils.load_image(t2smap)
+        t2sG = t2s.copy()
+        mask = (t2s != 0).astype(int)
+    elif t2smap and mask:
+        LGR.info('Using user-defined mask and T2* map to generate mask')
+        t2s = utils.load_image(t2smap)
+        t2sG = t2s.copy()
+        mask = utils.load_image(mask)
+        mask[t2s == 0] = 0  # reduce mask based on T2* map
+    else:
         LGR.info('Computing EPI mask from first echo')
         first_echo_img = io.new_nii_like(ref_img, catd[:, 0, :])
         mask = compute_epi_mask(first_echo_img)
         bp_str += (" An initial mask was generated from the first echo using "
                    "nilearn's compute_epi_mask function.")
-    else:
-        # TODO: add affine check
-        LGR.info('Using user-defined mask')
-        bp_str += (" A user-defined mask was applied to the data.")
 
     mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True)
     bp_str += (" An adaptive mask was then generated, in which each voxel's "
                "value reflects the number of echoes with 'good' data.")
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
+
     if verbose:
         io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
 
@@ -462,13 +474,6 @@ def tedana_workflow(data, tes, mask=None, out_dir='.',
             io.filewrite(s0s, op.join(out_dir, 's0vs.nii'), ref_img)
             io.filewrite(t2sG, op.join(out_dir, 't2svG.nii'), ref_img)
             io.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
-    else:
-        LGR.info('Loading provided T2* map')
-        t2s = utils.load_image(t2smap)
-        t2sG = t2s.copy()
-        mask[t2s == 0] = 0  # reduce mask based on T2* map
-        bp_str += (" Pregenerated voxelwise T2* estimates were read "
-                   "into memory.")
 
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
@@ -573,11 +578,11 @@ def tedana_workflow(data, tes, mask=None, out_dir='.',
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
-        comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                    catd, data_oc, mmix_orig, t2s, tes,
-                    ref_img, label='meica_', out_dir=out_dir,
-                    algorithm='kundu_v2', verbose=verbose)
         if ctab is None:
+            comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
+                        catd, data_oc, mmix_orig, t2s, tes,
+                        ref_img, label='meica_', out_dir=out_dir,
+                        algorithm='kundu_v2', verbose=verbose)
             comptable = metrics.kundu_metrics(comptable, metric_maps)
             comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
             bp_str += (" Next, component selection was performed to identify "
@@ -591,6 +596,7 @@ def tedana_workflow(data, tes, mask=None, out_dir='.',
                      "of the National Academy of Sciences, 110(40), "
                      "16187-16192."]
         else:
+            mmix = mmix_orig.copy()
             comptable = pd.read_csv(ctab, sep='\t', index_col='component')
             if manacc is not None:
                 comptable = selection.manual_selection(comptable, acc=manacc)
