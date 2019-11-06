@@ -23,7 +23,7 @@ Multi-echo data
 ```````````````
 
 Here are the echo-specific time series for a single voxel in an example
-resting-state scan with 5 echoes.
+resting-state scan with 8 echoes.
 
 .. image:: /_static/a01_echo_timeseries.png
 
@@ -201,7 +201,7 @@ This way, low-variance information (originally discarded by TEDPCA) is retained
 in the data, but is ignored by the TEDICA process.
 This results in echo- and voxel-specific betas for each of the components.
 
-TE-dependence (:math:`R_2`) and TE-independence (:math:`S_0`) models can then
+TE-dependence (:math:`R_2` or :math:`1/T_{2}^*`) and TE-independence (:math:`S_0`) models can then
 be fit to these betas.
 For more information on how these models are estimated, see :ref:`dependence models`.
 These models allow calculation of F-statistics for the :math:`R_2` and :math:`S_0`
