@@ -96,7 +96,7 @@ run_integration_tests() {
     cprint "RUNNING INTEGRATION TESTS"
     source activate tedana_py36
     python setup.py -q install
-    py.test "$@" tedana/tests/test_integration.py
+    py.test "$@" -k integration tedana
 }
 
 
