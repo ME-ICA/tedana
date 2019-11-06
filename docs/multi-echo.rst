@@ -1,14 +1,15 @@
 Multi-echo fMRI
 ===============
-In most echo-planar image (EPI) fMRI sequences, only one brain image is acquired
-at each repetition time, at the rate of radio frequency (RF). In contrast, in
-multi-echo (ME) fMRI, data are acquired for multiple echo times, resulting in
-multiple volumes with varying levels of contrast acquired per RF.
+Most echo-planar image (EPI) sequences collect a single brain image following 
+a radio frequency (RF) pulse, at a rate known as the repetition time (TR). 
+This typical approach is known as single-echo fMRI. In contrast, multi-echo (ME) 
+fMRI refers to collecting data at multiple echo times, resulting in
+multiple volumes with varying levels of contrast acquired per RF pulse.
 
 The physics of multi-echo fMRI
 ------------------------------
-Multi-echo fMRI data is obtained by acquiring multiple TEs (commonly called
-`echo times`_) for each MRI volume
+Multi-echo fMRI data is obtained by acquiring multiple echo times (commonly called
+`TEs`_) for each MRI volume
 during data collection.
 While fMRI signal contains important neural information (termed the blood
 oxygen-level dependent, or `BOLD signal`_,
