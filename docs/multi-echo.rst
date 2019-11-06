@@ -1,5 +1,5 @@
-Multi-echo fMRI
-===============
+What is Multi-echo fMRI
+=======================
 Most echo-planar image (EPI) sequences collect a single brain image following 
 a radio frequency (RF) pulse, at a rate known as the repetition time (TR). 
 This typical approach is known as single-echo fMRI. In contrast, multi-echo (ME) 
@@ -9,8 +9,7 @@ multiple volumes with varying levels of contrast acquired per RF pulse.
 The physics of multi-echo fMRI
 ------------------------------
 Multi-echo fMRI data is obtained by acquiring multiple echo times (commonly called
-`TEs`_) for each MRI volume
-during data collection.
+`TEs`_) for each MRI volume during data collection.
 While fMRI signal contains important neural information (termed the blood
 oxygen-level dependent, or `BOLD signal`_,
 it also contains "noise" (termed non-BOLD signal) caused by things like
@@ -20,7 +19,7 @@ echos allows us to assess whether components of the fMRI signal are BOLD- or
 non-BOLD.
 For a comprehensive review, see `Kundu et al. (2017)`_.
 
-.. _echo times: http://mriquestions.com/tr-and-te.html
+.. _TEs: http://mriquestions.com/tr-and-te.html
 .. _BOLD signal: http://www.fil.ion.ucl.ac.uk/spm/course/slides10-zurich/Kerstin_BOLD.pdf
 .. _Kundu et al. (2017): https://paperpile.com/shared/eH3PPu
 
@@ -124,6 +123,30 @@ resulted in research publications.
 We suggest new multi-echo fMRI users examine the :ref:`spreadsheet of publications` that use
 multi-echo fMRI to identify studies with similar acquisition priorities,
 and use the parameters from those studies as a starting point.
+
+Collecting Multi-echo Data
+--------------------------
+For Siemens users, there are two options for Works In Progress (WIPs) Sequences. 
+The Center for Magnetic Resonance Research at the University of Minnesota 
+provides a custom MR sequence that allows users to collect multiple echoes 
+(termed **Contrasts**). The sequence and documentation can be `found here`_. For details 
+on obtaining a license follow `this link`_. By default the number of contrasts is 1, 
+yielding a signal echo sequence. In order to collect multiple echoes, increase number of 
+Contrasts on the **Sequence Tab, Part 1** on the MR console. 
+
+In addition, the Martinos Center at Harvard also has a MR sequence available, with the 
+details `available here`_. The number of echoes can be specified on the **Sequence, Special** tab 
+in this sequence. 
+
+.. _found here: https://www.cmrr.umn.edu/multiband/
+.. _this link: http://license.umn.edu/technologies/cmrr_center-for-magnetic-resonance-research-software-for-siemens-mri-scanners
+.. _available here: https://www.nmr.mgh.harvard.edu/software/c2p/sms
+
+.. note:: 
+    In order to increase the number of contrasts ("echoes") you may need to first increase the TR, shorten the 
+    first TE and/or enable in-plane acceleration. For typically used parameters see the 
+    `parameters and publications page`_
+.. _parameters and publications page: https://tedana.readthedocs.io/en/latest/publications.html
 
 Resources
 ---------
