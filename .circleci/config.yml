@@ -137,7 +137,7 @@ jobs:
           command: |
             source activate venv
             python setup.py install
-            py.test tedana/tests/test_integration_three_echo.py \
+          py.test tedana/tests/test_integration.py::test_three_echo \
               --cov-append --cov-report term-missing --cov=tedana
             mkdir /tmp/src/coverage/
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.1
@@ -188,7 +188,7 @@ jobs:
           command: |
             source activate venv
             python setup.py install
-            py.test tedana/tests/test_integration_five_echo.py \
+          py.test tedana/tests/test_integration.py::test_integration_five_echo \
               --cov-append --cov-report term-missing --cov=tedana
             mkdir /tmp/src/coverage/
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.2
