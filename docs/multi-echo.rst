@@ -54,42 +54,14 @@ We can use this information to denoise the optimally combined time series.
 .. _processing pipeline details: https://tedana.readthedocs.io/en/latest/approach.html#optimal-combination
 .. _Pruim et al. (2015): https://www.sciencedirect.com/science/article/pii/S1053811915001822
 
-Recommendations on multi-echo use for someone planning a new study
-------------------------------------------------------------------
+Considerations for collecting multi-echo data
+---------------------------------------------
 Multi-echo fMRI acquisition sequences and analysis methods are rapidly maturing. Someone who has access
-to a multi-echo fMRI sequence should seriously consider using it. Multiple studies have shown that a
-weighted average of the echoes to optimize T2* weighting, sometimes called "optimally combined,"
-gives a reliable, modest boost in data quality. The optimal combination of echoes can currently be
-calculated in several software packages including AFNI, fMRIPrep, and tedana. In tedana, the weighted
-average can be calculated with `t2smap`_ If no other
-acquisition compromises are necessary to acquire multi-echo data, this boost is worthwhile. If other
-compromises are necessary, consider the life of the data set. If data is being acquired for a discrete
-study that will be acquired, analyzed, and published in a year or two, it might not be worth making
-compromises to acquire multi-echo data. If a data set is expected to be used for future analyses in later
-years, it is likely that more powerful approaches to multi-echo denoising will sufficiently mature and add
-even more value to a data set.
+to a multi-echo fMRI sequence should seriously consider using it. The following are a few points to 
+consider when deciding whether or not to collect multi-echo data
 
-Other multi-echo denoising methods, such as MEICA, the predecessor to tedana, have shown the potential for
-much greater data quality improvements, as well as the ability to more accurately separate visually similar
-signal vs noise, such as scanner based drifts vs slow changes in BOLD signal. These more powerful methods are
-still being improved, and the algorithms are still changing. Users need to have the time and knowledge to look
-at the denoising output from every run to make sure denoising worked as intended. If someone wants a push-button
-way to use multi-echo data to improve data quality, that doesn't require as deep an inspection of every output,
-stick with using the weighted average. The developers of tedana look forward to when tedana and other methods
-have sufficiently stable algorithms, which have been validated on a wide range of data sets, so that we can
-recommend the wide use of tedana.
-
-.. _t2smap: https://tedana.readthedocs.io/en/latest/usage.html#run-t2smap
-
-Acquisition Parameter Recommendations
--------------------------------------
-There is no empirically tested best parameter set for multi-echo acquisition.
-The guidelines for optimizing parameters are similar to single-echo fMRI.
-For multi-echo fMRI, the same factors that may guide priorities for single echo
-fMRI sequences are also relevant.
-Choose sequence parameters that meet the priorities of a study with regards to spatial resolution,
-spatial coverage, sample rate, signal-to-noise ratio, signal drop-out, distortion, and artifacts.
-
+`There is a cost of collecting multiple echoes`
+***********************************************
 The one difference with multi-echo is a slight time cost.
 For multi-echo fMRI, the shortest echo time (TE) is essentially free since it is collected in the
 gap between the RF pulse and the single-echo acquisition.
@@ -105,6 +77,49 @@ then a rough rule of thumb is that the multi-echo sequence will have 10% fewer s
 Instead of compromising on slice coverage or TR, one can increase acceleration.
 If one increases acceleration, it is worth doing an empirical comparison to make sure there
 isn't a non-trivial loss in SNR or an increase of artifacts.
+
+`A simple weighted average will increase SNR`
+*********************************************
+Multiple studies have shown that a
+weighted average of the echoes to optimize T2* weighting, sometimes called "optimally combined,"
+gives a reliable, modest boost in data quality. The optimal combination of echoes can currently be
+calculated in several software packages including AFNI, fMRIPrep, and tedana. In tedana, the weighted
+average can be calculated with `t2smap`_ If no other
+acquisition compromises are necessary to acquire multi-echo data, this boost is worthwhile. 
+
+`Consider the life of the dataset`
+**********************************
+If other
+compromises are necessary, consider the life of the data set. If data is being acquired for a discrete
+study that will be acquired, analyzed, and published in a year or two, it might not be worth making
+compromises to acquire multi-echo data. If a data set is expected to be used for future analyses in later
+years, it is likely that more powerful approaches to multi-echo denoising will sufficiently mature and add
+even more value to a data set.
+
+Other multi-echo denoising methods, such as MEICA, the predecessor to tedana, have shown the potential for
+much greater data quality improvements, as well as the ability to more accurately separate visually similar
+signal vs noise, such as scanner based drifts vs slow changes in BOLD signal. These more powerful methods are
+still being improved, and the algorithms are still changing. Users need to have the time and knowledge to look
+at the denoising output from every run to make sure denoising worked as intended. 
+
+`Consider the cost of added quality control`
+********************************************
+If someone wants a push-button
+way to use multi-echo data to improve data quality, that doesn't require as deep an inspection of every output,
+stick with using the weighted average. The developers of tedana look forward to when tedana and other methods
+have sufficiently stable algorithms, which have been validated on a wide range of data sets, so that we can
+recommend the wide use of tedana.
+
+.. _t2smap: https://tedana.readthedocs.io/en/latest/usage.html#run-t2smap
+
+Acquisition Parameter Recommendations
+-------------------------------------
+There is no empirically tested best parameter set for multi-echo acquisition.
+The guidelines for optimizing parameters are similar to single-echo fMRI.
+For multi-echo fMRI, the same factors that may guide priorities for single echo
+fMRI sequences are also relevant.
+Choose sequence parameters that meet the priorities of a study with regards to spatial resolution,
+spatial coverage, sample rate, signal-to-noise ratio, signal drop-out, distortion, and artifacts.
 
 A minimum of 3 echoes is recommended for running TE-dependent denoising.
 While there are successful studies that don’t follow this rule,
@@ -122,7 +137,10 @@ There are multiple ways to balance the slight time cost from the added echoes th
 resulted in research publications.
 We suggest new multi-echo fMRI users examine the :ref:`spreadsheet of publications` that use
 multi-echo fMRI to identify studies with similar acquisition priorities,
-and use the parameters from those studies as a starting point.
+and use the parameters from those studies as a starting point. More complete recomendations
+and guidelines are discussed in the `appendix`_ of Dipasquale et al, 2017.
+
+.. _appendix: https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0173289
 
 Collecting Multi-echo Data
 --------------------------
