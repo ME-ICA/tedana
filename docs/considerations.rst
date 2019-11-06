@@ -1,4 +1,4 @@
-Consideratsion for ME-fMRI
+Considerations for ME-fMRI
 ==========================
 Multi-echo fMRI acquisition sequences and analysis methods are rapidly maturing. Someone who has access
 to a multi-echo fMRI sequence should seriously consider using it. The following are a few points to 
