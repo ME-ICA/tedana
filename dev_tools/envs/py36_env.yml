@@ -1,0 +1,36 @@
+name: tedana_py36
+channels:
+    - defaults
+    - conda-forge
+dependencies:
+    - python=3.6
+    - boto3
+    - cython
+    - ipython
+    - lxml
+    - mkl
+    - nose
+    - nose-timer
+    - patsy
+    - pillow
+    - pip
+    - sphinx
+    - pip:
+        - codecov
+        - coverage
+        - coveralls
+        - duecredit
+        - flake8<3.0
+        - flake8-putty
+        - matplotlib
+        - nibabel>=2.1.0
+        - nilearn
+        - numpy>=1.14
+        - numpydoc
+        - pandas
+        - pytest
+        - pytest-cov
+        - scikit-learn
+        - scipy
+        - sphinx-argparse
+        - versioneer
