@@ -63,7 +63,7 @@ generate_tedana_dockerfile() {
 
 build_tedana_image() {
     #
-    # Recreates local Dockerfile and builds me-ica/tedana:local Docker image
+    # Recreates local Dockerfile and builds tedana/tedana-dev:local Docker image
     #
 
     if [ ! -z "${1}" ]; then
@@ -73,7 +73,7 @@ build_tedana_image() {
     fi
 
     generate_tedana_dockerfile
-    docker build --tag me-ica/tedana-dev:${tag} -f Dockerfile_dev .
+    docker build --tag tedana/tedana-dev:${tag} -f Dockerfile_dev .
 }
 
 

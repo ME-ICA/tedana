@@ -166,7 +166,7 @@ For changes to the codebase, we suggest using our development Docker container w
 You can run all the checks with:
 
 ```
-docker run --tty --rm -v ${PWD}:/tedana me-ica/tedana-dev:latest run_all_tests
+docker run --tty --rm -v ${PWD}:/tedana tedana/tedana-dev:latest run_all_tests
 ```
 
 from within your local `tedana` repository.
