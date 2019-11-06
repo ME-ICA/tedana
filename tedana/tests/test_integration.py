@@ -14,6 +14,7 @@ def test_integration_five_echo(skip_integration, include_five_echo):
         out_dir='/tmp/data/five-echo/TED.five-echo',
         debug=True, verbose=True)
 
+
 def test_integration_three_echo(skip_integration):
     """
     An integration test of the full tedana workflow using three-echo test data.

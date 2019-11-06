@@ -7,6 +7,7 @@ def pytest_addoption(parser):
     parser.addoption('--include-five-echo', action='store_true',
                      default=False, help='Run the five-echo test set.')
 
+
 @pytest.fixture
 def skip_integration(request):
     return request.config.getoption('--skipintegration')
