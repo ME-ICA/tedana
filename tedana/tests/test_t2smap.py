@@ -26,16 +26,16 @@ class TestT2smap():
         out_dir = 'TED.echo1.t2smap'
 
         # Check outputs
-        assert op.isfile(op.join(out_dir, 'ts_OC.nii'))
-        img = nib.load(op.join(out_dir, 't2sv.nii'))
+        assert op.isfile(op.join(out_dir, 'ts_OC.nii.gz'))
+        img = nib.load(op.join(out_dir, 't2sv.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 's0v.nii'))
+        img = nib.load(op.join(out_dir, 's0v.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 't2svG.nii'))
+        img = nib.load(op.join(out_dir, 't2svG.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 's0vG.nii'))
+        img = nib.load(op.join(out_dir, 's0vG.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 'ts_OC.nii'))
+        img = nib.load(op.join(out_dir, 'ts_OC.nii.gz'))
         assert len(img.shape) == 4
 
     def test_basic_t2smap2(self):
@@ -52,16 +52,16 @@ class TestT2smap():
         out_dir = 'TED.echo1.t2smap'
 
         # Check outputs
-        assert op.isfile(op.join(out_dir, 'ts_OC.nii'))
-        img = nib.load(op.join(out_dir, 't2sv.nii'))
+        assert op.isfile(op.join(out_dir, 'ts_OC.nii.gz'))
+        img = nib.load(op.join(out_dir, 't2sv.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 's0v.nii'))
+        img = nib.load(op.join(out_dir, 's0v.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 't2svG.nii'))
+        img = nib.load(op.join(out_dir, 't2svG.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 's0vG.nii'))
+        img = nib.load(op.join(out_dir, 's0vG.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 'ts_OC.nii'))
+        img = nib.load(op.join(out_dir, 'ts_OC.nii.gz'))
         assert len(img.shape) == 4
 
     def test_basic_t2smap3(self):
@@ -78,16 +78,16 @@ class TestT2smap():
         out_dir = 'TED.echo1.t2smap'
 
         # Check outputs
-        assert op.isfile(op.join(out_dir, 'ts_OC.nii'))
-        img = nib.load(op.join(out_dir, 't2sv.nii'))
+        assert op.isfile(op.join(out_dir, 'ts_OC.nii.gz'))
+        img = nib.load(op.join(out_dir, 't2sv.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 's0v.nii'))
+        img = nib.load(op.join(out_dir, 's0v.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 't2svG.nii'))
+        img = nib.load(op.join(out_dir, 't2svG.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 's0vG.nii'))
+        img = nib.load(op.join(out_dir, 's0vG.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 'ts_OC.nii'))
+        img = nib.load(op.join(out_dir, 'ts_OC.nii.gz'))
         assert len(img.shape) == 4
 
     def test_basic_t2smap4(self):
@@ -106,16 +106,16 @@ class TestT2smap():
         out_dir = 'TED.echo1.t2smap'
 
         # Check outputs
-        assert op.isfile(op.join(out_dir, 'ts_OC.nii'))
-        img = nib.load(op.join(out_dir, 't2sv.nii'))
+        assert op.isfile(op.join(out_dir, 'ts_OC.nii.gz'))
+        img = nib.load(op.join(out_dir, 't2sv.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 's0v.nii'))
+        img = nib.load(op.join(out_dir, 's0v.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 't2svG.nii'))
+        img = nib.load(op.join(out_dir, 't2svG.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 's0vG.nii'))
+        img = nib.load(op.join(out_dir, 's0vG.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 'ts_OC.nii'))
+        img = nib.load(op.join(out_dir, 'ts_OC.nii.gz'))
         assert len(img.shape) == 4
 
     def teardown_method(self):
