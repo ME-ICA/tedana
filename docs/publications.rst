@@ -10,6 +10,9 @@ excluded publication, whether or not it is yours, please add it.
 The figure below highlights the average TEs used in currently published papers using multiecho 
 at 3T. 
 
+"""
+...
+
 Average TE at 3T
 --------
 
