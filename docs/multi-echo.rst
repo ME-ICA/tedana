@@ -32,18 +32,18 @@ Specifically, by collecting multi-echo data, researchers are able to compare res
 (1) single-echo, (2) optimally combined, and (3) denoised data.
 Each of these levels of analysis have their own advantages.
 
-For single-echo: currently, field standards are largely set using single-echo EPI.
+Single-echo data: currently, field standards are largely set using single-echo EPI.
 Because multi-echo is composed of multiple single-echo time series, each of these can be analyzed separately.
 This allows researchers to benchmark their results.
 
-For optimally combined: Rather than analyzing single-echo time series separately,
+Optimally combined data: Rather than analyzing single-echo time series separately,
 we can combine them into a "optimally combined time series".
 For more information on this combination, see `processing pipeline details`_.
 Optimally combined data exhibits higher SNR and improves statistical power of analyses in regions
 traditionally affected by drop-out.
 
-For denoised: Collecting multi-echo data allows access to unique denoising metrics.
-``tedana`` is one ICA-based denoising pipeline built on this information.
+Denoised data: Collecting multi-echo data allows access to unique denoising methods.
+``tedana`` is one ICA-based denoising pipeline built especially for multi-echo data.
 Other ICA-based denoising methods like ICA-AROMA (`Pruim et al. (2015)`_)
 have been shown to significantly improve the quality of cleaned signal.
 
