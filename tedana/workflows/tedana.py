@@ -37,7 +37,7 @@ def _get_parser():
     -------
     parser.parse_args() : argparse dict
     """
-    from .info import __version__
+    from ..info import __version__
     verstr = 'tedana v{}'.format(__version__)
     parser = argparse.ArgumentParser()
     # Argument parser follow templtate provided by RalphyZ
