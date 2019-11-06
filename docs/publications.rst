@@ -10,11 +10,6 @@ excluded publication, whether or not it is yours, please add it.
 The figure below highlights the average TEs used in currently published papers using multiecho 
 at 3T. 
 
-"""
-...
-
-Average TE at 3T
---------
 
 .. plot::
    import matplotlib.pyplot as plt
@@ -26,7 +21,7 @@ Average TE at 3T
    TEs = [metable.TE1.mean(), metable.TE2.mean(), metable.TE3.mean(), metable.TE4.mean(), metable.TE5.mean()]
    plt.bar([1, 2, 3, 4, 5], TEs)
    plt.show()
-"""
+
 
 You can view and suggest additions to this spreadsheet `here`_
 
