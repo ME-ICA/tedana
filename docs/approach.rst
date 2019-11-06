@@ -62,7 +62,12 @@ value for that voxel in the adaptive mask.
 Monoexponential decay model fit
 ```````````````````````````````
 The next step is to fit a monoexponential decay model to the data in order to
-estimate voxel-wise :math:`T_{2}^*` and :math:`S_0`.
+estimate voxel-wise :math:`T_{2}^*` and :math:`S_0`. :math:`S_0` corresponds
+to the total signal in each voxel before decay and can reflect coil sensivity. 
+:math:`T_{2}^*` corresponds to the rate at which a voxel decays over time, which
+is related to signal dropout and BOLD sensitivity. Estimates of the parameters are 
+saved as **t2sv.nii.gz** and **s0v.nii.gz**. 
+
 While :math:`T_{2}^*` and :math:`S_0` in fact fluctuate over time, estimating
 them on a volume-by-volume basis with only a small number of echoes is not
 feasible (i.e., the estimates would be extremely noisy).
@@ -70,7 +75,7 @@ As such, we estimate average :math:`T_{2}^*` and :math:`S_0` maps and use those
 throughout the workflow.
 
 In order to make it easier to fit the decay model to the data, ``tedana``
-transforms the data.
+transforms the data by default.
 The BOLD data are transformed as :math:`log(|S|+1)`, where :math:`S` is the BOLD signal.
 The echo times are also multiplied by -1.
 
@@ -134,7 +139,7 @@ between the distributions for other echoes.
 .. image:: /_static/a09_optimal_combination_value_distributions.png
 
 The time series for the optimally combined data also looks like a combination
-of the other echoes (which it is). This optimally combined data is written out as `ts_OC.nii.gz`
+of the other echoes (which it is). This optimally combined data is written out as **ts_OC.nii.gz**
 
 .. image:: /_static/a10_optimal_combination_timeseries.png
 
@@ -156,7 +161,7 @@ components analysis (PCA).
 The goal of this step is to make it easier for the later ICA decomposition to converge.
 Dimensionality reduction is a common step prior to ICA.
 TEDPCA applies PCA to the optimally combined data in order to decompose it into component maps and
-time series (saved as `mepca_mix.1D`).
+time series (saved as **mepca_mix.1D**).
 Here we can see time series for some example components (we don't really care about the maps):
 
 .. image:: /_static/a11_pca_component_timeseries.png
@@ -192,7 +197,8 @@ Next, ``tedana`` applies TE-dependent independent components analysis (ICA) in
 order to identify and remove TE-independent (i.e., non-BOLD noise) components.
 The dimensionally reduced optimally combined data are first subjected to ICA in
 order to fit a mixing matrix to the whitened data. This generates a number if 
-independent timeseries (saved as `meica_mix.1D`).
+independent timeseries (saved as **meica_mix.1D**), as well as beta maps which show 
+the spatially loading of these components on the brain (**betas_OC.nii.gz**). 
 
 .. image:: /_static/a13_ica_component_timeseries.png
 
@@ -222,6 +228,9 @@ The actual decision tree is dependent on the component selection algorithm emplo
 ``tedana`` includes two options: `kundu_v2_5` (which uses hardcoded thresholds
 applied to each of the metrics) and `kundu_v3_2` (which trains a classifier to
 select components).
+
+Components that are classified as noise are projected out of the optimally combined data, 
+yielding a denoised timeseries, which is saved as `dn_ts_OC.nii.gz`. 
 
 .. image:: /_static/a15_denoised_data_timeseries.png
 
