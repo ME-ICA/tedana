@@ -134,7 +134,7 @@ between the distributions for other echoes.
 .. image:: /_static/a09_optimal_combination_value_distributions.png
 
 The time series for the optimally combined data also looks like a combination
-of the other echoes (which it is).
+of the other echoes (which it is). This optimally combined data is written out as `ts_OC.nii.gz`
 
 .. image:: /_static/a10_optimal_combination_timeseries.png
 
@@ -156,7 +156,7 @@ components analysis (PCA).
 The goal of this step is to make it easier for the later ICA decomposition to converge.
 Dimensionality reduction is a common step prior to ICA.
 TEDPCA applies PCA to the optimally combined data in order to decompose it into component maps and
-time series.
+time series (saved as `mepca_mix.1D`).
 Here we can see time series for some example components (we don't really care about the maps):
 
 .. image:: /_static/a11_pca_component_timeseries.png
@@ -182,7 +182,7 @@ TE-independent (i.e., have low Rho).
 
 After component selection is performed, the retained components and their
 associated betas are used to reconstruct the optimally combined data, resulting
-in a dimensionally reduced version of the dataset.
+in a dimensionally reduced version of the dataset which is then used in the `TEDICA` step.
 
 .. image:: /_static/a12_pca_reduced_data.png
 
@@ -191,7 +191,8 @@ TEDICA
 Next, ``tedana`` applies TE-dependent independent components analysis (ICA) in
 order to identify and remove TE-independent (i.e., non-BOLD noise) components.
 The dimensionally reduced optimally combined data are first subjected to ICA in
-order to fit a mixing matrix to the whitened data.
+order to fit a mixing matrix to the whitened data. This generates a number if 
+independent timeseries (saved as `meica_mix.1D`).
 
 .. image:: /_static/a13_ica_component_timeseries.png
 
@@ -215,7 +216,8 @@ models (referred to as :math:`\kappa` and :math:`\rho`, respectively).
 
 A decision tree is applied to :math:`\kappa`, :math:`\rho`, and other metrics in order to
 classify ICA components as TE-dependent (BOLD signal), TE-independent
-(non-BOLD noise), or neither (to be ignored).
+(non-BOLD noise), or neither (to be ignored). These classifications are saved in 
+`comp_table_ica.txt`.
 The actual decision tree is dependent on the component selection algorithm employed.
 ``tedana`` includes two options: `kundu_v2_5` (which uses hardcoded thresholds
 applied to each of the metrics) and `kundu_v3_2` (which trains a classifier to
