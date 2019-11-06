@@ -1,5 +1,5 @@
-Usage
-=====
+tedana Usage
+============
 
 ``tedana`` minimally requires:
 
