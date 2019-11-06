@@ -12,8 +12,8 @@ at 3T.
 
 
 .. plot::
+
    import matplotlib.pyplot as plt
-   import pandas as pd
    import pandas as pd
     metable= = pd.read_csv('https://docs.google.com/spreadsheets/d/1WERojJyxFoqcg_tndUm5Kj0H1UfUc9Ban0jFGGfPaBk/export?gid=0&format=csv',
                    header=0
