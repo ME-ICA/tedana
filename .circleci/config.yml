@@ -7,89 +7,158 @@ orbs:
   codecov: codecov/codecov@1.0.5
 jobs:
 
-  style_check:
-    working_directory: /tedana
+  build:
     docker:
-      - image: tedana/tedana-dev
+      - image: docker:18.01.0-ce-git
+    working_directory: /tedana
     steps:
+      - run:
+          name: Install parallel gzip and Python 3
+          command: |
+            apk add --no-cache pigz python3
       - checkout
+      - setup_remote_docker
+      - run:
+          name: Fetch latest release image
+          no_output_timeout: 10m
+          command: |
+            docker pull tedana/tedana-dev:latest
+      - run:
+          name: Build image
+          no_output_timeout: 30m
+          command: |
+            THISVERSION=$( python3 -c 'import tedana; print(tedana.__version__)' )
+            echo "Building version ${CIRCLE_TAG:-$THISVERSION}"
+            docker build \
+              --cache-from=tedana/tedana-dev \
+              --rm=false \
+              --tag tedana/tedana-dev:latest \
+              --build-arg BUILD_DATE="$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+              --build-arg VCS_REF="$(git rev-parse --short HEAD)" \
+              --build-arg VERSION="${CIRCLE_TAG:-$THISVERSION}" \
+              --file Dockerfile_dev .
+      - run:
+          name: Check version
+          command: |
+            THISVERSION=$( python3 -c 'import tedana; print(tedana.__version__)' )
+            THISVERSION="${CIRCLE_TAG:-$THISVERSION}"
+            DOCKERVERSION=$( docker run --rm -v ${PWD}:/tedana tedana/tedana-dev:latest \
+                             python -c 'import tedana; print(tedana.__version__)' )
+            echo "$THISVERSION"
+            echo "$DOCKERVERSION"
+            test "$DOCKERVERSION" = "$THISVERSION"
+      - run:
+          name: Docker save
+          no_output_timeout: 40m
+          command: |
+            mkdir -p /tmp/cache
+            docker save tedana/tedana-dev:latest \
+            | pigz -2 -p 3 > /tmp/cache/docker.tar.gz
+      - persist_to_workspace:
+          root: /
+          paths:
+            - tedana/
+            - tmp/cache/docker.tar.gz
+
+  get_test_data:
+    docker:
+      - image: debian
+    working_directory: /tedana
+    steps:
+      - attach_workspace:
+          at: /tedana
+      - run:
+          name: Get data
+          command: |
+            bash -c "source ./dev_tools/get_data.sh && download_data"
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - data/
+
+  style_check:
+    docker:
+      - image: python:3.7.4
+    working_directory: /tedana
+    steps:
+      - attach_workspace:
+          at: /tedana
       - run:
           name: Run style check
           command: |
-            source ./dev_tools/run_tests.sh && run_lint_tests
+            python --version
+            python -m pip install flake8
+            flake8 tedana
 
-  py35_unit_tests:
+  unit_tests:
+    machine:
+      image: circleci/classic:201711-01
     working_directory: /tedana
-    docker:
-      - image: tedana/tedana-dev
     steps:
-      - checkout
+      - attach_workspace:
+          at: /tedana
+      - attach_workspace:
+          at: /tmp
+      - run:
+          name: Load Docker image layer cache
+          no_output_timeout: 30m
+          command: |
+            docker info
+            set +o pipefail
+            if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo apt update && sudo apt -y install pigz
+              pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
+              docker images
+            fi
       - run:
           name: Run unit tests
+          no_output_timeout: 2h
           command: |
-            source ./dev_tools/run_tests.sh && run_unit_test tedana_py35
+            docker run --rm -v ${PWD}:/tedana -v /tmp/data:/tmp/data \
+                tedana/tedana-dev:latest bash -c \
+                'source ./dev_tools/run_tests.sh && \
+                 for pyenv in tedana_py3{5,6,7}; do run_unit_test ${pyenv}; done'
             mkdir /coverage
-            mv /tedana/.coverage /coverage/.coverage.py35
+            mv tedana/.coverage /coverage/.coverage.units
       - store_artifacts:
           path: /coverage
       - persist_to_workspace:
           root: /coverage
           paths:
-              - .coverage.py35
-
-  py36_unit_tests:
-    working_directory: /tedana
-    docker:
-      - image: tedana/tedana-dev
-    steps:
-      - checkout
-      - run:
-          name: Run unit tests
-          command: |
-            source ./dev_tools/run_tests.sh && run_unit_test tedana_py36
-            mkdir /coverage
-            mv /tedana/.coverage /coverage/.coverage.py36
-      - store_artifacts:
-          path: /coverage
-      - persist_to_workspace:
-          root: /coverage
-          paths:
-              - .coverage.py36
-
-  py37_unit_tests:
-    working_directory: /tedana
-    docker:
-      - image: tedana/tedana-dev
-    steps:
-      - checkout
-      - run:
-          name: Run unit tests
-          command: |
-            source ./dev_tools/run_tests.sh && run_unit_test tedana_py37
-            mkdir /coverage
-            mv /tedana/.coverage /coverage/.coverage.py37
-      - store_artifacts:
-          path: /coverage
-      - persist_to_workspace:
-          root: /coverage
-          paths:
-              - .coverage.py37
+              - .coverage.units
 
   three_echo_rest:
     working_directory: /tedana
-    docker:
-      - image: tedana/tedana-dev
+    machine:
+      image: circleci/classic:201711-01
     steps:
-      - checkout
+      - attach_workspace:
+          at: /tedana
+      - attach_workspace:
+          at: /tmp
+      - run:
+          name: Load Docker image layer cache
+          no_output_timeout: 30m
+          command: |
+            docker info
+            set +o pipefail
+            if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo apt update && sudo apt -y install pigz
+              pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
+              docker images
+            fi
       - run:
           name: Run three-echo dataset
           no_output_timeout: 40m
           command: |
-            source ./dev_tools/run_tests.sh && run_integration_tests -k three
+            docker run --rm -v ${PWD}:/tedana -v /tmp/data:/tmp/data \
+                tedana/tedana-dev:latest bash -c \
+                'source ./dev_tools/run_tests.sh && \
+                 run_integration_tests -k three'
             mkdir /coverage
             mv /tedana/.coverage /coverage/.coverage.three_echo
       - store_artifacts:
-          path: /data/three-echo
+          path: /tmp/data/three-echo
       - store_artifacts:
           path: /coverage
       - persist_to_workspace:
@@ -99,20 +168,36 @@ jobs:
 
   five_echo_task:
     working_directory: /tedana
-    docker:
-      - image: tedana/tedana-dev
+    machine:
+      image: circleci/classic:201711-01
     steps:
-      - checkout
+      - attach_workspace:
+          at: /tedana
+      - attach_workspace:
+          at: /tmp
+      - run:
+          name: Load Docker image layer cache
+          no_output_timeout: 30m
+          command: |
+            docker info
+            set +o pipefail
+            if [ -f /tmp/cache/docker.tar.gz ]; then
+              sudo apt update && sudo apt -y install pigz
+              pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
+              docker images
+            fi
       - run:
           name: Run five-echo dataset
           no_output_timeout: 40m
           command: |
-            source ./dev_tools/run_tests.sh && \
-              run_integration_tests --include-five-echo -k five
+            docker run --rm -v ${PWD}:/tedana -v /tmp/data:/tmp/data \
+                tedana/tedana-dev:latest bash -c \
+                'source ./dev_tools/run_tests.sh && \
+                 run_integration_tests --include-five-echo -k five'
             mkdir /coverage
             mv /tedana/.coverage /coverage/.coverage.five_echo
       - store_artifacts:
-          path: /data/five-echo
+          path: /tmp/data/five-echo
       - store_artifacts:
           path: /coverage
       - persist_to_workspace:
@@ -121,17 +206,19 @@ jobs:
               - .coverage.five_echo
 
   merge_coverage:
-    working_directory: /tedana
     docker:
-      - image: tedana/tedana-dev
+      - image: python:3.7.4
+    working_directory: /tedana
     steps:
       - attach_workspace:
           at: /coverage
-      - checkout
+      - attach_workspace:
+          at: /tedana
       - run:
           name: Merge coverage files
           command: |
-            source activate tedana_py36
+            python --version
+            python -m pip install coverage
             cd /coverage
             coverage combine
             coverage xml
@@ -144,26 +231,23 @@ workflows:
   version: 2.1
   build_test:
     jobs:
+      - build
+      - get_test_data
       - style_check
       - three_echo_rest:
           requires:
-            - style_check
+            - build
+            - get_test_data
       - five_echo_task:
           requires:
-            - style_check
-      - py35_unit_tests:
+            - build
+            - get_test_data
+      - unit_tests:
           requires:
-            - style_check
-      - py36_unit_tests:
-          requires:
-            - style_check
-      - py37_unit_tests:
-          requires:
-            - style_check
+            - build
+            - get_test_data
       - merge_coverage:
           requires:
-            - py35_unit_tests
-            - py36_unit_tests
-            - py37_unit_tests
+            - unit_tests
             - three_echo_rest
             - five_echo_task

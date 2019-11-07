@@ -2,7 +2,7 @@
 
 get_three_echo_test_data() {
     mkdir -p /tmp/data/three-echo
-    curl -L -o /tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz https://osf.io/8fzse/download
+    curl -s -L -o /tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz https://osf.io/8fzse/download
 }
     # && curl -L -o TED.Cornell_processed_three_echo_dataset.tar.xz https://osf.io/u65sq/download
     # && tar xf TED.Cornell_processed_three_echo_dataset.tar.xz --no-same-owner -C /data/test/three-echo/
@@ -11,10 +11,8 @@ get_three_echo_test_data() {
 
 get_five_echo_test_data() {
     mkdir /tmp/data/five-echo
-    curl -L -o five_echo_NIH.tar.xz https://osf.io/ea5v3/download
-    tar xf five_echo_NIH.tar.xz -C /tmp/data/five-echo
+    curl -s -L https://osf.io/ea5v3/download | tar xJf - -C /tmp/data/five-echo
 }
-    # && rm -f five_echo_NIH.tar.xz
     # && curl -L -o TED.p06.tar.xz https://osf.io/fr6mx/download
     # && tar xf TED.p06.tar.xz --no-same-owner -C /data/test/five-echo/
     # && rm -f TED.p06.tar.xz'

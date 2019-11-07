@@ -42,15 +42,6 @@ run_unit_test() {
     #                   be one of [tedana_py35, tedana_py36, tedana_py37]
     #
 
-    if [ -z "${1}" ] || { [ "${1}" != "tedana_py35" ] \
-                            || [ "${1}" != "tedana_py36" ] \
-                            || [ "${1}" != "tedana_py37"]; }; then
-        printf 'Must supply python environment name for running unit ' >&2
-        printf 'tests. Should be one of [tedana_py35, tedana_py36, ' >&2
-        printf 'tedana_py37].\n' >&2
-        return
-    fi
-
     cprint "RUNNING UNIT TESTS FOR PYTHON ENVIRONMENT: ${1}"
     source activate "${1}"
     py.test --skipintegration --cov-append --cov-report term-missing --cov=tedana tedana
