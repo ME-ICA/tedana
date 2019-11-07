@@ -210,16 +210,19 @@ the spatially loading of these components on the brain (**betas_OC.nii.gz**).
 .. image:: /_static/a13_ica_component_timeseries.png
 
 Linear regression is used to fit the component time series to each voxel in each
-echo from the original, echo-specific data.
-This way, low-variance information (originally discarded by TEDPCA) is retained
-in the data, but is ignored by the TEDICA process.
-This results in echo- and voxel-specific betas for each of the components.
+echo from the original, echo-specific data. This results in echo- and voxel-specific 
+betas for each of the components.The beta values from the linear regression 
+can be used to determine how the fluctutations (in each component timeseries) change 
+across the echo times. 
 
 TE-dependence (:math:`R_2` or :math:`1/T_{2}^*`) and TE-independence (:math:`S_0`) models can then
 be fit to these betas.
 For more information on how these models are estimated, see :ref:`dependence models`.
 These models allow calculation of F-statistics for the :math:`R_2` and :math:`S_0`
 models (referred to as :math:`\kappa` and :math:`\rho`, respectively).
+
+The grey lines show how beta values (Parameter Estimates) change over time. Refer the the
+`physics section`_ :math:`{\Delta}{S_0}` for more information about the :math:`S_0` and :math:`T_2^*` models.
 
 .. image:: /_static/a14_te_dependence_models_component_0.png
 
@@ -260,3 +263,5 @@ Currently, ``tedana`` implements GSR and T1c-GSR.
 .. _nilearn.masking.compute_epi_mask: https://nilearn.github.io/modules/generated/nilearn.masking.compute_epi_mask.html
 .. _Power et al. (2018): http://www.pnas.org/content/early/2018/02/07/1720985115.short
 .. _Poser et al., 2006: https://onlinelibrary.wiley.com/doi/full/10.1002/mrm.20900
+
+.. _physics section: https://tedana.readthedocs.io/en/latest/multi_echo.html
