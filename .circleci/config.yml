@@ -149,7 +149,7 @@ jobs:
       - persist_to_workspace:
           root: ~/coverage
           paths:
-              - .coverage.three_echo
+              - .coverage.integration
 
   merge_coverage:
     docker:
@@ -179,9 +179,13 @@ workflows:
   version: 2.1
   build_test:
     jobs:
-      - build
-      - get_test_data
       - style_check
+      - build
+          requires:
+            - style_check
+      - get_test_data
+          requires:
+            - style_check
       - integration_tests:
           requires:
             - build
