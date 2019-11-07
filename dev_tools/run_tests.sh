@@ -22,13 +22,13 @@ cprint() {
 
 run_integration_tests() {
     #
-    # Runs tedana integration tests; passes any parameters to py.test. If you
+    # Runs tedana integration tests; passes any parameters to py.test
     #
 
     download_data
     cprint "RUNNING INTEGRATION TESTS"
     source activate tedana_py36
-    py.test --cov-report term-missing --cov=tedana tedana/tests/test_integration.py
+    py.test "$@" --cov-append --cov-report term-missing --cov=tedana tedana/tests/test_integration.py
 }
 
 
@@ -58,27 +58,16 @@ run_lint_tests() {
 }
 
 
-run_tests() {
+run_all_tests() {
     #
     # Runs tedana test suite excluding five-echo test by default
     #
 
     run_lint_tests
-    for pyenv in tedana_py35 tedana_py36 tedana_py37; do
+    for pyenv in tedana_py3{5,6,7}; do
         run_unit_test "${pyenv}"
     done
     run_integration_tests
-
-    cprint "FINISHED RUNNING TESTS! GREAT SUCCESS"
-}
-
-
-run_all_tests() {
-    #
-    # Runs entire tedana test suite
-    #
-
-    run_tests
 
     cprint "FINISHED RUNNING ALL TESTS! GREAT SUCCESS"
 }

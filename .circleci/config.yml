@@ -19,11 +19,6 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
-          name: Fetch latest release image
-          no_output_timeout: 10m
-          command: |
-            docker pull tedana/tedana-dev:latest
-      - run:
           name: Build image
           no_output_timeout: 30m
           command: |
@@ -74,13 +69,10 @@ jobs:
     working_directory: /tedana
     steps:
       - checkout
-<<<<<<< HEAD
-=======
       - run:
           name: Install python3
           command: |
             apk add --no-cache python3
->>>>>>> origin/feature/pytest_skip_integration
       - run:
           name: Run style check
           command: |
@@ -115,7 +107,7 @@ jobs:
                 'source ./dev_tools/run_tests.sh && \
                  for pyenv in tedana_py3{5,6,7}; do run_unit_test ${pyenv}; done'
             mkdir ~/coverage
-            mv tedana/.coverage ~/coverage/.coverage.units
+            mv ./.coverage ~/coverage/.coverage.units
       - store_artifacts:
           path: ~/coverage
       - persist_to_workspace:
@@ -123,7 +115,7 @@ jobs:
           paths:
               - .coverage.units
 
-  three_echo_rest:
+  integration_tests:
     machine:
       image: circleci/classic:201711-01
     steps:
@@ -147,55 +139,17 @@ jobs:
           command: |
             docker run --rm -v ${PWD}:/tedana -v /tmp/data:/tmp/data \
                 tedana/tedana-dev:latest bash -c \
-                'source ./dev_tools/run_tests.sh && \
-                 run_integration_tests -k three'
+                'source ./dev_tools/run_tests.sh && run_integration_tests'
             mkdir ~/coverage
-            mv /tedana/.coverage ~/coverage/.coverage.three_echo
+            mv ./.coverage ~/coverage/.coverage.integration
       - store_artifacts:
-          path: /tmp/data/three-echo
+          path: /tmp/data
       - store_artifacts:
           path: ~/coverage
       - persist_to_workspace:
           root: ~/coverage
           paths:
               - .coverage.three_echo
-
-  five_echo_task:
-    machine:
-      image: circleci/classic:201711-01
-    steps:
-      - attach_workspace:
-          at: /tmp
-      - checkout
-      - run:
-          name: Load Docker image layer cache
-          no_output_timeout: 30m
-          command: |
-            docker info
-            set +o pipefail
-            if [ -f /tmp/cache/docker.tar.gz ]; then
-              sudo apt update && sudo apt -y install pigz
-              pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
-              docker images
-            fi
-      - run:
-          name: Run five-echo dataset
-          no_output_timeout: 40m
-          command: |
-            docker run --rm -v ${PWD}:/tedana -v /tmp/data:/tmp/data \
-                tedana/tedana-dev:latest bash -c \
-                'source ./dev_tools/run_tests.sh && \
-                 run_integration_tests -k five'
-            mkdir /coverage
-            mv /tedana/.coverage /coverage/.coverage.five_echo
-      - store_artifacts:
-          path: /tmp/data/five-echo
-      - store_artifacts:
-          path: ~/coverage
-      - persist_to_workspace:
-          root: ~/coverage
-          paths:
-              - .coverage.five_echo
 
   merge_coverage:
     docker:
@@ -228,11 +182,7 @@ workflows:
       - build
       - get_test_data
       - style_check
-      - three_echo_rest:
-          requires:
-            - build
-            - get_test_data
-      - five_echo_task:
+      - integration_tests:
           requires:
             - build
             - get_test_data
@@ -243,5 +193,4 @@ workflows:
       - merge_coverage:
           requires:
             - unit_tests
-            - three_echo_rest
-            - five_echo_task
+            - integration_tests
