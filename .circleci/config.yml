@@ -183,7 +183,7 @@ jobs:
             docker run --rm -v ${PWD}:/tedana -v /tmp/data:/tmp/data \
                 tedana/tedana-dev:latest bash -c \
                 'source ./dev_tools/run_tests.sh && \
-                 run_integration_tests --include-five-echo -k five'
+                 run_integration_tests -k five'
             mkdir /coverage
             mv /tedana/.coverage /coverage/.coverage.five_echo
       - store_artifacts:

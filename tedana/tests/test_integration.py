@@ -38,7 +38,7 @@ def test_integration_five_echo(skip_integration, include_five_echo):
     """
     An integration test of the full tedana workflow using five-echo test data.
     """
-    if skip_integration or not include_five_echo:
+    if skip_integration:
         pytest.skip('Skipping five-echo integration test')
     out_dir = '/tmp/data/five-echo/TED.five-echo'
     out_filename = '/tedana/.circleci/tedana_outputs_verbose.txt'

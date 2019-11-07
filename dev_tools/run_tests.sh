@@ -23,13 +23,12 @@ cprint() {
 run_integration_tests() {
     #
     # Runs tedana integration tests; passes any parameters to py.test. If you
-    # want to run the five-echo test you need to pass "--include-five-echo"
     #
 
     download_data
     cprint "RUNNING INTEGRATION TESTS"
     source activate tedana_py36
-    py.test "$@" --cov-report term-missing --cov=tedana tedana/tests/test_integration.py
+    py.test --cov-report term-missing --cov=tedana tedana/tests/test_integration.py
 }
 
 
@@ -64,19 +63,13 @@ run_tests() {
     # Runs tedana test suite excluding five-echo test by default
     #
 
-    if [ ! -z "${1}" ] && [ "${1}" == "--include-five-echo" ]; then
-        run_five_echo='--include-five-echo'
-    fi
-
     run_lint_tests
     for pyenv in tedana_py35 tedana_py36 tedana_py37; do
         run_unit_test "${pyenv}"
     done
-    run_integration_tests "${run_five_echo}"
+    run_integration_tests
 
-    if [ -z "${run_five_echo}" ]; then
-        cprint "FINISHED RUNNING TESTS! GREAT SUCCESS"
-    fi
+    cprint "FINISHED RUNNING TESTS! GREAT SUCCESS"
 }
 
 
@@ -85,7 +78,7 @@ run_all_tests() {
     # Runs entire tedana test suite
     #
 
-    run_tests --include-five-echo
+    run_tests
 
     cprint "FINISHED RUNNING ALL TESTS! GREAT SUCCESS"
 }
