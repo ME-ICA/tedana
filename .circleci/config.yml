@@ -45,10 +45,9 @@ jobs:
             docker save tedana/tedana-dev:latest \
             | pigz -2 -p 3 > /tmp/cache/docker.tar.gz
       - persist_to_workspace:
-          root: /
+          root: /tmp
           paths:
-            - tedana/
-            - tmp/cache/docker.tar.gz
+            - cache/docker.tar.gz
 
   get_test_data:
     docker:
@@ -71,15 +70,19 @@ jobs:
 
   style_check:
     docker:
-      - image: python:3.7.4
+      - image: docker:18.01.0-ce-git
     working_directory: /tedana
     steps:
       - checkout
       - run:
+          name: Install python3
+          command: |
+            apk add --no-cache python3
+      - run:
           name: Run style check
           command: |
-            python --version
-            python -m pip install flake8<3.0 flake8-putty
+            python3 --version
+            python3 -m pip install "flake8<3.0" flake8-putty
             flake8 tedana
 
   unit_tests:
@@ -88,9 +91,8 @@ jobs:
     working_directory: /tedana
     steps:
       - attach_workspace:
-          at: /tedana
-      - attach_workspace:
           at: /tmp
+      - checkout
       - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
@@ -125,9 +127,8 @@ jobs:
       image: circleci/classic:201711-01
     steps:
       - attach_workspace:
-          at: /tedana
-      - attach_workspace:
           at: /tmp
+      - checkout
       - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
@@ -164,9 +165,8 @@ jobs:
       image: circleci/classic:201711-01
     steps:
       - attach_workspace:
-          at: /tedana
-      - attach_workspace:
           at: /tmp
+      - checkout
       - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
@@ -199,18 +199,20 @@ jobs:
 
   merge_coverage:
     docker:
-      - image: python:3.7.4
+      - image: docker:18.01.0-ce-git
     working_directory: /tedana
     steps:
       - attach_workspace:
           at: /coverage
-      - attach_workspace:
-          at: /tedana
+      - run:
+          name: Install python3
+          command: |
+            apk add --no-cache python3
       - run:
           name: Merge coverage files
           command: |
-            python --version
-            python -m pip install coverage
+            python3 --version
+            python3 -m pip install coverage
             cd /coverage
             coverage combine
             coverage xml
