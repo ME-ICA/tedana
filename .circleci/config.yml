@@ -7,352 +7,162 @@ orbs:
   codecov: codecov/codecov@1.0.5
 jobs:
 
-  build:
-    working_directory: /tmp/src/tedana
+  style_check:
+    working_directory: /tedana
     docker:
-      # Ubuntu 14.04 with Docker 17.10.0-ce
-      - image: continuumio/miniconda3
+      - image: tedana/tedana-dev
     steps:
       - checkout
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-              - src/tedana/
-      - restore_cache:  # ensure this step occurs *before* installing dependencies
-          key: test-v1-{{ checksum "requirements.txt" }}
       - run:
-          name: Generate environment
+          name: Run style check
           command: |
-            if [[ -e /opt/conda/envs/venv ]]; then
-                echo "Restoring environment from cache"
-                source activate venv
-            else
-                conda create -n venv python=3.6 lxml nose cython mkl sphinx patsy boto3 pillow -yq
-                conda install -n venv nose-timer -c conda-forge -yq
-                source activate venv
-                pip install pytest pytest-cov codecov coverage coveralls 'flake8<3.0' flake8-putty
-                pip install -r requirements.txt
-            fi
-      - save_cache:
-          key: test-v1-{{ checksum "requirements.txt" }}
-          paths:
-            - "/opt/conda/envs/venv"
+            source ./dev_tools/run_tests.sh && run_lint_tests
 
-  get_data:
-    working_directory: /tmp/src/tedana
+  py35_unit_tests:
+    working_directory: /tedana
     docker:
-      # Ubuntu 14.04 with Docker 17.10.0-ce
-      - image: continuumio/miniconda3
+      - image: tedana/tedana-dev
     steps:
-      - restore_cache:
-          keys:
-              - data-v1-{{ .Branch }}
-              - data-v1-
+      - checkout
       - run:
-          name: Download test three-echo data
+          name: Run unit tests
           command: |
-            if [[ -e /tmp/data/three-echo ]]; then
-              echo "Restoring three-echo data from cache"
-            else
-                mkdir -p /tmp/data
-                apt-get install -y curl
-                curl -L --create-dirs -o \
-                  /tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz https://osf.io/8fzse/download
-            fi
-      - run:
-          name: Download test five-echo data
-          command: |
-            if [[ -e /tmp/data/five-echo ]]; then
-              echo "Restoring five-echo data from cache"
-            else
-                mkdir /tmp/data/five-echo
-                apt-get install -y curl
-                curl -L -o five_echo_NIH.tar.xz https://osf.io/ea5v3/download
-                tar xf five_echo_NIH.tar.xz -C /tmp/data/five-echo
-            fi
+            source ./dev_tools/run_tests.sh && run_unit_test tedana_py35
+            mkdir /coverage
+            mv /tedana/.coverage /coverage/.coverage.py35
+      - store_artifacts:
+          path: /coverage
       - persist_to_workspace:
-          root: /tmp
+          root: /coverage
           paths:
-              - data/three-echo/
-              - data/five-echo/
-      - save_cache:
-          key: data-v1-{{ .Branch }}
-          paths:
-              - /tmp/data
+              - .coverage.py35
 
-  get_regression_data:
-    working_directory: /tmp/src/tedana
+  py36_unit_tests:
+    working_directory: /tedana
     docker:
-      # Ubuntu 14.04 with Docker 17.10.0-ce
-      - image: continuumio/miniconda3
+      - image: tedana/tedana-dev
     steps:
-      - restore_cache:
-          keys:
-              - test-v1-{{ .Branch }}
-              - test-v1-
+      - checkout
       - run:
-          name: Download expected output for three-echo data
+          name: Run unit tests
           command: |
-            if [[ -e /tmp/test/three-echo ]]; then
-              echo "Restoring three-echo regression data from cache"
-            else
-                mkdir -p /tmp/test/three-echo/
-                apt-get install -y curl
-                curl -L -o TED.Cornell_processed_three_echo_dataset.tar.xz https://osf.io/u65sq/download
-                tar xf TED.Cornell_processed_three_echo_dataset.tar.xz --no-same-owner -C /tmp/test/three-echo/
-            fi
-      - run:
-          name: Download expected output for five-echo data
-          command: |
-            if [[ -e /tmp/test/five-echo ]]; then
-              echo "Restoring five-echo regression data from cache"
-            else
-                mkdir -p /tmp/test/five-echo/
-                apt-get install -y curl
-                curl -L -o TED.p06.tar.xz https://osf.io/fr6mx/download
-                tar xf TED.p06.tar.xz --no-same-owner -C /tmp/test/five-echo/
-            fi
+            source ./dev_tools/run_tests.sh && run_unit_test tedana_py36
+            mkdir /coverage
+            mv /tedana/.coverage /coverage/.coverage.py36
+      - store_artifacts:
+          path: /coverage
       - persist_to_workspace:
-          root: /tmp
+          root: /coverage
           paths:
-              - test/three-echo/
-              - test/five-echo/
-      - save_cache:
-          key: test-v1-{{ .Branch }}
+              - .coverage.py36
+
+  py37_unit_tests:
+    working_directory: /tedana
+    docker:
+      - image: tedana/tedana-dev
+    steps:
+      - checkout
+      - run:
+          name: Run unit tests
+          command: |
+            source ./dev_tools/run_tests.sh && run_unit_test tedana_py37
+            mkdir /coverage
+            mv /tedana/.coverage /coverage/.coverage.py37
+      - store_artifacts:
+          path: /coverage
+      - persist_to_workspace:
+          root: /coverage
           paths:
-              - /tmp/test
+              - .coverage.py37
 
   three_echo_rest:
-    working_directory: /tmp/src/tedana
+    working_directory: /tedana
     docker:
-      - image: continuumio/miniconda3
+      - image: tedana/tedana-dev
     steps:
-      - attach_workspace:
-          at: /tmp
-      - restore_cache:  # load environment
-          key: test-v1-{{ checksum "requirements.txt" }}
+      - checkout
       - run:
           name: Run three-echo dataset
           no_output_timeout: 40m
           command: |
-            source activate venv
-            python setup.py install
-          py.test tedana/tests/test_integration.py::test_three_echo \
-              --cov-append --cov-report term-missing --cov=tedana
-            mkdir /tmp/src/coverage/
-            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.1
-      - run:
-          name: Checking outputs
-          command: |
-            # find file
-            find /tmp/data/three-echo/TED.three-echo/* \
-                -exec basename {} \; > /tmp/data/three-echo/TED.three-echo/outputs.out
-            # set filenames
-            f1=/tmp/src/tedana/.circleci/tedana_outputs.txt
-            f2=/tmp/data/three-echo/TED.three-echo/outputs.out
-            # sort both files, pipe into grep to check for tedana
-            # logfile format; should only see one
-            comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana_[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.txt$'
-            numlogs=$(comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana_[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.txt$' | wc -l)
-            if [[ ! $numlogs -eq 1 ]];
-            then
-                printf "Incorrect number of logfiles: %s" $numlogs
-            fi
-            # verify non-log outputs match exactly
-            find /tmp/data/three-echo/TED.three-echo/* \
-                -exec basename {} \; | grep -v outputs.out | sort > /tmp/data/three-echo/TED.three-echo/outputs.out
-            f3=/tmp/data/three-echo/TED.three-echo/outputs_nolog.txt
-            cat $f2 | grep -v -E -e '^tedana_[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.txt$' > $f3
-            diff $f1 $f3
+            source ./dev_tools/run_tests.sh && run_integration_tests -k three
+            mkdir /coverage
+            mv /tedana/.coverage /coverage/.coverage.three_echo
       - store_artifacts:
-          path: /tmp/data/three-echo
+          path: /data/three-echo
       - store_artifacts:
-          path: /tmp/src/coverage
+          path: /coverage
       - persist_to_workspace:
-          root: /tmp
+          root: /coverage
           paths:
-              - src/coverage/.coverage.1
+              - .coverage.three_echo
 
   five_echo_task:
-    working_directory: /tmp/src/tedana
+    working_directory: /tedana
     docker:
-      - image: continuumio/miniconda3
+      - image: tedana/tedana-dev
     steps:
-      - attach_workspace:
-          at: /tmp
-      - restore_cache:  # load environment
-          key: test-v1-{{ checksum "requirements.txt" }}
+      - checkout
       - run:
           name: Run five-echo dataset
           no_output_timeout: 40m
           command: |
-            source activate venv
-            python setup.py install
-          py.test tedana/tests/test_integration.py::test_integration_five_echo \
-              --cov-append --cov-report term-missing --cov=tedana
-            mkdir /tmp/src/coverage/
-            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.2
-      - run:
-          name: Checking outputs
-          command: |
-            # find file
-            find /tmp/data/five-echo/TED.five-echo/* \
-                -exec basename {} \; > /tmp/data/five-echo/TED.five-echo/outputs.out
-            # set filenames
-            f1=/tmp/src/tedana/.circleci/tedana_outputs_verbose.txt
-            f2=/tmp/data/five-echo/TED.five-echo/outputs.out
-            # sort both files, pipe into grep to check for tedana
-            # logfile format; should only see one
-            comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana_[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.txt$'
-            numlogs=$(comm -13 <(sort -u $f1) <(sort -u $f2) | grep -E -e '^tedana_[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.txt$' | wc -l)
-            if [[ ! $numlogs -eq 1 ]];
-            then
-                printf "Incorrect number of logfiles: %s" $numlogs
-            fi
-            # verify that non-log outputs match exactly
-            f3=/tmp/data/five-echo/TED.five-echo/outputs_nolog.txt
-            find /tmp/data/five-echo/TED.five-echo/* \
-                -exec basename {} \; | grep -v outputs.out | sort > /tmp/data/five-echo/TED.five-echo/outputs.out
-            cat $f2 | grep -v -E -e '^tedana_[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}.txt$' > $f3
-            diff $f1 $f3
-
+            source ./dev_tools/run_tests.sh && \
+              run_integration_tests --include-five-echo -k five
+            mkdir /coverage
+            mv /tedana/.coverage /coverage/.coverage.five_echo
       - store_artifacts:
-          path: /tmp/data/five-echo
+          path: /data/five-echo
       - store_artifacts:
-          path: /tmp/src/coverage
+          path: /coverage
       - persist_to_workspace:
-          root: /tmp
+          root: /coverage
           paths:
-              - src/coverage/.coverage.2
-
-  py36_unit_tests_and_coverage:
-    working_directory: /tmp/src/tedana
-    docker:
-      - image: continuumio/miniconda3
-    steps:
-      - attach_workspace:
-          at: /tmp
-      - restore_cache:  # load environment
-          key: test-v1-{{ checksum "requirements.txt" }}
-      - run:
-          name: Run unit tests
-          command: |
-            source activate venv
-            python setup.py install
-            py.test --skipintegration \
-              --cov-append --cov-report term-missing --cov=tedana tedana
-            mkdir /tmp/src/coverage/
-            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.3
-      - store_artifacts:
-          path: /tmp/src/coverage
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-              - src/coverage/.coverage.3
-
-  py35_unit_tests:
-    working_directory: /tmp/src/tedana
-    docker:
-      - image: continuumio/miniconda3
-    steps:
-      - checkout
-      - run:
-          name: Generate environment
-          command: |
-            conda create -n py35_env python=3.5 pytest -yq
-            source activate py35_env
-            pip install -r requirements.txt
-      - run:
-          name: Run unit tests
-          command: |
-            source activate py35_env
-            python setup.py install
-            py.test --skipintegration tedana
-
-
-  py37_unit_tests:
-    working_directory: /tmp/src/tedana
-    docker:
-      - image: continuumio/miniconda3
-    steps:
-      - checkout
-      - run:
-          name: Generate environment
-          command: |
-            conda create -n py37_env python=3.7 pytest -yq
-            source activate py37_env
-            pip install -r requirements.txt
-      - run:
-          name: Run unit tests
-          command: |
-            source activate py37_env
-            python setup.py install
-            py.test --skipintegration tedana
-
-  style_check:
-    working_directory: /tmp/src/tedana
-    docker:
-      - image: continuumio/miniconda3
-    steps:
-      - attach_workspace:
-          at: /tmp
-      - restore_cache:  # load environment
-          key: test-v1-{{ checksum "requirements.txt" }}
-      - run:
-          name: Run style check
-          command: |
-            source activate venv
-            flake8 tedana
+              - .coverage.five_echo
 
   merge_coverage:
-    working_directory: /tmp/src/tedana
+    working_directory: /tedana
     docker:
-      - image: continuumio/miniconda3
+      - image: tedana/tedana-dev
     steps:
       - attach_workspace:
-          at: /tmp
-      - restore_cache:  # load environment
-          key: test-v1-{{ checksum "requirements.txt" }}
+          at: /coverage
       - run:
           name: Merge coverage files
           command: |
-            apt-get install -y curl
-            source activate venv
-            cd /tmp/src/coverage/
+            source activate tedana_py36
+            cd /coverage
             coverage combine
             coverage xml
       - store_artifacts:
-          path: /tmp/src/coverage
+          path: /coverage
       - codecov/upload:
-          file: /tmp/src/coverage/coverage.xml
+          file: /coverage/coverage.xml
 
 workflows:
   version: 2.1
   build_test:
     jobs:
-      - build
-      - get_data
-      - get_regression_data
-      - py35_unit_tests
-      - py36_unit_tests_and_coverage:
+      - style_check
+      - py35_unit_tests:
           requires:
-            - build
-      - py37_unit_tests
-      - style_check:
+            - style_check
+      - py36_unit_tests:
           requires:
-            - build
+            - style_check
+      - py37_unit_tests:
+          requires:
+            - style_check
       - three_echo_rest:
           requires:
-            - build
-            - get_data
-            - get_regression_data
+            - style_check
       - five_echo_task:
           requires:
-            - build
-            - get_data
-            - get_regression_data
+            - style_check
       - merge_coverage:
           requires:
-            - py36_unit_tests_and_coverage
+            - py35_unit_tests
+            - py36_unit_tests
+            - py37_unit_tests
             - three_echo_rest
             - five_echo_task
