@@ -52,11 +52,14 @@ jobs:
 
   get_test_data:
     docker:
-      - image: debian
+      - image: docker:18.01.0-ce-git
     working_directory: /tedana
     steps:
-      - attach_workspace:
-          at: /tedana
+      - checkout
+      - run:
+          name: Install curl and tar
+          command: |
+            apk add --no-cache bash curl curl-dev tar bzip2 xz
       - run:
           name: Get data
           command: |
@@ -71,13 +74,12 @@ jobs:
       - image: python:3.7.4
     working_directory: /tedana
     steps:
-      - attach_workspace:
-          at: /tedana
+      - checkout
       - run:
           name: Run style check
           command: |
             python --version
-            python -m pip install flake8
+            python -m pip install flake8<3.0 flake8-putty
             flake8 tedana
 
   unit_tests:

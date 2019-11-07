@@ -10,7 +10,7 @@ get_three_echo_test_data() {
 
 
 get_five_echo_test_data() {
-    mkdir /tmp/data/five-echo
+    mkdir -p /tmp/data/five-echo
     curl -s -L https://osf.io/ea5v3/download | tar xJf - -C /tmp/data/five-echo
 }
     # && curl -L -o TED.p06.tar.xz https://osf.io/fr6mx/download
