@@ -83,7 +83,7 @@ The echo times are also multiplied by -1.
 
 A simple line can then be fit to the transformed data with linear regression.
 For the sake of this introduction, we can assume that the example voxel has
-good signal in all five echoes (i.e., the adaptive mask has a value of 5 at
+good signal in all eight echoes (i.e., the adaptive mask has a value of 8 at
 this voxel), so the line is fit to all available data.
 
 .. note::
