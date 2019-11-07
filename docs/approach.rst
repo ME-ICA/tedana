@@ -133,6 +133,8 @@ For the example voxel, the resulting weights are:
   :width: 400 px
   :align: center
 
+THese normalized weights are then used to compute a weighted average that takes advantage
+of the higher signal in earlier echoes and the heigher sensitivty at later echoes.
 The distribution of values for the optimally combined data lands somewhere
 between the distributions for other echoes.
 
@@ -154,6 +156,17 @@ of the other echoes (which it is). This optimally combined data is written out a
     We do, however, make it accessible as an alternative combination method
     in the t2smap workflow.
 
+Denoising
+`````````
+The next step is an attempt to remove noise from the data. This process can be 
+broadly seperated into three steps: **decomposition, metric calculation** and 
+**component selection**. Decomposition reduces the diemnstionality of the 
+optimally combined data using PCA and then an ICA. Metrics which highlights the
+TE-dependence or indepence are derived from these components. Component selection 
+uses these metrics in order to identify components that should be kept in the data
+or discarded. Unwanted components are then removed from the optimally combined data 
+to produce the denoised data output. 
+
 TEDPCA
 ``````
 The next step is to dimensionally reduce the data with TE-dependent principal
@@ -170,20 +183,14 @@ These components are subjected to component selection, the specifics of which
 vary according to algorithm.
 
 In the simplest approach, ``tedana`` uses Minka’s MLE to estimate the
-dimensionality of the data, which disregards low-variance components.
+dimensionality of the data, which disregards low-variance components. (the `mle` option in for `--tedpca`).
 
-A more complicated approach involves applying a decision tree to identify and
+A more complicated approach involves applying a decision tree (similar to the
+decision tree described in the TEDICA section below) to identify and
 discard PCA components which, in addition to not explaining much variance,
 are also not significantly TE-dependent (i.e., have low Kappa) or
-TE-independent (i.e., have low Rho).
-
-.. note::
-    This process (also performed in TEDICA) can be broadly separated into three
-    steps: decomposition, metric calculation, and component selection.
-    Decomposition identifies components in the data.
-    Metric calculation derives relevant summary statistics for each component.
-    Component selection uses the summary statistics to identify components that
-    should be kept or discarded.
+TE-independent (i.e., have low Rho). These approaches can be accessed using 
+either the `kundu` or `kundu_stabilize` options for the `--tedpca` flag. 
 
 After component selection is performed, the retained components and their
 associated betas are used to reconstruct the optimally combined data, resulting
