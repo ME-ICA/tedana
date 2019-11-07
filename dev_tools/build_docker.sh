@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-update_tedana_dockerfile() {
+update_dev_dockerfile() {
     #
     # Generates Dockerfile to build Docker image for local tedana testing
     #
@@ -18,11 +18,13 @@ update_tedana_dockerfile() {
         && rm -f five_echo_NIH.tar.xz
         && curl -L -o TED.p06.tar.xz https://osf.io/fr6mx/download
         && tar xf TED.p06.tar.xz --no-same-owner -C /data/test/five-echo/
-        && rm -f TED.p06.tar.xz'2
+        && rm -f TED.p06.tar.xz'
     generate_ipython_config="
         /opt/conda/envs/tedana_py36/bin/ipython profile create
         && sed -i 's/#c.InteractiveShellApp.extensions = \[\]/c.InteractiveShellApp.extensions = \['\''autoreload'\''\]/g' /root/.ipython/profile_default/ipython_config.py"
 
+    call_dir=${PWD}
+    git_root=$( git rev-parse --show-toplevel ); cd "${git_root}"
     docker run --rm kaczmarj/neurodocker:0.6.0 generate docker                 \
       --base debian:latest                                                     \
       --pkg-manager apt                                                        \
@@ -47,15 +49,16 @@ update_tedana_dockerfile() {
       --run "${get_three_echo_test_data}"                                      \
       --run "${get_five_echo_test_data}"                                       \
       --run "${generate_ipython_config}"                                       \
-      --copy "./dev_tools/local_testing.sh" /dev_tools/local_testing.sh        \
+      --copy "./dev_tools/run_tests.sh" /dev_tools/run_tests.sh                \
       --add-to-entrypoint "source activate tedana_py36"                        \
-      --add-to-entrypoint "source /dev_tools/local_testing.sh"                 \
+      --add-to-entrypoint "source /dev_tools/run_tests.sh"                     \
       --workdir /tedana                                                        \
       > ./Dockerfile_dev
+    cd "${call_dir}"
 }
 
 
-build_tedana_image() {
+build_dev_image() {
     #
     # Recreates local Dockerfile and builds tedana/tedana-dev:local Docker image
     #
@@ -66,90 +69,6 @@ build_tedana_image() {
         tag=local
     fi
 
-    update_tedana_dockerfile
-    docker build --tag tedana/tedana-dev:${tag} -f Dockerfile_dev .
-}
-
-
-cprint() {
-    #
-    # Prints all supplied arguments as a green string
-    #
-
-    if [[ -t 0 ]]; then
-        COLS=$( tput cols )
-    else
-        COLS=80
-    fi
-
-    msg=${*}
-    eq=$( python -c "print('=' * ((${COLS} - len('${msg}') - 4) // 2))" )
-    python -c "print('\033[1m\033[92m${eq}  ${msg}  ${eq}\033[0m')"
-}
-
-
-run_integration_tests() {
-    #
-    # Runs tedana integration tests; passes any parameters to py.test
-    #
-
-    cprint "RUNNING INTEGRATION TESTS"
-    source activate tedana_py36
-    python setup.py -q install
-    py.test "$@" -k integration tedana
-}
-
-
-run_unit_tests() {
-    #
-    # Runs tedana unit tests for Python 3.5, 3.6, and 3.7 environments
-    #
-
-    for pyenv in tedana_py35 tedana_py36 tedana_py37; do
-        cprint "RUNNING UNIT TESTS FOR PYTHON ENVIRONMENT: ${pyenv}"
-        source activate ${pyenv}
-        python setup.py -q install
-        py.test --ignore-glob=tedana/tests/test_integration.py tedana
-    done
-}
-
-
-run_lint_tests() {
-    #
-    # Lints the tedana codebase
-    #
-
-    cprint "RUNNING FLAKE8 ON TEDANA DIRECTORY"
-    source activate tedana_py36
-    flake8 tedana
-}
-
-
-run_tests() {
-    #
-    # Runs tedana test suite excluding five-echo test by default
-    #
-
-    if [ ! -z "${1}" ] && [ "${1}" == "--include-five-echo" ]; then
-        run_five_echo='--include-five-echo'
-    fi
-
-    run_lint_tests
-    run_unit_tests
-    run_integration_tests "${run_five_echo}"
-
-    if [ -z "${run_five_echo}" ]; then
-        cprint "FINISHED RUNNING TESTS! GREAT SUCCESS"
-    fi
-}
-
-
-run_all_tests() {
-    #
-    # Runs entire tedana test suite
-    #
-
-    run_tests --include-five-echo
-
-    cprint "FINISHED RUNNING ALL TESTS! GREAT SUCCESS"
+    update_dev_dockerfile
+    docker build --tag tedana/tedana-dev:"${tag}" -f Dockerfile_dev .
 }
