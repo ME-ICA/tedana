@@ -6,7 +6,7 @@ cprint() {
     #
 
     if [[ -t 0 ]] && [ ! -z "${TERM}" ]; then
-        COLS=$( tput cols )
+        COLS=$( tput -T screen cols )
     else
         COLS=80
     fi
