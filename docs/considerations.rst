@@ -89,7 +89,7 @@ and guidelines are discussed in the `appendix`_ of Dipasquale et al, 2017.
 
 Collecting Multi-echo Data
 --------------------------
-For Siemens users, there are two options for Works In Progress (WIPs) Sequences. 
+**For Siemens** users, there are two options for Works In Progress (WIPs) Sequences. 
 The Center for Magnetic Resonance Research at the University of Minnesota 
 provides a custom MR sequence that allows users to collect multiple echoes 
 (termed **Contrasts**). The sequence and documentation can be `found here`_. For details 
@@ -101,10 +101,22 @@ In addition, the Martinos Center at Harvard also has a MR sequence available, wi
 details `available here`_. The number of echoes can be specified on the **Sequence, Special** tab 
 in this sequence. 
 
+**For GE users**, there are currently two sharable pulse sequences:
+
+Multi-echo EPI (MEPI) – Software releases: DV24, MP24 and DV25 (with offline recon)
+Hyperband Multi-echo EPI (HyperMEPI) - Software releases: DV26, MP26, DV27, RX27 
+(here Hyperband can be deactivated to do simple Multi-echo EPI – online recon)
+
+Please reach out to the GE Research Operation team or each pulse sequence’s 
+author to begin the process of obtaining this software. More information can be 
+found on the `GE Collaboration Portal`_ 
+
+Once logged-in, go to Groups > GE Works-in-Progress you can find the description of the current ATSM (i.e. prototypes)
+
 .. _found here: https://www.cmrr.umn.edu/multiband/
 .. _this link: http://license.umn.edu/technologies/cmrr_center-for-magnetic-resonance-research-software-for-siemens-mri-scanners
 .. _available here: https://www.nmr.mgh.harvard.edu/software/c2p/sms
-
+.. _GE Collaboration Portal: https://collaborate.mr.gehealthcare.com
 .. note:: 
     In order to increase the number of contrasts ("echoes") you may need to first increase the TR, shorten the 
     first TE and/or enable in-plane acceleration. For typically used parameters see the 
