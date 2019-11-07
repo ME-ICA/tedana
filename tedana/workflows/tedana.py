@@ -300,16 +300,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     # boilerplate
     refs = []
-    basename = 'report'
-    extension = 'txt'
-    repname = op.join(out_dir, (basename + '.' + extension))
-    repex = op.join(out_dir, (basename + '*'))
-    previousreps = glob(repex)
-    previousreps.sort(reverse=True)
-    for f in previousreps:
-        previousparts = op.splitext(f)
-        newname = previousparts[0] + '_old' + previousparts[1]
-        os.rename(f, newname)
 
     # create logfile name
     basename = 'tedana_'
