@@ -29,7 +29,7 @@ update_dev_dockerfile() {
       --base debian:latest                                                     \
       --pkg-manager apt                                                        \
       --env LANG=C.UTF-8 LC_ALL=C.UTF-8                                        \
-      --install curl git wget bzip2 ca-certificates sed                        \
+      --install curl git wget bzip2 ca-certificates sed openssh-client         \
       --run "mkdir -p /dev_tools/envs /tedana"                                 \
       --copy ./dev_tools/envs/py35_env.yml /dev_tools/envs/py35_env.yml        \
       --copy ./dev_tools/envs/py36_env.yml /dev_tools/envs/py36_env.yml        \
