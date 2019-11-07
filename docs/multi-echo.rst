@@ -18,16 +18,36 @@ Because the BOLD signal is known to decay at a set rate, collecting multiple
 echos allows us to assess whether components of the fMRI signal are BOLD- or
 non-BOLD.
 
-Non-BOLD like components are changes in the static signal. A common example is
-movement, in which the voxel (which is at a static location within the scanner)
-now contains different tissue or even an area outside of the brain. These changes 
-in signal, termed :math:`{\Delta}{S_0}` 
-
-.. image:: /_static/physics_kundu_2017_TE_dependence.jpg
-
+The image below shows the basic relationship between echo times and the image acquired at
+3T (top, A) and 7T (bottom, B). Note that the earliest echo time is the brightest, as the 
+signal has only had a limited amount of time to decay. 
+In addition, the latter echo times show areas in which is the signal has decayed completely ('drop out') 
+due to inhomgeneity in the magnetic field. By using the information across multiple 
+echoes these images can be combined in an optimal manner to take advantage of the signal 
+in the earlier echoes (see `processing pipeline details`_).
 
 .. image:: /_static/physics_kundu_2017_multiple_echoes.jpg
 
+In order to classify the relationship between the signal and the echo time we can consider a 
+single voxel at two timepoints (x and y) and the measured signal measured at three different echo times - :math:`S(TE_N)`. 
+
+For the left column, we are observing a change that we term :math:`{\Delta}{S_0}` - that is a change
+in the intercept or raw signal intensity. A common example of this is participant movement, 
+in which the voxel (which is at a static location within the scanner)
+now contains different tissue or even an area outside of the brain.  
+
+As we have collected three seperate echoes, we can compare the change in signal at each echo time, :math:`{Delta}{S(TE_N)}. For 
+:math:`{Delta}{S_0}` we see that this produces a decaying curve. If we compare this to the original signal, as in
+:math:`frac{{Delta}{S(TE_N)}{S(TE_N)}} we see that there is no echo time dependence. 
+
+In the right column, we consider changes that are related to brain activity, that is the two brain states here 
+(x and y) could be a baseline and task activated state. These we term as :math:`{\Delta}{R_2^*}`. Again we can plot the
+change in the signal between these two states as a function of echo time, finding that the signal rises and falls. If we compare this 
+curve to the original signal we find that magnitude of the changes is dependent on the echo time.
+
+.. image:: /_static/physics_kundu_2017_TE_dependence.jpg
+
+T
 For a comprehensive review, see `Kundu et al. (2017)`_.
 
 .. _TEs: http://mriquestions.com/tr-and-te.html
