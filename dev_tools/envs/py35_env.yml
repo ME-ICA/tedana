@@ -1,0 +1,20 @@
+name: tedana_py35
+channels:
+    - defaults
+    - conda-forge
+dependencies:
+    - python=3.5
+    - pip
+    - pip:
+        - duecredit
+        - matplotlib
+        - nilearn
+        - nibabel>=2.1.0
+        - numpy>=1.14
+        - numpydoc
+        - pandas
+        - pytest
+        - scikit-learn
+        - scipy
+        - sphinx-argparse
+        - versioneer
