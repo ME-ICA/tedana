@@ -47,7 +47,6 @@ curve to the original signal we find that magnitude of the changes is dependent 
 
 .. image:: /_static/physics_kundu_2017_TE_dependence.jpg
 
-T
 For a comprehensive review, see `Kundu et al. (2017)`_.
 
 .. _TEs: http://mriquestions.com/tr-and-te.html
