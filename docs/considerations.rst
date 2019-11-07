@@ -6,7 +6,7 @@ to a multi-echo fMRI sequence should seriously consider using it. The following 
 consider when deciding whether or not to collect multi-echo data
 
 Possible increase in TR
------------------------
+=======================
 The one difference with multi-echo is a slight time cost.
 For multi-echo fMRI, the shortest echo time (TE) is essentially free since it is collected in the
 gap between the RF pulse and the single-echo acquisition.
@@ -24,7 +24,7 @@ If one increases acceleration, it is worth doing an empirical comparison to make
 isn't a non-trivial loss in SNR or an increase of artifacts.
 
 A simple weighted average will increase SNR
--------------------------------------------
+===========================================
 Multiple studies have shown that a
 weighted average of the echoes to optimize T2* weighting, sometimes called "optimally combined,"
 gives a reliable, modest boost in data quality. The optimal combination of echoes can currently be
@@ -33,7 +33,7 @@ average can be calculated with `t2smap`_ If no other
 acquisition compromises are necessary to acquire multi-echo data, this boost is worthwhile. 
 
 Consider the life of the dataset
---------------------------------
+================================
 If other
 compromises are necessary, consider the life of the data set. If data is being acquired for a discrete
 study that will be acquired, analyzed, and published in a year or two, it might not be worth making
@@ -48,7 +48,7 @@ still being improved, and the algorithms are still changing. Users need to have 
 at the denoising output from every run to make sure denoising worked as intended. 
 
 Consider the cost of added quality control
-------------------------------------------
+==========================================
 If someone wants a push-button
 way to use multi-echo data to improve data quality, that doesn't require as deep an inspection of every output,
 stick with using the weighted average. The developers of tedana look forward to when tedana and other methods
@@ -87,8 +87,56 @@ and guidelines are discussed in the `appendix`_ of Dipasquale et al, 2017.
 
 .. _appendix: https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0173289
 
-Collecting Multi-echo Data
---------------------------
+.. _found here: https://www.cmrr.umn.edu/multiband/
+.. _this link: http://license.umn.edu/technologies/cmrr_center-for-magnetic-resonance-research-software-for-siemens-mri-scanners
+.. _available here: https://www.nmr.mgh.harvard.edu/software/c2p/sms
+.. _GE Collaboration Portal: https://collaborate.mr.gehealthcare.com
+.. note:: 
+    In order to increase the number of contrasts ("echoes") you may need to first increase the TR, shorten the 
+    first TE and/or enable in-plane acceleration. For typically used parameters see the 
+    `parameters and publications page`_
+.. _parameters and publications page: https://tedana.readthedocs.io/en/latest/publications.html
+
+Resources
+=========
+
+Journal articles
+----------------
+* | :ref:`spreadsheet of publications` catalogues papers using multi-echo fMRI,
+    with information about acquisition parameters.
+* | `Multi-echo acquisition`_
+  | Posse, NeuroImage 2012
+  | Includes an historical overview of multi-echo acquisition and research
+* | `Multi-Echo fMRI A Review of Applications in fMRI Denoising and Analysis of BOLD Signals`_
+  |  Kundu et al, NeuroImage 2017
+  |  A review of multi-echo denoising with a focus on the MEICA algorithm
+* | `Enhanced identification of BOLD-like componenents with MESMS and MEICA`_
+  |  Olafsson et al, NeuroImage 2015
+  |  The appendix includes a good explanation of the math underlying MEICA denoising
+* | `Comparing resting state fMRI de-noising approaches using multi- and single-echo acqusitions`_
+  |  Dipasquale et al, PLoS One 2017
+  |  The appendix includes some recommendations for multi-echo acqusition
+
+.. _Multi-echo acquisition: https://www.ncbi.nlm.nih.gov/pubmed/22056458
+.. _Multi-Echo fMRI A Review of Applications in fMRI Denoising and Analysis of BOLD Signals: https://www.ncbi.nlm.nih.gov/pubmed/28363836
+.. _Enhanced identification of BOLD-like componenents with MESMS and MEICA: https://www.ncbi.nlm.nih.gov/pubmed/25743045
+.. _Comparing resting state fMRI de-noising approaches using multi- and single-echo acqusitions: https://www.ncbi.nlm.nih.gov/pubmed/28323821
+
+Videos
+------
+* An `educational session from OHBM 2017`_ by Dr. Prantik Kundu about multi-echo denoising
+* A `series of lectures from the OHBM 2017 multi-echo session`_ on multiple facets of multi-echo data analysis
+* | Multi-echo fMRI lecture from the `2018 NIH FMRI Summer Course`_ by Javier Gonzalez-Castillo
+  | `Slides from 2018 NIH FMRI Summer Course`_
+
+.. _educational session from OHBM 2017: https://www.pathlms.com/ohbm/courses/5158/sections/7788/video_presentations/75977
+.. _series of lectures from the OHBM 2017 multi-echo session: https://www.pathlms.com/ohbm/courses/5158/sections/7822
+.. _2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/course/fmrif_course/2018/14_Javier_20180713
+.. _Slides from 2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/COURSE/fmrif_course/2018/content/14_Javier_20180713.pdf
+
+Available multi-echo fMRI sequences for multiple vendors
+--------------------------------------------------------
+
 **For Siemens** users, there are two options for Works In Progress (WIPs) Sequences. 
 The Center for Magnetic Resonance Research at the University of Minnesota 
 provides a custom MR sequence that allows users to collect multiple echoes 
@@ -113,72 +161,20 @@ found on the `GE Collaboration Portal`_
 
 Once logged-in, go to Groups > GE Works-in-Progress you can find the description of the current ATSM (i.e. prototypes)
 
-.. _found here: https://www.cmrr.umn.edu/multiband/
-.. _this link: http://license.umn.edu/technologies/cmrr_center-for-magnetic-resonance-research-software-for-siemens-mri-scanners
-.. _available here: https://www.nmr.mgh.harvard.edu/software/c2p/sms
-.. _GE Collaboration Portal: https://collaborate.mr.gehealthcare.com
-.. note:: 
-    In order to increase the number of contrasts ("echoes") you may need to first increase the TR, shorten the 
-    first TE and/or enable in-plane acceleration. For typically used parameters see the 
-    `parameters and publications page`_
-.. _parameters and publications page: https://tedana.readthedocs.io/en/latest/publications.html
-
-Resources
----------
-
-Journal articles
-****************
-* | :ref:`spreadsheet of publications` catalogues papers using multi-echo fMRI,
-    with information about acquisition parameters.
-* | `Multi-echo acquisition`_
-  | Posse, NeuroImage 2012
-  | Includes an historical overview of multi-echo acquisition and research
-* | `Multi-Echo fMRI A Review of Applications in fMRI Denoising and Analysis of BOLD Signals`_
-  |  Kundu et al, NeuroImage 2017
-  |  A review of multi-echo denoising with a focus on the MEICA algorithm
-* | `Enhanced identification of BOLD-like componenents with MESMS and MEICA`_
-  |  Olafsson et al, NeuroImage 2015
-  |  The appendix includes a good explanation of the math underlying MEICA denoising
-* | `Comparing resting state fMRI de-noising approaches using multi- and single-echo acqusitions`_
-  |  Dipasquale et al, PLoS One 2017
-  |  The appendix includes some recommendations for multi-echo acqusition
-
-.. _Multi-echo acquisition: https://www.ncbi.nlm.nih.gov/pubmed/22056458
-.. _Multi-Echo fMRI A Review of Applications in fMRI Denoising and Analysis of BOLD Signals: https://www.ncbi.nlm.nih.gov/pubmed/28363836
-.. _Enhanced identification of BOLD-like componenents with MESMS and MEICA: https://www.ncbi.nlm.nih.gov/pubmed/25743045
-.. _Comparing resting state fMRI de-noising approaches using multi- and single-echo acqusitions: https://www.ncbi.nlm.nih.gov/pubmed/28323821
-
-Videos
-******
-* An `educational session from OHBM 2017`_ by Dr. Prantik Kundu about multi-echo denoising
-* A `series of lectures from the OHBM 2017 multi-echo session`_ on multiple facets of multi-echo data analysis
-* | Multi-echo fMRI lecture from the `2018 NIH FMRI Summer Course`_ by Javier Gonzalez-Castillo
-  | `Slides from 2018 NIH FMRI Summer Course`_
-
-.. _educational session from OHBM 2017: https://www.pathlms.com/ohbm/courses/5158/sections/7788/video_presentations/75977
-.. _series of lectures from the OHBM 2017 multi-echo session: https://www.pathlms.com/ohbm/courses/5158/sections/7822
-.. _2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/course/fmrif_course/2018/14_Javier_20180713
-.. _Slides from 2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/COURSE/fmrif_course/2018/content/14_Javier_20180713.pdf
-
-Available multi-echo fMRI sequences for multiple vendors
-********************************************************
-
-Information on multi-echo sequences from Siemens, GE, and Phillips will be added here.
-
 Multi-echo preprocessing software
-*********************************
+---------------------------------
 
 tedana requires data that has already been preprocessed for head motion, alignment, etc.
 More details on software packages that include preprocessing options specifically for multi-echo
 fMRI data, such as AFNI and fMRIPrep will be added here.
 
 Other software that uses multi-echo fMRI
-****************************************
+----------------------------------------
 
 Information and links to other approaches for denoising multi-echo fMRI data will be added here.
 
 Datasets
-********
+--------
 A number of multi-echo datasets have been made public so far.
 This list is not necessarily up-to-date, so please check out OpenNeuro to potentially find more.
 
