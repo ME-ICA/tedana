@@ -45,17 +45,20 @@ jobs:
             docker save tedana/tedana-dev:latest \
             | pigz -2 -p 3 > /tmp/cache/docker.tar.gz
       - persist_to_workspace:
-          root: /
+          root: /tmp
           paths:
-            - tedana/
-            - tmp/cache/docker.tar.gz
+            - cache/docker.tar.gz
 
   get_test_data:
     docker:
-      - image: debian
+      - image: docker:18.01.0-ce-git
     working_directory: /tedana
     steps:
       - checkout
+      - run:
+          name: Install curl and tar
+          command: |
+            apk add --no-cache bash curl curl-dev tar bzip2 xz
       - run:
           name: Get data
           command: |
@@ -67,26 +70,31 @@ jobs:
 
   style_check:
     docker:
-      - image: python:3.7.4
+      - image: docker:18.01.0-ce-git
     working_directory: /tedana
     steps:
       - checkout
+<<<<<<< HEAD
+=======
+      - run:
+          name: Install python3
+          command: |
+            apk add --no-cache python3
+>>>>>>> origin/feature/pytest_skip_integration
       - run:
           name: Run style check
           command: |
-            python --version
-            python -m pip install flake8
+            python3 --version
+            python3 -m pip install "flake8<3.0" flake8-putty
             flake8 tedana
 
   unit_tests:
     machine:
       image: circleci/classic:201711-01
-    working_directory: /tedana
     steps:
       - attach_workspace:
-          at: /tedana
-      - attach_workspace:
           at: /tmp
+      - checkout
       - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
@@ -106,24 +114,22 @@ jobs:
                 tedana/tedana-dev:latest bash -c \
                 'source ./dev_tools/run_tests.sh && \
                  for pyenv in tedana_py3{5,6,7}; do run_unit_test ${pyenv}; done'
-            mkdir /coverage
-            mv tedana/.coverage /coverage/.coverage.units
+            mkdir ~/coverage
+            mv tedana/.coverage ~/coverage/.coverage.units
       - store_artifacts:
-          path: /coverage
+          path: ~/coverage
       - persist_to_workspace:
-          root: /coverage
+          root: ~/coverage
           paths:
               - .coverage.units
 
   three_echo_rest:
-    working_directory: /tedana
     machine:
       image: circleci/classic:201711-01
     steps:
       - attach_workspace:
-          at: /tedana
-      - attach_workspace:
           at: /tmp
+      - checkout
       - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
@@ -143,26 +149,24 @@ jobs:
                 tedana/tedana-dev:latest bash -c \
                 'source ./dev_tools/run_tests.sh && \
                  run_integration_tests -k three'
-            mkdir /coverage
-            mv /tedana/.coverage /coverage/.coverage.three_echo
+            mkdir ~/coverage
+            mv /tedana/.coverage ~/coverage/.coverage.three_echo
       - store_artifacts:
           path: /tmp/data/three-echo
       - store_artifacts:
-          path: /coverage
+          path: ~/coverage
       - persist_to_workspace:
-          root: /coverage
+          root: ~/coverage
           paths:
               - .coverage.three_echo
 
   five_echo_task:
-    working_directory: /tedana
     machine:
       image: circleci/classic:201711-01
     steps:
       - attach_workspace:
-          at: /tedana
-      - attach_workspace:
           at: /tmp
+      - checkout
       - run:
           name: Load Docker image layer cache
           no_output_timeout: 30m
@@ -187,33 +191,35 @@ jobs:
       - store_artifacts:
           path: /tmp/data/five-echo
       - store_artifacts:
-          path: /coverage
+          path: ~/coverage
       - persist_to_workspace:
-          root: /coverage
+          root: ~/coverage
           paths:
               - .coverage.five_echo
 
   merge_coverage:
     docker:
-      - image: python:3.7.4
+      - image: docker:18.01.0-ce-git
     working_directory: /tedana
     steps:
       - attach_workspace:
-          at: /coverage
-      - attach_workspace:
-          at: /tedana
+          at: ~/coverage
+      - run:
+          name: Install python3
+          command: |
+            apk add --no-cache python3
       - run:
           name: Merge coverage files
           command: |
-            python --version
-            python -m pip install coverage
-            cd /coverage
+            python3 --version
+            python3 -m pip install coverage
+            cd ~/coverage
             coverage combine
             coverage xml
       - store_artifacts:
-          path: /coverage
+          path: ~/coverage
       - codecov/upload:
-          file: /coverage/coverage.xml
+          file: ~/coverage/coverage.xml
 
 workflows:
   version: 2.1
