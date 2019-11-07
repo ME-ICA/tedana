@@ -17,10 +17,9 @@ def is_valid_file(parser, arg):
 
 class ContextFilter(logging.Filter):
     """
-    This is a filter which injects contextual information into the log.
-
-    Rather than use actual contextual information, we just use random
-    data in this demo.
+    A filter to allow specific logging handlers to ignore specific loggers.
+    We use this to prevent our report-generation and reference-compiling
+    loggers from printing to the general log file or to stdout.
     """
     NAMES = ['REPORT', 'REFERENCES']
 
