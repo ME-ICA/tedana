@@ -111,12 +111,12 @@ jobs:
                 tedana/tedana-dev:latest bash -c \
                 'source ./dev_tools/run_tests.sh && \
                  for pyenv in tedana_py3{5,6,7}; do run_unit_test ${pyenv}; done'
-            mkdir /coverage
-            mv tedana/.coverage /coverage/.coverage.units
+            mkdir ~/coverage
+            mv tedana/.coverage ~/coverage/.coverage.units
       - store_artifacts:
-          path: /coverage
+          path: ~/coverage
       - persist_to_workspace:
-          root: /coverage
+          root: ~/coverage
           paths:
               - .coverage.units
 
@@ -146,14 +146,14 @@ jobs:
                 tedana/tedana-dev:latest bash -c \
                 'source ./dev_tools/run_tests.sh && \
                  run_integration_tests -k three'
-            mkdir /coverage
-            mv /tedana/.coverage /coverage/.coverage.three_echo
+            mkdir ~/coverage
+            mv /tedana/.coverage ~/coverage/.coverage.three_echo
       - store_artifacts:
           path: /tmp/data/three-echo
       - store_artifacts:
-          path: /coverage
+          path: ~/coverage
       - persist_to_workspace:
-          root: /coverage
+          root: ~/coverage
           paths:
               - .coverage.three_echo
 
@@ -183,14 +183,14 @@ jobs:
                 tedana/tedana-dev:latest bash -c \
                 'source ./dev_tools/run_tests.sh && \
                  run_integration_tests --include-five-echo -k five'
-            mkdir /coverage
-            mv /tedana/.coverage /coverage/.coverage.five_echo
+            mkdir ~/coverage
+            mv /tedana/.coverage ~/coverage/.coverage.five_echo
       - store_artifacts:
           path: /tmp/data/five-echo
       - store_artifacts:
-          path: /coverage
+          path: ~/coverage
       - persist_to_workspace:
-          root: /coverage
+          root: ~/coverage
           paths:
               - .coverage.five_echo
 
@@ -200,7 +200,7 @@ jobs:
     working_directory: /tedana
     steps:
       - attach_workspace:
-          at: /coverage
+          at: ~/coverage
       - run:
           name: Install python3
           command: |
@@ -210,13 +210,13 @@ jobs:
           command: |
             python3 --version
             python3 -m pip install coverage
-            cd /coverage
+            cd ~/coverage
             coverage combine
             coverage xml
       - store_artifacts:
-          path: /coverage
+          path: ~/coverage
       - codecov/upload:
-          file: /coverage/coverage.xml
+          file: ~/coverage/coverage.xml
 
 workflows:
   version: 2.1
