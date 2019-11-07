@@ -127,6 +127,7 @@ jobs:
     steps:
       - attach_workspace:
           at: /coverage
+      - checkout
       - run:
           name: Merge coverage files
           command: |
