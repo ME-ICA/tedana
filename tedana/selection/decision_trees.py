@@ -3,7 +3,7 @@ Functions that include workflows to identify
 TE-dependent and TE-independent components.
 """
 import logging
-import numpy as np
+# import numpy as np
 # from scipy import stats
 
 # from tedana.stats import getfbounds
@@ -15,61 +15,62 @@ from tedana.selection.selection_nodes import RhoGtKappa
 LGR = logging.getLogger(__name__)
 
 
-def manual_selection(comptable, acc=None, rej=None):
-    """
-    Perform manual selection of components.
+# def manual_selection(comptable, acc=None, rej=None):
+#     """
+#     Perform manual selection of components.
 
-    Parameters
-    ----------
-    comptable : (C x M) :obj:`pandas.DataFrame`
-        Component metric table, where `C` is components and `M` is metrics
-    acc : :obj:`list`, optional
-        List of accepted components. Default is None.
-    rej : :obj:`list`, optional
-        List of rejected components. Default is None.
+#     Parameters
+#     ----------
+#     comptable : (C x M) :obj:`pandas.DataFrame`
+#         Component metric table, where `C` is components and `M` is metrics
+#     acc : :obj:`list`, optional
+#         List of accepted components. Default is None.
+#     rej : :obj:`list`, optional
+#         List of rejected components. Default is None.
 
-    Returns
-    -------
-    comptable : (C x M) :obj:`pandas.DataFrame`
-        Component metric table with classification.
-    """
-    LGR.info('Performing manual ICA component selection')
-    if ('classification' in comptable.columns and
-            'original_classification' not in comptable.columns):
-        comptable['original_classification'] = comptable['classification']
-        comptable['original_rationale'] = comptable['rationale']
+#     Returns
+#     -------
+#     comptable : (C x M) :obj:`pandas.DataFrame`
+#         Component metric table with classification.
+#     """
+#     LGR.info('Performing manual ICA component selection')
+#     test1 = 'classification' in comptable.columns
+#     test2 = 'original_classification' not in comptable.columns
+#     if test1 and test2:
+#         comptable['original_classification'] = comptable['classification']
+#         comptable['original_rationale'] = comptable['rationale']
 
-    comptable['classification'] = 'accepted'
-    comptable['rationale'] = ''
+#     comptable['classification'] = 'accepted'
+#     comptable['rationale'] = ''
 
-    all_comps = comptable.index.values
-    if acc is not None:
-        acc = [int(comp) for comp in acc]
+#     all_comps = comptable.index.values
+#     if acc is not None:
+#         acc = [int(comp) for comp in acc]
 
-    if rej is not None:
-        rej = [int(comp) for comp in rej]
+#     if rej is not None:
+#         rej = [int(comp) for comp in rej]
 
-    if acc is not None and rej is None:
-        rej = sorted(np.setdiff1d(all_comps, acc))
-    elif acc is None and rej is not None:
-        acc = sorted(np.setdiff1d(all_comps, rej))
-    elif acc is None and rej is None:
-        LGR.info('No manually accepted or rejected components supplied. '
-                 'Accepting all components.')
-        # Accept all components if no manual selection provided
-        acc = all_comps[:]
-        rej = []
+#     if acc is not None and rej is None:
+#         rej = sorted(np.setdiff1d(all_comps, acc))
+#     elif acc is None and rej is not None:
+#         acc = sorted(np.setdiff1d(all_comps, rej))
+#     elif acc is None and rej is None:
+#         LGR.info('No manually accepted or rejected components supplied. '
+#                  'Accepting all components.')
+#         # Accept all components if no manual selection provided
+#         acc = all_comps[:]
+#         rej = []
 
-    ign = np.setdiff1d(all_comps, np.union1d(acc, rej))
-    comptable.loc[acc, 'classification'] = 'accepted'
-    comptable.loc[rej, 'classification'] = 'rejected'
-    comptable.loc[rej, 'rationale'] += 'I001;'
-    comptable.loc[ign, 'classification'] = 'ignored'
-    comptable.loc[ign, 'rationale'] += 'I001;'
+#     ign = np.setdiff1d(all_comps, np.union1d(acc, rej))
+#     comptable.loc[acc, 'classification'] = 'accepted'
+#     comptable.loc[rej, 'classification'] = 'rejected'
+#     comptable.loc[rej, 'rationale'] += 'I001;'
+#     comptable.loc[ign, 'classification'] = 'ignored'
+#     comptable.loc[ign, 'rationale'] += 'I001;'
 
-    # Move decision columns to end
-    comptable = clean_dataframe(comptable)
-    return comptable
+#     # Move decision columns to end
+#     comptable = clean_dataframe(comptable)
+#     return comptable
 
 
 def minimal_decision_tree_A(comptable, n_echos):

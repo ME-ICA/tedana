@@ -36,8 +36,8 @@ def RhoGtKappa(comptable, decision_tree_steps, iftrue='reject', iffalse='no_chan
             the label in this string. Same options as iftrue
     decide_comps: :obj:`union(str, list[str])`
             A string or a list of strings listing what classifications of components
-            to operate on. For example: If 'all' then run on all components. 
-            If 'unclassified' run on only components labeled 'unclassified'. 
+            to operate on. For example: If 'all' then run on all components.
+            If 'unclassified' run on only components labeled 'unclassified'.
             If ['unclassified', 'provionalreject'] run on components with either of
             those classifications
     kappa_scale: :obj:`float`
@@ -60,7 +60,7 @@ def RhoGtKappa(comptable, decision_tree_steps, iftrue='reject', iffalse='no_chan
     metrics_exist, missing_metrics = confirm_metrics_calculated(comptable, necessary_metrics)
     if metrics_exist is False:
         error_msg = ("Necessary metrics for " + functionname + " are not in comptable. "
-                     + "Need to calculate the following metrics: " + missing_metrics)
+                     "Need to calculate the following metrics: " + missing_metrics)
         raise ValueError(error_msg)
 
     decision_tree_steps = new_decision_node_info(decision_tree_steps, functionname,
@@ -74,8 +74,8 @@ def RhoGtKappa(comptable, decision_tree_steps, iftrue='reject', iffalse='no_chan
         log_decision_tree_step(nodeidxstr, functionname, comps2use,
                                decide_comps=decide_comps)
     else:
-        decision_boolean = (comptable.loc[comps2use, 'rho'] >
-                            (kappa_scale * comptable.loc[comps2use, 'kappa']))
+        decision_boolean = (
+            comptable.loc[comps2use, 'rho'] > (kappa_scale * comptable.loc[comps2use, 'kappa']))
 
         comptable, decision_tree_steps = change_comptable_classifications(
                         comptable, iftrue, iffalse,

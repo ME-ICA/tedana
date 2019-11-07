@@ -63,8 +63,9 @@ def clean_dataframe(comptable):
     last and remove trailing semicolons from rationale column.
     """
     cols_at_end = ['classification', 'rationale']
-    comptable = (comptable[[c for c in comptable if c not in cols_at_end] +
-                 [c for c in cols_at_end if c in comptable]])
+    comptable = (
+        comptable[[c for c in comptable if c not in cols_at_end] + [c for c in cols_at_end
+                                                                    if c in comptable]])
     comptable['rationale'] = comptable['rationale'].str.rstrip(';')
     return comptable
 
@@ -143,12 +144,12 @@ def are_only_necessary_metrics_used(used_metrics, necessary_metrics, functionnam
     """
     onlyin_used_metrics = np.setdiff1d(used_metrics, necessary_metrics)
     if not onlyin_used_metrics:
-        LGR.warning(functionname + " uses the following metrics that are not " +
+        LGR.warning(functionname + " uses the following metrics that are not "
                     "declared as necessary metrices: " + str(onlyin_used_metrics))
 
     onlyin_necessary_metrics = np.setdiff1d(necessary_metrics, used_metrics)
     if not onlyin_necessary_metrics:
-        LGR.warning(functionname + " declared the following metrics as necessary " +
+        LGR.warning(functionname + " declared the following metrics as necessary "
                     "but does not use them: " + str(onlyin_necessary_metrics))
 
 # Functions that edit decision_tree_steps
@@ -193,10 +194,10 @@ def log_decision_tree_step(nodeidxstr, functionname, comps2use,
         LGR.info("Step " + nodeidxstr + " " + functionname + " not applied because "
                  "no remaining components were classified as " + str(decide_comps))
     else:
-        LGR.info("Step " + nodeidxstr + " " + functionname + " applied to "
-                 + str((comps2use is True).sum()) + " components. "
-                 + str(decision_tree_steps[-1]['numtrue']) + " were True and "
-                 + str(decision_tree_steps[-1]['numfalse']) + " were False")
+        LGR.info(("Step " + nodeidxstr + " " + functionname + " "
+                  "applied to " + str((comps2use is True).sum()) + " "
+                  "components. " + str(decision_tree_steps[-1]['numtrue']) + " "
+                  "were True and " + str(decision_tree_steps[-1]['numfalse']) + " were False"))
 
 # Calculations that are used in decision tree functions
 
