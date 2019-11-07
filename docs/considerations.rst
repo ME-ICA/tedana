@@ -165,8 +165,18 @@ Multi-echo preprocessing software
 ---------------------------------
 
 tedana requires data that has already been preprocessed for head motion, alignment, etc.
-More details on software packages that include preprocessing options specifically for multi-echo
-fMRI data, such as AFNI and fMRIPrep will be added here.
+
+AFNI can process multi-echo data natively as well as apply tedana denoising through the use of 
+**afni_proc.py**. To see various implementations, start with Example 12 in the `afni_proc.py help`_
+
+.. afni_proc.py: https://afni.nimh.nih.gov/pub/dist/doc/program_help/afni_proc.py.html
+
+`fmriprep` can also process multi-echo data, but is currently limited to using the optimally combined
+timeseries. For more details, see the `fmriprep workflows page`_
+
+.. _fmriprep workflows page: https://fmriprep.readthedocs.io/en/stable/workflows.html
+
+Currently SPM and FSL do not natively support mutli-echo fmri data processing. 
 
 Other software that uses multi-echo fMRI
 ----------------------------------------
