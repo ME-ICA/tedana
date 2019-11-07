@@ -12,7 +12,6 @@ os.environ['OPENBLAS_NUM_THREADS'] = '1'
 import shutil
 import logging
 import os.path as op
-from glob import glob
 import datetime
 
 import argparse
@@ -649,8 +648,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     bp_str += '\n\nReferences\n\n'
     refs = sorted(list(set(refs)))
     bp_str += '\n\n'.join(refs)
-    with open(repname, 'w') as fo:
-        fo.write(bp_str)
 
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)

@@ -33,7 +33,6 @@ mepca_S0_pred.nii.gz
 mepca_betas_catd.nii.gz
 mepca_metric_weights.nii.gz
 mepca_mix.1D
-report.txt
 s0v.nii.gz
 s0vG.nii.gz
 s0vs.nii.gz
