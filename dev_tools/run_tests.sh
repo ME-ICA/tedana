@@ -25,7 +25,7 @@ run_integration_tests() {
 
     cprint "RUNNING INTEGRATION TESTS"
     source activate tedana_py36
-    py.test "$@" -k integration --cov-report term-missing --cov=tedana tedana
+    py.test "$@" --cov-report term-missing --cov=tedana tedana/tests/test_integration.py
 }
 
 

@@ -145,6 +145,12 @@ workflows:
   build_test:
     jobs:
       - style_check
+      - three_echo_rest:
+          requires:
+            - style_check
+      - five_echo_task:
+          requires:
+            - style_check
       - py35_unit_tests:
           requires:
             - style_check
@@ -152,12 +158,6 @@ workflows:
           requires:
             - style_check
       - py37_unit_tests:
-          requires:
-            - style_check
-      - three_echo_rest:
-          requires:
-            - style_check
-      - five_echo_task:
           requires:
             - style_check
       - merge_coverage:
