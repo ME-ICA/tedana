@@ -12,10 +12,8 @@ import gzip
 
 import numpy as np
 import pandas as pd
+import os
 
-import os.path as op
-
-from os import makedirs
 
 LGR = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -35,7 +33,7 @@ def _get_parser():
     # https://stackoverflow.com/a/43456577
     optional = parser._action_groups.pop()
     required = parser.add_argument_group('required arguments')
-    required.add_argument('-td', '--ted-dir',
+    required.add_argument('-d', '--dir',
                           dest='tedana_dir',
                           type=str,
                           help=('Output directory of tedana, i.e. where '
@@ -59,17 +57,19 @@ def _get_parser():
     return parser
 
 
-def check_gzip_and_copy_volume(vol, out_vol, name=''):
+def check_gzip_and_link_volume(vol, out_vol, name=''):
     """
-    Function to copy a volume from source to destination.
-    It also check hat the file exists and is zipped, or it zip it while copying.
+    Function to link a .nii.gz volume from source to destination.
+    Alternatively, it copies and compress a .nii file
+    from source to destination.
+    It also check that the file exists.
 
     Parameters
     ----------
     vol: string
-        File with full path of copy source.
+        File with full path to source.
     out_vol: string
-        File with full path of copy destination.
+        File with full path to destination.
     name: string
         Name of volume for messages
 
@@ -83,17 +83,17 @@ def check_gzip_and_copy_volume(vol, out_vol, name=''):
     if vol[-3:] == '.gz':
         vol = vol[:-3]
 
-    if not op.exists(vol):
+    if not os.path.exists(vol):
         vol = vol + '.gz'
 
-        if not op.exists(vol):
+        if not os.path.exists(vol):
             LGR.error('%s not found. Check the relevant folder', vol)
             sys.exit()
 
-        LGR.info('Copying %s in me.ica folder', name)
-        shutil.copyfile(vol, out_vol)
+        LGR.info('Linking %s in new folder', name)
+        os.symlink(vol, out_vol)
     else:
-        LGR.info('Compressing and copying %s in me.ica folder', name)
+        LGR.info('Compressing and copying %s in new folder', name)
         with open(vol, 'rb') as f_in:
             with gzip.open(out_vol, 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
@@ -120,37 +120,42 @@ def create_melview_folder(tedana_dir, outdir, anat):
 
     """
 
-    ctab = op.join(tedana_dir, 'comp_table_ica.txt')
-    mmat = op.join(tedana_dir, 'meica_mix.1D')
-    fvol = op.join(tedana_dir, 'betas_OC.nii')
-    out_fvol = op.join(outdir, 'melodic_IC.nii.gz')
-    out_mmat = op.join(outdir, 'melodic_mix')
-    out_ftmat = op.join(outdir, 'melodic_FTmix')
-    out_ctab = op.join(outdir, 'melodic_class')
+    ctab = os.path.join(tedana_dir, 'comp_table_ica.txt')
+    mmat = os.path.join(tedana_dir, 'meica_mix.1D')
+    fvol = os.path.join(tedana_dir, 'betas_OC.nii')
+    dvol = os.path.join(tedana_dir, 'dn_ts_OC.nii')
+    out_fvol = os.path.join(outdir, 'filtered_func_data.ica', 'melodic_IC.nii.gz')
+    out_dvol = os.path.join(outdir, 'filtered_func_data.nii.gz')
+    out_mmat = os.path.join(outdir, 'filtered_func_data.ica', 'melodic_mix')
+    out_ftmat = os.path.join(outdir, 'filtered_func_data.ica', 'melodic_FTmix')
+    out_ctab = os.path.join(outdir, 'filtered_func_data.ica', 'melodic_class')
 
-    if not op.exists(mmat):
+    if not os.path.exists(mmat):
         LGR.error('%s not found. Check tedana\'s output folder', mmat)
         sys.exit()
-    elif not op.exists(ctab):
+    elif not os.path.exists(ctab):
         LGR.error('%s not found. Check tedana\'s output folder', ctab)
         sys.exit()
 
-    if op.exists(outdir):
+    if os.path.exists(outdir):
         shutil.rmtree(outdir)
         LGR.warning('Removing %s', outdir)
 
-    makedirs(outdir)
+    os.makedirs(os.path.join(outdir, 'filtered_func_data.ica'))
     LGR.info('The files will be stored in %s', outdir)
 
-    check_gzip_and_copy_volume(fvol, out_fvol, 'betas_OC')
+    check_gzip_and_link_volume(fvol, out_fvol, 'betas_OC')
+    check_gzip_and_link_volume(dvol, out_dvol, 'dn_ts_OC')
 
     if anat:
         if anat[-7:] != '.nii.gz':
             if anat[-4:] != '.nii':
                 anat = anat + '.nii'
+    else:
+        anat = os.path.join(tedana_dir, 't2sv.nii')
 
-        out_anat = op.join(outdir, 'mean.nii.gz')
-        check_gzip_and_copy_volume(anat, out_anat, 'anat')
+        out_anat = os.path.join(outdir, 'filtered_func_data.ica', 'mean.nii.gz')
+        check_gzip_and_link_volume(anat, out_anat, 'anat')
 
     LGR.info('Copying meica_mix in me.ica folder and generating melodic_FTmix')
     ts = np.genfromtxt(mmat)
@@ -167,15 +172,20 @@ def create_melview_folder(tedana_dir, outdir, anat):
                                        'countsigFR2', 'countsigFS0',
                                        'dice_FR2', 'dice_FS0', 'countnoise',
                                        'signal-noise_t', 'signal-noise_p',
-                                       'd_table_score', 'd_table_score_scrub'], axis=1)
-    comptable['true'] = 'True'
+                                       'd_table_score', 'kappa ratio',
+                                       'd_table_score_scrub', 'rationale'], axis=1)
+
+    comptable['true'] = ' True'
+    comptable['classification'] = ' ' + comptable['classification']
+
     comptable.component = comptable.component + 1
 
     compstr = str(list(comptable.component))
 
     f = open(out_ctab, 'w+')
-    f.write('.\n')
-    comptable.to_csv(f, header=False, index=False)
+    first_line = os.path.join(outdir, 'filtered_func_data.ica')
+    f.write(f'{first_line}\n')
+    comptable.to_csv(f, header=False, index=False, sep=',')
     f.write('%s' % compstr)
     f.close()
     LGR.info('Folder ready. Open with \"fsleyes -ad -s melodic %s\"', outdir)
@@ -185,9 +195,9 @@ def _main(argv=None):
     options = _get_parser().parse_args(argv)
 
     if options.out_dir:
-        outdir = op.join(options.out_dir,'me.ica')
+        outdir = os.path.join(options.out_dir, 'me.ica')
     else:
-        outdir = op.join(options.tedana_dir,'me.ica')
+        outdir = os.path.join(options.tedana_dir, 'me.ica')
 
     create_melview_folder(options.tedana_dir, outdir, options.anat)
 
