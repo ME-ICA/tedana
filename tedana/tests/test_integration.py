@@ -34,13 +34,13 @@ def check_outputs(fname, outpath):
     assert len(logfiles) == 1
 
 
-def test_integration_five_echo(skip_integration, include_five_echo):
+def test_integration_five_echo(skip_integration):
     """
     An integration test of the full tedana workflow using five-echo test data.
     """
     if skip_integration:
         pytest.skip('Skipping five-echo integration test')
-    out_dir = '/tmp/data/five-echo/TED.five-echo'
+    out_dir = '/tmp/data/five-echo/five-echo'
     out_filename = '/tedana/.circleci/tedana_outputs_verbose.txt'
     tedana_workflow(
         data='/tmp/data/five-echo/p06.SBJ01_S09_Task11_e[1,2,3,4,5].sm.nii.gz',
