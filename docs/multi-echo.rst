@@ -36,9 +36,9 @@ in the intercept or raw signal intensity. A common example of this is participan
 in which the voxel (which is at a static location within the scanner)
 now contains different tissue or even an area outside of the brain.  
 
-As we have collected three seperate echoes, we can compare the change in signal at each echo time, :math:`{Delta}{S(TE_N)}. For 
-:math:`{Delta}{S_0}` we see that this produces a decaying curve. If we compare this to the original signal, as in
-:math:`frac{{Delta}{S(TE_N)}{S(TE_N)}} we see that there is no echo time dependence. 
+As we have collected three seperate echoes, we can compare the change in signal at each echo time, :math:`{\Delta}{S(TE_n)}`. For 
+:math:`{\Delta}{S_0}` we see that this produces a decaying curve. If we compare this to the original signal, as in
+:math:`\frac{{\Delta}{S(TE_n)}}{S(TE_n)}` we see that there is no echo time dependence. 
 
 In the right column, we consider changes that are related to brain activity, that is the two brain states here 
 (x and y) could be a baseline and task activated state. These we term as :math:`{\Delta}{R_2^*}`. Again we can plot the
