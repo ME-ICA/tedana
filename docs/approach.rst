@@ -160,7 +160,7 @@ Denoising
 `````````
 The next step is an attempt to remove noise from the data. This process can be 
 broadly seperated into three steps: **decomposition, metric calculation** and 
-**component selection**. Decomposition reduces the diemnstionality of the 
+**component selection**. Decomposition reduces the dimensionality of the 
 optimally combined data using PCA and then an ICA. Metrics which highlights the
 TE-dependence or indepence are derived from these components. Component selection 
 uses these metrics in order to identify components that should be kept in the data
