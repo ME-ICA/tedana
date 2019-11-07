@@ -38,16 +38,6 @@ jobs:
               --build-arg VERSION="${CIRCLE_TAG:-$THISVERSION}" \
               --file Dockerfile_dev .
       - run:
-          name: Check version
-          command: |
-            THISVERSION=$( python3 -c 'import tedana; print(tedana.__version__)' )
-            THISVERSION="${CIRCLE_TAG:-$THISVERSION}"
-            DOCKERVERSION=$( docker run --rm -v ${PWD}:/tedana tedana/tedana-dev:latest \
-                             python -c 'import tedana; print(tedana.__version__)' )
-            echo "$THISVERSION"
-            echo "$DOCKERVERSION"
-            test "$DOCKERVERSION" = "$THISVERSION"
-      - run:
           name: Docker save
           no_output_timeout: 40m
           command: |
