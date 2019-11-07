@@ -40,10 +40,10 @@ def test_integration_five_echo(skip_integration, include_five_echo):
     """
     if skip_integration or not include_five_echo:
         pytest.skip('Skipping five-echo integration test')
-    out_dir = '/data/five-echo/TED.five-echo'
+    out_dir = '/tmp/data/five-echo/TED.five-echo'
     out_filename = '/tedana/.circleci/tedana_outputs_verbose.txt'
     tedana_workflow(
-        data='/data/five-echo/p06.SBJ01_S09_Task11_e[1,2,3,4,5].sm.nii.gz',
+        data='/tmp/data/five-echo/p06.SBJ01_S09_Task11_e[1,2,3,4,5].sm.nii.gz',
         tes=[15.4, 29.7, 44.0, 58.3, 72.6],
         out_dir=out_dir,
         debug=True, verbose=True)
@@ -56,10 +56,10 @@ def test_integration_three_echo(skip_integration):
     """
     if skip_integration:
         pytest.skip('Skipping three-echo integration test')
-    out_dir = '/data/three-echo/TED.three-echo'
+    out_dir = '/tmp/data/three-echo/TED.three-echo'
     out_filename='/tedana/.circleci/tedana_outputs.txt'
     tedana_workflow(
-        data='/data/three-echo/three_echo_Cornell_zcat.nii.gz',
+        data='/tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz',
         tes=[14.5, 38.5, 62.5],
         out_dir=out_dir,
         tedpca='kundu', png=True)
