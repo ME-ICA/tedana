@@ -5,7 +5,11 @@ cprint() {
     # Prints all supplied arguments as a bold, green string
     #
 
-    if [[ -t 0 ]]; then COLS=$( tput cols ); else COLS=80; fi
+    if [[ -t 0 ]] && [ ! -z "${TERM}" ]; then
+        COLS=$( tput cols )
+    else
+        COLS=80
+    fi
 
     msg="${*}"
     eq=$( python -c "print('=' * ((${COLS} - len('${msg}') - 4) // 2))" )
