@@ -18,7 +18,15 @@ Because the BOLD signal is known to decay at a set rate, collecting multiple
 echos allows us to assess whether components of the fMRI signal are BOLD- or
 non-BOLD.
 
+Non-BOLD like components are changes in the static signal. A common example is
+movement, in which the voxel (which is at a static location within the scanner)
+now contains different tissue or even an area outside of the brain. These changes 
+in signal, termed :math:`{\Delta}{S_0}` 
+
 .. image:: /_static/physics_kundu_2017_TE_dependence.jpg
+
+
+.. image:: /_static/physics_kundu_2017_multiple_echoes.jpg
 
 For a comprehensive review, see `Kundu et al. (2017)`_.
 
