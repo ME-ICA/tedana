@@ -1,6 +1,9 @@
 
 FAQ
----
+===
+
+tedana
+------
 
 ICA has failed to converge.
 ```````````````````````````
@@ -36,3 +39,20 @@ Anyone interested in using v3.2 may compile and install an earlier release (<=0.
 .. _NeuroStars: https://neurostars.org
 .. _fMRIPrep: https://fmriprep.readthedocs.io
 .. _afni_proc.py: https://afni.nimh.nih.gov/pub/dist/doc/program_help/afni_proc.py.html
+
+Multi-echo fMRI
+---------------
+
+Will I encounter SAR limits more often with multi-echo fMRI?
+````````````````````````````````````````````````````````````
+While multi-echo does lead to collecting more images during each TR (one per echo), there is still only a single
+radiofrequency pulse. For this reason, there is no change in SAR for participants intrinsic to multi-echo
+fMRI. 
+
+Can I combine multiband (simultaneous multislice) with multi-echo fMRI?
+```````````````````````````````````````````````````````````````````````
+Yes, these techniques are completely seperate. Mutliband fMRI leads to collecting multiple slices within a volume
+simultaneouly, while multi-echo fMRI is instead related to collecting multiple unique volumes. These techniques can 
+be combined to reduce the TR in a multi-echo sequence. 
+
+
