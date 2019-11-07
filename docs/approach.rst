@@ -1,5 +1,5 @@
-Processing pipeline details
-===========================
+The tedana pipeline
+===================
 
 ``tedana`` works by decomposing multi-echo BOLD data via PCA and ICA.
 The resulting components are then analyzed to determine whether they are
