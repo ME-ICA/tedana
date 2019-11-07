@@ -34,6 +34,7 @@ update_dev_dockerfile() {
       --copy ./dev_tools/envs/py35_env.yml /dev_tools/envs/py35_env.yml        \
       --copy ./dev_tools/envs/py36_env.yml /dev_tools/envs/py36_env.yml        \
       --copy ./dev_tools/envs/py37_env.yml /dev_tools/envs/py37_env.yml        \
+      --run "export TERM=xterm-256color"\
       --miniconda create_env=tedana_py35                                       \
                   install_path=/opt/conda                                      \
                   yaml_file=/dev_tools/envs/py35_env.yml                       \
