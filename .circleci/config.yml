@@ -180,10 +180,10 @@ workflows:
   build_test:
     jobs:
       - style_check
-      - build
+      - build:
           requires:
             - style_check
-      - get_test_data
+      - get_test_data:
           requires:
             - style_check
       - integration_tests:
