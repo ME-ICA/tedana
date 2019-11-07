@@ -55,8 +55,7 @@ jobs:
       - image: debian
     working_directory: /tedana
     steps:
-      - attach_workspace:
-          at: /tedana
+      - checkout
       - run:
           name: Get data
           command: |
@@ -71,8 +70,7 @@ jobs:
       - image: python:3.7.4
     working_directory: /tedana
     steps:
-      - attach_workspace:
-          at: /tedana
+      - checkout
       - run:
           name: Run style check
           command: |
