@@ -558,7 +558,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     LGR.info('Workflow completed')
 
-    RepLGR.info("\nThis workflow used numpy (Van Der Walt, Colbert, & "
+    RepLGR.info("This workflow used numpy (Van Der Walt, Colbert, & "
                 "Varoquaux, 2011), scipy (Jones et al., 2001), pandas "
                 "(McKinney, 2010), scikit-learn (Pedregosa et al., 2011), "
                 "nilearn, and nibabel (Brett et al., 2019).")
@@ -578,7 +578,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                 "Cipollini, B., McCarthy, P., … freec84. (2019, May 28). "
                 "nipy/nibabel. Zenodo. http://doi.org/10.5281/zenodo.3233118")
 
-    RepLGR.info("\nThis workflow also used the Dice similarity index "
+    RepLGR.info("This workflow also used the Dice similarity index "
                 "(Dice, 1945; Sørensen, 1948).")
     RefLGR.info("Dice, L. R. (1945). Measures of the amount of ecologic "
                 "association between species. Ecology, 26(3), 297-302.")
