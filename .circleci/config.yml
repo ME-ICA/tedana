@@ -88,7 +88,6 @@ jobs:
   unit_tests:
     machine:
       image: circleci/classic:201711-01
-    working_directory: /tedana
     steps:
       - attach_workspace:
           at: /tmp
@@ -122,7 +121,6 @@ jobs:
               - .coverage.units
 
   three_echo_rest:
-    working_directory: /tedana
     machine:
       image: circleci/classic:201711-01
     steps:
@@ -160,7 +158,6 @@ jobs:
               - .coverage.three_echo
 
   five_echo_task:
-    working_directory: /tedana
     machine:
       image: circleci/classic:201711-01
     steps:
