@@ -55,7 +55,7 @@ You may recover signal in areas affected by dropout
 Typical single echo fMRI uses an echo time that is appropriate for signal across most of the brain. While this is effective
 it also leads to drop out in regions with low :math:T_2^* values. This can lead to low or even no signal at all in some areas. 
 If your research question could benefit from having either
-improve signal characteristics in regions such as the orbitofrontal cortex, ventral temporal cortex or 
+improved signal characteristics in regions such as the orbitofrontal cortex, ventral temporal cortex or 
 the ventral striatum them multi-echo fMRI may be beneficial. 
 
 Consider the cost of added quality control
