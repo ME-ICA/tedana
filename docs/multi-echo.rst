@@ -31,6 +31,9 @@ Adapted from  `Kundu et al. (2017)`_.
 In order to classify the relationship between the signal and the echo time we can consider a 
 single voxel at two timepoints (x and y) and the measured signal measured at three different echo times - :math:`S(TE_n)`. 
 
+.. image:: /_static/physics_kundu_2017_TE_dependence.jpg
+Adapted from  `Kundu et al. (2017)`_.
+
 For the left column, we are observing a change that we term :math:`{\Delta}{S_0}` - that is a change
 in the intercept or raw signal intensity. A common example of this is participant movement, 
 in which the voxel (which is at a static location within the scanner)
@@ -38,17 +41,15 @@ now contains different tissue or even an area outside of the brain.
 
 As we have collected three seperate echoes, we can compare the change in signal at each echo time, :math:`{\Delta}{S(TE_n)}`. For 
 :math:`{\Delta}{S_0}` we see that this produces a decaying curve. If we compare this to the original signal, as in
-:math:`\frac{{\Delta}{S(TE_n)}}{S(TE_n)}` we see that there is no echo time dependence. 
+:math:`\frac{{\Delta}{S(TE_n)}}{S(TE_n)}` we see that there is no echo time dependence, as the final plot is a flat line. 
 
-In the right column, we consider changes that are related to brain activity, that is the two brain states here 
-(x and y) could be a baseline and task activated state. These we term as :math:`{\Delta}{R_2^*}` which is equivilent 
-to the inverse of :math:`{T_2^*}`. 
-Again we can plot the change in the signal between these two states as a function of echo time, 
+In the right column, we consider changes that are related to brain activity. For example, imagine that the two brain states here 
+(x and y) are a baseline and task activated state respectively. This effect is a change in in :math:`{\Delta}{R_2^*}` which is equivilent 
+to the inverse of :math:`{T_2^*}`. We typically observe this change in signal amplitude occuring over volumes with 
+the hemodynamic response, while here we are examining the change in signal over echo times. 
+Again we can plot the difference in the signal between these two states as a function of echo time, 
 finding that the signal rises and falls. If we compare this curve to the original signal we find 
-that magnitude of the changes is dependent on the echo time.
-
-.. image:: /_static/physics_kundu_2017_TE_dependence.jpg
-Adapted from  `Kundu et al. (2017)`_.
+that the magnitude of the changes is dependent on the echo time.
 
 For a more comprehensive review of these topics and others, see `Kundu et al. (2017)`_.
 
