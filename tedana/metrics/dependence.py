@@ -9,7 +9,7 @@ import pandas as pd
 from scipy import stats
 
 from tedana import io, utils
-from tedana.stats import getfbounds, computefeats2, get_coeffs
+from tedana.stats import getfbounds, computefeats2, get_coeffs, t_to_z
 
 
 LGR = logging.getLogger(__name__)
@@ -84,6 +84,11 @@ def compute_countsigFS0(F_S0_clmaps):
     return countsigFS0
 
 
+def compute_countsignal(Z_clmaps):
+    countsignal = Z_clmaps.sum(axis=0)
+    return countsignal
+
+
 def compute_countnoise(Z_maps, Z_cl_maps, z_thresh=1.95):
     n_components = Z_maps.shape[1]
     countnoise = np.zeros(n_components)
@@ -93,6 +98,37 @@ def compute_countnoise(Z_maps, Z_cl_maps, z_thresh=1.95):
                           (Z_clmaps[:, i_comp] == 0))
         countnoise[i_comp] = np.array(comp_noise_sel, dtype=np.int).sum()
     return countnoise
+
+
+def compute_signal_minus_noise_z():
+    n_components = Z_maps.shape[1]
+    signal_minus_noise_t = np.zeros(n_components)
+    signal_minus_noise_p = np.zeros(n_components)
+    for i_comp in range(n_components):
+        # index voxels significantly loading on component but not from clusters
+        comp_noise_idx = ((np.abs(Z_maps[:, i_comp]) > z_thresh) &
+                          (Z_clmaps[:, i_comp] == 0))
+        countsignal = Z_clmaps[:, i_comp].sum()
+        # NOTE: Why only compare distributions of *unique* F-statistics?
+        noise_FT2_Z = 0.5 * np.log(F_T2_maps[comp_noise_idx, i_comp])
+        signal_FT2_Z = 0.5 * np.log(F_T2_maps[Z_clmaps[:, i_comp] == 1, i_comp]))
+        n_noise_dupls = noise_FT2_Z.size - np.unique(noise_FT2_Z).size
+        if n_noise_dupls:
+            LGR.debug('For component {}, {} duplicate noise F-values '
+                      'detected.'.format(i_comp, n_noise_dupls))
+        n_signal_dupls = signal_FR2_Z.size - np.unique(signal_FR2_Z).size
+        if n_signal_dupls:
+            LGR.debug('For component {}, {} duplicate signal F-values '
+                      'detected.'.format(i_comp, n_signal_dupes))
+        dof = np.sum(comp_noise_idx) + countsignal - 2
+
+        t_value, signal_minus_noise_p[i_comp] = stats.ttest_ind(
+            signal_FT2_Z, noise_FT2_Z, equal_var=False)
+        signal_minus_noise_z[i_comp] = t_to_z(t_value, dof)
+
+    signal_minus_noise_z[np.isnan(signal_minus_noise_t)] = 0
+    signal_minus_noise_p[np.isnan(signal_minus_noise_p)] = 0
+    return signal_minus_noise_z, signal_minus_noise_p
 
 
 def compute_signal_minus_noise_t(Z_maps, Z_cl_maps, F_T2_maps, z_thresh=1.95):
