@@ -109,7 +109,7 @@ def test_integration_three_echo(skip_integration):
         data='/tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz',
         tes=[14.5, 38.5, 62.5],
         out_dir=out_dir,
-        tedpca='kundu', png=True)
+        tedpca='kundu')
 
     # compare the generated output files
     fn = resource_filename('tedana', 'tests/data/tedana_outputs.txt')
