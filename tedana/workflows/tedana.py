@@ -213,7 +213,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     tedort=False, gscontrol=None, tedpca='mle',
                     source_tes=-1, combmode='t2s', verbose=False, stabilize=False,
                     out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
-                    debug=False, quiet=False, nopng=False, png_cmap='coolwarm',
+                    debug=False, quiet=False, nopng=False,
+                    png_cmap='coolwarm',
                     low_mem=False, fittype='loglin'):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
@@ -374,11 +375,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     catd, ref_img = io.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
-
-    # override --nopng if --png-cmap supplied
-    if nopng and png_cmap:
-        LGR.warning('Overriding --nopng  since --png-cmap supplied.')
-        nopng = False
+  
+    if not nopng and (png_cmap == 'coolwarm'):
+            LGR.warning('Overriding --nopng since --png-cmap provided.')
+            nopng = False
 
     # check if TR is 0
     img_t_r = ref_img.header.get_zooms()[-1]

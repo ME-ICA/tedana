@@ -42,6 +42,7 @@ t2sv.nii.gz
 t2svG.nii.gz
 ts_OC.nii.gz
 ts_OC_whitened.nii.gz
+figures
 figures/Component_Overview.png
 figures/Kappa_vs_Rho_Scatter.png
 figures/comp_000.png
