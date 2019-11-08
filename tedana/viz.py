@@ -263,12 +263,12 @@ def write_kappa_scree(comptable, out_dir):
 
     fig, ax1 = plt.subplots(figsize=(10, 9))
 
-    ax1.plot(comp_table.component.to_numpy(), comp_table['variance explained'].to_numpy(), 'k-', alpha = 0.5, linewidth=2, label='Variance')
+    ax1.plot(comptable.component.to_numpy(), comptable['variance explained'].to_numpy(), 'k-', alpha = 0.5, linewidth=2, label='Variance')
     ax1.set_ylabel('Variance Explained', fontsize = 15)
     ax2 = ax1.twinx()
 
-    ax2.plot(comp_table.component.to_numpy(), comp_table.kappa.to_numpy(), 'b-', linewidth=2, label='Kappa')
-    ax2.plot(comp_table.component.to_numpy(), comp_table.rho.to_numpy(), 'r-', linewidth=2, label='Rho')
+    ax2.plot(comptable.component.to_numpy(), comptable.kappa.to_numpy(), 'b-', linewidth=2, label='Kappa')
+    ax2.plot(comptable.component.to_numpy(), comptable.rho.to_numpy(), 'r-', linewidth=2, label='Rho')
     ax2.set_title('Kappa/Rho Metrics', fontsize = 28)
     ax1.set_xlabel('Component Number', fontsize = 15)
     ax2.set_ylabel('Metric Value', fontsize = 15)
