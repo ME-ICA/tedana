@@ -187,7 +187,7 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     Filename                  Content
     ======================    =================================================
     pcastate.pkl              Values from PCA results.
-    comp_table_pca.txt        PCA component table.
+    comp_table_pca.tsv        PCA component table.
     mepca_mix.1D              PCA mixing matrix.
     ======================    =================================================
     """
@@ -306,7 +306,7 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
         comptable['classification'] = 'accepted'
         comptable['rationale'] = ''
 
-    comptable.to_csv('comp_table_pca.txt', sep='\t', index=True,
+    comptable.to_csv('comp_table_pca.tsv', sep='\t', index=True,
                      index_label='component', float_format='%.6f')
 
     acc = comptable[comptable.classification == 'accepted'].index.values
