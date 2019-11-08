@@ -21,8 +21,8 @@ import pandas as pd
 from scipy import stats
 from nilearn.masking import compute_epi_mask
 
-from tedana import (decay, combine, decomposition, io, metrics, selection, utils,
-                    viz)
+from tedana import (decay, combine, decomposition, io, metrics, selection,
+                    utils, viz)
 import tedana.gscontrol as gsc
 from tedana.workflows.parser_utils import is_valid_file
 
@@ -126,31 +126,34 @@ def _get_parser():
                                 'delimited list'),
                           choices=['t1c', 'gsr'],
                           default=None)
-    optional.add_argument('--tedpca',
-                          dest='tedpca',
-                          help='Method with which to select components in TEDPCA',
-                          choices=['mle', 'kundu', 'kundu-stabilize'],
-                          default='mle')
+    optional.add_argument(
+        '--tedpca',
+        dest='tedpca',
+        help='Method with which to select components in TEDPCA',
+        choices=['mle', 'kundu', 'kundu-stabilize'],
+        default='mle')
     optional.add_argument('--out-dir',
                           dest='out_dir',
                           type=str,
                           help='Output directory.',
                           default='.')
-    optional.add_argument('--seed',
-                          dest='fixed_seed',
-                          type=int,
-                          help=('Value used for random initialization of ICA algorithm. '
-                                'Set to an integer value for reproducible ICA results. '
-                                'Set to -1 for varying results across ICA calls. '
-                                'Default=42.'),
-                          default=42)
-    optional.add_argument('--png',
-                          dest='png',
-                          action='store_true',
-                          help=('Creates a figures folder with static component '
-                                'maps, timecourse plots and other diagnostic '
-                                'images'),
-                          default=False)
+    optional.add_argument(
+        '--seed',
+        dest='fixed_seed',
+        type=int,
+        help=('Value used for random initialization of ICA algorithm. '
+              'Set to an integer value for reproducible ICA results. '
+              'Set to -1 for varying results across ICA calls. '
+              'Default=42.'),
+        default=42)
+    optional.add_argument(
+        '--png',
+        dest='png',
+        action='store_true',
+        help=('Creates a figures folder with static component '
+              'maps, timecourse plots and other diagnostic '
+              'images'),
+        default=False)
     optional.add_argument('--png-cmap',
                           dest='png_cmap',
                           type=str,
@@ -182,11 +185,11 @@ def _get_parser():
                           action='store',
                           choices=['loglin', 'curvefit'],
                           help='Desired Fitting Method '
-                               '"loglin" means that a linear model is fit '
-                               'to the log of the data, default '
-                               '"curvefit" means that a more computationally '
-                               'demanding monoexponential model is fit '
-                               'to the raw data',
+                          '"loglin" means that a linear model is fit '
+                          'to the log of the data, default '
+                          '"curvefit" means that a more computationally '
+                          'demanding monoexponential model is fit '
+                          'to the raw data',
                           default='loglin')
     optional.add_argument('--debug',
                           dest='debug',
@@ -204,12 +207,29 @@ def _get_parser():
     return parser
 
 
-def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
-                    tedort=False, gscontrol=None, tedpca='mle',
-                    source_tes=-1, combmode='t2s', verbose=False, stabilize=False,
-                    out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
-                    debug=False, quiet=False, png=False, png_cmap='coolwarm',
-                    low_mem=False, fittype='loglin'):
+def tedana_workflow(data,
+                    tes,
+                    mask=None,
+                    mixm=None,
+                    ctab=None,
+                    manacc=None,
+                    tedort=False,
+                    gscontrol=None,
+                    tedpca='mle',
+                    source_tes=-1,
+                    combmode='t2s',
+                    verbose=False,
+                    stabilize=False,
+                    out_dir='.',
+                    fixed_seed=42,
+                    maxit=500,
+                    maxrestart=10,
+                    debug=False,
+                    quiet=False,
+                    png=False,
+                    png_cmap='coolwarm',
+                    low_mem=False,
+                    fittype='loglin'):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -316,8 +336,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     # set logging format
     formatter = logging.Formatter(
-                '%(asctime)s\t%(name)-12s\t%(levelname)-8s\t%(message)s',
-                datefmt='%Y-%m-%dT%H:%M:%S')
+        '%(asctime)s\t%(name)-12s\t%(levelname)-8s\t%(message)s',
+        datefmt='%Y-%m-%dT%H:%M:%S')
 
     # set up logging file and open it for writing
     fh = logging.FileHandler(logname)
@@ -355,13 +375,14 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     # check if TR is 0
     img_t_r = ref_img.header.get_zooms()[-1]
     if img_t_r == 0 and png:
-        raise IOError('Dataset has a TR of 0. This indicates incorrect'
-                      ' header information. To correct this, we recommend'
-                      ' using this snippet:'
-                      '\n'
-                      'https://gist.github.com/jbteves/032c87aeb080dd8de8861cb151bff5d6'
-                      '\n'
-                      'to correct your TR to the value it should be.')
+        raise IOError(
+            'Dataset has a TR of 0. This indicates incorrect'
+            ' header information. To correct this, we recommend'
+            ' using this snippet:'
+            '\n'
+            'https://gist.github.com/jbteves/032c87aeb080dd8de8861cb151bff5d6'
+            '\n'
+            'to correct your TR to the value it should be.')
 
     if mixm is not None and op.isfile(mixm):
         mixm = op.abspath(mixm)
@@ -416,7 +437,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     os.chdir(out_dir)
 
     LGR.info('Computing T2* map')
-    t2s, s0, t2ss, s0s, t2sG, s0G = decay.fit_decay(catd, tes, mask, masksum, fittype)
+    t2s, s0, t2ss, s0s, t2sG, s0G = decay.fit_decay(catd, tes, mask, masksum,
+                                                    fittype)
     bp_str += (" A monoexponential model was fit to the data at each voxel "
                "using log-linear regression in order to estimate T2* and S0 "
                "maps. For each voxel, the value from the adaptive mask was "
@@ -425,7 +447,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     # set a hard cap for the T2* map
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
-    cap_t2s = stats.scoreatpercentile(t2s.flatten(), 99.5,
+    cap_t2s = stats.scoreatpercentile(t2s.flatten(),
+                                      99.5,
                                       interpolation_method='lower')
     LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
     t2s[t2s > cap_t2s * 10] = cap_t2s
@@ -442,12 +465,14 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     data_oc = combine.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
     if combmode == 't2s':
         cm_str = "'t2s' (Posse et al., 1999)"
-        refs += ["Posse, S., Wiese, S., Gembris, D., Mathiak, K., Kessler, "
-                 "C., Grosse‐Ruyken, M. L., ... & Kiselev, V. G. (1999). "
-                 "Enhancement of BOLD‐contrast sensitivity by single‐shot "
-                 "multi‐echo functional MR imaging. Magnetic Resonance in "
-                 "Medicine: An Official Journal of the International Society "
-                 "for Magnetic Resonance in Medicine, 42(1), 87-97."]
+        refs += [
+            "Posse, S., Wiese, S., Gembris, D., Mathiak, K., Kessler, "
+            "C., Grosse‐Ruyken, M. L., ... & Kiselev, V. G. (1999). "
+            "Enhancement of BOLD‐contrast sensitivity by single‐shot "
+            "multi‐echo functional MR imaging. Magnetic Resonance in "
+            "Medicine: An Official Journal of the International Society "
+            "for Magnetic Resonance in Medicine, 42(1), 87-97."
+        ]
 
     bp_str += (" Multi-echo data were then optimally combined using the {0} "
                "combination method.").format(cm_str)
@@ -460,37 +485,59 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     if mixm is None:
         # Identify and remove thermal noise from data
-        dd, n_components = decomposition.tedpca(catd, data_oc, combmode, mask,
-                                                t2s, t2sG, ref_img,
-                                                tes=tes, algorithm=tedpca,
+        dd, n_components = decomposition.tedpca(catd,
+                                                data_oc,
+                                                combmode,
+                                                mask,
+                                                t2s,
+                                                t2sG,
+                                                ref_img,
+                                                tes=tes,
+                                                algorithm=tedpca,
                                                 source_tes=source_tes,
-                                                kdaw=10., rdaw=1.,
+                                                kdaw=10.,
+                                                rdaw=1.,
                                                 out_dir=out_dir,
                                                 verbose=verbose,
                                                 low_mem=low_mem)
         if tedpca == 'mle':
             alg_str = "using MLE dimensionality estimation (Minka, 2001)"
-            refs += ["Minka, T. P. (2001). Automatic choice of dimensionality "
-                     "for PCA. In Advances in neural information processing "
-                     "systems (pp. 598-604)."]
+            refs += [
+                "Minka, T. P. (2001). Automatic choice of dimensionality "
+                "for PCA. In Advances in neural information processing "
+                "systems (pp. 598-604)."
+            ]
         elif tedpca == 'kundu':
             alg_str = ("followed by the Kundu component selection decision "
                        "tree (Kundu et al., 2013)")
-            refs += ["Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
-                     "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
-                     "(2013). Integrated strategy for improving functional "
-                     "connectivity mapping using multiecho fMRI. Proceedings "
-                     "of the National Academy of Sciences, 110(40), "
-                     "16187-16192."]
+            refs += [
+                "Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
+                "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
+                "(2013). Integrated strategy for improving functional "
+                "connectivity mapping using multiecho fMRI. Proceedings "
+                "of the National Academy of Sciences, 110(40), "
+                "16187-16192."
+            ]
         elif tedpca == 'kundu-stabilize':
             alg_str = ("followed by the 'stabilized' Kundu component "
                        "selection decision tree (Kundu et al., 2013)")
-            refs += ["Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
-                     "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
-                     "(2013). Integrated strategy for improving functional "
-                     "connectivity mapping using multiecho fMRI. Proceedings "
-                     "of the National Academy of Sciences, 110(40), "
-                     "16187-16192."]
+            refs += [
+                "Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
+                "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
+                "(2013). Integrated strategy for improving functional "
+                "connectivity mapping using multiecho fMRI. Proceedings "
+                "of the National Academy of Sciences, 110(40), "
+                "16187-16192."
+            ]
+        elif tedpca == 'gift':
+            alg_str = (
+                "Following model order estimation of the GIFT software.")
+            ref += [
+                "Li, Y. , Adalı, T. and Calhoun, V. D. (2007), Estimating "
+                "the number of independent components for functional "
+                "magnetic resonance imaging data. Hum. Brain Mapp., "
+                "28: 1251-1266. doi:10.1002/hbm.20359"
+            ]
 
         if source_tes == -1:
             dat_str = "the optimally combined data"
@@ -500,11 +547,11 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
             dat_str = "a z-concatenated subset of echoes from the input data"
 
         bp_str += (" Principal component analysis {0} was applied to "
-                   "{1} for dimensionality reduction.").format(alg_str,
-                                                               dat_str)
+                   "{1} for dimensionality reduction.").format(
+                       alg_str, dat_str)
 
-        mmix_orig = decomposition.tedica(dd, n_components, fixed_seed,
-                                         maxit, maxrestart)
+        mmix_orig = decomposition.tedica(dd, n_components, fixed_seed, maxit,
+                                         maxrestart)
         bp_str += (" Independent component analysis was then used to "
                    "decompose the dimensionally reduced dataset.")
 
@@ -518,9 +565,17 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # generated from dimensionally reduced data using full data (i.e., data
         # with thermal noise)
         comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                    catd, data_oc, mmix_orig, t2s, tes,
-                    ref_img, reindex=True, label='meica_', out_dir=out_dir,
-                    algorithm='kundu_v2', verbose=verbose)
+            catd,
+            data_oc,
+            mmix_orig,
+            t2s,
+            tes,
+            ref_img,
+            reindex=True,
+            label='meica_',
+            out_dir=out_dir,
+            algorithm='kundu_v2',
+            verbose=verbose)
         bp_str += (" A series of TE-dependence metrics were calculated for "
                    "each ICA component, including Kappa, Rho, and variance "
                    "explained.")
@@ -532,32 +587,44 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                    "BOLD (TE-dependent), non-BOLD (TE-independent), and "
                    "uncertain (low-variance) components using the Kundu "
                    "decision tree (v2.5; Kundu et al., 2013).")
-        refs += ["Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
-                 "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
-                 "(2013). Integrated strategy for improving functional "
-                 "connectivity mapping using multiecho fMRI. Proceedings "
-                 "of the National Academy of Sciences, 110(40), "
-                 "16187-16192."]
+        refs += [
+            "Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
+            "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
+            "(2013). Integrated strategy for improving functional "
+            "connectivity mapping using multiecho fMRI. Proceedings "
+            "of the National Academy of Sciences, 110(40), "
+            "16187-16192."
+        ]
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
         comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                    catd, data_oc, mmix_orig, t2s, tes,
-                    ref_img, label='meica_', out_dir=out_dir,
-                    algorithm='kundu_v2', verbose=verbose)
+            catd,
+            data_oc,
+            mmix_orig,
+            t2s,
+            tes,
+            ref_img,
+            label='meica_',
+            out_dir=out_dir,
+            algorithm='kundu_v2',
+            verbose=verbose)
         if ctab is None:
             comptable = metrics.kundu_metrics(comptable, metric_maps)
-            comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
+            comptable = selection.kundu_selection_v2(comptable, n_echos,
+                                                     n_vols)
             bp_str += (" Next, component selection was performed to identify "
                        "BOLD (TE-dependent), non-BOLD (TE-independent), and "
                        "uncertain (low-variance) components using the Kundu "
                        "decision tree (v2.5; Kundu et al., 2013).")
-            refs += ["Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
-                     "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
-                     "(2013). Integrated strategy for improving functional "
-                     "connectivity mapping using multiecho fMRI. Proceedings "
-                     "of the National Academy of Sciences, 110(40), "
-                     "16187-16192."]
+            refs += [
+                "Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
+                "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
+                "(2013). Integrated strategy for improving functional "
+                "connectivity mapping using multiecho fMRI. Proceedings "
+                "of the National Academy of Sciences, 110(40), "
+                "16187-16192."
+            ]
         else:
             comptable = pd.read_csv(ctab, sep='\t', index_col='component')
             comptable = selection.manual_selection(comptable, acc=manacc)
@@ -565,8 +632,11 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                        "BOLD (TE-dependent), non-BOLD (TE-independent), or "
                        "uncertain (low-variance).")
 
-    comptable.to_csv(op.join(out_dir, 'comp_table_ica.txt'), sep='\t',
-                     index=True, index_label='component', float_format='%.6f')
+    comptable.to_csv(op.join(out_dir, 'comp_table_ica.txt'),
+                     sep='\t',
+                     index=True,
+                     index_label='component',
+                     float_format='%.6f')
 
     if comptable[comptable.classification == 'accepted'].shape[0] == 0:
         LGR.warning('No BOLD components detected! Please check data and '
@@ -574,10 +644,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     mmix_orig = mmix.copy()
     if tedort:
-        acc_idx = comptable.loc[
-            ~comptable.classification.str.contains('rejected')].index.values
-        rej_idx = comptable.loc[
-            comptable.classification.str.contains('rejected')].index.values
+        acc_idx = comptable.loc[~comptable.classification.str.
+                                contains('rejected')].index.values
+        rej_idx = comptable.loc[comptable.classification.str.contains(
+            'rejected')].index.values
         acc_ts = mmix[:, acc_idx]
         rej_ts = mmix[:, rej_idx]
         betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
@@ -589,8 +659,12 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                    "orthogonalized with respect to accepted components' time "
                    "series.")
 
-    io.writeresults(data_oc, mask=mask, comptable=comptable, mmix=mmix,
-                    n_vols=n_vols, ref_img=ref_img)
+    io.writeresults(data_oc,
+                    mask=mask,
+                    comptable=comptable,
+                    mmix=mmix,
+                    n_vols=n_vols,
+                    ref_img=ref_img)
 
     if 't1c' in gscontrol:
         LGR.info('Performing T1c global signal regression to remove spatially '
@@ -609,8 +683,11 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         if not op.isdir(op.join(out_dir, 'figures')):
             os.mkdir(op.join(out_dir, 'figures'))
 
-        viz.write_comp_figs(data_oc, mask=mask, comptable=comptable,
-                            mmix=mmix_orig, ref_img=ref_img,
+        viz.write_comp_figs(data_oc,
+                            mask=mask,
+                            comptable=comptable,
+                            mmix=mmix_orig,
+                            ref_img=ref_img,
                             out_dir=op.join(out_dir, 'figures'),
                             png_cmap=png_cmap)
 
@@ -628,30 +705,34 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                "Varoquaux, 2011), scipy (Jones et al., 2001), pandas "
                "(McKinney, 2010), scikit-learn (Pedregosa et al., 2011), "
                "nilearn, and nibabel (Brett et al., 2019).")
-    refs += ["Van Der Walt, S., Colbert, S. C., & Varoquaux, G. (2011). The "
-             "NumPy array: a structure for efficient numerical computation. "
-             "Computing in Science & Engineering, 13(2), 22.",
-             "Jones E, Oliphant E, Peterson P, et al. SciPy: Open Source "
-             "Scientific Tools for Python, 2001-, http://www.scipy.org/",
-             "McKinney, W. (2010, June). Data structures for statistical "
-             "computing in python. In Proceedings of the 9th Python in "
-             "Science Conference (Vol. 445, pp. 51-56).",
-             "Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., "
-             "Thirion, B., Grisel, O., ... & Vanderplas, J. (2011). "
-             "Scikit-learn: Machine learning in Python. Journal of machine "
-             "learning research, 12(Oct), 2825-2830.",
-             "Brett, M., Markiewicz, C. J., Hanke, M., Côté, M.-A., "
-             "Cipollini, B., McCarthy, P., … freec84. (2019, May 28). "
-             "nipy/nibabel. Zenodo. http://doi.org/10.5281/zenodo.3233118"]
+    refs += [
+        "Van Der Walt, S., Colbert, S. C., & Varoquaux, G. (2011). The "
+        "NumPy array: a structure for efficient numerical computation. "
+        "Computing in Science & Engineering, 13(2), 22.",
+        "Jones E, Oliphant E, Peterson P, et al. SciPy: Open Source "
+        "Scientific Tools for Python, 2001-, http://www.scipy.org/",
+        "McKinney, W. (2010, June). Data structures for statistical "
+        "computing in python. In Proceedings of the 9th Python in "
+        "Science Conference (Vol. 445, pp. 51-56).",
+        "Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., "
+        "Thirion, B., Grisel, O., ... & Vanderplas, J. (2011). "
+        "Scikit-learn: Machine learning in Python. Journal of machine "
+        "learning research, 12(Oct), 2825-2830.",
+        "Brett, M., Markiewicz, C. J., Hanke, M., Côté, M.-A., "
+        "Cipollini, B., McCarthy, P., … freec84. (2019, May 28). "
+        "nipy/nibabel. Zenodo. http://doi.org/10.5281/zenodo.3233118"
+    ]
 
     bp_str += ("\n\nThis workflow also used the Dice similarity index "
                "(Dice, 1945; Sørensen, 1948).")
-    refs += ["Dice, L. R. (1945). Measures of the amount of ecologic "
-             "association between species. Ecology, 26(3), 297-302.",
-             "Sørensen, T. J. (1948). A method of establishing groups of "
-             "equal amplitude in plant sociology based on similarity of "
-             "species content and its application to analyses of the "
-             "vegetation on Danish commons. I kommission hos E. Munksgaard."]
+    refs += [
+        "Dice, L. R. (1945). Measures of the amount of ecologic "
+        "association between species. Ecology, 26(3), 297-302.",
+        "Sørensen, T. J. (1948). A method of establishing groups of "
+        "equal amplitude in plant sociology based on similarity of "
+        "species content and its application to analyses of the "
+        "vegetation on Danish commons. I kommission hos E. Munksgaard."
+    ]
 
     bp_str += '\n\nReferences\n\n'
     refs = sorted(list(set(refs)))

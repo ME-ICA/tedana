@@ -12,12 +12,12 @@ from tedana.decomposition._utils import eimask
 from tedana.stats import computefeats2
 from tedana.selection import kundu_tedpca
 from tedana.due import due, BibTeX
+from tedana.decomposition import run_gift_pca
 
 LGR = logging.getLogger(__name__)
 
 
-@due.dcite(BibTeX(
-    """
+@due.dcite(BibTeX("""
     @inproceedings{minka2001automatic,
       title={Automatic choice of dimensionality for PCA},
       author={Minka, Thomas P},
@@ -26,8 +26,8 @@ LGR = logging.getLogger(__name__)
       year={2001}
     }
     """),
-    description='Introduces method for choosing PCA dimensionality '
-                'automatically')
+           description='Introduces method for choosing PCA dimensionality '
+           'automatically')
 def run_mlepca(data):
     """
     Run Singular Value Decomposition (SVD) on input data,
@@ -84,9 +84,21 @@ def low_mem_pca(data):
     return u, s, v
 
 
-def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
-           ref_img, tes, algorithm='mle', source_tes=-1, kdaw=10., rdaw=1.,
-           out_dir='.', verbose=False, low_mem=False):
+def tedpca(data_cat,
+           data_oc,
+           combmode,
+           mask,
+           t2s,
+           t2sG,
+           ref_img,
+           tes,
+           algorithm='mle',
+           source_tes=-1,
+           kdaw=10.,
+           rdaw=1.,
+           out_dir='.',
+           verbose=False,
+           low_mem=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
     noise from multi-echo data.
@@ -205,16 +217,23 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
         LGR.info('Computing PCA of spatially concatenated multi-echo data')
         data = data_cat[mask, ...]
     else:
-        LGR.info('Computing PCA of echo #{0}'.format(','.join([str(ee) for ee in source_tes])))
-        data = np.stack([data_cat[mask, ee, :] for ee in source_tes - 1], axis=1)
+        LGR.info('Computing PCA of echo #{0}'.format(','.join(
+            [str(ee) for ee in source_tes])))
+        data = np.stack([data_cat[mask, ee, :] for ee in source_tes - 1],
+                        axis=1)
 
     eim = np.squeeze(eimask(data))
     data = np.squeeze(data[eim])
 
-    data_z = ((data.T - data.T.mean(axis=0)) / data.T.std(axis=0)).T  # var normalize ts
-    data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
+    data_z = ((data.T - data.T.mean(axis=0)) /
+              data.T.std(axis=0)).T  # var normalize ts
+    data_z = (data_z -
+              data_z.mean()) / data_z.std()  # var normalize everything
 
-    if algorithm == 'mle':
+    if algorithm in ['mdl', 'aic', 'kic']:
+        voxel_comp_weights, varex, varex_norm, comp_ts = run_gift_pca(
+            data_z, algorithm)
+    elif algorithm == 'mle':
         voxel_comp_weights, varex, varex_norm, comp_ts = run_mlepca(data_z)
     elif low_mem:
         voxel_comp_weights, varex, comp_ts = low_mem_pca(data_z)
@@ -238,10 +257,18 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
 
     # Normalize each component's time series
     vTmixN = stats.zscore(comp_ts, axis=0)
-    comptable, _, _, _ = metrics.dependence_metrics(
-                data_cat, data_oc, comp_ts, t2s, tes, ref_img,
-                reindex=False, mmixN=vTmixN, algorithm=None,
-                label='mepca_', out_dir=out_dir, verbose=verbose)
+    comptable, _, _, _ = metrics.dependence_metrics(data_cat,
+                                                    data_oc,
+                                                    comp_ts,
+                                                    t2s,
+                                                    tes,
+                                                    ref_img,
+                                                    reindex=False,
+                                                    mmixN=vTmixN,
+                                                    algorithm=None,
+                                                    label='mepca_',
+                                                    out_dir=out_dir,
+                                                    verbose=verbose)
 
     # varex_norm from PCA overrides varex_norm from dependence_metrics,
     # but we retain the original
@@ -255,31 +282,50 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     comp_maps = np.zeros((data_oc.shape[0], comp_ts.shape[1]))
     for i_comp in range(comp_ts.shape[1]):
         temp_comp_ts = comp_ts[:, i_comp][:, None]
-        comp_map = utils.unmask(computefeats2(data_oc, temp_comp_ts, mask), mask)
+        comp_map = utils.unmask(computefeats2(data_oc, temp_comp_ts, mask),
+                                mask)
         comp_maps[:, i_comp] = np.squeeze(comp_map)
     io.filewrite(comp_maps, 'mepca_OC_components.nii', ref_img)
 
     # Select components using decision tree
     if algorithm == 'kundu':
-        comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=False)
+        comptable = kundu_tedpca(comptable,
+                                 n_echos,
+                                 kdaw,
+                                 rdaw,
+                                 stabilize=False)
     elif algorithm == 'kundu-stabilize':
-        comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=True)
+        comptable = kundu_tedpca(comptable,
+                                 n_echos,
+                                 kdaw,
+                                 rdaw,
+                                 stabilize=True)
     elif algorithm == 'mle':
         LGR.info('Selected {0} components with MLE dimensionality '
                  'detection'.format(comptable.shape[0]))
         comptable['classification'] = 'accepted'
         comptable['rationale'] = ''
 
-    comptable.to_csv('comp_table_pca.txt', sep='\t', index=True,
-                     index_label='component', float_format='%.6f')
+    elif algorithm in ['mdl', 'aic', 'kic']:
+        LGR.info('Selected {0} components with {1}} dimensionality '
+                 'detection'.format(comptable.shape[0], algorithm))
+        comptable['classification'] = 'accepted'
+        comptable['rationale'] = ''
+
+    comptable.to_csv('comp_table_pca.txt',
+                     sep='\t',
+                     index=True,
+                     index_label='component',
+                     float_format='%.6f')
 
     acc = comptable[comptable.classification == 'accepted'].index.values
     n_components = acc.size
-    voxel_kept_comp_weighted = (voxel_comp_weights[:, acc] *
-                                varex[None, acc])
+    voxel_kept_comp_weighted = (voxel_comp_weights[:, acc] * varex[None, acc])
     kept_data = np.dot(voxel_kept_comp_weighted, comp_ts[:, acc].T)
 
-    kept_data = stats.zscore(kept_data, axis=1)  # variance normalize time series
-    kept_data = stats.zscore(kept_data, axis=None)  # variance normalize everything
+    kept_data = stats.zscore(kept_data,
+                             axis=1)  # variance normalize time series
+    kept_data = stats.zscore(kept_data,
+                             axis=None)  # variance normalize everything
 
     return kept_data, n_components
