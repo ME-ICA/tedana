@@ -63,7 +63,7 @@ for the participant.
 
 Can I combine multiband (simultaneous multislice) with multi-echo fMRI?
 ```````````````````````````````````````````````````````````````````````
-Yes, these techniques are completely seperate. 
+Yes, these techniques are complementary. 
 Mutliband fMRI leads to collecting multiple slices within a volume  simultaneouly, while multi-echo 
 fMRI is instead related to collecting multiple unique volumes. 
 These techniques can be combined to reduce the TR in a multi-echo sequence. 
