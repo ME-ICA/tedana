@@ -27,12 +27,14 @@ an optimal manner to take advantage of the signal
 in the earlier echoes (see `processing pipeline details`_).
 
 .. image:: /_static/physics_kundu_2017_multiple_echoes.jpg
+	
 Adapted from  `Kundu et al. (2017)`_.
 
 In order to classify the relationship between the signal and the echo time we can consider a 
 single voxel at two timepoints (x and y) and the measured signal measured at three different echo times - :math:`S(TE_n)`. 
 
 .. image:: /_static/physics_kundu_2017_TE_dependence.jpg
+	
 Adapted from  `Kundu et al. (2017)`_.
 
 For the left column, we are observing a change that we term :math:`{\Delta}{S_0}` - that is a change
