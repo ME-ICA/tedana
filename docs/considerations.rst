@@ -67,16 +67,19 @@ the ventral striatum them multi-echo fMRI may be beneficial.
 
 Consider the cost of added quality control
 ------------------------------------------
+The developers of ``tedana`` strongly support always examining data for quality concerns, whether
+or not multi-echo fMRI is used. 
 If someone wants a push-button
 way to use multi-echo data to improve data quality, that doesn't require as deep an inspection of every output,
 stick with using the weighted average. 
 The developers of tedana look forward to when tedana and other methods
 have sufficiently stable algorithms, which have been validated on a wide range of data sets, so that we can
 recommend the wide use of tedana.
-
-
+``tedana`` currently allows the use of a ``--png`` flag when called, in order to produce basic diagnostic images, 
+`see outputs`_ for more information on these outputs. 
 
 .. _t2smap: https://tedana.readthedocs.io/en/latest/usage.html#run-t2smap
+.. _see outputs: https://tedana.readthedocs.io/en/latest/outputs.html
 
 Acquisition Parameter Recommendations
 =====================================
@@ -87,10 +90,17 @@ fMRI sequences are also relevant.
 Choose sequence parameters that meet the priorities of a study with regards to spatial resolution,
 spatial coverage, sample rate, signal-to-noise ratio, signal drop-out, distortion, and artifacts.
 
-A minimum of 3 echoes is recommended for running TE-dependent denoising.
+A minimum of 3 echoes is required for running the current implementation fo TE-dependent denoising in
+``tedana``. 
 While there are successful studies that don’t follow this rule,
 it may be useful to have at least one echo that is earlier and one echo that is later than the
 TE one would use for single-echo T2* weighted fMRI.
+
+.. note::
+    This is in contrast to the **dual echo** denoising method which uses a very early (~5ms)
+    first echo in order to clean data. For more information on this method, see `Bright and Murphy`_ (2013).
+
+.. _Bright and Murphy: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3518782/
 
 More than 3 echoes may be useful, because that would allow for more accurate
 estimates of BOLD and non-BOLD weighted fluctuations, but more echoes have an
@@ -167,7 +177,7 @@ The sequence and documentation can be `found here`_. For details
 on obtaining a license follow `this link`_. 
 By default the number of contrasts is 1, 
 yielding a signal echo sequence.
- In order to collect multiple echoes, increase number of 
+In order to collect multiple echoes, increase number of 
 Contrasts on the **Sequence Tab, Part 1** on the MR console. 
 
 In addition, the Martinos Center at Harvard also has a MR sequence available, with the 

@@ -1,7 +1,8 @@
 The tedana pipeline
 ===================
 
-``tedana`` works by decomposing multi-echo BOLD data via PCA and ICA.
+``tedana`` works by decomposing multi-echo BOLD data via priniciple component analysis (PCA) 
+and independent component analyses (ICA).
 The resulting components are then analyzed to determine whether they are
 TE-dependent or -independent.
 TE-dependent components are classified as BOLD, while TE-independent components
@@ -78,6 +79,12 @@ In order to make it easier to fit the decay model to the data, ``tedana``
 transforms the data by default.
 The BOLD data are transformed as :math:`log(|S|+1)`, where :math:`S` is the BOLD signal.
 The echo times are also multiplied by -1.
+
+.. note::
+    It is now possible to do a nonlinear monoexponential fit to the orignal, untransformed 
+    data values by specifiying ``--fittype curvefit``. 
+    This method is slightly more computationally demanding but may obtain more
+    accurate fits. 
 
 .. image:: /_static/a04_echo_log_value_distributions.png
 
@@ -189,15 +196,17 @@ These components are subjected to component selection, the specifics of which
 vary according to algorithm.
 
 In the simplest approach, ``tedana`` uses Minka’s MLE to estimate the
-dimensionality of the data, which disregards low-variance components. (the `mle` option in for `--tedpca`).
+dimensionality of the data, which disregards low-variance components (the `mle` option in for `--tedpca`).
 
 A more complicated approach involves applying a decision tree (similar to the
 decision tree described in the TEDICA section below) to identify and
 discard PCA components which, in addition to not explaining much variance,
 are also not significantly TE-dependent (i.e., have low Kappa) or
 TE-independent (i.e., have low Rho). 
-These approaches can be accessed using 
-either the `kundu` or `kundu_stabilize` options for the `--tedpca` flag. 
+These approaches can be accessed using either the `kundu` or `kundu_stabilize` 
+options for the `--tedpca` flag. 
+For a more thorough explanation of this approach, consider the supplemental information 
+in `Kundu et al (2013)`_ 
 
 After component selection is performed, the retained components and their
 associated betas are used to reconstruct the optimally combined data, resulting
@@ -276,3 +285,4 @@ Currently, ``tedana`` implements GSR and T1c-GSR.
 .. _Poser et al., 2006: https://onlinelibrary.wiley.com/doi/full/10.1002/mrm.20900
 
 .. _physics section: https://tedana.readthedocs.io/en/latest/multi_echo.html
+.. _Kundu et al (2013): https://www.ncbi.nlm.nih.gov/pubmed/24038744
