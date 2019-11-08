@@ -53,14 +53,11 @@ the citation and visibility of software or methods, visit the `duecredit`_ githu
 Multi-echo fMRI
 ---------------
 
-Will I encounter participant heating limits more often with multi-echo fMRI?
-````````````````````````````````````````````````````````````````````````````
-One of the more important considerations in MR imaging is limits assocaited with the `specific absorbtion rate`_ (SAR). 
-This is related to how much radio frequency (RF) energy can be used in imaging over time, in order to avoid adding 
-to much heat to the participant. 
+Does multi-echo fMRI require more radio frequency pulses?
+`````````````````````````````````````````````````````````
 While multi-echo does lead to collecting more images during each TR (one per echo), there is still only a single
-radiofrequency pulse. 
-For this reason, there is no change in SAR for participants intrinsic to multi-echo fMRI. 
+radiofrequency pulse per TR. This means that there is no change in the `specific absorbtion rate`_ (SAR) limits 
+for the participant.  
 
 .. _specific absorbtion rate: https://www.mr-tip.com/serv1.php?type=db1&dbs=Specific%20Absorption%20Rate
 
