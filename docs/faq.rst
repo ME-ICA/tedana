@@ -70,5 +70,3 @@ Yes, these techniques are completely seperate.
 Mutliband fMRI leads to collecting multiple slices within a volume  simultaneouly, while multi-echo 
 fMRI is instead related to collecting multiple unique volumes. 
 These techniques can be combined to reduce the TR in a multi-echo sequence. 
-
-
