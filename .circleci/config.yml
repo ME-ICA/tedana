@@ -113,20 +113,20 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py36-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
       - run:
           name: Generate environment
           command: |
             apt-get install -y make
-            if [ ! -d /opt/conda/envs/tedana_py36 ]; then
-              conda create -yq -n tedana_py36 python=3.6
-              source activate tedana_py36
+            if [ ! -d /opt/conda/envs/tedana_py37 ]; then
+              conda create -yq -n tedana_py37 python=3.6
+              source activate tedana_py37
               pip install -r dev_requirements.txt
             fi
       - run:
           name: Style check
           command: |
-            source activate tedana_py36
+            source activate tedana_py37
             make lint
 
   integration:
@@ -136,21 +136,21 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py36-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
       - run:
           name: Generate environment
           command: |
             apt-get install -y make
-            if [ ! -d /opt/conda/envs/tedana_py36 ]; then
-              conda create -yq -n tedana_py36 python=3.6
-              source activate tedana_py36
+            if [ ! -d /opt/conda/envs/tedana_py37 ]; then
+              conda create -yq -n tedana_py37 python=3.6
+              source activate tedana_py37
               pip install -r dev_requirements.txt
             fi
       - run:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
-            source activate tedana_py36
+            source activate tedana_py37
             make integration
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.integration
@@ -170,12 +170,12 @@ jobs:
           at: /tmp
       - checkout
       - restore_cache:
-          key: conda-py36-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
       - run:
           name: Merge coverage files
           command: |
             apt-get install -y curl
-            source activate tedana_py36
+            source activate tedana_py37
             cd /tmp/src/coverage/
             coverage combine
             coverage xml
