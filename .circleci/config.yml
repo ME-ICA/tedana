@@ -25,11 +25,6 @@ jobs:
               pip install -r dev_requirements.txt
             fi
       - run:
-          name: Style check
-          command: |
-            source activate tedana_py35
-            make lint
-      - run:
           name: Running unit tests
           command: |
             source activate tedana_py35
@@ -63,11 +58,6 @@ jobs:
               pip install -r dev_requirements.txt
             fi
       - run:
-          name: Style check
-          command: |
-            source activate tedana_py36
-            make lint
-      - run:
           name: Running unit tests
           command: |
             source activate tedana_py36
@@ -82,7 +72,6 @@ jobs:
           root: /tmp
           paths:
               - src/coverage/.coverage.py36
-
 
   unittest_37:
     docker:
@@ -102,11 +91,6 @@ jobs:
               pip install -r dev_requirements.txt
             fi
       - run:
-          name: Style check
-          command: |
-            source activate tedana_py37
-            make lint
-      - run:
           name: Running unit tests
           command: |
             source activate tedana_py37
@@ -121,6 +105,29 @@ jobs:
           root: /tmp
           paths:
               - src/coverage/.coverage.py37
+
+  style_check:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py36-v1-{{ checksum "dev_requirements.txt" }}
+      - run:
+          name: Generate environment
+          command: |
+            apt-get install -y make
+            if [ ! -d /opt/conda/envs/tedana_py36 ]; then
+              conda create -yq -n tedana_py36 python=3.6
+              source activate tedana_py36
+              pip install -r dev_requirements.txt
+            fi
+      - run:
+          name: Style check
+          command: |
+            source activate tedana_py36
+            make lint
 
   integration:
     docker:
@@ -172,6 +179,8 @@ jobs:
             cd /tmp/src/coverage/
             coverage combine
             coverage xml
+      - store_artifacts:
+          path: /tmp/src/coverage
       - codecov/upload:
           file: /tmp/src/coverage/coverage.xml
 
@@ -182,6 +191,7 @@ workflows:
       - unittest_35
       - unittest_36
       - unittest_37
+      - style_check
       - integration
       - merge_coverage:
           requires:
