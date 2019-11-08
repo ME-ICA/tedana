@@ -132,8 +132,8 @@ Journal articles
 * | :ref:`spreadsheet of publications` catalogues papers using multi-echo fMRI,
     with information about acquisition parameters.
 * | `Multi-echo acquisition`_
-  | Posse, NeuroImage 2012
-  | Includes an historical overview of multi-echo acquisition and research
+  |  Posse, NeuroImage 2012
+  |  Includes an historical overview of multi-echo acquisition and research
 * | `Multi-Echo fMRI A Review of Applications in fMRI Denoising and Analysis of BOLD Signals`_
   |  Kundu et al, NeuroImage 2017
   |  A review of multi-echo denoising with a focus on the MEICA algorithm
