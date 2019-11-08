@@ -7,6 +7,8 @@ import numpy as np
 from scipy import stats
 
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 
 def eimask(dd, ees=None):
