@@ -435,8 +435,8 @@ def tedana_workflow(data, tes, mask=None, out_dir='.',
     if t2smap is not None and op.isfile(t2smap):
         t2smap = op.abspath(t2smap)
         # Allow users to re-run on same folder
-        if t2smap != op.join(out_dir, 't2sv.nii'):
-            shutil.copyfile(t2smap, op.join(out_dir, 't2sv.nii'))
+        if t2smap != op.join(out_dir, 't2sv.nii.gz'):
+            shutil.copyfile(t2smap, op.join(out_dir, 't2sv.nii.gz'))
             shutil.copyfile(t2smap, op.join(out_dir, op.basename(t2smap)))
     elif t2smap is not None:
         raise IOError('Argument "t2smap" must be an existing file.')
@@ -452,7 +452,7 @@ def tedana_workflow(data, tes, mask=None, out_dir='.',
         t2sG = t2s.copy()
         mask = (t2s != 0).astype(int)
     elif t2smap and mask:
-        LGR.info('Using user-defined mask and T2* map to generate mask')
+        LGR.info('Combining user-defined mask and T2* map to generate mask')
         t2s = utils.load_image(t2smap)
         t2sG = t2s.copy()
         mask = utils.load_image(mask)
@@ -468,7 +468,7 @@ def tedana_workflow(data, tes, mask=None, out_dir='.',
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
 
     if verbose:
-        io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
+        io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii.gz'), ref_img)
 
     os.chdir(out_dir)
 
@@ -482,14 +482,14 @@ def tedana_workflow(data, tes, mask=None, out_dir='.',
                                           interpolation_method='lower')
         LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
         t2s[t2s > cap_t2s * 10] = cap_t2s
-        io.filewrite(t2s, op.join(out_dir, 't2sv.nii'), ref_img)
-        io.filewrite(s0, op.join(out_dir, 's0v.nii'), ref_img)
+        io.filewrite(t2s, op.join(out_dir, 't2sv.nii.gz'), ref_img)
+        io.filewrite(s0, op.join(out_dir, 's0v.nii.gz'), ref_img)
 
         if verbose:
-            io.filewrite(t2ss, op.join(out_dir, 't2ss.nii'), ref_img)
-            io.filewrite(s0s, op.join(out_dir, 's0vs.nii'), ref_img)
-            io.filewrite(t2sG, op.join(out_dir, 't2svG.nii'), ref_img)
-            io.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
+            io.filewrite(t2ss, op.join(out_dir, 't2ss.nii.gz'), ref_img)
+            io.filewrite(s0s, op.join(out_dir, 's0vs.nii.gz'), ref_img)
+            io.filewrite(t2sG, op.join(out_dir, 't2svG.nii.gz'), ref_img)
+            io.filewrite(s0G, op.join(out_dir, 's0vG.nii.gz'), ref_img)
 
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
@@ -513,7 +513,7 @@ def tedana_workflow(data, tes, mask=None, out_dir='.',
 
         if verbose and (source_tes == -1):
             io.filewrite(utils.unmask(dd, mask),
-                         op.join(out_dir, 'ts_OC_whitened.nii'), ref_img)
+                         op.join(out_dir, 'ts_OC_whitened.nii.gz'), ref_img)
 
         LGR.info('Making second component selection guess from ICA results')
         # Estimate betas and compute selection metrics for mixing matrix
