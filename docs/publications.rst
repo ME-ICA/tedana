@@ -4,7 +4,8 @@ ME-fMRI Parameters & Publications
 =================================
 
 The following page highlights a selection of parameters collected from published papers that have
-used multi-echo fMRI. The subsequent spreadsheet is an on-going effort to track all of these publication. 
+used multi-echo fMRI. 
+The subsequent spreadsheet is an on-going effort to track all of these publication. 
 This is a volunteer led effort so, if you know of a excluded publication, whether or not it is yours, 
 please add it.
 

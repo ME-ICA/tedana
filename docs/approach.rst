@@ -62,11 +62,11 @@ value for that voxel in the adaptive mask.
 Monoexponential decay model fit
 ```````````````````````````````
 The next step is to fit a monoexponential decay model to the data in order to
-estimate voxel-wise :math:`T_{2}^*` and :math:`S_0`. :math:`S_0` corresponds
-to the total signal in each voxel before decay and can reflect coil sensivity. 
+estimate voxel-wise :math:`T_{2}^*` and :math:`S_0`. 
+:math:`S_0` corresponds to the total signal in each voxel before decay and can reflect coil sensivity. 
 :math:`T_{2}^*` corresponds to the rate at which a voxel decays over time, which
-is related to signal dropout and BOLD sensitivity. Estimates of the parameters are 
-saved as **t2sv.nii.gz** and **s0v.nii.gz**. 
+is related to signal dropout and BOLD sensitivity. 
+Estimates of the parameters are saved as **t2sv.nii.gz** and **s0v.nii.gz**. 
 
 While :math:`T_{2}^*` and :math:`S_0` in fact fluctuate over time, estimating
 them on a volume-by-volume basis with only a small number of echoes is not
@@ -141,7 +141,8 @@ between the distributions for other echoes.
 .. image:: /_static/a09_optimal_combination_value_distributions.png
 
 The time series for the optimally combined data also looks like a combination
-of the other echoes (which it is). This optimally combined data is written out as **ts_OC.nii.gz**
+of the other echoes (which it is). 
+This optimally combined data is written out as **ts_OC.nii.gz**
 
 .. image:: /_static/a10_optimal_combination_timeseries.png
 
@@ -158,13 +159,18 @@ of the other echoes (which it is). This optimally combined data is written out a
 
 Denoising
 `````````
-The next step is an attempt to remove noise from the data. This process can be 
+The next step is an attempt to remove noise from the data. 
+This process can be 
 broadly seperated into three steps: **decomposition, metric calculation** and 
-**component selection**. Decomposition reduces the dimensionality of the 
-optimally combined data using PCA and then an ICA. Metrics which highlights the
-TE-dependence or indepence are derived from these components. Component selection 
+**component selection**. 
+Decomposition reduces the dimensionality of the 
+optimally combined data using PCA and then an ICA. 
+Metrics which highlights the
+TE-dependence or indepence are derived from these components. 
+Component selection 
 uses these metrics in order to identify components that should be kept in the data
-or discarded. Unwanted components are then removed from the optimally combined data 
+or discarded. 
+Unwanted components are then removed from the optimally combined data 
 to produce the denoised data output. 
 
 TEDPCA
@@ -189,7 +195,8 @@ A more complicated approach involves applying a decision tree (similar to the
 decision tree described in the TEDICA section below) to identify and
 discard PCA components which, in addition to not explaining much variance,
 are also not significantly TE-dependent (i.e., have low Kappa) or
-TE-independent (i.e., have low Rho). These approaches can be accessed using 
+TE-independent (i.e., have low Rho). 
+These approaches can be accessed using 
 either the `kundu` or `kundu_stabilize` options for the `--tedpca` flag. 
 
 After component selection is performed, the retained components and their
@@ -203,15 +210,18 @@ TEDICA
 Next, ``tedana`` applies TE-dependent independent components analysis (ICA) in
 order to identify and remove TE-independent (i.e., non-BOLD noise) components.
 The dimensionally reduced optimally combined data are first subjected to ICA in
-order to fit a mixing matrix to the whitened data. This generates a number if 
+order to fit a mixing matrix to the whitened data. 
+This generates a number if 
 independent timeseries (saved as **meica_mix.1D**), as well as beta maps which show 
 the spatially loading of these components on the brain (**betas_OC.nii.gz**). 
 
 .. image:: /_static/a13_ica_component_timeseries.png
 
 Linear regression is used to fit the component time series to each voxel in each
-echo from the original, echo-specific data. This results in echo- and voxel-specific 
-betas for each of the components.The beta values from the linear regression 
+echo from the original, echo-specific data. 
+This results in echo- and voxel-specific 
+betas for each of the components.
+The beta values from the linear regression 
 can be used to determine how the fluctutations (in each component timeseries) change 
 across the echo times. 
 
@@ -232,7 +242,8 @@ The grey lines show how beta values (Parameter Estimates) change over time. Refe
 
 A decision tree is applied to :math:`\kappa`, :math:`\rho`, and other metrics in order to
 classify ICA components as TE-dependent (BOLD signal), TE-independent
-(non-BOLD noise), or neither (to be ignored). These classifications are saved in 
+(non-BOLD noise), or neither (to be ignored). 
+These classifications are saved in 
 `comp_table_ica.txt`.
 The actual decision tree is dependent on the component selection algorithm employed.
 ``tedana`` includes two options: `kundu_v2_5` (which uses hardcoded thresholds
