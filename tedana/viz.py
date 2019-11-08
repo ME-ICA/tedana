@@ -244,6 +244,38 @@ def write_kappa_scatter(comptable, out_dir):
 
     plt.close()
 
+    
+def write_kappa_scree(comptable, out_dir):
+    """
+    Creates a scree plot sorted by kappa, showing the values of the kappa and
+    rho metrics as wella s variance explained.
+
+    Parameters
+    ----------
+    comptable : (C x X) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component, with a column for
+        each metric. Requires at least four columns: "classification",
+        "kappa", "rho", and "variance explained".
+    out_dir : :obj:`str`
+        Figures folder within output directory
+
+    """
+
+    fig, ax1 = plt.subplots(figsize=(10, 9))
+
+    ax1.plot(comp_table.component.to_numpy(), comp_table['variance explained'].to_numpy(), 'k-', alpha = 0.5, linewidth=2, label='Variance')
+    ax1.set_ylabel('Variance Explained', fontsize = 15)
+    ax2 = ax1.twinx()
+
+    ax2.plot(comp_table.component.to_numpy(), comp_table.kappa.to_numpy(), 'b-', linewidth=2, label='Kappa')
+    ax2.plot(comp_table.component.to_numpy(), comp_table.rho.to_numpy(), 'r-', linewidth=2, label='Rho')
+    ax2.set_title('Kappa/Rho Metrics', fontsize = 28)
+    ax1.set_xlabel('Component Number', fontsize = 15)
+    ax2.set_ylabel('Metric Value', fontsize = 15)
+    fig.legend(loc='upper right', bbox_to_anchor=(0.82, 0.78))
+    screefig_title = os.path.join(out_dir, 'Kappa_Rho_Scree_plot.png')
+    plt.savefig(screefig_title)
+
 
 def write_summary_fig(comptable, out_dir):
     """
