@@ -197,7 +197,7 @@ def _get_parser():
                           action='store_true',
                           help=('Logs in the terminal will have increased '
                                 'verbosity, and will also be written into '
-                                'a .txt file in the output directory.'),
+                                'a .tsv file in the output directory.'),
                           default=False)
     optional.add_argument('--quiet',
                           dest='quiet',
@@ -315,7 +315,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     # create logfile name
     basename = 'tedana_'
-    extension = 'txt'
+    extension = 'tsv'
     isotime = datetime.datetime.now().replace(microsecond=0).isoformat()
     logname = op.join(out_dir, (basename + isotime + '.' + extension))
 
@@ -366,6 +366,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     # coerce data to samples x echos x time array
     if isinstance(data, str):
+        if not op.exists(data):
+            raise ValueError('Zcat file {} does not exist'.format(data))
         data = [data]
 
     LGR.info('Loading input data: {}'.format([f for f in data]))
@@ -401,8 +403,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if ctab is not None and op.isfile(ctab):
         ctab = op.abspath(ctab)
         # Allow users to re-run on same folder
-        if ctab != op.join(out_dir, 'comp_table_ica.txt'):
-            shutil.copyfile(ctab, op.join(out_dir, 'comp_table_ica.txt'))
+        if ctab != op.join(out_dir, 'comp_table_ica.tsv'):
+            shutil.copyfile(ctab, op.join(out_dir, 'comp_table_ica.tsv'))
             shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
@@ -507,7 +509,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
             comptable = pd.read_csv(ctab, sep='\t', index_col='component')
             comptable = selection.manual_selection(comptable, acc=manacc)
 
-    comptable.to_csv(op.join(out_dir, 'comp_table_ica.txt'), sep='\t',
+    comptable.to_csv(op.join(out_dir, 'comp_table_ica.tsv'), sep='\t',
                      index=True, index_label='component', float_format='%.6f')
 
     if comptable[comptable.classification == 'accepted'].shape[0] == 0:

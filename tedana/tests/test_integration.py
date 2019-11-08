@@ -36,7 +36,7 @@ def check_integration_outputs(fname, outpath):
     # Checks for log file
     log_regex = ('^tedana_'
                  '[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:'
-                 '[0-9]{2}:[0-9]{2}.txt$')
+                 '[0-9]{2}:[0-9]{2}.tsv$')
     logfiles = [out for out in existing if re.match(log_regex, out)]
     assert len(logfiles) == 1
 
@@ -81,8 +81,11 @@ def test_integration_five_echo(skip_integration):
     # download data and run the test
     download_test_data('https://osf.io/9c42e/download',
                        os.path.dirname(out_dir))
+    prepend = '/tmp/data/five-echo/p06.SBJ01_S09_Task11_e'
+    suffix = '.sm.nii.gz'
+    datalist = [prepend + str(i+1) + suffix for i in range(5)]
     tedana_workflow(
-        data='/tmp/data/five-echo/p06.SBJ01_S09_Task11_e[1,2,3,4,5].sm.nii.gz',
+        data=datalist,
         tes=[15.4, 29.7, 44.0, 58.3, 72.6],
         out_dir=out_dir,
         debug=True, verbose=True)

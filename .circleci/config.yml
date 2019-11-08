@@ -7,6 +7,27 @@ orbs:
   codecov: codecov/codecov@1.0.5
 jobs:
 
+  makeenv_37:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+      - run:
+          name: Generate environment
+          command: |
+            if [ ! -d /opt/conda/envs/tedana_py37 ]; then
+              conda create -yq -n tedana_py37 python=3.7
+              source activate tedana_py37
+              pip install -r dev_requirements.txt
+            fi
+      - save_cache:
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+          paths:
+              - /opt/conda/envs/tedana_py37
+
   unittest_35:
     docker:
       - image: continuumio/miniconda3
@@ -18,7 +39,7 @@ jobs:
       - run:
           name: Generate environment
           command: |
-            apt-get install -y make
+            apt-get install -yqq make
             if [ ! -d /opt/conda/envs/tedana_py35 ]; then
               conda create -yq -n tedana_py35 python=3.5
               source activate tedana_py35
@@ -51,7 +72,7 @@ jobs:
       - run:
           name: Generate environment
           command: |
-            apt-get install -y make
+            apt-get install -yqq make
             if [ ! -d /opt/conda/envs/tedana_py36 ]; then
               conda create -yq -n tedana_py36 python=3.6
               source activate tedana_py36
@@ -82,25 +103,13 @@ jobs:
       - restore_cache:
           key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
       - run:
-          name: Generate environment
-          command: |
-            apt-get install -y make
-            if [ ! -d /opt/conda/envs/tedana_py37 ]; then
-              conda create -yq -n tedana_py37 python=3.7
-              source activate tedana_py37
-              pip install -r dev_requirements.txt
-            fi
-      - run:
           name: Running unit tests
           command: |
-            source activate tedana_py37
+            apt-get install -y make
+            source activate tedana_py37  # depends on makeenv_37
             make unittest
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py37
-      - save_cache:
-          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
-          paths:
-              - /opt/conda/envs/tedana_py37
       - persist_to_workspace:
           root: /tmp
           paths:
@@ -115,19 +124,30 @@ jobs:
       - restore_cache:
           key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
       - run:
-          name: Generate environment
-          command: |
-            apt-get install -y make
-            if [ ! -d /opt/conda/envs/tedana_py37 ]; then
-              conda create -yq -n tedana_py37 python=3.6
-              source activate tedana_py37
-              pip install -r dev_requirements.txt
-            fi
-      - run:
           name: Style check
           command: |
-            source activate tedana_py37
+            apt-get install -yqq make
+            source activate tedana_py37  # depends on makeenv37
             make lint
+
+  build_docs:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+      - run:
+          name: Build docs
+          command: |
+            apt-get install -yqq make
+            source activate tedana_py37   # depends on makeenv37
+            cd docs && make html doctest
+            mkdir /tmp/docs
+            mv /tmp/src/tedana/docs/_build/* /tmp/docs/
+      - store_artifacts:
+          path: /tmp/docs
 
   integration:
     docker:
@@ -138,19 +158,11 @@ jobs:
       - restore_cache:
           key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
       - run:
-          name: Generate environment
-          command: |
-            apt-get install -y make
-            if [ ! -d /opt/conda/envs/tedana_py37 ]; then
-              conda create -yq -n tedana_py37 python=3.6
-              source activate tedana_py37
-              pip install -r dev_requirements.txt
-            fi
-      - run:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
-            source activate tedana_py37
+            apt-get install -yqq make
+            source activate tedana_py37  # depends on makeenv_37
             make integration
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.integration
@@ -174,8 +186,8 @@ jobs:
       - run:
           name: Merge coverage files
           command: |
-            apt-get install -y curl
-            source activate tedana_py37
+            apt-get install -yqq curl
+            source activate tedana_py37  # depends on makeenv37
             cd /tmp/src/coverage/
             coverage combine
             coverage xml
@@ -188,11 +200,21 @@ workflows:
   version: 2.1
   build_test:
     jobs:
+      - makeenv_37
       - unittest_35
       - unittest_36
-      - unittest_37
-      - style_check
-      - integration
+      - unittest_37:
+          requires:
+            - makeenv_37
+      - style_check:
+          requires:
+            - makeenv_37
+      - integration:
+          requires:
+            - makeenv_37
+      - build_docs:
+          requires:
+            - makeenv_37
       - merge_coverage:
           requires:
             - unittest_35

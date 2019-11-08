@@ -1,6 +1,10 @@
 -r requirements.txt
 sphinx
+sphinx-argparse
+sphinx_rtd_theme
 coverage
 flake8>=3.7
+numpydoc
 pytest
 pytest-cov
+requests
