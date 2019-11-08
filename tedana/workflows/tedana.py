@@ -366,6 +366,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     # coerce data to samples x echos x time array
     if isinstance(data, str):
+        if not op.exists(data):
+            raise ValueError('Zcat file {} does not exist'.format(data))
         data = [data]
 
     LGR.info('Loading input data: {}'.format([f for f in data]))
