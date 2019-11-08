@@ -68,15 +68,11 @@ the ventral striatum them multi-echo fMRI may be beneficial.
 Consider the cost of added quality control
 ------------------------------------------
 The developers of ``tedana`` strongly support always examining data for quality concerns, whether
-or not multi-echo fMRI is used. 
-If someone wants a push-button
-way to use multi-echo data to improve data quality, that doesn't require as deep an inspection of every output,
-stick with using the weighted average. 
-The developers of tedana look forward to when tedana and other methods
-have sufficiently stable algorithms, which have been validated on a wide range of data sets, so that we can
-recommend the wide use of tedana.
-``tedana`` currently produces basic diagnostic images by default, 
-`see outputs`_ for more information on these outputs. 
+or not multi-echo fMRI is used.
+Multi-echo data and denoising are no exception. 
+For this purpose, ``tedana`` currently produces basic diagnostic images by default, which can be
+inspected in order to determine the quality of denoising. 
+`See outputs`_ for more information on these outputs. 
 
 .. _t2smap: https://tedana.readthedocs.io/en/latest/usage.html#run-t2smap
 .. _see outputs: https://tedana.readthedocs.io/en/latest/outputs.html
