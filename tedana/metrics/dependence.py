@@ -37,7 +37,7 @@ def calculate_weights(data_optcom, mixing_z):
     return weights
 
 
-def determine_signs(weights):
+def determine_signs(weights, axis=0):
     """
     Determine component-wise optimal signs using voxel-wise parameter estimates.
 
@@ -54,7 +54,7 @@ def determine_signs(weights):
         mixing matrix's component time series.
     """
     # compute skews to determine signs based on unnormalized weights,
-    signs = stats.skew(weights, axis=0)
+    signs = stats.skew(weights, axis=axis)
     signs /= np.abs(signs)
     return signs
 
@@ -138,6 +138,11 @@ def generate_decision_table_score(kappa, dice_FT2, signal_minus_noise_t,
         len(kappa) - stats.rankdata(countsigFT2)]).T
     d_table_score = d_table_rank.mean(axis=1)
     return d_table_score
+
+
+def flip_components(*args, signs):
+    # correct mixing & weights signs based on spatial distribution tails
+    return [arg * signs for arg in args]
 
 
 def apply_sort(*args, sort_idx, axis=0):
@@ -373,31 +378,35 @@ def generate_metrics(comptable, data_cat, data_optcom, mixing, mask, tes, ref_im
 
     mixing = mixing.copy()
 
+    # Metric maps
     weights = calculate_weights(data_optcom, mixing_z)
-    signs = determine_signs(weights)
-    # correct mixing & weights signs based on spatial distribution tails
-    weights *= signs
-    mixing *= signs
+    signs = determine_signs(weights, axis=0)
+    weights, mixing = flip_components(weights, mixing, signs=signs)
     tsoc_B = calculate_betas(data_optcom, mixing)
     PSC = calculate_psc(data_optcom, tsoc_B)
     comptable = pd.DataFrame(index=np.arange(n_components, dtype=int))
 
-    if 'variance explained' in metrics:
-        comptable['variance explained'] = calculate_varex(tsoc_B)
-
-    if 'normalized variance explained' in metrics:
-        comptable['normalized variance explained'] = calculate_varex_norm(weights)
     # compute betas and means over TEs for TE-dependence analysis
     Z_maps = calculate_z_maps(weights)
     F_T2_maps, F_S0_maps = calculate_f_maps(mixing, data_cat, tes, Z_maps)
-    if any([v in metrics for v in ['kappa', 'rho']]):
-        comptable['kappa'], comptable['rho'] = calculate_dependence_metrics(
-            F_T2_maps, F_S0_maps, Z_maps)
 
     (Z_clmaps, F_T2_clmaps, F_S0_clmaps,
      Br_T2_clmaps, Br_S0_clmaps) = spatial_cluster(
         F_T2_maps, F_S0_maps, Z_maps, tsoc_B, mask, n_echos)
 
+    # Dependence metrics
+    if any([v in metrics for v in ['kappa', 'rho']]):
+        comptable['kappa'], comptable['rho'] = calculate_dependence_metrics(
+            F_T2_maps, F_S0_maps, Z_maps)
+
+    # Generic metrics
+    if 'variance explained' in metrics:
+        comptable['variance explained'] = calculate_varex(tsoc_B)
+
+    if 'normalized variance explained' in metrics:
+        comptable['normalized variance explained'] = calculate_varex_norm(weights)
+
+    # Spatial metrics
     if 'dice_FT2' in metrics:
         comptable['dice_FT2'] = compute_dice(Br_T2_clmaps, F_T2_clmaps)
 
