@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source ${DIRECTORY}/get_data.sh
-
 cprint() {
     #
     # Prints all supplied arguments as a bold, green string
@@ -22,28 +19,23 @@ cprint() {
 
 run_integration_tests() {
     #
-    # Runs tedana integration tests; passes any parameters to py.test
+    # Runs tedana integration tests
     #
 
-    download_data
     cprint "RUNNING INTEGRATION TESTS"
-    source activate tedana_py36
-    py.test "$@" --cov-append --cov-report term-missing --cov=tedana tedana/tests/test_integration.py
+    make integration
+    cprint "INTEGRATION TESTS PASSED !"
 }
 
 
-run_unit_test() {
+run_unit_tests() {
     #
-    # Runs tedana unit tests for provided Python environment
-    #
-    # Required argments:
-    #   pyenv           name of python environment to use for testing. should
-    #                   be one of [tedana_py35, tedana_py36, tedana_py37]
+    # Runs tedana unit tests
     #
 
-    cprint "RUNNING UNIT TESTS FOR PYTHON ENVIRONMENT: ${1}"
-    source activate "${1}"
-    py.test --skipintegration --cov-append --cov-report term-missing --cov=tedana tedana
+    cprint "RUNNING UNIT TESTS"
+    make unittest
+    cprint "UNIT TESTS PASSED !"
 }
 
 
@@ -52,22 +44,20 @@ run_lint_tests() {
     # Lints the tedana codebase
     #
 
-    cprint "RUNNING FLAKE8 ON TEDANA DIRECTORY"
-    source activate tedana_py36
-    flake8 tedana
+    cprint "RUNNING FLAKE8 TO LINT CODEBASE"
+    make lint
+    cprint "CODEBASE LINTED SUCCESSFULLY !"
 }
 
 
 run_all_tests() {
     #
-    # Runs tedana test suite excluding five-echo test by default
+    # Runs tedana test suite
     #
 
     run_lint_tests
-    for pyenv in tedana_py3{5,6,7}; do
-        run_unit_test "${pyenv}"
-    done
+    run_unit_tests
     run_integration_tests
 
-    cprint "FINISHED RUNNING ALL TESTS! GREAT SUCCESS"
+    cprint "FINISHED RUNNING ALL TESTS -- GREAT SUCCESS !"
 }

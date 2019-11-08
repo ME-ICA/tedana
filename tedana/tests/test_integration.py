@@ -2,11 +2,15 @@
 Integration tests for "real" data
 """
 
+from io import BytesIO
+from gzip import GzipFile
 import os
 from pkg_resources import resource_filename
 import re
+import tarfile
 
 import pytest
+import requests
 
 from tedana.workflows import tedana_workflow
 
@@ -35,6 +39,18 @@ def check_outputs(fname, outpath):
                  '[0-9]{2}:[0-9]{2}.txt$')
     logfiles = [out for out in os.listdir(outpath) if re.match(log_regex, out)]
     assert len(logfiles) == 1
+    os.remove(logfiles[0])  # remove this so multiple runs don't clash
+
+
+def download_test_data(osf, outpath):
+    """ Downloads tar.gz data stored at `osf` and unpacks into `outpath`
+    """
+
+    req = requests.get(osf)
+    req.raise_for_status()
+    t = tarfile.open(fileobj=GzipFile(fileobj=BytesIO(req.content)))
+    os.makedirs(outpath, exist_ok=True)
+    t.extractall(outpath)
 
 
 def test_integration_five_echo(skip_integration):
@@ -43,7 +59,9 @@ def test_integration_five_echo(skip_integration):
 
     if skip_integration:
         pytest.skip('Skipping five-echo integration test')
-    out_dir = '/tmp/data/five-echo/five-echo'
+    out_dir = '/tmp/data/five-echo/TED.five-echo'
+    download_test_data('https://osf.io/9c42e/download',
+                       os.path.dirname(out_dir))
     fn = resource_filename('tedana', 'tests/data/tedana_outputs_verbose.txt')
     tedana_workflow(
         data='/tmp/data/five-echo/p06.SBJ01_S09_Task11_e[1,2,3,4,5].sm.nii.gz',
@@ -60,6 +78,8 @@ def test_integration_three_echo(skip_integration):
     if skip_integration:
         pytest.skip('Skipping three-echo integration test')
     out_dir = '/tmp/data/three-echo/TED.three-echo'
+    download_test_data('https://osf.io/rqhfc/download',
+                       os.path.dirname(out_dir))
     fn = resource_filename('tedana', 'tests/data/tedana_outputs.txt')
     tedana_workflow(
         data='/tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz',

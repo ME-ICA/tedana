@@ -1,0 +1,7 @@
+-r requirements.txt
+sphinx
+coverage
+flake8<3.0
+flake8-putty
+pytest
+pytest-cov
