@@ -2,7 +2,10 @@
 # ex: set sts=4 ts=4 sw=4 et:
 
 from .kundu_fit import (
-    dependence_metrics, kundu_metrics, get_coeffs, computefeats2
+    kundu_metrics, get_coeffs, computefeats2
+)
+from .dependence import (
+    dependence_metrics
 )
 
 __all__ = [
