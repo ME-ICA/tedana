@@ -375,8 +375,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     catd, ref_img = io.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
-  
-    if not nopng and (png_cmap == 'coolwarm'):
+ 
+    if nopng and (png_cmap != 'coolwarm'):
             LGR.warning('Overriding --nopng since --png-cmap provided.')
             nopng = False
 
