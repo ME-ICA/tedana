@@ -81,8 +81,11 @@ def test_integration_five_echo(skip_integration):
     # download data and run the test
     download_test_data('https://osf.io/9c42e/download',
                        os.path.dirname(out_dir))
+    prepend = '/tmp/data/five-echo/p06.SBJ01_S09_Task11_e'
+    suffix = '.sm.nii.gz'
+    datalist = [prepend + str(i+1) + suffix for i in range(5)]
     tedana_workflow(
-        data='/tmp/data/five-echo/p06.SBJ01_S09_Task11_e[1,2,3,4,5].sm.nii.gz',
+        data=datalist,
         tes=[15.4, 29.7, 44.0, 58.3, 72.6],
         out_dir=out_dir,
         debug=True, verbose=True)
@@ -109,7 +112,7 @@ def test_integration_three_echo(skip_integration):
         data='/tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz',
         tes=[14.5, 38.5, 62.5],
         out_dir=out_dir,
-        tedpca='kundu', png=True)
+        tedpca='kundu')
 
     # compare the generated output files
     fn = resource_filename('tedana', 'tests/data/tedana_outputs.txt')
