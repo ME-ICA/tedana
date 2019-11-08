@@ -274,9 +274,8 @@ classify ICA components as TE-dependent (BOLD signal), TE-independent
 These classifications are saved in 
 `comp_table_ica.txt`.
 The actual decision tree is dependent on the component selection algorithm employed.
-``tedana`` includes two options: `kundu_v2_5` (which uses hardcoded thresholds
-applied to each of the metrics) and `kundu_v3_2` (which trains a classifier to
-select components).
+``tedana`` includes the option `kundu` (which uses hardcoded thresholds
+applied to each of the metrics).
 
 Components that are classified as noise are projected out of the optimally combined data, 
 yielding a denoised timeseries, which is saved as `dn_ts_OC.nii.gz`.

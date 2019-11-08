@@ -92,8 +92,7 @@ spatial coverage, sample rate, signal-to-noise ratio, signal drop-out, distortio
 
 A minimum of 3 echoes is required for running the current implementation fo TE-dependent denoising in
 ``tedana``. 
-While there are successful studies that don’t follow this rule,
-it may be useful to have at least one echo that is earlier and one echo that is later than the
+It may be useful to have at least one echo that is earlier and one echo that is later than the
 TE one would use for single-echo T2* weighted fMRI.
 
 .. note::
