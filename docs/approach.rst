@@ -149,7 +149,7 @@ For the example voxel, the resulting weights are:
   :width: 400 px
   :align: center
 
-THese normalized weights are then used to compute a weighted average that takes advantage
+These normalized weights are then used to compute a weighted average that takes advantage
 of the higher signal in earlier echoes and the heigher sensitivty at later echoes.
 The distribution of values for the optimally combined data lands somewhere
 between the distributions for other echoes.
