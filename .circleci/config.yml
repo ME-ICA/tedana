@@ -27,9 +27,12 @@ jobs:
       - run:
           name: Style check
           command: |
+            source activate tedana_py35
             make lint
       - run:
           name: Running unit tests
+          command: |
+            source activate tedana_py35
             make unittest
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py35
@@ -62,9 +65,12 @@ jobs:
       - run:
           name: Style check
           command: |
+            source activate tedana_py36
             make lint
       - run:
           name: Running unit tests
+          command: |
+            source activate tedana_py36
             make unittest
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py36
@@ -98,9 +104,12 @@ jobs:
       - run:
           name: Style check
           command: |
+            source activate tedana_py37
             make lint
       - run:
           name: Running unit tests
+          command: |
+            source activate tedana_py37
             make unittest
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py37
@@ -113,7 +122,7 @@ jobs:
           paths:
               - src/coverage/.coverage.py37
 
-  integration_tests:
+  integration:
     docker:
       - image: continuumio/miniconda3
     working_directory: /tmp/src/tedana
@@ -134,6 +143,7 @@ jobs:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
+            source activate tedana_py36
             make integration
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.integration
