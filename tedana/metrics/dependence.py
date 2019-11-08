@@ -68,9 +68,9 @@ def calculate_betas(data_optcom, mixing):
     return betas
 
 
-def calculate_psc(data_optcom, tsoc_B):
-    assert data_optcom.shape[1] == tsoc_B.shape[0]
-    PSC = 100 * tsoc_B / data_optcom.mean(axis=-1, keepdims=True)
+def calculate_psc(data_optcom, optcom_betas):
+    assert data_optcom.shape[1] == optcom_betas.shape[0]
+    PSC = 100 * optcom_betas / data_optcom.mean(axis=-1, keepdims=True)
     return PSC
 
 
@@ -224,13 +224,13 @@ def calculate_dependence_metrics(F_T2_maps, F_S0_maps, Z_maps):
     return kappas, rhos
 
 
-def calculate_varex(tsoc_B):
-    n_components = tsoc_B.shape[1]
-    totvar = (tsoc_B**2).sum()
+def calculate_varex(optcom_betas):
+    n_components = optcom_betas.shape[1]
+    totvar = (optcom_betas**2).sum()
 
     varex = np.zeros(n_components)
     for i_comp in range(n_components):
-        varex[i_comp] = 100 * (tsoc_B[:, i_comp]**2).sum() / totvar
+        varex[i_comp] = 100 * (optcom_betas[:, i_comp]**2).sum() / totvar
     return varex
 
 
@@ -290,11 +290,11 @@ def calculate_f_maps(mixing, data_cat, tes, Z_maps, f_max=500):
     return F_S0_maps, F_T2_maps
 
 
-def spatial_cluster(F_T2_maps, F_S0_maps, Z_maps, tsoc_B, mask, n_echos, csize=None):
+def spatial_cluster(F_T2_maps, F_S0_maps, Z_maps, optcom_betas, mask, n_echos, csize=None):
     n_voxels, n_components = Z_maps.shape
     fmin, _, _ = getfbounds(n_echos)
 
-    tsoc_Babs = np.abs(tsoc_B)
+    optcom_betas_abs = np.abs(optcom_betas)
 
     # Generate clustering criteria for component selection
     Z_clmaps = np.zeros([n_voxels, n_components], bool)
@@ -339,14 +339,14 @@ def spatial_cluster(F_T2_maps, F_S0_maps, Z_maps, tsoc_B, mask, n_echos, csize=N
         # Cluster-extent threshold and binarize ranked signal-change map
         ccimg = io.new_nii_like(
             ref_img,
-            utils.unmask(stats.rankdata(tsoc_Babs[:, i_comp]), mask))
+            utils.unmask(stats.rankdata(optcom_betas_abs[:, i_comp]), mask))
         Br_T2_clmaps[:, i_comp] = utils.threshold_map(
             ccimg, min_cluster_size=csize,
-            threshold=(max(tsoc_Babs.shape) - countsigFT2), mask=mask,
+            threshold=(max(optcom_betas_abs.shape) - countsigFT2), mask=mask,
             binarize=True)
         Br_S0_clmaps[:, i_comp] = utils.threshold_map(
             ccimg, min_cluster_size=csize,
-            threshold=(max(tsoc_Babs.shape) - countsigFS0), mask=mask,
+            threshold=(max(optcom_betas_abs.shape) - countsigFS0), mask=mask,
             binarize=True)
     return Z_clmaps, F_T2_clmaps, F_S0_clmaps, Br_T2_clmaps, Br_S0_clmaps
 
@@ -418,8 +418,8 @@ def generate_metrics(comptable, data_cat, data_optcom, mixing, mask, tes, ref_im
     weights = calculate_weights(data_optcom, mixing_z)
     signs = determine_signs(weights, axis=0)
     weights, mixing = flip_components(weights, mixing, signs=signs)
-    tsoc_B = calculate_betas(data_optcom, mixing)
-    PSC = calculate_psc(data_optcom, tsoc_B)
+    optcom_betas = calculate_betas(data_optcom, mixing)
+    PSC = calculate_psc(data_optcom, optcom_betas)
     comptable = pd.DataFrame(index=np.arange(n_components, dtype=int))
 
     # compute betas and means over TEs for TE-dependence analysis
@@ -428,7 +428,7 @@ def generate_metrics(comptable, data_cat, data_optcom, mixing, mask, tes, ref_im
 
     (Z_clmaps, F_T2_clmaps, F_S0_clmaps,
      Br_T2_clmaps, Br_S0_clmaps) = spatial_cluster(
-        F_T2_maps, F_S0_maps, Z_maps, tsoc_B, mask, n_echos)
+        F_T2_maps, F_S0_maps, Z_maps, optcom_betas, mask, n_echos)
 
     # Dependence metrics
     if any([v in metrics for v in ['kappa', 'rho']]):
@@ -437,7 +437,7 @@ def generate_metrics(comptable, data_cat, data_optcom, mixing, mask, tes, ref_im
 
     # Generic metrics
     if 'variance explained' in metrics:
-        comptable['variance explained'] = calculate_varex(tsoc_B)
+        comptable['variance explained'] = calculate_varex(optcom_betas)
 
     if 'normalized variance explained' in metrics:
         comptable['normalized variance explained'] = calculate_varex_norm(weights)
