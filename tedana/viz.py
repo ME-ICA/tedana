@@ -220,8 +220,8 @@ def write_kappa_scatter(comptable, out_dir):
 
     # Prebuild legend so that the marker sizes are uniform
     for kind in mkr_dict:
-            plt.scatter([], [], s=1, marker=mkr_dict[kind][0],
-                        c=mkr_dict[kind][1], label=kind, alpha=0.5)
+        plt.scatter([], [], s=1, marker=mkr_dict[kind][0],
+                    c=mkr_dict[kind][1], label=kind, alpha=0.5)
     # Create legend
     ax_scatter.legend(markerscale=10)
 

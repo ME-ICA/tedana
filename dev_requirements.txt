@@ -1,0 +1,6 @@
+-r requirements.txt
+sphinx
+coverage
+flake8>=3.7
+pytest
+pytest-cov
