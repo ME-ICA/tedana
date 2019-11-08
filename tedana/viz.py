@@ -15,6 +15,8 @@ from tedana.utils import get_spectrum
 LGR = logging.getLogger(__name__)
 MPL_LGR = logging.getLogger('matplotlib')
 MPL_LGR.setLevel(logging.WARNING)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 
 def trim_edge_zeros(arr):

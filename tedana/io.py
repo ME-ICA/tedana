@@ -14,6 +14,8 @@ from tedana import utils
 from tedana.stats import computefeats2, get_coeffs
 
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 
 def split_ts(data, mmix, mask, comptable):

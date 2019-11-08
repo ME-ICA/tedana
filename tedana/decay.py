@@ -7,6 +7,8 @@ import numpy as np
 from tedana import utils
 
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 
 def mono_exp(tes, s0, t2star):
@@ -84,6 +86,12 @@ def fit_decay(data, tes, mask, masksum, fittype):
         in :math:`S_0` map with 0.
     3.  Generate limited :math:`T_2^*` and :math:`S_0` maps by doing something.
     """
+    RepLGR.info("A monoexponential model was fit to the data at each voxel "
+                "using log-linear regression in order to estimate T2* and S0 "
+                "maps. For each voxel, the value from the adaptive mask was "
+                "used to determine which echoes would be used to estimate T2* "
+                "and S0.")
+
     if data.shape[1] != len(tes):
         raise ValueError('Second dimension of data ({0}) does not match number '
                          'of echoes provided (tes; {1})'.format(data.shape[1], len(tes)))
