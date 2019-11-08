@@ -9,6 +9,8 @@ from scipy import stats
 from sklearn.decomposition import FastICA
 
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 
 def tedica(data, n_components, fixed_seed, maxit=500, maxrestart=10):
@@ -41,9 +43,10 @@ def tedica(data, n_components, fixed_seed, maxit=500, maxrestart=10):
     -----
     Uses `sklearn` implementation of FastICA for decomposition
     """
-
     warnings.filterwarnings(action='ignore', module='scipy',
                             message='^internal gelsd')
+    RepLGR.info("Independent component analysis was then used to "
+                "decompose the dimensionally reduced dataset.")
 
     if fixed_seed == -1:
         fixed_seed = np.random.randint(low=1, high=1000)

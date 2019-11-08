@@ -1,11 +1,8 @@
+duecredit
+matplotlib
+nibabel>=2.1.0
+nilearn
 numpy>=1.14
+pandas
 scikit-learn
 scipy
-nilearn
-nibabel>=2.1.0
-versioneer
-pandas
-matplotlib
-duecredit
-sphinx-argparse
-numpydoc

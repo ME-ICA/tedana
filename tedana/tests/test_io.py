@@ -12,7 +12,7 @@ from tedana.tests.test_utils import fnames, tes
 
 from tedana.tests.utils import get_test_data_path
 
-import os 
+import os
 
 data_dir = get_test_data_path()
 
@@ -62,13 +62,13 @@ def test_smoke_split_ts():
     Note: classification is ["accepted", "rejected", "ignored"]
     """
     np.random.seed(0) # seeded because comptable MUST have accepted components
-    n_samples = 100 
+    n_samples = 100
     n_times = 20
     n_components = 6
     data = np.random.random((n_samples, n_times))
     mmix = np.random.random((n_times, n_components))
     mask = np.random.randint(2, size=n_samples)
-    
+
     # creating the component table with component as random floats, a "metric," and random classification
     component = np.random.random((n_components))
     metric = np.random.random((n_components))
@@ -82,7 +82,7 @@ def test_smoke_split_ts():
     assert resid is not None
 
 
-def test_smoke_write_split_ts(): 
+def test_smoke_write_split_ts():
     """
     Ensures that write_split_ts writes out the expected files with random input and tear them down
     """
@@ -101,12 +101,12 @@ def test_smoke_write_split_ts():
     comptable = pd.DataFrame(df_data, columns=['component', 'metric', 'classification'])
 
     assert me.write_split_ts(data, mmix, mask, comptable, ref_img) is not None
-    
+
     # TODO: midk_ts.nii is never generated?
-    for filename in ["hik_ts_.nii", "lowk_ts_.nii", "dn_ts_.nii"]: # remove all files generated
-        try: 
+    for filename in ["hik_ts_.nii.gz", "lowk_ts_.nii.gz", "dn_ts_.nii.gz"]: # remove all files generated
+        try:
             os.remove(filename)
-        except OSError: 
+        except OSError:
             print(filename + " not generated")
             pass
 
@@ -122,10 +122,10 @@ def test_smoke_writefeats():
     ref_img = os.path.join(data_dir, 'mask.nii.gz')
 
     assert me.writefeats(data, mmix, mask, ref_img) is not None
-    
-    # this only generates feats_.nii, so delete that 
-    try: 
-        os.remove("feats_.nii")
+
+    # this only generates feats_.nii, so delete that
+    try:
+        os.remove("feats_.nii.gz")
     except OSError:
         print("feats_.nii not generated")
         pass
@@ -144,15 +144,15 @@ def test_smoke_filewrite():
     assert me.filewrite(data_1d, filename, ref_img) is not None
     assert me.filewrite(data_2d, filename, ref_img) is not None
 
-    try: 
-        os.remove(".nii")
-    except OSError: 
+    try:
+        os.remove(".nii.gz")
+    except OSError:
         print(".nii not generated")
 
 
 def test_smoke_load_data():
-    """ 
-    Ensures that data is loaded when given a random neuroimage 
+    """
+    Ensures that data is loaded when given a random neuroimage
     """
     data = os.path.join(data_dir, 'mask.nii.gz')
     n_echos = 1
