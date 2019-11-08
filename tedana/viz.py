@@ -248,7 +248,7 @@ def write_kappa_scatter(comptable, out_dir):
 def write_kappa_scree(comptable, out_dir):
     """
     Creates a scree plot sorted by kappa, showing the values of the kappa and
-    rho metrics as wella s variance explained.
+    rho metrics as well as the variance explained.
 
     Parameters
     ----------
