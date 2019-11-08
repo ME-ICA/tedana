@@ -44,6 +44,7 @@ def _get_parser():
     parser = argparse.ArgumentParser()
     # Argument parser follow templtate provided by RalphyZ
     # https://stackoverflow.com/a/43456577
+    print('Orb?')
     optional = parser._action_groups.pop()
     required = parser.add_argument_group('required arguments')
     required.add_argument('-d',
