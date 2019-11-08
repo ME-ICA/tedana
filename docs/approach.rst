@@ -90,7 +90,7 @@ The echo times are also multiplied by -1.
 
 
 .. note::
-    It is now possible to do a nonlinear monoexponential fit to the orignal, untransformed 
+    It is now possible to do a nonlinear monoexponential fit to the original, untransformed 
     data values by specifiying ``--fittype curvefit``. 
     This method is slightly more computationally demanding but may obtain more
     accurate fits. 
