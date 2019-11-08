@@ -25,6 +25,7 @@ def main():
         REQUIRES,
         TESTS_REQUIRES,
         EXTRA_REQUIRES,
+        PYTHON_REQUIRES
     )
 
     pkg_data = {
@@ -60,6 +61,7 @@ def main():
         classifiers=CLASSIFIERS,
         download_url=DOWNLOAD_URL,
         # Dependencies handling
+        python_requires=PYTHON_REQUIRES,
         install_requires=REQUIRES,
         tests_require=TESTS_REQUIRES,
         extras_require=EXTRA_REQUIRES,

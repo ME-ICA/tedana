@@ -12,6 +12,7 @@ Already know what you're looking for in this guide? Jump to the following sectio
 
 * [Joining the conversation](#joining-the-conversation)
   * [Monthly developer calls](#monthly-developer-calls)
+* [Contributing small documentation changes](#contributing-small-documentation-changes)
 * [Contributing through Github](#contributing-through-github)
 * [Understanding issues, milestones, and project boards](#understanding-issues-milestones-and-project-boards)
 * [Making a change](#making-a-change)
@@ -40,6 +41,11 @@ An agenda will be circulated in the gitter channel in advance of the meeting.
 
 Everyone is welcome.
 We look forward to meeting you there :hibiscus:
+
+## Contributing small documentation changes
+If you are new to GitHub and just have a small documentation change
+recommendation, please submit it to [our e-mail address](mailto:tedana.devs@gmail.com)
+and one of our developers will add it to the documentation directly.
 
 ## Contributing through GitHub
 
@@ -116,39 +122,75 @@ The current list of labels are [here][link_labels] and include:
 
 ## Making a change
 
-We appreciate all contributions to tedana, but those accepted fastest will follow a workflow similar to the following:
+We appreciate all contributions to `tedana`, but those accepted fastest will follow a workflow similar to the following:
 
-**1. Comment on an existing issue or open a new issue referencing your addition.**
+### 1. Comment on an existing issue or [open a new issue][link_createissue] referencing your addition
 
-This allows other members of the tedana development team to confirm that you aren't overlapping with work that's currently underway and that everyone is on the same page with the goal of the work you're going to carry out.
+This allows other members of the `tedana` development team to confirm that you aren't overlapping with work that's currently underway and that everyone is on the same page with the goal of the work you're going to carry out.
 
 [This blog][link_pushpullblog] is a nice explanation of why putting this work in up front is so useful to everyone involved.
 
-**2. [Fork][link_fork] the [tedana repository][link_tedana] to your profile.**
+### 2. [Fork][link_fork] the [tedana repository][link_tedana] to your GitHub profile
 
-This is now your own unique copy of tedana. Changes here won't effect anyone else's work, so it's a safe space to explore edits to the code!
+This is now your own unique and online copy of `tedana`. Changes here won't affect anyone else's work, so it's a safe space to explore edits to the code!
 
-Make sure to [keep your fork up to date][link_updateupstreamwiki] with the master repository.
+Remember to [clone your fork][link_clonerepo] of `tedana` to your local machine, which will allow you to make local changes to `tedana`.
 
-**3. Make the changes you've discussed.**
+Make sure to always [keep your fork up to date][link_updateupstreamwiki] with the master repository before and after making changes.
 
-Try to keep the changes focused. We've found that working on a [new branch][link_branches] makes it easier to keep your changes targeted.
+### 3. Run the developer setup
 
-When you're creating your pull request, please make sure to review the tedana [style conventions](#style-guide).
-
-Note that to test a change, you may need to set up your local repository to run a tedana workflow. 
+To test a change, you may need to set up your local repository to run a `tedana` workflow. 
 To do so, run
 ```
-python setup.py develop
+pip install -e .
 ```
-which should ensure all packages are correctly organized and linked on your user profile. 
+from within your local `tedana` repository. This should ensure all packages are correctly organized and linked on your user profile. 
+
 Once you've run this, your repository should be set for most changes (i.e., you do not have to re-run with every change). 
 
-**4. Submit a [pull request][link_pullrequest].**
+### 4. Make the changes you've discussed
 
-A member of the development team will review your changes to confirm that they can be merged into the main code base.
-When opening the pull request, we ask that you follow some [specific conventions](#pull-requests).
-We outline these below.
+Try to keep the changes focused to the issue. We've found that working on a [new branch][link_branches] for each issue makes it easier to keep your changes targeted. 
+
+Using a new branch allows you to follow the standard "fork/branch/commit/pull-request/merge" GitHub workflow when making changes. [This guide][link_gitworkflow] provides a useful overview for this workflow.
+
+Before creating your pull request, please make sure to review the `tedana` [style conventions](#style-guide).
+
+### 5. Test your changes
+
+#### Changes to code
+
+For changes to the codebase, we suggest using our development Docker container which will run all the necessary checks and tests to ensure your code is ready to be merged into `tedana`!
+(This does require that you have a local install of [Docker](https://www.docker.com/products/docker-desktop).)
+You can run all the checks with:
+
+```
+docker run --tty --rm -v ${PWD}:/tedana tedana/tedana-dev:latest run_all_tests
+```
+
+from within your local `tedana` repository.
+(**N.B.** It is possible that, depending on your Docker setup, you may need to increase the amount of memory available to Docker in order to run the `tedana` test suite. 
+You can either do this permanently by editing your Docker settings or temporarily by adding `--memory=4g` to the above `docker run` command.)
+
+This will print out a number of different status update messages as the tests run, but if you see `"FINISHED RUNNING ALL TESTS! GREAT SUCCESS"` then it means everything finished succesfully.
+If not, there should be some helpful outputs that specify which tests failed.
+
+#### Changes to documentation
+
+For changes to documentation, we suggest rendering the HTML files locally in order to review the changes before submitting a pull request. This can be done by running
+```
+make html
+```
+from the `docs` directory in your local `tedana` repository. You should then be able to access the rendered files in the `docs/_build` directory, and view them in your browser.
+
+### 6. Submit a [pull request][link_pullrequest]
+
+When opening the pull request, we ask that you follow some [specific conventions](#pull-requests). We outline these below.
+
+After you have submitted the pull request, a member of the development team will review your changes to confirm that they can be merged into the main code base.
+
+After successful merging of the pull request, remember to [keep your fork up to date][link_updateupstreamwiki] with the master `tedana` repository and to delete the branch on your fork that was used for the merged pull request.
 
 ### Pull Requests
 
@@ -251,6 +293,9 @@ You're awesome. :wave::smiley:
 [link_pushpullblog]: https://www.igvita.com/2011/12/19/dont-push-your-pull-requests/
 [link_updateupstreamwiki]: https://help.github.com/articles/syncing-a-fork/
 [link_branches]: https://help.github.com/articles/creating-and-deleting-branches-within-your-repository/
+[link_createissue]: https://help.github.com/articles/creating-an-issue/
+[link_clonerepo]: https://help.github.com/articles/cloning-a-repository/
+[link_gitworkflow]: https://guides.github.com/introduction/flow/
 
 [link_numpydoc]: https://numpydoc.readthedocs.io/en/latest/format.html
 [link_pep8]: https://www.python.org/dev/peps/pep-0008/
