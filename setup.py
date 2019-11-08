@@ -67,7 +67,8 @@ def main():
         extras_require=EXTRA_REQUIRES,
         entry_points={'console_scripts': [
             't2smap=tedana.workflows.t2smap:_main',
-            'tedana=tedana.workflows.tedana:_main'
+            'tedana=tedana.workflows.tedana:_main',
+            'post_melodicview=tedana.workflows.post_melodicview:_main'
         ]},
         packages=find_packages(exclude=("tests",)),
         package_data=pkg_data,
