@@ -2,11 +2,14 @@
 Considerations for ME-fMRI
 ##########################
 Multi-echo fMRI acquisition sequences and analysis methods are rapidly maturing. Someone who has access
-to a multi-echo fMRI sequence should seriously consider using it. The following are a few points to 
-consider when deciding whether or not to collect multi-echo data
+to a multi-echo fMRI sequence should seriously consider using it. 
+
+The possible costs and benefits of multi-echo fMRI
+==================================================
+The following are a few points to consider when deciding whether or not to collect multi-echo data.
 
 Possible increase in TR
-=======================
+-----------------------
 The one difference with multi-echo is a slight time cost.
 For multi-echo fMRI, the shortest echo time (TE) is essentially free since it is collected in the
 gap between the RF pulse and the single-echo acquisition.
@@ -23,8 +26,8 @@ Instead of compromising on slice coverage or TR, one can increase acceleration.
 If one increases acceleration, it is worth doing an empirical comparison to make sure there
 isn't a non-trivial loss in SNR or an increase of artifacts.
 
-A simple weighted average will increase SNR
-===========================================
+Weighted Averaging may lead to an increase in SNR 
+-------------------------------------------------
 Multiple studies have shown that a
 weighted average of the echoes to optimize T2* weighting, sometimes called "optimally combined,"
 gives a reliable, modest boost in data quality. The optimal combination of echoes can currently be
@@ -33,7 +36,7 @@ average can be calculated with `t2smap`_ If no other
 acquisition compromises are necessary to acquire multi-echo data, this boost is worthwhile. 
 
 Consider the life of the dataset
-================================
+--------------------------------
 If other
 compromises are necessary, consider the life of the data set. If data is being acquired for a discrete
 study that will be acquired, analyzed, and published in a year or two, it might not be worth making
@@ -47,13 +50,23 @@ signal vs noise, such as scanner based drifts vs slow changes in BOLD signal. Th
 still being improved, and the algorithms are still changing. Users need to have the time and knowledge to look
 at the denoising output from every run to make sure denoising worked as intended. 
 
+You may recover signal in areas affected by dropout
+---------------------------------------------------
+Typical single echo fMRI uses an echo time that is appropriate for signal across most of the brain. While this is effective
+it also leads to drop out in regions with low :math:T_2^* values. This can lead to low or even no signal at all in some areas. 
+If your research question could benefit from having either
+improve signal characteristics in regions such as the orbitofrontal cortex, ventral temporal cortex or 
+the ventral striatum them multi-echo fMRI may be beneficial. 
+
 Consider the cost of added quality control
-==========================================
+------------------------------------------
 If someone wants a push-button
 way to use multi-echo data to improve data quality, that doesn't require as deep an inspection of every output,
 stick with using the weighted average. The developers of tedana look forward to when tedana and other methods
 have sufficiently stable algorithms, which have been validated on a wide range of data sets, so that we can
 recommend the wide use of tedana.
+
+
 
 .. _t2smap: https://tedana.readthedocs.io/en/latest/usage.html#run-t2smap
 
@@ -169,7 +182,7 @@ tedana requires data that has already been preprocessed for head motion, alignme
 AFNI can process multi-echo data natively as well as apply tedana denoising through the use of 
 **afni_proc.py**. To see various implementations, start with Example 12 in the `afni_proc.py help`_
 
-.. afni_proc.py: https://afni.nimh.nih.gov/pub/dist/doc/program_help/afni_proc.py.html
+.. _afni_proc.py help: https://afni.nimh.nih.gov/pub/dist/doc/program_help/afni_proc.py.html
 
 `fmriprep` can also process multi-echo data, but is currently limited to using the optimally combined
 timeseries. For more details, see the `fmriprep workflows page`_
