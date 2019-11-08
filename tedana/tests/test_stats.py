@@ -172,7 +172,6 @@ def test_getfbounds():
         getfbounds(n_echos)
 
 
-# SMOKE TEST 
 
 def test_smoke_getfbounds():
     """ 
