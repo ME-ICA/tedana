@@ -6,6 +6,8 @@ import logging
 import numpy as np
 
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 
 def clean_dataframe(comptable):

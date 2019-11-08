@@ -9,6 +9,8 @@ from scipy import stats
 from tedana import utils
 
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 
 def getfbounds(n_echos):

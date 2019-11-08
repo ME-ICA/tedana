@@ -14,6 +14,8 @@ from tedana.selection import kundu_tedpca
 from tedana.due import due, BibTeX
 
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 
 @due.dcite(BibTeX(
@@ -194,6 +196,40 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
                     'dimensionality estimation. Switching to Kundu decision '
                     'tree.')
         algorithm = 'kundu'
+
+    if algorithm == 'mle':
+        alg_str = "using MLE dimensionality estimation (Minka, 2001)"
+        RefLGR.info("Minka, T. P. (2001). Automatic choice of dimensionality "
+                    "for PCA. In Advances in neural information processing "
+                    "systems (pp. 598-604).")
+    elif algorithm == 'kundu':
+        alg_str = ("followed by the Kundu component selection decision "
+                   "tree (Kundu et al., 2013)")
+        RefLGR.info("Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
+                    "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
+                    "(2013). Integrated strategy for improving functional "
+                    "connectivity mapping using multiecho fMRI. Proceedings "
+                    "of the National Academy of Sciences, 110(40), "
+                    "16187-16192.")
+    elif algorithm == 'kundu-stabilize':
+        alg_str = ("followed by the 'stabilized' Kundu component "
+                   "selection decision tree (Kundu et al., 2013)")
+        RefLGR.info("Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
+                    "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
+                    "(2013). Integrated strategy for improving functional "
+                    "connectivity mapping using multiecho fMRI. Proceedings "
+                    "of the National Academy of Sciences, 110(40), "
+                    "16187-16192.")
+
+    if source_tes == -1:
+        dat_str = "the optimally combined data"
+    elif source_tes == 0:
+        dat_str = "the z-concatenated multi-echo data"
+    else:
+        dat_str = "a z-concatenated subset of echoes from the input data"
+
+    RepLGR.info("Principal component analysis {0} was applied to "
+                "{1} for dimensionality reduction.".format(alg_str, dat_str))
 
     n_samp, n_echos, n_vols = data_cat.shape
     source_tes = np.array([int(ee) for ee in str(source_tes).split(',')])

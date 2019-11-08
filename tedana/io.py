@@ -14,6 +14,8 @@ from tedana import utils
 from tedana.stats import computefeats2, get_coeffs
 
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 
 def split_ts(data, mmix, mask, comptable):
@@ -316,7 +318,7 @@ def new_nii_like(ref_img, data, affine=None, copy_header=True):
     return nii
 
 
-def filewrite(data, filename, ref_img, gzip=False, copy_header=True):
+def filewrite(data, filename, ref_img, gzip=True, copy_header=True):
     """
     Writes `data` to `filename` in format of `ref_img`
 
@@ -330,7 +332,7 @@ def filewrite(data, filename, ref_img, gzip=False, copy_header=True):
         Reference image
     gzip : :obj:`bool`, optional
         Whether to gzip output (if not specified in `filename`). Only applies
-        if output dtype is NIFTI. Default: False
+        if output dtype is NIFTI. Default: True
     copy_header : :obj:`bool`, optional
         Whether to copy header from `ref_img` to new image. Default: True
 
