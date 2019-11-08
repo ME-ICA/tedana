@@ -91,12 +91,12 @@ Instead, we recommend that researchers apply the same transforms to all echoes i
 That is, that they calculate head motion correction parameters from one echo
 and apply the resulting transformation to all echoes.
 
-Similarly, any intensity normalization or nuisance regressors should be applied to the data
-*after* ``tedana`` calculates the BOLD and non-BOLD weighting of components.
-
-If this is not considered, resulting intensity gradients (e.g., in the case of scaling)
-or alignment parameters (e.g., in the case of motion correction, normalization)
-are likely to differ across echos,
-and the subsequent calculation of voxelwise T2* values will be distorted.
-See the description of ``tedana``'s :doc:`approach <\approach>` for more details
-on how T2* values are calculated.
+.. note:: 
+    Any intensity normalization or nuisance regressors should be applied to the data
+    *after* ``tedana`` calculates the BOLD and non-BOLD weighting of components. If this is 
+    not considered, resulting intensity gradients (e.g., in the case of scaling)
+    or alignment parameters (e.g., in the case of motion correction, normalization)
+    are likely to differ across echos,
+    and the subsequent calculation of voxelwise T2* values will be distorted or incorrect.
+    See the description of ``tedana``'s :doc:`approach <\approach>` for more details
+    on how T2* values are calculated.
