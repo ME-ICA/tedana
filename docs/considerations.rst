@@ -217,9 +217,37 @@ For more details, see the `fmriprep workflows page`_
 Currently SPM and FSL do not natively support mutli-echo fmri data processing. 
 
 Other software that uses multi-echo fMRI
-----------------------------------------
+========================================
 
-Information and links to other approaches for denoising multi-echo fMRI data will be added here.
+``tedana`` represents only one approach to processing multiecho data. 
+Currently there are a number of methods that can take advantage of or use the information contain in multi-echo data. 
+These include:
+
+`3dMEPFM`_: A multi-echo implemntation of 'paradigm free mapping', that is detection of neural events in the absense of 
+a prespecified model. 
+By leveraging the information present in multiecho data, changes in relaxation time can be directly esimated and 
+more events can be detected. For more information, see the `following paper`_. 
+
+.. _3dMEPFM: https://afni.nimh.nih.gov/pub/dist/doc/program_help/3dMEPFM.html
+.. _following paper: https://www.sciencedirect.com/science/article/pii/S105381191930669X
+
+`Bayesian approach to denoising`_: An alternative approach to seperating out BOLD and non-BOLD signals within a Bayesian 
+framework is currently under development. 
+
+.. _Bayesian approach to denoising: https://ww5.aievolution.com/hbm1901/index.cfm?do=abs.viewAbs&abs=5026
+
+`Multi-echo Group ICA`_: Current approches to ICA just use a single run of data in order to perform denoising. An alternative
+approach is to use information from multiple subjects or multiple runs from a single subject in order to improve the 
+classification of BOLD and non-BOLD components. 
+
+.. _Multi-echo Group ICA: https://ww5.aievolution.com/hbm1901/index.cfm?do=abs.viewAbs&abs=1286
+
+`Dual Echo Denoising`_: If the first echo can be collected early enough, there are currently methods that take advantage of the 
+very limited BOLD weighting at these early echo times. 
+
+.. _Dual Echo Denoising: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3518782/
+
+
 
 Datasets
 --------
