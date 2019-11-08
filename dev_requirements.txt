@@ -1,7 +1,6 @@
 -r requirements.txt
 sphinx
 coverage
-flake8<3.0
-flake8-putty
+flake8>=3.7
 pytest
 pytest-cov
