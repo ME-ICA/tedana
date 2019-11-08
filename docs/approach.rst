@@ -182,10 +182,10 @@ Denoising
 `````````
 The next step is an attempt to remove noise from the data. 
 This process can be 
-broadly seperated into three steps: **decomposition, metric calculation** and 
+broadly seperated into three steps: **decomposition**, **metric calculation** and 
 **component selection**. 
 Decomposition reduces the dimensionality of the 
-optimally combined data using PCA and then an ICA. 
+optimally combined data using `Principal Components Analysis (PCA)`_ and then an `Independent Components Analysis (ICA)`_. 
 Metrics which highlights the
 TE-dependence or indepence are derived from these components. 
 Component selection 
@@ -239,14 +239,14 @@ Next, ``tedana`` applies TE-dependent independent components analysis (ICA) in
 order to identify and remove TE-independent (i.e., non-BOLD noise) components.
 The dimensionally reduced optimally combined data are first subjected to ICA in
 order to fit a mixing matrix to the whitened data. 
-This generates a number if 
+This generates a number of 
 independent timeseries (saved as **meica_mix.1D**), as well as beta maps which show 
-the spatially loading of these components on the brain (**betas_OC.nii.gz**). 
+the spatial loading of these components on the brain (**betas_OC.nii.gz**). 
 
 .. image:: /_static/a13_ica_component_timeseries.png
 
 Linear regression is used to fit the component time series to each voxel in each
-echo from the original, echo-specific data. 
+of the original, echo-specific data. 
 This results in echo- and voxel-specific 
 betas for each of the components.
 The beta values from the linear regression 
