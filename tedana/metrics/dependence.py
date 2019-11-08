@@ -413,6 +413,7 @@ def generate_metrics(comptable, data_cat, data_optcom, mixing, mask, tes, ref_im
                          'match.'.format(data_cat.shape[2], data_optcom.shape[1], mixing.shape[0]))
 
     mixing = mixing.copy()
+    comptable = pd.DataFrame(index=np.arange(n_components, dtype=int))
 
     # Metric maps
     weights = calculate_weights(data_optcom, mixing_z)
@@ -420,7 +421,6 @@ def generate_metrics(comptable, data_cat, data_optcom, mixing, mask, tes, ref_im
     weights, mixing = flip_components(weights, mixing, signs=signs)
     optcom_betas = calculate_betas(data_optcom, mixing)
     PSC = calculate_psc(data_optcom, optcom_betas)
-    comptable = pd.DataFrame(index=np.arange(n_components, dtype=int))
 
     # compute betas and means over TEs for TE-dependence analysis
     Z_maps = calculate_z_maps(weights)
