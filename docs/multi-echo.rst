@@ -1,4 +1,4 @@
-What is Multi-echo fMRI
+What is multi-echo fMRI
 =======================
 Most echo-planar image (EPI) sequences collect a single brain image following 
 a radio frequency (RF) pulse, at a rate known as the repetition time (TR). 
@@ -15,8 +15,7 @@ oxygen-level dependent, or `BOLD signal`_,
 it also contains "noise" (termed non-BOLD signal) caused by things like
 participant motion and changes in breathing.
 Because the BOLD signal is known to decay at a set rate, collecting multiple
-echos allows us to assess whether components of the fMRI signal are BOLD- or
-non-BOLD.
+echos allows us to assess non-BOLD.
 
 The image below shows the basic relationship between echo times and the image acquired at
 3T (top, A) and 7T (bottom, B). Note that the earliest echo time is the brightest, as the 
@@ -27,9 +26,10 @@ echoes these images can be combined in an optimal manner to take advantage of th
 in the earlier echoes (see `processing pipeline details`_).
 
 .. image:: /_static/physics_kundu_2017_multiple_echoes.jpg
+Adapted from  `Kundu et al. (2017)`_.
 
 In order to classify the relationship between the signal and the echo time we can consider a 
-single voxel at two timepoints (x and y) and the measured signal measured at three different echo times - :math:`S(TE_N)`. 
+single voxel at two timepoints (x and y) and the measured signal measured at three different echo times - :math:`S(TE_n)`. 
 
 For the left column, we are observing a change that we term :math:`{\Delta}{S_0}` - that is a change
 in the intercept or raw signal intensity. A common example of this is participant movement, 
@@ -41,13 +41,17 @@ As we have collected three seperate echoes, we can compare the change in signal 
 :math:`\frac{{\Delta}{S(TE_n)}}{S(TE_n)}` we see that there is no echo time dependence. 
 
 In the right column, we consider changes that are related to brain activity, that is the two brain states here 
-(x and y) could be a baseline and task activated state. These we term as :math:`{\Delta}{R_2^*}`. Again we can plot the
-change in the signal between these two states as a function of echo time, finding that the signal rises and falls. If we compare this 
-curve to the original signal we find that magnitude of the changes is dependent on the echo time.
+(x and y) could be a baseline and task activated state. These we term as :math:`{\Delta}{R_2^*}` which is equivilent 
+to the inverse of :math:`{T_2^*}`. 
+Again we can plot the change in the signal between these two states as a function of echo time, 
+finding that the signal rises and falls. If we compare this curve to the original signal we find 
+that magnitude of the changes is dependent on the echo time.
 
 .. image:: /_static/physics_kundu_2017_TE_dependence.jpg
+Adapted from  `Kundu et al. (2017)`_.
 
-For a comprehensive review, see `Kundu et al. (2017)`_.
+For a more comprehensive review of these topics and others, see `Kundu et al. (2017)`_.
+
 
 .. _TEs: http://mriquestions.com/tr-and-te.html
 .. _BOLD signal: http://www.fil.ion.ucl.ac.uk/spm/course/slides10-zurich/Kerstin_BOLD.pdf
