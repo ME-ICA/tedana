@@ -1,6 +1,7 @@
 """
 Utility functions for tedana.selection
 """
+
 import logging
 
 import numpy as np
@@ -37,7 +38,7 @@ def selectcomps2use(comptable, decide_comps):
 
 
 def change_comptable_classifications(comptable, iftrue, iffalse,
-                                     decision_boolean, nodeidxstr, decision_tree_steps):
+                                     decision_boolean, decision_node_idx_str):
     """
     Given information on whether a decision critereon is true or false for each component
     change or don't change the compnent classification
@@ -45,16 +46,16 @@ def change_comptable_classifications(comptable, iftrue, iffalse,
     if iftrue != 'no_change':
         changeidx = decision_boolean.index[decision_boolean.values is True]
         comptable['classification'][changeidx] = iftrue
-        comptable['rationale'][changeidx] += (nodeidxstr + ': ' + iftrue + '; ')
+        comptable['rationale'][changeidx] += (decision_node_idx_str + ': ' + iftrue + '; ')
     if iffalse != 'no_change':
         changeidx = decision_boolean.index[decision_boolean.values is False]
         comptable['classification'][changeidx] = iffalse
-        comptable['rationale'][changeidx] += (nodeidxstr + ': ' + iffalse + '; ')
+        comptable['rationale'][changeidx] += (decision_node_idx_str + ': ' + iffalse + '; ')
 
-    decision_tree_steps[-1]['numtrue'] = (decision_boolean is True).sum()
-    decision_tree_steps[-1]['numfalse'] = (decision_boolean is False).sum()
+    # decision_tree_steps[-1]['numtrue'] = (decision_boolean is True).sum()
+    # decision_tree_steps[-1]['numfalse'] = (decision_boolean is False).sum()
 
-    return comptable, decision_tree_steps
+    return comptable  # , decision_tree_steps
 
 
 def clean_dataframe(comptable):
@@ -184,20 +185,22 @@ def new_decision_node_info(decision_tree_steps, functionname,
     return decision_tree_steps
 
 
-def log_decision_tree_step(nodeidxstr, functionname, comps2use,
-                           decide_comps=None, decision_tree_steps=None):
+def log_decision_tree_step(functionname_idx, comps2use,
+                           decide_comps=None, decision_tree_steps=None,
+                           numTrue=None, numFalse=None):
     """
         Logging text to add for every decision tree calculation
     """
 
     if comps2use is None:
-        LGR.info("Step " + nodeidxstr + " " + functionname + " not applied because "
+        LGR.info(functionname_idx + " not applied because "
                  "no remaining components were classified as " + str(decide_comps))
     else:
-        LGR.info(("Step " + nodeidxstr + " " + functionname + " "
-                  "applied to " + str((comps2use is True).sum()) + " "
-                  "components. " + str(decision_tree_steps[-1]['numtrue']) + " "
-                  "were True and " + str(decision_tree_steps[-1]['numfalse']) + " were False"))
+        LGR.info((functionname_idx + "applied to " + str((comps2use is True).sum()) + " "
+                  "components. " + str(numTrue) + " were True "
+                  "and " + str(numFalse) + "were False"))
+        # decision_tree_steps[-1]['numtrue']) + " "
+        # "were True and " + str(decision_tree_steps[-1]['numfalse']) + " were False"))
 
 # Calculations that are used in decision tree functions
 
