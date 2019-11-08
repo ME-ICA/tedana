@@ -2,7 +2,7 @@ The tedana pipeline
 ===================
 
 ``tedana`` works by decomposing multi-echo BOLD data via priniciple component analysis (PCA) 
-and independent component analyses (ICA).
+and independent component analysis (ICA).
 The resulting components are then analyzed to determine whether they are
 TE-dependent or -independent.
 TE-dependent components are classified as BOLD, while TE-independent components
@@ -46,6 +46,10 @@ When :math:`T_{2}^*` and :math:`S_{0}` are calculated below, each voxel's values
 are only calculated from the first :math:`n` echoes, where :math:`n` is the
 value for that voxel in the adaptive mask.
 
+`Adaptive mask code`_
+
+.. _Adaptive mask code: https://tedana.readthedocs.io/en/latest/generated/tedana.utils.make_adaptive_mask.html#tedana.utils.make_adaptive_mask
+
 .. note::
     ``tedana`` allows users to provide their own mask.
     The adaptive mask will be computed on this explicit mask, and may reduce
@@ -79,6 +83,11 @@ In order to make it easier to fit the decay model to the data, ``tedana``
 transforms the data by default.
 The BOLD data are transformed as :math:`log(|S|+1)`, where :math:`S` is the BOLD signal.
 The echo times are also multiplied by -1.
+
+`Decay model fit code`_
+
+.. _Decay model fit code: https://tedana.readthedocs.io/en/latest/generated/tedana.decay.fit_decay.html#tedana.decay.fit_decay
+
 
 .. note::
     It is now possible to do a nonlinear monoexponential fit to the orignal, untransformed 
@@ -151,6 +160,11 @@ The time series for the optimally combined data also looks like a combination
 of the other echoes (which it is). 
 This optimally combined data is written out as **ts_OC.nii.gz**
 
+`Optimal combination code`_
+
+.. _Optimal combination code: https://tedana.readthedocs.io/en/latest/generated/tedana.combine.make_optcom.html#tedana.combine.make_optcom
+
+
 .. image:: /_static/a10_optimal_combination_timeseries.png
 
 .. note::
@@ -214,6 +228,11 @@ in a dimensionally reduced version of the dataset which is then used in the `TED
 
 .. image:: /_static/a12_pca_reduced_data.png
 
+`TEDPCA code`_
+
+.. _TEDPCA code: https://tedana.readthedocs.io/en/latest/generated/tedana.decomposition.tedpca.html#tedana.decomposition.tedpca
+
+
 TEDICA
 ``````
 Next, ``tedana`` applies TE-dependent independent components analysis (ICA) in
@@ -260,7 +279,12 @@ applied to each of the metrics) and `kundu_v3_2` (which trains a classifier to
 select components).
 
 Components that are classified as noise are projected out of the optimally combined data, 
-yielding a denoised timeseries, which is saved as `dn_ts_OC.nii.gz`. 
+yielding a denoised timeseries, which is saved as `dn_ts_OC.nii.gz`.
+
+`TEDICA code`_
+
+.. _TEDICA code: https://tedana.readthedocs.io/en/latest/generated/tedana.decomposition.tedica.html#tedana.decomposition.tedica
+
 
 .. image:: /_static/a15_denoised_data_timeseries.png
 
@@ -277,6 +301,10 @@ Methods which have been employed in the past include global signal
 regression (GSR), T1c-GSR, anatomical CompCor, Go Decomposition (GODEC), and
 robust PCA.
 Currently, ``tedana`` implements GSR and T1c-GSR.
+
+`Global signal control code`_
+
+.. _Global signal control code: https://tedana.readthedocs.io/en/latest/generated/tedana.gscontrol.gscontrol_mmix.html#tedana.gscontrol.gscontrol_mmix
 
 .. image:: /_static/a16_t1c_denoised_data_timeseries.png
 
