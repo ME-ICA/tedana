@@ -36,7 +36,7 @@ def check_integration_outputs(fname, outpath):
     # Checks for log file
     log_regex = ('^tedana_'
                  '[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:'
-                 '[0-9]{2}:[0-9]{2}.txt$')
+                 '[0-9]{2}:[0-9]{2}.tsv$')
     logfiles = [out for out in existing if re.match(log_regex, out)]
     assert len(logfiles) == 1
 
