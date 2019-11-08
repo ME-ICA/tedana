@@ -56,7 +56,6 @@ def test_break_computefeats2():
                                                                        mmix.shape[0]))
 
 
-# SMOKE TEST
 
 def test_smoke_computefeats2():
     """
