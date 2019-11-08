@@ -1,8 +1,8 @@
 ##########################
 Considerations for ME-fMRI
 ##########################
-Multi-echo fMRI acquisition sequences and analysis methods are rapidly maturing. Someone who has access
-to a multi-echo fMRI sequence should seriously consider using it. 
+Multi-echo fMRI acquisition sequences and analysis methods are rapidly maturing. 
+Someone who has access to a multi-echo fMRI sequence should seriously consider using it. 
 
 The possible costs and benefits of multi-echo fMRI
 ==================================================
@@ -30,30 +30,37 @@ Weighted Averaging may lead to an increase in SNR
 -------------------------------------------------
 Multiple studies have shown that a
 weighted average of the echoes to optimize T2* weighting, sometimes called "optimally combined,"
-gives a reliable, modest boost in data quality. The optimal combination of echoes can currently be
-calculated in several software packages including AFNI, fMRIPrep, and tedana. In tedana, the weighted
+gives a reliable, modest boost in data quality. 
+The optimal combination of echoes can currently be calculated in several software packages including AFNI, 
+fMRIPrep, and tedana. In tedana, the weighted
 average can be calculated with `t2smap`_ If no other
 acquisition compromises are necessary to acquire multi-echo data, this boost is worthwhile. 
 
 Consider the life of the dataset
 --------------------------------
 If other
-compromises are necessary, consider the life of the data set. If data is being acquired for a discrete
+compromises are necessary, consider the life of the data set. 
+If data is being acquired for a discrete
 study that will be acquired, analyzed, and published in a year or two, it might not be worth making
-compromises to acquire multi-echo data. If a data set is expected to be used for future analyses in later
+compromises to acquire multi-echo data. 
+If a data set is expected to be used for future analyses in later
 years, it is likely that more powerful approaches to multi-echo denoising will sufficiently mature and add
 even more value to a data set.
 
 Other multi-echo denoising methods, such as MEICA, the predecessor to tedana, have shown the potential for
 much greater data quality improvements, as well as the ability to more accurately separate visually similar
-signal vs noise, such as scanner based drifts vs slow changes in BOLD signal. These more powerful methods are
-still being improved, and the algorithms are still changing. Users need to have the time and knowledge to look
+signal vs noise, such as scanner based drifts vs slow changes in BOLD signal. 
+These more powerful methods are
+still being improved, and the algorithms are still changing. 
+Users need to have the time and knowledge to look
 at the denoising output from every run to make sure denoising worked as intended. 
 
 You may recover signal in areas affected by dropout
 ---------------------------------------------------
-Typical single echo fMRI uses an echo time that is appropriate for signal across most of the brain. While this is effective
-it also leads to drop out in regions with low :math:T_2^* values. This can lead to low or even no signal at all in some areas. 
+Typical single echo fMRI uses an echo time that is appropriate for signal across most of the brain. 
+While this is effective
+it also leads to drop out in regions with low :math:T_2^* values. 
+This can lead to low or even no signal at all in some areas. 
 If your research question could benefit from having either
 improved signal characteristics in regions such as the orbitofrontal cortex, ventral temporal cortex or 
 the ventral striatum them multi-echo fMRI may be beneficial. 
@@ -62,7 +69,8 @@ Consider the cost of added quality control
 ------------------------------------------
 If someone wants a push-button
 way to use multi-echo data to improve data quality, that doesn't require as deep an inspection of every output,
-stick with using the weighted average. The developers of tedana look forward to when tedana and other methods
+stick with using the weighted average. 
+The developers of tedana look forward to when tedana and other methods
 have sufficiently stable algorithms, which have been validated on a wide range of data sets, so that we can
 recommend the wide use of tedana.
 
@@ -95,7 +103,8 @@ There are multiple ways to balance the slight time cost from the added echoes th
 resulted in research publications.
 We suggest new multi-echo fMRI users examine the :ref:`spreadsheet of publications` that use
 multi-echo fMRI to identify studies with similar acquisition priorities,
-and use the parameters from those studies as a starting point. More complete recomendations
+and use the parameters from those studies as a starting point. 
+More complete recomendations
 and guidelines are discussed in the `appendix`_ of Dipasquale et al, 2017.
 
 .. _appendix: https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0173289
@@ -106,8 +115,8 @@ and guidelines are discussed in the `appendix`_ of Dipasquale et al, 2017.
 .. _GE Collaboration Portal: https://collaborate.mr.gehealthcare.com
 .. note:: 
     In order to increase the number of contrasts ("echoes") you may need to first increase the TR, shorten the 
-    first TE and/or enable in-plane acceleration. For typically used parameters see the 
-    `parameters and publications page`_
+    first TE and/or enable in-plane acceleration. 
+    For typically used parameters see the `parameters and publications page`_
 .. _parameters and publications page: https://tedana.readthedocs.io/en/latest/publications.html
 
 Resources
@@ -153,13 +162,17 @@ Available multi-echo fMRI sequences for multiple vendors
 **For Siemens** users, there are two options for Works In Progress (WIPs) Sequences. 
 The Center for Magnetic Resonance Research at the University of Minnesota 
 provides a custom MR sequence that allows users to collect multiple echoes 
-(termed **Contrasts**). The sequence and documentation can be `found here`_. For details 
-on obtaining a license follow `this link`_. By default the number of contrasts is 1, 
-yielding a signal echo sequence. In order to collect multiple echoes, increase number of 
+(termed **Contrasts**). 
+The sequence and documentation can be `found here`_. For details 
+on obtaining a license follow `this link`_. 
+By default the number of contrasts is 1, 
+yielding a signal echo sequence.
+ In order to collect multiple echoes, increase number of 
 Contrasts on the **Sequence Tab, Part 1** on the MR console. 
 
 In addition, the Martinos Center at Harvard also has a MR sequence available, with the 
-details `available here`_. The number of echoes can be specified on the **Sequence, Special** tab 
+details `available here`_. 
+The number of echoes can be specified on the **Sequence, Special** tab 
 in this sequence. 
 
 **For GE users**, there are currently two sharable pulse sequences:
@@ -169,7 +182,8 @@ Hyperband Multi-echo EPI (HyperMEPI) - Software releases: DV26, MP26, DV27, RX27
 (here Hyperband can be deactivated to do simple Multi-echo EPI – online recon)
 
 Please reach out to the GE Research Operation team or each pulse sequence’s 
-author to begin the process of obtaining this software. More information can be 
+author to begin the process of obtaining this software. 
+More information can be 
 found on the `GE Collaboration Portal`_ 
 
 Once logged-in, go to Groups > GE Works-in-Progress you can find the description of the current ATSM (i.e. prototypes)
@@ -185,7 +199,8 @@ AFNI can process multi-echo data natively as well as apply tedana denoising thro
 .. _afni_proc.py help: https://afni.nimh.nih.gov/pub/dist/doc/program_help/afni_proc.py.html
 
 `fmriprep` can also process multi-echo data, but is currently limited to using the optimally combined
-timeseries. For more details, see the `fmriprep workflows page`_
+timeseries. 
+For more details, see the `fmriprep workflows page`_
 
 .. _fmriprep workflows page: https://fmriprep.readthedocs.io/en/stable/workflows.html
 

@@ -36,9 +36,10 @@ Anyone interested in using v3.2 may compile and install an earlier release (<=0.
 
 What is the warning about ``duecredit``?
 `````````````````````````````````````````
-``duecredit`` is a python package that is used, but not required by ``tedana``. These warnings do
-not affect any of the processing within the ``tedana``. To avoide this warning, you can install
-``duecredit`` with ``pip install duecredit``. For more information about ``duecredit`` and concerns about 
+``duecredit`` is a python package that is used, but not required by ``tedana``. 
+These warnings do not affect any of the processing within the ``tedana``. 
+To avoide this warning, you can install ``duecredit`` with ``pip install duecredit``. 
+For more information about ``duecredit`` and concerns about 
 the citation and visibility of software or methods, visit the `duecredit`_ github. 
 
 .. _duecredit: https://github.com/duecredit/duecredit
@@ -55,13 +56,14 @@ Multi-echo fMRI
 Will I encounter SAR limits more often with multi-echo fMRI?
 ````````````````````````````````````````````````````````````
 While multi-echo does lead to collecting more images during each TR (one per echo), there is still only a single
-radiofrequency pulse. For this reason, there is no change in SAR for participants intrinsic to multi-echo
-fMRI. 
+radiofrequency pulse. 
+For this reason, there is no change in SAR for participants intrinsic to multi-echo fMRI. 
 
 Can I combine multiband (simultaneous multislice) with multi-echo fMRI?
 ```````````````````````````````````````````````````````````````````````
-Yes, these techniques are completely seperate. Mutliband fMRI leads to collecting multiple slices within a volume
-simultaneouly, while multi-echo fMRI is instead related to collecting multiple unique volumes. These techniques can 
-be combined to reduce the TR in a multi-echo sequence. 
+Yes, these techniques are completely seperate. 
+Mutliband fMRI leads to collecting multiple slices within a volume  simultaneouly, while multi-echo 
+fMRI is instead related to collecting multiple unique volumes. 
+These techniques can be combined to reduce the TR in a multi-echo sequence. 
 
 

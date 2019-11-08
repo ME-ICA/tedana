@@ -2,9 +2,9 @@ What is multi-echo fMRI
 =======================
 Most echo-planar image (EPI) sequences collect a single brain image following 
 a radio frequency (RF) pulse, at a rate known as the repetition time (TR). 
-This typical approach is known as single-echo fMRI. In contrast, multi-echo (ME) 
-fMRI refers to collecting data at multiple echo times, resulting in
-multiple volumes with varying levels of contrast acquired per RF pulse.
+This typical approach is known as single-echo fMRI. 
+In contrast, multi-echo (ME) fMRI refers to collecting data at multiple echo times, 
+resulting in multiple volumes with varying levels of contrast acquired per RF pulse.
 
 The physics of multi-echo fMRI
 ------------------------------
@@ -21,8 +21,9 @@ The image below shows the basic relationship between echo times and the image ac
 3T (top, A) and 7T (bottom, B). Note that the earliest echo time is the brightest, as the 
 signal has only had a limited amount of time to decay. 
 In addition, the latter echo times show areas in which is the signal has decayed completely ('drop out') 
-due to inhomgeneity in the magnetic field. By using the information across multiple 
-echoes these images can be combined in an optimal manner to take advantage of the signal 
+due to inhomgeneity in the magnetic field. 
+By using the information across multiple echoes these images can be combined in 
+an optimal manner to take advantage of the signal 
 in the earlier echoes (see `processing pipeline details`_).
 
 .. image:: /_static/physics_kundu_2017_multiple_echoes.jpg
@@ -35,20 +36,24 @@ single voxel at two timepoints (x and y) and the measured signal measured at thr
 Adapted from  `Kundu et al. (2017)`_.
 
 For the left column, we are observing a change that we term :math:`{\Delta}{S_0}` - that is a change
-in the intercept or raw signal intensity. A common example of this is participant movement, 
-in which the voxel (which is at a static location within the scanner)
-now contains different tissue or even an area outside of the brain.  
+in the intercept or raw signal intensity. 
+A common example of this is participant movement, in which the voxel (which is at a static 
+location within the scanner) now contains different tissue or even an area outside of the brain.  
 
-As we have collected three seperate echoes, we can compare the change in signal at each echo time, :math:`{\Delta}{S(TE_n)}`. For 
-:math:`{\Delta}{S_0}` we see that this produces a decaying curve. If we compare this to the original signal, as in
-:math:`\frac{{\Delta}{S(TE_n)}}{S(TE_n)}` we see that there is no echo time dependence, as the final plot is a flat line. 
+As we have collected three seperate echoes, we can compare the change in signal at each echo time, :math:`{\Delta}{S(TE_n)}`. 
+For  :math:`{\Delta}{S_0}` we see that this produces a decaying curve. 
+If we compare this to the original signal, as in :math:`\frac{{\Delta}{S(TE_n)}}{S(TE_n)}` 
+we see that there is no echo time dependence, as the final plot is a flat line. 
 
-In the right column, we consider changes that are related to brain activity. For example, imagine that the two brain states here 
-(x and y) are a baseline and task activated state respectively. This effect is a change in in :math:`{\Delta}{R_2^*}` which is equivilent 
-to the inverse of :math:`{T_2^*}`. We typically observe this change in signal amplitude occuring over volumes with 
+In the right column, we consider changes that are related to brain activity. 
+For example, imagine that the two brain states here (x and y) are a baseline and task activated state respectively. 
+This effect is a change in in :math:`{\Delta}{R_2^*}` which is equivilent 
+to the inverse of :math:`{T_2^*}`. 
+We typically observe this change in signal amplitude occuring over volumes with 
 the hemodynamic response, while here we are examining the change in signal over echo times. 
 Again we can plot the difference in the signal between these two states as a function of echo time, 
-finding that the signal rises and falls. If we compare this curve to the original signal we find 
+finding that the signal rises and falls. 
+If we compare this curve to the original signal we find 
 that the magnitude of the changes is dependent on the echo time.
 
 For a more comprehensive review of these topics and others, see `Kundu et al. (2017)`_.
@@ -75,9 +80,10 @@ Optimally combined data exhibits higher SNR and improves statistical power of an
 traditionally affected by drop-out.
 
 **Denoise the data based on information contained in the echoes**: Collecting multi-echo data allows 
-access to unique denoising methods. ICA-based denoising methods like ICA-AROMA (`Pruim et al. (2015)`_)
-have been shown to significantly improve the quality of cleaned signal. These methods, however, have comparably 
-limited information, as they are designed to work with single-echo EPI.
+access to unique denoising methods. 
+ICA-based denoising methods like ICA-AROMA (`Pruim et al. (2015)`_)
+have been shown to significantly improve the quality of cleaned signal. 
+These methods, however, have comparably limited information, as they are designed to work with single-echo EPI.
 
 ``tedana`` is an ICA-based denoising pipeline built especially for 
 multi-echo data. Collecting multi-echo EPI allows us to leverage all of the information available for single-echo datasets,

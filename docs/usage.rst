@@ -34,9 +34,11 @@ https://tedana.readthedocs.io/en/latest/outputs.html
 
 .. note::
     The ``--mask`` argument is not intended for use with very conservative region-of-interest
-    analyses. One of the ways by which components are assessed as BOLD or non-BOLD is their
+    analyses. 
+    One of the ways by which components are assessed as BOLD or non-BOLD is their
     spatial pattern, so overly conservative masks will invalidate several steps in the tedana
-    workflow. To examine regions-of-interest with multi-echo data, apply masks after TE
+    workflow. 
+    To examine regions-of-interest with multi-echo data, apply masks after TE
     Dependent ANAlysis.
 
 Run t2smap
@@ -93,8 +95,8 @@ and apply the resulting transformation to all echoes.
 
 .. note:: 
     Any intensity normalization or nuisance regressors should be applied to the data
-    *after* ``tedana`` calculates the BOLD and non-BOLD weighting of components. If this is 
-    not considered, resulting intensity gradients (e.g., in the case of scaling)
+    *after* ``tedana`` calculates the BOLD and non-BOLD weighting of components. 
+    If this is not considered, resulting intensity gradients (e.g., in the case of scaling)
     or alignment parameters (e.g., in the case of motion correction, normalization)
     are likely to differ across echos,
     and the subsequent calculation of voxelwise T2* values will be distorted or incorrect.
