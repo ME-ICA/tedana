@@ -201,10 +201,11 @@ def metric1_greaterthan_metric2(comptable, decision_node_idx, iftrue, iffalse,
         comptable = change_comptable_classifications(
                         comptable, iftrue, iffalse,
                         decision_boolean, str(decision_node_idx))
-
+        numTrue = (comps2use is True).sum()
+        numFalse = (comps2use is False).sum()
         log_decision_tree_step(functionname_idx, comps2use,
-                               numTrue=(decision_boolean is True).sum(),
-                               numFalse=(decision_boolean is False).sum())
+                               numTrue=numTrue,
+                               numFalse=numFalse)
 
     return comptable, used_metrics, numTrue, numFalse
 
