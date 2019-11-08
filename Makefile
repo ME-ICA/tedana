@@ -15,5 +15,9 @@ lint:
 unittest:
 	@py.test --skipintegration --cov-append --cov-report term-missing --cov=tedana tedana/
 
-integration:
-	@py.test --cov-append --cov-report term-missing --cov=tedana tedana/tests/test_integration.py
+three-echo:
+	@py.test --cov-append --cov-report term-missing --cov=tedana -k test_three_echo tedana/tests/test_integration.py
+
+five-echo:
+	@py.test --cov-append --cov-report term-missing --cov=tedana -k test_five_echo tedana/tests/test_integration.py
+
