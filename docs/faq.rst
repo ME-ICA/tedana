@@ -34,6 +34,15 @@ the v3.2 code, with the goal of revisiting it when ``tedana`` is more stable.
 
 Anyone interested in using v3.2 may compile and install an earlier release (<=0.0.4) of ``tedana``.
 
+What is the warning about ``duecredit``?
+`````````````````````````````````````````
+``duecredit`` is a python package that is used, but not required by ``tedana``. These warnings do
+not affect any of the processing within the ``tedana``. To avoide this warning, you can install
+``duecredit`` with ``pip install duecredit``. For more information about ``duecredit`` and concerns about 
+the citation and visibility of software or methods, visit the `duecredit`_ github. 
+
+.. _duecredit: https://github.com/duecredit/duecredit
+
 .. _here: https://bitbucket.org/prantikk/me-ica/commits/906bd1f6db7041f88cd0efcac8a74074d673f4f5
 
 .. _NeuroStars: https://neurostars.org
