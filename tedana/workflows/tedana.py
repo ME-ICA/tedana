@@ -301,7 +301,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         os.mkdir(out_dir)
 
     # boilerplate
-    refs = []
     basename = 'report'
     extension = 'txt'
     repname = op.join(out_dir, (basename + '.' + extension))
@@ -422,7 +421,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         first_echo_img = io.new_nii_like(ref_img, catd[:, 0, :])
         mask = compute_epi_mask(first_echo_img)
         RepLGR.info("An initial mask was generated from the first echo using "
-                  "nilearn's compute_epi_mask function.")
+                    "nilearn's compute_epi_mask function.")
     else:
         # TODO: add affine check
         LGR.info('Using user-defined mask')
