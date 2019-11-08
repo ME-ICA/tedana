@@ -75,7 +75,7 @@ stick with using the weighted average.
 The developers of tedana look forward to when tedana and other methods
 have sufficiently stable algorithms, which have been validated on a wide range of data sets, so that we can
 recommend the wide use of tedana.
-``tedana`` currently allows the use of a ``--png`` flag when called, in order to produce basic diagnostic images, 
+``tedana`` currently produces basic diagnostic images by default, 
 `see outputs`_ for more information on these outputs. 
 
 .. _t2smap: https://tedana.readthedocs.io/en/latest/usage.html#run-t2smap
