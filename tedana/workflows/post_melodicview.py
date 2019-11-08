@@ -124,7 +124,8 @@ def create_melview_folder(tedana_dir, outdir, anat):
     mmat = os.path.join(tedana_dir, 'meica_mix.1D')
     fvol = os.path.join(tedana_dir, 'betas_OC.nii')
     dvol = os.path.join(tedana_dir, 'dn_ts_OC.nii')
-    out_fvol = os.path.join(outdir, 'filtered_func_data.ica', 'melodic_IC.nii.gz')
+    out_fvol = os.path.join(outdir, 'filtered_func_data.ica',
+                            'melodic_IC.nii.gz')
     out_dvol = os.path.join(outdir, 'filtered_func_data.nii.gz')
     out_mmat = os.path.join(outdir, 'filtered_func_data.ica', 'melodic_mix')
     out_ftmat = os.path.join(outdir, 'filtered_func_data.ica', 'melodic_FTmix')
@@ -154,7 +155,8 @@ def create_melview_folder(tedana_dir, outdir, anat):
     else:
         anat = os.path.join(tedana_dir, 't2sv.nii')
 
-        out_anat = os.path.join(outdir, 'filtered_func_data.ica', 'mean.nii.gz')
+        out_anat = os.path.join(outdir, 'filtered_func_data.ica',
+                                'mean.nii.gz')
         check_gzip_and_link_volume(anat, out_anat, 'anat')
 
     LGR.info('Copying meica_mix in me.ica folder and generating melodic_FTmix')
@@ -173,7 +175,8 @@ def create_melview_folder(tedana_dir, outdir, anat):
                                        'dice_FR2', 'dice_FS0', 'countnoise',
                                        'signal-noise_t', 'signal-noise_p',
                                        'd_table_score', 'kappa ratio',
-                                       'd_table_score_scrub', 'rationale'], axis=1)
+                                       'd_table_score_scrub', 'rationale'],
+                               axis=1)
 
     comptable['true'] = ' True'
     comptable['classification'] = ' ' + comptable['classification']
@@ -184,7 +187,7 @@ def create_melview_folder(tedana_dir, outdir, anat):
 
     f = open(out_ctab, 'w+')
     first_line = os.path.join(outdir, 'filtered_func_data.ica')
-    f.write(f'{first_line}\n')
+    f.write('{}\n'.format(first_line))
     comptable.to_csv(f, header=False, index=False, sep=',')
     f.write('%s' % compstr)
     f.close()
