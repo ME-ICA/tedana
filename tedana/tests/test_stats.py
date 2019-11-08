@@ -10,9 +10,6 @@ from tedana.stats import get_coeffs
 from tedana.stats import getfbounds
 
 
-"""
-Tests for computefeats2
-"""
 def test_break_computefeats2():
     """
     Ensure that computefeats2 fails when input data do not have the right
@@ -71,9 +68,6 @@ def test_smoke_computefeats2():
     assert computefeats2(data, mmix, normalize=False) is not None     
 
 
-"""
-Tests for tedana.stats.get_coeffs
-"""
 def test_get_coeffs():
     """
     Check least squares coefficients.
@@ -144,8 +138,6 @@ def test_break_get_coeffs():
                                  'match'.format(data.shape[0], mask.shape[0]))
 
 
-
-# SMOKE TEST 
 def test_smoke_get_coeffs():
     """
     Ensure that get_coeffs returns outputs with different inputs and optional paramters
@@ -162,9 +154,6 @@ def test_smoke_get_coeffs():
     assert get_coeffs(data_2d, x, add_const=True) is not None
 
 
-"""
-Tests for tedana.stats.getfbounds
-"""
 def test_getfbounds():
     good_inputs = range(1, 12)
 
