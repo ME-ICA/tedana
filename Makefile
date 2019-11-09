@@ -17,7 +17,7 @@ unittest:
 	@py.test --skipintegration --cov-append --cov-report term-missing --cov=tedana tedana/
 
 three-echo:
-	@py.test --cov-append --cov-report term-missing --cov=tedana -k test_three_echo tedana/tests/test_integration.py
+	@py.test -k test_three_echo tedana/tests/test_integration.py
 
 five-echo:
 	@py.test --cov-append --cov-report term-missing --cov=tedana -k test_five_echo tedana/tests/test_integration.py
