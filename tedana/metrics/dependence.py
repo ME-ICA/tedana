@@ -96,7 +96,7 @@ def compute_signal_minus_noise_z():
         if n_noise_dupls:
             LGR.debug('For component {}, {} duplicate noise F-values '
                       'detected.'.format(i_comp, n_noise_dupls))
-        n_signal_dupls = signal_FR2_Z.size - np.unique(signal_FR2_Z).size
+        n_signal_dupls = signal_FT2_Z.size - np.unique(signal_FT2_Z).size
         if n_signal_dupls:
             LGR.debug('For component {}, {} duplicate signal F-values '
                       'detected.'.format(i_comp, n_signal_dupes))
@@ -304,16 +304,51 @@ def spatial_cluster(F_T2_maps, F_S0_maps, Z_maps, optcom_betas, mask, n_echos, c
             ccimg, min_cluster_size=csize, threshold=1.95, mask=mask,
             binarize=True)
 
-        # Cluster-extent threshold and binarize ranked signal-change map
+        # Initial cluster-defining threshold is defined based on the number
+        # of significant voxels from the F-statistic maps. This threshold
+        # will be relaxed until the number of significant voxels from both
+        # maps is roughly equal.
         ccimg = io.new_nii_like(
             ref_img,
             utils.unmask(stats.rankdata(optcom_betas_abs[:, i_comp]), mask))
-        Br_T2_clmaps[:, i_comp] = utils.threshold_map(
-            ccimg, min_cluster_size=csize,
-            threshold=(max(optcom_betas_abs.shape) - countsigFT2), mask=mask,
-            binarize=True)
-        Br_S0_clmaps[:, i_comp] = utils.threshold_map(
-            ccimg, min_cluster_size=csize,
-            threshold=(max(optcom_betas_abs.shape) - countsigFS0), mask=mask,
-            binarize=True)
+        step = int(countsigFT2 / 10)
+        T2_thresh = n_voxels - (countsigFT2 - 1)
+        while True:
+            Br_T2_clmap = utils.threshold_map(
+                ccimg, min_cluster_size=csize,
+                threshold=T2_thresh, mask=mask,
+                binarize=True)
+            diff = countsigFT2 - Br_T2_clmap.sum()
+            if diff < 0 or Br_T2_clmap.sum() == 0:
+                T2_thresh += step
+                Br_T2_clmap = utils.threshold_map(
+                    ccimg, min_cluster_size=csize,
+                    threshold=T2_thresh, mask=mask,
+                    binarize=True)
+                break
+            else:
+                T2_thresh -= step
+        Br_T2_clmaps[:, i_comp] = Br_T2_clmap
+
+        ccimg = io.new_nii_like(
+            ref_img,
+            utils.unmask(stats.rankdata(optcom_betas_abs[:, i_comp]), mask))
+        step = int(countsigFS0 / 10)
+        S0_thresh = n_voxels - (countsigFS0 - 1)
+        while True:
+            Br_S0_clmap = utils.threshold_map(
+                ccimg, min_cluster_size=csize,
+                threshold=S0_thresh, mask=mask,
+                binarize=True)
+            diff = countsigFS0 - Br_S0_clmap.sum()
+            if diff < 0 or Br_S0_clmap.sum() == 0:
+                S0_thresh += step
+                Br_S0_clmap = utils.threshold_map(
+                    ccimg, min_cluster_size=csize,
+                    threshold=S0_thresh, mask=mask,
+                    binarize=True)
+                break
+            else:
+                S0_thresh -= step
+        Br_S0_clmaps[:, i_comp] = Br_S0_clmap
     return Z_clmaps, F_T2_clmaps, F_S0_clmaps, Br_T2_clmaps, Br_S0_clmaps
