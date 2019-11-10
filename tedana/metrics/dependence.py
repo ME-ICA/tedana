@@ -54,33 +54,18 @@ def calculate_psc(data_optcom, optcom_betas):
     return PSC
 
 
-def compute_countsigFT2(F_T2_clmaps):
-    countsigFT2 = F_T2_clmaps.sum(axis=0)
-    return countsigFT2
-
-
-def compute_countsigFS0(F_S0_clmaps):
-    countsigFS0 = F_S0_clmaps.sum(axis=0)
-    return countsigFS0
-
-
-def compute_countsignal(Z_clmaps):
-    countsignal = Z_clmaps.sum(axis=0)
+def compute_countsignal(cl_arr):
+    countsignal = cl_arr.sum(axis=0)
     return countsignal
 
 
 def compute_countnoise(Z_maps, Z_cl_maps, z_thresh=1.95):
-    n_components = Z_maps.shape[1]
-    countnoise = np.zeros(n_components)
-    for i_comp in range(n_components):
-        # index voxels significantly loading on component but not from clusters
-        comp_noise_sel = ((np.abs(Z_maps[:, i_comp]) > z_thresh) &
-                          (Z_clmaps[:, i_comp] == 0))
-        countnoise[i_comp] = np.array(comp_noise_sel, dtype=np.int).sum()
+    noise_idx = (np.abs(Z_maps) > z_thresh) & (Z_clmaps == 0)
+    countnoise = np.sum(noise_idx).sum(axis=0)
     return countnoise
 
 
-def compute_signal_minus_noise_z():
+def compute_signal_minus_noise_z(Z_maps, Z_cl_maps, F_T2_maps, z_thresh=1.95):
     n_components = Z_maps.shape[1]
     signal_minus_noise_t = np.zeros(n_components)
     signal_minus_noise_p = np.zeros(n_components)
@@ -106,8 +91,8 @@ def compute_signal_minus_noise_z():
             signal_FT2_Z, noise_FT2_Z, equal_var=False)
         signal_minus_noise_z[i_comp] = t_to_z(t_value, dof)
 
-    signal_minus_noise_z[np.isnan(signal_minus_noise_t)] = 0
-    signal_minus_noise_p[np.isnan(signal_minus_noise_p)] = 0
+    signal_minus_noise_z = np.nan_to_num(signal_minus_noise_z, 0)
+    signal_minus_noise_p = np.nan_to_num(signal_minus_noise_p, 0)
     return signal_minus_noise_z, signal_minus_noise_p
 
 
@@ -135,8 +120,8 @@ def compute_signal_minus_noise_t(Z_maps, Z_cl_maps, F_T2_maps, z_thresh=1.95):
          signal_minus_noise_p[i_comp]) = stats.ttest_ind(
              signal_FT2_Z, noise_FT2_Z, equal_var=False)
 
-    signal_minus_noise_t[np.isnan(signal_minus_noise_t)] = 0
-    signal_minus_noise_p[np.isnan(signal_minus_noise_p)] = 0
+    signal_minus_noise_t = np.nan_to_num(signal_minus_noise_t, 0)
+    signal_minus_noise_p = np.nan_to_num(signal_minus_noise_p, 0)
     return signal_minus_noise_t, signal_minus_noise_p
 
 
@@ -146,7 +131,7 @@ def compute_dice(Br_clmaps, F_clmaps):
     for i_comp in range(n_components):
         dice_values[i_comp] = utils.dice(Br_clmaps[:, i_comp], F_clmaps[:, i_comp])
 
-    dice_values[np.isnan(dice_values)] = 0
+    dice_values = np.nan_to_num(dice_values, 0)
     return dice_values
 
 
@@ -193,22 +178,14 @@ def calculate_dependence_metrics(comptable, F_T2_maps, F_S0_maps, Z_maps):
 
 
 def calculate_varex(optcom_betas):
-    n_components = optcom_betas.shape[1]
-    totvar = (optcom_betas**2).sum()
-
-    varex = np.zeros(n_components)
-    for i_comp in range(n_components):
-        varex[i_comp] = 100 * (optcom_betas[:, i_comp]**2).sum() / totvar
+    compvar = (optcom_betas ** 2).sum(axis=0)
+    varex = 100 * (compvar / compvar.sum())
     return varex
 
 
 def calculate_varex_norm(weights):
-    n_components = weights.shape[1]
-    totvar_norm = (weights**2).sum()
-
-    varex_norm = np.zeros(n_components)
-    for i_comp in range(n_components):
-        varex_norm[i_comp] = (weights[:, i_comp]**2).sum() / totvar_norm
+    compvar = (weights ** 2).sum(axis=0)
+    varex_norm = compvar / compvar.sum()
     return varex_norm
 
 

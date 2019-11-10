@@ -6,7 +6,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-from .dependence import *
+from . import dependence
 from ._utils import determine_signs, flip_components, sort_df, apply_sort
 
 
@@ -16,7 +16,7 @@ RefLGR = logging.getLogger('REFERENCES')
 
 
 def generate_metrics(comptable, data_cat, data_optcom, mixing, mask, tes, ref_img, mixing_z=None,
-                     metrics=['kappa', 'rho'], sort_by='kappa', ascending=False):
+                     metrics=None, sort_by='kappa', ascending=False):
     """
     Fit TE-dependence and -independence models to components.
 
@@ -62,6 +62,8 @@ def generate_metrics(comptable, data_cat, data_optcom, mixing, mask, tes, ref_im
     betas : :obj:`numpy.ndarray`
     mmix_new : :obj:`numpy.ndarray`
     """
+    if metrics is None:
+        metrics = []
     RepLGR.info('The following metrics were calculated: {}.'.format(', '.join(metrics)))
 
     if not (data_cat.shape[0] == data_optcom.shape[0] == mask.sum()):
@@ -82,54 +84,55 @@ def generate_metrics(comptable, data_cat, data_optcom, mixing, mask, tes, ref_im
     comptable = pd.DataFrame(index=np.arange(n_components, dtype=int))
 
     # Metric maps
-    weights = calculate_weights(data_optcom, mixing_z)
+    weights = dependence.calculate_weights(data_optcom, mixing_z)
     signs = determine_signs(weights, axis=0)
     weights, mixing = flip_components(weights, mixing, signs=signs)
-    optcom_betas = calculate_betas(data_optcom, mixing)
-    PSC = calculate_psc(data_optcom, optcom_betas)
+    optcom_betas = dependence.calculate_betas(data_optcom, mixing)
+    PSC = dependence.calculate_psc(data_optcom, optcom_betas)
 
     # compute betas and means over TEs for TE-dependence analysis
-    Z_maps = calculate_z_maps(weights)
-    F_T2_maps, F_S0_maps = calculate_f_maps(mixing, data_cat, tes, Z_maps)
+    Z_maps = dependence.calculate_z_maps(weights)
+    F_T2_maps, F_S0_maps = dependence.calculate_f_maps(mixing, data_cat, tes, Z_maps)
 
     (Z_clmaps, F_T2_clmaps, F_S0_clmaps,
-     Br_T2_clmaps, Br_S0_clmaps) = spatial_cluster(
+     Br_T2_clmaps, Br_S0_clmaps) = dependence.spatial_cluster(
         F_T2_maps, F_S0_maps, Z_maps, optcom_betas, mask, n_echos)
 
     # Dependence metrics
     if any([v in metrics for v in ['kappa', 'rho']]):
-        comptable = calculate_dependence_metrics(comptable, F_T2_maps, F_S0_maps, Z_maps)
+        comptable['kappa'], comptable['rho'] = dependence.calculate_dependence_metrics(
+            F_T2_maps, F_S0_maps, Z_maps)
 
     # Generic metrics
     if 'variance explained' in metrics:
-        comptable['variance explained'] = calculate_varex(optcom_betas)
+        comptable['variance explained'] = dependence.calculate_varex(optcom_betas)
 
     if 'normalized variance explained' in metrics:
-        comptable['normalized variance explained'] = calculate_varex_norm(weights)
+        comptable['normalized variance explained'] = dependence.calculate_varex_norm(weights)
 
     # Spatial metrics
     if 'dice_FT2' in metrics:
-        comptable['dice_FT2'] = compute_dice(Br_T2_clmaps, F_T2_clmaps)
+        comptable['dice_FT2'] = dependence.compute_dice(Br_T2_clmaps, F_T2_clmaps)
 
     if 'dice_FS0' in metrics:
-        comptable['dice_FS0'] = compute_dice(Br_S0_clmaps, F_S0_clmaps)
+        comptable['dice_FS0'] = dependence.compute_dice(Br_S0_clmaps, F_S0_clmaps)
 
     if any([v in metrics for v in ['signal-noise_t', 'signal-noise_p']]):
         (comptable['signal-noise_t'],
-         comptable['signal-noise_p']) = compute_signal_minus_noise_t(
+         comptable['signal-noise_p']) = dependence.compute_signal_minus_noise_t(
             Z_maps, Z_clmaps, F_T2_maps)
 
     if 'countnoise' in metrics:
-        comptable['countnoise'] = compute_countnoise(Z_maps, Z_clmaps)
+        comptable['countnoise'] = dependence.compute_countnoise(Z_maps, Z_clmaps)
 
     if 'countsigFT2' in metrics:
-        comptable['countsigFT2'] = compute_countsigFT2(F_T2_clmaps)
+        comptable['countsigFT2'] = dependence.compute_countsignal(F_T2_clmaps)
 
     if 'countsigFS0' in metrics:
-        comptable['countsigFS0'] = compute_countsigFS0(F_S0_clmaps)
+        comptable['countsigFS0'] = dependence.compute_countsignal(F_S0_clmaps)
 
     if 'd_table_score' in metrics:
-        comptable['d_table_score'] = generate_decision_table_score(
+        comptable['d_table_score'] = dependence.generate_decision_table_score(
             comptable['kappa'], comptable['dice_FT2'],
             comptable['signal_minus_noise_t'], comptable['countnoise'],
             comptable['countsigFT2'])
