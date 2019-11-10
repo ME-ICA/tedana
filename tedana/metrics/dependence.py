@@ -125,12 +125,8 @@ def compute_signal_minus_noise_t(Z_maps, Z_cl_maps, F_T2_maps, z_thresh=1.95):
     return signal_minus_noise_t, signal_minus_noise_p
 
 
-def compute_dice(Br_clmaps, F_clmaps):
-    n_components = Br_clmaps.shape[1]
-    dice_values = np.zeros(n_components)
-    for i_comp in range(n_components):
-        dice_values[i_comp] = utils.dice(Br_clmaps[:, i_comp], F_clmaps[:, i_comp])
-
+def compute_dice(Br_clmaps, F_clmaps, axis=0):
+    dice_values = utils.dice(Br_clmaps, F_clmaps, axis=axis)
     dice_values = np.nan_to_num(dice_values, 0)
     return dice_values
 

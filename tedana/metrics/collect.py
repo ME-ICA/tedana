@@ -112,10 +112,10 @@ def generate_metrics(comptable, data_cat, data_optcom, mixing, mask, tes, ref_im
 
     # Spatial metrics
     if 'dice_FT2' in metrics:
-        comptable['dice_FT2'] = dependence.compute_dice(Br_T2_clmaps, F_T2_clmaps)
+        comptable['dice_FT2'] = dependence.compute_dice(Br_T2_clmaps, F_T2_clmaps, axis=0)
 
     if 'dice_FS0' in metrics:
-        comptable['dice_FS0'] = dependence.compute_dice(Br_S0_clmaps, F_S0_clmaps)
+        comptable['dice_FS0'] = dependence.compute_dice(Br_S0_clmaps, F_S0_clmaps, axis=0)
 
     if any([v in metrics for v in ['signal-noise_t', 'signal-noise_p']]):
         (comptable['signal-noise_t'],
