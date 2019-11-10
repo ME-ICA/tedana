@@ -100,7 +100,8 @@
         "projectManagement",
         "doc",
         "review",
-        "maintenance"
+        "maintenance",
+        "code"
       ]
     },
     {
