@@ -137,14 +137,9 @@ def generate_decision_table_score(kappa, dice_FT2, signal_minus_noise_t,
 
 
 def calculate_z_maps(weights, z_max=8):
-    n_components = weights.shape[1]
-    Z_maps = np.zeros(weights.shape)
-    for i_comp in range(n_components):
-        # compute weights as Z-values
-        weights_z = (weights[:, i_comp] - weights[:, i_comp].mean()) / weights[:, i_comp].std()
-        weights_z[np.abs(weights_z) > z_max] = (z_max * (np.abs(weights_z) / weights_z))[
-            np.abs(weights_z) > z_max]
-        Z_maps[:, i_comp] = weights_z
+    Z_maps = stats.zscore(weights, axis=0)
+    extreme_idx = np.abs(Z_maps) > z_max
+    Z_maps[extreme_idx] = z_max * np.sign(Z_maps[extreme_idx])
     return Z_maps
 
 
