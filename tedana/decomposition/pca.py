@@ -288,11 +288,7 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     np.savetxt('mepca_mix.1D', comp_ts)
 
     # write component maps to 4D image
-    comp_maps = np.zeros((data_oc.shape[0], comp_ts.shape[1]))
-    for i_comp in range(comp_ts.shape[1]):
-        temp_comp_ts = comp_ts[:, i_comp][:, None]
-        comp_map = utils.unmask(computefeats2(data_oc, temp_comp_ts, mask), mask)
-        comp_maps[:, i_comp] = np.squeeze(comp_map)
+    comp_maps = utils.unmask(computefeats2(data_oc, comp_ts, mask), mask)
     io.filewrite(comp_maps, 'mepca_OC_components.nii', ref_img)
 
     # Select components using decision tree
