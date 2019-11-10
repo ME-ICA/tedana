@@ -21,36 +21,27 @@ def test_break_computefeats2():
     mask = np.empty((n_samples))
 
     data = np.empty((n_samples))
-    with pytest.raises(ValueError) as e_info:
+    with pytest.raises(ValueError):
         computefeats2(data, mmix, mask, normalize=True)
-    assert str(e_info.value) == ('Parameter data should be 2d, not {0}d'.format(data.ndim))
 
     data = np.empty((n_samples, n_vols))
     mmix = np.empty((n_vols))
-    with pytest.raises(ValueError) as e_info:
+    with pytest.raises(ValueError):
         computefeats2(data, mmix, mask, normalize=True)
-    assert str(e_info.value) == ('Parameter mmix should be 2d, not {0}d'.format(mmix.ndim))
 
     mmix = np.empty((n_vols, n_comps))
     mask = np.empty((n_samples, n_vols))
-    with pytest.raises(ValueError) as e_info:
+    with pytest.raises(ValueError):
         computefeats2(data, mmix, mask, normalize=True)
-    assert str(e_info.value) == ('Parameter mask should be 1d, not {0}d'.format(mask.ndim))
 
     mask = np.empty((n_samples+1))
-    with pytest.raises(ValueError) as e_info:
+    with pytest.raises(ValueError):
         computefeats2(data, mmix, mask, normalize=True)
-    assert str(e_info.value) == ('First dimensions (number of samples) of data ({0}) '
-                                 'and mask ({1}) do not match.'.format(data.shape[0],
-                                                                       mask.shape[0]))
     data.shape[1] != mmix.shape[0]
     mask = np.empty((n_samples))
     mmix = np.empty((n_vols+1, n_comps))
-    with pytest.raises(ValueError) as e_info:
+    with pytest.raises(ValueError):
         computefeats2(data, mmix, mask, normalize=True)
-    assert str(e_info.value) == ('Second dimensions (number of volumes) of data ({0}) '
-                                 'and mmix ({1}) do not match.'.format(data.shape[0],
-                                                                       mmix.shape[0]))
 
 
 
@@ -113,29 +104,22 @@ def test_break_get_coeffs():
 
     data = np.empty((n_samples, n_vols))
     X = np.empty((n_vols))
-    with pytest.raises(ValueError) as e_info:
+    with pytest.raises(ValueError):
         get_coeffs(data, X, mask, add_const=False)
-    assert str(e_info.value) == ('Parameter X should be 2d, not {0}d'.format(X.ndim))
 
     data = np.empty((n_samples, n_echos, n_vols+1))
     X = np.empty((n_vols, n_comps))
-    with pytest.raises(ValueError) as e_info:
+    with pytest.raises(ValueError)
         get_coeffs(data, X, mask, add_const=False)
-    assert str(e_info.value) == ('Last dimension (dimension {0}) of data ({1}) does not '
-                                 'match first dimension of '
-                                 'X ({2})'.format(data.ndim, data.shape[-1], X.shape[0]))
 
     data = np.empty((n_samples, n_echos, n_vols))
     mask = np.empty((n_samples, n_echos, n_vols))
-    with pytest.raises(ValueError) as e_info:
+    with pytest.raises(ValueError):
         get_coeffs(data, X, mask, add_const=False)
-    assert str(e_info.value) == ('Parameter data should be 1d or 2d, not {0}d'.format(mask.ndim))
 
     mask = np.empty((n_samples+1, n_echos))
-    with pytest.raises(ValueError) as e_info:
+    with pytest.raises(ValueError):
         get_coeffs(data, X, mask, add_const=False)
-    assert str(e_info.value) == ('First dimensions of data ({0}) and mask ({1}) do not '
-                                 'match'.format(data.shape[0], mask.shape[0]))
 
 
 def test_smoke_get_coeffs():
