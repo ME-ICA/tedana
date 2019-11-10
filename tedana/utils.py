@@ -187,11 +187,6 @@ def dice(arr1, arr2, axis=None):
     if axis is not None and axis > (arr1.ndim - 1):
         raise ValueError('Axis provided {} not supported by the input arrays.'.format(axis))
 
-    if axis is None:
-        arr1 = arr1.flatten()
-        arr2 = arr2.flatten()
-        axis = 0
-
     arr_sum = arr1.sum(axis=axis) + arr2.sum(axis=axis)
     if np.all(arr_sum == 0):
         dsi = np.zeros(arr_sum.shape)
