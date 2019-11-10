@@ -61,7 +61,7 @@ def compute_countsignal(cl_arr):
 
 def compute_countnoise(Z_maps, Z_cl_maps, z_thresh=1.95):
     noise_idx = (np.abs(Z_maps) > z_thresh) & (Z_clmaps == 0)
-    countnoise = np.sum(noise_idx).sum(axis=0)
+    countnoise = noise_idx.sum(axis=0)
     return countnoise
 
 
@@ -69,13 +69,11 @@ def compute_signal_minus_noise_z(Z_maps, Z_cl_maps, F_T2_maps, z_thresh=1.95):
     n_components = Z_maps.shape[1]
     signal_minus_noise_t = np.zeros(n_components)
     signal_minus_noise_p = np.zeros(n_components)
+    noise_idx = (np.abs(Z_maps) > z_thresh) & (Z_clmaps == 0)
+    countnoise = noise_idx.sum(axis=0)
+    countsignal = Z_clmaps.sum(axis=0)
     for i_comp in range(n_components):
-        # index voxels significantly loading on component but not from clusters
-        comp_noise_idx = ((np.abs(Z_maps[:, i_comp]) > z_thresh) &
-                          (Z_clmaps[:, i_comp] == 0))
-        countsignal = Z_clmaps[:, i_comp].sum()
-        # NOTE: Why only compare distributions of *unique* F-statistics?
-        noise_FT2_Z = 0.5 * np.log(F_T2_maps[comp_noise_idx, i_comp])
+        noise_FT2_Z = 0.5 * np.log(F_T2_maps[noise_idx[:, i_comp], i_comp])
         signal_FT2_Z = 0.5 * np.log(F_T2_maps[Z_clmaps[:, i_comp] == 1, i_comp]))
         n_noise_dupls = noise_FT2_Z.size - np.unique(noise_FT2_Z).size
         if n_noise_dupls:
@@ -85,7 +83,7 @@ def compute_signal_minus_noise_z(Z_maps, Z_cl_maps, F_T2_maps, z_thresh=1.95):
         if n_signal_dupls:
             LGR.debug('For component {}, {} duplicate signal F-values '
                       'detected.'.format(i_comp, n_signal_dupes))
-        dof = np.sum(comp_noise_idx) + countsignal - 2
+        dof = countnoise[i_comp] + countsignal[i_comp] - 2
 
         t_value, signal_minus_noise_p[i_comp] = stats.ttest_ind(
             signal_FT2_Z, noise_FT2_Z, equal_var=False)
@@ -106,16 +104,11 @@ def compute_signal_minus_noise_t(Z_maps, Z_cl_maps, F_T2_maps, z_thresh=1.95):
     n_components = Z_maps.shape[1]
     signal_minus_noise_t = np.zeros(n_components)
     signal_minus_noise_p = np.zeros(n_components)
+    noise_idx = (np.abs(Z_maps) > z_thresh) & (Z_clmaps == 0)
     for i_comp in range(n_components):
-        # index voxels significantly loading on component but not from clusters
-        comp_noise_sel = ((np.abs(Z_maps[:, i_comp]) > z_thresh) &
-                          (Z_clmaps[:, i_comp] == 0))
-        comptable.loc[i_comp, 'countnoise'] = np.array(
-            comp_noise_sel, dtype=np.int).sum()
         # NOTE: Why only compare distributions of *unique* F-statistics?
-        noise_FT2_Z = np.log10(np.unique(F_T2_maps[comp_noise_sel, i_comp]))
-        signal_FT2_Z = np.log10(np.unique(
-            F_T2_maps[Z_clmaps[:, i_comp] == 1, i_comp]))
+        noise_FT2_Z = np.log10(np.unique(F_T2_maps[noise_idx[:, i_comp], i_comp]))
+        signal_FT2_Z = np.log10(np.unique(F_T2_maps[Z_clmaps[:, i_comp] == 1, i_comp]))
         (signal_minus_noise_t[i_comp],
          signal_minus_noise_p[i_comp]) = stats.ttest_ind(
              signal_FT2_Z, noise_FT2_Z, equal_var=False)
