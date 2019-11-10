@@ -130,25 +130,6 @@ jobs:
             source activate tedana_py37  # depends on makeenv37
             make lint
 
-  build_docs:
-    docker:
-      - image: continuumio/miniconda3
-    working_directory: /tmp/src/tedana
-    steps:
-      - checkout
-      - restore_cache:
-          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
-      - run:
-          name: Build docs
-          command: |
-            apt-get install -yqq make
-            source activate tedana_py37   # depends on makeenv37
-            cd docs && make html doctest
-            mkdir /tmp/docs
-            mv /tmp/src/tedana/docs/_build/* /tmp/docs/
-      - store_artifacts:
-          path: /tmp/docs
-
   three-echo:
     docker:
       - image: continuumio/miniconda3
@@ -236,9 +217,6 @@ workflows:
           requires:
             - makeenv_37
       - five-echo:
-          requires:
-            - makeenv_37
-      - build_docs:
           requires:
             - makeenv_37
       - merge_coverage:
