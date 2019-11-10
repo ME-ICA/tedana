@@ -8,11 +8,10 @@ from scipy import stats
 from sklearn.decomposition import PCA
 
 from tedana import metrics, utils, io
-from tedana.decomposition._utils import eimask
+from tedana.decomposition import (gift_pca, _utils)
 from tedana.stats import computefeats2
 from tedana.selection import kundu_tedpca
 from tedana.due import due, BibTeX
-from tedana.decomposition import run_gift_pca
 
 LGR = logging.getLogger(__name__)
 
@@ -222,7 +221,7 @@ def tedpca(data_cat,
         data = np.stack([data_cat[mask, ee, :] for ee in source_tes - 1],
                         axis=1)
 
-    eim = np.squeeze(eimask(data))
+    eim = np.squeeze(_utils.eimask(data))
     data = np.squeeze(data[eim])
 
     data_z = ((data.T - data.T.mean(axis=0)) /
@@ -231,7 +230,7 @@ def tedpca(data_cat,
               data_z.mean()) / data_z.std()  # var normalize everything
 
     if algorithm in ['mdl', 'aic', 'kic']:
-        voxel_comp_weights, varex, varex_norm, comp_ts = run_gift_pca(
+        voxel_comp_weights, varex, varex_norm, comp_ts = gift_pca.run_gift_pca(
             data_z, algorithm)
     elif algorithm == 'mle':
         voxel_comp_weights, varex, varex_norm, comp_ts = run_mlepca(data_z)

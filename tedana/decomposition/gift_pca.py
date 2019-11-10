@@ -9,7 +9,7 @@ from scipy.signal import correlate2d
 
 
 def autocorr(x):
-    result = numpy.correlate(x, x, mode='full')
+    result = np.correlate(x, x, mode='full')
     return result[result.size / 2:]
 
 
