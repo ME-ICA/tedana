@@ -95,9 +95,11 @@ def computefeats2(data, mmix, mask=None, normalize=True):
     return data_Z
 
 
-def get_coeffs(data, X, mask=None, add_const=False):
+def get_coeffs(data, X, mask=None):
     """
-    Performs least-squares fit of `X` against `data`
+    Performs least-squares fit of X against data to get parameter estimates
+    for each regressor in X against each voxel in data. Automatically adds a
+    constant term to X.
 
     Parameters
     ----------
@@ -107,13 +109,11 @@ def get_coeffs(data, X, mask=None, add_const=False):
         Array where `T` is time and `C` is predictor variables
     mask : (S [x E]) array_like
         Boolean mask array
-    add_const : bool, optional
-        Add intercept column to `X` before fitting. Default: False
 
     Returns
     -------
     betas : (S [x E] x C) :obj:`numpy.ndarray`
-        Array of `S` sample betas for `C` predictors
+        Array of `S` sample parameter estimates for `C` predictors
     """
     if data.ndim not in [2, 3]:
         raise ValueError('Parameter data should be 2d or 3d, not {0}d'.format(data.ndim))
@@ -138,15 +138,19 @@ def get_coeffs(data, X, mask=None, add_const=False):
     # coerce X to >=2d
     X = np.atleast_2d(X)
 
-    if len(X) == 1:
+    if X.shape[0] == 1:
         X = X.T
 
-    if add_const:  # add intercept, if specified
-        X = np.column_stack([X, np.ones((len(X), 1))])
+    # mean-center design matrix
+    X = X - np.mean(X, axis=0, keepdims=True)
+
+    # add intercept
+    X = np.column_stack([X, np.ones((len(X), 1))])
 
     betas = np.linalg.lstsq(X, mdata, rcond=None)[0].T
-    if add_const:  # drop beta for intercept, if specified
-        betas = betas[:, :-1]
+
+    # drop beta for intercept
+    betas = betas[:, :-1]
 
     if mask is not None:
         betas = utils.unmask(betas, mask)
