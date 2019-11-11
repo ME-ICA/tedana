@@ -347,7 +347,7 @@ def tedpca(data_cat,
         comptable['classification'] = 'accepted'
         comptable['rationale'] = ''
 
-    comptable.to_csv('comp_table_pca.txt',
+    comptable.to_csv('comp_table_pca.tsv',
                      sep='\t',
                      index=True,
                      index_label='component',
