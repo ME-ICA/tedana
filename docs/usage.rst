@@ -1,5 +1,5 @@
-Usage
-=====
+tedana Usage
+============
 
 ``tedana`` minimally requires:
 
@@ -34,9 +34,11 @@ https://tedana.readthedocs.io/en/latest/outputs.html
 
 .. note::
     The ``--mask`` argument is not intended for use with very conservative region-of-interest
-    analyses. One of the ways by which components are assessed as BOLD or non-BOLD is their
+    analyses. 
+    One of the ways by which components are assessed as BOLD or non-BOLD is their
     spatial pattern, so overly conservative masks will invalidate several steps in the tedana
-    workflow. To examine regions-of-interest with multi-echo data, apply masks after TE
+    workflow. 
+    To examine regions-of-interest with multi-echo data, apply masks after TE
     Dependent ANAlysis.
 
 Run t2smap
@@ -91,64 +93,12 @@ Instead, we recommend that researchers apply the same transforms to all echoes i
 That is, that they calculate head motion correction parameters from one echo
 and apply the resulting transformation to all echoes.
 
-Similarly, any intensity normalization or nuisance regressors should be applied to the data
-*after* ``tedana`` calculates the BOLD and non-BOLD weighting of components.
-
-If this is not considered, resulting intensity gradients (e.g., in the case of scaling)
-or alignment parameters (e.g., in the case of motion correction, normalization)
-are likely to differ across echos,
-and the subsequent calculation of voxelwise T2* values will be distorted.
-See the description of ``tedana``'s :doc:`approach <\approach>` for more details
-on how T2* values are calculated.
-
-.. _support_ref:
-
-Support and communication
--------------------------
-All bugs, concerns and enhancement requests for this software can be submitted here: https://github.com/ME-ICA/tedana/issues.
-
-If you would like to ask a question about usage or tedana's outputs, please submit a question to `NeuroStars`_ with the ``multi-echo`` tag.
-
-All previous tedana-related questions are available under the `multi-echo tag`_.
-
-We will also attempt to archive certain common questions and associate answers in the Frequently Asked Questions (FAQ) section below.
-
-.. _multi-echo tag: https://neurostars.org/tags/multi-echo
-
-FAQ
----
-
-ICA has failed to converge.
-```````````````````````````
-The TEDICA step may fail to converge if TEDPCA is either too strict
-(i.e., there are too few components) or too lenient (there are too many).
-
-In our experience, this may happen when preprocessing has not been applied to
-the data, or when improper steps have been applied to the data (e.g., distortion
-correction, rescaling, nuisance regression).
-If you are confident that your data have been preprocessed correctly prior to
-applying tedana, and you encounter this problem, please submit a question to `NeuroStars`_.
-
-
-I think that some BOLD ICA components have been misclassified as noise.
-```````````````````````````````````````````````````````````````````````
-``tedana`` allows users to manually specify accepted components when calling the pipeline.
-You can use the ``--manacc`` argument to specify the indices of components to accept.
-
-
-Why isn't v3.2 of the component selection algorithm supported in ``tedana``?
-````````````````````````````````````````````````````````````````````````````
-There is a lot of solid logic behind the updated version of the TEDICA component
-selection algorithm, first added to the original ME-ICA codebase `here`_ by Dr. Prantik Kundu.
-However, we (the ``tedana`` developers) have encountered certain difficulties
-with this method (e.g., misclassified components) and the method itself has yet
-to be validated in any papers, posters, etc., which is why we have chosen to archive
-the v3.2 code, with the goal of revisiting it when ``tedana`` is more stable.
-
-Anyone interested in using v3.2 may compile and install an earlier release (<=0.0.4) of ``tedana``.
-
-.. _here: https://bitbucket.org/prantikk/me-ica/commits/906bd1f6db7041f88cd0efcac8a74074d673f4f5
-
-.. _NeuroStars: https://neurostars.org
-.. _fMRIPrep: https://fmriprep.readthedocs.io
-.. _afni_proc.py: https://afni.nimh.nih.gov/pub/dist/doc/program_help/afni_proc.py.html
+.. note:: 
+    Any intensity normalization or nuisance regressors should be applied to the data
+    *after* ``tedana`` calculates the BOLD and non-BOLD weighting of components. 
+    If this is not considered, resulting intensity gradients (e.g., in the case of scaling)
+    or alignment parameters (e.g., in the case of motion correction, normalization)
+    are likely to differ across echos,
+    and the subsequent calculation of voxelwise T2* values will be distorted or incorrect.
+    See the description of ``tedana``'s :doc:`approach <\approach>` for more details
+    on how T2* values are calculated.

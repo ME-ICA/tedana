@@ -13,6 +13,8 @@ from tedana.stats import getfbounds, computefeats2, get_coeffs
 
 
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 F_MAX = 500
 Z_MAX = 8
@@ -84,6 +86,10 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
                          'tsoc ({1}), and mmix ({2}) do not '
                          'match.'.format(catd.shape[2], tsoc.shape[1],
                                          mmix.shape[0]))
+
+    RepLGR.info("A series of TE-dependence metrics were calculated for "
+                "each ICA component, including Kappa, Rho, and variance "
+                "explained.")
 
     # mask everything we can
     tsoc = tsoc[mask, :]

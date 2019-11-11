@@ -49,3 +49,21 @@ def test_break_computefeats2():
     assert str(e_info.value) == ('Second dimensions (number of volumes) of data ({0}) '
                                  'and mmix ({1}) do not match.'.format(data.shape[0],
                                                                        mmix.shape[0]))
+
+
+# SMOKE TEST
+
+def test_smoke_computefeats2():
+    """
+    Ensures that computefeats2 works with random inputs and different optional parameters
+    """
+    n_samples, n_times, n_components = 100, 20, 6
+    data = np.random.random((n_samples, n_times))
+    mmix = np.random.random((n_times, n_components))  
+    mask = np.random.randint(2, size=n_samples)     
+
+    assert computefeats2(data, mmix) is not None
+    assert computefeats2(data, mmix, mask=mask) is not None
+    assert computefeats2(data, mmix, normalize=False) is not None     
+
+

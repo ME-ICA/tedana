@@ -12,6 +12,8 @@ from sklearn.utils import check_array
 from tedana.due import due, BibTeX
 
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 
 def load_image(data):
@@ -63,6 +65,9 @@ def make_adaptive_mask(data, mask=None, getsum=False):
         Valued array indicating the number of echos with sufficient signal in a
         given voxel. Only returned if `getsum = True`
     """
+    RepLGR.info("An adaptive mask was then generated, in which each voxel's "
+                "value reflects the number of echoes with 'good' data.")
+
     # take temporal mean of echos and extract non-zero values in first echo
     echo_means = data.mean(axis=-1)  # temporal mean of echos
     first_echo = echo_means[echo_means[:, 0] != 0, 0]

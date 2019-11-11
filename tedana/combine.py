@@ -7,6 +7,8 @@ from tedana.utils import unmask
 from tedana.due import due, Doi
 
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 
 @due.dcite(Doi('10.1002/(SICI)1522-2594(199907)42:1<87::AID-MRM13>3.0.CO;2-O'),
@@ -31,6 +33,14 @@ def _combine_t2s(data, tes, ft2s):
     combined : (M x T) :obj:`numpy.ndarray`
         Data combined across echoes according to T2* estimates.
     """
+    RepLGR.info("Multi-echo data were then optimally combined using the "
+                "T2* combination method (Posse et al., 1999).")
+    RefLGR.info("Posse, S., Wiese, S., Gembris, D., Mathiak, K., Kessler, "
+                "C., Grosse‐Ruyken, M. L., ... & Kiselev, V. G. (1999). "
+                "Enhancement of BOLD‐contrast sensitivity by single‐shot "
+                "multi‐echo functional MR imaging. Magnetic Resonance in "
+                "Medicine: An Official Journal of the International Society "
+                "for Magnetic Resonance in Medicine, 42(1), 87-97.")
     n_vols = data.shape[-1]
     alpha = tes * np.exp(-tes / ft2s)
     if alpha.ndim == 2:
@@ -70,6 +80,16 @@ def _combine_paid(data, tes):
     combined : (M x T) :obj:`numpy.ndarray`
         Data combined across echoes according to SNR/signal.
     """
+    RepLGR.info("Multi-echo data were then optimally combined using the "
+                "parallel-acquired inhomogeneity desensitized (PAID) "
+                "combination method.")
+    RefLGR.info("Poser, B. A., Versluis, M. J., Hoogduin, J. M., & Norris, "
+                "D. G. (2006). BOLD contrast sensitivity enhancement and "
+                "artifact reduction with multiecho EPI: parallel‐acquired "
+                "inhomogeneity‐desensitized fMRI. "
+                "Magnetic Resonance in Medicine: An Official Journal of the "
+                "International Society for Magnetic Resonance in Medicine, "
+                "55(6), 1227-1235.")
     n_vols = data.shape[-1]
     alpha = data.mean(axis=-1) * tes
     alpha = np.tile(alpha[:, :, np.newaxis], (1, 1, n_vols))
