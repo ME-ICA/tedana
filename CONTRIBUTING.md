@@ -144,19 +144,25 @@ Before creating your pull request, please make sure to review the `tedana` [styl
 
 ### 5. Test your changes
 
-You can run style checks by running the following
-
+You can run style checks by running the following,
 ```
-cd TEDANADIR
+cd $TEDANADIR
 flake8 tedana
 ```
 
-and unit/integration tests by running the following:
+and unit/integration tests by running ``pytest``.
+If you know a file will test your change,
+you can run only that test.
+Alternatively, running all unit tests is relatively quick and should be
+fairly comprehensive.
+Running all ``pytest`` tests will be useful for pre-pushing checks.
+When you open a Pull Request, CircleCI will run all tests.
+
 ```
 cd TEDANADIR/tedana/tests
-# All tests
+# All tests; final checks before pushing
 pytest .
-# Unit tests and linting only (saves time)
+# Unit tests and linting only
 pytest --skipintegration .
 # One test file in particular
 pytest test_file.py
