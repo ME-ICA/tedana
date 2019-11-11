@@ -134,7 +134,7 @@ def _get_parser():
         '--tedpca',
         dest='tedpca',
         help='Method with which to select components in TEDPCA',
-        choices=['mle', 'kundu', 'kundu-stabilize'],
+        choices=['mle', 'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'],
         default='mle')
     optional.add_argument('--out-dir',
                           dest='out_dir',
@@ -248,7 +248,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     gscontrol : {None, 't1c', 'gsr'} or :obj:`list`, optional
         Perform additional denoising to remove spatially diffuse noise. Default
         is None.
-    tedpca : {'mle', 'kundu', 'kundu-stabilize'}, optional
+    tedpca : {'mle', 'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
         Method with which to select components in TEDPCA. Default is 'mle'.
     source_tes : :obj:`int`, optional
         Source TEs for models. 0 for all, -1 for optimal combination.

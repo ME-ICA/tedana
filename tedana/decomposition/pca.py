@@ -231,6 +231,8 @@ def tedpca(data_cat,
                     "connectivity mapping using multiecho fMRI. Proceedings "
                     "of the National Academy of Sciences, 110(40), "
                     "16187-16192.")
+    else:
+        alg_str = "GIFT(!)"
 
     if source_tes == -1:
         dat_str = "the optimally combined data"
@@ -266,8 +268,10 @@ def tedpca(data_cat,
               data_z.mean()) / data_z.std()  # var normalize everything
 
     if algorithm in ['mdl', 'aic', 'kic']:
+        data_img = io.new_nii_like(ref_img, utils.unmask(utils.unmask(data_z, eim), mask))
+        mask_img = io.new_nii_like(ref_img, utils.unmask(eim, mask).astype(int))
         voxel_comp_weights, varex, varex_norm, comp_ts = gift_pca.run_gift_pca(
-            data_z, algorithm)
+            data_img, mask_img, algorithm)
     elif algorithm == 'mle':
         voxel_comp_weights, varex, varex_norm, comp_ts = run_mlepca(data_z)
     elif low_mem:
