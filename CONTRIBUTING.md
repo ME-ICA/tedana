@@ -206,7 +206,8 @@ If your pull request is not yet ready to be merged, please use [draft PRs][link_
 This tells the development team that your pull request is a "work-in-progress",
 and that you plan to continue working on it.
 Note that if your pull request has no conversation or commits for 90 days,
-stale-bot will mark it stale and we may ask your permission to take over it.
+stale-bot will mark it stale.
+We may also ask that another development team member resume work on it, if you are unable to continue to do so.
 
 Pull Request Checklist (Before Requesting Review):
 - [ ] Check that all tests are passing ("All tests passsed")
