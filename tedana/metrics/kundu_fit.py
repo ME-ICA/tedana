@@ -120,10 +120,11 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
     totvar = (tsoc_B**2).sum()
     totvar_norm = (WTS**2).sum()
 
-    # compute betas and means over TEs for TE-dependence analysis
-    betas = get_coeffs(utils.unmask(catd, mask), mmix,
-                     np.repeat(mask[:, np.newaxis], len(tes), axis=1),
-                     add_const=True)
+    # compute Betas and means over TEs for TE-dependence analysis
+    betas = get_coeffs(utils.unmask(catd, mask),
+                       mmix,
+                       np.repeat(mask[:, np.newaxis], len(tes), axis=1),
+                       add_const=True)
     betas = betas[mask, ...]
     n_voxels, n_echos, n_components = betas.shape
     mu = catd.mean(axis=-1, dtype=float)
@@ -148,31 +149,31 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
 
     LGR.info('Fitting TE- and S0-dependent models to components')
     for i_comp in range(n_components):
-        # size of comp_pes is (n_echoes, n_samples)
-        comp_pes = np.atleast_3d(betas)[:, :, i_comp].T
-        alpha = (np.abs(comp_pes)**2).sum(axis=0)
+        # size of comp_betas is (n_echoes, n_samples)
+        comp_betas = np.atleast_3d(betas)[:, :, i_comp].T
+        alpha = (np.abs(comp_betas)**2).sum(axis=0)
         varex[i_comp] = (tsoc_B[:, i_comp]**2).sum() / totvar * 100.
         varex_norm[i_comp] = (WTS[:, i_comp]**2).sum() / totvar_norm
 
         for j_echo in np.unique(adaptive_mask[adaptive_mask >= 3]):
             mask_idx = adaptive_mask == j_echo
-            alpha = (np.abs(comp_pes[:j_echo])**2).sum(axis=0)
+            alpha = (np.abs(comp_betas[:j_echo])**2).sum(axis=0)
 
             # S0 Model
             # (S,) model coefficient map
-            coeffs_S0 = (comp_pes[:j_echo] * X1[:j_echo, :]).sum(axis=0) /\
+            coeffs_S0 = (comp_betas[:j_echo] * X1[:j_echo, :]).sum(axis=0) /\
                 (X1[:j_echo, :]**2).sum(axis=0)
             pred_S0 = X1[:j_echo, :] * np.tile(coeffs_S0, (j_echo, 1))
-            SSE_S0 = (comp_pes[:j_echo] - pred_S0)**2
+            SSE_S0 = (comp_betas[:j_echo] - pred_S0)**2
             SSE_S0 = SSE_S0.sum(axis=0)  # (S,) prediction error map
             F_S0 = (alpha - SSE_S0) * (j_echo - 1) / (SSE_S0)
             F_S0_maps[mask_idx[mask], i_comp] = F_S0[mask_idx[mask]]
 
             # R2 Model
-            coeffs_R2 = (comp_pes[:j_echo] * X2[:j_echo, :]).sum(axis=0) /\
+            coeffs_R2 = (comp_betas[:j_echo] * X2[:j_echo, :]).sum(axis=0) /\
                 (X2[:j_echo, :]**2).sum(axis=0)
             pred_R2 = X2[:j_echo] * np.tile(coeffs_R2, (j_echo, 1))
-            SSE_R2 = (comp_pes[:j_echo] - pred_R2)**2
+            SSE_R2 = (comp_betas[:j_echo] - pred_R2)**2
             SSE_R2 = SSE_R2.sum(axis=0)
             F_R2 = (alpha - SSE_R2) * (j_echo - 1) / (SSE_R2)
             F_R2_maps[mask_idx[mask], i_comp] = F_R2[mask_idx[mask]]
@@ -193,7 +194,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         norm_weights = np.abs(wtsZ ** 2.)
         kappas[i_comp] = np.average(F_R2, weights=norm_weights)
         rhos[i_comp] = np.average(F_S0, weights=norm_weights)
-    del SSE_S0, SSE_R2, wtsZ, F_S0, F_R2, norm_weights, comp_pes
+    del SSE_S0, SSE_R2, wtsZ, F_S0, F_R2, norm_weights, comp_betas
     if algorithm != 'kundu_v3':
         del WTS, PSC, tsoc_B
 
