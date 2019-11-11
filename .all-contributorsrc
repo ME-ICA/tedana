@@ -100,7 +100,8 @@
         "projectManagement",
         "doc",
         "review",
-        "maintenance"
+        "maintenance",
+        "code"
       ]
     },
     {
@@ -139,6 +140,15 @@
       "name": "Benoît Béranger",
       "avatar_url": "https://avatars0.githubusercontent.com/u/16976839?v=4",
       "profile": "https://www.linkedin.com/in/benoit-beranger/",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "eurunuela",
+      "name": "Eneko Uruñuela",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/13706448?v=4",
+      "profile": "https://github.com/eurunuela",
       "contributions": [
         "code"
       ]
