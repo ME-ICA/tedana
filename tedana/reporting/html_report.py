@@ -13,14 +13,6 @@ def _update_template(bokeh_id, bokeh_js):
         The title for the report
     docstring : str
         The introductory docstring for the reported object
-    content : img
-        The content to display
-    overlay : img
-        Overlaid content, to appear on hover
-    parameters : dict
-        A dictionary of object parameters and their values
-    description : str
-        An optional description of the content
     Returns
     -------
     HTMLReport : an instance of a populated HTML report
@@ -29,8 +21,7 @@ def _update_template(bokeh_id, bokeh_js):
 
     body_template_name = 'report_body_template.html'
     body_template_path = resource_path.joinpath(body_template_name)
-    tpl = tempita.HTMLTemplate.from_filename(str(body_template_path),
-                                             encoding='utf-8')
+    tpl = tempita.HTMLTemplate.from_filename(str(body_template_path))
     body = tpl.substitute(version=__version__,
                           bokeh_id=bokeh_id,
                           bokeh_js=bokeh_js)
