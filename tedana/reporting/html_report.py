@@ -1,11 +1,37 @@
 from pathlib import Path
 from html import unescape
 from string import Template
-from tedana.externals import tempita
 from tedana.info import __version__
+from tedana.externals import tempita
 
 
-def _update_template(bokeh_id, bokeh_js):
+def _update_template_about(call, methods):
+    """
+    Populate a report with content.
+
+    Parameters
+    ----------
+    call: str
+        Call used to execute tedana
+    methods : str
+        Generated methods for specific tedana call
+    Returns
+    -------
+    HTMLReport : an instance of a populated HTML report
+    """
+    resource_path = Path(__file__).resolve().parent.joinpath('data', 'html')
+
+    body_template_name = 'report_body_template.html'
+    body_template_path = resource_path.joinpath(body_template_name)
+    tpl = tempita.HTMLTemplate.from_filename(str(body_template_path),
+                                             encoding='utf-8')
+    subst = tpl.substitute(content=methods,
+                           javascript=None)
+    body = unescape(subst)
+    return body
+
+
+def _update_template_bokeh(bokeh_id, bokeh_js):
     """
     Populate a report with content.
 
@@ -25,8 +51,8 @@ def _update_template(bokeh_id, bokeh_js):
     body_template_path = resource_path.joinpath(body_template_name)
     tpl = tempita.HTMLTemplate.from_filename(str(body_template_path),
                                              encoding='utf-8')
-    subst = tpl.substitute(bokeh_id=bokeh_id,
-                           bokeh_js=bokeh_js)
+    subst = tpl.substitute(content=bokeh_id,
+                           javascript=bokeh_js)
     body = unescape(subst)
     return body
 
@@ -69,7 +95,7 @@ def generate_report(bokeh_id, bokeh_js, file_path=None):
     HTML : file
         A generated HTML report
     """
-    body = _update_template(bokeh_id, bokeh_js)
+    body = _update_template_bokeh(bokeh_id, bokeh_js)
     html = _save_as_html(body)
 
     if file_path is not None:
