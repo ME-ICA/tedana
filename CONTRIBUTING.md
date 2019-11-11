@@ -149,7 +149,8 @@ You can run all the checks from running the following
 ```
 cd TEDANADIR/tedana/tests
 # All tests
-pytest .
+# --flake8 runs linting
+pytest --flake8 .
 # Unit tests and linting only (saves time)
 pytest --skipintegration .
 # One test file in particular
