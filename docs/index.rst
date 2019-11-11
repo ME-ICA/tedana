@@ -141,9 +141,10 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
+   
    installation
    multi-echo
+   considerations
    publications
    usage
    approach

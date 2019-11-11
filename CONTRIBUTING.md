@@ -159,12 +159,30 @@ Before creating your pull request, please make sure to review the `tedana` [styl
 
 ### 5. Test your changes
 
+#### Changes to code
+
+For changes to the codebase, we suggest using our development Docker container which will run all the necessary checks and tests to ensure your code is ready to be merged into `tedana`!
+(This does require that you have a local install of [Docker](https://www.docker.com/products/docker-desktop).)
+You can run all the checks with:
+
+```
+docker run --tty --rm -v ${PWD}:/tedana tedana/tedana-dev:latest run_all_tests
+```
+
+from within your local `tedana` repository.
+(**N.B.** It is possible that, depending on your Docker setup, you may need to increase the amount of memory available to Docker in order to run the `tedana` test suite. 
+You can either do this permanently by editing your Docker settings or temporarily by adding `--memory=4g` to the above `docker run` command.)
+
+This will print out a number of different status update messages as the tests run, but if you see `"FINISHED RUNNING ALL TESTS! GREAT SUCCESS"` then it means everything finished succesfully.
+If not, there should be some helpful outputs that specify which tests failed.
+
+#### Changes to documentation
+
 For changes to documentation, we suggest rendering the HTML files locally in order to review the changes before submitting a pull request. This can be done by running
 ```
-html make
+make html
 ```
 from the `docs` directory in your local `tedana` repository. You should then be able to access the rendered files in the `docs/_build` directory, and view them in your browser.
-
 
 ### 6. Submit a [pull request][link_pullrequest]
 

@@ -5,11 +5,11 @@ import logging
 
 import numpy as np
 from scipy.linalg import svd
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA, TruncatedSVD
 from sklearn.preprocessing import StandardScaler
 
 from scipy.signal import detrend
-from scipy.fftpack import fft, fftshift, fftn
+from scipy.fftpack import fft, fftshift, fftn, fft2
 from scipy.signal import correlate2d
 
 LGR = logging.getLogger(__name__)
@@ -22,11 +22,11 @@ def _autocorr(x):
 
     Parameters
     ----------
-    x : 
+    x :
 
     Returns
     -------
-    u : 
+    u :
     """
     result = np.correlate(x, x, mode='full')
     return result[result.size / 2:]
@@ -38,11 +38,11 @@ def _sumN(dat):
 
     Parameters
     ----------
-    dat : 
+    dat :
 
     Returns
     -------
-    u : 
+    u :
     """
     return np.sum(dat[:])
 
@@ -53,7 +53,7 @@ def _checkOrder(n_in):
 
     Parameters
     ----------
-    n_in : 
+    n_in :
 
     Returns
     -------
@@ -95,11 +95,11 @@ def _parzen_win(n):
 
     Parameters
     ----------
-    n : 
+    n :
 
     Returns
     -------
-    w : 
+    w :
     """
 
     # Check for valid window length (i.e., n < 0)
@@ -127,12 +127,12 @@ def _entrate_sp(x, sm_window):
 
     Parameters
     ----------
-    x : 
+    x :
     sm_window :
 
     Returns
     -------
-    out : 
+    out :
     """
 
     n = x.shape
@@ -164,7 +164,7 @@ def _entrate_sp(x, sm_window):
 
     if x.ndim == 2 and min(n) == 1:  # 1D
         xc = _autocorr(x)
-        xc = xc * parzen_w
+        xc = xc * parzen_w_1
         xf = fftshift(fft(xc))
 
     elif x.ndim == 2 and min(n) != 1:  # 2D
@@ -243,11 +243,11 @@ def _est_indp_sp(x):
 
     Parameters
     ----------
-    x : 
+    x :
 
     Returns
     -------
-    s : 
+    s :
     entrate_m :
     """
 
@@ -287,13 +287,13 @@ def _subsampling(x, s, x0):
 
     Parameters
     ----------
-    x : 
+    x :
     s :
     x0 :
 
     Returns
     -------
-    out : 
+    out :
     """
 
     n = x.shape
@@ -321,7 +321,7 @@ def _kurtn(x):
 
     Parameters
     ----------
-    x : 
+    x :
 
     Returns
     -------
@@ -345,17 +345,21 @@ def _icatb_svd(data, numpc):
 
     Parameters
     ----------
-    data : 
+    data :
     numpc :
     criteria :
 
     Returns
     -------
-    V : 
+    V :
     Lambda :
     """
+    tsvd = TruncatedSVD(n_components=(min(data.shape) - 1), )
+    tsvd.fit(data)
+    Lambda = tsvd.singular_values_
+    vh = tsvd.components_
 
-    _, Lambda, vh = svd(data)
+    #_, Lambda, vh = svd(data)
     # Sort eigen vectors in Ascending order
     V = vh.T
     Lambda = Lambda / np.sqrt(data.shape[0] - 1)  # Whitening (sklearn)
@@ -430,7 +434,7 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     mask_nib : 4D nibabel
                mask to apply on data_nib.
     criteria : string
-               aic, kic or mdl criteria to select the number of components 
+               aic, kic or mdl criteria to select the number of components
                (default='mdl').
 
     Returns
@@ -450,7 +454,10 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     [Nx, Ny, Nz, Nt] = data_nib.shape
     data_nib_V = np.reshape(data_nib, (Nx * Ny * Nz, Nt), order='F')
     maskvec = np.reshape(mask_nib, Nx * Ny * Nz, order='F')
-    data = data_nib_V[maskvec == 1, :]
+    data_non_normalized = data_nib_V[maskvec == 1, :]
+    scaler = StandardScaler(with_mean=True, with_std=True)
+    data   = scaler.fit_transform(data_non_normalized) # This was X_sc
+    print('hello1')
 
     V, EigenValues = _icatb_svd(data, Nt)
 
@@ -460,12 +467,14 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     # Potentially the small differences come from the different signs on V
 
     # Rename SVD results to be used later
-    V_orig = V.copy()
-    S_orig = EigenValues.copy()
+    # following currently unused
+    # V_orig = V.copy()
+    # S_orig = EigenValues.copy()
 
     # Using 12 gaussian components from middle, top and bottom gaussian
     # components to determine the subsampling depth. Final subsampling depth is
     # determined using median
+    print('hello2')
     kurtv1 = _kurtn(dataN)
     kurtv1[EigenValues > np.mean(EigenValues)] = 1000
     idx_gauss = np.where(
@@ -475,6 +484,7 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     dfs = len(
         np.where(EigenValues > np.finfo(float).eps)[0])  # degrees of freedom
     minTp = 12
+    print('hello3')
     if (len(idx) >= minTp):
         middle = int(np.round(len(idx) / 2))
         idx = np.hstack([idx[0:4], idx[middle - 1:middle + 3], idx[-4:]])
@@ -483,7 +493,7 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
         idx = np.arange(dfs - minTp, dfs)
 
     idx = np.unique(idx)
-
+    print('hello4')
     # Estimate the subsampling depth for effectively i.i.d. samples
     mask_ND = np.reshape(maskvec, (Nx, Ny, Nz), order='F')
     ms = len(idx)
@@ -500,6 +510,7 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
                 s = tmpS
                 break
         dim_n = x_single.ndim
+    print('hello5')
     s1 = int(np.round(np.median(s)))
     if np.floor(np.power(np.sum(maskvec) / Nt, 1 / dim_n)) < s1:
         s1 = int(np.floor(np.power(np.sum(maskvec) / Nt, 1 / dim_n)))
@@ -521,7 +532,6 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
             dat[:, i] = dat0[mask_s_1d == 1]
 
         # Perform Variance Normalization
-        scaler = StandardScaler(with_mean=True, with_std=True)
         dat = scaler.fit_transform(dat)
 
         # (completed)
@@ -573,14 +583,14 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
 
     dlap = np.diff(itc[criteria_idx, :])
     a = np.where(dlap > 0)[0] + 1  # Plus 1 to
-    if a is None:
+    if a.size == 0:
         comp_est = itc[criteria_idx, :].shape[0]
     else:
         comp_est = a[0]
 
     LGR.info('Estimated components is found out to be %d' % comp_est)
 
-    # PCA with estimated number of components
+    # PCA with estimated number of components
     ppca = PCA(n_components=comp_est, svd_solver='full', copy=False)
     ppca.fit(data)
     v = ppca.components_.T

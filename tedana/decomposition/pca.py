@@ -14,6 +14,8 @@ from tedana.selection import kundu_tedpca
 from tedana.due import due, BibTeX
 
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 
 @due.dcite(BibTeX("""
@@ -196,7 +198,7 @@ def tedpca(data_cat,
     Filename                  Content
     ======================    =================================================
     pcastate.pkl              Values from PCA results.
-    comp_table_pca.txt        PCA component table.
+    comp_table_pca.tsv        PCA component table.
     mepca_mix.1D              PCA mixing matrix.
     ======================    =================================================
     """
@@ -205,6 +207,42 @@ def tedpca(data_cat,
                     'dimensionality estimation. Switching to Kundu decision '
                     'tree.')
         algorithm = 'kundu'
+
+    if algorithm == 'mle':
+        alg_str = "using MLE dimensionality estimation (Minka, 2001)"
+        RefLGR.info("Minka, T. P. (2001). Automatic choice of dimensionality "
+                    "for PCA. In Advances in neural information processing "
+                    "systems (pp. 598-604).")
+    elif algorithm == 'kundu':
+        alg_str = ("followed by the Kundu component selection decision "
+                   "tree (Kundu et al., 2013)")
+        RefLGR.info("Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
+                    "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
+                    "(2013). Integrated strategy for improving functional "
+                    "connectivity mapping using multiecho fMRI. Proceedings "
+                    "of the National Academy of Sciences, 110(40), "
+                    "16187-16192.")
+    elif algorithm == 'kundu-stabilize':
+        alg_str = ("followed by the 'stabilized' Kundu component "
+                   "selection decision tree (Kundu et al., 2013)")
+        RefLGR.info("Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
+                    "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
+                    "(2013). Integrated strategy for improving functional "
+                    "connectivity mapping using multiecho fMRI. Proceedings "
+                    "of the National Academy of Sciences, 110(40), "
+                    "16187-16192.")
+    else:
+        alg_str = "GIFT(!)"
+
+    if source_tes == -1:
+        dat_str = "the optimally combined data"
+    elif source_tes == 0:
+        dat_str = "the z-concatenated multi-echo data"
+    else:
+        dat_str = "a z-concatenated subset of echoes from the input data"
+
+    RepLGR.info("Principal component analysis {0} was applied to "
+                "{1} for dimensionality reduction.".format(alg_str, dat_str))
 
     n_samp, n_echos, n_vols = data_cat.shape
     source_tes = np.array([int(ee) for ee in str(source_tes).split(',')])
@@ -230,8 +268,10 @@ def tedpca(data_cat,
               data_z.mean()) / data_z.std()  # var normalize everything
 
     if algorithm in ['mdl', 'aic', 'kic']:
+        data_img = io.new_nii_like(ref_img, utils.unmask(utils.unmask(data_z, eim), mask))
+        mask_img = io.new_nii_like(ref_img, utils.unmask(eim, mask).astype(int))
         voxel_comp_weights, varex, varex_norm, comp_ts = gift_pca.run_gift_pca(
-            data_z, algorithm)
+            data_img, mask_img, algorithm)
     elif algorithm == 'mle':
         voxel_comp_weights, varex, varex_norm, comp_ts = run_mlepca(data_z)
     elif low_mem:
@@ -311,7 +351,7 @@ def tedpca(data_cat,
         comptable['classification'] = 'accepted'
         comptable['rationale'] = ''
 
-    comptable.to_csv('comp_table_pca.txt',
+    comptable.to_csv('comp_table_pca.tsv',
                      sep='\t',
                      index=True,
                      index_label='component',
