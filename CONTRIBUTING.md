@@ -209,6 +209,9 @@ Pull Request Checklist (Before Requesting Review):
 - [ ] Make sure you note any issues that will be closed by your PR
 - [ ] Take a look at the automatically generated readthedocs for your PR (Show all checks -> continuous-documentation/readthedocs -> Details)
 
+### Advanced Development
+For core developers, please see our Developing Guidelines on [readthedocs][link_developing_rtd].
+
 ## Style Guide
 
 Docstrings should follow [numpydoc][link_numpydoc] convention.
@@ -300,3 +303,4 @@ You're awesome. :wave::smiley:
 [link_all-contributors-bot-usage]: https://allcontributors.org/docs/en/bot/usage
 [link_stemmrolemodels]: https://github.com/KirstieJane/STEMMRoleModels
 [link_pytest]: https://docs.pytest.org/en/latest/usage.html
+[link_developing_rtd]: https://tedana.readthedocs.io/en/latest/developing.html
