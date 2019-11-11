@@ -144,13 +144,18 @@ Before creating your pull request, please make sure to review the `tedana` [styl
 
 ### 5. Test your changes
 
-You can run all the checks from running the following
+You can run style checks by running the following
 
+```
+cd TEDANADIR
+flake8 tedana
+```
+
+and unit/integration tests by running the following:
 ```
 cd TEDANADIR/tedana/tests
 # All tests
-# --flake8 runs linting
-pytest --flake8 .
+pytest .
 # Unit tests and linting only (saves time)
 pytest --skipintegration .
 # One test file in particular
