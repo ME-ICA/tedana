@@ -9,7 +9,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 from scipy.signal import detrend
-from scipy.fftpack import fft, fftshift, fftn
+from scipy.fftpack import fft, fftshift, fftn, fft2
 from scipy.signal import correlate2d
 
 LGR = logging.getLogger(__name__)
@@ -22,11 +22,11 @@ def _autocorr(x):
 
     Parameters
     ----------
-    x : 
+    x :
 
     Returns
     -------
-    u : 
+    u :
     """
     result = np.correlate(x, x, mode='full')
     return result[result.size / 2:]
@@ -38,11 +38,11 @@ def _sumN(dat):
 
     Parameters
     ----------
-    dat : 
+    dat :
 
     Returns
     -------
-    u : 
+    u :
     """
     return np.sum(dat[:])
 
@@ -53,7 +53,7 @@ def _checkOrder(n_in):
 
     Parameters
     ----------
-    n_in : 
+    n_in :
 
     Returns
     -------
@@ -95,11 +95,11 @@ def _parzen_win(n):
 
     Parameters
     ----------
-    n : 
+    n :
 
     Returns
     -------
-    w : 
+    w :
     """
 
     # Check for valid window length (i.e., n < 0)
@@ -127,12 +127,12 @@ def _entrate_sp(x, sm_window):
 
     Parameters
     ----------
-    x : 
+    x :
     sm_window :
 
     Returns
     -------
-    out : 
+    out :
     """
 
     n = x.shape
@@ -164,7 +164,7 @@ def _entrate_sp(x, sm_window):
 
     if x.ndim == 2 and min(n) == 1:  # 1D
         xc = _autocorr(x)
-        xc = xc * parzen_w
+        xc = xc * parzen_w_1
         xf = fftshift(fft(xc))
 
     elif x.ndim == 2 and min(n) != 1:  # 2D
@@ -243,11 +243,11 @@ def _est_indp_sp(x):
 
     Parameters
     ----------
-    x : 
+    x :
 
     Returns
     -------
-    s : 
+    s :
     entrate_m :
     """
 
@@ -287,13 +287,13 @@ def _subsampling(x, s, x0):
 
     Parameters
     ----------
-    x : 
+    x :
     s :
     x0 :
 
     Returns
     -------
-    out : 
+    out :
     """
 
     n = x.shape
@@ -321,7 +321,7 @@ def _kurtn(x):
 
     Parameters
     ----------
-    x : 
+    x :
 
     Returns
     -------
@@ -345,13 +345,13 @@ def _icatb_svd(data, numpc):
 
     Parameters
     ----------
-    data : 
+    data :
     numpc :
     criteria :
 
     Returns
     -------
-    V : 
+    V :
     Lambda :
     """
 
@@ -430,7 +430,7 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     mask_nib : 4D nibabel
                mask to apply on data_nib.
     criteria : string
-               aic, kic or mdl criteria to select the number of components 
+               aic, kic or mdl criteria to select the number of components
                (default='mdl').
 
     Returns
@@ -460,8 +460,9 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     # Potentially the small differences come from the different signs on V
 
     # Rename SVD results to be used later
-    V_orig = V.copy()
-    S_orig = EigenValues.copy()
+    # following currently unused
+    # V_orig = V.copy()
+    # S_orig = EigenValues.copy()
 
     # Using 12 gaussian components from middle, top and bottom gaussian
     # components to determine the subsampling depth. Final subsampling depth is
@@ -580,7 +581,7 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
 
     LGR.info('Estimated components is found out to be %d' % comp_est)
 
-    # PCA with estimated number of components
+    # PCA with estimated number of components
     ppca = PCA(n_components=comp_est, svd_solver='full', copy=False)
     ppca.fit(data)
     v = ppca.components_.T
