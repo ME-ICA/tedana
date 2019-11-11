@@ -11,7 +11,6 @@ Here are some [instructions][link_signupinstructions].
 Already know what you're looking for in this guide? Jump to the following sections:
 
 * [Joining the conversation](#joining-the-conversation)
-  * [Monthly developer calls](#monthly-developer-calls)
 * [Contributing small documentation changes](#contributing-small-documentation-changes)
 * [Contributing through Github](#contributing-through-github)
 * [Understanding issues, milestones, and project boards](#understanding-issues-milestones-and-project-boards)
@@ -83,11 +82,6 @@ towards ``tedana``'s shared vision.
     We might have just missed it, or we might not (yet) see how it aligns with the overall project structure.
     These conversations are important to have, and we are excited to hear your perspective!
 
-* The **project board** is an automated [Kanban board][link_kanban] to keep track of what is currently underway
-(in progress), what has been completed (done), and what remains to be done for a specific release.
-The ``tedana``  maintainers use this board to keep an eye on how tasks are progressing week by week.
-
-
 ### Issue labels
 
 The current list of labels are [here][link_labels] and include:
@@ -149,8 +143,6 @@ Using a new branch allows you to follow the standard "fork/branch/commit/pull-re
 Before creating your pull request, please make sure to review the `tedana` [style conventions](#style-guide).
 
 ### 5. Test your changes
-
-#### Changes to code
 
 You can run all the checks from running the following
 
