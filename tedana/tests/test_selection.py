@@ -2,9 +2,6 @@
 Tests for tedana.selection
 """
 
-import os.path as op
-
-import pytest
 import numpy as np
 import pandas as pd
 

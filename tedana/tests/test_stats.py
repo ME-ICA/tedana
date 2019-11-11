@@ -34,15 +34,14 @@ def test_break_computefeats2():
     with pytest.raises(ValueError):
         computefeats2(data, mmix, mask, normalize=True)
 
-    mask = np.empty((n_samples+1))
+    mask = np.empty((n_samples + 1))
     with pytest.raises(ValueError):
         computefeats2(data, mmix, mask, normalize=True)
     data.shape[1] != mmix.shape[0]
     mask = np.empty((n_samples))
-    mmix = np.empty((n_vols+1, n_comps))
+    mmix = np.empty((n_vols + 1, n_comps))
     with pytest.raises(ValueError):
         computefeats2(data, mmix, mask, normalize=True)
-
 
 
 def test_smoke_computefeats2():
@@ -51,12 +50,12 @@ def test_smoke_computefeats2():
     """
     n_samples, n_times, n_components = 100, 20, 6
     data = np.random.random((n_samples, n_times))
-    mmix = np.random.random((n_times, n_components))  
-    mask = np.random.randint(2, size=n_samples)     
+    mmix = np.random.random((n_times, n_components))
+    mask = np.random.randint(2, size=n_samples)
 
     assert computefeats2(data, mmix) is not None
     assert computefeats2(data, mmix, mask=mask) is not None
-    assert computefeats2(data, mmix, normalize=False) is not None     
+    assert computefeats2(data, mmix, normalize=False) is not None
 
 
 def test_get_coeffs():
@@ -106,7 +105,7 @@ def test_break_get_coeffs():
     with pytest.raises(ValueError):
         get_coeffs(data, X, mask, add_const=False)
 
-    data = np.empty((n_samples, n_echos, n_vols+1))
+    data = np.empty((n_samples, n_echos, n_vols + 1))
     X = np.empty((n_vols, n_comps))
     with pytest.raises(ValueError):
         get_coeffs(data, X, mask, add_const=False)
@@ -116,7 +115,7 @@ def test_break_get_coeffs():
     with pytest.raises(ValueError):
         get_coeffs(data, X, mask, add_const=False)
 
-    mask = np.empty((n_samples+1, n_echos))
+    mask = np.empty((n_samples + 1, n_echos))
     with pytest.raises(ValueError):
         get_coeffs(data, X, mask, add_const=False)
 
@@ -125,14 +124,13 @@ def test_smoke_get_coeffs():
     """
     Ensure that get_coeffs returns outputs with different inputs and optional paramters
     """
-    n_samples, n_echos, n_times, n_components = 100, 5, 20, 6
+    n_samples, _, n_times, n_components = 100, 5, 20, 6
     data_2d = np.random.random((n_samples, n_times))
-    #data_3d = np.random.random((n_samples, n_echos, n_times)) 
     x = np.random.random((n_times, n_components))
-    mask = np.random.randint(2, size=n_samples)     
+    mask = np.random.randint(2, size=n_samples)
 
     assert get_coeffs(data_2d, x) is not None
-    # assert get_coeffs(data_3d, x) is not None TODO: submit an issue for the bug 
+    # assert get_coeffs(data_3d, x) is not None TODO: submit an issue for the bug
     assert get_coeffs(data_2d, x, mask=mask) is not None
     assert get_coeffs(data_2d, x, add_const=True) is not None
 
@@ -144,14 +142,13 @@ def test_getfbounds():
         getfbounds(n_echos)
 
 
-
 def test_smoke_getfbounds():
-    """ 
-    Ensures that getfbounds returns outputs when fed in a random number of echos
     """
-    n_echos = random.randint(3, 10) # At least two echos!
+    Ensures that getfbounds returns outputs when fed in a random number of echo
+    """
+    n_echos = random.randint(3, 10)  # At least two echos!
     f05, f025, f01 = getfbounds(n_echos)
-    
+
     assert f05 is not None
     assert f025 is not None
     assert f01 is not None

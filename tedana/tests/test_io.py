@@ -16,6 +16,7 @@ import os
 
 data_dir = get_test_data_path()
 
+
 def test_new_nii_like():
     data, ref = me.load_data(fnames, n_echos=len(tes))
     nimg = me.new_nii_like(ref, data)
@@ -61,7 +62,7 @@ def test_smoke_split_ts():
     Ensures that split_ts returns output when fed in with random inputs
     Note: classification is ["accepted", "rejected", "ignored"]
     """
-    np.random.seed(0) # seeded because comptable MUST have accepted components
+    np.random.seed(0)  # seeded because comptable MUST have accepted components
     n_samples = 100
     n_times = 20
     n_components = 6
@@ -69,7 +70,8 @@ def test_smoke_split_ts():
     mmix = np.random.random((n_times, n_components))
     mask = np.random.randint(2, size=n_samples)
 
-    # creating the component table with component as random floats, a "metric," and random classification
+    # creating the component table with component as random floats,
+    # a "metric," and random classification
     component = np.random.random((n_components))
     metric = np.random.random((n_components))
     classification = np.random.choice(["accepted", "rejected", "ignored"], n_components)
@@ -86,14 +88,15 @@ def test_smoke_write_split_ts():
     """
     Ensures that write_split_ts writes out the expected files with random input and tear them down
     """
-    np.random.seed(0) # at least one accepted and one rejected, thus all files are generated
+    np.random.seed(0)  # at least one accepted and one rejected, thus all files are generated
     n_samples, n_times, n_components = 64350, 10, 6
     data = np.random.random((n_samples, n_times))
     mmix = np.random.random((n_times, n_components))
     mask = np.random.randint(2, size=n_samples)
-    ref_img = os.path.join(data_dir, 'mask.nii.gz')  # ref_img has shape of (39, 50, 33) so data is 64350 (39*33*50) x 10
-
-    # creating the component table with component as random floats, a "metric," and random classification
+    ref_img = os.path.join(data_dir, 'mask.nii.gz')
+    # ref_img has shape of (39, 50, 33) so data is 64350 (39*33*50) x 10
+    # creating the component table with component as random floats,
+    # a "metric," and random classification
     component = np.random.random((n_components))
     metric = np.random.random((n_components))
     classification = np.random.choice(["accepted", "rejected", "ignored"], n_components)
@@ -103,7 +106,8 @@ def test_smoke_write_split_ts():
     assert me.write_split_ts(data, mmix, mask, comptable, ref_img) is not None
 
     # TODO: midk_ts.nii is never generated?
-    for filename in ["hik_ts_.nii.gz", "lowk_ts_.nii.gz", "dn_ts_.nii.gz"]: # remove all files generated
+    for filename in ["hik_ts_.nii.gz", "lowk_ts_.nii.gz", "dn_ts_.nii.gz"]:
+        # remove all files generated
         try:
             os.remove(filename)
         except OSError:
@@ -113,7 +117,8 @@ def test_smoke_write_split_ts():
 
 def test_smoke_writefeats():
     """
-    Ensures that writefeats writes out the expected feature with random input, since there is no suffix, remove feats_.nii
+    Ensures that writefeats writes out the expected feature with random
+    input, since there is no suffix, remove feats_.nii
     """
     n_samples, n_times, n_components = 64350, 10, 6
     data = np.random.random((n_samples, n_times))
@@ -133,9 +138,10 @@ def test_smoke_writefeats():
 
 def test_smoke_filewrite():
     """
-    Ensures that filewrite writes out a neuroimage with random input, since there is no name, remove the image named .nii
+    Ensures that filewrite writes out a neuroimage with random input,
+    since there is no name, remove the image named .nii
     """
-    n_samples, n_times, n_components = 64350, 10, 6
+    n_samples, n_times, _ = 64350, 10, 6
     data_1d = np.random.random((n_samples))
     data_2d = np.random.random((n_samples, n_times))
     filename = ""
