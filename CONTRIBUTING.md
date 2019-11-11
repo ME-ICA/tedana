@@ -136,11 +136,46 @@ Once you've run this, your repository should be set for most changes (i.e., you 
 
 ### 4. Make the changes you've discussed
 
-Try to keep the changes focused to the issue. We've found that working on a [new branch][link_branches] for each issue makes it easier to keep your changes targeted. 
+Try to keep the changes focused to the issue. 
+We've found that working on a [new branch][link_branches] for each issue makes it easier to keep your changes targeted. 
+Using a new branch allows you to follow the standard 
+"fork/branch/commit/pull-request/merge" GitHub workflow when making changes.
+[This guide][link_gitworkflow] provides a useful overview for this workflow.
+Before making a new branch, make sure your master is up to date.
 
-Using a new branch allows you to follow the standard "fork/branch/commit/pull-request/merge" GitHub workflow when making changes. [This guide][link_gitworkflow] provides a useful overview for this workflow.
+```
+git checkout master
+git fetch upstream master
+git merge upstream/master
+```
 
-Before creating your pull request, please make sure to review the `tedana` [style conventions](#style-guide).
+Then, make your new branch.
+
+```
+git checkout -b MYBRANCH
+```
+
+As you're making changes, 
+make sure your branch is kept up to date with 
+
+```
+git fetch upstream master
+git merge upstream/master
+```
+
+If you know what rebasing is,
+please only use it for changes that haven't been pushed.
+If you don't know what rebasing is, don't do it at all,
+as it is the easiest way to make your repository a disaster zone.
+Please make sure to review the `tedana` [style conventions](#style-guide)
+and test your changes.
+
+If you are new to ``git``, there are several GUI git clients that you may
+find helpful, such as
+- [GitKraken][link_git_kraken]
+- [GitHub Desktop][link_github_desktop]
+- [SourceTree][link_source_tree]
+
 
 ### 5. Test your changes
 
@@ -187,9 +222,17 @@ When opening the pull request, we ask that you follow some [specific conventions
 
 After you have submitted the pull request, a member of the development team will review your changes to confirm that they can be merged into the main code base.
 
-After successful merging of the pull request, remember to [keep your fork up to date][link_updateupstreamwiki] with the master `tedana` repository and to delete the branch on your fork that was used for the merged pull request.
 
 ### Pull Requests
+
+To push your changes to your remote, use
+
+```
+git push -u origin MYBRANCH
+```
+
+and GitHub will respond by giving you a link to open a pull request to 
+ME-ICA/tedana.
 
 To improve understanding pull requests "at a glance", we encourage the use of several standardized tags.
 When opening a pull request, please use at least one of the following prefixes:
@@ -219,6 +262,22 @@ We may also ask that another development team member resume work on it, if you a
 - [ ] Make sure that docstrings are updated for edited functions
 - [ ] Make sure you note any issues that will be closed by your PR
 - [ ] Take a look at the automatically generated readthedocs for your PR (Show all checks -> continuous-documentation/readthedocs -> Details)
+
+### After Changes Are Merged
+After successful merging of the pull request, remember to [keep your fork up to date][link_updateupstreamwiki] with the master `tedana` repository and to delete the branch on your fork that was used for the merged pull request.
+You may also want to update your other branches to include these changes,
+which you can do via
+
+```
+git checkout master
+git fetch upstream master
+git merge upstream/master
+git checkout OTHERBRANCH
+git merge master
+```
+
+In the event of confusion, please ping in the Gitter for help.
+BE WARY OF WELL-INTENTIONED STACK OVERFLOW USERS TELLING YOU TO REBASE.
 
 ### Advanced Development
 For core developers, please see our Developing Guidelines on [readthedocs][link_developing_rtd].
@@ -315,3 +374,7 @@ You're awesome. :wave::smiley:
 [link_stemmrolemodels]: https://github.com/KirstieJane/STEMMRoleModels
 [link_pytest]: https://docs.pytest.org/en/latest/usage.html
 [link_developing_rtd]: https://tedana.readthedocs.io/en/latest/developing.html
+
+[link_git_kraken]: https://www.gitkraken.com/
+[link_github_desktop]: https://desktop.github.com/
+[link_source_tree]: https://desktop.github.com/
