@@ -98,9 +98,8 @@ def test_break_get_coeffs():
     mask = np.empty((n_samples))
 
     data = np.empty((n_samples))
-    with pytest.raises(ValueError) as e_info:
+    with pytest.raises(ValueError):
         get_coeffs(data, X, mask, add_const=False)
-    assert str(e_info.value) == ('Parameter data should be 2d or 3d, not {0}d'.format(data.ndim))
 
     data = np.empty((n_samples, n_vols))
     X = np.empty((n_vols))
@@ -109,7 +108,7 @@ def test_break_get_coeffs():
 
     data = np.empty((n_samples, n_echos, n_vols+1))
     X = np.empty((n_vols, n_comps))
-    with pytest.raises(ValueError)
+    with pytest.raises(ValueError):
         get_coeffs(data, X, mask, add_const=False)
 
     data = np.empty((n_samples, n_echos, n_vols))
