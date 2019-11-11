@@ -120,6 +120,25 @@ Using the five-echo set as a template,
 you should then edit ``.circlec/config.yml`` to add your test,
 calling the same name you define in the ``Makefile``.
 
+If you need to take a look at a failed test on CircleCI rather than
+locally, you can use the following block to retrieve artifacts
+(see CircleCI documentation here_)
+
+.. code-block:: none
+    export CIRCLE_TOKEN=':your_token'
+
+    curl https://circleci.com/api/v1.1/project/:vcs-type/:username/:project/$build_number/artifacts?circle-token=$CIRCLE_TOKEN \
+       | grep -o 'https://[^"]*' \
+       | sed -e "s/$/?circle-token=$CIRCLE_TOKEN/" \
+       | wget -v -i -
+
+To get a CircleCI token, follow the instructions for `getting one`_.
+You cannot do this unless you are part of the ME-ICA/tedana organization.
+
+Worked Example
+--------------
+Suppose that a 
+
 .. _git: https://git-scm.com/
 .. _`git pro`: https://git-scm.com/book/en/v2
 .. _repository: https://github.com/ME-ICA/tedana
@@ -132,3 +151,5 @@ calling the same name you define in the ``Makefile``.
 .. _this: https://github.com/ME-ICA/tedana/tree/master/docs
 .. _ReStructuredText: http://docutils.sourceforge.net/rst.html#user-documentation
 .. _`five echo set`: https://github.com/ME-ICA/tedana/blob/37368f802f77b4327fc8d3f788296ca0f01074fd/tedana/tests/test_integration.py#L71-L95
+.. _here: https://circleci.com/docs/2.0/artifacts/#downloading-all-artifacts-for-a-build-on-circleci
+.. _`getting one`: https://circleci.com/docs/2.0/managing-api-tokens/?gclid=CjwKCAiAqqTuBRBAEiwA7B66heDkdw6l68GAYAHtR2xS1xvDNNUzy7l1fmtwQWvVN0OIa97QL8yfhhoCejoQAvD_BwE#creating-a-personal-api-token
