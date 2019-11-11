@@ -41,4 +41,5 @@ def _update_template(bokeh_id, bokeh_js):
         head_tpl = Template(head_file.read())
 
     html = head_tpl.substitute(body=body)
-    return html
+    with open('temp_report.html', 'wb') as f:
+            f.write(html.encode('utf-8'))
