@@ -454,7 +454,9 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     [Nx, Ny, Nz, Nt] = data_nib.shape
     data_nib_V = np.reshape(data_nib, (Nx * Ny * Nz, Nt), order='F')
     maskvec = np.reshape(mask_nib, Nx * Ny * Nz, order='F')
-    data = data_nib_V[maskvec == 1, :]
+    data_non_normalized = data_nib_V[maskvec == 1, :]
+    scaler = StandardScaler(with_mean=True, with_std=True)
+    data   = scaler.fit_transform(data_non_normalized) # This was X_sc
     print('hello1')
 
     V, EigenValues = _icatb_svd(data, Nt)
@@ -530,7 +532,6 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
             dat[:, i] = dat0[mask_s_1d == 1]
 
         # Perform Variance Normalization
-        scaler = StandardScaler(with_mean=True, with_std=True)
         dat = scaler.fit_transform(dat)
 
         # (completed)
