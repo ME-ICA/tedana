@@ -212,7 +212,7 @@ and that you plan to continue working on it.
 Note that if your pull request has no conversation or commits for 90 days,
 stale-bot will mark it stale and we may ask your permission to take over it.
 
-Pull Request Checklist (Before Requesting Review):
+###Pull Request Checklist (Before Requesting Review):
 - [ ] Check that all tests are passing ("All tests passsed")
 - [ ] Make sure you have docstrings for any new functions
 - [ ] Make sure that docstrings are updated for edited functions

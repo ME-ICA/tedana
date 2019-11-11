@@ -1,8 +1,9 @@
+====================
 Developer Guidelines
 ====================
 
 Git Workflow
-------------
+============
 .. _`git workflow`:
 When making changes to the code or large documentation changes, you will want to use the following workflow:
 
@@ -72,7 +73,7 @@ Several popular ones include
 
 
 Adding and Modifying Tests
---------------------------
+==========================
 Testing is an important component of development.
 For simplicity, we have migrated all tests to ``pytest``.
 There are two basic kinds of tests:
@@ -94,7 +95,8 @@ For integration tests,
 make a ``tar.gz`` file which will unzip to be a single directory
 containing all of the files you'd like to run a workflow on.
 Run the workflow with a known-working version, and put the outputs into a
-text file inside ``TEDANADIR/tedana/tests/data/``.
+text file inside ``$TEDANADIR/tedana/tests/data/``,
+with ``TEDANADIR`` the local ``tedana repository``.
 You can follow the model our `five echo set`_,
 which has the following steps:
 
@@ -136,7 +138,7 @@ To get a CircleCI token, follow the instructions for `getting one`_.
 You cannot do this unless you are part of the ME-ICA/tedana organization.
 
 Worked Example
---------------
+==============
 Suppose that a 
 
 .. _git: https://git-scm.com/
