@@ -102,7 +102,6 @@ def test_smoke_fit_decay_curvefit():
     masksum = np.random.random((n_samples))
     fittype = 'curvefit'
     t2s_limited, s0_limited, t2ss, s0vs, t2s_full, s0_full = me.fit_decay(
-                                                                data,
                                                                 data, tes,
                                                                 mask,
                                                                 masksum,
