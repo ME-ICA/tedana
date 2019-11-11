@@ -146,8 +146,7 @@ Before creating your pull request, please make sure to review the `tedana` [styl
 
 You can run style checks by running the following,
 ```
-cd $TEDANADIR
-flake8 tedana
+flake8 $TEDANADIR/tedana
 ```
 
 and unit/integration tests by running ``pytest``.
@@ -159,15 +158,14 @@ Running all ``pytest`` tests will be useful for pre-pushing checks.
 When you open a Pull Request, CircleCI will run all tests.
 
 ```
-cd TEDANADIR/tedana/tests
 # All tests; final checks before pushing
-pytest .
+pytest $TEDANADIR/tedana/tests
 # Unit tests and linting only
-pytest --skipintegration .
+pytest --skipintegration $TEDANADIR/tedana/tests
 # One test file in particular
-pytest test_file.py
+pytest $TEDANADIR/tedana/tests/test_file.py
 # Test one function in a file
-pytest -k my_function test_file.py
+pytest -k my_function $TEDANADIR/tedana/tests/test_file.py
 ```
 
 from within your local `tedana` repository.
