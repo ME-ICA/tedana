@@ -33,15 +33,6 @@ We also maintain a [gitter chat room][link_gitter] for more informal conversatio
 There is significant cross-talk between these two spaces, and we look forward to hearing from you in either venue!
 As a reminder, we expect all contributions to `tedana` to adhere to our [code of conduct][link_coc].
 
-### Monthly developer calls
-
-We run monthly developer calls via Zoom.
-You can see the schedule via the `tedana` [google calendar](https://calendar.google.com/calendar/embed?src=pl6vb4t9fck3k6mdo2mok53iss%40group.calendar.google.com).
-An agenda will be circulated in the gitter channel in advance of the meeting.
-
-Everyone is welcome.
-We look forward to meeting you there :hibiscus:
-
 ## Contributing small documentation changes
 If you are new to GitHub and just have a small documentation change
 recommendation, please submit it to [our e-mail address](mailto:tedana.devs@gmail.com)
@@ -161,20 +152,24 @@ Before creating your pull request, please make sure to review the `tedana` [styl
 
 #### Changes to code
 
-For changes to the codebase, we suggest using our development Docker container which will run all the necessary checks and tests to ensure your code is ready to be merged into `tedana`!
-(This does require that you have a local install of [Docker](https://www.docker.com/products/docker-desktop).)
-You can run all the checks with:
+You can run all the checks from running the following
 
 ```
-docker run --tty --rm -v ${PWD}:/tedana tedana/tedana-dev:latest run_all_tests
+cd TEDANADIR/tedana/tests
+# All tests
+pytest .
+# Unit tests and linting only (saves time)
+pytest --skipintegration .
+# One test file in particular
+pytest test_file.py
+# Test one function in a file
+pytest -k my_function test_file.py
 ```
 
 from within your local `tedana` repository.
-(**N.B.** It is possible that, depending on your Docker setup, you may need to increase the amount of memory available to Docker in order to run the `tedana` test suite. 
-You can either do this permanently by editing your Docker settings or temporarily by adding `--memory=4g` to the above `docker run` command.)
-
-This will print out a number of different status update messages as the tests run, but if you see `"FINISHED RUNNING ALL TESTS! GREAT SUCCESS"` then it means everything finished succesfully.
-If not, there should be some helpful outputs that specify which tests failed.
+The test run will indicate the number of passes and failures.
+Most often, the failures are self-explanatory,
+but if not you can use the [pytest documentation][link_pytest] to use options to get more information. 
 
 #### Changes to documentation
 
@@ -202,20 +197,25 @@ When opening a pull request, please use at least one of the following prefixes:
 * **[ENH]** for enhancements
 * **[FIX]** for bug fixes
 * **[REF]** for refactoring existing code
-* **[STY]** for stylistic changes
 * **[TST]** for new or updated tests, and
-* **[WIP]** for changes which are not yet ready to be merged
-
-Pull requests should be submitted early and often!
-If your pull request is not yet ready to be merged, please also include the **[WIP]** prefix.
-This tells the development team that your pull request is a "work-in-progress",
-and that you plan to continue working on it.
-We request that you do not use the Draft PR feature at this time, 
-as it interferes with our Continuous Integration tool, Travis.
+* **[MAINT]** for maintenance of code
 
 You can also combine the tags above, for example if you are updating both a test and
 the documentation: **[TST, DOC]**.
-If you're still working on the pull request that prefix would be **[WIP, TST, DOC]**.
+
+Pull requests should be submitted early and often!
+If your pull request is not yet ready to be merged, please use [draft PRs][link_draftpr]
+This tells the development team that your pull request is a "work-in-progress",
+and that you plan to continue working on it.
+Note that if your pull request has no conversation or commits for 90 days,
+stale-bot will mark it stale and we may ask your permission to take over it.
+
+Pull Request Checklist (Before Requesting Review):
+- [ ] Check that all tests are passing ("All tests passsed")
+- [ ] Make sure you have docstrings for any new functions
+- [ ] Make sure that docstrings are updated for edited functions
+- [ ] Make sure you note any issues that will be closed by your PR
+- [ ] Take a look at the automatically generated readthedocs for your PR (Show all checks -> continuous-documentation/readthedocs -> Details)
 
 ## Style Guide
 
@@ -289,6 +289,7 @@ You're awesome. :wave::smiley:
 
 [link_kanban]: https://en.wikipedia.org/wiki/Kanban_board
 [link_pullrequest]: https://help.github.com/articles/creating-a-pull-request/
+[link_draftpr]: https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests#draft-pull-requests
 [link_fork]: https://help.github.com/articles/fork-a-repo/
 [link_pushpullblog]: https://www.igvita.com/2011/12/19/dont-push-your-pull-requests/
 [link_updateupstreamwiki]: https://help.github.com/articles/syncing-a-fork/
@@ -306,3 +307,4 @@ You're awesome. :wave::smiley:
 [link_all-contributors-bot]: https://allcontributors.org/docs/en/bot/overview
 [link_all-contributors-bot-usage]: https://allcontributors.org/docs/en/bot/usage
 [link_stemmrolemodels]: https://github.com/KirstieJane/STEMMRoleModels
+[link_pytest]: https://docs.pytest.org/en/latest/usage.html
