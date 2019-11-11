@@ -1,3 +1,8 @@
+"""
+PCA based on GIFT software
+"""
+import logging
+
 import numpy as np
 from scipy.linalg import svd
 from sklearn.decomposition import PCA
@@ -7,26 +12,62 @@ from scipy.signal import detrend
 from scipy.fftpack import fft, fftshift, fftn
 from scipy.signal import correlate2d
 
+LGR = logging.getLogger(__name__)
 
-def autocorr(x):
+
+def _autocorr(x):
+    """
+    Run Singular Value Decomposition (SVD) on input data,
+    automatically select components based on the GIFT software.
+
+    Parameters
+    ----------
+    x : 
+
+    Returns
+    -------
+    u : 
+    """
     result = np.correlate(x, x, mode='full')
     return result[result.size / 2:]
 
 
-def sumN(dat):
-    # sum of the all elements of the dat matrix
+def _sumN(dat):
+    """
+    Sum of all the elements of the dat matrix.
+
+    Parameters
+    ----------
+    dat : 
+
+    Returns
+    -------
+    u : 
+    """
     return np.sum(dat[:])
 
 
-def checkOrder(n_in):
-    # CHECKORDER Checks the order passed to the window functions.
+def _checkOrder(n_in):
+    """
+    Checks the order passed to the window functions.
+
+    Parameters
+    ----------
+    n_in : 
+
+    Returns
+    -------
+    n_out :
+    w :
+    trivalwin :
+    """
 
     w = []
     trivalwin = 0
 
     # Special case of negative orders:
     if n_in < 0:
-        print('ERROR!!!! Order cannot be less than zero.')
+        raise ValueError('Order cannot be less than zero.')
 
     # Check if order is already an integer or empty
     # If not, round to nearest integer.
@@ -34,7 +75,7 @@ def checkOrder(n_in):
         n_out = n_in
     else:
         n_out = np.round(n_in)
-        print('WARNING: Rounding order to nearest integer.')
+        LGR.warning('Rounding order to nearest integer.')
 
     # Special cases:
     if not n_out or n_out == 0:
@@ -47,13 +88,22 @@ def checkOrder(n_in):
     return n_out, w, trivalwin
 
 
-def parzen_win(n):
-    # PARZENWIN Parzen window.
-    # PARZENWIN(N) returns the N-point Parzen (de la Valle-Poussin) window in
-    # a column vector.
+def _parzen_win(n):
+    """
+    Returns the N-point Parzen (de la Valle-Poussin) window in
+    a column vector.
+
+    Parameters
+    ----------
+    n : 
+
+    Returns
+    -------
+    w : 
+    """
 
     # Check for valid window length (i.e., n < 0)
-    n, w, trivialwin = checkOrder(n)
+    n, w, trivialwin = _checkOrder(n)
     if trivialwin:
         return w
 
@@ -70,10 +120,20 @@ def parzen_win(n):
     return w
 
 
-def entrate_sp(x, sm_window):
+def _entrate_sp(x, sm_window):
+    """
+    Calculate the entropy rate of a stationary Gaussian random process using
+    spectrum estimation with smoothing window.
 
-    # Calculate the entropy rate of a stationary Gaussian random process using
-    # spectrum estimation with smoothing window
+    Parameters
+    ----------
+    x : 
+    sm_window :
+
+    Returns
+    -------
+    out : 
+    """
 
     n = x.shape
 
@@ -89,26 +149,26 @@ def entrate_sp(x, sm_window):
 
         if (x.ndim >= 3):
             parzen_w_3 = np.zeros((2 * n[2] - 1, ))
-            parzen_w_3[(n[2] - M[2] - 1):(n[2] + M[2])] = parzen_win(2 * M[2] +
-                                                                     1)
+            parzen_w_3[(n[2] - M[2] - 1):(n[2] +
+                                          M[2])] = _parzen_win(2 * M[2] + 1)
 
         if (x.ndim >= 2):
             parzen_w_2 = np.zeros((2 * n[1] - 1, ))
-            parzen_w_2[(n[1] - M[1] - 1):(n[1] + M[1])] = parzen_win(2 * M[1] +
-                                                                     1)
+            parzen_w_2[(n[1] - M[1] - 1):(n[1] +
+                                          M[1])] = _parzen_win(2 * M[1] + 1)
 
         if (x.ndim >= 1):
             parzen_w_1 = np.zeros((2 * n[0] - 1, ))
-            parzen_w_1[(n[0] - M[0] - 1):(n[0] + M[0])] = parzen_win(2 * M[0] +
-                                                                     1)
+            parzen_w_1[(n[0] - M[0] - 1):(n[0] +
+                                          M[0])] = _parzen_win(2 * M[0] + 1)
 
     if x.ndim == 2 and min(n) == 1:  # 1D
-        xc = autocorr(x)
+        xc = _autocorr(x)
         xc = xc * parzen_w
         xf = fftshift(fft(xc))
 
     elif x.ndim == 2 and min(n) != 1:  # 2D
-        xc = autocorr(x)  # default option: computes raw correlations with NO
+        xc = _autocorr(x)  # default option: computes raw correlations with NO
         # normalization -- Matlab help on xcorr
 
         # Bias correction
@@ -166,41 +226,54 @@ def entrate_sp(x, sm_window):
 
     else:
 
-        print('ERROR!!!!! Unrecognized matrix dimension.')
+        raise ValueError('Unrecognized matrix dimension.')
 
     xf = abs(xf)
     xf[xf < 1e-4] = 1e-4
-    out = 0.5 * np.log(2 * np.pi * np.exp(1)) + sumN(np.log(abs(
-        (xf)))) / 2 / sumN(abs(xf))
+    out = 0.5 * np.log(2 * np.pi * np.exp(1)) + _sumN(np.log(abs(
+        (xf)))) / 2 / _sumN(abs(xf))
 
     return out
 
 
-def est_indp_sp(x):
+def _est_indp_sp(x):
+    """
+    Estimate the effective number of independent samples based on the maximum
+    entropy rate principle of stationary random process.
+
+    Parameters
+    ----------
+    x : 
+
+    Returns
+    -------
+    s : 
+    entrate_m :
+    """
 
     dimv = x.shape
     s0 = 0
 
     for j in range(np.min(dimv) - 1):
-        x_sb = subsampling(x, j + 1, [0, 0, 0])
+        x_sb = _subsampling(x, j + 1, [0, 0, 0])
         if j == 0:
-            print(
+            LGR.info(
                 'Estimating the entropy rate of the Gaussian component with subsampling depth {},'
                 .format(j))
         else:
-            print(' {},'.format(j))
+            LGR.info(' {},'.format(j))
 
-        entrate_m = entrate_sp(x_sb, 1)
+        entrate_m = _entrate_sp(x_sb, 1)
 
         ent_ref = 1.41
         if entrate_m > ent_ref:
             s0 = j
             break
 
-    print(' Done;')
+    LGR.info(' Done;')
     if s0 == 0:
-        print(
-            'ERROR!!!!! Ill conditioned data, can not estimate independent samples.(est_indp_sp)'
+        raise ValueError(
+            'Ill conditioned data, can not estimate independent samples.(_est_indp_sp)'
         )
     else:
         s = s0
@@ -208,8 +281,20 @@ def est_indp_sp(x):
     return s, entrate_m
 
 
-def subsampling(x, s, x0):
-    # Subsampling the data evenly with space 's'
+def _subsampling(x, s, x0):
+    """
+    Subsampling the data evenly with space 's'.
+
+    Parameters
+    ----------
+    x : 
+    s :
+    x0 :
+
+    Returns
+    -------
+    out : 
+    """
 
     n = x.shape
 
@@ -225,12 +310,23 @@ def subsampling(x, s, x0):
                 x0[1], n[1], s), :][:, :, np.arange(x0[2], n[2], s)]
 
     else:
-        print('ERROR!!!! Unrecognized matrix dimension!(subsampling)')
+        raise ValueError('Unrecognized matrix dimension!(subsampling)')
 
     return out
 
 
-def kurtn(x):
+def _kurtn(x):
+    """
+    Normalized kurtosis funtion so that for a Gaussian r.v. the kurtn(g) = 0.
+
+    Parameters
+    ----------
+    x : 
+
+    Returns
+    -------
+    kurt : (1:N) array-like
+    """
 
     kurt = np.zeros((x.shape[1], 1))
 
@@ -242,7 +338,23 @@ def kurtn(x):
     return kurt
 
 
-def icatb_svd(data, numpc):
+def _icatb_svd(data, numpc):
+    """
+    Run Singular Value Decomposition (SVD) on input data and extracts the
+    given number of components (numpc).
+
+    Parameters
+    ----------
+    data : 
+    numpc :
+    criteria :
+
+    Returns
+    -------
+    V : 
+    Lambda :
+    """
+
     _, Lambda, vh = svd(data)
     # Sort eigen vectors in Ascending order
     V = vh.T
@@ -257,12 +369,30 @@ def icatb_svd(data, numpc):
     Lambda = Lambda[Lambda.shape[0] - numpc:]
     sumUsed = np.sum(Lambda)
     retained = (sumUsed / sumAll) * 100
-    print('{ret}% of non-zero eigenvalues retained'.format(ret=retained))
+    LGR.info('{ret}% of non-zero eigenvalues retained'.format(ret=retained))
 
     return V, Lambda
 
 
-def eigensp_adj(lam, n, p):
+def _eigensp_adj(lam, n, p):
+    """
+    Eigen spectrum adjustment for EVD on finite samples.
+
+    Parameters
+    ----------
+    lam : (p,) array-like
+          Eigen values.
+    n : int
+        Effective number of i.i.d. samples.
+    p : int
+        Number of eigen values.
+
+    Returns
+    -------
+    lam_adj : (p,) array-like
+              adjusted eigen values.
+    """
+
     r = p / n
     bp = np.power((1 + np.sqrt(r)), 2)
     bm = np.power((1 - np.sqrt(r)), 2)
@@ -288,15 +418,41 @@ def eigensp_adj(lam, n, p):
     return lam_adj
 
 
-def run_gift_pca(data, criteria='mdl'):
+def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
+    """
+    Run Singular Value Decomposition (SVD) on input data,
+    automatically select components based on the GIFT software.
 
-    # [Nx, Ny, Nz, Nt] = data_nib.shape
+    Parameters
+    ----------
+    data_nib : 4D nibabel
+               unmasked data to compute the PCA on.
+    mask_nib : 4D nibabel
+               mask to apply on data_nib.
+    criteria : string
+               aic, kic or mdl criteria to select the number of components 
+               (default='mdl').
 
-    # scaler = StandardScaler(with_mean=True, with_std=True)
-    # data = scaler.fit_transform(DATA)
-    Nt = data.shape[1]
+    Returns
+    -------
+    u : (S [*E] x C) array-like
+        Component weight map for each component.
+    s : (C,) array-like
+        Variance explained for each component.
+    varex_norm : (n_components,) array-like
+        Explained variance ratio.
+    v : (T x C) array-like
+        Component timeseries.
+    """
 
-    V, EigenValues = icatb_svd(data, Nt)
+    data_nib = data_nib.get_data()
+    mask_nib = mask_nib.get_data()
+    [Nx, Ny, Nz, Nt] = data_nib.shape
+    data_nib_V = np.reshape(data_nib, (Nx * Ny * Nz, Nt), order='F')
+    maskvec = np.reshape(mask_nib, Nx * Ny * Nz, order='F')
+    data = data_nib_V[maskvec == 1, :]
+
+    V, EigenValues = _icatb_svd(data, Nt)
 
     # Reordering of values
     EigenValues = EigenValues[::-1]
@@ -310,7 +466,7 @@ def run_gift_pca(data, criteria='mdl'):
     # Using 12 gaussian components from middle, top and bottom gaussian
     # components to determine the subsampling depth. Final subsampling depth is
     # determined using median
-    kurtv1 = kurtn(dataN)
+    kurtv1 = _kurtn(dataN)
     kurtv1[EigenValues > np.mean(EigenValues)] = 1000
     idx_gauss = np.where(
         ((kurtv1[:, 0] < 0.3) * (EigenValues > np.finfo(float).eps)
@@ -336,7 +492,7 @@ def run_gift_pca(data, criteria='mdl'):
         x_single = np.zeros(Nx * Ny * Nz)
         x_single[maskvec == 1] = dataN[:, idx[i]]
         x_single = np.reshape(x_single, (Nx, Ny, Nz), order='F')
-        s[i] = est_indp_sp(x_single)[0] + 1
+        s[i] = _est_indp_sp(x_single)[0] + 1
         if i > 6:
             tmpS = s[0:i]
             tmpSMedian = np.round(np.median(tmpS))
@@ -350,45 +506,46 @@ def run_gift_pca(data, criteria='mdl'):
     N = np.round(np.sum(maskvec) / np.power(s1, dim_n))
 
     # Use the subsampled dataset to calculate eigen values
-    print('Perform EVD on the effectively i.i.d. samples ...')
+    LGR.info('Perform EVD on the effectively i.i.d. samples ...')
 
     if s1 != 1:
-        mask_s = subsampling(mask_ND, s1, [0, 0, 0])
+        mask_s = _subsampling(mask_ND, s1, [0, 0, 0])
         mask_s_1d = np.reshape(mask_s, np.prod(mask_s.shape), order='F')
         dat = np.zeros((int(np.sum(mask_s_1d)), Nt))
         for i in range(Nt):
             x_single = np.zeros((Nx * Ny * Nz, ))
             x_single[maskvec == 1] = data[:, i]
             x_single = np.reshape(x_single, (Nx, Ny, Nz), order='F')
-            dat0 = subsampling(x_single, s1, [0, 0, 0])
+            dat0 = _subsampling(x_single, s1, [0, 0, 0])
             dat0 = np.reshape(dat0, np.prod(dat0.shape), order='F')
             dat[:, i] = dat0[mask_s_1d == 1]
 
         # Perform Variance Normalization
+        scaler = StandardScaler(with_mean=True, with_std=True)
         dat = scaler.fit_transform(dat)
 
         # (completed)
-        print('P2:')
-        [V, EigenValues] = icatb_svd(dat, Nt)
+        LGR.info('P2:')
+        [V, EigenValues] = _icatb_svd(dat, Nt)
         EigenValues = EigenValues[::-1]
 
     lam = EigenValues
 
-    print(' Effective number of i.i.d. samples %d' % N)
+    LGR.info('Effective number of i.i.d. samples %d' % N)
 
     # Make eigen spectrum adjustment
-    print('Perform eigen spectrum adjustment ...')
-    lam = eigensp_adj(lam, N, lam.shape[0])
+    LGR.info('Perform eigen spectrum adjustment ...')
+    lam = _eigensp_adj(lam, N, lam.shape[0])
     # (completed)
     if np.sum(np.imag(lam)):
-        print('ERROR: Invalid eigen value found for the subsampled data.')
+        raise ValueError('Invalid eigen value found for the subsampled data.')
 
     # Correction on the ill-conditioned results (when tdim is large,
     # some least significant eigenvalues become small negative numbers)
     if lam[np.real(lam) <= np.finfo(float).eps].shape[0] > 0:
         lam[np.real(lam) <= np.finfo(float).eps] = np.min(
             lam[np.real(lam) >= np.finfo(float).eps])
-    print(' Estimating the dimension ...')
+    LGR.info(' Estimating the dimension ...')
     p = Nt
     aic = np.zeros(p - 1)
     kic = np.zeros(p - 1)
@@ -401,7 +558,6 @@ def run_gift_pca(data, criteria='mdl'):
         aic[k_idx] = (-2 * mlh) + (2 * df)
         kic[k_idx] = (-2 * mlh) + (3 * df)
         mdl[k_idx] = -mlh + (0.5 * df * np.log(N))
-        #assert False
 
     itc = np.zeros((3, mdl.shape[0]))
     itc[0, :] = aic
@@ -422,7 +578,7 @@ def run_gift_pca(data, criteria='mdl'):
     else:
         comp_est = a[0]
 
-    print('Estimated components is found out to be %d' % comp_est)
+    LGR.info('Estimated components is found out to be %d' % comp_est)
 
     # PCA with estimated number of components
     ppca = PCA(n_components=comp_est, svd_solver='full', copy=False)
