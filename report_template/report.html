@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link href="https://fonts.googleapis.com/css?family=Titillium+Web:300,700&display=swap" rel="stylesheet" /> 
+    <style type="text/css">
+        body {
+            font-family: 'Titillium Web', sans-serif;
+            margin:0;
+        }
+
+        .headerbck {
+            position: fixed;
+            width: 100%;
+            height: 3em;
+            margin: 0px;
+            background: #023955;
+        }
+        .header {
+            width: 960px;
+            margin: 0 auto;
+        }
+        .header h1 {
+            display: inline;
+            position: relative;
+            float: left;
+            width: 600px;
+            margin: 0;
+            font-weight: 700;
+            color: #fff;
+        }
+        .header h2 {
+            display: inline;
+            position: relative;
+            float: right;
+            margin: 0;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .main {
+            width: 960px;
+            height: 100%;
+            margin: 0 auto;
+            padding-top: 3em;
+        }
+
+        .nav {
+            position:fixed;
+            float: left;
+            width: 240px;
+            height: 100%;
+            border: 1px solid #ccc;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        .nav h3,
+        .nav h4 {
+            margin-bottom: 0;
+        }
+        .nav ul {
+            list-style-type: square;
+            margin: 0;
+        }
+        .nav a:link,
+        .nav a:visited {
+            color: #000;
+            text-decoration: none;
+        }
+        .nav a:hover,
+        .nav a:active {
+            color: #000;
+            text-decoration: underline;
+        }
+        a.rejected:link,
+        a.rejected:visited {
+            color: #900 !important;
+        }
+        a.accepted:link,
+        a.accepted:visited {
+            color: #090 !important;
+        }
+        a.ignored:link,
+        a.ignored:visited {
+            color: #666 !important;
+        }
+        ul.components {
+            list-style-type: decimal-leading-zero;
+            margin: 0;
+        }
+
+        .contentwrapper {
+            float: right;
+            width: 710px;
+        }
+        p#tedana_box {
+            margin: 1em;
+            padding: 1em 0.5em;
+            background: #eee;
+            border: 1px solid #ccc;
+            border-left:4px solid #ccc;
+        }
+        p#method_box,
+        p#reference_box {
+            margin: 1em;
+            padding: 1em;
+            background: #fafafa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 13pt;
+            height: 12em;
+            overflow: auto;
+        }
+        p#log_box {
+            margin: 1em;
+            padding: 1em 0.5em;
+            background: #fee;
+            border: 1px solid #fcc;
+            border-left:4px solid #fcc;
+        }
+    </style>
+
+<script></script>
+
+</head>
+
+<body>
+
+<div class="headerbck">
+    <div class="header">
+        <h2 align="right">$verstr</h2>
+        <h1 align="left">$experiment</h1>
+    </div>
+</div>
+
+<div class="main">
+    <div class="contentwrapper">
+        <!-- begin General -->
+        <h2 id="general">Report for $experiment</h2>
+
+        <h3 id="call_tedana">Tedana call</h3>
+        <p id="tedana_box">$call</p>
+
+        <h3 id="methods">Methods</h3>
+        <p id="method_box">$methods</p>
+
+        <h3 id="references">References</h3>
+        <p id="reference_box">$references</p>
+
+        <h3 id="errors">Error</h3>
+        <p id="log_box">$log</p>
+
+        <h3 id="tsnr">tSNR maps</h3>
+        <img src="$path_to_figures/tsnr.png" />
+
+        <h3 id="grayplot">Grayplot</h3>
+        <img src="$path_to_figures/grayplot.png" />
+
+    </div>
+
+
+    <div class="nav">
+        <h3><a href="#general">General report</a></h3>
+        <ul>
+            <!--common sections-->
+            <li><a href="#call_tedana">tedana call</a></li>
+            <li><a href="#methods">Methods</a></li>
+            <li><a href="#references">References</a></li>
+            <li><a href="#errors">Log</a></li>
+            <li><a href="#tsnr">tSNR</a></li>
+            <li><a href="#grayplot">Grayplot</a></li>
+        </ul>
+        <!--tedica-->
+        <h3><a href="./components.html#tedica">tedica</a></h3>
+        <ul>    
+            <li><a href="./components.html#scatter">&rho; vs &kappa; scatterplot</a></li>
+        </ul>
+        <h4>Components</h4>
+        <ul class="components">
+            <!--start add components-->
+            <!--$status is accepted rejected ignored-->
+            <li><a class="$status" href="./components.html#$compnum">$status</a></li>
+            <!--end add components-->
+        </ul>
+    </div>
+    <!-- end menu-->
+</div>
+
+<script></script>
+
+</body>
+</html>
