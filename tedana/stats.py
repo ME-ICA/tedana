@@ -144,11 +144,11 @@ def get_coeffs(data, X, mask=None, add_const=False):
     if add_const:  # add intercept, if specified
         X = np.column_stack([X, np.ones((len(X), 1))])
 
-    param_estimates = np.linalg.lstsq(X, mdata, rcond=None)[0].T
+    betas = np.linalg.lstsq(X, mdata, rcond=None)[0].T
     if add_const:  # drop beta for intercept, if specified
-        param_estimates = param_estimates[:, :-1]
+        betas = betas[:, :-1]
 
     if mask is not None:
-        param_estimates = utils.unmask(param_estimates, mask)
+        betas = utils.unmask(betas, mask)
 
-    return param_estimates
+    return betas

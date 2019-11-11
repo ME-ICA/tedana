@@ -243,6 +243,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     else:
         LGR.info('Computing PCA of echo #{0}'.format(','.join([str(ee) for ee in source_tes])))
         data = np.stack([data_cat[mask, ee, :] for ee in source_tes - 1], axis=1)
+
     eim = np.squeeze(eimask(data))
     data = np.squeeze(data[eim])
 

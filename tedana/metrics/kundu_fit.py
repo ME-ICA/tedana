@@ -66,7 +66,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         Dictionary containing component-specific metric maps to be used for
         component selection. If `algorithm` is None, then seldict will be None as
         well.
-    pes : :obj:`numpy.ndarray`
+    betas : :obj:`numpy.ndarray`
     mmix_new : :obj:`numpy.ndarray`
     """
     # Use adaptive_mask as mask
@@ -104,10 +104,10 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
     WTS = computefeats2(tsoc, mmixN, mask=None, normalize=False)
 
     # compute PSC dataset - shouldn't have to refit data
-    tsoc_pes = get_coeffs(tsoc_dm, mmix, mask=None)
+    tsoc_B = get_coeffs(tsoc_dm, mmix, mask=None)
     del tsoc_dm
-    tsoc_Babs = np.abs(tsoc_pes)
-    PSC = tsoc_pes / tsoc.mean(axis=-1, keepdims=True) * 100
+    tsoc_Babs = np.abs(tsoc_B)
+    PSC = tsoc_B / tsoc.mean(axis=-1, keepdims=True) * 100
 
     # compute skews to determine signs based on unnormalized weights,
     # correct mmix & WTS signs based on spatial distribution tails
@@ -117,15 +117,15 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
     mmix *= signs
     WTS *= signs
     PSC *= signs
-    totvar = (tsoc_pes**2).sum()
+    totvar = (tsoc_B**2).sum()
     totvar_norm = (WTS**2).sum()
 
-    # compute parameter estimates and means over TEs for TE-dependence analysis
-    pes = get_coeffs(utils.unmask(catd, mask), mmix,
+    # compute betas and means over TEs for TE-dependence analysis
+    betas = get_coeffs(utils.unmask(catd, mask), mmix,
                      np.repeat(mask[:, np.newaxis], len(tes), axis=1),
                      add_const=True)
-    pes = pes[mask, ...]
-    n_voxels, n_echos, n_components = pes.shape
+    betas = betas[mask, ...]
+    n_voxels, n_echos, n_components = betas.shape
     mu = catd.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))
     fmin, _, _ = getfbounds(n_echos)
@@ -149,9 +149,9 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
     LGR.info('Fitting TE- and S0-dependent models to components')
     for i_comp in range(n_components):
         # size of comp_pes is (n_echoes, n_samples)
-        comp_pes = np.atleast_3d(pes)[:, :, i_comp].T
+        comp_pes = np.atleast_3d(betas)[:, :, i_comp].T
         alpha = (np.abs(comp_pes)**2).sum(axis=0)
-        varex[i_comp] = (tsoc_pes[:, i_comp]**2).sum() / totvar * 100.
+        varex[i_comp] = (tsoc_B[:, i_comp]**2).sum() / totvar * 100.
         varex_norm[i_comp] = (WTS[:, i_comp]**2).sum() / totvar_norm
 
         for j_echo in np.unique(adaptive_mask[adaptive_mask >= 3]):
@@ -195,7 +195,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         rhos[i_comp] = np.average(F_S0, weights=norm_weights)
     del SSE_S0, SSE_R2, wtsZ, F_S0, F_R2, norm_weights, comp_pes
     if algorithm != 'kundu_v3':
-        del WTS, PSC, tsoc_pes
+        del WTS, PSC, tsoc_B
 
     # tabulate component values
     comptable = np.vstack([kappas, rhos, varex, varex_norm]).T
@@ -204,7 +204,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         sort_idx = comptable[:, 0].argsort()[::-1]
         comptable = comptable[sort_idx, :]
         mmix_new = mmix[:, sort_idx]
-        pes = pes[..., sort_idx]
+        betas = betas[..., sort_idx]
         F_R2_maps = F_R2_maps[:, sort_idx]
         F_S0_maps = F_S0_maps[:, sort_idx]
         Z_maps = Z_maps[:, sort_idx]
@@ -217,14 +217,14 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         if algorithm == 'kundu_v3':
             WTS = WTS[:, sort_idx]
             PSC = PSC[:, sort_idx]
-            tsoc_pes = tsoc_pes[:, sort_idx]
+            tsoc_B = tsoc_B[:, sort_idx]
     else:
         mmix_new = mmix
     del mmix
 
     if verbose:
         # Echo-specific weight maps for each of the ICA components.
-        io.filewrite(utils.unmask(pes, mask),
+        io.filewrite(utils.unmask(betas, mask),
                      op.join(out_dir, '{0}betas_catd.nii'.format(label)),
                      ref_img)
 
@@ -298,12 +298,12 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         del ccimg, tsoc_Babs
 
         if algorithm == 'kundu_v2':
-            # WTS, tsoc_pes, PSC, and F_S0_maps are not used by Kundu v2.5
+            # WTS, tsoc_B, PSC, and F_S0_maps are not used by Kundu v2.5
             selvars = ['Z_maps', 'F_R2_maps',
                        'Z_clmaps', 'F_R2_clmaps', 'F_S0_clmaps',
                        'Br_R2_clmaps', 'Br_S0_clmaps']
         elif algorithm == 'kundu_v3':
-            selvars = ['WTS', 'tsoc_pes', 'PSC',
+            selvars = ['WTS', 'tsoc_B', 'PSC',
                        'Z_maps', 'F_R2_maps', 'F_S0_maps',
                        'Z_clmaps', 'F_R2_clmaps', 'F_S0_clmaps',
                        'Br_R2_clmaps', 'Br_S0_clmaps']
@@ -318,7 +318,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
     else:
         seldict = None
 
-    return comptable, seldict, pes, mmix_new
+    return comptable, seldict, betas, mmix_new
 
 
 def kundu_metrics(comptable, metric_maps):
@@ -357,10 +357,10 @@ def kundu_metrics(comptable, metric_maps):
 
     """
     Generate Dice values for R2 and S0 models
-    - dice_FR2: Dice value of cluster-extent thresholded maps of R2-model
-      parameter estimates and F-statistics.
-    - dice_FS0: Dice value of cluster-extent thresholded maps of S0-model
-      parameter estimates and F-statistics.
+    - dice_FR2: Dice value of cluster-extent thresholded maps of R2-model betas
+      and F-statistics.
+    - dice_FS0: Dice value of cluster-extent thresholded maps of S0-model betas
+      and F-statistics.
     """
     comptable['dice_FR2'] = np.zeros(comptable.shape[0])
     comptable['dice_FS0'] = np.zeros(comptable.shape[0])
