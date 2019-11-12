@@ -7,6 +7,7 @@ import numpy as np
 from scipy import stats
 
 from tedana import utils
+from tedana.due import due, BibTeX, Doi
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
