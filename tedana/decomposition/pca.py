@@ -272,8 +272,6 @@ def tedpca(data_cat,
             ref_img, utils.unmask(utils.unmask(data_z, eim), mask))
         mask_img = io.new_nii_like(ref_img,
                                    utils.unmask(eim, mask).astype(int))
-        io.filewrite(utils.unmask(utils.unmask(data_z, eim), mask), 'oc',
-                     data_img)
         voxel_comp_weights, varex, varex_norm, comp_ts = gift_pca.run_gift_pca(
             data_img, mask_img, algorithm)
     elif algorithm == 'mle':

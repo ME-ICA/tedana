@@ -145,7 +145,7 @@ def _entrate_sp(x, sm_window):
 
     if (sm_window == 1):
 
-        M = [int(i) for i in np.ceil(np.array(n) / 10)]
+        M = [int(i) for i in np.ceil(np.array(n) / 10.0)]
 
         if (x.ndim >= 3):
             parzen_w_3 = np.zeros((2 * n[2] - 1, ))
@@ -256,13 +256,6 @@ def _est_indp_sp(x):
 
     for j in range(np.min(dimv) - 1):
         x_sb = _subsampling(x, j + 1, [0, 0, 0])
-        if j == 0:
-            LGR.info(
-                'Estimating the entropy rate of the Gaussian component with subsampling depth {},'
-                .format(j))
-        else:
-            LGR.info(' {},'.format(j))
-
         entrate_m = _entrate_sp(x_sb, 1)
 
         ent_ref = 1.41
@@ -270,13 +263,15 @@ def _est_indp_sp(x):
             s0 = j
             break
 
-    LGR.info(' Done;')
     if s0 == 0:
         raise ValueError(
             'Ill conditioned data, can not estimate independent samples.(_est_indp_sp)'
         )
     else:
         s = s0
+        LGR.info(
+            'Estimated the entropy rate of the Gaussian component with subsampling depth {}'
+            .format(j))
 
     return s, entrate_m
 
@@ -453,6 +448,8 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     maskvec = np.reshape(mask_nib, Nx * Ny * Nz, order='F')
     data_non_normalized = data_nib_V[maskvec == 1, :]
     scaler = StandardScaler(with_mean=True, with_std=True)
+    # Not sure we should be normalizing at this step. Probably tedana is
+    # already taking care of this before the data enter this function.
     # data = scaler.fit_transform(data_non_normalized)  # This was X_sc
     data = data_non_normalized
 
@@ -465,15 +462,9 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     dataN = np.dot(data, V[:, ::-1])
     # Potentially the small differences come from the different signs on V
 
-    # Rename SVD results to be used later
-    # following currently unused
-    # V_orig = V.copy()
-    # S_orig = EigenValues.copy()
-
     # Using 12 gaussian components from middle, top and bottom gaussian
     # components to determine the subsampling depth. Final subsampling depth is
     # determined using median
-
     kurtv1 = _kurtn(dataN)
     kurtv1[EigenValues > np.mean(EigenValues)] = 1000
     idx_gauss = np.where(
@@ -515,13 +506,11 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
         s1 = int(np.floor(np.power(np.sum(maskvec) / Nt, 1 / dim_n)))
     N = np.round(np.sum(maskvec) / np.power(s1, dim_n))
 
-    # Use the subsampled dataset to calculate eigen values
-    # LGR.info('Perform EVD on the effectively i.i.d. samples ...')
-
     if s1 != 1:
         mask_s = _subsampling(mask_ND, s1, [0, 0, 0])
         mask_s_1d = np.reshape(mask_s, np.prod(mask_s.shape), order='F')
         dat = np.zeros((int(np.sum(mask_s_1d)), Nt))
+        LGR.info('Generating subsampled i.i.d. OC data...')
         for i in range(Nt):
             x_single = np.zeros((Nx * Ny * Nz, ))
             x_single[maskvec == 1] = data[:, i]
@@ -534,7 +523,6 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
         dat = scaler.fit_transform(dat)
 
         # (completed)
-        LGR.info('P2:')
         LGR.info('Performing SVD on subsampled i.i.d. OC data...')
         [V, EigenValues] = _icatb_svd(dat, Nt)
         LGR.info('SVD done on subsampled i.i.d. OC data')
