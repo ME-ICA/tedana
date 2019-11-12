@@ -20,7 +20,6 @@ def _update_template_about(call, methods):
     HTMLReport : an instance of a populated HTML report
     """
     resource_path = Path(__file__).resolve().parent.joinpath('data', 'html')
-
     body_template_name = 'report_body_template.html'
     body_template_path = resource_path.joinpath(body_template_name)
     tpl = tempita.HTMLTemplate.from_filename(str(body_template_path),
