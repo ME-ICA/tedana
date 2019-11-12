@@ -268,8 +268,12 @@ def tedpca(data_cat,
               data_z.mean()) / data_z.std()  # var normalize everything
 
     if algorithm in ['mdl', 'aic', 'kic']:
-        data_img = io.new_nii_like(ref_img, utils.unmask(utils.unmask(data_z, eim), mask))
-        mask_img = io.new_nii_like(ref_img, utils.unmask(eim, mask).astype(int))
+        data_img = io.new_nii_like(
+            ref_img, utils.unmask(utils.unmask(data_z, eim), mask))
+        mask_img = io.new_nii_like(ref_img,
+                                   utils.unmask(eim, mask).astype(int))
+        io.filewrite(utils.unmask(utils.unmask(data_z, eim), mask), 'oc',
+                     data_img)
         voxel_comp_weights, varex, varex_norm, comp_ts = gift_pca.run_gift_pca(
             data_img, mask_img, algorithm)
     elif algorithm == 'mle':
@@ -346,7 +350,7 @@ def tedpca(data_cat,
         comptable['rationale'] = ''
 
     elif algorithm in ['mdl', 'aic', 'kic']:
-        LGR.info('Selected {0} components with {1}} dimensionality '
+        LGR.info('Selected {0} components with {1} dimensionality '
                  'detection'.format(comptable.shape[0], algorithm))
         comptable['classification'] = 'accepted'
         comptable['rationale'] = ''

@@ -354,12 +354,13 @@ def _icatb_svd(data, numpc):
     V :
     Lambda :
     """
-    tsvd = TruncatedSVD(n_components=(min(data.shape) - 1), )
-    tsvd.fit(data)
-    Lambda = tsvd.singular_values_
-    vh = tsvd.components_
+    # tsvd = TruncatedSVD(n_components=(min(data.shape) - 1), )
+    # tsvd.fit(data)
+    # Lambda = tsvd.singular_values_
+    # vh = tsvd.components_
 
-    #_, Lambda, vh = svd(data)
+    _, Lambda, vh = svd(data)
+
     # Sort eigen vectors in Ascending order
     V = vh.T
     Lambda = Lambda / np.sqrt(data.shape[0] - 1)  # Whitening (sklearn)
@@ -456,10 +457,12 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     maskvec = np.reshape(mask_nib, Nx * Ny * Nz, order='F')
     data_non_normalized = data_nib_V[maskvec == 1, :]
     scaler = StandardScaler(with_mean=True, with_std=True)
-    data   = scaler.fit_transform(data_non_normalized) # This was X_sc
-    print('hello1')
+    # data = scaler.fit_transform(data_non_normalized)  # This was X_sc
+    data = data_non_normalized
 
+    LGR.info('Performing SVD on original OC data...')
     V, EigenValues = _icatb_svd(data, Nt)
+    LGR.info('SVD done on original OC data')
 
     # Reordering of values
     EigenValues = EigenValues[::-1]
@@ -474,7 +477,7 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     # Using 12 gaussian components from middle, top and bottom gaussian
     # components to determine the subsampling depth. Final subsampling depth is
     # determined using median
-    print('hello2')
+
     kurtv1 = _kurtn(dataN)
     kurtv1[EigenValues > np.mean(EigenValues)] = 1000
     idx_gauss = np.where(
@@ -484,7 +487,7 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     dfs = len(
         np.where(EigenValues > np.finfo(float).eps)[0])  # degrees of freedom
     minTp = 12
-    print('hello3')
+
     if (len(idx) >= minTp):
         middle = int(np.round(len(idx) / 2))
         idx = np.hstack([idx[0:4], idx[middle - 1:middle + 3], idx[-4:]])
@@ -493,7 +496,7 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
         idx = np.arange(dfs - minTp, dfs)
 
     idx = np.unique(idx)
-    print('hello4')
+
     # Estimate the subsampling depth for effectively i.i.d. samples
     mask_ND = np.reshape(maskvec, (Nx, Ny, Nz), order='F')
     ms = len(idx)
@@ -510,14 +513,14 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
                 s = tmpS
                 break
         dim_n = x_single.ndim
-    print('hello5')
+
     s1 = int(np.round(np.median(s)))
     if np.floor(np.power(np.sum(maskvec) / Nt, 1 / dim_n)) < s1:
         s1 = int(np.floor(np.power(np.sum(maskvec) / Nt, 1 / dim_n)))
     N = np.round(np.sum(maskvec) / np.power(s1, dim_n))
 
     # Use the subsampled dataset to calculate eigen values
-    LGR.info('Perform EVD on the effectively i.i.d. samples ...')
+    # LGR.info('Perform EVD on the effectively i.i.d. samples ...')
 
     if s1 != 1:
         mask_s = _subsampling(mask_ND, s1, [0, 0, 0])
@@ -536,7 +539,9 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
 
         # (completed)
         LGR.info('P2:')
+        LGR.info('Performing SVD on subsampled i.i.d. OC data...')
         [V, EigenValues] = _icatb_svd(dat, Nt)
+        LGR.info('SVD done on subsampled i.i.d. OC data')
         EigenValues = EigenValues[::-1]
 
     lam = EigenValues
