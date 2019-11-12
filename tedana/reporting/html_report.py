@@ -11,7 +11,7 @@ def _update_template_about(call, methods):
 
     Parameters
     ----------
-    call: str
+    call : str
         Call used to execute tedana
     methods : str
         Generated methods for specific tedana call

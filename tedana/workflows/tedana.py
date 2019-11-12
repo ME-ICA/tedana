@@ -21,8 +21,8 @@ import pandas as pd
 from scipy import stats
 from nilearn.masking import compute_epi_mask
 
-from tedana import (decay, combine, decomposition, io, metrics, selection, utils,
-                    viz)
+from tedana import (decay, combine, decomposition, io, metrics,
+                    selection, utils, reporting)
 import tedana.gscontrol as gsc
 from tedana.workflows.parser_utils import is_valid_file, ContextFilter
 
@@ -148,18 +148,6 @@ def _get_parser():
                                 'Set to -1 for varying results across ICA calls. '
                                 'Default=42.'),
                           default=42)
-    optional.add_argument('--no-png',
-                          dest='no_png',
-                          action='store_true',
-                          help=('Creates a figures folder with static component '
-                                'maps, timecourse plots and other diagnostic '
-                                'images'),
-                          default=False)
-    optional.add_argument('--png-cmap',
-                          dest='png_cmap',
-                          type=str,
-                          help=('Colormap for figures'),
-                          default='coolwarm')
     optional.add_argument('--maxit',
                           dest='maxit',
                           type=int,
@@ -213,8 +201,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     tedort=False, gscontrol=None, tedpca='mle',
                     source_tes=-1, combmode='t2s', verbose=False, stabilize=False,
                     out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
-                    debug=False, quiet=False, no_png=False,
-                    png_cmap='coolwarm',
+                    debug=False, quiet=False,
                     low_mem=False, fittype='loglin'):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
@@ -262,11 +249,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         which is slightly slower but may be more accurate.
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
-    no_png : obj:'bool', optional
-        Do not generate .png plots and figures. Default is false.
-    png_cmap : obj:'str', optional
-            Name of a matplotlib colormap to be used when generating figures.
-            Cannot be used with --no-png. Default 'coolwarm'
     out_dir : :obj:`str`, optional
         Output directory.
 
@@ -376,13 +358,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
-    if no_png and (png_cmap != 'coolwarm'):
-        LGR.warning('Overriding --no-png since --png-cmap provided.')
-        no_png = False
-
     # check if TR is 0
     img_t_r = ref_img.header.get_zooms()[-1]
-    if img_t_r == 0 and not no_png:
+    if img_t_r == 0:
         raise IOError('Dataset has a TR of 0. This indicates incorrect'
                       ' header information. To correct this, we recommend'
                       ' using this snippet:'
@@ -542,25 +520,14 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if verbose:
         io.writeresults_echoes(catd, mmix, mask, comptable, ref_img)
 
-    if not no_png:
-        LGR.info('Making figures folder with static component maps and '
-                 'timecourse plots.')
-        # make figure folder first
-        if not op.isdir(op.join(out_dir, 'figures')):
-            os.mkdir(op.join(out_dir, 'figures'))
+    LGR.info('Generating figures for reports.')
+    # make figure folder first
+    if not op.isdir(op.join(out_dir, 'figures')):
+        os.mkdir(op.join(out_dir, 'figures'))
 
-        viz.write_comp_figs(data_oc, mask=mask, comptable=comptable,
-                            mmix=mmix_orig, ref_img=ref_img,
-                            out_dir=op.join(out_dir, 'figures'),
-                            png_cmap=png_cmap)
-
-        LGR.info('Making Kappa vs Rho scatter plot')
-        viz.write_kappa_scatter(comptable=comptable,
-                                out_dir=op.join(out_dir, 'figures'))
-
-        LGR.info('Making overall summary figure')
-        viz.write_summary_fig(comptable=comptable,
-                              out_dir=op.join(out_dir, 'figures'))
+    reporting.comp_figures(data_oc, mask=mask, comptable=comptable,
+                           mmix=mmix_orig, ref_img=ref_img,
+                           out_dir=op.join(out_dir, 'figures'))
 
     LGR.info('Workflow completed')
 
