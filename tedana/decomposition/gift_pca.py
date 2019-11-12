@@ -268,7 +268,6 @@ def _est_indp_sp(x):
             s0 = j
             break
 
-    LGR.info(' Done;')
     if s0 == 0:
         raise ValueError(
             'Ill conditioned data, can not estimate independent samples.(_est_indp_sp)'
