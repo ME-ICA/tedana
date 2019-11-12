@@ -354,10 +354,6 @@ def _icatb_svd(data, numpc):
     V :
     Lambda :
     """
-    # tsvd = TruncatedSVD(n_components=(min(data.shape) - 1), )
-    # tsvd.fit(data)
-    # Lambda = tsvd.singular_values_
-    # vh = tsvd.components_
 
     _, Lambda, vh = svd(data)
 
