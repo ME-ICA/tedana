@@ -22,14 +22,17 @@ def _autocorr(x):
 
     Parameters
     ----------
-    x :
+    x : array-like
+        The array to calculate the autocorrelation of
 
     Returns
     -------
-    u :
+    u : ndarray
+        The array of autocorrelations
     """
-    result = np.correlate(x, x, mode='full')
-    return result[result.size / 2:]
+    u = np.correlate(x, x, mode='full')
+    # Take upper half of correlation matrix
+    return u[result.size / 2:]
 
 
 def _sumN(dat):
@@ -38,11 +41,13 @@ def _sumN(dat):
 
     Parameters
     ----------
-    dat :
+    dat : ndarray
+        The data to be summed
 
     Returns
     -------
-    u :
+    u : float
+        The sum of all array elements
     """
     return np.sum(dat[:])
 
@@ -53,39 +58,39 @@ def _checkOrder(n_in):
 
     Parameters
     ----------
-    n_in :
+    n_in : ndarray
+        The order to be passed to the window function
 
     Returns
     -------
-    n_out :
-    w :
-    trivalwin :
+    n_out : ndarray
+        An integer order array
+    w : list
+        The window to be used
+    trivialwin : boolean
+        Whether the window is trivial (w in [0,1])
     """
 
     w = []
-    trivalwin = 0
+    trivialwin = False
 
     # Special case of negative orders:
     if n_in < 0:
         raise ValueError('Order cannot be less than zero.')
 
-    # Check if order is already an integer or empty
-    # If not, round to nearest integer.
-    if not n_in or n_in == np.floor(n_in):
-        n_out = n_in
-    else:
-        n_out = np.round(n_in)
-        LGR.warning('Rounding order to nearest integer.')
+    n_out = np.round(n_in)
+    if not np.array_equal(n_in, n_out):
+        LGR.warning('Rounded order to nearest integer')
 
     # Special cases:
     if not n_out or n_out == 0:
         w = np.zeros((0, 1))  # Empty matrix: 0-by-1
-        trivalwin = 1
+        trivialwin = True
     elif n_out == 1:
         w = 1
-        trivalwin = 1
+        trivialwin = True
 
-    return n_out, w, trivalwin
+    return n_out, w, trivialwin
 
 
 def _parzen_win(n):
@@ -95,11 +100,20 @@ def _parzen_win(n):
 
     Parameters
     ----------
-    n :
+    n : 1D array
+        The array to calculate the window for
 
     Returns
     -------
-    w :
+    w : 1D array
+        The Parzen window
+
+    Notes
+    -----
+    TODO: describe math
+
+    References
+    ----------
     """
 
     # Check for valid window length (i.e., n < 0)
@@ -127,12 +141,25 @@ def _entrate_sp(x, sm_window):
 
     Parameters
     ----------
-    x :
-    sm_window :
+    x : ndarray
+        Data to calculate the entropy rate of and smooth
+    sm_window : boolean
+        Whether there is a Parzen window to use
 
     Returns
     -------
-    out :
+    out : float
+        The entropy rate
+
+    Notes
+    -----
+    This function attempts to calculate the entropy rate according to the
+    following mathematical constraints:
+    TODO: discuss
+
+    References
+    ----------
+    TODO: add references
     """
 
     n = x.shape
@@ -143,10 +170,11 @@ def _entrate_sp(x, sm_window):
         x_std = 1e-10
     x = x / x_std
 
-    if (sm_window == 1):
+    if sm_window:
 
-        M = [int(i) for i in np.ceil(np.array(n) / 10.0)]
+        M = [int(i) for i in np.ceil(np.array(n) / 10)]
 
+        # Get Parzen window for each spatial direction
         if (x.ndim >= 3):
             parzen_w_3 = np.zeros((2 * n[2] - 1, ))
             parzen_w_3[(n[2] - M[2] - 1):(n[2] +
@@ -162,28 +190,35 @@ def _entrate_sp(x, sm_window):
             parzen_w_1[(n[0] - M[0] - 1):(n[0] +
                                           M[0])] = _parzen_win(2 * M[0] + 1)
 
-    if x.ndim == 2 and min(n) == 1:  # 1D
+    if x.ndim == 2 and min(n) == 1:
+        # Apply window to 1D
         xc = _autocorr(x)
         xc = xc * parzen_w_1
         xf = fftshift(fft(xc))
 
-    elif x.ndim == 2 and min(n) != 1:  # 2D
-        xc = _autocorr(x)  # default option: computes raw correlations with NO
-        # normalization -- Matlab help on xcorr
+    elif x.ndim == 2 and min(n) != 1:
+        # Apply windows to 2D
+        xc = _autocorr(x)
 
-        # Bias correction
-        v1 = np.hstack((np.arange(1, n[0] + 1), np.arange(n[0] - 1, 0,
-                                                          -1)))[np.newaxis, :]
-        v2 = np.hstack((np.arange(1, n[1] + 1), np.arange(n[1] - 1, 0,
-                                                          -1)))[np.newaxis, :]
+        # Create bias-correcting vectors
+        v1 = np.hstack((np.arange(1, n[0] + 1),
+                        np.arange(n[0] - 1, 0, -1)))[np.newaxis, :]
+        v2 = np.hstack((np.arange(1, n[1] + 1),
+                        np.arange(n[1] - 1, 0,-1)))[np.newaxis, :]
 
         vd = np.dot(v1.T, v2)
+
+        # Bias-correct
         xc = xc / vd
+
+        # Apply 2D Parzen Window
         parzen_window_2D = np.dot(parzen_w_1, parzen_w_2.T)
         xc = xc * parzen_window_2D
         xf = fftshift(fft2(xc))
 
-    elif x.ndim == 3 and min(n) != 1:  # 3D
+    elif x.ndim == 3 and min(n) != 1:
+        # Apply windows to 3D
+        # TODO: replace correlate2d with 3d if possible
         xc = np.zeros((2 * n[0] - 1, 2 * n[1] - 1, 2 * n[2] - 1))
         for m3 in range(n[2] - 1):
             temp = np.zeros((2 * n[0] - 1, 2 * n[1] - 1))
@@ -195,11 +230,11 @@ def _entrate_sp(x, sm_window):
             xc[:, :, (n[2] - 1) - m3] = temp
             xc[:, :, (n[2] - 1) + m3] = temp
 
-        # Bias correction
-        v1 = np.hstack((np.arange(1, n[0] + 1), np.arange(n[0] - 1, 0,
-                                                          -1)))[np.newaxis, :]
-        v2 = np.hstack((np.arange(1, n[1] + 1), np.arange(n[1] - 1, 0,
-                                                          -1)))[np.newaxis, :]
+        # Create bias-correcting vectors
+        v1 = np.hstack((np.arange(1, n[0] + 1),
+                        np.arange(n[0] - 1, 0, -1)))[np.newaxis, :]
+        v2 = np.hstack((np.arange(1, n[1] + 1),
+                        np.arange(n[1] - 1, 0, -1)))[np.newaxis, :]
         v3 = np.arange(n[2], 0, -1)
 
         vd = np.dot(v1.T, v2)
@@ -211,6 +246,7 @@ def _entrate_sp(x, sm_window):
         # Possible source of NAN values
         xc = xc / vcu
 
+        # Scale Parzen windows
         parzen_window_2D = np.dot(parzen_w_1[np.newaxis, :].T,
                                   parzen_w_2[np.newaxis, :])
         parzen_window_3D = np.zeros((2 * n[0] - 1, 2 * n[1] - 1, 2 * n[2] - 1))
@@ -220,16 +256,17 @@ def _entrate_sp(x, sm_window):
             parzen_window_3D[:, :, (n[2] - 1) + m3] = np.dot(
                 parzen_window_2D, parzen_w_3[n[2] - 1 + m3])
 
+        # Apply 3D Parzen Window
         xc = xc * parzen_window_3D
-
         xf = fftshift(fftn(xc))
 
     else:
-
         raise ValueError('Unrecognized matrix dimension.')
 
     xf = abs(xf)
     xf[xf < 1e-4] = 1e-4
+
+    # Estimation of the entropy rate 
     out = 0.5 * np.log(2 * np.pi * np.exp(1)) + _sumN(np.log(abs(
         (xf)))) / 2 / _sumN(abs(xf))
 
@@ -243,19 +280,30 @@ def _est_indp_sp(x):
 
     Parameters
     ----------
-    x :
+    x : ndarray
+        The data to have the number of samples estimated
 
     Returns
     -------
-    s :
-    entrate_m :
+    s : int
+        Number of iterations required to estimate entropy rate
+    entrate_m : float
+        The entropy rate of the data
+
+    Notes
+    -----
+    TOOD: explain math
+
+    References
+    ----------
+    TODO: add references
     """
 
     dimv = x.shape
-    s0 = 0
+    s0 = None
 
     for j in range(np.min(dimv) - 1):
-        x_sb = _subsampling(x, j + 1, [0, 0, 0])
+        x_sb = _subsampling(x, j + 1)
         entrate_m = _entrate_sp(x_sb, 1)
 
         ent_ref = 1.41
@@ -263,47 +311,41 @@ def _est_indp_sp(x):
             s0 = j
             break
 
-    if s0 == 0:
-        raise ValueError(
-            'Ill conditioned data, can not estimate independent samples.(_est_indp_sp)'
-        )
-    else:
-        s = s0
-        LGR.info(
-            'Estimated the entropy rate of the Gaussian component with subsampling depth {}'
-            .format(j))
+    if not s0:
+        raise ValueError('Ill conditioned data, can not estimate'
+                         'independent samples.')
+    s = s0
+    LGR.debug('Estimated the entropy rate of the Gaussian component '
+              'with subsampling depth {}'.format(j))
 
     return s, entrate_m
 
 
-def _subsampling(x, s, x0):
+def _subsampling(x, s):
     """
     Subsampling the data evenly with space 's'.
 
     Parameters
     ----------
-    x :
-    s :
-    x0 :
+    x : ndarray
+        The data to be subsampled
+    s : int
+        The subsampling depth
 
     Returns
     -------
-    out :
+    out : ndarray
+        Subsampled data
     """
 
+    # First index from which to start subsampling for each dimension
+    x0 = [0, 0, 0]
     n = x.shape
 
-    if x.ndim == 2 and np.min(n) == 1:  # 1D
-        out = x[np.arange(x0[0], np.max(n), s)]
-
-    elif x.ndim == 2 and np.min(n) != 1:  # 2D
-        out = x[np.arange(x0[0], n[0], s), :][:, np.arange(x0[1], n[1], s)]
-
-    elif x.ndim == 3 and np.min(n) != 1:  # 3D
+    if x.ndim == 3 and np.min(n) != 1:  # 3D
         out = x[np.arange(
             x0[0], n[0], s), :, :][:, np.arange(
                 x0[1], n[1], s), :][:, :, np.arange(x0[2], n[2], s)]
-
     else:
         raise ValueError('Unrecognized matrix dimension!(subsampling)')
 
@@ -316,11 +358,14 @@ def _kurtn(x):
 
     Parameters
     ----------
-    x :
+    x : ndarray
+        The data to calculate the kurtosis of
 
     Returns
     -------
     kurt : (1:N) array-like
+        The kurtosis of each vector in x along the second dimension. For
+        tedana, this will be the kurtosis of each PCA component.
     """
 
     kurt = np.zeros((x.shape[1], 1))
@@ -333,24 +378,30 @@ def _kurtn(x):
     return kurt
 
 
-def _icatb_svd(data, numpc):
+def _icatb_svd(data, numpc=None):
     """
     Run Singular Value Decomposition (SVD) on input data and extracts the
     given number of components (numpc).
 
     Parameters
     ----------
-    data :
-    numpc :
-    criteria :
+    data : array
+        The data to compute SVD for
+    numpc : int
+        Number of PCA components to be kept
 
     Returns
     -------
-    V :
-    Lambda :
+    V : 2D array
+        Eigenvectors from SVD
+    Lambda : float
+        Eigenvalues
     """
 
-    _, Lambda, vh = svd(data)
+    if not numpc:
+        numpc = np.min(data.shape[0], data.shape[1])
+
+    _, Lambda, vh = svd(data, overwrite_a=True)
 
     # Sort eigen vectors in Ascending order
     V = vh.T
@@ -365,7 +416,7 @@ def _icatb_svd(data, numpc):
     Lambda = Lambda[Lambda.shape[0] - numpc:]
     sumUsed = np.sum(Lambda)
     retained = (sumUsed / sumAll) * 100
-    LGR.info('{ret}% of non-zero eigenvalues retained'.format(ret=retained))
+    LGR.debug('{ret}% of non-zero components retained'.format(ret=retained))
 
     return V, Lambda
 
@@ -376,8 +427,8 @@ def _eigensp_adj(lam, n, p):
 
     Parameters
     ----------
-    lam : (p,) array-like
-          Eigen values.
+    lam : [Px1] array-like
+        Component eigenvalues
     n : int
         Effective number of i.i.d. samples.
     p : int
@@ -387,6 +438,10 @@ def _eigensp_adj(lam, n, p):
     -------
     lam_adj : (p,) array-like
               adjusted eigen values.
+
+    Notes
+    -----
+    TODO: add math notes
     """
 
     r = p / n
@@ -422,12 +477,12 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     Parameters
     ----------
     data_nib : 4D nibabel
-               unmasked data to compute the PCA on.
+               Unmasked data to compute the PCA on.
     mask_nib : 4D nibabel
-               mask to apply on data_nib.
-    criteria : string
-               aic, kic or mdl criteria to select the number of components
-               (default='mdl').
+               Mask to apply on data_nib.
+    criteria : string in ['aic', 'kic', mdl']
+               Criteria to select the number of components;
+               default='mdl'.
 
     Returns
     -------
@@ -439,6 +494,10 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
         Explained variance ratio.
     v : (T x C) array-like
         Component timeseries.
+
+    Notes
+    -----
+    TODO: add descriptions of the different criteria
     """
 
     data_nib = data_nib.get_data()
@@ -478,7 +537,7 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     if (len(idx) >= minTp):
         middle = int(np.round(len(idx) / 2))
         idx = np.hstack([idx[0:4], idx[middle - 1:middle + 3], idx[-4:]])
-    elif not idx:
+    else:
         minTp = np.min([minTp, dfs])
         idx = np.arange(dfs - minTp, dfs)
 
@@ -507,7 +566,7 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     N = np.round(np.sum(maskvec) / np.power(s1, dim_n))
 
     if s1 != 1:
-        mask_s = _subsampling(mask_ND, s1, [0, 0, 0])
+        mask_s = _subsampling(mask_ND, s1)
         mask_s_1d = np.reshape(mask_s, np.prod(mask_s.shape), order='F')
         dat = np.zeros((int(np.sum(mask_s_1d)), Nt))
         LGR.info('Generating subsampled i.i.d. OC data...')
@@ -515,7 +574,7 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
             x_single = np.zeros((Nx * Ny * Nz, ))
             x_single[maskvec == 1] = data[:, i]
             x_single = np.reshape(x_single, (Nx, Ny, Nz), order='F')
-            dat0 = _subsampling(x_single, s1, [0, 0, 0])
+            dat0 = _subsampling(x_single, s1)
             dat0 = np.reshape(dat0, np.prod(dat0.shape), order='F')
             dat[:, i] = dat0[mask_s_1d == 1]
 
