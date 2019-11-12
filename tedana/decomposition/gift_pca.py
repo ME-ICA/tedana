@@ -142,7 +142,7 @@ def _entrate_sp(x, sm_window):
         x_std = 1e-10
     x = x / x_std
 
-    if (sm_window == 1):
+    if sm_window == 1:
 
         M = [int(i) for i in np.ceil(np.array(n) / 10)]
 
