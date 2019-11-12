@@ -4,13 +4,16 @@ PCA based on GIFT software
 import logging
 
 import numpy as np
-from scipy.linalg import svd
+
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
+from scipy.linalg import svd
 from scipy.signal import detrend
 from scipy.fftpack import fft, fftshift, fftn, fft2
 from scipy.signal import correlate2d
+
+import sys
 
 LGR = logging.getLogger(__name__)
 
@@ -401,7 +404,7 @@ def _icatb_svd(data, numpc=None):
     if not numpc:
         numpc = np.min(data.shape[0], data.shape[1])
 
-    _, Lambda, vh = svd(data, overwrite_a=True)
+    _, Lambda, vh = svd(data, full_matrices=False)
 
     # Sort eigen vectors in Ascending order
     V = vh.T
