@@ -13,8 +13,6 @@ from scipy.signal import detrend
 from scipy.fftpack import fft, fftshift, fftn, fft2
 from scipy.signal import correlate2d
 
-import sys
-
 LGR = logging.getLogger(__name__)
 
 
@@ -35,7 +33,7 @@ def _autocorr(x):
     """
     u = np.correlate(x, x, mode='full')
     # Take upper half of correlation matrix
-    return u[result.size / 2:]
+    return u[u.size / 2:]
 
 
 def _sumN(dat):
@@ -207,7 +205,7 @@ def _entrate_sp(x, sm_window):
         v1 = np.hstack((np.arange(1, n[0] + 1),
                         np.arange(n[0] - 1, 0, -1)))[np.newaxis, :]
         v2 = np.hstack((np.arange(1, n[1] + 1),
-                        np.arange(n[1] - 1, 0,-1)))[np.newaxis, :]
+                        np.arange(n[1] - 1, 0, -1)))[np.newaxis, :]
 
         vd = np.dot(v1.T, v2)
 
@@ -269,7 +267,7 @@ def _entrate_sp(x, sm_window):
     xf = abs(xf)
     xf[xf < 1e-4] = 1e-4
 
-    # Estimation of the entropy rate 
+    # Estimation of the entropy rate
     out = 0.5 * np.log(2 * np.pi * np.exp(1)) + _sumN(np.log(abs(
         (xf)))) / 2 / _sumN(abs(xf))
 
