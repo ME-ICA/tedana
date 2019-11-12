@@ -70,7 +70,7 @@ def _checkOrder(n_in):
 
     # Check if order is already an integer or empty
     # If not, round to nearest integer.
-    if not n_in or n_in == np.floor(n_in):
+    if n_in == np.floor(n_in):
         n_out = n_in
     else:
         n_out = np.round(n_in)
