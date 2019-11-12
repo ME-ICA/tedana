@@ -15,7 +15,7 @@ RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
 
-def generate_metrics(comptable, data_cat, data_optcom, mixing, mask, tes, ref_img, mixing_z=None,
+def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img, mixing_z=None,
                      metrics=None, sort_by='kappa', ascending=False):
     """
     Fit TE-dependence and -independence models to components.
@@ -35,32 +35,24 @@ def generate_metrics(comptable, data_cat, data_optcom, mixing, mask, tes, ref_im
         List of echo times associated with `data_cat`, in milliseconds
     ref_img : str or img_like
         Reference image to dictate how outputs are saved to disk
-    reindex : bool, optional
-        Whether to sort components in descending order by Kappa. Default: False
     mixing_z : (T x C) array_like, optional
         Z-scored mixing matrix. Default: None
-    algorithm : {'kundu_v2', 'kundu_v3', None}, optional
-        Decision tree to be applied to metrics. Determines which maps will be
-        generated and stored in seldict. Default: None
-    label : :obj:`str` or None, optional
-        Prefix to apply to generated files. Default is None.
+    metrics : list
+        List of metrics to return
+    sort_by : str
+        Metric to sort component table by
+    ascending : bool
+        Whether to sort the table in ascending or descending order.
     out_dir : :obj:`str`, optional
-        Output directory for generated files. Default is current working
-        directory.
-    verbose : :obj:`bool`, optional
-        Whether or not to generate additional files. Default is False.
+        Output directory for generated files. Default is current working directory.
 
     Returns
     -------
     comptable : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index is the component number.
-    seldict : :obj:`dict` or None
-        Dictionary containing component-specific metric maps to be used for
-        component selection. If `algorithm` is None, then seldict will be None as
-        well.
-    betas : :obj:`numpy.ndarray`
-    mmix_new : :obj:`numpy.ndarray`
+    mixing : :obj:`numpy.ndarray`
+        Mixing matrix after sign flipping and sorting.
     """
     if metrics is None:
         metrics = []
@@ -81,6 +73,7 @@ def generate_metrics(comptable, data_cat, data_optcom, mixing, mask, tes, ref_im
                          'match.'.format(data_cat.shape[2], data_optcom.shape[1], mixing.shape[0]))
 
     mixing = mixing.copy()
+    n_components = mixing.shape[1]
     comptable = pd.DataFrame(index=np.arange(n_components, dtype=int))
 
     # Metric maps
@@ -89,55 +82,44 @@ def generate_metrics(comptable, data_cat, data_optcom, mixing, mask, tes, ref_im
     weights, mixing = flip_components(weights, mixing, signs=signs)
     optcom_betas = dependence.calculate_betas(data_optcom, mixing)
     PSC = dependence.calculate_psc(data_optcom, optcom_betas)
-
-    # compute betas and means over TEs for TE-dependence analysis
     Z_maps = dependence.calculate_z_maps(weights)
     F_T2_maps, F_S0_maps = dependence.calculate_f_maps(mixing, data_cat, tes, Z_maps)
-
     (Z_clmaps, F_T2_clmaps, F_S0_clmaps,
      Br_T2_clmaps, Br_S0_clmaps) = dependence.spatial_cluster(
-        F_T2_maps, F_S0_maps, Z_maps, optcom_betas, mask, n_echos)
+        F_T2_maps, F_S0_maps, Z_maps, optcom_betas, mask, ref_img, len(tes))
 
     # Dependence metrics
-    if any([v in metrics for v in ['kappa', 'rho']]):
-        comptable['kappa'], comptable['rho'] = dependence.calculate_dependence_metrics(
-            F_T2_maps, F_S0_maps, Z_maps)
+    comptable['kappa'], comptable['rho'] = dependence.calculate_dependence_metrics(
+        F_T2_maps, F_S0_maps, Z_maps)
 
     # Generic metrics
-    if 'variance explained' in metrics:
-        comptable['variance explained'] = dependence.calculate_varex(optcom_betas)
+    comptable['variance explained'] = dependence.calculate_varex(optcom_betas)
 
-    if 'normalized variance explained' in metrics:
-        comptable['normalized variance explained'] = dependence.calculate_varex_norm(weights)
+    comptable['normalized variance explained'] = dependence.calculate_varex_norm(weights)
 
     # Spatial metrics
-    if 'dice_FT2' in metrics:
-        comptable['dice_FT2'] = dependence.compute_dice(Br_T2_clmaps, F_T2_clmaps, axis=0)
+    comptable['dice_FT2'] = dependence.compute_dice(Br_T2_clmaps, F_T2_clmaps, axis=0)
 
-    if 'dice_FS0' in metrics:
-        comptable['dice_FS0'] = dependence.compute_dice(Br_S0_clmaps, F_S0_clmaps, axis=0)
+    comptable['dice_FS0'] = dependence.compute_dice(Br_S0_clmaps, F_S0_clmaps, axis=0)
 
-    if any([v in metrics for v in ['signal-noise_t', 'signal-noise_p']]):
-        (comptable['signal-noise_t'],
-         comptable['signal-noise_p']) = dependence.compute_signal_minus_noise_t(
-            Z_maps, Z_clmaps, F_T2_maps)
+    (comptable['signal-noise_t'],
+        comptable['signal-noise_p']) = dependence.compute_signal_minus_noise_t(
+        Z_maps, Z_clmaps, F_T2_maps)
 
-    if 'countnoise' in metrics:
-        comptable['countnoise'] = dependence.compute_countnoise(Z_maps, Z_clmaps)
+    comptable['countnoise'] = dependence.compute_countnoise(Z_maps, Z_clmaps)
 
-    if 'countsigFT2' in metrics:
-        comptable['countsigFT2'] = dependence.compute_countsignal(F_T2_clmaps)
+    comptable['countsigFT2'] = dependence.compute_countsignal(F_T2_clmaps)
 
-    if 'countsigFS0' in metrics:
-        comptable['countsigFS0'] = dependence.compute_countsignal(F_S0_clmaps)
+    comptable['countsigFS0'] = dependence.compute_countsignal(F_S0_clmaps)
 
-    if 'd_table_score' in metrics:
-        comptable['d_table_score'] = dependence.generate_decision_table_score(
-            comptable['kappa'], comptable['dice_FT2'],
-            comptable['signal_minus_noise_t'], comptable['countnoise'],
-            comptable['countsigFT2'])
+    comptable['d_table_score'] = dependence.generate_decision_table_score(
+        comptable['kappa'], comptable['dice_FT2'],
+        comptable['signal_minus_noise_t'], comptable['countnoise'],
+        comptable['countsigFT2'])
 
-    # TODO: move sorting out of this function and only return comptable
     comptable, sort_idx = sort_df(comptable, by='kappa', ascending=ascending)
     mixing = apply_sort(mixing, sort_idx=sort_idx, axis=1)
+
+    # Just calculate everything for now and only return the requested metrics
+    comptable = comptable[metrics]
     return comptable, mixing

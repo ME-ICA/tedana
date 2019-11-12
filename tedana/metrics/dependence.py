@@ -19,7 +19,7 @@ RefLGR = logging.getLogger('REFERENCES')
 
 def calculate_weights(data_optcom, mixing_z):
     """
-    Calculate weights.
+    Calculate standardized parameter estimates between data and mixing matrix.
 
     Parameters
     ----------
@@ -31,8 +31,8 @@ def calculate_weights(data_optcom, mixing_z):
     Returns
     -------
     weights : (S x C) array_like
-        Parameter estimates for optimally combined data against the mixing
-        matrix.
+        Standardized parameter estimates for optimally combined data against
+        the mixing matrix.
     """
     # compute un-normalized weight dataset (features)
     weights = computefeats2(data_optcom, mixing_z, normalize=False)
@@ -40,6 +40,20 @@ def calculate_weights(data_optcom, mixing_z):
 
 
 def calculate_betas(data_optcom, mixing):
+    """
+    Calculate unstandardized parameter estimates between data and mixing
+    matrix.
+
+    Parameters
+    ----------
+    data_optcom
+    mixing
+
+    Returns
+    -------
+    betas
+        Unstandardized parameter estimates
+    """
     assert data_optcom.shape[1] == mixing.shape[0]
     # demean optimal combination
     data_optcom_dm = data_optcom - data_optcom.mean(axis=-1, keepdims=True)
@@ -49,131 +63,50 @@ def calculate_betas(data_optcom, mixing):
 
 
 def calculate_psc(data_optcom, optcom_betas):
+    """
+    Calculate percent signal change maps for components against optimally
+    combined data.
+
+    Parameters
+    ----------
+    data_optcom
+    optcom_betas
+
+    Returns
+    -------
+    PSC
+        Component-wise percent signal change maps.
+    """
     assert data_optcom.shape[1] == optcom_betas.shape[0]
     PSC = 100 * optcom_betas / data_optcom.mean(axis=-1, keepdims=True)
     return PSC
 
 
-def compute_countsignal(cl_arr):
-    countsignal = cl_arr.sum(axis=0)
-    return countsignal
-
-
-def compute_countnoise(Z_maps, Z_cl_maps, z_thresh=1.95):
-    noise_idx = (np.abs(Z_maps) > z_thresh) & (Z_clmaps == 0)
-    countnoise = noise_idx.sum(axis=0)
-    return countnoise
-
-
-def compute_signal_minus_noise_z(Z_maps, Z_cl_maps, F_T2_maps, z_thresh=1.95):
-    n_components = Z_maps.shape[1]
-    signal_minus_noise_t = np.zeros(n_components)
-    signal_minus_noise_p = np.zeros(n_components)
-    noise_idx = (np.abs(Z_maps) > z_thresh) & (Z_clmaps == 0)
-    countnoise = noise_idx.sum(axis=0)
-    countsignal = Z_clmaps.sum(axis=0)
-    for i_comp in range(n_components):
-        noise_FT2_Z = 0.5 * np.log(F_T2_maps[noise_idx[:, i_comp], i_comp])
-        signal_FT2_Z = 0.5 * np.log(F_T2_maps[Z_clmaps[:, i_comp] == 1, i_comp]))
-        n_noise_dupls = noise_FT2_Z.size - np.unique(noise_FT2_Z).size
-        if n_noise_dupls:
-            LGR.debug('For component {}, {} duplicate noise F-values '
-                      'detected.'.format(i_comp, n_noise_dupls))
-        n_signal_dupls = signal_FT2_Z.size - np.unique(signal_FT2_Z).size
-        if n_signal_dupls:
-            LGR.debug('For component {}, {} duplicate signal F-values '
-                      'detected.'.format(i_comp, n_signal_dupes))
-        dof = countnoise[i_comp] + countsignal[i_comp] - 2
-
-        t_value, signal_minus_noise_p[i_comp] = stats.ttest_ind(
-            signal_FT2_Z, noise_FT2_Z, equal_var=False)
-        signal_minus_noise_z[i_comp] = t_to_z(t_value, dof)
-
-    signal_minus_noise_z = np.nan_to_num(signal_minus_noise_z, 0)
-    signal_minus_noise_p = np.nan_to_num(signal_minus_noise_p, 0)
-    return signal_minus_noise_z, signal_minus_noise_p
-
-
-def compute_signal_minus_noise_t(Z_maps, Z_cl_maps, F_T2_maps, z_thresh=1.95):
-    RepLGR.info('A t-test was performed between the distributions of T2*-model '
-                'F-statistics associated with clusters (i.e., signal) and '
-                'non-cluster voxels (i.e., noise) to generate a t-statistic '
-                '(metric signal-noise_t) and p-value (metric signal-noise_p) '
-                'measuring relative association of the component to signal '
-                'over noise.')
-    n_components = Z_maps.shape[1]
-    signal_minus_noise_t = np.zeros(n_components)
-    signal_minus_noise_p = np.zeros(n_components)
-    noise_idx = (np.abs(Z_maps) > z_thresh) & (Z_clmaps == 0)
-    for i_comp in range(n_components):
-        # NOTE: Why only compare distributions of *unique* F-statistics?
-        noise_FT2_Z = np.log10(np.unique(F_T2_maps[noise_idx[:, i_comp], i_comp]))
-        signal_FT2_Z = np.log10(np.unique(F_T2_maps[Z_clmaps[:, i_comp] == 1, i_comp]))
-        (signal_minus_noise_t[i_comp],
-         signal_minus_noise_p[i_comp]) = stats.ttest_ind(
-             signal_FT2_Z, noise_FT2_Z, equal_var=False)
-
-    signal_minus_noise_t = np.nan_to_num(signal_minus_noise_t, 0)
-    signal_minus_noise_p = np.nan_to_num(signal_minus_noise_p, 0)
-    return signal_minus_noise_t, signal_minus_noise_p
-
-
-def compute_dice(Br_clmaps, F_clmaps, axis=0):
-    dice_values = utils.dice(Br_clmaps, F_clmaps, axis=axis)
-    dice_values = np.nan_to_num(dice_values, 0)
-    return dice_values
-
-
-def generate_decision_table_score(kappa, dice_FT2, signal_minus_noise_t,
-                                  countnoise, countsigFT2):
-    d_table_rank = np.vstack([
-        len(kappa) - stats.rankdata(kappa),
-        len(kappa) - stats.rankdata(dice_FT2),
-        len(kappa) - stats.rankdata(signal_minus_noise_t),
-        stats.rankdata(countnoise),
-        len(kappa) - stats.rankdata(countsigFT2)]).T
-    d_table_score = d_table_rank.mean(axis=1)
-    return d_table_score
-
-
 def calculate_z_maps(weights, z_max=8):
+    """
+    Calculate z-statistic maps by z-scoring standardized parameter estimate maps and cropping
+    extreme values.
+
+    Parameters
+    ----------
+    weights
+    z_max
+
+    Returns
+    -------
+    Z_maps
+    """
     Z_maps = stats.zscore(weights, axis=0)
     extreme_idx = np.abs(Z_maps) > z_max
     Z_maps[extreme_idx] = z_max * np.sign(Z_maps[extreme_idx])
     return Z_maps
 
 
-def calculate_dependence_metrics(comptable, F_T2_maps, F_S0_maps, Z_maps):
-    RepLGR.info('Kappa (kappa) and Rho (rho) were calculated as measures of '
-                'TE-dependence and TE-independence, respectively.')
-    _names = ['kappa', 'rho']
-    if any([name in comptable.columns for name in _names]):
-        raise Exception('Metrics already exist in component table.')
-
-    n_components = Z_maps.shape[1]
-    kappas, rhos = np.zeros(n_components), np.zeros(n_components)
-    for i_comp in range(n_components):
-        norm_weights = np.abs(Z_maps[:, i_comp] ** 2.)
-        kappas[i_comp] = np.average(F_T2_maps[:, i_comp], weights=norm_weights)
-        rhos[i_comp] = np.average(F_S0_maps[:, i_comp], weights=norm_weights)
-    comptable['kappa'] = kappas
-    comptable['rho'] = rhos
-    return comptable
-
-
-def calculate_varex(optcom_betas):
-    compvar = (optcom_betas ** 2).sum(axis=0)
-    varex = 100 * (compvar / compvar.sum())
-    return varex
-
-
-def calculate_varex_norm(weights):
-    compvar = (weights ** 2).sum(axis=0)
-    varex_norm = compvar / compvar.sum()
-    return varex_norm
-
-
 def calculate_f_maps(mixing, data_cat, tes, Z_maps, f_max=500):
+    """
+    Calculate pseudo-F-statistic maps (per component) for TE-dependence
+    and -indepdence models.
+    """
     me_betas = get_coeffs(data_cat, mixing)  # TODO: Remove mask arg from get_coeffs
     n_voxels, n_echos, n_components = me_betas.shape
     mu = data_cat.mean(axis=-1, dtype=float)
@@ -219,7 +152,47 @@ def calculate_f_maps(mixing, data_cat, tes, Z_maps, f_max=500):
     return F_S0_maps, F_T2_maps
 
 
-def spatial_cluster(F_T2_maps, F_S0_maps, Z_maps, optcom_betas, mask, n_echos, csize=None):
+def threshold_to_match(maps, n_sig_voxels, mask, ref_img, csize):
+    """
+    Cluster-extent threshold a map to have roughly some requested number of
+    significant voxels (with clusters accounted for).
+    """
+    n_voxels, n_components = maps.shape
+    clmaps = np.zeros([n_voxels, n_components], bool)
+    for i_comp in range(n_components):
+        # Initial cluster-defining threshold is defined based on the number
+        # of significant voxels from the F-statistic maps. This threshold
+        # will be relaxed until the number of significant voxels from both
+        # maps is roughly equal.
+        ccimg = io.new_nii_like(
+            ref_img,
+            utils.unmask(stats.rankdata(maps[:, i_comp]), mask))
+        step = int(n_sig_voxels[i_comp] / 10)
+        rank_thresh = n_voxels - (n_sig_voxels[i_comp] - 1)
+        while True:
+            clmap = utils.threshold_map(
+                ccimg, min_cluster_size=csize,
+                threshold=rank_thresh, mask=mask,
+                binarize=True)
+            diff = n_sig_voxels[i_comp] - clmap.sum()
+            if diff < 0 or clmap.sum() == 0:
+                rank_thresh += step
+                clmap = utils.threshold_map(
+                    ccimg, min_cluster_size=csize,
+                    threshold=rank_thresh, mask=mask,
+                    binarize=True)
+                break
+            else:
+                rank_thresh -= step
+        clmaps[:, i_comp] = clmap
+    return clmaps
+
+
+def spatial_cluster(F_T2_maps, F_S0_maps, Z_maps, optcom_betas, mask, ref_img,
+                    n_echos, csize=None):
+    """
+    Perform cluster-extent thresholding on a series of maps.
+    """
     n_voxels, n_components = Z_maps.shape
     fmin, _, _ = getfbounds(n_echos)
 
@@ -229,7 +202,6 @@ def spatial_cluster(F_T2_maps, F_S0_maps, Z_maps, optcom_betas, mask, n_echos, c
     Z_clmaps = np.zeros([n_voxels, n_components], bool)
     F_T2_clmaps = np.zeros([n_voxels, n_components], bool)
     F_S0_clmaps = np.zeros([n_voxels, n_components], bool)
-    Br_T2_clmaps = np.zeros([n_voxels, n_components], bool)
     Br_S0_clmaps = np.zeros([n_voxels, n_components], bool)
 
     LGR.info('Performing spatial clustering of components')
@@ -247,7 +219,6 @@ def spatial_cluster(F_T2_maps, F_S0_maps, Z_maps, optcom_betas, mask, n_echos, c
         F_T2_clmaps[:, i_comp] = utils.threshold_map(
             ccimg, min_cluster_size=csize, threshold=fmin, mask=mask,
             binarize=True)
-        countsigFT2 = F_T2_clmaps[:, i_comp].sum()
 
         ccimg = io.new_nii_like(
             ref_img,
@@ -255,7 +226,6 @@ def spatial_cluster(F_T2_maps, F_S0_maps, Z_maps, optcom_betas, mask, n_echos, c
         F_S0_clmaps[:, i_comp] = utils.threshold_map(
             ccimg, min_cluster_size=csize, threshold=fmin, mask=mask,
             binarize=True)
-        countsigFS0 = F_S0_clmaps[:, i_comp].sum()
 
         # Cluster-extent threshold and binarize Z-maps with CDT of p < 0.05
         ccimg = io.new_nii_like(
@@ -265,51 +235,229 @@ def spatial_cluster(F_T2_maps, F_S0_maps, Z_maps, optcom_betas, mask, n_echos, c
             ccimg, min_cluster_size=csize, threshold=1.95, mask=mask,
             binarize=True)
 
-        # Initial cluster-defining threshold is defined based on the number
-        # of significant voxels from the F-statistic maps. This threshold
-        # will be relaxed until the number of significant voxels from both
-        # maps is roughly equal.
-        ccimg = io.new_nii_like(
-            ref_img,
-            utils.unmask(stats.rankdata(optcom_betas_abs[:, i_comp]), mask))
-        step = int(countsigFT2 / 10)
-        T2_thresh = n_voxels - (countsigFT2 - 1)
-        while True:
-            Br_T2_clmap = utils.threshold_map(
-                ccimg, min_cluster_size=csize,
-                threshold=T2_thresh, mask=mask,
-                binarize=True)
-            diff = countsigFT2 - Br_T2_clmap.sum()
-            if diff < 0 or Br_T2_clmap.sum() == 0:
-                T2_thresh += step
-                Br_T2_clmap = utils.threshold_map(
-                    ccimg, min_cluster_size=csize,
-                    threshold=T2_thresh, mask=mask,
-                    binarize=True)
-                break
-            else:
-                T2_thresh -= step
-        Br_T2_clmaps[:, i_comp] = Br_T2_clmap
-
-        ccimg = io.new_nii_like(
-            ref_img,
-            utils.unmask(stats.rankdata(optcom_betas_abs[:, i_comp]), mask))
-        step = int(countsigFS0 / 10)
-        S0_thresh = n_voxels - (countsigFS0 - 1)
-        while True:
-            Br_S0_clmap = utils.threshold_map(
-                ccimg, min_cluster_size=csize,
-                threshold=S0_thresh, mask=mask,
-                binarize=True)
-            diff = countsigFS0 - Br_S0_clmap.sum()
-            if diff < 0 or Br_S0_clmap.sum() == 0:
-                S0_thresh += step
-                Br_S0_clmap = utils.threshold_map(
-                    ccimg, min_cluster_size=csize,
-                    threshold=S0_thresh, mask=mask,
-                    binarize=True)
-                break
-            else:
-                S0_thresh -= step
-        Br_S0_clmaps[:, i_comp] = Br_S0_clmap
+    countsigFT2 = F_T2_clmaps.sum(axis=1)
+    countsigFS0 = F_S0_clmaps.sum(axis=1)
+    Br_T2_clmaps = threshold_to_match(optcom_betas_abs, countsigFT2, mask, ref_img, csize=csize)
+    Br_S0_clmaps = threshold_to_match(optcom_betas_abs, countsigFS0, mask, ref_img, csize=csize)
     return Z_clmaps, F_T2_clmaps, F_S0_clmaps, Br_T2_clmaps, Br_S0_clmaps
+
+
+def compute_countsignal(cl_arr):
+    """
+    Count the number of significant voxels, per map, in a set of cluster-extent
+    thresholded maps.
+
+    Parameters
+    ----------
+    cl_arr
+        Statistical map after cluster-extent thresholding and binarization.
+
+    Returns
+    -------
+    countsignal
+        Number of significant (non-zero) voxels for each map in cl_arr.
+    """
+    countsignal = cl_arr.sum(axis=0)
+    return countsignal
+
+
+def compute_countnoise(stat_maps, stat_cl_maps, stat_thresh=1.95):
+    """
+    Count the number of significant voxels (after application of
+    cluster-defining threshold) from non-significant clusters (after
+    cluster-extent thresholding).
+
+    Parameters
+    ----------
+    stat_maps
+        Unthresholded statistical maps.
+    stat_cl_maps
+        Cluster-extent thresholded and binarized version of stat_maps.
+    stat_thresh
+        Statistical threshold. Default is 1.95 (Z-statistic threshold
+        corresponding to p<X one-sided).
+    """
+    noise_idx = (np.abs(stat_maps) > stat_thresh) & (stat_cl_maps == 0)
+    countnoise = noise_idx.sum(axis=0)
+    return countnoise
+
+
+def compute_signal_minus_noise_z(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95):
+    """
+    Divide voxel-level thresholded F-statistic maps into distributions of
+    signal (voxels in significant clusters) and noise (voxels from
+    non-significant clusters) statistics, then compare these distributions
+    with a two-sample t-test. Convert the resulting t-statistics (per map)
+    to normally distributed z-statistics.
+
+    Parameters
+    ----------
+    Z_maps
+    Z_clmaps
+    F_T2_maps
+    z_thresh
+
+    Returns
+    -------
+    signal_minus_noise_z
+    signal_minus_noise_p
+    """
+    n_components = Z_maps.shape[1]
+    signal_minus_noise_z = np.zeros(n_components)
+    signal_minus_noise_p = np.zeros(n_components)
+    noise_idx = (np.abs(Z_maps) > z_thresh) & (Z_clmaps == 0)
+    countnoise = noise_idx.sum(axis=0)
+    countsignal = Z_clmaps.sum(axis=0)
+    for i_comp in range(n_components):
+        noise_FT2_Z = 0.5 * np.log(F_T2_maps[noise_idx[:, i_comp], i_comp])
+        signal_FT2_Z = 0.5 * np.log(F_T2_maps[Z_clmaps[:, i_comp] == 1, i_comp])
+        n_noise_dupls = noise_FT2_Z.size - np.unique(noise_FT2_Z).size
+        if n_noise_dupls:
+            LGR.debug('For component {}, {} duplicate noise F-values '
+                      'detected.'.format(i_comp, n_noise_dupls))
+        n_signal_dupls = signal_FT2_Z.size - np.unique(signal_FT2_Z).size
+        if n_signal_dupls:
+            LGR.debug('For component {}, {} duplicate signal F-values '
+                      'detected.'.format(i_comp, n_signal_dupls))
+        dof = countnoise[i_comp] + countsignal[i_comp] - 2
+
+        t_value, signal_minus_noise_p[i_comp] = stats.ttest_ind(
+            signal_FT2_Z, noise_FT2_Z, equal_var=False)
+        signal_minus_noise_z[i_comp] = t_to_z(t_value, dof)
+
+    signal_minus_noise_z = np.nan_to_num(signal_minus_noise_z, 0)
+    signal_minus_noise_p = np.nan_to_num(signal_minus_noise_p, 0)
+    return signal_minus_noise_z, signal_minus_noise_p
+
+
+def compute_signal_minus_noise_t(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95):
+    RepLGR.info('A t-test was performed between the distributions of T2*-model '
+                'F-statistics associated with clusters (i.e., signal) and '
+                'non-cluster voxels (i.e., noise) to generate a t-statistic '
+                '(metric signal-noise_t) and p-value (metric signal-noise_p) '
+                'measuring relative association of the component to signal '
+                'over noise.')
+    n_components = Z_maps.shape[1]
+    signal_minus_noise_t = np.zeros(n_components)
+    signal_minus_noise_p = np.zeros(n_components)
+    noise_idx = (np.abs(Z_maps) > z_thresh) & (Z_clmaps == 0)
+    for i_comp in range(n_components):
+        # NOTE: Why only compare distributions of *unique* F-statistics?
+        noise_FT2_Z = np.log10(np.unique(F_T2_maps[noise_idx[:, i_comp], i_comp]))
+        signal_FT2_Z = np.log10(np.unique(F_T2_maps[Z_clmaps[:, i_comp] == 1, i_comp]))
+        (signal_minus_noise_t[i_comp],
+         signal_minus_noise_p[i_comp]) = stats.ttest_ind(
+             signal_FT2_Z, noise_FT2_Z, equal_var=False)
+
+    signal_minus_noise_t = np.nan_to_num(signal_minus_noise_t, 0)
+    signal_minus_noise_p = np.nan_to_num(signal_minus_noise_p, 0)
+    return signal_minus_noise_t, signal_minus_noise_p
+
+
+def compute_dice(Br_clmaps, F_clmaps, axis=0):
+    """
+    Compute the Dice similarity index between two thresholded and binarized maps.
+
+    Parameters
+    ----------
+    Br_clmaps, F_clmaps
+    axis
+
+    Returns
+    -------
+    dice_values
+    """
+    dice_values = utils.dice(Br_clmaps, F_clmaps, axis=axis)
+    dice_values = np.nan_to_num(dice_values, 0)
+    return dice_values
+
+
+def generate_decision_table_score(kappa, dice_FT2, signal_minus_noise_t,
+                                  countnoise, countsigFT2):
+    """
+    Generate a five-metric decision table. Metrics are ranked in either descending
+    or ascending order if they measure TE-dependence or -independence, respectively,
+    and are then averaged for each component.
+
+    Parameters
+    ----------
+    kappa
+    dice_FT2
+    signal_minus_noise_t
+    countnoise
+    countsigFT2
+
+    Returns
+    -------
+    d_table_score
+    """
+    d_table_rank = np.vstack([
+        len(kappa) - stats.rankdata(kappa),
+        len(kappa) - stats.rankdata(dice_FT2),
+        len(kappa) - stats.rankdata(signal_minus_noise_t),
+        stats.rankdata(countnoise),
+        len(kappa) - stats.rankdata(countsigFT2)]).T
+    d_table_score = d_table_rank.mean(axis=1)
+    return d_table_score
+
+
+def calculate_dependence_metrics(F_T2_maps, F_S0_maps, Z_maps):
+    """
+    Calculate Kappa and Rho metrics from F-statistic maps.
+    Just a weighted average over voxels.
+
+    Parameters
+    ----------
+    F_T2_maps, F_S0_maps
+    Z_maps
+
+    Returns
+    -------
+    kappas, rhos
+    """
+    RepLGR.info('Kappa (kappa) and Rho (rho) were calculated as measures of '
+                'TE-dependence and TE-independence, respectively.')
+
+    weight_maps = Z_maps ** 2.
+    n_components = Z_maps.shape[1]
+    kappas, rhos = np.zeros(n_components), np.zeros(n_components)
+    for i_comp in range(n_components):
+        kappas[i_comp] = np.average(F_T2_maps[:, i_comp], weights=weight_maps[:, i_comp])
+        rhos[i_comp] = np.average(F_S0_maps[:, i_comp], weights=weight_maps[:, i_comp])
+    return kappas, rhos
+
+
+def calculate_varex(optcom_betas):
+    """
+    Calculate unnormalized(?) variance explained from unstandardized
+    parameter estimate maps.
+
+    Parameters
+    ----------
+    optcom_betas
+
+    Returns
+    -------
+    varex
+    """
+    compvar = (optcom_betas ** 2).sum(axis=0)
+    varex = 100 * (compvar / compvar.sum())
+    return varex
+
+
+def calculate_varex_norm(weights):
+    """
+    Calculate normalized variance explained from standardized parameter
+    estimate maps.
+
+    Parameters
+    ----------
+    weights
+    
+    Returns
+    -------
+    varex_norm
+    """
+    compvar = (weights ** 2).sum(axis=0)
+    varex_norm = compvar / compvar.sum()
+    return varex_norm
