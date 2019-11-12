@@ -4,7 +4,6 @@ PCA based on GIFT software
 import logging
 
 import numpy as np
-from scipy.linalg import svd
 from sklearn.decomposition import PCA, TruncatedSVD
 from sklearn.preprocessing import StandardScaler
 
@@ -359,8 +358,8 @@ def _icatb_svd(data, numpc):
     Lambda = tsvd.singular_values_
     vh = tsvd.components_
 
-    #_, Lambda, vh = svd(data)
-    # Sort eigen vectors in Ascending order
+    # _, Lambda, vh = svd(data)
+    # Sort eigenvectors in Ascending order
     V = vh.T
     Lambda = Lambda / np.sqrt(data.shape[0] - 1)  # Whitening (sklearn)
     inds = np.argsort(np.power(Lambda, 2))
@@ -456,8 +455,7 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     maskvec = np.reshape(mask_nib, Nx * Ny * Nz, order='F')
     data_non_normalized = data_nib_V[maskvec == 1, :]
     scaler = StandardScaler(with_mean=True, with_std=True)
-    data   = scaler.fit_transform(data_non_normalized) # This was X_sc
-    print('hello1')
+    data = scaler.fit_transform(data_non_normalized)  # This was X_sc
 
     V, EigenValues = _icatb_svd(data, Nt)
 

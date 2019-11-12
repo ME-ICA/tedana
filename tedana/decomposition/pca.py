@@ -346,7 +346,7 @@ def tedpca(data_cat,
         comptable['rationale'] = ''
 
     elif algorithm in ['mdl', 'aic', 'kic']:
-        LGR.info('Selected {0} components with {1}} dimensionality '
+        LGR.info('Selected {0} components with {1} dimensionality '
                  'detection'.format(comptable.shape[0], algorithm))
         comptable['classification'] = 'accepted'
         comptable['rationale'] = ''
