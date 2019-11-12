@@ -408,12 +408,29 @@ def load_data(data, n_echos=None):
     return fdata, ref_img
 
 
-def add_decomp_prefix(name, prefix, max_value):
+def add_decomp_prefix(comp_num, prefix, max_value):
     """
     Create component name with leading zeros matching number of components
+
+    Parameters
+    ----------
+    comp_num : :obj:`int`
+        Component number
+    prefix : :obj:`str`
+        A prefix to prepend to the component name. An underscore is
+        automatically added between the prefix and the component number.
+    max_value : :obj:`int`
+        The maximum component number in the whole decomposition. Used to
+        determine the appropriate number of leading zeros in the component
+        name.
+
+    Returns
+    -------
+    comp_name : :obj:`str`
+        Component name in the form <prefix>_<zeros><comp_num>
     """
     n_digits = int(np.log10(max_value)) + 1
-    comp_name = '{0:08d}'.format(int(name))
+    comp_name = '{0:08d}'.format(int(comp_num))
     comp_name = '{0}_{1}'.format(prefix, comp_name[8 - n_digits:])
     return comp_name
 
@@ -438,7 +455,7 @@ def _find_comp_rows(name):
 
 def save_comptable(df, filename, label='ica', metadata=None):
     """
-    Save pandas DataFrame as a json file.
+    Save pandas DataFrame as a BIDS Derivatives-compatible json file.
 
     Parameters
     ----------
@@ -475,7 +492,7 @@ def save_comptable(df, filename, label='ica', metadata=None):
 
 def load_comptable(filename):
     """
-    Load pandas DataFrame from json file.
+    Load a BIDS Derivatives decomposition json file into a pandas DataFrame.
 
     Parameters
     ----------
