@@ -37,6 +37,21 @@ state2col = {'accepted': '#00ff00', 'rejected': '#ff0000', 'ignored': '#0000ff'}
 
 # %%
 def prepare_comp_table(comp_table_DIR):
+    """
+    Create Bokeh ColumnDataSource with all info dynamic plots need
+
+    Parameters
+    ----------
+    comp_table_DIR: str
+        tedana output directory where to find comp_table
+    
+    Returns
+    -------
+    CompTable_CDS: bokeh.models.ColumnDataSource
+        Data structure with all the fields to plot or hover over
+    Nc: int
+        Number of components
+    """
     CompTable_Path = osp.join(comp_table_DIR, 'comp_table_ica.tsv')
     DF = pd.read_csv(CompTable_Path, sep='\t')
     Nc = DF.shape[0]
@@ -71,6 +86,21 @@ def prepare_comp_table(comp_table_DIR):
 
 # %%
 def tap_callback(CSD, div):
+    """
+    Javacript function to animate tap events and show component info on the right
+
+    Parameters
+    ----------
+    CDS: bokeh.models.ColumnDataSource
+        Data structure containing a limited set of columns from the comp_table
+    div: bokeh.models.Div
+        Target Div element where component images will be loaded
+    
+    Returns
+    -------
+    CustomJS: bokeh.models.CustomJS
+        Javascript function that adds the tapping functionality
+    """
     return CustomJS(args=dict(source=CSD, div=div_content, outdir=OUTDIR), code="""
     // the event that triggered the callback is cb_obj:
     // The event type determines the relevant attributes
@@ -95,6 +125,21 @@ def tap_callback(CSD, div):
 
 # %%
 def create_krPlot(CompTable_CDS, div):
+    """
+    Create Dymamic Kappa/Rho Scatter Plot
+
+    Parameters
+    ----------
+    CompTable_CDS: bokeh.models.ColumnDataSource
+        Data structure containing a limited set of columns from the comp_table
+    div: bokeh.models.Div
+        Target Div element where component images will be loaded
+    
+    Returns
+    -------
+    krFig: bokeh.plotting.figure.Figure
+        Bokeh scatter plot of kappa vs. rho
+    """
     # Create Panel for the Kappa - Rho Scatter
     kr_hovertool = HoverTool(tooltips=[('Component ID', '@component'), ('Kappa', '@x'),
                                        ('Rho', '@y'), ('Var. Expl.', '@varexp')])
@@ -115,6 +160,21 @@ def create_krPlot(CompTable_CDS, div):
 
 # %%
 def create_ksortedPlot(CompTable_CDS, Nc, div):
+    """
+    Create Dymamic Sorted Kappa Plot
+
+    Parameters
+    ----------
+    CompTable_CDS: bokeh.models.ColumnDataSource
+        Data structure containing a limited set of columns from the comp_table
+    div: bokeh.models.Div
+        Target Div element where component images will be loaded
+    
+    Returns
+    -------
+    ksorted_Fig: bokeh.plotting.figure.Figure
+        Bokeh plot of components ranked by kappa
+    """
     # Create Panel for the Ranked Kappa Plot
     ksorted_hovertool = HoverTool(tooltips=[('Component ID', '@component'), ('Kappa', '@x'),
                                             ('Rho', '@y'), ('Var. Expl.', '@varexp')])
@@ -140,6 +200,5 @@ kappa_rho_plot = create_krPlot(CompTable_CDS, div_content)
 kappa_sorted_plot = create_ksortedPlot(CompTable_CDS, Nc, div_content)
 app = row(column(kappa_rho_plot, kappa_sorted_plot), div_content)
 (kr_script, kr_div) = components(app)
-generate_report(kr_div, kr_script,file_path='/opt/report.html')
+generate_report(kr_div, kr_script, file_path='/opt/report.html')
 
-# %%
