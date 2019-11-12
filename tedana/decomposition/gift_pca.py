@@ -161,7 +161,7 @@ def _entrate_sp(x, sm_window):
             parzen_w_1[(n[0] - M[0] - 1):(n[0] +
                                           M[0])] = _parzen_win(2 * M[0] + 1)
 
-    if x.ndim == 2 and min(n) == 1:  # 1D
+    if (x.ndim == 2) and (min(n) == 1):  # 1D
         xc = _autocorr(x)
         xc = xc * parzen_w_1
         xf = fftshift(fft(xc))
