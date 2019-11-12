@@ -81,7 +81,7 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img, mixing_z
     signs = determine_signs(weights, axis=0)
     weights, mixing = flip_components(weights, mixing, signs=signs)
     optcom_betas = dependence.calculate_betas(data_optcom, mixing)
-    PSC = dependence.calculate_psc(data_optcom, optcom_betas)
+    PSC = dependence.calculate_psc(data_optcom, optcom_betas)  # used in kundu v3.2 tree
     Z_maps = dependence.calculate_z_maps(weights)
     F_T2_maps, F_S0_maps = dependence.calculate_f_maps(mixing, data_cat, tes, Z_maps)
     (Z_clmaps, F_T2_clmaps, F_S0_clmaps,

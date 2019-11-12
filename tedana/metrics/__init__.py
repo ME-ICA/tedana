@@ -2,11 +2,11 @@
 # ex: set sts=4 ts=4 sw=4 et:
 
 from .kundu_fit import (
-    kundu_metrics, get_coeffs, computefeats2
+    kundu_metrics, dependence_metrics
 )
 from .dependence import (
-    dependence_metrics
+    calculate_varex_norm
 )
 
 __all__ = [
-    'dependence_metrics', 'kundu_metrics', 'get_coeffs', 'computefeats2']
+    'dependence_metrics', 'kundu_metrics']
