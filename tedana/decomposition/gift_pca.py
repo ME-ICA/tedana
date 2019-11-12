@@ -5,7 +5,7 @@ import logging
 
 import numpy as np
 from scipy.linalg import svd
-from sklearn.decomposition import PCA, TruncatedSVD
+from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 from scipy.signal import detrend
