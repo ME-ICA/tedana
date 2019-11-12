@@ -190,7 +190,6 @@ def _entrate_sp(x, sm_window):
                 temp = temp + correlate2d(x[:, :, k + m3], x[:, :, k])
                 # default option:
                 # computes raw correlations with NO normalization
-                # -- Matlab help on xcorr
             xc[:, :, (n[2] - 1) - m3] = temp
             xc[:, :, (n[2] - 1) + m3] = temp
 
