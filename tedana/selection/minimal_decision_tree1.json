@@ -113,12 +113,12 @@
             }
         },
         {
-            "functionname": "variance_gt_threshold",
+            "functionname": "variance_lt_thresholds",
             "parameters": {
                 "iftrue": "nochange",
                 "iffalse": "ignore",
                 "decidecomps": "provisionalreject",
-                "decidemetric": "varexp"
+                "varmetric": "varexp"
             },
             "kwargs": {
                 "log_extra_info": "",

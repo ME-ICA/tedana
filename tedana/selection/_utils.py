@@ -14,24 +14,32 @@ LGR = logging.getLogger(__name__)
 def selectcomps2use(comptable, decide_comps):
     """
     Give a list of components that fit a classification types
+    Since 'all' converts string to boolean, it will miss components with
+    no classification. This means, in the initialization of comptree, all
+    components need to be labeled as unclassified, NOT empty
+    WILL NEED TO ADD NUMBER INDEXING TO selectcomps2use
     """
 
     if decide_comps == 'all':
-        # This classification always has a value, this is a way to get all
-        # values in the same structure as the subset lists below
-        # There's probably a simpler way to do this
-        comps2use = comptable['classification'] is not None
+        # All components with any string in the classification field
+        # are set to True
+        comps2use = list(range(comptable.shape[0]))
     elif (type(decide_comps) == str):
-        comps2use = comptable['classification'] == decide_comps
+        comps2use = comptable.index[comptable['classification'] == decide_comps].tolist()
+    elif (type(decide_comps) == list) and (type(decide_comps[0]) == str):
+        comps2use = []
+        for didx in range(len(decide_comps)):
+            newcomps2use = comptable.index[
+                comptable['classification'] == decide_comps[didx]].tolist()
+            comps2use = list(set(comps2use + newcomps2use))
     else:
-        comps2use = comptable['classification'] == decide_comps[0]
-        for didx in range(len(decide_comps - 1)):
-            comps2use = (comps2use | (comptable['classification'] == decide_comps[didx + 1]))
+        # decide_comps is already a string of indices
+        comps2use = decide_comps
 
     # If no components are selected, then return None.
     # The function that called this can check for None and exit before
     # attempting any computations on no data
-    if comps2use.sum() == 0:
+    if not comps2use:
         comps2use = None
 
     return comps2use
