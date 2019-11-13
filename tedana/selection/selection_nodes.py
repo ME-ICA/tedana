@@ -2,12 +2,11 @@
 Functions that will be used as steps in a decision tree
 """
 import logging
-# import numpy as np
+import numpy as np
 # from scipy import stats
 
 # from tedana.stats import getfbounds
-from tedana.selection._utils import (confirm_metrics_calculated,
-                                     selectcomps2use,
+from tedana.selection._utils import (confirm_metrics_exist, selectcomps2use,
                                      log_decision_tree_step, change_comptable_classifications)
 # getelbow, clean_dataframe, new_decision_node_info,
 LGR = logging.getLogger(__name__)
@@ -161,8 +160,8 @@ def manual_classify(comptable, decision_node_idx,
         comptable = change_comptable_classifications(
                         comptable, iftrue, iffalse,
                         comps2use, str(decision_node_idx))
-        numTrue = (comps2use is True).sum()
-        numFalse = (comps2use is False).sum()
+        numTrue = comps2use.sum()
+        numFalse = np.logical_not(comps2use).sum()
         log_decision_tree_step(functionname_idx, comps2use,
                                numTrue=numTrue,
                                numFalse=numFalse)
@@ -235,11 +234,11 @@ def metric1_greaterthan_metric2(comptable, decision_node_idx, iftrue, iffalse,
     if log_extra_report:
         LGR.report(log_extra_report)
 
-    metrics_exist, missing_metrics = confirm_metrics_calculated(comptable, used_metrics)
-    if metrics_exist is False:
-        error_msg = ("Necessary metrics for " + functionname_idx + "are not in comptable. "
-                     "Need to calculate the following metrics: " + missing_metrics)
-        raise ValueError(error_msg)
+    metrics_exist = confirm_metrics_exist(comptable, used_metrics, functionname_idx)
+    # if metrics_exist is False:
+    #     error_msg = ("Necessary metrics for " + functionname_idx + "are not in comptable. "
+    #                  "Need to calculate the following metrics: " + used_metrics)
+    #     raise ValueError(error_msg)
 
     # decision_tree_steps = new_decision_node_info(decision_tree_steps, functionname,
     #                                             necessary_metrics, iftrue, iffalse,
@@ -264,8 +263,8 @@ def metric1_greaterthan_metric2(comptable, decision_node_idx, iftrue, iffalse,
         comptable = change_comptable_classifications(
                         comptable, iftrue, iffalse,
                         decision_boolean, str(decision_node_idx))
-        numTrue = (comps2use is True).sum()
-        numFalse = (comps2use is False).sum()
+        numTrue = comps2use.sum()
+        numFalse = np.logical_not(comps2use).sum()
         log_decision_tree_step(functionname_idx, comps2use,
                                numTrue=numTrue,
                                numFalse=numFalse)
