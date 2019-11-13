@@ -98,8 +98,8 @@ def computefeats2(data, mmix, mask=None, normalize=True):
 def get_coeffs(data, X, mask=None):
     """
     Performs least-squares fit of X against data to get parameter estimates
-    for each regressor in X against each voxel in data. Automatically adds a
-    constant term to X.
+    for each regressor in X against each voxel in data. Automatically mean-centers
+    X, which eliminates the need to mean-center data or add a constant term.
 
     Parameters
     ----------
@@ -144,13 +144,7 @@ def get_coeffs(data, X, mask=None):
     # mean-center design matrix
     X = X - np.mean(X, axis=0, keepdims=True)
 
-    # add intercept
-    X = np.column_stack([X, np.ones((len(X), 1))])
-
     betas = np.linalg.lstsq(X, mdata, rcond=None)[0].T
-
-    # drop beta for intercept
-    betas = betas[:, :-1]
 
     if mask is not None:
         betas = utils.unmask(betas, mask)
