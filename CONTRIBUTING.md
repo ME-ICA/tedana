@@ -136,10 +136,10 @@ Once you've run this, your repository should be set for most changes (i.e., you 
 
 ### 4. Make the changes you've discussed
 
-Try to keep the changes focused to the issue. 
-We've found that working on a [new branch][link_branches] for each issue makes it easier to keep your changes targeted. 
-Using a new branch allows you to follow the standard 
-"fork/branch/commit/pull-request/merge" GitHub workflow when making changes.
+Try to keep the changes focused to the issue.  
+We've found that working on a [new branch][link_branches] for each issue makes it easier to keep your changes targeted.
+Using a new branch allows you to follow the standard "fork/branch/commit/pull-request/merge" GitHub 
+workflow when making changes.
 [This guide][link_gitworkflow] provides a useful overview for this workflow.
 Before making a new branch, make sure your master is up to date.
 
@@ -155,23 +155,19 @@ Then, make your new branch.
 git checkout -b MYBRANCH
 ```
 
-As you're making changes, 
-make sure your branch is kept up to date with 
+As you're making changes, make sure your branch is kept up to date with 
 
 ```
 git fetch upstream master
 git merge upstream/master
 ```
 
-If you know what rebasing is,
-please only use it for changes that haven't been pushed.
-If you don't know what rebasing is, don't do it at all,
-as it is the easiest way to make your repository a disaster zone.
-Please make sure to review the `tedana` [style conventions](#style-guide)
-and test your changes.
+If you know what rebasing is, please only use it for changes that haven't been pushed.
+If you don't know what rebasing is, don't do it at all, as it is the easiest way to make your 
+repository a disaster zone.
+Please make sure to review the `tedana` [style conventions](#style-guide) and test your changes.
 
-If you are new to ``git``, there are several GUI git clients that you may
-find helpful, such as
+If you are new to ``git``, there are several GUI git clients that you may find helpful, such as
 - [GitKraken][link_git_kraken]
 - [GitHub Desktop][link_github_desktop]
 - [SourceTree][link_source_tree]
@@ -179,14 +175,13 @@ find helpful, such as
 
 ### 5. Test your changes
 
-You can run style checks by running the following,
+You can run style checks by running the following:
 ```
 flake8 $TEDANADIR/tedana
 ```
 
-and unit/integration tests by running `pytest`.
-If you know a file will test your change,
-you can run only that test.
+and unit/integration tests by running `pytest` (more details below).
+If you know a file will test your change, you can run only that test.
 Alternatively, running all unit tests is relatively quick and should be
 fairly comprehensive.
 Running all `pytest` tests will be useful for pre-pushing checks.
@@ -205,8 +200,8 @@ pytest -k my_function $TEDANADIR/tedana/tests/test_file.py
 
 from within your local `tedana` repository.
 The test run will indicate the number of passes and failures.
-Most often, the failures are self-explanatory,
-but if not you can use the [pytest documentation][link_pytest] to use options to get more information. 
+Most often, the failures give enough information to determine the cause; if not, if not you can
+refer to the [pytest documentation][link_pytest] for more details on the failure.
 
 #### Changes to documentation
 
