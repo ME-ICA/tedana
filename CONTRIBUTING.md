@@ -280,7 +280,7 @@ In the event of confusion, please ping in the Gitter for help.
 We strongly recommend you *not* use the `git rebase` command when working with and contributing to the `tedana` repository.
 
 ### Advanced Development
-For core developers, please see our Developing Guidelines on [readthedocs][link_developing_rtd].
+For additional, in-depth information on contributing to `tedana`, please see our Developing Guidelines on [readthedocs][link_developing_rtd].
 
 ## Style Guide
 
