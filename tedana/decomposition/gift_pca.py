@@ -16,13 +16,13 @@ from scipy.signal import correlate2d
 LGR = logging.getLogger(__name__)
 
 
-def _autocorr(x):
+def _autocorr(data):
     """
     Calculates the auto correlation of a given array.
 
     Parameters
     ----------
-    x : array-like
+    data : array-like
         The array to calculate the autocorrelation of
 
     Returns
@@ -30,12 +30,12 @@ def _autocorr(x):
     u : ndarray
         The array of autocorrelations
     """
-    u = np.correlate(x, x, mode='full')
+    u = np.correlate(data, data, mode='full')
     # Take upper half of correlation matrix
     return u[u.size / 2:]
 
 
-def _check_order(n_in):
+def _check_order(order_in):
     """
     Checks the order passed to the window functions.
 
@@ -58,37 +58,37 @@ def _check_order(n_in):
     trivialwin = False
 
     # Special case of negative orders:
-    if n_in < 0:
+    if order_in < 0:
         raise ValueError('Order cannot be less than zero.')
 
-    n_out = np.round(n_in)
-    if not np.array_equal(n_in, n_out):
+    order_out = np.round(order_in)
+    if not np.array_equal(order_in, order_out):
         LGR.warning('Rounded order to nearest integer')
 
     # Special cases:
-    if not n_out or n_out == 0:
+    if not order_out or order_out == 0:
         w = np.zeros((0, 1))  # Empty matrix: 0-by-1
         trivialwin = True
-    elif n_out == 1:
+    elif order_out == 1:
         w = 1
         trivialwin = True
 
-    return n_out, w, trivialwin
+    return order_out, w, trivialwin
 
 
-def _parzen_win(n):
+def _parzen_win(n_points):
     """
     Returns the N-point Parzen (de la Valle-Poussin) window in
     a column vector.
 
     Parameters
     ----------
-    n : 1D array
-        The array to calculate the window for
+    n_points : int
+        Number of non-zero points the window must contain
 
     Returns
     -------
-    w : 1D array
+    parzen_w : 1D array
         The Parzen window
 
     Notes
@@ -104,38 +104,38 @@ def _parzen_win(n):
     """
 
     # Check for valid window length (i.e., n < 0)
-    n, w, trivialwin = _check_order(n)
+    n_points, parzen_w, trivialwin = _check_order(n_points)
     if trivialwin:
-        return w
+        return parzen_w
 
     # Index vectors
-    k = np.arange(-(n - 1) / 2, ((n - 1) / 2) + 1)
-    k1 = k[k < -(n - 1) / 4]
-    k2 = k[abs(k) <= (n - 1) / 4]
+    k = np.arange(-(n_points - 1) / 2, ((n_points - 1) / 2) + 1)
+    k1 = k[k < -(n_points - 1) / 4]
+    k2 = k[abs(k) <= (n_points - 1) / 4]
 
     # Equation 37 of [1]: window defined in three sections
-    w1 = 2 * (1 - abs(k1) / (n / 2))**3
-    w2 = 1 - 6 * (abs(k2) / (n / 2))**2 + 6 * (abs(k2) / (n / 2))**3
-    w = np.hstack((w1, w2, w1[::-1])).T
+    parzen_w1 = 2 * (1 - abs(k1) / (n_points / 2))**3
+    parzen_w2 = 1 - 6 * (abs(k2) / (n_points / 2))**2 + 6 * (abs(k2) / (n_points / 2))**3
+    parzen_w = np.hstack((parzen_w1, parzen_w2, parzen_w1[::-1])).T
 
-    return w
+    return parzen_w
 
 
-def _ent_rate_sp(x, sm_window):
+def _ent_rate_sp(data, sm_window):
     """
     Calculate the entropy rate of a stationary Gaussian random process using
     spectrum estimation with smoothing window.
 
     Parameters
     ----------
-    x : ndarray
+    data : ndarray
         Data to calculate the entropy rate of and smooth
     sm_window : boolean
         Whether there is a Parzen window to use
 
     Returns
     -------
-    out : float
+    ent_rate : float
         The entropy rate
 
     Notes
@@ -143,65 +143,67 @@ def _ent_rate_sp(x, sm_window):
     This function attempts to calculate the entropy rate following (Li et al., 2007)
     """
 
-    n = x.shape
+    dims = data.shape
 
     # Normalize x_sb to be unit variance
-    x_std = np.std(np.reshape(x, (np.prod(n), 1)))
-    if x_std < 1e-10:
-        x_std = 1e-10
-    x = x / x_std
+    data_std = np.std(np.reshape(data, (np.prod(dims), 1)))
+
+    # Make sure we do not divide by zero
+    if data_std < 1e-10:
+        data_std = 1e-10
+    data = data / data_std
 
     if sm_window:
 
-        M = [int(i) for i in np.ceil(np.array(n) / 10)]
+        M = [int(i) for i in np.ceil(np.array(dims) / 10)]
 
         # Get Parzen window for each spatial direction
-        if x.ndim >= 3:
-            parzen_w_3 = np.zeros((2 * n[2] - 1, ))
-            parzen_w_3[(n[2] - M[2] - 1):(n[2] + M[2])] = _parzen_win(2 * M[2] + 1)
+        if data.ndim >= 3:
+            parzen_w_3 = np.zeros((2 * dims[2] - 1, ))
+            parzen_w_3[(dims[2] - M[2] - 1):(dims[2] + M[2])] = _parzen_win(2 * M[2] + 1)
 
-        if x.ndim >= 2:
-            parzen_w_2 = np.zeros((2 * n[1] - 1, ))
-            parzen_w_2[(n[1] - M[1] - 1):(n[1] + M[1])] = _parzen_win(2 * M[1] + 1)
+        if data.ndim >= 2:
+            parzen_w_2 = np.zeros((2 * dims[1] - 1, ))
+            parzen_w_2[(dims[1] - M[1] - 1):(dims[1] + M[1])] = _parzen_win(2 * M[1] + 1)
 
-        if x.ndim >= 1:
-            parzen_w_1 = np.zeros((2 * n[0] - 1, ))
-            parzen_w_1[(n[0] - M[0] - 1):(n[0] + M[0])] = _parzen_win(2 * M[0] + 1)
+        if data.ndim >= 1:
+            parzen_w_1 = np.zeros((2 * dims[0] - 1, ))
+            parzen_w_1[(dims[0] - M[0] - 1):(dims[0] + M[0])] = _parzen_win(2 * M[0] + 1)
 
-    if x.ndim == 2 and min(n) == 1:
+    if data.ndim == 2 and min(dims) == 1:
         # Apply window to 1D
-        xc = _autocorr(x)
-        xc = xc * parzen_w_1
-        xf = fftshift(fft(xc))
+        data_corr = _autocorr(data)
+        data_corr = data_corr * parzen_w_1
+        data_fft = fftshift(fft(data_corr))
 
-    elif x.ndim == 2 and min(n) != 1:
+    elif data.ndim == 2 and min(dims) != 1:
         # Apply windows to 2D
-        xc = _autocorr(x)
+        data_corr = _autocorr(data)
 
         # Create bias-correcting vectors
-        v1 = np.hstack((np.arange(1, n[0] + 1),
-                        np.arange(n[0] - 1, 0, -1)))[np.newaxis, :]
-        v2 = np.hstack((np.arange(1, n[1] + 1),
-                        np.arange(n[1] - 1, 0, -1)))[np.newaxis, :]
+        v1 = np.hstack((np.arange(1, dims[0] + 1),
+                        np.arange(dims[0] - 1, 0, -1)))[np.newaxis, :]
+        v2 = np.hstack((np.arange(1, dims[1] + 1),
+                        np.arange(dims[1] - 1, 0, -1)))[np.newaxis, :]
 
         vd = np.dot(v1.T, v2)
 
         # Bias-correct
-        xc = xc / vd
+        data_corr = data_corr / vd
 
         # Apply 2D Parzen Window
         parzen_window_2D = np.dot(parzen_w_1, parzen_w_2.T)
-        xc = xc * parzen_window_2D
-        xf = fftshift(fft2(xc))
+        data_corr = data_corr * parzen_window_2D
+        data_fft = fftshift(fft2(data_corr))
 
-    elif x.ndim == 3 and min(n) != 1:
+    elif data.ndim == 3 and min(dims) != 1:
         # Apply windows to 3D
         # TODO: replace correlate2d with 3d if possible
-        xc = np.zeros((2 * n[0] - 1, 2 * n[1] - 1, 2 * n[2] - 1))
-        for m3 in range(n[2] - 1):
-            temp = np.zeros((2 * n[0] - 1, 2 * n[1] - 1))
-            for k in range(n[2] - m3):
-                temp = temp + correlate2d(x[:, :, k + m3], x[:, :, k])
+        data_corr = np.zeros((2 * dims[0] - 1, 2 * dims[1] - 1, 2 * dims[2] - 1))
+        for m3 in range(dims[2] - 1):
+            temp = np.zeros((2 * dims[0] - 1, 2 * dims[1] - 1))
+            for k in range(dims[2] - m3):
+                temp = temp + correlate2d(data[:, :, k + m3], data[:, :, k])
                 # default option:
                 # computes raw correlations with NO normalization
                 # -- Matlab help on xcorr
@@ -209,62 +211,62 @@ def _ent_rate_sp(x, sm_window):
             xc[:, :, (n[2] - 1) + m3] = temp
 
         # Create bias-correcting vectors
-        v1 = np.hstack((np.arange(1, n[0] + 1),
-                        np.arange(n[0] - 1, 0, -1)))[np.newaxis, :]
-        v2 = np.hstack((np.arange(1, n[1] + 1),
-                        np.arange(n[1] - 1, 0, -1)))[np.newaxis, :]
-        v3 = np.arange(n[2], 0, -1)
+        v1 = np.hstack((np.arange(1, dims[0] + 1),
+                        np.arange(dims[0] - 1, 0, -1)))[np.newaxis, :]
+        v2 = np.hstack((np.arange(1, dims[1] + 1),
+                        np.arange(dims[1] - 1, 0, -1)))[np.newaxis, :]
+        v3 = np.arange(dims[2], 0, -1)
 
         vd = np.dot(v1.T, v2)
-        vcu = np.zeros((2 * n[0] - 1, 2 * n[1] - 1, 2 * n[2] - 1))
-        for m3 in range(n[2]):
-            vcu[:, :, (n[2] - 1) - m3] = vd * v3[m3]
-            vcu[:, :, (n[2] - 1) + m3] = vd * v3[m3]
+        vcu = np.zeros((2 * dims[0] - 1, 2 * dims[1] - 1, 2 * dims[2] - 1))
+        for m3 in range(dims[2]):
+            vcu[:, :, (dims[2] - 1) - m3] = vd * v3[m3]
+            vcu[:, :, (dims[2] - 1) + m3] = vd * v3[m3]
 
-        xc = xc / vcu
+        data_corr = data_corr / vcu
 
         # Scale Parzen windows
         parzen_window_2D = np.dot(parzen_w_1[np.newaxis, :].T,
                                   parzen_w_2[np.newaxis, :])
-        parzen_window_3D = np.zeros((2 * n[0] - 1, 2 * n[1] - 1, 2 * n[2] - 1))
-        for m3 in range(n[2] - 1):
-            parzen_window_3D[:, :, (n[2] - 1) - m3] = np.dot(
-                parzen_window_2D, parzen_w_3[n[2] - 1 - m3])
-            parzen_window_3D[:, :, (n[2] - 1) + m3] = np.dot(
-                parzen_window_2D, parzen_w_3[n[2] - 1 + m3])
+        parzen_window_3D = np.zeros((2 * dims[0] - 1, 2 * dims[1] - 1, 2 * dims[2] - 1))
+        for m3 in range(dims[2] - 1):
+            parzen_window_3D[:, :, (dims[2] - 1) - m3] = np.dot(
+                parzen_window_2D, parzen_w_3[dims[2] - 1 - m3])
+            parzen_window_3D[:, :, (dims[2] - 1) + m3] = np.dot(
+                parzen_window_2D, parzen_w_3[dims[2] - 1 + m3])
 
         # Apply 3D Parzen Window
-        xc = xc * parzen_window_3D
-        xf = fftshift(fftn(xc))
+        data_corr = data_corr * parzen_window_3D
+        data_fft = fftshift(fftn(data_corr))
 
     else:
         raise ValueError('Unrecognized matrix dimension.')
 
-    xf = abs(xf)
-    xf[xf < 1e-4] = 1e-4
+    data_fft = abs(data_fft)
+    data_fft[data_fft < 1e-4] = 1e-4
 
     # Estimation of the entropy rate
-    out = 0.5 * np.log(2 * np.pi * np.exp(1)) + np.sum(np.log(abs(
-        (xf)))[:]) / 2 / np.sum(abs(xf)[:])
+    ent_rate = 0.5 * np.log(2 * np.pi * np.exp(1)) + np.sum(np.log(abs(
+        (data_fft)))[:]) / 2 / np.sum(abs(data_fft)[:])
 
-    return out
+    return ent_rate
 
 
-def _est_indp_sp(x):
+def _est_indp_sp(data):
     """
     Estimate the effective number of independent samples based on the maximum
     entropy rate principle of stationary random process.
 
     Parameters
     ----------
-    x : ndarray
+    data : ndarray
         The data to have the number of samples estimated
 
     Returns
     -------
-    s : int
+    n_iters : int
         Number of iterations required to estimate entropy rate
-    entrate_m : float
+    ent_rate : float
         The entropy rate of the data
 
     Notes
@@ -276,37 +278,37 @@ def _est_indp_sp(x):
     TODO: add references
     """
 
-    dimv = x.shape
-    s0 = None
+    dims = data.shape
+    n_iters_0 = None
 
-    for j in range(np.min(dimv) - 1):
-        x_sb = _subsampling(x, j + 1)
-        entrate_m = _ent_rate_sp(x_sb, 1)
+    for j in range(np.min(dims) - 1):
+        data_sb = _subsampling(data, j + 1)
+        ent_rate = _ent_rate_sp(data_sb, 1)
 
         ent_ref = 1.41
-        if entrate_m > ent_ref:
-            s0 = j
+        if ent_rate > ent_ref:
+            n_iters_0 = j
             break
 
-    if not s0:
+    if not n_iters_0:
         raise ValueError('Ill conditioned data, can not estimate'
                          'independent samples.')
-    s = s0
+    n_iters = n_iters_0
     LGR.debug('Estimated the entropy rate of the Gaussian component '
               'with subsampling depth {}'.format(j))
 
-    return s, entrate_m
+    return n_iters, ent_rate
 
 
-def _subsampling(x, s):
+def _subsampling(data, sub_depth):
     """
     Subsampling the data evenly with space 's'.
 
     Parameters
     ----------
-    x : ndarray
+    data : ndarray
         The data to be subsampled
-    s : int
+    sub_depth : int
         The subsampling depth
 
     Returns
@@ -316,26 +318,26 @@ def _subsampling(x, s):
     """
 
     # First index from which to start subsampling for each dimension
-    x0 = [0, 0, 0]
-    n = x.shape
+    idx_0 = [0, 0, 0]
+    ndims = data.shape
 
-    if x.ndim == 3 and np.min(n) != 1:  # 3D
-        out = x[np.arange(
-            x0[0], n[0], s), :, :][:, np.arange(
-                x0[1], n[1], s), :][:, :, np.arange(x0[2], n[2], s)]
+    if data.ndim == 3 and np.min(ndims) != 1:  # 3D
+        out = data[np.arange(
+            idx_0[0], ndims[0], sub_depth), :, :][:, np.arange(
+                idx_0[1], ndims[1], sub_depth), :][:, :, np.arange(idx_0[2], ndims[2], sub_depth)]
     else:
         raise ValueError('Unrecognized matrix dimension!')
 
     return out
 
 
-def _kurtn(x):
+def _kurtn(data):
     """
     Normalized kurtosis funtion so that for a Gaussian r.v. the kurtn(g) = 0.
 
     Parameters
     ----------
-    x : ndarray
+    data : ndarray
         The data to calculate the kurtosis of
 
     Returns
@@ -345,12 +347,12 @@ def _kurtn(x):
         tedana, this will be the kurtosis of each PCA component.
     """
 
-    kurt = np.zeros((x.shape[1], 1))
+    kurt = np.zeros((data.shape[1], 1))
 
-    for i in range(x.shape[1]):
-        a = detrend(x[:, i], type='constant')
-        a = a / np.std(a)
-        kurt[i] = np.mean(a**4) - 3
+    for i in range(data.shape[1]):
+        data_norm = detrend(data[:, i], type='constant')
+        data_norm = data_norm / np.std(data_norm)
+        kurt[i] = np.mean(data_norm**4) - 3
 
     kurt[kurt < 0] = 0
 
@@ -525,28 +527,28 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     # Estimate the subsampling depth for effectively i.i.d. samples
     LGR.info('Estimating the subsampling depth for effective i.i.d samples...')
     mask_ND = np.reshape(maskvec, (Nx, Ny, Nz), order='F')
-    ms = len(idx)
-    s = np.zeros((ms, ))
-    for i in range(ms):
+    sub_depth = len(idx)
+    sub_iid_sp = np.zeros((sub_depth, ))
+    for i in range(sub_depth):
         x_single = np.zeros(Nx * Ny * Nz)
         x_single[maskvec == 1] = dataN[:, idx[i]]
         x_single = np.reshape(x_single, (Nx, Ny, Nz), order='F')
-        s[i] = _est_indp_sp(x_single)[0] + 1
+        sub_iid_sp[i] = _est_indp_sp(x_single)[0] + 1
         if i > 6:
-            tmpS = s[0:i]
-            tmpSMedian = np.round(np.median(tmpS))
-            if np.sum(tmpS == tmpSMedian) > 6:
-                s = tmpS
+            tmp_sub_sp = sub_iid_sp[0:i]
+            tmp_sub_median = np.round(np.median(tmp_sub_sp))
+            if np.sum(tmp_sub_sp == tmp_sub_median) > 6:
+                sub_iid_sp = tmp_sub_sp
                 break
         dim_n = x_single.ndim
 
-    s1 = int(np.round(np.median(s)))
-    if np.floor(np.power(np.sum(maskvec) / Nt, 1 / dim_n)) < s1:
-        s1 = int(np.floor(np.power(np.sum(maskvec) / Nt, 1 / dim_n)))
-    N = np.round(np.sum(maskvec) / np.power(s1, dim_n))
+    sub_iid_sp_median = int(np.round(np.median(sub_iid_sp)))
+    if np.floor(np.power(np.sum(maskvec) / Nt, 1 / dim_n)) < sub_iid_sp_median:
+        sub_iid_sp_median = int(np.floor(np.power(np.sum(maskvec) / Nt, 1 / dim_n)))
+    N = np.round(np.sum(maskvec) / np.power(sub_iid_sp_median, dim_n))
 
-    if s1 != 1:
-        mask_s = _subsampling(mask_ND, s1)
+    if sub_iid_sp_median != 1:
+        mask_s = _subsampling(mask_ND, sub_iid_sp_median)
         mask_s_1d = np.reshape(mask_s, np.prod(mask_s.shape), order='F')
         dat = np.zeros((int(np.sum(mask_s_1d)), Nt))
         LGR.info('Generating subsampled i.i.d. OC data...')
@@ -554,7 +556,7 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
             x_single = np.zeros((Nx * Ny * Nz, ))
             x_single[maskvec == 1] = data[:, i]
             x_single = np.reshape(x_single, (Nx, Ny, Nz), order='F')
-            dat0 = _subsampling(x_single, s1)
+            dat0 = _subsampling(x_single, sub_iid_sp_median)
             dat0 = np.reshape(dat0, np.prod(dat0.shape), order='F')
             dat[:, i] = dat0[mask_s_1d == 1]
 
