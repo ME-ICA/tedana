@@ -5,6 +5,7 @@ import logging
 import os.path as op
 
 import numpy as np
+import pandas as pd
 import nibabel as nib
 from nibabel.filename_parser import splitext_addext
 from nilearn._utils import check_niimg
@@ -404,3 +405,23 @@ def load_data(data, n_echos=None):
     ref_img.header.set_sform(ref_img.header.get_sform(), code=1)
 
     return fdata, ref_img
+
+
+def load_comp_ts(comptable):
+    """
+    Parameters
+    ----------
+    n_comps : int
+        Number of defined components in the component table
+    
+    Returns
+    -------
+    df : Pandas DataFrame
+    """
+    meica_mix = np.loadtxt(comptable)
+    _, n_comps = meica_mix.shape
+    df = pd.DataFrame(meica_mix)
+    df.columns = ['C' + str(c).zfill(3) for c in np.arange(n_comps)]
+    df.reset_index(inplace=True)
+    df.rename(columns={'index': 'Volume'}, inplace=True)
+    return df

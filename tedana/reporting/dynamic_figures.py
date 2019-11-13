@@ -4,6 +4,7 @@ from os.path import join as opj
 from sklearn.preprocessing import MinMaxScaler
 from bokeh import (embed, events, layouts, models, plotting)
 
+from tedana.io import load_comp_ts
 from tedana.utils import get_spectrum
 from tedana.reporting import generate_report
 
@@ -127,6 +128,7 @@ def create_data_struct(out_dir, color_mapping=color_mapping):
 
     return comptable_ds
 
+
 def create_krPlot(comptable_ds, CDS_meica_ts, CDS_meica_fft,
                   CDS_TSplot, CDS_FFTplot, div, out_dir):
     """
@@ -145,67 +147,26 @@ def create_krPlot(comptable_ds, CDS_meica_ts, CDS_meica_fft,
         Bokeh scatter plot of kappa vs. rho
     """
     # Create Panel for the Kappa - Rho Scatter
-    kr_hovertool = models.HoverTool(tooltips=[('Component ID', '@component'),
+    hovertool = models.HoverTool(tooltips=[('Component ID', '@component'),
                                               ('Kappa', '@kappa'),
                                               ('Rho', '@rho'),
                                               ('Var. Expl.', '@varexp')])
-    krFig = plotting.figure(plot_width=400, plot_height=400,
-                   tools=["tap,wheel_zoom,reset,pan,crosshair", kr_hovertool],
+    fig = plotting.figure(plot_width=400, plot_height=400,
+                   tools=["tap,wheel_zoom,reset,pan,crosshair", hovertool],
                    title="Kappa / Rho Plot")
-    krFig.circle('kappa', 'rho', size='size', color='color',
+    fig.circle('kappa', 'rho', size='size', color='color',
                  alpha=0.5, source=comptable_ds,
                  legend_group='classif')
-    krFig.xaxis.axis_label = 'Kappa'
-    krFig.yaxis.axis_label = 'Rho'
-    krFig.toolbar.logo = None
-    krFig.legend.background_fill_alpha = 0.5
-    krFig.legend.orientation = 'horizontal'
-    krFig.legend.location = 'bottom_right'
-    krFig.js_on_event(events.Tap,
-                      tap_callback(comptable_ds, CDS_meica_ts,
-                                   CDS_meica_fft, CDS_TSplot,
-                                   CDS_FFTplot, div, out_dir))
-    return krFig
+    fig.xaxis.axis_label = 'Kappa'
+    fig.yaxis.axis_label = 'Rho'
+    fig.toolbar.logo = None
+    fig.legend.background_fill_alpha = 0.5
+    fig.legend.orientation = 'horizontal'
+    fig.legend.location = 'bottom_right'
+    return fig
 
 
-def create_ksortedPlot(comptable_ds, CDS_meica_ts, CDS_meica_fft,
-                       CDS_TSplot, CDS_FFTplot, Nc, div):
-    """
-    Create Dymamic Sorted Kappa Plot
-
-    Parameters
-    ----------
-    comptable_ds: bokeh.models.ColumnDataSource
-        Data structure containing a limited set of columns from the comp_table
-    div: bokeh.models.Div
-        Target Div element where component images will be loaded
-    
-    Returns
-    -------
-    ksorted_Fig: bokeh.plotting.figure.Figure
-        Bokeh plot of components ranked by kappa
-    """
-    # Create Panel for the Ranked Kappa Plot
-    ksorted_hovertool = models.HoverTool(tooltips=[('Component ID', '@component'),
-                                                   ('Kappa', '@kappa'),
-                                                   ('Rho', '@rho'),
-                                                   ('Var. Expl.', '@varexp')])
-    ksorted_Fig = plotting.figure(plot_width=400, plot_height=400,
-                         tools=["tap,wheel_zoom,reset,pan,crosshair", ksorted_hovertool],
-                         title="Components sorted by Kappa")
-    ksorted_Fig.circle('kappa_rank', 'kappa', source=comptable_ds, size=3, color='color')
-    ksorted_Fig.xaxis.axis_label = 'Kappa Rank'
-    ksorted_Fig.yaxis.axis_label = 'Kappa'
-    ksorted_Fig.x_range = models.Range1d(-1, Nc + 1)
-    ksorted_Fig.toolbar.logo = None
-    ksorted_Fig.js_on_event(events.Tap, tap_callback(
-        comptable_ds, CDS_meica_ts, CDS_meica_fft, CDS_TSplot, CDS_FFTplot, div, out_dir))
-
-    return ksorted_Fig
-
-
-def create_rho_sortedPlot(comptable_ds, CDS_meica_ts, CDS_meica_fft,
-                          CDS_TSplot, CDS_FFTplot, Nc, div):
+def create_ksortedPlot(comptable_ds):
     """
     Create Dymamic Sorted Kappa Plot
 
@@ -227,6 +188,35 @@ def create_rho_sortedPlot(comptable_ds, CDS_meica_ts, CDS_meica_fft,
                                            ('Rho', '@rho'),
                                            ('Var. Expl.', '@varexp')])
     fig = plotting.figure(plot_width=400, plot_height=400,
+                          tools=["tap,wheel_zoom,reset,pan,crosshair", hovertool],
+                          title="Components sorted by Kappa")
+    fig.circle('kappa_rank', 'kappa', source=comptable_ds, size=3, color='color')
+    fig.xaxis.axis_label = 'Kappa Rank'
+    fig.yaxis.axis_label = 'Kappa'
+    fig.x_range = models.Range1d(-1, Nc + 1)
+    fig.toolbar.logo = None
+    return fig
+
+
+def create_rho_sortedPlot(comptable_ds):
+    """
+    Create Dymamic Sorted Rho Plot
+
+    Parameters
+    ----------
+    comptable_ds: bokeh.models.ColumnDataSource
+        Data structure containing a limited set of columns from the comp_table
+    
+    Returns
+    -------
+    fig: bokeh.plotting.figure.Figure
+        Bokeh plot of components ranked by rho
+    """
+    hovertool = models.HoverTool(tooltips=[('Component ID', '@component'),
+                                           ('Kappa', '@kappa'),
+                                           ('Rho', '@rho'),
+                                           ('Var. Expl.', '@varexp')])
+    fig = plotting.figure(plot_width=400, plot_height=400,
                          tools=["tap,wheel_zoom,reset,pan,crosshair", hovertool],
                          title="Components sorted by Rho")
     fig.circle('rho_rank', 'rho', source=comptable_ds, size=3, color='color')
@@ -234,29 +224,23 @@ def create_rho_sortedPlot(comptable_ds, CDS_meica_ts, CDS_meica_fft,
     fig.yaxis.axis_label = 'Rho'
     fig.x_range = models.Range1d(-1, Nc + 1)
     fig.toolbar.logo = None
-    fig.js_on_event(events.Tap, tap_callback(comptable_ds, CDS_meica_ts,
-                                             CDS_meica_fft, CDS_TSplot,
-                                             CDS_FFTplot, div, out_dir))
 
     return fig
 
 
-def create_varexp_sortedPlot(comptable_ds, CDS_meica_ts, CDS_meica_fft,
-                             CDS_TSplot, CDS_FFTplot, Nc, div):
+def create_varexp_sortedPlot(comptable_ds):
     """
-    Create Dymamic Sorted Kappa Plot
+    Create Dynamic Sorted VarExp Plot
 
     Parameters
     ----------
     comptable_ds: bokeh.models.ColumnDataSource
         Data structure containing a limited set of columns from the comp_table
-    div: bokeh.models.Div
-        Target Div element where component images will be loaded
     
     Returns
     -------
     fig: bokeh.plotting.figure.Figure
-        Bokeh plot of components ranked by kappa
+        Bokeh plot of components ranked by VarExp
     """
     # Create Panel for the Ranked Kappa Plot
     hovertool = models.HoverTool(tooltips=[('Component ID', '@component'),
@@ -271,9 +255,6 @@ def create_varexp_sortedPlot(comptable_ds, CDS_meica_ts, CDS_meica_fft,
     fig.yaxis.axis_label = 'Variance'
     fig.x_range = models.Range1d(-1, Nc + 1)
     fig.toolbar.logo = None
-    fig.js_on_event(events.Tap, tap_callback(comptable_ds, CDS_meica_ts,
-                                             CDS_meica_fft, CDS_TSplot, CDS_FFTplot, div, out_dir))
-
     return fig
 
 
