@@ -1,6 +1,7 @@
 """
 Functions to handle file input/output
 """
+import json
 import logging
 import os.path as op
 
@@ -407,19 +408,108 @@ def load_data(data, n_echos=None):
     return fdata, ref_img
 
 
-def load_comp_ts(comptable):
+def add_decomp_prefix(comp_num, prefix, max_value):
     """
+    Create component name with leading zeros matching number of components
+
     Parameters
     ----------
-    comptable :
+    comp_num : :obj:`int`
+        Component number
+    prefix : :obj:`str`
+        A prefix to prepend to the component name. An underscore is
+        automatically added between the prefix and the component number.
+    max_value : :obj:`int`
+        The maximum component number in the whole decomposition. Used to
+        determine the appropriate number of leading zeros in the component
+        name.
 
     Returns
     -------
-    df : Pandas DataFrame
+    comp_name : :obj:`str`
+        Component name in the form <prefix>_<zeros><comp_num>
     """
-    df = pd.read_csv(comptable, sep='\t', encoding='utf-8')
-    _, n_comps = df.shape
-    df.columns = ['C' + str(c).zfill(3) for c in np.arange(n_comps)]
-    df.reset_index(inplace=True)
-    df.rename(columns={'index': 'Volume'}, inplace=True)
+    n_digits = int(np.log10(max_value)) + 1
+    comp_name = '{0:08d}'.format(int(comp_num))
+    comp_name = '{0}_{1}'.format(prefix, comp_name[8 - n_digits:])
+    return comp_name
+
+
+def _rem_column_prefix(name):
+    """
+    Remove column prefix
+    """
+    return int(name.split('_')[-1])
+
+
+def _find_comp_rows(name):
+    """
+    Find component rows
+    """
+    is_valid = False
+    temp = name.split('_')
+    if len(temp) == 2 and temp[-1].isdigit():
+        is_valid = True
+    return is_valid
+
+
+def save_comptable(df, filename, label='ica', metadata=None):
+    """
+    Save pandas DataFrame as a BIDS Derivatives-compatible json file.
+
+    Parameters
+    ----------
+    df : :obj:`pandas.DataFrame`
+        DataFrame to save to file.
+    filename : :obj:`str`
+        File to which to output DataFrame.
+    label : :obj:`str`, optional
+        Prefix to add to component names in json file. Generally either "ica"
+        or "pca".
+    metadata : :obj:`dict` or None, optional
+        Additional top-level metadata (e.g., decomposition description) to add
+        to json file. Default is None.
+    """
+    save_df = df.copy()
+
+    if 'component' not in save_df.columns:
+        save_df['component'] = save_df.index
+
+    # Rename components
+    max_value = save_df['component'].max()
+    save_df['component'] = save_df['component'].apply(
+        add_decomp_prefix, prefix=label, max_value=max_value)
+    save_df = save_df.set_index('component')
+    save_df = save_df.fillna('n/a')
+
+    data = save_df.to_dict(orient='index')
+
+    if metadata is not None:
+        data = {**data, **metadata}
+
+    with open(filename, 'w') as fo:
+        json.dump(data, fo, sort_keys=True, indent=4)
+
+
+def load_comptable(filename):
+    """
+    Load a BIDS Derivatives decomposition json file into a pandas DataFrame.
+
+    Parameters
+    ----------
+    filename : :obj:`str`
+        File from which to load DataFrame.
+
+    Returns
+    -------
+    df : :obj:`pandas.DataFrame`
+        DataFrame with contents from filename.
+    """
+    df = pd.read_json(filename, orient='index')
+    df = df.replace('n/a', np.nan)  # our jsons store nans as 'n/a'
+    df['component'] = df.index
+    df = df.loc[df['component'].apply(_find_comp_rows)]
+    df['component'] = df['component'].apply(_rem_column_prefix)
+    df = df.set_index('component')
+    df.index.name = 'component'
     return df
