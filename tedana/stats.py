@@ -98,7 +98,7 @@ def computefeats2(data, mmix, mask=None, normalize=True):
     if mask is not None:
         data = data[mask, ...]
     LGR.info('Starting OLS')
-    pe_logp_vals, pe_t_vals, _ = permuted_ols(mmix, data.T, model_intercept=True, n_perm=5000, verbose=3)
+    pe_logp_vals, pe_t_vals, _ = permuted_ols(mmix, data.T, model_intercept=True, n_perm=500, verbose=1)
     pe_p_vals = np.power(10., -pe_logp_vals)
     pe_z_vals = p_to_z(pe_p_vals, tail='two')
     pe_z_vals *= np.sign(pe_t_vals)
