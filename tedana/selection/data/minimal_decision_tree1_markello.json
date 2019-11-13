@@ -11,7 +11,7 @@
         {
             "functionname": "manual_classify",
             "parameters": {
-                "new_classification": "unclassified",
+                "iftrue": "unclassified",
                 "decide_comps": "all"
             },
             "kwargs": {
@@ -81,12 +81,12 @@
             }
         },
         {
-            "functionname": "dmetric_greaterthan_elbow",
+            "functionname": "dmetric_gt_elbow",
             "parameters": {
                 "iftrue": "provisionalaccept",
                 "iffalse": "provisionalreject",
                 "decide_comps": "unclassified",
-                "decide_metric": "kappa"
+                "decidemetric": "kappa"
             },
             "kwargs": {
                 "log_extra_info": "",
@@ -96,12 +96,12 @@
             }
         },
         {
-            "functionname": "dmetric_greaterthan_elbow",
+            "functionname": "dmetric_gt_elbow",
             "parameters": {
                 "iftrue": "provisionalreject",
                 "iffalse": "nochange",
                 "decide_comps": "provisionalaccept",
-                "decide_metric": "rho"
+                "decidemetric": "rho"
             },
             "kwargs": {
                 "log_extra_info": "",
@@ -111,7 +111,7 @@
             }
         },
         {
-            "functionname": "variance_lessthan_thresholds",
+            "functionname": "variance_lt_thresholds",
             "parameters": {
                 "iftrue": "nochange",
                 "iffalse": "ignore",
@@ -128,7 +128,7 @@
         {
             "functionname": "manual_classify",
             "parameters": {
-                "new_classification": "accept",
+                "iftrue": "accept",
                 "decide_comps": "provisionalaccept"
             },
             "kwargs": {
@@ -140,7 +140,7 @@
         {
             "functionname": "manual_classify",
             "parameters": {
-                "new_classification": "reject",
+                "iftrue": "reject",
                 "decide_comps": "provisionalreject"
             },
             "kwargs": {

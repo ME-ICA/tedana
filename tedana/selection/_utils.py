@@ -127,39 +127,39 @@ def confirm_metrics_exist(comptable, necessary_metrics, functionname=None):
     return metrics_exist
 
 
-def are_only_necessary_metrics_used(used_metrics, necessary_metrics, functionname):
-    """
-    Checks if all metrics that are declared as necessary are actually used and
-    if any used_metrics weren't explicitly declared. If either of these happen,
-    a warning is added to the logger that notes which metrics weren't declared
-    or used.
+# def are_only_necessary_metrics_used(used_metrics, necessary_metrics, functionname):
+#     """
+#     Checks if all metrics that are declared as necessary are actually used and
+#     if any used_metrics weren't explicitly declared. If either of these happen,
+#     a warning is added to the logger that notes which metrics weren't declared
+#     or used.
 
-    Parameters
-    ----------
-    used_metrics: :obj:`list`
-            A list of strings of the metric names that were used in the
-            decision tree
-    necessary_metrics: :obj:`list`
-            A list of strings of the metric names that were declared
-            to be used in the decision tree
-    functionname: :obj:`str`
-            The function name for the decision tree that was run
+#     Parameters
+#     ----------
+#     used_metrics: :obj:`list`
+#             A list of strings of the metric names that were used in the
+#             decision tree
+#     necessary_metrics: :obj:`list`
+#             A list of strings of the metric names that were declared
+#             to be used in the decision tree
+#     functionname: :obj:`str`
+#             The function name for the decision tree that was run
 
-    Returns
-    -------
-    A warning that includes a list of metrics that were used, but
-    not declared or declared, but not used. If only declared metrics
-    where used, then this function has no output
-    """
-    onlyin_used_metrics = np.setdiff1d(used_metrics, necessary_metrics)
-    if not onlyin_used_metrics:
-        LGR.warning(functionname + " uses the following metrics that are not "
-                    "declared as necessary metrices: " + str(onlyin_used_metrics))
+#     Returns
+#     -------
+#     A warning that includes a list of metrics that were used, but
+#     not declared or declared, but not used. If only declared metrics
+#     where used, then this function has no output
+#     """
+#     onlyin_used_metrics = np.setdiff1d(used_metrics, necessary_metrics)
+#     if not onlyin_used_metrics:
+#         LGR.warning(functionname + " uses the following metrics that are not "
+#                     "declared as necessary metrices: " + str(onlyin_used_metrics))
 
-    onlyin_necessary_metrics = np.setdiff1d(necessary_metrics, used_metrics)
-    if not onlyin_necessary_metrics:
-        LGR.warning(functionname + " declared the following metrics as necessary "
-                    "but does not use them: " + str(onlyin_necessary_metrics))
+#     onlyin_necessary_metrics = np.setdiff1d(necessary_metrics, used_metrics)
+#     if not onlyin_necessary_metrics:
+#         LGR.warning(functionname + " declared the following metrics as necessary "
+#                     "but does not use them: " + str(onlyin_necessary_metrics))
 
 # Functions that edit decision_tree_steps
 
@@ -204,7 +204,7 @@ def log_decision_tree_step(functionname_idx, comps2use,
         LGR.info(functionname_idx + " not applied because "
                  "no remaining components were classified as " + str(decide_comps))
     else:
-        LGR.info((functionname_idx + "applied to " + str((comps2use).sum()) + " "
+        LGR.info((functionname_idx + "applied to " + str(np.array(comps2use).sum()) + " "
                   "components. " + str(numTrue) + " were True "
                   "and " + str(numFalse) + "were False"))
         # decision_tree_steps[-1]['numtrue']) + " "

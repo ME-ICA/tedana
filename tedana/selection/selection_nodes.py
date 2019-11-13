@@ -150,7 +150,8 @@ def manual_classify(comptable, decision_node_idx,
     if log_extra_info:
         LGR.info(log_extra_info)
     if log_extra_report:
-        LGR.report(log_extra_report)
+        # LGR.report(log_extra_report)
+        print(log_extra_report)
 
     comps2use = selectcomps2use(comptable, decide_comps)
 
@@ -160,7 +161,7 @@ def manual_classify(comptable, decision_node_idx,
         comptable = change_comptable_classifications(
                         comptable, iftrue, iffalse,
                         comps2use, str(decision_node_idx))
-        numTrue = comps2use.sum()
+        numTrue = np.array(comps2use).sum()
         numFalse = np.logical_not(comps2use).sum()
         log_decision_tree_step(functionname_idx, comps2use,
                                numTrue=numTrue,
@@ -232,13 +233,14 @@ def metric1_greaterthan_metric2(comptable, decision_node_idx, iftrue, iffalse,
     if log_extra_info:
         LGR.info(log_extra_info)
     if log_extra_report:
-        LGR.report(log_extra_report)
+        # LGR.report(log_extra_report)
+        print(log_extra_report)
 
     metrics_exist = confirm_metrics_exist(comptable, used_metrics, functionname_idx)
-    # if metrics_exist is False:
-    #     error_msg = ("Necessary metrics for " + functionname_idx + "are not in comptable. "
-    #                  "Need to calculate the following metrics: " + used_metrics)
-    #     raise ValueError(error_msg)
+    if metrics_exist is False:
+        error_msg = ("Necessary metrics for " + functionname_idx + "are not in comptable. "
+                     "Need to calculate the following metrics: " + used_metrics)
+        raise ValueError(error_msg)
 
     # decision_tree_steps = new_decision_node_info(decision_tree_steps, functionname,
     #                                             necessary_metrics, iftrue, iffalse,
@@ -275,12 +277,12 @@ def metric1_greaterthan_metric2(comptable, decision_node_idx, iftrue, iffalse,
 metric1_greaterthan_metric2.__doc__ = metric1_greaterthan_metric2.__doc__.format(**decision_docs)
 
 
-def variance_lt_thresholds(comptable, decision_node_idx, iftrue, iffalse,
-                           decide_comps, varmetric='varexp',
-                           single_comp_threshold=0.1,
-                           all_comp_threshold=1.0,
-                           log_extra_report="", log_extra_info="",
-                           custom_node_label="", only_used_metrics=False):
+def variance_lessthan_thresholds(comptable, decision_node_idx, iftrue, iffalse,
+                                 decide_comps, var_metric='varexp',
+                                 single_comp_threshold=0.1,
+                                 all_comp_threshold=1.0,
+                                 log_extra_report="", log_extra_info="",
+                                 custom_node_label="", only_used_metrics=False):
     """
     Finds componentes with variance<single_comp_threshold.
     If the sum of the variance for all components that meet this criteria
@@ -312,7 +314,7 @@ def variance_lt_thresholds(comptable, decision_node_idx, iftrue, iffalse,
     {basicreturns}
     """
 
-    used_metrics = [varmetric]
+    used_metrics = [var_metric]
 
     if only_used_metrics:
         return used_metrics
@@ -327,9 +329,10 @@ def variance_lt_thresholds(comptable, decision_node_idx, iftrue, iffalse,
     if log_extra_info:
         LGR.info(log_extra_info)
     if log_extra_report:
-        LGR.report(log_extra_report)
+        # LGR.report(log_extra_report)
+        print(log_extra_report)
 
-    metrics_exist, missing_metrics = confirm_metrics_calculated(comptable, used_metrics)
+    metrics_exist, missing_metrics = confirm_metrics_exist(comptable, used_metrics)
     if metrics_exist is False:
         error_msg = ("Necessary metrics for " + functionname_idx + "are not in comptable. "
                      "Need to calculate the following metrics: " + missing_metrics)
@@ -339,7 +342,7 @@ def variance_lt_thresholds(comptable, decision_node_idx, iftrue, iffalse,
     if comps2use is None:
         log_decision_tree_step(functionname_idx, comps2use)
     else:
-        variance = comptable.loc[comps2use, varmetric]
+        variance = comptable.loc[comps2use, var_metric]
         decision_boolean = variance < single_comp_threshold
         # if all the low variance components sum above all_comp_threshold
         # keep removing the highest remaining variance component until
@@ -358,4 +361,17 @@ def variance_lt_thresholds(comptable, decision_node_idx, iftrue, iffalse,
                                numTrue=numTrue,
                                numFalse=numFalse)
 
+    return comptable, used_metrics, node_label, numTrue, numFalse
+
+
+def dmetric_greaterthan_elbow(comptable, decision_node_idx, iftrue, iffalse,
+                              decide_comps, decide_metric,
+                              elbowparam1=1, elbowparam2=2,
+                              log_extra_report="", log_extra_info="",
+                              custom_node_label="", only_used_metrics=False):
+
+    used_metrics = decide_metric
+    node_label = 'moo'
+    numTrue = 0
+    numFalse = 0
     return comptable, used_metrics, node_label, numTrue, numFalse

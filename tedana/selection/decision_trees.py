@@ -9,8 +9,8 @@ import logging
 from pkg_resources import resource_filename
 
 from tedana.selection._utils import (
-    clean_dataframe, confirm_metrics_exist,
-    are_only_necessary_metrics_used)
+    clean_dataframe, confirm_metrics_exist)
+#    are_only_necessary_metrics_used)
 from tedana.selection import selection_nodes
 
 LGR = logging.getLogger(__name__)
@@ -150,11 +150,11 @@ class DecisionTree:
         report = self.config['report']
         if user_notes is not None:
             report += user_notes
-        LGR.report(report)
-        LGR.refs(self.config['refs'])
+        # LGR.report(report)
+        # LGR.refs(self.config['refs'])
 
         self.nodes = self.config['nodes']
-        self.metrics = set(config['necessary_metrics'])
+        self.metrics = self.config['necessary_metrics']
         self.used_metrics = []
 
         # this will crash the program with an error message if not all
@@ -179,8 +179,8 @@ class DecisionTree:
             params, kwargs = node['parameters'], node['kwargs']
             LGR.info('Running function {} with parameters: {}'
                      .format(node['functionname'], {**params, **kwargs}))
-            self.comptable, metrics, numTrue, numFalse = \
-                fcn(self.comptable, decision_node_idx=ii, **params, **kwargs)
+            self.comptable, metrics, numTrue, numFalse = fcn(
+                self.comptable, decision_node_idx=ii, **params, **kwargs)
             used_metrics.update(metrics)
             self.nodes[ii].update(
                 decision_node_idx=ii,
@@ -207,61 +207,3 @@ class DecisionTree:
         if len(not_used) > 0:
             LGR.warn('Decision tree {} failed to use metrics that were '
                      'declared as necessary: {}'.format(self.tree, not_used))
-
-
-# def manual_selection(comptable, acc=None, rej=None):
-#     """
-#     Perform manual selection of components.
-
-#     Parameters
-#     ----------
-#     comptable : (C x M) :obj:`pandas.DataFrame`
-#         Component metric table, where `C` is components and `M` is metrics
-#     acc : :obj:`list`, optional
-#         List of accepted components. Default is None.
-#     rej : :obj:`list`, optional
-#         List of rejected components. Default is None.
-
-#     Returns
-#     -------
-#     comptable : (C x M) :obj:`pandas.DataFrame`
-#         Component metric table with classification.
-#     """
-#     LGR.info('Performing manual ICA component selection')
-#     test1 = 'classification' in comptable.columns
-#     test2 = 'original_classification' not in comptable.columns
-#     if test1 and test2:
-#         comptable['original_classification'] = comptable['classification']
-#         comptable['original_rationale'] = comptable['rationale']
-
-#     comptable['classification'] = 'accepted'
-#     comptable['rationale'] = ''
-
-#     all_comps = comptable.index.values
-#     if acc is not None:
-#         acc = [int(comp) for comp in acc]
-
-#     if rej is not None:
-#         rej = [int(comp) for comp in rej]
-
-#     if acc is not None and rej is None:
-#         rej = sorted(np.setdiff1d(all_comps, acc))
-#     elif acc is None and rej is not None:
-#         acc = sorted(np.setdiff1d(all_comps, rej))
-#     elif acc is None and rej is None:
-#         LGR.info('No manually accepted or rejected components supplied. '
-#                  'Accepting all components.')
-#         # Accept all components if no manual selection provided
-#         acc = all_comps[:]
-#         rej = []
-
-#     ign = np.setdiff1d(all_comps, np.union1d(acc, rej))
-#     comptable.loc[acc, 'classification'] = 'accepted'
-#     comptable.loc[rej, 'classification'] = 'rejected'
-#     comptable.loc[rej, 'rationale'] += 'I001;'
-#     comptable.loc[ign, 'classification'] = 'ignored'
-#     comptable.loc[ign, 'rationale'] += 'I001;'
-
-#     # Move decision columns to end
-#     comptable = clean_dataframe(comptable)
-#     return comptable
