@@ -66,6 +66,8 @@ locally, you can use the following block to retrieve artifacts
 
 To get a CircleCI token, follow the instructions for `getting one`_.
 You cannot do this unless you are part of the ME-ICA/tedana organization.
+If you don't want all of the artifacts, you can go to the test details and use the browser to
+manually select the files you would like.
 
 Worked Example
 ==============
