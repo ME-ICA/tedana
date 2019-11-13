@@ -2,6 +2,11 @@
 Developer Guidelines
 ====================
 
+This webpage is intended to guide users through making making changes to
+``tedana``'s codebase, in particular working with tests.
+The worked example also offers some guidelines on approaching testing when
+adding new functions.
+
 Adding and Modifying Tests
 ==========================
 Testing is an important component of development.
