@@ -103,6 +103,7 @@ takes an argument, ``place``, so that the output filename is actually ``hello_PL
 We merge any changes from the upstream master branch into our branch via
 
 .. code-block:: bash
+
     git checkout feature/say_hello  # unless you're already there
     git fetch upstream master
     git merge upstream/master
@@ -147,7 +148,8 @@ changes will be merged!
 
 We should then do the following cleanup with our git repository:
 
-.. clode-blocks:: bash
+.. code-block:: bash
+
     git checkout master
     git fetch upstream master
     git merge upstream/master
