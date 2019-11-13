@@ -207,8 +207,8 @@ def _ent_rate_sp(data, sm_window):
                 # default option:
                 # computes raw correlations with NO normalization
                 # -- Matlab help on xcorr
-            xc[:, :, (n[2] - 1) - m3] = temp
-            xc[:, :, (n[2] - 1) + m3] = temp
+            data_corr[:, :, (dims[2] - 1) - m3] = temp
+            data_corr[:, :, (dims[2] - 1) + m3] = temp
 
         # Create bias-correcting vectors
         v1 = np.hstack((np.arange(1, dims[0] + 1),
