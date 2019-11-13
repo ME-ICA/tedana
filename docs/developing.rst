@@ -6,62 +6,56 @@ Adding and Modifying Tests
 ==========================
 Testing is an important component of development.
 For simplicity, we have migrated all tests to ``pytest``.
-There are two basic kinds of tests:
-unit and integration tests.
-Unit tests focus on testing individual functions,
-whereas integration tests focus on making sure that the whole workflow
-runs correctly.
+There are two basic kinds of tests: unit and integration tests.
+Unit tests focus on testing individual functions, whereas integration tests focus on making sure
+that the whole workflow runs correctly.
 
-For unit tests,
-we try to keep tests on the same module grouped into one file.
-Make sure the function you're testing is imported,
-then write your test.
-Good tests will make sure that edge cases are accounted for as well as
-common cases.
-You may also use ``pytest.raises`` to ensure that errors are thrown for
-invalid inputs to a function.
+For unit tests, we try to keep tests on the same module grouped into one file.
+Make sure the function you're testing is imported, then write your test.
+Good tests will make sure that edge cases are accounted for as well as common cases.
+You may also use ``pytest.raises`` to ensure that errors are thrown for invalid inputs to a
+function.
 
-For integration tests,
-make a ``tar.gz`` file which will unzip to be only the files you'd like to run a workflow on.
+For integration tests, make a ``tar.gz`` file which will unzip to be only the files you'd like to
+run a workflow on.
 You can do this with the following, which would make an archive ``my_data.tar.gz``:
 
-.. code-block:: none
+.. code-block:: bash
+
     tar czf my_data.tar.gz my_data/*.nii.gz
 
-Run the workflow with a known-working version, and put the outputs into a
-text file inside ``$TEDANADIR/tedana/tests/data/``,
-with ``TEDANADIR`` the local ``tedana repository``.
-You can follow the model our `five echo set`_,
-which has the following steps:
+Run the workflow with a known-working version, and put the outputs into a text file inside
+``$TEDANADIR/tedana/tests/data/``,with ``TEDANADIR`` the local ``tedana repository``.
+You can follow the model our `five echo set`_, which has the following steps:
 
 1. Check if a pytest user is skipping integration, skip if so
 #. Use ``download_test_data`` to retrieve the test data from OSF
 #. Run a workflow
-#. Use ``resources_filename`` and ``check_integration_outputs`` to compare your expected output to actual
+#. Use ``resources_filename`` and ``check_integration_outputs`` to compare your expected output to
+   actual output.
 
-If you need to upload new data, you will need to contact the maintainers
-and ask them to either add it or give you permission to add it.
-Once you've tested your integration test locally and it is working,
-you will need to add it to the CircleCI config and the ``Makefile``.
-Following the model of the three-echo and five-echo sets,
-define a name for your integration test and on an indented line below put 
+If you need to upload new data, you will need to contact the maintainers and ask them to either add
+it or give you permission to add it.
+Once you've tested your integration test locally and it is working, you will need to add it to the
+CircleCI config and the ``Makefile``.
+Following the model of the three-echo and five-echo sets, define a name for your integration test
+and on an indented line below put
 
-.. code-block:: none
+.. code-block:: bash
 
     @py.test --cov-append --cov-report term-missing --cov=tedana -k TEST
 
-with ``TEST`` your test function's name. 
-This call basically adds code coverage reports to account for the new test,
-and runs the actual test in addition.
-Using the five-echo set as a template,
-you should then edit ``.circlec/config.yml`` to add your test,
-calling the same name you define in the ``Makefile``.
+with ``TEST`` your test function's name.
+This call basically adds code coverage reports to account for the new test, and runs the actual
+test in addition.
+Using the five-echo set as a template, you should then edit ``.circlec/config.yml`` to add your
+test, calling the same name you define in the ``Makefile``.
 
-If you need to take a look at a failed test on CircleCI rather than
-locally, you can use the following block to retrieve artifacts
-(see CircleCI documentation here_)
+If you need to take a look at a failed test on CircleCI rather than locally, you can use the
+following block to retrieve artifacts (see CircleCI documentation here_)
 
-.. code-block:: none
+.. code-block:: bash
+
     export CIRCLE_TOKEN=':your_token'
 
     curl https://circleci.com/api/v1.1/project/:vcs-type/:username/:project/$build_number/artifacts?circle-token=$CIRCLE_TOKEN \
@@ -76,7 +70,7 @@ manually select the files you would like.
 
 Worked Example
 ==============
-Suppose that a 
+Suppose that a
 
 Monthly Developer Calls
 =======================
