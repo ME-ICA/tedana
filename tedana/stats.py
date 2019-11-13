@@ -100,11 +100,8 @@ def computefeats2(data, mmix, mask=None, normalize=True):
     LGR.info('Starting OLS')
     pe_logp_vals, pe_t_vals, _ = permuted_ols(mmix, data.T, model_intercept=True, n_perm=5000, verbose=3)
     pe_p_vals = np.power(10., -pe_logp_vals)
-    print(pe_p_vals)
     pe_z_vals = p_to_z(pe_p_vals, tail='two')
-    print(pe_z_vals)
     pe_z_vals *= np.sign(pe_t_vals)
-    print(pe_z_vals)
     LGR.info('Finished OLS')
     return pe_z_vals.T
 
