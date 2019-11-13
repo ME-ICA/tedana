@@ -184,12 +184,12 @@ You can run style checks by running the following,
 flake8 $TEDANADIR/tedana
 ```
 
-and unit/integration tests by running ``pytest``.
+and unit/integration tests by running `pytest`.
 If you know a file will test your change,
 you can run only that test.
 Alternatively, running all unit tests is relatively quick and should be
 fairly comprehensive.
-Running all ``pytest`` tests will be useful for pre-pushing checks.
+Running all `pytest` tests will be useful for pre-pushing checks.
 When you open a Pull Request, CircleCI will run all tests.
 
 ```
@@ -277,10 +277,10 @@ git merge master
 ```
 
 In the event of confusion, please ping in the Gitter for help.
-BE WARY OF WELL-INTENTIONED STACK OVERFLOW USERS TELLING YOU TO REBASE.
+We strongly recommend you *not* use the `git rebase` command when working with and contributing to the `tedana` repository.
 
 ### Advanced Development
-For core developers, please see our Developing Guidelines on [readthedocs][link_developing_rtd].
+For additional, in-depth information on contributing to `tedana`, please see our Developing Guidelines on [readthedocs][link_developing_rtd].
 
 ## Style Guide
 
