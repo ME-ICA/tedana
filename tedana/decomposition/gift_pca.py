@@ -375,6 +375,8 @@ def _kurtn(x):
         a = detrend(x[:, i], type='constant')
         a = a / np.std(a)
         kurt[i] = np.mean(a**4) - 3
+    
+    kurt[kurt<0] =0
 
     return kurt
 
@@ -528,7 +530,7 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     kurtv1 = _kurtn(dataN)
     kurtv1[EigenValues > np.mean(EigenValues)] = 1000
     idx_gauss = np.where(
-        ((kurtv1[:, 0] < 0.3) * (EigenValues > np.finfo(float).eps)
+        ((kurtv1[:, 0] < 0.3) * (kurtv1[:, 0] > 0) * (EigenValues > np.finfo(float).eps)
          ) == 1)[0]  # DOUBT: make sure np.where is giving us just one tuple
     idx = np.array(idx_gauss[:]).T
     dfs = len(
