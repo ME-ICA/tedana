@@ -98,8 +98,8 @@ def _parzen_win(n):
 
     References
     ----------
-    Harris, Fredric J. “On the Use of Windows for Harmonic Analysis 
-    with the Discrete Fourier Transform.” Proceedings of the IEEE. 
+    Harris, Fredric J. “On the Use of Windows for Harmonic Analysis
+    with the Discrete Fourier Transform.” Proceedings of the IEEE.
     Vol. 66, January 1978, pp. 51–83.
     """
 
