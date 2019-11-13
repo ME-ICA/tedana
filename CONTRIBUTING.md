@@ -189,7 +189,7 @@ If you know a file will test your change,
 you can run only that test.
 Alternatively, running all unit tests is relatively quick and should be
 fairly comprehensive.
-Running all ``pytest`` tests will be useful for pre-pushing checks.
+Running all `pytest` tests will be useful for pre-pushing checks.
 When you open a Pull Request, CircleCI will run all tests.
 
 ```
