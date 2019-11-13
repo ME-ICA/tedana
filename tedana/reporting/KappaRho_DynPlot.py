@@ -28,6 +28,8 @@ from tedana.utils import get_spectrum
 import os.path as osp
 from math import pi
 from tedana.io import load_comptable
+from bokeh.transform import cumsum
+
 hv.extension('bokeh')
 
 # %%
@@ -104,7 +106,8 @@ def load_comp_table(out_dir):
     # Create additional Column with colors based on final classification
     DF['color'] = [state2col[i] for i in DF['classification']]
     DF['component'] = np.arange(Nc)
-    
+    # Re-sort for Pie
+    DF['angle']=DF['var_exp']/DF['var_exp'].sum() * 2*pi
     CDS = ColumnDataSource(data=dict(
         kappa=DF['kappa'],
         rho=DF['rho'],
@@ -115,7 +118,8 @@ def load_comp_table(out_dir):
         component=[str(i) for i in DF['component']],
         color=DF['color'],
         size=DF['var_exp_size'],
-        classif=DF['classification']))
+        classif=DF['classification'],
+        angle=DF['angle']))
     return CDS, Nc
 
 
@@ -399,6 +403,31 @@ def create_varexp_sortedPlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TS
 
 
 # %%
+def create_varexp_piePlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplot,
+                             CDS_FFTplot, ts_line_glyph, fft_line_glyph, Nc, div):
+    fig = figure(plot_width=400, plot_height=400, title='Variance Explained View', 
+                 tools=['hover,tap'], 
+                 tooltips=[('Component ID','@component'),
+                           ('Kappa','@kappa'),
+                           ('Rho','@rho'),
+                           ('Var. Exp.','@varexp')])
+    fig.wedge(x=0,y=1,radius=.9,
+              start_angle=cumsum('angle', include_zero=True),
+              end_angle=cumsum('angle'),
+              line_color="white",
+              fill_color='color', source=CDS_CompTable, alpha=0.7)
+    fig.axis.visible=False
+    fig.grid.visible=False
+    fig.toolbar.logo=None    
+    
+    fig.js_on_event(Tap, tap_callback(CDS_comp_table, CDS_meica_ts, CDS_meica_fft,
+                    CDS_TSplot, CDS_FFTplot, ts_line_glyph,
+                    fft_line_glyph, div))
+
+    return fig
+
+
+# %%
 def create_ts_plot(CDS_TSplot, Nt):
     """
     Generates a bokeh line plot for the time series of a given component
@@ -496,11 +525,14 @@ rho_sorted_plot = create_rho_sortedPlot(CDS_CompTable, CDS_meica_mix, CDS_meica_
                                         CDS_TSplot, CDS_FFTplot, ts_line_glyph,
                                         fft_line_glyph, Nc, div_content)
 # 12) Create the Ranked Variance Explained Plot
-varexp_sorted_plot = create_varexp_sortedPlot(CDS_CompTable, CDS_meica_mix, CDS_meica_fft,
+#varexp_sorted_plot = create_varexp_sortedPlot(CDS_CompTable, CDS_meica_mix, CDS_meica_fft,
+#                                              CDS_TSplot, CDS_FFTplot, ts_line_glyph,
+#                                              fft_line_glyph, Nc, div_content)
+varexp_pie_plot = create_varexp_piePlot(CDS_CompTable, CDS_meica_mix, CDS_meica_fft,
                                               CDS_TSplot, CDS_FFTplot, ts_line_glyph,
                                               fft_line_glyph, Nc, div_content)
 # 13) Create a layout
-app = column(row(kappa_rho_plot, kappa_sorted_plot, rho_sorted_plot, varexp_sorted_plot),
+app = column(row(kappa_rho_plot, kappa_sorted_plot, rho_sorted_plot, varexp_pie_plot),
              row(ts_plot, fft_plot),
              div_content)
 
