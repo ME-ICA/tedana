@@ -35,24 +35,7 @@ def _autocorr(x):
     return u[u.size / 2:]
 
 
-def _sumN(dat):
-    """
-    Sum of all the elements of the dat matrix.
-
-    Parameters
-    ----------
-    dat : ndarray
-        The data to be summed
-
-    Returns
-    -------
-    u : float
-        The sum of all array elements
-    """
-    return np.sum(dat[:])
-
-
-def _checkOrder(n_in):
+def _check_order(n_in):
     """
     Checks the order passed to the window functions.
 
@@ -110,14 +93,18 @@ def _parzen_win(n):
 
     Notes
     -----
-    TODO: describe math
+    Maths are described in the following MATLAB documentation page:
+    https://www.mathworks.com/help/signal/ref/parzenwin.html
 
     References
     ----------
+    Harris, Fredric J. “On the Use of Windows for Harmonic Analysis 
+    with the Discrete Fourier Transform.” Proceedings of the IEEE. 
+    Vol. 66, January 1978, pp. 51–83.
     """
 
     # Check for valid window length (i.e., n < 0)
-    n, w, trivialwin = _checkOrder(n)
+    n, w, trivialwin = _check_order(n)
     if trivialwin:
         return w
 
@@ -134,7 +121,7 @@ def _parzen_win(n):
     return w
 
 
-def _entrate_sp(x, sm_window):
+def _ent_rate_sp(x, sm_window):
     """
     Calculate the entropy rate of a stationary Gaussian random process using
     spectrum estimation with smoothing window.
@@ -153,13 +140,7 @@ def _entrate_sp(x, sm_window):
 
     Notes
     -----
-    This function attempts to calculate the entropy rate according to the
-    following mathematical constraints:
-    TODO: discuss
-
-    References
-    ----------
-    TODO: add references
+    This function attempts to calculate the entropy rate following (Li et al., 2007)
     """
 
     n = x.shape
@@ -175,20 +156,17 @@ def _entrate_sp(x, sm_window):
         M = [int(i) for i in np.ceil(np.array(n) / 10)]
 
         # Get Parzen window for each spatial direction
-        if (x.ndim >= 3):
+        if x.ndim >= 3:
             parzen_w_3 = np.zeros((2 * n[2] - 1, ))
-            parzen_w_3[(n[2] - M[2] - 1):(n[2] +
-                                          M[2])] = _parzen_win(2 * M[2] + 1)
+            parzen_w_3[(n[2] - M[2] - 1):(n[2] + M[2])] = _parzen_win(2 * M[2] + 1)
 
-        if (x.ndim >= 2):
+        if x.ndim >= 2:
             parzen_w_2 = np.zeros((2 * n[1] - 1, ))
-            parzen_w_2[(n[1] - M[1] - 1):(n[1] +
-                                          M[1])] = _parzen_win(2 * M[1] + 1)
+            parzen_w_2[(n[1] - M[1] - 1):(n[1] + M[1])] = _parzen_win(2 * M[1] + 1)
 
-        if (x.ndim >= 1):
+        if x.ndim >= 1:
             parzen_w_1 = np.zeros((2 * n[0] - 1, ))
-            parzen_w_1[(n[0] - M[0] - 1):(n[0] +
-                                          M[0])] = _parzen_win(2 * M[0] + 1)
+            parzen_w_1[(n[0] - M[0] - 1):(n[0] + M[0])] = _parzen_win(2 * M[0] + 1)
 
     if x.ndim == 2 and min(n) == 1:
         # Apply window to 1D
@@ -243,7 +221,6 @@ def _entrate_sp(x, sm_window):
             vcu[:, :, (n[2] - 1) - m3] = vd * v3[m3]
             vcu[:, :, (n[2] - 1) + m3] = vd * v3[m3]
 
-        # Possible source of NAN values
         xc = xc / vcu
 
         # Scale Parzen windows
@@ -267,8 +244,8 @@ def _entrate_sp(x, sm_window):
     xf[xf < 1e-4] = 1e-4
 
     # Estimation of the entropy rate
-    out = 0.5 * np.log(2 * np.pi * np.exp(1)) + _sumN(np.log(abs(
-        (xf)))) / 2 / _sumN(abs(xf))
+    out = 0.5 * np.log(2 * np.pi * np.exp(1)) + np.sum(np.log(abs(
+        (xf)))[:]) / 2 / np.sum(abs(xf)[:])
 
     return out
 
@@ -292,7 +269,7 @@ def _est_indp_sp(x):
 
     Notes
     -----
-    TOOD: explain math
+    TODO: explain math
 
     References
     ----------
@@ -304,7 +281,7 @@ def _est_indp_sp(x):
 
     for j in range(np.min(dimv) - 1):
         x_sb = _subsampling(x, j + 1)
-        entrate_m = _entrate_sp(x_sb, 1)
+        entrate_m = _ent_rate_sp(x_sb, 1)
 
         ent_ref = 1.41
         if entrate_m > ent_ref:
@@ -347,7 +324,7 @@ def _subsampling(x, s):
             x0[0], n[0], s), :, :][:, np.arange(
                 x0[1], n[1], s), :][:, :, np.arange(x0[2], n[2], s)]
     else:
-        raise ValueError('Unrecognized matrix dimension!(subsampling)')
+        raise ValueError('Unrecognized matrix dimension!')
 
     return out
 
@@ -380,16 +357,16 @@ def _kurtn(x):
     return kurt
 
 
-def _icatb_svd(data, numpc=None):
+def _icatb_svd(data, n_comps=None):
     """
     Run Singular Value Decomposition (SVD) on input data and extracts the
-    given number of components (numpc).
+    given number of components (n_comps).
 
     Parameters
     ----------
     data : array
         The data to compute SVD for
-    numpc : int
+    n_comps : int
         Number of PCA components to be kept
 
     Returns
@@ -400,8 +377,8 @@ def _icatb_svd(data, numpc=None):
         Eigenvalues
     """
 
-    if not numpc:
-        numpc = np.min(data.shape[0], data.shape[1])
+    if not n_comps:
+        n_comps = np.min(data.shape[0], data.shape[1])
 
     _, Lambda, vh = svd(data, full_matrices=False)
 
@@ -414,8 +391,8 @@ def _icatb_svd(data, numpc=None):
     sumAll = np.sum(Lambda)
 
     # Return only the extracted components
-    V = V[:, (V.shape[1] - numpc):]
-    Lambda = Lambda[Lambda.shape[0] - numpc:]
+    V = V[:, (V.shape[1] - n_comps):]
+    Lambda = Lambda[Lambda.shape[0] - n_comps:]
     sumUsed = np.sum(Lambda)
     retained = (sumUsed / sumAll) * 100
     LGR.debug('{ret}% of non-zero components retained'.format(ret=retained))
