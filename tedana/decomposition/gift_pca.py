@@ -18,8 +18,7 @@ LGR = logging.getLogger(__name__)
 
 def _autocorr(x):
     """
-    Run Singular Value Decomposition (SVD) on input data,
-    automatically select components based on the GIFT software.
+    Calculates the auto correlation of a given array.
 
     Parameters
     ----------
