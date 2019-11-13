@@ -411,16 +411,14 @@ def load_comp_ts(comptable):
     """
     Parameters
     ----------
-    n_comps : int
-        Number of defined components in the component table
-    
+    comptable :
+
     Returns
     -------
     df : Pandas DataFrame
     """
-    meica_mix = np.loadtxt(comptable)
-    _, n_comps = meica_mix.shape
-    df = pd.DataFrame(meica_mix)
+    df = pd.read_csv(comptable, sep='\t', encoding='utf-8')
+    _, n_comps = df.shape
     df.columns = ['C' + str(c).zfill(3) for c in np.arange(n_comps)]
     df.reset_index(inplace=True)
     df.rename(columns={'index': 'Volume'}, inplace=True)
