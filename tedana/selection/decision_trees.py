@@ -2,90 +2,98 @@
 Functions that include workflows to identify
 TE-dependent and TE-independent components.
 """
+
+import inspect
+import json
 import logging
-import yaml
-from jsonschema import validate
-from pathlib import Path
+from pkg_resources import resource_filename
 
-# import numpy as np
-# from scipy import stats
-
-# from tedana.stats import getfbounds
 from tedana.selection._utils import (
-    clean_dataframe, confirm_metrics_calculated,
-    are_only_necessary_metrics_used)  # getelbow
-from tedana.selection.selection_nodes import RhoGtKappa
+    clean_dataframe, confirm_metrics_exist,
+    are_only_necessary_metrics_used)
+from tedana.selection import selection_nodes
 
 LGR = logging.getLogger(__name__)
+VALID_TREES = [
+    'mdt', 'minimal_decision_tree1'
+]
 
 
-# class Metrics:
-#     def compute_metric(self, metric):
-#         print("Important stuff goes here")
-
-#     def get_metric(self, metric):
-#         if metric not in self.comptable.columns:
-#             self.compute_metric(metric)
-
-#     def kappa(self):
-#         return self.comptable['kappa']
+class TreeError(Exception):
+    pass
 
 
-# metrics = Metrics(...)
-# metrics.kappa
-# hasattr(metrics, kappa)
-
-# my_tree = DecisionTree(config, metrics, n_echos)
-# my_tree.run()
-
-
-def read_config(config_file):
-    # raise NotImplemented
-
-    config_file = Path(config_file)
-    is_valid = False
-    test_dict = yaml.load(config_file.read_text())
-
-    # dtree_schema = {
-    #                 "full_tree_info": {
-    #                     'tree_id': {"type": "str"},
-    #                     'info': {"type": "str"},
-    #                     'report': {"type": "str"},
-    #                     'refs': {"type": "str"},
-    #                     'necessary_metrics': {"type": "list"}
-    #                                   },
-    #                 "tree_node": {
-    #                     'functionname': {"type": "str"},
-    #                     'iftrue': {"type": "str"},
-    #                     'iffalse': {"type": "str"},
-    #                     'additionalparams': {"type": "str"},  # use arg?
-    #                     'report_extra_details': {"type": "str"}
-    #                 }
-    #         }
-
-    # validate(test_dict, dtree_schema)
-
-    # 'decision_tree_full': ['see below...']
-
-    #         "$schema": "defined_inplace",
-    #         "type": "object",
-    #         "properties": {
-    #             "env_vars": {"type": "array"},
-    #             "env": {"type": "array"},
-    #             "inputs": {"type": "array"},
-    #             "execute": {"type": "object"},
-    #             "keywords": {"type": "array"},
-    #             "label": {"type": "string"},
-    #         },
-    #         "required": ["inputs", "execute"],
-    #     }
-    #     return self._schema
+def load_config(tree):
+    fname = resource_filename('tedana', 'selection/data/{}.json'.format(tree))
+    try:
+        with open(fname, 'r') as src:
+            dectree = json.loads(src.read())
+    except FileNotFoundError as err:
+        raise ValueError('Invalid decision tree name: {}. Must be one of '
+                         '{}'.format(tree, VALID_TREES))
+    return validate_tree(dectree)
 
 
-class decision_tree:
+def validate_tree(tree):
     """
-    Classify components as "accepted," "rejected," or "ignored" based on
-    relevant metrics.
+    Confirms that provided `tree` is a valid decision tree
+
+    Parameters
+    ----------
+    tree : dict
+        Ostensible decision tree dictionary
+
+    Returns
+    -------
+    tree : dict
+        Validated decision tree dictionary
+
+    Raises
+    ------
+    TreeError
+    """
+
+    err_msg = ''
+    tree_info = ['tree_id', 'info', 'report', 'refs', 'necessary_metrics', 'nodes']
+    defaults = {'comptable', 'decision_node_idx'}
+
+    for k in tree_info:
+        try:
+            assert tree.get(k) is not None
+        except AssertionError as err:
+            err_msg += 'Decision tree missing required info: {}\n'.format(k)
+
+    for i, node in enumerate(tree['nodes']):
+        try:
+            fcn = getattr(selection_nodes, node.get('functionname'))
+            sig = inspect.signature(fcn)
+        except (AttributeError, TypeError) as err:
+            err_msg += ('Node {} has invalid functionname parameter: {}\n'
+                        .format(i, node.get('functionname')))
+            continue
+
+        sig = inspect.signature(fcn)
+        pos = set([p for p, i in sig.parameters.items() if i.default is inspect.Parameter.empty])
+        kwargs = set(sig.parameters.keys()) - pos
+
+        missing_pos = pos - set(node.get('parameters').keys()) - defaults
+        if len(missing_pos) > 0:
+            err_msg += ('Node {} is missing required parameter(s): {}\n'
+                        .format(i, missing_pos))
+        invalid_kwargs = set(node.get('kwargs').keys()) - kwargs
+        if len(invalid_kwargs) > 0:
+            err_msg += ('Node {} has additional, undefined kwarg(s): {}\n'
+                        .format(i, invalid_kwargs))
+
+    if err_msg:
+        raise TreeError('\n' + err_msg)
+
+    return tree
+
+
+class DecisionTree:
+    """
+    Classifies components based on specified `tree`
 
     The selection process uses previously calculated parameters listed in
     comptable for each ICA component such as Kappa (a T2* weighting metric),
@@ -95,24 +103,31 @@ class decision_tree:
 
     Parameters
     ----------
+    tree : str
+        Decision tree to use
     comptable : (C x M) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
-        each metric. The index should be the component number.
-    n_echos : :obj:`int`
-        Number of echos in original data
-        Only used to get threshold for F statistic related to the "elbow" calculation
+        each metric; the index should be the component number!
+    n_echos : int
+        Number of echos in original data; this is only used to get threshold
+        for F statistic related to the "elbow" calculation.
+    user_notes : str, optional
+        Additional user notes about decision tree
 
     Returns
     -------
     comptable : :obj:`pandas.DataFrame`
-        Updated component table with additional metrics and with
-        classification (accepted, rejected, or ignored)
+        Updated component table with additional metrics and with classification
+        (i.e., accepted, rejected, or ignored)
+    nodes : list of dict
+        Nodes used in decision tree, including function names, parameters
+        provided, and relevant modifications made to comptable
 
     Notes
     -----
-    The selection algorithm used in this function is a minimalist version based on
-    ME-ICA by Prantik Kundu, and his original implementation is available at:
-    https://github.com/ME-ICA/me-ica/blob/b2781dd087ab9de99a2ec3925f04f02ce84f0adc/meica.libs/select_model.py
+    The selection algorithm used in this function is a minimalist version based
+    on ME-ICA by Prantik Kundu, and his original implementation is available
+    at: https://github.com/ME-ICA/me-ica/blob/b2781dd087ab9de99a2ec3925f04f02ce84f0adc/meica.libs/select_model.py
 
     This component selection process uses multiple, previously calculated
     metrics that include kappa, rho, variance explained, noise and spatial
@@ -125,28 +140,26 @@ class decision_tree:
         are moved to ignored
     """
 
-    def __init__(self, config_file, metrics, n_echos, user_notes=None):
-        # initialize stuff based on the info in full_tree_info
-        config = read_config(config_file)
+    def __init__(self, tree, comptable, n_echos, user_notes=None):
+        # initialize stuff based on the info in specified `tree`
+        self.tree = tree
+        self.config = load_config(self.tree)
+        self.comptable = comptable.copy()
 
-        LGR.info('Performing component selection with ' + config['tree_id'])
-        report = config['report']
-        if user_notes:
+        LGR.info('Performing component selection with ' + self.config['tree_id'])
+        report = self.config['report']
+        if user_notes is not None:
             report += user_notes
         LGR.report(report)
-        LGR.refs(config['refs'])
-        self.metrics = metrics
-        self.nodes = config['nodes']
-        # this will probably be grabbing functionname from each element
-        self.node_list = [x['functionname'] for x in config['nodes']]
+        LGR.refs(self.config['refs'])
 
-        self.necessary_metrics = config['necessary_metrics']
+        self.nodes = self.config['nodes']
+        self.metrics = set(config['necessary_metrics'])
         self.used_metrics = []
 
-        # This will crash the program with an error message if not all necessary_metrics
-        # are in the comptable
-        # This should not crash so that uncomputed metrics are allowed
-        confirm_metrics_calculated(comptable, necessary_metrics, functionname=functionname)
+        # this will crash the program with an error message if not all
+        # necessary_metrics are in the comptable
+        confirm_metrics_exist(self.comptable, self.metrics, self.tree)
 
     # for each node that is run:
     # 1. Create decision_node_idx as a variable to pass to the function & in the decision tree dict
@@ -159,31 +172,41 @@ class decision_tree:
     # A new element is added to decision_tree_steps with an index incremented by 1
     # necessary_metrics is a list of metrics used in this specific function
 
-    def run_node(self, node):
-        'nodeidx':  # will be filled in at runtime
-            'functionname': tedana.metric.KappaGtElbow,
-            'metrics_used':  # will be filled in at runtime
-            'decide_comps': 'unclassified',
-            'iftrue': 'provisionallyaccept',
-            'iffalse': 'provisionallyreject',
-            'additionalparameters': [],
-            'report_extra_log': [],  # optionally defined by user
-            'numfalse': [],  # will be filled in at runtime
-            'numtrue': [],  # will be filled in at runtime
-
     def run(self):
-        for ii, node in enumerate(self.node_list):
-            self.run_node(self.nodes[ii])
+        used_metrics = set()
+        for ii, node in enumerate(self.nodes):
+            fcn = getattr(selection_nodes, node['functionname'])
+            params, kwargs = node['parameters'], node['kwargs']
+            LGR.info('Running function {} with parameters: {}'
+                     .format(node['functionname'], {**params, **kwargs}))
+            self.comptable, metrics, numTrue, numFalse = \
+                fcn(self.comptable, decision_node_idx=ii, **params, **kwargs)
+            used_metrics.update(metrics)
+            self.nodes[ii].update(
+                decision_node_idx=ii,
+                numTrue=numTrue,
+                numFalse=numFalse,
+                used_metrics=metrics
+            )
 
+        # Move decision columns to end
+        self.comptable = clean_dataframe(self.comptable)
+        self.are_only_necessary_metrics_used(used_metrics)
+
+        return self.comptable, self.nodes
+
+    def are_only_necessary_metrics_used(self, used_metrics):
         # This function checks if all metrics that are declared as necessary
         # are actually used and if any used_metrics weren't explicitly declared
         # If either of these happen, a warning is added to the logger
-    are_only_necessary_metrics_used()
-
-    # Move decision columns to end
-    comptable = clean_dataframe(comptable)
-
-    return comptable, decision_tree_steps
+        not_declared = set(used_metrics) - set(self.metrics)
+        not_used = set(self.metrics) - set(used_metrics)
+        if len(not_declared) > 0:
+            LGR.warn('Decision tree {} used additional metrics not declared '
+                     'as necessary: {}'.format(self.tree, not_declared))
+        if len(not_used) > 0:
+            LGR.warn('Decision tree {} failed to use metrics that were '
+                     'declared as necessary: {}'.format(self.tree, not_used))
 
 
 # def manual_selection(comptable, acc=None, rej=None):

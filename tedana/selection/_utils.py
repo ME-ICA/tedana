@@ -52,13 +52,13 @@ def change_comptable_classifications(comptable, iftrue, iffalse,
     change or don't change the compnent classification
     """
     if iftrue != 'no_change':
-        changeidx = decision_boolean.index[decision_boolean.values is True]
-        comptable['classification'][changeidx] = iftrue
-        comptable['rationale'][changeidx] += (decision_node_idx_str + ': ' + iftrue + '; ')
+        changeidx = np.asarray(decision_boolean)
+        comptable.loc[changeidx, 'classification'] = iftrue
+        comptable.loc[changeidx, 'rationale'] += (decision_node_idx_str + ': ' + iftrue + '; ')
     if iffalse != 'no_change':
-        changeidx = decision_boolean.index[decision_boolean.values is False]
-        comptable['classification'][changeidx] = iffalse
-        comptable['rationale'][changeidx] += (decision_node_idx_str + ': ' + iffalse + '; ')
+        changeidx = np.logical_not(np.asarray(decision_boolean))
+        comptable.loc[changeidx, 'classification'] = iffalse
+        comptable.loc[changeidx, 'rationale'] += (decision_node_idx_str + ': ' + iffalse + '; ')
 
     # decision_tree_steps[-1]['numtrue'] = (decision_boolean is True).sum()
     # decision_tree_steps[-1]['numfalse'] = (decision_boolean is False).sum()
@@ -112,11 +112,11 @@ def confirm_metrics_exist(comptable, necessary_metrics, functionname=None):
     of the metrics in necessary_metrics and the column labels in comptable
     """
 
-    missing_metrics = np.setdiff1d(necessary_metrics, list(set(comptable.columns)))
-    metrics_exist = not missing_metrics
+    missing_metrics = set(necessary_metrics) - set(comptable.columns)
+    metrics_exist = len(missing_metrics) == 0
 
     if metrics_exist is False:
-        if functionname:
+        if functionname is not None:
             error_msg = ("Necessary metrics for " + functionname + " are not in comptable. "
                          "Need to calculate the following metrics: " + str(missing_metrics))
         else:
@@ -204,7 +204,7 @@ def log_decision_tree_step(functionname_idx, comps2use,
         LGR.info(functionname_idx + " not applied because "
                  "no remaining components were classified as " + str(decide_comps))
     else:
-        LGR.info((functionname_idx + "applied to " + str((comps2use is True).sum()) + " "
+        LGR.info((functionname_idx + "applied to " + str((comps2use).sum()) + " "
                   "components. " + str(numTrue) + " were True "
                   "and " + str(numFalse) + "were False"))
         # decision_tree_steps[-1]['numtrue']) + " "
