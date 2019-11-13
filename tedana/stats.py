@@ -5,6 +5,8 @@ import logging
 
 import numpy as np
 from scipy import stats
+from scipy.special import ndtri
+from nilearn.mass_univariate import permuted_ols
 
 from tedana import utils
 
@@ -32,6 +34,27 @@ def getfbounds(n_echos):
     f025 = stats.f.ppf(q=(1 - 0.025), dfn=1, dfd=(n_echos - 1))
     f01 = stats.f.ppf(q=(1 - 0.01), dfn=1, dfd=(n_echos - 1))
     return f05, f025, f01
+
+
+def p_to_z(p, tail='two'):
+    """Convert p-values to z-values.
+    """
+    eps = np.spacing(1)
+    p = np.array(p)
+    p[p < eps] = eps
+    if tail == 'two':
+        z = ndtri(1 - (p / 2))
+        z = np.array(z)
+    elif tail == 'one':
+        z = ndtri(1 - p)
+        z = np.array(z)
+        z[z < 0] = 0
+    else:
+        raise ValueError('Argument "tail" must be one of ["one", "two"]')
+
+    if z.shape == ():
+        z = z[()]
+    return z
 
 
 def computefeats2(data, mmix, mask=None, normalize=True):
@@ -74,25 +97,16 @@ def computefeats2(data, mmix, mask=None, normalize=True):
     # demean masked data
     if mask is not None:
         data = data[mask, ...]
-    data_vn = stats.zscore(data, axis=-1)
-
-    # get betas of `data`~`mmix` and limit to range [-0.999, 0.999]
-    data_R = get_coeffs(data_vn, mmix, mask=None)
-    data_R[data_R < -0.999] = -0.999
-    data_R[data_R > 0.999] = 0.999
-
-    # R-to-Z transform
-    data_Z = np.arctanh(data_R)
-    if data_Z.ndim == 1:
-        data_Z = np.atleast_2d(data_Z).T
-
-    # normalize data
-    if normalize:
-        data_Zm = stats.zscore(data_Z, axis=0)
-        data_Z = data_Zm + (data_Z.mean(axis=0, keepdims=True) /
-                            data_Z.std(axis=0, keepdims=True))
-
-    return data_Z
+    LGR.info('Starting OLS')
+    pe_logp_vals, pe_t_vals, _ = permuted_ols(mmix, data.T, model_intercept=True, n_perm=5000, verbose=3)
+    pe_p_vals = np.power(10., -pe_logp_vals)
+    print(pe_p_vals)
+    pe_z_vals = p_to_z(pe_p_vals, tail='two')
+    print(pe_z_vals)
+    pe_z_vals *= np.sign(pe_t_vals)
+    print(pe_z_vals)
+    LGR.info('Finished OLS')
+    return pe_z_vals.T
 
 
 def get_coeffs(data, X, mask=None, add_const=False):
