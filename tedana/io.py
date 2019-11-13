@@ -480,6 +480,7 @@ def save_comptable(df, filename, label='ica', metadata=None):
     save_df['component'] = save_df['component'].apply(
         add_decomp_prefix, prefix=label, max_value=max_value)
     save_df = save_df.set_index('component')
+    save_df = save_df.fillna('n/a')
 
     data = save_df.to_dict(orient='index')
 
@@ -505,6 +506,7 @@ def load_comptable(filename):
         DataFrame with contents from filename.
     """
     df = pd.read_json(filename, orient='index')
+    df = df.replace('n/a', np.nan)  # our jsons store nans as 'n/a'
     df['component'] = df.index
     df = df.loc[df['component'].apply(_find_comp_rows)]
     df['component'] = df['component'].apply(_rem_column_prefix)
