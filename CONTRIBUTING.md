@@ -184,7 +184,7 @@ You can run style checks by running the following,
 flake8 $TEDANADIR/tedana
 ```
 
-and unit/integration tests by running ``pytest``.
+and unit/integration tests by running `pytest`.
 If you know a file will test your change,
 you can run only that test.
 Alternatively, running all unit tests is relatively quick and should be
