@@ -22,8 +22,12 @@ You may also use ``pytest.raises`` to ensure that errors are thrown for
 invalid inputs to a function.
 
 For integration tests,
-make a ``tar.gz`` file which will unzip to be a single directory
-containing all of the files you'd like to run a workflow on.
+make a ``tar.gz`` file which will unzip to be only the files you'd like to run a workflow on.
+You can do this with the following, which would make an archive ``my_data.tar.gz``:
+
+.. code-block:: none
+    tar czf my_data.tar.gz my_data/*.nii.gz
+
 Run the workflow with a known-working version, and put the outputs into a
 text file inside ``$TEDANADIR/tedana/tests/data/``,
 with ``TEDANADIR`` the local ``tedana repository``.
