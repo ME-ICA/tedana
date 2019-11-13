@@ -152,6 +152,16 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "CesarCaballeroGaudes",
+      "name": "Cesar Caballero Gaudes",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/7611340?v=4",
+      "profile": "https://github.com/CesarCaballeroGaudes",
+      "contributions": [
+        "doc",
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 5,
