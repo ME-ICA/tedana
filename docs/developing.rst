@@ -95,7 +95,12 @@ So, we define a new function in ``test_io.py`` that looks something like this:
         # clean up
         os.remove('hello_world.txt')
 
-We should see that ``pytest test_io.py`` is successful.
+We should see that our unit test is successful via
+
+.. code-block:: bash
+
+    pytest $TEDANADIR/tedana/tests/test_io.py -k test_say_hello
+    
 If not, we should continue editing the function until it passes our test.
 Let's suppose that suddenly, you realize that what would be even more useful is a function that
 takes an argument, ``place``, so that the output filename is actually ``hello_PLACE``, with
@@ -134,6 +139,12 @@ Once that test is passing, we may need to adjust the integration test.
 Our program creates a file, ``hello_world.txt``, which the older version would not have produced.
 Therefore, we need to add the file to ``$TEDANADIR/tedana/tests/data/tedana_outputs.txt`` and its
 counterpart, R2-D2-- uh, we mean, ``tedana_outputs_verbose.txt``.
+With that edit complete, we can run the full ``pytest`` suite via
+
+.. code-block:: bash
+
+    pytest $TEDANADIR/tedana/tests
+
 Once that filename is added, all of the tests should be passing and we should open a PR to have our
 change reviewed.
 
