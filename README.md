@@ -14,7 +14,7 @@ multi-echo functional magnetic resonance imaging (fMRI) data.
 [![Codecov](https://codecov.io/gh/me-ica/tedana/branch/master/graph/badge.svg)](https://codecov.io/gh/me-ica/tedana)
 [![Join the chat at https://gitter.im/ME-ICA/tedana](https://badges.gitter.im/ME-ICA/tedana.svg)](https://gitter.im/ME-ICA/tedana?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Join our tinyletter mailing list](https://img.shields.io/badge/receive-our%20newsletter%20❤%EF%B8%8F-blueviolet.svg)](https://tinyletter.com/tedana-devs)
-[![All Contributors](https://img.shields.io/badge/all_contributors-13-orange.svg?style=flat-square)](#contributors)
+[![All Contributors](https://img.shields.io/badge/all_contributors-14-orange.svg?style=flat-square)](#contributors)
 
 
 ## About
@@ -117,6 +117,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="http://www.fmrwhy.com/"><img src="https://avatars0.githubusercontent.com/u/10141237?v=4" width="100px;" alt="Stephan Heunis"/><br /><sub><b>Stephan Heunis</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=jsheunis" title="Documentation">📖</a></td>
     <td align="center"><a href="https://www.linkedin.com/in/benoit-beranger/"><img src="https://avatars0.githubusercontent.com/u/16976839?v=4" width="100px;" alt="Benoît Béranger"/><br /><sub><b>Benoît Béranger</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=benoitberanger" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/eurunuela"><img src="https://avatars0.githubusercontent.com/u/13706448?v=4" width="100px;" alt="Eneko Uruñuela"/><br /><sub><b>Eneko Uruñuela</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=eurunuela" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/CesarCaballeroGaudes"><img src="https://avatars1.githubusercontent.com/u/7611340?v=4" width="100px;" alt="Cesar Caballero Gaudes"/><br /><sub><b>Cesar Caballero Gaudes</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=CesarCaballeroGaudes" title="Documentation">📖</a> <a href="https://github.com/ME-ICA/tedana/commits?author=CesarCaballeroGaudes" title="Code">💻</a></td>
   </tr>
 </table>
 
