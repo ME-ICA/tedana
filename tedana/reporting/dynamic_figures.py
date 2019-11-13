@@ -117,7 +117,7 @@ def _spectrum_data_src(comptable, tr, n_comps):
 
     Returns
     -------
-    data_src : 
+    data_src :
     Nf :
     """
     df = io.load_comp_ts(comptable)

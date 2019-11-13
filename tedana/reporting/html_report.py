@@ -75,7 +75,6 @@ def _save_as_html(body):
     return html
 
 
-
 def generate_report(bokeh_id, bokeh_js, file_path=None):
     """
     Generate and save an HTML report.
@@ -99,7 +98,7 @@ def generate_report(bokeh_id, bokeh_js, file_path=None):
 
     if file_path is not None:
         with open(file_path, 'wb') as f:
-                f.write(html.encode('utf-8'))
+            f.write(html.encode('utf-8'))
     else:
         with open('./tedana_report.html', 'wb') as f:
-                f.write(html.encode('utf-8'))
+            f.write(html.encode('utf-8'))
