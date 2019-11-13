@@ -375,7 +375,7 @@ def _kurtn(x):
         a = a / np.std(a)
         kurt[i] = np.mean(a**4) - 3
 
-    kurt[kurt < 0 ] = 0
+    kurt[kurt < 0] = 0
 
     return kurt
 
