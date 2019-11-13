@@ -249,7 +249,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Perform additional denoising to remove spatially diffuse noise. Default
         is None.
     tedpca : {'mle', 'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
-        Method with which to select components in TEDPCA. Default is 'mle'.
+        Method with which to select components in TEDPCA. Default is 'mdl'.
     source_tes : :obj:`int`, optional
         Source TEs for models. 0 for all, -1 for optimal combination.
         Default is -1.

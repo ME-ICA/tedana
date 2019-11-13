@@ -93,7 +93,7 @@ def tedpca(data_cat,
            t2sG,
            ref_img,
            tes,
-           algorithm='mle',
+           algorithm='mdl',
            source_tes=-1,
            kdaw=10.,
            rdaw=1.,
@@ -124,8 +124,8 @@ def tedpca(data_cat,
         Reference image to dictate how outputs are saved to disk
     tes : :obj:`list`
         List of echo times associated with `data_cat`, in milliseconds
-    algorithm : {'mle', 'kundu', 'kundu-stabilize'}, optional
-        Method with which to select components in TEDPCA. Default is 'mle'.
+    algorithm : {'mle', 'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
+        Method with which to select components in TEDPCA. Default is 'mdl'.
     source_tes : :obj:`int` or :obj:`list` of :obj:`int`, optional
         Which echos to use in PCA. Values -1 and 0 are special, where a value
         of -1 will indicate using the optimal combination of the echos
@@ -232,7 +232,12 @@ def tedpca(data_cat,
                     "of the National Academy of Sciences, 110(40), "
                     "16187-16192.")
     else:
-        alg_str = "GIFT(!)"
+        alg_str = ("based on the PCA components estimation in the GIFT software "
+                   "(Li et al., 2007)")
+        RefLGR.info("Li, Y.O., Adalı, T. and Calhoun, V.D., (2007). "
+                    "Estimating the number of independent components for "
+                    "functional magnetic resonance imaging data. "
+                    "Human brain mapping, 28(11), pp.1251-1266.")
 
     if source_tes == -1:
         dat_str = "the optimally combined data"
