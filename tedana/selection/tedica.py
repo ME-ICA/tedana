@@ -239,9 +239,9 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
                     (comptable.loc[ncls, 'rho'] < rho_elbow)]
 
     # Quit early if no potentially accepted components remain
-    if len(acc_prov) == 0:
-        LGR.warning('No BOLD-like components detected. Ignoring all remaining '
-                    'components.')
+    if len(acc_prov) <= 1:
+        LGR.warning('Too few BOLD-like components detected. '
+                    'Ignoring all remaining.')
         ign = sorted(np.setdiff1d(all_comps, rej))
         comptable.loc[ign, 'classification'] = 'ignored'
         comptable.loc[ign, 'rationale'] += 'I006;'

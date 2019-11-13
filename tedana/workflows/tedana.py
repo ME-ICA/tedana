@@ -21,9 +21,10 @@ import pandas as pd
 from scipy import stats
 from nilearn.masking import compute_epi_mask
 
-from tedana import (decay, combine, decomposition, io, metrics, selection, utils,
-                    viz)
+from tedana import (decay, combine, decomposition, io, metrics,
+                    selection, utils, reporting)
 import tedana.gscontrol as gsc
+from tedana.stats import computefeats2
 from tedana.workflows.parser_utils import is_valid_file, ContextFilter
 
 LGR = logging.getLogger(__name__)
@@ -148,18 +149,6 @@ def _get_parser():
                                 'Set to -1 for varying results across ICA calls. '
                                 'Default=42.'),
                           default=42)
-    optional.add_argument('--no-png',
-                          dest='no_png',
-                          action='store_true',
-                          help=('Creates a figures folder with static component '
-                                'maps, timecourse plots and other diagnostic '
-                                'images'),
-                          default=False)
-    optional.add_argument('--png-cmap',
-                          dest='png_cmap',
-                          type=str,
-                          help=('Colormap for figures'),
-                          default='coolwarm')
     optional.add_argument('--maxit',
                           dest='maxit',
                           type=int,
@@ -213,8 +202,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     tedort=False, gscontrol=None, tedpca='mle',
                     source_tes=-1, combmode='t2s', verbose=False, stabilize=False,
                     out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
-                    debug=False, quiet=False, no_png=False,
-                    png_cmap='coolwarm',
+                    debug=False, quiet=False,
                     low_mem=False, fittype='loglin'):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
@@ -262,11 +250,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         which is slightly slower but may be more accurate.
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
-    no_png : obj:'bool', optional
-        Do not generate .png plots and figures. Default is false.
-    png_cmap : obj:'str', optional
-            Name of a matplotlib colormap to be used when generating figures.
-            Cannot be used with --no-png. Default 'coolwarm'
     out_dir : :obj:`str`, optional
         Output directory.
 
@@ -376,13 +359,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
-    if no_png and (png_cmap != 'coolwarm'):
-        LGR.warning('Overriding --no-png since --png-cmap provided.')
-        no_png = False
-
     # check if TR is 0
     img_t_r = ref_img.header.get_zooms()[-1]
-    if img_t_r == 0 and not no_png:
+    if img_t_r == 0:
         raise IOError('Dataset has a TR of 0. This indicates incorrect'
                       ' header information. To correct this, we recommend'
                       ' using this snippet:'
@@ -394,8 +373,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if mixm is not None and op.isfile(mixm):
         mixm = op.abspath(mixm)
         # Allow users to re-run on same folder
-        if mixm != op.join(out_dir, 'meica_mix.1D'):
-            shutil.copyfile(mixm, op.join(out_dir, 'meica_mix.1D'))
+        if mixm != op.join(out_dir, 'ica_mixing.tsv'):
+            shutil.copyfile(mixm, op.join(out_dir, 'ica_mixing.tsv'))
             shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
     elif mixm is not None:
         raise IOError('Argument "mixm" must be an existing file.')
@@ -403,8 +382,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if ctab is not None and op.isfile(ctab):
         ctab = op.abspath(ctab)
         # Allow users to re-run on same folder
-        if ctab != op.join(out_dir, 'comp_table_ica.tsv'):
-            shutil.copyfile(ctab, op.join(out_dir, 'comp_table_ica.tsv'))
+        if ctab != op.join(out_dir, 'ica_decomposition.json'):
+            shutil.copyfile(ctab, op.join(out_dir, 'ica_decomposition.json'))
             shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
@@ -491,17 +470,29 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     catd, data_oc, mmix_orig, t2s, tes,
                     ref_img, reindex=True, label='meica_', out_dir=out_dir,
                     algorithm='kundu_v2', verbose=verbose)
-        np.savetxt(op.join(out_dir, 'meica_mix.1D'), mmix)
+        comp_names = [io.add_decomp_prefix(comp, prefix='ica', max_value=comptable.index.max())
+                      for comp in comptable.index.values]
+        mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
+        mixing_df.to_csv('ica_mixing.tsv', sep='\t', index=False)
+        betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
+        io.filewrite(betas_oc,
+                     op.join(out_dir, 'ica_components.nii.gz'),
+                     ref_img)
 
         comptable = metrics.kundu_metrics(comptable, metric_maps)
         comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
-        mmix_orig = np.loadtxt(op.join(out_dir, 'meica_mix.1D'))
+        mmix_orig = pd.read_table(op.join(out_dir, 'ica_mixing.tsv')).values
         comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
                     catd, data_oc, mmix_orig, t2s, tes,
                     ref_img, label='meica_', out_dir=out_dir,
                     algorithm='kundu_v2', verbose=verbose)
+        betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
+        io.filewrite(betas_oc,
+                     op.join(out_dir, 'ica_components.nii.gz'),
+                     ref_img)
+
         if ctab is None:
             comptable = metrics.kundu_metrics(comptable, metric_maps)
             comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
@@ -509,8 +500,17 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
             comptable = pd.read_csv(ctab, sep='\t', index_col='component')
             comptable = selection.manual_selection(comptable, acc=manacc)
 
-    comptable.to_csv(op.join(out_dir, 'comp_table_ica.tsv'), sep='\t',
-                     index=True, index_label='component', float_format='%.6f')
+    # Save decomposition
+    data_type = 'optimally combined data' if source_tes == -1 else 'z-concatenated data'
+    comptable['Description'] = 'ICA fit to dimensionally reduced {0}.'.format(data_type)
+    mmix_dict = {}
+    mmix_dict['Method'] = ('Independent components analysis with FastICA '
+                           'algorithm implemented by sklearn. Components '
+                           'are sorted by Kappa in descending order. '
+                           'Component signs are flipped to best match the '
+                           'data.')
+    io.save_comptable(comptable, op.join(out_dir, 'ica_decomposition.json'),
+                      label='ica', metadata=mmix_dict)
 
     if comptable[comptable.classification == 'accepted'].shape[0] == 0:
         LGR.warning('No BOLD components detected! Please check data and '
@@ -528,7 +528,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         pred_rej_ts = np.dot(acc_ts, betas)
         resid = rej_ts - pred_rej_ts
         mmix[:, rej_idx] = resid
-        np.savetxt(op.join(out_dir, 'meica_mix_orth.1D'), mmix)
+        comp_names = [io.add_decomp_prefix(comp, prefix='ica', max_value=comptable.index.max())
+                      for comp in comptable.index.values]
+        mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
+        mixing_df.to_csv('ica_orth_mixing.tsv', sep='\t', index=False)
         RepLGR.info("Rejected components' time series were then "
                     "orthogonalized with respect to accepted components' time "
                     "series.")
@@ -542,25 +545,14 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     if verbose:
         io.writeresults_echoes(catd, mmix, mask, comptable, ref_img)
 
-    if not no_png:
-        LGR.info('Making figures folder with static component maps and '
-                 'timecourse plots.')
-        # make figure folder first
-        if not op.isdir(op.join(out_dir, 'figures')):
-            os.mkdir(op.join(out_dir, 'figures'))
+    LGR.info('Generating figures for reports.')
+    # make figure folder first
+    if not op.isdir(op.join(out_dir, 'figures')):
+        os.mkdir(op.join(out_dir, 'figures'))
 
-        viz.write_comp_figs(data_oc, mask=mask, comptable=comptable,
-                            mmix=mmix_orig, ref_img=ref_img,
-                            out_dir=op.join(out_dir, 'figures'),
-                            png_cmap=png_cmap)
-
-        LGR.info('Making Kappa vs Rho scatter plot')
-        viz.write_kappa_scatter(comptable=comptable,
-                                out_dir=op.join(out_dir, 'figures'))
-
-        LGR.info('Making overall summary figure')
-        viz.write_summary_fig(comptable=comptable,
-                              out_dir=op.join(out_dir, 'figures'))
+    reporting.comp_figures(data_oc, mask=mask, comptable=comptable,
+                           mmix=mmix_orig, ref_img=ref_img,
+                           out_dir=op.join(out_dir, 'figures'))
 
     LGR.info('Workflow completed')
 

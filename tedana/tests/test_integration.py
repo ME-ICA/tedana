@@ -83,7 +83,7 @@ def test_integration_five_echo(skip_integration):
                        os.path.dirname(out_dir))
     prepend = '/tmp/data/five-echo/p06.SBJ01_S09_Task11_e'
     suffix = '.sm.nii.gz'
-    datalist = [prepend + str(i+1) + suffix for i in range(5)]
+    datalist = [prepend + str(i + 1) + suffix for i in range(5)]
     tedana_workflow(
         data=datalist,
         tes=[15.4, 29.7, 44.0, 58.3, 72.6],

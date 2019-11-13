@@ -27,6 +27,7 @@ from sklearn.preprocessing import MinMaxScaler
 from tedana.utils import get_spectrum
 import os.path as osp
 from math import pi
+from tedana.io import load_comptable
 hv.extension('bokeh')
 
 # %%
@@ -54,13 +55,10 @@ def load_comp_ts(out_dir):
     Nc: int
         Number of components
     """
-    meica_mix_Path = osp.join(out_dir, 'meica_mix.1D')
-    meica_mix = np.loadtxt(meica_mix_Path)
-    [Nt, Nc] = meica_mix.shape
-    DF = pd.DataFrame(meica_mix)
-    DF.columns = ['C' + str(c).zfill(3) for c in np.arange(Nc)]
-    DF.reset_index(inplace=True)
-    DF.rename(columns={'index': 'Volume'}, inplace=True)
+    file_path = osp.join(OUTDIR,'ica_mixing.tsv')
+    DF = pd.read_csv(file_path, sep='\t')
+    [Nt,Nc] = DF.shape
+    DF['Volume'] = np.arange(Nt)
     CDS = ColumnDataSource(DF)
     return CDS, Nt, Nc
 
@@ -82,17 +80,18 @@ def load_comp_table(out_dir):
     Nc: int
         Number of components
     """
-    CompTable_Path = osp.join(out_dir, 'comp_table_ica.tsv')
-    DF = pd.read_csv(CompTable_Path, sep='\t')
+    comptable_path = osp.join(OUTDIR,'ica_decomposition.json')
+    DF = pd.read_json(comptable_path)
+    DF.drop('Description', axis=0, inplace=True)
+    DF.drop('Method', axis=1, inplace=True)
+    DF = DF.T
+
     Nc = DF.shape[0]
     # When needed, remove space from column names (bokeh is not happy about it)
     DF.rename(columns={'variance explained': 'var_exp'}, inplace=True)
-
     # For providing sizes based on Var Explained that are visible
     mm_scaler = MinMaxScaler(feature_range=(4, 20))
-    DF['var_exp_size'] = mm_scaler.fit_transform(
-        DF[['var_exp', 'normalized variance explained']])[:, 0]
-
+    DF['var_exp_size'] = mm_scaler.fit_transform(DF[['var_exp', 'normalized variance explained']])[:, 0]
     # Ranks
     DF['rho_rank'] = DF['rho'].rank(ascending=False).values
     DF['kappa_rank'] = DF['kappa'].rank(ascending=False).values
@@ -102,9 +101,9 @@ def load_comp_table(out_dir):
              'countnoise', 'dice_FR2', 'signal-noise_t', 'signal-noise_p',
              'd_table_score', 'kappa ratio', 'rationale', 'd_table_score_scrub'],
             axis=1, inplace=True)
-
     # Create additional Column with colors based on final classification
     DF['color'] = [state2col[i] for i in DF['classification']]
+    DF['component'] = np.arange(Nc)
     
     CDS = ColumnDataSource(data=dict(
         kappa=DF['kappa'],
@@ -117,7 +116,6 @@ def load_comp_table(out_dir):
         color=DF['color'],
         size=DF['var_exp_size'],
         classif=DF['classification']))
-
     return CDS, Nc
 
 
@@ -142,11 +140,11 @@ def generate_spectrum_CDS(CDS_meica_mix, TR, Nc):
     Nf: int
         Number of frequency points
     """
-    spectrum, freqs = get_spectrum(CDS_meica_mix.data['C000'], TR)
+    spectrum, freqs = get_spectrum(CDS_meica_mix.data['ica_00'], TR)
     Nf = spectrum.shape[0]
-    DF = pd.DataFrame(columns=['C' + str(c).zfill(3) for c in np.arange(Nc)], index=np.arange(Nf))
+    DF = pd.DataFrame(columns=['ica_' + str(c).zfill(2) for c in np.arange(Nc)], index=np.arange(Nf))
     for c in np.arange(Nc):
-        cid = 'C' + str(c).zfill(3)
+        cid = 'ica_' + str(c).zfill(2)
         ts = CDS_meica_mix.data[cid]
         spectrum, freqs = get_spectrum(ts, 2)
         DF[cid] = spectrum
@@ -161,16 +159,16 @@ tap_callback_jscode = """
     var data     = source_comp_table.data;
     var selected = source_comp_table.selected.indices;
     var selected_padded = '' + selected;
-    while (selected_padded.length < 3) {
+    while (selected_padded.length < 2) {
         selected_padded = '0' + selected_padded;
     }
-    // Creating a new version 000 --> C000
-    var selected_padded_C = 'C' + selected_padded
+    // Creating a new version 00 --> ica_00
+    var selected_padded_C = 'ica_' + selected_padded
 
     // Find color for selected component
     var colors = data['color']
     var this_component_color = colors[selected]
-    var ts_line_color = ts_line.line_color;
+    // var ts_line_color = ts_line.line_color;
 
     // Update time series line color
     ts_line.line_color = this_component_color;
@@ -512,7 +510,5 @@ app = column(row(kappa_rho_plot, kappa_sorted_plot, rho_sorted_plot, varexp_sort
 # 15) Embed into Report Template
 generate_report(kr_div, kr_script, file_path='/opt/report_v2.html')
 
-
-# %%
 
 # %%
