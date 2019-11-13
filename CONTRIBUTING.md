@@ -277,7 +277,7 @@ git merge master
 ```
 
 In the event of confusion, please ping in the Gitter for help.
-BE WARY OF WELL-INTENTIONED STACK OVERFLOW USERS TELLING YOU TO REBASE.
+We strongly recommend you *not* use the `git rebase` command when working with and contributing to the `tedana` repository.
 
 ### Advanced Development
 For core developers, please see our Developing Guidelines on [readthedocs][link_developing_rtd].
