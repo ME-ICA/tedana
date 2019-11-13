@@ -269,7 +269,7 @@ def tedpca(data_cat,
 
     if algorithm in ['mdl', 'aic', 'kic']:
         data_img = io.new_nii_like(
-            ref_img, utils.unmask(utils.unmask(data_z, eim), mask))
+            ref_img, utils.unmask(utils.unmask(data, eim), mask))
         mask_img = io.new_nii_like(ref_img,
                                    utils.unmask(eim, mask).astype(int))
         voxel_comp_weights, varex, varex_norm, comp_ts = gift_pca.run_gift_pca(

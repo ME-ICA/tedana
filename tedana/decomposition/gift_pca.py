@@ -374,8 +374,8 @@ def _kurtn(x):
         a = detrend(x[:, i], type='constant')
         a = a / np.std(a)
         kurt[i] = np.mean(a**4) - 3
-    
-    kurt[kurt<0] =0
+
+    kurt[kurt < 0 ] = 0
 
     return kurt
 
@@ -511,7 +511,7 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     scaler = StandardScaler(with_mean=True, with_std=True)
     # Not sure we should be normalizing at this step. Probably tedana is
     # already taking care of this before the data enter this function.
-    # data = scaler.fit_transform(data_non_normalized)  # This was X_sc
+    data = scaler.fit_transform(data_non_normalized)  # This was X_sc
     data = data_non_normalized
 
     LGR.info('Performing SVD on original OC data...')
@@ -546,6 +546,7 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     idx = np.unique(idx)
 
     # Estimate the subsampling depth for effectively i.i.d. samples
+    LGR.info('Estimating the subsampling depth for effective i.i.d samples...')
     mask_ND = np.reshape(maskvec, (Nx, Ny, Nz), order='F')
     ms = len(idx)
     s = np.zeros((ms, ))
