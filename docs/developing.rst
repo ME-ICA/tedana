@@ -45,6 +45,7 @@ define a name for your integration test and on an indented line below put
 .. code-block:: none
 
     @py.test --cov-append --cov-report term-missing --cov=tedana -k TEST
+
 with ``TEST`` your test function's name. 
 This call basically adds code coverage reports to account for the new test,
 and runs the actual test in addition.
