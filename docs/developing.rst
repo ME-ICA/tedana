@@ -70,7 +70,91 @@ manually select the files you would like.
 
 Worked Example
 ==============
-Suppose that a
+Suppose we want to add a function in ``tedana`` that creates a file called ```hello_world.txt`` to
+be stored along the outputs of the ``tedana`` workflow.
+
+First, we merge the repository's ``master`` branch into our own to make sure we're up to date, and
+then we make a new branch called something like ``feature/say_hello``.
+Any changes we make will stay on this branch.
+We make the new function and call it ``say_hello`` and locate this function inside of ``io.py``.
+We'll also need to make a unit test.
+(Some developers actually make the unit test before the new function; this is a great way to make
+sure you don't forget to create it!)
+Since the function lives in ``io.py``, its unit test should go into ``test_io.py``.
+The job of this test is exclusively to tell if the function we wrote does what it claims to do
+without errors.
+So, we define a new function in ``test_io.py`` that looks something like this:
+
+.. code-block:: python
+
+    def test_say_hello():
+        # run the function
+        say_hello()
+        # test the function
+        assert op.exists('hello_world.txt')
+        # clean up
+        os.remove('hello_world.txt')
+
+We should see that ``pytest test_io.py`` is successful.
+If not, we should continue editing the function until it passes our test.
+Let's suppose that suddenly, you realize that what would be even more useful is a function that
+takes an argument, ``place``, so that the output filename is actually ``hello_PLACE``, with
+``PLACE`` the value passed and ``'world'`` as the default value.
+We merge any changes from the upstream master branch into our branch via
+
+.. code-block:: bash
+    git checkout feature/say_hello  # unless you're already there
+    git fetch upstream master
+    git merge upstream/master
+
+and then begin work on our test.
+We need to our unit test to be more complete, so we update it to look more like the following,
+adding several cases to make sure our function is robust to the name supplied:
+
+.. code-block:: python
+
+    def test_say_hello():
+        # prefix of all files to be checked
+        prefix = 'hello_'
+        # suffix of all files to be checked
+        suffix  = '.txt'
+        # run the function with several cases
+        for x in ['world', 'solar system', 'galaxy', 'universe']:
+            # current test name
+            outname = prefix + x + suffix
+            # call the function
+            say_hello(x)
+            # test the function
+            assert op.exists(outname)
+            # clean up from this call
+            os.remove(outname)
+
+Once that test is passing, we may need to adjust the integration test.
+Our program creates a file, ``hello_world.txt``, which the older version would not have produced.
+Therefore, we need to add the file to ``$TEDANADIR/tedana/tests/data/tedana_outputs.txt`` and its
+counterpart, R2-D2-- uh, we mean, ``tedana_outputs_verbose.txt``.
+Once that filename is added, all of the tests should be passing and we should open a PR to have our
+change reviewed.
+
+From here, others working on the project may request changes and we'll have to make sure that our
+tests are kept up to date with any changes made as we did before updating the unit test.
+For example, if a new parameter is added, ``greeting``, with a default of ``hello``, we'll need to
+adjust the unit test.
+However, since this doesn't change the typical workflow of ``tedana``, there's no need to change
+the integration test; we're still matching the original filename.
+Once we are happy with the changes and some members of ``tedana`` have approved the changes, our
+changes will be merged!
+
+We should then do the following cleanup with our git repository:
+
+.. clode-blocks:: bash
+    git checkout master
+    git fetch upstream master
+    git merge upstream/master
+    git branch -d feature/say_hello
+    git push --delete origin feature/say_hello
+
+and we're good to go!
 
 Monthly Developer Calls
 =======================
