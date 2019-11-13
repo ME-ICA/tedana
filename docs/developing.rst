@@ -78,6 +78,14 @@ Worked Example
 ==============
 Suppose that a 
 
+Monthly Developer Calls
+=======================
+We run monthly developer calls via Zoom.
+You can see the schedule via the tedana `google calendar`_.
+
+Everyone is welcome.
+We look forward to meeting you there :hibiscus:
+
 .. _git: https://git-scm.com/
 .. _`git pro`: https://git-scm.com/book/en/v2
 .. _repository: https://github.com/ME-ICA/tedana
@@ -92,3 +100,4 @@ Suppose that a
 .. _`five echo set`: https://github.com/ME-ICA/tedana/blob/37368f802f77b4327fc8d3f788296ca0f01074fd/tedana/tests/test_integration.py#L71-L95
 .. _here: https://circleci.com/docs/2.0/artifacts/#downloading-all-artifacts-for-a-build-on-circleci
 .. _`getting one`: https://circleci.com/docs/2.0/managing-api-tokens/?gclid=CjwKCAiAqqTuBRBAEiwA7B66heDkdw6l68GAYAHtR2xS1xvDNNUzy7l1fmtwQWvVN0OIa97QL8yfhhoCejoQAvD_BwE#creating-a-personal-api-token
+.. _`google calendar`: https://calendar.google.com/calendar/embed?src=pl6vb4t9fck3k6mdo2mok53iss%40group.calendar.google.com
