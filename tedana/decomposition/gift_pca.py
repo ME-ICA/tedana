@@ -40,7 +40,7 @@ def _check_order(order_in):
 
     Parameters
     ----------
-    n_in : ndarray
+    order_in : ndarray
         The order to be passed to the window function
 
     Returns
@@ -144,7 +144,7 @@ def _ent_rate_sp(data, sm_window):
     dims = data.shape
 
     # Normalize x_sb to be unit variance
-    data_std = np.std(np.reshape(data, (np.prod(dims), 1)))
+    data_std = np.std(np.reshape(data, (-1, 1)))
 
     # Make sure we do not divide by zero
     if data_std == 0:
@@ -187,7 +187,7 @@ def _ent_rate_sp(data, sm_window):
         vd = np.dot(v1.T, v2)
 
         # Bias-correct
-        data_corr = data_corr / vd
+        data_corr /= vd
 
         # Apply 2D Parzen Window
         parzen_window_2D = np.dot(parzen_w_1, parzen_w_2.T)
@@ -221,7 +221,7 @@ def _ent_rate_sp(data, sm_window):
             vcu[:, :, (dims[2] - 1) - m3] = vd * v3[m3]
             vcu[:, :, (dims[2] - 1) + m3] = vd * v3[m3]
 
-        data_corr = data_corr / vcu
+        data_corr /= vcu
 
         # Scale Parzen windows
         parzen_window_2D = np.dot(parzen_w_1[np.newaxis, :].T,
@@ -234,7 +234,7 @@ def _ent_rate_sp(data, sm_window):
                 parzen_window_2D, parzen_w_3[dims[2] - 1 + m3])
 
         # Apply 3D Parzen Window
-        data_corr = data_corr * parzen_window_3D
+        data_corr *= parzen_window_3D
         data_fft = fftshift(fftn(data_corr))
 
     else:
@@ -324,7 +324,7 @@ def _subsampling(data, sub_depth):
             idx_0[0], ndims[0], sub_depth), :, :][:, np.arange(
                 idx_0[1], ndims[1], sub_depth), :][:, :, np.arange(idx_0[2], ndims[2], sub_depth)]
     else:
-        raise ValueError('Unrecognized matrix dimension!')
+        raise ValueError('Unrecognized matrix dimension! Input array must be 3D with min dimension > 1.')
 
     return out
 
@@ -349,7 +349,7 @@ def _kurtn(data):
 
     for i in range(data.shape[1]):
         data_norm = detrend(data[:, i], type='constant')
-        data_norm = data_norm / np.std(data_norm)
+        data_norm /= np.std(data_norm)
         kurt[i] = np.mean(data_norm**4) - 3
 
     kurt[kurt < 0] = 0
