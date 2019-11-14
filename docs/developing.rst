@@ -180,7 +180,7 @@ We run monthly developer calls via Zoom.
 You can see the schedule via the tedana `google calendar`_.
 
 Everyone is welcome.
-We look forward to meeting you there :hibiscus:
+We look forward to meeting you there!
 
 .. _git: https://git-scm.com/
 .. _`git pro`: https://git-scm.com/book/en/v2
