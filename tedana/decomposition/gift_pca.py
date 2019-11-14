@@ -435,7 +435,7 @@ def _eigensp_adj(lam, n, p):
     for i in range(gv.shape[0]):
         gvd[i] = sum(gv[0:i])
 
-    gvd = gvd / np.max(gvd)
+    gvd /= np.max(gvd)
 
     lam_emp = np.zeros(lam.shape)
     for idx, i in enumerate(np.arange(1, p + 1)):
