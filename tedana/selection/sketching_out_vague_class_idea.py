@@ -1,11 +1,11 @@
 
-{'tree_id': 'mytree',
-    'report': 'my own report for my decision tree',
-    'decision_tree_full': ['see below...']
-# 'tree_refs_log'
-# 'tree_info_log'
-# 'tree_necessary_metrics'
-}
+# {'tree_id': 'mytree',
+#     'report': 'my own report for my decision tree',
+#     'decision_tree_full': ['see below...']
+# # 'tree_refs_log'
+# # 'tree_info_log'
+# # 'tree_necessary_metrics'
+# }
 
 # NOTE: I'll want to be able to manually classify components by number
 
@@ -60,7 +60,8 @@
 #                                       # currently countsigR2 and countsigS0
 #                                       'count_sig_in_T2cluster', 'count_sig_in_S0cluster',
 #                                       'DICE_FT2', 'DICE_FS0',
-#                                       'T2sig_inside-outside_clusters_T',  # currently sigalnoise_t
+#                                       'T2sig_inside-outside_clusters_T',
+# # currently sigalnoise_t
 #                                       'varexp']))
 
 # config['nodes'] = (  # Step 1: Rho>Kappa
@@ -78,4 +79,3 @@
 #     #                                        decide_comps='all', kappa_scale=1,
 #     #                                        decision_tree_steps=decision_tree_steps)
 #     # used_metrics = list(set(used_metrics + tmp_necessary_metrics))
-)

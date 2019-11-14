@@ -3,13 +3,17 @@ Functions that will be used as steps in a decision tree
 """
 import logging
 import numpy as np
+import pandas as pd
 # from scipy import stats
 
-# from tedana.stats import getfbounds
+from tedana.stats import getfbounds
 from tedana.selection._utils import (confirm_metrics_exist, selectcomps2use,
-                                     log_decision_tree_step, change_comptable_classifications)
-# getelbow, clean_dataframe, new_decision_node_info,
+                                     log_decision_tree_step, change_comptable_classifications,
+                                     getelbow)
+# clean_dataframe, new_decision_node_info,
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 decision_docs = {
     'comptable': """\
@@ -141,7 +145,7 @@ def manual_classify(comptable, decision_node_idx,
     iftrue = new_classification
     iffalse = 'nochange'
 
-    functionname_idx = ("manual_classify, step " + str(decision_node_idx))
+    function_name_idx = ("manual_classify, step " + str(decision_node_idx))
     if custom_node_label:
         node_label = custom_node_label
     else:
@@ -150,27 +154,38 @@ def manual_classify(comptable, decision_node_idx,
     if log_extra_info:
         LGR.info(log_extra_info)
     if log_extra_report:
-        # LGR.report(log_extra_report)
-        print(log_extra_report)
+        RepLGR.info(log_extra_report)
 
-    comps2use = selectcomps2use(comptable, decide_comps)
+    comps2use = selectcomps2use(comptable, [decide_comps])
 
     if comps2use is None:
-        log_decision_tree_step(functionname_idx, comps2use)
+        log_decision_tree_step(function_name_idx, comps2use)
+        numTrue = 0
+        numFalse = 0
     else:
+        decision_boolean = pd.Series(True, index=comps2use)
         comptable = change_comptable_classifications(
                         comptable, iftrue, iffalse,
-                        comps2use, str(decision_node_idx))
-        numTrue = np.array(comps2use).sum()
-        numFalse = np.logical_not(comps2use).sum()
-        log_decision_tree_step(functionname_idx, comps2use,
+                        decision_boolean, str(decision_node_idx))
+        numTrue = decision_boolean.sum()
+        numFalse = np.logical_not(decision_boolean).sum()
+        print(('numTrue={}, numFalse={}, numcomps2use={}'.format(
+            numTrue, numFalse, len(comps2use))))
+        log_decision_tree_step(function_name_idx, comps2use,
                                numTrue=numTrue,
                                numFalse=numFalse)
 
     if clear_rationale:
         comptable['rationale'] = ""
-        LGR.info(functionname_idx + " all 'rationale' values are set to empty strings")
-    return comptable, used_metrics, node_label, numTrue, numFalse
+        LGR.info(function_name_idx + " all 'rationale' values are set to empty strings")
+
+    dnode_outputs = {
+        'used_metrics': used_metrics,
+        'node_label': node_label,
+        'numTrue': numTrue,
+        'numFalse': numFalse
+    }
+    return comptable, dnode_outputs
 
 
 manual_classify.__doc__ = manual_classify.__doc__.format(**decision_docs)
@@ -220,7 +235,7 @@ def metric1_greaterthan_metric2(comptable, decision_node_idx, iftrue, iffalse,
     if only_used_metrics:
         return used_metrics
 
-    functionname_idx = ("metric1_greaterthan_metric2, step " + str(decision_node_idx))
+    function_name_idx = ("metric1_greaterthan_metric2, step " + str(decision_node_idx))
     if custom_node_label:
         node_label = custom_node_label
     elif metric2_scale == 1:
@@ -233,16 +248,11 @@ def metric1_greaterthan_metric2(comptable, decision_node_idx, iftrue, iffalse,
     if log_extra_info:
         LGR.info(log_extra_info)
     if log_extra_report:
-        # LGR.report(log_extra_report)
-        print(log_extra_report)
+        RepLGR.info(log_extra_report)
 
-    metrics_exist = confirm_metrics_exist(comptable, used_metrics, functionname_idx)
-    if metrics_exist is False:
-        error_msg = ("Necessary metrics for " + functionname_idx + "are not in comptable. "
-                     "Need to calculate the following metrics: " + used_metrics)
-        raise ValueError(error_msg)
+    confirm_metrics_exist(comptable, used_metrics, function_name=function_name_idx)
 
-    # decision_tree_steps = new_decision_node_info(decision_tree_steps, functionname,
+    # decision_tree_steps = new_decision_node_info(decision_tree_steps, function_name,
     #                                             necessary_metrics, iftrue, iffalse,
     #                                             additionalparameters=None)
     # nodeidxstr = str(decision_tree_steps[-1]['nodeidx'])
@@ -250,7 +260,9 @@ def metric1_greaterthan_metric2(comptable, decision_node_idx, iftrue, iffalse,
     comps2use = selectcomps2use(comptable, decide_comps)
 
     if comps2use is None:
-        log_decision_tree_step(functionname_idx, comps2use)
+        log_decision_tree_step(function_name_idx, comps2use)
+        numTrue = 0
+        numFalse = 0
     else:
         if isinstance(metric1, str):
             val1 = comptable.loc[comps2use, metric1]
@@ -265,13 +277,21 @@ def metric1_greaterthan_metric2(comptable, decision_node_idx, iftrue, iffalse,
         comptable = change_comptable_classifications(
                         comptable, iftrue, iffalse,
                         decision_boolean, str(decision_node_idx))
-        numTrue = comps2use.sum()
-        numFalse = np.logical_not(comps2use).sum()
-        log_decision_tree_step(functionname_idx, comps2use,
+        numTrue = np.asarray(decision_boolean).sum()
+        numFalse = np.logical_not(decision_boolean).sum()
+        print(('numTrue={}, numFalse={}, numcomps2use={}'.format(
+            numTrue, numFalse, len(comps2use))))
+        log_decision_tree_step(function_name_idx, comps2use,
                                numTrue=numTrue,
                                numFalse=numFalse)
 
-    return comptable, used_metrics, node_label, numTrue, numFalse
+    dnode_outputs = {
+        'used_metrics': used_metrics,
+        'node_label': node_label,
+        'numTrue': numTrue,
+        'numFalse': numFalse
+    }
+    return comptable, dnode_outputs
 
 
 metric1_greaterthan_metric2.__doc__ = metric1_greaterthan_metric2.__doc__.format(**decision_docs)
@@ -319,28 +339,25 @@ def variance_lessthan_thresholds(comptable, decision_node_idx, iftrue, iffalse,
     if only_used_metrics:
         return used_metrics
 
-    functionname_idx = ("variance_lt_thresholds, step " + str(decision_node_idx))
+    function_name_idx = ("variance_lt_thresholds, step " + str(decision_node_idx))
     if custom_node_label:
         node_label = custom_node_label
     else:
-        node_label = (used_metrics + "<" + str(single_comp_threshold) + "."
-                      " All variance<" + str(all_comp_threshold))
+        node_label = ('{}<{}. All variance<{}').format(
+            used_metrics, single_comp_threshold, all_comp_threshold)
 
     if log_extra_info:
         LGR.info(log_extra_info)
     if log_extra_report:
-        # LGR.report(log_extra_report)
-        print(log_extra_report)
-
-    metrics_exist, missing_metrics = confirm_metrics_exist(comptable, used_metrics)
-    if metrics_exist is False:
-        error_msg = ("Necessary metrics for " + functionname_idx + "are not in comptable. "
-                     "Need to calculate the following metrics: " + missing_metrics)
-        raise ValueError(error_msg)
+        RepLGR.info(log_extra_report)
+    metrics_exist, missing_metrics = confirm_metrics_exist(
+        comptable, used_metrics, function_name=function_name_idx)
 
     comps2use = selectcomps2use(comptable, decide_comps)
     if comps2use is None:
-        log_decision_tree_step(functionname_idx, comps2use)
+        log_decision_tree_step(function_name_idx, comps2use)
+        numTrue = 0
+        numFalse = 0
     else:
         variance = comptable.loc[comps2use, var_metric]
         decision_boolean = variance < single_comp_threshold
@@ -355,23 +372,91 @@ def variance_lessthan_thresholds(comptable, decision_node_idx, iftrue, iffalse,
         comptable = change_comptable_classifications(
                         comptable, iftrue, iffalse,
                         decision_boolean, str(decision_node_idx))
-        numTrue = (comps2use is True).sum()
-        numFalse = (comps2use is False).sum()
-        log_decision_tree_step(functionname_idx, comps2use,
+        numTrue = np.asarray(decision_boolean).sum()
+        numFalse = np.logical_not(decision_boolean).sum()
+        print(('numTrue={}, numFalse={}, numcomps2use={}'.format(
+            numTrue, numFalse, len(comps2use))))
+        log_decision_tree_step(function_name_idx, comps2use,
                                numTrue=numTrue,
                                numFalse=numFalse)
 
-    return comptable, used_metrics, node_label, numTrue, numFalse
+    dnode_outputs = {
+        'used_metrics': used_metrics,
+        'node_label': node_label,
+        'numTrue': numTrue,
+        'numFalse': numFalse
+    }
+    return comptable, dnode_outputs
 
 
-def dmetric_greaterthan_elbow(comptable, decision_node_idx, iftrue, iffalse,
-                              decide_comps, decide_metric,
-                              elbowparam1=1, elbowparam2=2,
-                              log_extra_report="", log_extra_info="",
-                              custom_node_label="", only_used_metrics=False):
+def kappa_rho_elbow_cutoffs_kundu(comptable, decision_node_idx, iftrue, iffalse,
+                                  decide_comps, n_echos,
+                                  log_extra_report="", log_extra_info="",
+                                  custom_node_label="", only_used_metrics=False):
 
-    used_metrics = decide_metric
-    node_label = 'moo'
-    numTrue = 0
-    numFalse = 0
-    return comptable, used_metrics, node_label, numTrue, numFalse
+    used_metrics = ['kappa', 'rho']
+    if only_used_metrics:
+        return used_metrics
+
+    function_name_idx = ("kappa_rho_elbow_cutoffs_kundu, step " + str(decision_node_idx))
+    if custom_node_label:
+        node_label = custom_node_label
+    else:
+        node_label = ('Kappa&Rho Elbow Thresholds')
+
+    if log_extra_info:
+        LGR.info(log_extra_info)
+    if log_extra_report:
+        RepLGR.info(log_extra_report)
+
+    LGR.info("Note: This matches the elbow selecton criteria in Kundu's MEICA v2.7"
+             " except there is a variance threshold that is used for the rho criteria that "
+             "really didn't make sanse and is being excluded.")
+
+    metrics_exist, missing_metrics = confirm_metrics_exist(
+        comptable, used_metrics, function_name=function_name_idx)
+
+    comps2use = selectcomps2use(comptable, decide_comps)
+
+    if comps2use is None:
+        log_decision_tree_step(function_name_idx, comps2use)
+        numTrue = 0
+        numFalse = 0
+    else:
+        f05, _, f01 = getfbounds(n_echos)
+        # get kappa values for components below a significance threshold
+        kappas_nonsig = comptable.loc[comptable['kappa'] < f01, 'kappa']
+
+        # Would an elbow from all Kappa values *ever* be lower than one from
+        # a subset of lower values?
+        kappa_elbow = np.min((getelbow(kappas_nonsig, return_val=True),
+                              getelbow(comptable['kappa'], return_val=True)))
+        # The first elbow used to be for rho values of the unclassified components
+        # excluding a few based on differences of variance. Now it's all unclassified
+        # components
+        rho_elbow = np.mean((getelbow(comptable.loc[comps2use, 'rho'], return_val=True),
+                             getelbow(comptable['rho'], return_val=True),
+                             f05))
+
+        decision_boolean = (
+            comptable.loc[comps2use, 'kappa'] >= kappa_elbow) & (
+            comptable.loc[comps2use, 'rho'] < rho_elbow)
+
+        comptable = change_comptable_classifications(
+                        comptable, iftrue, iffalse,
+                        decision_boolean, str(decision_node_idx))
+        numTrue = np.asarray(decision_boolean).sum()
+        numFalse = np.logical_not(decision_boolean).sum()
+        print(('numTrue={}, numFalse={}, numcomps2use={}'.format(
+            numTrue, numFalse, len(comps2use))))
+        log_decision_tree_step(function_name_idx, comps2use,
+                               numTrue=numTrue,
+                               numFalse=numFalse)
+
+    dnode_outputs = {
+        'used_metrics': used_metrics,
+        'node_label': node_label,
+        'numTrue': numTrue,
+        'numFalse': numFalse
+    }
+    return comptable, dnode_outputs

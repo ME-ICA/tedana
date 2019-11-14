@@ -5,7 +5,13 @@
     "refs": "Kundu 2013",
     "necessary_metrics": [
         "kappa",
-        "rho"
+        "rho",
+        "countsig in S0clusters",
+        "countsig in T2clusters",
+        "DICE_FS0",
+        "DICE_FT2",
+        "T2fitdiff invsout ICAmap Tstat",
+        "variance explained"
     ],
     "nodes": [
         {
@@ -17,7 +23,7 @@
             "kwargs": {
                 "log_extra_info": "Initializing all classifications as unclassified and all rationales as blank",
                 "log_extra_report": "",
-                "clear_rationale": "True"
+                "clear_rationale": true
             }
         },
         {
@@ -41,8 +47,8 @@
                 "iftrue": "reject",
                 "iffalse": "nochange",
                 "decide_comps": "unclassified",
-                "metric1": "countsig_in_S0clusters",
-                "metric2": "countsig_in_T2clusters"
+                "metric1": "countsig in S0clusters",
+                "metric2": "countsig in T2clusters"
             },
             "kwargs": {
                 "log_extra_info": "Reject if countsig_in S0clusters > T2clusters",
@@ -56,8 +62,8 @@
                 "iftrue": "reject",
                 "iffalse": "nochange",
                 "decide_comps": "unclassified",
-                "metric1": "DICE_S0",
-                "metric2": "DICE_T2"
+                "metric1": "DICE_FS0",
+                "metric2": "DICE_FT2"
             },
             "kwargs": {
                 "log_extra_info": "Reject if DICE S0>T2",
@@ -72,7 +78,7 @@
                 "iffalse": "nochange",
                 "decide_comps": "unclassified",
                 "metric1": 0,
-                "metric2": "T2fitdiff_invsout_ICAmap_Tstat"
+                "metric2": "T2fitdiff invsout ICAmap Tstat"
             },
             "kwargs": {
                 "log_extra_info": "Reject if T2fitdiff_invsout_ICAmap_Tstat<0",
@@ -81,33 +87,16 @@
             }
         },
         {
-            "functionname": "dmetric_greaterthan_elbow",
+            "functionname": "kappa_rho_elbow_cutoffs_kundu",
             "parameters": {
                 "iftrue": "provisionalaccept",
                 "iffalse": "provisionalreject",
                 "decide_comps": "unclassified",
-                "decide_metric": "kappa"
+                "n_echos": null
             },
             "kwargs": {
                 "log_extra_info": "",
-                "log_extra_report": "",
-                "elbowparam1": 1,
-                "elbowparam2": 2
-            }
-        },
-        {
-            "functionname": "dmetric_greaterthan_elbow",
-            "parameters": {
-                "iftrue": "provisionalreject",
-                "iffalse": "nochange",
-                "decide_comps": "provisionalaccept",
-                "decide_metric": "rho"
-            },
-            "kwargs": {
-                "log_extra_info": "",
-                "log_extra_report": "",
-                "elbowparam1": 1,
-                "elbowparam2": 2
+                "log_extra_report": ""
             }
         },
         {
@@ -116,7 +105,7 @@
                 "iftrue": "nochange",
                 "iffalse": "ignore",
                 "decide_comps": "provisionalreject",
-                "varmetric": "varexp"
+                "var_metric": "variance explained"
             },
             "kwargs": {
                 "log_extra_info": "",
@@ -134,7 +123,7 @@
             "kwargs": {
                 "log_extra_info": "",
                 "log_extra_report": "",
-                "clear_rationale": "False"
+                "clear_rationale": false
             }
         },
         {
@@ -146,7 +135,7 @@
             "kwargs": {
                 "log_extra_info": "",
                 "log_extra_report": "",
-                "clear_rationale": "False"
+                "clear_rationale": false
             }
         }
     ]

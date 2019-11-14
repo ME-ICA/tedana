@@ -27,6 +27,8 @@ import tedana.gscontrol as gsc
 from tedana.workflows.parser_utils import is_valid_file
 
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 
 def _get_parser():

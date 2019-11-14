@@ -20,7 +20,7 @@ def selectcomps2use(comptable, decide_comps):
     WILL NEED TO ADD NUMBER INDEXING TO selectcomps2use
     """
 
-    if decide_comps == 'all':
+    if decide_comps[0] == 'all':
         # All components with any string in the classification field
         # are set to True
         comps2use = list(range(comptable.shape[0]))
@@ -51,12 +51,14 @@ def change_comptable_classifications(comptable, iftrue, iffalse,
     Given information on whether a decision critereon is true or false for each component
     change or don't change the compnent classification
     """
-    if iftrue != 'no_change':
-        changeidx = np.asarray(decision_boolean)
+    print(('iftrue={}, iffalse={}, decision_node_idx_str{}').format(
+        iftrue, iffalse, decision_node_idx_str))
+    if iftrue != 'nochange':
+        changeidx = decision_boolean.index[np.asarray(decision_boolean)]
         comptable.loc[changeidx, 'classification'] = iftrue
         comptable.loc[changeidx, 'rationale'] += (decision_node_idx_str + ': ' + iftrue + '; ')
-    if iffalse != 'no_change':
-        changeidx = np.logical_not(np.asarray(decision_boolean))
+    if iffalse != 'nochange':
+        changeidx = decision_boolean.index[~np.asarray(decision_boolean)]
         comptable.loc[changeidx, 'classification'] = iffalse
         comptable.loc[changeidx, 'rationale'] += (decision_node_idx_str + ': ' + iffalse + '; ')
 
@@ -81,7 +83,7 @@ def clean_dataframe(comptable):
 # Functions that validate inputted parameters or other processing steps
 
 
-def confirm_metrics_exist(comptable, necessary_metrics, functionname=None):
+def confirm_metrics_exist(comptable, necessary_metrics, function_name=None):
     """
     Confirm that all metrics declared in necessary_metrics are
     already included in comptable.
@@ -91,7 +93,9 @@ def confirm_metrics_exist(comptable, necessary_metrics, functionname=None):
     comptable : (C x M) :obj:`pandas.DataFrame`
             Component metric table. One row for each component, with a column for
             each metric. The index should be the component number.
-    necessary_metrics :obj:`list` a 1D list of strings of metrics
+    necessary_metrics : :obj:`list` a 1D list of strings of metrics
+    function_name : :obj:`str`
+        Text identifying the function name that called this function
 
     Returns
     -------
@@ -116,18 +120,19 @@ def confirm_metrics_exist(comptable, necessary_metrics, functionname=None):
     metrics_exist = len(missing_metrics) == 0
 
     if metrics_exist is False:
-        if functionname is not None:
-            error_msg = ("Necessary metrics for " + functionname + " are not in comptable. "
+        if function_name is not None:
+            error_msg = ("Necessary metrics for " + function_name + " are not in comptable. "
                          "Need to calculate the following metrics: " + str(missing_metrics))
         else:
             error_msg = ("Necessary metrics are not in comptable (calling function unknown). "
                          "Need to calculate the following metrics: " + str(missing_metrics))
+
         raise ValueError(error_msg)
 
-    return metrics_exist
+    return metrics_exist, missing_metrics
 
 
-# def are_only_necessary_metrics_used(used_metrics, necessary_metrics, functionname):
+# def are_only_necessary_metrics_used(used_metrics, necessary_metrics, function_name):
 #     """
 #     Checks if all metrics that are declared as necessary are actually used and
 #     if any used_metrics weren't explicitly declared. If either of these happen,
@@ -142,7 +147,7 @@ def confirm_metrics_exist(comptable, necessary_metrics, functionname=None):
 #     necessary_metrics: :obj:`list`
 #             A list of strings of the metric names that were declared
 #             to be used in the decision tree
-#     functionname: :obj:`str`
+#     function_name: :obj:`str`
 #             The function name for the decision tree that was run
 
 #     Returns
@@ -153,18 +158,18 @@ def confirm_metrics_exist(comptable, necessary_metrics, functionname=None):
 #     """
 #     onlyin_used_metrics = np.setdiff1d(used_metrics, necessary_metrics)
 #     if not onlyin_used_metrics:
-#         LGR.warning(functionname + " uses the following metrics that are not "
+#         LGR.warning(function_name + " uses the following metrics that are not "
 #                     "declared as necessary metrices: " + str(onlyin_used_metrics))
 
 #     onlyin_necessary_metrics = np.setdiff1d(necessary_metrics, used_metrics)
 #     if not onlyin_necessary_metrics:
-#         LGR.warning(functionname + " declared the following metrics as necessary "
+#         LGR.warning(function_name + " declared the following metrics as necessary "
 #                     "but does not use them: " + str(onlyin_necessary_metrics))
 
 # Functions that edit decision_tree_steps
 
 
-def new_decision_node_info(decision_tree_steps, functionname,
+def new_decision_node_info(decision_tree_steps, function_name,
                            metrics_used, iftrue, iffalse,
                            additionalparameters=None):
     """
@@ -173,7 +178,7 @@ def new_decision_node_info(decision_tree_steps, functionname,
 
     # ADD ERROR TESTING SO THAT A CRASH FROM A MISSING VARIABLE IS INTELLIGENTLY LOGGED
     tmp_decision_tree = {'nodeidx': None,
-                         'functionname': functionname,
+                         'function_name': function_name,
                          'metrics_used': metrics_used,
                          'iftrue': iftrue,
                          'iffalse': iffalse,
@@ -193,7 +198,7 @@ def new_decision_node_info(decision_tree_steps, functionname,
     return decision_tree_steps
 
 
-def log_decision_tree_step(functionname_idx, comps2use,
+def log_decision_tree_step(function_name_idx, comps2use,
                            decide_comps=None, decision_tree_steps=None,
                            numTrue=None, numFalse=None):
     """
@@ -201,10 +206,10 @@ def log_decision_tree_step(functionname_idx, comps2use,
     """
 
     if comps2use is None:
-        LGR.info(functionname_idx + " not applied because "
+        LGR.info(function_name_idx + " not applied because "
                  "no remaining components were classified as " + str(decide_comps))
     else:
-        LGR.info((functionname_idx + "applied to " + str(np.array(comps2use).sum()) + " "
+        LGR.info((function_name_idx + "applied to " + str(np.array(comps2use).sum()) + " "
                   "components. " + str(numTrue) + " were True "
                   "and " + str(numFalse) + "were False"))
         # decision_tree_steps[-1]['numtrue']) + " "

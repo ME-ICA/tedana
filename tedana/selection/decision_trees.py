@@ -14,6 +14,9 @@ from tedana.selection._utils import (
 from tedana.selection import selection_nodes
 
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
+
 VALID_TREES = [
     'mdt', 'minimal_decision_tree1'
 ]
@@ -24,11 +27,33 @@ class TreeError(Exception):
 
 
 def load_config(tree):
+    """
+    Loads the json file with the decision tree and validates that the
+    fields in the decision tree are appropriate.
+
+    Parameters
+    ----------
+    tree : :obj:`str`
+        A json file name in ./selection/data without the '.json' extension
+
+    Returns
+    -------
+    tree : dict
+        A validated decision tree dictionary
+
+    Note
+    ----
+    In the current version of this script, the decision tree script is validated
+    against a pre-defined list of valid trees. Eventually, there should be a way
+    to load trees that aren't on the validated list and the currently validated
+    list should be used as a short-hand for common trees.
+    """
+
     fname = resource_filename('tedana', 'selection/data/{}.json'.format(tree))
     try:
         with open(fname, 'r') as src:
             dectree = json.loads(src.read())
-    except FileNotFoundError as err:
+    except FileNotFoundError:
         raise ValueError('Invalid decision tree name: {}. Must be one of '
                          '{}'.format(tree, VALID_TREES))
     return validate_tree(dectree)
@@ -60,14 +85,14 @@ def validate_tree(tree):
     for k in tree_info:
         try:
             assert tree.get(k) is not None
-        except AssertionError as err:
+        except AssertionError:
             err_msg += 'Decision tree missing required info: {}\n'.format(k)
 
     for i, node in enumerate(tree['nodes']):
         try:
             fcn = getattr(selection_nodes, node.get('functionname'))
             sig = inspect.signature(fcn)
-        except (AttributeError, TypeError) as err:
+        except (AttributeError, TypeError):
             err_msg += ('Node {} has invalid functionname parameter: {}\n'
                         .format(i, node.get('functionname')))
             continue
@@ -127,7 +152,8 @@ class DecisionTree:
     -----
     The selection algorithm used in this function is a minimalist version based
     on ME-ICA by Prantik Kundu, and his original implementation is available
-    at: https://github.com/ME-ICA/me-ica/blob/b2781dd087ab9de99a2ec3925f04f02ce84f0adc/meica.libs/select_model.py
+    at: https://github.com/ME-ICA/me-ica/blob/
+    b2781dd087ab9de99a2ec3925f04f02ce84f0adc/meica.libs/select_model.py
 
     This component selection process uses multiple, previously calculated
     metrics that include kappa, rho, variance explained, noise and spatial
@@ -140,18 +166,17 @@ class DecisionTree:
         are moved to ignored
     """
 
-    def __init__(self, tree, comptable, n_echos, user_notes=None):
+    def __init__(self, tree, comptable, n_echos):
         # initialize stuff based on the info in specified `tree`
         self.tree = tree
-        self.config = load_config(self.tree)
         self.comptable = comptable.copy()
+        self.n_echos = n_echos
+        self.config = load_config(self.tree)
 
         LGR.info('Performing component selection with ' + self.config['tree_id'])
-        report = self.config['report']
-        if user_notes is not None:
-            report += user_notes
-        # LGR.report(report)
-        # LGR.refs(self.config['refs'])
+        LGR.info(self.config.get('info', ''))
+        RepLGR.info(self.config.get('report', ''))
+        RefLGR.info(self.config.get('refs', ''))
 
         self.nodes = self.config['nodes']
         self.metrics = self.config['necessary_metrics']
@@ -161,39 +186,54 @@ class DecisionTree:
         # necessary_metrics are in the comptable
         confirm_metrics_exist(self.comptable, self.metrics, self.tree)
 
-    # for each node that is run:
-    # 1. Create decision_node_idx as a variable to pass to the function & in the decision tree dict
-    # 2. Log the function call in LGR.info.
-    # 3. Run function.
-    #     This will return: comptable (updated), used_metrics, numTrue, numFalse
-    # 4. Add information to the decision tree dict: numTrue, numFalse, used_metrics
+        # for each node that is run:
+        # 1. Create decision_node_idx as a variable to pass to the function
+        #   & in the decision tree dict
+        # 2. Log the function call in LGR.info.
+        # 3. Run function.
+        #     This will return: comptable (updated), used_metrics, numTrue, numFalse
+        # 4. Add information to the decision tree dict: numTrue, numFalse, used_metrics
 
-    # The comptable values for classification & rationale may be updated
-    # A new element is added to decision_tree_steps with an index incremented by 1
-    # necessary_metrics is a list of metrics used in this specific function
+        # The comptable values for classification & rationale may be updated
+        # A new element is added to decision_tree_steps with an index incremented by 1
+        # necessary_metrics is a list of metrics used in this specific function
 
     def run(self):
         used_metrics = set()
         for ii, node in enumerate(self.nodes):
             fcn = getattr(selection_nodes, node['functionname'])
+
             params, kwargs = node['parameters'], node['kwargs']
+            params = self.check_null(params, node['functionname'])
+            kwargs = self.check_null(kwargs, node['functionname'])
+
             LGR.info('Running function {} with parameters: {}'
                      .format(node['functionname'], {**params, **kwargs}))
-            self.comptable, metrics, numTrue, numFalse = fcn(
+            self.comptable, dnode_outputs = fcn(
                 self.comptable, decision_node_idx=ii, **params, **kwargs)
-            used_metrics.update(metrics)
-            self.nodes[ii].update(
-                decision_node_idx=ii,
-                numTrue=numTrue,
-                numFalse=numFalse,
-                used_metrics=metrics
-            )
+            used_metrics.update(dnode_outputs['used_metrics'])
+            print(node['functionname'])
+            # print(list(self.comptable['rationale']))
+            # dnode_outputs is a dict that should always include fields for
+            #   decision_node_idx, numTrue, numFalse, used_metrics, and node_label
+            #   any other fields will also be logged in this output
+            self.nodes[ii].update(dnode_outputs)
 
         # Move decision columns to end
         self.comptable = clean_dataframe(self.comptable)
         self.are_only_necessary_metrics_used(used_metrics)
-
         return self.comptable, self.nodes
+
+    def check_null(self, params, fcn):
+        for key, val in params.items():
+            if val is None:
+                try:
+                    params[key] = getattr(self, key)
+                except AttributeError:
+                    raise ValueError('Invalid parameter {} in node {}'
+                                     .format(key, fcn))
+
+        return params
 
     def are_only_necessary_metrics_used(self, used_metrics):
         # This function checks if all metrics that are declared as necessary
