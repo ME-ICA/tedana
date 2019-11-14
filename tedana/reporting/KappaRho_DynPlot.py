@@ -17,7 +17,7 @@
 import holoviews as hv
 import pandas as pd
 import numpy as np
-from bokeh.models import ColumnDataSource, HoverTool, CustomJS, Div, Range1d, Line
+from bokeh.models import ColumnDataSource, HoverTool, CustomJS, Div, Range1d, Line, Circle
 from bokeh.events import Tap
 from bokeh.embed import components
 from bokeh.layouts import row, column
@@ -108,6 +108,7 @@ def load_comp_table(out_dir):
     DF['component'] = np.arange(Nc)
     # Re-sort for Pie
     DF['angle']=DF['var_exp']/DF['var_exp'].sum() * 2*pi
+    DF.sort_values(by=['classification','var_exp'], inplace=True)
     CDS = ColumnDataSource(data=dict(
         kappa=DF['kappa'],
         rho=DF['rho'],
@@ -161,17 +162,20 @@ def generate_spectrum_CDS(CDS_meica_mix, TR, Nc):
 tap_callback_jscode = """
     // Accessing the selected component ID
     var data     = source_comp_table.data;
-    var selected = source_comp_table.selected.indices;
+    var selected_idx = source_comp_table.selected.indices;
+    var components = data['component']
+    var selected = components[selected_idx]
     var selected_padded = '' + selected;
     while (selected_padded.length < 2) {
         selected_padded = '0' + selected_padded;
     }
+    var selected_padded_forIMG = '0' + selected_padded
     // Creating a new version 00 --> ica_00
     var selected_padded_C = 'ica_' + selected_padded
 
     // Find color for selected component
     var colors = data['color']
-    var this_component_color = colors[selected]
+    var this_component_color = colors[selected_idx]
     // var ts_line_color = ts_line.line_color;
 
     // Update time series line color
@@ -206,7 +210,7 @@ tap_callback_jscode = """
 
     console.log('selected = ' + selected_padded)
     div.text = ""
-    var line = "<span><img src='" + outdir + "/figures/comp_"+selected_padded+".png'" +
+    var line = "<span><img src='" + outdir + "/figures/comp_"+selected_padded_forIMG+".png'" +
         " alt='Component Map' height=1000 width=900><span>\\n";
     console.log('Linea: ' + line)
     var text = div.text.concat(line);
@@ -264,8 +268,8 @@ def create_krPlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplot,
         Bokeh scatter plot of kappa vs. rho
     """
     # Create Panel for the Kappa - Rho Scatter
-    kr_hovertool = HoverTool(tooltips=[('Component ID', '@component'), ('Kappa', '@kappa'),
-                                       ('Rho', '@rho'), ('Var. Expl.', '@varexp')])
+    kr_hovertool = HoverTool(tooltips=[('Component ID', '@component'), ('Kappa', '@kappa{0.00}'),
+                                       ('Rho', '@rho{0.00}'), ('Var. Expl.', '@varexp{0.00}%')])
     fig = figure(plot_width=400, plot_height=400,
                  tools=["tap,wheel_zoom,reset,pan,crosshair", kr_hovertool],
                  title="Kappa / Rho Plot")
@@ -301,8 +305,8 @@ def create_ksortedPlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplot,
         Bokeh plot of components ranked by kappa
     """
     # Create Panel for the Ranked Kappa Plot
-    ksorted_hovertool = HoverTool(tooltips=[('Component ID', '@component'), ('Kappa', '@kappa'),
-                                            ('Rho', '@rho'), ('Var. Expl.', '@varexp')])
+    ksorted_hovertool = HoverTool(tooltips=[('Component ID', '@component'), ('Kappa', '@kappa{0.00}'),
+                                            ('Rho', '@rho{0.00}'), ('Var. Expl.', '@varexp{0.00}%')])
     fig = figure(plot_width=400, plot_height=400,
                  tools=["tap,wheel_zoom,reset,pan,crosshair", ksorted_hovertool],
                  title="Components sorted by Kappa")
@@ -341,8 +345,8 @@ def create_rho_sortedPlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplo
         Bokeh plot of components ranked by kappa
     """
     # Create Panel for the Ranked Kappa Plot
-    hovertool = HoverTool(tooltips=[('Component ID', '@component'), ('Kappa', '@kappa'),
-                                    ('Rho', '@rho'), ('Var. Expl.', '@varexp')])
+    hovertool = HoverTool(tooltips=[('Component ID', '@component'), ('Kappa', '@kappa{0.00}'),
+                                    ('Rho', '@rho{0.00}'), ('Var. Expl.', '@varexp{0.00}%')])
     fig = figure(plot_width=400, plot_height=400,
                  tools=["tap,wheel_zoom,reset,pan,crosshair", hovertool],
                  title="Components sorted by Rho")
@@ -381,8 +385,8 @@ def create_varexp_sortedPlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TS
         Bokeh plot of components ranked by kappa
     """
     # Create Panel for the Ranked Kappa Plot
-    hovertool = HoverTool(tooltips=[('Component ID', '@component'), ('Kappa', '@kappa'),
-                                    ('Rho', '@rho'), ('Var. Expl.', '@varexp')])
+    hovertool = HoverTool(tooltips=[('Component ID', '@component'), ('Kappa', '@kappa{0.00}'),
+                                    ('Rho', '@rho{0.00}'), ('Var. Expl.', '@varexp{0.00}%')])
     fig = figure(plot_width=400, plot_height=400,
                  tools=["tap,wheel_zoom,reset,pan,crosshair", hovertool],
                  title="Components sorted by Variance Explained")
@@ -408,14 +412,14 @@ def create_varexp_piePlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplo
     fig = figure(plot_width=400, plot_height=400, title='Variance Explained View', 
                  tools=['hover,tap'], 
                  tooltips=[('Component ID','@component'),
-                           ('Kappa','@kappa'),
-                           ('Rho','@rho'),
-                           ('Var. Exp.','@varexp')])
+                           ('Kappa','@kappa{0.00}'),
+                           ('Rho','@rho{0.00}'),
+                           ('Var. Exp.','@varexp{0.00}%')])
     fig.wedge(x=0,y=1,radius=.9,
               start_angle=cumsum('angle', include_zero=True),
               end_angle=cumsum('angle'),
               line_color="white",
-              fill_color='color', source=CDS_CompTable, alpha=0.7)
+              fill_color='color', source=CDS_CompTable, fill_alpha=0.7)
     fig.axis.visible=False
     fig.grid.visible=False
     fig.toolbar.logo=None    
@@ -423,6 +427,9 @@ def create_varexp_piePlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplo
     fig.js_on_event(Tap, tap_callback(CDS_comp_table, CDS_meica_ts, CDS_meica_fft,
                     CDS_TSplot, CDS_FFTplot, ts_line_glyph,
                     fft_line_glyph, div))
+    
+    circle = Circle(x=0,y=1,size=150, fill_color='white', line_color='white')
+    fig.add_glyph(circle)
 
     return fig
 
@@ -446,7 +453,7 @@ def create_ts_plot(CDS_TSplot, Nt):
         Bokeh plot to show a given component time series
     """
     fig = figure(plot_width=800, plot_height=200,
-                 tools=["wheel_zoom,reset,pan,crosshair",
+                 tools=["wheel_zoom,box_zoom,reset,pan,crosshair",
                         HoverTool(tooltips=[('Volume', '@x'), ('Signal', '@y')])],
                  title="Component Time Series")
     line_glyph = Line(x='x', y='y', line_color='#000000', line_width=3)
@@ -478,7 +485,7 @@ def create_fft_plot(CDS_FFTplot, max_freq):
         Bokeh plot to show a given component spectrum
     """
     fig = figure(plot_width=800, plot_height=200,
-                 tools=["wheel_zoom,reset,pan,crosshair",
+                 tools=["wheel_zoom,box_zoom,reset,pan,crosshair",
                         HoverTool(tooltips=[('Freq.', '@x'), ('Power', '@y')])],
                  title="Component Spectrum")
     line_glyph = Line(x='x', y='y', line_color='#000000', line_width=3)
@@ -542,5 +549,13 @@ app = column(row(kappa_rho_plot, kappa_sorted_plot, rho_sorted_plot, varexp_pie_
 # 15) Embed into Report Template
 generate_report(kr_div, kr_script, file_path='/opt/report_v2.html')
 
+
+# %%
+
+# %%
+
+# %%
+
+# %%
 
 # %%
