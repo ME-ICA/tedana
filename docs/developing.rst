@@ -31,7 +31,7 @@ You can do this with the following, which would make an archive ``my_data.tar.gz
 
 Run the workflow with a known-working version, and put the outputs into a text file inside
 ``$TEDANADIR/tedana/tests/data/``, where ``TEDANADIR`` is your local ``tedana repository``.
-You can follow the model our `five echo set`_, which has the following steps:
+To write the test function you can follow the model of our `five echo set`_, which takes the following steps:
 
 1. Check if a pytest user is skipping integration, skip if so
 #. Use ``download_test_data`` to retrieve the test data from OSF
