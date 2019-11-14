@@ -96,16 +96,26 @@ interactions vary by plot, but can be easily infered by the toolbar that accompa
   :align: center
   :height: 25px
 
-The table below includes information about all available interactions:
+The table below includes information about all available interactions
+
+.. |Reset Logo| image:: /_static/rep01_tool_reset.png
+  :align: center
+  :height: 25px
+  :alt: Reset
+
+============  ==================  ============= =============
+Interaction   Icon                Description   Available at
+============  ==================  ============= =============
+Reset         
+
+Wheel Zoom    |Reset Logo|
+============  ==================  ============= =============
 
 
 
 Specific user interactions can be swithed on/off by clicking on their associated icon within
 the toolbar of a given plot. Active interactions show an horizontal blue line underneath their
 icon, while inactive ones lack the line.
-
-
-
 
 
 
