@@ -87,21 +87,9 @@ def low_mem_pca(data):
     return u, s, v
 
 
-def tedpca(data_cat,
-           data_oc,
-           combmode,
-           mask,
-           t2s,
-           t2sG,
-           ref_img,
-           tes,
-           algorithm='mdl',
-           source_tes=-1,
-           kdaw=10.,
-           rdaw=1.,
-           out_dir='.',
-           verbose=False,
-           low_mem=False):
+def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
+           ref_img, tes, algorithm='mdl', source_tes=-1, kdaw=10., rdaw=1.,
+           out_dir='.', verbose=False, low_mem=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
     noise from multi-echo data.
