@@ -161,63 +161,98 @@ def generate_spectrum_CDS(CDS_meica_mix, TR, Nc):
 # %%
 tap_callback_jscode = """
     // Accessing the selected component ID
-    var data     = source_comp_table.data;
+    var data          = source_comp_table.data;
     var selected_idx = source_comp_table.selected.indices;
-    var components = data['component']
-    var selected = components[selected_idx]
-    var selected_padded = '' + selected;
-    while (selected_padded.length < 2) {
-        selected_padded = '0' + selected_padded;
+    if(selected_idx > 0) {
+        // A component has been selected
+        // -----------------------------
+        var components = data['component']
+        var selected = components[selected_idx]
+        var selected_padded = '' + selected;
+        while (selected_padded.length < 2) {
+            selected_padded = '0' + selected_padded;
+        }
+        var selected_padded_forIMG = '0' + selected_padded
+        var selected_padded_C = 'ica_' + selected_padded
+        
+        // Find color for selected component
+        var colors = data['color']
+        var this_component_color = colors[selected_idx]
+        
+        // Update time series line color
+        ts_line.line_color = this_component_color;
+
+        // Update spectrum line color
+        fft_line.line_color = this_component_color;
+        
+        // Updating TS Plot
+        var Plot_TS = source_tsplot.data;
+        var TS_x    = Plot_TS['x']
+        var TS_y    = Plot_TS['y']
+        var Comp_TS   = source_meica_ts.data;
+        var Comp_TS_y = Comp_TS[selected_padded_C]
+
+        for (var i = 0; i < TS_x.length; i ++) {
+            TS_y[i] = Comp_TS_y[i]
+        }
+        source_tsplot.change.emit();
+        
+        // Updating FFT Plot
+        var Plot_FFT = source_fftplot.data;
+        var FFT_x = Plot_FFT['x']
+        var FFT_y = Plot_FFT['y']
+        var Comp_FFT = source_meica_fft.data;
+        var Comp_FFT_y = Comp_FFT[selected_padded_C]
+        for (var i = 0; i < FFT_x.length; i ++) {
+            FFT_y[i] = Comp_FFT_y[i]
+        }
+        source_fftplot.change.emit();
+        
+        // Image Below Plots
+        div.text = ""
+        var line = "<span><img src='" + outdir + "/figures/comp_"+selected_padded_forIMG+".png'" +
+            " alt='Component Map' height=1000 width=900><span>\\n";
+        console.log('Linea: ' + line)
+        var text = div.text.concat(line);
+        var lines = text.split("\\n")
+            if (lines.length > 35)
+                lines.shift();
+        div.text = lines.join("\\n");
+    
+    } else {
+        // No component has been selected
+        // ------------------------------
+        // Set Component color to Black
+        var this_component_color = '#000000'
+        
+        // Update time series line color
+        ts_line.line_color = this_component_color;
+
+        // Update spectrum line color
+        fft_line.line_color = this_component_color;
+        
+        // Updating TS Plot
+        var Plot_TS = source_tsplot.data;
+        var TS_x    = Plot_TS['x']
+        var TS_y    = Plot_TS['y']
+        for (var i = 0; i < TS_x.length; i ++) {
+            TS_y[i] = 0
+        }
+        source_tsplot.change.emit();
+        
+        // Updating FFT Plot
+        var Plot_FFT = source_fftplot.data;
+        var FFT_x = Plot_FFT['x']
+        var FFT_y = Plot_FFT['y']
+        for (var i = 0; i < FFT_x.length; i ++) {
+            FFT_y[i] = 0
+        }
+        source_fftplot.change.emit();
+        
+        // Image Below Plots
+        div.text = "\\n"
+
     }
-    var selected_padded_forIMG = '0' + selected_padded
-    // Creating a new version 00 --> ica_00
-    var selected_padded_C = 'ica_' + selected_padded
-
-    // Find color for selected component
-    var colors = data['color']
-    var this_component_color = colors[selected_idx]
-    // var ts_line_color = ts_line.line_color;
-
-    // Update time series line color
-    ts_line.line_color = this_component_color;
-
-    // Update spectrum line color
-    fft_line.line_color = this_component_color;
-
-    // Updating TS Plot
-    var Plot_TS = source_tsplot.data;
-    var TS_x    = Plot_TS['x']
-    var TS_y    = Plot_TS['y']
-    var Comp_TS   = source_meica_ts.data;
-    var Comp_TS_y = Comp_TS[selected_padded_C]
-
-    for (var i = 0; i < TS_x.length; i ++) {
-        TS_y[i] = Comp_TS_y[i]
-    }
-    source_tsplot.change.emit();
-
-    // Updating FFT Plot
-    var Plot_FFT = source_fftplot.data;
-    var FFT_x = Plot_FFT['x']
-    var FFT_y = Plot_FFT['y']
-    var Comp_FFT = source_meica_fft.data;
-    var Comp_FFT_y = Comp_FFT[selected_padded_C]
-    for (var i = 0; i < FFT_x.length; i ++) {
-        FFT_y[i] = Comp_FFT_y[i]
-    }
-    source_fftplot.change.emit();
-
-
-    console.log('selected = ' + selected_padded)
-    div.text = ""
-    var line = "<span><img src='" + outdir + "/figures/comp_"+selected_padded_forIMG+".png'" +
-        " alt='Component Map' height=1000 width=900><span>\\n";
-    console.log('Linea: ' + line)
-    var text = div.text.concat(line);
-    var lines = text.split("\\n")
-        if (lines.length > 35)
-            lines.shift();
-    div.text = lines.join("\\n");
     """
 
 
