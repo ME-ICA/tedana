@@ -223,7 +223,7 @@ def _ent_rate_sp(data, sm_window):
             vcu[:, :, (dims[2] - 1) - m3] = vd * v3[m3]
             vcu[:, :, (dims[2] - 1) + m3] = vd * v3[m3]
 
-        data_corr = data_corr / vcu
+        data_corr /= vcu
 
         # Scale Parzen windows
         parzen_window_2D = np.dot(parzen_w_1[np.newaxis, :].T,
