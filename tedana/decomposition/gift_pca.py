@@ -351,7 +351,7 @@ def _kurtn(data):
 
     for i in range(data.shape[1]):
         data_norm = detrend(data[:, i], type='constant')
-        data_norm = data_norm / np.std(data_norm)
+        data_norm /= np.std(data_norm)
         kurt[i] = np.mean(data_norm**4) - 3
 
     kurt[kurt < 0] = 0
