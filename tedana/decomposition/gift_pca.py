@@ -236,7 +236,7 @@ def _ent_rate_sp(data, sm_window):
                 parzen_window_2D, parzen_w_3[dims[2] - 1 + m3])
 
         # Apply 3D Parzen Window
-        data_corr = data_corr * parzen_window_3D
+        data_corr *= parzen_window_3D
         data_fft = fftshift(fftn(data_corr))
 
     else:
