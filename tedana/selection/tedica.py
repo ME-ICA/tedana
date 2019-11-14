@@ -220,8 +220,9 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     for i_loop in range(3):
         temp_comptable = comptable.loc[ncls].sort_values(by=['variance explained'],
                                                          ascending=False)
-        ncls = temp_comptable.loc[
-            temp_comptable['variance explained'].diff() < varex_upper_p].index.values
+        diff_vals = temp_comptable['variance explained'].diff(-1)
+        diff_vals = diff_vals.fillna(0)
+        ncls = temp_comptable.loc[diff_vals < varex_upper_p].index.values
 
     # Compute elbows from other elbows
     f05, _, f01 = getfbounds(n_echos)
