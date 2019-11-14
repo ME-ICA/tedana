@@ -353,9 +353,7 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     voxel_kept_comp_weighted = (voxel_comp_weights[:, acc] * varex[None, acc])
     kept_data = np.dot(voxel_kept_comp_weighted, comp_ts[:, acc].T)
 
-    kept_data = stats.zscore(kept_data,
-                             axis=1)  # variance normalize time series
-    kept_data = stats.zscore(kept_data,
-                             axis=None)  # variance normalize everything
+    kept_data = stats.zscore(kept_data, axis=1)  # variance normalize time series
+    kept_data = stats.zscore(kept_data, axis=None)  # variance normalize everything
 
     return kept_data, n_components
