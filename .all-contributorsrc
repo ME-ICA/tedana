@@ -39,7 +39,9 @@
       "avatar_url": "https://avatars1.githubusercontent.com/u/7314358?v=4",
       "profile": "https://github.com/javiergcas",
       "contributions": [
-        "ideas"
+        "ideas",
+        "code",
+        "design"
       ]
     },
     {
@@ -100,7 +102,8 @@
         "projectManagement",
         "doc",
         "review",
-        "maintenance"
+        "maintenance",
+        "code"
       ]
     },
     {
@@ -140,6 +143,25 @@
       "avatar_url": "https://avatars0.githubusercontent.com/u/16976839?v=4",
       "profile": "https://www.linkedin.com/in/benoit-beranger/",
       "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "eurunuela",
+      "name": "Eneko Uruñuela",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/13706448?v=4",
+      "profile": "https://github.com/eurunuela",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "CesarCaballeroGaudes",
+      "name": "Cesar Caballero Gaudes",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/7611340?v=4",
+      "profile": "https://github.com/CesarCaballeroGaudes",
+      "contributions": [
+        "doc",
         "code"
       ]
     }

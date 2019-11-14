@@ -27,16 +27,34 @@ midk_ts_OC.nii.gz         Combined time series from "mid-k" rejected components.
 hik_ts_OC.nii.gz          High-kappa time series. This dataset does not
                           include thermal noise or low variance components.
                           Not the recommended dataset for analysis.
-comp_table_pca.txt        TEDPCA component table. A tab-delimited file with
-                          summary metrics and inclusion/exclusion information
-                          for each component from the PCA decomposition.
-mepca_mix.1D              Mixing matrix (component time series) from PCA
-                          decomposition.
-meica_mix.1D              Mixing matrix (component time series) from ICA
-                          decomposition. The only differences between this
-                          mixing matrix and the one above are that
-                          components may be sorted differently and signs of
-                          time series may be flipped.
+pca_decomposition.json    TEDPCA component table. A BIDS Derivatives-compatible
+                          json file with summary metrics and inclusion/exclusion
+                          information for each component from the PCA
+                          decomposition. To view, you may want to use
+                          ``io.load_comptable``, which returns a pandas
+                          DataFrame from the json file.
+pca_mixing.tsv            Mixing matrix (component time series) from PCA
+                          decomposition in a tab-delimited file. Each column is
+                          a different component, and the column name is the
+                          component number.
+pca_components.nii.gz     Component weight maps from PCA decomposition.
+                          Each map corresponds to the same component index in
+                          the mixing matrix and component table.
+ica_decomposition.json    TEDICA component table. A BIDS Derivatives-compatible
+                          json file with summary metrics and inclusion/exclusion
+                          information for each component from the ICA
+                          decomposition. To view, you may want to use
+                          ``io.load_comptable``, which returns a pandas
+                          DataFrame from the json file.
+ica_mixing.tsv            Mixing matrix (component time series) from ICA
+                          decomposition in a tab-delimited file. Each column is
+                          a different component, and the column name is the
+                          component number.
+ica_components.nii.gz     Component weight maps from ICA decomposition.
+                          Values are z-transformed standardized regression
+                          coefficients. Each map corresponds to the same
+                          component index in the mixing matrix and component table.
+                          Should be the same as "feats_OC2.nii.gz".
 betas_OC.nii.gz           Full ICA coefficient feature set.
 betas_hik_OC.nii.gz       High-kappa ICA coefficient feature set
 feats_OC2.nii.gz          Z-normalized spatial component maps
