@@ -189,7 +189,7 @@ def _ent_rate_sp(data, sm_window):
         vd = np.dot(v1.T, v2)
 
         # Bias-correct
-        data_corr = data_corr / vd
+        data_corr /= vd
 
         # Apply 2D Parzen Window
         parzen_window_2D = np.dot(parzen_w_1, parzen_w_2.T)
