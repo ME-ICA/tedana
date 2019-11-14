@@ -324,7 +324,8 @@ def _subsampling(data, sub_depth):
             idx_0[0], ndims[0], sub_depth), :, :][:, np.arange(
                 idx_0[1], ndims[1], sub_depth), :][:, :, np.arange(idx_0[2], ndims[2], sub_depth)]
     else:
-        raise ValueError('Unrecognized matrix dimension! Input array must be 3D with min dimension > 1.')
+        raise ValueError('Unrecognized matrix dimension! )'
+                         'Input array must be 3D with min dimension > 1.')
 
     return out
 
