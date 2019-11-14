@@ -40,7 +40,7 @@ To write the test function you can follow the model of our `five echo set`_, whi
    actual output.
 
 If you need to upload new data, you will need to contact the maintainers and ask them to either add
-it or give you permission to add it.
+it to `OSF`_ or give you permission to add it.
 Once you've tested your integration test locally and it is working, you will need to add it to the
 CircleCI config and the ``Makefile``.
 Following the model of the three-echo and five-echo sets, define a name for your integration test
