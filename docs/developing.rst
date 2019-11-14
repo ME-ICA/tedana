@@ -30,7 +30,7 @@ You can do this with the following, which would make an archive ``my_data.tar.gz
     tar czf my_data.tar.gz my_data/*.nii.gz
 
 Run the workflow with a known-working version, and put the outputs into a text file inside
-``$TEDANADIR/tedana/tests/data/``,with ``TEDANADIR`` the local ``tedana repository``.
+``$TEDANADIR/tedana/tests/data/``, where ``TEDANADIR`` is your local ``tedana repository``.
 You can follow the model our `five echo set`_, which has the following steps:
 
 1. Check if a pytest user is skipping integration, skip if so
