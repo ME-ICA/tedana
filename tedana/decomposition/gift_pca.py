@@ -146,7 +146,7 @@ def _ent_rate_sp(data, sm_window):
     dims = data.shape
 
     # Normalize x_sb to be unit variance
-    data_std = np.std(np.reshape(data, (np.prod(dims), 1)))
+    data_std = np.std(np.reshape(data, (-1, 1)))
 
     # Make sure we do not divide by zero
     if data_std < 1e-10:
