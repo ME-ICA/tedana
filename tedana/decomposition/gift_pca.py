@@ -508,11 +508,10 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
     kurtv1 = _kurtn(dataN)
     kurtv1[EigenValues > np.mean(EigenValues)] = 1000
     idx_gauss = np.where(
-        ((kurtv1[:, 0] < 0.3) * (kurtv1[:, 0] > 0) * (EigenValues > np.finfo(float).eps)
+        ((kurtv1[:, 0] < 0.3) & (kurtv1[:, 0] > 0) & (EigenValues > np.finfo(float).eps)
          ) == 1)[0]  # DOUBT: make sure np.where is giving us just one tuple
     idx = np.array(idx_gauss[:]).T
-    dfs = len(
-        np.where(EigenValues > np.finfo(float).eps)[0])  # degrees of freedom
+    dfs = np.sum(EigenValues > np.finfo(float).eps)  # degrees of freedom
     minTp = 12
 
     if (len(idx) >= minTp):
@@ -569,40 +568,35 @@ def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
         LGR.info('SVD done on subsampled i.i.d. OC data')
         EigenValues = EigenValues[::-1]
 
-    lam = EigenValues
-
     LGR.info('Effective number of i.i.d. samples %d' % N)
 
     # Make eigen spectrum adjustment
     LGR.info('Perform eigen spectrum adjustment ...')
-    lam = _eigensp_adj(lam, N, lam.shape[0])
+    EigenValues = _eigensp_adj(EigenValues, N, EigenValues.shape[0])
     # (completed)
-    if np.sum(np.imag(lam)):
+    if np.sum(np.imag(EigenValues)):
         raise ValueError('Invalid eigen value found for the subsampled data.')
 
     # Correction on the ill-conditioned results (when tdim is large,
     # some least significant eigenvalues become small negative numbers)
-    if lam[np.real(lam) <= np.finfo(float).eps].shape[0] > 0:
-        lam[np.real(lam) <= np.finfo(float).eps] = np.min(
-            lam[np.real(lam) >= np.finfo(float).eps])
-    LGR.info(' Estimating the dimension ...')
+    if EigenValues[np.real(EigenValues) <= np.finfo(float).eps].shape[0] > 0:
+        EigenValues[np.real(EigenValues) <= np.finfo(float).eps] = np.min(
+            EigenValues[np.real(EigenValues) >= np.finfo(float).eps])
+    LGR.info('Estimating the dimension ...')
     p = Nt
     aic = np.zeros(p - 1)
     kic = np.zeros(p - 1)
     mdl = np.zeros(p - 1)
 
     for k_idx, k in enumerate(np.arange(1, p)):
-        LH = np.log(np.prod(np.power(lam[k:], 1 / (p - k))) / np.mean(lam[k:]))
+        LH = np.log(np.prod(np.power(EigenValues[k:], 1 / (p - k))) / np.mean(EigenValues[k:]))
         mlh = 0.5 * N * (p - k) * LH
         df = 1 + 0.5 * k * (2 * p - k + 1)
         aic[k_idx] = (-2 * mlh) + (2 * df)
         kic[k_idx] = (-2 * mlh) + (3 * df)
         mdl[k_idx] = -mlh + (0.5 * df * np.log(N))
 
-    itc = np.zeros((3, mdl.shape[0]))
-    itc[0, :] = aic
-    itc[1, :] = kic
-    itc[2, :] = mdl
+    itc = np.row_stack([aic, kic, mdl])
 
     if criteria == 'aic':
         criteria_idx = 0

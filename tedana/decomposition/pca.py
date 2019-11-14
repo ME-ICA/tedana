@@ -261,18 +261,14 @@ def tedpca(data_cat,
         LGR.info('Computing PCA of spatially concatenated multi-echo data')
         data = data_cat[mask, ...]
     else:
-        LGR.info('Computing PCA of echo #{0}'.format(','.join(
-            [str(ee) for ee in source_tes])))
-        data = np.stack([data_cat[mask, ee, :] for ee in source_tes - 1],
-                        axis=1)
+        LGR.info('Computing PCA of echo #{0}'.format(','.join([str(ee) for ee in source_tes])))
+        data = np.stack([data_cat[mask, ee, :] for ee in source_tes - 1], axis=1)
 
     eim = np.squeeze(_utils.eimask(data))
     data = np.squeeze(data[eim])
 
-    data_z = ((data.T - data.T.mean(axis=0)) /
-              data.T.std(axis=0)).T  # var normalize ts
-    data_z = (data_z -
-              data_z.mean()) / data_z.std()  # var normalize everything
+    data_z = ((data.T - data.T.mean(axis=0)) / data.T.std(axis=0)).T  # var normalize ts
+    data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
 
     if algorithm in ['mdl', 'aic', 'kic']:
         data_img = io.new_nii_like(
@@ -331,17 +327,9 @@ def tedpca(data_cat,
 
     # Select components using decision tree
     if algorithm == 'kundu':
-        comptable = kundu_tedpca(comptable,
-                                 n_echos,
-                                 kdaw,
-                                 rdaw,
-                                 stabilize=False)
+        comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=False)
     elif algorithm == 'kundu-stabilize':
-        comptable = kundu_tedpca(comptable,
-                                 n_echos,
-                                 kdaw,
-                                 rdaw,
-                                 stabilize=True)
+        comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=True)
     elif algorithm == 'mle':
         LGR.info('Selected {0} components with MLE dimensionality '
                  'detection'.format(comptable.shape[0]))
