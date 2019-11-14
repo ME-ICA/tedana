@@ -104,12 +104,12 @@ def _create_fft_plot(n_vols, Nf):
     return fig
 
 
-def _spectrum_data_src(comp_ts, tr):
+def _spectrum_data_src(df, tr):
     """
     Parameters
     ----------
-    comp_ts :
-        The component time series
+    df :
+        The component time series as a Pandas DataFrame
     tr : float
         Repetition time of the acquired ME data set
 
@@ -118,15 +118,10 @@ def _spectrum_data_src(comp_ts, tr):
     data_src :
     Nf :
     """
-
-    spectrum, freqs = utils.get_spectrum(comp_ts.data['C000'], tr)
-    Nf = spectrum.shape[0]
-
-    df = pd.read_csv(comp_ts, sep='\t', encoding='utf-8')
     n_comps, n_vols = df.shape
     data_src = models.ColumnDataSource(df)
     spectrum, _ = utils.get_spectrum(data_src.data['ica_00'], tr)
-
+    Nf = spectrum.shape[0]
     return data_src, Nf
 
 
@@ -179,7 +174,7 @@ def create_data_struct(comptable, color_mapping=color_mapping):
         kappa_rank=df['kappa_rank'],
         rho_rank=df['rho_rank'],
         varexp_rank=df['var_exp_rank'],
-        component=[str(i) for i in df['component']],
+        component=[str(i) for i in df.index],
         color=df['color'],
         size=df['var_exp_size'],
         classif=df['classification']))
@@ -347,9 +342,9 @@ df = pd.read_csv(comp_ts, sep='\t', encoding='utf-8')
 n_comps, n_vols = df.shape
 
 # Load the component table
-comptable_ds = create_data_struct(models.ColumnDataSource(df))
+comptable_ds = create_data_struct(comptable)
 # generate the component spectrum
-data_src, Nf = _spectrum_data_src(comp_ts, tr)
+data_src, Nf = _spectrum_data_src(df, tr)
 
 # create fft, ts plots
 fft_plot = _create_fft_plot(n_vols, Nf)
