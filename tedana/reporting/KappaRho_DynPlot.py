@@ -271,7 +271,7 @@ def create_krPlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplot,
     kr_hovertool = HoverTool(tooltips=[('Component ID', '@component'), ('Kappa', '@kappa{0.00}'),
                                        ('Rho', '@rho{0.00}'), ('Var. Expl.', '@varexp{0.00}%')])
     fig = figure(plot_width=400, plot_height=400,
-                 tools=["tap,wheel_zoom,reset,pan,crosshair", kr_hovertool],
+                 tools=["tap,wheel_zoom,reset,pan,crosshair,save", kr_hovertool],
                  title="Kappa / Rho Plot")
     fig.circle('kappa', 'rho', size='size', color='color', alpha=0.5, source=CDS_comp_table,
                legend_group='classif')
@@ -308,7 +308,7 @@ def create_ksortedPlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplot,
     ksorted_hovertool = HoverTool(tooltips=[('Component ID', '@component'), ('Kappa', '@kappa{0.00}'),
                                             ('Rho', '@rho{0.00}'), ('Var. Expl.', '@varexp{0.00}%')])
     fig = figure(plot_width=400, plot_height=400,
-                 tools=["tap,wheel_zoom,reset,pan,crosshair", ksorted_hovertool],
+                 tools=["tap,wheel_zoom,reset,pan,crosshair,save", ksorted_hovertool],
                  title="Components sorted by Kappa")
     fig.line(x=np.arange(1, Nc + 1),
              y=CDS_CompTable.data['kappa'].sort_values(ascending=False).values,
@@ -348,7 +348,7 @@ def create_rho_sortedPlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplo
     hovertool = HoverTool(tooltips=[('Component ID', '@component'), ('Kappa', '@kappa{0.00}'),
                                     ('Rho', '@rho{0.00}'), ('Var. Expl.', '@varexp{0.00}%')])
     fig = figure(plot_width=400, plot_height=400,
-                 tools=["tap,wheel_zoom,reset,pan,crosshair", hovertool],
+                 tools=["tap,wheel_zoom,reset,pan,crosshair,save", hovertool],
                  title="Components sorted by Rho")
     fig.line(x=np.arange(1, Nc + 1),
              y=CDS_CompTable.data['rho'].sort_values(ascending=False).values,
@@ -388,7 +388,7 @@ def create_varexp_sortedPlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TS
     hovertool = HoverTool(tooltips=[('Component ID', '@component'), ('Kappa', '@kappa{0.00}'),
                                     ('Rho', '@rho{0.00}'), ('Var. Expl.', '@varexp{0.00}%')])
     fig = figure(plot_width=400, plot_height=400,
-                 tools=["tap,wheel_zoom,reset,pan,crosshair", hovertool],
+                 tools=["tap,wheel_zoom,reset,pan,crosshair,save", hovertool],
                  title="Components sorted by Variance Explained")
     fig.line(x=np.arange(1, Nc + 1),
              y=CDS_CompTable.data['varexp'].sort_values(ascending=False).values,
@@ -410,7 +410,7 @@ def create_varexp_sortedPlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TS
 def create_varexp_piePlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplot,
                              CDS_FFTplot, ts_line_glyph, fft_line_glyph, Nc, div):
     fig = figure(plot_width=400, plot_height=400, title='Variance Explained View', 
-                 tools=['hover,tap'], 
+                 tools=['hover,tap,save'], 
                  tooltips=[('Component ID','@component'),
                            ('Kappa','@kappa{0.00}'),
                            ('Rho','@rho{0.00}'),
@@ -453,7 +453,7 @@ def create_ts_plot(CDS_TSplot, Nt):
         Bokeh plot to show a given component time series
     """
     fig = figure(plot_width=800, plot_height=200,
-                 tools=["wheel_zoom,box_zoom,reset,pan,crosshair",
+                 tools=["wheel_zoom,box_zoom,reset,pan,crosshair,save",
                         HoverTool(tooltips=[('Volume', '@x'), ('Signal', '@y')])],
                  title="Component Time Series")
     line_glyph = Line(x='x', y='y', line_color='#000000', line_width=3)
@@ -485,7 +485,7 @@ def create_fft_plot(CDS_FFTplot, max_freq):
         Bokeh plot to show a given component spectrum
     """
     fig = figure(plot_width=800, plot_height=200,
-                 tools=["wheel_zoom,box_zoom,reset,pan,crosshair",
+                 tools=["wheel_zoom,box_zoom,reset,pan,crosshair,save",
                         HoverTool(tooltips=[('Freq.', '@x'), ('Power', '@y')])],
                  title="Component Spectrum")
     line_glyph = Line(x='x', y='y', line_color='#000000', line_width=3)
