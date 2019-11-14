@@ -41,7 +41,7 @@ def _check_order(order_in):
 
     Parameters
     ----------
-    n_in : ndarray
+    order_in : ndarray
         The order to be passed to the window function
 
     Returns
