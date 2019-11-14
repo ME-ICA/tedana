@@ -35,7 +35,7 @@ hv.extension('bokeh')
 # %%
 OUTDIR = '/opt/tedana-hack/tedana/docs/DynReports/data/TED.five-echo/'
 TR = 2
-state2col = {'accepted': '#00ff00', 'rejected': '#ff0000', 'ignored': '#0000ff'}
+state2col = {'accepted': '#2ecc71', 'rejected': '#e74c3c', 'ignored': '#3498db'}
 
 
 # %%
