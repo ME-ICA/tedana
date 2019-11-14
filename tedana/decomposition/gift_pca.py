@@ -9,9 +9,8 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 from scipy.linalg import svd
-from scipy.signal import detrend
+from scipy.signal import detrend, correlate2d
 from scipy.fftpack import fft, fftshift, fftn, fft2
-from scipy.signal import correlate2d
 
 LGR = logging.getLogger(__name__)
 
@@ -32,7 +31,7 @@ def _autocorr(data):
     """
     u = np.correlate(data, data, mode='full')
     # Take upper half of correlation matrix
-    return u[u.size / 2:]
+    return u[u.size // 2:]
 
 
 def _check_order(order_in):
@@ -78,8 +77,7 @@ def _check_order(order_in):
 
 def _parzen_win(n_points):
     """
-    Returns the N-point Parzen (de la Valle-Poussin) window in
-    a column vector.
+    Returns the N-point Parzen (de la Valle-Poussin) window in a column vector.
 
     Parameters
     ----------
@@ -149,8 +147,8 @@ def _ent_rate_sp(data, sm_window):
     data_std = np.std(np.reshape(data, (np.prod(dims), 1)))
 
     # Make sure we do not divide by zero
-    if data_std < 1e-10:
-        data_std = 1e-10
+    if data_std == 0:
+        raise ValueError('Divide by zero encountered.')
     data = data / data_std
 
     if sm_window:
