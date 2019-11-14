@@ -131,12 +131,11 @@ def _get_parser():
                                 'delimited list'),
                           choices=['t1c', 'gsr'],
                           default=None)
-    optional.add_argument(
-        '--tedpca',
-        dest='tedpca',
-        help='Method with which to select components in TEDPCA',
-        choices=['mle', 'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'],
-        default='mle')
+    optional.add_argument('--tedpca',
+                          dest='tedpca',
+                          help='Method with which to select components in TEDPCA',
+                          choices=['mle', 'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'],
+                          default='mdl')
     optional.add_argument('--out-dir',
                           dest='out_dir',
                           type=str,
@@ -188,11 +187,11 @@ def _get_parser():
                           action='store',
                           choices=['loglin', 'curvefit'],
                           help='Desired Fitting Method '
-                          '"loglin" means that a linear model is fit '
-                          'to the log of the data, default '
-                          '"curvefit" means that a more computationally '
-                          'demanding monoexponential model is fit '
-                          'to the raw data',
+                               '"loglin" means that a linear model is fit '
+                               'to the log of the data, default '
+                               '"curvefit" means that a more computationally '
+                               'demanding monoexponential model is fit '
+                               'to the raw data',
                           default='loglin')
     optional.add_argument('--debug',
                           dest='debug',
@@ -448,9 +447,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     # set a hard cap for the T2* map
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
-    cap_t2s = stats.scoreatpercentile(t2s.flatten(),
-                                      99.5,
-                                      interpolation_method='lower')
+    cap_t2s = stats.scoreatpercentile(t2s.flatten(), 99.5, interpolation_method='lower')
     LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
     t2s[t2s > cap_t2s * 10] = cap_t2s
     io.filewrite(t2s, op.join(out_dir, 't2sv.nii'), ref_img)
