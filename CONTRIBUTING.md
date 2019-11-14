@@ -200,7 +200,7 @@ pytest -k my_function $TEDANADIR/tedana/tests/test_file.py
 
 from within your local `tedana` repository.
 The test run will indicate the number of passes and failures.
-Most often, the failures give enough information to determine the cause; if not, if not you can
+Most often, the failures give enough information to determine the cause; if not, you can
 refer to the [pytest documentation][link_pytest] for more details on the failure.
 
 #### Changes to documentation
