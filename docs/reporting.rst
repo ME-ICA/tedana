@@ -4,13 +4,14 @@ ICA Components Report
 
 The reporting page for the tedana decomposition presents a series
 of interactive plots designed to help you evaluate the quality of your
-analyses. Here you can find both a description of the plots and infromation
-on how to take advantage of the interactive functionalities.
+analyses. This page describes the plots forming the reports and well as
+infromation on how to take advantage of the interactive functionalities.
 
 Report Structure
 ================
 
-The image below shows a representative report, which has two sections:
+The image below shows a representative report, which has two sections: a) the summary view,
+and b) the individual component view.
 
 .. image:: /_static/rep01_overallview.png
   :align: center
@@ -98,24 +99,63 @@ interactions vary by plot, but can be easily infered by the toolbar that accompa
 
 The table below includes information about all available interactions
 
-.. |Reset Logo| image:: /_static/rep01_tool_reset.png
-  :align: center
+.. |Reset| image:: /_static/rep01_tool_reset.png
   :height: 25px
-  :alt: Reset
 
-============  ==================  ============= =============
-Interaction   Icon                Description   Available at
-============  ==================  ============= =============
-Reset         
+.. |WZoom| image:: /_static/rep01_tool_wheelzoom.png
+  :height: 25px
 
-Wheel Zoom    |Reset Logo|
-============  ==================  ============= =============
+.. |BZoom| image:: /_static/rep01_tool_areazoom.png
+  :height: 25px
 
+.. |CHair| image:: /_static/rep01_tool_crosshair.png
+  :height: 25px
 
+.. |Pan| image:: /_static/rep01_tool_pan.png
+  :height: 25px
 
-Specific user interactions can be swithed on/off by clicking on their associated icon within
-the toolbar of a given plot. Active interactions show an horizontal blue line underneath their
-icon, while inactive ones lack the line.
+.. |Hover| image:: /_static/rep01_tool_hover.png
+  :height: 25px
+
+.. |Sel| image:: /_static/rep01_tool_select.png
+  :height: 25px
+
+.. |Save| image:: /_static/rep01_tool_save.png
+  :height: 25px
+
+============  =======  =======================================================
+Interaction   Icon     Description                                            
+============  =======  =======================================================
+Reset         |Reset|  Resets the data bounds of the plot to their values when
+                       the plot was initially created.
+
+Wheel Zoom    |WZoom|  Zoom the plot in and out, centered on the current      
+                       mouse location.
+
+Box Zoom      |BZoom|  Define a rectangular region of a plot to zoom to by     
+                       dragging the mouse over the plot region.
+
+Crosshair     |CHair|  Draws a crosshair annotation over the plot, centered on
+                       the current mouse position                    
+
+Pan           |Pan|    Allows the user to pan a plot by left-dragging a mouse
+                       across the plot region.
+
+Hover         |Hover|  If active, the plot displays informational tooltips 
+                       whenever the cursor is directly over a plot element.
+
+Selection     |Sel|    Allows user to select components by tapping on the dot
+                       or wedge that represents them. Once a component is
+                       selected, the plots forming the individual component
+                       view update to show component specific information. 
+
+Save          |Save|   Saves an image reproduction of the plot in PNG format.
+============  =======  =======================================================
+
+.. note:: 
+  Specific user interactions can be swithed on/off by clicking on their associated icon within
+  the toolbar of a given plot. Active interactions show an horizontal blue line underneath their
+  icon, while inactive ones lack the line.
 
 
 
