@@ -2,11 +2,15 @@
 Functions to estimate S0 and T2* from multi-echo data.
 """
 import logging
-import scipy
 import numpy as np
+import scipy
+from scipy import stats
+
 from tedana import utils
 
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 
 def mono_exp(tes, s0, t2star):
@@ -84,6 +88,12 @@ def fit_decay(data, tes, mask, masksum, fittype):
         in :math:`S_0` map with 0.
     3.  Generate limited :math:`T_2^*` and :math:`S_0` maps by doing something.
     """
+    RepLGR.info("A monoexponential model was fit to the data at each voxel "
+                "using log-linear regression in order to estimate T2* and S0 "
+                "maps. For each voxel, the value from the adaptive mask was "
+                "used to determine which echoes would be used to estimate T2* "
+                "and S0.")
+
     if data.shape[1] != len(tes):
         raise ValueError('Second dimension of data ({0}) does not match number '
                          'of echoes provided (tes; {1})'.format(data.shape[1], len(tes)))
@@ -163,6 +173,13 @@ def fit_decay(data, tes, mask, masksum, fittype):
     t2s_full, s0_full = t2s_limited.copy(), s0_limited.copy()
     t2s_full[masksum == 1] = t2ss[masksum == 1, 0]
     s0_full[masksum == 1] = s0vs[masksum == 1, 0]
+
+    # set a hard cap for the T2* map
+    # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
+    cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5,
+                                      interpolation_method='lower')
+    LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
+    t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
 
     return t2s_limited, s0_limited, t2ss, s0vs, t2s_full, s0_full
 

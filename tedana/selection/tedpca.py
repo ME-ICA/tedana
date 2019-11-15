@@ -9,6 +9,8 @@ from tedana.stats import getfbounds
 from tedana.selection._utils import (getelbow_cons, getelbow, clean_dataframe)
 
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 F_MAX = 500
 

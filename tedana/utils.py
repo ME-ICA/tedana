@@ -12,6 +12,8 @@ from sklearn.utils import check_array
 from tedana.due import due, BibTeX
 
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 
 def load_image(data):
@@ -63,6 +65,9 @@ def make_adaptive_mask(data, mask=None, getsum=False):
         Valued array indicating the number of echos with sufficient signal in a
         given voxel. Only returned if `getsum = True`
     """
+    RepLGR.info("An adaptive mask was then generated, in which each voxel's "
+                "value reflects the number of echoes with 'good' data.")
+
     # take temporal mean of echos and extract non-zero values in first echo
     echo_means = data.mean(axis=-1)  # temporal mean of echos
     first_echo = echo_means[echo_means[:, 0] != 0, 0]
@@ -149,7 +154,7 @@ def unmask(data, mask):
                   'volume={5},'
                   'pages={1--34}}'),
            description='Introduction of Sorenson-Dice index by Sorenson in 1948.')
-def dice(arr1, arr2):
+def dice(arr1, arr2, axis=None):
     """
     Compute Dice's similarity index between two numpy arrays. Arrays will be
     binarized before comparison.
@@ -158,6 +163,9 @@ def dice(arr1, arr2):
     ----------
     arr1, arr2 : array_like
         Input arrays, arrays to binarize and compare.
+    axis : None or int, optional
+        Axis along which the DSIs are computed.
+        The default is to compute the DSI of the flattened arrays.
 
     Returns
     -------
@@ -176,12 +184,15 @@ def dice(arr1, arr2):
     if arr1.shape != arr2.shape:
         raise ValueError('Shape mismatch: arr1 and arr2 must have the same shape.')
 
-    arr_sum = arr1.sum() + arr2.sum()
-    if arr_sum == 0:
-        dsi = 0
+    if axis is not None and axis > (arr1.ndim - 1):
+        raise ValueError('Axis provided {} not supported by the input arrays.'.format(axis))
+
+    arr_sum = arr1.sum(axis=axis) + arr2.sum(axis=axis)
+    if np.all(arr_sum == 0):
+        dsi = np.zeros(arr_sum.shape)
     else:
         intersection = np.logical_and(arr1, arr2)
-        dsi = (2. * intersection.sum()) / arr_sum
+        dsi = (2. * intersection.sum(axis=axis)) / arr_sum
 
     return dsi
 

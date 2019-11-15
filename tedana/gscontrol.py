@@ -11,6 +11,8 @@ from scipy.special import lpmv
 from tedana import io, utils
 
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 
 def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
@@ -45,6 +47,8 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, dtrank=4):
         Input `optcom` with global signal removed from time series
     """
     LGR.info('Applying amplitude-based T1 equilibration correction')
+    RepLGR.info("Global signal regression was applied to the multi-echo "
+                "and optimally combined datasets.")
     if catd.shape[0] != optcom.shape[0]:
         raise ValueError('First dimensions of catd ({0}) and optcom ({1}) do not '
                          'match'.format(catd.shape[0], optcom.shape[0]))
@@ -134,6 +138,11 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img):
     meica_mix_T1c.1D          T1 global signal-corrected mixing matrix
     ======================    =================================================
     """
+    LGR.info('Performing T1c global signal regression to remove spatially '
+             'diffuse noise')
+    RepLGR.info("T1c global signal regression was then applied to the "
+                "data in order to remove spatially diffuse noise.")
+
     all_comps = comptable.index.values
     acc = comptable[comptable.classification == 'accepted'].index.values
     ign = comptable[comptable.classification == 'ignored'].index.values

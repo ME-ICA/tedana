@@ -7,6 +7,8 @@ import logging
 import numpy as np
 
 LGR = logging.getLogger(__name__)
+RepLGR = logging.getLogger('REPORT')
+RefLGR = logging.getLogger('REFERENCES')
 
 # Functions that are used for interacting with comptable
 

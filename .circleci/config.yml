@@ -7,167 +7,196 @@ orbs:
   codecov: codecov/codecov@1.0.5
 jobs:
 
-  build:
+  makeenv_37:
     docker:
-      - image: docker:18.01.0-ce-git
-    working_directory: /tedana
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
     steps:
       - run:
           name: Install parallel gzip and Python 3
           command: |
             apk add --no-cache pigz python3
       - checkout
-      - setup_remote_docker
+      - restore_cache:
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
       - run:
-          name: Build image
-          no_output_timeout: 30m
+          name: Generate environment
           command: |
-            THISVERSION=$( python3 -c 'import tedana; print(tedana.__version__)' )
-            echo "Building version ${CIRCLE_TAG:-$THISVERSION}"
-            docker build \
-              --cache-from=tedana/tedana-dev \
-              --rm=false \
-              --tag tedana/tedana-dev:latest \
-              --build-arg BUILD_DATE="$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
-              --build-arg VCS_REF="$(git rev-parse --short HEAD)" \
-              --build-arg VERSION="${CIRCLE_TAG:-$THISVERSION}" \
-              --file Dockerfile_dev .
-      - run:
-          name: Docker save
-          no_output_timeout: 40m
-          command: |
-            mkdir -p /tmp/cache
-            docker save tedana/tedana-dev:latest \
-            | pigz -2 -p 3 > /tmp/cache/docker.tar.gz
-      - persist_to_workspace:
-          root: /tmp
+            if [ ! -d /opt/conda/envs/tedana_py37 ]; then
+              conda create -yq -n tedana_py37 python=3.7
+              source activate tedana_py37
+              pip install -r dev_requirements.txt
+            fi
+      - save_cache:
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
           paths:
-            - cache/docker.tar.gz
+              - /opt/conda/envs/tedana_py37
 
-  get_test_data:
+  unittest_35:
     docker:
-      - image: docker:18.01.0-ce-git
-    working_directory: /tedana
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
     steps:
       - checkout
+      - restore_cache:
+          key: conda-py35-v1-{{ checksum "dev_requirements.txt" }}
       - run:
-          name: Install curl and tar
+          name: Generate environment
           command: |
-            apk add --no-cache bash curl curl-dev tar bzip2 xz
+            apt-get install -yqq make
+            if [ ! -d /opt/conda/envs/tedana_py35 ]; then
+              conda create -yq -n tedana_py35 python=3.5
+              source activate tedana_py35
+              pip install -r dev_requirements.txt
+            fi
       - run:
-          name: Get data
+          name: Running unit tests
           command: |
-            bash -c "source ./dev_tools/get_data.sh && download_data"
+            source activate tedana_py35
+            make unittest
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py35
+      - save_cache:
+          key: conda-py35-v1-{{ checksum "dev_requirements.txt" }}
+          paths:
+              - /opt/conda/envs/tedana_py35
       - persist_to_workspace:
           root: /tmp
           paths:
-            - data/
+              - src/coverage/.coverage.py35
+
+  unittest_36:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py36-v1-{{ checksum "dev_requirements.txt" }}
+      - run:
+          name: Generate environment
+          command: |
+            apt-get install -yqq make
+            if [ ! -d /opt/conda/envs/tedana_py36 ]; then
+              conda create -yq -n tedana_py36 python=3.6
+              source activate tedana_py36
+              pip install -r dev_requirements.txt
+            fi
+      - run:
+          name: Running unit tests
+          command: |
+            source activate tedana_py36
+            make unittest
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py36
+      - save_cache:
+          key: conda-py36-v1-{{ checksum "dev_requirements.txt" }}
+          paths:
+              - /opt/conda/envs/tedana_py36
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+              - src/coverage/.coverage.py36
+
+  unittest_37:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+      - run:
+          name: Running unit tests
+          command: |
+            apt-get install -y make
+            source activate tedana_py37  # depends on makeenv_37
+            make unittest
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py37
+      - persist_to_workspace:
+          root: ~/coverage
+          paths:
+              - src/coverage/.coverage.py37
 
   style_check:
     docker:
-      - image: docker:18.01.0-ce-git
-    working_directory: /tedana
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
     steps:
       - checkout
+      - restore_cache:
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
       - run:
-          name: Install python3
+          name: Style check
           command: |
-            apk add --no-cache python3
-      - run:
-          name: Run style check
-          command: |
-            python3 --version
-            python3 -m pip install "flake8<3.0" flake8-putty
-            flake8 tedana
+            apt-get install -yqq make
+            source activate tedana_py37  # depends on makeenv37
+            make lint
 
-  unit_tests:
-    machine:
-      image: circleci/classic:201711-01
+  three-echo:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
     steps:
-      - attach_workspace:
-          at: /tmp
       - checkout
+      - restore_cache:
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
       - run:
-          name: Load Docker image layer cache
-          no_output_timeout: 30m
-          command: |
-            docker info
-            set +o pipefail
-            if [ -f /tmp/cache/docker.tar.gz ]; then
-              sudo apt update && sudo apt -y install pigz
-              pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
-              docker images
-            fi
-      - run:
-          name: Run unit tests
-          no_output_timeout: 2h
-          command: |
-            docker run --rm -v ${PWD}:/tedana -v /tmp/data:/tmp/data \
-                tedana/tedana-dev:latest bash -c \
-                'source ./dev_tools/run_tests.sh && \
-                 for pyenv in tedana_py3{5,6,7}; do run_unit_test ${pyenv}; done'
-            mkdir ~/coverage
-            mv ./.coverage ~/coverage/.coverage.units
-      - store_artifacts:
-          path: ~/coverage
-      - persist_to_workspace:
-          root: ~/coverage
-          paths:
-              - .coverage.units
-
-  integration_tests:
-    machine:
-      image: circleci/classic:201711-01
-    steps:
-      - attach_workspace:
-          at: /tmp
-      - checkout
-      - run:
-          name: Load Docker image layer cache
-          no_output_timeout: 30m
-          command: |
-            docker info
-            set +o pipefail
-            if [ -f /tmp/cache/docker.tar.gz ]; then
-              sudo apt update && sudo apt -y install pigz
-              pigz -d --stdout /tmp/cache/docker.tar.gz | docker load
-              docker images
-            fi
-      - run:
-          name: Run three-echo dataset
+          name: Run integration tests
           no_output_timeout: 40m
           command: |
-            docker run --rm -v ${PWD}:/tedana -v /tmp/data:/tmp/data \
-                tedana/tedana-dev:latest bash -c \
-                'source ./dev_tools/run_tests.sh && run_integration_tests'
-            mkdir ~/coverage
-            mv ./.coverage ~/coverage/.coverage.integration
+            apt-get install -yqq make
+            source activate tedana_py37  # depends on makeenv_37
+            make three-echo
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.three-echo
       - store_artifacts:
           path: /tmp/data
-      - store_artifacts:
-          path: ~/coverage
       - persist_to_workspace:
           root: ~/coverage
           paths:
-              - .coverage.three_echo
+              - src/coverage/.coverage.three-echo
+  five-echo:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+      - run:
+          name: Run integration tests
+          no_output_timeout: 40m
+          command: |
+            apt-get install -yqq make
+            source activate tedana_py37  # depends on makeenv_37
+            make five-echo
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.five-echo
+      - store_artifacts:
+          path: /tmp/data
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+              - src/coverage/.coverage.five-echo
 
   merge_coverage:
+    working_directory: /tmp/src/tedana
     docker:
-      - image: docker:18.01.0-ce-git
-    working_directory: /tedana
+      - image: continuumio/miniconda3
     steps:
       - attach_workspace:
-          at: ~/coverage
-      - run:
-          name: Install python3
-          command: |
-            apk add --no-cache python3
+          at: /tmp
+      - checkout
+      - restore_cache:
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
       - run:
           name: Merge coverage files
           command: |
-            python3 --version
-            python3 -m pip install coverage
-            cd ~/coverage
+            apt-get install -yqq curl
+            source activate tedana_py37  # depends on makeenv37
+            cd /tmp/src/coverage/
             coverage combine
             coverage xml
       - store_artifacts:
@@ -179,18 +208,25 @@ workflows:
   version: 2.1
   build_test:
     jobs:
-      - build
-      - get_test_data
-      - style_check
-      - integration_tests:
+      - makeenv_37
+      - unittest_35
+      - unittest_36
+      - unittest_37:
           requires:
-            - build
-            - get_test_data
-      - unit_tests:
+            - makeenv_37
+      - style_check:
           requires:
-            - build
-            - get_test_data
+            - makeenv_37
+      - three-echo:
+          requires:
+            - makeenv_37
+      - five-echo:
+          requires:
+            - makeenv_37
       - merge_coverage:
           requires:
-            - unit_tests
-            - integration_tests
+            - unittest_35
+            - unittest_36
+            - unittest_37
+            - three-echo
+            - five-echo
