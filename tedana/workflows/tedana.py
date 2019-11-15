@@ -165,19 +165,6 @@ def _get_parser():
                           help=('Orthogonalize rejected components w.r.t. '
                                 'accepted components prior to denoising.'),
                           default=False)
-    optional.add_argument('--png',
-                          dest='png',
-                          action='store_true',
-                          help=('Creates a figures folder with static component '
-                                'maps, timecourse plots and other diagnostic '
-                                'images'),
-                          default=False)
-    optional.add_argument('--png-cmap',
-                          dest='png_cmap',
-                          metavar='CMAP',
-                          type=str,
-                          help=('Colormap for figures'),
-                          default='coolwarm')
     optional.add_argument('--lowmem',
                           dest='low_mem',
                           action='store_true',
