@@ -109,17 +109,22 @@ def _create_ts_plot(n_vol):
 
     Parameters
     ----------
-    CDS_FFTplot: bokeh.models.ColumnDataSource
-        Contains only the data to be plotted at a given moment.
-
-    Nt: float
+    n_vols: float
         Number of acquisitions
 
     Returns
     -------
     fig: bokeh.plotting.figure.Figure
         Bokeh plot to show a given component time series
+    
+    line_glyph: bokeh.models.Line
+        Link to the line element of the time series plot.
+    
+    ts_cds: bokeh.models.ColumnDataSource
+        Data structure that contains the timeseries being
+        plotted at a given moment.
     """
+    
     ts_cds = models.ColumnDataSource(data=dict(x=np.arange(n_vol),
                                                y=np.zeros(n_vol,)))
     
@@ -135,6 +140,46 @@ def _create_ts_plot(n_vol):
     fig.toolbar_location = 'above'
     fig.x_range = models.Range1d(0, n_vol)
     return fig, line_glyph, ts_cds
+
+
+# %%
+def _create_fft_plot(freqs):
+    """
+    Generates a bokeh line plot for the spectrum of a given component
+
+    Parameters
+    ----------
+    freqs: np.darray
+        List of frequencies for which spectral amplitude values are
+        available
+
+    Returns
+    -------
+    fig: bokeh.plotting.figure.Figure
+        Bokeh plot to show a given component spectrum
+        
+    line_glyph: bokeh.models.Line
+        Link to the line element of the fft plot.
+    
+    ts_cds: bokeh.models.ColumnDataSource
+        Data structure that contains the fft being
+        plotted at a given moment.
+    """
+    Nf = len(freqs)
+    max_freq = np.max(freqs)
+    fft_cds = models.ColumnDataSource(data=dict(x=freqs, y=np.zeros(Nf,)))
+    fig = plotting.figure(plot_width=800, plot_height=200,
+                 tools=["wheel_zoom,box_zoom,reset,pan,crosshair,save",
+                        models.HoverTool(tooltips=[('Freq.', '@x{0.000} Hz'), ('Power', '@y{0.00}')])],
+                 title="Component Spectrum")
+    line_glyph = models.Line(x='x', y='y', line_color='#000000', line_width=3)
+    fig.add_glyph(fft_cds, line_glyph)
+    fig.xaxis.axis_label = 'Frequency [Hz]'
+    fig.yaxis.axis_label = 'Power'
+    fig.toolbar.logo = None
+    fig.toolbar_location = 'above'
+    fig.x_range = models.Range1d(0, max_freq)
+    return fig, line_glyph, fft_cds
 
 
 # %%
@@ -254,7 +299,7 @@ def generate_spectrum_CDS(CDS_meica_mix, TR, Nc):
         DF[cid] = spectrum
     DF['Freq'] = freqs
     CDS = models.ColumnDataSource(DF)
-    return CDS, Nf
+    return CDS, freqs
 
 
 # %%
@@ -507,51 +552,19 @@ def create_varexp_piePlot(CDS_comp_table, Nc):
 
 
 # %%
-def create_fft_plot(CDS_FFTplot, max_freq):
-    """
-    Generates a bokeh line plot for the spectrum of a given component
-
-    Parameters
-    ----------
-    CDS_FFTplot: bokeh.models.ColumnDataSource
-        Contains only the data to be plotted at a given moment.
-
-    max_freq: float
-        Maximum frequency for which there is information
-
-    Returns
-    -------
-    fig: bokeh.plotting.figure.Figure
-        Bokeh plot to show a given component spectrum
-    """
-    fig = plotting.figure(plot_width=800, plot_height=200,
-                 tools=["wheel_zoom,box_zoom,reset,pan,crosshair,save",
-                        models.HoverTool(tooltips=[('Freq.', '@x{0.000} Hz'), ('Power', '@y{0.00}')])],
-                 title="Component Spectrum")
-    line_glyph = models.Line(x='x', y='y', line_color='#000000', line_width=3)
-    fig.add_glyph(CDS_FFTplot, line_glyph)
-    fig.xaxis.axis_label = 'Frequency [Hz]'
-    fig.yaxis.axis_label = 'Power'
-    fig.toolbar.logo = None
-    fig.toolbar_location = 'above'
-    fig.x_range = models.Range1d(0, max_freq)
-    return fig, line_glyph
-
-
-# %%
 # LOAD ALL NECESSARY INFORMATION
 # 1) Load the Comp_table file into a bokeh CDS
 [CDS_CompTable, Nc] = load_comp_table(OUTDIR)
 # 2) Load the Component Timeseries into a bokeh CDS
 [CDS_meica_mix, n_vols, Nc] = load_comp_ts(OUTDIR)
 # 3) Generate the Component Spectrum and store it into a bokeh CDS
-[CDS_meica_fft, Nf] = generate_spectrum_CDS(CDS_meica_mix, TR, Nc)
+[CDS_meica_fft, freqs] = generate_spectrum_CDS(CDS_meica_mix, TR, Nc)
 
 # GENERATE CDS NECESSARY FOR LIVE UPDATE OF PLOTS
 # 4) Save flat Line into a bokeh CDS (this is what get plotted in the TS graph)
 #CDS_TSplot = models.ColumnDataSource(data=dict(x=np.arange(Nt), y=np.zeros(Nt,)))
 # 5) Save flat Line into a bokeh CDS (this is what get plotted in the FFT graph)
-CDS_FFTplot = models.ColumnDataSource(data=dict(x=CDS_meica_fft.data['Freq'], y=np.zeros(Nf,)))
+#CDS_FFTplot = models.ColumnDataSource(data=dict(x=CDS_meica_fft.data['Freq'], y=np.zeros(Nf,)))
 
 # CREATE ALL GRAPHIC ELEMENTS
 # 6) Create a DIV element
@@ -559,7 +572,7 @@ div_content = models.Div(width=600, height=900, height_policy='fixed')
 # 7) Create the Component Timeseries Plot
 [ts_plot, ts_line_glyph, CDS_TSplot] = _create_ts_plot(n_vols)
 # 8) Create the Component FFT Plot
-[fft_plot, fft_line_glyph] = create_fft_plot(CDS_FFTplot, np.max(CDS_meica_fft.data['Freq']))
+[fft_plot, fft_line_glyph, CDS_FFTplot] = _create_fft_plot(freqs)
 # 9) Create the Kappa/Rho Scatter Plot
 kappa_rho_plot = create_krPlot(CDS_CompTable)
 # 10) Create the Ranked Kappa Plot
@@ -591,6 +604,7 @@ reporting.generate_report(kr_div, kr_script, file_path='/opt/report_v3.html')
 
 
 # %%
+type(freqs)
 
 # %%
 
