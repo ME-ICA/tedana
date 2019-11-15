@@ -26,15 +26,10 @@ from sklearn.preprocessing import MinMaxScaler
 from bokeh import (embed, events, layouts, models, plotting, transform)
 
 from tedana import (io, reporting, utils)
-from tedana.io import load_comptable
 
 color_mapping = {'accepted': '#2ecc71', 
                  'rejected': '#e74c3c', 
                  'ignored': '#3498db'}
-
-# %%
-OUTDIR = '/opt/tedana-hack/tedana/docs/DynReports/data/TED.five-echo/'
-TR = 2
 
 
 # %%
@@ -98,6 +93,7 @@ def _link_figures(fig, comptable_ds,
                                 fft_plot,
                                 ts_line_glyph,
                                 fft_line_glyph,
+                                div_content,
                                 out_dir))
     return fig
 
@@ -183,13 +179,13 @@ def _create_fft_plot(freqs):
 
 
 # %%
-def _spectrum_data_src(CDS_meica_mix, tr, n_comps):
+def _spectrum_data_src(comp_ts_cds, tr, n_comps):
     """
     Computes FFT for all time series and puts them on a bokeh.models.ColumnDataSource
 
     Parameters
     ----------
-    CDS_meica_mix: bokeh.models.ColumnDataSource
+    comp_ts_cds: bokeh.models.ColumnDataSource
         Contains the time series for all components
     tr: int
         Data Repetition Time in seconds
@@ -204,13 +200,13 @@ def _spectrum_data_src(CDS_meica_mix, tr, n_comps):
         List of frequencies for which spectral amplitude values are
         available
     """
-    spectrum, freqs = utils.get_spectrum(CDS_meica_mix.data['ica_00'], tr)
+    spectrum, freqs = utils.get_spectrum(comp_ts_cds.data['ica_00'], tr)
     n_freqs = spectrum.shape[0]
     df = pd.DataFrame(columns=['ica_' + str(c).zfill(2) for c in np.arange(n_comps)], 
                       index=np.arange(n_freqs))
-    for c in np.arange(Nc):
+    for c in np.arange(n_comps):
         cid = 'ica_' + str(c).zfill(2)
-        ts = CDS_meica_mix.data[cid]
+        ts = comp_ts_cds.data[cid]
         spectrum, freqs = utils.get_spectrum(ts, tr)
         df[cid] = spectrum
     cds = models.ColumnDataSource(df)
@@ -218,89 +214,73 @@ def _spectrum_data_src(CDS_meica_mix, tr, n_comps):
 
 
 # %%
-def load_comp_ts(out_dir):
-    """
-    Load Component Timeseries (meica_mix.1D) into a bokeh.ColumnDataSource
-
-    Parameters
-    ----------
-    out_dir: str
-        tedana output directory where to find comp_table
-
-    Returns
-    -------
-    CDS: bokeh.models.ColumnDataSource
-        Contains the component time series
-    Nt: int
-        Number of Time points
-    Nc: int
-        Number of components
-    """
-    file_path = opj(OUTDIR,'ica_mixing.tsv')
-    DF = pd.read_csv(file_path, sep='\t')
-    [Nt,Nc] = DF.shape
-    DF['Volume'] = np.arange(Nt)
-    CDS = models.ColumnDataSource(DF)
-    return CDS, Nt, Nc
-
-
-# %%
-def load_comp_table(out_dir):
+def create_data_struct(comptable_path, color_mapping=color_mapping):
     """
     Create Bokeh ColumnDataSource with all info dynamic plots need
 
     Parameters
     ----------
-    out_dir: str
-        tedana output directory where to find comp_table
+    comptable: str
+        file path to component table, JSON format
 
     Returns
     -------
-    CDS: bokeh.models.ColumnDataSource
+    cds: bokeh.models.ColumnDataSource
         Data structure with all the fields to plot or hover over
-    Nc: int
-        Number of components
     """
-    comptable_path = opj(OUTDIR,'ica_decomposition.json')
-    DF = pd.read_json(comptable_path)
-    DF.drop('Description', axis=0, inplace=True)
-    DF.drop('Method', axis=1, inplace=True)
-    DF = DF.T
-
-    Nc = DF.shape[0]
-    # When needed, remove space from column names (bokeh is not happy about it)
-    DF.rename(columns={'variance explained': 'var_exp'}, inplace=True)
+    unused_cols = ['normalized variance explained',
+                   'countsigFR2', 'countsigFS0',
+                   'dice_FS0', 'countnoise', 'dice_FR2',
+                   'signal-noise_t', 'signal-noise_p',
+                   'd_table_score', 'kappa ratio',
+                   'rationale', 'd_table_score_scrub']
+    
+    df = pd.read_json(comptable_path)
+    df.drop('Description', axis=0, inplace=True)
+    df.drop('Method', axis=1, inplace=True)
+    df = df.T
+    n_comps = df.shape[0]
+    
+    # remove space from column name
+    df.rename(columns={'variance explained': 'var_exp'}, inplace=True)
+    
     # For providing sizes based on Var Explained that are visible
     mm_scaler = MinMaxScaler(feature_range=(4, 20))
-    DF['var_exp_size'] = mm_scaler.fit_transform(DF[['var_exp', 'normalized variance explained']])[:, 0]
-    # Ranks
-    DF['rho_rank'] = DF['rho'].rank(ascending=False).values
-    DF['kappa_rank'] = DF['kappa'].rank(ascending=False).values
-    DF['var_exp_rank'] = DF['var_exp'].rank(ascending=False).values
+    df['var_exp_size'] = mm_scaler.fit_transform(
+        df[['var_exp', 'normalized variance explained']])[:, 0]
+    
+    # Calculate Kappa and Rho ranks
+    df['rho_rank'] = df['rho'].rank(ascending=False).values
+    df['kappa_rank'] = df['kappa'].rank(ascending=False).values
+    df['var_exp_rank'] = df['var_exp'].rank(ascending=False).values
+    
     # Remove unsed columns to decrease size of final HTML
-    DF.drop(['normalized variance explained', 'countsigFR2', 'countsigFS0', 'dice_FS0',
-             'countnoise', 'dice_FR2', 'signal-noise_t', 'signal-noise_p',
-             'd_table_score', 'kappa ratio', 'rationale', 'd_table_score_scrub'],
-            axis=1, inplace=True)
+    df.drop(unused_cols, axis=1, inplace=True)
+    
     # Create additional Column with colors based on final classification
-    DF['color'] = [color_mapping[i] for i in DF['classification']]
-    DF['component'] = np.arange(Nc)
-    # Re-sort for Pie
-    DF['angle']=DF['var_exp']/DF['var_exp'].sum() * 2*pi
-    DF.sort_values(by=['classification','var_exp'], inplace=True)
-    CDS = models.ColumnDataSource(data=dict(
-        kappa=DF['kappa'],
-        rho=DF['rho'],
-        varexp=DF['var_exp'],
-        kappa_rank=DF['kappa_rank'],
-        rho_rank=DF['rho_rank'],
-        varexp_rank=DF['var_exp_rank'],
-        component=[str(i) for i in DF['component']],
-        color=DF['color'],
-        size=DF['var_exp_size'],
-        classif=DF['classification'],
-        angle=DF['angle']))
-    return CDS, Nc
+    df['color'] = [color_mapping[i] for i in df['classification']]
+    
+    # Create additional column with component ID
+    df['component'] = np.arange(n_comps)
+    
+    # Compute angle and re-sort data for Pie plots
+    df['angle']=df['var_exp']/df['var_exp'].sum() * 2*pi
+    df.sort_values(by=['classification','var_exp'], inplace=True)
+    
+    cds = models.ColumnDataSource(data=dict(
+        kappa=df['kappa'],
+        rho=df['rho'],
+        varexp=df['var_exp'],
+        kappa_rank=df['kappa_rank'],
+        rho_rank=df['rho_rank'],
+        varexp_rank=df['var_exp_rank'],
+        component=[str(i) for i in df['component']],
+        color=df['color'],
+        size=df['var_exp_size'],
+        classif=df['classification'],
+        angle=df['angle']))
+    
+    return cds
 
 
 # %%
@@ -401,8 +381,8 @@ tap_callback_jscode = """
     """
 
 
-def tap_callback(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplot,
-                 CDS_FFTplot, ts_line_glyph, fft_line_glyph, div):
+def tap_callback(comptable_cds, CDS_meica_ts, comp_fft_cds, plot_ts_cds,
+                 plot_fft_cds, ts_line_glyph, fft_line_glyph, div, out_dir):
     """
     Javacript function to animate tap events and show component info on the right
 
@@ -418,25 +398,25 @@ def tap_callback(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplot,
     CustomJS: bokeh.models.CustomJS
         Javascript function that adds the tapping functionality
     """
-    return models.CustomJS(args=dict(source_comp_table=CDS_comp_table,
+    return models.CustomJS(args=dict(source_comp_table=comptable_cds,
                               source_meica_ts=CDS_meica_ts,
-                              source_tsplot=CDS_TSplot,
-                              source_meica_fft=CDS_meica_fft,
-                              source_fftplot=CDS_FFTplot,
+                              source_tsplot=plot_ts_cds,
+                              source_meica_fft=comp_fft_cds,
+                              source_fftplot=plot_fft_cds,
                               div=div_content,
                               ts_line=ts_line_glyph,
                               fft_line=fft_line_glyph,
-                              outdir=OUTDIR), code=tap_callback_jscode)
+                              outdir=out_dir), code=tap_callback_jscode)
 
 
 # %%
-def create_krPlot(CDS_comp_table):
+def create_krPlot(comptable_cds):
     """
     Create Dymamic Kappa/Rho Scatter Plot
 
     Parameters
     ----------
-    CDS_comp_table: bokeh.models.ColumnDataSource
+    comptable_cds: bokeh.models.ColumnDataSource
         Data structure containing a limited set of columns from the comp_table
 
     Returns
@@ -450,7 +430,7 @@ def create_krPlot(CDS_comp_table):
     fig = plotting.figure(plot_width=400, plot_height=400,
                  tools=["tap,wheel_zoom,reset,pan,crosshair,save", kr_hovertool],
                  title="Kappa / Rho Plot")
-    fig.circle('kappa', 'rho', size='size', color='color', alpha=0.5, source=CDS_comp_table,
+    fig.circle('kappa', 'rho', size='size', color='color', alpha=0.5, source=comptable_cds,
                legend_group='classif')
     fig.xaxis.axis_label = 'Kappa'
     fig.yaxis.axis_label = 'Rho'
@@ -462,13 +442,13 @@ def create_krPlot(CDS_comp_table):
 
 
 # %%
-def create_ksortedPlot(CDS_comp_table, Nc):
+def create_ksortedPlot(comptable_cds, n_comps):
     """
     Create Dymamic Sorted Kappa Plot
 
     Parameters
     ----------
-    CDS_comp_table: bokeh.models.ColumnDataSource
+    comptable_cds: bokeh.models.ColumnDataSource
         Data structure containing a limited set of columns from the comp_table
 
     Returns
@@ -482,27 +462,27 @@ def create_ksortedPlot(CDS_comp_table, Nc):
     fig = plotting.figure(plot_width=400, plot_height=400,
                  tools=["tap,wheel_zoom,reset,pan,crosshair,save", ksorted_hovertool],
                  title="Components sorted by Kappa")
-    fig.line(x=np.arange(1, Nc + 1),
-             y=CDS_CompTable.data['kappa'].sort_values(ascending=False).values,
+    fig.line(x=np.arange(1, n_comps + 1),
+             y=comptable_cds.data['kappa'].sort_values(ascending=False).values,
              color='black')
-    fig.circle('kappa_rank', 'kappa', source=CDS_comp_table,
+    fig.circle('kappa_rank', 'kappa', source=comptable_cds,
                size=5, color='color', alpha=0.7)
     fig.xaxis.axis_label = 'Kappa Rank'
     fig.yaxis.axis_label = 'Kappa'
-    fig.x_range = models.Range1d(-1, Nc + 1)
+    fig.x_range = models.Range1d(-1, n_comps + 1)
     fig.toolbar.logo = None
 
     return fig
 
 
 # %%
-def create_rho_sortedPlot(CDS_comp_table, Nc):
+def create_rho_sortedPlot(comptable_cds, n_comps):
     """
     Create Dymamic Sorted Kappa Plot
 
     Parameters
     ----------
-    CDS_comp_table: bokeh.models.ColumnDataSource
+    comptable_cds: bokeh.models.ColumnDataSource
         Data structure containing a limited set of columns from the comp_table
 
     Returns
@@ -516,21 +496,21 @@ def create_rho_sortedPlot(CDS_comp_table, Nc):
     fig = plotting.figure(plot_width=400, plot_height=400,
                  tools=["tap,wheel_zoom,reset,pan,crosshair,save", hovertool],
                  title="Components sorted by Rho")
-    fig.line(x=np.arange(1, Nc + 1),
-             y=CDS_CompTable.data['rho'].sort_values(ascending=False).values,
+    fig.line(x=np.arange(1, n_comps + 1),
+             y=comptable_cds.data['rho'].sort_values(ascending=False).values,
              color='black')
-    fig.circle('rho_rank', 'rho', source=CDS_comp_table,
+    fig.circle('rho_rank', 'rho', source=comptable_cds,
                size=5, color='color', alpha=0.7)
     fig.xaxis.axis_label = 'Rho Rank'
     fig.yaxis.axis_label = 'Rho'
-    fig.x_range = models.Range1d(-1, Nc + 1)
+    fig.x_range = models.Range1d(-1, n_comps + 1)
     fig.toolbar.logo = None
 
     return fig
 
 
 # %%
-def create_varexp_piePlot(CDS_comp_table, Nc):
+def create_varexp_piePlot(comptable_cds, n_comps):
     fig = plotting.figure(plot_width=400, plot_height=400, title='Variance Explained View', 
                  tools=['hover,tap,save'], 
                  tooltips=[('Component ID','@component'),
@@ -541,7 +521,7 @@ def create_varexp_piePlot(CDS_comp_table, Nc):
               start_angle=transform.cumsum('angle', include_zero=True),
               end_angle=transform.cumsum('angle'),
               line_color="white",
-              fill_color='color', source=CDS_CompTable, fill_alpha=0.7)
+              fill_color='color', source=comptable_cds, fill_alpha=0.7)
     fig.axis.visible=False
     fig.grid.visible=False
     fig.toolbar.logo=None    
@@ -553,59 +533,61 @@ def create_varexp_piePlot(CDS_comp_table, Nc):
 
 
 # %%
-# LOAD ALL NECESSARY INFORMATION
-# 1) Load the Comp_table file into a bokeh CDS
-[CDS_CompTable, Nc] = load_comp_table(OUTDIR)
-# 2) Load the Component Timeseries into a bokeh CDS
-[CDS_meica_mix, n_vols, Nc] = load_comp_ts(OUTDIR)
-# 3) Generate the Component Spectrum and store it into a bokeh CDS
-[CDS_meica_fft, freqs] = _spectrum_data_src(CDS_meica_mix, TR, Nc)
+# -------------------------------------------------------------------------
 
-# GENERATE CDS NECESSARY FOR LIVE UPDATE OF PLOTS
-# 4) Save flat Line into a bokeh CDS (this is what get plotted in the TS graph)
-#CDS_TSplot = models.ColumnDataSource(data=dict(x=np.arange(Nt), y=np.zeros(Nt,)))
-# 5) Save flat Line into a bokeh CDS (this is what get plotted in the FFT graph)
-#CDS_FFTplot = models.ColumnDataSource(data=dict(x=CDS_meica_fft.data['Freq'], y=np.zeros(Nf,)))
+out_dir = '/opt/tedana-hack/tedana/docs/DynReports/data/TED.five-echo/'
+tr = 2
 
-# CREATE ALL GRAPHIC ELEMENTS
-# 6) Create a DIV element
+# Load the component time series
+comp_ts_path = opj(out_dir,'ica_mixing.tsv')
+comp_ts_df = pd.read_csv(comp_ts_path, sep='\t', encoding='utf=8')
+n_vols, n_comps = comp_ts_df.shape
+comp_ts_df['Volume'] = np.arange(n_vols)
+comp_ts_cds = models.ColumnDataSource(comp_ts_df)
+
+# Load the component table
+comptable_path = opj(out_dir,'ica_decomposition.json')
+comptable_cds = create_data_struct(comptable_path)
+
+# Generate the component's spectra 
+comp_fft_cds, freqs = _spectrum_data_src(comp_ts_cds, tr, n_comps)
+
+# Create ts, fft plots
+ts_plot, ts_line_glyph, plot_ts_cds = _create_ts_plot(n_vols)
+fft_plot, fft_line_glyph, plot_fft_cds = _create_fft_plot(freqs)
+
+# Create kappa rho plot
+kappa_rho_plot = create_krPlot(comptable_cds)
+
+# Create sorted plots
+kappa_sorted_plot = create_ksortedPlot(comptable_cds, n_comps)
+rho_sorted_plot = create_rho_sortedPlot(comptable_cds, n_comps)
+varexp_pie_plot = create_varexp_piePlot(comptable_cds, n_comps)
+
+# link all dynamic figures
+figs = [kappa_rho_plot, kappa_sorted_plot,
+        rho_sorted_plot, varexp_pie_plot]
+
 div_content = models.Div(width=600, height=900, height_policy='fixed')
-# 7) Create the Component Timeseries Plot
-[ts_plot, ts_line_glyph, CDS_TSplot] = _create_ts_plot(n_vols)
-# 8) Create the Component FFT Plot
-[fft_plot, fft_line_glyph, CDS_FFTplot] = _create_fft_plot(freqs)
-# 9) Create the Kappa/Rho Scatter Plot
-kappa_rho_plot = create_krPlot(CDS_CompTable)
-# 10) Create the Ranked Kappa Plot
-kappa_sorted_plot = create_ksortedPlot(CDS_CompTable, Nc)
-# 11) Create the Ranked Rho Plot
-rho_sorted_plot = create_rho_sortedPlot(CDS_CompTable, Nc)
-# 12) Create the Ranked Variance Explained Plot
-varexp_pie_plot = create_varexp_piePlot(CDS_CompTable, Nc)
 
-for fig in [kappa_rho_plot,kappa_sorted_plot,rho_sorted_plot,varexp_pie_plot]:
-    _link_figures(fig,
-                  CDS_CompTable,
-                  CDS_meica_mix,
-                  CDS_meica_fft,
-                  CDS_TSplot,
-                  CDS_FFTplot, ts_line_glyph, fft_line_glyph,
-                  div_content, OUTDIR)
-
-# 13) Create a layout
-app = layouts.column(layouts.row(kappa_rho_plot, kappa_sorted_plot, rho_sorted_plot, varexp_pie_plot),
-             layouts.row(ts_plot, fft_plot),
-             div_content)
-
-# CREATE EMBEDDING MATERIALS
-# 14) Create Script and Div
-(kr_script, kr_div) = embed.components(app)
-# 15) Embed into Report Template
-reporting.generate_report(kr_div, kr_script, file_path='/opt/report_v3.html')
+for fig in figs:
+    _link_figures(fig, comptable_cds, comp_ts_cds, comp_fft_cds,
+                  plot_ts_cds, plot_fft_cds, ts_line_glyph, 
+                  fft_line_glyph, div_content, out_dir)
 
 
-# %%
-CDS_meica_mix.data
+
+# Create a layout
+app = layouts.column(layouts.row(kappa_rho_plot, kappa_sorted_plot,
+                                 rho_sorted_plot, varexp_pie_plot),
+                     layouts.row(ts_plot, fft_plot),
+                     div_content)
+
+# Embed for reporting
+kr_script, kr_div = embed.components(app)
+reporting.generate_report(kr_div, kr_script, 
+                          file_path='/opt/report_v3.html')
+
 
 # %%
 
