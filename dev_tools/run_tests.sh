@@ -17,14 +17,22 @@ cprint() {
 }
 
 
-run_integration_tests() {
+run_three_echo_test() {
     #
-    # Runs tedana integration tests
+    # Runs tedana three-echo test
     #
 
-    cprint "RUNNING INTEGRATION TESTS"
-    make integration
-    cprint "INTEGRATION TESTS PASSED !"
+    cprint "RUNNING THREE-ECHO TEST"
+    make three-echo
+    cprint "THREE-ECHO TEST PASSED !"
+}
+
+run_five_echo_test() {
+    #
+    # Runs tedana five-echo test
+    cprint "RUNNING FIVE-ECHO TEST"
+    make five-echo
+    cprint "FIVE-ECHO TEST PASSED !"
 }
 
 
@@ -57,7 +65,8 @@ run_all_tests() {
 
     run_lint_tests
     run_unit_tests
-    run_integration_tests
+    run_three_echo_test
+    run_five_echo_test
 
     cprint "FINISHED RUNNING ALL TESTS -- GREAT SUCCESS !"
 }

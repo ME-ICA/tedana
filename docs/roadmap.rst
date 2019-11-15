@@ -156,8 +156,6 @@ such that the ``afni_proc.py`` maintainers are willing to switch to ``tedana`` a
 method of accessing ME-EPI denoising in AFNI.
 We will aim to aid in this process by increasing compatibility between ``tedana``
 and the ``afni_proc.py`` workflow, eliminating the need for an additional wrapper script.
-For example, ``tedana`` could directly accept BRIK/HEAD files,
-facilitating interoperability with other AFNI pipelines.
 
 
 |milestone4|_
