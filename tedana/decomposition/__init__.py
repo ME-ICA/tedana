@@ -3,6 +3,6 @@
 
 from .pca import tedpca
 from .ica import tedica
-from .gift_pca import run_gift_pca
+from .gift import gift_pca
 
-__all__ = ['tedpca', 'tedica', 'run_gift_pca']
+__all__ = ['tedpca', 'tedica', 'gift_pca']

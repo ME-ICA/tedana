@@ -40,7 +40,7 @@ def _check_order(order_in):
 
     Parameters
     ----------
-    order_in : ndarray
+    order_in : int
         The order to be passed to the window function
 
     Returns
@@ -266,14 +266,6 @@ def _est_indp_sp(data):
         Number of iterations required to estimate entropy rate
     ent_rate : float
         The entropy rate of the data
-
-    Notes
-    -----
-    TODO: explain math
-
-    References
-    ----------
-    TODO: add references
     """
 
     dims = data.shape
@@ -418,10 +410,6 @@ def _eigensp_adj(lam, n, p):
     -------
     lam_adj : (p,) array-like
               adjusted eigen values.
-
-    Notes
-    -----
-    TODO: add math notes
     """
 
     r = p / n
@@ -449,7 +437,7 @@ def _eigensp_adj(lam, n, p):
     return lam_adj
 
 
-def run_gift_pca(data_nib, mask_nib, criteria='mdl'):
+def gift_pca(data_nib, mask_nib, criteria='mdl'):
     """
     Run Singular Value Decomposition (SVD) on input data,
     automatically select components based on the GIFT software.

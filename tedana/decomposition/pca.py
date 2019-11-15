@@ -10,7 +10,7 @@ from scipy import stats
 from sklearn.decomposition import PCA
 
 from tedana import metrics, utils, io
-from tedana.decomposition import (gift_pca, _utils)
+from tedana.decomposition import (gift, _utils)
 from tedana.stats import computefeats2
 from tedana.selection import kundu_tedpca
 from tedana.due import due, BibTeX
@@ -115,7 +115,9 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     tes : :obj:`list`
         List of echo times associated with `data_cat`, in milliseconds
     algorithm : {'mle', 'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
-        Method with which to select components in TEDPCA. Default is 'mdl'.
+        Method with which to select components in TEDPCA. Default is 'mdl'. Mdl, kic
+        and aic options are based on the GIFT software PCA decomposition and are
+        ordered from most to least aggresive. See (Li et al., 2007).
     source_tes : :obj:`int` or :obj:`list` of :obj:`int`, optional
         Which echos to use in PCA. Values -1 and 0 are special, where a value
         of -1 will indicate using the optimal combination of the echos
@@ -263,7 +265,7 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
             ref_img, utils.unmask(utils.unmask(data, eim), mask))
         mask_img = io.new_nii_like(ref_img,
                                    utils.unmask(eim, mask).astype(int))
-        voxel_comp_weights, varex, varex_norm, comp_ts = gift_pca.run_gift_pca(
+        voxel_comp_weights, varex, varex_norm, comp_ts = gift.gift_pca(
             data_img, mask_img, algorithm)
     elif algorithm == 'mle':
         voxel_comp_weights, varex, varex_norm, comp_ts = run_mlepca(data_z)
