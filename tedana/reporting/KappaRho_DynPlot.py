@@ -183,6 +183,41 @@ def _create_fft_plot(freqs):
 
 
 # %%
+def _spectrum_data_src(CDS_meica_mix, tr, n_comps):
+    """
+    Computes FFT for all time series and puts them on a bokeh.models.ColumnDataSource
+
+    Parameters
+    ----------
+    CDS_meica_mix: bokeh.models.ColumnDataSource
+        Contains the time series for all components
+    tr: int
+        Data Repetition Time in seconds
+    n_comps: int
+        Number of components
+
+    Returns
+    -------
+    cds: bokeh.models.ColumnDataSource
+        Contains the spectrum for all time series
+    freqs: np.darray
+        List of frequencies for which spectral amplitude values are
+        available
+    """
+    spectrum, freqs = utils.get_spectrum(CDS_meica_mix.data['ica_00'], tr)
+    n_freqs = spectrum.shape[0]
+    df = pd.DataFrame(columns=['ica_' + str(c).zfill(2) for c in np.arange(n_comps)], 
+                      index=np.arange(n_freqs))
+    for c in np.arange(Nc):
+        cid = 'ica_' + str(c).zfill(2)
+        ts = CDS_meica_mix.data[cid]
+        spectrum, freqs = utils.get_spectrum(ts, tr)
+        df[cid] = spectrum
+    cds = models.ColumnDataSource(df)
+    return cds, freqs
+
+
+# %%
 def load_comp_ts(out_dir):
     """
     Load Component Timeseries (meica_mix.1D) into a bokeh.ColumnDataSource
@@ -266,40 +301,6 @@ def load_comp_table(out_dir):
         classif=DF['classification'],
         angle=DF['angle']))
     return CDS, Nc
-
-
-# %%
-def generate_spectrum_CDS(CDS_meica_mix, TR, Nc):
-    """
-    Computes FFT for all time series and puts them on a bokeh.models.ColumnDataSource
-
-    Parameters
-    ----------
-    CDS_meica_mix: bokeh.models.ColumnDataSource
-        Contains the time series for all components
-    TR: int
-        Data Repetition Time in seconds
-    Nc: int
-        Number of components
-
-    Returns
-    -------
-    CDS: bokeh.models.ColumnDataSource
-        Contains the spectrum for all time series
-    Nf: int
-        Number of frequency points
-    """
-    spectrum, freqs = utils.get_spectrum(CDS_meica_mix.data['ica_00'], TR)
-    Nf = spectrum.shape[0]
-    DF = pd.DataFrame(columns=['ica_' + str(c).zfill(2) for c in np.arange(Nc)], index=np.arange(Nf))
-    for c in np.arange(Nc):
-        cid = 'ica_' + str(c).zfill(2)
-        ts = CDS_meica_mix.data[cid]
-        spectrum, freqs = utils.get_spectrum(ts, TR)
-        DF[cid] = spectrum
-    DF['Freq'] = freqs
-    CDS = models.ColumnDataSource(DF)
-    return CDS, freqs
 
 
 # %%
@@ -558,7 +559,7 @@ def create_varexp_piePlot(CDS_comp_table, Nc):
 # 2) Load the Component Timeseries into a bokeh CDS
 [CDS_meica_mix, n_vols, Nc] = load_comp_ts(OUTDIR)
 # 3) Generate the Component Spectrum and store it into a bokeh CDS
-[CDS_meica_fft, freqs] = generate_spectrum_CDS(CDS_meica_mix, TR, Nc)
+[CDS_meica_fft, freqs] = _spectrum_data_src(CDS_meica_mix, TR, Nc)
 
 # GENERATE CDS NECESSARY FOR LIVE UPDATE OF PLOTS
 # 4) Save flat Line into a bokeh CDS (this is what get plotted in the TS graph)
@@ -604,7 +605,7 @@ reporting.generate_report(kr_div, kr_script, file_path='/opt/report_v3.html')
 
 
 # %%
-type(freqs)
+CDS_meica_mix.data
 
 # %%
 
