@@ -92,7 +92,7 @@ def test_make_adaptive_mask():
     # masksum has correct values
     vals, counts = np.unique(masksum, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([13564,  3977,  5060, 41749]))
+    assert np.allclose(counts, np.array([13564, 3977, 5060, 41749]))
 
     # test user-defined mask
     # TODO: Add mask file with no bad voxels to test against
@@ -106,9 +106,9 @@ def test_make_adaptive_mask():
 
 def test_smoke_load_image():
     """
-    ensure that load_image returns reasonable objects with random inputs 
+    ensure that load_image returns reasonable objects with random inputs
     in the correct format
-    Note: load_image could take in 3D or 4D array 
+    Note: load_image could take in 3D or 4D array
     """
     data_3d = np.random.random((100, 5, 20))
     data_4d = np.random.random((100, 5, 20, 50))
@@ -119,9 +119,9 @@ def test_smoke_load_image():
 
 def test_smoke_make_adaptive_mask():
     """
-    ensure that make_adaptive_mask returns reasonable objects with random inputs 
+    ensure that make_adaptive_mask returns reasonable objects with random inputs
     in the correct format
-    Note: make_adaptive_mask has optional paramters - mask and getsum 
+    Note: make_adaptive_mask has optional paramters - mask and getsum
     """
     n_samples = 100
     n_echos = 5
@@ -130,82 +130,81 @@ def test_smoke_make_adaptive_mask():
     mask = np.random.randint(2, size=n_samples)
 
     assert utils.make_adaptive_mask(data) is not None
-    assert utils.make_adaptive_mask(data, mask=mask) is not None # functions with mask
-    assert utils.make_adaptive_mask(data, getsum=True) is not None # functions when getsumis true
+    assert utils.make_adaptive_mask(data, mask=mask) is not None  # functions with mask
+    assert utils.make_adaptive_mask(data, getsum=True) is not None  # functions when getsumis true
 
 
 def test_smoke_unmask():
     """
-    ensure that unmask returns reasonable objects with random inputs 
+    ensure that unmask returns reasonable objects with random inputs
     in the correct format
     Note: unmask could take in 1D or 2D or 3D arrays
-    """ 
+    """
     data_1d = np.random.random((100))
     data_2d = np.random.random((100, 5))
     data_3d = np.random.random((100, 5, 20))
     mask = np.random.randint(2, size=100)
 
-    assert utils.unmask(data_1d, mask) is not None  
+    assert utils.unmask(data_1d, mask) is not None
     assert utils.unmask(data_2d, mask) is not None
     assert utils.unmask(data_3d, mask) is not None
 
 
 def test_smoke_dice():
     """
-    ensure that dice returns reasonable objects with random inputs 
+    ensure that dice returns reasonable objects with random inputs
     in the correct format
     Note: two arrays must be in the same length
     """
     arr1 = np.random.random((100))
     arr2 = np.random.random((100))
 
-    assert utils.dice(arr1, arr2) is not None 
+    assert utils.dice(arr1, arr2) is not None
 
 
 def test_smoke_andb():
     """
-    ensure that andb returns reasonable objects with random inputs 
+    ensure that andb returns reasonable objects with random inputs
     in the correct format
-    """ 
-    arr = np.random.random((100, 10)).tolist() # 2D list of "arrays"
+    """
+    arr = np.random.random((100, 10)).tolist()  # 2D list of "arrays"
 
     assert utils.andb(arr) is not None
 
 
 def test_smoke_get_spectrum():
     """
-    ensure that get_spectrum returns reasonable objects with random inputs 
+    ensure that get_spectrum returns reasonable objects with random inputs
     in the correct format
-    """ 
+    """
     data = np.random.random((100))
     tr = random.random()
 
     spectrum, freqs = utils.get_spectrum(data, tr)
     assert spectrum is not None
     assert freqs is not None
-     
 
 
 def test_smoke_threshold_map():
     """
-    ensure that threshold_map returns reasonable objects with random inputs 
+    ensure that threshold_map returns reasonable objects with random inputs
     in the correct format
     Note: using 3D array as img, some parameters are optional and are all tested
-    """ 
-    img = np.random.random((10, 10, 10)) # 3D array must of of size S
+    """
+    img = np.random.random((10, 10, 10))  # 3D array must of of size S
     min_cluster_size = random.randint(1, 100)
 
     threshold = random.random()
     mask = np.random.randint(2, size=1000)
 
-    assert utils.threshold_map(img, min_cluster_size) is not None 
+    assert utils.threshold_map(img, min_cluster_size) is not None
 
     # test threshold_map with different optional parameters
-    assert utils.threshold_map(img, min_cluster_size, threshold=threshold) is not None 
-    assert utils.threshold_map(img, min_cluster_size, mask=mask) is not None 
-    assert utils.threshold_map(img, min_cluster_size, binarize=False) is not None 
-    assert utils.threshold_map(img, min_cluster_size, sided='one') is not None 
-    assert utils.threshold_map(img, min_cluster_size, sided='bi') is not None 
+    assert utils.threshold_map(img, min_cluster_size, threshold=threshold) is not None
+    assert utils.threshold_map(img, min_cluster_size, mask=mask) is not None
+    assert utils.threshold_map(img, min_cluster_size, binarize=False) is not None
+    assert utils.threshold_map(img, min_cluster_size, sided='one') is not None
+    assert utils.threshold_map(img, min_cluster_size, sided='bi') is not None
 
 
 # TODO: "BREAK" AND UNIT TESTS
