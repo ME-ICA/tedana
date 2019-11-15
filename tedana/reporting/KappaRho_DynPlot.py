@@ -410,7 +410,7 @@ def tap_callback(comptable_cds, CDS_meica_ts, comp_fft_cds, plot_ts_cds,
 
 
 # %%
-def create_krPlot(comptable_cds):
+def create_kr_plt(comptable_cds):
     """
     Create Dymamic Kappa/Rho Scatter Plot
 
@@ -442,67 +442,49 @@ def create_krPlot(comptable_cds):
 
 
 # %%
-def create_ksortedPlot(comptable_cds, n_comps):
-    """
-    Create Dymamic Sorted Kappa Plot
-
+def create_sorted_plt(compatable_cds, n_comps, x_var, y_var, title=None, x_label=None, y_label=None):
+    """ 
+    Create dynamic sorted plots
+    
     Parameters
     ----------
-    comptable_cds: bokeh.models.ColumnDataSource
+    comptable_ds: bokeh.models.ColumnDataSource
         Data structure containing a limited set of columns from the comp_table
 
+    x_var: str
+        Name of variable for the x-axis
+    
+    y_var: str
+        Name of variable for the y-axis
+    
+    title: str
+        Plot title
+        
+    x_label: str
+        X-axis label
+    
+    y_label: str
+        Y-axis label
+        
     Returns
     -------
     fig: bokeh.plotting.figure.Figure
-        Bokeh plot of components ranked by kappa
+        Bokeh plot of components ranked by a given feature
     """
-    # Create Panel for the Ranked Kappa Plot
-    ksorted_hovertool = models.HoverTool(tooltips=[('Component ID', '@component'), ('Kappa', '@kappa{0.00}'),
-                                            ('Rho', '@rho{0.00}'), ('Var. Expl.', '@varexp{0.00}%')])
-    fig = plotting.figure(plot_width=400, plot_height=400,
-                 tools=["tap,wheel_zoom,reset,pan,crosshair,save", ksorted_hovertool],
-                 title="Components sorted by Kappa")
-    fig.line(x=np.arange(1, n_comps + 1),
-             y=comptable_cds.data['kappa'].sort_values(ascending=False).values,
-             color='black')
-    fig.circle('kappa_rank', 'kappa', source=comptable_cds,
-               size=5, color='color', alpha=0.7)
-    fig.xaxis.axis_label = 'Kappa Rank'
-    fig.yaxis.axis_label = 'Kappa'
-    fig.x_range = models.Range1d(-1, n_comps + 1)
-    fig.toolbar.logo = None
-
-    return fig
-
-
-# %%
-def create_rho_sortedPlot(comptable_cds, n_comps):
-    """
-    Create Dymamic Sorted Kappa Plot
-
-    Parameters
-    ----------
-    comptable_cds: bokeh.models.ColumnDataSource
-        Data structure containing a limited set of columns from the comp_table
-
-    Returns
-    -------
-    fig: bokeh.plotting.figure.Figure
-        Bokeh plot of components ranked by kappa
-    """
-    # Create Panel for the Ranked Kappa Plot
-    hovertool = models.HoverTool(tooltips=[('Component ID', '@component'), ('Kappa', '@kappa{0.00}'),
-                                    ('Rho', '@rho{0.00}'), ('Var. Expl.', '@varexp{0.00}%')])
+    hovertool = models.HoverTool(tooltips=[('Component ID', '@component'), 
+                                           ('Kappa', '@kappa{0.00}'),
+                                            ('Rho', '@rho{0.00}'), 
+                                           ('Var. Expl.', '@varexp{0.00}%')])
     fig = plotting.figure(plot_width=400, plot_height=400,
                  tools=["tap,wheel_zoom,reset,pan,crosshair,save", hovertool],
-                 title="Components sorted by Rho")
+                 title=title)
     fig.line(x=np.arange(1, n_comps + 1),
-             y=comptable_cds.data['rho'].sort_values(ascending=False).values,
+             y=comptable_cds.data[y_var].sort_values(ascending=False).values,
              color='black')
-    fig.circle('rho_rank', 'rho', source=comptable_cds,
+    fig.circle(x_var, y_var, source=comptable_cds,
                size=5, color='color', alpha=0.7)
-    fig.xaxis.axis_label = 'Rho Rank'
-    fig.yaxis.axis_label = 'Rho'
+    fig.xaxis.axis_label = x_label
+    fig.yaxis.axis_label = y_label
     fig.x_range = models.Range1d(-1, n_comps + 1)
     fig.toolbar.logo = None
 
@@ -510,7 +492,7 @@ def create_rho_sortedPlot(comptable_cds, n_comps):
 
 
 # %%
-def create_varexp_piePlot(comptable_cds, n_comps):
+def create_varexp_pie_plt(comptable_cds, n_comps):
     fig = plotting.figure(plot_width=400, plot_height=400, title='Variance Explained View', 
                  tools=['hover,tap,save'], 
                  tooltips=[('Component ID','@component'),
@@ -557,12 +539,16 @@ ts_plot, ts_line_glyph, plot_ts_cds = _create_ts_plot(n_vols)
 fft_plot, fft_line_glyph, plot_fft_cds = _create_fft_plot(freqs)
 
 # Create kappa rho plot
-kappa_rho_plot = create_krPlot(comptable_cds)
+kappa_rho_plot = create_kr_plt(comptable_cds)
 
 # Create sorted plots
-kappa_sorted_plot = create_ksortedPlot(comptable_cds, n_comps)
-rho_sorted_plot = create_rho_sortedPlot(comptable_cds, n_comps)
-varexp_pie_plot = create_varexp_piePlot(comptable_cds, n_comps)
+kappa_sorted_plot = create_sorted_plt(comptable_cds, n_comps,
+                                      'kappa_rank', 'kappa',
+                                       'Kappa Rank','Kappa')
+rho_sorted_plot = create_sorted_plt(comptable_cds, n_comps,
+                                   'rho_rank', 'rho',
+                                   'Rho Rank','Rho')
+varexp_pie_plot = create_varexp_pie_plt(comptable_cds, n_comps)
 
 # link all dynamic figures
 figs = [kappa_rho_plot, kappa_sorted_plot,
