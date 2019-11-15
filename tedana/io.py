@@ -505,11 +505,13 @@ def load_comptable(filename):
     df : :obj:`pandas.DataFrame`
         DataFrame with contents from filename.
     """
-    df = pd.read_json(filename, orient='index')
+    with open(filename, 'r') as fo:
+        data = json.load(fo)
+    data = {d: data[d] for d in data.keys() if _find_comp_rows(d)}
+    df = pd.DataFrame.from_dict(data, orient='index')
     df = df.replace('n/a', np.nan)  # our jsons store nans as 'n/a'
     df['component'] = df.index
-    df = df.loc[df['component'].apply(_find_comp_rows)]
     df['component'] = df['component'].apply(_rem_column_prefix)
-    df = df.set_index('component')
+    df = df.set_index('component', drop=True)
     df.index.name = 'component'
     return df
