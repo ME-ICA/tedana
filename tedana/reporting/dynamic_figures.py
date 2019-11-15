@@ -358,15 +358,19 @@ kappa_sorted_plot = create_sorted_plt(comptable_ds, n_comps, 'kappa_rank', 'kapp
 rho_sorted_plot = create_sorted_plt(comptable_ds, n_comps, 'rho_rank', 'rho')
 varexp_sorted_plot = create_sorted_plt(comptable_ds, n_comps, 'varexp_rank', 'varexp')
 
-# %%
+# %%
 # link all dynamic figures
 figs = [kappa_rho_plot, kappa_sorted_plot,
         rho_sorted_plot, varexp_sorted_plot]
+
+div_content = models.Div(width=600, height=900, height_policy='fixed')
+
 for f in figs:
-    _link_figures(f)
+    _link_figures(f, comptable_ds, kappa_rho_plot, kappa_sorted_plot,
+                  rho_sorted_plot, varexp_sorted_plot,
+                  div_content, out_dir)
 
 # Create a layout
-div_content = models.Div(width=600, height=900, height_policy='fixed')
 app = layouts.column(layouts.row(kappa_rho_plot, kappa_sorted_plot,
                                  rho_sorted_plot, varexp_sorted_plot),
                      layouts.row(ts_plot, fft_plot),
@@ -375,4 +379,6 @@ app = layouts.column(layouts.row(kappa_rho_plot, kappa_sorted_plot,
 # Embed for reporting
 kr_script, kr_div = embed.components(app)
 reporting.generate_report(kr_div, kr_script,
-                          file_path='/opt/report_v2.html')
+                          file_path='//Users/enekourunuela/Desktop/tedtest/report_v2.html')
+
+
