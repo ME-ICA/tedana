@@ -15,8 +15,12 @@
 
 # %%
 import holoviews as hv
+hv.extension('bokeh')
+
+# %%
 import pandas as pd
 import numpy as np
+from os.path import join as opj
 from bokeh.models import ColumnDataSource, HoverTool, CustomJS, Div, Range1d, Line, Circle
 from bokeh.events import Tap
 from bokeh.embed import components
@@ -29,8 +33,6 @@ import os.path as osp
 from math import pi
 from tedana.io import load_comptable
 from bokeh.transform import cumsum
-
-hv.extension('bokeh')
 
 # %%
 OUTDIR = '/opt/tedana-hack/tedana/docs/DynReports/data/TED.five-echo/'
@@ -57,7 +59,7 @@ def load_comp_ts(out_dir):
     Nc: int
         Number of components
     """
-    file_path = osp.join(OUTDIR,'ica_mixing.tsv')
+    file_path = opj(OUTDIR,'ica_mixing.tsv')
     DF = pd.read_csv(file_path, sep='\t')
     [Nt,Nc] = DF.shape
     DF['Volume'] = np.arange(Nt)
@@ -151,7 +153,7 @@ def generate_spectrum_CDS(CDS_meica_mix, TR, Nc):
     for c in np.arange(Nc):
         cid = 'ica_' + str(c).zfill(2)
         ts = CDS_meica_mix.data[cid]
-        spectrum, freqs = get_spectrum(ts, 2)
+        spectrum, freqs = get_spectrum(ts, TR)
         DF[cid] = spectrum
     DF['Freq'] = freqs
     CDS = ColumnDataSource(DF)
@@ -285,8 +287,7 @@ def tap_callback(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplot,
 
 
 # %%
-def create_krPlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplot,
-                  CDS_FFTplot, ts_line_glyph, fft_line_glyph, div):
+def create_krPlot(CDS_comp_table):
     """
     Create Dymamic Kappa/Rho Scatter Plot
 
@@ -316,14 +317,11 @@ def create_krPlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplot,
     fig.legend.background_fill_alpha = 0.5
     fig.legend.orientation = 'horizontal'
     fig.legend.location = 'bottom_right'
-    fig.js_on_event(Tap, tap_callback(CDS_comp_table, CDS_meica_ts, CDS_meica_fft,
-                    CDS_TSplot, CDS_FFTplot, ts_line_glyph, fft_line_glyph, div))
     return fig
 
 
 # %%
-def create_ksortedPlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplot,
-                       CDS_FFTplot, ts_line_glyph, fft_line_glyph, Nc, div):
+def create_ksortedPlot(CDS_comp_table, Nc):
     """
     Create Dymamic Sorted Kappa Plot
 
@@ -354,16 +352,12 @@ def create_ksortedPlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplot,
     fig.yaxis.axis_label = 'Kappa'
     fig.x_range = Range1d(-1, Nc + 1)
     fig.toolbar.logo = None
-    fig.js_on_event(Tap, tap_callback(CDS_comp_table, CDS_meica_ts, CDS_meica_fft,
-                                      CDS_TSplot, CDS_FFTplot, ts_line_glyph,
-                                      fft_line_glyph, div))
 
     return fig
 
 
 # %%
-def create_rho_sortedPlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplot,
-                          CDS_FFTplot, ts_line_glyph, fft_line_glyph, Nc, div):
+def create_rho_sortedPlot(CDS_comp_table, Nc):
     """
     Create Dymamic Sorted Kappa Plot
 
@@ -394,16 +388,12 @@ def create_rho_sortedPlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplo
     fig.yaxis.axis_label = 'Rho'
     fig.x_range = Range1d(-1, Nc + 1)
     fig.toolbar.logo = None
-    fig.js_on_event(Tap, tap_callback(CDS_comp_table, CDS_meica_ts, CDS_meica_fft,
-                    CDS_TSplot, CDS_FFTplot, ts_line_glyph,
-                    fft_line_glyph, div))
 
     return fig
 
 
 # %%
-def create_varexp_sortedPlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplot,
-                             CDS_FFTplot, ts_line_glyph, fft_line_glyph, Nc, div):
+def create_varexp_sortedPlot(CDS_comp_table, Nc):
     """
     Create Dymamic Sorted Kappa Plot
 
@@ -442,8 +432,7 @@ def create_varexp_sortedPlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TS
 
 
 # %%
-def create_varexp_piePlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplot,
-                             CDS_FFTplot, ts_line_glyph, fft_line_glyph, Nc, div):
+def create_varexp_piePlot(CDS_comp_table, Nc):
     fig = figure(plot_width=400, plot_height=400, title='Variance Explained View', 
                  tools=['hover,tap,save'], 
                  tooltips=[('Component ID','@component'),
@@ -458,11 +447,7 @@ def create_varexp_piePlot(CDS_comp_table, CDS_meica_ts, CDS_meica_fft, CDS_TSplo
     fig.axis.visible=False
     fig.grid.visible=False
     fig.toolbar.logo=None    
-    
-    fig.js_on_event(Tap, tap_callback(CDS_comp_table, CDS_meica_ts, CDS_meica_fft,
-                    CDS_TSplot, CDS_FFTplot, ts_line_glyph,
-                    fft_line_glyph, div))
-    
+        
     circle = Circle(x=0,y=1,size=150, fill_color='white', line_color='white')
     fig.add_glyph(circle)
 
@@ -521,7 +506,7 @@ def create_fft_plot(CDS_FFTplot, max_freq):
     """
     fig = figure(plot_width=800, plot_height=200,
                  tools=["wheel_zoom,box_zoom,reset,pan,crosshair,save",
-                        HoverTool(tooltips=[('Freq.', '@x'), ('Power', '@y')])],
+                        HoverTool(tooltips=[('Freq.', '@x{0.000} Hz'), ('Power', '@y{0.00}')])],
                  title="Component Spectrum")
     line_glyph = Line(x='x', y='y', line_color='#000000', line_width=3)
     fig.add_glyph(CDS_FFTplot, line_glyph)
@@ -531,6 +516,48 @@ def create_fft_plot(CDS_FFTplot, max_freq):
     fig.toolbar_location = 'above'
     fig.x_range = Range1d(0, max_freq)
     return fig, line_glyph
+
+
+# %%
+def _link_figures(fig, comptable_ds,
+                  ts_src, fft_src, ts_plot, fft_plot, ts_line_glyph, fft_line_glyph,
+                  div_content, out_dir):
+    """
+    Links figures and adds interaction on mouse-click.
+
+    Parameters
+    ----------
+    fig :
+
+    comptable_ds :
+
+    ts_src :
+
+    fft_src :
+
+    ts_plot :
+
+    fft_plot :
+
+    div_content :
+
+    out_dir :
+
+    Returns
+    -------
+    fig :
+    
+    """
+    fig.js_on_event(Tap,
+                    tap_callback(comptable_ds,
+                                ts_src,
+                                fft_src,
+                                ts_plot,
+                                fft_plot,
+                                ts_line_glyph,
+                                fft_line_glyph,
+                                out_dir))
+    return fig
 
 
 # %%
@@ -556,23 +583,23 @@ div_content = Div(width=600, height=900, height_policy='fixed')
 # 8) Create the Component FFT Plot
 [fft_plot, fft_line_glyph] = create_fft_plot(CDS_FFTplot, np.max(CDS_meica_fft.data['Freq']))
 # 9) Create the Kappa/Rho Scatter Plot
-kappa_rho_plot = create_krPlot(CDS_CompTable, CDS_meica_mix, CDS_meica_fft,
-                               CDS_TSplot, CDS_FFTplot, ts_line_glyph, fft_line_glyph, div_content)
+kappa_rho_plot = create_krPlot(CDS_CompTable)
 # 10) Create the Ranked Kappa Plot
-kappa_sorted_plot = create_ksortedPlot(CDS_CompTable, CDS_meica_mix, CDS_meica_fft,
-                                       CDS_TSplot, CDS_FFTplot, ts_line_glyph,
-                                       fft_line_glyph, Nc, div_content)
+kappa_sorted_plot = create_ksortedPlot(CDS_CompTable, Nc)
 # 11) Create the Ranked Rho Plot
-rho_sorted_plot = create_rho_sortedPlot(CDS_CompTable, CDS_meica_mix, CDS_meica_fft,
-                                        CDS_TSplot, CDS_FFTplot, ts_line_glyph,
-                                        fft_line_glyph, Nc, div_content)
+rho_sorted_plot = create_rho_sortedPlot(CDS_CompTable, Nc)
 # 12) Create the Ranked Variance Explained Plot
-#varexp_sorted_plot = create_varexp_sortedPlot(CDS_CompTable, CDS_meica_mix, CDS_meica_fft,
-#                                              CDS_TSplot, CDS_FFTplot, ts_line_glyph,
-#                                              fft_line_glyph, Nc, div_content)
-varexp_pie_plot = create_varexp_piePlot(CDS_CompTable, CDS_meica_mix, CDS_meica_fft,
-                                              CDS_TSplot, CDS_FFTplot, ts_line_glyph,
-                                              fft_line_glyph, Nc, div_content)
+varexp_pie_plot = create_varexp_piePlot(CDS_CompTable, Nc)
+
+for fig in [kappa_rho_plot,kappa_sorted_plot,rho_sorted_plot,varexp_pie_plot]:
+    _link_figures(fig,
+                  CDS_CompTable,
+                  CDS_meica_mix,
+                  CDS_meica_fft,
+                  CDS_TSplot,
+                  CDS_FFTplot, ts_line_glyph, fft_line_glyph,
+                  div_content, OUTDIR)
+
 # 13) Create a layout
 app = column(row(kappa_rho_plot, kappa_sorted_plot, rho_sorted_plot, varexp_pie_plot),
              row(ts_plot, fft_plot),
@@ -582,7 +609,7 @@ app = column(row(kappa_rho_plot, kappa_sorted_plot, rho_sorted_plot, varexp_pie_
 # 14) Create Script and Div
 (kr_script, kr_div) = components(app)
 # 15) Embed into Report Template
-generate_report(kr_div, kr_script, file_path='/opt/report_v2.html')
+generate_report(kr_div, kr_script, file_path='/opt/report_v3.html')
 
 
 # %%
