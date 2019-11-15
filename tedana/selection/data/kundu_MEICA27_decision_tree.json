@@ -1,6 +1,6 @@
 {
-    "tree_id": "minimal_decision_tree_test1",
-    "info": "First test of a minimal decision tree",
+    "tree_id": "kundu_MEICA27_decision_tree",
+    "info": "Following the full decision tree designed by Prantik Kundu",
     "report": "This is based on the minimal criteria of the original MEICA decision tree without the more agressive noise removal steps",
     "refs": "Kundu 2013",
     "necessary_metrics": [
@@ -11,7 +11,8 @@
         "DICE_FS0",
         "DICE_FT2",
         "T2fitdiff invsout ICAmap Tstat",
-        "variance explained"
+        "variance explained",
+        "mean metric rank"
     ],
     "nodes": [
         {
@@ -93,6 +94,23 @@
                 "iffalse": "provisionalreject",
                 "decide_comps": "unclassified",
                 "n_echos": null
+            },
+            "kwargs": {
+                "log_extra_info": "",
+                "log_extra_report": ""
+            }
+        },
+        {
+            "functionname": "meanmetricrank_and_variance_greaterthan_thresh",
+            "parameters": {
+                "iftrue": "reject",
+                "iffalse": "nochange",
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject"
+                ],
+                "HIGH_PERC": null,
+                "EXTEND_FACTOR": null
             },
             "kwargs": {
                 "log_extra_info": "",

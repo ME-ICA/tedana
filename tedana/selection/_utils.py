@@ -19,13 +19,14 @@ def selectcomps2use(comptable, decide_comps):
     components need to be labeled as unclassified, NOT empty
     WILL NEED TO ADD NUMBER INDEXING TO selectcomps2use
     """
-
+    if type(decide_comps) == str:
+        decide_comps = [decide_comps]
     if decide_comps[0] == 'all':
         # All components with any string in the classification field
         # are set to True
         comps2use = list(range(comptable.shape[0]))
-    elif (type(decide_comps) == str):
-        comps2use = comptable.index[comptable['classification'] == decide_comps].tolist()
+    # elif (type(decide_comps) == str):
+    #    comps2use = comptable.index[comptable['classification'] == decide_comps].tolist()
     elif (type(decide_comps) == list) and (type(decide_comps[0]) == str):
         comps2use = []
         for didx in range(len(decide_comps)):

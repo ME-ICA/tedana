@@ -18,7 +18,8 @@ RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
 VALID_TREES = [
-    'mdt', 'minimal_decision_tree1'
+    'mdt', 'minimal_decision_tree1',
+    'kdt', 'kundu_MEICA27_decision_tree'
 ]
 
 
@@ -166,11 +167,21 @@ class DecisionTree:
         are moved to ignored
     """
 
-    def __init__(self, tree, comptable, n_echos):
+    def __init__(self, tree, comptable, n_echos, n_vols, LOW_PERC=25, HIGH_PERC=90):
         # initialize stuff based on the info in specified `tree`
         self.tree = tree
         self.comptable = comptable.copy()
         self.n_echos = n_echos
+        self.n_vols = n_vols
+        self.LOW_PERC = LOW_PERC
+        self.HIGH_PERC = HIGH_PERC
+        if n_vols < 90:
+            self.EXTEND_FACTOR = 3
+        elif n_vols < 110:
+            self.EXTEND_FACTOR = 2 + (n_vols - 90) / 20
+        else:
+            self.EXTEND_FACTOR = 2
+
         self.config = load_config(self.tree)
 
         LGR.info('Performing component selection with ' + self.config['tree_id'])
@@ -211,7 +222,7 @@ class DecisionTree:
                      .format(node['functionname'], {**params, **kwargs}))
             self.comptable, dnode_outputs = fcn(
                 self.comptable, decision_node_idx=ii, **params, **kwargs)
-            used_metrics.update(dnode_outputs['used_metrics'])
+            used_metrics.update(dnode_outputs['outputs']['used_metrics'])
             print(node['functionname'])
             # print(list(self.comptable['rationale']))
             # dnode_outputs is a dict that should always include fields for
