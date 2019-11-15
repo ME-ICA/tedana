@@ -332,7 +332,7 @@ def tap_callback(comptable_ds, ts_src, fft_src,
 # ----------------------------------------------------------------
 # What not to do:
 
-out_dir = '/home/emdupre/Desktop/tedest'
+out_dir = '/Users/enekourunuela/Desktop/tedtest'
 tr = 2
 
 # Load the component time series
@@ -350,16 +350,15 @@ data_src, Nf = _spectrum_data_src(df, tr)
 fft_plot = _create_fft_plot(n_vols, Nf)
 ts_plot = _create_ts_plot(n_vols)
 
-# %%
-
 # create kapp rho plot
 kappa_rho_plot = create_kr_plt(comptable_ds)
 
 # create all sorted plots
-kappa_sorted_plot = create_sorted_plt()
-rho_sorted_plot = create_sorted_plt()
-varexp_sorted_plot = create_sorted_plt()
+kappa_sorted_plot = create_sorted_plt(comptable_ds, n_comps, 'kappa_rank', 'kappa')
+rho_sorted_plot = create_sorted_plt(comptable_ds, n_comps, 'rho_rank', 'rho')
+varexp_sorted_plot = create_sorted_plt(comptable_ds, n_comps, 'varexp_rank', 'varexp')
 
+# %%
 # link all dynamic figures
 figs = [kappa_rho_plot, kappa_sorted_plot,
         rho_sorted_plot, varexp_sorted_plot]
