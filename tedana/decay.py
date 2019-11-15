@@ -2,8 +2,10 @@
 Functions to estimate S0 and T2* from multi-echo data.
 """
 import logging
-import scipy
 import numpy as np
+import scipy
+from scipy import stats
+
 from tedana import utils
 
 LGR = logging.getLogger(__name__)

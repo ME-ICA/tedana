@@ -153,17 +153,17 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     comptable.loc[temp_rej0a, 'classification'] = 'rejected'
     comptable.loc[temp_rej0a, 'rationale'] += 'I002;'
 
-    # Number of significant voxels for S0 model is higher than number for R2
-    # model *and* number for R2 model is greater than zero.
-    temp_rej0b = all_comps[((comptable['countsigFS0'] > comptable['countsigFR2']) &
-                            (comptable['countsigFR2'] > 0))]
+    # Number of significant voxels for S0 model is higher than number for T2
+    # model *and* number for T2 model is greater than zero.
+    temp_rej0b = all_comps[((comptable['countsigFS0'] > comptable['countsigFT2']) &
+                            (comptable['countsigFT2'] > 0))]
     comptable.loc[temp_rej0b, 'classification'] = 'rejected'
     comptable.loc[temp_rej0b, 'rationale'] += 'I003;'
     rej = np.union1d(temp_rej0a, temp_rej0b)
 
-    # Dice score for S0 maps is higher than Dice score for R2 maps and variance
+    # Dice score for S0 maps is higher than Dice score for T2 maps and variance
     # explained is higher than the median across components.
-    temp_rej1 = all_comps[(comptable['dice_FS0'] > comptable['dice_FR2']) &
+    temp_rej1 = all_comps[(comptable['dice_FS0'] > comptable['dice_FT2']) &
                           (comptable['variance explained'] >
                            np.median(comptable['variance explained']))]
     comptable.loc[temp_rej1, 'classification'] = 'rejected'
@@ -198,8 +198,8 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     a. Not outlier variance
     b. Kappa>kappa_elbow
     c. Rho<Rho_elbow
-    d. High R2* dice compared to S0 dice
-    e. Gain of F_R2 in clusters vs noise
+    d. High T2* dice compared to S0 dice
+    e. Gain of F_T2 in clusters vs noise
     f. Estimate a low and high variance
     """
     # Step 2a
@@ -305,10 +305,10 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
         # Recompute the midk steps on the limited set to clean up the tail
         d_table_rank = np.vstack([
             len(unclf) - stats.rankdata(comptable.loc[unclf, 'kappa']),
-            len(unclf) - stats.rankdata(comptable.loc[unclf, 'dice_FR2']),
+            len(unclf) - stats.rankdata(comptable.loc[unclf, 'dice_FT2']),
             len(unclf) - stats.rankdata(comptable.loc[unclf, 'signal-noise_t']),
             stats.rankdata(comptable.loc[unclf, 'countnoise']),
-            len(unclf) - stats.rankdata(comptable.loc[unclf, 'countsigFR2'])]).T
+            len(unclf) - stats.rankdata(comptable.loc[unclf, 'countsigFT2'])]).T
         comptable.loc[unclf, 'd_table_score_scrub'] = d_table_rank.mean(1)
         num_acc_guess = int(np.mean([
             np.sum((comptable.loc[unclf, 'kappa'] > kappa_elbow) &

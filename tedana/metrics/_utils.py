@@ -7,6 +7,29 @@ from scipy import stats
 from tedana.stats import computefeats2
 
 
+def dependency_resolver(dict_, requested_metrics, base_inputs):
+    """
+    """
+    not_found = [k for k in requested_metrics if not k in dict_.keys()]
+    if not_found:
+        raise ValueError('Unknown metric(s): {}'.format(', '.join(not_found)))
+
+    required_metrics = requested_metrics
+    while True:
+        required_metrics_new = required_metrics[:]
+        for k in required_metrics:
+            if k in dict_.keys():
+                new_metrics = dict_[k]
+            elif k not in base_inputs:
+                print("Warning: {} not found".format(k))
+            required_metrics_new += new_metrics
+        if set(required_metrics) == set(required_metrics_new):
+            break
+        else:
+            required_metrics = required_metrics_new
+    return required_metrics
+
+
 def determine_signs(weights, axis=0):
     """
     Determine component-wise optimal signs using voxel-wise parameter estimates.

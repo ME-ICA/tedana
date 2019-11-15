@@ -4,9 +4,9 @@
 from .kundu_fit import (
     kundu_metrics, dependence_metrics
 )
-from .dependence import (
-    calculate_varex_norm
+from .collect import (
+    generate_metrics
 )
 
 __all__ = [
-    'dependence_metrics', 'kundu_metrics']
+    'dependence_metrics', 'kundu_metrics', 'generate_metrics']

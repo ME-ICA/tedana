@@ -188,22 +188,9 @@ def threshold_to_match(maps, n_sig_voxels, mask, ref_img, csize):
     return clmaps
 
 
-def spatial_cluster(F_T2_maps, F_S0_maps, Z_maps, optcom_betas, mask, ref_img,
-                    n_echos, csize=None):
-    """
-    Perform cluster-extent thresholding on a series of maps.
-    """
-    n_voxels, n_components = Z_maps.shape
-    fmin, _, _ = getfbounds(n_echos)
-
-    optcom_betas_abs = np.abs(optcom_betas)
-
-    # Generate clustering criteria for component selection
-    Z_clmaps = np.zeros([n_voxels, n_components], bool)
-    F_T2_clmaps = np.zeros([n_voxels, n_components], bool)
-    F_S0_clmaps = np.zeros([n_voxels, n_components], bool)
-    Br_S0_clmaps = np.zeros([n_voxels, n_components], bool)
-
+def threshold_map(maps, mask, ref_img, threshold, csize=None):
+    n_voxels, n_components = maps.shape
+    maps_thresh = np.zeros([n_voxels, n_components], bool)
     LGR.info('Performing spatial clustering of components')
     if csize is None:
         csize = np.max([int(n_voxels * 0.0005) + 5, 20])
@@ -215,31 +202,11 @@ def spatial_cluster(F_T2_maps, F_S0_maps, Z_maps, optcom_betas, mask, ref_img,
         # Cluster-extent threshold and binarize F-maps
         ccimg = io.new_nii_like(
             ref_img,
-            np.squeeze(utils.unmask(F_T2_maps[:, i_comp], mask)))
-        F_T2_clmaps[:, i_comp] = utils.threshold_map(
-            ccimg, min_cluster_size=csize, threshold=fmin, mask=mask,
+            np.squeeze(utils.unmask(maps[:, i_comp], mask)))
+        maps_thresh[:, i_comp] = utils.threshold_map(
+            ccimg, min_cluster_size=csize, threshold=threshold, mask=mask,
             binarize=True)
-
-        ccimg = io.new_nii_like(
-            ref_img,
-            np.squeeze(utils.unmask(F_S0_maps[:, i_comp], mask)))
-        F_S0_clmaps[:, i_comp] = utils.threshold_map(
-            ccimg, min_cluster_size=csize, threshold=fmin, mask=mask,
-            binarize=True)
-
-        # Cluster-extent threshold and binarize Z-maps with CDT of p < 0.05
-        ccimg = io.new_nii_like(
-            ref_img,
-            np.squeeze(utils.unmask(Z_maps[:, i_comp], mask)))
-        Z_clmaps[:, i_comp] = utils.threshold_map(
-            ccimg, min_cluster_size=csize, threshold=1.95, mask=mask,
-            binarize=True)
-
-    countsigFT2 = F_T2_clmaps.sum(axis=1)
-    countsigFS0 = F_S0_clmaps.sum(axis=1)
-    Br_T2_clmaps = threshold_to_match(optcom_betas_abs, countsigFT2, mask, ref_img, csize=csize)
-    Br_S0_clmaps = threshold_to_match(optcom_betas_abs, countsigFS0, mask, ref_img, csize=csize)
-    return Z_clmaps, F_T2_clmaps, F_S0_clmaps, Br_T2_clmaps, Br_S0_clmaps
+    return maps_thresh
 
 
 def compute_countsignal(cl_arr):
@@ -354,7 +321,7 @@ def compute_signal_minus_noise_t(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95):
     return signal_minus_noise_t, signal_minus_noise_p
 
 
-def compute_dice(Br_clmaps, F_clmaps, axis=0):
+def compute_dice(clmaps1, clmaps2, axis=0):
     """
     Compute the Dice similarity index between two thresholded and binarized maps.
 
@@ -367,7 +334,7 @@ def compute_dice(Br_clmaps, F_clmaps, axis=0):
     -------
     dice_values
     """
-    dice_values = utils.dice(Br_clmaps, F_clmaps, axis=axis)
+    dice_values = utils.dice(clmaps1, clmaps2, axis=axis)
     dice_values = np.nan_to_num(dice_values, 0)
     return dice_values
 
@@ -453,7 +420,7 @@ def calculate_varex_norm(weights):
     Parameters
     ----------
     weights
-    
+
     Returns
     -------
     varex_norm
