@@ -101,6 +101,22 @@
             }
         },
         {
+            "functionname": "classification_exists",
+            "parameters": {
+                "iftrue": "nochange",
+                "iffalse": "ignore",
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject"
+                ],
+                "class_comp_exists": "provisionalaccept"
+            },
+            "kwargs": {
+                "log_extra_info": "",
+                "log_extra_report": ""
+            }
+        },
+        {
             "functionname": "meanmetricrank_and_variance_greaterthan_thresh",
             "parameters": {
                 "iftrue": "reject",
@@ -109,10 +125,10 @@
                     "provisionalaccept",
                     "provisionalreject"
                 ],
-                "HIGH_PERC": null,
-                "EXTEND_FACTOR": null
+                "n_vols": null
             },
             "kwargs": {
+                "high_perc": 90,
                 "log_extra_info": "",
                 "log_extra_report": ""
             }

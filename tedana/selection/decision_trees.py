@@ -167,20 +167,14 @@ class DecisionTree:
         are moved to ignored
     """
 
-    def __init__(self, tree, comptable, n_echos, n_vols, LOW_PERC=25, HIGH_PERC=90):
+    def __init__(self, tree, comptable, **kwargs):
         # initialize stuff based on the info in specified `tree`
         self.tree = tree
         self.comptable = comptable.copy()
-        self.n_echos = n_echos
-        self.n_vols = n_vols
-        self.LOW_PERC = LOW_PERC
-        self.HIGH_PERC = HIGH_PERC
-        if n_vols < 90:
-            self.EXTEND_FACTOR = 3
-        elif n_vols < 110:
-            self.EXTEND_FACTOR = 2 + (n_vols - 90) / 20
-        else:
-            self.EXTEND_FACTOR = 2
+
+        self.__dict__.update(kwargs)
+        # self.n_echos = n_echos
+        # self.n_vols = n_vols
 
         self.config = load_config(self.tree)
 
@@ -235,14 +229,36 @@ class DecisionTree:
         self.are_only_necessary_metrics_used(used_metrics)
         return self.comptable, self.nodes
 
+    def check_necessary_metrics(self):
+        used_metrics = set()
+        for ii, node in enumerate(self.nodes):
+            fcn = getattr(selection_nodes, node['functionname'])
+
+            params, kwargs = node['parameters'], node['kwargs']
+            params = self.check_null(params, node['functionname'])
+            kwargs = self.check_null(kwargs, node['functionname'])
+
+            LGR.info('Checking necessary metrics for function {} with parameters: {}'
+                     .format(node['functionname'], {**params, **kwargs}))
+            func_used_metrics = fcn(
+                self.comptable, decision_node_idx=ii, **params, **kwargs,
+                only_used_metrics=True)
+            used_metrics.update(func_used_metrics)
+        LGR.info('Used metrics: {}'.format(used_metrics))
+        return used_metrics
+
     def check_null(self, params, fcn):
         for key, val in params.items():
             if val is None:
                 try:
                     params[key] = getattr(self, key)
                 except AttributeError:
-                    raise ValueError('Invalid parameter {} in node {}'
-                                     .format(key, fcn))
+                    raise ValueError('Parameter {} is required in node {}, but not defined. '
+                                     .format(key, fcn) + 'If {} is dataset specific, it should be '
+                                     'defined in the '.format(key) + ' initialization of '
+                                     'DecisionTree. If it is fixed regardless of dataset, it '
+                                     'should be defined in the json file that defines the '
+                                     'decision tree.')
 
         return params
 

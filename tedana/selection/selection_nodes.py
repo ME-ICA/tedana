@@ -375,9 +375,86 @@ def metric1_greaterthan_metric2(comptable, decision_node_idx, iftrue, iffalse,
 metric1_greaterthan_metric2.__doc__ = metric1_greaterthan_metric2.__doc__.format(**decision_docs)
 
 
+def classification_exists(comptable, decision_node_idx, iftrue, iffalse,
+                          decide_comps, class_comp_exists,
+                          log_extra_report="", log_extra_info="",
+                          custom_node_label="", only_used_metrics=False):
+    """
+    If there are not compontents with a classification specified in class_comp_exists,
+    change the classification of all components in decide_comps
+    Parameters
+    ----------
+    {comptable}
+    {decision_node_idx}
+    {iftrue}
+    {iffalse}
+    {decide_comps}
+    class_comp_exists: :obj:`str` or :obj:`list[str]` or :obj:`int` or :obj:`list[int]`
+        This has the same structure options as decide_comps. This function tests
+        whether any components have the classifications defined in this variable.
+    {log_extra}
+    {custom_node_label}
+    {only_used_metrics}
+
+    Returns
+    -------
+    {basicreturns}
+
+    """
+
+    used_metrics = []
+    if only_used_metrics:
+        return used_metrics
+
+    function_name_idx = ("classification_exists, step " + str(decision_node_idx))
+    if custom_node_label:
+        node_label = custom_node_label
+    else:
+        node_label = "Change {} if {} doesn't exist".format(decide_comps, classification_exists)
+
+    # Might want to add additional default logging to functions here
+    # The function input will be logged before the function call
+    if log_extra_info:
+        LGR.info(log_extra_info)
+    if log_extra_report:
+        RepLGR.info(log_extra_report)
+
+    comps2use = selectcomps2use(comptable, decide_comps)
+    do_comps_exist = selectcomps2use(comptable, class_comp_exists)
+
+    if comps2use is None:
+        log_decision_tree_step(function_name_idx, comps2use, decide_comps=decide_comps)
+        numTrue = 0
+        numFalse = 0
+    elif do_comps_exist is None:
+        # should be false for all components
+        decision_boolean = comptable.loc[comps2use, 'component'] < -100
+        comptable = change_comptable_classifications(
+                        comptable, iftrue, iffalse,
+                        decision_boolean, str(decision_node_idx))
+        numTrue = np.asarray(decision_boolean).sum()
+        # numtrue should always be 0 in this situation
+        numFalse = np.logical_not(decision_boolean).sum()
+        print(('numTrue={}, numFalse={}, numcomps2use={}'.format(
+            numTrue, numFalse, len(comps2use))))
+        log_decision_tree_step(function_name_idx, comps2use,
+                               numTrue=numTrue,
+                               numFalse=numFalse)
+    else:
+        numTrue = len(comps2use)
+        numFalse = 0
+        log_decision_tree_step(function_name_idx, comps2use,
+                               numTrue=numTrue,
+                               numFalse=numFalse)
+
+    dnode_outputs = create_dnode_outputs(used_metrics, node_label, numTrue, numFalse)
+
+    return comptable, dnode_outputs
+
+
 def meanmetricrank_and_variance_greaterthan_thresh(comptable, decision_node_idx, iftrue, iffalse,
-                                                   decide_comps,
-                                                   HIGH_PERC=90, EXTEND_FACTOR=2,
+                                                   decide_comps, n_vols,
+                                                   high_perc=90,
                                                    log_extra_report="", log_extra_info="",
                                                    custom_node_label="", only_used_metrics=False):
     """
@@ -401,11 +478,12 @@ def meanmetricrank_and_variance_greaterthan_thresh(comptable, decision_node_idx,
     HIGH_PERC: :obj:`int`
         A percentile threshold to apply to components to set the variance
         threshold. default=90
-    EXTEND_FACTOR: :obj:`int`
-        A threshold used to set the threshold for meanmetricrank
+    n_vols: :obj:`int`
+        The number of volumes in the fMRI time series.
+        Used to calculate the threshold for meanmetricrank
         In the MEICA code, this was hard-coded to 2 for data with more
         than 100 volumes and 3 for data with less than 100 volumes.
-        default=2
+        default=2. Now is linearly ramped from 2-3 for vols between 90 & 110
     {log_extra}
     {custom_node_label}
     {only_used_metrics}
@@ -454,8 +532,15 @@ def meanmetricrank_and_variance_greaterthan_thresh(comptable, decision_node_idx,
     else:
         num_prov_accept = len(provaccept_comps2use)
         varex_threshold = scoreatpercentile(
-            comptable.loc[provaccept_comps2use, 'variance explained'], HIGH_PERC)
-        max_good_meanmetricrank = EXTEND_FACTOR * num_prov_accept
+            comptable.loc[provaccept_comps2use, 'variance explained'], high_perc)
+
+        if n_vols < 90:
+            extend_factor = 3
+        elif n_vols < 110:
+            extend_factor = 2 + (n_vols - 90) / 20
+        else:
+            extend_factor = 2
+        max_good_meanmetricrank = extend_factor * num_prov_accept
 
         decision_boolean1 = comptable.loc[comps2use, 'mean metric rank'] > max_good_meanmetricrank
         decision_boolean2 = comptable.loc[comps2use, 'variance explained'] > varex_threshold
