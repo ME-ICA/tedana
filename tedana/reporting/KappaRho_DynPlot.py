@@ -24,17 +24,16 @@ from os.path import join as opj
 from math import pi
 from sklearn.preprocessing import MinMaxScaler
 from bokeh import (embed, events, layouts, models, plotting, transform)
+from tedana import (reporting, utils)
 
-from tedana import (io, reporting, utils)
-
-color_mapping = {'accepted': '#2ecc71', 
-                 'rejected': '#e74c3c', 
+color_mapping = {'accepted': '#2ecc71',
+                 'rejected': '#e74c3c',
                  'ignored': '#3498db'}
 
 
 # %%
 def _link_figures(fig, comptable_ds,
-                  ts_src, fft_src, ts_plot, fft_plot, 
+                  ts_src, fft_src, ts_plot, fft_plot,
                   ts_line_glyph, fft_line_glyph,
                   div_content, out_dir):
     """
@@ -63,11 +62,11 @@ def _link_figures(fig, comptable_ds,
     fft_plot : bokeh.models.ColumnDataSource
         Data structure that contains the fft being plotted
         at a given moment in time
-        
+
     ts_line_glyph : bokeh.models.Line
         Link to the line element of the time series plot.
         Needed to update the color of the timeseries trace.
-    
+
     fft_line_glyph : bokeh.models.Line
         Link to the line element of the fft plot.
         Needed to update the color of the fft trace.
@@ -83,18 +82,18 @@ def _link_figures(fig, comptable_ds,
     fig : bokeh.plotting.figure
         Same as input figure, but with a linked method to
         its Tap event.
-    
+
     """
     fig.js_on_event(events.Tap,
                     tap_callback(comptable_ds,
-                                ts_src,
-                                fft_src,
-                                ts_plot,
-                                fft_plot,
-                                ts_line_glyph,
-                                fft_line_glyph,
-                                div_content,
-                                out_dir))
+                                 ts_src,
+                                 fft_src,
+                                 ts_plot,
+                                 fft_plot,
+                                 ts_line_glyph,
+                                 fft_line_glyph,
+                                 div_content,
+                                 out_dir))
     return fig
 
 
@@ -112,22 +111,23 @@ def _create_ts_plot(n_vol):
     -------
     fig: bokeh.plotting.figure.Figure
         Bokeh plot to show a given component time series
-    
+
     line_glyph: bokeh.models.Line
         Link to the line element of the time series plot.
-    
+
     ts_cds: bokeh.models.ColumnDataSource
         Data structure that contains the timeseries being
         plotted at a given moment.
     """
-    
+
     ts_cds = models.ColumnDataSource(data=dict(x=np.arange(n_vol),
                                                y=np.zeros(n_vol,)))
-    
+
     fig = plotting.figure(plot_width=800, plot_height=200,
-                 tools=["wheel_zoom,box_zoom,reset,pan,crosshair,save",
-                        models.HoverTool(tooltips=[('Volume', '@x{0.00}'), ('Signal', '@y{0.00}')])],
-                 title="Component Time Series")
+                          tools=["wheel_zoom,box_zoom,reset,pan,crosshair,save",
+                                 models.HoverTool(tooltips=[('Volume', '@x{0.00}'),
+                                                            ('Signal', '@y{0.00}')])],
+                          title="Component Time Series")
     line_glyph = models.Line(x='x', y='y', line_color='#000000', line_width=3)
     fig.add_glyph(ts_cds, line_glyph)
     fig.xaxis.axis_label = 'Time [Volume]'
@@ -153,10 +153,10 @@ def _create_fft_plot(freqs):
     -------
     fig: bokeh.plotting.figure.Figure
         Bokeh plot to show a given component spectrum
-        
+
     line_glyph: bokeh.models.Line
         Link to the line element of the fft plot.
-    
+
     ts_cds: bokeh.models.ColumnDataSource
         Data structure that contains the fft being
         plotted at a given moment.
@@ -165,9 +165,10 @@ def _create_fft_plot(freqs):
     max_freq = np.max(freqs)
     fft_cds = models.ColumnDataSource(data=dict(x=freqs, y=np.zeros(Nf,)))
     fig = plotting.figure(plot_width=800, plot_height=200,
-                 tools=["wheel_zoom,box_zoom,reset,pan,crosshair,save",
-                        models.HoverTool(tooltips=[('Freq.', '@x{0.000} Hz'), ('Power', '@y{0.00}')])],
-                 title="Component Spectrum")
+                          tools=["wheel_zoom,box_zoom,reset,pan,crosshair,save",
+                                 models.HoverTool(tooltips=[('Freq.', '@x{0.000} Hz'),
+                                                            ('Power', '@y{0.00}')])],
+                          title="Component Spectrum")
     line_glyph = models.Line(x='x', y='y', line_color='#000000', line_width=3)
     fig.add_glyph(fft_cds, line_glyph)
     fig.xaxis.axis_label = 'Frequency [Hz]'
@@ -202,7 +203,7 @@ def _spectrum_data_src(comp_ts_cds, tr, n_comps):
     """
     spectrum, freqs = utils.get_spectrum(comp_ts_cds.data['ica_00'], tr)
     n_freqs = spectrum.shape[0]
-    df = pd.DataFrame(columns=['ica_' + str(c).zfill(2) for c in np.arange(n_comps)], 
+    df = pd.DataFrame(columns=['ica_' + str(c).zfill(2) for c in np.arange(n_comps)],
                       index=np.arange(n_freqs))
     for c in np.arange(n_comps):
         cid = 'ica_' + str(c).zfill(2)
@@ -234,39 +235,39 @@ def create_data_struct(comptable_path, color_mapping=color_mapping):
                    'signal-noise_t', 'signal-noise_p',
                    'd_table_score', 'kappa ratio',
                    'rationale', 'd_table_score_scrub']
-    
+
     df = pd.read_json(comptable_path)
     df.drop('Description', axis=0, inplace=True)
     df.drop('Method', axis=1, inplace=True)
     df = df.T
     n_comps = df.shape[0]
-    
+
     # remove space from column name
     df.rename(columns={'variance explained': 'var_exp'}, inplace=True)
-    
+
     # For providing sizes based on Var Explained that are visible
     mm_scaler = MinMaxScaler(feature_range=(4, 20))
     df['var_exp_size'] = mm_scaler.fit_transform(
         df[['var_exp', 'normalized variance explained']])[:, 0]
-    
+
     # Calculate Kappa and Rho ranks
     df['rho_rank'] = df['rho'].rank(ascending=False).values
     df['kappa_rank'] = df['kappa'].rank(ascending=False).values
     df['var_exp_rank'] = df['var_exp'].rank(ascending=False).values
-    
+
     # Remove unsed columns to decrease size of final HTML
     df.drop(unused_cols, axis=1, inplace=True)
-    
+
     # Create additional Column with colors based on final classification
     df['color'] = [color_mapping[i] for i in df['classification']]
-    
+
     # Create additional column with component ID
     df['component'] = np.arange(n_comps)
-    
+
     # Compute angle and re-sort data for Pie plots
-    df['angle']=df['var_exp']/df['var_exp'].sum() * 2*pi
-    df.sort_values(by=['classification','var_exp'], inplace=True)
-    
+    df['angle'] = df['var_exp'] / df['var_exp'].sum() * 2 * pi
+    df.sort_values(by=['classification', 'var_exp'], inplace=True)
+
     cds = models.ColumnDataSource(data=dict(
         kappa=df['kappa'],
         rho=df['rho'],
@@ -279,7 +280,7 @@ def create_data_struct(comptable_path, color_mapping=color_mapping):
         size=df['var_exp_size'],
         classif=df['classification'],
         angle=df['angle']))
-    
+
     return cds
 
 
@@ -299,17 +300,17 @@ tap_callback_jscode = """
         }
         var selected_padded_forIMG = '0' + selected_padded
         var selected_padded_C = 'ica_' + selected_padded
-        
+
         // Find color for selected component
         var colors = data['color']
         var this_component_color = colors[selected_idx]
-        
+
         // Update time series line color
         ts_line.line_color = this_component_color;
 
         // Update spectrum line color
         fft_line.line_color = this_component_color;
-        
+
         // Updating TS Plot
         var Plot_TS = source_tsplot.data;
         var TS_x    = Plot_TS['x']
@@ -321,7 +322,7 @@ tap_callback_jscode = """
             TS_y[i] = Comp_TS_y[i]
         }
         source_tsplot.change.emit();
-        
+
         // Updating FFT Plot
         var Plot_FFT = source_fftplot.data;
         var FFT_x = Plot_FFT['x']
@@ -332,7 +333,7 @@ tap_callback_jscode = """
             FFT_y[i] = Comp_FFT_y[i]
         }
         source_fftplot.change.emit();
-        
+
         // Image Below Plots
         div.text = ""
         var line = "<span><img src='" + outdir + "/figures/comp_"+selected_padded_forIMG+".png'" +
@@ -343,19 +344,19 @@ tap_callback_jscode = """
             if (lines.length > 35)
                 lines.shift();
         div.text = lines.join("\\n");
-    
+
     } else {
         // No component has been selected
         // ------------------------------
         // Set Component color to Black
         var this_component_color = '#000000'
-        
+
         // Update time series line color
         ts_line.line_color = this_component_color;
 
         // Update spectrum line color
         fft_line.line_color = this_component_color;
-        
+
         // Updating TS Plot
         var Plot_TS = source_tsplot.data;
         var TS_x    = Plot_TS['x']
@@ -364,7 +365,7 @@ tap_callback_jscode = """
             TS_y[i] = 0
         }
         source_tsplot.change.emit();
-        
+
         // Updating FFT Plot
         var Plot_FFT = source_fftplot.data;
         var FFT_x = Plot_FFT['x']
@@ -373,7 +374,7 @@ tap_callback_jscode = """
             FFT_y[i] = 0
         }
         source_fftplot.change.emit();
-        
+
         // Image Below Plots
         div.text = "\\n"
 
@@ -399,14 +400,14 @@ def tap_callback(comptable_cds, CDS_meica_ts, comp_fft_cds, plot_ts_cds,
         Javascript function that adds the tapping functionality
     """
     return models.CustomJS(args=dict(source_comp_table=comptable_cds,
-                              source_meica_ts=CDS_meica_ts,
-                              source_tsplot=plot_ts_cds,
-                              source_meica_fft=comp_fft_cds,
-                              source_fftplot=plot_fft_cds,
-                              div=div_content,
-                              ts_line=ts_line_glyph,
-                              fft_line=fft_line_glyph,
-                              outdir=out_dir), code=tap_callback_jscode)
+                                     source_meica_ts=CDS_meica_ts,
+                                     source_tsplot=plot_ts_cds,
+                                     source_meica_fft=comp_fft_cds,
+                                     source_fftplot=plot_fft_cds,
+                                     div=div_content,
+                                     ts_line=ts_line_glyph,
+                                     fft_line=fft_line_glyph,
+                                     outdir=out_dir), code=tap_callback_jscode)
 
 
 # %%
@@ -425,11 +426,13 @@ def create_kr_plt(comptable_cds):
         Bokeh scatter plot of kappa vs. rho
     """
     # Create Panel for the Kappa - Rho Scatter
-    kr_hovertool = models.HoverTool(tooltips=[('Component ID', '@component'), ('Kappa', '@kappa{0.00}'),
-                                       ('Rho', '@rho{0.00}'), ('Var. Expl.', '@varexp{0.00}%')])
+    kr_hovertool = models.HoverTool(tooltips=[('Component ID', '@component'),
+                                              ('Kappa', '@kappa{0.00}'),
+                                              ('Rho', '@rho{0.00}'),
+                                              ('Var. Expl.', '@varexp{0.00}%')])
     fig = plotting.figure(plot_width=400, plot_height=400,
-                 tools=["tap,wheel_zoom,reset,pan,crosshair,save", kr_hovertool],
-                 title="Kappa / Rho Plot")
+                          tools=["tap,wheel_zoom,reset,pan,crosshair,save", kr_hovertool],
+                          title="Kappa / Rho Plot")
     fig.circle('kappa', 'rho', size='size', color='color', alpha=0.5, source=comptable_cds,
                legend_group='classif')
     fig.xaxis.axis_label = 'Kappa'
@@ -442,10 +445,11 @@ def create_kr_plt(comptable_cds):
 
 
 # %%
-def create_sorted_plt(compatable_cds, n_comps, x_var, y_var, title=None, x_label=None, y_label=None):
-    """ 
+def create_sorted_plt(compatable_cds, n_comps, x_var, y_var, title=None,
+                      x_label=None, y_label=None):
+    """
     Create dynamic sorted plots
-    
+
     Parameters
     ----------
     comptable_ds: bokeh.models.ColumnDataSource
@@ -453,31 +457,31 @@ def create_sorted_plt(compatable_cds, n_comps, x_var, y_var, title=None, x_label
 
     x_var: str
         Name of variable for the x-axis
-    
+
     y_var: str
         Name of variable for the y-axis
-    
+
     title: str
         Plot title
-        
+
     x_label: str
         X-axis label
-    
+
     y_label: str
         Y-axis label
-        
+
     Returns
     -------
     fig: bokeh.plotting.figure.Figure
         Bokeh plot of components ranked by a given feature
     """
-    hovertool = models.HoverTool(tooltips=[('Component ID', '@component'), 
+    hovertool = models.HoverTool(tooltips=[('Component ID', '@component'),
                                            ('Kappa', '@kappa{0.00}'),
-                                            ('Rho', '@rho{0.00}'), 
+                                           ('Rho', '@rho{0.00}'),
                                            ('Var. Expl.', '@varexp{0.00}%')])
     fig = plotting.figure(plot_width=400, plot_height=400,
-                 tools=["tap,wheel_zoom,reset,pan,crosshair,save", hovertool],
-                 title=title)
+                          tools=["tap,wheel_zoom,reset,pan,crosshair,save", hovertool],
+                          title=title)
     fig.line(x=np.arange(1, n_comps + 1),
              y=comptable_cds.data[y_var].sort_values(ascending=False).values,
              color='black')
@@ -493,22 +497,22 @@ def create_sorted_plt(compatable_cds, n_comps, x_var, y_var, title=None, x_label
 
 # %%
 def create_varexp_pie_plt(comptable_cds, n_comps):
-    fig = plotting.figure(plot_width=400, plot_height=400, title='Variance Explained View', 
-                 tools=['hover,tap,save'], 
-                 tooltips=[('Component ID','@component'),
-                           ('Kappa','@kappa{0.00}'),
-                           ('Rho','@rho{0.00}'),
-                           ('Var. Exp.','@varexp{0.00}%')])
-    fig.wedge(x=0,y=1,radius=.9,
+    fig = plotting.figure(plot_width=400, plot_height=400, title='Variance Explained View',
+                          tools=['hover,tap,save'],
+                          tooltips=[('Component ID', ' @component'),
+                                    ('Kappa', '@kappa{0.00}'),
+                                    ('Rho', '@rho{0.00}'),
+                                    ('Var. Exp.', '@varexp{0.00}%')])
+    fig.wedge(x=0, y=1, radius=.9,
               start_angle=transform.cumsum('angle', include_zero=True),
               end_angle=transform.cumsum('angle'),
               line_color="white",
               fill_color='color', source=comptable_cds, fill_alpha=0.7)
-    fig.axis.visible=False
-    fig.grid.visible=False
-    fig.toolbar.logo=None    
-        
-    circle = models.Circle(x=0,y=1,size=150, fill_color='white', line_color='white')
+    fig.axis.visible = False
+    fig.grid.visible = False
+    fig.toolbar.logo = None
+
+    circle = models.Circle(x=0, y=1, size=150, fill_color='white', line_color='white')
     fig.add_glyph(circle)
 
     return fig
@@ -521,17 +525,17 @@ out_dir = '/opt/tedana-hack/tedana/docs/DynReports/data/TED.five-echo/'
 tr = 2
 
 # Load the component time series
-comp_ts_path = opj(out_dir,'ica_mixing.tsv')
+comp_ts_path = opj(out_dir, 'ica_mixing.tsv')
 comp_ts_df = pd.read_csv(comp_ts_path, sep='\t', encoding='utf=8')
 n_vols, n_comps = comp_ts_df.shape
 comp_ts_df['Volume'] = np.arange(n_vols)
 comp_ts_cds = models.ColumnDataSource(comp_ts_df)
 
 # Load the component table
-comptable_path = opj(out_dir,'ica_decomposition.json')
+comptable_path = opj(out_dir, 'ica_decomposition.json')
 comptable_cds = create_data_struct(comptable_path)
 
-# Generate the component's spectra 
+# Generate the component's spectra
 comp_fft_cds, freqs = _spectrum_data_src(comp_ts_cds, tr, n_comps)
 
 # Create ts, fft plots
@@ -544,10 +548,10 @@ kappa_rho_plot = create_kr_plt(comptable_cds)
 # Create sorted plots
 kappa_sorted_plot = create_sorted_plt(comptable_cds, n_comps,
                                       'kappa_rank', 'kappa',
-                                       'Kappa Rank','Kappa')
+                                      'Kappa Rank', 'Kappa')
 rho_sorted_plot = create_sorted_plt(comptable_cds, n_comps,
-                                   'rho_rank', 'rho',
-                                   'Rho Rank','Rho')
+                                    'rho_rank', 'rho',
+                                    'Rho Rank', 'Rho')
 varexp_pie_plot = create_varexp_pie_plt(comptable_cds, n_comps)
 
 # link all dynamic figures
@@ -558,9 +562,8 @@ div_content = models.Div(width=600, height=900, height_policy='fixed')
 
 for fig in figs:
     _link_figures(fig, comptable_cds, comp_ts_cds, comp_fft_cds,
-                  plot_ts_cds, plot_fft_cds, ts_line_glyph, 
+                  plot_ts_cds, plot_fft_cds, ts_line_glyph,
                   fft_line_glyph, div_content, out_dir)
-
 
 
 # Create a layout
@@ -571,14 +574,5 @@ app = layouts.column(layouts.row(kappa_rho_plot, kappa_sorted_plot,
 
 # Embed for reporting
 kr_script, kr_div = embed.components(app)
-reporting.generate_report(kr_div, kr_script, 
+reporting.generate_report(kr_div, kr_script,
                           file_path='/opt/report_v3.html')
-
-
-# %%
-
-# %%
-
-# %%
-
-# %%
