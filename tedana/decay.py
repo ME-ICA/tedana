@@ -229,7 +229,8 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype):
         raise ValueError('Unknown fittype option: {}'.format(fittype))
 
     t2s_limited[np.isinf(t2s_limited)] = 500.  # why 500?
-    t2s_limited[t2s_limited <= 0] = 1.  # let's get rid of negative values!
+    # let's get rid of negative values, but keep zeros where limited != full
+    t2s_limited[(adaptive_mask_masked > 1) & (t2s_limited <= 0)] = 1.
     s0_limited[np.isnan(s0_limited)] = 0.  # why 0?
     t2s_full[np.isinf(t2s_full)] = 500.  # why 500?
     t2s_full[t2s_full <= 0] = 1.  # let's get rid of negative values!
