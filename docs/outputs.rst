@@ -70,10 +70,6 @@ If ``verbose`` is set to True:
 ======================    =====================================================
 Filename                  Content
 ======================    =====================================================
-t2ss.nii.gz               Voxel-wise T2* estimates using ascending numbers
-                          of echoes, starting with 2.
-s0vs.nii.gz               Voxel-wise S0 estimates using ascending numbers
-                          of echoes, starting with 2.
 t2svG.nii.gz              Full T2* map/time series. The difference between
                           the limited and full maps is that, for voxels
                           affected by dropout where only one echo contains
