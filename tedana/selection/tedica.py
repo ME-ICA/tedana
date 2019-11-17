@@ -198,7 +198,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     a. Not outlier variance
     b. Kappa>kappa_elbow
     c. Rho<Rho_elbow
-    d. High T2* dice compared to S0 dice
+    d. High R2* dice compared to S0 dice
     e. Gain of F_R2 in clusters vs noise
     f. Estimate a low and high variance
     """
