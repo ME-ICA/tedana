@@ -437,13 +437,12 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
-    if verbose:
-        io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
+    io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
 
     os.chdir(out_dir)
 
     LGR.info('Computing T2* map')
-    t2s, s0, t2ss, s0s, t2sG, s0G = decay.fit_decay(catd, tes, mask, masksum, fittype)
+    t2s, s0, t2sG, s0G = decay.fit_decay(catd, tes, mask, masksum, fittype)
 
     # set a hard cap for the T2* map
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
@@ -455,8 +454,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     io.filewrite(s0, op.join(out_dir, 's0v.nii'), ref_img)
 
     if verbose:
-        io.filewrite(t2ss, op.join(out_dir, 't2ss.nii'), ref_img)
-        io.filewrite(s0s, op.join(out_dir, 's0vs.nii'), ref_img)
         io.filewrite(t2sG, op.join(out_dir, 't2svG.nii'), ref_img)
         io.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
 
