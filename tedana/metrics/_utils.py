@@ -10,7 +10,7 @@ from tedana.stats import computefeats2
 def dependency_resolver(dict_, requested_metrics, base_inputs):
     """
     """
-    not_found = [k for k in requested_metrics if not k in dict_.keys()]
+    not_found = [k for k in requested_metrics if k not in dict_.keys()]
     if not_found:
         raise ValueError('Unknown metric(s): {}'.format(', '.join(not_found)))
 
