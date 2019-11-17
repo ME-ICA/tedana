@@ -4,7 +4,6 @@ Fit models.
 import logging
 
 import numpy as np
-import pandas as pd
 from scipy import stats
 
 from tedana import io, utils
