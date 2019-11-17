@@ -27,6 +27,9 @@ midk_ts_OC.nii.gz         Combined time series from "mid-k" rejected components.
 hik_ts_OC.nii.gz          High-kappa time series. This dataset does not
                           include thermal noise or low variance components.
                           Not the recommended dataset for analysis.
+adaptive_mask.nii.gz      Integer-valued mask used in the workflow, where
+                          each voxel's value corresponds to the number of good
+                          echoes to be used for T2*/S0 estimation.
 pca_decomposition.json    TEDPCA component table. A BIDS Derivatives-compatible
                           json file with summary metrics and inclusion/exclusion
                           information for each component from the PCA
