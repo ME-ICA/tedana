@@ -83,8 +83,8 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
                       '({3:.2f}%) voxel(s), used log linear estimate '
                       'instead'.format(echo_num, fail_count, len(voxel_idx), fail_percent))
 
-        t2s_asc_maps[..., i_echo] = t2s_full
-        s0_asc_maps[..., i_echo] = s0_full
+        t2s_asc_maps[:, i_echo] = t2s_full
+        s0_asc_maps[:, i_echo] = s0_full
 
     # create limited T2* and S0 maps
     t2s_limited = utils.unmask(t2s_asc_maps[echo_masks], adaptive_mask > 1)
@@ -136,8 +136,8 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask):
         t2s = 1. / betas[1, :].T
         s0 = np.exp(betas[0, :]).T
 
-        t2s_asc_maps[..., i_echo] = t2s
-        s0_asc_maps[..., i_echo] = s0
+        t2s_asc_maps[:, i_echo] = t2s
+        s0_asc_maps[:, i_echo] = s0
 
     # create limited T2* and S0 maps
     t2s_limited = utils.unmask(t2s_asc_maps[echo_masks], adaptive_mask > 1)
