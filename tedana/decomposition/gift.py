@@ -9,7 +9,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 from scipy.linalg import svd
-from scipy.signal import detrend, correlate2d
+from scipy.signal import detrend, fftconvolve
 from scipy.fftpack import fft, fftshift, fftn, fft2
 
 LGR = logging.getLogger(__name__)
