@@ -134,9 +134,10 @@ def _get_parser():
     optional.add_argument('--tedpca',
                           dest='tedpca',
                           help=('Method with which to select components in TEDPCA. '
-                                'Mdl, kic and aic are based in the PCA decomposition '
-                                'in the GIFT software and are ordered from most to '
-                                'least aggresive. Default=\'mdl\'.'),
+                                'PCA decomposition with the mdl, kic and aic options '
+                                'is based on a Moving Average (stationary Gaussian) '
+                                'process and are ordered from most to least aggresive. '
+                                'Default=\'mdl\'.'),
                           choices=['mle', 'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'],
                           default='mdl')
     optional.add_argument('--out-dir',

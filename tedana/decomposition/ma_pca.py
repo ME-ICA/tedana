@@ -1,5 +1,5 @@
 """
-PCA based on GIFT software
+PCA based on Moving Average (stationary Gaussian) process
 """
 import logging
 
@@ -266,6 +266,10 @@ def _est_indp_sp(data):
         Number of iterations required to estimate entropy rate
     ent_rate : float
         The entropy rate of the data
+    Notes
+    -----
+    This function estimates the effective number of independent samples by omitting
+    the least significant components with the subsampling scheme (Li et al., 2007)
     """
 
     dims = data.shape
@@ -275,7 +279,11 @@ def _est_indp_sp(data):
         data_sb = _subsampling(data, j + 1)
         ent_rate = _ent_rate_sp(data_sb, 1)
 
+        # Upper-bound.
         ent_ref = 1.41
+
+        # If entropy rate of a subsampled Gaussian sequence reaches the upper bound
+        # of the entropy rate, the subsampled sequence is an i.i.d. sequence.
         if ent_rate > ent_ref:
             n_iters_0 = j
             break
@@ -437,10 +445,12 @@ def _eigensp_adj(lam, n, p):
     return lam_adj
 
 
-def gift_pca(data_nib, mask_nib, criteria='mdl'):
+def pca(data_nib, mask_nib, criteria='mdl'):
     """
     Run Singular Value Decomposition (SVD) on input data,
-    automatically select components based on the GIFT software.
+    automatically select components based on a Moving Average
+    (stationary Gaussian) process. Finally perform PCA with
+    selected number of components.
 
     Parameters
     ----------
@@ -465,7 +475,11 @@ def gift_pca(data_nib, mask_nib, criteria='mdl'):
 
     Notes
     -----
-    TODO: add descriptions of the different criteria
+    aic : Akaike Information Criterion. Least aggressive option.
+    kic : Kullback-Leibler Information Criterion. Stands in the
+          middle in terms of aggressiveness.
+    mdl : Minimum Description Length. Most aggressive
+          (and recommended) option.
     """
 
     data_nib = data_nib.get_data()

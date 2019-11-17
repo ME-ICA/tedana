@@ -10,7 +10,7 @@ from scipy import stats
 from sklearn.decomposition import PCA
 
 from tedana import metrics, utils, io
-from tedana.decomposition import (gift, _utils)
+from tedana.decomposition import (ma_pca, _utils)
 from tedana.stats import computefeats2
 from tedana.selection import kundu_tedpca
 from tedana.due import due, BibTeX
@@ -115,9 +115,10 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     tes : :obj:`list`
         List of echo times associated with `data_cat`, in milliseconds
     algorithm : {'mle', 'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
-        Method with which to select components in TEDPCA. Default is 'mdl'. Mdl, kic
-        and aic options are based on the GIFT software PCA decomposition and are
-        ordered from most to least aggresive. See (Li et al., 2007).
+        Method with which to select components in TEDPCA. Default is 'mdl'. PCA
+        decomposition with the mdl, kic and aic options are based on a Moving Average
+        (stationary Gaussian) process and are ordered from most to least aggresive.
+        See (Li et al., 2007).
     source_tes : :obj:`int` or :obj:`list` of :obj:`int`, optional
         Which echos to use in PCA. Values -1 and 0 are special, where a value
         of -1 will indicate using the optimal combination of the echos
@@ -224,8 +225,8 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
                     "of the National Academy of Sciences, 110(40), "
                     "16187-16192.")
     else:
-        alg_str = ("based on the PCA components estimation in the GIFT software "
-                   "(Li et al., 2007)")
+        alg_str = ("based on the PCA component estimation with a Moving Average"
+                   "(stationary Gaussian) process (Li et al., 2007)")
         RefLGR.info("Li, Y.O., Adalı, T. and Calhoun, V.D., (2007). "
                     "Estimating the number of independent components for "
                     "functional magnetic resonance imaging data. "
@@ -265,7 +266,7 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
             ref_img, utils.unmask(utils.unmask(data, eim), mask))
         mask_img = io.new_nii_like(ref_img,
                                    utils.unmask(eim, mask).astype(int))
-        voxel_comp_weights, varex, varex_norm, comp_ts = gift.gift_pca(
+        voxel_comp_weights, varex, varex_norm, comp_ts = ma_pca.pca(
             data_img, mask_img, algorithm)
     elif algorithm == 'mle':
         voxel_comp_weights, varex, varex_norm, comp_ts = run_mlepca(data_z)
