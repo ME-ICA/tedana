@@ -102,12 +102,16 @@ def calculate_z_maps(weights, z_max=8):
     return Z_maps
 
 
-def calculate_f_maps(mixing, data_cat, tes, Z_maps, f_max=500):
+def calculate_f_maps(data_cat, Z_maps, mixing, mask, tes, f_max=500):
     """
     Calculate pseudo-F-statistic maps (per component) for TE-dependence
     and -indepdence models.
     """
-    me_betas = get_coeffs(data_cat, mixing)  # TODO: Remove mask arg from get_coeffs
+    temp_data = utils.unmask(data_cat, mask)
+    # TODO: Remove mask arg from get_coeffs
+    me_betas = get_coeffs(
+        temp_data, mixing, np.repeat(mask[:, np.newaxis], len(tes), axis=1))
+    me_betas = me_betas[mask, ...]
     n_voxels, n_echos, n_components = me_betas.shape
     mu = data_cat.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))
@@ -152,12 +156,18 @@ def calculate_f_maps(mixing, data_cat, tes, Z_maps, f_max=500):
     return F_S0_maps, F_T2_maps
 
 
-def threshold_to_match(maps, n_sig_voxels, mask, ref_img, csize):
+def threshold_to_match(maps, n_sig_voxels, mask, ref_img, csize=None):
     """
     Cluster-extent threshold a map to have roughly some requested number of
     significant voxels (with clusters accounted for).
     """
     n_voxels, n_components = maps.shape
+    if csize is None:
+        csize = np.max([int(n_voxels * 0.0005) + 5, 20])
+    else:
+        csize = int(csize)
+    LGR.debug('Using minimum cluster size: {}'.format(csize))
+
     clmaps = np.zeros([n_voxels, n_components], bool)
     for i_comp in range(n_components):
         # Initial cluster-defining threshold is defined based on the number
@@ -203,6 +213,7 @@ def threshold_map(maps, mask, ref_img, threshold, csize=None):
         ccimg = io.new_nii_like(
             ref_img,
             np.squeeze(utils.unmask(maps[:, i_comp], mask)))
+
         maps_thresh[:, i_comp] = utils.threshold_map(
             ccimg, min_cluster_size=csize, threshold=threshold, mask=mask,
             binarize=True)
