@@ -18,7 +18,6 @@ import datetime
 import argparse
 import numpy as np
 import pandas as pd
-from scipy import stats
 from nilearn.masking import compute_epi_mask
 
 from tedana import (decay, combine, decomposition, io, metrics, selection, utils,

@@ -4,8 +4,6 @@ Misc. utils for metric calculation.
 import numpy as np
 from scipy import stats
 
-from tedana.stats import computefeats2
-
 
 def dependency_resolver(dict_, requested_metrics, base_inputs):
     """

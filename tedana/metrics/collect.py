@@ -9,7 +9,6 @@ from scipy import stats
 
 from . import dependence
 from ._utils import determine_signs, flip_components, sort_df, apply_sort, dependency_resolver
-from tedana.utils import unmask
 from tedana.stats import getfbounds
 
 
@@ -87,7 +86,8 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img, mixing_z
         'signal-noise_t': ['map Z', 'map Z clusterized', 'map FT2'],
         'variance explained': ['map optcom betas'],
         'normalized variance explained': ['map weight'],
-        'd_table_score': ['kappa', 'dice_FT2', 'signal_minus_noise_t', 'countnoise', 'countsigFT2'],
+        'd_table_score': ['kappa', 'dice_FT2', 'signal_minus_noise_t',
+                          'countnoise', 'countsigFT2'],
         'map FT2': ['map Z', 'data_cat', 'mask'],
         'map FS0': ['map Z'],
         'map Z': ['map weight'],

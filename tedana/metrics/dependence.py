@@ -2,14 +2,13 @@
 Fit models.
 """
 import logging
-import os.path as op
 
 import numpy as np
 import pandas as pd
 from scipy import stats
 
 from tedana import io, utils
-from tedana.stats import getfbounds, computefeats2, get_coeffs, t_to_z
+from tedana.stats import computefeats2, get_coeffs, t_to_z
 
 
 LGR = logging.getLogger(__name__)
