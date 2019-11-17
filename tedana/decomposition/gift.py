@@ -201,7 +201,7 @@ def _ent_rate_sp(data, sm_window):
         for m3 in range(dims[2] - 1):
             temp = np.zeros((2 * dims[0] - 1, 2 * dims[1] - 1))
             for k in range(dims[2] - m3):
-                temp = temp + correlate2d(data[:, :, k + m3], data[:, :, k])
+                temp += fftconvolve(data[:, :, k + m3], data[::-1, ::-1, k])
                 # default option:
                 # computes raw correlations with NO normalization
                 # -- Matlab help on xcorr
