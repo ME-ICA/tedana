@@ -202,7 +202,7 @@ def new_decision_node_info(decision_tree_steps, function_name,
 
 
 def log_decision_tree_step(function_name_idx, comps2use,
-                           decide_comps=None, decision_tree_steps=None,
+                           decide_comps=None,
                            numTrue=None, numFalse=None):
     """
         Logging text to add for every decision tree calculation
@@ -217,6 +217,76 @@ def log_decision_tree_step(function_name_idx, comps2use,
                   "and " + str(numFalse) + "were False"))
         # decision_tree_steps[-1]['numtrue']) + " "
         # "were True and " + str(decision_tree_steps[-1]['numfalse']) + " were False"))
+
+
+def create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
+                         n_echos=None, n_vols=None, kappa_elbow=None, rho_elbow=None,
+                         num_prov_accept=None, max_good_meanmetricrank=None,
+                         varex_threshold=None, low_perc=None, high_perc=None,
+                         extend_factor=None,
+                         ):
+    """
+    Take several parameters that should be output from each decision node function
+    and put them in a dictionary under the key 'outputs' When the decision is output
+    as part of the decision tree class, this will be added to the dictionary with
+    parameters that called the function with all the outputs under the 'outputs' key.
+
+    Parameters
+    ----------
+    Required parameters
+    used_metrics: :obj: `list[str]`
+        A list of all metrics from the comptable header used within this function.
+        Note, this must be a list even if only one metric is used
+    node_label: :obj: `str`
+        A brief label for what happens in this node that can be used in a decision
+        tree summary table or flow chart.
+    numTrue, numFalse: :obj: `int`
+        The number of components that were classified as true or false respectively
+    in this decision tree step.
+
+    Optional parameters that are ignored, if None
+    n_echos: :obj:`int`
+        The number of echos in the multi-echo data
+    n_vols: :obj:`int`
+        The number of volumes (time points) in the fMRI data
+    kappa_elbow: :obj:`float`
+        The kappa threshold below which components should be rejected or ignored
+    rho_elbow: :obj:`float`
+        The rho threshold above which components should be rejected or ignored
+
+
+    Returns
+    -------
+    dnode_outputs: :obj:`dict`
+        A dict that contains the inputted parameters that are not 'None'
+    """
+
+    dnode_outputs = {'outputs': {
+        'used_metrics': used_metrics,
+        'node_label': node_label,
+        'numTrue': numTrue,
+        'numFalse': numFalse
+    }}
+    if n_echos:
+        dnode_outputs['outputs'].update({'n_echos': n_echos})
+    if n_vols:
+        dnode_outputs['outputs'].update({'n_vols': n_vols})
+    if kappa_elbow:
+        dnode_outputs['outputs'].update({'kappa_elbow': kappa_elbow})
+    if rho_elbow:
+        dnode_outputs['outputs'].update({'rho_elbow': rho_elbow})
+    if high_perc:
+        dnode_outputs['outputs'].update({'high_perc': high_perc})
+    if low_perc:
+        dnode_outputs['outputs'].update({'low_perc': low_perc})
+    if max_good_meanmetricrank:
+        dnode_outputs['outputs'].update({'max_good_meanmetricrank': max_good_meanmetricrank})
+    if varex_threshold:
+        dnode_outputs['outputs'].update({'varex_threshold': varex_threshold})
+    if num_prov_accept:
+        dnode_outputs['outputs'].update({'num_prov_accept': num_prov_accept})
+
+    return dnode_outputs
 
 # Calculations that are used in decision tree functions
 

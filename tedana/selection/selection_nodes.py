@@ -10,7 +10,7 @@ from scipy.stats import scoreatpercentile
 from tedana.stats import getfbounds
 from tedana.selection._utils import (confirm_metrics_exist, selectcomps2use,
                                      log_decision_tree_step, change_comptable_classifications,
-                                     getelbow)
+                                     getelbow, create_dnode_outputs)
 
 # clean_dataframe, new_decision_node_info,
 LGR = logging.getLogger(__name__)
@@ -121,63 +121,6 @@ rho_elbow: :obj:`float`
         \
 """
 }
-
-
-def create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
-                         n_echos=None, kappa_elbow=None, rho_elbow=None,
-                         num_prov_accept=None, max_good_meanmetricrank=None,
-                         varex_threshold=None
-                         ):
-    """
-    Take several parameters that should be output from each decision node function
-    and put them in a dictionary under the key 'outputs' When the decision is output
-    as part of the decision tree class, this will be added to the dictionary with
-    parameters that called the function with all the outputs under the 'outputs' key
-
-    Parameters
-    ----------
-    Required parameters
-    used_metrics: :obj: `list[str]`
-        A list of all metrics from the comptable header used within this function.
-        Note, this must be a list even if only one metric is used
-    node_label: :obj: `str`
-        A brief label for what happens in this node that can be used in a decision
-        tree summary table or flow chart.
-    numTrue, numFalse: :obj: `int`
-        The number of components that were classified as true or false respectively
-    in this decision tree step.
-
-    Optional parameters that are ignored, if None
-    n_echos: :obj:`int`
-        The number of echos in the multi-echo data
-    n_vols: :obj:`int`
-        The number of volumes (time points) in the fMRI data
-    kappa_elbow: :obj:`float`
-        The kappa threshold below which components should be rejected or ignored
-    rho_elbow: :obj:`float`
-        The rho threshold above which components should be rejected or ignored
-
-
-    Returns
-    -------
-    dnode_outputs: :obj:`dict`
-        A dict that contains the inputted parameters that are not 'None'
-    """
-
-    dnode_outputs = {'outputs': {
-        'used_metrics': used_metrics,
-        'node_label': node_label,
-        'numTrue': numTrue,
-        'numFalse': numFalse
-    }}
-    if n_echos:
-        dnode_outputs['outputs'].update({'n_echos': n_echos})
-    if kappa_elbow:
-        dnode_outputs['outputs'].update({'kappa_elbow': kappa_elbow})
-    if rho_elbow:
-        dnode_outputs['outputs'].update({'rho_elbow': rho_elbow})
-
-    return dnode_outputs
 
 
 def manual_classify(comptable, decision_node_idx,
@@ -560,7 +503,8 @@ def meanmetricrank_and_variance_greaterthan_thresh(comptable, decision_node_idx,
         dnode_outputs = create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
                                              num_prov_accept=num_prov_accept,
                                              varex_threshold=varex_threshold,
-                                             max_good_meanmetricrank=max_good_meanmetricrank)
+                                             max_good_meanmetricrank=max_good_meanmetricrank,
+                                             extend_factor=extend_factor)
 
     return comptable, dnode_outputs
 
@@ -576,7 +520,7 @@ def variance_lessthan_thresholds(comptable, decision_node_idx, iftrue, iffalse,
                                  log_extra_report="", log_extra_info="",
                                  custom_node_label="", only_used_metrics=False):
     """
-    Finds componentes with variance<single_comp_threshold.
+    Finds components with variance<single_comp_threshold.
     If the sum of the variance for all components that meet this criteria
     is greater than all_comp_threshold then keep the lowest variance
     components so that the sum of their variances is less than all_comp_threshold
@@ -784,4 +728,119 @@ def kappa_rho_elbow_cutoffs_kundu(comptable, decision_node_idx, iftrue, iffalse,
 
 
 kappa_rho_elbow_cutoffs_kundu.__doc__ = kappa_rho_elbow_cutoffs_kundu.__doc__.format(
+    **decision_docs)
+
+
+def lowvariance_highmeanmetricrank_lowkappa(comptable, decision_node_idx, iftrue, iffalse,
+                                            decide_comps, n_echos, n_vols,
+                                            low_perc=25,
+                                            log_extra_report="", log_extra_info="",
+                                            custom_node_label="", only_used_metrics=False):
+    """
+    Finds components with variance below a threshold,
+    a mean metric rank above a threshold, and kappa below a threshold.
+    This would typically be used to identify remaining components that would
+    otherwise be rejected & put them in ignore due to their low variance
+
+    Parameters
+    ----------
+    {comptable}
+    {decision_node_idx}
+    {iftrue}
+    {iffalse}
+    {decide_comps}
+    {log_extra}
+    {custom_node_label}
+    {only_used_metrics}
+
+    Returns
+    -------
+    {basicreturns}
+    """
+
+    used_metrics = ['variance explained', 'kappa', 'mean metric rank']
+    if only_used_metrics:
+        return used_metrics
+
+    function_name_idx = ("lowvariance_highmeanmetricrank_lowkappa, step " + str(decision_node_idx))
+    if custom_node_label:
+        node_label = custom_node_label
+    else:
+        node_label = 'lowvar highmeanmetricrank lowkappa'
+
+    if log_extra_info:
+        LGR.info(log_extra_info)
+    if log_extra_report:
+        RepLGR.info(log_extra_report)
+    metrics_exist, missing_metrics = confirm_metrics_exist(
+        comptable, used_metrics, function_name=function_name_idx)
+
+    comps2use = selectcomps2use(comptable, decide_comps)
+    provaccept_comps2use = selectcomps2use(comptable, ['provisionalaccept'])
+
+    if (comps2use is None) or (provaccept_comps2use is None):
+        if comps2use is None:
+            log_decision_tree_step(function_name_idx, comps2use,
+                                   decide_comps=decide_comps)
+        if provaccept_comps2use is None:
+            log_decision_tree_step(function_name_idx, comps2use,
+                                   decide_comps='provisionalaccept')
+        dnode_outputs = create_dnode_outputs(used_metrics, node_label, 0, 0)
+    else:
+        # low variance threshold
+        varex_threshold = scoreatpercentile(
+            comptable.loc[provaccept_comps2use, 'variance explained'], low_perc)
+        db_low_varex = comptable.loc[comps2use, 'variance explained'] < varex_threshold
+
+        # mean metric rank threshold
+        num_prov_accept = len(provaccept_comps2use)
+        if n_vols < 90:
+            extend_factor = 3
+        elif n_vols < 110:
+            extend_factor = 2 + (n_vols - 90) / 20
+        else:
+            extend_factor = 2
+        max_good_meanmetricrank = extend_factor * num_prov_accept
+
+        db_meanmetricrank = comptable.loc[comps2use,
+                                          'mean metric rank'] < max_good_meanmetricrank
+
+        # low kappa threshold
+        f05, _, f01 = getfbounds(n_echos)
+        # get kappa values for components below a significance threshold
+        kappas_nonsig = comptable.loc[comptable['kappa'] < f01, 'kappa']
+
+        # Would an elbow from all Kappa values *ever* be lower than one from
+        # a subset of lower values?
+        kappa_elbow = np.min((getelbow(kappas_nonsig, return_val=True),
+                              getelbow(comptable['kappa'], return_val=True)))
+        db_kappa = comptable.loc[comps2use, 'kappa'] > kappa_elbow
+
+        decision_boolean = db_low_varex & db_meanmetricrank & db_kappa
+
+        comptable = change_comptable_classifications(
+                        comptable, iftrue, iffalse,
+                        decision_boolean, str(decision_node_idx))
+        numTrue = np.asarray(decision_boolean).sum()
+        numFalse = np.logical_not(decision_boolean).sum()
+        print(('numTrue={}, numFalse={}, numcomps2use={}'.format(
+            numTrue, numFalse, len(comps2use))))
+
+        log_decision_tree_step(function_name_idx, comps2use,
+                               numTrue=numTrue,
+                               numFalse=numFalse)
+
+        dnode_outputs = create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
+                                             n_echos=n_echos,
+                                             n_vols=n_vols,
+                                             kappa_elbow=kappa_elbow,
+                                             varex_threshold=varex_threshold,
+                                             max_good_meanmetricrank=max_good_meanmetricrank,
+                                             num_prov_accept=num_prov_accept,
+                                             extend_factor=extend_factor)
+
+    return comptable, dnode_outputs
+
+
+lowvariance_highmeanmetricrank_lowkappa.__doc__ = lowvariance_highmeanmetricrank_lowkappa.__doc__.format(
     **decision_docs)

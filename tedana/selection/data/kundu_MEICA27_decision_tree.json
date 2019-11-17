@@ -134,6 +134,40 @@
             }
         },
         {
+            "functionname": "lowvariance_highmeanmetricrank_lowkappa",
+            "parameters": {
+                "iftrue": "ignore",
+                "iffalse": "nochange",
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject"
+                ],
+                "n_echos": null,
+                "n_vols": null
+            },
+            "kwargs": {
+                "low_perc": 25,
+                "log_extra_info": "",
+                "log_extra_report": ""
+            }
+        },
+        {
+            "functionname": "classification_exists",
+            "parameters": {
+                "iftrue": "nochange",
+                "iffalse": "accept",
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject"
+                ],
+                "class_comp_exists": "provisionalreject"
+            },
+            "kwargs": {
+                "log_extra_info": "",
+                "log_extra_report": ""
+            }
+        },
+        {
             "functionname": "variance_lessthan_thresholds",
             "parameters": {
                 "iftrue": "nochange",
