@@ -86,7 +86,7 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img, mixing_z
         'signal-noise_t': ['map Z', 'map Z clusterized', 'map FT2'],
         'variance explained': ['map optcom betas'],
         'normalized variance explained': ['map weight'],
-        'd_table_score': ['kappa', 'dice_FT2', 'signal_minus_noise_t',
+        'd_table_score': ['kappa', 'dice_FT2', 'signal-noise_t',
                           'countnoise', 'countsigFT2'],
         'map FT2': ['map Z', 'data_cat', 'mask'],
         'map FS0': ['map Z'],
@@ -213,7 +213,7 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img, mixing_z
         comptable['d_table_score'] = dependence.generate_decision_table_score(
             comptable['kappa'],
             comptable['dice_FT2'],
-            comptable['signal_minus_noise_t'],
+            comptable['signal-noise_t'],
             comptable['countnoise'],
             comptable['countsigFT2'])
 
