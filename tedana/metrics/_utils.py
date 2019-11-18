@@ -91,10 +91,10 @@ def flip_components(*args, signs):
     """
     assert signs.ndim == 1, 'Argument "signs" must be one-dimensional.'
     for arg in args:
-        assert len(signs) in arg.shape,
+        assert len(signs) in arg.shape, \
             ('Size of argument "signs" must match size of one dimension in '
              'each of the input arguments.')
-        assert sum(x == len(signs) for x in arg.shape) == 1,
+        assert sum(x == len(signs) for x in arg.shape) == 1, \
             ('Only one dimension of each input argument can match the length '
              'of argument "signs".')
     # correct mixing & weights signs based on spatial distribution tails
