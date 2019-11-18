@@ -44,9 +44,11 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
     """
     RepLGR.info("A monoexponential model was fit to the data at each voxel "
                 "using nonlinear model fitting in order to estimate T2* and S0 "
-                "maps. For each voxel, the value from the adaptive mask was "
-                "used to determine which echoes would be used to estimate T2* "
-                "and S0.")
+                "maps, using T2*/S0 estimates from a log-linear fit as "
+                "initial values. For each voxel, the value from the adaptive "
+                "mask was used to determine which echoes would be used to "
+                "estimate T2* and S0. In cases of model fit failure, T2*/S0 "
+                "estimates from the log-linear fit were retained instead.")
     n_samp, n_echos, n_vols = data_cat.shape
     t2s_asc_maps = np.zeros([n_samp, n_echos - 1])
     s0_asc_maps = np.zeros([n_samp, n_echos - 1])
@@ -56,7 +58,7 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
     # fit_sigma = np.std(data_cat, axis=2)
 
     t2s_limited, s0_limited, t2s_full, s0_full = fit_loglinear(
-        data_cat, echo_times, adaptive_mask)
+        data_cat, echo_times, adaptive_mask, report=False)
 
     echos_to_run = np.unique(adaptive_mask)
     if 1 in echos_to_run:
@@ -116,14 +118,15 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
     return t2s_limited, s0_limited, t2s_full, s0_full
 
 
-def fit_loglinear(data_cat, echo_times, adaptive_mask):
+def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
     """
     """
-    RepLGR.info("A monoexponential model was fit to the data at each voxel "
-                "using log-linear regression in order to estimate T2* and S0 "
-                "maps. For each voxel, the value from the adaptive mask was "
-                "used to determine which echoes would be used to estimate T2* "
-                "and S0.")
+    if report:
+        RepLGR.info("A monoexponential model was fit to the data at each voxel "
+                    "using log-linear regression in order to estimate T2* and S0 "
+                    "maps. For each voxel, the value from the adaptive mask was "
+                    "used to determine which echoes would be used to estimate T2* "
+                    "and S0.")
     n_samp, n_echos, n_vols = data_cat.shape
     t2s_asc_maps = np.zeros([n_samp, n_echos - 1])
     s0_asc_maps = np.zeros([n_samp, n_echos - 1])
