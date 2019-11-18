@@ -418,6 +418,11 @@ def _eigensp_adj(lam, n, p):
     -------
     lam_adj : (p,) array-like
               adjusted eigen values.
+
+    Notes
+    -----
+    Adjusts the eigen spectrum to account for the finite samples
+    after subsampling (Li et al., 2007)
     """
 
     r = p / n
