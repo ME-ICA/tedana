@@ -5,7 +5,6 @@ import logging
 
 import numpy as np
 import pandas as pd
-from scipy import stats
 
 from . import dependence
 from ._utils import (determine_signs, flip_components, sort_df, apply_sort,
