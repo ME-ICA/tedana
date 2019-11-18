@@ -441,30 +441,29 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
-    if verbose:
-        io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
+    io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
 
     os.chdir(out_dir)
 
     LGR.info('Computing T2* map')
-    t2s, s0, t2ss, s0s, t2sG, s0G = decay.fit_decay(catd, tes, mask, masksum, fittype)
+    t2s_limited, s0_limited, t2s_full, s0_full = decay.fit_decay(
+        catd, tes, mask, masksum, fittype)
 
     # set a hard cap for the T2* map
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
-    cap_t2s = stats.scoreatpercentile(t2s.flatten(), 99.5, interpolation_method='lower')
+    cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5,
+                                      interpolation_method='lower')
     LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
-    t2s[t2s > cap_t2s * 10] = cap_t2s
-    io.filewrite(t2s, op.join(out_dir, 't2sv.nii'), ref_img)
-    io.filewrite(s0, op.join(out_dir, 's0v.nii'), ref_img)
+    t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
+    io.filewrite(t2s_limited, op.join(out_dir, 't2sv.nii'), ref_img)
+    io.filewrite(s0_limited, op.join(out_dir, 's0v.nii'), ref_img)
 
     if verbose:
-        io.filewrite(t2ss, op.join(out_dir, 't2ss.nii'), ref_img)
-        io.filewrite(s0s, op.join(out_dir, 's0vs.nii'), ref_img)
-        io.filewrite(t2sG, op.join(out_dir, 't2svG.nii'), ref_img)
-        io.filewrite(s0G, op.join(out_dir, 's0vG.nii'), ref_img)
+        io.filewrite(t2s_full, op.join(out_dir, 't2svG.nii'), ref_img)
+        io.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
 
     # optimally combine data
-    data_oc = combine.make_optcom(catd, tes, mask, t2s=t2sG, combmode=combmode)
+    data_oc = combine.make_optcom(catd, tes, mask, t2s=t2s_full, combmode=combmode)
 
     # regress out global signal unless explicitly not desired
     if 'gsr' in gscontrol:
@@ -472,15 +471,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     if mixm is None:
         # Identify and remove thermal noise from data
-        dd, n_components = decomposition.tedpca(catd,
-                                                data_oc,
-                                                combmode,
-                                                mask,
-                                                t2s,
-                                                t2sG,
-                                                ref_img,
-                                                tes=tes,
-                                                algorithm=tedpca,
+        dd, n_components = decomposition.tedpca(catd, data_oc, combmode, mask,
+                                                t2s_limited, t2s_full, ref_img,
+                                                tes=tes, algorithm=tedpca,
                                                 source_tes=source_tes,
                                                 kdaw=10.,
                                                 rdaw=1.,
@@ -499,7 +492,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # generated from dimensionally reduced data using full data (i.e., data
         # with thermal noise)
         comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                    catd, data_oc, mmix_orig, t2s, tes,
+                    catd, data_oc, mmix_orig, t2s_limited, tes,
                     ref_img, reindex=True, label='meica_', out_dir=out_dir,
                     algorithm='kundu_v2', verbose=verbose)
         comp_names = [io.add_decomp_prefix(comp, prefix='ica', max_value=comptable.index.max())
@@ -517,7 +510,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = pd.read_table(op.join(out_dir, 'ica_mixing.tsv')).values
         comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                    catd, data_oc, mmix_orig, t2s, tes,
+                    catd, data_oc, mmix_orig, t2s_limited, tes,
                     ref_img, label='meica_', out_dir=out_dir,
                     algorithm='kundu_v2', verbose=verbose)
         betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)

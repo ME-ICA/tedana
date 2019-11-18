@@ -37,8 +37,6 @@ pca_mixing.tsv
 report.txt
 s0v.nii.gz
 s0vG.nii.gz
-s0vs.nii.gz
-t2ss.nii.gz
 t2sv.nii.gz
 t2svG.nii.gz
 ts_OC.nii.gz

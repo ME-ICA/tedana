@@ -205,7 +205,6 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
     LGR.info('Computing adaptive T2* map')
     if fitmode == 'all':
         (t2s_limited, s0_limited,
-         t2ss, s0s,
          t2s_full, s0_full) = decay.fit_decay(catd, tes, mask, masksum,
                                               fittype)
     else:

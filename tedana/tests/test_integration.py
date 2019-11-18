@@ -2,19 +2,21 @@
 Integration tests for "real" data
 """
 
-from io import BytesIO
-import glob
-from gzip import GzipFile
 import os
-from pkg_resources import resource_filename
 import re
+import glob
 import shutil
 import tarfile
+from io import BytesIO
+from gzip import GzipFile
+from pkg_resources import resource_filename
 
 import pytest
 import requests
+import pandas as pd
 
 from tedana.workflows import tedana_workflow
+from tedana import io
 
 
 def check_integration_outputs(fname, outpath):
@@ -90,6 +92,11 @@ def test_integration_five_echo(skip_integration):
         out_dir=out_dir,
         tedpca='mdl',
         debug=True, verbose=True)
+
+    # Just a check on the component table pending a unit test of load_comptable
+    comptable = os.path.join(out_dir, 'ica_decomposition.json')
+    df = io.load_comptable(comptable)
+    assert isinstance(df, pd.DataFrame)
 
     # compare the generated output files
     fn = resource_filename('tedana', 'tests/data/tedana_outputs_verbose.txt')
