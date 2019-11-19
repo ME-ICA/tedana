@@ -70,8 +70,9 @@ def test_smoke_fit_decay():
     n_times = 20
     data = np.random.random((n_samples, n_echos, n_times))
     tes = np.random.random((n_echos)).tolist()
-    mask = np.random.randint(2, size=n_samples)  # generate binary mask of random 0s and 1s
-    adaptive_mask = np.random.random((n_samples))
+    mask = np.ones(n_samples, dtype=int)
+    mask[n_samples//2:] = 0
+    adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
     fittype = 'loglin'
     t2s_limited, s0_limited, t2s_full, s0_full = me.fit_decay(
         data, tes, mask, adaptive_mask, fittype)
@@ -92,8 +93,9 @@ def test_smoke_fit_decay_curvefit():
     n_times = 20
     data = np.random.random((n_samples, n_echos, n_times))
     tes = np.random.random((n_echos)).tolist()
-    mask = np.random.randint(2, size=n_samples)  # generate binary mask of random 0s and 1s
-    adaptive_mask = np.random.random((n_samples))
+    mask = np.ones(n_samples, dtype=int)
+    mask[n_samples//2:] = 0
+    adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
     fittype = 'curvefit'
     t2s_limited, s0_limited, t2s_full, s0_full = me.fit_decay(
         data, tes, mask, adaptive_mask, fittype)
@@ -113,8 +115,9 @@ def test_smoke_fit_decay_ts():
     n_times = 20
     data = np.random.random((n_samples, n_echos, n_times))
     tes = np.random.random((n_echos)).tolist()
-    mask = np.random.randint(2, size=n_samples)  # generate binary mask of random 0s and 1s
-    adaptive_mask = np.random.random((n_samples))
+    mask = np.ones(n_samples, dtype=int)
+    mask[n_samples//2:] = 0
+    adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
     fittype = 'loglin'
     t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts = me.fit_decay_ts(
         data, tes, mask, adaptive_mask, fittype)
@@ -135,8 +138,9 @@ def test_smoke_fit_decay_curvefit_ts():
     n_times = 20
     data = np.random.random((n_samples, n_echos, n_times))
     tes = np.random.random((n_echos)).tolist()
-    mask = np.random.randint(2, size=n_samples)  # generate binary mask of random 0s and 1s
-    adaptive_mask = np.random.random((n_samples))
+    mask = np.ones(n_samples, dtype=int)
+    mask[n_samples//2:] = 0
+    adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
     fittype = 'curvefit'
     t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts = me.fit_decay_ts(
         data, tes, mask, adaptive_mask, fittype)
