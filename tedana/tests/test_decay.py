@@ -63,7 +63,10 @@ def test_fit_decay_ts(testdata1):
 def test_smoke_fit_decay():
     """
     test_smoke_fit_decay tests that the function fit_decay returns reasonable
-    objects with random inputs in the correct format
+    objects with semi-random inputs in the correct format.
+    A mask with at least some "good" voxels and an adaptive mask where all
+    good voxels have at least two good echoes are generated to ensure that
+    the decay-fitting function has valid voxels on which to run.
     """
     n_samples = 100
     n_echos = 5
