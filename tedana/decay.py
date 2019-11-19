@@ -50,8 +50,6 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
                 "estimate T2* and S0. In cases of model fit failure, T2*/S0 "
                 "estimates from the log-linear fit were retained instead.")
     n_samp, n_echos, n_vols = data_cat.shape
-    t2s_asc_maps = np.zeros([n_samp, n_echos - 1])
-    s0_asc_maps = np.zeros([n_samp, n_echos - 1])
 
     # Currently unused
     # fit_data = np.mean(data_cat, axis=2)
@@ -65,6 +63,8 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
         echos_to_run = np.sort(np.unique(np.append(echos_to_run, 2)))
     echos_to_run = echos_to_run[echos_to_run >= 2]
 
+    t2s_asc_maps = np.zeros([n_samp, len(echos_to_run)])
+    s0_asc_maps = np.zeros([n_samp, len(echos_to_run)])
     echo_masks = np.zeros([n_samp, len(echos_to_run)], dtype=bool)
 
     for i_echo, echo_num in enumerate(echos_to_run):
@@ -128,13 +128,14 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
                     "used to determine which echoes would be used to estimate T2* "
                     "and S0.")
     n_samp, n_echos, n_vols = data_cat.shape
-    t2s_asc_maps = np.zeros([n_samp, n_echos - 1])
-    s0_asc_maps = np.zeros([n_samp, n_echos - 1])
 
     echos_to_run = np.unique(adaptive_mask)
     if 1 in echos_to_run:
         echos_to_run = np.sort(np.unique(np.append(echos_to_run, 2)))
     echos_to_run = echos_to_run[echos_to_run >= 2]
+
+    t2s_asc_maps = np.zeros([n_samp, len(echos_to_run)])
+    s0_asc_maps = np.zeros([n_samp, len(echos_to_run)])
     echo_masks = np.zeros([n_samp, len(echos_to_run)], dtype=bool)
 
     for i_echo, echo_num in enumerate(echos_to_run):

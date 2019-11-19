@@ -63,15 +63,19 @@ def test_fit_decay_ts(testdata1):
 def test_smoke_fit_decay():
     """
     test_smoke_fit_decay tests that the function fit_decay returns reasonable
-    objects with random inputs in the correct format
+    objects with semi-random inputs in the correct format.
+    A mask with at least some "good" voxels and an adaptive mask where all
+    good voxels have at least two good echoes are generated to ensure that
+    the decay-fitting function has valid voxels on which to run.
     """
     n_samples = 100
     n_echos = 5
     n_times = 20
     data = np.random.random((n_samples, n_echos, n_times))
     tes = np.random.random((n_echos)).tolist()
-    mask = np.random.randint(2, size=n_samples)  # generate binary mask of random 0s and 1s
-    adaptive_mask = np.random.random((n_samples))
+    mask = np.ones(n_samples, dtype=int)
+    mask[n_samples // 2:] = 0
+    adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
     fittype = 'loglin'
     t2s_limited, s0_limited, t2s_full, s0_full = me.fit_decay(
         data, tes, mask, adaptive_mask, fittype)
@@ -92,8 +96,9 @@ def test_smoke_fit_decay_curvefit():
     n_times = 20
     data = np.random.random((n_samples, n_echos, n_times))
     tes = np.random.random((n_echos)).tolist()
-    mask = np.random.randint(2, size=n_samples)  # generate binary mask of random 0s and 1s
-    adaptive_mask = np.random.random((n_samples))
+    mask = np.ones(n_samples, dtype=int)
+    mask[n_samples // 2:] = 0
+    adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
     fittype = 'curvefit'
     t2s_limited, s0_limited, t2s_full, s0_full = me.fit_decay(
         data, tes, mask, adaptive_mask, fittype)
@@ -113,8 +118,9 @@ def test_smoke_fit_decay_ts():
     n_times = 20
     data = np.random.random((n_samples, n_echos, n_times))
     tes = np.random.random((n_echos)).tolist()
-    mask = np.random.randint(2, size=n_samples)  # generate binary mask of random 0s and 1s
-    adaptive_mask = np.random.random((n_samples))
+    mask = np.ones(n_samples, dtype=int)
+    mask[n_samples // 2:] = 0
+    adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
     fittype = 'loglin'
     t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts = me.fit_decay_ts(
         data, tes, mask, adaptive_mask, fittype)
@@ -135,8 +141,9 @@ def test_smoke_fit_decay_curvefit_ts():
     n_times = 20
     data = np.random.random((n_samples, n_echos, n_times))
     tes = np.random.random((n_echos)).tolist()
-    mask = np.random.randint(2, size=n_samples)  # generate binary mask of random 0s and 1s
-    adaptive_mask = np.random.random((n_samples))
+    mask = np.ones(n_samples, dtype=int)
+    mask[n_samples // 2:] = 0
+    adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
     fittype = 'curvefit'
     t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts = me.fit_decay_ts(
         data, tes, mask, adaptive_mask, fittype)
