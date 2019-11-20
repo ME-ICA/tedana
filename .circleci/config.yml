@@ -241,6 +241,9 @@ workflows:
       - three-echo:
           requires:
             - makeenv_37
+      - four-echo:
+          requires:
+            - makeenv_37
       - five-echo:
           requires:
             - makeenv_37
