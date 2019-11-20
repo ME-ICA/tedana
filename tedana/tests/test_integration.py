@@ -122,12 +122,9 @@ def test_integration_four_echo(skip_integration):
     tedana_workflow(data=datalist,
                     tes=[11.8, 28.04, 44.28, 60.52],
                     out_dir=out_dir,
-                    tedpca='mdl')
-
-    # Just a check on the component table pending a unit test of load_comptable
-    comptable = os.path.join(out_dir, 'ica_decomposition.json')
-    df = io.load_comptable(comptable)
-    assert isinstance(df, pd.DataFrame)
+                    tedpca='aic',
+                    fittype='curvefit',
+                    tedort=True)
 
     # compare the generated output files
     fn = resource_filename('tedana', 'tests/data/fiu_outputs.txt')
@@ -151,6 +148,7 @@ def test_integration_three_echo(skip_integration):
         data='/tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz',
         tes=[14.5, 38.5, 62.5],
         out_dir=out_dir,
+        low_mem=True,
         tedpca='kundu')
 
     # compare the generated output files
