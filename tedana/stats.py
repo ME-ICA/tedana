@@ -159,7 +159,7 @@ def get_coeffs(data, X, mask=None, add_const=False):
            @article{hughett2007accurate,
              title={Accurate Computation of the F-to-z and t-to-z Transforms
                     for Large Arguments},
-             author={Hughett, Paul and others},
+             author={Hughett, Paul},
              journal={Journal of Statistical Software},
              volume={23},
              number={1},
@@ -187,12 +187,22 @@ def t_to_z(t_values, dof):
     Notes
     -----
     From Vanessa Sochat's TtoZ package.
+    https://github.com/vsoch/TtoZ
     """
     if not isinstance(t_values, np.ndarray):
         ret_float = True
         t_values = np.array([t_values])
     else:
         ret_float = False
+
+    RepLGR.info("T-statistics were converted to z-statistics using Dr. "
+                "Vanessa Sochat's implementation (Sochat, 2015) of the method "
+                "described in Hughett (2007).")
+    RefLGR.info('Sochat, V. (2015). TtoZ Original Release. Zenodo. '
+                'http://doi.org/10.5281/zenodo.32508.')
+    RefLGR.info('Hughett, P. (2007). Accurate Computation of the F-to-z and '
+                't-to-z Transforms for Large Arguments. Journal of '
+                'Statistical Software, 23(1), 1-5.')
 
     # Select just the nonzero voxels
     nonzero = t_values[t_values != 0]
