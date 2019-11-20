@@ -32,7 +32,7 @@ run_four_echo_test() {
     # Runs tedana four-echo test
     cprint "RUNNING four-ECHO TEST"
     make four-echo
-    cprint "four-ECHO TEST PASSED !"
+    cprint "FOUR-ECHO TEST PASSED !"
 }
 
 run_five_echo_test() {
