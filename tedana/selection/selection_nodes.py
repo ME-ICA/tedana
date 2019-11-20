@@ -10,7 +10,10 @@ from scipy.stats import scoreatpercentile
 from tedana.stats import getfbounds
 from tedana.selection._utils import (confirm_metrics_exist, selectcomps2use,
                                      log_decision_tree_step, change_comptable_classifications,
-                                     getelbow, create_dnode_outputs)
+                                     getelbow, create_dnode_outputs, get_extend_factor,
+                                     kappa_elbow_kundu, get_new_meanmetricrank,
+                                     prev_classified_comps)
+
 
 # clean_dataframe, new_decision_node_info,
 LGR = logging.getLogger(__name__)
@@ -110,6 +113,11 @@ n_vols: :obj:`int`
     The number of volumes (time points) in the fMRI data
         \
 """,
+    'extend_factor': """\
+extend_factor: :obj:`float`
+    A scaler used to set the threshold for the mean rank metric
+        \
+        """,
     'kappa_elbow': """\
 kappa_elbow: :obj:`float`
     The kappa threshold below which components should be rejected or ignored
@@ -397,7 +405,7 @@ def classification_exists(comptable, decision_node_idx, iftrue, iffalse,
 
 def meanmetricrank_and_variance_greaterthan_thresh(comptable, decision_node_idx, iftrue, iffalse,
                                                    decide_comps, n_vols,
-                                                   high_perc=90,
+                                                   high_perc=90, extend_factor=None,
                                                    log_extra_report="", log_extra_info="",
                                                    custom_node_label="", only_used_metrics=False):
     """
@@ -418,15 +426,11 @@ def meanmetricrank_and_variance_greaterthan_thresh(comptable, decision_node_idx,
     {iftrue}
     {iffalse}
     {decide_comps}
-    HIGH_PERC: :obj:`int`
+    {n_vols}
+    high_perc: :obj:`int`
         A percentile threshold to apply to components to set the variance
         threshold. default=90
-    n_vols: :obj:`int`
-        The number of volumes in the fMRI time series.
-        Used to calculate the threshold for meanmetricrank
-        In the MEICA code, this was hard-coded to 2 for data with more
-        than 100 volumes and 3 for data with less than 100 volumes.
-        default=2. Now is linearly ramped from 2-3 for vols between 90 & 110
+    {extend_factor}
     {log_extra}
     {custom_node_label}
     {only_used_metrics}
@@ -474,19 +478,14 @@ def meanmetricrank_and_variance_greaterthan_thresh(comptable, decision_node_idx,
         dnode_outputs = create_dnode_outputs(used_metrics, node_label, 0, 0)
     else:
         num_prov_accept = len(provaccept_comps2use)
-        varex_threshold = scoreatpercentile(
+        varex_upper_thresh = scoreatpercentile(
             comptable.loc[provaccept_comps2use, 'variance explained'], high_perc)
 
-        if n_vols < 90:
-            extend_factor = 3
-        elif n_vols < 110:
-            extend_factor = 2 + (n_vols - 90) / 20
-        else:
-            extend_factor = 2
+        extend_factor = get_extend_factor(n_vols=n_vols, extend_factor=extend_factor)
         max_good_meanmetricrank = extend_factor * num_prov_accept
 
         decision_boolean1 = comptable.loc[comps2use, 'mean metric rank'] > max_good_meanmetricrank
-        decision_boolean2 = comptable.loc[comps2use, 'variance explained'] > varex_threshold
+        decision_boolean2 = comptable.loc[comps2use, 'variance explained'] > varex_upper_thresh
         decision_boolean = decision_boolean1 & decision_boolean2
 
         comptable = change_comptable_classifications(
@@ -502,7 +501,7 @@ def meanmetricrank_and_variance_greaterthan_thresh(comptable, decision_node_idx,
 
         dnode_outputs = create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
                                              num_prov_accept=num_prov_accept,
-                                             varex_threshold=varex_threshold,
+                                             varex_threshold=varex_upper_thresh,
                                              max_good_meanmetricrank=max_good_meanmetricrank,
                                              extend_factor=extend_factor)
 
@@ -674,21 +673,14 @@ def kappa_rho_elbow_cutoffs_kundu(comptable, decision_node_idx, iftrue, iffalse,
         numTrue = 0
         numFalse = 0
     else:
-
-        f05, _, f01 = getfbounds(n_echos)
-        # get kappa values for components below a significance threshold
-        kappas_nonsig = comptable.loc[comptable['kappa'] < f01, 'kappa']
-
-        # Would an elbow from all Kappa values *ever* be lower than one from
-        # a subset of lower values?
-        kappa_elbow = np.min((getelbow(kappas_nonsig, return_val=True),
-                              getelbow(comptable['kappa'], return_val=True)))
+        kappa_elbow = kappa_elbow_kundu(comptable, n_echos)
 
         # The first elbow used to be for rho values of the unclassified components
         # excluding a few based on differences of variance. Now it's all unclassified
         # components
         # Upper limit for variance explained is median across components with high
         # Kappa values. High Kappa is defined as Kappa above Kappa elbow.
+        f05, _, f01 = getfbounds(n_echos)
         varex_upper_p = np.median(
             comptable.loc[comptable['kappa'] > getelbow(comptable['kappa'], return_val=True),
                           'variance explained'])
@@ -721,7 +713,7 @@ def kappa_rho_elbow_cutoffs_kundu(comptable, decision_node_idx, iftrue, iffalse,
                                numFalse=numFalse)
 
     dnode_outputs = create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
-                                         n_echos=n_echos,
+                                         n_echos=n_echos, varex_threshold=varex_upper_p,
                                          kappa_elbow=kappa_elbow, rho_elbow=rho_elbow)
 
     return comptable, dnode_outputs
@@ -733,7 +725,7 @@ kappa_rho_elbow_cutoffs_kundu.__doc__ = kappa_rho_elbow_cutoffs_kundu.__doc__.fo
 
 def lowvariance_highmeanmetricrank_lowkappa(comptable, decision_node_idx, iftrue, iffalse,
                                             decide_comps, n_echos, n_vols,
-                                            low_perc=25,
+                                            low_perc=25, extend_factor=None,
                                             log_extra_report="", log_extra_info="",
                                             custom_node_label="", only_used_metrics=False):
     """
@@ -749,6 +741,9 @@ def lowvariance_highmeanmetricrank_lowkappa(comptable, decision_node_idx, iftrue
     {iftrue}
     {iffalse}
     {decide_comps}
+    {n_echos}
+    {n_vols}
+    {extend_factor}
     {log_extra}
     {custom_node_label}
     {only_used_metrics}
@@ -788,34 +783,22 @@ def lowvariance_highmeanmetricrank_lowkappa(comptable, decision_node_idx, iftrue
         dnode_outputs = create_dnode_outputs(used_metrics, node_label, 0, 0)
     else:
         # low variance threshold
-        varex_threshold = scoreatpercentile(
+        varex_lower_thresh = scoreatpercentile(
             comptable.loc[provaccept_comps2use, 'variance explained'], low_perc)
-        db_low_varex = comptable.loc[comps2use, 'variance explained'] < varex_threshold
+        db_low_varex = comptable.loc[comps2use, 'variance explained'] < varex_lower_thresh
 
         # mean metric rank threshold
         num_prov_accept = len(provaccept_comps2use)
-        if n_vols < 90:
-            extend_factor = 3
-        elif n_vols < 110:
-            extend_factor = 2 + (n_vols - 90) / 20
-        else:
-            extend_factor = 2
+        extend_factor = get_extend_factor(n_vols=n_vols, extend_factor=extend_factor)
         max_good_meanmetricrank = extend_factor * num_prov_accept
-
         db_meanmetricrank = comptable.loc[comps2use,
                                           'mean metric rank'] < max_good_meanmetricrank
 
-        # low kappa threshold
-        f05, _, f01 = getfbounds(n_echos)
-        # get kappa values for components below a significance threshold
-        kappas_nonsig = comptable.loc[comptable['kappa'] < f01, 'kappa']
-
-        # Would an elbow from all Kappa values *ever* be lower than one from
-        # a subset of lower values?
-        kappa_elbow = np.min((getelbow(kappas_nonsig, return_val=True),
-                              getelbow(comptable['kappa'], return_val=True)))
+        # kappa threshold
+        kappa_elbow = kappa_elbow_kundu(comptable, n_echos)
         db_kappa = comptable.loc[comps2use, 'kappa'] > kappa_elbow
 
+        # combine the 3 thresholds
         decision_boolean = db_low_varex & db_meanmetricrank & db_kappa
 
         comptable = change_comptable_classifications(
@@ -834,7 +817,7 @@ def lowvariance_highmeanmetricrank_lowkappa(comptable, decision_node_idx, iftrue
                                              n_echos=n_echos,
                                              n_vols=n_vols,
                                              kappa_elbow=kappa_elbow,
-                                             varex_threshold=varex_threshold,
+                                             varex_threshold=varex_lower_thresh,
                                              max_good_meanmetricrank=max_good_meanmetricrank,
                                              num_prov_accept=num_prov_accept,
                                              extend_factor=extend_factor)
@@ -842,5 +825,359 @@ def lowvariance_highmeanmetricrank_lowkappa(comptable, decision_node_idx, iftrue
     return comptable, dnode_outputs
 
 
-lowvariance_highmeanmetricrank_lowkappa.__doc__ = lowvariance_highmeanmetricrank_lowkappa.__doc__.format(
-    **decision_docs)
+lowvariance_highmeanmetricrank_lowkappa.__doc__ = (
+    lowvariance_highmeanmetricrank_lowkappa.__doc__.format(**decision_docs))
+
+
+def highvariance_highmeanmetricrank_highkapparatio(comptable, decision_node_idx, iftrue, iffalse,
+                                                   decide_comps, n_echos, n_vols=None,
+                                                   extend_factor=None,
+                                                   restrict_factor=2,
+                                                   prev_X_steps=0, high_perc=90,
+                                                   log_extra_report="", log_extra_info="",
+                                                   custom_node_label="", only_used_metrics=False):
+    """
+    Finds components with variance above a threshold,
+    a mean metric rank above a threshold, and kappa ratio above a threshold.
+    This would typically be used to identify borderline remaining components to reject.
+
+    Parameters
+    ----------
+    {comptable}
+    {decision_node_idx}
+    {iftrue}
+    {iffalse}
+    {decide_comps}
+    {n_echos}
+    {n_vols}
+    {extend_factor}
+    {restrict_factor}
+    {prev_X_steps}
+    {log_extra}
+    {custom_node_label}
+    {only_used_metrics}
+
+    Returns
+    -------
+    {basicreturns}
+    """
+
+    used_metrics = ['variance explained', 'kappa', 'rho', 'DICE_FT2',
+                    'T2fitdiff invsout ICAmap Tstat', 'countsig in T2clusters',
+                    'countnoise']
+    if only_used_metrics:
+        return used_metrics
+
+    function_name_idx = (
+        "highvariance_highmeanmetricrank_highkapparatio, step " + str(decision_node_idx))
+    if custom_node_label:
+        node_label = custom_node_label
+    else:
+        node_label = 'highvar highmeanmetricrank highkapparatio'
+
+    if log_extra_info:
+        LGR.info(log_extra_info)
+    if log_extra_report:
+        RepLGR.info(log_extra_report)
+    metrics_exist, missing_metrics = confirm_metrics_exist(
+        comptable, used_metrics, function_name=function_name_idx)
+
+    comps2use = selectcomps2use(comptable, decide_comps)
+    if comps2use is None:
+        log_decision_tree_step(function_name_idx, comps2use, decide_comps=decide_comps)
+        numTrue = 0
+        numFalse = 0
+        dnode_outputs = create_dnode_outputs(used_metrics, node_label, 0, 0)
+    else:
+        # This will either identify a previously calculated revised meanmetricrank and
+        # return it or it will calculate a revised meanmetricrank, return it,
+        # and add a new column to comptable that contains this new metric
+        meanmetricrank, comptable = get_new_meanmetricrank(
+            comptable, comps2use, decision_node_idx)
+
+        # Identify components that were either provionsally accepted
+        # or don't have a final classificaiton in prev_X_steps previous nodes
+        previous_comps2use = prev_classified_comps(
+            comptable, decision_node_idx,
+            ['provisionalaccept', 'provisionalreject', 'unclassified'],
+            prev_X_steps=prev_X_steps)
+        previous_provaccept_comps2use = prev_classified_comps(
+            comptable, decision_node_idx, ['provisionalaccept'], prev_X_steps=prev_X_steps)
+
+        kappa_elbow = kappa_elbow_kundu(comptable, n_echos)
+
+        # This should be the same as the MEICA 2.7 code except that I'm using provisionalaccept
+        # instead of >kappa_eblow and <rho_elbow, which si how provisionally accepted components
+        # are initially classified
+        num_acc_guess = int(
+            np.mean(len(previous_provaccept_comps2use),
+                    np.sum(comptable.loc[previous_comps2use, 'kappa'] > kappa_elbow)))
+
+        # a scaling factor that is either based on the number of volumes or can be
+        # directly assigned
+        extend_factor = get_extend_factor(n_vols=n_vols, extend_factor=extend_factor)
+
+        varex_upper_thresh = scoreatpercentile(
+                comptable.loc[previous_provaccept_comps2use, 'variance explained'], high_perc)
+
+        conservative_guess = num_acc_guess / restrict_factor
+        db_mmrank = meanmetricrank.loc[comps2use] > conservative_guess
+        db_kapparatio = comptable.loc[comps2use, 'kappa ratio'] > (extend_factor * 2)
+        db_var_upper = comptable.loc[comps2use, 'variance explained'] > (
+            varex_upper_thresh * extend_factor)
+        decision_boolean = db_mmrank & db_kapparatio & db_var_upper
+
+        comptable = change_comptable_classifications(
+                            comptable, iftrue, iffalse,
+                            decision_boolean, str(decision_node_idx))
+        numTrue = np.asarray(decision_boolean).sum()
+        numFalse = np.logical_not(decision_boolean).sum()
+        print(('numTrue={}, numFalse={}, numcomps2use={}'.format(
+                numTrue, numFalse, len(comps2use))))
+
+        log_decision_tree_step(function_name_idx, comps2use,
+                               numTrue=numTrue,
+                               numFalse=numFalse)
+
+        dnode_outputs = create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
+                                             n_echos=n_echos,
+                                             n_vols=n_vols,
+                                             varex_threshold=varex_upper_thresh,
+                                             restrict_factor=2,
+                                             ignore_prev_X_steps=0,
+                                             max_good_meanmetricrank=conservative_guess,
+                                             num_acc_guess=num_acc_guess,
+                                             extend_factor=extend_factor)
+
+    return comptable, dnode_outputs
+
+
+highvariance_highmeanmetricrank_highkapparatio.__doc__ = (
+    highvariance_highmeanmetricrank_highkapparatio.__doc__.format(**decision_docs))
+
+
+def highvariance_highmeanmetricrank(comptable, decision_node_idx, iftrue, iffalse,
+                                    decide_comps, n_echos, n_vols=None,
+                                    low_perc=25, high_perc=90,
+                                    extend_factor=None,
+                                    prev_X_steps=0, recalc_varex_lower_thresh=False,
+                                    log_extra_report="", log_extra_info="",
+                                    custom_node_label="", only_used_metrics=False):
+    """
+    Finds components with variance above a threshold,
+    a mean metric rank above a threshold, and kappa ratio above a threshold.
+    This would typically be used to identify borderline remaining components to reject.
+
+    Parameters
+    ----------
+    {comptable}
+    {decision_node_idx}
+    {iftrue}
+    {iffalse}
+    {decide_comps}
+    {n_echos}
+    {n_vols}
+    {extend_factor}
+    {prev_X_steps}
+    {log_extra}
+    {custom_node_label}
+    {only_used_metrics}
+
+    Returns
+    -------
+    {basicreturns}
+    """
+
+    used_metrics = ['variance explained', 'kappa', 'rho', 'DICE_FT2',
+                    'T2fitdiff invsout ICAmap Tstat', 'countsig in T2clusters',
+                    'countnoise']
+    if only_used_metrics:
+        return used_metrics
+
+    function_name_idx = (
+        "highvariance_highmeanmetricrank_highkapparatio, step " + str(decision_node_idx))
+    if custom_node_label:
+        node_label = custom_node_label
+    else:
+        node_label = 'highvar highmeanmetricrank highkapparatio'
+
+    if log_extra_info:
+        LGR.info(log_extra_info)
+    if log_extra_report:
+        RepLGR.info(log_extra_report)
+    metrics_exist, missing_metrics = confirm_metrics_exist(
+        comptable, used_metrics, function_name=function_name_idx)
+
+    comps2use = selectcomps2use(comptable, decide_comps)
+    if comps2use is None:
+        log_decision_tree_step(function_name_idx, comps2use, decide_comps=decide_comps)
+        numTrue = 0
+        numFalse = 0
+        dnode_outputs = create_dnode_outputs(used_metrics, node_label, 0, 0)
+    else:
+        # This will either identify a previously calculated revised meanmetricrank and
+        # return it or it will calculate a revised meanmetricrank, return it,
+        # and add a new column to comptable that contains this new metric
+        meanmetricrank, comptable = get_new_meanmetricrank(
+            comptable, comps2use, decision_node_idx)
+
+        # Identify components that were either provionsally accepted
+        # or don't have a final classificaiton in prev_X_steps previous nodes
+        previous_comps2use = prev_classified_comps(
+            comptable, decision_node_idx,
+            ['provisionalaccept', 'provisionalreject', 'unclassified'],
+            prev_X_steps=prev_X_steps)
+        previous_provaccept_comps2use = prev_classified_comps(
+            comptable, decision_node_idx, ['provisionalaccept'], prev_X_steps=prev_X_steps)
+
+        kappa_elbow = kappa_elbow_kundu(comptable, n_echos)
+
+        # This should be the same as the MEICA 2.7 code except that I'm using provisionalaccept
+        # instead of >kappa_eblow and <rho_elbow, which si how provisionally accepted components
+        # are initially classified
+        num_acc_guess = int(
+            np.mean(len(previous_provaccept_comps2use),
+                    np.sum(comptable.loc[previous_comps2use, 'kappa'] > kappa_elbow)))
+
+        # a scaling factor that is either based on the number of volumes or can be
+        # directly assigned
+        extend_factor = get_extend_factor(n_vols=n_vols, extend_factor=extend_factor)
+
+        conservative_guess2 = num_acc_guess * high_perc / 100.
+        db_mmrank = meanmetricrank.loc[comps2use] > conservative_guess2
+
+        if recalc_varex_lower_thresh:
+            # Note: In MEICA v2.7 code, the included components are:
+            # [comps2use[:num_acc_guess]]. That would only make sense if the
+            # components were sorted by variance and I don't think they were.
+            # even still, this would be the the same as shifting the percentile
+            # based on num_acc_guess. The threshold without num_acc_guess seems
+            # equally arbitry so just keeping that for simplicity.
+            varex_lower_thresh = scoreatpercentile(
+                comptable.loc[comps2use, 'variance explained'], low_perc)
+        else:
+            varex_lower_thresh = scoreatpercentile(
+                comptable.loc[previous_provaccept_comps2use, 'variance explained'], low_perc)
+
+        db_var_lower = comptable.loc[comps2use, 'variance explained'] > (
+            varex_lower_thresh * extend_factor)
+
+        decision_boolean = db_mmrank & db_var_lower
+
+        comptable = change_comptable_classifications(
+                            comptable, iftrue, iffalse,
+                            decision_boolean, str(decision_node_idx))
+        numTrue = np.asarray(decision_boolean).sum()
+        numFalse = np.logical_not(decision_boolean).sum()
+        print(('numTrue={}, numFalse={}, numcomps2use={}'.format(
+                numTrue, numFalse, len(comps2use))))
+
+        log_decision_tree_step(function_name_idx, comps2use,
+                               numTrue=numTrue,
+                               numFalse=numFalse)
+
+        dnode_outputs = create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
+                                             n_echos=n_echos,
+                                             n_vols=n_vols,
+                                             varex_threshold=varex_lower_thresh,
+                                             prev_X_steps=prev_X_steps,
+                                             max_good_meanmetricrank=conservative_guess2,
+                                             num_acc_guess=num_acc_guess,
+                                             extend_factor=extend_factor)
+
+    return comptable, dnode_outputs
+
+
+highvariance_highmeanmetricrank.__doc__ = (
+    highvariance_highmeanmetricrank.__doc__.format(**decision_docs))
+
+
+def highvariance_lowkappa(comptable, decision_node_idx, iftrue, iffalse,
+                          decide_comps, n_echos,
+                          low_perc=25,
+                          log_extra_report="", log_extra_info="",
+                          custom_node_label="", only_used_metrics=False):
+    """
+    Finds components with variance above a threshold,
+    a mean metric rank above a threshold, and kappa ratio above a threshold.
+    This would typically be used to identify borderline remaining components to reject.
+
+    Parameters
+    ----------
+    {comptable}
+    {decision_node_idx}
+    {iftrue}
+    {iffalse}
+    {decide_comps}
+    {n_echos}
+    {log_extra}
+    {custom_node_label}
+    {only_used_metrics}
+
+    Returns
+    -------
+    {basicreturns}
+    """
+
+    used_metrics = ['variance explained', 'kappa']
+    if only_used_metrics:
+        return used_metrics
+
+    function_name_idx = (
+        "highvariance_lowkappa, step " + str(decision_node_idx))
+    if custom_node_label:
+        node_label = custom_node_label
+    else:
+        node_label = 'highvariance lowkappa'
+
+    if log_extra_info:
+        LGR.info(log_extra_info)
+    if log_extra_report:
+        RepLGR.info(log_extra_report)
+    metrics_exist, missing_metrics = confirm_metrics_exist(
+        comptable, used_metrics, function_name=function_name_idx)
+
+    comps2use = selectcomps2use(comptable, decide_comps)
+    if comps2use is None:
+        log_decision_tree_step(function_name_idx, comps2use, decide_comps=decide_comps)
+        numTrue = 0
+        numFalse = 0
+        dnode_outputs = create_dnode_outputs(used_metrics, node_label, 0, 0)
+    else:
+        kappa_elbow = kappa_elbow_kundu(comptable, n_echos)
+        db_kappa = comptable.loc[comps2use, 'kappa'] <= kappa_elbow
+
+        # Note: In MEICA v2.7 code, the included components are:
+        # [comps2use[:num_acc_guess]]. That would only make sense if the
+        # components were sorted by variance and I don't think they were.
+        # even still, this would be the the same as shifting the percentile
+        # based on num_acc_guess. The threshold without num_acc_guess seems
+        # equally arbitry so just keeping that for simplicity.
+        varex_lower_thresh = scoreatpercentile(
+                comptable.loc[comps2use, 'variance explained'], low_perc)
+
+        db_var_lower = comptable.loc[comps2use, 'variance explained'] > varex_lower_thresh
+
+        decision_boolean = db_kappa & db_var_lower
+
+        comptable = change_comptable_classifications(
+                            comptable, iftrue, iffalse,
+                            decision_boolean, str(decision_node_idx))
+        numTrue = np.asarray(decision_boolean).sum()
+        numFalse = np.logical_not(decision_boolean).sum()
+        print(('numTrue={}, numFalse={}, numcomps2use={}'.format(
+                numTrue, numFalse, len(comps2use))))
+
+        log_decision_tree_step(function_name_idx, comps2use,
+                               numTrue=numTrue,
+                               numFalse=numFalse)
+
+        dnode_outputs = create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
+                                             n_echos=n_echos,
+                                             varex_threshold=varex_lower_thresh)
+
+    return comptable, dnode_outputs
+
+
+highvariance_lowkappa.__doc__ = (
+    highvariance_lowkappa.__doc__.format(**decision_docs))

@@ -168,18 +168,75 @@
             }
         },
         {
-            "functionname": "variance_lessthan_thresholds",
+            "functionname": "highvariance_highmeanmetricrank_highkapparatio",
             "parameters": {
-                "iftrue": "nochange",
-                "iffalse": "ignore",
-                "decide_comps": "provisionalreject",
-                "var_metric": "variance explained"
+                "iftrue": "reject",
+                "iffalse": "nochange",
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject"
+                ],
+                "n_echos": null,
+                "n_vols": null
+            },
+            "kwargs": {
+                "prev_X_steps": 0,
+                "log_extra_info": "",
+                "log_extra_report": ""
+            }
+        },
+        {
+            "functionname": "highvariance_highmeanmetricrank",
+            "parameters": {
+                "iftrue": "reject",
+                "iffalse": "nochange",
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject"
+                ],
+                "n_echos": null,
+                "n_vols": null
+            },
+            "kwargs": {
+                "prev_X_steps": 1,
+                "log_extra_info": "",
+                "log_extra_report": ""
+            }
+        },
+        {
+            "functionname": "highvariance_highmeanmetricrank",
+            "parameters": {
+                "iftrue": "ignore",
+                "iffalse": "nochange",
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject"
+                ],
+                "n_echos": null
+            },
+            "kwargs": {
+                "prev_X_steps": 2,
+                "high_perc": 100,
+                "extend_factor": 1,
+                "recalc_varex_lower_thresh": true,
+                "log_extra_info": "",
+                "log_extra_report": ""
+            }
+        },
+        {
+            "functionname": "highvariance_lowkappa",
+            "parameters": {
+                "iftrue": "ignore",
+                "iffalse": "nochange",
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject"
+                ],
+                "n_echos": null
             },
             "kwargs": {
                 "log_extra_info": "",
-                "log_extra_report": "",
-                "single_comp_threshold": 0.1,
-                "all_comp_threshold": 1.0
+                "log_extra_report": ""
             }
         },
         {

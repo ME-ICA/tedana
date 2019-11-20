@@ -174,7 +174,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     # map) and variance explained is higher than the median across components.
     temp_rej2 = unclf[(comptable.loc[unclf, 'signal-noise_t'] < 0) &
                       (comptable.loc[unclf, 'variance explained'] >
-                      np.median(comptable['variance explained']))]
+                       np.median(comptable['variance explained']))]
     comptable.loc[temp_rej2, 'classification'] = 'rejected'
     comptable.loc[temp_rej2, 'rationale'] += 'I005;'
     rej = np.union1d(temp_rej2, rej)
@@ -322,7 +322,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
             unclf[comptable.loc[unclf, 'd_table_score_scrub'] > conservative_guess],
             unclf[comptable.loc[unclf, 'kappa ratio'] > EXTEND_FACTOR * 2])
         candartA = (candartA[comptable.loc[candartA, 'variance explained'] >
-                    varex_upper * EXTEND_FACTOR])
+                             varex_upper * EXTEND_FACTOR])
         comptable.loc[candartA, 'classification'] = 'rejected'
         comptable.loc[candartA, 'rationale'] += 'I009;'
         midk = np.union1d(midk, candartA)
@@ -332,7 +332,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
         conservative_guess2 = num_acc_guess * HIGH_PERC / 100.
         candartB = unclf[comptable.loc[unclf, 'd_table_score_scrub'] > conservative_guess2]
         candartB = (candartB[comptable.loc[candartB, 'variance explained'] >
-                    varex_lower * EXTEND_FACTOR])
+                             varex_lower * EXTEND_FACTOR])
         comptable.loc[candartB, 'classification'] = 'rejected'
         comptable.loc[candartB, 'rationale'] += 'I010;'
         midk = np.union1d(midk, candartB)

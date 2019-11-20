@@ -3,8 +3,10 @@ Utility functions for tedana.selection
 """
 
 import logging
-
+import re
 import numpy as np
+from tedana.stats import getfbounds
+from tedana.metrics.dependence import generate_decision_table_score
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
@@ -52,7 +54,20 @@ def change_comptable_classifications(comptable, iftrue, iffalse,
                                      decision_boolean, decision_node_idx_str):
     """
     Given information on whether a decision critereon is true or false for each component
-    change or don't change the compnent classification
+    change or don't change the component classification
+
+    Note
+    ----
+    May want to add a check here so that, if a component classification is changed from
+    accept, reject, or ignore, to something else, throw a warning. A user would have the power
+    to change component labels in any order, but the ideal is that once something is assigned
+    as accept, reject, or ignore, those are final classifications that should not be changed.
+    If this is added, then there should be an option to override the warning. That override
+    would be necessary when manual_classify is used to remove all classification info at the
+    start of a decision tree. It also might be useful to have an override for ignore.
+    The use case for this would be, if the total explained variance of all the ignored components
+    is above a threshold (i.e >5% of accepted explained variance) then move the highest variance
+    ignored components with rho/kappa>a threshold form ignore to reject
     """
     print(('iftrue={}, iffalse={}, decision_node_idx_str{}').format(
         iftrue, iffalse, decision_node_idx_str))
@@ -223,7 +238,8 @@ def create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
                          n_echos=None, n_vols=None, kappa_elbow=None, rho_elbow=None,
                          num_prov_accept=None, max_good_meanmetricrank=None,
                          varex_threshold=None, low_perc=None, high_perc=None,
-                         extend_factor=None,
+                         extend_factor=None, restrict_factor=None,
+                         ignore_prex_X_steps=None, num_acc_guess=None
                          ):
     """
     Take several parameters that should be output from each decision node function
@@ -285,6 +301,12 @@ def create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
         dnode_outputs['outputs'].update({'varex_threshold': varex_threshold})
     if num_prov_accept:
         dnode_outputs['outputs'].update({'num_prov_accept': num_prov_accept})
+    if restrict_factor:
+        dnode_outputs['outputs'].update({'restrict_factor': num_prov_accept})
+    if ignore_prex_X_steps:
+        dnode_outputs['outputs'].update({'ignore_prex_X_steps': num_prov_accept})
+    if num_acc_guess:
+        dnode_outputs['outputs'].update({'num_acc_guess': num_prov_accept})
 
     return dnode_outputs
 
@@ -362,3 +384,178 @@ def getelbow(arr, return_val=False):
         return arr[k_min_ind]
     else:
         return k_min_ind
+
+
+def kappa_elbow_kundu(comptable, n_echos):
+    """
+    Calculate an elbow for kappa using the approach originally in
+    Prantik Kundu's MEICA v2.7 code
+
+    Parameters
+    ----------
+    comptable : (C x M) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component, with a column for
+        each metric. The index should be the component number.
+        Only the 'kappa' column is used in this function
+    n_echos: :obj:`int`
+        The number of echos in the multi-echo data
+
+    Returns
+    -------
+    kappa_elbow: :obj:`float`
+        The 'elbow' value for kappa values, above which components are considered
+        more likely to contain T2* weighted signals
+    """
+    # low kappa threshold
+    f05, _, f01 = getfbounds(n_echos)
+    # get kappa values for components below a significance threshold
+    kappas_nonsig = comptable.loc[comptable['kappa'] < f01, 'kappa']
+
+    # Would an elbow from all Kappa values *ever* be lower than one from
+    # a subset of lower values?
+    kappa_elbow = np.min((getelbow(kappas_nonsig, return_val=True),
+                          getelbow(comptable['kappa'], return_val=True)))
+
+    return kappa_elbow
+
+
+def get_extend_factor(n_vols=None, extend_factor=None):
+    """
+    extend_factor is a scaler used to set a threshold for the mean metric rank
+    It is either defined by the number of volumes in the time series or if directly
+    defined by the user. If it is defined by the user, that takes precedence over
+    using the number of volumes in a calculation
+
+    Parameters
+    ----------
+    n_vols: :obj:`int`
+        The number of volumes in an fMRI time series. default=None
+        In the MEICA code, extend_factor was hard-coded to 2 for data with more
+        than 100 volumes and 3 for data with less than 100 volumes.
+        Now is linearly ramped from 2-3 for vols between 90 & 110
+
+    extend_factor: :obj:`float`
+        The scaler used to set a threshold for mean metric rank. default=None
+
+    Returns
+    -------
+    extend_factor: :obj:`float`
+
+    Note
+    ----
+    Either n_vols OR extend_factor is a required input
+    """
+
+    if extend_factor:
+        LGR.info('extend_factor={}, as defined by user'.format(extend_factor))
+    elif n_vols:
+        if n_vols < 90:
+            extend_factor = 3
+        elif n_vols < 110:
+            extend_factor = 2 + (n_vols - 90) / 20
+        else:
+            extend_factor = 2
+        LGR.info('extend_factor={}, based on number of fMRI volumes'.format(extend_factor))
+    else:
+        error_msg = 'get_extend_factor need n_vols or extend_factor as an input'
+        LGR.error(error_msg)
+        ValueError(error_msg)
+    return extend_factor
+
+
+def get_new_meanmetricrank(comptable, comps2use, decision_node_idx,
+                           calc_new_rank=False):
+    """
+    If a revised mean metric rank was already calculated, use that.
+    If not, calculate a new mean metric rank based on the components
+    identified in comps2use
+
+    Parameters
+    ----------
+    comptable
+    comps2use
+    decision_node_idx: :obj:`int`
+        The index for the current decision node
+    calc_new_rank: :obj:`bool`
+        calculate a new mean metric rank even if a revised mean
+        metric rank was already calculated
+
+    Return
+    ------
+    comptable
+    meanmetricrank
+    """
+
+    if not calc_new_rank:
+        # check to see if a revised mean metric rank was already calculated
+        # and use that rank. A revised mean metric rank would be named
+        # 'mean metric rank' followed by a number that is lower than the
+        # current decision_node_idx
+        for didx in range(decision_node_idx, -1, -1):
+            if ('mean metric rank ' + str(didx)) in comptable.columns:
+                return comptable['mean metric rank ' + str(didx)], comptable
+        else:
+            comptable['mean metric rank ' + str(decision_node_idx)] = (
+                generate_decision_table_score(
+                    comptable.loc[comps2use, 'kappa'],
+                    comptable.loc[comps2use, 'dice_FT2'],
+                    comptable.loc[comps2use, 'signal_minus_noise_t'],
+                    comptable.loc[comps2use, 'countnoise'],
+                    comptable.loc[comps2use, 'countsigFT2']))
+            return comptable['mean metric rank ' + str(decision_node_idx)], comptable
+
+
+def prev_classified_comps(comptable, decision_node_idx, classification_label, prev_X_steps=0):
+    """
+    Output a list of components with a specific label during the current or
+    previous X steps of the decision tree. For example, if
+    classification_label = ['provisionalaccept'] and prev_X_steps = 0
+    then this outputs the indices of components that are currenlty
+    classsified as provisionalaccept. If prev_X_steps=2, then this will
+    output components that are classified as provisionalaccept or were
+    classified as such any time before the previous two decision tree steps
+
+    Parameters
+    ----------
+    comptable
+    n_echos: :obj:`int`
+        The number of echos in the multi-echo data set
+    decision_node_idx: :obj:`int`
+        The index of the node in the decision tree that called this function
+    classification_label: :obj:`list[str]`
+        A list of strings containing classification labels to identify in components
+        For example: ['provisionalaccept']
+    prev_X_steps: :obj:`int`
+        If 0, then just count the number of provisionally accepted or rejected
+        or unclassified components in the current node. If this is a positive
+        integer, then also check if a component was a in one of those three
+        categories in ignore_prev_X_steps previous nodes. default=0
+
+    Returns
+    -------
+    full_comps2use: :obj:`list[int]`
+        A list of indices of components that have or add classification_lable
+    """
+
+    full_comps2use = selectcomps2use(comptable, classification_label)
+    rationales = comptable['rationale']
+
+    if prev_X_steps > 0:  # if checking classifications in prevision nodes
+        for compidx in range(len(comptable)):
+            tmp_rationale = rationales.values[compidx]
+            tmp_list = re.split(':|;| ', tmp_rationale)
+            while("" in tmp_list):  # remove blank strings after splitting rationale
+                tmp_list.remove("")
+            # Check the previous nodes
+            # This is inefficient, but it should work
+            for didx in range(max(0, decision_node_idx - prev_X_steps), decision_node_idx):
+                if str(didx) in tmp_list:
+                    didx_loc = tmp_list.index(str(didx))
+                    if(didx_loc > 1):
+                        tmp_classifier = (tmp_list[didx_loc - 1])
+                        if tmp_classifier in classification_label:
+                            full_comps2use.append(compidx)
+
+    full_comps2use = list(set(full_comps2use))
+
+    return full_comps2use
