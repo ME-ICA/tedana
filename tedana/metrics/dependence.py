@@ -169,7 +169,7 @@ def calculate_f_maps(data_cat, Z_maps, mixing, mask, tes, f_max=500):
         F_S0_maps[:, i_comp] = F_S0
         F_T2_maps[:, i_comp] = F_T2
 
-    return F_S0_maps, F_T2_maps
+    return F_T2_maps, F_S0_maps
 
 
 def threshold_map(maps, mask, ref_img, threshold, csize=None):
@@ -227,6 +227,7 @@ def threshold_to_match(maps, n_sig_voxels, mask, ref_img, csize=None):
     clmaps
     """
     n_voxels, n_components = maps.shape
+    abs_maps = np.abs(maps)
     if csize is None:
         csize = np.max([int(n_voxels * 0.0005) + 5, 20])
     else:
@@ -241,9 +242,9 @@ def threshold_to_match(maps, n_sig_voxels, mask, ref_img, csize=None):
         # maps is roughly equal.
         ccimg = io.new_nii_like(
             ref_img,
-            utils.unmask(stats.rankdata(maps[:, i_comp]), mask))
+            utils.unmask(stats.rankdata(abs_maps[:, i_comp]), mask))
         step = int(n_sig_voxels[i_comp] / 10)
-        rank_thresh = n_voxels - (n_sig_voxels[i_comp] - 1)
+        rank_thresh = n_voxels - n_sig_voxels[i_comp]
         while True:
             clmap = utils.threshold_map(
                 ccimg, min_cluster_size=csize,
