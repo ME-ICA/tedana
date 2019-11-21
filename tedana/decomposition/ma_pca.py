@@ -450,7 +450,7 @@ def _eigensp_adj(lam, n, p):
     return lam_adj
 
 
-def pca(data_nib, mask_nib, criteria='mdl'):
+def ma_pca(data_nib, mask_nib, criteria='mdl'):
     """
     Run Singular Value Decomposition (SVD) on input data,
     automatically select components based on a Moving Average
