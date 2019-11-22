@@ -98,9 +98,6 @@ API
    tedana.metrics.dependence_metrics
    tedana.metrics.kundu_metrics
 
-   :template: module.rst
-   tedana.metrics.collect
-   tedana.metrics.dependence
 
 .. _api_selection_ref:
 
