@@ -174,9 +174,9 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
     # Dependence metrics
     if ('kappa' in required_metrics) or ('rho' in required_metrics):
         comptable['kappa'], comptable['rho'] = dependence.calculate_dependence_metrics(
-            metric_maps['map FT2'],
-            metric_maps['map FS0'],
-            metric_maps['map Z'])
+            F_T2_maps=metric_maps['map FT2'],
+            F_S0_maps=metric_maps['map FS0'],
+            Z_maps=metric_maps['map Z'])
 
     # Generic metrics
     if 'variance explained' in required_metrics:
@@ -201,9 +201,9 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
     if 'signal-noise_t' in required_metrics:
         (comptable['signal-noise_t'],
          comptable['signal-noise_p']) = dependence.compute_signal_minus_noise_t(
-            metric_maps['map Z'],
-            metric_maps['map Z clusterized'],
-            metric_maps['map FT2'])
+            Z_maps=metric_maps['map Z'],
+            Z_clmaps=metric_maps['map Z clusterized'],
+            F_T2_maps=metric_maps['map FT2'])
 
     if 'countnoise' in required_metrics:
         comptable['countnoise'] = dependence.compute_countnoise(
