@@ -15,13 +15,27 @@ There are two basic kinds of tests: unit and integration tests.
 Unit tests focus on testing individual functions, whereas integration tests focus on making sure
 that the whole workflow runs correctly.
 
+Unit Tests
+----------
 For unit tests, we try to keep tests on the same module grouped into one file.
 Make sure the function you're testing is imported, then write your test.
 Good tests will make sure that edge cases are accounted for as well as common cases.
 You may also use ``pytest.raises`` to ensure that errors are thrown for invalid inputs to a
 function.
 
-For integration tests, make a ``tar.gz`` file which will unzip to be only the files you'd like to
+Integration Tests
+-----------------
+Adding integration tests is relatively rare.
+An integration test will be a complete multi-echo dataset called with some set of options to ensure
+end-to-end pipeline functionality.
+These tests are relatively computationally expensive but aid us in making sure the pipeline is
+stable during large sets of changes.
+If you believe you have a dataset that will test ``tedana`` more completely, please open an issue
+before attempting to add an integration test.
+After securing the appropriate permission from the dataset owner to share it with ``tedana``, you
+can use the following procedure:
+
+(1) Make a ``tar.gz`` file which will unzip to be only the files you'd like to
 run a workflow on.
 You can do this with the following, which would make an archive ``my_data.tar.gz``:
 
@@ -29,8 +43,10 @@ You can do this with the following, which would make an archive ``my_data.tar.gz
 
     tar czf my_data.tar.gz my_data/*.nii.gz
 
-Run the workflow with a known-working version, and put the outputs into a text file inside
+(2) Run the workflow with a known-working version, and put the outputs into a text file inside
 ``$TEDANADIR/tedana/tests/data/``, where ``TEDANADIR`` is your local ``tedana repository``.
+
+(3) Write a test function in ``test_integration.py``.
 To write the test function you can follow the model of our `five echo set`_, which takes the following steps:
 
 1. Check if a pytest user is skipping integration, skip if so
@@ -39,9 +55,10 @@ To write the test function you can follow the model of our `five echo set`_, whi
 #. Use ``resources_filename`` and ``check_integration_outputs`` to compare your expected output to
    actual output.
 
-If you need to upload new data, you will need to contact the maintainers and ask them to either add
+(4) If you need to upload new data, you will need to contact the maintainers and ask them to either add
 it to `OSF`_ or give you permission to add it.
-Once you've tested your integration test locally and it is working, you will need to add it to the
+
+(5) Once you've tested your integration test locally and it is working, you will need to add it to the
 CircleCI config and the ``Makefile``.
 Following the model of the three-echo and five-echo sets, define a name for your integration test
 and on an indented line below put
@@ -53,7 +70,8 @@ and on an indented line below put
 with ``TEST`` your test function's name.
 This call basically adds code coverage reports to account for the new test, and runs the actual
 test in addition.
-Using the five-echo set as a template, you should then edit ``.circlec/config.yml`` to add your
+
+(6) Using the five-echo set as a template, you should then edit ``.circlec/config.yml`` to add your
 test, calling the same name you define in the ``Makefile``.
 
 If you need to take a look at a failed test on CircleCI rather than locally, you can use the
