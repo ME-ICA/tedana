@@ -7,6 +7,16 @@ This webpage is intended to guide users through making making changes to
 The worked example also offers some guidelines on approaching testing when
 adding new functions.
 
+
+Monthly Developer Calls
+=======================
+We run monthly developer calls via Zoom.
+You can see the schedule via the tedana `google calendar`_.
+
+Everyone is welcome.
+We look forward to meeting you there!
+
+
 Adding and Modifying Tests
 ==========================
 Testing is an important component of development.
@@ -194,13 +204,6 @@ We should then do the following cleanup with our git repository:
 
 and we're good to go!
 
-Monthly Developer Calls
-=======================
-We run monthly developer calls via Zoom.
-You can see the schedule via the tedana `google calendar`_.
-
-Everyone is welcome.
-We look forward to meeting you there!
 
 .. _git: https://git-scm.com/
 .. _`git pro`: https://git-scm.com/book/en/v2
