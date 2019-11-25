@@ -275,7 +275,7 @@ In the event of confusion, please open a draft pull request of what you're worki
 the problem you're having so that a developer can help you.
 We strongly recommend you *not* use the `git rebase` command when working with and contributing to the `tedana` repository.
 
-### Advanced Development
+### Comprehensive Developer Guide
 For additional, in-depth information on contributing to `tedana`, please see our Developing Guidelines on [readthedocs][link_developing_rtd].
 
 ## Style Guide
