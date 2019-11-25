@@ -181,7 +181,7 @@ flake8 $TEDANADIR/tedana
 ```
 
 and unit/integration tests by running `pytest` (more details below).
-If you know a file will test your change, you can run only that test.
+If you know a file will test your change, you can run only that test (see "One test file only" below).
 Alternatively, running all unit tests is relatively quick and should be
 fairly comprehensive.
 Running all `pytest` tests will be useful for pre-pushing checks.
@@ -192,7 +192,7 @@ Regardless, when you open a Pull Request, we use CircleCI to run all unit and in
 pytest $TEDANADIR/tedana/tests
 # Unit tests and linting only
 pytest --skipintegration $TEDANADIR/tedana/tests
-# One test file in particular
+# One test file only
 pytest $TEDANADIR/tedana/tests/test_file.py
 # Test one function in a file
 pytest -k my_function $TEDANADIR/tedana/tests/test_file.py
