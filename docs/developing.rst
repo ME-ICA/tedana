@@ -74,6 +74,8 @@ test in addition.
 (6) Using the five-echo set as a template, you should then edit ``.circlec/config.yml`` to add your
 test, calling the same name you define in the ``Makefile``.
 
+Viewing CircleCI Outputs
+------------------------
 If you need to take a look at a failed test on CircleCI rather than locally, you can use the
 following block to retrieve artifacts (see CircleCI documentation here_)
 
