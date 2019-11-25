@@ -167,7 +167,7 @@ If you don't know what rebasing is, don't do it at all, as it is the easiest way
 repository a disaster zone.
 Please make sure to review the `tedana` [style conventions](#style-guide) and test your changes.
 
-If you are new to ``git``, there are several GUI git clients that you may find helpful, such as
+If you are new to ``git`` and would like to work in a graphical user interface (GUI), there are several GUI git clients that you may find helpful, such as
 - [GitKraken][link_git_kraken]
 - [GitHub Desktop][link_github_desktop]
 - [SourceTree][link_source_tree]
