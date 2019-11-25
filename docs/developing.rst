@@ -15,7 +15,7 @@ There are two basic kinds of tests: unit and integration tests.
 Unit tests focus on testing individual functions, whereas integration tests focus on making sure
 that the whole workflow runs correctly.
 
-For unit tests, we try to keep tests on the same module grouped into one file.
+For unit tests, we try to keep tests from the same module grouped into one file.
 Make sure the function you're testing is imported, then write your test.
 Good tests will make sure that edge cases are accounted for as well as common cases.
 You may also use ``pytest.raises`` to ensure that errors are thrown for invalid inputs to a
