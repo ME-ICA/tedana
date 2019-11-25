@@ -251,7 +251,7 @@ Note that if your pull request has no conversation or commits for 90 days,
 stale-bot will mark it stale.
 We may also ask that another development team member resume work on it, if you are unable to continue to do so.
 
-### Pull Request Checklist (Before Requesting Review):
+### Pull Request Checklist (For Fastest Review):
 - [ ] Check that all tests are passing ("All tests passsed")
 - [ ] Make sure you have docstrings for any new functions
 - [ ] Make sure that docstrings are updated for edited functions
@@ -271,7 +271,8 @@ git checkout OTHERBRANCH
 git merge master
 ```
 
-In the event of confusion, please ping in the Gitter for help.
+In the event of confusion, please open a draft pull request of what you're working on and indicate
+the problem you're having so that a developer can help you.
 We strongly recommend you *not* use the `git rebase` command when working with and contributing to the `tedana` repository.
 
 ### Advanced Development
