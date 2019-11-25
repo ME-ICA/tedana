@@ -12,6 +12,46 @@ LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
+@due.dcite(references.T2Z_TRANSFORM,
+           description='Introduces T-to-Z transform.')
+@due.dcite(references.T2Z_IMPLEMENTATION,
+           description='Python implementation of T-to-Z transform.')
+
+def t_to_z(t_values, dof):
+    """
+    From Vanessa Sochat's TtoZ package.
+    """
+
+    # check if t_values is np.array, and convert if required
+    t_values = np.asanyarray(t_values)
+
+    # Select just the nonzero voxels
+    nonzero = t_values[t_values != 0]
+
+    # We will store our results here
+    z_values = np.zeros(len(nonzero))
+
+    # Select values less than or == 0, and greater than zero
+    c = np.zeros(len(nonzero))
+    k1 = (nonzero <= c)
+    k2 = (nonzero > c)
+    # Subset the data into two sets
+    t1 = nonzero[k1]
+    t2 = nonzero[k2]
+
+    # Calculate p values for <=0
+    p_values_t1 = stats.t.cdf(t1, df=dof)
+    z_values_t1 = stats.norm.ppf(p_values_t1)
+
+    # Calculate p values for > 0
+    p_values_t2 = stats.t.cdf(-t2, df=dof)
+    z_values_t2 = -stats.norm.ppf(p_values_t2)
+    z_values[k1] = z_values_t1
+    z_values[k2] = z_values_t2
+    # Write new image to file
+    out = np.zeros(t_values.shape)
+    out[t_values != 0] = z_values
+    return out
 
 def getfbounds(n_echos):
     """
@@ -74,28 +114,27 @@ def computefeats2(data, mmix, mask=None, normalize=True):
     # demean masked data
     if mask is not None:
         data = data[mask, ...]
+    # normalize data (minus mean and divide by std)
     data_vn = stats.zscore(data, axis=-1)
 
-    # get betas of `data`~`mmix` and limit to range [-0.999, 0.999]
-    data_R = get_coeffs(data_vn, mmix, mask=None)
-    data_R[data_R < -0.999] = -0.999
-    data_R[data_R > 0.999] = 0.999
-
-    # R-to-Z transform
-    data_Z = np.arctanh(data_R)
+    # get betas and z-values of `data`~`mmix`
+    # mmix is normalized internally
+    data_R, data_Z = get_coeffs(data_vn, mmix, mask=None, add_const=False, compute_zvalues=True)
     if data_Z.ndim == 1:
         data_Z = np.atleast_2d(data_Z).T
 
-    # normalize data
+    # normalize data (only division by std)
     if normalize:
+        # minus mean and divided by std
         data_Zm = stats.zscore(data_Z, axis=0)
+        # adding back the mean
         data_Z = data_Zm + (data_Z.mean(axis=0, keepdims=True) /
                             data_Z.std(axis=0, keepdims=True))
 
     return data_Z
 
 
-def get_coeffs(data, X, mask=None, add_const=False):
+def get_coeffs(data, X, mask=None, add_const=False, compute_zvalues=True, min_df=1):
     """
     Performs least-squares fit of `X` against `data`
 
@@ -109,11 +148,18 @@ def get_coeffs(data, X, mask=None, add_const=False):
         Boolean mask array
     add_const : bool, optional
         Add intercept column to `X` before fitting. Default: False
+    compute_zvalues : bool, optional
+        Compute z-values of the betas (predictors)
+    min_df : integer, optional
+        Integer to give warning if # df <= min_df
 
     Returns
     -------
     betas : (S [x E] x C) :obj:`numpy.ndarray`
         Array of `S` sample betas for `C` predictors
+    z_values : (S [x E] x C) :obj:`numpy.ndarray`
+        Array of `S` sample z-values for `C` predictors
+
     """
     if data.ndim not in [2, 3]:
         raise ValueError('Parameter data should be 2d or 3d, not {0}d'.format(data.ndim))
@@ -144,11 +190,39 @@ def get_coeffs(data, X, mask=None, add_const=False):
     if add_const:  # add intercept, if specified
         X = np.column_stack([X, np.ones((len(X), 1))])
 
-    betas = np.linalg.lstsq(X, mdata, rcond=None)[0].T
+    # least squares estimation
+    betas = np.dot(np.linalg.pinv(X),mdata)
+
+    if compute_zvalues:
+        # compute t-values of betas (estimates) and then convert to z-values
+        # first compute number of degrees of freedom
+        df = mdata.shape[0] - X.shape[1]
+        if df == 0:
+            LGR.error('ERROR: No degrees of freedom left in least squares calculation. Stopping!!')
+        else:
+            elif df <= min_df:
+                LGR.warning('Number of degrees of freedom in least-square estimation is less than {}'.format(min_df+1))
+            # compute residual sum of squares (RSS)
+            RSS = np.sum(np.power(mdata - np.dot(X, betas.T),2),axis=0)/df
+            RSS = RSS[:,np.newaxis]
+            C = np.diag(np.linalg.pinv(np.dot(X.T,X)))
+            C = C[:,np.newaxis]
+            std_betas = np.sqrt(np.dot(RSS,C.T))
+            z_values = t_to_z(betas / std_betas,df)
+
     if add_const:  # drop beta for intercept, if specified
         betas = betas[:, :-1]
+        if compute_zvalues:
+            z_values = z_values[:, :-1]
 
     if mask is not None:
         betas = utils.unmask(betas, mask)
+        if compute_zvalues:
+            z_values = utils.unmask(z_values, mask)
 
-    return betas
+    if compute_zvalues:
+        return betas, z_values
+    else:
+        return betas
+
+    
