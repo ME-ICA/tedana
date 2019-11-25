@@ -120,7 +120,6 @@ API
    tedana.selection.manual_selection
    tedana.selection.kundu_selection_v2
 
-
 .. _api_gscontrol_ref:
 
 :mod:`tedana.gscontrol`: Global signal control

@@ -2,7 +2,7 @@
 Functions that include workflows to identify
 TE-dependent and TE-independent components.
 """
-
+import os.path as op
 import inspect
 import json
 import logging
@@ -18,8 +18,8 @@ RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
 VALID_TREES = [
-    'mdt', 'minimal_decision_tree1',
-    'kdt', 'kundu_MEICA27_decision_tree'
+    'minimal_decision_tree1',
+    'kundu_MEICA27_decision_tree'
 ]
 
 
@@ -27,7 +27,7 @@ class TreeError(Exception):
     pass
 
 
-def load_config(tree):
+def load_config(tree, path=None):
     """
     Loads the json file with the decision tree and validates that the
     fields in the decision tree are appropriate.
@@ -35,7 +35,11 @@ def load_config(tree):
     Parameters
     ----------
     tree : :obj:`str`
-        A json file name in ./selection/data without the '.json' extension
+        A json file name without the '.json' extension
+    path : :obj:`str`
+        The directory path where tree is located
+        if None, then look for the tree within ./selection/data
+        in the tedana code directory. default=None
 
     Returns
     -------
@@ -49,14 +53,20 @@ def load_config(tree):
     to load trees that aren't on the validated list and the currently validated
     list should be used as a short-hand for common trees.
     """
-
-    fname = resource_filename('tedana', 'selection/data/{}.json'.format(tree))
+    if path:
+        fname = op.join(path, (tree + '.json'))
+    else:
+        fname = resource_filename('tedana', 'selection/data/{}.json'.format(tree))
     try:
         with open(fname, 'r') as src:
             dectree = json.loads(src.read())
     except FileNotFoundError:
-        raise ValueError('Invalid decision tree name: {}. Must be one of '
-                         '{}'.format(tree, VALID_TREES))
+        if path:
+            raise ValueError('Invalid decision tree: {}. Default tree options are '
+                             '{}'.format(fname, VALID_TREES))
+        else:
+            raise ValueError('Invalid decision tree name: {}. Default tree options are '
+                             '{}'.format(tree, VALID_TREES))
     return validate_tree(dectree)
 
 
@@ -173,10 +183,10 @@ class DecisionTree:
         self.comptable = comptable.copy()
 
         self.__dict__.update(kwargs)
-        # self.n_echos = n_echos
-        # self.n_vols = n_vols
-
-        self.config = load_config(self.tree)
+        if hasattr(self, 'path'):
+            self.config = load_config(self.tree, self.path)
+        else:
+            self.config = load_config(self.tree)
 
         LGR.info('Performing component selection with ' + self.config['tree_id'])
         LGR.info(self.config.get('info', ''))

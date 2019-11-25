@@ -118,6 +118,17 @@ extend_factor: :obj:`float`
     A scaler used to set the threshold for the mean rank metric
         \
         """,
+    'restrict_factor': """\
+restrict_factor: :obj:`float`
+    A scaler used to set the threshold for the mean rank metric
+        \
+        """,
+    'prev_X_steps': """\
+prev_X_steps: :obj:`int`
+    Search for components with a classification label in the current or the previous X steps in
+    the decision tree
+        \
+        """,
     'kappa_elbow': """\
 kappa_elbow: :obj:`float`
     The kappa threshold below which components should be rejected or ignored
