@@ -288,6 +288,11 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     comptable['normalized variance explained'] = varex_norm
 
     # write component maps to 4D image
+    # compute component spatial maps based on regression of the data on the
+    # component time series. Internally, regression (orthogonal least squares)
+    # is performed after z-normalization of data and component time series.
+    # Finally write component spatial maps in 4D files, where the spatial maps
+    # will divided by its standard deviation (option normalize=True)
     comp_ts_z = stats.zscore(comp_ts, axis=0)
     comp_maps = utils.unmask(computefeats2(data_oc, comp_ts_z, mask), mask)
     io.filewrite(comp_maps, op.join(out_dir, 'pca_components.nii.gz'), ref_img)
