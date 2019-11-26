@@ -288,12 +288,12 @@ def _est_indp_sp(data):
             n_iters_0 = j
             break
 
-    if not n_iters_0:
-        raise ValueError('Ill conditioned data, can not estimate'
+    if n_iters_0 is None:
+        raise ValueError('Ill conditioned data, can not estimate '
                          'independent samples.')
     n_iters = n_iters_0
     LGR.debug('Estimated the entropy rate of the Gaussian component '
-              'with subsampling depth {}'.format(j))
+              'with subsampling depth {}'.format(j + 1))
 
     return n_iters, ent_rate
 
