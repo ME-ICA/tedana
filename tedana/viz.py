@@ -9,7 +9,7 @@ import matplotlib
 matplotlib.use('AGG')
 import matplotlib.pyplot as plt
 
-from tedana import metrics
+from tedana.stats import compute_least_squares
 from tedana.utils import get_spectrum
 
 LGR = logging.getLogger(__name__)
@@ -79,7 +79,7 @@ def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
         LGR.warning('Provided colormap is not recognized, proceeding with default')
         png_cmap = 'coolwarm'
     # regenerate the beta images
-    ts_B = metrics.get_coeffs(ts, mmix, mask)
+    ts_B = compute_least_squares(ts, mmix, mask)
     ts_B = ts_B.reshape(ref_img.shape[:3] + ts_B.shape[1:])
     # trim edges from ts_B array
     ts_B = trim_edge_zeros(ts_B)

@@ -7,19 +7,21 @@ import numpy as np
 from scipy import stats
 
 from tedana import utils
+from tedana.due import due
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
-@due.dcite(references.T2Z_TRANSFORM,
-           description='Introduces T-to-Z transform.')
-@due.dcite(references.T2Z_IMPLEMENTATION,
-           description='Python implementation of T-to-Z transform.')
-
+# @due.dcite(references.T2Z_TRANSFORM,
+#            description='Introduces T-to-Z transform.')
+# @due.dcite(references.T2Z_IMPLEMENTATION,
+#            description='Python implementation of T-to-Z transform.')
 def t_to_z(t_values, dof):
     """
     From Vanessa Sochat's TtoZ package.
+    Copyright (c) 2015 Vanessa Sochat
+    MIT Licensed
     """
 
     # check if t_values is np.array, and convert if required
@@ -52,6 +54,7 @@ def t_to_z(t_values, dof):
     out = np.zeros(t_values.shape)
     out[t_values != 0] = z_values
     return out
+
 
 def getfbounds(n_echos):
     """
@@ -96,12 +99,14 @@ def computefeats2(data, mmix, mask=None, normalize=True):
         Data in component space
     """
     if data.ndim != 2:
-        raise ValueError('Parameter data should be 2d, not {0}d'.format(data.ndim))
+        raise ValueError('Parameter data should be 2d, not '
+                         '{0}d'.format(data.ndim))
     elif mmix.ndim not in [2]:
         raise ValueError('Parameter mmix should be 2d, not '
                          '{0}d'.format(mmix.ndim))
     elif (mask is not None) and (mask.ndim != 1):
-        raise ValueError('Parameter mask should be 1d, not {0}d'.format(mask.ndim))
+        raise ValueError('Parameter mask should be 1d, not '
+                         '{0}d'.format(mask.ndim))
     elif (mask is not None) and (data.shape[0] != mask.shape[0]):
         raise ValueError('First dimensions (number of samples) of data ({0}) '
                          'and mask ({1}) do not match.'.format(data.shape[0],
@@ -119,7 +124,8 @@ def computefeats2(data, mmix, mask=None, normalize=True):
 
     # get betas and z-values of `data`~`mmix`
     # mmix is normalized internally
-    data_R, data_Z = get_coeffs(data_vn, mmix, mask=None, add_const=False, compute_zvalues=True)
+    _, data_Z = compute_least_squares(data_vn, mmix, mask=None, add_const=False,
+                                      compute_zvalues=True)
     if data_Z.ndim == 1:
         data_Z = np.atleast_2d(data_Z).T
 
@@ -134,7 +140,7 @@ def computefeats2(data, mmix, mask=None, normalize=True):
     return data_Z
 
 
-def get_coeffs(data, X, mask=None, add_const=False, compute_zvalues=True, min_df=1):
+def compute_least_squares(data, X, mask=None, add_const=False, compute_zvalues=False, min_df=1):
     """
     Performs least-squares fit of `X` against `data`
 
@@ -162,21 +168,23 @@ def get_coeffs(data, X, mask=None, add_const=False, compute_zvalues=True, min_df
 
     """
     if data.ndim not in [2, 3]:
-        raise ValueError('Parameter data should be 2d or 3d, not {0}d'.format(data.ndim))
+        raise ValueError('Parameter data should be 2d or 3d, not '
+                         '{0}d'.format(data.ndim))
     elif X.ndim not in [2]:
         raise ValueError('Parameter X should be 2d, not {0}d'.format(X.ndim))
     elif data.shape[-1] != X.shape[0]:
-        raise ValueError('Last dimension (dimension {0}) of data ({1}) does not '
-                         'match first dimension of '
-                         'X ({2})'.format(data.ndim, data.shape[-1], X.shape[0]))
+        raise ValueError('Last dimension (dimension {0}) of data ({1}) does '
+                         'not match first dimension of X '
+                         '({2})'.format(data.ndim, data.shape[-1], X.shape[0]))
 
     # mask data and flip (time x samples)
     if mask is not None:
         if mask.ndim not in [1, 2]:
-            raise ValueError('Parameter data should be 1d or 2d, not {0}d'.format(mask.ndim))
+            raise ValueError('Parameter data should be 1d or 2d, not '
+                             '{0}d'.format(mask.ndim))
         elif data.shape[0] != mask.shape[0]:
-            raise ValueError('First dimensions of data ({0}) and mask ({1}) do not '
-                             'match'.format(data.shape[0], mask.shape[0]))
+            raise ValueError('First dimensions of data ({0}) and mask ({1}) do'
+                             ' not match'.format(data.shape[0], mask.shape[0]))
         mdata = data[mask, :].T
     else:
         mdata = data.T
@@ -191,24 +199,25 @@ def get_coeffs(data, X, mask=None, add_const=False, compute_zvalues=True, min_df
         X = np.column_stack([X, np.ones((len(X), 1))])
 
     # least squares estimation
-    betas = np.dot(np.linalg.pinv(X),mdata)
+    betas = np.dot(np.linalg.pinv(X), mdata)
 
     if compute_zvalues:
         # compute t-values of betas (estimates) and then convert to z-values
         # first compute number of degrees of freedom
         df = mdata.shape[0] - X.shape[1]
         if df == 0:
-            LGR.error('ERROR: No degrees of freedom left in least squares calculation. Stopping!!')
-        else:
-            elif df <= min_df:
-                LGR.warning('Number of degrees of freedom in least-square estimation is less than {}'.format(min_df+1))
-            # compute residual sum of squares (RSS)
-            RSS = np.sum(np.power(mdata - np.dot(X, betas.T),2),axis=0)/df
-            RSS = RSS[:,np.newaxis]
-            C = np.diag(np.linalg.pinv(np.dot(X.T,X)))
-            C = C[:,np.newaxis]
-            std_betas = np.sqrt(np.dot(RSS,C.T))
-            z_values = t_to_z(betas / std_betas,df)
+            LGR.error('ERROR: No degrees of freedom left in least squares '
+                      'calculation. Stopping!!')
+        elif df <= min_df:
+            LGR.warning('Number of degrees of freedom in least-square '
+                        'estimation is less than {}'.format(min_df + 1))
+        # compute residual sum of squares (RSS)
+        RSS = np.sum(np.power(mdata - np.dot(X, betas.T), 2), axis=0) / df
+        RSS = RSS[:, np.newaxis]
+        C = np.diag(np.linalg.pinv(np.dot(X.T, X)))
+        C = C[:, np.newaxis]
+        std_betas = np.sqrt(np.dot(RSS, C.T))
+        z_values = t_to_z(betas / std_betas, df)
 
     if add_const:  # drop beta for intercept, if specified
         betas = betas[:, :-1]
@@ -224,5 +233,3 @@ def get_coeffs(data, X, mask=None, add_const=False, compute_zvalues=True, min_df
         return betas, z_values
     else:
         return betas
-
-    
