@@ -177,7 +177,7 @@ API
    :toctree: generated/
    :template: function.rst
 
-   tedana.stats.compute_least_squares
+   tedana.stats.get_ls_coeffs
    tedana.stats.computefeats2
    tedana.stats.getfbounds
 

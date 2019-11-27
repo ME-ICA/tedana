@@ -13,7 +13,7 @@ from nilearn._utils import check_niimg
 from nilearn.image import new_img_like
 
 from tedana import utils
-from tedana.stats import computefeats2, compute_least_squares
+from tedana.stats import computefeats2, get_ls_coeffs
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
@@ -47,7 +47,7 @@ def split_ts(data, mmix, mask, comptable):
     """
     acc = comptable[comptable.classification == 'accepted'].index.values
 
-    cbetas = compute_least_squares(data - data.mean(axis=-1, keepdims=True),
+    cbetas = get_ls_coeffs(data - data.mean(axis=-1, keepdims=True),
                                    mmix, mask)
     betas = cbetas[mask]
     if len(acc) != 0:
@@ -104,7 +104,7 @@ def write_split_ts(data, mmix, mask, comptable, ref_img, suffix=''):
     dmdata = mdata.T - mdata.T.mean(axis=0)
 
     # get variance explained by retained components
-    betas = compute_least_squares(dmdata.T, mmix, mask=None)
+    betas = get_ls_coeffs(dmdata.T, mmix, mask=None)
     varexpl = (1 - ((dmdata.T - betas.dot(mmix.T))**2.).sum() /
                (dmdata**2.).sum()) * 100
     LGR.info('Variance explained by ICA decomposition: {:.02f}%'.format(varexpl))
@@ -223,7 +223,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, ref_img):
 
     write_split_ts(ts, mmix, mask, comptable, ref_img, suffix='OC')
 
-    ts_B = compute_least_squares(ts, mmix, mask)
+    ts_B = get_ls_coeffs(ts, mmix, mask)
     fout = filewrite(ts_B, 'betas_OC', ref_img)
     LGR.info('Writing full ICA coefficient feature set: {}'.format(op.abspath(fout)))
 

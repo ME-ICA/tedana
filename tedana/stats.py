@@ -124,7 +124,7 @@ def computefeats2(data, mmix, mask=None, normalize=True):
 
     # get betas and z-values of `data`~`mmix`
     # mmix is normalized internally
-    _, data_Z = compute_least_squares(data_vn, mmix, mask=None, add_const=False,
+    _, data_Z = get_ls_coeffs(data_vn, mmix, mask=None, add_const=False,
                                       compute_zvalues=True)
     if data_Z.ndim == 1:
         data_Z = np.atleast_2d(data_Z).T
@@ -140,7 +140,7 @@ def computefeats2(data, mmix, mask=None, normalize=True):
     return data_Z
 
 
-def compute_least_squares(data, X, mask=None, add_const=False, compute_zvalues=False, min_df=1):
+def get_ls_coeffs(data, X, mask=None, add_const=False, compute_zvalues=False, min_df=1):
     """
     Performs least-squares fit of `X` against `data`
 
