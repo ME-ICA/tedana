@@ -199,7 +199,7 @@ def compute_least_squares(data, X, mask=None, add_const=False, compute_zvalues=F
         X = np.column_stack([X, np.ones((len(X), 1))])
 
     # least squares estimation
-    betas = np.dot(np.linalg.pinv(X), mdata)
+    betas = np.dot(np.linalg.pinv(X), mdata).T
 
     if compute_zvalues:
         # compute t-values of betas (estimates) and then convert to z-values
