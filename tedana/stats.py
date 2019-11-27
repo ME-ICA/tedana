@@ -190,7 +190,8 @@ def get_ls_coeffs(data, X, mask=None, add_const=False, compute_zvalues=False, mi
     if add_const:  # add intercept, if specified
         X = np.column_stack([X, np.ones((len(X), 1))])
 
-    # least squares estimation
+    # least squares estimation: beta = (X^T * X)^(-1) * X^T * mdata
+    # betas is transposed due to backward compatibility with rest of code.
     betas = np.dot(np.linalg.pinv(X), mdata).T
 
     if compute_zvalues:
@@ -203,12 +204,17 @@ def get_ls_coeffs(data, X, mask=None, add_const=False, compute_zvalues=False, mi
         elif df <= min_df:
             LGR.warning('Number of degrees of freedom in least-square '
                         'estimation is less than {}'.format(min_df + 1))
-        # compute residual sum of squares (RSS)
-        RSS = np.sum(np.power(mdata - np.dot(X, betas.T), 2), axis=0) / df
-        RSS = RSS[:, np.newaxis]
+        # compute sigma:
+        # RSS = sum{[mdata - (X * betas)]^2}
+        # sigma = RSS / Degrees_of_Freedom
+        sigma = np.sum(np.power(mdata - np.dot(X, betas.T), 2), axis=0) / df
+        sigma = sigma[:, np.newaxis]
+        # Copmute std of betas:
+        # C = (X^T * X)_ii^(-1)
+        # std(betas) = sqrt(sigma * C)
         C = np.diag(np.linalg.pinv(np.dot(X.T, X)))
         C = C[:, np.newaxis]
-        std_betas = np.sqrt(np.dot(RSS, C.T))
+        std_betas = np.sqrt(np.dot(sigma, C.T))
         z_values = t_to_z(betas / std_betas, df)
 
     if add_const:  # drop beta for intercept, if specified
