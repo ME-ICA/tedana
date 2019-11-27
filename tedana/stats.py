@@ -29,9 +29,9 @@ T2Z_TRANSFORM = BibTeX("""
 T2Z_IMPLEMENTATION = Doi('10.5281/zenodo.32508')
 
 
-@due.dcite(references.T2Z_TRANSFORM,
+@due.dcite(T2Z_TRANSFORM,
            description='Introduces T-to-Z transform.')
-@due.dcite(references.T2Z_IMPLEMENTATION,
+@due.dcite(T2Z_IMPLEMENTATION,
            description='Python implementation of T-to-Z transform.')
 def t_to_z(t_values, dof):
     """
