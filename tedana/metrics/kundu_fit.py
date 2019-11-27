@@ -125,8 +125,8 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
 
     # compute Betas and means over TEs for TE-dependence analysis
     betas = get_ls_coeffs(utils.unmask(catd, mask),
-                                  mmix,
-                                  np.repeat(mask[:, np.newaxis], len(tes), axis=1))
+                          mmix,
+                          np.repeat(mask[:, np.newaxis], len(tes), axis=1))
     betas = betas[mask, ...]
     n_voxels, n_echos, n_components = betas.shape
     mu = catd.mean(axis=-1, dtype=float)

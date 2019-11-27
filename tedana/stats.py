@@ -125,17 +125,9 @@ def computefeats2(data, mmix, mask=None, normalize=True):
     # get betas and z-values of `data`~`mmix`
     # mmix is normalized internally
     _, data_Z = get_ls_coeffs(data_vn, mmix, mask=None, add_const=False,
-                                      compute_zvalues=True)
+                              compute_zvalues=True)
     if data_Z.ndim == 1:
         data_Z = np.atleast_2d(data_Z).T
-
-    # normalize data (only division by std)
-    if normalize:
-        # minus mean and divided by std
-        data_Zm = stats.zscore(data_Z, axis=0)
-        # adding back the mean
-        data_Z = data_Zm + (data_Z.mean(axis=0, keepdims=True) /
-                            data_Z.std(axis=0, keepdims=True))
 
     return data_Z
 
