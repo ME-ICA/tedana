@@ -7,16 +7,32 @@ import numpy as np
 from scipy import stats
 
 from tedana import utils
-from tedana.due import due
+from tedana.due import due, BibTeX, Doi
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
-# @due.dcite(references.T2Z_TRANSFORM,
-#            description='Introduces T-to-Z transform.')
-# @due.dcite(references.T2Z_IMPLEMENTATION,
-#            description='Python implementation of T-to-Z transform.')
+T2Z_TRANSFORM = BibTeX("""
+    @article{hughett2007accurate,
+      title={Accurate Computation of the F-to-z and t-to-z Transforms
+             for Large Arguments},
+      author={Hughett, Paul and others},
+      journal={Journal of Statistical Software},
+      volume={23},
+      number={1},
+      pages={1--5},
+      year={2007},
+      publisher={Foundation for Open Access Statistics}
+    }
+    """)
+T2Z_IMPLEMENTATION = Doi('10.5281/zenodo.32508')
+
+
+@due.dcite(references.T2Z_TRANSFORM,
+           description='Introduces T-to-Z transform.')
+@due.dcite(references.T2Z_IMPLEMENTATION,
+           description='Python implementation of T-to-Z transform.')
 def t_to_z(t_values, dof):
     """
     From Vanessa Sochat's TtoZ package.
