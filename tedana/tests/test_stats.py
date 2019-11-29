@@ -6,7 +6,7 @@ import pytest
 import random
 
 from tedana.stats import computefeats2
-from tedana.stats import get_coeffs
+from tedana.stats import get_ls_coeffs
 from tedana.stats import getfbounds
 
 
@@ -58,7 +58,7 @@ def test_smoke_computefeats2():
     assert computefeats2(data, mmix, normalize=False) is not None
 
 
-def test_get_coeffs():
+def test_get_ls_coeffs():
     """
     Check least squares coefficients.
     """
@@ -69,26 +69,26 @@ def test_get_coeffs():
     X = np.arange(0, 40)[:, np.newaxis]
     mask = np.array([True, False])
 
-    betas = get_coeffs(data, X, mask=None, add_const=False)
+    betas = get_ls_coeffs(data, X, mask=None, add_const=False)
     betas = np.squeeze(betas)
     assert np.allclose(betas, np.array([5., 5.]))
 
-    betas = get_coeffs(data, X, mask=None, add_const=True)
+    betas = get_ls_coeffs(data, X, mask=None, add_const=True)
     betas = np.squeeze(betas)
     assert np.allclose(betas, np.array([5., 5.]))
 
-    betas = get_coeffs(data, X, mask=mask, add_const=False)
+    betas = get_ls_coeffs(data, X, mask=mask, add_const=False)
     betas = np.squeeze(betas)
     assert np.allclose(betas, np.array([5, 0]))
 
-    betas = get_coeffs(data, X, mask=mask, add_const=True)
+    betas = get_ls_coeffs(data, X, mask=mask, add_const=True)
     betas = np.squeeze(betas)
     assert np.allclose(betas, np.array([5, 0]))
 
 
-def test_break_get_coeffs():
+def test_break_get_ls_coeffs():
     """
-    Ensure that get_coeffs fails when input data do not have the right
+    Ensure that get_ls_coeffs fails when input data do not have the right
     shapes.
     """
     n_samples, n_echos, n_vols, n_comps = 10000, 5, 100, 50
@@ -98,41 +98,41 @@ def test_break_get_coeffs():
 
     data = np.empty((n_samples))
     with pytest.raises(ValueError):
-        get_coeffs(data, X, mask, add_const=False)
+        get_ls_coeffs(data, X, mask, add_const=False)
 
     data = np.empty((n_samples, n_vols))
     X = np.empty((n_vols))
     with pytest.raises(ValueError):
-        get_coeffs(data, X, mask, add_const=False)
+        get_ls_coeffs(data, X, mask, add_const=False)
 
     data = np.empty((n_samples, n_echos, n_vols + 1))
     X = np.empty((n_vols, n_comps))
     with pytest.raises(ValueError):
-        get_coeffs(data, X, mask, add_const=False)
+        get_ls_coeffs(data, X, mask, add_const=False)
 
     data = np.empty((n_samples, n_echos, n_vols))
     mask = np.empty((n_samples, n_echos, n_vols))
     with pytest.raises(ValueError):
-        get_coeffs(data, X, mask, add_const=False)
+        get_ls_coeffs(data, X, mask, add_const=False)
 
     mask = np.empty((n_samples + 1, n_echos))
     with pytest.raises(ValueError):
-        get_coeffs(data, X, mask, add_const=False)
+        get_ls_coeffs(data, X, mask, add_const=False)
 
 
-def test_smoke_get_coeffs():
+def test_smoke_get_ls_coeffs():
     """
-    Ensure that get_coeffs returns outputs with different inputs and optional paramters
+    Ensure that get_ls_coeffs returns outputs with different inputs and optional paramters
     """
     n_samples, _, n_times, n_components = 100, 5, 20, 6
     data_2d = np.random.random((n_samples, n_times))
     x = np.random.random((n_times, n_components))
     mask = np.random.randint(2, size=n_samples)
 
-    assert get_coeffs(data_2d, x) is not None
-    # assert get_coeffs(data_3d, x) is not None TODO: submit an issue for the bug
-    assert get_coeffs(data_2d, x, mask=mask) is not None
-    assert get_coeffs(data_2d, x, add_const=True) is not None
+    assert get_ls_coeffs(data_2d, x) is not None
+    # assert get_ls_coeffs(data_3d, x) is not None TODO: submit an issue for the bug
+    assert get_ls_coeffs(data_2d, x, mask=mask) is not None
+    assert get_ls_coeffs(data_2d, x, add_const=True) is not None
 
 
 def test_getfbounds():

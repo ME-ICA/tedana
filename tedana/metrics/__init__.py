@@ -2,8 +2,8 @@
 # ex: set sts=4 ts=4 sw=4 et:
 
 from .kundu_fit import (
-    dependence_metrics, kundu_metrics, get_coeffs, computefeats2
+    dependence_metrics, kundu_metrics, get_ls_coeffs, computefeats2
 )
 
 __all__ = [
-    'dependence_metrics', 'kundu_metrics', 'get_coeffs', 'computefeats2']
+    'dependence_metrics', 'kundu_metrics', 'get_ls_coeffs', 'computefeats2']
