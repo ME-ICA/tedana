@@ -208,7 +208,7 @@ def get_ls_coeffs(data, X, mask=None, add_const=False, compute_zvalues=False, mi
 
     # least squares estimation: beta = (X^T * X)^(-1) * X^T * mdata
     # betas is transposed due to backward compatibility with rest of code.
-    betas = np.dot(np.linalg.pinv(X), mdata).T
+    betas = np.linalg.lstsq(X, mdata, rcond=None)[0].T
 
     if compute_zvalues:
         # compute t-values of betas (estimates) and then convert to z-values
