@@ -134,7 +134,7 @@ def computefeats2(data, mmix, mask=None, normalize=True):
     return data_Z
 
 
-def get_coeffs(data, X, mask=None, add_const=False, compute_zvalues=True, min_df=1):
+def get_coeffs(data, X, mask=None, add_const=False, compute_zvalues=False, min_df=1):
     """
     Performs least-squares fit of `X` against `data`
 
