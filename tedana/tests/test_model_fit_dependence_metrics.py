@@ -18,9 +18,7 @@ def test_break_dependence_metrics():
     tsoc = np.empty((n_samples, n_vols))
     mmix = np.empty((n_vols, n_comps))
     adaptive_mask = np.empty((n_samples))
-    t2s_full = np.empty((n_samples, n_vols))
     tes = np.empty((n_echos))
-    combmode = 'adaptive_mask'
     ref_img = ''
 
     # Shape of catd is wrong
