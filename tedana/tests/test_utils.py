@@ -92,7 +92,7 @@ def test_make_adaptive_mask():
     # masksum has correct values
     vals, counts = np.unique(masksum, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([13564,  3977,  5060, 41749]))
+    assert np.allclose(counts, np.array([13564, 3977, 5060, 41749]))
 
     # test user-defined mask
     # TODO: Add mask file with no bad voxels to test against
@@ -130,8 +130,8 @@ def test_smoke_make_adaptive_mask():
     mask = np.random.randint(2, size=n_samples)
 
     assert utils.make_adaptive_mask(data) is not None
-    assert utils.make_adaptive_mask(data, mask=mask) is not None # functions with mask
-    assert utils.make_adaptive_mask(data, getsum=True) is not None # functions when getsumis true
+    assert utils.make_adaptive_mask(data, mask=mask) is not None  # functions with mask
+    assert utils.make_adaptive_mask(data, getsum=True) is not None  # functions when getsumis true
 
 
 def test_smoke_unmask():
@@ -167,7 +167,7 @@ def test_smoke_andb():
     ensure that andb returns reasonable objects with random inputs
     in the correct format
     """
-    arr = np.random.random((100, 10)).tolist() # 2D list of "arrays"
+    arr = np.random.random((100, 10)).tolist()  # 2D list of "arrays"
 
     assert utils.andb(arr) is not None
 
@@ -185,14 +185,13 @@ def test_smoke_get_spectrum():
     assert freqs is not None
 
 
-
 def test_smoke_threshold_map():
     """
     ensure that threshold_map returns reasonable objects with random inputs
     in the correct format
     Note: using 3D array as img, some parameters are optional and are all tested
     """
-    img = np.random.random((10, 10, 10)) # 3D array must of of size S
+    img = np.random.random((10, 10, 10))  # 3D array must of of size S
     min_cluster_size = random.randint(1, 100)
 
     threshold = random.random()

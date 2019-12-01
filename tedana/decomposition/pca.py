@@ -2,8 +2,10 @@
 PCA and related signal decomposition methods for tedana
 """
 import logging
+import os.path as op
 
 import numpy as np
+import pandas as pd
 from scipy import stats
 from sklearn.decomposition import PCA
 
@@ -186,9 +188,9 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     ======================    =================================================
     Filename                  Content
     ======================    =================================================
-    pcastate.pkl              Values from PCA results.
-    comp_table_pca.tsv        PCA component table.
-    mepca_mix.1D              PCA mixing matrix.
+    pca_decomposition.json    PCA component table.
+    pca_mixing.tsv            PCA mixing matrix.
+    pca_components.nii.gz     Component weight maps.
     ======================    =================================================
     """
     if low_mem and algorithm == 'mle':
@@ -285,15 +287,10 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         comptable['normalized variance explained']
     comptable['normalized variance explained'] = varex_norm
 
-    np.savetxt('mepca_mix.1D', comp_ts)
-
     # write component maps to 4D image
-    comp_maps = np.zeros((data_oc.shape[0], comp_ts.shape[1]))
-    for i_comp in range(comp_ts.shape[1]):
-        temp_comp_ts = comp_ts[:, i_comp][:, None]
-        comp_map = utils.unmask(computefeats2(data_oc, temp_comp_ts, mask), mask)
-        comp_maps[:, i_comp] = np.squeeze(comp_map)
-    io.filewrite(comp_maps, 'mepca_OC_components.nii', ref_img)
+    comp_ts_z = stats.zscore(comp_ts, axis=0)
+    comp_maps = utils.unmask(computefeats2(data_oc, comp_ts_z, mask), mask)
+    io.filewrite(comp_maps, op.join(out_dir, 'pca_components.nii.gz'), ref_img)
 
     # Select components using decision tree
     if algorithm == 'kundu':
@@ -306,8 +303,23 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         comptable['classification'] = 'accepted'
         comptable['rationale'] = ''
 
-    comptable.to_csv('comp_table_pca.tsv', sep='\t', index=True,
-                     index_label='component', float_format='%.6f')
+    # Save decomposition
+    comp_names = [io.add_decomp_prefix(comp, prefix='pca', max_value=comptable.index.max())
+                  for comp in comptable.index.values]
+
+    mixing_df = pd.DataFrame(data=comp_ts, columns=comp_names)
+    mixing_df.to_csv(op.join(out_dir, 'pca_mixing.tsv'), sep='\t', index=False)
+
+    data_type = 'optimally combined data' if source_tes == -1 else 'z-concatenated data'
+    comptable['Description'] = 'PCA fit to {0}.'.format(data_type)
+    mmix_dict = {}
+    mmix_dict['Method'] = ('Principal components analysis implemented by '
+                           'sklearn. Components are sorted by variance '
+                           'explained in descending order. '
+                           'Component signs are flipped to best match the '
+                           'data.')
+    io.save_comptable(comptable, op.join(out_dir, 'pca_decomposition.json'),
+                      label='pca', metadata=mmix_dict)
 
     acc = comptable[comptable.classification == 'accepted'].index.values
     n_components = acc.size
