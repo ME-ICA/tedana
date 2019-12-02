@@ -452,15 +452,15 @@ def tedana_workflow(data, tes, mask=None, out_dir='.',
         RepLGR.info("A user-defined mask was applied to the data.")
     elif t2smap and not mask:
         LGR.info('Using user-defined T2* map to generate mask')
-        t2s = utils.load_image(t2smap)
-        t2sG = t2s.copy()
-        mask = (t2s != 0).astype(int)
+        t2s_limited = utils.load_image(t2smap)
+        t2s_full = t2s_limited.copy()
+        mask = (t2s_limited != 0).astype(int)
     elif t2smap and mask:
         LGR.info('Combining user-defined mask and T2* map to generate mask')
-        t2s = utils.load_image(t2smap)
-        t2sG = t2s.copy()
+        t2s_limited = utils.load_image(t2smap)
+        t2s_full = t2s_limited.copy()
         mask = utils.load_image(mask)
-        mask[t2s == 0] = 0  # reduce mask based on T2* map
+        mask[t2s_limited == 0] = 0  # reduce mask based on T2* map
     else:
         LGR.info('Computing EPI mask from first echo')
         first_echo_img = io.new_nii_like(ref_img, catd[:, 0, :])
