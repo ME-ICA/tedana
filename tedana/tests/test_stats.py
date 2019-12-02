@@ -22,26 +22,26 @@ def test_break_computefeats2():
 
     data = np.empty((n_samples))
     with pytest.raises(ValueError):
-        computefeats2(data, mmix, mask, normalize=True)
+        computefeats2(data, mmix, mask)
 
     data = np.empty((n_samples, n_vols))
     mmix = np.empty((n_vols))
     with pytest.raises(ValueError):
-        computefeats2(data, mmix, mask, normalize=True)
+        computefeats2(data, mmix, mask)
 
     mmix = np.empty((n_vols, n_comps))
     mask = np.empty((n_samples, n_vols))
     with pytest.raises(ValueError):
-        computefeats2(data, mmix, mask, normalize=True)
+        computefeats2(data, mmix, mask)
 
     mask = np.empty((n_samples + 1))
     with pytest.raises(ValueError):
-        computefeats2(data, mmix, mask, normalize=True)
+        computefeats2(data, mmix, mask)
     data.shape[1] != mmix.shape[0]
     mask = np.empty((n_samples))
     mmix = np.empty((n_vols + 1, n_comps))
     with pytest.raises(ValueError):
-        computefeats2(data, mmix, mask, normalize=True)
+        computefeats2(data, mmix, mask)
 
 
 def test_smoke_computefeats2():
@@ -55,7 +55,7 @@ def test_smoke_computefeats2():
 
     assert computefeats2(data, mmix) is not None
     assert computefeats2(data, mmix, mask=mask) is not None
-    assert computefeats2(data, mmix, normalize=False) is not None
+    assert computefeats2(data, mmix) is not None
 
 
 def test_get_ls_coeffs():
