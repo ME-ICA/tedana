@@ -234,7 +234,7 @@ def log_decision_tree_step(function_name_idx, comps2use,
         # "were True and " + str(decision_tree_steps[-1]['numfalse']) + " were False"))
 
 
-def create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
+def create_dnode_outputs(decision_node_idx, used_metrics, node_label, numTrue, numFalse,
                          n_echos=None, n_vols=None, kappa_elbow=None, rho_elbow=None,
                          num_prov_accept=None, max_good_meanmetricrank=None,
                          varex_threshold=None, low_perc=None, high_perc=None,
@@ -250,13 +250,17 @@ def create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
     Parameters
     ----------
     Required parameters
-    used_metrics: :obj: `list[str]`
+    decison_node_idx : :obj:`int`
+        The decision tree function are run as part of an ordered list.
+        This is the positional index for when this function has been run
+        as part of this list.
+    used_metrics: :obj:`list[str]`
         A list of all metrics from the comptable header used within this function.
         Note, this must be a list even if only one metric is used
-    node_label: :obj: `str`
+    node_label: :obj:`str`
         A brief label for what happens in this node that can be used in a decision
         tree summary table or flow chart.
-    numTrue, numFalse: :obj: `int`
+    numTrue, numFalse: :obj:`int`
         The number of components that were classified as true or false respectively
     in this decision tree step.
 
@@ -278,6 +282,7 @@ def create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
     """
 
     dnode_outputs = {'outputs': {
+        'decision_node_idx': decision_node_idx,
         'used_metrics': used_metrics,
         'node_label': node_label,
         'numTrue': numTrue,
@@ -498,10 +503,10 @@ def get_new_meanmetricrank(comptable, comps2use, decision_node_idx,
             comptable['mean metric rank ' + str(decision_node_idx)] = (
                 generate_decision_table_score(
                     comptable.loc[comps2use, 'kappa'],
-                    comptable.loc[comps2use, 'dice_FT2'],
-                    comptable.loc[comps2use, 'signal_minus_noise_t'],
+                    comptable.loc[comps2use, 'DICE_FT2'],
+                    comptable.loc[comps2use, 'T2fitdiff invsout ICAmap Tstat'],
                     comptable.loc[comps2use, 'countnoise'],
-                    comptable.loc[comps2use, 'countsigFT2']))
+                    comptable.loc[comps2use, 'countsig in T2clusters']))
             return comptable['mean metric rank ' + str(decision_node_idx)], comptable
 
 

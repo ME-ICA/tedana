@@ -227,7 +227,8 @@ def manual_classify(comptable, decision_node_idx,
         comptable['rationale'] = ""
         LGR.info(function_name_idx + " all 'rationale' values are set to empty strings")
 
-    dnode_outputs = create_dnode_outputs(used_metrics, node_label, numTrue, numFalse)
+    dnode_outputs = create_dnode_outputs(
+        decision_node_idx, used_metrics, node_label, numTrue, numFalse)
 
     return comptable, dnode_outputs
 
@@ -329,7 +330,8 @@ def metric1_greaterthan_metric2(comptable, decision_node_idx, iftrue, iffalse,
                                numTrue=numTrue,
                                numFalse=numFalse)
 
-    dnode_outputs = create_dnode_outputs(used_metrics, node_label, numTrue, numFalse)
+    dnode_outputs = create_dnode_outputs(
+        decision_node_idx, used_metrics, node_label, numTrue, numFalse)
 
     return comptable, dnode_outputs
 
@@ -409,7 +411,8 @@ def classification_exists(comptable, decision_node_idx, iftrue, iffalse,
                                numTrue=numTrue,
                                numFalse=numFalse)
 
-    dnode_outputs = create_dnode_outputs(used_metrics, node_label, numTrue, numFalse)
+    dnode_outputs = create_dnode_outputs(
+        decision_node_idx, used_metrics, node_label, numTrue, numFalse)
 
     return comptable, dnode_outputs
 
@@ -486,7 +489,7 @@ def meanmetricrank_and_variance_greaterthan_thresh(comptable, decision_node_idx,
         if provaccept_comps2use is None:
             log_decision_tree_step(function_name_idx, comps2use,
                                    decide_comps='provisionalaccept')
-        dnode_outputs = create_dnode_outputs(used_metrics, node_label, 0, 0)
+        dnode_outputs = create_dnode_outputs(decision_node_idx, used_metrics, node_label, 0, 0)
     else:
         num_prov_accept = len(provaccept_comps2use)
         varex_upper_thresh = scoreatpercentile(
@@ -510,7 +513,8 @@ def meanmetricrank_and_variance_greaterthan_thresh(comptable, decision_node_idx,
                                numTrue=numTrue,
                                numFalse=numFalse)
 
-        dnode_outputs = create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
+        dnode_outputs = create_dnode_outputs(decision_node_idx, used_metrics, node_label,
+                                             numTrue, numFalse,
                                              num_prov_accept=num_prov_accept,
                                              varex_threshold=varex_upper_thresh,
                                              max_good_meanmetricrank=max_good_meanmetricrank,
@@ -605,7 +609,8 @@ def variance_lessthan_thresholds(comptable, decision_node_idx, iftrue, iffalse,
                                numTrue=numTrue,
                                numFalse=numFalse)
 
-    dnode_outputs = create_dnode_outputs(used_metrics, node_label, numTrue, numFalse)
+    dnode_outputs = create_dnode_outputs(
+        decision_node_idx, used_metrics, node_label, numTrue, numFalse)
 
     return comptable, dnode_outputs
 
@@ -723,7 +728,8 @@ def kappa_rho_elbow_cutoffs_kundu(comptable, decision_node_idx, iftrue, iffalse,
                                numTrue=numTrue,
                                numFalse=numFalse)
 
-    dnode_outputs = create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
+    dnode_outputs = create_dnode_outputs(decision_node_idx, used_metrics, node_label,
+                                         numTrue, numFalse,
                                          n_echos=n_echos, varex_threshold=varex_upper_p,
                                          kappa_elbow=kappa_elbow, rho_elbow=rho_elbow)
 
@@ -791,7 +797,7 @@ def lowvariance_highmeanmetricrank_lowkappa(comptable, decision_node_idx, iftrue
         if provaccept_comps2use is None:
             log_decision_tree_step(function_name_idx, comps2use,
                                    decide_comps='provisionalaccept')
-        dnode_outputs = create_dnode_outputs(used_metrics, node_label, 0, 0)
+        dnode_outputs = create_dnode_outputs(decision_node_idx, used_metrics, node_label, 0, 0)
     else:
         # low variance threshold
         varex_lower_thresh = scoreatpercentile(
@@ -824,7 +830,8 @@ def lowvariance_highmeanmetricrank_lowkappa(comptable, decision_node_idx, iftrue
                                numTrue=numTrue,
                                numFalse=numFalse)
 
-        dnode_outputs = create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
+        dnode_outputs = create_dnode_outputs(decision_node_idx, used_metrics, node_label,
+                                             numTrue, numFalse,
                                              n_echos=n_echos,
                                              n_vols=n_vols,
                                              kappa_elbow=kappa_elbow,
@@ -898,7 +905,7 @@ def highvariance_highmeanmetricrank_highkapparatio(comptable, decision_node_idx,
         log_decision_tree_step(function_name_idx, comps2use, decide_comps=decide_comps)
         numTrue = 0
         numFalse = 0
-        dnode_outputs = create_dnode_outputs(used_metrics, node_label, 0, 0)
+        dnode_outputs = create_dnode_outputs(decision_node_idx, used_metrics, node_label, 0, 0)
     else:
         # This will either identify a previously calculated revised meanmetricrank and
         # return it or it will calculate a revised meanmetricrank, return it,
@@ -950,7 +957,8 @@ def highvariance_highmeanmetricrank_highkapparatio(comptable, decision_node_idx,
                                numTrue=numTrue,
                                numFalse=numFalse)
 
-        dnode_outputs = create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
+        dnode_outputs = create_dnode_outputs(decision_node_idx, used_metrics, node_label,
+                                             numTrue, numFalse,
                                              n_echos=n_echos,
                                              n_vols=n_vols,
                                              varex_threshold=varex_upper_thresh,
@@ -1024,7 +1032,7 @@ def highvariance_highmeanmetricrank(comptable, decision_node_idx, iftrue, iffals
         log_decision_tree_step(function_name_idx, comps2use, decide_comps=decide_comps)
         numTrue = 0
         numFalse = 0
-        dnode_outputs = create_dnode_outputs(used_metrics, node_label, 0, 0)
+        dnode_outputs = create_dnode_outputs(decision_node_idx, used_metrics, node_label, 0, 0)
     else:
         # This will either identify a previously calculated revised meanmetricrank and
         # return it or it will calculate a revised meanmetricrank, return it,
@@ -1087,7 +1095,8 @@ def highvariance_highmeanmetricrank(comptable, decision_node_idx, iftrue, iffals
                                numTrue=numTrue,
                                numFalse=numFalse)
 
-        dnode_outputs = create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
+        dnode_outputs = create_dnode_outputs(decision_node_idx, used_metrics, node_label,
+                                             numTrue, numFalse,
                                              n_echos=n_echos,
                                              n_vols=n_vols,
                                              varex_threshold=varex_lower_thresh,
@@ -1153,7 +1162,7 @@ def highvariance_lowkappa(comptable, decision_node_idx, iftrue, iffalse,
         log_decision_tree_step(function_name_idx, comps2use, decide_comps=decide_comps)
         numTrue = 0
         numFalse = 0
-        dnode_outputs = create_dnode_outputs(used_metrics, node_label, 0, 0)
+        dnode_outputs = create_dnode_outputs(decision_node_idx, used_metrics, node_label, 0, 0)
     else:
         kappa_elbow = kappa_elbow_kundu(comptable, n_echos)
         db_kappa = comptable.loc[comps2use, 'kappa'] <= kappa_elbow
@@ -1183,7 +1192,8 @@ def highvariance_lowkappa(comptable, decision_node_idx, iftrue, iffalse,
                                numTrue=numTrue,
                                numFalse=numFalse)
 
-        dnode_outputs = create_dnode_outputs(used_metrics, node_label, numTrue, numFalse,
+        dnode_outputs = create_dnode_outputs(decision_node_idx, used_metrics, node_label,
+                                             numTrue, numFalse,
                                              n_echos=n_echos,
                                              varex_threshold=varex_lower_thresh)
 

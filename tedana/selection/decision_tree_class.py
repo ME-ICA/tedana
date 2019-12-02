@@ -10,14 +10,18 @@ from pkg_resources import resource_filename
 
 from tedana.selection._utils import (
     clean_dataframe, confirm_metrics_exist)
-#    are_only_necessary_metrics_used)
 from tedana.selection import selection_nodes
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
-VALID_TREES = [
+# These are the names of the json files containing decision
+# trees that are stored in the ./selection/data/ directory
+# A user can run the desision tree either using one of these
+# names or by giving the full path to a tree in a different
+# location
+DEFAULT_TREES = [
     'minimal_decision_tree1',
     'kundu_MEICA27_decision_tree'
 ]
@@ -37,21 +41,30 @@ def load_config(tree, path=None):
     tree : :obj:`str`
         A json file name without the '.json' extension
     path : :obj:`str`
-        The directory path where tree is located
-        if None, then look for the tree within ./selection/data
+        The directory path where `tree` is located.
+        If None, then look for `tree` within ./selection/data
         in the tedana code directory. default=None
 
     Returns
     -------
-    tree : dict
-        A validated decision tree dictionary
-
-    Note
-    ----
-    In the current version of this script, the decision tree script is validated
-    against a pre-defined list of valid trees. Eventually, there should be a way
-    to load trees that aren't on the validated list and the currently validated
-    list should be used as a short-hand for common trees.
+    tree : :obj:`dict`
+        A validated decision tree for the component selection process.::|br|
+        The `dict` has several required fields to describe the entire tree ::|br|
+        `tree_id`: The name of the tree|br|
+        `info`: A brief description of the tree to be used in info logging|br|
+        `report`: A narrative description of the tree that could be used in report logging|br|
+        `refs`: Publications that should be referenced, when this tree is used|br|
+        `necessary_metrics`: The metrics in `comptable` that will be used by this tree|br|
+        `nodes`: A list of dictionaries where each dictionary includes the information<br>
+        to run one node in the decision tree. This includes:<br>
+        `functionname`: The name of the function to be called<br>
+        `parameters`: Required parameters for the function<br>
+        The only parameter that is used in all functions is `decidecomps`.
+        This is a list of component classifications, that this function should
+        operate on. Most functions also include `iftrue` and `iffalse` which
+        define how to to change the classification of a component if the
+        criteria in the function is true or false.<br>
+        `kwargs`: Optional parameters for the function
     """
     if path:
         fname = op.join(path, (tree + '.json'))
@@ -63,10 +76,10 @@ def load_config(tree, path=None):
     except FileNotFoundError:
         if path:
             raise ValueError('Invalid decision tree: {}. Default tree options are '
-                             '{}'.format(fname, VALID_TREES))
+                             '{}'.format(fname, DEFAULT_TREES))
         else:
             raise ValueError('Invalid decision tree name: {}. Default tree options are '
-                             '{}'.format(tree, VALID_TREES))
+                             '{}'.format(tree, DEFAULT_TREES))
     return validate_tree(dectree)
 
 
@@ -76,12 +89,12 @@ def validate_tree(tree):
 
     Parameters
     ----------
-    tree : dict
-        Ostensible decision tree dictionary
+    tree : :obj:`dict`
+        Ostensible decision tree for the component selection process
 
     Returns
     -------
-    tree : dict
+    tree : :obj:`dict`
         Validated decision tree dictionary
 
     Raises
@@ -129,52 +142,72 @@ def validate_tree(tree):
 
 class DecisionTree:
     """
-    Classifies components based on specified `tree`
+    Classifies components based on specified `tree` when the class is initialized
+    and then the `run` function is called.
+    The expected output of running a decision tree is that every component
+    will be classified as 'accept', 'reject', or 'ignore'.
 
     The selection process uses previously calculated parameters listed in
-    comptable for each ICA component such as Kappa (a T2* weighting metric),
-    Rho (an S0 weighting metric), and variance explained.
-    See `Notes` for additional calculated metrics used to classify each
-    component into one of the listed groups.
+    `comptable` for each ICA component such as Kappa (a T2* weighting metric),
+    Rho (an S0 weighting metric), and variance explained. See tedana.metrics
+    for more detail on the calculated metrics
 
     Parameters
     ----------
-    tree : str
-        Decision tree to use
+    tree : :obj:`str`
+        A json file name without the '.json' extension that contains the decision tree to use
     comptable : (C x M) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric; the index should be the component number!
-    n_echos : int
-        Number of echos in original data; this is only used to get threshold
-        for F statistic related to the "elbow" calculation.
     user_notes : str, optional
         Additional user notes about decision tree
+    path : :obj:`str, optional`
+        The directory path where `tree` is located.
+        If None, then look for `tree` within ./selection/data
+        in the tedana code directory. default=None
+
+    Additional Parameters
+    ---------------------
+    Any parameter that is used by a decision tree node function can be passed
+    as a parameter of DecisionTree class initialization function or can be
+    included in the json file that defines the decision tree. If a parameter
+    is set in the json file, that will take precedence. As a style rule, a
+    parameter that is the same regardless of the inputted data should be
+    defined in the decision tree json file. A parameter that is dataset specific
+    should be passed through the initialization function. Parameters that may need
+    to be passed through the class include:
+
+    n_echos : :obj:`int, optional`
+        Number of echos in multi-echo fMRI data
+    n_vols: :obj:`int`
+        Number of volumes (time points) in the fMRI data
+
 
     Returns
     -------
     comptable : :obj:`pandas.DataFrame`
-        Updated component table with additional metrics and with classification
-        (i.e., accepted, rejected, or ignored)
-    nodes : list of dict
-        Nodes used in decision tree, including function names, parameters
-        provided, and relevant modifications made to comptable
+        Updated component table with additional metrics and with classifications
+        (i.e., accepted, rejected, or ignored) for each component
+    nodes : :obj:`dict`
+        Nodes used in decision tree. This includes the decision tree dict
+        from the json file in the `tree` input. For every dict in the list of
+        functions called in the decision tree, there is an added key `outputs`
+        which includes four values:
+        decison_node_idx : :obj:`int`
+            The decision tree function are run as part of an ordered list.
+            This is the positional index for when this function has been run
+            as part of this list.
+        used_metrics : :obj:`list[str]`
+            A list of the metrics used in a node of the decision tree
+        node_label : :obj:`str`
+            A brief label for what happens in this node that can be used in a decision
+            tree summary table or flow chart.
+        numTrue, numFalse : :obj:`int`
+            The number of components that were classified as true or false respectively
+            in this decision tree step.
 
     Notes
     -----
-    The selection algorithm used in this function is a minimalist version based
-    on ME-ICA by Prantik Kundu, and his original implementation is available
-    at: https://github.com/ME-ICA/me-ica/blob/
-    b2781dd087ab9de99a2ec3925f04f02ce84f0adc/meica.libs/select_model.py
-
-    This component selection process uses multiple, previously calculated
-    metrics that include kappa, rho, variance explained, noise and spatial
-    frequency metrics, and measures of spatial overlap across metrics.
-
-    For this decision tree:
-        4 extreme rejection metrics are applied
-        A kappa and rho elbow are calculated and used to reject components
-        Potentially rejected components with very low variance explained
-        are moved to ignored
     """
 
     def __init__(self, tree, comptable, **kwargs):
@@ -197,23 +230,29 @@ class DecisionTree:
         self.metrics = self.config['necessary_metrics']
         self.used_metrics = []
 
+    def run(self):
+        """
+        Parse the parameters used to call each function in the component
+        selection decision tree and run the functions to classify components
+
+        Parameters all defined in class initialization
+
+        Returns
+        -------
+        comptable : :obj:`pandas.DataFrame`
+            Updated component table with additional metrics and with classifications
+            (i.e., accepted, rejected, or ignored) for each component
+        nodes : :obj:`dict`
+            Nodes used in decision tree with updated information from run-time
+
+
+
+        """
+
         # this will crash the program with an error message if not all
         # necessary_metrics are in the comptable
         confirm_metrics_exist(self.comptable, self.metrics, self.tree)
 
-        # for each node that is run:
-        # 1. Create decision_node_idx as a variable to pass to the function
-        #   & in the decision tree dict
-        # 2. Log the function call in LGR.info.
-        # 3. Run function.
-        #     This will return: comptable (updated), used_metrics, numTrue, numFalse
-        # 4. Add information to the decision tree dict: numTrue, numFalse, used_metrics
-
-        # The comptable values for classification & rationale may be updated
-        # A new element is added to decision_tree_steps with an index incremented by 1
-        # necessary_metrics is a list of metrics used in this specific function
-
-    def run(self):
         used_metrics = set()
         for ii, node in enumerate(self.nodes):
             fcn = getattr(selection_nodes, node['functionname'])
@@ -237,6 +276,7 @@ class DecisionTree:
         # Move decision columns to end
         self.comptable = clean_dataframe(self.comptable)
         self.are_only_necessary_metrics_used(used_metrics)
+        print(self.nodes)
         return self.comptable, self.nodes
 
     def check_necessary_metrics(self):
