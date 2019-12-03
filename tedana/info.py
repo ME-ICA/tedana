@@ -33,7 +33,6 @@ REQUIRES = [
     'nilearn',
     'nibabel>=2.1.0',
     'scipy',
-    'versioneer',
     'pandas',
     'matplotlib'
 ]
