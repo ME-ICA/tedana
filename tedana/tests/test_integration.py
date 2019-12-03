@@ -98,7 +98,8 @@ def test_integration_five_echo(skip_integration):
     assert isinstance(df, pd.DataFrame)
 
     # compare the generated output files
-    fn = resource_filename('tedana', 'tests/data/tedana_outputs_verbose.txt')
+    fn = resource_filename('tedana', 
+                           'tests/data/nih_five_echo_outputs_verbose.txt')
     check_integration_outputs(fn, out_dir)
 
 
@@ -127,7 +128,7 @@ def test_integration_four_echo(skip_integration):
                     tedort=True)
 
     # compare the generated output files
-    fn = resource_filename('tedana', 'tests/data/fiu_outputs.txt')
+    fn = resource_filename('tedana', 'tests/data/fiu_four_echo_outputs.txt')
     check_integration_outputs(fn, out_dir)
 
 
@@ -152,5 +153,6 @@ def test_integration_three_echo(skip_integration):
         tedpca='kundu')
 
     # compare the generated output files
-    fn = resource_filename('tedana', 'tests/data/tedana_outputs.txt')
+    fn = resource_filename('tedana', 
+                           'tests/data/cornell_three_echo_outputs.txt')
     check_integration_outputs(fn, out_dir)
