@@ -226,6 +226,9 @@ git push -u origin MYBRANCH
 
 and GitHub will respond by giving you a link to open a pull request to 
 ME-ICA/tedana.
+Once you have pushed changes to the repository, please do not use commands such as rebase and
+amend, as they will rewrite your history and make it difficult for developers to work with you on
+your pull request. You can read more about that [here][link_git_rewriting].
 
 To improve understanding pull requests "at a glance", we encourage the use of several standardized tags.
 When opening a pull request, please use at least one of the following prefixes:
@@ -274,7 +277,6 @@ git merge master
 
 In the event of confusion, please open a draft pull request of what you're working on and indicate
 the problem you're having so that a developer can help you.
-We strongly recommend you *not* use the `git rebase` command when working with and contributing to the `tedana` repository.
 
 ### Comprehensive Developer Guide
 For additional, in-depth information on contributing to `tedana`, please see our Developing Guidelines on [readthedocs][link_developing_rtd].
@@ -375,3 +377,4 @@ You're awesome. :wave::smiley:
 [link_git_kraken]: https://www.gitkraken.com/
 [link_github_desktop]: https://desktop.github.com/
 [link_source_tree]: https://desktop.github.com/
+[link_git_rewriting]: https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History
