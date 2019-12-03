@@ -136,10 +136,9 @@ Once you've run this, your repository should be set for most changes (i.e., you 
 
 ### 4. Make the changes you've discussed
 
-Try to keep the changes focused to the issue.  
+Try to keep the changes focused to the issue.
 We've found that working on a [new branch][link_branches] for each issue makes it easier to keep your changes targeted.
-Using a new branch allows you to follow the standard GitHub 
-workflow when making changes.
+Using a new branch allows you to follow the standard GitHub workflow when making changes.
 [This guide][link_gitworkflow] provides a useful overview for this workflow.
 Before making a new branch, make sure your master is up to date.
 
@@ -182,8 +181,7 @@ flake8 $TEDANADIR/tedana
 
 and unit/integration tests by running `pytest` (more details below).
 If you know a file will test your change, you can run only that test (see "One test file only" below).
-Alternatively, running all unit tests is relatively quick and should be
-fairly comprehensive.
+Alternatively, running all unit tests is relatively quick and should be fairly comprehensive.
 Running all `pytest` tests will be useful for pre-pushing checks.
 Regardless, when you open a Pull Request, we use CircleCI to run all unit and integration tests.
 
@@ -247,9 +245,12 @@ Pull requests should be submitted early and often!
 If your pull request is not yet ready to be merged, please use [draft PRs][link_draftpr]
 This tells the development team that your pull request is a "work-in-progress",
 and that you plan to continue working on it.
-Note that if your pull request has no conversation or commits for 90 days,
-stale-bot will mark it stale.
-We may also ask that another development team member resume work on it, if you are unable to continue to do so.
+If no comments or commits occur on an open Pull Request, stale-bot will comment in order to remind
+both you and the maintainers that the pull request is open.
+If at this time you are awaiting a developer response, please ping them to remind them.
+If you are no longer interested in working on the pull request, let us know and we will ask to
+continue working on your branch.
+Thanks for contributing!
 
 ### Pull Request Checklist (For Fastest Review):
 - [ ] Check that all tests are passing ("All tests passsed")
