@@ -44,6 +44,7 @@ TESTS_REQUIRES = [
 ]
 
 EXTRA_REQUIRES = {
+    'dev': ['versioneer'],
     'doc': [
         'sphinx>=1.5.3',
         'sphinx_rtd_theme',
