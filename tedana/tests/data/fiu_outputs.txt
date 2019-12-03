@@ -1,5 +1,6 @@
 adaptive_mask.nii.gz
 betas_OC.nii.gz
+betas_hik_OC.nii.gz
 dn_ts_OC.nii.gz
 feats_OC2.nii.gz
 figures
