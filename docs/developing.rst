@@ -55,6 +55,8 @@ You can do this with the following, which would make an archive ``my_data.tar.gz
 
 (2) Run the workflow with a known-working version, and put the outputs into a text file inside
 ``$TEDANADIR/tedana/tests/data/``, where ``TEDANADIR`` is your local ``tedana repository``.
+We encourage using the convention ``<DATASET>_<n_echoes>_echo_outputs.txt``, appending ``verbose``
+to the filename if the integration test uses ``tedana`` in the verbose mode.
 
 (3) Write a test function in ``test_integration.py``.
 To write the test function you can follow the model of our `five echo set`_, which takes the following steps:
