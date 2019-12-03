@@ -2,6 +2,7 @@ adaptive_mask.nii.gz
 betas_OC.nii.gz
 dn_ts_OC.nii.gz
 figures
+hik_ts_OC.nii.gz
 ica_components.nii.gz
 ica_decomposition.json
 ica_mixing.tsv
