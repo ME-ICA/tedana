@@ -27,6 +27,14 @@ run_three_echo_test() {
     cprint "THREE-ECHO TEST PASSED !"
 }
 
+run_four_echo_test() {
+    #
+    # Runs tedana four-echo test
+    cprint "RUNNING four-ECHO TEST"
+    make four-echo
+    cprint "FOUR-ECHO TEST PASSED !"
+}
+
 run_five_echo_test() {
     #
     # Runs tedana five-echo test
@@ -66,6 +74,7 @@ run_all_tests() {
     run_lint_tests
     run_unit_tests
     run_three_echo_test
+    run_four_echo_test
     run_five_echo_test
 
     cprint "FINISHED RUNNING ALL TESTS -- GREAT SUCCESS !"

@@ -86,11 +86,11 @@ def test_integration_five_echo(skip_integration):
     prepend = '/tmp/data/five-echo/p06.SBJ01_S09_Task11_e'
     suffix = '.sm.nii.gz'
     datalist = [prepend + str(i + 1) + suffix for i in range(5)]
-    tedana_workflow(
-        data=datalist,
-        tes=[15.4, 29.7, 44.0, 58.3, 72.6],
-        out_dir=out_dir,
-        debug=True, verbose=True)
+    tedana_workflow(data=datalist,
+                    tes=[15.4, 29.7, 44.0, 58.3, 72.6],
+                    out_dir=out_dir,
+                    tedpca='mdl',
+                    debug=True, verbose=True)
 
     # Just a check on the component table pending a unit test of load_comptable
     comptable = os.path.join(out_dir, 'ica_decomposition.json')
@@ -98,7 +98,37 @@ def test_integration_five_echo(skip_integration):
     assert isinstance(df, pd.DataFrame)
 
     # compare the generated output files
-    fn = resource_filename('tedana', 'tests/data/tedana_outputs_verbose.txt')
+    fn = resource_filename('tedana',
+                           'tests/data/nih_five_echo_outputs_verbose.txt')
+    check_integration_outputs(fn, out_dir)
+
+
+def test_integration_four_echo(skip_integration):
+    """ Integration test of the full tedana workflow using four-echo test data
+    """
+
+    if skip_integration:
+        pytest.skip('Skipping four-echo integration test')
+    out_dir = '/tmp/data/four-echo/TED.four-echo'
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    # download data and run the test
+    download_test_data('https://osf.io/gnj73/download',
+                       os.path.dirname(out_dir))
+    prepend = '/tmp/data/four-echo/'
+    prepend += 'sub-PILOT_ses-01_task-localizerDetection_run-01_echo-'
+    suffix = '_space-sbref_desc-preproc_bold+orig.HEAD'
+    datalist = [prepend + str(i + 1) + suffix for i in range(4)]
+    tedana_workflow(data=datalist,
+                    tes=[11.8, 28.04, 44.28, 60.52],
+                    out_dir=out_dir,
+                    tedpca='aic',
+                    fittype='curvefit',
+                    tedort=True)
+
+    # compare the generated output files
+    fn = resource_filename('tedana', 'tests/data/fiu_four_echo_outputs.txt')
     check_integration_outputs(fn, out_dir)
 
 
@@ -119,8 +149,10 @@ def test_integration_three_echo(skip_integration):
         data='/tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz',
         tes=[14.5, 38.5, 62.5],
         out_dir=out_dir,
+        low_mem=True,
         tedpca='kundu')
 
     # compare the generated output files
-    fn = resource_filename('tedana', 'tests/data/tedana_outputs.txt')
+    fn = resource_filename('tedana',
+                           'tests/data/cornell_three_echo_outputs.txt')
     check_integration_outputs(fn, out_dir)
