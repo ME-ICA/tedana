@@ -119,7 +119,7 @@ def _parzen_win(n_points):
     return parzen_w
 
 
-def _ent_rate_sp(data, sm_window):
+def ent_rate_sp(data, sm_window):
     """
     Calculate the entropy rate of a stationary Gaussian random process using
     spectrum estimation with smoothing window.
@@ -277,7 +277,7 @@ def _est_indp_sp(data):
 
     for j in range(np.min(dims) - 1):
         data_sb = _subsampling(data, j + 1)
-        ent_rate = _ent_rate_sp(data_sb, 1)
+        ent_rate = ent_rate_sp(data_sb, 1)
 
         # Upper-bound.
         ent_ref = 1.41

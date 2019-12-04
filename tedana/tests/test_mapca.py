@@ -7,6 +7,17 @@ import nibabel as nib
 from tedana import decomposition
 
 
+def test_ent_rate_sp():
+    """
+    Check that ent_rate_sp runs correctly, i.e. returns a float
+    """
+    test_data = np.random.rand(200, 10, 10)
+    ent_rate = decomposition.ent_rate_sp(test_data, 1)
+    assert type(ent_rate) is np.float64
+    assert ent_rate.ndim == 0
+    assert ent_rate.size == 1
+
+
 def test_ma_pca():
     """
     Check that ma_pca runs correctly with all three options
