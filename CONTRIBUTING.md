@@ -265,22 +265,6 @@ Thanks for contributing!
 - [ ] Make sure you note any issues that will be closed by your PR
 - [ ] Take a look at the automatically generated readthedocs for your PR (Show all checks -> continuous-documentation/readthedocs -> Details)
 
-### After Changes Are Merged
-After successful merging of the pull request, remember to [keep your fork up to date][link_updateupstreamwiki] with the master `tedana` repository and to delete the branch on your fork that was used for the merged pull request.
-You may also want to update your other branches to include these changes,
-which you can do via
-
-```
-git checkout master
-git fetch upstream master
-git merge upstream/master
-git checkout OTHERBRANCH
-git merge master
-```
-
-In the event of confusion, please open a draft pull request of what you're working on and indicate
-the problem you're having so that a developer can help you.
-
 ### Comprehensive Developer Guide
 For additional, in-depth information on contributing to `tedana`, please see our Developing Guidelines on [readthedocs][link_developing_rtd].
 
