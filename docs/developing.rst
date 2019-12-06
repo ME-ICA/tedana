@@ -146,7 +146,7 @@ We merge any changes from the upstream master branch into our branch via
 
 .. code-block:: bash
 
-    git checkout feature/say_hello  # unless you're already there
+    git checkout feature/say_hello
     git fetch upstream master
     git merge upstream/master
 
