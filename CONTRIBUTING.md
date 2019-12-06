@@ -161,9 +161,6 @@ git fetch upstream master
 git merge upstream/master
 ```
 
-If you know what rebasing is, please only use it for changes that haven't been pushed.
-If you don't know what rebasing is, don't do it at all, as it is the easiest way to make your 
-repository a disaster zone.
 Please make sure to review the `tedana` [style conventions](#style-guide) and test your changes.
 
 If you are new to ``git`` and would like to work in a graphical user interface (GUI), there are several GUI git clients that you may find helpful, such as
