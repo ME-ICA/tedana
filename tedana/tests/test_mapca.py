@@ -5,6 +5,7 @@ Tests for maPCA
 import numpy as np
 import nibabel as nib
 from tedana import decomposition
+from pytest import raises
 
 
 def test_ent_rate_sp():
@@ -13,9 +14,15 @@ def test_ent_rate_sp():
     """
     test_data = np.random.rand(200, 10, 10)
     ent_rate = decomposition.ent_rate_sp(test_data, 1)
-    assert type(ent_rate) is np.float64
+    assert isinstance(ent_rate, float)
     assert ent_rate.ndim == 0
     assert ent_rate.size == 1
+
+    # Checks ValueError with std = 0
+    test_data = np.ones((200, 10, 10))
+    with raises(ValueError) as errorinfo:
+        ent_rate = decomposition.ent_rate_sp(test_data, 1)
+    assert 'Divide by zero encountered' in str(errorinfo.value)
 
 
 def test_ma_pca():
