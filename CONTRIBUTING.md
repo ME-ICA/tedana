@@ -154,13 +154,6 @@ Then, make your new branch.
 git checkout -b MYBRANCH
 ```
 
-As you're making changes, make sure your branch is kept up to date with 
-
-```
-git fetch upstream master
-git merge upstream/master
-```
-
 Please make sure to review the `tedana` [style conventions](#style-guide) and test your changes.
 
 If you are new to ``git`` and would like to work in a graphical user interface (GUI), there are several GUI git clients that you may find helpful, such as
