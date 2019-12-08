@@ -10,7 +10,7 @@ from sklearn.preprocessing import StandardScaler
 
 from scipy.linalg import svd
 from scipy.signal import detrend, fftconvolve
-from scipy.fftpack import fft, fftshift, fftn, fft2
+from scipy.fftpack import fftshift, fftn
 
 LGR = logging.getLogger(__name__)
 
@@ -143,6 +143,11 @@ def ent_rate_sp(data, sm_window):
 
     dims = data.shape
 
+    if data.ndim == 3 and min(dims) != 1:
+        pass
+    else:
+        raise ValueError('Incorrect matrix dimensions.')
+
     # Normalize x_sb to be unit variance
     data_std = np.std(np.reshape(data, (-1, 1)))
 
@@ -152,95 +157,59 @@ def ent_rate_sp(data, sm_window):
     data = data / data_std
 
     if sm_window:
-
         M = [int(i) for i in np.ceil(np.array(dims) / 10)]
 
         # Get Parzen window for each spatial direction
-        if data.ndim >= 3:
-            parzen_w_3 = np.zeros((2 * dims[2] - 1, ))
-            parzen_w_3[(dims[2] - M[2] - 1):(dims[2] + M[2])] = _parzen_win(2 * M[2] + 1)
+        parzen_w_3 = np.zeros((2 * dims[2] - 1, ))
+        parzen_w_3[(dims[2] - M[2] - 1):(dims[2] + M[2])] = _parzen_win(2 * M[2] + 1)
 
-        if data.ndim >= 2:
-            parzen_w_2 = np.zeros((2 * dims[1] - 1, ))
-            parzen_w_2[(dims[1] - M[1] - 1):(dims[1] + M[1])] = _parzen_win(2 * M[1] + 1)
+        parzen_w_2 = np.zeros((2 * dims[1] - 1, ))
+        parzen_w_2[(dims[1] - M[1] - 1):(dims[1] + M[1])] = _parzen_win(2 * M[1] + 1)
 
-        if data.ndim >= 1:
-            parzen_w_1 = np.zeros((2 * dims[0] - 1, ))
-            parzen_w_1[(dims[0] - M[0] - 1):(dims[0] + M[0])] = _parzen_win(2 * M[0] + 1)
+        parzen_w_1 = np.zeros((2 * dims[0] - 1, ))
+        parzen_w_1[(dims[0] - M[0] - 1):(dims[0] + M[0])] = _parzen_win(2 * M[0] + 1)
 
-    if data.ndim == 2 and min(dims) == 1:
-        # Apply window to 1D
-        data_corr = _autocorr(data)
-        data_corr = data_corr * parzen_w_1
-        data_fft = fftshift(fft(data_corr))
+    # Apply windows to 3D
+    # TODO: replace correlate2d with 3d if possible
+    data_corr = np.zeros((2 * dims[0] - 1, 2 * dims[1] - 1, 2 * dims[2] - 1))
+    for m3 in range(dims[2] - 1):
+        temp = np.zeros((2 * dims[0] - 1, 2 * dims[1] - 1))
+        for k in range(dims[2] - m3):
+            temp += fftconvolve(data[:, :, k + m3], data[::-1, ::-1, k])
+            # default option:
+            # computes raw correlations with NO normalization
+            # -- Matlab help on xcorr
+        data_corr[:, :, (dims[2] - 1) - m3] = temp
+        data_corr[:, :, (dims[2] - 1) + m3] = temp
 
-    elif data.ndim == 2 and min(dims) != 1:
-        # Apply windows to 2D
-        data_corr = _autocorr(data)
+    # Create bias-correcting vectors
+    v1 = np.hstack((np.arange(1, dims[0] + 1),
+                    np.arange(dims[0] - 1, 0, -1)))[np.newaxis, :]
+    v2 = np.hstack((np.arange(1, dims[1] + 1),
+                    np.arange(dims[1] - 1, 0, -1)))[np.newaxis, :]
+    v3 = np.arange(dims[2], 0, -1)
 
-        # Create bias-correcting vectors
-        v1 = np.hstack((np.arange(1, dims[0] + 1),
-                        np.arange(dims[0] - 1, 0, -1)))[np.newaxis, :]
-        v2 = np.hstack((np.arange(1, dims[1] + 1),
-                        np.arange(dims[1] - 1, 0, -1)))[np.newaxis, :]
+    vd = np.dot(v1.T, v2)
+    vcu = np.zeros((2 * dims[0] - 1, 2 * dims[1] - 1, 2 * dims[2] - 1))
+    for m3 in range(dims[2]):
+        vcu[:, :, (dims[2] - 1) - m3] = vd * v3[m3]
+        vcu[:, :, (dims[2] - 1) + m3] = vd * v3[m3]
 
-        vd = np.dot(v1.T, v2)
+    data_corr /= vcu
 
-        # Bias-correct
-        data_corr /= vd
+    # Scale Parzen windows
+    parzen_window_2D = np.dot(parzen_w_1[np.newaxis, :].T,
+                                parzen_w_2[np.newaxis, :])
+    parzen_window_3D = np.zeros((2 * dims[0] - 1, 2 * dims[1] - 1, 2 * dims[2] - 1))
+    for m3 in range(dims[2] - 1):
+        parzen_window_3D[:, :, (dims[2] - 1) - m3] = np.dot(
+            parzen_window_2D, parzen_w_3[dims[2] - 1 - m3])
+        parzen_window_3D[:, :, (dims[2] - 1) + m3] = np.dot(
+            parzen_window_2D, parzen_w_3[dims[2] - 1 + m3])
 
-        # Apply 2D Parzen Window
-        parzen_window_2D = np.dot(parzen_w_1, parzen_w_2.T)
-        data_corr = data_corr * parzen_window_2D
-        data_fft = fftshift(fft2(data_corr))
-
-    elif data.ndim == 3 and min(dims) != 1:
-        # Apply windows to 3D
-        # TODO: replace correlate2d with 3d if possible
-        data_corr = np.zeros((2 * dims[0] - 1, 2 * dims[1] - 1, 2 * dims[2] - 1))
-        for m3 in range(dims[2] - 1):
-            temp = np.zeros((2 * dims[0] - 1, 2 * dims[1] - 1))
-            for k in range(dims[2] - m3):
-                temp += fftconvolve(data[:, :, k + m3], data[::-1, ::-1, k])
-                # default option:
-                # computes raw correlations with NO normalization
-                # -- Matlab help on xcorr
-            data_corr[:, :, (dims[2] - 1) - m3] = temp
-            data_corr[:, :, (dims[2] - 1) + m3] = temp
-
-        # Create bias-correcting vectors
-        v1 = np.hstack((np.arange(1, dims[0] + 1),
-                        np.arange(dims[0] - 1, 0, -1)))[np.newaxis, :]
-        v2 = np.hstack((np.arange(1, dims[1] + 1),
-                        np.arange(dims[1] - 1, 0, -1)))[np.newaxis, :]
-        v3 = np.arange(dims[2], 0, -1)
-
-        vd = np.dot(v1.T, v2)
-        vcu = np.zeros((2 * dims[0] - 1, 2 * dims[1] - 1, 2 * dims[2] - 1))
-        for m3 in range(dims[2]):
-            vcu[:, :, (dims[2] - 1) - m3] = vd * v3[m3]
-            vcu[:, :, (dims[2] - 1) + m3] = vd * v3[m3]
-
-        data_corr /= vcu
-
-        # Scale Parzen windows
-        parzen_window_2D = np.dot(parzen_w_1[np.newaxis, :].T,
-                                  parzen_w_2[np.newaxis, :])
-        parzen_window_3D = np.zeros((2 * dims[0] - 1, 2 * dims[1] - 1, 2 * dims[2] - 1))
-        for m3 in range(dims[2] - 1):
-            parzen_window_3D[:, :, (dims[2] - 1) - m3] = np.dot(
-                parzen_window_2D, parzen_w_3[dims[2] - 1 - m3])
-            parzen_window_3D[:, :, (dims[2] - 1) + m3] = np.dot(
-                parzen_window_2D, parzen_w_3[dims[2] - 1 + m3])
-
-        # Apply 3D Parzen Window
-        data_corr *= parzen_window_3D
-        data_fft = fftshift(fftn(data_corr))
-
-    else:
-        raise ValueError('Unrecognized matrix dimension.')
-
-    data_fft = abs(data_fft)
+    # Apply 3D Parzen Window
+    data_corr *= parzen_window_3D
+    data_fft = abs(fftshift(fftn(data_corr)))
     data_fft[data_fft < 1e-4] = 1e-4
 
     # Estimation of the entropy rate
