@@ -104,7 +104,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
     # compute un-normalized weight dataset (features)
     if mmixN is None:
         mmixN = mmix
-    WTS = computefeats2(tsoc, mmixN, mask=None, normalize=False)
+    WTS = computefeats2(tsoc, mmixN, mask=None)
 
     # compute PSC dataset - shouldn't have to refit data
     tsoc_B = get_ls_coeffs(tsoc_dm, mmix, mask=None)
