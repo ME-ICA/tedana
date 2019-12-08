@@ -66,7 +66,7 @@ def test_ma_pca():
 
     del u, s, varex_norm, v
 
-    # Testing AIC option
+    # Testing MDL option
     u, s, varex_norm, v = decomposition.ma_pca(test_img, test_mask_img, 'mdl')
 
     assert u.shape[0] == n_vox_total
