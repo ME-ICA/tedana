@@ -199,7 +199,7 @@ def ent_rate_sp(data, sm_window):
 
     # Scale Parzen windows
     parzen_window_2D = np.dot(parzen_w_1[np.newaxis, :].T,
-                                parzen_w_2[np.newaxis, :])
+                              parzen_w_2[np.newaxis, :])
     parzen_window_3D = np.zeros((2 * dims[0] - 1, 2 * dims[1] - 1, 2 * dims[2] - 1))
     for m3 in range(dims[2] - 1):
         parzen_window_3D[:, :, (dims[2] - 1) - m3] = np.dot(
