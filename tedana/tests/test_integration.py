@@ -90,6 +90,7 @@ def test_integration_five_echo(skip_integration):
         data=datalist,
         tes=[15.4, 29.7, 44.0, 58.3, 72.6],
         out_dir=out_dir,
+        tedpca='mdl',
         debug=True, verbose=True)
 
     # Just a check on the component table pending a unit test of load_comptable
