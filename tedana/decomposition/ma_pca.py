@@ -138,7 +138,14 @@ def ent_rate_sp(data, sm_window):
 
     Notes
     -----
-    This function attempts to calculate the entropy rate following (Li et al., 2007)
+    This function attempts to calculate the entropy rate following
+
+    References
+    ----------
+    Li, Y.O., Adalı, T. and Calhoun, V.D., (2007).
+    Estimating the number of independent components for
+    functional magnetic resonance imaging data.
+    Human brain mapping, 28(11), pp.1251-1266.
     """
 
     dims = data.shape
@@ -235,6 +242,7 @@ def _est_indp_sp(data):
         Number of iterations required to estimate entropy rate
     ent_rate : float
         The entropy rate of the data
+
     Notes
     -----
     This function estimates the effective number of independent samples by omitting
@@ -269,7 +277,7 @@ def _est_indp_sp(data):
 
 def _subsampling(data, sub_depth):
     """
-    Subsampling the data evenly with space 's'.
+    Subsampling the data evenly with space 'sub_depth'.
 
     Parameters
     ----------
@@ -392,6 +400,13 @@ def _eigensp_adj(lam, n, p):
     -----
     Adjusts the eigen spectrum to account for the finite samples
     after subsampling (Li et al., 2007)
+
+    References
+    ----------
+    Li, Y.O., Adalı, T. and Calhoun, V.D., (2007).
+    Estimating the number of independent components for
+    functional magnetic resonance imaging data.
+    Human brain mapping, 28(11), pp.1251-1266.
     """
 
     r = p / n
