@@ -232,9 +232,7 @@ def get_ls_coeffs(data, X, mask=None, add_const=False, compute_zvalues=False, mi
         C = C[:, np.newaxis]
         std_betas = np.sqrt(np.dot(sigma, C.T))
         z_values = t_to_z(betas / std_betas, df)
-        z_values = np.nan_to_num(z_values, posinf=30, neginf=-30)
-
-    betas = np.nan_to_num(betas, posinf=30, neginf=-30)
+        z_values = np.clip(z_values, -40, 40)
 
     if add_const:  # drop beta for intercept, if specified
         betas = betas[:, :-1]
