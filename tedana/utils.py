@@ -5,7 +5,7 @@ import logging
 
 import numpy as np
 import nibabel as nib
-from scipy import ndimage
+from scipy import ndimage, stats
 from nilearn._utils import check_niimg
 from sklearn.utils import check_array
 
@@ -40,6 +40,40 @@ def load_image(data):
 
     return fdata
 
+def eimask(dd, ees=None):
+    """
+    Returns mask for data between [0.001, 5] * 98th percentile of dd
+
+    Parameters
+    ----------
+    dd : (S x E x T) array_like
+        Input data, where `S` is samples, `E` is echos, and `T` is time
+    ees : (N,) :obj:`list`
+        Indices of echos to assess from `dd` in calculating output
+
+    Returns
+    -------
+    imask : (S x N) :obj:`numpy.ndarray`
+        Boolean array denoting
+    """
+
+    if ees is None:
+        ees = range(dd.shape[1])
+    imask = np.zeros((dd.shape[0], len(ees)), dtype=bool)
+    for ee in ees:
+        if len(ees) == 1:
+            LGR.debug('Creating eimask for optimal combination')
+        else:
+            LGR.debug('Creating eimask for echo {}'.format(ee))
+        perc98 = stats.scoreatpercentile(dd[:, ee, :].flatten(), 98,
+                                         interpolation_method='lower')
+        lthr, hthr = 0.001 * perc98, 5 * perc98
+        LGR.debug('Eimask threshold boundaries: '
+                  '{:.03f} {:.03f}'.format(lthr, hthr))
+        m = dd[:, ee, :].mean(axis=1)
+        imask[np.logical_and(m > lthr, m < hthr), ee] = True
+
+    return imask
 
 def make_adaptive_mask(data, mask=None, getsum=False):
     """
@@ -68,6 +102,10 @@ def make_adaptive_mask(data, mask=None, getsum=False):
     RepLGR.info("An adaptive mask was then generated, in which each voxel's "
                 "value reflects the number of echoes with 'good' data.")
 
+    # TODO: This function is a combination of several arbtirary thresholds
+    #       It would be nice to modularize each threshold so that this is slightly
+    #       easier to tweak the arbirary levels.
+
     # take temporal mean of echos and extract non-zero values in first echo
     echo_means = data.mean(axis=-1)  # temporal mean of echos
     first_echo = echo_means[echo_means[:, 0] != 0, 0]
@@ -87,11 +125,15 @@ def make_adaptive_mask(data, mask=None, getsum=False):
 
     # determine samples where absolute value is greater than echo-specific thresholds
     # and count # of echos that pass criterion
-    masksum = (np.abs(echo_means) > lthrs).sum(axis=-1)
+    masksum1 = ((np.abs(echo_means) > lthrs).sum(axis=-1)).astype(bool)
+
+    masksum2 = eimask(data)
+
+    masksum = masksum1 & masksum2
 
     if mask is None:
         # make it a boolean mask to (where we have at least 1 echo with good signal)
-        mask = masksum.astype(bool)
+        mask = masksum
     else:
         # if the user has supplied a binary mask
         mask = load_image(mask).astype(bool)
