@@ -21,8 +21,8 @@ import pandas as pd
 from scipy import stats
 from nilearn.masking import compute_epi_mask
 
-from tedana import (decay, combine, decomposition, io, metrics, selection, utils,
-                    viz)
+from tedana import (decay, combine, decomposition, io, metrics, selection,
+                    utils, viz)
 import tedana.gscontrol as gsc
 from tedana.stats import computefeats2
 from tedana.workflows.parser_utils import is_valid_file, ContextFilter
@@ -133,9 +133,13 @@ def _get_parser():
                           default=None)
     optional.add_argument('--tedpca',
                           dest='tedpca',
-                          help='Method with which to select components in TEDPCA',
-                          choices=['mle', 'kundu', 'kundu-stabilize'],
-                          default='mle')
+                          help=('Method with which to select components in TEDPCA. '
+                                'PCA decomposition with the mdl, kic and aic options '
+                                'is based on a Moving Average (stationary Gaussian) '
+                                'process and are ordered from most to least aggresive. '
+                                'Default=\'mdl\'.'),
+                          choices=['mle', 'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'],
+                          default='mdl')
     optional.add_argument('--out-dir',
                           dest='out_dir',
                           type=str,
@@ -248,8 +252,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     gscontrol : {None, 't1c', 'gsr'} or :obj:`list`, optional
         Perform additional denoising to remove spatially diffuse noise. Default
         is None.
-    tedpca : {'mle', 'kundu', 'kundu-stabilize'}, optional
-        Method with which to select components in TEDPCA. Default is 'mle'.
+    tedpca : {'mle', 'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
+        Method with which to select components in TEDPCA. Default is 'mdl'.
     source_tes : :obj:`int`, optional
         Source TEs for models. 0 for all, -1 for optimal combination.
         Default is -1.
@@ -538,10 +542,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     mmix_orig = mmix.copy()
     if tedort:
-        acc_idx = comptable.loc[
-            ~comptable.classification.str.contains('rejected')].index.values
-        rej_idx = comptable.loc[
-            comptable.classification.str.contains('rejected')].index.values
+        acc_idx = comptable.loc[~comptable.classification.str.
+                                contains('rejected')].index.values
+        rej_idx = comptable.loc[comptable.classification.str.contains(
+            'rejected')].index.values
         acc_ts = mmix[:, acc_idx]
         rej_ts = mmix[:, rej_idx]
         betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
@@ -556,8 +560,12 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     "orthogonalized with respect to accepted components' time "
                     "series.")
 
-    io.writeresults(data_oc, mask=mask, comptable=comptable, mmix=mmix,
-                    n_vols=n_vols, ref_img=ref_img)
+    io.writeresults(data_oc,
+                    mask=mask,
+                    comptable=comptable,
+                    mmix=mmix,
+                    n_vols=n_vols,
+                    ref_img=ref_img)
 
     if 't1c' in gscontrol:
         gsc.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
@@ -572,8 +580,11 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         if not op.isdir(op.join(out_dir, 'figures')):
             os.mkdir(op.join(out_dir, 'figures'))
 
-        viz.write_comp_figs(data_oc, mask=mask, comptable=comptable,
-                            mmix=mmix_orig, ref_img=ref_img,
+        viz.write_comp_figs(data_oc,
+                            mask=mask,
+                            comptable=comptable,
+                            mmix=mmix_orig,
+                            ref_img=ref_img,
                             out_dir=op.join(out_dir, 'figures'),
                             png_cmap=png_cmap)
 
