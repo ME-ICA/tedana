@@ -23,7 +23,8 @@ class TestT2smap():
                 op.join(data_dir, 'echo3.nii.gz')]
         out_dir = 'TED.echo1.t2smap'
         workflows.tedana_workflow(data, [14.5, 38.5, 62.5], combmode='t2s',
-                                  fitmode='all', out_dir=out_dir, denoise=False)
+                                  fitmode='all', out_dir=out_dir, denoise=False,
+                                  verbose=True)
 
         # Check outputs
         assert op.isfile(op.join(out_dir, 'ts_OC.nii.gz'))
@@ -49,8 +50,8 @@ class TestT2smap():
                 op.join(data_dir, 'echo3.nii.gz')]
         out_dir = 'TED.echo1.t2smap'
         workflows.tedana_workflow(data, [14.5, 38.5, 62.5], combmode='t2s',
-                                  fitmode='ts', out_dir=out_dir, denoise=False)
-        out_dir = 'TED.echo1.t2smap'
+                                  fitmode='ts', out_dir=out_dir, denoise=False,
+                                  verbose=True)
 
         # Check outputs
         assert op.isfile(op.join(out_dir, 'ts_OC.nii.gz'))
@@ -76,8 +77,8 @@ class TestT2smap():
                 op.join(data_dir, 'echo3.nii.gz')]
         out_dir = 'TED.echo1.t2smap'
         workflows.tedana_workflow(data, [14.5, 38.5, 62.5], combmode='paid',
-                                  fitmode='all', out_dir=out_dir, denoise=False)
-        out_dir = 'TED.echo1.t2smap'
+                                  fitmode='all', out_dir=out_dir, denoise=False,
+                                  verbose=True)
 
         # Check outputs
         assert op.isfile(op.join(out_dir, 'ts_OC.nii.gz'))
@@ -105,8 +106,8 @@ class TestT2smap():
                 op.join(data_dir, 'echo3.nii.gz')]
         out_dir = 'TED.echo1.t2smap'
         workflows.tedana_workflow(data, [14.5, 38.5, 62.5], combmode='paid',
-                                  fitmode='ts', out_dir=out_dir, denoise=False)
-        out_dir = 'TED.echo1.t2smap'
+                                  fitmode='ts', out_dir=out_dir, denoise=False,
+                                  verbose=True)
 
         # Check outputs
         assert op.isfile(op.join(out_dir, 'ts_OC.nii.gz'))
