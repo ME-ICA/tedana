@@ -95,13 +95,6 @@ def _get_parser():
                           help=('Comma separated list of manually '
                                 'accepted components'),
                           default=None)
-    optional.add_argument('--sourceTEs',
-                          dest='source_tes',
-                          type=str,
-                          help=('Source TEs for models. E.g., 0 for all, '
-                                '-1 for opt. com., and 1,2 for just TEs 1 and '
-                                '2. Default=-1.'),
-                          default=-1)
     optional.add_argument('--combmode',
                           dest='combmode',
                           action='store',
@@ -138,7 +131,7 @@ def _get_parser():
                                 'is based on a Moving Average (stationary Gaussian) '
                                 'process and are ordered from most to least aggresive. '
                                 'Default=\'mdl\'.'),
-                          choices=['mle', 'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'],
+                          choices=['kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'],
                           default='mdl')
     optional.add_argument('--out-dir',
                           dest='out_dir',
@@ -215,8 +208,8 @@ def _get_parser():
 
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
-                    tedort=False, gscontrol=None, tedpca='mle',
-                    source_tes=-1, combmode='t2s', verbose=False, stabilize=False,
+                    tedort=False, gscontrol=None, tedpca='mdl',
+                    combmode='t2s', verbose=False, stabilize=False,
                     out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
                     debug=False, quiet=False, no_png=False,
                     png_cmap='coolwarm',
@@ -252,11 +245,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     gscontrol : {None, 't1c', 'gsr'} or :obj:`list`, optional
         Perform additional denoising to remove spatially diffuse noise. Default
         is None.
-    tedpca : {'mle', 'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
+    tedpca : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
         Method with which to select components in TEDPCA. Default is 'mdl'.
-    source_tes : :obj:`int`, optional
-        Source TEs for models. 0 for all, -1 for optimal combination.
-        Default is -1.
     combmode : {'t2s'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default).
     fittype : {'loglin', 'curvefit'}, optional
@@ -474,7 +464,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         dd, n_components = decomposition.tedpca(catd, data_oc, combmode, mask,
                                                 t2s_limited, t2s_full, ref_img,
                                                 tes=tes, algorithm=tedpca,
-                                                source_tes=source_tes,
                                                 kdaw=10., rdaw=1.,
                                                 out_dir=out_dir,
                                                 verbose=verbose,
@@ -482,7 +471,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         mmix_orig = decomposition.tedica(dd, n_components, fixed_seed,
                                          maxit, maxrestart)
 
-        if verbose and (source_tes == -1):
+        if verbose:
             io.filewrite(utils.unmask(dd, mask),
                          op.join(out_dir, 'ts_OC_whitened.nii'), ref_img)
 
@@ -525,8 +514,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
             comptable = selection.manual_selection(comptable, acc=manacc)
 
     # Save decomposition
-    data_type = 'optimally combined data' if source_tes == -1 else 'z-concatenated data'
-    comptable['Description'] = 'ICA fit to dimensionally reduced {0}.'.format(data_type)
+    comptable['Description'] = 'ICA fit to dimensionally-reduced optimally combined data.'
     mmix_dict = {}
     mmix_dict['Method'] = ('Independent components analysis with FastICA '
                            'algorithm implemented by sklearn. Components '
