@@ -1,2 +1,5 @@
 ignore:
+  - "setup.py"
   - "tedana/tests/"
+  - "tedana/due.py"
+  - "tedana/_version.py"
