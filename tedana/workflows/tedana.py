@@ -228,7 +228,7 @@ def _get_parser():
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     tedort=False, gscontrol=None, tedpca='mdl',
-                    combmode='t2s', combmode='t2s', verbose=False,
+                    combmode='t2s', verbose=False,
                     out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
                     debug=False, quiet=False, no_png=False,
                     png_cmap='coolwarm',
