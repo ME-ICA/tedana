@@ -59,7 +59,7 @@ def low_mem_pca(data):
 
 
 def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
-           ref_img, tes, algorithm='mdl', source_tes=-1, kdaw=10., rdaw=1.,
+           ref_img, tes, algorithm='mdl', kdaw=10., rdaw=1.,
            out_dir='.', verbose=False, low_mem=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
@@ -90,12 +90,6 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
         decomposition with the mdl, kic and aic options are based on a Moving Average
         (stationary Gaussian) process and are ordered from most to least aggresive.
         See (Li et al., 2007).
-    source_tes : :obj:`int` or :obj:`list` of :obj:`int`, optional
-        Which echos to use in PCA. Values -1 and 0 are special, where a value
-        of -1 will indicate using the optimal combination of the echos
-        and 0  will indicate using all the echos. A list can be provided
-        to indicate a subset of echos.
-        Default: -1
     kdaw : :obj:`float`, optional
         Dimensionality augmentation weight for Kappa calculations. Must be a
         non-negative float, or -1 (a special value). Default is 10.
@@ -192,28 +186,14 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
                     "functional magnetic resonance imaging data. "
                     "Human brain mapping, 28(11), pp.1251-1266.")
 
-    if source_tes == -1:
-        dat_str = "the optimally combined data"
-    elif source_tes == 0:
-        dat_str = "the z-concatenated multi-echo data"
-    else:
-        dat_str = "a z-concatenated subset of echoes from the input data"
-
     RepLGR.info("Principal component analysis {0} was applied to "
-                "{1} for dimensionality reduction.".format(alg_str, dat_str))
+                "the optimally combined data for dimensionality "
+                "reduction.".format(alg_str))
 
     n_samp, n_echos, n_vols = data_cat.shape
-    source_tes = np.array([int(ee) for ee in str(source_tes).split(',')])
 
-    if len(source_tes) == 1 and source_tes[0] == -1:
-        LGR.info('Computing PCA of optimally combined multi-echo data')
-        data = data_oc[mask, :][:, np.newaxis, :]
-    elif len(source_tes) == 1 and source_tes[0] == 0:
-        LGR.info('Computing PCA of spatially concatenated multi-echo data')
-        data = data_cat[mask, ...]
-    else:
-        LGR.info('Computing PCA of echo #{0}'.format(','.join([str(ee) for ee in source_tes])))
-        data = np.stack([data_cat[mask, ee, :] for ee in source_tes - 1], axis=1)
+    LGR.info('Computing PCA of optimally combined multi-echo data')
+    data = data_oc[mask, :][:, np.newaxis, :]
 
     eim = np.squeeze(_utils.eimask(data))
     data = np.squeeze(data[eim])
@@ -292,8 +272,7 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     mixing_df = pd.DataFrame(data=comp_ts, columns=comp_names)
     mixing_df.to_csv(op.join(out_dir, 'pca_mixing.tsv'), sep='\t', index=False)
 
-    data_type = 'optimally combined data' if source_tes == -1 else 'z-concatenated data'
-    comptable['Description'] = 'PCA fit to {0}.'.format(data_type)
+    comptable['Description'] = 'PCA fit to optimally combined data.'
     mmix_dict = {}
     mmix_dict['Method'] = ('Principal components analysis implemented by '
                            'sklearn. Components are sorted by variance '
