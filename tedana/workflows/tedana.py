@@ -457,7 +457,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
 
     # regress out global signal unless explicitly not desired
     if 'gsr' in gscontrol:
-        catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, ref_img)
+        catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, ref_img,
+                                          out_dir=out_dir)
 
     if mixm is None:
         # Identify and remove thermal noise from data
@@ -556,7 +557,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     ref_img=ref_img)
 
     if 't1c' in gscontrol:
-        gsc.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
+        gsc.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img, out_dir=out_dir)
 
     if verbose:
         io.writeresults_echoes(catd, mmix, mask, comptable, ref_img)
