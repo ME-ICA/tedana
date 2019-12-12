@@ -408,6 +408,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         mixm = None
         ctab = None
         manacc = None
+    else:
+        LGR.debug('Disabling denoising-incompatible options')
         fitmode = 'all'
         combmode = 't2s'
 
