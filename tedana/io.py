@@ -360,7 +360,8 @@ def filewrite(data, filename, ref_img, gzip=True, copy_header=True):
     # get root of desired output file and save as nifti image
     root = op.dirname(filename)
     base = op.basename(filename)
-    _, ext, add = splitext_addext(base)
+    base, ext, add = splitext_addext(base)
+    root = op.join(root, base)
     name = '{}.{}'.format(root, 'nii.gz' if gzip else 'nii')
     out.to_filename(name)
 
