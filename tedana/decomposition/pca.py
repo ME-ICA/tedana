@@ -13,51 +13,10 @@ from tedana import metrics, utils, io
 from tedana.decomposition import (ma_pca, _utils)
 from tedana.stats import computefeats2
 from tedana.selection import kundu_tedpca
-from tedana.due import due, BibTeX
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
-
-
-@due.dcite(BibTeX("""
-    @inproceedings{minka2001automatic,
-      title={Automatic choice of dimensionality for PCA},
-      author={Minka, Thomas P},
-      booktitle={Advances in neural information processing systems},
-      pages={598--604},
-      year={2001}
-    }
-    """),
-           description='Introduces method for choosing PCA dimensionality '
-           'automatically')
-def run_mlepca(data):
-    """
-    Run Singular Value Decomposition (SVD) on input data,
-    automatically select components on MLE variance cut-off.
-
-    Parameters
-    ----------
-    data : (S [*E] x T) array_like
-        Optimally combined (S x T) or full multi-echo (S*E x T) data.
-
-    Returns
-    -------
-    u : (S [*E] x C) array_like
-        Component weight map for each component.
-    s : (C,) array_like
-        Variance explained for each component.
-    v : (T x C) array_like
-        Component timeseries.
-    """
-    # do PC dimension selection and get eigenvalue cutoff
-    ppca = PCA(n_components='mle', svd_solver='full', copy=False)
-    ppca.fit(data)
-    v = ppca.components_.T
-    s = ppca.explained_variance_
-    u = np.dot(np.dot(data, v), np.diag(1. / s))
-    varex_norm = ppca.explained_variance_ratio_
-    return u, s, varex_norm, v
 
 
 def low_mem_pca(data):
@@ -114,7 +73,7 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
         Reference image to dictate how outputs are saved to disk
     tes : :obj:`list`
         List of echo times associated with `data_cat`, in milliseconds
-    algorithm : {'mle', 'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
+    algorithm : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
         Method with which to select components in TEDPCA. Default is 'mdl'. PCA
         decomposition with the mdl, kic and aic options are based on a Moving Average
         (stationary Gaussian) process and are ordered from most to least aggresive.
@@ -189,18 +148,7 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     pca_components.nii.gz     Component weight maps.
     ======================    =================================================
     """
-    if low_mem and algorithm == 'mle':
-        LGR.warning('Low memory option is not compatible with MLE '
-                    'dimensionality estimation. Switching to Kundu decision '
-                    'tree.')
-        algorithm = 'kundu'
-
-    if algorithm == 'mle':
-        alg_str = "using MLE dimensionality estimation (Minka, 2001)"
-        RefLGR.info("Minka, T. P. (2001). Automatic choice of dimensionality "
-                    "for PCA. In Advances in neural information processing "
-                    "systems (pp. 598-604).")
-    elif algorithm == 'kundu':
+    if algorithm == 'kundu':
         alg_str = ("followed by the Kundu component selection decision "
                    "tree (Kundu et al., 2013)")
         RefLGR.info("Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
@@ -248,8 +196,6 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
                                    utils.unmask(eim, mask).astype(int))
         voxel_comp_weights, varex, varex_norm, comp_ts = ma_pca.ma_pca(
             data_img, mask_img, algorithm)
-    elif algorithm == 'mle':
-        voxel_comp_weights, varex, varex_norm, comp_ts = run_mlepca(data_z)
     elif low_mem:
         voxel_comp_weights, varex, comp_ts = low_mem_pca(data_z)
         varex_norm = varex / varex.sum()
@@ -301,12 +247,6 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
         comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=False)
     elif algorithm == 'kundu-stabilize':
         comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=True)
-    elif algorithm == 'mle':
-        LGR.info('Selected {0} components with MLE dimensionality '
-                 'detection'.format(comptable.shape[0]))
-        comptable['classification'] = 'accepted'
-        comptable['rationale'] = ''
-
     elif algorithm in ['mdl', 'aic', 'kic']:
         LGR.info('Selected {0} components with {1} dimensionality '
                  'detection'.format(comptable.shape[0], algorithm))
