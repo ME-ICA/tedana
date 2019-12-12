@@ -66,7 +66,8 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
         component selection. If `algorithm` is None, then seldict will be None as
         well.
     betas : :obj:`numpy.ndarray`
-    mmix_new : :obj:`numpy.ndarray`
+    mmix_corrected : :obj:`numpy.ndarray`
+        Mixing matrix after sign correction and resorting (if reindex is True).
     """
     # Use t2s as mask
     mask = t2s != 0
@@ -116,7 +117,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
     # correct mmix & WTS signs based on spatial distribution tails
     signs = stats.skew(WTS, axis=0)
     signs /= np.abs(signs)
-    mmix_new = mmix * signs
+    mmix_corrected = mmix * signs
     WTS *= signs
     PSC *= signs
     totvar = (tsoc_B**2).sum()
@@ -124,7 +125,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
 
     # compute Betas and means over TEs for TE-dependence analysis
     betas = get_coeffs(utils.unmask(catd, mask),
-                       mmix_new,
+                       mmix_corrected,
                        np.repeat(mask[:, np.newaxis], len(tes), axis=1))
     betas = betas[mask, ...]
     n_voxels, n_echos, n_components = betas.shape
@@ -196,7 +197,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
         # re-index all components in descending Kappa order
         sort_idx = comptable[:, 0].argsort()[::-1]
         comptable = comptable[sort_idx, :]
-        mmix_new = mmix_new[:, sort_idx]
+        mmix_corrected = mmix_corrected[:, sort_idx]
         betas = betas[..., sort_idx]
         pred_R2_maps = pred_R2_maps[:, :, sort_idx]
         pred_S0_maps = pred_S0_maps[:, :, sort_idx]
@@ -305,7 +306,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
     else:
         seldict = None
 
-    return comptable, seldict, betas, mmix_new
+    return comptable, seldict, betas, mmix_corrected
 
 
 def kundu_metrics(comptable, metric_maps):
