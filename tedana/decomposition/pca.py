@@ -13,7 +13,6 @@ from tedana import metrics, utils, io
 from tedana.decomposition import (ma_pca, _utils)
 from tedana.stats import computefeats2
 from tedana.selection import kundu_tedpca
-from tedana.due import due, BibTeX
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
