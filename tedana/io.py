@@ -358,7 +358,9 @@ def filewrite(data, filename, ref_img, gzip=True, copy_header=True):
 
     # FIXME: we only handle writing to nifti right now
     # get root of desired output file and save as nifti image
-    root, ext, add = splitext_addext(filename)
+    root = op.dirname(filename)
+    base = op.basename(filename)
+    _, ext, add = splitext_addext(base)
     name = '{}.{}'.format(root, 'nii.gz' if gzip else 'nii')
     out.to_filename(name)
 
