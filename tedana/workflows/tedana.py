@@ -283,13 +283,16 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         Default is 'all'.
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
-    no_png : obj:'bool', optional
+    no_png : :obj:'bool', optional
         Do not generate .png plots and figures. Default is false.
-    png_cmap : obj:'str', optional
-            Name of a matplotlib colormap to be used when generating figures.
-            Cannot be used with --no-png. Default 'coolwarm'
+    png_cmap : :obj:'str', optional
+        Name of a matplotlib colormap to be used when generating figures.
+        Cannot be used with --no-png. Default 'coolwarm'
     out_dir : :obj:`str`, optional
         Output directory.
+    denoise : :obj:`bool`, optional
+        Whether to run TE-dependent denoising or just to do T2* estimation
+        and optimal combination. Default is True (run denoising).
 
     Other Parameters
     ----------------
