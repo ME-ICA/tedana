@@ -433,8 +433,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
     io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
 
-    os.chdir(out_dir)
-
     LGR.info('Computing T2* map')
     t2s_limited, s0_limited, t2s_full, s0_full = decay.fit_decay(
         catd, tes, mask, masksum, fittype)
