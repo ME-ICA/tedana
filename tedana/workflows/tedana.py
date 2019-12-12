@@ -131,7 +131,7 @@ def _get_parser():
                                 'is based on a Moving Average (stationary Gaussian) '
                                 'process and are ordered from most to least aggresive. '
                                 'Default=\'mdl\'.'),
-                          choices=['mle', 'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'],
+                          choices=['kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'],
                           default='mdl')
     optional.add_argument('--out-dir',
                           dest='out_dir',
@@ -208,7 +208,7 @@ def _get_parser():
 
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
-                    tedort=False, gscontrol=None, tedpca='mle',
+                    tedort=False, gscontrol=None, tedpca='mdl',
                     combmode='t2s', verbose=False, stabilize=False,
                     out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
                     debug=False, quiet=False, no_png=False,
@@ -245,7 +245,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     gscontrol : {None, 't1c', 'gsr'} or :obj:`list`, optional
         Perform additional denoising to remove spatially diffuse noise. Default
         is None.
-    tedpca : {'mle', 'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
+    tedpca : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
         Method with which to select components in TEDPCA. Default is 'mdl'.
     combmode : {'t2s'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default).
