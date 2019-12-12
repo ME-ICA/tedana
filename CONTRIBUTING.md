@@ -136,10 +136,9 @@ Once you've run this, your repository should be set for most changes (i.e., you 
 
 ### 4. Make the changes you've discussed
 
-Try to keep the changes focused to the issue.  
+Try to keep the changes focused to the issue.
 We've found that working on a [new branch][link_branches] for each issue makes it easier to keep your changes targeted.
-Using a new branch allows you to follow the standard "fork/branch/commit/pull-request/merge" GitHub 
-workflow when making changes.
+Using a new branch allows you to follow the standard GitHub workflow when making changes.
 [This guide][link_gitworkflow] provides a useful overview for this workflow.
 Before making a new branch, make sure your master is up to date.
 
@@ -155,19 +154,9 @@ Then, make your new branch.
 git checkout -b MYBRANCH
 ```
 
-As you're making changes, make sure your branch is kept up to date with 
-
-```
-git fetch upstream master
-git merge upstream/master
-```
-
-If you know what rebasing is, please only use it for changes that haven't been pushed.
-If you don't know what rebasing is, don't do it at all, as it is the easiest way to make your 
-repository a disaster zone.
 Please make sure to review the `tedana` [style conventions](#style-guide) and test your changes.
 
-If you are new to ``git``, there are several GUI git clients that you may find helpful, such as
+If you are new to ``git`` and would like to work in a graphical user interface (GUI), there are several GUI git clients that you may find helpful, such as
 - [GitKraken][link_git_kraken]
 - [GitHub Desktop][link_github_desktop]
 - [SourceTree][link_source_tree]
@@ -181,26 +170,31 @@ flake8 $TEDANADIR/tedana
 ```
 
 and unit/integration tests by running `pytest` (more details below).
-If you know a file will test your change, you can run only that test.
-Alternatively, running all unit tests is relatively quick and should be
-fairly comprehensive.
+If you know a file will test your change, you can run only that test (see "One test file only" below).
+Alternatively, running all unit tests is relatively quick and should be fairly comprehensive.
 Running all `pytest` tests will be useful for pre-pushing checks.
-When you open a Pull Request, CircleCI will run all tests.
+Regardless, when you open a Pull Request, we use CircleCI to run all unit and integration tests.
 
+All tests; final checks before pushing
 ```
-# All tests; final checks before pushing
 pytest $TEDANADIR/tedana/tests
-# Unit tests and linting only
+```
+Unit tests and linting only
+```
 pytest --skipintegration $TEDANADIR/tedana/tests
-# One test file in particular
+```
+One test file only
+```
 pytest $TEDANADIR/tedana/tests/test_file.py
-# Test one function in a file
+```
+Test one function in a file
+```
 pytest -k my_function $TEDANADIR/tedana/tests/test_file.py
 ```
 
 from within your local `tedana` repository.
 The test run will indicate the number of passes and failures.
-Most often, the failures give enough information to determine the cause; if not, if not you can
+Most often, the failures give enough information to determine the cause; if not, you can
 refer to the [pytest documentation][link_pytest] for more details on the failure.
 
 #### Changes to documentation
@@ -228,6 +222,9 @@ git push -u origin MYBRANCH
 
 and GitHub will respond by giving you a link to open a pull request to 
 ME-ICA/tedana.
+Once you have pushed changes to the repository, please do not use commands such as rebase and
+amend, as they will rewrite your history and make it difficult for developers to work with you on
+your pull request. You can read more about that [here][link_git_rewriting].
 
 To improve understanding pull requests "at a glance", we encourage the use of several standardized tags.
 When opening a pull request, please use at least one of the following prefixes:
@@ -247,34 +244,21 @@ Pull requests should be submitted early and often!
 If your pull request is not yet ready to be merged, please use [draft PRs][link_draftpr]
 This tells the development team that your pull request is a "work-in-progress",
 and that you plan to continue working on it.
-Note that if your pull request has no conversation or commits for 90 days,
-stale-bot will mark it stale.
-We may also ask that another development team member resume work on it, if you are unable to continue to do so.
+If no comments or commits occur on an open Pull Request, stale-bot will comment in order to remind
+both you and the maintainers that the pull request is open.
+If at this time you are awaiting a developer response, please ping them to remind them.
+If you are no longer interested in working on the pull request, let us know and we will ask to
+continue working on your branch.
+Thanks for contributing!
 
-###Pull Request Checklist (Before Requesting Review):
+### Pull Request Checklist (For Fastest Review):
 - [ ] Check that all tests are passing ("All tests passsed")
 - [ ] Make sure you have docstrings for any new functions
 - [ ] Make sure that docstrings are updated for edited functions
 - [ ] Make sure you note any issues that will be closed by your PR
 - [ ] Take a look at the automatically generated readthedocs for your PR (Show all checks -> continuous-documentation/readthedocs -> Details)
 
-### After Changes Are Merged
-After successful merging of the pull request, remember to [keep your fork up to date][link_updateupstreamwiki] with the master `tedana` repository and to delete the branch on your fork that was used for the merged pull request.
-You may also want to update your other branches to include these changes,
-which you can do via
-
-```
-git checkout master
-git fetch upstream master
-git merge upstream/master
-git checkout OTHERBRANCH
-git merge master
-```
-
-In the event of confusion, please ping in the Gitter for help.
-We strongly recommend you *not* use the `git rebase` command when working with and contributing to the `tedana` repository.
-
-### Advanced Development
+### Comprehensive Developer Guide
 For additional, in-depth information on contributing to `tedana`, please see our Developing Guidelines on [readthedocs][link_developing_rtd].
 
 ## Style Guide
@@ -330,7 +314,7 @@ You're awesome. :wave::smiley:
 [writing_formatting_github]: https://help.github.com/articles/getting-started-with-writing-and-formatting-on-github
 [markdown]: https://daringfireball.net/projects/markdown
 [rick_roll]: https://www.youtube.com/watch?v=dQw4w9WgXcQ
-[restructuredtext]: http://docutils.sourceforge.net/rst.html#user-documentation
+[restructuredtext]: http://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html 
 [sphinx]: http://www.sphinx-doc.org/en/master/index.html
 [readthedocs]: https://docs.readthedocs.io/en/latest/index.html
 
@@ -373,3 +357,4 @@ You're awesome. :wave::smiley:
 [link_git_kraken]: https://www.gitkraken.com/
 [link_github_desktop]: https://desktop.github.com/
 [link_source_tree]: https://desktop.github.com/
+[link_git_rewriting]: https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History
