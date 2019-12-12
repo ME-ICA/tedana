@@ -95,12 +95,20 @@ def _get_parser():
                           help=('Comma separated list of manually '
                                 'accepted components'),
                           default=None)
+    optional.add_argument('--sourceTEs',
+                          dest='source_tes',
+                          type=str,
+                          help=('Source TEs for models. E.g., 0 for all, '
+                                '-1 for opt. com., and 1,2 for just TEs 1 and '
+                                '2. Default=-1.'),
+                          default=-1)
     optional.add_argument('--combmode',
                           dest='combmode',
                           action='store',
-                          choices=['t2s'],
+                          choices=['t2s', 'paid'],
                           help=('Combination scheme for TEs: '
-                                't2s (Posse 1999, default)'),
+                                't2s (Posse 1999, default), paid (Poser). '
+                                'paid is only compatible with --no-denoise.'),
                           default='t2s')
     optional.add_argument('--verbose',
                           dest='verbose',
@@ -190,6 +198,24 @@ def _get_parser():
                                'demanding monoexponential model is fit '
                                'to the raw data',
                           default='loglin')
+    optional.add_argument('--fitmode',
+                          dest='fitmode',
+                          action='store',
+                          choices=['all', 'ts'],
+                          help=('Monoexponential model fitting scheme. '
+                                '"all" means that the model is fit, per voxel, '
+                                'across all timepoints. '
+                                '"ts" means that the model is fit, per voxel '
+                                'and per timepoint. '
+                                'ts is only compatible with --no-denoise'),
+                          default='all')
+    optional.add_argument('--no-denoise',
+                          dest='denoise',
+                          action='store_false',
+                          help=('Disable denoising and only perform the steps '
+                                'to estimate T2*/S0 and optimally combine data '
+                                'across echoes.'),
+                          default=False)
     optional.add_argument('--debug',
                           dest='debug',
                           action='store_true',
@@ -209,11 +235,12 @@ def _get_parser():
 
 def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     tedort=False, gscontrol=None, tedpca='mle',
-                    combmode='t2s', verbose=False, stabilize=False,
+                    source_tes=-1, combmode='t2s', verbose=False, stabilize=False,
                     out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
                     debug=False, quiet=False, no_png=False,
                     png_cmap='coolwarm',
-                    low_mem=False, fittype='loglin'):
+                    low_mem=False, fittype='loglin', fitmode='all',
+                    denoise=True):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -247,6 +274,9 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         is None.
     tedpca : {'mle', 'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
         Method with which to select components in TEDPCA. Default is 'mdl'.
+    source_tes : :obj:`int`, optional
+        Source TEs for models. 0 for all, -1 for optimal combination.
+        Default is -1.
     combmode : {'t2s'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default).
     fittype : {'loglin', 'curvefit'}, optional
@@ -255,6 +285,12 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         the data.
         'curvefit' means to use a monoexponential fit to the raw data,
         which is slightly slower but may be more accurate.
+    fitmode : {'all', 'ts'}, optional
+        Monoexponential model fitting scheme.
+        'all' means that the model is fit, per voxel, across all timepoints.
+        'ts' means that the model is fit, per voxel and per timepoint, and is
+        only allowed if denoising is disabled.
+        Default is 'all'.
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
     no_png : obj:'bool', optional
@@ -371,6 +407,17 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
+    if not denoise:
+        # Disable denoising-specific arguments if no denoising is requested.
+        LGR.debug('No TE-dependent denoising will be performed. Disabling '
+                  'incompatible arguments.')
+        no_png = True
+        mixm = None
+        ctab = None
+        manacc = None
+        fitmode = 'all'
+        combmode = 't2s'
+
     if no_png and (png_cmap != 'coolwarm'):
         LGR.warning('Overriding --no-png since --png-cmap provided.')
         no_png = False
@@ -433,11 +480,13 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
     io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
 
-    os.chdir(out_dir)
-
     LGR.info('Computing T2* map')
-    t2s_limited, s0_limited, t2s_full, s0_full = decay.fit_decay(
-        catd, tes, mask, masksum, fittype)
+    if fitmode == 'all':
+        (t2s_limited, s0_limited,
+         t2s_full, s0_full) = decay.fit_decay(catd, tes, mask, masksum, fittype)
+    else:
+        (t2s_limited, s0_limited,
+         t2s_full, s0_full) = decay.fit_decay_ts(catd, tes, mask, masksum, fittype)
 
     # set a hard cap for the T2* map
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
@@ -455,15 +504,59 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, mask, t2s=t2s_full, combmode=combmode)
 
-    # regress out global signal unless explicitly not desired
     if 'gsr' in gscontrol:
-        catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, ref_img)
+        # regress out global signal if desired
+        catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, ref_img,
+                                          out_dir=out_dir)
+
+    io.filewrite(data_oc, op.join(out_dir, 'ts_OC.nii'), ref_img)
+
+    if not denoise:
+        # Stop before denoising steps
+        LGR.info('Workflow completed')
+
+        RepLGR.info("This workflow used numpy (Van Der Walt, Colbert, & "
+                    "Varoquaux, 2011), scipy (Jones et al., 2001), pandas "
+                    "(McKinney, 2010), scikit-learn (Pedregosa et al., 2011), "
+                    "nilearn, and nibabel (Brett et al., 2019).")
+        RefLGR.info("Van Der Walt, S., Colbert, S. C., & Varoquaux, G. (2011). The "
+                    "NumPy array: a structure for efficient numerical computation. "
+                    "Computing in Science & Engineering, 13(2), 22.")
+        RefLGR.info("Jones E, Oliphant E, Peterson P, et al. SciPy: Open Source "
+                    "Scientific Tools for Python, 2001-, http://www.scipy.org/")
+        RefLGR.info("McKinney, W. (2010, June). Data structures for statistical "
+                    "computing in python. In Proceedings of the 9th Python in "
+                    "Science Conference (Vol. 445, pp. 51-56).")
+        RefLGR.info("Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., "
+                    "Thirion, B., Grisel, O., ... & Vanderplas, J. (2011). "
+                    "Scikit-learn: Machine learning in Python. Journal of machine "
+                    "learning research, 12(Oct), 2825-2830.")
+        RefLGR.info("Brett, M., Markiewicz, C. J., Hanke, M., Côté, M.-A., "
+                    "Cipollini, B., McCarthy, P., … freec84. (2019, May 28). "
+                    "nipy/nibabel. Zenodo. http://doi.org/10.5281/zenodo.3233118")
+
+        with open(repname, 'r') as fo:
+            report = [line.rstrip() for line in fo.readlines()]
+            report = ' '.join(report)
+        with open(refname, 'r') as fo:
+            reference_list = sorted(list(set(fo.readlines())))
+            references = '\n'.join(reference_list)
+        report += '\n\nReferences\n' + references
+        with open(repname, 'w') as fo:
+            fo.write(report)
+        os.remove(refname)
+
+        for handler in logging.root.handlers[:]:
+            logging.root.removeHandler(handler)
+
+        return
 
     if mixm is None:
         # Identify and remove thermal noise from data
         dd, n_components = decomposition.tedpca(catd, data_oc, combmode, mask,
                                                 t2s_limited, t2s_full, ref_img,
                                                 tes=tes, algorithm=tedpca,
+                                                source_tes=source_tes,
                                                 kdaw=10., rdaw=1.,
                                                 out_dir=out_dir,
                                                 verbose=verbose,
@@ -471,7 +564,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         mmix_orig = decomposition.tedica(dd, n_components, fixed_seed,
                                          maxit, maxrestart)
 
-        if verbose:
+        if verbose and (source_tes == -1):
             io.filewrite(utils.unmask(dd, mask),
                          op.join(out_dir, 'ts_OC_whitened.nii'), ref_img)
 
@@ -514,7 +607,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
             comptable = selection.manual_selection(comptable, acc=manacc)
 
     # Save decomposition
-    comptable['Description'] = 'ICA fit to dimensionally-reduced optimally combined data.'
+    data_type = 'optimally combined data' if source_tes == -1 else 'z-concatenated data'
+    comptable['Description'] = 'ICA fit to dimensionally reduced {0}.'.format(data_type)
     mmix_dict = {}
     mmix_dict['Method'] = ('Independent components analysis with FastICA '
                            'algorithm implemented by sklearn. Components '

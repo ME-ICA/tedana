@@ -3,7 +3,6 @@
 
 # Overrides submodules with their functions.
 from .tedana import tedana_workflow
-from .t2smap import t2smap_workflow
 
 
-__all__ = ['tedana_workflow', 't2smap_workflow']
+__all__ = ['tedana_workflow']
