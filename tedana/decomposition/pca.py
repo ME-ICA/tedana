@@ -7,6 +7,7 @@ import os.path as op
 import numpy as np
 import pandas as pd
 from scipy import stats
+from sklearn.decomposition import PCA
 
 from tedana import metrics, utils, io
 from tedana.decomposition import (ma_pca, _utils)
@@ -18,18 +19,6 @@ LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
-
-@due.dcite(BibTeX("""
-    @inproceedings{minka2001automatic,
-      title={Automatic choice of dimensionality for PCA},
-      author={Minka, Thomas P},
-      booktitle={Advances in neural information processing systems},
-      pages={598--604},
-      year={2001}
-    }
-    """),
-           description='Introduces method for choosing PCA dimensionality '
-           'automatically')
 
 def low_mem_pca(data):
     """
