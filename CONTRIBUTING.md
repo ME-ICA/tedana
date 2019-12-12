@@ -210,6 +210,7 @@ from the `docs` directory in your local `tedana` repository. You should then be 
 When opening the pull request, we ask that you follow some [specific conventions](#pull-requests). We outline these below.
 
 After you have submitted the pull request, a member of the development team will review your changes to confirm that they can be merged into the main code base.
+When you have two approving reviewers and all tests are passing, your pull request may be merged.
 
 
 ### Pull Requests
