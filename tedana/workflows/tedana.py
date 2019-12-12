@@ -95,13 +95,6 @@ def _get_parser():
                           help=('Comma separated list of manually '
                                 'accepted components'),
                           default=None)
-    optional.add_argument('--sourceTEs',
-                          dest='source_tes',
-                          type=str,
-                          help=('Source TEs for models. E.g., 0 for all, '
-                                '-1 for opt. com., and 1,2 for just TEs 1 and '
-                                '2. Default=-1.'),
-                          default=-1)
     optional.add_argument('--combmode',
                           dest='combmode',
                           action='store',
@@ -274,9 +267,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         is None.
     tedpca : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
         Method with which to select components in TEDPCA. Default is 'mdl'.
-    source_tes : :obj:`int`, optional
-        Source TEs for models. 0 for all, -1 for optimal combination.
-        Default is -1.
     combmode : {'t2s'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default).
     fittype : {'loglin', 'curvefit'}, optional
@@ -556,7 +546,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         dd, n_components = decomposition.tedpca(catd, data_oc, combmode, mask,
                                                 t2s_limited, t2s_full, ref_img,
                                                 tes=tes, algorithm=tedpca,
-                                                source_tes=source_tes,
                                                 kdaw=10., rdaw=1.,
                                                 out_dir=out_dir,
                                                 verbose=verbose,
@@ -564,7 +553,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         mmix_orig = decomposition.tedica(dd, n_components, fixed_seed,
                                          maxit, maxrestart)
 
-        if verbose and (source_tes == -1):
+        if verbose:
             io.filewrite(utils.unmask(dd, mask),
                          op.join(out_dir, 'ts_OC_whitened.nii'), ref_img)
 
@@ -607,8 +596,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
             comptable = selection.manual_selection(comptable, acc=manacc)
 
     # Save decomposition
-    data_type = 'optimally combined data' if source_tes == -1 else 'z-concatenated data'
-    comptable['Description'] = 'ICA fit to dimensionally reduced {0}.'.format(data_type)
+    comptable['Description'] = 'ICA fit to dimensionally-reduced optimally combined data.'
     mmix_dict = {}
     mmix_dict['Method'] = ('Independent components analysis with FastICA '
                            'algorithm implemented by sklearn. Components '
