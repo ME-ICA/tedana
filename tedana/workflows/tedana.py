@@ -554,13 +554,14 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
                     comptable=comptable,
                     mmix=mmix,
                     n_vols=n_vols,
-                    ref_img=ref_img)
+                    ref_img=ref_img,
+                    out_dir=out_dir)
 
     if 't1c' in gscontrol:
         gsc.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img, out_dir=out_dir)
 
     if verbose:
-        io.writeresults_echoes(catd, mmix, mask, comptable, ref_img)
+        io.writeresults_echoes(catd, mmix, mask, comptable, ref_img, out_dir=out_dir)
 
     if not no_png:
         LGR.info('Making figures folder with static component maps and '
