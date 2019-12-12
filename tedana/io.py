@@ -217,9 +217,13 @@ def writeresults(ts, mask, comptable, mmix, n_vols, ref_img, out_dir='.'):
     betas_hik_OC.nii          Denoised ICA coefficient feature set.
     feats_OC2.nii             Z-normalized spatial component maps. Generated
                               by :py:func:`tedana.utils.io.writefeats`.
+    ts_OC.nii                 Optimally combined 4D time series.
     ======================    =================================================
     """
     acc = comptable[comptable.classification == 'accepted'].index.values
+
+    fout = filewrite(ts, op.join(out_dir, 'ts_OC'), ref_img)
+    LGR.info('Writing optimally combined time series: {}'.format(op.abspath(fout)))
 
     write_split_ts(ts, mmix, mask, comptable, ref_img, out_dir=out_dir, suffix='OC')
 
