@@ -144,7 +144,7 @@ Try to keep the changes focused to the issue.
 We've found that working on a [new branch][link_branches] for each issue makes it easier to keep your changes targeted.
 Using a new branch allows you to follow the standard GitHub workflow when making changes.
 [This guide][link_gitworkflow] provides a useful overview for this workflow.
-Before making a new branch, make sure your master is up to date.
+Before making a new branch, make sure your master is up to date with the following commands:
 
 ```
 git checkout master
