@@ -475,6 +475,8 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
     io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
 
+    os.chdir(out_dir)
+
     LGR.info('Computing T2* map')
     if fitmode == 'all':
         (t2s_limited, s0_limited,
