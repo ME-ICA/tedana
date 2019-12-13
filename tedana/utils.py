@@ -259,6 +259,11 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None,
         How to apply thresholding. One-sided thresholds on the positive side.
         Two-sided thresholds positive and negative values together. Bi-sided
         thresholds positive and negative values separately. Default is 'bi'.
+
+    Returns
+    -------
+    clust_thresholded : (M) :obj:`numpy.ndarray`
+        Cluster-extent thresholded (and optionally binarized) map.
     """
     if not isinstance(img, np.ndarray):
         arr = img.get_data()
