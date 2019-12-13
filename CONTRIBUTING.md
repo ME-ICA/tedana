@@ -14,9 +14,13 @@ Already know what you're looking for in this guide? Jump to the following sectio
 * [Contributing small documentation changes](#contributing-small-documentation-changes)
 * [Contributing through Github](#contributing-through-github)
 * [Understanding issues, milestones, and project boards](#understanding-issues-milestones-and-project-boards)
+* [Installing in editable mode](#Run-the-developer-setup)
 * [Making a change](#making-a-change)
+* [Testing your change](#Test-your-changes)
+* [Viewing Documentation Locally](#Changes-to-documentation)
 * [Structuring contributions](#style-guide)
 * [Recognizing contributors](#recognizing-contributions)
+* [Monthly calls and testing guidelines][link_developing_rtd]
 
 Don't know where to get started? 
 Read [Joining the conversation](#joining-the-conversation) and pop into 
