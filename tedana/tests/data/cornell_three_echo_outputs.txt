@@ -39,9 +39,6 @@ figures/comp_032.png
 figures/comp_033.png
 figures/comp_034.png
 figures/comp_035.png
-figures/comp_036.png
-figures/comp_037.png
-figures/comp_038.png
 dn_ts_OC.nii.gz
 feats_OC2.nii.gz
 figures
