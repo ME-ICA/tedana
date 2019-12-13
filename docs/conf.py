@@ -48,7 +48,8 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.todo',
               'numpydoc',
               'sphinx.ext.ifconfig',
-              'sphinx.ext.linkcode']
+              'sphinx.ext.linkcode',
+              'matplotlib.sphinxext.plot_directive']
 
 import sphinx
 from distutils.version import LooseVersion
