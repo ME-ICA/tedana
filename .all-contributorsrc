@@ -14,7 +14,8 @@
         "code",
         "question",
         "design",
-        "bug"
+        "bug",
+        "review"
       ]
     },
     {
@@ -170,5 +171,6 @@
   "projectName": "tedana",
   "projectOwner": "ME-ICA",
   "repoType": "github",
-  "repoHost": "https://github.com"
+  "repoHost": "https://github.com",
+  "skipCi": true
 }
