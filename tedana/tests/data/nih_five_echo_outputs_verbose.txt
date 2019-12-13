@@ -11,7 +11,7 @@ dn_ts_e3.nii.gz
 dn_ts_e4.nii.gz
 dn_ts_e5.nii.gz
 feats_OC2.nii.gz
-g1sig.nii.gz
+glsig.1D
 hik_ts_OC.nii.gz
 hik_ts_OC_T1c.nii.gz
 hik_ts_e1.nii.gz
