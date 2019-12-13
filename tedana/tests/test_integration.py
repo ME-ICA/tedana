@@ -143,6 +143,7 @@ def test_integration_three_echo(skip_integration):
     if skip_integration:
         pytest.skip('Skipping three-echo integration test')
     out_dir = '/tmp/data/three-echo/TED.three-echo'
+    out_dir2 = '/tmp/data/three-echo/TED.three-echo-rerun'
     if os.path.exists(out_dir):
         shutil.rmtree(out_dir)
 
@@ -154,13 +155,12 @@ def test_integration_three_echo(skip_integration):
         tes=[14.5, 38.5, 62.5],
         out_dir=out_dir,
         low_mem=True,
-        tedpca='kundu-stabilize',
-        no_png=True)
+        tedpca='kundu-stabilize')
 
     tedana_workflow(
         data='/tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz',
         tes=[14.5, 38.5, 62.5],
-        out_dir=out_dir,
+        out_dir=out_dir2,
         mixm=os.path.join(out_dir, 'ica_mixing.tsv'),
         ctab=os.path.join(out_dir, 'ica_decomposition.json'),
         no_png=True)
