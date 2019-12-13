@@ -19,6 +19,7 @@ t2sv.nii.gz
 ts_OC.nii.gz
 figures/Component_Overview.png
 figures/Kappa_vs_Rho_Scatter.png
+figures/Kappa_Rho_Scree_plot.png
 figures/comp_000.png
 figures/comp_001.png
 figures/comp_002.png
