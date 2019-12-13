@@ -19,7 +19,7 @@ Already know what you're looking for in this guide? Jump to the following sectio
 * [Testing your change](#5-Test-your-changes)
 * [Viewing Documentation Locally](#Changes-to-documentation)
 * [Structuring contributions](#style-guide)
-* [Recognizing contributors](#recognizing-contributions)
+* [Recognizing contributors](#Recognizing-contributors)
 * [Monthly calls and testing guidelines][link_developing_rtd]
 
 Don't know where to get started? 
