@@ -161,7 +161,7 @@ def test_integration_three_echo(skip_integration):
         data='/tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz',
         tes=[14.5, 38.5, 62.5],
         out_dir=out_dir,
-        mix=os.path.join(out_dir, 'ica_mixing.tsv'),
+        mixm=os.path.join(out_dir, 'ica_mixing.tsv'),
         ctab=os.path.join(out_dir, 'ica_decomposition.json'),
         no_png=True)
 
