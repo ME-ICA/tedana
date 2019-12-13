@@ -157,6 +157,7 @@ def test_integration_three_echo(skip_integration):
         low_mem=True,
         tedpca='kundu-stabilize')
 
+    # test rerunning the workflow
     tedana_workflow(
         data='/tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz',
         tes=[14.5, 38.5, 62.5],
