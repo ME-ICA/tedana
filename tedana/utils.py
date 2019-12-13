@@ -40,7 +40,8 @@ def load_image(data):
 
     return fdata
 
-def eimask(dd, ees=None):
+
+def extreme_percentile_mask(dd, ees=None):
     """
     Returns mask for data between [0.001, 5] * 98th percentile of dd
 
@@ -54,7 +55,7 @@ def eimask(dd, ees=None):
     Returns
     -------
     imask : (S x N) :obj:`numpy.ndarray`
-        Boolean array denoting
+        0 1 int array denoting
     """
 
     if ees is None:
@@ -73,7 +74,11 @@ def eimask(dd, ees=None):
         m = dd[:, ee, :].mean(axis=1)
         imask[np.logical_and(m > lthr, m < hthr), ee] = True
 
-    return imask
+    # if any echo has an outlier set the mask for that voxel to False
+
+    mask = imask.all(axis=1).astype(int)
+    return mask
+
 
 def make_adaptive_mask(data, mask=None, getsum=False):
     """
@@ -125,25 +130,29 @@ def make_adaptive_mask(data, mask=None, getsum=False):
 
     # determine samples where absolute value is greater than echo-specific thresholds
     # and count # of echos that pass criterion
-    masksum1 = ((np.abs(echo_means) > lthrs).sum(axis=-1)).astype(bool)
+    masksum1 = ((np.abs(echo_means) > lthrs).sum(axis=-1))
 
-    masksum2 = eimask(data)
+    masksum2 = extreme_percentile_mask(data)
 
-    masksum = masksum1 & masksum2
+    masksum = masksum1 * masksum2
 
     if mask is None:
         # make it a boolean mask to (where we have at least 1 echo with good signal)
-        mask = masksum
+        mask = masksum.astype(bool)
     else:
         # if the user has supplied a binary mask
+        # Note: The way this function is currently called in tedana.py means either
+        #  a user-provided mask or a mask defined by compute_epi_mask is the input
+        #  The warning message below was changed to account for both of these scenarios
         mask = load_image(mask).astype(bool)
         masksum = masksum * mask
         # reduce mask based on masksum
         # TODO: Use visual report to make checking the reduced mask easier
         if np.any(masksum[mask] == 0):
             n_bad_voxels = np.sum(masksum[mask] == 0)
-            LGR.warning('{0} voxels in user-defined mask do not have good '
-                        'signal. Removing voxels from mask.'.format(n_bad_voxels))
+            LGR.warning(('make_adaptive_mask removed an additional {} voxels from the {} voxels '
+                         'in the inputted mask.').format(
+                n_bad_voxels, mask.sum()))
             mask = masksum.astype(bool)
 
     if getsum:

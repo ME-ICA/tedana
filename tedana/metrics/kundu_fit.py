@@ -68,6 +68,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
     betas : :obj:`numpy.ndarray`
     mmix_new : :obj:`numpy.ndarray`
     """
+
     # Use t2s as mask
     mask = t2s != 0
     if not (catd.shape[0] == t2s.shape[0] == mask.shape[0] == tsoc.shape[0]):

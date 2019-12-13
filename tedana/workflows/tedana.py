@@ -438,7 +438,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         # TODO: add affine check
         LGR.info('Using user-defined mask')
         RepLGR.info("A user-defined mask was applied to the data.")
-
+    LGR.info('Checking for additional outlier voxels to mask')
     mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
     io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)

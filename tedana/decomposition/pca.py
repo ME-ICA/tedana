@@ -10,7 +10,7 @@ from scipy import stats
 from sklearn.decomposition import PCA
 
 from tedana import metrics, utils, io
-from tedana.decomposition import (ma_pca, _utils)
+from tedana.decomposition import ma_pca
 from tedana.stats import computefeats2
 from tedana.selection import kundu_tedpca
 from tedana.due import due, BibTeX
@@ -255,17 +255,15 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
         LGR.info('Computing PCA of echo #{0}'.format(','.join([str(ee) for ee in source_tes])))
         data = np.stack([data_cat[mask, ee, :] for ee in source_tes - 1], axis=1)
 
-    eim = np.squeeze(_utils.eimask(data))
-    data = np.squeeze(data[eim])
+    data = np.squeeze(data)
 
     data_z = ((data.T - data.T.mean(axis=0)) / data.T.std(axis=0)).T  # var normalize ts
     data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
 
     if algorithm in ['mdl', 'aic', 'kic']:
         data_img = io.new_nii_like(
-            ref_img, utils.unmask(utils.unmask(data, eim), mask))
-        mask_img = io.new_nii_like(ref_img,
-                                   utils.unmask(eim, mask).astype(int))
+            ref_img, utils.unmask(data, mask))
+        mask_img = io.new_nii_like(ref_img, mask.astype(int))
         voxel_comp_weights, varex, varex_norm, comp_ts = ma_pca.ma_pca(
             data_img, mask_img, algorithm)
     elif algorithm == 'mle':
@@ -283,12 +281,6 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
         varex_norm = varex / varex.sum()
 
     # Compute Kappa and Rho for PCA comps
-    eimum = np.atleast_2d(eim)
-    eimum = np.transpose(eimum, np.argsort(eimum.shape)[::-1])
-    eimum = eimum.prod(axis=1)
-    o = np.zeros((mask.shape[0], *eimum.shape[1:]))
-    o[mask, ...] = eimum
-    eimum = np.squeeze(o).astype(bool)
 
     # Normalize each component's time series
     vTmixN = stats.zscore(comp_ts, axis=0)
