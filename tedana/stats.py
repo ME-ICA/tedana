@@ -76,7 +76,7 @@ def computefeats2(data, mmix, mask=None, normalize=True):
         data = data[mask, ...]
     # normalize data (minus mean and divide by std) in the last dimension
     # so that least-squares estimates represent "approximate" correlation values (data_R)
-    # assuming mmix are also normalized
+    # assuming mixing matrix (mmix) values are also normalized
     data_vn = stats.zscore(data, axis=-1)
 
     # get betas of `data`~`mmix` and limit to range [-0.999, 0.999]
