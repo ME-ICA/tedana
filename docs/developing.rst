@@ -6,6 +6,7 @@ This webpage is intended to guide users through making making changes to
 ``tedana``'s codebase, in particular working with tests.
 The worked example also offers some guidelines on approaching testing when
 adding new functions.
+Please check out our `contributing guide`_ for getting started.
 
 
 Monthly Developer Calls
@@ -222,3 +223,4 @@ and we're good to go!
 .. _here: https://circleci.com/docs/2.0/artifacts/#downloading-all-artifacts-for-a-build-on-circleci
 .. _`getting one`: https://circleci.com/docs/2.0/managing-api-tokens/?gclid=CjwKCAiAqqTuBRBAEiwA7B66heDkdw6l68GAYAHtR2xS1xvDNNUzy7l1fmtwQWvVN0OIa97QL8yfhhoCejoQAvD_BwE#creating-a-personal-api-token
 .. _`google calendar`: https://calendar.google.com/calendar/embed?src=pl6vb4t9fck3k6mdo2mok53iss%40group.calendar.google.com
+.. _`contributing guide`: https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md
