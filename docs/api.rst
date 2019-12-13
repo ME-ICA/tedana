@@ -21,7 +21,6 @@ API
    :toctree: generated/
 
    tedana.workflows.tedana_workflow
-   tedana.workflows.t2smap_workflow
 
 
 .. _api_decay_ref:
