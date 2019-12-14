@@ -8,3 +8,4 @@ numpydoc
 pytest
 pytest-cov
 requests
+sphinx
