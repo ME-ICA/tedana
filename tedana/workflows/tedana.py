@@ -413,9 +413,6 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if ctab and not mixm:
         LGR.warning('Argument "ctab" requires argument "mixm".')
         ctab = None
-    elif ctab and (manacc is None):
-        LGR.warning('Argument "ctab" requires argument "manacc".')
-        ctab = None
     elif manacc is not None and not mixm:
         LGR.warning('Argument "manacc" requires argument "mixm".')
         manacc = None
@@ -500,20 +497,23 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = pd.read_table(op.join(out_dir, 'ica_mixing.tsv')).values
-        comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                    catd, data_oc, mmix_orig, t2s_limited, tes,
-                    ref_img, label='meica_', out_dir=out_dir,
-                    algorithm='kundu_v2', verbose=verbose)
-        betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
-        io.filewrite(betas_oc,
-                     op.join(out_dir, 'ica_components.nii.gz'),
-                     ref_img)
 
         if ctab is None:
+            comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
+                        catd, data_oc, mmix_orig, t2s_limited, tes,
+                        ref_img, label='meica_', out_dir=out_dir,
+                        algorithm='kundu_v2', verbose=verbose)
             comptable = metrics.kundu_metrics(comptable, metric_maps)
             comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
         else:
-            comptable = pd.read_csv(ctab, sep='\t', index_col='component')
+            mmix = mmix_orig.copy()
+            comptable = io.load_comptable(ctab)
+            if manacc is not None:
+                comptable = selection.manual_selection(comptable, acc=manacc)
+            betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
+            io.filewrite(betas_oc,
+                         op.join(out_dir, 'ica_components.nii.gz'),
+                         ref_img)
             comptable = selection.manual_selection(comptable, acc=manacc)
 
     # Save decomposition
