@@ -369,12 +369,6 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if not isinstance(gscontrol, list):
         gscontrol = [gscontrol]
 
-    # coerce data to samples x echos x time array
-    if isinstance(data, str):
-        if not op.exists(data):
-            raise ValueError('Zcat file {} does not exist'.format(data))
-        data = [data]
-
     LGR.info('Loading input data: {}'.format([f for f in data]))
     catd, ref_img = io.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
