@@ -514,7 +514,6 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             io.filewrite(betas_oc,
                          op.join(out_dir, 'ica_components.nii.gz'),
                          ref_img)
-            comptable = selection.manual_selection(comptable, acc=manacc)
 
     # Save decomposition
     comptable['Description'] = 'ICA fit to dimensionally-reduced optimally combined data.'
