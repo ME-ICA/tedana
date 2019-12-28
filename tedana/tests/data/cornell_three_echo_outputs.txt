@@ -1,5 +1,6 @@
 figures/Component_Overview.png
 figures/Kappa_vs_Rho_Scatter.png
+figures/Kappa_Rho_Scree_plot.png
 adaptive_mask.nii.gz
 betas_OC.nii.gz
 betas_hik_OC.nii.gz

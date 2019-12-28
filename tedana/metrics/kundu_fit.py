@@ -67,7 +67,8 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         component selection. If `algorithm` is None, then seldict will be None as
         well.
     betas : :obj:`numpy.ndarray`
-    mmix_new : :obj:`numpy.ndarray`
+    mmix_corrected : :obj:`numpy.ndarray`
+        Mixing matrix after sign correction and resorting (if reindex is True).
     """
     # Use adaptive_mask as mask
     mask = adaptive_mask >= 3
@@ -113,8 +114,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
     # correct mmix & WTS signs based on spatial distribution tails
     signs = stats.skew(WTS, axis=0)
     signs /= np.abs(signs)
-    mmix = mmix.copy()
-    mmix *= signs
+    mmix_corrected = mmix * signs
     WTS *= signs
     PSC *= signs
     totvar = (tsoc_B**2).sum()
@@ -122,9 +122,8 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
 
     # compute Betas and means over TEs for TE-dependence analysis
     betas = get_coeffs(utils.unmask(catd, mask),
-                       mmix,
-                       np.repeat(mask[:, np.newaxis], len(tes), axis=1),
-                       add_const=True)
+                       mmix_corrected,
+                       np.repeat(mask[:, np.newaxis], len(tes), axis=1))
     betas = betas[mask, ...]
     n_voxels, n_echos, n_components = betas.shape
     mu = catd.mean(axis=-1, dtype=float)
@@ -204,7 +203,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         # re-index all components in descending Kappa order
         sort_idx = comptable[:, 0].argsort()[::-1]
         comptable = comptable[sort_idx, :]
-        mmix_new = mmix[:, sort_idx]
+        mmix_corrected = mmix_corrected[:, sort_idx]
         betas = betas[..., sort_idx]
         F_R2_maps = F_R2_maps[:, sort_idx]
         F_S0_maps = F_S0_maps[:, sort_idx]
@@ -219,9 +218,6 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
             WTS = WTS[:, sort_idx]
             PSC = PSC[:, sort_idx]
             tsoc_B = tsoc_B[:, sort_idx]
-    else:
-        mmix_new = mmix
-    del mmix
 
     if verbose:
         # Echo-specific weight maps for each of the ICA components.
@@ -319,7 +315,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
     else:
         seldict = None
 
-    return comptable, seldict, betas, mmix_new
+    return comptable, seldict, betas, mmix_corrected
 
 
 def kundu_metrics(comptable, metric_maps):

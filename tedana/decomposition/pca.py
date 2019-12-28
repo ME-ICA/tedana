@@ -13,51 +13,10 @@ from tedana import metrics, utils, io
 from tedana.decomposition import (ma_pca, _utils)
 from tedana.stats import computefeats2
 from tedana.selection import kundu_tedpca
-from tedana.due import due, BibTeX
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
-
-
-@due.dcite(BibTeX("""
-    @inproceedings{minka2001automatic,
-      title={Automatic choice of dimensionality for PCA},
-      author={Minka, Thomas P},
-      booktitle={Advances in neural information processing systems},
-      pages={598--604},
-      year={2001}
-    }
-    """),
-           description='Introduces method for choosing PCA dimensionality '
-           'automatically')
-def run_mlepca(data):
-    """
-    Run Singular Value Decomposition (SVD) on input data,
-    automatically select components on MLE variance cut-off.
-
-    Parameters
-    ----------
-    data : (S [*E] x T) array_like
-        Optimally combined (S x T) or full multi-echo (S*E x T) data.
-
-    Returns
-    -------
-    u : (S [*E] x C) array_like
-        Component weight map for each component.
-    s : (C,) array_like
-        Variance explained for each component.
-    v : (T x C) array_like
-        Component timeseries.
-    """
-    # do PC dimension selection and get eigenvalue cutoff
-    ppca = PCA(n_components='mle', svd_solver='full', copy=False)
-    ppca.fit(data)
-    v = ppca.components_.T
-    s = ppca.explained_variance_
-    u = np.dot(np.dot(data, v), np.diag(1. / s))
-    varex_norm = ppca.explained_variance_ratio_
-    return u, s, varex_norm, v
 
 
 def low_mem_pca(data):
@@ -88,7 +47,7 @@ def low_mem_pca(data):
 
 
 def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
-           ref_img, tes, algorithm='mdl', source_tes=-1, kdaw=10., rdaw=1.,
+           ref_img, tes, algorithm='mdl', kdaw=10., rdaw=1.,
            out_dir='.', verbose=False, low_mem=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
@@ -114,17 +73,11 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         Reference image to dictate how outputs are saved to disk
     tes : :obj:`list`
         List of echo times associated with `data_cat`, in milliseconds
-    algorithm : {'mle', 'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
+    algorithm : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
         Method with which to select components in TEDPCA. Default is 'mdl'. PCA
         decomposition with the mdl, kic and aic options are based on a Moving Average
         (stationary Gaussian) process and are ordered from most to least aggresive.
         See (Li et al., 2007).
-    source_tes : :obj:`int` or :obj:`list` of :obj:`int`, optional
-        Which echos to use in PCA. Values -1 and 0 are special, where a value
-        of -1 will indicate using the optimal combination of the echos
-        and 0  will indicate using all the echos. A list can be provided
-        to indicate a subset of echos.
-        Default: -1
     kdaw : :obj:`float`, optional
         Dimensionality augmentation weight for Kappa calculations. Must be a
         non-negative float, or -1 (a special value). Default is 10.
@@ -195,18 +148,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     pca_components.nii.gz     Component weight maps.
     ======================    =================================================
     """
-    if low_mem and algorithm == 'mle':
-        LGR.warning('Low memory option is not compatible with MLE '
-                    'dimensionality estimation. Switching to Kundu decision '
-                    'tree.')
-        algorithm = 'kundu'
-
-    if algorithm == 'mle':
-        alg_str = "using MLE dimensionality estimation (Minka, 2001)"
-        RefLGR.info("Minka, T. P. (2001). Automatic choice of dimensionality "
-                    "for PCA. In Advances in neural information processing "
-                    "systems (pp. 598-604).")
-    elif algorithm == 'kundu':
+    if algorithm == 'kundu':
         alg_str = ("followed by the Kundu component selection decision "
                    "tree (Kundu et al., 2013)")
         RefLGR.info("Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
@@ -232,28 +174,14 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
                     "functional magnetic resonance imaging data. "
                     "Human brain mapping, 28(11), pp.1251-1266.")
 
-    if source_tes == -1:
-        dat_str = "the optimally combined data"
-    elif source_tes == 0:
-        dat_str = "the z-concatenated multi-echo data"
-    else:
-        dat_str = "a z-concatenated subset of echoes from the input data"
-
     RepLGR.info("Principal component analysis {0} was applied to "
-                "{1} for dimensionality reduction.".format(alg_str, dat_str))
+                "the optimally combined data for dimensionality "
+                "reduction.".format(alg_str))
 
     n_samp, n_echos, n_vols = data_cat.shape
-    source_tes = np.array([int(ee) for ee in str(source_tes).split(',')])
 
-    if len(source_tes) == 1 and source_tes[0] == -1:
-        LGR.info('Computing PCA of optimally combined multi-echo data')
-        data = data_oc[mask, :][:, np.newaxis, :]
-    elif len(source_tes) == 1 and source_tes[0] == 0:
-        LGR.info('Computing PCA of spatially concatenated multi-echo data')
-        data = data_cat[mask, ...]
-    else:
-        LGR.info('Computing PCA of echo #{0}'.format(','.join([str(ee) for ee in source_tes])))
-        data = np.stack([data_cat[mask, ee, :] for ee in source_tes - 1], axis=1)
+    LGR.info('Computing PCA of optimally combined multi-echo data')
+    data = data_oc[mask, :][:, np.newaxis, :]
 
     eim = np.squeeze(_utils.eimask(data))
     data = np.squeeze(data[eim])
@@ -268,8 +196,6 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
                                    utils.unmask(eim, mask).astype(int))
         voxel_comp_weights, varex, varex_norm, comp_ts = ma_pca.ma_pca(
             data_img, mask_img, algorithm)
-    elif algorithm == 'mle':
-        voxel_comp_weights, varex, varex_norm, comp_ts = run_mlepca(data_z)
     elif low_mem:
         voxel_comp_weights, varex, comp_ts = low_mem_pca(data_z)
         varex_norm = varex / varex.sum()
@@ -313,12 +239,6 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=False)
     elif algorithm == 'kundu-stabilize':
         comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=True)
-    elif algorithm == 'mle':
-        LGR.info('Selected {0} components with MLE dimensionality '
-                 'detection'.format(comptable.shape[0]))
-        comptable['classification'] = 'accepted'
-        comptable['rationale'] = ''
-
     elif algorithm in ['mdl', 'aic', 'kic']:
         LGR.info('Selected {0} components with {1} dimensionality '
                  'detection'.format(comptable.shape[0], algorithm))
@@ -332,8 +252,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     mixing_df = pd.DataFrame(data=comp_ts, columns=comp_names)
     mixing_df.to_csv(op.join(out_dir, 'pca_mixing.tsv'), sep='\t', index=False)
 
-    data_type = 'optimally combined data' if source_tes == -1 else 'z-concatenated data'
-    comptable['Description'] = 'PCA fit to {0}.'.format(data_type)
+    comptable['Description'] = 'PCA fit to optimally combined data.'
     mmix_dict = {}
     mmix_dict['Method'] = ('Principal components analysis implemented by '
                            'sklearn. Components are sorted by variance '
