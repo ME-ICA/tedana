@@ -2,7 +2,6 @@ from pathlib import Path
 from html import unescape
 from string import Template
 from tedana.info import __version__
-from tedana.externals import tempita
 
 
 def _update_template_about(call, methods):
