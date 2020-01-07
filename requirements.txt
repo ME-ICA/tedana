@@ -4,5 +4,5 @@ nibabel>=2.1.0
 nilearn
 numpy>=1.14
 pandas
-scikit-learn==0.22
+scikit-learn
 scipy
