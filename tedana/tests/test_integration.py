@@ -91,7 +91,10 @@ def test_integration_five_echo(skip_integration):
         tes=[15.4, 29.7, 44.0, 58.3, 72.6],
         out_dir=out_dir,
         tedpca='mdl',
-        debug=True, verbose=True)
+        gscontrol=['gsr', 't1c'],
+        png_cmap='bone',
+        debug=True,
+        verbose=True)
 
     # Just a check on the component table pending a unit test of load_comptable
     comptable = os.path.join(out_dir, 'ica_decomposition.json')
@@ -140,6 +143,7 @@ def test_integration_three_echo(skip_integration):
     if skip_integration:
         pytest.skip('Skipping three-echo integration test')
     out_dir = '/tmp/data/three-echo/TED.three-echo'
+    out_dir2 = '/tmp/data/three-echo/TED.three-echo-rerun'
     if os.path.exists(out_dir):
         shutil.rmtree(out_dir)
 
@@ -151,7 +155,16 @@ def test_integration_three_echo(skip_integration):
         tes=[14.5, 38.5, 62.5],
         out_dir=out_dir,
         low_mem=True,
-        tedpca='kundu')
+        tedpca='kundu-stabilize')
+
+    # test rerunning the workflow
+    tedana_workflow(
+        data='/tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz',
+        tes=[14.5, 38.5, 62.5],
+        out_dir=out_dir2,
+        mixm=os.path.join(out_dir, 'ica_mixing.tsv'),
+        ctab=os.path.join(out_dir, 'ica_decomposition.json'),
+        no_png=True)
 
     # compare the generated output files
     fn = resource_filename('tedana',
