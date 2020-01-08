@@ -129,7 +129,8 @@ def test_integration_four_echo(skip_integration):
                     out_dir=out_dir,
                     tedpca='aic',
                     fittype='curvefit',
-                    tedort=True)
+                    tedort=True,
+                    verbose=True)
 
     # compare the generated output files
     fn = resource_filename('tedana', 'tests/data/fiu_four_echo_outputs.txt')
