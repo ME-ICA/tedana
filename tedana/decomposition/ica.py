@@ -72,6 +72,8 @@ def tedica(data, n_components, fixed_seed, maxit=500, maxrestart=10):
             else:
                 LGR.info('ICA attempt {0} converged in {1} '
                          'iterations'.format(i_attempt + 1, ica.n_iter_))
+                RepLGR.info('ICA attempt {0} converged in {1} '
+                            'iterations'.format(i_attempt + 1, ica.n_iter_))
                 break
 
     mmix = ica.mixing_
