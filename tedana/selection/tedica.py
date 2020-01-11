@@ -223,7 +223,6 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
         diff_vals = temp_comptable['variance explained'].diff(-1)
         diff_vals = diff_vals.fillna(0)
         ncls = temp_comptable.loc[diff_vals < varex_upper_p].index.values
-    LGR.warning('ncls: {}'.format(ncls))
 
     # Compute elbows from other elbows
     f05, _, f01 = getfbounds(n_echos)
@@ -239,9 +238,6 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     # Provisionally accept components based on Kappa and Rho elbows
     acc_prov = ncls[(comptable.loc[ncls, 'kappa'] >= kappa_elbow) &
                     (comptable.loc[ncls, 'rho'] < rho_elbow)]
-    LGR.warning('kappa_elbow: {}'.format(kappa_elbow))
-    LGR.warning('rho_elbow: {}'.format(rho_elbow))
-    LGR.warning('acc_prov: {}'.format(acc_prov))
 
     # Quit early if no potentially accepted components remain
     if len(acc_prov) <= 1:
