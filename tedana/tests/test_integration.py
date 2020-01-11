@@ -124,13 +124,15 @@ def test_integration_four_echo(skip_integration):
     prepend += 'sub-PILOT_ses-01_task-localizerDetection_run-01_echo-'
     suffix = '_space-sbref_desc-preproc_bold+orig.HEAD'
     datalist = [prepend + str(i + 1) + suffix for i in range(4)]
-    tedana_workflow(data=datalist,
-                    tes=[11.8, 28.04, 44.28, 60.52],
-                    out_dir=out_dir,
-                    tedpca='aic',
-                    fittype='curvefit',
-                    tedort=True,
-                    verbose=True)
+    tedana_workflow(
+        data=datalist,
+        tes=[11.8, 28.04, 44.28, 60.52],
+        out_dir=out_dir,
+        tedpca='mdl',
+        gscontrol=['gsr', 't1c'],
+        png_cmap='bone',
+        debug=True,
+        verbose=True)
 
     # compare the generated output files
     fn = resource_filename('tedana', 'tests/data/fiu_four_echo_outputs.txt')
