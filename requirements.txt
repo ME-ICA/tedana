@@ -1,6 +1,6 @@
 duecredit
 matplotlib
-nibabel==2.1.0
+nibabel==2.5.1
 nilearn
 numpy==1.17.3
 pandas
