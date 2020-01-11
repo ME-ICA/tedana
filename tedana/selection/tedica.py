@@ -179,6 +179,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     comptable.loc[temp_rej2, 'rationale'] += 'I005;'
     rej = np.union1d(temp_rej2, rej)
     unclf = np.setdiff1d(unclf, rej)
+    LGR.warning('Unclf: {}'.format(unclf))
 
     # Quit early if no potentially accepted components remain
     if len(unclf) == 0:
