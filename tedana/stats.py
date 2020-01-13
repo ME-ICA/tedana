@@ -74,7 +74,7 @@ def computefeats2(data, mmix, mask=None, normalize=True):
     # demean masked data
     if mask is not None:
         data = data[mask, ...]
-    # normalize data (minus mean and divide by std) in the last dimension
+    # normalize data (subtract mean and divide by standard deviation) in the last dimension
     # so that least-squares estimates represent "approximate" correlation values (data_R)
     # assuming mixing matrix (mmix) values are also normalized
     data_vn = stats.zscore(data, axis=-1)
