@@ -92,7 +92,7 @@ def computefeats2(data, mmix, mask=None, normalize=True):
 
     # normalize data (only division by std)
     if normalize:
-        # minus mean and divided by std
+        # subtract mean and dividing by standard deviation
         data_Zm = stats.zscore(data_Z, axis=0)
         # adding back the mean
         data_Z = data_Zm + (data_Z.mean(axis=0, keepdims=True) /
