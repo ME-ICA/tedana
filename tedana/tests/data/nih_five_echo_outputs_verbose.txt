@@ -17,6 +17,7 @@ hik_ts_e5.nii.gz
 ica_components.nii.gz
 ica_decomposition.json
 ica_mixing.tsv
+ica_orth_mixing.tsv
 lowk_ts_OC.nii.gz
 lowk_ts_e1.nii.gz
 lowk_ts_e2.nii.gz
@@ -109,3 +110,10 @@ figures/comp_060.png
 figures/comp_061.png
 figures/comp_062.png
 figures/comp_063.png
+figures/comp_064.png
+figures/comp_065.png
+figures/comp_066.png
+figures/comp_067.png
+figures/comp_068.png
+figures/comp_069.png
+figures/comp_070.png
