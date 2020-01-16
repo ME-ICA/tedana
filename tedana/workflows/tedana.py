@@ -21,8 +21,8 @@ import pandas as pd
 from scipy import stats
 from nilearn.masking import compute_epi_mask
 
-from tedana import (decay, combine, decomposition, io, metrics, selection, utils,
-                    viz)
+from tedana import (decay, combine, decomposition, io, metrics, selection,
+                    utils, viz)
 import tedana.gscontrol as gsc
 from tedana.stats import computefeats2
 from tedana.workflows.parser_utils import is_valid_file, ContextFilter
@@ -76,29 +76,6 @@ def _get_parser():
                                 "function will be used to derive a mask "
                                 "from the first echo's data."),
                           default=None)
-    optional.add_argument('--out-dir',
-                          dest='out_dir',
-                          type=str,
-                          help='Output directory.',
-                          default='.')
-    optional.add_argument('--sourceTEs',
-                          dest='source_tes',
-                          type=str,
-                          help=('Source TEs for models. E.g., 0 for all, '
-                                '-1 for opt. com., and 1,2 for just TEs 1 and '
-                                '2. Default=-1.'),
-                          default=-1)
-    optional.add_argument('--fittype',
-                          dest='fittype',
-                          action='store',
-                          choices=['loglin', 'curvefit'],
-                          help='Desired Fitting Method '
-                               '"loglin" means that a linear model is fit '
-                               'to the log of the data, default '
-                               '"curvefit" means that a more computationally '
-                               'demanding monoexponential model is fit '
-                               'to the raw data',
-                          default='loglin')
     optional.add_argument('--combmode',
                           dest='combmode',
                           action='store',
@@ -119,9 +96,18 @@ def _get_parser():
                           default=None)
     optional.add_argument('--tedpca',
                           dest='tedpca',
-                          help='Method with which to select components in TEDPCA',
-                          choices=['mle', 'kundu', 'kundu-stabilize'],
-                          default='mle')
+                          help=('Method with which to select components in TEDPCA. '
+                                'PCA decomposition with the mdl, kic and aic options '
+                                'is based on a Moving Average (stationary Gaussian) '
+                                'process and are ordered from most to least aggresive. '
+                                'Default=\'mdl\'.'),
+                          choices=['kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'],
+                          default='mdl')
+    optional.add_argument('--out-dir',
+                          dest='out_dir',
+                          type=str,
+                          help='Output directory.',
+                          default='.')
     optional.add_argument('--seed',
                           dest='fixed_seed',
                           metavar='INT',
@@ -222,15 +208,13 @@ def _get_parser():
     return parser
 
 
-def tedana_workflow(data, tes, mask=None, out_dir='.',
-                    fittype='loglin', combmode='t2s',
-                    gscontrol=None, tedpca='mle',
-                    source_tes=-1, tedort=False,
-                    fixed_seed=42, maxit=500, maxrestart=10,
-                    no_png=False, png_cmap='coolwarm',
-                    low_mem=False,
-                    debug=False, quiet=False, verbose=False,
-                    t2smap=None, mixm=None, ctab=None, manacc=None):
+def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
+                    tedort=False, gscontrol=None, tedpca='mdl',
+                    combmode='t2s', verbose=False, stabilize=False,
+                    out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
+                    debug=False, quiet=False, no_png=False,
+                    png_cmap='coolwarm', t2smap=None,
+                    low_mem=False, fittype='loglin'):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -254,11 +238,8 @@ def tedana_workflow(data, tes, mask=None, out_dir='.',
     gscontrol : {None, 't1c', 'gsr'} or :obj:`list`, optional
         Perform additional denoising to remove spatially diffuse noise. Default
         is None.
-    tedpca : {'mle', 'kundu', 'kundu-stabilize'}, optional
-        Method with which to select components in TEDPCA. Default is 'mle'.
-    source_tes : :obj:`int`, optional
-        Source TEs for models. 0 for all, -1 for optimal combination.
-        Default is -1.
+    tedpca : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
+        Method with which to select components in TEDPCA. Default is 'mdl'.
     combmode : {'t2s'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default).
     fittype : {'loglin', 'curvefit'}, optional
@@ -504,7 +485,6 @@ def tedana_workflow(data, tes, mask=None, out_dir='.',
         dd, n_components = decomposition.tedpca(catd, data_oc, combmode, mask,
                                                 t2s_limited, t2s_full, ref_img,
                                                 tes=tes, algorithm=tedpca,
-                                                source_tes=source_tes,
                                                 kdaw=10., rdaw=1.,
                                                 out_dir=out_dir,
                                                 verbose=verbose,
@@ -512,7 +492,7 @@ def tedana_workflow(data, tes, mask=None, out_dir='.',
         mmix_orig = decomposition.tedica(dd, n_components, fixed_seed,
                                          maxit, maxrestart)
 
-        if verbose and (source_tes == -1):
+        if verbose:
             io.filewrite(utils.unmask(dd, mask),
                          op.join(out_dir, 'ts_OC_whitened.nii.gz'), ref_img)
 
@@ -557,8 +537,7 @@ def tedana_workflow(data, tes, mask=None, out_dir='.',
                      ref_img)
 
     # Save decomposition
-    data_type = 'optimally combined data' if source_tes == -1 else 'z-concatenated data'
-    comptable['Description'] = 'ICA fit to dimensionally reduced {0}.'.format(data_type)
+    comptable['Description'] = 'ICA fit to dimensionally-reduced optimally combined data.'
     mmix_dict = {}
     mmix_dict['Method'] = ('Independent components analysis with FastICA '
                            'algorithm implemented by sklearn. Components '
@@ -574,10 +553,10 @@ def tedana_workflow(data, tes, mask=None, out_dir='.',
 
     mmix_orig = mmix.copy()
     if tedort:
-        acc_idx = comptable.loc[
-            ~comptable.classification.str.contains('rejected')].index.values
-        rej_idx = comptable.loc[
-            comptable.classification.str.contains('rejected')].index.values
+        acc_idx = comptable.loc[~comptable.classification.str.
+                                contains('rejected')].index.values
+        rej_idx = comptable.loc[comptable.classification.str.contains(
+            'rejected')].index.values
         acc_ts = mmix[:, acc_idx]
         rej_ts = mmix[:, rej_idx]
         betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
@@ -592,8 +571,12 @@ def tedana_workflow(data, tes, mask=None, out_dir='.',
                     "orthogonalized with respect to accepted components' time "
                     "series.")
 
-    io.writeresults(data_oc, mask=mask, comptable=comptable, mmix=mmix,
-                    n_vols=n_vols, ref_img=ref_img)
+    io.writeresults(data_oc,
+                    mask=mask,
+                    comptable=comptable,
+                    mmix=mmix,
+                    n_vols=n_vols,
+                    ref_img=ref_img)
 
     if 't1c' in gscontrol:
         gsc.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
@@ -608,14 +591,21 @@ def tedana_workflow(data, tes, mask=None, out_dir='.',
         if not op.isdir(op.join(out_dir, 'figures')):
             os.mkdir(op.join(out_dir, 'figures'))
 
-        viz.write_comp_figs(data_oc, mask=mask, comptable=comptable,
-                            mmix=mmix_orig, ref_img=ref_img,
+        viz.write_comp_figs(data_oc,
+                            mask=mask,
+                            comptable=comptable,
+                            mmix=mmix_orig,
+                            ref_img=ref_img,
                             out_dir=op.join(out_dir, 'figures'),
                             png_cmap=png_cmap)
 
         LGR.info('Making Kappa vs Rho scatter plot')
         viz.write_kappa_scatter(comptable=comptable,
                                 out_dir=op.join(out_dir, 'figures'))
+
+        LGR.info('Making Kappa/Rho scree plot')
+        viz.write_kappa_scree(comptable=comptable,
+                              out_dir=op.join(out_dir, 'figures'))
 
         LGR.info('Making overall summary figure')
         viz.write_summary_fig(comptable=comptable,
