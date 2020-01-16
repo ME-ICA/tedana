@@ -580,6 +580,10 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         viz.write_kappa_scatter(comptable=comptable,
                                 out_dir=op.join(out_dir, 'figures'))
 
+        LGR.info('Making Kappa/Rho scree plot')
+        viz.write_kappa_scree(comptable=comptable,
+                              out_dir=op.join(out_dir, 'figures'))
+
         LGR.info('Making overall summary figure')
         viz.write_summary_fig(comptable=comptable,
                               out_dir=op.join(out_dir, 'figures'))
