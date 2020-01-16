@@ -1,8 +1,8 @@
 duecredit
 matplotlib
-nibabel>=2.1.0
-nilearn
-numpy>=1.14
+nibabel>=2.5.1
+nilearn>=0.5.2
+numpy>=1.15
 pandas
-scikit-learn
-scipy
+scikit-learn>=0.22
+scipy>=1.3.3

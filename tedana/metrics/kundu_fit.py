@@ -91,7 +91,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
                              't2s ({1})'.format(catd.shape[2], t2s.shape[1]))
 
     RepLGR.info("A series of TE-dependence metrics were calculated for "
-                "each ICA component, including Kappa, Rho, and variance "
+                "each component, including Kappa, Rho, and variance "
                 "explained.")
 
     # mask everything we can
