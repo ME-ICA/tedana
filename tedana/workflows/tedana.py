@@ -158,6 +158,17 @@ def _get_parser():
                                 'use of IncrementalPCA. May increase workflow '
                                 'duration.'),
                           default=False)
+    optional.add_argument('--fittype',
+                          dest='fittype',
+                          action='store',
+                          choices=['loglin', 'curvefit'],
+                          help='Desired Fitting Method '
+                               '"loglin" means that a linear model is fit '
+                               'to the log of the data, default '
+                               '"curvefit" means that a more computationally '
+                               'demanding monoexponential model is fit '
+                               'to the raw data',
+                          default='loglin')
     optional.add_argument('--verbose',
                           dest='verbose',
                           action='store_true',
