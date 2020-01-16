@@ -14,7 +14,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}-{{ checksum "requirements.txt" }}
       - run:
           name: Generate environment
           command: |
@@ -24,7 +24,7 @@ jobs:
               pip install -r dev_requirements.txt
             fi
       - save_cache:
-          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}-{{ checksum "requirements.txt" }}
           paths:
               - /opt/conda/envs/tedana_py37
 
@@ -35,7 +35,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py35-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py35-v1-{{ checksum "dev_requirements.txt" }}-{{ checksum "requirements.txt" }}
       - run:
           name: Generate environment
           command: |
@@ -53,7 +53,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py35
       - save_cache:
-          key: conda-py35-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py35-v1-{{ checksum "dev_requirements.txt" }}-{{ checksum "requirements.txt" }}
           paths:
               - /opt/conda/envs/tedana_py35
       - persist_to_workspace:
@@ -68,7 +68,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py36-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py36-v1-{{ checksum "dev_requirements.txt" }}-{{ checksum "requirements.txt" }}
       - run:
           name: Generate environment
           command: |
@@ -86,7 +86,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py36
       - save_cache:
-          key: conda-py36-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py36-v1-{{ checksum "dev_requirements.txt" }}-{{ checksum "requirements.txt" }}
           paths:
               - /opt/conda/envs/tedana_py36
       - persist_to_workspace:
@@ -101,7 +101,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}-{{ checksum "requirements.txt" }}
       - run:
           name: Running unit tests
           command: |
@@ -122,7 +122,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}-{{ checksum "requirements.txt" }}
       - run:
           name: Style check
           command: |
@@ -137,7 +137,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}-{{ checksum "requirements.txt" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -161,7 +161,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}-{{ checksum "requirements.txt" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -185,7 +185,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}-{{ checksum "requirements.txt" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -211,7 +211,7 @@ jobs:
           at: /tmp
       - checkout
       - restore_cache:
-          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}-{{ checksum "requirements.txt" }}
       - run:
           name: Merge coverage files
           command: |
