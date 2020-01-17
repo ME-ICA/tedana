@@ -101,3 +101,48 @@ def generate_report(bokeh_id, bokeh_js, file_path=None):
     else:
         with open('./tedana_report.html', 'wb') as f:
             f.write(html.encode('utf-8'))
+
+
+# Load the component time series
+comp_ts_path = opj(out_dir, 'ica_mixing.tsv')
+comp_ts_df = pd.read_csv(comp_ts_path, sep='\t', encoding='utf=8')
+n_vols, n_comps = comp_ts_df.shape
+comp_ts_df['Volume'] = np.arange(n_vols)
+comp_ts_cds = models.ColumnDataSource(comp_ts_df)
+
+# Load the component table
+comptable_path = opj(out_dir, 'ica_decomposition.json')
+comptable_cds = _create_data_struct(comptable_path)
+
+# Create kappa rho plot
+kappa_rho_plot = _create_kr_plt(comptable_cds)
+
+# Create sorted plots
+kappa_sorted_plot = _create_sorted_plt(comptable_cds, n_comps,
+                                       'kappa_rank', 'kappa',
+                                       'Kappa Rank', 'Kappa')
+rho_sorted_plot = _create_sorted_plt(comptable_cds, n_comps,
+                                     'rho_rank', 'rho',
+                                     'Rho Rank', 'Rho')
+varexp_pie_plot = _create_varexp_pie_plt(comptable_cds, n_comps)
+
+# link all dynamic figures
+figs = [kappa_rho_plot, kappa_sorted_plot,
+        rho_sorted_plot, varexp_pie_plot]
+
+div_content = models.Div(width=600, height=900, height_policy='fixed')
+
+for fig in figs:
+    _link_figures(fig, comptable_cds, comp_ts_cds,
+                  div_content, out_dir)
+
+
+# Create a layout
+app = layouts.column(layouts.row(kappa_rho_plot, kappa_sorted_plot,
+                                 rho_sorted_plot, varexp_pie_plot),
+                     div_content)
+
+# Embed for reporting
+kr_script, kr_div = embed.components(app)
+reporting.generate_report(kr_div, kr_script,
+                          file_path='/opt/report_v3.html')
