@@ -122,14 +122,14 @@ def _get_parser():
                           default=42)
     optional.add_argument('--maxit',
                           dest='maxit',
-                          type=int,
                           metavar='INT',
+                          type=int,
                           help=('Maximum number of iterations for ICA.'),
                           default=500)
     optional.add_argument('--maxrestart',
                           dest='maxrestart',
-                          type=int,
                           metavar='INT',
+                          type=int,
                           help=('Maximum number of attempts for ICA. If ICA '
                                 'fails to converge, the fixed seed will be '
                                 'updated and ICA will be run again. If '
@@ -193,6 +193,13 @@ def _get_parser():
     parser._action_groups.append(optional)
 
     rerungrp = parser.add_argument_group('arguments for rerunning the workflow')
+    rerungrp.add_argument('--t2smap',
+                          dest='t2smap',
+                          metavar='FILE',
+                          type=lambda x: is_valid_file(parser, x),
+                          help=('Precalculated T2* map in the same space as '
+                                'the input data.'),
+                          default=None)
     rerungrp.add_argument('--mix',
                           dest='mixm',
                           metavar='FILE',
@@ -222,7 +229,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                     tedort=False, gscontrol=None,
                     no_png=False, png_cmap='coolwarm',
                     verbose=False, low_mem=False, debug=False, quiet=False,
-                    mixm=None, ctab=None, manacc=None):
+                    t2smap=None, mixm=None, ctab=None, manacc=None):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -262,6 +269,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     png_cmap : obj:'str', optional
         Name of a matplotlib colormap to be used when generating figures.
         Cannot be used with --no-png. Default is 'coolwarm'.
+    t2smap : :obj:`str`, optional
+        Precalculated T2* map in the same space as the input data.
     mixm : :obj:`str` or None, optional
         File containing mixing matrix, to be used when re-running the workflow.
         If not provided, ME-PCA and ME-ICA are done. Default is None.
@@ -417,38 +426,59 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         LGR.warning('Argument "manacc" requires argument "mixm".')
         manacc = None
 
+    if t2smap is not None and op.isfile(t2smap):
+        t2smap = op.abspath(t2smap)
+        # Allow users to re-run on same folder
+        if t2smap != op.join(out_dir, 't2sv.nii.gz'):
+            shutil.copyfile(t2smap, op.join(out_dir, 't2sv.nii.gz'))
+            shutil.copyfile(t2smap, op.join(out_dir, op.basename(t2smap)))
+    elif t2smap is not None:
+        raise IOError('Argument "t2smap" must be an existing file.')
+
     RepLGR.info("TE-dependence analysis was performed on input data.")
-    if mask is None:
+    if mask and not t2smap:
+        # TODO: add affine check
+        LGR.info('Using user-defined mask')
+        RepLGR.info("A user-defined mask was applied to the data.")
+    elif t2smap and not mask:
+        LGR.info('Using user-defined T2* map to generate mask')
+        t2s_limited = utils.load_image(t2smap)
+        t2s_full = t2s_limited.copy()
+        mask = (t2s_limited != 0).astype(int)
+    elif t2smap and mask:
+        LGR.info('Combining user-defined mask and T2* map to generate mask')
+        t2s_limited = utils.load_image(t2smap)
+        t2s_full = t2s_limited.copy()
+        mask = utils.load_image(mask)
+        mask[t2s_limited == 0] = 0  # reduce mask based on T2* map
+    else:
         LGR.info('Computing EPI mask from first echo')
         first_echo_img = io.new_nii_like(ref_img, catd[:, 0, :])
         mask = compute_epi_mask(first_echo_img)
         RepLGR.info("An initial mask was generated from the first echo using "
                     "nilearn's compute_epi_mask function.")
-    else:
-        # TODO: add affine check
-        LGR.info('Using user-defined mask')
-        RepLGR.info("A user-defined mask was applied to the data.")
 
     mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
     io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
 
-    LGR.info('Computing T2* map')
-    t2s_limited, s0_limited, t2s_full, s0_full = decay.fit_decay(
-        catd, tes, mask, masksum, fittype)
+    if t2smap is None:
+        LGR.info('Computing T2* map')
+        t2s_limited, s0_limited, t2s_full, s0_full = decay.fit_decay(
+            catd, tes, mask, masksum, fittype)
 
-    # set a hard cap for the T2* map
-    # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
-    cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5,
-                                      interpolation_method='lower')
-    LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
-    t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
-    io.filewrite(t2s_limited, op.join(out_dir, 't2sv.nii'), ref_img)
-    io.filewrite(s0_limited, op.join(out_dir, 's0v.nii'), ref_img)
+        # set a hard cap for the T2* map
+        # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
+        cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5,
+                                          interpolation_method='lower')
+        LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
+        t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
+        io.filewrite(t2s_limited, op.join(out_dir, 't2sv.nii'), ref_img)
+        io.filewrite(s0_limited, op.join(out_dir, 's0v.nii'), ref_img)
 
-    if verbose:
-        io.filewrite(t2s_full, op.join(out_dir, 't2svG.nii'), ref_img)
-        io.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
+        if verbose:
+            io.filewrite(t2s_full, op.join(out_dir, 't2svG.nii'), ref_img)
+            io.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
 
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, mask, t2s=t2s_full, combmode=combmode)
@@ -472,7 +502,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
 
         if verbose:
             io.filewrite(utils.unmask(dd, mask),
-                         op.join(out_dir, 'ts_OC_whitened.nii'), ref_img)
+                         op.join(out_dir, 'ts_OC_whitened.nii.gz'), ref_img)
 
         LGR.info('Making second component selection guess from ICA results')
         # Estimate betas and compute selection metrics for mixing matrix
@@ -509,10 +539,10 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             comptable = io.load_comptable(ctab)
             if manacc is not None:
                 comptable = selection.manual_selection(comptable, acc=manacc)
-            betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
-            io.filewrite(betas_oc,
-                         op.join(out_dir, 'ica_components.nii.gz'),
-                         ref_img)
+        betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
+        io.filewrite(betas_oc,
+                     op.join(out_dir, 'ica_components.nii.gz'),
+                     ref_img)
 
     # Save decomposition
     comptable['Description'] = 'ICA fit to dimensionally-reduced optimally combined data.'
