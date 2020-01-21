@@ -124,14 +124,12 @@ def _get_parser():
                           dest='maxit',
                           metavar='INT',
                           type=int,
-                          metavar='INT',
                           help=('Maximum number of iterations for ICA.'),
                           default=500)
     optional.add_argument('--maxrestart',
                           dest='maxrestart',
                           metavar='INT',
                           type=int,
-                          metavar='INT',
                           help=('Maximum number of attempts for ICA. If ICA '
                                 'fails to converge, the fixed seed will be '
                                 'updated and ICA will be run again. If '
