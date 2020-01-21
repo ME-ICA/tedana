@@ -74,10 +74,14 @@ def computefeats2(data, mmix, mask=None, normalize=True):
     # demean masked data
     if mask is not None:
         data = data[mask, ...]
+    # normalize data (subtract mean and divide by standard deviation) in the last dimension
+    # so that least-squares estimates represent "approximate" correlation values (data_R)
+    # assuming mixing matrix (mmix) values are also normalized
     data_vn = stats.zscore(data, axis=-1)
 
     # get betas of `data`~`mmix` and limit to range [-0.999, 0.999]
     data_R = get_coeffs(data_vn, mmix, mask=None)
+    # Avoid abs(data_R) => 1, otherwise Fisher's transform will return Inf or -Inf
     data_R[data_R < -0.999] = -0.999
     data_R[data_R > 0.999] = 0.999
 
@@ -86,9 +90,11 @@ def computefeats2(data, mmix, mask=None, normalize=True):
     if data_Z.ndim == 1:
         data_Z = np.atleast_2d(data_Z).T
 
-    # normalize data
+    # normalize data (only division by std)
     if normalize:
+        # subtract mean and dividing by standard deviation
         data_Zm = stats.zscore(data_Z, axis=0)
+        # adding back the mean
         data_Z = data_Zm + (data_Z.mean(axis=0, keepdims=True) /
                             data_Z.std(axis=0, keepdims=True))
 

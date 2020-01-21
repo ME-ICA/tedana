@@ -65,6 +65,12 @@ def _get_parser():
                           type=float,
                           help='Echo times (in ms). E.g., 15.0 39.0 63.0',
                           required=True)
+    optional.add_argument('--out-dir',
+                          dest='out_dir',
+                          type=str,
+                          metavar='PATH',
+                          help='Output directory.',
+                          default='.')
     optional.add_argument('--mask',
                           dest='mask',
                           metavar='FILE',
@@ -76,6 +82,18 @@ def _get_parser():
                                 "function will be used to derive a mask "
                                 "from the first echo's data."),
                           default=None)
+    optional.add_argument('--fittype',
+                          dest='fittype',
+                          action='store',
+                          choices=['loglin', 'curvefit'],
+                          help=('Desired T2*/S0 fitting method. '
+                                '"loglin" means that a linear model is fit '
+                                'to the log of the data. '
+                                '"curvefit" means that a more computationally '
+                                'demanding monoexponential model is fit '
+                                'to the raw data. '
+                                'Default is "loglin".'),
+                          default='loglin')
     optional.add_argument('--combmode',
                           dest='combmode',
                           action='store',
@@ -83,17 +101,6 @@ def _get_parser():
                           help=('Combination scheme for TEs: '
                                 't2s (Posse 1999, default)'),
                           default='t2s')
-    optional.add_argument('--gscontrol',
-                          dest='gscontrol',
-                          required=False,
-                          action='store',
-                          nargs='+',
-                          help=('Perform additional denoising to remove '
-                                'spatially diffuse noise. Default is None. '
-                                'This argument can be single value or a space '
-                                'delimited list'),
-                          choices=['t1c', 'gsr'],
-                          default=None)
     optional.add_argument('--tedpca',
                           dest='tedpca',
                           help=('Method with which to select components in TEDPCA. '
@@ -103,42 +110,28 @@ def _get_parser():
                                 'Default=\'mdl\'.'),
                           choices=['kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'],
                           default='mdl')
-    optional.add_argument('--out-dir',
-                          dest='out_dir',
-                          type=str,
-                          help='Output directory.',
-                          default='.')
     optional.add_argument('--seed',
                           dest='fixed_seed',
                           metavar='INT',
                           type=int,
-                          help=('Value used for random initialization of ICA algorithm. '
-                                'Set to an integer value for reproducible ICA results. '
-                                'Set to -1 for varying results across ICA calls. '
+                          help=('Value used for random initialization of ICA '
+                                'algorithm. Set to an integer value for '
+                                'reproducible ICA results. Set to -1 for '
+                                'varying results across ICA calls. '
                                 'Default=42.'),
                           default=42)
-    optional.add_argument('--no-png',
-                          dest='no_png',
-                          action='store_true',
-                          help=('Creates a figures folder with static component '
-                                'maps, timecourse plots and other diagnostic '
-                                'images'),
-                          default=False)
-    optional.add_argument('--png-cmap',
-                          dest='png_cmap',
-                          type=str,
-                          help=('Colormap for figures'),
-                          default='coolwarm')
     optional.add_argument('--maxit',
                           dest='maxit',
                           metavar='INT',
                           type=int,
+                          metavar='INT',
                           help=('Maximum number of iterations for ICA.'),
                           default=500)
     optional.add_argument('--maxrestart',
                           dest='maxrestart',
                           metavar='INT',
                           type=int,
+                          metavar='INT',
                           help=('Maximum number of attempts for ICA. If ICA '
                                 'fails to converge, the fixed seed will be '
                                 'updated and ICA will be run again. If '
@@ -151,28 +144,40 @@ def _get_parser():
                           help=('Orthogonalize rejected components w.r.t. '
                                 'accepted components prior to denoising.'),
                           default=False)
+    optional.add_argument('--gscontrol',
+                          dest='gscontrol',
+                          required=False,
+                          action='store',
+                          nargs='+',
+                          help=('Perform additional denoising to remove '
+                                'spatially diffuse noise. Default is None. '
+                                'This argument can be single value or a space '
+                                'delimited list'),
+                          choices=['t1c', 'gsr'],
+                          default=None)
+    optional.add_argument('--no-png',
+                          dest='no_png',
+                          action='store_true',
+                          help=('Creates a figures folder with static component '
+                                'maps, timecourse plots and other diagnostic '
+                                'images'),
+                          default=False)
+    optional.add_argument('--png-cmap',
+                          dest='png_cmap',
+                          type=str,
+                          help='Colormap for figures',
+                          default='coolwarm')
+    optional.add_argument('--verbose',
+                          dest='verbose',
+                          action='store_true',
+                          help='Generate intermediate and additional files.',
+                          default=False)
     optional.add_argument('--lowmem',
                           dest='low_mem',
                           action='store_true',
                           help=('Enables low-memory processing, including the '
                                 'use of IncrementalPCA. May increase workflow '
                                 'duration.'),
-                          default=False)
-    optional.add_argument('--fittype',
-                          dest='fittype',
-                          action='store',
-                          choices=['loglin', 'curvefit'],
-                          help='Desired Fitting Method '
-                               '"loglin" means that a linear model is fit '
-                               'to the log of the data, default '
-                               '"curvefit" means that a more computationally '
-                               'demanding monoexponential model is fit '
-                               'to the raw data',
-                          default='loglin')
-    optional.add_argument('--verbose',
-                          dest='verbose',
-                          action='store_true',
-                          help='Generate intermediate and additional files.',
                           default=False)
     optional.add_argument('--debug',
                           dest='debug',
@@ -213,19 +218,20 @@ def _get_parser():
                           default=None)
     rerungrp.add_argument('--manacc',
                           dest='manacc',
-                          help=('Comma-separated list of manually '
-                                'accepted components.'),
+                          help=('Comma separated list of manually '
+                                'accepted components'),
                           default=None)
+
     return parser
 
 
-def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
-                    tedort=False, gscontrol=None, tedpca='mdl',
-                    combmode='t2s', verbose=False, stabilize=False,
-                    out_dir='.', fixed_seed=42, maxit=500, maxrestart=10,
-                    debug=False, quiet=False, no_png=False,
-                    png_cmap='coolwarm', t2smap=None,
-                    low_mem=False, fittype='loglin'):
+def tedana_workflow(data, tes, out_dir='.', mask=None,
+                    fittype='loglin', combmode='t2s', tedpca='mdl',
+                    fixed_seed=42, maxit=500, maxrestart=10,
+                    tedort=False, gscontrol=None,
+                    no_png=False, png_cmap='coolwarm',
+                    verbose=False, low_mem=False, debug=False, quiet=False,
+                    t2smap=None, mixm=None, ctab=None, manacc=None):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -236,44 +242,44 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         list of echo-specific files, in ascending order.
     tes : :obj:`list`
         List of echo times associated with data in milliseconds.
-    mask : :obj:`str`, optional
+    out_dir : :obj:`str`, optional
+        Output directory.
+    mask : :obj:`str` or None, optional
         Binary mask of voxels to include in TE Dependent ANAlysis. Must be
         spatially aligned with `data`. If an explicit mask is not provided,
         then Nilearn's compute_epi_mask function will be used to derive a mask
         from the first echo's data.
-    out_dir : :obj:`str`, optional
-        Output directory.
+    fittype : {'loglin', 'curvefit'}, optional
+        Monoexponential fitting method. 'loglin' uses the the default linear
+        fit to the log of the data. 'curvefit' uses a monoexponential fit to
+        the raw data, which is slightly slower but may be more accurate.
+        Default is 'loglin'.
+    combmode : {'t2s'}, optional
+        Combination scheme for TEs: 't2s' (Posse 1999, default).
+    tedpca : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
+        Method with which to select components in TEDPCA. Default is 'mdl'.
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
         denoising. Default is False.
     gscontrol : {None, 't1c', 'gsr'} or :obj:`list`, optional
         Perform additional denoising to remove spatially diffuse noise. Default
         is None.
-    tedpca : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
-        Method with which to select components in TEDPCA. Default is 'mdl'.
-    combmode : {'t2s'}, optional
-        Combination scheme for TEs: 't2s' (Posse 1999, default).
-    fittype : {'loglin', 'curvefit'}, optional
-        Monoexponential fitting method.
-        'loglin' means to use the the default linear fit to the log of
-        the data.
-        'curvefit' means to use a monoexponential fit to the raw data,
-        which is slightly slower but may be more accurate.
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
     no_png : obj:'bool', optional
         Do not generate .png plots and figures. Default is false.
     png_cmap : obj:'str', optional
         Name of a matplotlib colormap to be used when generating figures.
-        Cannot be used with --no-png. Default 'coolwarm'
+        Cannot be used with --no-png. Default is 'coolwarm'.
     t2smap : :obj:`str`, optional
         Precalculated T2* map in the same space as the input data.
-    mixm : :obj:`str`, optional
-        File containing mixing matrix. If not provided, ME-PCA and ME-ICA are
-        done.
-    ctab : :obj:`str`, optional
+    mixm : :obj:`str` or None, optional
+        File containing mixing matrix, to be used when re-running the workflow.
+        If not provided, ME-PCA and ME-ICA are done. Default is None.
+    ctab : :obj:`str` or None, optional
         File containing component table from which to extract pre-computed
-        classifications.
+        classifications, to be used with 'mixm' when re-running the workflow.
+        Default is None.
     manacc : :obj:`list`, :obj:`str`, or None, optional
         List of manually accepted components. Can be a list of the components,
         a comma-separated string with component numbers, or None. Default is
@@ -373,12 +379,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     # Coerce gscontrol to list
     if not isinstance(gscontrol, list):
         gscontrol = [gscontrol]
-
-    # coerce data to samples x echos x time array
-    if isinstance(data, str):
-        if not op.exists(data):
-            raise ValueError('Zcat file {} does not exist'.format(data))
-        data = [data]
 
     LGR.info('Loading input data: {}'.format([f for f in data]))
     catd, ref_img = io.load_data(data, n_echos=n_echos)
@@ -529,6 +529,7 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = pd.read_table(op.join(out_dir, 'ica_mixing.tsv')).values
+
         if ctab is None:
             comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
                         catd, data_oc, mmix_orig, t2s_limited, tes,
@@ -539,7 +540,6 @@ def tedana_workflow(data, tes, mask=None, mixm=None, ctab=None, manacc=None,
         else:
             mmix = mmix_orig.copy()
             comptable = io.load_comptable(ctab)
-
             if manacc is not None:
                 comptable = selection.manual_selection(comptable, acc=manacc)
         betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
