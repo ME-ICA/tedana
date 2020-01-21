@@ -100,6 +100,20 @@ def test_integration_five_echo(skip_integration):
     df = io.load_comptable(comptable)
     assert isinstance(df, pd.DataFrame)
 
+    out_dir2 = '/tmp/data/five-echo/TED.five-echo-manual'
+    acc_comps = df.loc[df['classification'] == 'accepted'].index.values
+    mixing = os.path.join(out_dir, 'ica_mixing.tsv')
+    tedana_workflow(
+        data=datalist,
+        tes=[15.4, 29.7, 44.0, 58.3, 72.6],
+        out_dir=out_dir2,
+        debug=True,
+        verbose=True,
+        manacc=','.join(acc_comps.astype(str)),
+        ctab=comptable,
+        mixm=mixing,
+    )
+
     # compare the generated output files
     fn = resource_filename('tedana',
                            'tests/data/nih_five_echo_outputs_verbose.txt')
