@@ -238,7 +238,7 @@ def get_spectrum(data: np.array, tr: float = 1.0):
 
 
 def threshold_map(img, min_cluster_size, threshold=None, mask=None,
-                  binarize=True, sided='two'):
+                  binarize=True, sided='bi'):
     """
     Cluster-extent threshold and binarize image.
 
@@ -255,10 +255,15 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None,
         Boolean array for masking resultant data array. Default is None.
     binarize : bool, optional
         Default is True.
-    sided : {'two', 'one', 'bi'}, optional
+    sided : {'bi', 'two', 'one'}, optional
         How to apply thresholding. One-sided thresholds on the positive side.
         Two-sided thresholds positive and negative values together. Bi-sided
-        thresholds positive and negative values separately. Default is 'two'.
+        thresholds positive and negative values separately. Default is 'bi'.
+
+    Returns
+    -------
+    clust_thresholded : (M) :obj:`numpy.ndarray`
+        Cluster-extent thresholded (and optionally binarized) map.
     """
     if not isinstance(img, np.ndarray):
         arr = img.get_data()

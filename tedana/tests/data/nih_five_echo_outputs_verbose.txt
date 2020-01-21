@@ -17,6 +17,7 @@ hik_ts_e5.nii.gz
 ica_components.nii.gz
 ica_decomposition.json
 ica_mixing.tsv
+ica_orth_mixing.tsv
 lowk_ts_OC.nii.gz
 lowk_ts_e1.nii.gz
 lowk_ts_e2.nii.gz
@@ -37,13 +38,14 @@ pca_mixing.tsv
 report.txt
 s0v.nii.gz
 s0vG.nii.gz
-s0vs.nii.gz
-t2ss.nii.gz
 t2sv.nii.gz
 t2svG.nii.gz
 ts_OC.nii.gz
 ts_OC_whitened.nii.gz
 figures
+figures/Component_Overview.png
+figures/Kappa_vs_Rho_Scatter.png
+figures/Kappa_Rho_Scree_plot.png
 figures/comp_000.png
 figures/comp_001.png
 figures/comp_002.png
@@ -115,6 +117,3 @@ figures/comp_067.png
 figures/comp_068.png
 figures/comp_069.png
 figures/comp_070.png
-figures/comp_071.png
-figures/comp_072.png
-figures/comp_073.png

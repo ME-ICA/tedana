@@ -1,0 +1,5 @@
+ignore:
+  - "tedana/tests/"
+  - "tedana/due.py"
+  - "tedana/_version.py"
+  - "tedana/info.py"
