@@ -105,7 +105,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
     WTS = computefeats2(tsoc, mmixN, mask=None, normalize=False)
 
     # compute PSC dataset - shouldn't have to refit data
-    tsoc_B = get_coeffs(tsoc_dm, mmix, mask=None)
+    tsoc_B = get_coeffs(tsoc_dm, mmix, mask=None, add_const=False)
     del tsoc_dm
     tsoc_Babs = np.abs(tsoc_B)
     PSC = tsoc_B / tsoc.mean(axis=-1, keepdims=True) * 100

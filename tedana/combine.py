@@ -163,9 +163,9 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
                  'inhomogeneity desensitized (PAID) method')
     else:
         if t2s.ndim == 1:
-            msg = 'Optimally combining data with voxel-wise T2 estimates'
+            msg = 'Optimally combining data with voxel-wise T2* estimates'
         else:
-            msg = ('Optimally combining data with voxel- and volume-wise T2 '
+            msg = ('Optimally combining data with voxel- and volume-wise T2* '
                    'estimates')
         LGR.info(msg)
 
