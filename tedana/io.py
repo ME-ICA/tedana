@@ -217,6 +217,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, ref_img, out_dir='.'):
     betas_hik_OC.nii          Denoised ICA coefficient feature set.
     feats_OC2.nii             Z-normalized spatial component maps. Generated
                               by :py:func:`tedana.utils.io.writefeats`.
+    ts_OC.nii                 Optimally combined 4D time series.
     ======================    =================================================
     """
     acc = comptable[comptable.classification == 'accepted'].index.values
@@ -354,7 +355,10 @@ def filewrite(data, filename, ref_img, gzip=True, copy_header=True):
 
     # FIXME: we only handle writing to nifti right now
     # get root of desired output file and save as nifti image
-    root, ext, add = splitext_addext(filename)
+    root = op.dirname(filename)
+    base = op.basename(filename)
+    base, ext, add = splitext_addext(base)
+    root = op.join(root, base)
     name = '{}.{}'.format(root, 'nii.gz' if gzip else 'nii')
     out.to_filename(name)
 

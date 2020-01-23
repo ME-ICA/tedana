@@ -94,6 +94,7 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
 
     io.filewrite(optcom, op.join(out_dir, 'tsoc_orig'), ref_img)
     dm_optcom = utils.unmask(tsoc_nogs, Gmask)
+    io.filewrite(dm_optcom, op.join(out_dir, 'tsoc_nogs'), ref_img)
 
     # Project glbase out of each echo
     dm_catd = catd.copy()  # don't overwrite catd
