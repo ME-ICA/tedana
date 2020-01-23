@@ -462,8 +462,6 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
     io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
 
-    os.chdir(out_dir)
-
     if t2smap is None:
         LGR.info('Computing T2* map')
         t2s_limited, s0_limited, t2s_full, s0_full = decay.fit_decay(
@@ -487,7 +485,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
 
     # regress out global signal unless explicitly not desired
     if 'gsr' in gscontrol:
-        catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, ref_img)
+        catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, ref_img,
+                                          out_dir=out_dir)
 
     if mixm is None:
         # Identify and remove thermal noise from data
@@ -516,7 +515,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         comp_names = [io.add_decomp_prefix(comp, prefix='ica', max_value=comptable.index.max())
                       for comp in comptable.index.values]
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
-        mixing_df.to_csv('ica_mixing.tsv', sep='\t', index=False)
+        mixing_df.to_csv(op.join(out_dir, 'ica_mixing.tsv'), sep='\t', index=False)
         betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
         io.filewrite(betas_oc,
                      op.join(out_dir, 'ica_components.nii.gz'),
@@ -575,7 +574,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         comp_names = [io.add_decomp_prefix(comp, prefix='ica', max_value=comptable.index.max())
                       for comp in comptable.index.values]
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
-        mixing_df.to_csv('ica_orth_mixing.tsv', sep='\t', index=False)
+        mixing_df.to_csv(op.join(out_dir, 'ica_orth_mixing.tsv'), sep='\t', index=False)
         RepLGR.info("Rejected components' time series were then "
                     "orthogonalized with respect to accepted components' time "
                     "series.")
@@ -585,13 +584,14 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                     comptable=comptable,
                     mmix=mmix,
                     n_vols=n_vols,
-                    ref_img=ref_img)
+                    ref_img=ref_img,
+                    out_dir=out_dir)
 
     if 't1c' in gscontrol:
-        gsc.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img)
+        gsc.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img, out_dir=out_dir)
 
     if verbose:
-        io.writeresults_echoes(catd, mmix, mask, comptable, ref_img)
+        io.writeresults_echoes(catd, mmix, mask, comptable, ref_img, out_dir=out_dir)
 
     if not no_png:
         LGR.info('Making figures folder with static component maps and '
