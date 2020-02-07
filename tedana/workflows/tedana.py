@@ -270,7 +270,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         Name of a matplotlib colormap to be used when generating figures.
         Cannot be used with --no-png. Default is 'coolwarm'.
     t2smap : :obj:`str`, optional
-        Precalculated T2* map in the same space as the input data.
+        Precalculated T2* map in the same space as the input data. Values in
+        the map must be in seconds.
     mixm : :obj:`str` or None, optional
         File containing mixing matrix, to be used when re-running the workflow.
         If not provided, ME-PCA and ME-ICA are done. Default is None.
@@ -442,12 +443,12 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         RepLGR.info("A user-defined mask was applied to the data.")
     elif t2smap and not mask:
         LGR.info('Using user-defined T2* map to generate mask')
-        t2s_limited = utils.load_image(t2smap)
+        t2s_limited = utils.load_image(t2smap) * 1000
         t2s_full = t2s_limited.copy()
         mask = (t2s_limited != 0).astype(int)
     elif t2smap and mask:
         LGR.info('Combining user-defined mask and T2* map to generate mask')
-        t2s_limited = utils.load_image(t2smap)
+        t2s_limited = utils.load_image(t2smap) * 1000
         t2s_full = t2s_limited.copy()
         mask = utils.load_image(mask)
         mask[t2s_limited == 0] = 0  # reduce mask based on T2* map
@@ -471,13 +472,13 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
         cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5,
                                           interpolation_method='lower')
-        LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
+        LGR.debug('Setting cap on T2* map at {:.5f}ms'.format(cap_t2s * 10))
         t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
-        io.filewrite(t2s_limited, op.join(out_dir, 't2sv.nii'), ref_img)
+        io.filewrite(t2s_limited / 1000., op.join(out_dir, 't2sv.nii'), ref_img)
         io.filewrite(s0_limited, op.join(out_dir, 's0v.nii'), ref_img)
 
         if verbose:
-            io.filewrite(t2s_full, op.join(out_dir, 't2svG.nii'), ref_img)
+            io.filewrite(t2s_full / 1000., op.join(out_dir, 't2svG.nii'), ref_img)
             io.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
 
     # optimally combine data
