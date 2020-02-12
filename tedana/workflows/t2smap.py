@@ -216,7 +216,8 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
     cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5,
                                       interpolation_method='lower')
-    LGR.debug('Setting cap on T2* map at {:.5f}ms'.format(cap_t2s * 10))
+    cap_t2s_sec = (cap_t2s * 10.) / 1000.
+    LGR.debug('Setting cap on T2* map at {:.5f}s'.format(cap_t2s_sec))
     t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
 
     LGR.info('Computing optimal combination')
