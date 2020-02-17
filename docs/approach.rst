@@ -13,8 +13,8 @@ and decompose the resulting data into components that can be classified as BOLD
 or non-BOLD.
 This is performed in a series of steps, including:
 
-* Principal components analysis
-* Independent components analysis
+* Principal component analysis
+* Independent component analysis
 * Component classification
 
 .. image:: /_static/tedana-workflow.png
@@ -181,23 +181,20 @@ This optimally combined data is written out as **ts_OC.nii.gz**
 Denoising
 `````````
 The next step is an attempt to remove noise from the data.
-This process can be
-broadly separated into three steps: **decomposition**, **metric calculation** and
-**component selection**.
-Decomposition reduces the dimensionality of the
-optimally combined data using `Principal Components Analysis (PCA)`_ and then an `Independent Components Analysis (ICA)`_.
-Metrics which highlights the
-TE-dependence or independence are derived from these components.
-Component selection
-uses these metrics in order to identify components that should be kept in the data
-or discarded.
+This process can be broadly separated into three steps: **decomposition**,
+**metric calculation** and **component selection**.
+Decomposition reduces the dimensionality of the optimally combined data using
+`principal component analysis (PCA)`_ and then an `independent component analysis (ICA)`_.
+Metrics which highlights the TE-dependence or independence are derived from these components.
+Component selection uses these metrics in order to identify components that
+should be kept in the data or discarded.
 Unwanted components are then removed from the optimally combined data
 to produce the denoised data output.
 
 TEDPCA
 ``````
 The next step is to dimensionally reduce the data with TE-dependent principal
-components analysis (PCA).
+component analysis (PCA).
 The goal of this step is to make it easier for the later ICA decomposition to converge.
 Dimensionality reduction is a common step prior to ICA.
 TEDPCA applies PCA to the optimally combined data in order to decompose it into component maps and
@@ -235,7 +232,7 @@ in a dimensionally reduced version of the dataset which is then used in the `TED
 
 TEDICA
 ``````
-Next, ``tedana`` applies TE-dependent independent components analysis (ICA) in
+Next, ``tedana`` applies TE-dependent independent component analysis (ICA) in
 order to identify and remove TE-independent (i.e., non-BOLD noise) components.
 The dimensionally reduced optimally combined data are first subjected to ICA in
 order to fit a mixing matrix to the whitened data.

@@ -1,5 +1,5 @@
-What is multi-echo fMRI
-=======================
+What is multi-echo fMRI?
+========================
 Most echo-planar image (EPI) sequences collect a single brain image following
 a radio frequency (RF) pulse, at a rate known as the repetition time (TR).
 This typical approach is known as single-echo fMRI.

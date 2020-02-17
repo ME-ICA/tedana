@@ -4,8 +4,8 @@ Considerations for ME-fMRI
 Multi-echo fMRI acquisition sequences and analysis methods are rapidly maturing.
 Someone who has access to a multi-echo fMRI sequence should seriously consider using it.
 
-The possible costs and benefits of multi-echo fMRI
-==================================================
+Costs and benefits of multi-echo fMRI
+=====================================
 The following are a few points to consider when deciding whether or not to collect multi-echo data.
 
 Possible increase in TR
@@ -26,7 +26,7 @@ Instead of compromising on slice coverage or TR, one can increase acceleration.
 If one increases acceleration, it is worth doing an empirical comparison to make sure there
 isn't a non-trivial loss in SNR or an increase of artifacts.
 
-Weighted Averaging may lead to an increase in SNR
+Weighted averaging may lead to an increase in SNR
 -------------------------------------------------
 Multiple studies have shown that a
 weighted average of the echoes to optimize T2* weighting, sometimes called "optimally combined,"
@@ -77,7 +77,7 @@ inspected in order to determine the quality of denoising.
 .. _t2smap: https://tedana.readthedocs.io/en/latest/usage.html#run-t2smap
 .. _see outputs: https://tedana.readthedocs.io/en/latest/outputs.html
 
-Acquisition Parameter Recommendations
+Acquisition parameter recommendations
 =====================================
 There is no empirically tested best parameter set for multi-echo acquisition.
 The guidelines for optimizing parameters are similar to single-echo fMRI.
@@ -114,10 +114,6 @@ and guidelines are discussed in the `appendix`_ of Dipasquale et al, 2017.
 
 .. _appendix: https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0173289
 
-.. _found here: https://www.cmrr.umn.edu/multiband/
-.. _this link: http://license.umn.edu/technologies/cmrr_center-for-magnetic-resonance-research-software-for-siemens-mri-scanners
-.. _available here: https://www.nmr.mgh.harvard.edu/software/c2p/sms
-.. _GE Collaboration Portal: https://collaborate.mr.gehealthcare.com
 .. note::
     In order to increase the number of contrasts ("echoes") you may need to first increase the TR, shorten the
     first TE and/or enable in-plane acceleration.
@@ -161,37 +157,44 @@ Videos
 .. _2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/course/fmrif_course/2018/14_Javier_20180713
 .. _Slides from 2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/COURSE/fmrif_course/2018/content/14_Javier_20180713.pdf
 
-Available multi-echo fMRI sequences for multiple vendors
---------------------------------------------------------
+Available multi-echo fMRI sequences
+-----------------------------------
 
+Siemens
+```````
 **For Siemens** users, there are two options for Works In Progress (WIPs) Sequences.
-The Center for Magnetic Resonance Research at the University of Minnesota
-provides a custom MR sequence that allows users to collect multiple echoes
-(termed **Contrasts**).
-The sequence and documentation can be `found here`_. For details
-on obtaining a license follow `this link`_.
-By default the number of contrasts is 1,
-yielding a single-echo sequence.
-In order to collect multiple echoes, increase number of
-Contrasts on the **Sequence Tab, Part 1** on the MR console.
 
-In addition, the Martinos Center at Harvard also has a MR sequence available, with the
-details `available here`_.
-The number of echoes can be specified on the **Sequence, Special** tab
-in this sequence.
+* | The Center for Magnetic Resonance Research at the University of Minnesota
+  | provides a custom MR sequence that allows users to collect multiple echoes
+  | (termed **Contrasts**). The sequence and documentation can be `found here`_.
+  | For details on obtaining a license follow `this link`_.
+  | By default the number of contrasts is 1, yielding a single-echo sequence.
+  | In order to collect multiple echoes, increase number of Contrasts on the
+  | **Sequence Tab, Part 1** on the MR console.
+* | The Martinos Center at Harvard also has a MR sequence available, with the
+  | details `available here`_. The number of echoes can be specified on the
+  | **Sequence, Special** tab in this sequence.
 
+.. _found here: https://www.cmrr.umn.edu/multiband/
+.. _this link: http://license.umn.edu/technologies/cmrr_center-for-magnetic-resonance-research-software-for-siemens-mri-scanners
+.. _available here: https://www.nmr.mgh.harvard.edu/software/c2p/sms
+
+GE
+``
 **For GE users**, there are currently two sharable pulse sequences:
 
-Multi-echo EPI (MEPI) – Software releases: DV24, MP24 and DV25 (with offline recon)
-Hyperband Multi-echo EPI (HyperMEPI) - Software releases: DV26, MP26, DV27, RX27
-(here Hyperband can be deactivated to do simple Multi-echo EPI – online recon)
+* Multi-echo EPI (MEPI) – Software releases: DV24, MP24 and DV25 (with offline recon)
+* | Hyperband Multi-echo EPI (HyperMEPI) - Software releases: DV26, MP26, DV27, RX27
+  | (here hyperband can be deactivated to do simple Multi-echo EPI – online recon)
 
 Please reach out to the GE Research Operation team or each pulse sequence’s
 author to begin the process of obtaining this software.
-More information can be
-found on the `GE Collaboration Portal`_
+More information can be found on the `GE Collaboration Portal`_
 
-Once logged-in, go to Groups > GE Works-in-Progress you can find the description of the current ATSM (i.e. prototypes)
+Once logged in, go to Groups > GE Works-in-Progress you can find the description
+of the current ATSM (i.e. prototypes).
+
+.. _GE Collaboration Portal: https://collaborate.mr.gehealthcare.com
 
 Multi-echo preprocessing software
 ---------------------------------
@@ -205,7 +208,7 @@ AFNI can process multi-echo data natively as well as apply tedana denoising thro
 
 `fmriprep` can also process multi-echo data, but is currently limited to using the optimally combined
 timeseries.
-For more details, see the `fmriprep workflows page`_
+For more details, see the `fmriprep workflows page`_.
 
 .. _fmriprep workflows page: https://fmriprep.readthedocs.io/en/stable/workflows.html
 
@@ -215,39 +218,36 @@ Other software that uses multi-echo fMRI
 ========================================
 
 ``tedana`` represents only one approach to processing multi-echo data.
-Currently there are a number of methods that can take advantage of or use the information contain in multi-echo data.
+Currently there are a number of methods that can take advantage of or use the
+information contain in multi-echo data.
 These include:
 
-`3dMEPFM`_: A multi-echo implementation of 'paradigm free mapping', that is detection of neural events in the absence of
-a prespecified model.
-By leveraging the information present in multi-echo data, changes in relaxation time can be directly estimated and
-more events can be detected. For more information, see the `following paper`_.
+* | `3dMEPFM`_: A multi-echo implementation of 'paradigm free mapping', that is
+  | detection of neural events in the absence of a prespecified model. By
+  | leveraging the information present in multi-echo data, changes in relaxation
+  | time can be directly estimated and more events can be detected.
+  | For more information, see the `following paper`_.
+* | `Bayesian approach to denoising`_: An alternative approach to separating out
+  | BOLD and non-BOLD signals within a Bayesian framework is currently under
+  | development.
+* | `Multi-echo Group ICA`_: Current approaches to ICA just use a single run of
+  | data in order to perform denoising. An alternative approach is to use
+  | information from multiple subjects or multiple runs from a single subject
+  | in order to improve the classification of BOLD and non-BOLD components.
+* | `Dual Echo Denoising`_: If the first echo can be collected early enough,
+  | there are currently methods that take advantage of the very limited BOLD
+  | weighting at these early echo times.
 
 .. _3dMEPFM: https://afni.nimh.nih.gov/pub/dist/doc/program_help/3dMEPFM.html
 .. _following paper: https://www.sciencedirect.com/science/article/pii/S105381191930669X
-
-`Bayesian approach to denoising`_: An alternative approach to separating out BOLD and non-BOLD signals within a Bayesian
-framework is currently under development.
-
 .. _Bayesian approach to denoising: https://ww5.aievolution.com/hbm1901/index.cfm?do=abs.viewAbs&abs=5026
-
-`Multi-echo Group ICA`_: Current approches to ICA just use a single run of data in order to perform denoising. An alternative
-approach is to use information from multiple subjects or multiple runs from a single subject in order to improve the
-classification of BOLD and non-BOLD components.
-
 .. _Multi-echo Group ICA: https://ww5.aievolution.com/hbm1901/index.cfm?do=abs.viewAbs&abs=1286
-
-`Dual Echo Denoising`_: If the first echo can be collected early enough, there are currently methods that take advantage of the
-very limited BOLD weighting at these early echo times.
-
 .. _Dual Echo Denoising: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3518782/
 
-
-
 Datasets
---------
+========
 A number of multi-echo datasets have been made public so far.
-This list is not necessarily up-to-date, so please check out OpenNeuro to potentially find more.
+This list is not necessarily up to date, so please check out OpenNeuro to potentially find more.
 
 * `Multi-echo fMRI replication sample of autobiographical memory, prospection and theory of mind reasoning tasks`_
 * `Multi-echo Cambridge`_
