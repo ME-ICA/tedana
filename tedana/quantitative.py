@@ -11,14 +11,19 @@ RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
 
-def t2star_fit(multiecho_magn, multiecho_phase, echo_time,
+def t2star_fit(multiecho_magn, multiecho_phase, echo_times,
                compute_freq_map=True, smooth_freq_map=True,
                compute_corrected_fitting=True,
                prefix='top_', path_current='.', fitting_method='nlls'):
     """
+    Estimate T2* values for complex multi-echo data.
 
     Parameters
     ----------
+    multiecho_magn : list of nibabel.nifti1.Nifti1Image or file
+        List of magnitude images/time series. Each entry in the list is an echo.
+    multiecho_phase
+    echo_times
     fitting_method : {'nlls', 'ols', 'gls', 'num'}, optional
         'nlls': Levenberg-Marquardt nonlinear fitting to exponential (default).
         'ols': Ordinary least squares linear fit of the log of S.
@@ -40,25 +45,37 @@ def t2star_fit(multiecho_magn, multiecho_phase, echo_time,
         'threshold_t2star_max': 1000,  # in ms. threshold T2* map (for quantization purpose when saving in NIFTI).Suggested value=1000.
     }
     # Compute field map of frequencies from multi-echo phase data
-    if params['compute_freq_map']:
-    	freq_img, mask_img = t2star_computeFreqMap(
-            multiecho_magn, multiecho_phase, echo_times,
-            mask_thresh=params['mask_thresh'],
-            rmse_thresh=params['rmse_thresh'])
+	freq_img, mask_img = t2star_computeFreqMap(
+        multiecho_magn, multiecho_phase, echo_times,
+        mask_thresh=params['mask_thresh'],
+        rmse_thresh=params['rmse_thresh'])
 
     # Smooth field map of frequencies
-    if params['smoothFreqMap']:
-    	params = t2star_smoothFreqMap(
-            multiecho_magn, multiecho_phase, freq, mask,
-            echo_times, mask_thresh, rmse_thresh)
+	freq_smooth = t2star_smoothFreqMap(
+        multiecho_magn, multiecho_phase, freq, mask,
+        echo_times, mask_thresh, rmse_thresh)
+
+    # Correct z gradients
+    grad_z = t2star_computeGradientZ(
+        multiecho_magn, freq_smooth, mask, grad_z,
+        min_length, poly_fit_order, dz)
 
     # Estimate corrected T2*
-    if params['compute_corrected_fitting']:
-    	params = t2star_computeCorrectedFitting(params)
-    return params
+    (t2star_unc, t2star_cor,
+     rsquared_unc, rsquared_cor,
+     n_iters, grad_z_final) = t2star_computeCorrectedFitting(
+        multiecho_magn, multiecho_phase,
+        fitting_method, gradZ_file, mask,
+        echo_times, do_optimization,
+        threshold_t2star_max)
+    return t2star_cor
 
 
-def t2star_computeFreqMap(multiecho_magn, multiecho_phase, echo_times, mask_thresh, rmse_thresh):
+def t2star_computeFreqMap(multiecho_magn, multiecho_phase, echo_times,
+                          mask_thresh, rmse_thresh):
+    """
+    Compute field map of frequencies from multi echo phase data.
+    """
     first_img = nib.load(multiecho_magn[0])
     dims = first_img.shape
     n_echoes = len(multiecho_magn)
@@ -156,19 +173,40 @@ def t2star_computeFreqMap(multiecho_magn, multiecho_phase, echo_times, mask_thre
 def t2star_smoothFreqMap(multiecho_magn, multiecho_phase, freq, mask,
                          echo_times, mask_thresh, rmse_thresh,
                          smooth_downsampling):
-    pass
+    """
+    Smooth frequency map.
+    """
+    return freq_smooth
 
 
 def t2star_computeCorrectedFitting(multiecho_magn, multiecho_phase,
                                    fitting_method, gradZ_file, mask,
                                    echo_times, do_optimization,
                                    threshold_t2star_max):
-    pass
+    """
+    Fit T2* corrected for through-slice drop out.
+    """
+    return (t2star_unc, t2star_cor, rsquared_unc, rsquared_cor,
+            n_iters, grad_z_final)
 
 
 def func_t2star_optimization(data_magn_1d, echo_times, delta_f, X):
+    """
+    Optimization function.
+    """
     return sd_err
 
 
 def func_t2star_fit(S, TE, method, X, n_t):
-    return T2star,S0,Sfit,Rsquared,iter
+    """
+    Perform T2* fit.
+    """
+    return T2star, S0, Sfit, Rsquared, iter
+
+
+def t2star_computeGradientZ(multiecho_magn, freq_smooth, mask, grad_z,
+                            min_length, poly_fit_order, dz):
+    """
+    Compute map of gradient frequencies along Z.
+    """
+    return grad_z
