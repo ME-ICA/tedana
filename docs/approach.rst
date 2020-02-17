@@ -191,6 +191,10 @@ should be kept in the data or discarded.
 Unwanted components are then removed from the optimally combined data
 to produce the denoised data output.
 
+.. _principal component analysis (PCA): https://en.wikipedia.org/wiki/Principal_component_analysis
+.. _independent component Analysis (ICA): https://en.wikipedia.org/wiki/Independent_component_analysis
+
+
 TEDPCA
 ``````
 The next step is to dimensionally reduce the data with TE-dependent principal
