@@ -443,12 +443,12 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         RepLGR.info("A user-defined mask was applied to the data.")
     elif t2smap and not mask:
         LGR.info('Using user-defined T2* map to generate mask')
-        t2s_limited = utils.load_image(t2smap) * 1000
+        t2s_limited = utils.load_image(t2smap) * 1000  # convert to ms
         t2s_full = t2s_limited.copy()
         mask = (t2s_limited != 0).astype(int)
     elif t2smap and mask:
         LGR.info('Combining user-defined mask and T2* map to generate mask')
-        t2s_limited = utils.load_image(t2smap) * 1000
+        t2s_limited = utils.load_image(t2smap) * 1000  # convert to ms
         t2s_full = t2s_limited.copy()
         mask = utils.load_image(mask)
         mask[t2s_limited == 0] = 0  # reduce mask based on T2* map
