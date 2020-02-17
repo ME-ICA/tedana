@@ -61,9 +61,6 @@ ica_components.nii.gz     Component weight maps from ICA decomposition.
 betas_OC.nii.gz           Full ICA coefficient feature set.
 betas_hik_OC.nii.gz       High-kappa ICA coefficient feature set
 feats_OC2.nii.gz          Z-normalized spatial component maps
-comp_table_ica.txt        TEDICA component table. A tab-delimited file with
-                          summary metrics and inclusion/exclusion information
-                          for each component from the ICA decomposition.
 report.txt                A summary report for the workflow with relevant
                           citations.
 ======================    =====================================================
