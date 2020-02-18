@@ -59,7 +59,7 @@ Other software that uses multi-echo fMRI
 
 ``tedana`` represents only one approach to processing multi-echo data.
 Currently there are a number of methods that can take advantage of or use the
-information contain in multi-echo data.
+information contained in multi-echo data.
 These include:
 
 * | `3dMEPFM`_: A multi-echo implementation of 'paradigm free mapping', that is
@@ -77,12 +77,17 @@ These include:
 * | `Dual Echo Denoising`_: If the first echo can be collected early enough,
   | there are currently methods that take advantage of the very limited BOLD
   | weighting at these early echo times.
+* | `qMRLab`_: This is a MATLAB software package for quantitative magnetic
+  | resonance imaging. While it does not support ME-fMRI, it does include methods
+  | for estimating T2*/S0 from high-resolution, complex-valued multi-echo GRE
+  | data with correction for background field gradients.
 
 .. _3dMEPFM: https://afni.nimh.nih.gov/pub/dist/doc/program_help/3dMEPFM.html
 .. _following paper: https://www.sciencedirect.com/science/article/pii/S105381191930669X
 .. _Bayesian approach to denoising: https://ww5.aievolution.com/hbm1901/index.cfm?do=abs.viewAbs&abs=5026
 .. _Multi-echo Group ICA: https://ww5.aievolution.com/hbm1901/index.cfm?do=abs.viewAbs&abs=1286
 .. _Dual Echo Denoising: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3518782/
+.. _qMRLab: https://github.com/qMRLab/qMRLab
 
 Datasets
 --------

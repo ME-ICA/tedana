@@ -40,9 +40,28 @@ of the current ATSM (i.e. prototypes).
 
 .. _GE Collaboration Portal: https://collaborate.mr.gehealthcare.com
 
+Other available multi-echo MRI sequences
+----------------------------------------
+
+In addition to ME-fMRI, many other MR sequences benefit from acquiring multiple
+echoes, including T1-weighted imaging (MEMPRAGE) and susceptibility weighted imaging.
+While most of these kinds of sequences fall outside the purview of this documentation,
+we do want to document sequences for quantitative T2* mapping.
+Estimation of T2* and S0 from ME-fMRI data is inherently noisy, given the
+relatively low spatial resolution of EPI data and the limited number of echoes
+that can be acquired while maintaining reasonable temporal resolution.
+As such, ``tedana`` allows users to provide a T2* map as input to the workflow,
+which means that it may be beneficial to acquire a quantitative T2* map if you
+are also acquiring ME-fMRI data.
+
+Quantitative T2* mapping can be done with a multi-echo GRE sequence, such as a
+multi-echo FLASH stock sequence, with a large number of echoes (e.g., 12).
+When acquiring such a scan, it is best to reconstruct both magnitude and phase data.
+
+
 Acquisition parameter recommendations
 -------------------------------------
-There is no empirically tested best parameter set for multi-echo acquisition.
+There is no empirically tested best parameter set for multi-echo fMRI acquisition.
 The guidelines for optimizing parameters are similar to single-echo fMRI.
 For multi-echo fMRI, the same factors that may guide priorities for single echo
 fMRI sequences are also relevant.
@@ -88,7 +107,7 @@ and guidelines are discussed in the `appendix`_ of Dipasquale et al, 2017.
 ME-fMRI parameters and publications
 -----------------------------------
 
-The following page highlights a selection of parameters collected from published papers that have
+The following section highlights a selection of parameters collected from published papers that have
 used multi-echo fMRI.
 The subsequent spreadsheet is an on-going effort to track all of these publication.
 This is a volunteer-led effort so, if you know of a excluded publication, whether or not it is yours,
