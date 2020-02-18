@@ -1,0 +1,141 @@
+Acquiring multi-echo data
+=========================
+
+Available multi-echo fMRI sequences
+-----------------------------------
+
+Siemens
+```````
+**For Siemens** users, there are two options for Works In Progress (WIPs) Sequences.
+
+* | The Center for Magnetic Resonance Research at the University of Minnesota
+  | provides a custom MR sequence that allows users to collect multiple echoes
+  | (termed **Contrasts**). The sequence and documentation can be `found here`_.
+  | For details on obtaining a license follow `this link`_.
+  | By default the number of contrasts is 1, yielding a single-echo sequence.
+  | In order to collect multiple echoes, increase number of Contrasts on the
+  | **Sequence Tab, Part 1** on the MR console.
+* | The Martinos Center at Harvard also has a MR sequence available, with the
+  | details `available here`_. The number of echoes can be specified on the
+  | **Sequence, Special** tab in this sequence.
+
+.. _found here: https://www.cmrr.umn.edu/multiband/
+.. _this link: http://license.umn.edu/technologies/cmrr_center-for-magnetic-resonance-research-software-for-siemens-mri-scanners
+.. _available here: https://www.nmr.mgh.harvard.edu/software/c2p/sms
+
+GE
+``
+**For GE users**, there are currently two sharable pulse sequences:
+
+* Multi-echo EPI (MEPI) – Software releases: DV24, MP24 and DV25 (with offline recon)
+* | Hyperband Multi-echo EPI (HyperMEPI) - Software releases: DV26, MP26, DV27, RX27
+  | (here hyperband can be deactivated to do simple Multi-echo EPI – online recon)
+
+Please reach out to the GE Research Operation team or each pulse sequence’s
+author to begin the process of obtaining this software.
+More information can be found on the `GE Collaboration Portal`_
+
+Once logged in, go to Groups > GE Works-in-Progress you can find the description
+of the current ATSM (i.e. prototypes).
+
+.. _GE Collaboration Portal: https://collaborate.mr.gehealthcare.com
+
+Acquisition parameter recommendations
+-------------------------------------
+There is no empirically tested best parameter set for multi-echo acquisition.
+The guidelines for optimizing parameters are similar to single-echo fMRI.
+For multi-echo fMRI, the same factors that may guide priorities for single echo
+fMRI sequences are also relevant.
+Choose sequence parameters that meet the priorities of a study with regards to spatial resolution,
+spatial coverage, sample rate, signal-to-noise ratio, signal drop-out, distortion, and artifacts.
+
+A minimum of 3 echoes is required for running the current implementation fo TE-dependent denoising in
+``tedana``.
+It may be useful to have at least one echo that is earlier and one echo that is later than the
+TE one would use for single-echo T2* weighted fMRI.
+
+.. note::
+    This is in contrast to the **dual echo** denoising method which uses a very early (~5ms)
+    first echo in order to clean data. For more information on this method, see `Bright and Murphy`_ (2013).
+
+.. _Bright and Murphy: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3518782/
+
+More than 3 echoes may be useful, because that would allow for more accurate
+estimates of BOLD and non-BOLD weighted fluctuations, but more echoes have an
+additional time cost, which would result in either less spatiotemporal coverage
+or more acceleration.
+Where the benefits of more echoes balance out the additional costs is an open research question.
+
+We are not recommending specific parameter options at this time.
+There are multiple ways to balance the slight time cost from the added echoes that have
+resulted in research publications.
+We suggest new multi-echo fMRI users examine the :ref:`spreadsheet of publications` that use
+multi-echo fMRI to identify studies with similar acquisition priorities,
+and use the parameters from those studies as a starting point.
+More complete recommendations
+and guidelines are discussed in the `appendix`_ of Dipasquale et al, 2017.
+
+.. _appendix: https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0173289
+
+.. note::
+    In order to increase the number of contrasts ("echoes") you may need to first increase the TR, shorten the
+    first TE and/or enable in-plane acceleration.
+    For typically used parameters see the `parameters and publications page`_
+.. _parameters and publications page: https://tedana.readthedocs.io/en/latest/publications.html
+
+.. _spreadsheet of publications:
+
+ME-fMRI parameters and publications
+-----------------------------------
+
+The following page highlights a selection of parameters collected from published papers that have
+used multi-echo fMRI.
+The subsequent spreadsheet is an on-going effort to track all of these publication.
+This is a volunteer-led effort so, if you know of a excluded publication, whether or not it is yours,
+please add it.
+
+The following plots reflect the average values for studies conducted at 3 Tesla.
+
+.. plot::
+
+    import matplotlib.pyplot as plt
+    import pandas as pd
+    import numpy as np
+    # TODO deal with the issue that the plot doesn't regenterate (ie isn't alive)
+    # Unless the code is updated.
+    metable = pd.read_csv('https://docs.google.com/spreadsheets/d/1WERojJyxFoqcg_tndUm5Kj0H1UfUc9Ban0jFGGfPaBk/export?gid=0&format=csv',
+                           header=0)
+    TEs = [metable.TE1.mean(), metable.TE2.mean(), metable.TE3.mean(), metable.TE4.mean(), metable.TE5.mean()]
+    TE_labels = ['TE1', 'TE2', 'TE3', 'TE4', 'TE5']
+    plt.bar([1, 2, 3, 4, 5], TEs)
+    plt.title('Echo Times', fontsize=18)
+    pub_count = metable.TE1.count()
+    plt.text(0.5,60, 'Average from {} studies'.format(pub_count))
+    plt.xlabel('Echo Number')
+    plt.ylabel('Echo Time (ms)')
+    plt.show()
+
+
+    plt.hist(metable.TR.to_numpy())
+    plt.title('Repetition Times', fontsize = 18)
+    plt.xlabel('Repetition Time (s)')
+    plt.ylabel('Count')
+    plt.show()
+
+
+    x_vox = metable.x.to_numpy()
+    y_vox = metable.y.to_numpy()
+    z_vox = metable.z.to_numpy()
+    plt.hist(np.nanmean([x_vox, y_vox, z_vox],0))
+    plt.title('Voxel Dimensions', fontsize = 18)
+    plt.xlabel('Average Voxel dimension (mm)')
+    plt.ylabel('Count')
+    plt.show()
+
+You can view and suggest additions to this spreadsheet `here`_
+
+.. raw:: html
+
+    <iframe style="position: absolute; height: 60%; width: 60%; border: none" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vS0nEVp27NpwdzPunvMLflyKzcZbCo4k2qPk5zxEiaoJTD_IY1OGbWICizogAEZlTyL7d_7aDA92uwf/pubhtml?widget=true&amp;headers=false"></iframe>
+
+.. _here: https://docs.google.com/spreadsheets/d/1WERojJyxFoqcg_tndUm5Kj0H1UfUc9Ban0jFGGfPaBk/edit#gid=0
