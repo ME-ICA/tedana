@@ -14,7 +14,7 @@ RefLGR = logging.getLogger('REFERENCES')
 def t2star_fit(multiecho_magn, multiecho_phase, echo_times,
                compute_freq_map=True, smooth_freq_map=True,
                compute_corrected_fitting=True,
-               prefix='top_', path_current='.', fitting_method='nlls'):
+               out_dir='.', fitting_method='nlls'):
     """
     Estimate T2* values for complex multi-echo data.
 
@@ -52,8 +52,8 @@ def t2star_fit(multiecho_magn, multiecho_phase, echo_times,
 
     # Smooth field map of frequencies
 	freq_smooth = t2star_smoothFreqMap(
-        multiecho_magn, multiecho_phase, freq, mask,
-        echo_times, mask_thresh, rmse_thresh)
+        multiecho_magn, multiecho_phase, freq, mask, echo_times,
+        mask_thresh=params['mask_thresh'], rmse_thresh=params['rmse_thresh'])
 
     # Correct z gradients
     grad_z = t2star_computeGradientZ(
