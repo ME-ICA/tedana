@@ -71,7 +71,7 @@ used as an input to many functions in the tedana workflow.
 
 There are many ways to calculate T2* maps, with some using multi-echo acquisitions.
 We are not presenting an expansive review of this literature here,
-but Cohen-Adad et al. (2012) and Ruuth et al. (2019) are good places to start
+but `Cohen-Adad et al. (2012)`_ and `Ruuth et al. (2019)`_ are good places to start
 learning more about this topic.
 
 .. _Cohen-Adad et al. (2012): https://doi.org/10.1016/j.neuroimage.2012.01.053
