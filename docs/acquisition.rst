@@ -4,6 +4,13 @@ Acquiring multi-echo data
 Available multi-echo fMRI sequences
 -----------------------------------
 
+We have attempted to compile some basic multi-echo fMRI protocols in an `OSF project`_.
+These protocols should not be considered "canonical".
+If you would like to use one of them, please customize it for your own purposes
+and make sure to pilot it before using it in a study.
+
+.. _OSF project: https://osf.io/ebkrp/
+
 Siemens
 ```````
 **For Siemens** users, there are two options for Works In Progress (WIPs) Sequences.
