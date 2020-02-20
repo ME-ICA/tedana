@@ -156,6 +156,12 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
    roadmap
    api
 
+.. toctree::
+   :hidden:
+   :name: hiddentoc
+
+   dependence_metrics
+
 Indices and tables
 ------------------
 

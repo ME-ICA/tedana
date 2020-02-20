@@ -30,6 +30,7 @@ Siemens
 .. _this link: http://license.umn.edu/technologies/cmrr_center-for-magnetic-resonance-research-software-for-siemens-mri-scanners
 .. _available here: https://www.nmr.mgh.harvard.edu/software/c2p/sms
 
+
 GE
 ``
 **For GE users**, there are currently two sharable pulse sequences:
@@ -47,9 +48,9 @@ of the current ATSM (i.e. prototypes).
 
 .. _GE Collaboration Portal: https://collaborate.mr.gehealthcare.com
 
+
 Other available multi-echo MRI sequences
 ----------------------------------------
-
 In addition to ME-fMRI, many other MR sequences benefit from acquiring multiple
 echoes, including T1-weighted imaging (MEMPRAGE) and susceptibility weighted imaging.
 While most of these kinds of sequences fall outside the purview of this documentation,
@@ -60,6 +61,11 @@ that can be acquired while maintaining reasonable temporal resolution.
 As such, ``tedana`` allows users to provide a T2* map as input to the workflow,
 which means that it may be beneficial to acquire a quantitative T2* map if you
 are also acquiring ME-fMRI data.
+
+.. warning::
+    While tedana allows the input of a T2* map from any source, and a more
+    accurate T2* map should lead to better results, this hasn't been
+    systematically evaluated yet.
 
 Quantitative T2* mapping can be done with a multi-echo GRE sequence, such as a
 multi-echo FLASH stock sequence, with a large number of echoes (e.g., 12).
@@ -106,19 +112,16 @@ and guidelines are discussed in the `appendix`_ of Dipasquale et al, 2017.
 .. note::
     In order to increase the number of contrasts ("echoes") you may need to first increase the TR, shorten the
     first TE and/or enable in-plane acceleration.
-    For typically used parameters see the `parameters and publications page`_
-.. _parameters and publications page: https://tedana.readthedocs.io/en/latest/publications.html
+    For typically used parameters see the **ME-fMRI parameters** section below.
 
-.. _spreadsheet of publications:
 
-ME-fMRI parameters and publications
------------------------------------
+.. _common multi-echo parameters:
 
+ME-fMRI parameters
+------------------
 The following section highlights a selection of parameters collected from published papers that have
 used multi-echo fMRI.
-The subsequent spreadsheet is an on-going effort to track all of these publication.
-This is a volunteer-led effort so, if you know of a excluded publication, whether or not it is yours,
-please add it.
+You can see the spreadsheet of publications at :ref:`spreadsheet of publications`.
 
 The following plots reflect the average values for studies conducted at 3 Tesla.
 
@@ -157,11 +160,3 @@ The following plots reflect the average values for studies conducted at 3 Tesla.
     plt.xlabel('Average Voxel dimension (mm)')
     plt.ylabel('Count')
     plt.show()
-
-You can view and suggest additions to this spreadsheet `here`_
-
-.. raw:: html
-
-    <iframe style="position: absolute; height: 60%; width: 60%; border: none" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vS0nEVp27NpwdzPunvMLflyKzcZbCo4k2qPk5zxEiaoJTD_IY1OGbWICizogAEZlTyL7d_7aDA92uwf/pubhtml?widget=true&amp;headers=false"></iframe>
-
-.. _here: https://docs.google.com/spreadsheets/d/1WERojJyxFoqcg_tndUm5Kj0H1UfUc9Ban0jFGGfPaBk/edit#gid=0
