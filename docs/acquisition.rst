@@ -5,9 +5,12 @@ Available multi-echo fMRI sequences
 -----------------------------------
 
 We have attempted to compile some basic multi-echo fMRI protocols in an `OSF project`_.
-These protocols should not be considered "canonical".
+The parameter choices in these protocols run and seem reasonable, but they have
+not been optimized for a specific situation.
+They are a good starting point for someone designing a study, but should not be
+considered canonical.
 If you would like to use one of them, please customize it for your own purposes
-and make sure to pilot it before using it in a study.
+and make sure to run pilot scans to test your choices.
 
 .. _OSF project: https://osf.io/ebkrp/
 
