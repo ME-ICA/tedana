@@ -3,7 +3,6 @@ Acquiring multi-echo data
 
 Available multi-echo fMRI sequences
 -----------------------------------
-
 We have attempted to compile some basic multi-echo fMRI protocols in an `OSF project`_.
 The parameter choices in these protocols run and seem reasonable, but they have
 not been optimized for a specific situation.
@@ -54,25 +53,29 @@ of the current ATSM (i.e. prototypes).
 
 Other available multi-echo MRI sequences
 ----------------------------------------
-In addition to ME-fMRI, many other MR sequences benefit from acquiring multiple
+In addition to ME-fMRI, other MR sequences benefit from acquiring multiple
 echoes, including T1-weighted imaging (MEMPRAGE) and susceptibility weighted imaging.
 While most of these kinds of sequences fall outside the purview of this documentation,
-we do want to document sequences for quantitative T2* mapping.
-Estimation of T2* and S0 from ME-fMRI data is inherently noisy, given the
-relatively low spatial resolution of EPI data and the limited number of echoes
-that can be acquired while maintaining reasonable temporal resolution.
-As such, ``tedana`` allows users to provide a T2* map as input to the workflow,
-which means that it may be beneficial to acquire a quantitative T2* map if you
-are also acquiring ME-fMRI data.
+quantitative T2* mapping is relevant since a baseline T2* map is used in several
+processing steps including :ref:`optimal combination`.
+While the T2* map estimated directly from fMRI time series is noisy, no current
+study quantifies the benefit to optimal combination or tedana denoising if a
+higher quality T2* map is used.
+Some benefit is likely, so, if a T2* map is independently calculated, it can be
+used as an input to many functions in the tedana workflow.
 
 .. warning::
     While tedana allows the input of a T2* map from any source, and a more
     accurate T2* map should lead to better results, this hasn't been
     systematically evaluated yet.
 
-Quantitative T2* mapping can be done with a multi-echo GRE sequence, such as a
-multi-echo FLASH stock sequence, with a large number of echoes (e.g., 12).
-When acquiring such a scan, it is best to reconstruct both magnitude and phase data.
+There are many ways to calculate T2* maps, with some using multi-echo acquisitions.
+We are not presenting an expansive review of this literature here,
+but Cohen-Adad et al. (2012) and Ruuth et al. (2019) are good places to start
+learning more about this topic.
+
+.. _Cohen-Adad et al. (2012): https://doi.org/10.1016/j.neuroimage.2012.01.053
+.. _Ruuth et al. (2019): https://doi.org/10.1016/j.ejro.2018.12.006
 
 
 Acquisition parameter recommendations
