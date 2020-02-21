@@ -86,9 +86,10 @@ def test_integration_five_echo(skip_integration):
     prepend = '/tmp/data/five-echo/p06.SBJ01_S09_Task11_e'
     suffix = '.sm.nii.gz'
     datalist = [prepend + str(i + 1) + suffix for i in range(5)]
+    echo_times = [15.4, 29.7, 44.0, 58.3, 72.6]
     tedana_cli.tedana_workflow(
         data=datalist,
-        tes=[15.4, 29.7, 44.0, 58.3, 72.6],
+        tes=echo_times,
         out_dir=out_dir,
         tedpca='aic',
         fittype='curvefit',
@@ -106,8 +107,8 @@ def test_integration_five_echo(skip_integration):
     mixing = os.path.join(out_dir, 'ica_mixing.tsv')
     args = (['-d'] + datalist + ['-e'] + echo_times +
             ['--out-dir', out_dir2, '--debug', '--verbose',
-            '--manacc', ','.join(acc_comps.astype(str)),
-            '--ctab', comptable, '--mixm', mixing])
+             '--manacc', ','.join(acc_comps.astype(str)),
+             '--ctab', comptable, '--mixm', mixing])
     tedana_cli._main(args)
 
     # compare the generated output files
@@ -170,9 +171,6 @@ def test_integration_three_echo(skip_integration):
         tedpca='mdl')
 
     # Test re-running, but use the CLI
-    out_dir2 = '/tmp/data/five-echo/TED.five-echo-manual'
-    acc_comps = df.loc[df['classification'] == 'accepted'].index.values
-    mixing = os.path.join(out_dir, 'ica_mixing.tsv')
     args = (['-d', '/tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz',
              '-e', '14.5', '38.5', '62.5',
              '--out-dir', out_dir2, '--debug', '--verbose',
