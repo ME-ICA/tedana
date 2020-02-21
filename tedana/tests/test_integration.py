@@ -105,10 +105,10 @@ def test_integration_five_echo(skip_integration):
     out_dir2 = '/tmp/data/five-echo/TED.five-echo-manual'
     acc_comps = df.loc[df['classification'] == 'accepted'].index.values
     mixing = os.path.join(out_dir, 'ica_mixing.tsv')
-    args = (['-d'] + datalist + ['-e'] + echo_times +
+    args = (['-d'] + datalist + ['-e'] + [str(te) for te in echo_times] +
             ['--out-dir', out_dir2, '--debug', '--verbose',
              '--manacc', ','.join(acc_comps.astype(str)),
-             '--ctab', comptable, '--mixm', mixing])
+             '--ctab', comptable, '--mix', mixing])
     tedana_cli._main(args)
 
     # compare the generated output files
@@ -175,7 +175,7 @@ def test_integration_three_echo(skip_integration):
              '-e', '14.5', '38.5', '62.5',
              '--out-dir', out_dir2, '--debug', '--verbose',
              '--ctab', os.path.join(out_dir, 'ica_decomposition.json'),
-             '--mixm', os.path.join(out_dir, 'ica_mixing.tsv')])
+             '--mix', os.path.join(out_dir, 'ica_mixing.tsv')])
     tedana_cli._main(args)
 
     # compare the generated output files
