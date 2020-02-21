@@ -141,11 +141,11 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-   
+
    installation
    multi-echo
-   considerations
-   publications
+   acquisition
+   resources
    usage
    approach
    outputs
@@ -155,6 +155,12 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
    developing
    roadmap
    api
+
+.. toctree::
+   :hidden:
+   :name: hiddentoc
+
+   dependence_metrics
 
 Indices and tables
 ------------------

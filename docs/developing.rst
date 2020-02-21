@@ -69,7 +69,7 @@ To write the test function you can follow the model of our `five echo set`_, whi
    actual output.
 
 (4) If you need to upload new data, you will need to contact the maintainers and ask them to either add
-it to `OSF`_ or give you permission to add it.
+it to the `tedana OSF project`_ or give you permission to add it.
 
 (5) Once you've tested your integration test locally and it is working, you will need to add it to the
 CircleCI config and the ``Makefile``.
@@ -138,7 +138,7 @@ We should see that our unit test is successful via
 .. code-block:: bash
 
     pytest $TEDANADIR/tedana/tests/test_io.py -k test_say_hello
-    
+
 If not, we should continue editing the function until it passes our test.
 Let's suppose that suddenly, you realize that what would be even more useful is a function that
 takes an argument, ``place``, so that the output filename is actually ``hello_PLACE``, with
@@ -208,6 +208,7 @@ We should then do the following cleanup with our git repository:
 and we're good to go!
 
 
+.. _`tedana OSF project`: https://osf.io/bpe8h/
 .. _git: https://git-scm.com/
 .. _`git pro`: https://git-scm.com/book/en/v2
 .. _repository: https://github.com/ME-ICA/tedana
