@@ -2,11 +2,11 @@
 Run the "canonical" TE-Dependent ANAlysis workflow.
 """
 import os
+import os.path as op
 import shutil
 import logging
-import os.path as op
-from glob import glob
 import datetime
+from glob import glob
 
 import argparse
 import numpy as np
