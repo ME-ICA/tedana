@@ -89,6 +89,14 @@ def _get_parser():
                                'demanding monoexponential model is fit'
                                'to the raw data',
                           default='loglin')
+    optional.add_argument('--n-threads',
+                          dest='n_threads',
+                          type=int,
+                          action='store',
+                          help=('Number of threads to use. Used by '
+                                'threadcountctl to set the parameter outside '
+                                'of the workflow function.'),
+                          default=-1)
     optional.add_argument('--debug',
                           dest='debug',
                           help=argparse.SUPPRESS,
@@ -248,7 +256,11 @@ def _main(argv=None):
     else:
         logging.basicConfig(level=logging.INFO)
 
-    t2smap_workflow(**vars(options))
+    kwargs = vars(options)
+    n_threads = kwargs.pop('n_threads')
+    n_threads = None if n_threads == -1 else n_threads
+    with threadpool_limits(limits=n_threads, user_api=None):
+        t2smap_workflow(**vars(options))
 
 
 if __name__ == '__main__':

@@ -2,13 +2,6 @@
 Run the "canonical" TE-Dependent ANAlysis workflow.
 """
 import os
-
-os.environ['MKL_NUM_THREADS'] = '1'
-os.environ['NUMEXPR_NUM_THREADS'] = '1'
-os.environ['OMP_NUM_THREADS'] = '1'
-os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
-os.environ['OPENBLAS_NUM_THREADS'] = '1'
-
 import shutil
 import logging
 import os.path as op
@@ -19,6 +12,7 @@ import argparse
 import numpy as np
 import pandas as pd
 from scipy import stats
+from threadpoolctl import threadpool_limits
 from nilearn.masking import compute_epi_mask
 
 from tedana import (decay, combine, decomposition, io, metrics, selection,
@@ -177,6 +171,14 @@ def _get_parser():
                                 'use of IncrementalPCA. May increase workflow '
                                 'duration.'),
                           default=False)
+    optional.add_argument('--n-threads',
+                          dest='n_threads',
+                          type=int,
+                          action='store',
+                          help=('Number of threads to use. Used by '
+                                'threadcountctl to set the parameter outside '
+                                'of the workflow function.'),
+                          default=-1)
     optional.add_argument('--debug',
                           dest='debug',
                           action='store_true',
@@ -669,7 +671,11 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
 def _main(argv=None):
     """Tedana entry point"""
     options = _get_parser().parse_args(argv)
-    tedana_workflow(**vars(options))
+    kwargs = vars(options)
+    n_threads = kwargs.pop('n_threads')
+    n_threads = None if n_threads == -1 else n_threads
+    with threadpool_limits(limits=n_threads, user_api=None):
+        tedana_workflow(**kwargs)
 
 
 if __name__ == '__main__':
