@@ -137,3 +137,35 @@ def apply_sort(*args, sort_idx, axis=0):
     for arg in args:
         assert arg.shape[axis] == len(sort_idx)
     return [np.take(arg, sort_idx, axis=axis) for arg in args]
+
+
+def check_mask(data, mask):
+    """
+    Check that no zero-variance voxels remain in masked data.
+
+    Parameters
+    ----------
+    data : (S [x E] x T) array_like
+        Data to be masked and evaluated.
+    mask : (S) array_like
+        Boolean mask.
+
+    Raises
+    ------
+    ValueError
+    """
+    assert data.ndim <= 3
+    assert mask.shape[0] == data.shape[0]
+    masked_data = data[mask, ...]
+    dims_to_check = list(range(1, data.ndim))
+    for dim in dims_to_check:
+        # ignore singleton dimensions
+        if masked_data.shape[dim] == 1:
+            continue
+
+        masked_data_std = masked_data.std(axis=dim)
+        zero_idx = np.where(masked_data_std == 0)
+        n_bad_voxels = len(zero_idx[0])
+        if n_bad_voxels > 0:
+            raise ValueError('{0} voxels in masked data have zero variance. '
+                             'Mask is too liberal.'.format(n_bad_voxels))
