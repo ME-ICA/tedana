@@ -104,7 +104,9 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
     data_optcom = data_optcom[mask, :]
 
     required_metrics = dependency_resolver(METRIC_DEPENDENCIES, metrics, INPUTS)
-    mixing = mixing.copy()  # Use copy to avoid changing the original variable outside of thise function
+
+    # Use copy to avoid changing the original variable outside of this function
+    mixing = mixing.copy()
 
     # Generate the component table, which will be filled out, column by column,
     # throughout this function
