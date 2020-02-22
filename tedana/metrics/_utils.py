@@ -109,7 +109,7 @@ def sort_df(df, by='kappa', ascending=False):
     ----------
     df : :obj:`pandas.DataFrame`
         DataFrame to sort.
-    by : :obj:`str`, optional
+    by : :obj:`str` or None, optional
         Column by which to sort the DataFrame. Default is 'kappa'.
     ascending : :obj:`bool`, optional
         Whether to sort the DataFrame in ascending (True) or descending (False)
@@ -122,6 +122,9 @@ def sort_df(df, by='kappa', ascending=False):
     argsort : array_like
         Sorting index.
     """
+    if by is None:
+        return df, df.index.values
+
     # Order of kwargs is preserved at 3.6+
     argsort = df[by].argsort()
     if not ascending:

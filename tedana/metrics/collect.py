@@ -201,13 +201,34 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
             metric_maps['map FS0 clusterized'], axis=0)
 
     if 'signal-noise_t' in required_metrics:
+        RepLGR.info('A t-test was performed between the distributions of T2*-model '
+                    'F-statistics associated with clusters (i.e., signal) and '
+                    'non-cluster voxels (i.e., noise) to generate a t-statistic '
+                    '(metric signal-noise_z) and p-value (metric signal-noise_p) '
+                    'measuring relative association of the component to signal '
+                    'over noise.')
         (comptable['signal-noise_t'],
          comptable['signal-noise_p']) = dependence.compute_signal_minus_noise_t(
             Z_maps=metric_maps['map Z'],
             Z_clmaps=metric_maps['map Z clusterized'],
             F_T2_maps=metric_maps['map FT2'])
 
+    if 'signal-noise_z' in required_metrics:
+        RepLGR.info('A t-test was performed between the distributions of T2*-model '
+                    'F-statistics associated with clusters (i.e., signal) and '
+                    'non-cluster voxels (i.e., noise) to generate a z-statistic '
+                    '(metric signal-noise_z) and p-value (metric signal-noise_p) '
+                    'measuring relative association of the component to signal '
+                    'over noise.')
+        (comptable['signal-noise_z'],
+         comptable['signal-noise_p']) = dependence.compute_signal_minus_noise_z(
+            Z_maps=metric_maps['map Z'],
+            Z_clmaps=metric_maps['map Z clusterized'],
+            F_T2_maps=metric_maps['map FT2'])
+
     if 'countnoise' in required_metrics:
+        RepLGR.info('The number of significant voxels not from clusters was '
+                    'calculated for each component.')
         comptable['countnoise'] = dependence.compute_countnoise(
             metric_maps['map Z'],
             metric_maps['map Z clusterized'])
@@ -223,5 +244,5 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
 
     # Sort the component table and mixing matrix
     comptable, sort_idx = sort_df(comptable, by=sort_by, ascending=ascending)
-    mixing = apply_sort(mixing, sort_idx=sort_idx, axis=1)
+    mixing, = apply_sort(mixing, sort_idx=sort_idx, axis=1)
     return comptable, mixing
