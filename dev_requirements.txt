@@ -2,9 +2,10 @@
 sphinx
 sphinx-argparse
 sphinx_rtd_theme
-coverage
+coverage<5.0
 flake8>=3.7
 numpydoc
 pytest
 pytest-cov
 requests
+sphinx

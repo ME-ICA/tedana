@@ -66,7 +66,8 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
         component selection. If `algorithm` is None, then seldict will be None as
         well.
     betas : :obj:`numpy.ndarray`
-    mmix_new : :obj:`numpy.ndarray`
+    mmix_corrected : :obj:`numpy.ndarray`
+        Mixing matrix after sign correction and resorting (if reindex is True).
     """
     # Use t2s as mask
     mask = t2s != 0
@@ -90,7 +91,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
                              't2s ({1})'.format(catd.shape[2], t2s.shape[1]))
 
     RepLGR.info("A series of TE-dependence metrics were calculated for "
-                "each ICA component, including Kappa, Rho, and variance "
+                "each component, including Kappa, Rho, and variance "
                 "explained.")
 
     # mask everything we can
@@ -107,7 +108,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
     WTS = computefeats2(tsoc, mmixN, mask=None, normalize=False)
 
     # compute PSC dataset - shouldn't have to refit data
-    tsoc_B = get_coeffs(tsoc_dm, mmix, mask=None)
+    tsoc_B = get_coeffs(tsoc_dm, mmix, mask=None, add_const=False)
     del tsoc_dm
     tsoc_Babs = np.abs(tsoc_B)
     PSC = tsoc_B / tsoc.mean(axis=-1, keepdims=True) * 100
@@ -116,8 +117,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
     # correct mmix & WTS signs based on spatial distribution tails
     signs = stats.skew(WTS, axis=0)
     signs /= np.abs(signs)
-    mmix = mmix.copy()
-    mmix *= signs
+    mmix_corrected = mmix * signs
     WTS *= signs
     PSC *= signs
     totvar = (tsoc_B**2).sum()
@@ -125,7 +125,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
 
     # compute Betas and means over TEs for TE-dependence analysis
     betas = get_coeffs(utils.unmask(catd, mask),
-                       mmix,
+                       mmix_corrected,
                        np.repeat(mask[:, np.newaxis], len(tes), axis=1))
     betas = betas[mask, ...]
     n_voxels, n_echos, n_components = betas.shape
@@ -197,7 +197,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
         # re-index all components in descending Kappa order
         sort_idx = comptable[:, 0].argsort()[::-1]
         comptable = comptable[sort_idx, :]
-        mmix_new = mmix[:, sort_idx]
+        mmix_corrected = mmix_corrected[:, sort_idx]
         betas = betas[..., sort_idx]
         pred_R2_maps = pred_R2_maps[:, :, sort_idx]
         pred_S0_maps = pred_S0_maps[:, :, sort_idx]
@@ -209,9 +209,6 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
             WTS = WTS[:, sort_idx]
             PSC = PSC[:, sort_idx]
             tsoc_B = tsoc_B[:, sort_idx]
-    else:
-        mmix_new = mmix
-    del mmix
 
     if verbose:
         # Echo-specific weight maps for each of the ICA components.
@@ -309,7 +306,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
     else:
         seldict = None
 
-    return comptable, seldict, betas, mmix_new
+    return comptable, seldict, betas, mmix_corrected
 
 
 def kundu_metrics(comptable, metric_maps):
