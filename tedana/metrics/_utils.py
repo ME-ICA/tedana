@@ -33,6 +33,7 @@ def dependency_resolver(dict_, requested_metrics, base_inputs):
         raise ValueError('Unknown metric(s): {}'.format(', '.join(not_found)))
 
     required_metrics = requested_metrics
+    escape_counter = 0
     while True:
         required_metrics_new = required_metrics[:]
         for k in required_metrics:
@@ -46,6 +47,10 @@ def dependency_resolver(dict_, requested_metrics, base_inputs):
             break
         else:
             required_metrics = required_metrics_new
+        escape_counter += 1
+        if escape_counter >= 1000:
+            print('dependency_resolver in infinite loop. Escaping early.')
+            break
     return required_metrics
 
 
