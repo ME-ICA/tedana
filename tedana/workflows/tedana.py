@@ -465,13 +465,6 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         LGR.info('Computing T2* map')
         t2s_limited, s0_limited, t2s_full, s0_full = decay.fit_decay(
             catd, tes, mask, masksum, fittype)
-
-        # set a hard cap for the T2* map
-        # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
-        cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5,
-                                          interpolation_method='lower')
-        LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
-        t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
         io.filewrite(t2s_limited, op.join(out_dir, 't2sv.nii'), ref_img)
         io.filewrite(s0_limited, op.join(out_dir, 's0v.nii'), ref_img)
 
