@@ -216,8 +216,6 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     o[mask, ...] = eimum
     eimum = np.squeeze(o).astype(bool)
 
-    # Normalize each component's time series
-    vTmixN = stats.zscore(comp_ts, axis=0)
     required_metrics = [
         'kappa', 'rho', 'countnoise', 'countsigFT2', 'countsigFS0',
         'dice_FT2', 'dice_FS0', 'signal-noise_t',
