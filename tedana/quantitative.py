@@ -4,7 +4,9 @@ Functions to estimate S0 and T2* from complex multi-echo data.
 import logging
 import scipy
 import numpy as np
+import nibabel as nib
 from tedana import utils
+from scipy import ndimage
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
@@ -45,13 +47,13 @@ def t2star_fit(multiecho_magn, multiecho_phase, echo_times,
         'threshold_t2star_max': 1000,  # in ms. threshold T2* map (for quantization purpose when saving in NIFTI).Suggested value=1000.
     }
     # Compute field map of frequencies from multi-echo phase data
-	freq_img, mask_img = t2star_computeFreqMap(
+    freq_img, mask_img = t2star_computeFreqMap(
         multiecho_magn, multiecho_phase, echo_times,
         mask_thresh=params['mask_thresh'],
         rmse_thresh=params['rmse_thresh'])
 
     # Smooth field map of frequencies
-	freq_smooth = t2star_smoothFreqMap(
+    freq_smooth = t2star_smoothFreqMap(
         multiecho_magn, multiecho_phase, freq, mask, echo_times,
         mask_thresh=params['mask_thresh'], rmse_thresh=params['rmse_thresh'])
 
@@ -76,6 +78,7 @@ def t2star_computeFreqMap(multiecho_magn, multiecho_phase, echo_times,
     """
     Compute field map of frequencies from multi echo phase data.
     """
+    echo_times = np.array(echo_times)
     first_img = nib.load(multiecho_magn[0])
     dims = first_img.shape
     n_echoes = len(multiecho_magn)
@@ -86,7 +89,7 @@ def t2star_computeFreqMap(multiecho_magn, multiecho_phase, echo_times,
 
     multiecho_magn_data = np.zeros((n_x, n_y, n_z, n_t, n_echoes))
     multiecho_phase_data = np.zeros((n_x, n_y, n_z, n_t, n_echoes))
-    for i_echo in range(len(n_echoes)):
+    for i_echo in range(n_echoes):
         echo_magn_data = nib.load(multiecho_magn[i_echo]).get_fdata()
         echo_phase_data = nib.load(multiecho_phase[i_echo]).get_fdata()
         multiecho_magn_data[..., i_echo] = echo_magn_data
@@ -108,24 +111,24 @@ def t2star_computeFreqMap(multiecho_magn, multiecho_phase, echo_times,
         phase_slice_data = multiecho_phase_data[:, :, i_slice, :]
 
         # Create mask from magnitude data
-    	print("Create mask from first echo's magnitude data...")
-    	data_multiecho_magn_smooth_2d = ndimage.gaussian_filter(
+        print("Create mask from first echo's magnitude data...")
+        data_multiecho_magn_smooth_2d = ndimage.gaussian_filter(
             data_multiecho_magn[:, :, 0], sigma=(5, 5), mode='mirror', order=0
         )
         mask_2d = data_multiecho_magn_smooth_2d > mask_thresh
         n_mask_pixels = mask_2d.sum()
-    	print(".. Number of pixels: {}".format(n_mask_pixels))
-    	mask_3d[:, :, i_slice] = mask_2d
+        print(".. Number of pixels: {}".format(n_mask_pixels))
+        mask_3d[:, :, i_slice] = mask_2d
 
         # convert to Radian [0,2pi), assuming max value is 4095
         print('Convert to Radian [0,2pi), assuming max value is 4095...')
-    	max_phase_rad = 2 * np.pi * (1 - (1. / 4096))
-    	data_multiecho_phase = (data_multiecho_phase / 4095.) * max_phase_rad
+        max_phase_rad = 2 * np.pi * (1 - (1. / 4096))
+        data_multiecho_phase = (data_multiecho_phase / 4095.) * max_phase_rad
 
         freq_map_2d = np.zeros((nx, ny))
-	    err_phase_2d = np.zeros((nx, ny))
+        err_phase_2d = np.zeros((nx, ny))
         data_multiecho_magn_2d = np.reshape(data_multiecho_magn, (n_x*n_y, n_t));
-	    data_multiecho_phase_2d = np.reshape(data_multiecho_phase,(n_x*n_y, n_t));
+        data_multiecho_phase_2d = np.reshape(data_multiecho_phase,(n_x*n_y, n_t));
         mask_1d = np.reshape(mask_2d, (n_x*n_y))
         X = np.concatenate((echo_times_s.T, np.ones((n_echoes, 1))), axis=1)
         mask_1d_idx = np.where(mask_1d)[0]
@@ -136,22 +139,22 @@ def t2star_computeFreqMap(multiecho_magn, multiecho_phase, echo_times,
             data_phase_1d_unwrapped = np.unwrap(data_phase_1d)
 
             # Linear least square fitting of y = a.X + err
-			phase_1d = data_phase_1d_unwrapped
+            phase_1d = data_phase_1d_unwrapped
             betas_unscaled, _, _, _ = np.linalg.lstsq(phase_1d, X)
 
-		    # scale phase signal
-		    phase_1d_scaled = phase_1d - np.min(phase_1d)
-		    phase_1d_scaled = phase_1d_scaled / np.max(phase_1d_scaled)
-		  	# Linear least square fitting of scaled phase
+            # scale phase signal
+            phase_1d_scaled = phase_1d - np.min(phase_1d)
+            phase_1d_scaled = phase_1d_scaled / np.max(phase_1d_scaled)
+              # Linear least square fitting of scaled phase
             betas_scaled, _, _, _ = np.linalg.lstsq(phase_1d_scaled, X)
-			err_phase_2d[mask_idx] = np.sqrt(
+            err_phase_2d[mask_idx] = np.sqrt(
                 np.sum(
                     (phase_1d_scaled.T - (betas_scaled[0] * echo_times_s + betas_scaled[1])) ** 2
                 )
             )
 
             # Get frequency in Hertz
-			freq_map_2d[mask_idx] = betas_unscaled[0] / (2 * np.pi)
+            freq_map_2d[mask_idx] = betas_unscaled[0] / (2 * np.pi)
 
         # Crease mask from RMSE map
         mask_freq = np.zeros((n_x, n_y))
@@ -161,7 +164,7 @@ def t2star_computeFreqMap(multiecho_magn, multiecho_phase, echo_times,
         freq_map_2d_masked[rmse_idx] = freq_map_2d[rmse_idx]
 
         # fill 3D matrix
-		freq_map_3d[:, :, i_slice] = freq_map_2d_masked
+        freq_map_3d[:, :, i_slice] = freq_map_2d_masked
 
     freq_img = nib.Nifti1Image(freq_map_3d, first_img.affine, header=first_img.header)
     mask_img = nib.Nifti1Image(mask_3d, first_img.affine, header=first_img.header)
