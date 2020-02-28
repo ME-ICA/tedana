@@ -95,7 +95,7 @@ def _get_parser():
                           type=int,
                           action='store',
                           help=('Number of threads to use. Used by '
-                                'threadcountctl to set the parameter outside '
+                                'threadpoolctl to set the parameter outside '
                                 'of the workflow function.'),
                           default=-1)
     optional.add_argument('--debug',
