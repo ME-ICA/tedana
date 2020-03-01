@@ -82,12 +82,12 @@ def _get_parser():
                           dest='fittype',
                           action='store',
                           choices=['loglin', 'curvefit'],
-                          help='Desired Fitting Method'
-                               '"loglin" means that a linear model is fit'
-                               ' to the log of the data, default'
-                               '"curvefit" means that a more computationally'
-                               'demanding monoexponential model is fit'
-                               'to the raw data',
+                          help=('Desired fitting method: '
+                                '"loglin" means that a linear model is fit '
+                                'to the log of the data, default '
+                                '"curvefit" means that a more computationally '
+                                'demanding monoexponential model is fit '
+                                'to the raw data.'),
                           default='loglin')
     optional.add_argument('--debug',
                           dest='debug',
@@ -205,8 +205,8 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
     LGR.info('Computing adaptive T2* map')
     if fitmode == 'all':
         (t2s_limited, s0_limited,
-         t2s_full, s0_full) = decay.fit_decay(catd, tes, mask, masksum,
-                                              fittype)
+         t2s_full, s0_full, r_squared) = decay.fit_decay(
+            catd, tes, mask, masksum, fittype)
     else:
         (t2s_limited, s0_limited,
          t2s_full, s0_full) = decay.fit_decay_ts(catd, tes, mask, masksum,
@@ -236,6 +236,7 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
     io.filewrite(t2s_full, op.join(out_dir, 't2svG.nii'), ref_img)
     io.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
     io.filewrite(OCcatd, op.join(out_dir, 'ts_OC.nii'), ref_img)
+    io.filewrite(r_squared, op.join(out_dir, 'r_squared.nii'), ref_img)
 
 
 def _main(argv=None):

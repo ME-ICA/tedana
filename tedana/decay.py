@@ -245,6 +245,8 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype):
     # Mask the inputs
     data_masked = data[mask, :, :]
     adaptive_mask_masked = adaptive_mask[mask]
+    n_echoes = data_masked.shape[1]
+    adaptive_mask_masked[:] = n_echoes
 
     if fittype == 'loglin':
         t2s_limited, s0_limited, t2s_full, s0_full = fit_loglinear(
@@ -255,20 +257,31 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype):
     else:
         raise ValueError('Unknown fittype option: {}'.format(fittype))
 
+    # Determine model fit
+    mean_data = np.mean(data_masked, axis=2)
+    tes_rep = np.tile(tes, (t2s_full.shape[0], 1))
+    s_pred = s0_full[:, None] * np.exp(-tes_rep / t2s_full[:, None])
+    ss_resid = np.sum((mean_data - s_pred) ** 2, axis=1)
+    ss_total = (mean_data.shape[1] - 1) * np.var(mean_data, axis=1)
+    r_squared = 1 - (ss_resid / ss_total)
+
+    # Restrict calculated values
     t2s_limited[np.isinf(t2s_limited)] = 500.  # why 500?
     # let's get rid of negative values, but keep zeros where limited != full
     t2s_limited[(adaptive_mask_masked > 1) & (t2s_limited <= 0)] = 1.
-    s0_limited[np.isnan(s0_limited)] = 0.  # why 0?
     t2s_full[np.isinf(t2s_full)] = 500.  # why 500?
     t2s_full[t2s_full <= 0] = 1.  # let's get rid of negative values!
+    s0_limited[np.isnan(s0_limited)] = 0.  # why 0?
     s0_full[np.isnan(s0_full)] = 0.  # why 0?
+    r_squared[r_squared < 0] = 0  # r^2 can be negative when fit is awful
 
+    r_squared = utils.unmask(r_squared, mask)
     t2s_limited = utils.unmask(t2s_limited, mask)
     s0_limited = utils.unmask(s0_limited, mask)
     t2s_full = utils.unmask(t2s_full, mask)
     s0_full = utils.unmask(s0_full, mask)
 
-    return t2s_limited, s0_limited, t2s_full, s0_full
+    return t2s_limited, s0_limited, t2s_full, s0_full, r_squared
 
 
 def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
@@ -315,13 +328,19 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
     s0_limited_ts = np.copy(t2s_limited_ts)
     t2s_full_ts = np.copy(t2s_limited_ts)
     s0_full_ts = np.copy(t2s_limited_ts)
+    r_squared_ts = np.copy(t2s_limited_ts)
 
     for vol in range(n_vols):
-        t2s_limited, s0_limited, t2s_full, s0_full = fit_decay(
-            data[:, :, vol][:, :, None], tes, mask, adaptive_mask, fittype)
+        if vol == 0:
+            report = True
+        else:
+            report = False
+        t2s_limited, s0_limited, t2s_full, s0_full, r_squared = fit_decay(
+            data[:, :, vol][:, :, None], tes, mask, adaptive_mask, fittype, report=report)
         t2s_limited_ts[:, vol] = t2s_limited
         s0_limited_ts[:, vol] = s0_limited
         t2s_full_ts[:, vol] = t2s_full
         s0_full_ts[:, vol] = s0_full
+        r_squared_ts[:, vol] = r_squared
 
-    return t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts
+    return t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts, r_squared_ts
