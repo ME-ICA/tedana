@@ -263,7 +263,7 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True):
     # split idx by voxel
     split_idx = np.split(
         good_idx,
-        np.where(np.diff(good_idx[0, :]))[0]+1,
+        np.where(np.diff(good_idx[0, :]))[0] + 1,
         axis=1
     )
     for i_voxel in range(len(split_idx)):
@@ -402,7 +402,7 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype, report=True):
     # split idx by voxel
     split_idx = np.split(
         good_idx,
-        np.where(np.diff(good_idx[0, :]))[0]+1,
+        np.where(np.diff(good_idx[0, :]))[0] + 1,
         axis=1
     )
     for i_voxel in range(len(split_idx)):

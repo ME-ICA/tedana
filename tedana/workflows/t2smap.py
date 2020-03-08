@@ -6,7 +6,6 @@ import os.path as op
 import logging
 
 import argparse
-import numpy as np
 from scipy import stats
 
 from tedana import (combine, decay, io, utils)
