@@ -459,12 +459,12 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                     "nilearn's compute_epi_mask function.")
 
     mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True)
-    LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
-    io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
 
     if t2smap is None:
         LGR.info('Computing T2* map')
-        t2s_limited, s0_limited, t2s_full, s0_full = decay.fit_decay(
+        (t2s_limited, s0_limited,
+         t2s_full, s0_full,
+         r_squared, masksum) = decay.fit_decay(
             catd, tes, mask, masksum, fittype)
 
         # set a hard cap for the T2* map
@@ -475,10 +475,14 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
         io.filewrite(t2s_limited, op.join(out_dir, 't2sv.nii'), ref_img)
         io.filewrite(s0_limited, op.join(out_dir, 's0v.nii'), ref_img)
+        io.filewrite(r_squared, op.join(out_dir, 'r_squared.nii'), ref_img)
 
         if verbose:
             io.filewrite(t2s_full, op.join(out_dir, 't2svG.nii'), ref_img)
             io.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
+
+    LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
+    io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
 
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, mask, t2s=t2s_full, combmode=combmode)

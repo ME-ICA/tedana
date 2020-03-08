@@ -205,12 +205,14 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
     LGR.info('Computing adaptive T2* map')
     if fitmode == 'all':
         (t2s_limited, s0_limited,
-         t2s_full, s0_full) = decay.fit_decay(catd, tes, mask, masksum,
-                                              fittype)
+         t2s_full, s0_full,
+         r_squared, masksum) = decay.fit_decay(
+            catd, tes, mask, masksum, fittype)
     else:
         (t2s_limited, s0_limited,
-         t2s_full, s0_full) = decay.fit_decay_ts(catd, tes, mask, masksum,
-                                                 fittype)
+         t2s_full, s0_full,
+         r_squared, masksum) = decay.fit_decay_ts(
+            catd, tes, mask, masksum, fittype)
 
     # set a hard cap for the T2* map/timeseries
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
@@ -224,17 +226,12 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
     OCcatd = combine.make_optcom(catd, tes, mask, t2s=t2s_full,
                                  combmode=combmode)
 
-    # clean up numerical errors
-    for arr in (OCcatd, s0_limited, t2s_limited):
-        np.nan_to_num(arr, copy=False)
-
-    s0_limited[s0_limited < 0] = 0
-    t2s_limited[t2s_limited < 0] = 0
-
     io.filewrite(t2s_limited, op.join(out_dir, 't2sv.nii'), ref_img)
     io.filewrite(s0_limited, op.join(out_dir, 's0v.nii'), ref_img)
     io.filewrite(t2s_full, op.join(out_dir, 't2svG.nii'), ref_img)
     io.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
+    io.filewrite(r_squared, op.join(out_dir, 'r_squared.nii'), ref_img)
+    io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
     io.filewrite(OCcatd, op.join(out_dir, 'ts_OC.nii'), ref_img)
 
 
