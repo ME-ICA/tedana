@@ -466,6 +466,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
          t2s_full, s0_full,
          r_squared, masksum) = decay.fit_decay(
             catd, tes, mask, masksum, fittype)
+        mask = masksum.astype(bool)  # re-binarize adaptive mask
 
         # set a hard cap for the T2* map
         # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
