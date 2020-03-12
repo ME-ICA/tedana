@@ -36,6 +36,14 @@ multi-echo functional magnetic resonance imaging (fMRI) data.
    :target: https://codecov.io/gh/me-ica/tedana
    :alt: Codecov
 
+.. image:: http://isitmaintained.com/badge/resolution/ME-ICA/tedana.svg
+   :target: http://isitmaintained.com/project/ME-ICA/tedana
+   :alt: Average time to resolve an issue
+
+.. image:: http://isitmaintained.com/badge/open/ME-ICA/tedana.svg
+   :target: http://isitmaintained.com/project/ME-ICA/tedana
+   :alt: Percentage of issues still open
+
 .. image:: https://badges.gitter.im/ME-ICA/tedana.svg
    :target: https://gitter.im/ME-ICA/tedana
    :alt: Join the chat
