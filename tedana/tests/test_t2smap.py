@@ -131,7 +131,6 @@ class TestT2smap():
         out_dir = 'TED.echo1.t2smap'
 
         # Check outputs
-        assert op.isfile(op.join(out_dir, 'ts_OC.nii.gz'))
         img = nib.load(op.join(out_dir, 't2sv.nii.gz'))
         assert len(img.shape) == 3
         img = nib.load(op.join(out_dir, 's0v.nii.gz'))
