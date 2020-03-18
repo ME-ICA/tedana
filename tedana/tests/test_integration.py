@@ -105,6 +105,7 @@ def test_integration_five_echo(skip_integration):
     out_dir2 = '/tmp/data/five-echo/TED.five-echo-manual'
     acc_comps = df.loc[df['classification'] == 'accepted'].index.values
     mixing = os.path.join(out_dir, 'ica_mixing.tsv')
+    t2smap = os.path.join(out_dir, 't2sv.nii.gz')
     args = (['-d'] + datalist + ['-e'] + [str(te) for te in echo_times] +
             ['--out-dir', out_dir2, '--debug', '--verbose',
              '--manacc', ','.join(acc_comps.astype(str)),
