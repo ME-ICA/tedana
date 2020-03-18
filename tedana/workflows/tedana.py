@@ -331,8 +331,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     # create logfile name
     basename = 'tedana_'
     extension = 'tsv'
-    isotime = datetime.datetime.now().replace(microsecond=0).isoformat()
-    logname = op.join(out_dir, (basename + isotime + '.' + extension))
+    start_time = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%S')
+    logname = op.join(out_dir, (basename + start_time + '.' + extension))
 
     # set logging format
     log_formatter = logging.Formatter(

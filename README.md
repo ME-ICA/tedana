@@ -12,6 +12,8 @@ multi-echo functional magnetic resonance imaging (fMRI) data.
 [![CircleCI](https://circleci.com/gh/ME-ICA/tedana.svg?style=shield)](https://circleci.com/gh/ME-ICA/tedana)
 [![Documentation Status](https://readthedocs.org/projects/tedana/badge/?version=latest)](http://tedana.readthedocs.io/en/latest/?badge=latest)
 [![Codecov](https://codecov.io/gh/me-ica/tedana/branch/master/graph/badge.svg)](https://codecov.io/gh/me-ica/tedana)
+[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/ME-ICA/tedana.svg)](http://isitmaintained.com/project/ME-ICA/tedana "Average time to resolve an issue")
+[![Percentage of issues still open](http://isitmaintained.com/badge/open/ME-ICA/tedana.svg)](http://isitmaintained.com/project/ME-ICA/tedana "Percentage of issues still open")
 [![Join the chat at https://gitter.im/ME-ICA/tedana](https://badges.gitter.im/ME-ICA/tedana.svg)](https://gitter.im/ME-ICA/tedana?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Join our tinyletter mailing list](https://img.shields.io/badge/receive-our%20newsletter%20❤%EF%B8%8F-blueviolet.svg)](https://tinyletter.com/tedana-devs)
 [![All Contributors](https://img.shields.io/badge/all_contributors-14-orange.svg?style=flat-square)](#contributors)
