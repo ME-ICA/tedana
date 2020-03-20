@@ -40,6 +40,11 @@ def test_check_order():
     assert w == 1
     assert trivwin
 
+    test_order = 4
+    ord_out, w, trivwin = _check_order(test_order)
+    assert ord_out == test_order
+    assert not trivwin
+
 
 def test_parzen_win():
     test_npoints = 3
