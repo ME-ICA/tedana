@@ -15,7 +15,7 @@ import pytest
 import requests
 import pandas as pd
 
-from tedana.workflows import tedana_workflow
+from tedana.workflows import tedana as tedana_cli
 from tedana import io
 
 
@@ -37,8 +37,8 @@ def check_integration_outputs(fname, outpath):
 
     # Checks for log file
     log_regex = ('^tedana_'
-                 '[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:'
-                 '[0-9]{2}:[0-9]{2}.tsv$')
+                 '[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}'
+                 '[0-9]{2}[0-9]{2}.tsv$')
     logfiles = [out for out in existing if re.match(log_regex, out)]
     assert len(logfiles) == 1
 
@@ -86,9 +86,10 @@ def test_integration_five_echo(skip_integration):
     prepend = '/tmp/data/five-echo/p06.SBJ01_S09_Task11_e'
     suffix = '.sm.nii.gz'
     datalist = [prepend + str(i + 1) + suffix for i in range(5)]
-    tedana_workflow(
+    echo_times = [15.4, 29.7, 44.0, 58.3, 72.6]
+    tedana_cli.tedana_workflow(
         data=datalist,
-        tes=[15.4, 29.7, 44.0, 58.3, 72.6],
+        tes=echo_times,
         out_dir=out_dir,
         tedpca='aic',
         fittype='curvefit',
@@ -99,6 +100,16 @@ def test_integration_five_echo(skip_integration):
     comptable = os.path.join(out_dir, 'ica_decomposition.json')
     df = io.load_comptable(comptable)
     assert isinstance(df, pd.DataFrame)
+
+    # Test re-running, but use the CLI
+    out_dir2 = '/tmp/data/five-echo/TED.five-echo-manual'
+    acc_comps = df.loc[df['classification'] == 'accepted'].index.values
+    mixing = os.path.join(out_dir, 'ica_mixing.tsv')
+    args = (['-d'] + datalist + ['-e'] + [str(te) for te in echo_times] +
+            ['--out-dir', out_dir2, '--debug', '--verbose',
+             '--manacc', ','.join(acc_comps.astype(str)),
+             '--ctab', comptable, '--mix', mixing])
+    tedana_cli._main(args)
 
     # compare the generated output files
     fn = resource_filename('tedana',
@@ -123,7 +134,7 @@ def test_integration_four_echo(skip_integration):
     prepend += 'sub-PILOT_ses-01_task-localizerDetection_run-01_echo-'
     suffix = '_space-sbref_desc-preproc_bold+orig.HEAD'
     datalist = [prepend + str(i + 1) + suffix for i in range(4)]
-    tedana_workflow(
+    tedana_cli.tedana_workflow(
         data=datalist,
         tes=[11.8, 28.04, 44.28, 60.52],
         out_dir=out_dir,
@@ -152,21 +163,20 @@ def test_integration_three_echo(skip_integration):
     # download data and run the test
     download_test_data('https://osf.io/rqhfc/download',
                        os.path.dirname(out_dir))
-    tedana_workflow(
+    tedana_cli.tedana_workflow(
         data='/tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz',
         tes=[14.5, 38.5, 62.5],
         out_dir=out_dir,
         low_mem=True,
         tedpca='mdl')
 
-    # test rerunning the workflow
-    tedana_workflow(
-        data='/tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz',
-        tes=[14.5, 38.5, 62.5],
-        out_dir=out_dir2,
-        mixm=os.path.join(out_dir, 'ica_mixing.tsv'),
-        ctab=os.path.join(out_dir, 'ica_decomposition.json'),
-        no_png=True)
+    # Test re-running, but use the CLI
+    args = (['-d', '/tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz',
+             '-e', '14.5', '38.5', '62.5',
+             '--out-dir', out_dir2, '--debug', '--verbose',
+             '--ctab', os.path.join(out_dir, 'ica_decomposition.json'),
+             '--mix', os.path.join(out_dir, 'ica_mixing.tsv')])
+    tedana_cli._main(args)
 
     # compare the generated output files
     fn = resource_filename('tedana',
