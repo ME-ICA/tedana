@@ -215,7 +215,8 @@ proposed by `Li et al (2007)`_. A moving average process is the output of a line
 that has an i.i.d. Gaussian process as the input. If we assume that the linear system is shift invariant, the moving average process
 is a stationary Gaussian random process. Simply put, a PCA step is performed to obtain a set of least significant components of the fMRI 
 data and estimate the effectively i.i.d. sample set with a subsampling scheme. The selection of components is then performed on the
-covariance matrix of the original and subsampled data with the either of the three options provided by `--tedpca`: 
+covariance matrix of the original and subsampled data with the either of the three options provided by `--tedpca`:
+
 * `aic`: the Akaike Information Criterion, which is the least aggresive option; i.e. returns the biggest amount of components.
 * `kic`: the Kullback-Leibler Information Criterion, which stands in the middle in terms of aggressiveness.
 * `mdl`: the Minimum Description Length, which is the most aggressive (and recommended) option.
