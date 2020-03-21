@@ -283,7 +283,7 @@ def _create_varexp_pie_plt(comptable_cds, n_comps):
 
 
 def _tap_callback(comptable_cds, CDS_meica_ts, comp_fft_cds, plot_ts_cds,
-                  plot_fft_cds, ts_line_glyph, fft_line_glyph, div, out_dir):
+                  plot_fft_cds, div_content, ts_line_glyph, fft_line_glyph, div, out_dir):
     """
     Javacript function to animate tap events and show component info on the right
 
