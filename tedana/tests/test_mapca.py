@@ -12,7 +12,7 @@ from tedana.decomposition.ma_pca import _subsampling, _kurtn, _icatb_svd, _eigen
 
 def test_autocorr():
     """
-    Uni test on _autocorr function
+    Unit test on _autocorr function
     """
     test_data = np.array([1, 2, 3, 4])
     test_result = np.array([30, 20, 11, 4])
