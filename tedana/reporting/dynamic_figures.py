@@ -210,7 +210,7 @@ def _create_kr_plt(comptable_cds):
     return fig
 
 
-def _create_sorted_plt(compatable_cds, n_comps, x_var, y_var, title=None,
+def _create_sorted_plt(comptable_cds, n_comps, x_var, y_var, title=None,
                        x_label=None, y_label=None):
     """
     Create dynamic sorted plots
