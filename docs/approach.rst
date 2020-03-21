@@ -321,3 +321,4 @@ Currently, ``tedana`` implements GSR and T1c-GSR.
 
 .. _physics section: https://tedana.readthedocs.io/en/latest/multi_echo.html
 .. _Kundu et al (2013): https://www.ncbi.nlm.nih.gov/pubmed/24038744
+.. _Li et al (2007): https://onlinelibrary.wiley.com/doi/abs/10.1002/hbm.20359
