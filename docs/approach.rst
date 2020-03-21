@@ -208,10 +208,17 @@ Here we can see time series for some example components (we don't really care ab
 .. image:: /_static/a11_pca_component_timeseries.png
 
 These components are subjected to component selection, the specifics of which
-vary according to algorithm.
+vary according to algorithm. Speficically, ``tedana`` offers two different approaches that perform this step.
 
-In the simplest approach, ``tedana`` uses Minka’s MLE to estimate the
-dimensionality of the data, which disregards low-variance components (the `mle` option in for `--tedpca`).
+The default approach (the `mdl` option for `--tedpca`) is based on a Moving Average (stationary Gaussian) process
+proposed by `Li et al (2007)`_. A moving average process is the output of a linear system (which in this case is a smoothing filter)
+that has an i.i.d. Gaussian process as the input. If we assume that the linear system is shift invariant, the moving average process
+is a stationary Gaussian random process. Simply put, a PCA step is performed to obtain a set of least significant components of the fMRI 
+data and estimate the effectively i.i.d. sample set with a subsampling scheme. The selection of components is then performed on the
+covariance matrix of the original and subsampled data with the either of the three options provided by `--tedpca`: 
+* `aic`: the Akaike Information Criterion, which is the least aggresive option; i.e. returns the biggest amount of components.
+* `kic`: the Kullback-Leibler Information Criterion, which stands in the middle in terms of aggressiveness.
+* `mdl`: the Minimum Description Length, which is the most aggressive (and recommended) option.
 
 A more complicated approach involves applying a decision tree (similar to the
 decision tree described in the TEDICA section below) to identify and
