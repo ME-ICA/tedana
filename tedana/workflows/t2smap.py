@@ -216,7 +216,8 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
     cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5,
                                       interpolation_method='lower')
-    LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
+    cap_t2s_sec = utils.millisec2sec(cap_t2s * 10.)
+    LGR.debug('Setting cap on T2* map at {:.5f}s'.format(cap_t2s_sec))
     t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
 
     LGR.info('Computing optimal combination')
@@ -231,9 +232,9 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
     s0_limited[s0_limited < 0] = 0
     t2s_limited[t2s_limited < 0] = 0
 
-    io.filewrite(t2s_limited, op.join(out_dir, 't2sv.nii'), ref_img)
+    io.filewrite(utils.millisec2sec(t2s_limited), op.join(out_dir, 't2sv.nii'), ref_img)
     io.filewrite(s0_limited, op.join(out_dir, 's0v.nii'), ref_img)
-    io.filewrite(t2s_full, op.join(out_dir, 't2svG.nii'), ref_img)
+    io.filewrite(utils.millisec2sec(t2s_full), op.join(out_dir, 't2svG.nii'), ref_img)
     io.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
     io.filewrite(OCcatd, op.join(out_dir, 'ts_OC.nii'), ref_img)
 

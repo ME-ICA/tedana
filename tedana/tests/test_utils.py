@@ -207,4 +207,20 @@ def test_smoke_threshold_map():
     assert utils.threshold_map(img, min_cluster_size, sided='bi') is not None
 
 
+def test_sec2millisec():
+    """
+    Ensure that sec2millisec returns 1000x the input values.
+    """
+    assert utils.sec2millisec(5) == 5000
+    assert utils.sec2millisec(np.array([5])) == np.array([5000])
+
+
+def test_millisec2sec():
+    """
+    Ensure that millisec2sec returns 1/1000x the input values.
+    """
+    assert utils.millisec2sec(5000) == 5
+    assert utils.millisec2sec(np.array([5000])) == np.array([5])
+
+
 # TODO: "BREAK" AND UNIT TESTS

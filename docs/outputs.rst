@@ -8,6 +8,7 @@ tedana derivatives
 Filename                  Content
 ======================    =====================================================
 t2sv.nii.gz               Limited estimated T2* 3D map.
+                          Values are in seconds.
                           The difference between the limited and full maps
                           is that, for voxels affected by dropout where
                           only one echo contains good data, the full map
@@ -70,12 +71,13 @@ If ``verbose`` is set to True:
 ======================    =====================================================
 Filename                  Content
 ======================    =====================================================
-t2svG.nii.gz              Full T2* map/time series. The difference between
-                          the limited and full maps is that, for voxels
-                          affected by dropout where only one echo contains
-                          good data, the full map uses the single echo's
-                          value while the limited map has a NaN. Only used
-                          for optimal combination.
+t2svG.nii.gz              Full T2* map/time series.
+                          Values are in seconds.
+                          The difference between the limited and full maps is
+                          that, for voxels affected by dropout where only one
+                          echo contains good data, the full map uses the
+                          single echo's value while the limited map has a NaN.
+                          Only used for optimal combination.
 s0vG.nii.gz               Full S0 map/time series. Only used for optimal
                           combination.
 hik_ts_e[echo].nii.gz     High-Kappa time series for echo number ``echo``
