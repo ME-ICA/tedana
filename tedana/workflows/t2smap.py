@@ -200,7 +200,7 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
         LGR.info('Computing adaptive mask')
     else:
         LGR.info('Using user-defined mask')
-    mask, masksum = utils.make_adaptive_mask(catd, getsum=True)
+    mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True)
 
     LGR.info('Computing adaptive T2* map')
     if fitmode == 'all':
