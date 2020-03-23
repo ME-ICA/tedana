@@ -356,7 +356,7 @@ def _icatb_svd(data, n_comps=None):
     """
 
     if not n_comps:
-        n_comps = np.min(data.shape[0], data.shape[1])
+        n_comps = np.min((data.shape[0], data.shape[1]))
 
     _, Lambda, vh = svd(data, full_matrices=False)
 
