@@ -208,7 +208,7 @@ Here we can see time series for some example components (we don't really care ab
 .. image:: /_static/a11_pca_component_timeseries.png
 
 These components are subjected to component selection, the specifics of which
-vary according to algorithm. Speficically, ``tedana`` offers two different approaches that perform this step.
+vary according to algorithm. Specifically, ``tedana`` offers two different approaches that perform this step.
 
 The default approach (the `mdl` option for `--tedpca`) is based on a Moving Average (stationary Gaussian) process
 proposed by `Li et al (2007)`_. A moving average process is the output of a linear system (which in this case is
