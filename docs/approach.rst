@@ -217,7 +217,7 @@ invariant, the moving average process is a stationary Gaussian random process. S
 selects the number of components for fMRI data following a subsampling scheme described in `Li et al (2007)`_. The
 selection of components is performed with either of the three options provided by `--tedpca`:
 
-* `aic`: the Akaike Information Criterion, which is the least aggresive option; i.e. returns the biggest amount of components.
+* `aic`: the Akaike Information Criterion, which is the least aggressive option; i.e., returns the largest number of components.
 * `kic`: the Kullback-Leibler Information Criterion, which stands in the middle in terms of aggressiveness.
 * `mdl`: the Minimum Description Length, which is the most aggressive (and recommended) option.
 
