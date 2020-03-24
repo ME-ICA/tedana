@@ -96,8 +96,10 @@ def _get_parser():
                           action='store',
                           help=('Number of threads to use. Used by '
                                 'threadpoolctl to set the parameter outside '
-                                'of the workflow function.'),
-                          default=-1)
+                                'of the workflow function. Higher numbers of '
+                                'threads tend to slow down performance on '
+                                'typical datasets. Default is 1.'),
+                          default=1)
     optional.add_argument('--debug',
                           dest='debug',
                           help=argparse.SUPPRESS,
