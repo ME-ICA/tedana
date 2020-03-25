@@ -34,7 +34,8 @@ REQUIRES = [
     'nibabel>=2.1.0',
     'scipy',
     'pandas',
-    'matplotlib'
+    'matplotlib',
+    'threadpoolctl'
 ]
 
 TESTS_REQUIRES = [
