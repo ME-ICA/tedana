@@ -263,7 +263,7 @@ def _main(argv=None):
     n_threads = kwargs.pop('n_threads')
     n_threads = None if n_threads == -1 else n_threads
     with threadpool_limits(limits=n_threads, user_api=None):
-        t2smap_workflow(**vars(options))
+        t2smap_workflow(**kwargs)
 
 
 if __name__ == '__main__':
