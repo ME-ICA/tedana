@@ -208,10 +208,18 @@ Here we can see time series for some example components (we don't really care ab
 .. image:: /_static/a11_pca_component_timeseries.png
 
 These components are subjected to component selection, the specifics of which
-vary according to algorithm.
+vary according to algorithm. Specifically, ``tedana`` offers two different approaches that perform this step.
 
-In the simplest approach, ``tedana`` uses Minka’s MLE to estimate the
-dimensionality of the data, which disregards low-variance components (the `mle` option in for `--tedpca`).
+The default approach (the `mdl` option for `--tedpca`) is based on a Moving Average (stationary Gaussian) process
+proposed by `Li et al (2007)`_. A moving average process is the output of a linear system (which in this case is
+a smoothing filter) that has an independent and identically distributed Gaussian process as the input. If we assume that the linear system is shift
+invariant, the moving average process is a stationary Gaussian random process. Simply put, this process more optimally
+selects the number of components for fMRI data following a subsampling scheme described in `Li et al (2007)`_. The
+selection of components is performed with either of the three options provided by `--tedpca`:
+
+* `aic`: the Akaike Information Criterion, which is the least aggressive option; i.e., returns the largest number of components.
+* `kic`: the Kullback-Leibler Information Criterion, which stands in the middle in terms of aggressiveness.
+* `mdl`: the Minimum Description Length, which is the most aggressive (and recommended) option.
 
 A more complicated approach involves applying a decision tree (similar to the
 decision tree described in the TEDICA section below) to identify and
@@ -314,3 +322,4 @@ Currently, ``tedana`` implements GSR and T1c-GSR.
 
 .. _physics section: https://tedana.readthedocs.io/en/latest/multi_echo.html
 .. _Kundu et al (2013): https://www.ncbi.nlm.nih.gov/pubmed/24038744
+.. _Li et al (2007): https://onlinelibrary.wiley.com/doi/abs/10.1002/hbm.20359
