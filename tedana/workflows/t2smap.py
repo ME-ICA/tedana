@@ -49,6 +49,12 @@ def _get_parser():
                           type=float,
                           help='Echo times (in ms). E.g., 15.0 39.0 63.0',
                           required=True)
+    optional.add_argument('--out-dir',
+                          dest='out_dir',
+                          type=str,
+                          metavar='PATH',
+                          help='Output directory.',
+                          default='.')
     optional.add_argument('--mask',
                           dest='mask',
                           metavar='FILE',
@@ -57,6 +63,17 @@ def _get_parser():
                                 'Dependent ANAlysis. Must be in the same '
                                 'space as `data`.'),
                           default=None)
+    optional.add_argument('--fittype',
+                          dest='fittype',
+                          action='store',
+                          choices=['loglin', 'curvefit'],
+                          help='Desired Fitting Method'
+                               '"loglin" means that a linear model is fit'
+                               ' to the log of the data, default'
+                               '"curvefit" means that a more computationally'
+                               'demanding monoexponential model is fit'
+                               'to the raw data',
+                          default='loglin')
     optional.add_argument('--fitmode',
                           dest='fitmode',
                           action='store',
@@ -74,22 +91,6 @@ def _get_parser():
                           help=('Combination scheme for TEs: '
                                 't2s (Posse 1999, default), paid (Poser)'),
                           default='t2s')
-    optional.add_argument('--label',
-                          dest='label',
-                          type=str,
-                          help='Label for output directory.',
-                          default=None)
-    optional.add_argument('--fittype',
-                          dest='fittype',
-                          action='store',
-                          choices=['loglin', 'curvefit'],
-                          help='Desired Fitting Method'
-                               '"loglin" means that a linear model is fit'
-                               ' to the log of the data, default'
-                               '"curvefit" means that a more computationally'
-                               'demanding monoexponential model is fit'
-                               'to the raw data',
-                          default='loglin')
     optional.add_argument('--n-threads',
                           dest='n_threads',
                           type=int,
@@ -114,8 +115,9 @@ def _get_parser():
     return parser
 
 
-def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
-                    label=None, debug=False, fittype='loglin', quiet=False):
+def t2smap_workflow(data, tes, out_dir='.', mask=None,
+                    fittype='loglin', fitmode='all', combmode='t2s',
+                    debug=False, quiet=False):
     """
     Estimate T2 and S0, and optimally combine data across TEs.
 
@@ -126,9 +128,17 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
         list of echo-specific files, in ascending order.
     tes : :obj:`list`
         List of echo times associated with data in milliseconds.
+    out_dir : :obj:`str`, optional
+        Output directory.
     mask : :obj:`str`, optional
         Binary mask of voxels to include in TE Dependent ANAlysis. Must be spatially
         aligned with `data`.
+    fittype : {'loglin', 'curvefit'}, optional
+        Monoexponential fitting method.
+        'loglin' means to use the the default linear fit to the log of
+        the data.
+        'curvefit' means to use a monoexponential fit to the raw data,
+        which is slightly slower but may be more accurate.
     fitmode : {'all', 'ts'}, optional
         Monoexponential model fitting scheme.
         'all' means that the model is fit, per voxel, across all timepoints.
@@ -136,14 +146,6 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
         Default is 'all'.
     combmode : {'t2s', 'paid'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'paid' (Poser).
-    label : :obj:`str` or :obj:`None`, optional
-        Label for output directory. Default is None.
-    fittype : {'loglin', 'curvefit'}, optional
-        Monoexponential fitting method.
-        'loglin' means to use the the default linear fit to the log of
-        the data.
-        'curvefit' means to use a monoexponential fit to the raw data,
-        which is slightly slower but may be more accurate.
 
     Other Parameters
     ----------------
@@ -155,12 +157,7 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
 
     Notes
     -----
-    This workflow writes out several files, which are written out to a folder
-    named TED.[ref_label].[label] if ``label`` is provided and TED.[ref_label]
-    if not. ``ref_label`` is determined based on the name of the first ``data``
-    file.
-
-    Files are listed below:
+    This workflow writes out several files, which are described below:
 
     ======================    =================================================
     Filename                  Content
@@ -178,6 +175,19 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
     ts_OC.nii                 Optimally combined timeseries.
     ======================    =================================================
     """
+    out_dir = op.abspath(out_dir)
+    if not op.isdir(out_dir):
+        os.mkdir(out_dir)
+
+    if debug and not quiet:
+        logging.basicConfig(level=logging.DEBUG)
+    elif quiet:
+        logging.basicConfig(level=logging.WARNING)
+    else:
+        logging.basicConfig(level=logging.INFO)
+
+    LGR.info('Using output directory: {}'.format(out_dir))
+
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
     n_echos = len(tes)
@@ -190,22 +200,6 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
     catd, ref_img = io.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
-
-    try:
-        ref_label = op.basename(ref_img).split('.')[0]
-    except (TypeError, AttributeError):
-        ref_label = op.basename(str(data[0])).split('.')[0]
-
-    if label is not None:
-        out_dir = 'TED.{0}.{1}'.format(ref_label, label)
-    else:
-        out_dir = 'TED.{0}'.format(ref_label)
-    out_dir = op.abspath(out_dir)
-    if not op.isdir(out_dir):
-        LGR.info('Creating output directory: {}'.format(out_dir))
-        os.mkdir(out_dir)
-    else:
-        LGR.info('Using output directory: {}'.format(out_dir))
 
     if mask is None:
         LGR.info('Computing adaptive mask')
@@ -253,13 +247,6 @@ def t2smap_workflow(data, tes, mask=None, fitmode='all', combmode='t2s',
 def _main(argv=None):
     """T2smap entry point"""
     options = _get_parser().parse_args(argv)
-    if options.debug and not options.quiet:
-        logging.basicConfig(level=logging.DEBUG)
-    elif options.quiet:
-        logging.basicConfig(level=logging.WARNING)
-    else:
-        logging.basicConfig(level=logging.INFO)
-
     kwargs = vars(options)
     n_threads = kwargs.pop('n_threads')
     n_threads = None if n_threads == -1 else n_threads
