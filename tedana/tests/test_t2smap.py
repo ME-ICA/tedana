@@ -124,11 +124,11 @@ class TestT2smap():
         data = [op.join(data_dir, 'echo1.nii.gz'),
                 op.join(data_dir, 'echo2.nii.gz'),
                 op.join(data_dir, 'echo3.nii.gz')]
+        out_dir = 'TED.echo1.t2smap'
         args = (['-d'] + data +
                 ['-e', '14.5', '38.5', '62.5', '--combmode', 't2s',
-                 '--fitmode', 'all', '--label', 't2smap'])
+                 '--fitmode', 'all', '--out-dir', out_dir])
         workflows.t2smap._main(args)
-        out_dir = 'TED.echo1.t2smap'
 
         # Check outputs
         img = nib.load(op.join(out_dir, 'T2StarMap.nii.gz'))
