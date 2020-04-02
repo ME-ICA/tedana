@@ -159,21 +159,21 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     -----
     This workflow writes out several files, which are described below:
 
-    ======================    =================================================
-    Filename                  Content
-    ======================    =================================================
-    t2sv.nii                  Limited estimated T2* 3D map or 4D timeseries.
-                              Will be a 3D map if ``fitmode`` is 'all' and a
-                              4D timeseries if it is 'ts'.
-    s0v.nii                   Limited S0 3D map or 4D timeseries.
-    t2svG.nii                 Full T2* map/timeseries. The difference between
-                              the limited and full maps is that, for voxels
-                              affected by dropout where only one echo contains
-                              good data, the full map uses the single echo's
-                              value while the limited map has a NaN.
-    s0vG.nii                  Full S0 map/timeseries.
-    ts_OC.nii                 Optimally combined timeseries.
-    ======================    =================================================
+    ==========================    =================================================
+    Filename                      Content
+    ==========================    =================================================
+    T2StarMap.nii.gz              Limited estimated T2* 3D map or 4D timeseries.
+                                  Will be a 3D map if ``fitmode`` is 'all' and a
+                                  4D timeseries if it is 'ts'.
+    S0Map.nii.gz                  Limited S0 3D map or 4D timeseries.
+    desc-full_T2StarMap.nii.gz    Full T2* map/timeseries. The difference between
+                                  the limited and full maps is that, for voxels
+                                  affected by dropout where only one echo contains
+                                  good data, the full map uses the single echo's
+                                  value while the limited map has a NaN.
+    desc-full_S0Map.nii.gz        Full S0 map/timeseries.
+    desc-optcom_bold.nii.gz       Optimally combined timeseries.
+    ==========================    =================================================
     """
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
@@ -237,11 +237,13 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     s0_limited[s0_limited < 0] = 0
     t2s_limited[t2s_limited < 0] = 0
 
-    io.filewrite(utils.millisec2sec(t2s_limited), op.join(out_dir, 't2sv.nii'), ref_img)
-    io.filewrite(s0_limited, op.join(out_dir, 's0v.nii'), ref_img)
-    io.filewrite(utils.millisec2sec(t2s_full), op.join(out_dir, 't2svG.nii'), ref_img)
-    io.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
-    io.filewrite(OCcatd, op.join(out_dir, 'ts_OC.nii'), ref_img)
+    io.filewrite(utils.millisec2sec(t2s_limited),
+                 op.join(out_dir, 'T2StarMap.nii.gz'), ref_img)
+    io.filewrite(s0_limited, op.join(out_dir, 'S0Map.nii.gz'), ref_img)
+    io.filewrite(utils.millisec2sec(t2s_full),
+                 op.join(out_dir, 'desc-full_T2StarMap.nii.gz'), ref_img)
+    io.filewrite(s0_full, op.join(out_dir, 'desc-full_S0Map.nii.gz'), ref_img)
+    io.filewrite(OCcatd, op.join(out_dir, 'desc-optcom_bold.nii.gz'), ref_img)
 
 
 def _main(argv=None):
