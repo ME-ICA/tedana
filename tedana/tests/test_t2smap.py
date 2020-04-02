@@ -23,7 +23,7 @@ class TestT2smap():
                 op.join(data_dir, 'echo3.nii.gz')]
         out_dir = 'TED.echo1.t2smap'
         workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='t2s',
-                                  fitmode='all', label='t2smap', out_dir=out_dir)
+                                  fitmode='all', out_dir=out_dir)
 
         # Check outputs
         assert op.isfile(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
@@ -49,7 +49,7 @@ class TestT2smap():
                 op.join(data_dir, 'echo3.nii.gz')]
         out_dir = 'TED.echo1.t2smap'
         workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='t2s',
-                                  fitmode='ts', label='t2smap', out_dir=out_dir)
+                                  fitmode='ts', out_dir=out_dir)
 
         # Check outputs
         assert op.isfile(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
@@ -75,7 +75,7 @@ class TestT2smap():
                 op.join(data_dir, 'echo3.nii.gz')]
         out_dir = 'TED.echo1.t2smap'
         workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='paid',
-                                  fitmode='all', label='t2smap', out_dir=out_dir)
+                                  fitmode='all', out_dir=out_dir)
 
         # Check outputs
         assert op.isfile(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
@@ -101,7 +101,7 @@ class TestT2smap():
                 op.join(data_dir, 'echo3.nii.gz')]
         out_dir = 'TED.echo1.t2smap'
         workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='paid',
-                                  fitmode='ts', label='t2smap', out_dir=out_dir)
+                                  fitmode='ts', out_dir=out_dir)
 
         # Check outputs
         assert op.isfile(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
