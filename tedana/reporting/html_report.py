@@ -1,7 +1,12 @@
+import numpy as np
+import pandas as pd
+from bokeh import (embed, events, layouts, models)
 from pathlib import Path
 from html import unescape
+from os.path import join as opj
 from string import Template
 from tedana.info import __version__
+from tedana.reporting import dynamic_figures as df
 
 
 def _update_template_about(call, methods):
@@ -21,9 +26,9 @@ def _update_template_about(call, methods):
     resource_path = Path(__file__).resolve().parent.joinpath('data', 'html')
     body_template_name = 'report_body_template.html'
     body_template_path = resource_path.joinpath(body_template_name)
-    tpl = tempita.HTMLTemplate.from_filename(str(body_template_path),
-                                             encoding='utf-8')
-    subst = tpl.substitute(content=methods,
+    with open(str(body_template_path), 'r') as body_file:
+        body_tpl = Template(body_file.read())
+    subst = body_tpl.substitute(content=methods,
                            javascript=None)
     body = unescape(subst)
     return body
@@ -47,10 +52,10 @@ def _update_template_bokeh(bokeh_id, bokeh_js):
 
     body_template_name = 'report_body_template.html'
     body_template_path = resource_path.joinpath(body_template_name)
-    tpl = tempita.HTMLTemplate.from_filename(str(body_template_path),
-                                             encoding='utf-8')
-    subst = tpl.substitute(content=bokeh_id,
-                           javascript=bokeh_js)
+    with open(str(body_template_path), 'r') as body_file:
+        body_tpl = Template(body_file.read())
+    subst = body_tpl.substitute(content=bokeh_id,
+                                javascript=bokeh_js)
     body = unescape(subst)
     return body
 
@@ -103,46 +108,46 @@ def generate_report(bokeh_id, bokeh_js, file_path=None):
             f.write(html.encode('utf-8'))
 
 
-# Load the component time series
-comp_ts_path = opj(out_dir, 'ica_mixing.tsv')
-comp_ts_df = pd.read_csv(comp_ts_path, sep='\t', encoding='utf=8')
-n_vols, n_comps = comp_ts_df.shape
-comp_ts_df['Volume'] = np.arange(n_vols)
-comp_ts_cds = models.ColumnDataSource(comp_ts_df)
+def html_report(out_dir):
+    # Load the component time series
+    comp_ts_path = opj(out_dir, 'ica_mixing.tsv')
+    comp_ts_df = pd.read_csv(comp_ts_path, sep='\t', encoding='utf=8')
+    n_vols, n_comps = comp_ts_df.shape
+    comp_ts_df['Volume'] = np.arange(n_vols)
+    comp_ts_cds = models.ColumnDataSource(comp_ts_df)
 
-# Load the component table
-comptable_path = opj(out_dir, 'ica_decomposition.json')
-comptable_cds = _create_data_struct(comptable_path)
+    # Load the component table
+    comptable_path = opj(out_dir, 'ica_decomposition.json')
+    comptable_cds = df._create_data_struct(comptable_path)
 
-# Create kappa rho plot
-kappa_rho_plot = _create_kr_plt(comptable_cds)
+    # Create kappa rho plot
+    kappa_rho_plot = df._create_kr_plt(comptable_cds)
 
-# Create sorted plots
-kappa_sorted_plot = _create_sorted_plt(comptable_cds, n_comps,
-                                       'kappa_rank', 'kappa',
-                                       'Kappa Rank', 'Kappa')
-rho_sorted_plot = _create_sorted_plt(comptable_cds, n_comps,
-                                     'rho_rank', 'rho',
-                                     'Rho Rank', 'Rho')
-varexp_pie_plot = _create_varexp_pie_plt(comptable_cds, n_comps)
+    # Create sorted plots
+    kappa_sorted_plot = df._create_sorted_plt(comptable_cds, n_comps,
+                                              'kappa_rank', 'kappa',
+                                              'Kappa Rank', 'Kappa')
+    rho_sorted_plot = df._create_sorted_plt(comptable_cds, n_comps,
+                                            'rho_rank', 'rho',
+                                            'Rho Rank', 'Rho')
+    varexp_pie_plot = df._create_varexp_pie_plt(comptable_cds, n_comps)
 
-# link all dynamic figures
-figs = [kappa_rho_plot, kappa_sorted_plot,
-        rho_sorted_plot, varexp_pie_plot]
+    # link all dynamic figures
+    figs = [kappa_rho_plot, kappa_sorted_plot,
+            rho_sorted_plot, varexp_pie_plot]
 
-div_content = models.Div(width=600, height=900, height_policy='fixed')
+    div_content = models.Div(width=600, height=900, height_policy='fixed')
 
-for fig in figs:
-    _link_figures(fig, comptable_cds, comp_ts_cds,
-                  div_content, out_dir)
+    for fig in figs:
+        df._link_figures(fig, comptable_cds, comp_ts_cds,
+                         div_content, out_dir)
 
+    # Create a layout
+    app = layouts.column(layouts.row(kappa_rho_plot, kappa_sorted_plot,
+                                    rho_sorted_plot, varexp_pie_plot),
+                        div_content)
 
-# Create a layout
-app = layouts.column(layouts.row(kappa_rho_plot, kappa_sorted_plot,
-                                 rho_sorted_plot, varexp_pie_plot),
-                     div_content)
-
-# Embed for reporting
-kr_script, kr_div = embed.components(app)
-reporting.generate_report(kr_div, kr_script,
-                          file_path='/opt/report_v3.html')
+    # Embed for reporting
+    kr_script, kr_div = embed.components(app)
+    generate_report(kr_div, kr_script,
+                    file_path='/opt/report_v3.html')
