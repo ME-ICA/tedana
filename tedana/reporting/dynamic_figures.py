@@ -6,6 +6,7 @@ from sklearn.preprocessing import MinMaxScaler
 from bokeh import (embed, events, layouts, models, plotting, transform)
 
 from tedana import reporting
+from tedana import utils
 
 color_mapping = {'accepted': '#2ecc71',
                  'rejected': '#e74c3c',
@@ -282,8 +283,60 @@ def _create_varexp_pie_plt(comptable_cds, n_comps):
     return fig
 
 
+def _create_ts_plot(n_vol):
+    """
+    Creates timeseries Bokeh plot.
+    Parameters
+    ----------
+    n_vol : int
+    Returns
+    -------
+    fig
+    """
+    ts_cds = models.ColumnDataSource(data=dict(x=np.arange(n_vol),
+                                               y=np.zeros(n_vol,)))
+    fig = plotting.figure(plot_width=800, plot_height=200,
+                          tools=["tap,wheel_zoom,reset,pan,crosshair",
+                                 models.HoverTool(tooltips=[('x', '@x'), ('y', '@y')])],
+                          title="Component Time Series")
+    fig.line('x', 'y', source=ts_cds, line_color='black', line_width=3)
+    fig.xaxis.axis_label = 'Time [Volume]'
+    fig.yaxis.axis_label = 'Signal'
+    fig.toolbar.logo = None
+    fig.toolbar_location = 'above'
+    fig.x_range = models.Range1d(0, n_vol)
+    return fig
+
+
+def _create_fft_plot(n_vols, Nf):
+    """
+    Creates FFT Bokeh plot.
+    Parameters
+    ----------
+    n_vols : int
+        Number of volumes in the time series
+    Nf :
+    Returns
+    -------
+    fig
+    """
+    fft_cds = models.ColumnDataSource(data=dict(x=np.arange(n_vols),
+                                                y=np.zeros(n_vols,)))
+    fig = plotting.figure(plot_width=800, plot_height=200,
+                          tools=["tap,wheel_zoom,reset,pan,crosshair",
+                                 models.HoverTool(tooltips=[('x', '@x'), ('y', '@y')])],
+                          title="Component Spectrum")
+    fig.line('x', 'y', source=fft_cds, line_color='black', line_width=3)
+    fig.xaxis.axis_label = 'Frequency [Hz]'
+    fig.yaxis.axis_label = 'Power'
+    fig.toolbar.logo = None
+    fig.toolbar_location = 'above'
+    fig.x_range = models.Range1d(0, Nf)
+    return fig
+
+
 def _tap_callback(comptable_cds, CDS_meica_ts, comp_fft_cds, plot_ts_cds,
-                  plot_fft_cds, div_content, ts_line_glyph, fft_line_glyph, div, out_dir):
+                  plot_fft_cds, ts_line_glyph, fft_line_glyph, div_content, out_dir):
     """
     Javacript function to animate tap events and show component info on the right
 
