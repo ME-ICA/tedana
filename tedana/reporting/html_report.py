@@ -75,7 +75,7 @@ def _save_as_html(body):
     return html
 
 
-def generate_report(bokeh_id, bokeh_js, file_path=None):
+def generate_report(bokeh_id, bokeh_js, file_name=None):
     """
     Generate and save an HTML report.
 
@@ -85,8 +85,8 @@ def generate_report(bokeh_id, bokeh_js, file_path=None):
         HTML div created by bokeh.embed.components
     bokeh_js : strs
         Javascript created by bokeh.embed.components
-    file_path : str
-        The file path on disk to write the HTML report
+    file_name : str
+        The file name with which to write the HTML report
 
     Returns
     -------
@@ -96,11 +96,11 @@ def generate_report(bokeh_id, bokeh_js, file_path=None):
     body = _update_template_bokeh(bokeh_id, bokeh_js)
     html = _save_as_html(body)
 
-    if file_path is not None:
-        with open(file_path, 'wb') as f:
+    if file_name is not None:
+        with open(file_name, 'wb') as f:
             f.write(html.encode('utf-8'))
     else:
-        with open('./tedana_report.html', 'wb') as f:
+        with open('tedana_report.html', 'wb') as f:
             f.write(html.encode('utf-8'))
 
 
