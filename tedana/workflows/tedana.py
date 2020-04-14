@@ -21,8 +21,8 @@ import pandas as pd
 from scipy import stats
 from nilearn.masking import compute_epi_mask
 
-from tedana import (decay, combine, decomposition, io, metrics, selection,
-                    utils, viz)
+from tedana import (decay, combine, decomposition, io, metrics,
+                    reporting, selection, utils)
 import tedana.gscontrol as gsc
 from tedana.stats import computefeats2
 from tedana.workflows.parser_utils import is_valid_file, ContextFilter
@@ -596,25 +596,15 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         if not op.isdir(op.join(out_dir, 'figures')):
             os.mkdir(op.join(out_dir, 'figures'))
 
-        viz.write_comp_figs(data_oc,
-                            mask=mask,
-                            comptable=comptable,
-                            mmix=mmix_orig,
-                            ref_img=ref_img,
-                            out_dir=op.join(out_dir, 'figures'),
-                            png_cmap=png_cmap)
+        reporting.static_figures.comp_figs(data_oc, mask=mask,
+                                           comptable=comptable,
+                                           mmix=mmix_orig,
+                                           ref_img=ref_img,
+                                           out_dir=op.join(out_dir, 'figures'),
+                                           png_cmap=png_cmap)
 
-        LGR.info('Making Kappa vs Rho scatter plot')
-        viz.write_kappa_scatter(comptable=comptable,
-                                out_dir=op.join(out_dir, 'figures'))
-
-        LGR.info('Making Kappa/Rho scree plot')
-        viz.write_kappa_scree(comptable=comptable,
-                              out_dir=op.join(out_dir, 'figures'))
-
-        LGR.info('Making overall summary figure')
-        viz.write_summary_fig(comptable=comptable,
-                              out_dir=op.join(out_dir, 'figures'))
+        LGR.info('Generating dynamic report')
+        reporting.html_report.html_report(out_dir, tr=img_t_r)
 
     LGR.info('Workflow completed')
 

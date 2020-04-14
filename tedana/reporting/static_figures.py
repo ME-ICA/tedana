@@ -43,7 +43,7 @@ def _trim_edge_zeros(arr):
     return arr[bounding_box]
 
 
-def comp_figures(ts, mask, comptable, mmix, ref_img, out_dir):
+def comp_figures(ts, mask, comptable, mmix, ref_img, out_dir, png_cmap):
     """
     Creates static figures that highlight certain aspects of tedana processing
     This includes a figure for each component showing the component time course,
@@ -159,7 +159,7 @@ def comp_figures(ts, mask, comptable, mmix, ref_img, out_dir):
                     to_plot = ts_B[:, :, imgslice * cuts[idx], compnum]
 
                 ax_im = ax.imshow(to_plot, vmin=imgmin, vmax=imgmax, aspect='equal',
-                                  cmap='coolwarm')
+                                  cmap=png_cmap)
 
         # Add a color bar to the plot.
         ax_cbar = allplot.add_axes([0.8, 0.3, 0.03, 0.37])
