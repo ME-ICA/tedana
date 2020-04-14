@@ -329,3 +329,37 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None,
         clust_thresholded = clust_thresholded[mask]
 
     return clust_thresholded
+
+
+def sec2millisec(arr):
+    """
+    Convert seconds to milliseconds.
+
+    Parameters
+    ----------
+    arr : array_like
+        Values in seconds.
+
+    Returns
+    -------
+    array_like
+        Values in milliseconds.
+    """
+    return arr * 1000
+
+
+def millisec2sec(arr):
+    """
+    Convert milliseconds to seconds.
+
+    Parameters
+    ----------
+    arr : array_like
+        Values in milliseconds.
+
+    Returns
+    -------
+    array_like
+        Values in seconds.
+    """
+    return arr / 1000.
