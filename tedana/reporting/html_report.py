@@ -105,6 +105,13 @@ def generate_report(bokeh_id, bokeh_js, file_path=None):
 
 
 def html_report(out_dir, tr):
+    """
+    Parameters
+    ----------
+
+    Returns
+    -------
+    """
     # Load the component time series
     comp_ts_path = opj(out_dir, 'ica_mixing.tsv')
     comp_ts_df = pd.read_csv(comp_ts_path, sep='\t', encoding='utf=8')
@@ -142,5 +149,4 @@ def html_report(out_dir, tr):
 
     # Embed for reporting
     kr_script, kr_div = embed.components(app)
-    generate_report(kr_div, kr_script,
-                    file_path=opj(out_dir, 'report_v3.html'))
+    generate_report(kr_div, kr_script)

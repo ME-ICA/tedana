@@ -36,14 +36,12 @@ s0vG.nii.gz
 sphis_hik.nii.gz
 t2sv.nii.gz
 t2svG.nii.gz
+tedana_report.html
 ts_OC.nii.gz
 ts_OC_whitened.nii.gz
 tsoc_nogs.nii.gz
 tsoc_orig.nii.gz
 figures
-figures/Component_Overview.png
-figures/Kappa_vs_Rho_Scatter.png
-figures/Kappa_Rho_Scree_plot.png
 figures/comp_000.png
 figures/comp_001.png
 figures/comp_002.png
