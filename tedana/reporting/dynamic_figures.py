@@ -92,8 +92,10 @@ def _create_data_struct(comptable_path, color_mapping=color_mapping):
     df['kappa_rank'] = df['kappa'].rank(ascending=False).values
     df['var_exp_rank'] = df['var_exp'].rank(ascending=False).values
 
-    # Remove unsed columns to decrease size of final HTML
-    df.drop(unused_cols, axis=1, inplace=True)
+    # Remove unused columns to decrease size of final HTML
+    # set errors to 'ignore' in case some columns do not exist in
+    # a given data frame
+    df.drop(unused_cols, axis=1, inplace=True, errors='ignore')
 
     # Create additional Column with colors based on final classification
     df['color'] = [color_mapping[i] for i in df['classification']]
