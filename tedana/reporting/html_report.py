@@ -1,7 +1,6 @@
 import pandas as pd
 from bokeh import (embed, layouts, models)
 from pathlib import Path
-from html import unescape
 from os.path import join as opj
 from string import Template
 from tedana.info import __version__
@@ -27,9 +26,8 @@ def _update_template_about(call, methods):
     body_template_path = resource_path.joinpath(body_template_name)
     with open(str(body_template_path), 'r') as body_file:
         body_tpl = Template(body_file.read())
-    subst = body_tpl.substitute(content=methods,
-                                javascript=None)
-    body = unescape(subst)
+    body = body_tpl.substitute(content=methods,
+                               javascript=None)
     return body
 
 
@@ -53,9 +51,8 @@ def _update_template_bokeh(bokeh_id, bokeh_js):
     body_template_path = resource_path.joinpath(body_template_name)
     with open(str(body_template_path), 'r') as body_file:
         body_tpl = Template(body_file.read())
-    subst = body_tpl.substitute(content=bokeh_id,
-                                javascript=bokeh_js)
-    body = unescape(subst)
+    body = body_tpl.substitute(content=bokeh_id,
+                               javascript=bokeh_js)
     return body
 
 
