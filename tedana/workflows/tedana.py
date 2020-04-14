@@ -604,12 +604,13 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         if not op.isdir(op.join(out_dir, 'figures')):
             os.mkdir(op.join(out_dir, 'figures'))
 
-        reporting.static_figures.comp_figs(data_oc, mask=mask,
-                                           comptable=comptable,
-                                           mmix=mmix_orig,
-                                           ref_img=ref_img,
-                                           out_dir=op.join(out_dir, 'figures'),
-                                           png_cmap=png_cmap)
+        reporting.static_figures.comp_figures(data_oc, mask=mask,
+                                              comptable=comptable,
+                                              mmix=mmix_orig,
+                                              ref_img=ref_img,
+                                              out_dir=op.join(out_dir,
+                                                              'figures'),
+                                              png_cmap=png_cmap)
 
         LGR.info('Generating dynamic report')
         reporting.html_report.html_report(out_dir, tr=img_t_r)
