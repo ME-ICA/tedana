@@ -9,7 +9,7 @@ import matplotlib
 matplotlib.use('AGG')
 import matplotlib.pyplot as plt
 
-from tedana import metrics
+from tedana import stats
 from tedana.utils import get_spectrum
 
 LGR = logging.getLogger(__name__)
@@ -71,7 +71,7 @@ def comp_figures(ts, mask, comptable, mmix, ref_img, out_dir, png_cmap):
     n_vols = len(mmix)
 
     # regenerate the beta images
-    ts_B = metrics.get_coeffs(ts, mmix, mask)
+    ts_B = stats.get_coeffs(ts, mmix, mask)
     ts_B = ts_B.reshape(ref_img.shape[:3] + ts_B.shape[1:])
     # trim edges from ts_B array
     ts_B = _trim_edge_zeros(ts_B)
