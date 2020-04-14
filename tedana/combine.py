@@ -91,7 +91,8 @@ def _combine_paid(data, tes):
                 "International Society for Magnetic Resonance in Medicine, "
                 "55(6), 1227-1235.")
     n_vols = data.shape[-1]
-    alpha = data.mean(axis=-1) * tes
+    snr = data.mean(axis=-1) / data.std(axis=-1)
+    alpha = snr * tes
     alpha = np.tile(alpha[:, :, np.newaxis], (1, 1, n_vols))
     combined = np.average(data, axis=1, weights=alpha)
     return combined
