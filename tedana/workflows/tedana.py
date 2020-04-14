@@ -613,7 +613,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                                               png_cmap=png_cmap)
 
         LGR.info('Generating dynamic report')
-        reporting.html_report.html_report(out_dir, tr=img_t_r)
+        reporting.generate_report(out_dir=out_dir, tr=img_t_r)
 
     LGR.info('Workflow completed')
 

@@ -75,42 +75,20 @@ def _save_as_html(body):
     return html
 
 
-def generate_report(bokeh_id, bokeh_js, file_name=None):
+def generate_report(out_dir, tr):
     """
-    Generate and save an HTML report.
-
     Parameters
     ----------
-    bokeh_id : str
-        HTML div created by bokeh.embed.components
-    bokeh_js : strs
-        Javascript created by bokeh.embed.components
-    file_name : str
-        The file name with which to write the HTML report
+    out_dir : str
+        File path to a completed tedana output directory
+    tr : float
+        The repetition time (TR) for the collected multi-echo
+        sequence
 
     Returns
     -------
     HTML : file
         A generated HTML report
-    """
-    body = _update_template_bokeh(bokeh_id, bokeh_js)
-    html = _save_as_html(body)
-
-    if file_name is not None:
-        with open(file_name, 'wb') as f:
-            f.write(html.encode('utf-8'))
-    else:
-        with open('tedana_report.html', 'wb') as f:
-            f.write(html.encode('utf-8'))
-
-
-def html_report(out_dir, tr):
-    """
-    Parameters
-    ----------
-
-    Returns
-    -------
     """
     # Load the component time series
     comp_ts_path = opj(out_dir, 'ica_mixing.tsv')
@@ -147,6 +125,9 @@ def html_report(out_dir, tr):
                                      rho_sorted_plot, varexp_pie_plot),
                          div_content)
 
-    # Embed for reporting
+    # Embed for reporting and save out HTML
     kr_script, kr_div = embed.components(app)
-    generate_report(kr_div, kr_script)
+    body = _update_template_bokeh(kr_div, kr_script)
+    html = _save_as_html(body)
+    with open(opj(out_dir, 'tedana_report.html'), 'wb') as f:
+        f.write(html.encode('utf-8'))
