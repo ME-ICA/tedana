@@ -1,12 +1,8 @@
 import numpy as np
 from math import pi
 import pandas as pd
-from os.path import join as opj
 from sklearn.preprocessing import MinMaxScaler
-from bokeh import (embed, events, layouts, models, plotting, transform)
-
-from tedana import reporting
-from tedana import utils
+from bokeh import (events, models, plotting, transform)
 
 color_mapping = {'accepted': '#2ecc71',
                  'rejected': '#e74c3c',
@@ -32,35 +28,6 @@ tap_callback_jscode = """
         var colors = data['color']
         var this_component_color = colors[selected_idx]
 
-        // Update time series line color
-        ts_line.line_color = this_component_color;
-
-        // Update spectrum line color
-        fft_line.line_color = this_component_color;
-
-        // Updating TS Plot
-        var Plot_TS = source_tsplot.data;
-        var TS_x    = Plot_TS['x']
-        var TS_y    = Plot_TS['y']
-        var Comp_TS   = source_meica_ts.data;
-        var Comp_TS_y = Comp_TS[selected_padded_C]
-
-        for (var i = 0; i < TS_x.length; i ++) {
-            TS_y[i] = Comp_TS_y[i]
-        }
-        source_tsplot.change.emit();
-
-        // Updating FFT Plot
-        var Plot_FFT = source_fftplot.data;
-        var FFT_x = Plot_FFT['x']
-        var FFT_y = Plot_FFT['y']
-        var Comp_FFT = source_meica_fft.data;
-        var Comp_FFT_y = Comp_FFT[selected_padded_C]
-        for (var i = 0; i < FFT_x.length; i ++) {
-            FFT_y[i] = Comp_FFT_y[i]
-        }
-        source_fftplot.change.emit();
-
         // Image Below Plots
         div.text = ""
         var line = "<span><img src='" + outdir + "/figures/comp_"+selected_padded_forIMG+".png'" +
@@ -77,30 +44,6 @@ tap_callback_jscode = """
         // ------------------------------
         // Set Component color to Black
         var this_component_color = '#000000'
-
-        // Update time series line color
-        ts_line.line_color = this_component_color;
-
-        // Update spectrum line color
-        fft_line.line_color = this_component_color;
-
-        // Updating TS Plot
-        var Plot_TS = source_tsplot.data;
-        var TS_x    = Plot_TS['x']
-        var TS_y    = Plot_TS['y']
-        for (var i = 0; i < TS_x.length; i ++) {
-            TS_y[i] = 0
-        }
-        source_tsplot.change.emit();
-
-        // Updating FFT Plot
-        var Plot_FFT = source_fftplot.data;
-        var FFT_x = Plot_FFT['x']
-        var FFT_y = Plot_FFT['y']
-        for (var i = 0; i < FFT_x.length; i ++) {
-            FFT_y[i] = 0
-        }
-        source_fftplot.change.emit();
 
         // Image Below Plots
         div.text = "\\n"
@@ -283,60 +226,7 @@ def _create_varexp_pie_plt(comptable_cds, n_comps):
     return fig
 
 
-def _create_ts_plot(n_vol):
-    """
-    Creates timeseries Bokeh plot.
-    Parameters
-    ----------
-    n_vol : int
-    Returns
-    -------
-    fig
-    """
-    ts_cds = models.ColumnDataSource(data=dict(x=np.arange(n_vol),
-                                               y=np.zeros(n_vol,)))
-    fig = plotting.figure(plot_width=800, plot_height=200,
-                          tools=["tap,wheel_zoom,reset,pan,crosshair",
-                                 models.HoverTool(tooltips=[('x', '@x'), ('y', '@y')])],
-                          title="Component Time Series")
-    fig.line('x', 'y', source=ts_cds, line_color='black', line_width=3)
-    fig.xaxis.axis_label = 'Time [Volume]'
-    fig.yaxis.axis_label = 'Signal'
-    fig.toolbar.logo = None
-    fig.toolbar_location = 'above'
-    fig.x_range = models.Range1d(0, n_vol)
-    return fig
-
-
-def _create_fft_plot(n_vols, Nf):
-    """
-    Creates FFT Bokeh plot.
-    Parameters
-    ----------
-    n_vols : int
-        Number of volumes in the time series
-    Nf :
-    Returns
-    -------
-    fig
-    """
-    fft_cds = models.ColumnDataSource(data=dict(x=np.arange(n_vols),
-                                                y=np.zeros(n_vols,)))
-    fig = plotting.figure(plot_width=800, plot_height=200,
-                          tools=["tap,wheel_zoom,reset,pan,crosshair",
-                                 models.HoverTool(tooltips=[('x', '@x'), ('y', '@y')])],
-                          title="Component Spectrum")
-    fig.line('x', 'y', source=fft_cds, line_color='black', line_width=3)
-    fig.xaxis.axis_label = 'Frequency [Hz]'
-    fig.yaxis.axis_label = 'Power'
-    fig.toolbar.logo = None
-    fig.toolbar_location = 'above'
-    fig.x_range = models.Range1d(0, Nf)
-    return fig
-
-
-def _tap_callback(comptable_cds, CDS_meica_ts, comp_fft_cds, plot_ts_cds,
-                  plot_fft_cds, ts_line_glyph, fft_line_glyph, div_content, out_dir):
+def _tap_callback(comptable_cds, div_content, out_dir):
     """
     Javacript function to animate tap events and show component info on the right
 
@@ -353,20 +243,11 @@ def _tap_callback(comptable_cds, CDS_meica_ts, comp_fft_cds, plot_ts_cds,
         Javascript function that adds the tapping functionality
     """
     return models.CustomJS(args=dict(source_comp_table=comptable_cds,
-                                     source_meica_ts=CDS_meica_ts,
-                                     source_tsplot=plot_ts_cds,
-                                     source_meica_fft=comp_fft_cds,
-                                     source_fftplot=plot_fft_cds,
                                      div=div_content,
-                                     ts_line=ts_line_glyph,
-                                     fft_line=fft_line_glyph,
                                      outdir=out_dir), code=tap_callback_jscode)
 
 
-def _link_figures(fig, comptable_ds,
-                  ts_src, fft_src, ts_plot, fft_plot,
-                  ts_line_glyph, fft_line_glyph,
-                  div_content, out_dir):
+def _link_figures(fig, comptable_ds, div_content, out_dir):
     """
     Links figures and adds interaction on mouse-click.
 
@@ -378,29 +259,6 @@ def _link_figures(fig, comptable_ds,
     comptable_ds : bokeh.models.ColumnDataSource
         Data structure with a limited version of the comptable
         suitable for dynamic plot purposes
-
-    ts_src : bokeh.models.ColumnDataSource
-        Data structure containing the timeseries for all
-        components
-
-    fft_src : bokeh.models.ColumnDataSource
-        Data structure containing the fft for all components
-
-    ts_plot : bokeh.models.ColumnDataSource
-        Data structure that contains the timeseries being
-        plotted at a given moment.
-
-    fft_plot : bokeh.models.ColumnDataSource
-        Data structure that contains the fft being plotted
-        at a given moment in time
-
-    ts_line_glyph : bokeh.models.Line
-        Link to the line element of the time series plot.
-        Needed to update the color of the timeseries trace.
-
-    fft_line_glyph : bokeh.models.Line
-        Link to the line element of the fft plot.
-        Needed to update the color of the fft trace.
 
     div_content : bokeh.models.Div
         Div element for additional HTML content.
@@ -417,12 +275,6 @@ def _link_figures(fig, comptable_ds,
     """
     fig.js_on_event(events.Tap,
                     _tap_callback(comptable_ds,
-                                  ts_src,
-                                  fft_src,
-                                  ts_plot,
-                                  fft_plot,
-                                  ts_line_glyph,
-                                  fft_line_glyph,
                                   div_content,
                                   out_dir))
     return fig

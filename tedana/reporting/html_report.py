@@ -1,13 +1,11 @@
-import numpy as np
 import pandas as pd
-from bokeh import (embed, events, layouts, models)
+from bokeh import (embed, layouts, models)
 from pathlib import Path
 from html import unescape
 from os.path import join as opj
 from string import Template
 from tedana.info import __version__
 from tedana.reporting import dynamic_figures as df
-from tedana import utils
 
 
 def _update_template_about(call, methods):
@@ -30,7 +28,7 @@ def _update_template_about(call, methods):
     with open(str(body_template_path), 'r') as body_file:
         body_tpl = Template(body_file.read())
     subst = body_tpl.substitute(content=methods,
-                           javascript=None)
+                                javascript=None)
     body = unescape(subst)
     return body
 
@@ -114,20 +112,10 @@ def html_report(out_dir, tr):
     comp_ts_path = opj(out_dir, 'ica_mixing.tsv')
     comp_ts_df = pd.read_csv(comp_ts_path, sep='\t', encoding='utf=8')
     n_vols, n_comps = comp_ts_df.shape
-    comp_ts_df['Volume'] = np.arange(n_vols)
-    comp_ts_cds = models.ColumnDataSource(comp_ts_df)
 
     # Load the component table
     comptable_path = opj(out_dir, 'ica_decomposition.json')
     comptable_cds = df._create_data_struct(comptable_path)
-
-    # generate the component spectrum
-    spectrum, _ = utils.get_spectrum(comp_ts_df['ica_00'], tr)
-    Nf = spectrum.shape[0]
-
-    # create fft, ts plots
-    fft_plot = df._create_fft_plot(n_vols, Nf)
-    ts_plot = df._create_ts_plot(n_vols)
 
     # Create kappa rho plot
     kappa_rho_plot = df._create_kr_plt(comptable_cds)
@@ -148,12 +136,11 @@ def html_report(out_dir, tr):
     div_content = models.Div(width=600, height=900, height_policy='fixed')
 
     for fig in figs:
-        df._link_figures(fig, comptable_cds, comp_ts_cds, comp_ts_cds, comp_ts_cds, comp_ts_cds, ts_plot, fft_plot, div_content, out_dir=out_dir)
+        df._link_figures(fig, comptable_cds, div_content, out_dir=out_dir)
 
     # Create a layout
     app = layouts.column(layouts.row(kappa_rho_plot, kappa_sorted_plot,
-                                    rho_sorted_plot, varexp_pie_plot),
-                         layouts.row(ts_plot, fft_plot),
+                                     rho_sorted_plot, varexp_pie_plot),
                          div_content)
 
     # Embed for reporting
