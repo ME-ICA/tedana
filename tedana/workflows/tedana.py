@@ -11,6 +11,7 @@ from glob import glob
 import argparse
 import numpy as np
 import pandas as pd
+from bs4 import BeautifulSoup, NavigableString
 from scipy import stats
 from threadpoolctl import threadpool_limits
 from nilearn.masking import compute_epi_mask
@@ -656,6 +657,11 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     with open(repname, 'w') as fo:
         fo.write(report)
     os.remove(refname)
+    html_code = BeautifulSoup(open(op.join(out_dir, 'tedana_report.html')), 'html.parser')
+    html_code.p.append(report)
+    edited_html = html_code.prettify(html_code.original_encoding)
+    with open("tedana_report.html", "wb") as file:
+        file.write(edited_html.encode('utf-8'))
 
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
