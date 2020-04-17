@@ -66,7 +66,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     mask : (S,) array_like
         Boolean mask array
     adaptive_mask : (S,) array_like
-        Adaptive mask
+        Adaptive mask of the data indicating the number of echos with signal at each voxel
     t2sG : (S,) array_like
         Map of voxel-wise T2* estimates.
     ref_img : :obj:`str` or img_like
