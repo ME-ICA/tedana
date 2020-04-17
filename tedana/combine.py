@@ -173,7 +173,7 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
         LGR.info(msg)
 
     mask = adaptive_mask >= 3
-    data = data[mask, :, :]  # mask out empty voxels/samples
+    data = data[mask, :, :]  # mask out unstable voxels/samples
     tes = np.array(tes)[np.newaxis, ...]  # (1 x E) array_like
     combined = np.zeros((data.shape[0], data.shape[2]))
     for echo in np.unique(adaptive_mask[mask]):
