@@ -652,7 +652,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     with open(refname, 'r') as fo:
         reference_list = sorted(list(set(fo.readlines())))
         references = '\n'.join(reference_list)
-    report += '\n\nReferences\n' + references
+    report += '\n\nReferences:\n\n' + references
     with open(repname, 'w') as fo:
         fo.write(report)
     os.remove(refname)

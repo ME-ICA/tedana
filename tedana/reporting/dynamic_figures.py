@@ -30,7 +30,7 @@ tap_callback_jscode = """
 
         // Image Below Plots
         div.text = ""
-        var line = "<span><img src='" + outdir + "/figures/comp_"+selected_padded_forIMG+".png'" +
+        var line = "<span style='top: -900px; right:-900px; position: relative;'><img src='" + outdir + "/figures/comp_"+selected_padded_forIMG+".png'" +
             " alt='Component Map' height=1000 width=900><span>\\n";
         console.log('Linea: ' + line)
         var text = div.text.concat(line);
