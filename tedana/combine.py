@@ -108,7 +108,7 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
     tes : (E,) :obj:`numpy.ndarray`
         Array of TEs, in seconds.
     adaptive_mask : (S,) :obj:`numpy.ndarray`
-        Adaptive mask of the data indicating those voxels for which at least
+                Adaptive mask of the data indicating the number of echos with signal at each voxel
         three echos are available. If this is less than the total number of
         collected echos, we assume that later echos do not provided
         meaningful signal.
