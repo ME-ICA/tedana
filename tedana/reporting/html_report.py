@@ -115,14 +115,14 @@ def generate_report(out_dir, tr):
     figs = [kappa_rho_plot, kappa_sorted_plot,
             rho_sorted_plot, varexp_pie_plot]
 
-    div_content = models.Div(width=600, height=900, height_policy='fixed')
+    div_content = models.Div(width=500, height=750, height_policy='fixed')
 
     for fig in figs:
         df._link_figures(fig, comptable_cds, div_content, out_dir=out_dir)
 
     # Create a layout
-    app = layouts.column(layouts.row(kappa_rho_plot, kappa_sorted_plot),
-                         layouts.row(rho_sorted_plot, varexp_pie_plot),
+    app = layouts.column(layouts.row(kappa_rho_plot, varexp_pie_plot),
+                         layouts.row(rho_sorted_plot, kappa_sorted_plot),
                          div_content)
 
     # Embed for reporting and save out HTML
