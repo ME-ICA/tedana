@@ -99,7 +99,10 @@ def _combine_paid(data, tes):
 
 def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True):
     """
-    Optimally combine BOLD data across TEs.
+    Optimally combine BOLD data across TEs, using only those echos with reliable signal
+    across at least three echos. If the number of echos providing reliable signal is greater
+    than three but less than the total number of collected echos, we assume that later
+    echos do not provided meaningful signal.
 
     Parameters
     ----------
