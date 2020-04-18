@@ -489,7 +489,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             io.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
 
     # optimally combine data
-    data_oc = combine.make_optcom(catd, tes, mask, t2s=t2s_full, combmode=combmode)
+    data_oc = combine.make_optcom(catd, tes, masksum, t2s=t2s_full, combmode=combmode)
 
     # regress out global signal unless explicitly not desired
     if 'gsr' in gscontrol:
@@ -499,7 +499,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if mixm is None:
         # Identify and remove thermal noise from data
         dd, n_components = decomposition.tedpca(catd, data_oc, combmode, mask,
-                                                t2s_limited, t2s_full, ref_img,
+                                                masksum, t2s_full, ref_img,
                                                 tes=tes, algorithm=tedpca,
                                                 kdaw=10., rdaw=1.,
                                                 out_dir=out_dir,
@@ -517,7 +517,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         # generated from dimensionally reduced data using full data (i.e., data
         # with thermal noise)
         comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                    catd, data_oc, mmix_orig, t2s_limited, tes,
+                    catd, data_oc, mmix_orig, masksum, tes,
                     ref_img, reindex=True, label='meica_', out_dir=out_dir,
                     algorithm='kundu_v2', verbose=verbose)
         comp_names = [io.add_decomp_prefix(comp, prefix='ica', max_value=comptable.index.max())
@@ -537,7 +537,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
 
         if ctab is None:
             comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                        catd, data_oc, mmix_orig, t2s_limited, tes,
+                        catd, data_oc, mmix_orig, masksum, tes,
                         ref_img, label='meica_', out_dir=out_dir,
                         algorithm='kundu_v2', verbose=verbose)
             comptable = metrics.kundu_metrics(comptable, metric_maps)
