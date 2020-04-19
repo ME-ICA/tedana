@@ -30,8 +30,8 @@ tap_callback_jscode = """
 
         // Image Below Plots
         div.text = ""
-        var line = "<span style='top: -900px; right:-900px; position: relative;'><img src='" + outdir + "/figures/comp_"+selected_padded_forIMG+".png'" +
-            " alt='Component Map' height=1000 width=900><span>\\n";
+        var line = "<span><img src='" + outdir + "/figures/comp_"+selected_padded_forIMG+".png'" +
+            " alt='Component Map'><span>\\n";
         console.log('Linea: ' + line)
         var text = div.text.concat(line);
         var lines = text.split("\\n")
@@ -46,7 +46,9 @@ tap_callback_jscode = """
         var this_component_color = '#000000'
 
         // Image Below Plots
-        div.text = "\\n"
+        div.text = ""
+        var line = "<p>Please select an individual component to view it in more detail</p>\\n"
+        var text = div.text.concat(line);
 
     }
     """
