@@ -147,12 +147,13 @@ def _get_parser():
                                 'delimited list'),
                           choices=['t1c', 'gsr'],
                           default=None)
-    optional.add_argument('--no-png',
-                          dest='no_png',
+    optional.add_argument('--no-reports',
+                          dest='no_reports',
                           action='store_true',
                           help=('Creates a figures folder with static component '
                                 'maps, timecourse plots and other diagnostic '
-                                'images'),
+                                'images and displays these in an interactive '
+                                'reporting framework'),
                           default=False)
     optional.add_argument('--png-cmap',
                           dest='png_cmap',
@@ -231,7 +232,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                     fittype='loglin', combmode='t2s', tedpca='mdl',
                     fixed_seed=42, maxit=500, maxrestart=10,
                     tedort=False, gscontrol=None,
-                    no_png=False, png_cmap='coolwarm',
+                    no_reports=False, png_cmap='coolwarm',
                     verbose=False, low_mem=False, debug=False, quiet=False,
                     t2smap=None, mixm=None, ctab=None, manacc=None):
     """
@@ -268,8 +269,9 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         is None.
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
-    no_png : obj:'bool', optional
-        Do not generate .png plots and figures. Default is false.
+    no_reports : obj:'bool', optional
+        Do not generate .html reports and .png plots. Default is false such
+        that reports are generated.
     png_cmap : obj:'str', optional
         Name of a matplotlib colormap to be used when generating figures.
         Cannot be used with --no-png. Default is 'coolwarm'.
@@ -597,7 +599,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if verbose:
         io.writeresults_echoes(catd, mmix, mask, comptable, ref_img, out_dir=out_dir)
 
-    if not no_png:
+    if not no_reports:
         LGR.info('Making figures folder with static component maps and '
                  'timecourse plots.')
         # make figure folder first
