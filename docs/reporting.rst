@@ -35,20 +35,20 @@ selection results. It includes four different plots.
 
 * **Kappa Scree Plot:** This scree plots provides a view of the components ranked by `Kappa`
   As in the previous plot, each dot represents a component. The color of the dot inform us
-  about classification status. In this plot size is not related to variance explained.
+  about classification status. In this plot, size is not related to variance explained.
 .. image:: /_static/rep01_kappaScree.png
   :align: center
   :height: 400px
 
 * **Rho Scree Plot:** This scree plots provides a view of the components ranked by `Rho`
   As in the previous plot, each dot represents a component. The color of the dot inform us
-  about classification status. In this plot size is not related to variance explained.
+  about classification status. In this plot, size is not related to variance explained.
 .. image:: /_static/rep01_rhoScree.png
   :align: center
   :height: 400px
 
 * **Variance Explained Plot:** This pie plot provides a summary of how much variance is explained
-  by each individual component, as well as, the total variance explained by each of the three
+  by each individual component, as well as the total variance explained by each of the three
   classification categories (i.e., accepted, rejected, ignored). In this plot, each component is
   represented as a wedge, whose size is directly related to the amount of variance explained. The
   color of the wedge inform us about the classification status of the component. For this view,
@@ -75,7 +75,7 @@ interactive plots.
 
 * **Spectrum:** This plot shows the spectrogram associated with a given component
   (selected in the summary view). The x-axis represents frequency (in Hz), and the
-  y-axis represents spectral amplitude? Finally, the color of the trace
+  y-axis represents spectral amplitude. Finally, the color of the trace
   informs us about the component classification status.
 
 .. image:: /_static/rep01_fftPlot.png
