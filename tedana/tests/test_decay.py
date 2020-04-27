@@ -32,30 +32,38 @@ def test_fit_decay(testdata1):
     """
     fit_decay should return data in (samples,) shape.
     """
-    t2sv, s0v, t2svG, s0vG = me.fit_decay(testdata1['data'],
-                                          testdata1['tes'],
-                                          testdata1['mask'],
-                                          testdata1['adaptive_mask'],
-                                          testdata1['fittype'])
+    (t2sv, s0v,
+     t2svG, s0vG,
+     r_squared, adaptive_mask) = me.fit_decay(testdata1['data'],
+                                              testdata1['tes'],
+                                              testdata1['mask'],
+                                              testdata1['adaptive_mask'],
+                                              testdata1['fittype'])
     assert t2sv.ndim == 1
     assert s0v.ndim == 1
     assert t2svG.ndim == 1
     assert s0vG.ndim == 1
+    assert r_squared.ndim == 1
+    assert adaptive_mask.ndim == 1
 
 
 def test_fit_decay_ts(testdata1):
     """
     fit_decay_ts should return data in samples x time shape.
     """
-    t2sv, s0v, t2svG, s0vG = me.fit_decay_ts(testdata1['data'],
-                                             testdata1['tes'],
-                                             testdata1['mask'],
-                                             testdata1['adaptive_mask'],
-                                             testdata1['fittype'])
+    (t2sv, s0v,
+     t2svG, s0vG,
+     r_squared, adaptive_mask) = me.fit_decay_ts(testdata1['data'],
+                                                 testdata1['tes'],
+                                                 testdata1['mask'],
+                                                 testdata1['adaptive_mask'],
+                                                 testdata1['fittype'])
     assert t2sv.ndim == 2
     assert s0v.ndim == 2
     assert t2svG.ndim == 2
     assert s0vG.ndim == 2
+    assert r_squared.ndim == 2
+    assert adaptive_mask.ndim == 1
 
 
 # SMOKE TESTS
@@ -77,12 +85,16 @@ def test_smoke_fit_decay():
     mask[n_samples // 2:] = 0
     adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
     fittype = 'loglin'
-    t2s_limited, s0_limited, t2s_full, s0_full = me.fit_decay(
+    (t2s_limited, s0_limited,
+     t2s_full, s0_full,
+     r_squared, adaptive_mask) = me.fit_decay(
         data, tes, mask, adaptive_mask, fittype)
     assert t2s_limited is not None
     assert s0_limited is not None
     assert t2s_full is not None
     assert s0_full is not None
+    assert r_squared is not None
+    assert adaptive_mask is not None
 
 
 def test_smoke_fit_decay_curvefit():
@@ -100,12 +112,16 @@ def test_smoke_fit_decay_curvefit():
     mask[n_samples // 2:] = 0
     adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
     fittype = 'curvefit'
-    t2s_limited, s0_limited, t2s_full, s0_full = me.fit_decay(
+    (t2s_limited, s0_limited,
+     t2s_full, s0_full,
+     r_squared, adaptive_mask) = me.fit_decay(
         data, tes, mask, adaptive_mask, fittype)
     assert t2s_limited is not None
     assert s0_limited is not None
     assert t2s_full is not None
     assert s0_full is not None
+    assert r_squared is not None
+    assert adaptive_mask is not None
 
 
 def test_smoke_fit_decay_ts():
@@ -122,12 +138,16 @@ def test_smoke_fit_decay_ts():
     mask[n_samples // 2:] = 0
     adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
     fittype = 'loglin'
-    t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts = me.fit_decay_ts(
+    (t2s_limited_ts, s0_limited_ts,
+     t2s_full_ts, s0_full_ts,
+     r_squared, adaptive_mask) = me.fit_decay_ts(
         data, tes, mask, adaptive_mask, fittype)
     assert t2s_limited_ts is not None
     assert s0_limited_ts is not None
     assert t2s_full_ts is not None
     assert s0_full_ts is not None
+    assert r_squared is not None
+    assert adaptive_mask is not None
 
 
 def test_smoke_fit_decay_curvefit_ts():
@@ -145,10 +165,14 @@ def test_smoke_fit_decay_curvefit_ts():
     mask[n_samples // 2:] = 0
     adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
     fittype = 'curvefit'
-    t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts = me.fit_decay_ts(
+    (t2s_limited_ts, s0_limited_ts,
+     t2s_full_ts, s0_full_ts,
+     r_squared, adaptive_mask) = me.fit_decay_ts(
         data, tes, mask, adaptive_mask, fittype)
     assert t2s_limited_ts is not None
     assert s0_limited_ts is not None
     assert t2s_full_ts is not None
     assert s0_full_ts is not None
+    assert r_squared is not None
+    assert adaptive_mask is not None
 # TODO: BREAK AND UNIT TESTS
