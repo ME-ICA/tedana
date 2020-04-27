@@ -21,21 +21,21 @@ class TestT2smap():
         data = [op.join(data_dir, 'echo1.nii.gz'),
                 op.join(data_dir, 'echo2.nii.gz'),
                 op.join(data_dir, 'echo3.nii.gz')]
-        workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='t2s',
-                                  fitmode='all', label='t2smap')
         out_dir = 'TED.echo1.t2smap'
+        workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='t2s',
+                                  fitmode='all', out_dir=out_dir)
 
         # Check outputs
-        assert op.isfile(op.join(out_dir, 'ts_OC.nii.gz'))
-        img = nib.load(op.join(out_dir, 't2sv.nii.gz'))
+        assert op.isfile(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
+        img = nib.load(op.join(out_dir, 'T2StarMap.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 's0v.nii.gz'))
+        img = nib.load(op.join(out_dir, 'S0Map.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 't2svG.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-full_T2StarMap.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 's0vG.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-full_S0Map.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 'ts_OC.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
         assert len(img.shape) == 4
 
     def test_basic_t2smap2(self):
@@ -47,21 +47,21 @@ class TestT2smap():
         data = [op.join(data_dir, 'echo1.nii.gz'),
                 op.join(data_dir, 'echo2.nii.gz'),
                 op.join(data_dir, 'echo3.nii.gz')]
-        workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='t2s',
-                                  fitmode='ts', label='t2smap')
         out_dir = 'TED.echo1.t2smap'
+        workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='t2s',
+                                  fitmode='ts', out_dir=out_dir)
 
         # Check outputs
-        assert op.isfile(op.join(out_dir, 'ts_OC.nii.gz'))
-        img = nib.load(op.join(out_dir, 't2sv.nii.gz'))
+        assert op.isfile(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
+        img = nib.load(op.join(out_dir, 'T2StarMap.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 's0v.nii.gz'))
+        img = nib.load(op.join(out_dir, 'S0Map.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 't2svG.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-full_T2StarMap.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 's0vG.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-full_S0Map.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 'ts_OC.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
         assert len(img.shape) == 4
 
     def test_basic_t2smap3(self):
@@ -73,49 +73,73 @@ class TestT2smap():
         data = [op.join(data_dir, 'echo1.nii.gz'),
                 op.join(data_dir, 'echo2.nii.gz'),
                 op.join(data_dir, 'echo3.nii.gz')]
-        workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='paid',
-                                  fitmode='all', label='t2smap')
         out_dir = 'TED.echo1.t2smap'
+        workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='paid',
+                                  fitmode='all', out_dir=out_dir)
 
         # Check outputs
-        assert op.isfile(op.join(out_dir, 'ts_OC.nii.gz'))
-        img = nib.load(op.join(out_dir, 't2sv.nii.gz'))
+        assert op.isfile(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
+        img = nib.load(op.join(out_dir, 'T2StarMap.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 's0v.nii.gz'))
+        img = nib.load(op.join(out_dir, 'S0Map.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 't2svG.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-full_T2StarMap.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 's0vG.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-full_S0Map.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 'ts_OC.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
         assert len(img.shape) == 4
 
     def test_basic_t2smap4(self):
         """
         A very simple test, to confirm that t2smap creates output
         files when combmode is set to 'paid' and fitmode is set to 'ts'.
-
-        Not sure why this fails.
         """
         data_dir = get_test_data_path()
         data = [op.join(data_dir, 'echo1.nii.gz'),
                 op.join(data_dir, 'echo2.nii.gz'),
                 op.join(data_dir, 'echo3.nii.gz')]
-        workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='paid',
-                                  fitmode='ts', label='t2smap')
         out_dir = 'TED.echo1.t2smap'
+        workflows.t2smap_workflow(data, [14.5, 38.5, 62.5], combmode='paid',
+                                  fitmode='ts', out_dir=out_dir)
 
         # Check outputs
-        assert op.isfile(op.join(out_dir, 'ts_OC.nii.gz'))
-        img = nib.load(op.join(out_dir, 't2sv.nii.gz'))
+        assert op.isfile(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
+        img = nib.load(op.join(out_dir, 'T2StarMap.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 's0v.nii.gz'))
+        img = nib.load(op.join(out_dir, 'S0Map.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 't2svG.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-full_T2StarMap.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 's0vG.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-full_S0Map.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 'ts_OC.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
+        assert len(img.shape) == 4
+
+    def test_t2smap_cli(self):
+        """
+        Run test_basic_t2smap1, but use the CLI method.
+        """
+        data_dir = get_test_data_path()
+        data = [op.join(data_dir, 'echo1.nii.gz'),
+                op.join(data_dir, 'echo2.nii.gz'),
+                op.join(data_dir, 'echo3.nii.gz')]
+        out_dir = 'TED.echo1.t2smap'
+        args = (['-d'] + data +
+                ['-e', '14.5', '38.5', '62.5', '--combmode', 't2s',
+                 '--fitmode', 'all', '--out-dir', out_dir])
+        workflows.t2smap._main(args)
+
+        # Check outputs
+        img = nib.load(op.join(out_dir, 'T2StarMap.nii.gz'))
+        assert len(img.shape) == 3
+        img = nib.load(op.join(out_dir, 'S0Map.nii.gz'))
+        assert len(img.shape) == 3
+        img = nib.load(op.join(out_dir, 'desc-full_T2StarMap.nii.gz'))
+        assert len(img.shape) == 3
+        img = nib.load(op.join(out_dir, 'desc-full_S0Map.nii.gz'))
+        assert len(img.shape) == 3
+        img = nib.load(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
         assert len(img.shape) == 4
 
     def teardown_method(self):

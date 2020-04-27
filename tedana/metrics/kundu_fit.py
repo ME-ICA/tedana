@@ -20,7 +20,7 @@ F_MAX = 500
 Z_MAX = 8
 
 
-def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
+def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
                        reindex=False, mmixN=None, algorithm=None, label=None,
                        out_dir='.', verbose=False):
     """
@@ -35,8 +35,9 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
     mmix : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `catd`
-    t2s : (S [x T]) array_like
-        Limited T2* map or timeseries.
+    adaptive_mask : (S) array_like
+        Adaptive mask, where each voxel's value is the number of echoes with
+        "good signal".
     tes : list
         List of echo times associated with `catd`, in milliseconds
     ref_img : str or img_like
@@ -69,13 +70,14 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
     mmix_corrected : :obj:`numpy.ndarray`
         Mixing matrix after sign correction and resorting (if reindex is True).
     """
-    # Use t2s as mask
-    mask = t2s != 0
-    if not (catd.shape[0] == t2s.shape[0] == mask.shape[0] == tsoc.shape[0]):
+    # Use adaptive_mask as mask
+    mask = adaptive_mask >= 3
+
+    if not (catd.shape[0] == adaptive_mask.shape[0] == tsoc.shape[0]):
         raise ValueError('First dimensions (number of samples) of catd ({0}), '
-                         'tsoc ({1}), and t2s ({2}) do not '
+                         'tsoc ({1}), and adaptive_mask ({2}) do not '
                          'match'.format(catd.shape[0], tsoc.shape[0],
-                                        t2s.shape[0]))
+                                        adaptive_mask.shape[0]))
     elif catd.shape[1] != len(tes):
         raise ValueError('Second dimension of catd ({0}) does not match '
                          'number of echoes provided (tes; '
@@ -83,12 +85,8 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
     elif not (catd.shape[2] == tsoc.shape[1] == mmix.shape[0]):
         raise ValueError('Number of volumes in catd ({0}), '
                          'tsoc ({1}), and mmix ({2}) do not '
-                         'match.'.format(catd.shape[2], tsoc.shape[1], mmix.shape[0]))
-    elif t2s.ndim == 2:
-        if catd.shape[2] != t2s.shape[1]:
-            raise ValueError('Number of volumes in catd '
-                             '({0}) does not match number of volumes in '
-                             't2s ({1})'.format(catd.shape[2], t2s.shape[1]))
+                         'match.'.format(catd.shape[2], tsoc.shape[1],
+                                         mmix.shape[0]))
 
     RepLGR.info("A series of TE-dependence metrics were calculated for "
                 "each component, including Kappa, Rho, and variance "
@@ -97,7 +95,6 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
     # mask everything we can
     tsoc = tsoc[mask, :]
     catd = catd[mask, ...]
-    t2s = t2s[mask]
 
     # demean optimal combination
     tsoc_dm = tsoc - tsoc.mean(axis=-1, keepdims=True)
@@ -126,16 +123,17 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
     # compute Betas and means over TEs for TE-dependence analysis
     betas = get_coeffs(utils.unmask(catd, mask),
                        mmix_corrected,
-                       np.repeat(mask[:, np.newaxis], len(tes), axis=1))
+                       np.repeat(mask[:, np.newaxis], len(tes), axis=1),
+                       add_const=True)
     betas = betas[mask, ...]
     n_voxels, n_echos, n_components = betas.shape
     mu = catd.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))
     fmin, _, _ = getfbounds(n_echos)
 
-    # set up Xmats
-    X1 = mu.T  # Model 1
-    X2 = np.tile(tes, (1, n_voxels)) * mu.T / t2s.T  # Model 2
+    # set up design matrices
+    X1 = mu.T  # Model 1: TE-independence model
+    X2 = np.tile(tes, (1, n_voxels)) * mu.T  # Model 2: TE-dependence model
 
     # tables for component selection
     kappas = np.zeros([n_components])
@@ -145,8 +143,9 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
     Z_maps = np.zeros([n_voxels, n_components])
     F_R2_maps = np.zeros([n_voxels, n_components])
     F_S0_maps = np.zeros([n_voxels, n_components])
-    pred_R2_maps = np.zeros([n_voxels, n_echos, n_components])
-    pred_S0_maps = np.zeros([n_voxels, n_echos, n_components])
+    if verbose:
+        pred_R2_maps = np.zeros([n_voxels, n_echos, n_components])
+        pred_S0_maps = np.zeros([n_voxels, n_echos, n_components])
 
     LGR.info('Fitting TE- and S0-dependent models to components')
     for i_comp in range(n_components):
@@ -156,24 +155,32 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
         varex[i_comp] = (tsoc_B[:, i_comp]**2).sum() / totvar * 100.
         varex_norm[i_comp] = (WTS[:, i_comp]**2).sum() / totvar_norm
 
-        # S0 Model
-        # (S,) model coefficient map
-        coeffs_S0 = (comp_betas * X1).sum(axis=0) / (X1**2).sum(axis=0)
-        pred_S0 = X1 * np.tile(coeffs_S0, (n_echos, 1))
-        pred_S0_maps[:, :, i_comp] = pred_S0.T
-        SSE_S0 = (comp_betas - pred_S0)**2
-        SSE_S0 = SSE_S0.sum(axis=0)  # (S,) prediction error map
-        F_S0 = (alpha - SSE_S0) * (n_echos - 1) / (SSE_S0)
-        F_S0_maps[:, i_comp] = F_S0
+        for j_echo in np.unique(adaptive_mask[adaptive_mask >= 3]):
+            mask_idx = adaptive_mask == j_echo
+            alpha = (np.abs(comp_betas[:j_echo])**2).sum(axis=0)
 
-        # R2 Model
-        coeffs_R2 = (comp_betas * X2).sum(axis=0) / (X2**2).sum(axis=0)
-        pred_R2 = X2 * np.tile(coeffs_R2, (n_echos, 1))
-        pred_R2_maps[:, :, i_comp] = pred_R2.T
-        SSE_R2 = (comp_betas - pred_R2)**2
-        SSE_R2 = SSE_R2.sum(axis=0)
-        F_R2 = (alpha - SSE_R2) * (n_echos - 1) / (SSE_R2)
-        F_R2_maps[:, i_comp] = F_R2
+            # S0 Model
+            # (S,) model coefficient map
+            coeffs_S0 = (comp_betas[:j_echo] * X1[:j_echo, :]).sum(axis=0) /\
+                (X1[:j_echo, :]**2).sum(axis=0)
+            pred_S0 = X1[:j_echo, :] * np.tile(coeffs_S0, (j_echo, 1))
+            SSE_S0 = (comp_betas[:j_echo] - pred_S0)**2
+            SSE_S0 = SSE_S0.sum(axis=0)  # (S,) prediction error map
+            F_S0 = (alpha - SSE_S0) * (j_echo - 1) / (SSE_S0)
+            F_S0_maps[mask_idx[mask], i_comp] = F_S0[mask_idx[mask]]
+
+            # R2 Model
+            coeffs_R2 = (comp_betas[:j_echo] * X2[:j_echo, :]).sum(axis=0) /\
+                (X2[:j_echo, :]**2).sum(axis=0)
+            pred_R2 = X2[:j_echo] * np.tile(coeffs_R2, (j_echo, 1))
+            SSE_R2 = (comp_betas[:j_echo] - pred_R2)**2
+            SSE_R2 = SSE_R2.sum(axis=0)
+            F_R2 = (alpha - SSE_R2) * (j_echo - 1) / (SSE_R2)
+            F_R2_maps[mask_idx[mask], i_comp] = F_R2[mask_idx[mask]]
+
+            if verbose:
+                pred_S0_maps[mask_idx[mask], :j_echo, i_comp] = pred_S0.T[mask_idx[mask], :]
+                pred_R2_maps[mask_idx[mask], :j_echo, i_comp] = pred_R2.T[mask_idx[mask], :]
 
         # compute weights as Z-values
         wtsZ = (WTS[:, i_comp] - WTS[:, i_comp].mean()) / WTS[:, i_comp].std()
@@ -199,12 +206,15 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
         comptable = comptable[sort_idx, :]
         mmix_corrected = mmix_corrected[:, sort_idx]
         betas = betas[..., sort_idx]
-        pred_R2_maps = pred_R2_maps[:, :, sort_idx]
-        pred_S0_maps = pred_S0_maps[:, :, sort_idx]
         F_R2_maps = F_R2_maps[:, sort_idx]
         F_S0_maps = F_S0_maps[:, sort_idx]
         Z_maps = Z_maps[:, sort_idx]
         tsoc_Babs = tsoc_Babs[:, sort_idx]
+
+        if verbose:
+            pred_R2_maps = pred_R2_maps[:, :, sort_idx]
+            pred_S0_maps = pred_S0_maps[:, :, sort_idx]
+
         if algorithm == 'kundu_v3':
             WTS = WTS[:, sort_idx]
             PSC = PSC[:, sort_idx]
@@ -226,7 +236,7 @@ def dependence_metrics(catd, tsoc, mmix, t2s, tes, ref_img,
         io.filewrite(utils.unmask(Z_maps ** 2., mask),
                      op.join(out_dir, '{0}metric_weights.nii'.format(label)),
                      ref_img)
-    del pred_R2_maps, pred_S0_maps
+        del pred_R2_maps, pred_S0_maps
 
     comptable = pd.DataFrame(comptable,
                              columns=['kappa', 'rho',

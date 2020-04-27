@@ -2,23 +2,17 @@
 Run the "canonical" TE-Dependent ANAlysis workflow.
 """
 import os
-
-os.environ['MKL_NUM_THREADS'] = '1'
-os.environ['NUMEXPR_NUM_THREADS'] = '1'
-os.environ['OMP_NUM_THREADS'] = '1'
-os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
-os.environ['OPENBLAS_NUM_THREADS'] = '1'
-
+import os.path as op
 import shutil
 import logging
-import os.path as op
-from glob import glob
 import datetime
+from glob import glob
 
 import argparse
 import numpy as np
 import pandas as pd
 from scipy import stats
+from threadpoolctl import threadpool_limits
 from nilearn.masking import compute_epi_mask
 
 from tedana import (decay, combine, decomposition, io, metrics, selection,
@@ -177,6 +171,16 @@ def _get_parser():
                                 'use of IncrementalPCA. May increase workflow '
                                 'duration.'),
                           default=False)
+    optional.add_argument('--n-threads',
+                          dest='n_threads',
+                          type=int,
+                          action='store',
+                          help=('Number of threads to use. Used by '
+                                'threadpoolctl to set the parameter outside '
+                                'of the workflow function. Higher numbers of '
+                                'threads tend to slow down performance on '
+                                'typical datasets. Default is 1.'),
+                          default=1)
     optional.add_argument('--debug',
                           dest='debug',
                           action='store_true',
@@ -270,7 +274,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         Name of a matplotlib colormap to be used when generating figures.
         Cannot be used with --no-png. Default is 'coolwarm'.
     t2smap : :obj:`str`, optional
-        Precalculated T2* map in the same space as the input data.
+        Precalculated T2* map in the same space as the input data. Values in
+        the map must be in seconds.
     mixm : :obj:`str` or None, optional
         File containing mixing matrix, to be used when re-running the workflow.
         If not provided, ME-PCA and ME-ICA are done. Default is None.
@@ -330,8 +335,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     # create logfile name
     basename = 'tedana_'
     extension = 'tsv'
-    isotime = datetime.datetime.now().replace(microsecond=0).isoformat()
-    logname = op.join(out_dir, (basename + isotime + '.' + extension))
+    start_time = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%S')
+    logname = op.join(out_dir, (basename + start_time + '.' + extension))
 
     # set logging format
     log_formatter = logging.Formatter(
@@ -442,12 +447,14 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         RepLGR.info("A user-defined mask was applied to the data.")
     elif t2smap and not mask:
         LGR.info('Using user-defined T2* map to generate mask')
-        t2s_limited = utils.load_image(t2smap)
+        t2s_limited_sec = utils.load_image(t2smap)
+        t2s_limited = utils.sec2millisec(t2s_limited_sec)
         t2s_full = t2s_limited.copy()
         mask = (t2s_limited != 0).astype(int)
     elif t2smap and mask:
         LGR.info('Combining user-defined mask and T2* map to generate mask')
-        t2s_limited = utils.load_image(t2smap)
+        t2s_limited_sec = utils.load_image(t2smap)
+        t2s_limited = utils.sec2millisec(t2s_limited_sec)
         t2s_full = t2s_limited.copy()
         mask = utils.load_image(mask)
         mask[t2s_limited == 0] = 0  # reduce mask based on T2* map
@@ -472,21 +479,22 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
         cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5,
                                           interpolation_method='lower')
-        LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
+        LGR.debug('Setting cap on T2* map at {:.5f}s'.format(
+            utils.millisec2sec(cap_t2s)))
         t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
-        io.filewrite(t2s_limited, op.join(out_dir, 't2sv.nii'), ref_img)
+        io.filewrite(utils.millisec2sec(t2s_limited), op.join(out_dir, 't2sv.nii'), ref_img)
         io.filewrite(s0_limited, op.join(out_dir, 's0v.nii'), ref_img)
         io.filewrite(r_squared, op.join(out_dir, 'r_squared.nii'), ref_img)
 
         if verbose:
-            io.filewrite(t2s_full, op.join(out_dir, 't2svG.nii'), ref_img)
+            io.filewrite(utils.millisec2sec(t2s_full), op.join(out_dir, 't2svG.nii'), ref_img)
             io.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
 
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
     io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
 
     # optimally combine data
-    data_oc = combine.make_optcom(catd, tes, mask, t2s=t2s_full, combmode=combmode)
+    data_oc = combine.make_optcom(catd, tes, masksum, t2s=t2s_full, combmode=combmode)
 
     # regress out global signal unless explicitly not desired
     if 'gsr' in gscontrol:
@@ -496,7 +504,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if mixm is None:
         # Identify and remove thermal noise from data
         dd, n_components = decomposition.tedpca(catd, data_oc, combmode, mask,
-                                                t2s_limited, t2s_full, ref_img,
+                                                masksum, t2s_full, ref_img,
                                                 tes=tes, algorithm=tedpca,
                                                 kdaw=10., rdaw=1.,
                                                 out_dir=out_dir,
@@ -514,7 +522,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         # generated from dimensionally reduced data using full data (i.e., data
         # with thermal noise)
         comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                    catd, data_oc, mmix_orig, t2s_limited, tes,
+                    catd, data_oc, mmix_orig, masksum, tes,
                     ref_img, reindex=True, label='meica_', out_dir=out_dir,
                     algorithm='kundu_v2', verbose=verbose)
         comp_names = [io.add_decomp_prefix(comp, prefix='ica', max_value=comptable.index.max())
@@ -534,7 +542,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
 
         if ctab is None:
             comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                        catd, data_oc, mmix_orig, t2s_limited, tes,
+                        catd, data_oc, mmix_orig, masksum, tes,
                         ref_img, label='meica_', out_dir=out_dir,
                         algorithm='kundu_v2', verbose=verbose)
             comptable = metrics.kundu_metrics(comptable, metric_maps)
@@ -674,7 +682,11 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
 def _main(argv=None):
     """Tedana entry point"""
     options = _get_parser().parse_args(argv)
-    tedana_workflow(**vars(options))
+    kwargs = vars(options)
+    n_threads = kwargs.pop('n_threads')
+    n_threads = None if n_threads == -1 else n_threads
+    with threadpool_limits(limits=n_threads, user_api=None):
+        tedana_workflow(**kwargs)
 
 
 if __name__ == '__main__':
