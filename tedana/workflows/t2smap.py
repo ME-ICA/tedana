@@ -152,7 +152,7 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     debug : :obj:`bool`, optional
         Whether to run in debugging mode or not. Default is False.
     quiet : :obj:`bool`, optional
-        If True, suppresses logging/printing of messages. Default is False.
+        If True, suppress logging/printing of messages. Default is False.
 
 
     Notes
