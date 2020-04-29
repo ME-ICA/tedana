@@ -152,7 +152,7 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     debug : :obj:`bool`, optional
         Whether to run in debugging mode or not. Default is False.
     quiet : :obj:`bool`, optional
-        If True, suppresses logging/printing of messages. Default is False.
+        If True, suppress logging/printing of messages. Default is False.
 
 
     Notes
@@ -162,16 +162,16 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     ==========================    =================================================
     Filename                      Content
     ==========================    =================================================
-    T2StarMap.nii.gz              Limited estimated T2* 3D map or 4D timeseries.
+    T2starmap.nii.gz              Limited estimated T2* 3D map or 4D timeseries.
                                   Will be a 3D map if ``fitmode`` is 'all' and a
                                   4D timeseries if it is 'ts'.
-    S0Map.nii.gz                  Limited S0 3D map or 4D timeseries.
-    desc-full_T2StarMap.nii.gz    Full T2* map/timeseries. The difference between
+    S0map.nii.gz                  Limited S0 3D map or 4D timeseries.
+    desc-full_T2starmap.nii.gz    Full T2* map/timeseries. The difference between
                                   the limited and full maps is that, for voxels
                                   affected by dropout where only one echo contains
                                   good data, the full map uses the single echo's
                                   value while the limited map has a NaN.
-    desc-full_S0Map.nii.gz        Full S0 map/timeseries.
+    desc-full_S0map.nii.gz        Full S0 map/timeseries.
     desc-optcom_bold.nii.gz       Optimally combined timeseries.
     ==========================    =================================================
     """
@@ -238,11 +238,11 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     t2s_limited[t2s_limited < 0] = 0
 
     io.filewrite(utils.millisec2sec(t2s_limited),
-                 op.join(out_dir, 'T2StarMap.nii.gz'), ref_img)
-    io.filewrite(s0_limited, op.join(out_dir, 'S0Map.nii.gz'), ref_img)
+                 op.join(out_dir, 'T2starmap.nii.gz'), ref_img)
+    io.filewrite(s0_limited, op.join(out_dir, 'S0map.nii.gz'), ref_img)
     io.filewrite(utils.millisec2sec(t2s_full),
-                 op.join(out_dir, 'desc-full_T2StarMap.nii.gz'), ref_img)
-    io.filewrite(s0_full, op.join(out_dir, 'desc-full_S0Map.nii.gz'), ref_img)
+                 op.join(out_dir, 'desc-full_T2starmap.nii.gz'), ref_img)
+    io.filewrite(s0_full, op.join(out_dir, 'desc-full_S0map.nii.gz'), ref_img)
     io.filewrite(OCcatd, op.join(out_dir, 'desc-optcom_bold.nii.gz'), ref_img)
 
 
