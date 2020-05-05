@@ -227,7 +227,7 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
 
     LGR.info('Computing optimal combination')
     # optimally combine data
-    OCcatd = combine.make_optcom(catd, tes, mask, t2s=t2s_full,
+    OCcatd = combine.make_optcom(catd, tes, masksum, t2s=t2s_full,
                                  combmode=combmode)
 
     # clean up numerical errors
