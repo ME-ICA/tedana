@@ -1,0 +1,5 @@
+desc-full_S0map.nii.gz
+desc-full_T2starmap.nii.gz
+desc-optcom_bold.nii.gz
+S0map.nii.gz
+T2starmap.nii.gz
