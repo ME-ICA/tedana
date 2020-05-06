@@ -1,6 +1,6 @@
 .PHONY: all lint
 
-all_tests: lint unittest three-echo five-echo
+all_tests: lint unittest three-echo four-echo five-echo t2smap
 
 help:
 	@echo "Please use 'make <target>' where <target> is one of:"

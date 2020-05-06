@@ -271,6 +271,9 @@ workflows:
       - five-echo:
           requires:
             - makeenv_37
+      - t2smap:
+          requires:
+            - makeenv_37
       - merge_coverage:
           requires:
             - unittest_35
@@ -279,3 +282,4 @@ workflows:
             - three-echo
             - four-echo
             - five-echo
+            - t2smap
