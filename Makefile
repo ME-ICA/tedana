@@ -1,6 +1,6 @@
 .PHONY: all lint
 
-all_tests: lint unittest three-echo five-echo
+all_tests: lint unittest three-echo four-echo five-echo t2smap
 
 help:
 	@echo "Please use 'make <target>' where <target> is one of:"
@@ -8,6 +8,7 @@ help:
 	@echo "  unittest		to run unit tests on tedana"
 	@echo "  three-echo	to run the three-echo test set on tedana"
 	@echo "  five-echo	to run the five-echo test set on tedana"
+	@echo "  t2smap	to run the t2smap integration test set on tedana"
 	@echo "  all_tests		to run 'lint', 'unittest', and 'integration'"
 
 lint:
@@ -25,3 +26,5 @@ four-echo:
 five-echo:
 	@py.test --cov-append --cov-report term-missing --cov=tedana -k test_integration_five_echo tedana/tests/test_integration.py
 
+t2smap:
+	@py.test --cov-append --cov-report term-missing --cov=tedana -k test_integration_t2smap tedana/tests/test_integration.py

@@ -202,6 +202,30 @@ jobs:
           paths:
               - src/coverage/.coverage.five-echo
 
+  t2smap:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}-{{ checksum "requirements.txt" }}
+      - run:
+          name: Run integration tests
+          no_output_timeout: 40m
+          command: |
+            apt-get install -yqq make
+            source activate tedana_py37  # depends on makeenv_37
+            make t2smap
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.t2smap
+      - store_artifacts:
+          path: /tmp/data
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+              - src/coverage/.coverage.t2smap
+
   merge_coverage:
     working_directory: /tmp/src/tedana
     docker:
@@ -247,6 +271,9 @@ workflows:
       - five-echo:
           requires:
             - makeenv_37
+      - t2smap:
+          requires:
+            - makeenv_37
       - merge_coverage:
           requires:
             - unittest_35
@@ -255,3 +282,4 @@ workflows:
             - three-echo
             - four-echo
             - five-echo
+            - t2smap
