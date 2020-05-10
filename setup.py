@@ -31,6 +31,8 @@ def main():
     pkg_data = {
         'tedana': [
             'tests/data/*',
+            'reporting/data/*',
+            'reporting/data/html/*',
         ]
     }
 
