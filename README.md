@@ -80,7 +80,8 @@ If you aim to contribute to the `tedana` code base and/or documentation, please 
 ## Getting involved
 
 We :yellow_heart: new contributors!
-To get started, check out [our contributing guidelines](https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md).
+To get started, check out [our contributing guidelines](https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md)
+and our [developer's guide](https://tedana.readthedocs.io/en/latest/developing.html).
 
 Want to learn more about our plans for developing ``tedana``?
 Have a question, comment, or suggestion?
