@@ -4,118 +4,130 @@ Outputs of tedana
 tedana derivatives
 ------------------
 
-======================    =====================================================
-Filename                  Content
-======================    =====================================================
-t2sv.nii.gz               Limited estimated T2* 3D map.
-                          Values are in seconds.
-                          The difference between the limited and full maps
-                          is that, for voxels affected by dropout where
-                          only one echo contains good data, the full map
-                          uses the single echo's value while the limited
-                          map has a NaN.
-s0v.nii.gz                Limited S0 3D map.
-                          The difference between the limited and full maps
-                          is that, for voxels affected by dropout where
-                          only one echo contains good data, the full map
-                          uses the single echo's value while the limited
-                          map has a NaN.
-ts_OC.nii.gz              Optimally combined time series.
-dn_ts_OC.nii.gz           Denoised optimally combined time series. Recommended
-                          dataset for analysis.
-lowk_ts_OC.nii.gz         Combined time series from rejected components.
-midk_ts_OC.nii.gz         Combined time series from "mid-k" rejected components.
-hik_ts_OC.nii.gz          High-kappa time series. This dataset does not
-                          include thermal noise or low variance components.
-                          Not the recommended dataset for analysis.
-adaptive_mask.nii.gz      Integer-valued mask used in the workflow, where
-                          each voxel's value corresponds to the number of good
-                          echoes to be used for T2*/S0 estimation.
-pca_decomposition.json    TEDPCA component table. A BIDS Derivatives-compatible
-                          json file with summary metrics and inclusion/exclusion
-                          information for each component from the PCA
-                          decomposition. To view, you may want to use
-                          ``io.load_comptable``, which returns a pandas
-                          DataFrame from the json file.
-pca_mixing.tsv            Mixing matrix (component time series) from PCA
-                          decomposition in a tab-delimited file. Each column is
-                          a different component, and the column name is the
-                          component number.
-pca_components.nii.gz     Component weight maps from PCA decomposition.
-                          Each map corresponds to the same component index in
-                          the mixing matrix and component table.
-ica_decomposition.json    TEDICA component table. A BIDS Derivatives-compatible
-                          json file with summary metrics and inclusion/exclusion
-                          information for each component from the ICA
-                          decomposition. To view, you may want to use
-                          ``io.load_comptable``, which returns a pandas
-                          DataFrame from the json file.
-ica_mixing.tsv            Mixing matrix (component time series) from ICA
-                          decomposition in a tab-delimited file. Each column is
-                          a different component, and the column name is the
-                          component number.
-ica_components.nii.gz     Component weight maps from ICA decomposition.
-                          Values are z-transformed standardized regression
-                          coefficients. Each map corresponds to the same
-                          component index in the mixing matrix and component table.
-                          Should be the same as "feats_OC2.nii.gz".
-betas_OC.nii.gz           Full ICA coefficient feature set.
-betas_hik_OC.nii.gz       High-kappa ICA coefficient feature set
-feats_OC2.nii.gz          Z-normalized spatial component maps
-report.txt                A summary report for the workflow with relevant
-                          citations.
-======================    =====================================================
+================================================    =====================================================
+Filename                                            Content
+================================================    =====================================================
+T2starmap.nii.gz                                    Limited estimated T2* 3D map.
+                                                    Values are in seconds.
+                                                    The difference between the limited and full maps
+                                                    is that, for voxels affected by dropout where
+                                                    only one echo contains good data, the full map
+                                                    uses the single echo's value while the limited
+                                                    map has a NaN.
+S0map.nii.gz                                        Limited S0 3D map.
+                                                    The difference between the limited and full maps
+                                                    is that, for voxels affected by dropout where
+                                                    only one echo contains good data, the full map
+                                                    uses the single echo's value while the limited
+                                                    map has a NaN.
+desc-optcom_bold.nii.gz                             Optimally combined time series.
+desc-optcomDenoised_bold.nii.gz                     Denoised optimally combined time series. Recommended
+                                                    dataset for analysis.
+desc-optcomRejected_bold.nii.gz                     Combined time series from rejected components.
+desc-optcomAccepted_bold.nii.gz                     High-kappa time series. This dataset does not
+                                                    include thermal noise or low variance components.
+                                                    Not the recommended dataset for analysis.
+desc-adaptiveGoodSignal_mask.nii.gz                 Integer-valued mask used in the workflow, where
+                                                    each voxel's value corresponds to the number of good
+                                                    echoes to be used for T2\*/S0 estimation.
+desc-PCA_decomposition.json                         TEDPCA component table. A BIDS Derivatives-compatible
+                                                    json file with summary metrics and inclusion/exclusion
+                                                    information for each component from the PCA
+                                                    decomposition. To view, you may want to use
+                                                    :py:func:`tedana.io.load_comptable`, which returns
+                                                    a pandas DataFrame from the json file.
+desc-PCA_mixing.tsv                                 Mixing matrix (component time series) from PCA
+                                                    decomposition in a tab-delimited file. Each column is
+                                                    a different component, and the column name is the
+                                                    component number.
+desc-PCA_components.nii.gz                          Component weight maps from PCA decomposition.
+                                                    Each map corresponds to the same component index in
+                                                    the mixing matrix and component table.
+desc-ICA_decomposition.json                         TEDICA component table. A BIDS Derivatives-compatible
+                                                    json file with summary metrics and inclusion/exclusion
+                                                    information for each component from the ICA
+                                                    decomposition. To view, you may want to use
+                                                    :py:func:`tedana.io.load_comptable`, which returns
+                                                    a pandas DataFrame from the json file.
+desc-ICA_mixing.tsv                                 Mixing matrix (component time series) from ICA
+                                                    decomposition in a tab-delimited file. Each column is
+                                                    a different component, and the column name is the
+                                                    component number.
+desc-ICA_components.nii.gz                          Full ICA coefficient feature set.
+desc-ICAZ_components.nii.gz                         Z-normalized component weight maps from ICA
+                                                    decomposition.
+                                                    Values are z-transformed standardized regression
+                                                    coefficients. Each map corresponds to the same
+                                                    component index in the mixing matrix and component table.
+desc-ICAAccepted_components.nii.gz                  High-kappa ICA coefficient feature set
+desc-ICAAcceptedZ_components.nii.gz                 Z-normalized spatial component maps
+report.txt                                          A summary report for the workflow with relevant
+                                                    citations.
+================================================    =====================================================
 
 If ``verbose`` is set to True:
 
-======================    =====================================================
-Filename                  Content
-======================    =====================================================
-t2svG.nii.gz              Full T2* map/time series.
-                          Values are in seconds.
-                          The difference between the limited and full maps is
-                          that, for voxels affected by dropout where only one
-                          echo contains good data, the full map uses the
-                          single echo's value while the limited map has a NaN.
-                          Only used for optimal combination.
-s0vG.nii.gz               Full S0 map/time series. Only used for optimal
-                          combination.
-hik_ts_e[echo].nii.gz     High-Kappa time series for echo number ``echo``
-midk_ts_e[echo].nii.gz    Mid-Kappa time series for echo number ``echo``
-lowk_ts_e[echo].nii.gz    Low-Kappa time series for echo number ``echo``
-dn_ts_e[echo].nii.gz      Denoised time series for echo number ``echo``
-======================    =====================================================
+================================================    =====================================================
+Filename                                            Content
+================================================    =====================================================
+desc-full_T2starmap.nii.gz                          Full T2* map/time series.
+                                                    Values are in seconds.
+                                                    The difference between the limited and full maps is
+                                                    that, for voxels affected by dropout where only one
+                                                    echo contains good data, the full map uses the
+                                                    single echo's value while the limited map has a NaN.
+                                                    Only used for optimal combination.
+desc-full_S0map.nii.gz                              Full S0 map/time series. Only used for optimal
+                                                    combination.
+echo-[echo]_desc-[PCA|ICA]_components.nii.gz        Echo-wise PCA/ICA component weight maps.
+desc-[PCA|ICA]R2ModelPredictions_X.nii.gz           Component- and voxel-wise R2-model predictions.
+desc-[PCA|ICA]S0ModelPredictions_X.nii.gz           Component- and voxel-wise S0-model predictions.
+desc-[PCA|ICA]AveragingWeights_X.nii.gz             Component-wise averaging weights for metric
+                                                    calculation.
+desc-optcomPCAReduced_bold.nii.gz                   Optimally combined data after dimensionality
+                                                    reduction with PCA.
+echo-[echo]_desc-Accepted_bold.nii.gz               High-Kappa time series for echo number ``echo``
+echo-[echo]_desc-Rejected_bold.nii.gz               Low-Kappa time series for echo number ``echo``
+echo-[echo]_desc-Denoised_bold.nii.gz               Denoised time series for echo number ``echo``
+================================================    =====================================================
 
 If ``gscontrol`` includes 'gsr':
 
-======================    =====================================================
-Filename                  Content
-======================    =====================================================
-T1gs.nii.gz               Spatial global signal
-glsig.1D                  Time series of global signal from optimally combined
-                          data.
-tsoc_orig.nii.gz          Optimally combined time series with global signal
-                          retained.
-tsoc_nogs.nii.gz          Optimally combined time series with global signal
-                          removed.
-======================    =====================================================
+================================================    =====================================================
+Filename                                            Content
+================================================    =====================================================
+T1gs.nii.gz                                         Spatial global signal
+desc-globalSignal_regressors.tsv                    Time series of global signal from optimally combined
+                                                    data.
+desc-optcomWithGlobalSignal_bold.nii.gz             Optimally combined time series with global signal
+                                                    retained.
+desc-optcomNoGlobalSignal_bold.nii.gz               Optimally combined time series with global signal
+                                                    removed.
+================================================    =====================================================
 
 If ``gscontrol`` includes 't1c':
 
-=======================    =====================================================
-Filename                   Content
-=======================    =====================================================
-sphis_hik.nii.gz           T1-like effect
-hik_ts_OC_T1c.nii.gz       T1 corrected high-kappa time series by regression
-dn_ts_OC_T1c.nii.gz        T1 corrected denoised time series
-betas_hik_OC_T1c.nii.gz    T1-GS corrected high-kappa components
-meica_mix_T1c.1D           T1-GS corrected mixing matrix
-=======================    =====================================================
+================================================    =====================================================
+Filename                                            Content
+================================================    =====================================================
+desc-optcomAccepted_min.nii.gz                      T1-like effect
+desc-optcomAcceptedT1cDenoised_bold.nii.gz          T1-corrected high-kappa time series by regression
+desc-optcomT1cDenoised_bold.nii.gz                  T1-corrected denoised time series
+desc-TEDICAAcceptedT1cDenoised_components.nii.gz    T1-GS corrected high-kappa components
+desc-TEDICAT1cDenoised_mixing.tsv                   T1-GS corrected mixing matrix
+================================================    =====================================================
 
 Component tables
 ----------------
-TEDPCA and TEDICA use tab-delimited tables to track relevant metrics, component
+TEDPCA and TEDICA use component tables to track relevant metrics, component
 classifications, and rationales behind classifications.
+The component tables are stored as json files for BIDS-compatibility.
+This format is not very conducive to manual review, which is why we have
+:py:func:`tedana.io.load_comptable` to load the json file into a pandas
+DataFrame.
+
+In order to make sense of the rationale codes in the component tables,
+consult the tables below.
 TEDPCA rationale codes start with a "P", while TEDICA codes start with an "I".
 
 ===============    =============================================================

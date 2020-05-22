@@ -140,13 +140,13 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
 
     This function writes out several files:
 
-    ======================    =================================================
-    Filename                  Content
-    ======================    =================================================
-    pca_decomposition.json    PCA component table.
-    pca_mixing.tsv            PCA mixing matrix.
-    pca_components.nii.gz     Component weight maps.
-    ======================    =================================================
+    ===========================    =============================================
+    Filename                       Content
+    ===========================    =============================================
+    desc-PCA_decomposition.json    PCA component table
+    desc-PCA_mixing.tsv            PCA mixing matrix
+    desc-PCA_components.nii.gz     Component weight maps
+    ===========================    =============================================
     """
     if algorithm == 'kundu':
         alg_str = ("followed by the Kundu component selection decision "
@@ -209,7 +209,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     comptable, _, _, _ = metrics.dependence_metrics(
                 data_cat, data_oc, comp_ts, adaptive_mask, tes, ref_img,
                 reindex=False, mmixN=vTmixN, algorithm=None,
-                label='mepca_', out_dir=out_dir, verbose=verbose)
+                label='PCA', out_dir=out_dir, verbose=verbose)
 
     # varex_norm from PCA overrides varex_norm from dependence_metrics,
     # but we retain the original
@@ -218,9 +218,8 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     comptable['normalized variance explained'] = varex_norm
 
     # write component maps to 4D image
-    comp_ts_z = stats.zscore(comp_ts, axis=0)
-    comp_maps = utils.unmask(computefeats2(data_oc, comp_ts_z, mask), mask)
-    io.filewrite(comp_maps, op.join(out_dir, 'pca_components.nii.gz'), ref_img)
+    comp_maps = utils.unmask(computefeats2(data_oc, comp_ts, mask), mask)
+    io.filewrite(comp_maps, op.join(out_dir, 'desc-PCA_components.nii.gz'), ref_img)
 
     # Select components using decision tree
     if algorithm == 'kundu':
@@ -238,7 +237,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
                   for comp in comptable.index.values]
 
     mixing_df = pd.DataFrame(data=comp_ts, columns=comp_names)
-    mixing_df.to_csv(op.join(out_dir, 'pca_mixing.tsv'), sep='\t', index=False)
+    mixing_df.to_csv(op.join(out_dir, 'desc-PCA_mixing.tsv'), sep='\t', index=False)
 
     comptable['Description'] = 'PCA fit to optimally combined data.'
     mmix_dict = {}
@@ -247,7 +246,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
                            'explained in descending order. '
                            'Component signs are flipped to best match the '
                            'data.')
-    io.save_comptable(comptable, op.join(out_dir, 'pca_decomposition.json'),
+    io.save_comptable(comptable, op.join(out_dir, 'desc-PCA_decomposition.json'),
                       label='pca', metadata=mmix_dict)
 
     acc = comptable[comptable.classification == 'accepted'].index.values

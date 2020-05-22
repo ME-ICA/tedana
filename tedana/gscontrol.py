@@ -6,6 +6,7 @@ import os.path as op
 
 import numpy as np
 from numpy.linalg import lstsq
+import pandas as pd
 from scipy import stats
 from scipy.special import lpmv
 
@@ -78,13 +79,20 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
     detr = dat - np.dot(sol.T, Lmix.T)[0]
     sphis = (detr).min(axis=1)
     sphis -= sphis.mean()
-    io.filewrite(utils.unmask(sphis, Gmask), op.join(out_dir, 'T1gs'), ref_img)
+    io.filewrite(
+        utils.unmask(sphis, Gmask),
+        op.join(out_dir, 'T1gs.nii.gz'),
+        ref_img
+    )
 
     # find time course ofc the spatial global signal
     # make basis with the Legendre basis
     glsig = np.linalg.lstsq(np.atleast_2d(sphis).T, dat, rcond=None)[0]
     glsig = stats.zscore(glsig, axis=None)
-    np.savetxt(op.join(out_dir, 'glsig.1D'), glsig)
+
+    glsig_df = pd.DataFrame(data=glsig.T, columns=['global_signal'])
+    glsig_df.to_csv(op.join(out_dir, 'desc-globalSignal_regressors.tsv'),
+                    sep='\t', index=False)
     glbase = np.hstack([Lmix, glsig.T])
 
     # Project global signal out of optimally combined data
@@ -92,9 +100,17 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
     tsoc_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T,
                              np.atleast_2d(glbase.T[dtrank])) + Gmu[Gmask][:, np.newaxis]
 
-    io.filewrite(optcom, op.join(out_dir, 'tsoc_orig'), ref_img)
+    io.filewrite(
+        optcom,
+        op.join(out_dir, 'desc-optcomWithGlobalSignal_bold.nii.gz'),
+        ref_img
+    )
     dm_optcom = utils.unmask(tsoc_nogs, Gmask)
-    io.filewrite(dm_optcom, op.join(out_dir, 'tsoc_nogs'), ref_img)
+    io.filewrite(
+        dm_optcom,
+        op.join(out_dir, 'desc-optcomNoGlobalSignal_bold.nii.gz'),
+        ref_img
+    )
 
     # Project glbase out of each echo
     dm_catd = catd.copy()  # don't overwrite catd
@@ -170,7 +186,11 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, out_dir='.'):
     bold_ts = np.dot(cbetas[:, acc], mmix[:, acc].T)
     t1_map = bold_ts.min(axis=-1)
     t1_map -= t1_map.mean()
-    io.filewrite(utils.unmask(t1_map, mask), op.join(out_dir, 'sphis_hik'), ref_img)
+    io.filewrite(
+        utils.unmask(t1_map, mask),
+        op.join(out_dir, 'desc-optcomAccepted_min.nii.gz'),
+        ref_img
+    )
     t1_map = t1_map[:, np.newaxis]
 
     """
@@ -184,14 +204,21 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, out_dir='.'):
     bold_noT1gs = bold_ts - np.dot(lstsq(glob_sig.T, bold_ts.T,
                                          rcond=None)[0].T, glob_sig)
     hik_ts = bold_noT1gs * optcom_std
-    io.filewrite(utils.unmask(hik_ts, mask), op.join(out_dir, 'hik_ts_OC_T1c'),
-                 ref_img)
+    io.filewrite(
+        utils.unmask(hik_ts, mask),
+        op.join(out_dir, 'desc-optcomAcceptedT1cDenoised_bold.nii.gz'),
+        ref_img
+    )
 
     """
     Make denoised version of T1-corrected time series
     """
     medn_ts = optcom_mu + ((bold_noT1gs + resid) * optcom_std)
-    io.filewrite(utils.unmask(medn_ts, mask), op.join(out_dir, 'dn_ts_OC_T1c'), ref_img)
+    io.filewrite(
+        utils.unmask(medn_ts, mask),
+        op.join(out_dir, 'desc-optcomT1cDenoised_bold.nii.gz'),
+        ref_img
+    )
 
     """
     Orthogonalize mixing matrix w.r.t. T1-GS
@@ -208,6 +235,14 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, out_dir='.'):
     Write T1-GS corrected components and mixing matrix
     """
     cbetas_norm = lstsq(mmixnogs_norm.T, data_norm.T, rcond=None)[0].T
-    io.filewrite(utils.unmask(cbetas_norm[:, 2:], mask),
-                 op.join(out_dir, 'betas_hik_OC_T1c'), ref_img)
-    np.savetxt(op.join(out_dir, 'meica_mix_T1c.1D'), mmixnogs)
+    io.filewrite(
+        utils.unmask(cbetas_norm[:, 2:], mask),
+        op.join(out_dir, 'desc-TEDICAAcceptedT1cDenoised_components.nii.gz'),
+        ref_img
+    )
+    comp_names = [io.add_decomp_prefix(comp, prefix='ica',
+                                       max_value=comptable.index.max())
+                  for comp in comptable.index.values]
+    mixing_df = pd.DataFrame(data=mmixnogs.T, columns=comp_names)
+    mixing_df.to_csv(op.join(out_dir, 'desc-TEDICAT1cDenoised_mixing.tsv'),
+                     sep='\t', index=False)

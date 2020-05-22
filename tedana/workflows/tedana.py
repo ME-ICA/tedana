@@ -434,8 +434,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if t2smap is not None and op.isfile(t2smap):
         t2smap = op.abspath(t2smap)
         # Allow users to re-run on same folder
-        if t2smap != op.join(out_dir, 't2sv.nii.gz'):
-            shutil.copyfile(t2smap, op.join(out_dir, 't2sv.nii.gz'))
+        if t2smap != op.join(out_dir, 'T2starmap.nii.gz'):
+            shutil.copyfile(t2smap, op.join(out_dir, 'T2starmap.nii.gz'))
             shutil.copyfile(t2smap, op.join(out_dir, op.basename(t2smap)))
     elif t2smap is not None:
         raise IOError('Argument "t2smap" must be an existing file.')
@@ -467,7 +467,11 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
 
     mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
-    io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
+    io.filewrite(
+        masksum,
+        op.join(out_dir, 'desc-adaptiveGoodSignal_mask.nii.gz'),
+        ref_img
+    )
 
     if t2smap is None:
         LGR.info('Computing T2* map')
@@ -481,12 +485,24 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         LGR.debug('Setting cap on T2* map at {:.5f}s'.format(
             utils.millisec2sec(cap_t2s)))
         t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
-        io.filewrite(utils.millisec2sec(t2s_limited), op.join(out_dir, 't2sv.nii'), ref_img)
-        io.filewrite(s0_limited, op.join(out_dir, 's0v.nii'), ref_img)
+        io.filewrite(
+            utils.millisec2sec(t2s_limited),
+            op.join(out_dir, 'T2starmap.nii.gz'),
+            ref_img
+        )
+        io.filewrite(s0_limited, op.join(out_dir, 'S0map.nii.gz'), ref_img)
 
         if verbose:
-            io.filewrite(utils.millisec2sec(t2s_full), op.join(out_dir, 't2svG.nii'), ref_img)
-            io.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
+            io.filewrite(
+                utils.millisec2sec(t2s_full),
+                op.join(out_dir, 'desc-full_T2starmap.nii.gz'),
+                ref_img
+            )
+            io.filewrite(
+                s0_full,
+                op.join(out_dir, 'desc-full_S0map.nii.gz'),
+                ref_img
+            )
 
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, masksum, t2s=t2s_full, combmode=combmode)
@@ -495,6 +511,12 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if 'gsr' in gscontrol:
         catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, ref_img,
                                           out_dir=out_dir)
+
+    io.filewrite(
+        data_oc,
+        op.join(out_dir, 'desc-optcom_bold.nii.gz'),
+        ref_img
+    )
 
     if mixm is None:
         # Identify and remove thermal noise from data
@@ -509,8 +531,11 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                                          maxit, maxrestart)
 
         if verbose:
-            io.filewrite(utils.unmask(dd, mask),
-                         op.join(out_dir, 'ts_OC_whitened.nii.gz'), ref_img)
+            io.filewrite(
+                utils.unmask(dd, mask),
+                op.join(out_dir, 'desc-optcomPCAReduced_bold.nii.gz'),
+                ref_img
+            )
 
         LGR.info('Making second component selection guess from ICA results')
         # Estimate betas and compute selection metrics for mixing matrix
@@ -518,27 +543,27 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         # with thermal noise)
         comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
                     catd, data_oc, mmix_orig, masksum, tes,
-                    ref_img, reindex=True, label='meica_', out_dir=out_dir,
+                    ref_img, reindex=True, label='ICA', out_dir=out_dir,
                     algorithm='kundu_v2', verbose=verbose)
         comp_names = [io.add_decomp_prefix(comp, prefix='ica', max_value=comptable.index.max())
                       for comp in comptable.index.values]
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
-        mixing_df.to_csv(op.join(out_dir, 'ica_mixing.tsv'), sep='\t', index=False)
+        mixing_df.to_csv(op.join(out_dir, 'desc-ICA_mixing.tsv'), sep='\t', index=False)
         betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
         io.filewrite(betas_oc,
-                     op.join(out_dir, 'ica_components.nii.gz'),
+                     op.join(out_dir, 'desc-ICAZ_components.nii.gz'),
                      ref_img)
 
         comptable = metrics.kundu_metrics(comptable, metric_maps)
         comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
-        mmix_orig = pd.read_table(op.join(out_dir, 'ica_mixing.tsv')).values
+        mmix_orig = pd.read_table(op.join(out_dir, 'desc-ICA_mixing.tsv')).values
 
         if ctab is None:
             comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
                         catd, data_oc, mmix_orig, masksum, tes,
-                        ref_img, label='meica_', out_dir=out_dir,
+                        ref_img, label='ICA', out_dir=out_dir,
                         algorithm='kundu_v2', verbose=verbose)
             comptable = metrics.kundu_metrics(comptable, metric_maps)
             comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
@@ -549,7 +574,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                 comptable = selection.manual_selection(comptable, acc=manacc)
         betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
         io.filewrite(betas_oc,
-                     op.join(out_dir, 'ica_components.nii.gz'),
+                     op.join(out_dir, 'desc-ICAZ_components.nii.gz'),
                      ref_img)
 
     # Save decomposition
@@ -560,7 +585,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                            'are sorted by Kappa in descending order. '
                            'Component signs are flipped to best match the '
                            'data.')
-    io.save_comptable(comptable, op.join(out_dir, 'ica_decomposition.json'),
+    io.save_comptable(comptable, op.join(out_dir, 'desc-ICA_decomposition.json'),
                       label='ica', metadata=mmix_dict)
 
     if comptable[comptable.classification == 'accepted'].shape[0] == 0:
@@ -582,7 +607,11 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         comp_names = [io.add_decomp_prefix(comp, prefix='ica', max_value=comptable.index.max())
                       for comp in comptable.index.values]
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
-        mixing_df.to_csv(op.join(out_dir, 'ica_orth_mixing.tsv'), sep='\t', index=False)
+        mixing_df.to_csv(
+            op.join(out_dir, 'desc-ICAOrth_mixing.tsv'),
+            sep='\t',
+            index=False
+        )
         RepLGR.info("Rejected components' time series were then "
                     "orthogonalized with respect to accepted components' time "
                     "series.")

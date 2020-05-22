@@ -98,15 +98,15 @@ def test_integration_five_echo(skip_integration):
         verbose=True)
 
     # Just a check on the component table pending a unit test of load_comptable
-    comptable = os.path.join(out_dir, 'ica_decomposition.json')
+    comptable = os.path.join(out_dir, 'desc-ICA_decomposition.json')
     df = io.load_comptable(comptable)
     assert isinstance(df, pd.DataFrame)
 
     # Test re-running, but use the CLI
     out_dir2 = '/tmp/data/five-echo/TED.five-echo-manual'
     acc_comps = df.loc[df['classification'] == 'accepted'].index.values
-    mixing = os.path.join(out_dir, 'ica_mixing.tsv')
-    t2smap = os.path.join(out_dir, 't2sv.nii.gz')
+    mixing = os.path.join(out_dir, 'desc-ICA_mixing.tsv')
+    t2smap = os.path.join(out_dir, 'T2starmap.nii.gz')
     args = (['-d'] + datalist + ['-e'] + [str(te) for te in echo_times] +
             ['--out-dir', out_dir2, '--debug', '--verbose',
              '--manacc', ','.join(acc_comps.astype(str)),
@@ -176,8 +176,8 @@ def test_integration_three_echo(skip_integration):
     args = (['-d', '/tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz',
              '-e', '14.5', '38.5', '62.5',
              '--out-dir', out_dir2, '--debug', '--verbose',
-             '--ctab', os.path.join(out_dir, 'ica_decomposition.json'),
-             '--mix', os.path.join(out_dir, 'ica_mixing.tsv')])
+             '--ctab', os.path.join(out_dir, 'desc-ICA_decomposition.json'),
+             '--mix', os.path.join(out_dir, 'desc-ICA_mixing.tsv')])
     tedana_cli._main(args)
 
     # compare the generated output files
