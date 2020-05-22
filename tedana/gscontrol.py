@@ -237,12 +237,12 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, out_dir='.'):
     cbetas_norm = lstsq(mmixnogs_norm.T, data_norm.T, rcond=None)[0].T
     io.filewrite(
         utils.unmask(cbetas_norm[:, 2:], mask),
-        op.join(out_dir, 'desc-TEDICAAcceptedT1cDenoised_components.nii.gz'),
+        op.join(out_dir, 'desc-ICAAcceptedT1cDenoised_components.nii.gz'),
         ref_img
     )
     comp_names = [io.add_decomp_prefix(comp, prefix='ica',
                                        max_value=comptable.index.max())
                   for comp in comptable.index.values]
     mixing_df = pd.DataFrame(data=mmixnogs.T, columns=comp_names)
-    mixing_df.to_csv(op.join(out_dir, 'desc-TEDICAT1cDenoised_mixing.tsv'),
+    mixing_df.to_csv(op.join(out_dir, 'desc-ICAT1cDenoised_mixing.tsv'),
                      sep='\t', index=False)

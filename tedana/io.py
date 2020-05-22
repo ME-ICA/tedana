@@ -305,7 +305,7 @@ def writeresults_echoes(catd, mmix, mask, comptable, ref_img, out_dir='.'):
         write_split_ts(
             catd[:, i_echo, :], mmix, mask, comptable, ref_img,
             out_dir=out_dir,
-            prefix='echo-{}_desc-optcom'.format(i_echo + 1)
+            prefix='echo-{}_desc-'.format(i_echo + 1)
         )
 
 
