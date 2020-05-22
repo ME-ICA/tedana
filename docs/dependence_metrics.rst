@@ -9,10 +9,8 @@ In the below equation, :math:`S(t, TE_k)` is signal at a given time :math:`t`
 and for a given echo time :math:`TE_k`.
 :math:`\bar{S}(TE_k)` is the mean signal across time for the echo time
 :math:`TE_k`.
-:math:`{\Delta}{S_0}(t)` is the difference in :math:`S_0` at time :math:`t`
-from the average :math:`S_0` (:math:`\bar{S}_0`).
-:math:`{\Delta}{R_2^*}(t)` is the difference in :math:`R_2^*` at time :math:`t`
-from the average :math:`R_2^*`.
+:math:`{\Delta}{S_0}(t)` is the difference in :math:`S_0` at time :math:`t` from the average :math:`S_0` (:math:`\bar{S}_0`).
+:math:`{\Delta}{R_2^*}(t)` is the difference in :math:`R_2^*` at time :math:`t` from the average :math:`R_2^*`.
 
 .. math::
   S(t, TE_k) = \bar{S}(TE_k) * (1 + \frac{{\Delta}{S_0}(t)}{\bar{S}_0} - {\Delta}{R_2^*}(t)*TE_k)
@@ -43,9 +41,9 @@ TE), so we can just ignore that, which means we only use :math:`{\bar{S}(TE_k)}`
 Thus, the model becomes :math:`{\Delta}S(TE_k) = {\bar{S}(TE_k)} * X`, where we
 fit X to the data using regression and evaluate model fit.
 
-For TEDPCA/TEDICA, we use regression to get parameter estimates (PEs; not beta
-values) for component time-series against echo-specific data, and substitute
-those PEs for :math:`{\bar{S}(TE_k)}`.
+For TEDPCA/TEDICA, we use regression to get parameter estimates (raw PEs; not
+standardized beta values) for component time-series against echo-specific data,
+and substitute those PEs for :math:`{\bar{S}(TE_k)}`.
 Thus, to assess the TE-independence of a component, we use the model
 :math:`PE(TE_k) = {\bar{S}(TE_k)} * X`, fit X to the data, and evaluate model
 fit.
@@ -69,12 +67,12 @@ for the hypothetical overall average over time.
 In one time point, only S0 will fluctuate.
 In the other, only R2* will fluctuate.
 
-.. note::
+.. caution::
   To make things easier, we're simulating these data with echo times of 0 to
   200 milliseconds, at 1ms intervals.
   In real life, you'll generally only have 3-5 echoes to work with.
-  Real signal from each echo will be contaminated with random noise and will
-  have influences from both S0 and R2*.
+  Real signal from each echo will also be contaminated with random noise and
+  will have influences from both S0 and T2*.
 
 .. image:: /_static/b01_simulated_fluctuations.png
 
@@ -91,23 +89,26 @@ each dataset.
 .. image:: /_static/b02_model_fits.png
 
 As expected, the S0 model fits perfectly to the S0-fluctuating dataset, while
-the R2* model fits quite well to the R2*-fluctuating dataset.
+the R2* model fits quite well to the R2\*-fluctuating dataset.
 
 The actual model fits can be calculated as F-statistics.
 Then, the F-statistics per voxel are averaged across voxels into the Kappa and
 Rho pseudo-F-statistics.
 
+Applying our models to spatiotemporal decompositions
+----------------------------------------------------
+
 Now let us see how this extends to time series, components, and component
 parameter estimates.
 
-We have the means to simulate T2*- and S0-based fluctuations, so here we have
-compiled two component time series- one T2*-based and one S0-based.
+We have the means to simulate T2\*- and S0-based fluctuations, so here we have
+compiled two component time series- one T2\*-based and one S0-based.
 Both time series share the same level of percent signal change (a standard
-deviation equivalent to 5% of the mean), although the mean S0 (16000) is very
+deviation equivalent to 5\% of the mean), although the mean S0 (16000) is very
 different from the mean T2* (30).
 We can then average those two components with different weights to create
-components that are T2*- or S0-based to various degrees.
-In this case, both T2* and S0 contribute equally to the component.
+components that are T2\*- or S0-based to various degrees.
+In this case, both T2\* and S0 contribute equally to the component.
 
 .. image:: /_static/b03_component_timeseries.png
 

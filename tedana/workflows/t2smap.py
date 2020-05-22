@@ -30,7 +30,7 @@ def _get_parser():
     # Argument parser follow templtate provided by RalphyZ
     # https://stackoverflow.com/a/43456577
     optional = parser._action_groups.pop()
-    required = parser.add_argument_group('required arguments')
+    required = parser.add_argument_group('Required Arguments')
     required.add_argument('-d',
                           dest='data',
                           nargs='+',
@@ -153,7 +153,6 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
         Whether to run in debugging mode or not. Default is False.
     quiet : :obj:`bool`, optional
         If True, suppress logging/printing of messages. Default is False.
-
 
     Notes
     -----

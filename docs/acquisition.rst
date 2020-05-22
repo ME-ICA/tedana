@@ -34,7 +34,7 @@ Siemens
 
 
 GE
-``
+```
 **For GE users**, there are currently two sharable pulse sequences:
 
 * Multi-echo EPI (MEPI) – Software releases: DV24, MP24 and DV25 (with offline recon)
@@ -94,9 +94,9 @@ TE one would use for single-echo T2* weighted fMRI.
 
 .. note::
     This is in contrast to the **dual echo** denoising method which uses a very early (~5ms)
-    first echo in order to clean data. For more information on this method, see `Bright and Murphy`_ (2013).
+    first echo in order to clean data. For more information on this method, see `Bright and Murphy (2013)`_.
 
-.. _Bright and Murphy: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3518782/
+.. _Bright and Murphy (2013): https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3518782/
 
 More than 3 echoes may be useful, because that would allow for more accurate
 estimates of BOLD and non-BOLD weighted fluctuations, but more echoes have an
@@ -111,9 +111,9 @@ We suggest new multi-echo fMRI users examine the :ref:`spreadsheet of publicatio
 multi-echo fMRI to identify studies with similar acquisition priorities,
 and use the parameters from those studies as a starting point.
 More complete recommendations
-and guidelines are discussed in the `appendix`_ of Dipasquale et al, 2017.
+and guidelines are discussed in the `appendix of Dipasquale et al. (2017)`_.
 
-.. _appendix: https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0173289
+.. _appendix of Dipasquale et al. (2017): https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0173289
 
 .. note::
     In order to increase the number of contrasts ("echoes") you may need to first increase the TR, shorten the
@@ -136,7 +136,7 @@ The following plots reflect the average values for studies conducted at 3 Tesla.
     import matplotlib.pyplot as plt
     import pandas as pd
     import numpy as np
-    # TODO deal with the issue that the plot doesn't regenterate (ie isn't alive)
+    # TODO: deal with the issue that the plot doesn't regenerate (ie isn't alive)
     # Unless the code is updated.
     metable = pd.read_csv('https://docs.google.com/spreadsheets/d/1WERojJyxFoqcg_tndUm5Kj0H1UfUc9Ban0jFGGfPaBk/export?gid=0&format=csv',
                            header=0)

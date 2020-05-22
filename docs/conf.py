@@ -33,7 +33,6 @@ from github_link import make_linkcode_resolve
 
 # generate autosummary even if no references
 autosummary_generate = True
-autodoc_default_flags = ['members', 'inherited-members']
 add_module_names = False
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -46,7 +45,6 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.autosummary',
               'sphinx.ext.doctest',
               'sphinx.ext.todo',
-              'numpydoc',
               'sphinx.ext.ifconfig',
               'sphinx.ext.linkcode',
               'matplotlib.sphinxext.plot_directive']
@@ -68,7 +66,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-from datetime import datetime #access current time and date
+from datetime import datetime  # access current time and date
 project = 'tedana'
 copyright = '2017-' + datetime.today().strftime("%Y") + ', tedana developers'
 author = 'tedana developers'
@@ -147,11 +145,11 @@ linkcode_resolve = make_linkcode_resolve('tedana',
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    'http://docs.python.org/3.5': None,
-    'http://docs.scipy.org/doc/numpy': None,
-    'http://docs.scipy.org/doc/scipy/reference': None,
-    'http://matplotlib.org/': None,
-    'http://scikit-learn.org/0.17': None,
-    'http://nipy.org/nibabel/': None,
-    'http://pandas.pydata.org/pandas-docs/stable/': None,
+    "python": ("https://docs.python.org/3/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
+    "matplotlib": ("https://matplotlib.org/", None),
+    "nibabel": ("https://nipy.org/nibabel/", None),
+    "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
+    "nilearn": ("http://nilearn.github.io/", None)
 }
