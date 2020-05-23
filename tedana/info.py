@@ -28,20 +28,23 @@ DOWNLOAD_URL = (
         name=__packagename__, ver=__version__))
 
 REQUIRES = [
-    'numpy >=1.14',
-    'scikit-learn',
-    'nilearn',
-    'nibabel>=2.1.0',
-    'scipy',
-    'pandas',
     'matplotlib',
+    'nibabel>=2.5.1',
+    'nilearn>=0.5.2',
+    'numpy>=1.15',
+    'pandas',
+    'scikit-learn>=0.22',
+    'scipy>=1.3.3',
     'threadpoolctl'
 ]
 
 TESTS_REQUIRES = [
     'codecov',
+    'coverage<5.0',
+    'flake8>=3.7',
     'pytest',
-    'pytest-cov'
+    'pytest-cov',
+    'requests',
 ]
 
 EXTRA_REQUIRES = {
@@ -50,7 +53,6 @@ EXTRA_REQUIRES = {
         'sphinx>=1.5.3',
         'sphinx_rtd_theme',
         'sphinx-argparse',
-        'numpydoc'
     ],
     'tests': TESTS_REQUIRES,
     'duecredit': ['duecredit'],
