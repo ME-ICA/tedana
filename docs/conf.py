@@ -38,16 +38,18 @@ add_module_names = False
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.napoleon',
-              'sphinxarg.ext',
-              'sphinx.ext.intersphinx',
-              'sphinx.ext.autosummary',
-              'sphinx.ext.doctest',
-              'sphinx.ext.todo',
-              'sphinx.ext.ifconfig',
-              'sphinx.ext.linkcode',
-              'matplotlib.sphinxext.plot_directive']
+extensions = [
+    'matplotlib.sphinxext.plot_directive',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.doctest',
+    'sphinx.ext.ifconfig',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.linkcode',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.todo',
+    'sphinxarg.ext',
+]
 
 import sphinx
 from distutils.version import LooseVersion
