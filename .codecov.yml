@@ -13,3 +13,9 @@ coverage:
       default:
         target: 0
         threshold: null
+
+ignore:
+  - "tedana/tests/"
+  - "tedana/due.py"
+  - "tedana/_version.py"
+  - "tedana/info.py"
