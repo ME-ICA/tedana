@@ -18,7 +18,6 @@ jobs:
       - run:
           name: Generate environment
           command: |
-            apt-get install -yqq make
             if [ ! -d /opt/conda/envs/tedana_py37 ]; then
               conda create -yq -n tedana_py37 python=3.7
               source activate tedana_py37
@@ -106,6 +105,7 @@ jobs:
       - run:
           name: Running unit tests
           command: |
+            apt-get install -y make
             source activate tedana_py37  # depends on makeenv_37
             make unittest
             mkdir /tmp/src/coverage
@@ -126,6 +126,7 @@ jobs:
       - run:
           name: Style check
           command: |
+            apt-get install -yqq make
             source activate tedana_py37  # depends on makeenv37
             make lint
 
@@ -141,6 +142,7 @@ jobs:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
+            apt-get install -yqq make
             source activate tedana_py37  # depends on makeenv_37
             make three-echo
             mkdir /tmp/src/coverage
@@ -164,6 +166,7 @@ jobs:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
+            apt-get install -yqq make
             source activate tedana_py37  # depends on makeenv_37
             make four-echo
             mkdir /tmp/src/coverage
@@ -187,6 +190,7 @@ jobs:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
+            apt-get install -yqq make
             source activate tedana_py37  # depends on makeenv_37
             make five-echo
             mkdir /tmp/src/coverage
@@ -210,6 +214,7 @@ jobs:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
+            apt-get install -yqq make
             source activate tedana_py37  # depends on makeenv_37
             make t2smap
             mkdir /tmp/src/coverage
