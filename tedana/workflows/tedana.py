@@ -2,6 +2,7 @@
 Run the "canonical" TE-Dependent ANAlysis workflow.
 """
 import os
+import sys
 import os.path as op
 import shutil
 import logging
@@ -614,8 +615,13 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                                                               'figures'),
                                               png_cmap=png_cmap)
 
-        LGR.info('Generating dynamic report')
-        reporting.generate_report(out_dir=out_dir, tr=img_t_r)
+        if sys.version_info.major == 3 and sys.version_info.minor < 6:
+            warn_msg = ("Reports requested but Python version is less than "
+                        "3.6.0. Dynamic reports will not be generated.")
+            LGR.warn(warn_msg)
+        else:
+            LGR.info('Generating dynamic report')
+            reporting.generate_report(out_dir=out_dir, tr=img_t_r)
 
     LGR.info('Workflow completed')
 
