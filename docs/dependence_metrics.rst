@@ -78,15 +78,15 @@ In the other, only :math:`T_2^*` will fluctuate.
   200 milliseconds, at 1ms intervals.
   In real life, you'll generally only have 3-5 echoes to work with.
   Real signal from each echo will also be contaminated with random noise and
-  will have influences from both S0 and T2*.
+  will have influences from both :math:`S_0` and :math:`T_2^*`.
 
 .. image:: /_static/b01_simulated_fluctuations.png
 
 We can see that :math:`{\Delta}S(TE_k)` has very different curves for the two
 simulated datasets.
 Moreover, as expected, :math:`\frac{{\Delta}S(TE_k)}{\bar{S}(TE_k)}` is flat
-across echoes for the S0-fluctuating data and scales roughly linearly with TE
-for the T2\*-fluctuating data.
+across echoes for the :math:`S_0`-fluctuating data and scales roughly linearly with TE
+for the :math:`T_2^*`-fluctuating data.
 
 We then fit our TE-dependence and TE-independence models to the
 :math:`{\Delta}S(TE_k)` data, which gives us predicted data for each model for
@@ -94,8 +94,8 @@ each dataset.
 
 .. image:: /_static/b02_model_fits.png
 
-As expected, the S0 model fits perfectly to the S0-fluctuating dataset, while
-the T2\* model fits quite well to the T2\*-fluctuating dataset.
+As expected, the :math:`S_0` model fits perfectly to the :math:`S_0`-fluctuating dataset, while
+the :math:`T_2^*` model fits quite well to the :math:`T_2^*`-fluctuating dataset.
 
 The actual model fits can be calculated as F-statistics.
 Then, the F-statistics per voxel are averaged across voxels into the Kappa and
@@ -107,21 +107,21 @@ Applying our models to spatiotemporal decompositions
 Now let us see how this extends to time series, components, and component
 parameter estimates.
 
-We have the means to simulate T2\*- and S0-based fluctuations, so here we have
-generated two time series- one T2\*-based and one S0-based.
+We have the means to simulate :math:`T_2^*`- and :math:`S_0`-based fluctuations, so here we have
+generated two time series- one :math:`T_2^*`-based and one :math:`S_0`-based.
 Both time series share the same level of percent signal change (a standard
-deviation equivalent to 5\% of the mean), although the mean S0 (16000) is very
-different from the mean T2* (30).
+deviation equivalent to 5\% of the mean), although the mean :math:`S_0` (16000) is very
+different from the mean :math:`T_2^*` (30).
 
 We can then average those two time series with different weights to create
-components that are T2\*- or S0-based to various degrees.
-In this case, both T2\* and S0 contribute equally to the simulated time series.
+components that are :math:`T_2^*`- or :math:`S_0`-based to various degrees.
+In this case, both :math:`T_2^*` and :math:`S_0` contribute equally to the simulated time series.
 This simulated time series will act as our ICA component for this example.
 
 .. image:: /_static/b03_component_timeseries.png
 
 We also simulate multi-echo data for a single voxel with the same levels of
-T2\* and S0 fluctuations as in the pure T2\* and S0 time series above.
+:math:`T_2^*` and :math:`S_0` fluctuations as in the pure :math:`T_2^*` and :math:`S_0` time series above.
 Here we show time series for a subset of echo times.
 
 .. image:: /_static/b04_echo_timeseries.png
@@ -133,13 +133,15 @@ subset of echo times):
 
 We then run a regression for each echo's data against the component time series,
 producing one parameter estimate for each echo time.
-We can compare predicted T2* and S0 model values against the parameter estimates
+The parameter estimates match the signal decay curve for :math:`{\Delta}S(TE_k)`,
+as seen above.
+We can thus apply the same TE-dependence and -independence models as above,
 in order to calculate single-voxel :math:`\rho` and :math:`\kappa` values.
 Note that the metric values are extremely high, due to the inflated
 degrees of freedom resulting from using so many echoes in the simulations.
 
 .. attention::
-   You may also notice that, despite the fact that T2* and S0 fluctuate the same
+   You may also notice that, despite the fact that :math:`T_2^*` and :math:`S_0` fluctuate the same
    amount and that both contributed equally to the component, :math:`\rho` is
    much higher than :math:`\kappa`.
 

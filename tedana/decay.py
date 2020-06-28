@@ -21,9 +21,13 @@ def monoexponential(tes, s0, t2star):
         Echo times
     s0 : :obj:`float`
         Initial signal parameter
-    t2star : :oj:`float`
+    t2star : :obj:`float`
         T2* parameter
 
+    Returns
+    -------
+    :obj:`float`
+        Predicted signal
     """
     return s0 * np.exp(-tes / t2star)
 
@@ -34,9 +38,13 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
 
     Parameters
     ----------
-    data_cat
+    data_cat : (S x E x T) :obj:`numpy.ndarray`
+        Multi-echo data.
     echo_times
+        Echo times in milliseconds.
     adaptive_mask
+        Array where each value indicates the number of echoes with good signal
+        for that voxel.
 
     Returns
     -------

@@ -32,6 +32,15 @@ def _combine_t2s(data, tes, ft2s):
     -------
     combined : (M x T) :obj:`numpy.ndarray`
         Data combined across echoes according to T2* estimates.
+
+    References
+    ----------
+    * Posse, S., Wiese, S., Gembris, D., Mathiak, K., Kessler,
+      C., Grosse‐Ruyken, M. L., ... & Kiselev, V. G. (1999).
+      Enhancement of BOLD‐contrast sensitivity by single‐shot
+      multi‐echo functional MR imaging. Magnetic Resonance in
+      Medicine: An Official Journal of the International Society
+      for Magnetic Resonance in Medicine, 42(1), 87-97.
     """
     RepLGR.info("Multi-echo data were then optimally combined using the "
                 "T2* combination method (Posse et al., 1999).")
@@ -79,6 +88,16 @@ def _combine_paid(data, tes):
     -------
     combined : (M x T) :obj:`numpy.ndarray`
         Data combined across echoes according to SNR/signal.
+
+    References
+    ----------
+    * Poser, B. A., Versluis, M. J., Hoogduin, J. M., & Norris,
+      D. G. (2006). BOLD contrast sensitivity enhancement and
+      artifact reduction with multiecho EPI: parallel‐acquired
+      inhomogeneity‐desensitized fMRI.
+      Magnetic Resonance in Medicine: An Official Journal of the
+      International Society for Magnetic Resonance in Medicine,
+      55(6), 1227-1235.
     """
     RepLGR.info("Multi-echo data were then optimally combined using the "
                 "parallel-acquired inhomogeneity desensitized (PAID) "
@@ -129,14 +148,33 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
 
     Notes
     -----
-    1.  Estimate voxel- and TE-specific weights based on estimated
-        :math:`T_2^*`:
+    This function supports both the ``'t2s'`` method [1]_ and the ``'paid'``
+    method [2]_. The ``'t2s'`` method operates according to the following
+    logic:
+
+    1.  Estimate voxel- and TE-specific weights based on estimated :math:`T_2^*`:
 
             .. math::
                 w(T_2^*)_n = \\frac{TE_n * exp(\\frac{-TE}\
                 {T_{2(est)}^*})}{\\sum TE_n * exp(\\frac{-TE}{T_{2(est)}^*})}
     2.  Perform weighted average per voxel and TR across TEs based on weights
         estimated in the previous step.
+
+    References
+    ----------
+    .. [1] Posse, S., Wiese, S., Gembris, D., Mathiak, K., Kessler,
+           C., Grosse‐Ruyken, M. L., ... & Kiselev, V. G. (1999).
+           Enhancement of BOLD‐contrast sensitivity by single‐shot
+           multi‐echo functional MR imaging. Magnetic Resonance in
+           Medicine: An Official Journal of the International Society
+           for Magnetic Resonance in Medicine, 42(1), 87-97.
+    .. [2] Poser, B. A., Versluis, M. J., Hoogduin, J. M., & Norris,
+           D. G. (2006). BOLD contrast sensitivity enhancement and
+           artifact reduction with multiecho EPI: parallel‐acquired
+           inhomogeneity‐desensitized fMRI.
+           Magnetic Resonance in Medicine: An Official Journal of the
+           International Society for Magnetic Resonance in Medicine,
+           55(6), 1227-1235.
     """
     if data.ndim != 3:
         raise ValueError('Input data must be 3D (S x E x T)')
