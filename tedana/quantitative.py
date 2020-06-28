@@ -25,7 +25,8 @@ def t2star_fit(multiecho_magn, multiecho_phase, echo_times,
     multiecho_magn : list of nibabel.nifti1.Nifti1Image or file
         List of magnitude images/time series. Each entry in the list is an echo.
     multiecho_phase
-    echo_times
+    echo_times : array
+        In milliseconds
     fitting_method : {'nlls', 'ols', 'gls', 'num'}, optional
         'nlls': Levenberg-Marquardt nonlinear fitting to exponential (default).
         'ols': Ordinary least squares linear fit of the log of S.
@@ -36,15 +37,23 @@ def t2star_fit(multiecho_magn, multiecho_phase, echo_times,
     """
     params = {
         'mask_thresh': 500,  # intensity under which pixels are masked. Default=500.
-        'rmse_thresh': 0.8,  # threshold above which voxels are discarded for comuting the frequency map. RMSE results from fitting the frequency slope on the phase data. Default=2.
-        'smooth_type': 'polyfit3d',  # 'gaussian' | 'box' | 'polyfit1d' | 'polyfit3d'. Default='polyfit3d'
+        # threshold above which voxels are discarded for comuting the frequency map.
+        # RMSE results from fitting the frequency slope on the phase data. Default=2.
+        'rmse_thresh': 0.8,
+        # 'gaussian' | 'box' | 'polyfit1d' | 'polyfit3d'. Default='polyfit3d'
+        'smooth_type': 'polyfit3d',
         'smooth_kernel': [27, 27, 7],  # only for 'gaussian' and 'box'
         'smooth_poly_order': 3,
-        'smooth_downsampling': [2, 2, 2],  # 3D downsample frequency map to compute gradient along Z. Default=[2 2 2].
-        'min_length': 6,  # minimum length of values along Z, below which values are not considered. Default=4.
+        # 3D downsample frequency map to compute gradient along Z. Default=[2 2 2].
+        'smooth_downsampling': [2, 2, 2],
+        # minimum length of values along Z, below which values are not considered. Default=4.
+        'min_length': 6,
         'dz': 1.25,  # slice thickness in mm. N.B. SHOULD INCLUDE GAP!
-        'do_optimization': False,  # 0: Just use the initial freqGradZ value - which is acceptable if nicely computed
-        'threshold_t2star_max': 1000,  # in ms. threshold T2* map (for quantization purpose when saving in NIFTI).Suggested value=1000.
+        # 0: Just use the initial freqGradZ value - which is acceptable if nicely computed
+        'do_optimization': False,
+        # in ms. threshold T2* map (for quantization purpose when saving in NIFTI).
+        # Suggested value=1000.
+        'threshold_t2star_max': 1000,
     }
     # Compute field map of frequencies from multi-echo phase data
     freq_img, mask_img = t2star_computeFreqMap(
