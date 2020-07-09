@@ -50,6 +50,12 @@ of the current ATSM (i.e. prototypes).
 
 .. _GE Collaboration Portal: https://collaborate.mr.gehealthcare.com
 
+Philips
+```````
+**For Philips** users, there are product sequences available.
+
+Multi-echo EPI can be acquired using the product software and can be combined with
+SENSE parallel imaging and MultiBand.
 
 Other available multi-echo MRI sequences
 ----------------------------------------
