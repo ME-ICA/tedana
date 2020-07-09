@@ -52,10 +52,14 @@ of the current ATSM (i.e. prototypes).
 
 Philips
 ```````
-**For Philips** users, there are product sequences available.
+**For Philips** users, sequences can be defined using product software.
 
-Multi-echo EPI can be acquired using the product software and can be combined with
+Multi-echo EPI (ME-EPI) can be acquired using the product software and can be combined with
 SENSE parallel imaging and MultiBand.
+The combination with MultiBand requires a SW release >R5.1 and MultiBand functionality to be present.
+No default ME-EPI are provided, but existing single-echo EPI sequences can be modified into multi-echo sequences 
+by increasing the number of echoes.
+
 
 Other available multi-echo MRI sequences
 ----------------------------------------
