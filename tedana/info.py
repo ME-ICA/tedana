@@ -28,6 +28,7 @@ DOWNLOAD_URL = (
         name=__packagename__, ver=__version__))
 
 REQUIRES = [
+    'bokeh',
     'matplotlib',
     'nibabel>=2.5.1',
     'nilearn>=0.5.2',

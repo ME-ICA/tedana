@@ -11,3 +11,10 @@
       overflow: visible !important;
    }
 }
+
+div.admonition.note {
+  background: #f542c2
+}
+.admonition.note.title {
+  background: #f542c2
+}
