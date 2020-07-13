@@ -15,9 +15,6 @@ desc-optcomDenoised_bold.nii.gz
 desc-optcomRejected_bold.nii.gz
 desc-optcom_bold.nii.gz
 figures
-figures/Component_Overview.png
-figures/Kappa_Rho_Scree_plot.png
-figures/Kappa_vs_Rho_Scatter.png
 figures/comp_000.png
 figures/comp_001.png
 figures/comp_002.png
@@ -87,3 +84,4 @@ figures/comp_065.png
 figures/comp_066.png
 figures/comp_067.png
 report.txt
+tedana_report.html

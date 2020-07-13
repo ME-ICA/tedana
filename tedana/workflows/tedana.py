@@ -2,6 +2,7 @@
 Run the "canonical" TE-Dependent ANAlysis workflow.
 """
 import os
+import sys
 import os.path as op
 import shutil
 import logging
@@ -15,8 +16,8 @@ from scipy import stats
 from threadpoolctl import threadpool_limits
 from nilearn.masking import compute_epi_mask
 
-from tedana import (decay, combine, decomposition, io, metrics, selection,
-                    utils, viz)
+from tedana import (decay, combine, decomposition, io, metrics,
+                    reporting, selection, utils)
 import tedana.gscontrol as gsc
 from tedana.stats import computefeats2
 from tedana.workflows.parser_utils import is_valid_file, ContextFilter
@@ -147,12 +148,13 @@ def _get_parser():
                                 'delimited list'),
                           choices=['t1c', 'gsr'],
                           default=None)
-    optional.add_argument('--no-png',
-                          dest='no_png',
+    optional.add_argument('--no-reports',
+                          dest='no_reports',
                           action='store_true',
                           help=('Creates a figures folder with static component '
                                 'maps, timecourse plots and other diagnostic '
-                                'images'),
+                                'images and displays these in an interactive '
+                                'reporting framework'),
                           default=False)
     optional.add_argument('--png-cmap',
                           dest='png_cmap',
@@ -231,7 +233,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                     fittype='loglin', combmode='t2s', tedpca='mdl',
                     fixed_seed=42, maxit=500, maxrestart=10,
                     tedort=False, gscontrol=None,
-                    no_png=False, png_cmap='coolwarm',
+                    no_reports=False, png_cmap='coolwarm',
                     verbose=False, low_mem=False, debug=False, quiet=False,
                     t2smap=None, mixm=None, ctab=None, manacc=None):
     """
@@ -268,8 +270,9 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         is None.
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
-    no_png : obj:'bool', optional
-        Do not generate .png plots and figures. Default is false.
+    no_reports : obj:'bool', optional
+        Do not generate .html reports and .png plots. Default is false such
+        that reports are generated.
     png_cmap : obj:'str', optional
         Name of a matplotlib colormap to be used when generating figures.
         Cannot be used with --no-png. Default is 'coolwarm'.
@@ -388,13 +391,9 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
-    if no_png and (png_cmap != 'coolwarm'):
-        LGR.warning('Overriding --no-png since --png-cmap provided.')
-        no_png = False
-
     # check if TR is 0
     img_t_r = ref_img.header.get_zooms()[-1]
-    if img_t_r == 0 and not no_png:
+    if img_t_r == 0:
         raise IOError('Dataset has a TR of 0. This indicates incorrect'
                       ' header information. To correct this, we recommend'
                       ' using this snippet:'
@@ -630,32 +629,28 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if verbose:
         io.writeresults_echoes(catd, mmix, mask, comptable, ref_img, out_dir=out_dir)
 
-    if not no_png:
+    if not no_reports:
         LGR.info('Making figures folder with static component maps and '
                  'timecourse plots.')
         # make figure folder first
         if not op.isdir(op.join(out_dir, 'figures')):
             os.mkdir(op.join(out_dir, 'figures'))
 
-        viz.write_comp_figs(data_oc,
-                            mask=mask,
-                            comptable=comptable,
-                            mmix=mmix_orig,
-                            ref_img=ref_img,
-                            out_dir=op.join(out_dir, 'figures'),
-                            png_cmap=png_cmap)
+        reporting.static_figures.comp_figures(data_oc, mask=mask,
+                                              comptable=comptable,
+                                              mmix=mmix_orig,
+                                              ref_img=ref_img,
+                                              out_dir=op.join(out_dir,
+                                                              'figures'),
+                                              png_cmap=png_cmap)
 
-        LGR.info('Making Kappa vs Rho scatter plot')
-        viz.write_kappa_scatter(comptable=comptable,
-                                out_dir=op.join(out_dir, 'figures'))
-
-        LGR.info('Making Kappa/Rho scree plot')
-        viz.write_kappa_scree(comptable=comptable,
-                              out_dir=op.join(out_dir, 'figures'))
-
-        LGR.info('Making overall summary figure')
-        viz.write_summary_fig(comptable=comptable,
-                              out_dir=op.join(out_dir, 'figures'))
+        if sys.version_info.major == 3 and sys.version_info.minor < 6:
+            warn_msg = ("Reports requested but Python version is less than "
+                        "3.6.0. Dynamic reports will not be generated.")
+            LGR.warn(warn_msg)
+        else:
+            LGR.info('Generating dynamic report')
+            reporting.generate_report(out_dir=out_dir, tr=img_t_r)
 
     LGR.info('Workflow completed')
 
@@ -694,7 +689,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     with open(refname, 'r') as fo:
         reference_list = sorted(list(set(fo.readlines())))
         references = '\n'.join(reference_list)
-    report += '\n\nReferences\n' + references
+    report += '\n\nReferences:\n\n' + references
     with open(repname, 'w') as fo:
         fo.write(report)
     os.remove(refname)

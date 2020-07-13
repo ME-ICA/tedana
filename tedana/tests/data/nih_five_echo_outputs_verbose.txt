@@ -50,9 +50,6 @@ echo-5_desc-ICA_components.nii.gz
 echo-5_desc-PCA_components.nii.gz
 echo-5_desc-Rejected_bold.nii.gz
 figures
-figures/Component_Overview.png
-figures/Kappa_Rho_Scree_plot.png
-figures/Kappa_vs_Rho_Scatter.png
 figures/comp_000.png
 figures/comp_001.png
 figures/comp_002.png
@@ -125,3 +122,4 @@ figures/comp_068.png
 figures/comp_069.png
 figures/comp_070.png
 report.txt
+tedana_report.html
