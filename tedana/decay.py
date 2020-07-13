@@ -11,6 +11,31 @@ RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
 
+def _apply_t2s_floor(t2s, echo_times):
+    """
+    Apply a floor to T2* values to prevent zero division errors during
+    optimal combination.
+
+    Parameters
+    ----------
+    t2s : (S,) array
+    echo_times : (E,) array
+
+    Returns
+    -------
+    t2s : (S,) array
+    """
+    echo_times = np.asarray(echo_times)
+    if echo_times.ndim == 1:
+        echo_times = echo_times[:, None]
+
+    eps = np.finfo(dtype=t2s.dtype).eps  # smallest value for datatype
+    temp_arr = np.exp(-echo_times / t2s)
+    bad_voxel_idx = np.any(temp_arr == 0, axis=0) & (t2s != 0)
+    t2s[bad_voxel_idx] = np.min(-echo_times) / np.log(eps)
+    return t2s
+
+
 def monoexponential(tes, s0, t2star):
     """
     Specifies a monoexponential model for use with scipy curve fitting
@@ -258,9 +283,11 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype):
     t2s_limited[np.isinf(t2s_limited)] = 500.  # why 500?
     # let's get rid of negative values, but keep zeros where limited != full
     t2s_limited[(adaptive_mask_masked > 1) & (t2s_limited <= 0)] = 1.
+    t2s_limited = _apply_t2s_floor(t2s_limited, tes)
     s0_limited[np.isnan(s0_limited)] = 0.  # why 0?
     t2s_full[np.isinf(t2s_full)] = 500.  # why 500?
     t2s_full[t2s_full <= 0] = 1.  # let's get rid of negative values!
+    t2s_full = _apply_t2s_floor(t2s_full, tes)
     s0_full[np.isnan(s0_full)] = 0.  # why 0?
 
     t2s_limited = utils.unmask(t2s_limited, mask)
