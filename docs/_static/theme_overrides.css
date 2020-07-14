@@ -12,9 +12,9 @@
    }
 }
 
-div.admonition.note {
-  background: #f542c2
+div.admonition.caution {
+  background: #FFC3C3
 }
-.admonition.note.title {
-  background: #f542c2
+.rst-content .caution .admonition-title {
+  background: #FF6F6F
 }
