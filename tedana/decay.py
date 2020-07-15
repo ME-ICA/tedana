@@ -18,22 +18,26 @@ def _apply_t2s_floor(t2s, echo_times):
 
     Parameters
     ----------
-    t2s : (S,) array
-    echo_times : (E,) array
+    t2s : (S,) array_like
+        T2* estimates.
+    echo_times : (E,) array_like
+        Echo times in milliseconds.
 
     Returns
     -------
-    t2s : (S,) array
+    t2s_corrected : (S,) array_like
+        T2* estimates with very small, positive values replaced with a floor value.
     """
+    t2s_corrected = t2s.copy()
     echo_times = np.asarray(echo_times)
     if echo_times.ndim == 1:
         echo_times = echo_times[:, None]
 
     eps = np.finfo(dtype=t2s.dtype).eps  # smallest value for datatype
-    temp_arr = np.exp(-echo_times / t2s)
+    temp_arr = np.exp(-echo_times / t2s)  # (E x V) array
     bad_voxel_idx = np.any(temp_arr == 0, axis=0) & (t2s != 0)
-    t2s[bad_voxel_idx] = np.min(-echo_times) / np.log(eps)
-    return t2s
+    t2s_corrected[bad_voxel_idx] = np.min(-echo_times) / np.log(eps)
+    return t2s_corrected
 
 
 def monoexponential(tes, s0, t2star):
