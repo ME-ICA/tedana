@@ -119,6 +119,7 @@ API
 
    tedana.selection.manual_selection
    tedana.selection.kundu_selection_v2
+   tedana.selection.kundu_tedpca
 
 
 .. _api_gscontrol_ref:
@@ -155,10 +156,13 @@ API
    :toctree: generated/
    :template: function.rst
 
-   tedana.io.split_ts
-   tedana.io.filewrite
    tedana.io.load_data
+   tedana.io.filewrite
    tedana.io.new_nii_like
+   tedana.io.save_comptable
+   tedana.io.load_comptable
+   tedana.io.add_decomp_prefix
+   tedana.io.split_ts
    tedana.io.write_split_ts
    tedana.io.writefeats
    tedana.io.writeresults
@@ -202,6 +206,10 @@ API
 
    tedana.utils.andb
    tedana.utils.dice
+   tedana.utils.get_spectrum
    tedana.utils.load_image
    tedana.utils.make_adaptive_mask
+   tedana.utils.threshold_map
    tedana.utils.unmask
+   tedana.utils.sec2millisec
+   tedana.utils.millisec2sec

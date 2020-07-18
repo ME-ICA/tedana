@@ -2,26 +2,22 @@
 Run the "canonical" TE-Dependent ANAlysis workflow.
 """
 import os
-
-os.environ['MKL_NUM_THREADS'] = '1'
-os.environ['NUMEXPR_NUM_THREADS'] = '1'
-os.environ['OMP_NUM_THREADS'] = '1'
-os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
-os.environ['OPENBLAS_NUM_THREADS'] = '1'
-
+import sys
+import os.path as op
 import shutil
 import logging
-import os.path as op
-from glob import glob
 import datetime
+from glob import glob
 
 import argparse
 import numpy as np
 import pandas as pd
+from scipy import stats
+from threadpoolctl import threadpool_limits
 from nilearn.masking import compute_epi_mask
 
-from tedana import (decay, combine, decomposition, io, metrics, selection,
-                    utils, viz)
+from tedana import (decay, combine, decomposition, io, metrics,
+                    reporting, selection, utils)
 import tedana.gscontrol as gsc
 from tedana.stats import computefeats2
 from tedana.workflows.parser_utils import is_valid_file, ContextFilter
@@ -152,12 +148,13 @@ def _get_parser():
                                 'delimited list'),
                           choices=['t1c', 'gsr'],
                           default=None)
-    optional.add_argument('--no-png',
-                          dest='no_png',
+    optional.add_argument('--no-reports',
+                          dest='no_reports',
                           action='store_true',
                           help=('Creates a figures folder with static component '
                                 'maps, timecourse plots and other diagnostic '
-                                'images'),
+                                'images and displays these in an interactive '
+                                'reporting framework'),
                           default=False)
     optional.add_argument('--png-cmap',
                           dest='png_cmap',
@@ -176,6 +173,16 @@ def _get_parser():
                                 'use of IncrementalPCA. May increase workflow '
                                 'duration.'),
                           default=False)
+    optional.add_argument('--n-threads',
+                          dest='n_threads',
+                          type=int,
+                          action='store',
+                          help=('Number of threads to use. Used by '
+                                'threadpoolctl to set the parameter outside '
+                                'of the workflow function. Higher numbers of '
+                                'threads tend to slow down performance on '
+                                'typical datasets. Default is 1.'),
+                          default=1)
     optional.add_argument('--debug',
                           dest='debug',
                           action='store_true',
@@ -226,7 +233,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                     fittype='loglin', combmode='t2s', tedpca='mdl',
                     fixed_seed=42, maxit=500, maxrestart=10,
                     tedort=False, gscontrol=None,
-                    no_png=False, png_cmap='coolwarm',
+                    no_reports=False, png_cmap='coolwarm',
                     verbose=False, low_mem=False, debug=False, quiet=False,
                     t2smap=None, mixm=None, ctab=None, manacc=None):
     """
@@ -263,13 +270,15 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         is None.
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
-    no_png : obj:'bool', optional
-        Do not generate .png plots and figures. Default is false.
+    no_reports : obj:'bool', optional
+        Do not generate .html reports and .png plots. Default is false such
+        that reports are generated.
     png_cmap : obj:'str', optional
         Name of a matplotlib colormap to be used when generating figures.
         Cannot be used with --no-png. Default is 'coolwarm'.
     t2smap : :obj:`str`, optional
-        Precalculated T2* map in the same space as the input data.
+        Precalculated T2* map in the same space as the input data. Values in
+        the map must be in seconds.
     mixm : :obj:`str` or None, optional
         File containing mixing matrix, to be used when re-running the workflow.
         If not provided, ME-PCA and ME-ICA are done. Default is None.
@@ -329,8 +338,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     # create logfile name
     basename = 'tedana_'
     extension = 'tsv'
-    isotime = datetime.datetime.now().replace(microsecond=0).isoformat()
-    logname = op.join(out_dir, (basename + isotime + '.' + extension))
+    start_time = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%S')
+    logname = op.join(out_dir, (basename + start_time + '.' + extension))
 
     # set logging format
     log_formatter = logging.Formatter(
@@ -382,13 +391,9 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
-    if no_png and (png_cmap != 'coolwarm'):
-        LGR.warning('Overriding --no-png since --png-cmap provided.')
-        no_png = False
-
     # check if TR is 0
     img_t_r = ref_img.header.get_zooms()[-1]
-    if img_t_r == 0 and not no_png:
+    if img_t_r == 0:
         raise IOError('Dataset has a TR of 0. This indicates incorrect'
                       ' header information. To correct this, we recommend'
                       ' using this snippet:'
@@ -441,12 +446,14 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         RepLGR.info("A user-defined mask was applied to the data.")
     elif t2smap and not mask:
         LGR.info('Using user-defined T2* map to generate mask')
-        t2s_limited = utils.load_image(t2smap)
+        t2s_limited_sec = utils.load_image(t2smap)
+        t2s_limited = utils.sec2millisec(t2s_limited_sec)
         t2s_full = t2s_limited.copy()
         mask = (t2s_limited != 0).astype(int)
     elif t2smap and mask:
         LGR.info('Combining user-defined mask and T2* map to generate mask')
-        t2s_limited = utils.load_image(t2smap)
+        t2s_limited_sec = utils.load_image(t2smap)
+        t2s_limited = utils.sec2millisec(t2s_limited_sec)
         t2s_full = t2s_limited.copy()
         mask = utils.load_image(mask)
         mask[t2s_limited == 0] = 0  # reduce mask based on T2* map
@@ -465,15 +472,23 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         LGR.info('Computing T2* map')
         t2s_limited, s0_limited, t2s_full, s0_full = decay.fit_decay(
             catd, tes, mask, masksum, fittype)
-        io.filewrite(t2s_limited, op.join(out_dir, 't2sv.nii'), ref_img)
+
+        # set a hard cap for the T2* map
+        # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
+        cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5,
+                                          interpolation_method='lower')
+        LGR.debug('Setting cap on T2* map at {:.5f}s'.format(
+            utils.millisec2sec(cap_t2s)))
+        t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
+        io.filewrite(utils.millisec2sec(t2s_limited), op.join(out_dir, 't2sv.nii'), ref_img)
         io.filewrite(s0_limited, op.join(out_dir, 's0v.nii'), ref_img)
 
         if verbose:
-            io.filewrite(t2s_full, op.join(out_dir, 't2svG.nii'), ref_img)
+            io.filewrite(utils.millisec2sec(t2s_full), op.join(out_dir, 't2svG.nii'), ref_img)
             io.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
 
     # optimally combine data
-    data_oc = combine.make_optcom(catd, tes, mask, t2s=t2s_full, combmode=combmode)
+    data_oc = combine.make_optcom(catd, tes, masksum, t2s=t2s_full, combmode=combmode)
 
     # regress out global signal unless explicitly not desired
     if 'gsr' in gscontrol:
@@ -483,7 +498,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if mixm is None:
         # Identify and remove thermal noise from data
         dd, n_components = decomposition.tedpca(catd, data_oc, combmode, mask,
-                                                t2s_limited, t2s_full, ref_img,
+                                                masksum, t2s_full, ref_img,
                                                 tes=tes, algorithm=tedpca,
                                                 kdaw=10., rdaw=1.,
                                                 out_dir=out_dir,
@@ -592,32 +607,28 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if verbose:
         io.writeresults_echoes(catd, mmix, mask, comptable, ref_img, out_dir=out_dir)
 
-    if not no_png:
+    if not no_reports:
         LGR.info('Making figures folder with static component maps and '
                  'timecourse plots.')
         # make figure folder first
         if not op.isdir(op.join(out_dir, 'figures')):
             os.mkdir(op.join(out_dir, 'figures'))
 
-        viz.write_comp_figs(data_oc,
-                            mask=mask,
-                            comptable=comptable,
-                            mmix=mmix_orig,
-                            ref_img=ref_img,
-                            out_dir=op.join(out_dir, 'figures'),
-                            png_cmap=png_cmap)
+        reporting.static_figures.comp_figures(data_oc, mask=mask,
+                                              comptable=comptable,
+                                              mmix=mmix_orig,
+                                              ref_img=ref_img,
+                                              out_dir=op.join(out_dir,
+                                                              'figures'),
+                                              png_cmap=png_cmap)
 
-        LGR.info('Making Kappa vs Rho scatter plot')
-        viz.write_kappa_scatter(comptable=comptable,
-                                out_dir=op.join(out_dir, 'figures'))
-
-        LGR.info('Making Kappa/Rho scree plot')
-        viz.write_kappa_scree(comptable=comptable,
-                              out_dir=op.join(out_dir, 'figures'))
-
-        LGR.info('Making overall summary figure')
-        viz.write_summary_fig(comptable=comptable,
-                              out_dir=op.join(out_dir, 'figures'))
+        if sys.version_info.major == 3 and sys.version_info.minor < 6:
+            warn_msg = ("Reports requested but Python version is less than "
+                        "3.6.0. Dynamic reports will not be generated.")
+            LGR.warn(warn_msg)
+        else:
+            LGR.info('Generating dynamic report')
+            reporting.generate_report(out_dir=out_dir, tr=img_t_r)
 
     LGR.info('Workflow completed')
 
@@ -656,7 +667,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     with open(refname, 'r') as fo:
         reference_list = sorted(list(set(fo.readlines())))
         references = '\n'.join(reference_list)
-    report += '\n\nReferences\n' + references
+    report += '\n\nReferences:\n\n' + references
     with open(repname, 'w') as fo:
         fo.write(report)
     os.remove(refname)
@@ -668,7 +679,11 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
 def _main(argv=None):
     """Tedana entry point"""
     options = _get_parser().parse_args(argv)
-    tedana_workflow(**vars(options))
+    kwargs = vars(options)
+    n_threads = kwargs.pop('n_threads')
+    n_threads = None if n_threads == -1 else n_threads
+    with threadpool_limits(limits=n_threads, user_api=None):
+        tedana_workflow(**kwargs)
 
 
 if __name__ == '__main__':

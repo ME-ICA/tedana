@@ -50,6 +50,19 @@ of the current ATSM (i.e. prototypes).
 
 .. _GE Collaboration Portal: https://collaborate.mr.gehealthcare.com
 
+Philips
+```````
+**For Philips** users, sequences can be defined using product software.
+
+Multi-echo EPI (ME-EPI) can be acquired using the product software and can be combined with
+SENSE parallel imaging and MultiBand.
+The combination with MultiBand requires a SW release >R5.1 and MultiBand functionality to be present.
+No default ME-EPI are provided, but existing single-echo EPI sequences from the BOLD fMRI folder can be 
+modified into multi-echo sequences by increasing the number of echoes.
+As a starting point to develop a 3 echo EPI protocol start by opening the default fMRI protocol and 
+modify the following: increase number of echoes to 3 on the Contrast tab, set SENSE = 3, MB-SENSE = 3,
+set to 3mm isotropic voxels and adjust TEs to your preference.
+
 
 Other available multi-echo MRI sequences
 ----------------------------------------

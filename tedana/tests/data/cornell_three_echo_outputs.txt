@@ -1,6 +1,3 @@
-figures/Component_Overview.png
-figures/Kappa_vs_Rho_Scatter.png
-figures/Kappa_Rho_Scree_plot.png
 adaptive_mask.nii.gz
 betas_OC.nii.gz
 betas_hik_OC.nii.gz
@@ -72,10 +69,6 @@ figures/comp_064.png
 figures/comp_065.png
 figures/comp_066.png
 figures/comp_067.png
-figures/comp_068.png
-figures/comp_069.png
-figures/comp_070.png
-figures/comp_071.png
 dn_ts_OC.nii.gz
 feats_OC2.nii.gz
 figures
@@ -90,4 +83,5 @@ pca_mixing.tsv
 report.txt
 s0v.nii.gz
 t2sv.nii.gz
+tedana_report.html
 ts_OC.nii.gz
