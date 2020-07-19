@@ -185,6 +185,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "mvaziri",
+      "name": "Maryam",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/4219325?v=4",
+      "profile": "https://mvaziri.github.io/",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 5,
