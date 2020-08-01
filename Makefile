@@ -18,13 +18,13 @@ unittest:
 	@py.test --skipintegration --cov-append --cov-report term-missing --cov=tedana tedana/
 
 three-echo:
-	@py.test --cov-append --cov-report term-missing --cov=tedana -k test_integration_three_echo tedana/tests/test_integration.py
+	@py.test --log-cli-level=20 --cov-append --cov-report term-missing --cov=tedana -k test_integration_three_echo tedana/tests/test_integration.py
 
 four-echo:
-	@py.test --cov-append --cov-report term-missing --cov=tedana -k test_integration_four_echo tedana/tests/test_integration.py
+	@py.test --log-cli-level=20 --cov-append --cov-report term-missing --cov=tedana -k test_integration_four_echo tedana/tests/test_integration.py
 
 five-echo:
-	@py.test --cov-append --cov-report term-missing --cov=tedana -k test_integration_five_echo tedana/tests/test_integration.py
+	@py.test --log-cli-level=20 --cov-append --cov-report term-missing --cov=tedana -k test_integration_five_echo tedana/tests/test_integration.py
 
 t2smap:
-	@py.test --cov-append --cov-report term-missing --cov=tedana -k test_integration_t2smap tedana/tests/test_integration.py
+	@py.test --log-cli-level=20 --cov-append --cov-report term-missing --cov=tedana -k test_integration_t2smap tedana/tests/test_integration.py
