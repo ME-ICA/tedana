@@ -310,6 +310,6 @@ workflows:
             - merge_coverage
           filters:
             tags:
-              only: /[0-9]+(\.[0-9a-zA-Z]+)*/
+              only: /[0-9]+\.[0-9]+\.[0-9]+(?:rc)?(?:[0-9]+)?
             branches:
               ignore: /.*/
