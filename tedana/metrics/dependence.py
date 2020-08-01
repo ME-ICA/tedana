@@ -156,7 +156,6 @@ def calculate_f_maps(data_cat, Z_maps, mixing, mask, tes, f_max=500):
     pred_T2_maps = np.zeros([n_voxels, n_echos, n_components])
     pred_S0_maps = np.zeros([n_voxels, n_echos, n_components])
 
-    LGR.info('Fitting TE- and S0-dependent models to components')
     for i_comp in range(n_components):
         # size of comp_betas is (n_echoes, n_samples)
         comp_betas = np.atleast_3d(me_betas)[:, :, i_comp].T
@@ -193,11 +192,17 @@ def threshold_map(maps, mask, ref_img, threshold, csize=None):
 
     Parameters
     ----------
-    maps : (S x C)
-    mask
-    ref_img
-    threshold
-    csize
+    maps : (S x C) array_like
+        Statistical maps to be thresholded.
+    mask : (S) array_like
+        Binary mask.
+    ref_img : img_like
+        Reference image to convert to niimgs with.
+    threshold : :obj:`float`
+        Value threshold to apply to maps.
+    csize : :obj:`int` or :obj:`None`, optional
+        Minimum cluster size. If None, standard thresholding (non-cluster-extent) will be done.
+        Default is None.
 
     Returns
     -------
@@ -205,7 +210,6 @@ def threshold_map(maps, mask, ref_img, threshold, csize=None):
     """
     n_voxels, n_components = maps.shape
     maps_thresh = np.zeros([n_voxels, n_components], bool)
-    # LGR.info('Performing spatial clustering of components')
     if csize is None:
         csize = np.max([int(n_voxels * 0.0005) + 5, 20])
     else:
@@ -231,15 +235,22 @@ def threshold_to_match(maps, n_sig_voxels, mask, ref_img, csize=None):
 
     Parameters
     ----------
-    maps : (S x C)
-    n_sig_voxels
-    mask
-    ref_img
-    csize
+    maps : (S x C) array_like
+        Statistical maps to be thresholded.
+    n_sig_voxels : (C) array_like
+        Number of significant voxels to threshold to, for each map in maps.
+    mask : (S) array_like
+        Binary mask.
+    ref_img : img_like
+        Reference image to convert to niimgs with.
+    csize : :obj:`int` or :obj:`None`, optional
+        Minimum cluster size. If None, standard thresholding (non-cluster-extent) will be done.
+        Default is None.
 
     Returns
     -------
-    clmaps
+    clmaps : (S x C) array_like
+        Cluster-extent thresholded and binarized maps.
     """
     n_voxels, n_components = maps.shape
     abs_maps = np.abs(maps)
@@ -247,7 +258,6 @@ def threshold_to_match(maps, n_sig_voxels, mask, ref_img, csize=None):
         csize = np.max([int(n_voxels * 0.0005) + 5, 20])
     else:
         csize = int(csize)
-    # LGR.debug('Using minimum cluster size: {}'.format(csize))
 
     clmaps = np.zeros([n_voxels, n_components], bool)
     for i_comp in range(n_components):
@@ -260,11 +270,15 @@ def threshold_to_match(maps, n_sig_voxels, mask, ref_img, csize=None):
             utils.unmask(stats.rankdata(abs_maps[:, i_comp]), mask))
         step = int(n_sig_voxels[i_comp] / 10)
         rank_thresh = n_voxels - n_sig_voxels[i_comp]
+
         while True:
             clmap = utils.threshold_map(
                 ccimg, min_cluster_size=csize,
                 threshold=rank_thresh, mask=mask,
                 binarize=True)
+            if rank_thresh <= 0:  # all voxels significant
+                break
+
             diff = n_sig_voxels[i_comp] - clmap.sum()
             if diff < 0 or clmap.sum() == 0:
                 rank_thresh += step

@@ -117,57 +117,69 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
     # Maps will be stored as arrays in an easily-indexable dictionary
     metric_maps = {}
     if 'map weight' in required_metrics:
+        LGR.info('Calculating weight maps')
         metric_maps['map weight'] = dependence.calculate_weights(data_optcom, mixing)
         signs = determine_signs(metric_maps['map weight'], axis=0)
         metric_maps['map weight'], mixing = flip_components(
             metric_maps['map weight'], mixing, signs=signs)
 
     if 'map optcom betas' in required_metrics:
+        LGR.info('Calculating parameter estimate maps for optimally combined data')
         metric_maps['map optcom betas'] = dependence.calculate_betas(data_optcom, mixing)
 
     if 'map percent signal change' in required_metrics:
+        LGR.info('Calculating percent signal change maps')
         # used in kundu v3.2 tree
         metric_maps['map percent signal change'] = dependence.calculate_psc(
             data_optcom,
             metric_maps['map optcom betas'])
 
     if 'map Z' in required_metrics:
+        LGR.info('Calculating z-statistic maps')
         metric_maps['map Z'] = dependence.calculate_z_maps(metric_maps['map weight'])
 
     if ('map FT2' in required_metrics) or ('map FS0' in required_metrics):
+        LGR.info('Calculating F-statistic maps')
         metric_maps['map FT2'], metric_maps['map FS0'] = dependence.calculate_f_maps(
             data_cat, metric_maps['map Z'], mixing, mask, tes)
 
     if 'map Z clusterized' in required_metrics:
+        LGR.info('Thresholding z-statistic maps')
         z_thresh = 1.95
         metric_maps['map Z clusterized'] = dependence.threshold_map(
             metric_maps['map Z'], mask, ref_img, z_thresh)
 
     if 'map FT2 clusterized' in required_metrics:
+        LGR.info('Calculating T2* F-statistic maps')
         f_thresh, _, _ = getfbounds(len(tes))
         metric_maps['map FT2 clusterized'] = dependence.threshold_map(
             metric_maps['map FT2'], mask, ref_img, f_thresh)
 
     if 'map FS0 clusterized' in required_metrics:
+        LGR.info('Calculating S0 F-statistic maps')
         f_thresh, _, _ = getfbounds(len(tes))
         metric_maps['map FS0 clusterized'] = dependence.threshold_map(
             metric_maps['map FS0'], mask, ref_img, f_thresh)
 
     if 'countsigFT2' in required_metrics:
+        LGR.info('Counting significant voxels in T2* F-statistic maps')
         comptable['countsigFT2'] = dependence.compute_countsignal(
             metric_maps['map FT2 clusterized'])
 
     if 'countsigFS0' in required_metrics:
+        LGR.info('Counting significant voxels in S0 F-statistic maps')
         comptable['countsigFS0'] = dependence.compute_countsignal(
             metric_maps['map FS0 clusterized'])
 
     if 'map beta T2 clusterized' in required_metrics:
+        LGR.info('Thresholding optimal combination beta maps to match T2* F-statistic maps')
         metric_maps['map beta T2 clusterized'] = dependence.threshold_to_match(
             metric_maps['map optcom betas'],
             comptable['countsigFT2'],
             mask, ref_img)
 
     if 'map beta S0 clusterized' in required_metrics:
+        LGR.info('Thresholding optimal combination beta maps to match S0 F-statistic maps')
         metric_maps['map beta S0 clusterized'] = dependence.threshold_to_match(
             metric_maps['map optcom betas'],
             comptable['countsigFS0'],
@@ -175,6 +187,7 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
 
     # Dependence metrics
     if ('kappa' in required_metrics) or ('rho' in required_metrics):
+        LGR.info('Calculating kappa and rho')
         comptable['kappa'], comptable['rho'] = dependence.calculate_dependence_metrics(
             F_T2_maps=metric_maps['map FT2'],
             F_S0_maps=metric_maps['map FS0'],
@@ -182,25 +195,32 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
 
     # Generic metrics
     if 'variance explained' in required_metrics:
+        LGR.info('Calculating variance explained')
         comptable['variance explained'] = dependence.calculate_varex(
             metric_maps['map optcom betas'])
 
     if 'normalized variance explained' in required_metrics:
+        LGR.info('Calculating normalized variance explained')
         comptable['normalized variance explained'] = dependence.calculate_varex_norm(
             metric_maps['map weight'])
 
     # Spatial metrics
     if 'dice_FT2' in required_metrics:
+        LGR.info('Calculating DSI between thresholded T2* F-statistic and '
+                 'optimal combination beta maps')
         comptable['dice_FT2'] = dependence.compute_dice(
             metric_maps['map beta T2 clusterized'],
             metric_maps['map FT2 clusterized'], axis=0)
 
     if 'dice_FS0' in required_metrics:
+        LGR.info('Calculating DSI between thresholded S0 F-statistic and '
+                 'optimal combination beta maps')
         comptable['dice_FS0'] = dependence.compute_dice(
             metric_maps['map beta S0 clusterized'],
             metric_maps['map FS0 clusterized'], axis=0)
 
     if 'signal-noise_t' in required_metrics:
+        LGR.info('Calculating signal-noise t-statistics')
         RepLGR.info('A t-test was performed between the distributions of T2*-model '
                     'F-statistics associated with clusters (i.e., signal) and '
                     'non-cluster voxels (i.e., noise) to generate a t-statistic '
@@ -214,6 +234,7 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
             F_T2_maps=metric_maps['map FT2'])
 
     if 'signal-noise_z' in required_metrics:
+        LGR.info('Calculating signal-noise z-statistics')
         RepLGR.info('A t-test was performed between the distributions of T2*-model '
                     'F-statistics associated with clusters (i.e., signal) and '
                     'non-cluster voxels (i.e., noise) to generate a z-statistic '
@@ -227,6 +248,7 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
             F_T2_maps=metric_maps['map FT2'])
 
     if 'countnoise' in required_metrics:
+        LGR.info('Counting significant noise voxels from z-statistic maps')
         RepLGR.info('The number of significant voxels not from clusters was '
                     'calculated for each component.')
         comptable['countnoise'] = dependence.compute_countnoise(
@@ -235,6 +257,7 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
 
     # Composite metrics
     if 'd_table_score' in required_metrics:
+        LGR.info('Calculating decision table score')
         comptable['d_table_score'] = dependence.generate_decision_table_score(
             comptable['kappa'],
             comptable['dice_FT2'],

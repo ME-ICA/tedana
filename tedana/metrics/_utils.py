@@ -1,8 +1,12 @@
 """
 Misc. utils for metric calculation.
 """
+import logging
+
 import numpy as np
 from scipy import stats
+
+LGR = logging.getLogger(__name__)
 
 
 def dependency_resolver(dict_, requested_metrics, base_inputs):
@@ -49,7 +53,7 @@ def dependency_resolver(dict_, requested_metrics, base_inputs):
             required_metrics = required_metrics_new
         escape_counter += 1
         if escape_counter >= 10:
-            print('dependency_resolver in infinite loop. Escaping early.')
+            LGR.warning('dependency_resolver in infinite loop. Escaping early.')
             break
     return required_metrics
 
