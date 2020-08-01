@@ -48,7 +48,7 @@ def dependency_resolver(dict_, requested_metrics, base_inputs):
         else:
             required_metrics = required_metrics_new
         escape_counter += 1
-        if escape_counter >= 1000:
+        if escape_counter >= 10:
             print('dependency_resolver in infinite loop. Escaping early.')
             break
     return required_metrics
