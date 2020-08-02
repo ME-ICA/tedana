@@ -161,6 +161,7 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
         metric_maps['map FS0 clusterized'] = dependence.threshold_map(
             metric_maps['map FS0'], mask, ref_img, f_thresh)
 
+    # Intermediate metrics
     if 'countsigFT2' in required_metrics:
         LGR.info('Counting significant voxels in T2* F-statistic maps')
         comptable['countsigFT2'] = dependence.compute_countsignal(
@@ -171,6 +172,7 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
         comptable['countsigFS0'] = dependence.compute_countsignal(
             metric_maps['map FS0 clusterized'])
 
+    # Back to maps
     if 'map beta T2 clusterized' in required_metrics:
         LGR.info('Thresholding optimal combination beta maps to match T2* F-statistic maps')
         metric_maps['map beta T2 clusterized'] = dependence.threshold_to_match(
