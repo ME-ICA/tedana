@@ -1,5 +1,5 @@
 """
-Tests for tedana.model.fit
+Tests for tedana.metrics
 """
 import os.path as op
 

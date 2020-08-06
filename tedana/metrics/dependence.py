@@ -214,7 +214,6 @@ def threshold_map(maps, mask, ref_img, threshold, csize=None):
         csize = np.max([int(n_voxels * 0.0005) + 5, 20])
     else:
         csize = int(csize)
-    # LGR.debug('Using minimum cluster size: {}'.format(csize))
 
     for i_comp in range(n_components):
         # Cluster-extent threshold and binarize F-maps
