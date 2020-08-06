@@ -17,7 +17,8 @@ RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
 
-def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
+def generate_metrics(data_cat, data_optcom, mixing, mask, adaptive_mask,
+                     tes, ref_img,
                      metrics=None, sort_by='kappa', ascending=False):
     """
     Fit TE-dependence and -independence models to components.
@@ -31,8 +32,11 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
     mixing : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data_cat`
-    mask : img_like
-        Mask
+    mask : (S) array_like
+        Boolean mask
+    adaptive_mask : (S) array_like
+        Adaptive mask, where each voxel's value is the number of echoes with
+        "good signal".
     tes : list
         List of echo times associated with `data_cat`, in milliseconds
     ref_img : str or img_like
@@ -57,11 +61,12 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
         metrics = ['map weight']
     RepLGR.info('The following metrics were calculated: {}.'.format(', '.join(metrics)))
 
-    if not (data_cat.shape[0] == data_optcom.shape[0] == mask.shape[0]):
+    if not (data_cat.shape[0] == data_optcom.shape[0] == adaptive_mask.shape[0] ==
+            mask.shape[0]):
         raise ValueError('First dimensions (number of samples) of data_cat ({0}), '
-                         'data_optcom ({1}), and mask ({2}) do not '
+                         'data_optcom ({1}), adaptive_mask ({2}), and mask ({3}) do not '
                          'match'.format(data_cat.shape[0], data_optcom.shape[0],
-                                        mask.shape[0]))
+                                        adaptive_mask.shape[0], mask.shape[0]))
     elif data_cat.shape[1] != len(tes):
         raise ValueError('Second dimension of data_cat ({0}) does not match '
                          'number of echoes provided (tes; '
@@ -69,9 +74,11 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
     elif not (data_cat.shape[2] == data_optcom.shape[1] == mixing.shape[0]):
         raise ValueError('Number of volumes in data_cat ({0}), '
                          'data_optcom ({1}), and mixing ({2}) do not '
-                         'match.'.format(data_cat.shape[2], data_optcom.shape[1], mixing.shape[0]))
+                         'match.'.format(data_cat.shape[2], data_optcom.shape[1],
+                                         mixing.shape[0]))
 
-    INPUTS = ['data_cat', 'data_optcom', 'mixing', 'mask', 'tes', 'ref_img']
+    INPUTS = ['data_cat', 'data_optcom', 'mixing', 'adaptive_mask',
+              'mask', 'tes', 'ref_img']
     METRIC_DEPENDENCIES = {
         'kappa': ['map FT2', 'map Z'],
         'rho': ['map FS0', 'map Z'],
@@ -85,8 +92,8 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
         'normalized variance explained': ['map weight'],
         'd_table_score': ['kappa', 'dice_FT2', 'signal-noise_t',
                           'countnoise', 'countsigFT2'],
-        'map FT2': ['map Z', 'data_cat', 'mask'],
-        'map FS0': ['map Z'],
+        'map FT2': ['map Z', 'mixing', 'tes', 'data_cat', 'adaptive_mask'],
+        'map FS0': ['map Z', 'mixing', 'tes', 'data_cat', 'adaptive_mask'],
         'map Z': ['map weight'],
         'map weight': ['data_optcom', 'mixing'],
         'map optcom betas': ['data_optcom', 'mixing'],
@@ -102,6 +109,7 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
     # Apply masks before anything else
     data_cat = data_cat[mask, ...]
     data_optcom = data_optcom[mask, :]
+    adaptive_mask = adaptive_mask[mask]
 
     required_metrics = dependency_resolver(METRIC_DEPENDENCIES, metrics, INPUTS)
 
@@ -141,7 +149,7 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, tes, ref_img,
     if ('map FT2' in required_metrics) or ('map FS0' in required_metrics):
         LGR.info('Calculating F-statistic maps')
         metric_maps['map FT2'], metric_maps['map FS0'] = dependence.calculate_f_maps(
-            data_cat, metric_maps['map Z'], mixing, mask, tes)
+            data_cat, metric_maps['map Z'], mixing, adaptive_mask, tes)
 
     if 'map Z clusterized' in required_metrics:
         LGR.info('Thresholding z-statistic maps')

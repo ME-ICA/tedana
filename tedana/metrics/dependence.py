@@ -111,7 +111,7 @@ def calculate_z_maps(weights, z_max=8):
     return Z_maps
 
 
-def calculate_f_maps(data_cat, Z_maps, mixing, mask, tes, f_max=500):
+def calculate_f_maps(data_cat, Z_maps, mixing, adaptive_mask, tes, f_max=500):
     """
     Calculate pseudo-F-statistic maps (per component) for TE-dependence
     and -independence models.
@@ -124,8 +124,9 @@ def calculate_f_maps(data_cat, Z_maps, mixing, mask, tes, f_max=500):
         Z-statistic maps for components, reflecting voxel-wise component loadings.
     mixing : (T x C) array_like
         Mixing matrix
-    mask : (S) array_like
-        Boolean mask
+    adaptive_mask : (M) array_like
+        Adaptive mask, where each voxel's value is the number of echoes with
+        "good signal". Limited to masked voxels.
     tes : (E) array_like
         Echo times in milliseconds, in the same order as the echoes in data_cat.
     f_max : float, optional
@@ -138,11 +139,8 @@ def calculate_f_maps(data_cat, Z_maps, mixing, mask, tes, f_max=500):
         Pseudo-F-statistic maps for TE-dependence and -independence models,
         respectively.
     """
-    temp_data = utils.unmask(data_cat, mask)
     # TODO: Remove mask arg from get_coeffs
-    me_betas = get_coeffs(
-        temp_data, mixing, np.repeat(mask[:, np.newaxis], len(tes), axis=1))
-    me_betas = me_betas[mask, ...]
+    me_betas = get_coeffs(data_cat, mixing, mask=None, add_const=True)
     n_voxels, n_echos, n_components = me_betas.shape
     mu = data_cat.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))
@@ -153,35 +151,37 @@ def calculate_f_maps(data_cat, Z_maps, mixing, mask, tes, f_max=500):
 
     F_T2_maps = np.zeros([n_voxels, n_components])
     F_S0_maps = np.zeros([n_voxels, n_components])
-    pred_T2_maps = np.zeros([n_voxels, n_echos, n_components])
-    pred_S0_maps = np.zeros([n_voxels, n_echos, n_components])
 
     for i_comp in range(n_components):
         # size of comp_betas is (n_echoes, n_samples)
         comp_betas = np.atleast_3d(me_betas)[:, :, i_comp].T
         alpha = (np.abs(comp_betas)**2).sum(axis=0)
 
-        # S0 Model
-        # (S,) model coefficient map
-        coeffs_S0 = (comp_betas * X1).sum(axis=0) / (X1**2).sum(axis=0)
-        pred_S0 = X1 * np.tile(coeffs_S0, (n_echos, 1))
-        pred_S0_maps[:, :, i_comp] = pred_S0.T
-        SSE_S0 = (comp_betas - pred_S0)**2
-        SSE_S0 = SSE_S0.sum(axis=0)  # (S,) prediction error map
-        F_S0 = (alpha - SSE_S0) * (n_echos - 1) / (SSE_S0)
+        # Only analyze good echoes at each voxel
+        for j_echo in np.unique(adaptive_mask[adaptive_mask >= 3]):
+            mask_idx = adaptive_mask == j_echo
+            alpha = (np.abs(comp_betas[:j_echo])**2).sum(axis=0)
 
-        # T2 Model
-        coeffs_T2 = (comp_betas * X2).sum(axis=0) / (X2**2).sum(axis=0)
-        pred_T2 = X2 * np.tile(coeffs_T2, (n_echos, 1))
-        pred_T2_maps[:, :, i_comp] = pred_T2.T
-        SSE_T2 = (comp_betas - pred_T2)**2
-        SSE_T2 = SSE_T2.sum(axis=0)
-        F_T2 = (alpha - SSE_T2) * (n_echos - 1) / (SSE_T2)
+            # S0 Model
+            # (S,) model coefficient map
+            coeffs_S0 = (comp_betas[:j_echo] * X1[:j_echo, :]).sum(axis=0) /\
+                (X1[:j_echo, :]**2).sum(axis=0)
+            pred_S0 = X1[:j_echo, :] * np.tile(coeffs_S0, (j_echo, 1))
+            SSE_S0 = (comp_betas[:j_echo] - pred_S0)**2
+            SSE_S0 = SSE_S0.sum(axis=0)  # (S,) prediction error map
+            F_S0 = (alpha - SSE_S0) * (j_echo - 1) / (SSE_S0)
+            F_S0[F_S0 > f_max] = f_max
+            F_S0_maps[mask_idx, i_comp] = F_S0[mask_idx]
 
-        F_S0[F_S0 > f_max] = f_max
-        F_T2[F_T2 > f_max] = f_max
-        F_S0_maps[:, i_comp] = F_S0
-        F_T2_maps[:, i_comp] = F_T2
+            # T2 Model
+            coeffs_T2 = (comp_betas[:j_echo] * X2[:j_echo, :]).sum(axis=0) /\
+                (X2[:j_echo, :]**2).sum(axis=0)
+            pred_T2 = X2[:j_echo] * np.tile(coeffs_T2, (j_echo, 1))
+            SSE_T2 = (comp_betas[:j_echo] - pred_T2)**2
+            SSE_T2 = SSE_T2.sum(axis=0)
+            F_T2 = (alpha - SSE_T2) * (j_echo - 1) / (SSE_T2)
+            F_T2[F_T2 > f_max] = f_max
+            F_T2_maps[mask_idx, i_comp] = F_T2[mask_idx]
 
     return F_T2_maps, F_S0_maps
 
