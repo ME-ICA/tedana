@@ -140,7 +140,8 @@ def calculate_f_maps(data_cat, Z_maps, mixing, adaptive_mask, tes, f_max=500):
         respectively.
     """
     # TODO: Remove mask arg from get_coeffs
-    me_betas = get_coeffs(data_cat, mixing, mask=None, add_const=True)
+    me_betas = get_coeffs(data_cat, mixing, mask=np.ones(data_cat.shape[:2], bool),
+                          add_const=True)
     n_voxels, n_echos, n_components = me_betas.shape
     mu = data_cat.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))
