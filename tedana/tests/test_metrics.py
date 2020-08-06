@@ -41,7 +41,8 @@ def test_smoke_generate_metrics(testdata1):
                'normalized variance explained', 'd_table_score']
     comptable, mixing = collect.generate_metrics(
         testdata1['data_cat'], testdata1['data_optcom'], testdata1['mixing'],
-        testdata1['mask'], testdata1['tes'], testdata1['ref_img'],
+        testdata1['mask'], testdata1['adaptive_mask'],
+        testdata1['tes'], testdata1['ref_img'],
         metrics=metrics, sort_by='kappa', ascending=False)
     assert isinstance(comptable, pd.DataFrame)
 
@@ -92,13 +93,13 @@ def test_smoke_calculate_f_maps():
     data_cat = np.random.random((n_voxels, n_echos, n_volumes))
     Z_maps = np.random.normal(size=(n_voxels, n_components))
     mixing = np.random.random((n_volumes, n_components))
-    mask = np.ones((n_voxels), bool)
+    adaptive_mask = np.random.randint(1, n_echos + 1, size=n_voxels)
     tes = np.array([15, 25, 35, 45, 55])
     F_T2_maps, F_S0_maps = dependence.calculate_f_maps(
         data_cat,
         Z_maps,
         mixing,
-        mask,
+        adaptive_mask,
         tes,
         f_max=500
     )
