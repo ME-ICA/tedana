@@ -33,9 +33,9 @@ REQUIRES = [
     'nilearn',
     'nibabel>=2.1.0',
     'scipy',
-    'versioneer',
     'pandas',
-    'matplotlib'
+    'matplotlib',
+    'threadpoolctl'
 ]
 
 TESTS_REQUIRES = [
@@ -45,6 +45,7 @@ TESTS_REQUIRES = [
 ]
 
 EXTRA_REQUIRES = {
+    'dev': ['versioneer'],
     'doc': [
         'sphinx>=1.5.3',
         'sphinx_rtd_theme',

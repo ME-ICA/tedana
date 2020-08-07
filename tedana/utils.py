@@ -91,15 +91,16 @@ def make_adaptive_mask(data, mask=None, getsum=False):
 
     if mask is None:
         # make it a boolean mask to (where we have at least 1 echo with good signal)
-        mask = masksum.astype(bool)
+        mask = (masksum >= 3).astype(bool)
     else:
         # if the user has supplied a binary mask
         mask = load_image(mask).astype(bool)
         masksum = masksum * mask
+        mask = (masksum >= 3).astype(bool)
         # reduce mask based on masksum
         # TODO: Use visual report to make checking the reduced mask easier
-        if np.any(masksum[mask] == 0):
-            n_bad_voxels = np.sum(masksum[mask] == 0)
+        if np.any(masksum[mask] < 3):
+            n_bad_voxels = np.sum(masksum[mask] < 3)
             LGR.warning('{0} voxels in user-defined mask do not have good '
                         'signal. Removing voxels from mask.'.format(n_bad_voxels))
             mask = masksum.astype(bool)
@@ -154,7 +155,7 @@ def unmask(data, mask):
                   'volume={5},'
                   'pages={1--34}}'),
            description='Introduction of Sorenson-Dice index by Sorenson in 1948.')
-def dice(arr1, arr2):
+def dice(arr1, arr2, axis=None):
     """
     Compute Dice's similarity index between two numpy arrays. Arrays will be
     binarized before comparison.
@@ -163,6 +164,9 @@ def dice(arr1, arr2):
     ----------
     arr1, arr2 : array_like
         Input arrays, arrays to binarize and compare.
+    axis : None or int, optional
+        Axis along which the DSIs are computed.
+        The default is to compute the DSI of the flattened arrays.
 
     Returns
     -------
@@ -181,12 +185,15 @@ def dice(arr1, arr2):
     if arr1.shape != arr2.shape:
         raise ValueError('Shape mismatch: arr1 and arr2 must have the same shape.')
 
-    arr_sum = arr1.sum() + arr2.sum()
-    if arr_sum == 0:
-        dsi = 0
+    if axis is not None and axis > (arr1.ndim - 1):
+        raise ValueError('Axis provided {} not supported by the input arrays.'.format(axis))
+
+    arr_sum = arr1.sum(axis=axis) + arr2.sum(axis=axis)
+    if np.all(arr_sum == 0):
+        dsi = np.zeros(arr_sum.shape)
     else:
         intersection = np.logical_and(arr1, arr2)
-        dsi = (2. * intersection.sum()) / arr_sum
+        dsi = (2. * intersection.sum(axis=axis)) / arr_sum
 
     return dsi
 
@@ -238,7 +245,7 @@ def get_spectrum(data: np.array, tr: float = 1.0):
 
 
 def threshold_map(img, min_cluster_size, threshold=None, mask=None,
-                  binarize=True, sided='two'):
+                  binarize=True, sided='bi'):
     """
     Cluster-extent threshold and binarize image.
 
@@ -255,10 +262,15 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None,
         Boolean array for masking resultant data array. Default is None.
     binarize : bool, optional
         Default is True.
-    sided : {'two', 'one', 'bi'}, optional
+    sided : {'bi', 'two', 'one'}, optional
         How to apply thresholding. One-sided thresholds on the positive side.
         Two-sided thresholds positive and negative values together. Bi-sided
-        thresholds positive and negative values separately. Default is 'two'.
+        thresholds positive and negative values separately. Default is 'bi'.
+
+    Returns
+    -------
+    clust_thresholded : (M) :obj:`numpy.ndarray`
+        Cluster-extent thresholded (and optionally binarized) map.
     """
     if not isinstance(img, np.ndarray):
         arr = img.get_data()
@@ -324,3 +336,37 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None,
         clust_thresholded = clust_thresholded[mask]
 
     return clust_thresholded
+
+
+def sec2millisec(arr):
+    """
+    Convert seconds to milliseconds.
+
+    Parameters
+    ----------
+    arr : array_like
+        Values in seconds.
+
+    Returns
+    -------
+    array_like
+        Values in milliseconds.
+    """
+    return arr * 1000
+
+
+def millisec2sec(arr):
+    """
+    Convert milliseconds to seconds.
+
+    Parameters
+    ----------
+    arr : array_like
+        Values in milliseconds.
+
+    Returns
+    -------
+    array_like
+        Values in seconds.
+    """
+    return arr / 1000.

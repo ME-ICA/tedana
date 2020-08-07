@@ -11,13 +11,16 @@ Here are some [instructions][link_signupinstructions].
 Already know what you're looking for in this guide? Jump to the following sections:
 
 * [Joining the conversation](#joining-the-conversation)
-  * [Monthly developer calls](#monthly-developer-calls)
 * [Contributing small documentation changes](#contributing-small-documentation-changes)
 * [Contributing through Github](#contributing-through-github)
 * [Understanding issues, milestones, and project boards](#understanding-issues-milestones-and-project-boards)
+* [Installing in editable mode](#3-Run-the-developer-setup)
 * [Making a change](#making-a-change)
+* [Testing your change](#5-Test-your-changes)
+* [Viewing Documentation Locally](#Changes-to-documentation)
 * [Structuring contributions](#style-guide)
-* [Recognizing contributors](#recognizing-contributions)
+* [Recognizing contributors](#Recognizing-contributors)
+* [Monthly calls and testing guidelines][link_developing_rtd]
 
 Don't know where to get started? 
 Read [Joining the conversation](#joining-the-conversation) and pop into 
@@ -32,15 +35,6 @@ We also maintain a [gitter chat room][link_gitter] for more informal conversatio
 
 There is significant cross-talk between these two spaces, and we look forward to hearing from you in either venue!
 As a reminder, we expect all contributions to `tedana` to adhere to our [code of conduct][link_coc].
-
-### Monthly developer calls
-
-We run monthly developer calls via Zoom.
-You can see the schedule via the `tedana` [google calendar](https://calendar.google.com/calendar/embed?src=pl6vb4t9fck3k6mdo2mok53iss%40group.calendar.google.com).
-An agenda will be circulated in the gitter channel in advance of the meeting.
-
-Everyone is welcome.
-We look forward to meeting you there :hibiscus:
 
 ## Contributing small documentation changes
 If you are new to GitHub and just have a small documentation change
@@ -91,11 +85,6 @@ towards ``tedana``'s shared vision.
     If you feel that an issue should be assigned to a specific milestone but the maintainers have not done so, just ask!
     We might have just missed it, or we might not (yet) see how it aligns with the overall project structure.
     These conversations are important to have, and we are excited to hear your perspective!
-
-* The **project board** is an automated [Kanban board][link_kanban] to keep track of what is currently underway
-(in progress), what has been completed (done), and what remains to be done for a specific release.
-The ``tedana``  maintainers use this board to keep an eye on how tasks are progressing week by week.
-
 
 ### Issue labels
 
@@ -151,30 +140,66 @@ Once you've run this, your repository should be set for most changes (i.e., you 
 
 ### 4. Make the changes you've discussed
 
-Try to keep the changes focused to the issue. We've found that working on a [new branch][link_branches] for each issue makes it easier to keep your changes targeted. 
+Try to keep the changes focused to the issue.
+We've found that working on a [new branch][link_branches] for each issue makes it easier to keep your changes targeted.
+Using a new branch allows you to follow the standard GitHub workflow when making changes.
+[This guide][link_gitworkflow] provides a useful overview for this workflow.
+Before making a new branch, make sure your master is up to date with the following commands:
 
-Using a new branch allows you to follow the standard "fork/branch/commit/pull-request/merge" GitHub workflow when making changes. [This guide][link_gitworkflow] provides a useful overview for this workflow.
+```
+git checkout master
+git fetch upstream master
+git merge upstream/master
+```
 
-Before creating your pull request, please make sure to review the `tedana` [style conventions](#style-guide).
+Then, make your new branch.
+
+```
+git checkout -b MYBRANCH
+```
+
+Please make sure to review the `tedana` [style conventions](#style-guide) and test your changes.
+
+If you are new to ``git`` and would like to work in a graphical user interface (GUI), there are several GUI git clients that you may find helpful, such as
+- [GitKraken][link_git_kraken]
+- [GitHub Desktop][link_github_desktop]
+- [SourceTree][link_source_tree]
+
 
 ### 5. Test your changes
 
-#### Changes to code
-
-For changes to the codebase, we suggest using our development Docker container which will run all the necessary checks and tests to ensure your code is ready to be merged into `tedana`!
-(This does require that you have a local install of [Docker](https://www.docker.com/products/docker-desktop).)
-You can run all the checks with:
-
+You can run style checks by running the following:
 ```
-docker run --tty --rm -v ${PWD}:/tedana tedana/tedana-dev:latest run_all_tests
+flake8 $TEDANADIR/tedana
+```
+
+and unit/integration tests by running `pytest` (more details below).
+If you know a file will test your change, you can run only that test (see "One test file only" below).
+Alternatively, running all unit tests is relatively quick and should be fairly comprehensive.
+Running all `pytest` tests will be useful for pre-pushing checks.
+Regardless, when you open a Pull Request, we use CircleCI to run all unit and integration tests.
+
+All tests; final checks before pushing
+```
+pytest $TEDANADIR/tedana/tests
+```
+Unit tests and linting only
+```
+pytest --skipintegration $TEDANADIR/tedana/tests
+```
+One test file only
+```
+pytest $TEDANADIR/tedana/tests/test_file.py
+```
+Test one function in a file
+```
+pytest -k my_function $TEDANADIR/tedana/tests/test_file.py
 ```
 
 from within your local `tedana` repository.
-(**N.B.** It is possible that, depending on your Docker setup, you may need to increase the amount of memory available to Docker in order to run the `tedana` test suite. 
-You can either do this permanently by editing your Docker settings or temporarily by adding `--memory=4g` to the above `docker run` command.)
-
-This will print out a number of different status update messages as the tests run, but if you see `"FINISHED RUNNING ALL TESTS! GREAT SUCCESS"` then it means everything finished succesfully.
-If not, there should be some helpful outputs that specify which tests failed.
+The test run will indicate the number of passes and failures.
+Most often, the failures give enough information to determine the cause; if not, you can
+refer to the [pytest documentation][link_pytest] for more details on the failure.
 
 #### Changes to documentation
 
@@ -189,10 +214,22 @@ from the `docs` directory in your local `tedana` repository. You should then be 
 When opening the pull request, we ask that you follow some [specific conventions](#pull-requests). We outline these below.
 
 After you have submitted the pull request, a member of the development team will review your changes to confirm that they can be merged into the main code base.
+When you have two approving reviewers and all tests are passing, your pull request may be merged.
 
-After successful merging of the pull request, remember to [keep your fork up to date][link_updateupstreamwiki] with the master `tedana` repository and to delete the branch on your fork that was used for the merged pull request.
 
 ### Pull Requests
+
+To push your changes to your remote, use
+
+```
+git push -u origin MYBRANCH
+```
+
+and GitHub will respond by giving you a link to open a pull request to 
+ME-ICA/tedana.
+Once you have pushed changes to the repository, please do not use commands such as rebase and
+amend, as they will rewrite your history and make it difficult for developers to work with you on
+your pull request. You can read more about that [here][link_git_rewriting].
 
 To improve understanding pull requests "at a glance", we encourage the use of several standardized tags.
 When opening a pull request, please use at least one of the following prefixes:
@@ -202,20 +239,32 @@ When opening a pull request, please use at least one of the following prefixes:
 * **[ENH]** for enhancements
 * **[FIX]** for bug fixes
 * **[REF]** for refactoring existing code
-* **[STY]** for stylistic changes
 * **[TST]** for new or updated tests, and
-* **[WIP]** for changes which are not yet ready to be merged
-
-Pull requests should be submitted early and often!
-If your pull request is not yet ready to be merged, please also include the **[WIP]** prefix.
-This tells the development team that your pull request is a "work-in-progress",
-and that you plan to continue working on it.
-We request that you do not use the Draft PR feature at this time, 
-as it interferes with our Continuous Integration tool, Travis.
+* **[MAINT]** for maintenance of code
 
 You can also combine the tags above, for example if you are updating both a test and
 the documentation: **[TST, DOC]**.
-If you're still working on the pull request that prefix would be **[WIP, TST, DOC]**.
+
+Pull requests should be submitted early and often!
+If your pull request is not yet ready to be merged, please use [draft PRs][link_draftpr]
+This tells the development team that your pull request is a "work-in-progress",
+and that you plan to continue working on it.
+If no comments or commits occur on an open Pull Request, stale-bot will comment in order to remind
+both you and the maintainers that the pull request is open.
+If at this time you are awaiting a developer response, please ping them to remind them.
+If you are no longer interested in working on the pull request, let us know and we will ask to
+continue working on your branch.
+Thanks for contributing!
+
+### Pull Request Checklist (For Fastest Review):
+- [ ] Check that all tests are passing ("All tests passsed")
+- [ ] Make sure you have docstrings for any new functions
+- [ ] Make sure that docstrings are updated for edited functions
+- [ ] Make sure you note any issues that will be closed by your PR
+- [ ] Take a look at the automatically generated readthedocs for your PR (Show all checks -> continuous-documentation/readthedocs -> Details)
+
+### Comprehensive Developer Guide
+For additional, in-depth information on contributing to `tedana`, please see our Developing Guidelines on [readthedocs][link_developing_rtd].
 
 ## Style Guide
 
@@ -270,7 +319,7 @@ You're awesome. :wave::smiley:
 [writing_formatting_github]: https://help.github.com/articles/getting-started-with-writing-and-formatting-on-github
 [markdown]: https://daringfireball.net/projects/markdown
 [rick_roll]: https://www.youtube.com/watch?v=dQw4w9WgXcQ
-[restructuredtext]: http://docutils.sourceforge.net/rst.html#user-documentation
+[restructuredtext]: http://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html 
 [sphinx]: http://www.sphinx-doc.org/en/master/index.html
 [readthedocs]: https://docs.readthedocs.io/en/latest/index.html
 
@@ -289,6 +338,7 @@ You're awesome. :wave::smiley:
 
 [link_kanban]: https://en.wikipedia.org/wiki/Kanban_board
 [link_pullrequest]: https://help.github.com/articles/creating-a-pull-request/
+[link_draftpr]: https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests#draft-pull-requests
 [link_fork]: https://help.github.com/articles/fork-a-repo/
 [link_pushpullblog]: https://www.igvita.com/2011/12/19/dont-push-your-pull-requests/
 [link_updateupstreamwiki]: https://help.github.com/articles/syncing-a-fork/
@@ -306,3 +356,10 @@ You're awesome. :wave::smiley:
 [link_all-contributors-bot]: https://allcontributors.org/docs/en/bot/overview
 [link_all-contributors-bot-usage]: https://allcontributors.org/docs/en/bot/usage
 [link_stemmrolemodels]: https://github.com/KirstieJane/STEMMRoleModels
+[link_pytest]: https://docs.pytest.org/en/latest/usage.html
+[link_developing_rtd]: https://tedana.readthedocs.io/en/latest/developing.html
+
+[link_git_kraken]: https://www.gitkraken.com/
+[link_github_desktop]: https://desktop.github.com/
+[link_source_tree]: https://desktop.github.com/
+[link_git_rewriting]: https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History

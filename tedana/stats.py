@@ -7,6 +7,7 @@ import numpy as np
 from scipy import stats
 
 from tedana import utils
+from tedana.due import due, BibTeX, Doi
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
@@ -74,10 +75,14 @@ def computefeats2(data, mmix, mask=None, normalize=True):
     # demean masked data
     if mask is not None:
         data = data[mask, ...]
+    # normalize data (subtract mean and divide by standard deviation) in the last dimension
+    # so that least-squares estimates represent "approximate" correlation values (data_R)
+    # assuming mixing matrix (mmix) values are also normalized
     data_vn = stats.zscore(data, axis=-1)
 
     # get betas of `data`~`mmix` and limit to range [-0.999, 0.999]
     data_R = get_coeffs(data_vn, mmix, mask=None)
+    # Avoid abs(data_R) => 1, otherwise Fisher's transform will return Inf or -Inf
     data_R[data_R < -0.999] = -0.999
     data_R[data_R > 0.999] = 0.999
 
@@ -86,9 +91,11 @@ def computefeats2(data, mmix, mask=None, normalize=True):
     if data_Z.ndim == 1:
         data_Z = np.atleast_2d(data_Z).T
 
-    # normalize data
+    # normalize data (only division by std)
     if normalize:
+        # subtract mean and dividing by standard deviation
         data_Zm = stats.zscore(data_Z, axis=0)
+        # adding back the mean
         data_Z = data_Zm + (data_Z.mean(axis=0, keepdims=True) /
                             data_Z.std(axis=0, keepdims=True))
 
@@ -152,3 +159,86 @@ def get_coeffs(data, X, mask=None, add_const=False):
         betas = utils.unmask(betas, mask)
 
     return betas
+
+
+@due.dcite(BibTeX("""
+           @article{hughett2007accurate,
+             title={Accurate Computation of the F-to-z and t-to-z Transforms
+                    for Large Arguments},
+             author={Hughett, Paul},
+             journal={Journal of Statistical Software},
+             volume={23},
+             number={1},
+             pages={1--5},
+             year={2007},
+             publisher={Foundation for Open Access Statistics}
+           }
+           """),
+           description='Introduces T-to-Z transform.')
+@due.dcite(Doi('10.5281/zenodo.32508'),
+           description='Python implementation of T-to-Z transform.')
+def t_to_z(t_values, dof):
+    """
+    Convert t-values to z-values.
+
+    Parameters
+    ----------
+    t_values
+    dof
+
+    Returns
+    -------
+    out
+
+    Notes
+    -----
+    From Vanessa Sochat's TtoZ package.
+    https://github.com/vsoch/TtoZ
+    """
+    if not isinstance(t_values, np.ndarray):
+        ret_float = True
+        t_values = np.array([t_values])
+    else:
+        ret_float = False
+
+    RepLGR.info("T-statistics were converted to z-statistics using Dr. "
+                "Vanessa Sochat's implementation (Sochat, 2015) of the method "
+                "described in Hughett (2007).")
+    RefLGR.info('Sochat, V. (2015). TtoZ Original Release. Zenodo. '
+                'http://doi.org/10.5281/zenodo.32508.')
+    RefLGR.info('Hughett, P. (2007). Accurate Computation of the F-to-z and '
+                't-to-z Transforms for Large Arguments. Journal of '
+                'Statistical Software, 23(1), 1-5.')
+
+    # Select just the nonzero voxels
+    nonzero = t_values[t_values != 0]
+
+    # We will store our results here
+    z_values = np.zeros(len(nonzero))
+
+    # Select values less than or == 0, and greater than zero
+    c = np.zeros(len(nonzero))
+    k1 = (nonzero <= c)
+    k2 = (nonzero > c)
+
+    # Subset the data into two sets
+    t1 = nonzero[k1]
+    t2 = nonzero[k2]
+
+    # Calculate p values for <=0
+    p_values_t1 = stats.t.cdf(t1, df=dof)
+    z_values_t1 = stats.norm.ppf(p_values_t1)
+
+    # Calculate p values for > 0
+    p_values_t2 = stats.t.cdf(-t2, df=dof)
+    z_values_t2 = -stats.norm.ppf(p_values_t2)
+    z_values[k1] = z_values_t1
+    z_values[k2] = z_values_t2
+
+    # Write new image to file
+    out = np.zeros(t_values.shape)
+    out[t_values != 0] = z_values
+
+    if ret_float:
+        out = out[0]
+    return out

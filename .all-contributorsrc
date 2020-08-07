@@ -14,7 +14,8 @@
         "code",
         "question",
         "design",
-        "bug"
+        "bug",
+        "review"
       ]
     },
     {
@@ -152,7 +153,9 @@
       "avatar_url": "https://avatars0.githubusercontent.com/u/13706448?v=4",
       "profile": "https://github.com/eurunuela",
       "contributions": [
-        "code"
+        "code",
+        "review",
+        "ideas"
       ]
     },
     {
@@ -164,11 +167,30 @@
         "doc",
         "code"
       ]
+    },
+    {
+      "login": "Islast",
+      "name": "Isla",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/23707851?v=4",
+      "profile": "http://isla.st",
+      "contributions": [
+        "review"
+      ]
+    },
+    {
+      "login": "mjversluis",
+      "name": "mjversluis",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/32125111?v=4",
+      "profile": "https://github.com/mjversluis",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 5,
   "projectName": "tedana",
   "projectOwner": "ME-ICA",
   "repoType": "github",
-  "repoHost": "https://github.com"
+  "repoHost": "https://github.com",
+  "skipCi": true
 }
