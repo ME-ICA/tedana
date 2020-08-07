@@ -2,8 +2,10 @@
 Functions to estimate S0 and T2* from multi-echo data.
 """
 import logging
-import scipy
 import numpy as np
+import scipy
+from scipy import stats
+
 from tedana import utils
 
 LGR = logging.getLogger(__name__)
@@ -298,6 +300,13 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype):
     s0_limited = utils.unmask(s0_limited, mask)
     t2s_full = utils.unmask(t2s_full, mask)
     s0_full = utils.unmask(s0_full, mask)
+
+    # set a hard cap for the T2* map
+    # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
+    cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5,
+                                      interpolation_method='lower')
+    LGR.debug('Setting cap on T2* map at {:.5f}'.format(cap_t2s * 10))
+    t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
 
     return t2s_limited, s0_limited, t2s_full, s0_full
 

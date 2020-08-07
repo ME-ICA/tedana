@@ -93,11 +93,10 @@ API
 
 .. autosummary::
    :toctree: generated/
-   :template: function.rst
+   :template: module.rst
 
-   tedana.metrics.dependence_metrics
-   tedana.metrics.kundu_metrics
-
+   tedana.metrics.collect
+   tedana.metrics.dependence
 
 .. _api_selection_ref:
 

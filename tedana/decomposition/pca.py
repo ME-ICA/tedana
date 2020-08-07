@@ -204,12 +204,17 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         varex_norm = varex / varex.sum()
 
     # Compute Kappa and Rho for PCA comps
-    # Normalize each component's time series
-    vTmixN = stats.zscore(comp_ts, axis=0)
-    comptable, _, _, _ = metrics.dependence_metrics(
-                data_cat, data_oc, comp_ts, adaptive_mask, tes, ref_img,
-                reindex=False, mmixN=vTmixN, algorithm=None,
-                label='mepca_', out_dir=out_dir, verbose=verbose)
+    required_metrics = [
+        'kappa', 'rho', 'countnoise', 'countsigFT2', 'countsigFS0',
+        'dice_FT2', 'dice_FS0', 'signal-noise_t',
+        'variance explained', 'normalized variance explained',
+        'd_table_score'
+    ]
+    comptable, _ = metrics.collect.generate_metrics(
+        data_cat, data_oc, comp_ts, mask, adaptive_mask,
+        tes, ref_img,
+        metrics=required_metrics, sort_by=None
+    )
 
     # varex_norm from PCA overrides varex_norm from dependence_metrics,
     # but we retain the original

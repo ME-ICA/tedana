@@ -512,13 +512,17 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                          op.join(out_dir, 'ts_OC_whitened.nii.gz'), ref_img)
 
         LGR.info('Making second component selection guess from ICA results')
-        # Estimate betas and compute selection metrics for mixing matrix
-        # generated from dimensionally reduced data using full data (i.e., data
-        # with thermal noise)
-        comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                    catd, data_oc, mmix_orig, masksum, tes,
-                    ref_img, reindex=True, label='meica_', out_dir=out_dir,
-                    algorithm='kundu_v2', verbose=verbose)
+        required_metrics = [
+            'kappa', 'rho', 'countnoise', 'countsigFT2', 'countsigFS0',
+            'dice_FT2', 'dice_FS0', 'signal-noise_t',
+            'variance explained', 'normalized variance explained',
+            'd_table_score'
+        ]
+        comptable, mmix = metrics.collect.generate_metrics(
+            catd, data_oc, mmix_orig, mask, masksum, tes, ref_img,
+            metrics=required_metrics, sort_by='kappa', ascending=False
+        )
+
         comp_names = [io.add_decomp_prefix(comp, prefix='ica', max_value=comptable.index.max())
                       for comp in comptable.index.values]
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
@@ -527,19 +531,22 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         io.filewrite(betas_oc,
                      op.join(out_dir, 'ica_components.nii.gz'),
                      ref_img)
-
-        comptable = metrics.kundu_metrics(comptable, metric_maps)
         comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = pd.read_table(op.join(out_dir, 'ica_mixing.tsv')).values
 
         if ctab is None:
-            comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                        catd, data_oc, mmix_orig, masksum, tes,
-                        ref_img, label='meica_', out_dir=out_dir,
-                        algorithm='kundu_v2', verbose=verbose)
-            comptable = metrics.kundu_metrics(comptable, metric_maps)
+            required_metrics = [
+                'kappa', 'rho', 'countnoise', 'countsigFT2', 'countsigFS0',
+                'dice_FT2', 'dice_FS0', 'signal-noise_t',
+                'variance explained', 'normalized variance explained',
+                'd_table_score'
+            ]
+            comptable, mmix = metrics.collect.generate_metrics(
+                catd, data_oc, mmix_orig, mask, masksum, tes, ref_img,
+                metrics=required_metrics, sort_by='kappa', ascending=False
+            )
             comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
         else:
             mmix = mmix_orig.copy()

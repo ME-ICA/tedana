@@ -18,15 +18,7 @@ lowk_ts_e1.nii.gz
 lowk_ts_e2.nii.gz
 lowk_ts_e3.nii.gz
 lowk_ts_e4.nii.gz
-meica_R2_pred.nii.gz
-meica_S0_pred.nii.gz
-meica_betas_catd.nii.gz
-meica_metric_weights.nii.gz
 meica_mix_T1c.1D
-mepca_R2_pred.nii.gz
-mepca_S0_pred.nii.gz
-mepca_betas_catd.nii.gz
-mepca_metric_weights.nii.gz
 pca_components.nii.gz
 pca_decomposition.json
 pca_mixing.tsv
