@@ -21,7 +21,7 @@ __url__ = 'https://github.com/me-ica/tedana'
 __packagename__ = 'tedana'
 __description__ = ('TE-Dependent Analysis (tedana) of multi-echo functional '
                    'magnetic resonance imaging (fMRI) data.')
-__longdesc__ = ('To do.')
+__longdesc__ = open("../README.md", "r").read()
 
 DOWNLOAD_URL = (
     'https://github.com/ME-ICA/{name}/archive/{ver}.tar.gz'.format(
