@@ -222,8 +222,10 @@ def _get_parser():
                           default=None)
     rerungrp.add_argument('--manacc',
                           dest='manacc',
-                          help=('Comma separated list of manually '
-                                'accepted components'),
+                          metavar='INT',
+                          type=int,
+                          nargs='+',
+                          help='List of manually accepted components.',
                           default=None)
 
     return parser
@@ -286,10 +288,10 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         File containing component table from which to extract pre-computed
         classifications, to be used with 'mixm' when re-running the workflow.
         Default is None.
-    manacc : :obj:`list`, :obj:`str`, or None, optional
-        List of manually accepted components. Can be a list of the components,
-        a comma-separated string with component numbers, or None. Default is
-        None.
+    manacc : :obj:`list` of :obj:`int` or None, optional
+        List of manually accepted components. Can be a list of the components
+        numbers or None.
+        Default is None.
 
     Other Parameters
     ----------------
@@ -420,15 +422,15 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
 
-    if isinstance(manacc, str):
-        manacc = [int(comp) for comp in manacc.split(',')]
-
     if ctab and not mixm:
         LGR.warning('Argument "ctab" requires argument "mixm".')
         ctab = None
     elif manacc is not None and not mixm:
         LGR.warning('Argument "manacc" requires argument "mixm".')
         manacc = None
+    elif manacc is not None:
+        # coerce to list of integers
+        manacc = [int(m) for m in manacc]
 
     if t2smap is not None and op.isfile(t2smap):
         t2smap = op.abspath(t2smap)
