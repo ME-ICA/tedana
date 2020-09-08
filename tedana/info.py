@@ -35,7 +35,8 @@ REQUIRES = [
     'scipy',
     'pandas',
     'matplotlib',
-    'threadpoolctl'
+    'threadpoolctl',
+    'bokeh'
 ]
 
 TESTS_REQUIRES = [
