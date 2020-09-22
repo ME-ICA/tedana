@@ -14,4 +14,4 @@ We will also attempt to archive certain common questions and associate answers i
 
 .. _multi-echo tag: https://neurostars.org/tags/multi-echo
 .. _NeuroStars: https://neurostars.org
-.. _tedana: https://neurostars.org/tags/tedana
+.. _tedana tag: https://neurostars.org/tags/tedana
