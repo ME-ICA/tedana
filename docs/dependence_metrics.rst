@@ -9,7 +9,7 @@ In the below equation, :math:`S(t, TE_k)` is signal at a given time :math:`t`
 and for a given echo time :math:`TE_k`.
 :math:`\bar{S}(TE_k)` is the mean signal across time for the echo time
 :math:`TE_k`.
-:math:`{\Delta}{S_0}(t)` is the difference in :math:`S_0` at time :math:`t` from the average :math:`S_0` (:math:`\bar{S}_0`).
+:math:`{\Delta}{S_0}(t)` is the difference in :math:`S_0` at time :math:`t` from the average :math:`S_0`.
 :math:`{\Delta}{R_2^*}(t)` is the difference in :math:`R_2^*` at time :math:`t` from the average :math:`R_2^*`.
 
 .. math::
