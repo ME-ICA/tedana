@@ -41,7 +41,7 @@ def _get_parser():
     # Argument parser follow templtate provided by RalphyZ
     # https://stackoverflow.com/a/43456577
     optional = parser._action_groups.pop()
-    required = parser.add_argument_group('required arguments')
+    required = parser.add_argument_group('Required Arguments')
     required.add_argument('-d',
                           dest='data',
                           nargs='+',
@@ -198,7 +198,7 @@ def _get_parser():
     optional.add_argument('-v', '--version', action='version', version=verstr)
     parser._action_groups.append(optional)
 
-    rerungrp = parser.add_argument_group('arguments for rerunning the workflow')
+    rerungrp = parser.add_argument_group('Arguments for Rerunning the Workflow')
     rerungrp.add_argument('--t2smap',
                           dest='t2smap',
                           metavar='FILE',

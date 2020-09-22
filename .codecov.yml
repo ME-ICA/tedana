@@ -8,8 +8,14 @@ coverage:
       default:
         # basic
         target: 0
-        threshold: null
+        threshold: 0
     patch:
       default:
         target: 0
-        threshold: null
+        threshold: 0
+
+ignore:
+  - "tedana/tests/"
+  - "tedana/due.py"
+  - "tedana/_version.py"
+  - "tedana/info.py"

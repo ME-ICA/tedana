@@ -1,3 +1,5 @@
+.. _outputs:
+
 Outputs of tedana
 =================
 
@@ -129,7 +131,6 @@ ignored            Low-variance components ignored in denoised, but not
 
 TEDPCA codes
 ````````````
-
 =====  ===============  ========================================================
 Code   Classification   Description
 =====  ===============  ========================================================
@@ -237,8 +238,8 @@ max beta value.
 Finally, the bottom of the image shows the Fast Fourier Transform of the
 component timeseries.
 
-Tip: Look for your fundamental task frequencies here!
-
+.. tip::
+  Look for your fundamental task frequencies here!
 
 .. image:: /_static/example_bad_component.png
   :align: center
@@ -272,5 +273,6 @@ ring.
 If a low amount of variance is explained, this will be shown as a gap in the
 ring.
 
-Tip: Sometimes large variance is due to singular components, which can be
-easily seen here.
+.. tip::
+  Sometimes large variance is due to singular components, which can be
+  easily seen here.
