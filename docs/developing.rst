@@ -1,5 +1,5 @@
 ====================
-Developer Guidelines
+Developer guidelines
 ====================
 
 This webpage is intended to guide users through making making changes to

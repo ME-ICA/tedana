@@ -105,11 +105,12 @@ def test_integration_five_echo(skip_integration):
     # Test re-running, but use the CLI
     out_dir2 = '/tmp/data/five-echo/TED.five-echo-manual'
     acc_comps = df.loc[df['classification'] == 'accepted'].index.values
+    acc_comps = [str(c) for c in acc_comps]
     mixing = os.path.join(out_dir, 'desc-ICA_mixing.tsv')
     t2smap = os.path.join(out_dir, 'T2starmap.nii.gz')
     args = (['-d'] + datalist + ['-e'] + [str(te) for te in echo_times] +
             ['--out-dir', out_dir2, '--debug', '--verbose',
-             '--manacc', ','.join(acc_comps.astype(str)),
+             '--manacc', *acc_comps,
              '--ctab', comptable, '--mix', mixing, '--t2smap', t2smap])
     tedana_cli._main(args)
 
