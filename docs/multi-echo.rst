@@ -150,7 +150,7 @@ Other multi-echo denoising methods, such as MEICA, the predecessor to tedana,
 have shown the potential for much greater data quality improvements, as well as
 the ability to more accurately separate visually similar signal vs noise, such
 as scanner based drifts vs slow changes in BOLD signal.
-More powerful methods are still being improved, and associated algorithms are
+More powerful methods and associated algorithms are
 still being actively developed.
 Users need to have the time and knowledge to look at the denoising output from
 every run to make sure denoising worked as intended.
