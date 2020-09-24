@@ -108,9 +108,10 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
     return dm_catd, dm_optcom
 
 
-def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, out_dir='.'):
+def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir='.'):
     """
-    Perform global signal regression.
+    Perform minimum image regression (MIR) to remove T1-like effects from
+    BOLD-like components.
 
     Parameters
     ----------
@@ -137,15 +138,15 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, out_dir='.'):
     Filename                  Content
     ======================    =================================================
     sphis_hik.nii             T1-like effect
-    hik_ts_OC_T1c.nii         T1-corrected BOLD (high-Kappa) time series
-    dn_ts_OC_T1c.nii          Denoised version of T1-corrected time series
-    betas_hik_OC_T1c.nii      T1 global signal-corrected components
-    meica_mix_T1c.1D          T1 global signal-corrected mixing matrix
+    hik_ts_OC_MIR.nii         T1-corrected BOLD (high-Kappa) time series
+    dn_ts_OC_MIR.nii          Denoised version of T1-corrected time series
+    betas_hik_OC_MIR.nii      T1 global signal-corrected components
+    meica_mix_MIR.1D          T1 global signal-corrected mixing matrix
     ======================    =================================================
     """
-    LGR.info('Performing T1c global signal regression to remove spatially '
+    LGR.info('Performing minimum image regression to remove spatially '
              'diffuse noise')
-    RepLGR.info("T1c global signal regression was then applied to the "
+    RepLGR.info("Minimum image regression was then applied to the "
                 "data in order to remove spatially diffuse noise.")
 
     all_comps = comptable.index.values
@@ -157,45 +158,33 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, out_dir='.'):
     optcom_mu = optcom_masked.mean(axis=-1)[:, np.newaxis]
     optcom_std = optcom_masked.std(axis=-1)[:, np.newaxis]
 
-    """
-    Compute temporal regression
-    """
+    # Compute temporal regression
     data_norm = (optcom_masked - optcom_mu) / optcom_std
     cbetas = lstsq(mmix, data_norm.T, rcond=None)[0].T
     resid = data_norm - np.dot(cbetas[:, not_ign], mmix[:, not_ign].T)
 
-    """
-    Build BOLD time series without amplitudes, and save T1-like effect
-    """
+    # Build BOLD time series without amplitudes, and save T1-like effect
     bold_ts = np.dot(cbetas[:, acc], mmix[:, acc].T)
-    t1_map = bold_ts.min(axis=-1)
+    t1_map = bold_ts.min(axis=-1)  # map of T1-like effect
     t1_map -= t1_map.mean()
     io.filewrite(utils.unmask(t1_map, mask), op.join(out_dir, 'sphis_hik'), ref_img)
     t1_map = t1_map[:, np.newaxis]
 
-    """
-    Find the global signal based on the T1-like effect
-    """
+    # Find the global signal based on the T1-like effect
     glob_sig = lstsq(t1_map, data_norm, rcond=None)[0]
 
-    """
-    T1-correct time series by regression
-    """
+    # T1-correct time series by regression
     bold_noT1gs = bold_ts - np.dot(lstsq(glob_sig.T, bold_ts.T,
                                          rcond=None)[0].T, glob_sig)
     hik_ts = bold_noT1gs * optcom_std
-    io.filewrite(utils.unmask(hik_ts, mask), op.join(out_dir, 'hik_ts_OC_T1c'),
+    io.filewrite(utils.unmask(hik_ts, mask), op.join(out_dir, 'hik_ts_OC_MIR'),
                  ref_img)
 
-    """
-    Make denoised version of T1-corrected time series
-    """
+    # Make denoised version of T1-corrected time series
     medn_ts = optcom_mu + ((bold_noT1gs + resid) * optcom_std)
-    io.filewrite(utils.unmask(medn_ts, mask), op.join(out_dir, 'dn_ts_OC_T1c'), ref_img)
+    io.filewrite(utils.unmask(medn_ts, mask), op.join(out_dir, 'dn_ts_OC_MIR'), ref_img)
 
-    """
-    Orthogonalize mixing matrix w.r.t. T1-GS
-    """
+    # Orthogonalize mixing matrix w.r.t. T1-GS
     mmixnogs = mmix.T - np.dot(lstsq(glob_sig.T, mmix, rcond=None)[0].T,
                                glob_sig)
     mmixnogs_mu = mmixnogs.mean(-1)[:, np.newaxis]
@@ -204,10 +193,8 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, out_dir='.'):
     mmixnogs_norm = np.vstack([np.atleast_2d(np.ones(max(glob_sig.shape))),
                                glob_sig, mmixnogs_norm])
 
-    """
-    Write T1-GS corrected components and mixing matrix
-    """
+    # Write T1-GS corrected components and mixing matrix
     cbetas_norm = lstsq(mmixnogs_norm.T, data_norm.T, rcond=None)[0].T
     io.filewrite(utils.unmask(cbetas_norm[:, 2:], mask),
-                 op.join(out_dir, 'betas_hik_OC_T1c'), ref_img)
-    np.savetxt(op.join(out_dir, 'meica_mix_T1c.1D'), mmixnogs)
+                 op.join(out_dir, 'betas_hik_OC_MIR'), ref_img)
+    np.savetxt(op.join(out_dir, 'meica_mix_MIR.1D'), mmixnogs)
