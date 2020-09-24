@@ -146,7 +146,7 @@ def _get_parser():
                                 'spatially diffuse noise. Default is None. '
                                 'This argument can be single value or a space '
                                 'delimited list'),
-                          choices=['t1c', 'gsr'],
+                          choices=['mir', 'gsr'],
                           default=None)
     optional.add_argument('--no-reports',
                           dest='no_reports',
@@ -267,7 +267,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
         denoising. Default is False.
-    gscontrol : {None, 't1c', 'gsr'} or :obj:`list`, optional
+    gscontrol : {None, 'mir', 'gsr'} or :obj:`list`, optional
         Perform additional denoising to remove spatially diffuse noise. Default
         is None.
     verbose : :obj:`bool`, optional
@@ -596,8 +596,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                     ref_img=ref_img,
                     out_dir=out_dir)
 
-    if 't1c' in gscontrol:
-        gsc.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img, out_dir=out_dir)
+    if 'mir' in gscontrol:
+        gsc.minimum_image_regression(data_oc, mmix, mask, comptable, ref_img, out_dir=out_dir)
 
     if verbose:
         io.writeresults_echoes(catd, mmix, mask, comptable, ref_img, out_dir=out_dir)
