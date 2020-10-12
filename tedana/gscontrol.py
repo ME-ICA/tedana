@@ -155,7 +155,7 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
     not_ign = sorted(np.setdiff1d(all_comps, ign))
 
     optcom_masked = optcom_ts[mask, :]
-    optcom_mu = optcom_masked.mean(axis=-1)[:, np.newaxis]
+    optcom_mean = optcom_masked.mean(axis=-1)[:, np.newaxis]
     optcom_std = optcom_masked.std(axis=-1)[:, np.newaxis]
 
     # Compute temporal regression
@@ -163,7 +163,7 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
     comp_pes = np.linalg.lstsq(mmix, optcom_z.T, rcond=None)[0].T
     resid = optcom_z - np.dot(comp_pes[:, not_ign], mmix[:, not_ign].T)
 
-    # Build BOLD time series without amplitudes, and save T1-like effect
+    # Build time series of just BOLD-like components (i.e., MEHK) and save T1-like effect
     mehk_ts = np.dot(comp_pes[:, acc], mmix[:, acc].T)
     t1_map = mehk_ts.min(axis=-1)  # map of T1-like effect
     t1_map -= t1_map.mean()
@@ -181,7 +181,7 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
     io.filewrite(utils.unmask(hik_ts, mask), op.join(out_dir, "hik_ts_OC_MIR"), ref_img)
 
     # Make denoised version of T1-corrected time series
-    medn_ts = optcom_mu + ((mehk_noT1gs + resid) * optcom_std)
+    medn_ts = optcom_mean + ((mehk_noT1gs + resid) * optcom_std)
     io.filewrite(utils.unmask(medn_ts, mask), op.join(out_dir, "dn_ts_OC_MIR"), ref_img)
 
     # Orthogonalize mixing matrix w.r.t. T1-GS

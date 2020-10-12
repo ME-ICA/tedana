@@ -313,9 +313,9 @@ One of several post-processing strategies may be applied to the ME-DN or ME-HK
 datasets in order to remove spatially diffuse (ostensibly respiration-related)
 noise.
 Methods which have been employed in the past include global signal
-regression (GSR), T1c-GSR, anatomical CompCor, Go Decomposition (GODEC), and
+regression (GSR), minimum image regression (MIR), anatomical CompCor, Go Decomposition (GODEC), and
 robust PCA.
-Currently, ``tedana`` implements GSR and T1c-GSR.
+Currently, ``tedana`` implements GSR and MIR.
 
 .. image:: /_static/a16_t1c_denoised_data_timeseries.png
 
