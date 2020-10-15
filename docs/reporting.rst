@@ -153,10 +153,9 @@ Save          |Save|   Saves an image reproduction of the plot in PNG format.
 ============  =======  =======================================================
 
 .. note:: 
-  Specific user interactions can be swithed on/off by clicking on their associated icon within
+  Specific user interactions can be switched on/off by clicking on their associated icon within
   the toolbar of a given plot. Active interactions show an horizontal blue line underneath their
   icon, while inactive ones lack the line.
-
 
 
 
