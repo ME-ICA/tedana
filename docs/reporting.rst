@@ -64,8 +64,7 @@ selection results. It includes four different plots.
 Individual Component View 
 -------------------------
 This view provides detailed information about an individual 
-component (selected in the summary view, see below). It includes two different
-interactive plots.
+component (selected in the summary view, see below).
 
 * **Time series:** This plot shows the time series associated with a given component
   (selected in the summary view). The x-axis represents time (in units of TR), and the
@@ -159,4 +158,3 @@ Save          |Save|   Saves an image reproduction of the plot in PNG format.
   Specific user interactions can be switched on/off by clicking on their associated icon within
   the toolbar of a given plot. Active interactions show an horizontal blue line underneath their
   icon, while inactive ones lack the line.
-
