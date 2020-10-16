@@ -44,7 +44,7 @@ selection results. It includes four different plots.
   :height: 400px
 
 * **Rho Scree Plot:** This scree plot provides a view of the components ranked by `Rho`.
-  As in the previous plot, each dot represents a component. The color of the dot inform us
+  As in the previous plot, each dot represents a component. The color of the dot informs us
   about classification status. In this plot, size is not related to variance explained.
 .. image:: /_static/rep01_rhoScree.png
   :align: center
@@ -159,7 +159,6 @@ Save          |Save|   Saves an image reproduction of the plot in PNG format.
   Specific user interactions can be switched on/off by clicking on their associated icon within
   the toolbar of a given plot. Active interactions show an horizontal blue line underneath their
   icon, while inactive ones lack the line.
-
 
 
 
