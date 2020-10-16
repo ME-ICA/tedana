@@ -41,7 +41,7 @@ def _get_parser():
     # Argument parser follow templtate provided by RalphyZ
     # https://stackoverflow.com/a/43456577
     optional = parser._action_groups.pop()
-    required = parser.add_argument_group('required arguments')
+    required = parser.add_argument_group('Required Arguments')
     required.add_argument('-d',
                           dest='data',
                           nargs='+',
@@ -198,7 +198,7 @@ def _get_parser():
     optional.add_argument('-v', '--version', action='version', version=verstr)
     parser._action_groups.append(optional)
 
-    rerungrp = parser.add_argument_group('arguments for rerunning the workflow')
+    rerungrp = parser.add_argument_group('Arguments for Rerunning the Workflow')
     rerungrp.add_argument('--t2smap',
                           dest='t2smap',
                           metavar='FILE',
@@ -222,8 +222,10 @@ def _get_parser():
                           default=None)
     rerungrp.add_argument('--manacc',
                           dest='manacc',
-                          help=('Comma separated list of manually '
-                                'accepted components'),
+                          metavar='INT',
+                          type=int,
+                          nargs='+',
+                          help='List of manually accepted components.',
                           default=None)
 
     return parser
@@ -286,10 +288,10 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         File containing component table from which to extract pre-computed
         classifications, to be used with 'mixm' when re-running the workflow.
         Default is None.
-    manacc : :obj:`list`, :obj:`str`, or None, optional
-        List of manually accepted components. Can be a list of the components,
-        a comma-separated string with component numbers, or None. Default is
-        None.
+    manacc : :obj:`list` of :obj:`int` or None, optional
+        List of manually accepted components. Can be a list of the components
+        numbers or None.
+        Default is None.
 
     Other Parameters
     ----------------
@@ -420,15 +422,15 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
 
-    if isinstance(manacc, str):
-        manacc = [int(comp) for comp in manacc.split(',')]
-
     if ctab and not mixm:
         LGR.warning('Argument "ctab" requires argument "mixm".')
         ctab = None
     elif manacc is not None and not mixm:
         LGR.warning('Argument "manacc" requires argument "mixm".')
         manacc = None
+    elif manacc is not None:
+        # coerce to list of integers
+        manacc = [int(m) for m in manacc]
 
     if t2smap is not None and op.isfile(t2smap):
         t2smap = op.abspath(t2smap)
@@ -488,7 +490,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             io.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
 
     # optimally combine data
-    data_oc = combine.make_optcom(catd, tes, mask, t2s=t2s_full, combmode=combmode)
+    data_oc = combine.make_optcom(catd, tes, masksum, t2s=t2s_full, combmode=combmode)
 
     # regress out global signal unless explicitly not desired
     if 'gsr' in gscontrol:
@@ -498,7 +500,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if mixm is None:
         # Identify and remove thermal noise from data
         dd, n_components = decomposition.tedpca(catd, data_oc, combmode, mask,
-                                                t2s_limited, t2s_full, ref_img,
+                                                masksum, t2s_full, ref_img,
                                                 tes=tes, algorithm=tedpca,
                                                 kdaw=10., rdaw=1.,
                                                 out_dir=out_dir,
@@ -516,7 +518,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         # generated from dimensionally reduced data using full data (i.e., data
         # with thermal noise)
         comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                    catd, data_oc, mmix_orig, t2s_limited, tes,
+                    catd, data_oc, mmix_orig, masksum, tes,
                     ref_img, reindex=True, label='meica_', out_dir=out_dir,
                     algorithm='kundu_v2', verbose=verbose)
         comp_names = [io.add_decomp_prefix(comp, prefix='ica', max_value=comptable.index.max())
@@ -536,7 +538,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
 
         if ctab is None:
             comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                        catd, data_oc, mmix_orig, t2s_limited, tes,
+                        catd, data_oc, mmix_orig, masksum, tes,
                         ref_img, label='meica_', out_dir=out_dir,
                         algorithm='kundu_v2', verbose=verbose)
             comptable = metrics.kundu_metrics(comptable, metric_maps)

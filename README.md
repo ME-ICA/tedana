@@ -80,7 +80,8 @@ If you aim to contribute to the `tedana` code base and/or documentation, please 
 ## Getting involved
 
 We :yellow_heart: new contributors!
-To get started, check out [our contributing guidelines](https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md).
+To get started, check out [our contributing guidelines](https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md)
+and our [developer's guide](https://tedana.readthedocs.io/en/latest/developing.html).
 
 Want to learn more about our plans for developing ``tedana``?
 Have a question, comment, or suggestion?
@@ -122,6 +123,11 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/eurunuela"><img src="https://avatars0.githubusercontent.com/u/13706448?v=4" width="100px;" alt=""/><br /><sub><b>Eneko Uruñuela</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=eurunuela" title="Code">💻</a> <a href="https://github.com/ME-ICA/tedana/pulls?q=is%3Apr+reviewed-by%3Aeurunuela" title="Reviewed Pull Requests">👀</a> <a href="#ideas-eurunuela" title="Ideas, Planning, & Feedback">🤔</a></td>
     <td align="center"><a href="https://github.com/CesarCaballeroGaudes"><img src="https://avatars1.githubusercontent.com/u/7611340?v=4" width="100px;" alt=""/><br /><sub><b>Cesar Caballero Gaudes</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=CesarCaballeroGaudes" title="Documentation">📖</a> <a href="https://github.com/ME-ICA/tedana/commits?author=CesarCaballeroGaudes" title="Code">💻</a></td>
     <td align="center"><a href="http://isla.st"><img src="https://avatars2.githubusercontent.com/u/23707851?v=4" width="100px;" alt=""/><br /><sub><b>Isla</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/pulls?q=is%3Apr+reviewed-by%3AIslast" title="Reviewed Pull Requests">👀</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/mjversluis"><img src="https://avatars0.githubusercontent.com/u/32125111?v=4" width="100px;" alt=""/><br /><sub><b>mjversluis</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=mjversluis" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://mvaziri.github.io/"><img src="https://avatars2.githubusercontent.com/u/4219325?v=4" width="100px;" alt=""/><br /><sub><b>Maryam</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=mvaziri" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/aykhojandi"><img src="https://avatars1.githubusercontent.com/u/38105040?v=4" width="100px;" alt=""/><br /><sub><b>aykhojandi</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=aykhojandi" title="Documentation">📖</a></td>
   </tr>
 </table>
 

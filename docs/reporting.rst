@@ -64,7 +64,7 @@ selection results. It includes four different plots.
 Individual Component View 
 -------------------------
 This view provides detailed information about an individual 
-component (selected in the summary view, see below). It includes three different
+component (selected in the summary view, see below). It includes two different
 interactive plots.
 
 * **Time series:** This plot shows the time series associated with a given component

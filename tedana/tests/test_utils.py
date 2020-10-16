@@ -86,9 +86,9 @@ def test_make_adaptive_mask():
     assert np.allclose(mask, utils.make_adaptive_mask(data))
     # shapes are all the same
     assert mask.shape == masksum.shape == (64350,)
-    assert np.allclose(mask, masksum.astype(bool))
+    assert np.allclose(mask, (masksum >= 3).astype(bool))
     # mask has correct # of entries
-    assert mask.sum() == 50786
+    assert mask.sum() == 41749
     # masksum has correct values
     vals, counts = np.unique(masksum, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
@@ -99,7 +99,7 @@ def test_make_adaptive_mask():
     mask, masksum = utils.make_adaptive_mask(data, mask=pjoin(datadir,
                                                               'mask.nii.gz'),
                                              getsum=True)
-    assert np.allclose(mask, masksum.astype(bool))
+    assert np.allclose(mask, (masksum >= 3).astype(bool))
 
 
 # SMOKE TESTS

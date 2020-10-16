@@ -9,16 +9,19 @@ Using tedana
 But you can supply many other options, viewable with ``tedana -h`` or
 ``t2smap -h``.
 
-For most use cases, we recommend that users call tedana from within existing fMRI preprocessing
-pipelines such as `fMRIPrep`_ or `afni_proc.py`_.
-fMRIPrep currently supports :ref:`optimal combination` through ``tedana``, but not the full multi-echo
-denoising pipeline, although there are plans underway to integrate it.
-Users can also construct their own preprocessing pipelines from which to call ``tedana``;
-for recommendations on doing so, see our general guidelines for
+For most use cases, we recommend that users call tedana from within existing
+fMRI preprocessing pipelines such as `fMRIPrep`_ or `afni_proc.py`_.
+fMRIPrep currently supports :ref:`optimal combination` through ``tedana``, but
+not the full multi-echo denoising pipeline, although there are plans underway
+to integrate it.
+Users can also construct their own preprocessing pipelines from which to call
+``tedana``; for recommendations on doing so, see our general guidelines for
 :ref:`constructing ME-EPI pipelines`.
 
 .. _fMRIPrep: https://fmriprep.readthedocs.io
 .. _afni_proc.py: https://afni.nimh.nih.gov/pub/dist/doc/program_help/afni_proc.py.html
+
+.. _tedana cli:
 
 Running tedana
 --------------
@@ -40,6 +43,8 @@ https://tedana.readthedocs.io/en/latest/outputs.html
     workflow.
     To examine regions-of-interest with multi-echo data, apply masks after TE
     Dependent ANAlysis.
+
+.. _t2smap cli:
 
 Running t2smap
 --------------

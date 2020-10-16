@@ -1,3 +1,5 @@
+.. _outputs:
+
 Outputs of tedana
 =================
 
@@ -129,7 +131,6 @@ ignored            Low-variance components ignored in denoised, but not
 
 TEDPCA codes
 ````````````
-
 =====  ===============  ========================================================
 Code   Classification   Description
 =====  ===============  ========================================================
@@ -197,4 +198,3 @@ An example report
   Sørensen, T. J. (1948). A method of establishing groups of equal amplitude in plant sociology based on similarity of species content and its application to analyses of the vegetation on Danish commons. I kommission hos E. Munksgaard.
 
   Van Der Walt, S., Colbert, S. C., & Varoquaux, G. (2011). The NumPy array: a structure for efficient numerical computation. Computing in Science & Engineering, 13(2), 22.
-

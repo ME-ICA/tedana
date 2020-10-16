@@ -46,7 +46,7 @@ def low_mem_pca(data):
     return u, s, v
 
 
-def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
+def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
            ref_img, tes, algorithm='mdl', kdaw=10., rdaw=1.,
            out_dir='.', verbose=False, low_mem=False):
     """
@@ -65,8 +65,8 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
         Poser 2006
     mask : (S,) array_like
         Boolean mask array
-    t2s : (S,) array_like
-        Map of voxel-wise T2* estimates.
+    adaptive_mask : (S,) array_like
+        Adaptive mask of the data indicating the number of echos with signal at each voxel
     t2sG : (S,) array_like
         Map of voxel-wise T2* estimates.
     ref_img : :obj:`str` or img_like
@@ -206,18 +206,10 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     # Compute Kappa and Rho for PCA comps
     # Normalize each component's time series
     vTmixN = stats.zscore(comp_ts, axis=0)
-    comptable, _, _, _ = metrics.dependence_metrics(data_cat,
-                                                    data_oc,
-                                                    comp_ts,
-                                                    t2s,
-                                                    tes,
-                                                    ref_img,
-                                                    reindex=False,
-                                                    mmixN=vTmixN,
-                                                    algorithm=None,
-                                                    label='mepca_',
-                                                    out_dir=out_dir,
-                                                    verbose=verbose)
+    comptable, _, _, _ = metrics.dependence_metrics(
+                data_cat, data_oc, comp_ts, adaptive_mask, tes, ref_img,
+                reindex=False, mmixN=vTmixN, algorithm=None,
+                label='mepca_', out_dir=out_dir, verbose=verbose)
 
     # varex_norm from PCA overrides varex_norm from dependence_metrics,
     # but we retain the original
