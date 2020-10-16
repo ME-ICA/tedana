@@ -92,7 +92,7 @@ interactive plots.
 Reports User Interactions
 =========================
 
-As previously mentioned, all plots in the report allow user interactions. The list of permitted
+As previously mentioned, all summary plots in the report allow user interactions. The list of permitted
 interactions vary by plot, but can be easily infered by the toolbar that accompanies each plot
 (see example below).
 
@@ -159,6 +159,5 @@ Save          |Save|   Saves an image reproduction of the plot in PNG format.
   Specific user interactions can be switched on/off by clicking on their associated icon within
   the toolbar of a given plot. Active interactions show an horizontal blue line underneath their
   icon, while inactive ones lack the line.
-
 
 
