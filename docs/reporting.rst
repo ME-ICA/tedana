@@ -5,7 +5,7 @@ ICA Components Report
 The reporting page for the tedana decomposition presents a series
 of interactive plots designed to help you evaluate the quality of your
 analyses. This page describes the plots forming the reports and well as
-infromation on how to take advantage of the interactive functionalities.
+information on how to take advantage of the interactive functionalities.
 You can also play around with `our demo`_.
 
 .. _our demo: https://me-ica.github.io/tedana-ohbm-2020/
@@ -159,5 +159,4 @@ Save          |Save|   Saves an image reproduction of the plot in PNG format.
   Specific user interactions can be switched on/off by clicking on their associated icon within
   the toolbar of a given plot. Active interactions show an horizontal blue line underneath their
   icon, while inactive ones lack the line.
-
 
