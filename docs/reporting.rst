@@ -64,8 +64,33 @@ selection results. It includes four different plots.
 Individual Component View 
 -------------------------
 This view provides detailed information about an individual 
-component (selected in the summary view, see below).
+component (selected in the summary view, see below). It includes three different plots.
 
+* **Time series:** This plot shows the time series associated with a given component
+  (selected in the summary view). The x-axis represents time (in units of TR), and the
+  y-axis represents signal levels (in arbitrary units). Finally, the color of the trace
+  informs us about the component classification status.
+
+.. image:: /_static/rep01_tsPlot.png
+  :align: center
+  :height: 150px
+
+* **Component beta map:** This plot shows the time series associated with a given component
+  (selected in the summary view). The x-axis represents time (in units of TR), and the
+  y-axis represents signal levels (in arbitrary units). Finally, the color of the trace
+  informs us about the component classification status.
+
+.. image:: /_static/rep01_betaMap.png
+  :align: center
+  :height: 400px
+
+* **Spectrum:** This plot shows the spectrogram associated with a given component
+  (selected in the summary view). The x-axis represents frequency (in Hz), and the
+  y-axis represents spectral amplitude.
+
+.. image:: /_static/rep01_fftPlot.png
+  :align: center
+  :height: 150px
 
 .. note::
   When a report is initially loaded, as no component is selected on the
@@ -74,9 +99,10 @@ component (selected in the summary view, see below).
 Reports User Interactions
 =========================
 
-As previously mentioned, all summary plots in the report allow user interactions. The list of permitted
-interactions vary by plot, but can be easily infered by the toolbar that accompanies each plot
-(see example below).
+As previously mentioned, all summary plots in the report allow user interactions. While the 
+Kappa/Rho Scatter plot allows full user interaction (see the toolbar that accompanies the plot
+and the example below), the other three plots allow the user to select components and update the
+figures.
 
 .. image:: /_static/rep01_tools.png
   :align: center
