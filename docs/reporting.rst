@@ -66,23 +66,6 @@ Individual Component View
 This view provides detailed information about an individual 
 component (selected in the summary view, see below).
 
-* **Time series:** This plot shows the time series associated with a given component
-  (selected in the summary view). The x-axis represents time (in units of TR), and the
-  y-axis represents signal levels (in arbitrary units). Finally, the color of the trace
-  informs us about the component classification status.
-
-.. image:: /_static/rep01_tsPlot.png
-  :align: center
-  :height: 150px
-
-* **Spectrum:** This plot shows the spectrogram associated with a given component
-  (selected in the summary view). The x-axis represents frequency (in Hz), and the
-  y-axis represents spectral amplitude. Finally, the color of the trace
-  informs us about the component classification status.
-
-.. image:: /_static/rep01_fftPlot.png
-  :align: center
-  :height: 150px
 
 .. note::
   When a report is initially loaded, as no component is selected on the
