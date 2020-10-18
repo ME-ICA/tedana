@@ -75,10 +75,9 @@ component (selected in the summary view, see below). It includes three different
   :align: center
   :height: 150px
 
-* **Component beta map:** This plot shows the time series associated with a given component
-  (selected in the summary view). The x-axis represents time (in units of TR), and the
-  y-axis represents signal levels (in arbitrary units). Finally, the color of the trace
-  informs us about the component classification status.
+* **Component beta map:** This plot shows the map of the beta coefficients associated with
+  a given component (selected in the summary view). The colorbar represents the amplitude
+  of the beta coefficients.
 
 .. image:: /_static/rep01_betaMap.png
   :align: center
