@@ -219,7 +219,7 @@ to select the PCA components based on three widely-used model selection criterio
 * ``aic``: the Akaike Information Criterion (`AIC`_), which is the least aggressive option;
   i.e., returns the largest number of components.
 * ``kic``: the Kullback-Leibler Information Criterion (`KIC`_), which stands in the
-  middle in terms of aggressiveness. You can see how KIC related to AIC `here`_.
+  middle in terms of aggressiveness. You can see how KIC is related to AIC `here`_.
 * ``mdl``: the Minimum Description Length (`MDL`_), which is the most aggressive option;
   i.e. returns the least number of components. This option is the **default and recommeded**
   as we have seen it yields the most reasonable results.
