@@ -28,7 +28,7 @@ selection results. It includes four different plots.
   y-axis represents the rho feature. These are two of the most
   informative features describing the likelihood of the component
   being BOLD or non-BOLD. Additional information is provided via color
-  and size. In particuale, color informs about its classification
+  and size. In particular, color informs about its classification
   status (e.g., accepted, rejected); while size relates to
   the amount of variance explained by the component (larger dot,
   larger variance).
