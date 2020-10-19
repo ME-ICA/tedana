@@ -231,7 +231,7 @@ to select the PCA components based on three widely-used model selection criteria
 
 In addition to the moving average process-based options described above, we also support a
 decision tree-based selection method (similar to the one in the :ref:`TEDICA` section below).
-This method, involves applying a decision tree to identify and discard PCA components which,
+This method involves applying a decision tree to identify and discard PCA components which,
 in addition to not explaining much variance, are also not significantly TE-dependent (i.e.,
 have low Kappa) or TE-independent (i.e., have low Rho).
 These approaches can be accessed using either the ``kundu`` or ``kundu_stabilize``
