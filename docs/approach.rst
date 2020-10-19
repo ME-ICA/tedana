@@ -212,7 +212,7 @@ Gaussian process as the input.
 Simply put, this process more optimally selects the number of components for
 fMRI data following a subsampling scheme described in `Li et al (2007)`_.
 
-The amount of selected principal components depends on the selection criteria.
+The number of selected principal components depends on the selection criteria.
 For this PCA method in particular, ``--tedpca`` provides three different options
 to select the PCA components based on three widely-used model selection criterion:
 
