@@ -205,29 +205,35 @@ Specifically, ``tedana`` offers two different approaches that perform this step.
 
 The simplest approach (the default ``mdl``, ``aic`` and ``kic`` options for
 ``--tedpca``) is based on a moving average (stationary Gaussian) process
-proposed by `Li et al (2007)`_.
-A moving average process is the output of a linear system (which in this case is
+proposed by `Li et al (2007)`_ and used primarily in the Group ICA of fMRI Toolbox (GIFT).
+A moving average process is the output of a linear system (which, in this case, is
 a smoothing filter) that has an independent and identically distributed
 Gaussian process as the input.
-If we assume that the linear system is shift invariant, the moving average
-process is a stationary Gaussian random process.
 Simply put, this process more optimally selects the number of components for
 fMRI data following a subsampling scheme described in `Li et al (2007)`_.
-The selection of components is performed with either of the three options
-provided by ``--tedpca``:
 
-* ``aic``: the Akaike Information Criterion, which is the least aggressive option;
+The number of selected principal components depends on the selection criteria.
+For this PCA method in particular, ``--tedpca`` provides three different options
+to select the PCA components based on three widely-used model selection criteria:
+
+* ``mdl``: the Minimum Description Length (`MDL`_), which is the most aggressive option;
+  i.e. returns the least number of components. This option is the **default and recommeded**
+  as we have seen it yields the most reasonable results.
+* ``kic``: the Kullback-Leibler Information Criterion (`KIC`_), which stands in the
+  middle in terms of aggressiveness. You can see how KIC is related to AIC `here`_.
+* ``aic``: the Akaike Information Criterion (`AIC`_), which is the least aggressive option;
   i.e., returns the largest number of components.
-* ``kic``: the Kullback-Leibler Information Criterion, which stands in the
-  middle in terms of aggressiveness.
-* ``mdl``: the Minimum Description Length, which is the most aggressive (and
-  recommended) option.
 
-A more complicated approach involves applying a decision tree (similar to the
-decision tree described in the :ref:`TEDICA` section below) to identify and
-discard PCA components which, in addition to not explaining much variance,
-are also not significantly TE-dependent (i.e., have low Kappa) or
-TE-independent (i.e., have low Rho).
+.. note::
+    Please, bear in mind that this is a data-driven dimensionality reduction approach. The default
+    option ``mdl`` might not yield perfect results on your data. We suggest you explore the ``kic``
+    and ``aic`` options if running ``tedana`` with ``mdl`` returns less components than expected.
+
+In addition to the moving average process-based options described above, we also support a
+decision tree-based selection method (similar to the one in the :ref:`TEDICA` section below).
+This method involves applying a decision tree to identify and discard PCA components which,
+in addition to not explaining much variance, are also not significantly TE-dependent (i.e.,
+have low Kappa) or TE-independent (i.e., have low Rho).
 These approaches can be accessed using either the ``kundu`` or ``kundu_stabilize``
 options for the ``--tedpca`` flag.
 
@@ -243,7 +249,10 @@ in a dimensionally reduced version of the dataset which is then used in the
 :ref:`TEDICA` step.
 
 .. image:: /_static/a12_pca_reduced_data.png
-
+.. _AIC: https://en.wikipedia.org/wiki/Akaike_information_criterion
+.. _KIC: https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+.. _here: https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence#Relationship_between_models_and_reality
+.. _MDL: https://en.wikipedia.org/wiki/Minimum_description_length
 
 .. _TEDICA:
 
