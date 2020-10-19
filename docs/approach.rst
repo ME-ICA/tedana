@@ -214,7 +214,7 @@ fMRI data following a subsampling scheme described in `Li et al (2007)`_.
 
 The number of selected principal components depends on the selection criteria.
 For this PCA method in particular, ``--tedpca`` provides three different options
-to select the PCA components based on three widely-used model selection criterion:
+to select the PCA components based on three widely-used model selection criteria:
 
 * ``aic``: the Akaike Information Criterion (`AIC`_), which is the least aggressive option;
   i.e., returns the largest number of components.
