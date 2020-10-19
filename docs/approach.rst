@@ -205,7 +205,7 @@ Specifically, ``tedana`` offers two different approaches that perform this step.
 
 The simplest approach (the default ``mdl``, ``aic`` and ``kic`` options for
 ``--tedpca``) is based on a moving average (stationary Gaussian) process
-proposed by `Li et al (2007)`_.
+proposed by `Li et al (2007)`_ and used primarily in the Group ICA of fMRI Toolbox (GIFT).
 A moving average process is the output of a linear system (which, in this case, is
 a smoothing filter) that has an independent and identically distributed
 Gaussian process as the input.
