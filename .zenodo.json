@@ -1,40 +1,89 @@
 {
-  "creators": [
-    {
-      "name": "DuPre, Elizabeth",
-      "affiliation": "Montreal Neurological Institute, McGill University",
-      "orcid": "0000-0003-1358-196X"
-    },
-    {
-      "name": "Salo, Taylor",
-      "affiliation": "Florida International University",
-      "orcid": "0000-0001-9813-3167"
-    },
-    {
-      "name": "Markello, Ross",
-      "affiliation": "Montreal Neurological Institute, McGill University",
-      "orcid": "0000-0003-1057-1336"
-    },
-    {
-      "name": "Kundu, Prantik",
-      "affiliation": "Mount Sinai Hospital",
-      "orcid": "0000-0001-9367-3068"
-    },
-    {
-      "name": "Whitaker, Kirstie",
-      "affiliation": "Alan Turing Institute; Cambridge University",
-      "orcid": "0000-0001-8498-4059"
-    },
-    {
-      "name": "Handwerker, Dan",
-      "affiliation": "National Institutes of Health",
-      "orcid": "0000-0001-7261-4042"
-    }
-  ],
-  "keywords": [
-    "neuroimaging",
-    "fMRI"
-  ],
-  "license": "LGPL-2.1",
-  "upload_type": "software"
+    "creators": [
+        {
+            "name": "Caballero-Gaudes, César",
+            "affiliation": "Basque Center on Cognition, Brain and Language",
+            "orcid": "0000-0002-9068-5810"
+        },
+        {
+            "name": "Dowdle, Logan T.",
+            "affiliation": "Center for Magnetic Resonance Research, University of Minnesota",
+            "orcid": "0000-0002-1879-705X"
+        },
+        {
+            "name": "DuPre, Elizabeth",
+            "affiliation": "Montreal Neurological Institute, McGill University",
+            "orcid": "0000-0003-1358-196X"
+        },
+        {
+            "name": "Handwerker, Dan",
+            "affiliation": "National Institutes of Health",
+            "orcid": "0000-0001-7261-4042"
+        },
+        {
+            "name": "Heunis, Stephan",
+            "affiliation": "Eindhoven University of Technology",
+            "orcid": "0000-0003-3503-9872"
+        },
+        {
+            "name": "Kundu, Prantik",
+            "affiliation": "Mount Sinai Hospital",
+            "orcid": "0000-0001-9367-3068"
+        },
+        {
+            "name": "Markello, Ross",
+            "affiliation": "Montreal Neurological Institute, McGill University",
+            "orcid": "0000-0003-1057-1336"
+        },
+        {
+            "name": "Markiewicz, Christopher J.",
+            "affiliation": "Stanford University",
+            "orcid": "0000-0002-6533-164X"
+        },
+        {
+            "name": "Maullin-Sapey, Thomas",
+            "affiliation": "Big Data Institute, University of Oxford",
+            "orcid": "0000-0002-4516-5103"
+        },
+        {
+            "name": "Moia, Stefano",
+            "affiliation": "Basque Center on Cognition, Brain and Language",
+            "orcid": "0000-0002-2553-3327"
+        },
+        {
+            "name": "Salo, Taylor",
+            "affiliation": "Florida International University",
+            "orcid": "0000-0001-9813-3167"
+        },
+        {
+            "name": "Staden, Isla",
+            "orcid": "0000-0002-0795-1154"
+        },
+        {
+            "name": "Teves, Joshua",
+            "affiliation": "National Institutes of Mental Health, Section on Functional Imaging Methods",
+            "orcid": "0000-0002-7767-0067"
+        },
+        {
+            "name": "Uruñuela, Eneko",
+            "affiliation": "Basque Center on Cognition, Brain and Language",
+            "orcid": "0000-0001-6849-9088"
+        },
+        {
+            "name": "Vaziri-Pashkam, Maryam",
+            "affiliation": "Laboratory of Brain and Cognition, National Institute of Mental Health",
+            "orcid": "0000-0003-1830-2501"
+        },
+        {
+            "name": "Whitaker, Kirstie",
+            "affiliation": "Alan Turing Institute; Cambridge University",
+            "orcid": "0000-0001-8498-4059"
+        }
+    ],
+    "keywords": [
+        "neuroimaging",
+        "fMRI"
+    ],
+    "license": "LGPL-2.1",
+    "upload_type": "software"
 }
