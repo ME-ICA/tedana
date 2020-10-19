@@ -9,6 +9,7 @@ from scipy import stats
 from scipy.special import lpmv
 
 from tedana import io, utils
+from tedana.due import due, Doi
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger("REPORT")
@@ -107,6 +108,9 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
     return dm_catd, dm_optcom
 
 
+@due.dcite(Doi("10.1073/pnas.1301725110"),
+           description="Minimum image regression to remove T1-like effects "
+                       "from the denoised data.")
 def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir="."):
     """
     Perform minimum image regression (MIR) to remove T1-like effects from
