@@ -1,15 +1,15 @@
 T1gs.nii.gz
 adaptive_mask.nii.gz
 betas_OC.nii.gz
-betas_hik_OC_T1c.nii.gz
+betas_hik_OC_MIR.nii.gz
 dn_ts_OC.nii.gz
-dn_ts_OC_T1c.nii.gz
+dn_ts_OC_MIR.nii.gz
 dn_ts_e1.nii.gz
 dn_ts_e2.nii.gz
 dn_ts_e3.nii.gz
 dn_ts_e4.nii.gz
 glsig.1D
-hik_ts_OC_T1c.nii.gz
+hik_ts_OC_MIR.nii.gz
 ica_components.nii.gz
 ica_decomposition.json
 ica_mixing.tsv
@@ -22,7 +22,7 @@ meica_R2_pred.nii.gz
 meica_S0_pred.nii.gz
 meica_betas_catd.nii.gz
 meica_metric_weights.nii.gz
-meica_mix_T1c.1D
+meica_mix_MIR.1D
 mepca_R2_pred.nii.gz
 mepca_S0_pred.nii.gz
 mepca_betas_catd.nii.gz
