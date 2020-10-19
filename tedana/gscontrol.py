@@ -195,7 +195,7 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
 
     # Compute temporal regression
     optcom_z = stats.zscore(optcom_masked, axis=-1)
-    comp_pes = np.linalg.lstsq(mmix, optcom_z.T, rcond=None)[0].T
+    comp_pes = np.linalg.lstsq(mmix, optcom_z.T, rcond=None)[0].T  # component parameter estimates
     resid = optcom_z - np.dot(comp_pes[:, not_ign], mmix[:, not_ign].T)
 
     # Build time series of just BOLD-like components (i.e., MEHK) and save T1-like effect
