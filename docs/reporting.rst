@@ -37,7 +37,7 @@ selection results. It includes four different plots.
   :height: 400px
 
 * **Kappa Scree Plot:** This scree plots provides a view of the components ranked by `Kappa`
-  As in the previous plot, each dot represents a component. The color of the dot inform us
+  As in the previous plot, each dot represents a component. The color of the dot informs us
   about classification status. In this plot, size is not related to variance explained.
 .. image:: /_static/rep01_kappaScree.png
   :align: center
