@@ -18,6 +18,11 @@ and b) the individual component view.
 
 .. image:: /_static/rep01_overallview.png
   :align: center
+
+.. note::
+  When a report is initially loaded, as no component is selected on the
+  summary view, the individual component view appears empty.
+
 Summary View
 ------------
 This view provides an overview of the decomposition and component
@@ -90,10 +95,6 @@ component (selected in the summary view, see below). It includes three different
 .. image:: /_static/rep01_fftPlot.png
   :align: center
   :height: 150px
-
-.. note::
-  When a report is initially loaded, as no component is selected on the
-  summary view, the individual component view appears empty.
 
 Reports User Interactions
 =========================
