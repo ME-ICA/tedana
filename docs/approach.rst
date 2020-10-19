@@ -216,24 +216,24 @@ The number of selected principal components depends on the selection criteria.
 For this PCA method in particular, ``--tedpca`` provides three different options
 to select the PCA components based on three widely-used model selection criteria:
 
-* ``aic``: the Akaike Information Criterion (`AIC`_), which is the least aggressive option;
-  i.e., returns the largest number of components.
-* ``kic``: the Kullback-Leibler Information Criterion (`KIC`_), which stands in the
-  middle in terms of aggressiveness. You can see how KIC is related to AIC `here`_.
 * ``mdl``: the Minimum Description Length (`MDL`_), which is the most aggressive option;
   i.e. returns the least number of components. This option is the **default and recommeded**
   as we have seen it yields the most reasonable results.
+* ``kic``: the Kullback-Leibler Information Criterion (`KIC`_), which stands in the
+  middle in terms of aggressiveness. You can see how KIC is related to AIC `here`_.
+* ``aic``: the Akaike Information Criterion (`AIC`_), which is the least aggressive option;
+  i.e., returns the largest number of components.
 
 .. note::
     Please, bear in mind that this is a data-driven dimensionality reduction approach. The default
     option ``mdl`` might not yield perfect results on your data. We suggest you explore the ``kic``
     and ``aic`` options if running ``tedana`` with ``mdl`` returns less components than expected.
 
-A more complicated approach involves applying a decision tree (similar to the
-decision tree described in the :ref:`TEDICA` section below) to identify and
-discard PCA components which, in addition to not explaining much variance,
-are also not significantly TE-dependent (i.e., have low Kappa) or
-TE-independent (i.e., have low Rho).
+In addition to the moving average process-based options described above, we also support a
+decision tree-based selection method (similar to the one in the :ref:`TEDICA` section below).
+This method, involves applying a decision tree to identify and discard PCA components which,
+in addition to not explaining much variance, are also not significantly TE-dependent (i.e.,
+have low Kappa) or TE-independent (i.e., have low Rho).
 These approaches can be accessed using either the ``kundu`` or ``kundu_stabilize``
 options for the ``--tedpca`` flag.
 
