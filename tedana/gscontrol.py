@@ -112,6 +112,9 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
     Perform minimum image regression (MIR) to remove T1-like effects from
     BOLD-like components.
 
+    While this method has not yet been described in detail in any publications,
+    we recommend that users cite [1]_.
+
     Parameters
     ----------
     optcom_ts : (S x T) array_like
@@ -131,6 +134,19 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
 
     Notes
     -----
+    Minimum image regression operates by constructing a amplitude-normalized
+    form of the multi-echo high Kappa (MEHK) time series from BOLD-like ICA
+    components, and then taking voxel-wise minimum over time.
+    This "minimum map" serves as a voxel-wise estimate of the T1-like effect
+    in the time series.
+    From this minimum map, a T1-like global signal (i.e., a 1D time series)
+    is estimated.
+    The component time series in the mixing matrix are then corrected for the
+    T1-like effect by regressing out the global signal time series from each.
+    Finally, the multi-echo denoising (MEDN) and MEHK time series are
+    reconstructed from the corrected mixing matrix and are written out to new
+    files.
+
     This function writes out several files:
 
     ======================    =================================================
@@ -142,11 +158,26 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
     betas_hik_OC_MIR.nii      T1 global signal-corrected components
     meica_mix_MIR.1D          T1 global signal-corrected mixing matrix
     ======================    =================================================
+
+    References
+    ----------
+    .. [1] Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E.,
+           Inati, S. J., ... & Bullmore, E. T. (2013).
+           Integrated strategy for improving functional connectivity mapping
+           using multiecho fMRI.
+           Proceedings of the National Academy of Sciences, 110(40), 16187-16192.
     """
     LGR.info("Performing minimum image regression to remove spatially-diffuse noise")
     RepLGR.info(
         "Minimum image regression was then applied to the "
-        "data in order to remove spatially diffuse noise."
+        "data in order to remove spatially diffuse noise (Kundu et al., 2013)."
+    )
+    RefLGR.info(
+        "Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E., "
+        "Inati, S. J., ... & Bullmore, E. T. (2013). "
+        "Integrated strategy for improving functional connectivity mapping "
+        "using multiecho fMRI. "
+        "Proceedings of the National Academy of Sciences, 110(40), 16187-16192."
     )
 
     all_comps = comptable.index.values
