@@ -12,7 +12,7 @@ Code of conduct
 ```````````````
 
 All ``tedana`` community members are expected to follow our code of conduct
-during any interaction with the project. `The full code of conduct is here`_
+during any interaction with the project. `The full code of conduct is here`_.
 That includes---but is not limited to---online conversations,
 in-person workshops or development sprints, and when giving talks about the software.
 
