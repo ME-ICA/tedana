@@ -8,31 +8,6 @@ For a more practical guide to the tedana development, please see our
 
 .. _contributing guide: https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md
 
-.. _governance:
-
-Governance
-----------
-
-Governance is a hugely important part of any project.
-It is especially important to have clear process and communication channels
-for open source projects that rely on a distributed network of volunteers, such as ``tedana``.
-
-``tedana`` is currently supported by a small group of five core developers.
-Even with only five members involved in decision making processes,
-we've found that setting expectations and communicating a shared vision has great value.
-
-By starting the governance structure early in our development,
-we hope to welcome more people into the contributing team.
-We are committed to continuing to update the governance structures as necessary.
-Every member of the ``tedana`` community is encouraged to comment on these processes and suggest improvements.
-
-As the first interim `Benevolent Dictator for Life (BDFL)`_,
-Elizabeth DuPre is ultimately responsible for any major decisions pertaining to ``tedana`` development.
-However, all potential changes are explicitly and openly discussed in the described channels of
-communication, and we strive for consensus amongst all community members.
-
-.. _Benevolent Dictator for Life (BDFL): https://en.wikipedia.org/wiki/Benevolent_dictator_for_life
-
 Code of conduct
 ```````````````
 
