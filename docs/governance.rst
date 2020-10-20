@@ -66,7 +66,7 @@ Openness is a priority:
 - Openness provides a smoother transition to onboard future steering committee
   members
 - If steering committee discussions (written or verbal) could include
-  community members without compromising efficiency, should be invited. The
+  community members without compromising efficiency, they should be invited. The
   steering committee can schedule discussions without needing to ask about the
   availability for people outside of the steering committee. If notes from
   meetings can be openly shared without compromising personal privacy, they
