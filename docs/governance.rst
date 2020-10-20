@@ -12,19 +12,19 @@ available time plus expertise in collaborative software development, MRI
 physics, and advanced data processing methods to assume a primary project
 leader role. Even if such a person was interested, it may not benefit the
 project to overly rely on the existence of one person. We developed the
-following system three goals in mind:
+following system the following goals in mind:
 
-1. Acknowledge the leadership and time multiple people contribute to our
-   community without demanding more time than any individual can offer.
-   Dividing leadership responsabilies into multiple smaller roles also
-   makes it easier to encourage new people to take on a leadership role
-   without fearing that too much work will be required of them.
-2. Identify people who are willing to be the point-people who contribute
-   their expertise to specific areas of the project.
-3. Create a governance structure that will provide a mechanism for making
-   decisions without relying on highly structured systems that may be
-   necessary for larger projects, but would weight a project of our size
-   down with unncessary complexity.
+- Promote open discussions.
+- Minimize the administrative burden.
+- Strive for consensus.
+- Provide a path for when consensus cannot be achieved.
+- Grow the community.
+- Maximize the `bus factor <https://en.wikipedia.org/wiki/Bus_factor>`_ of the project.
+- Acknowledge the leadership and time multiple people contribute to our
+  community without demanding more time than any individual can offer.
+  Dividing leadership responsabilies into multiple smaller roles also
+  makes it easier to encourage new people to take on a leadership role
+  without fearing that too much work will be required of them.
 
 This governance structure is a work-in-progress. We welcome both people
 who want to take on a leadership role as well as ideas for our to improve
@@ -45,16 +45,16 @@ reviewed and approved by the steering committee or steering committee members.
 The steering committee can decide that an issue should be prioritized for wider
 communal discussion or that a pull request requires more discussion or reviews
 than standard before merging. The steering committee can also decide how a
-breaking change (something that changes existing user function calls or outputs)
-will be presented to the developer and user base for discussion and decision
-making.
+breaking change (something that changes existing user function calls or program
+outputs) will be presented to the developer and user base for discussion, before
+decisions are made.
 
 Steering committee decisions should strive for consensus and accept the
 majority’s decision. If voting is necessary, it can happen asynchronously and is
 defined as more than half of the members of the steering committee. If a member
 of the steering committee is unable to spend the time necessary to understand
-an issue & vote, they can temporarily recuse from decisions so that the number of
-committee members is reduced
+an issue & vote, they can recuse from a decision so that the number of committee
+members is reduced
 
 Openness is a priority:
 
@@ -63,21 +63,22 @@ Openness is a priority:
   and address steering committee blindspots
 - Openness provides a smoother transition to onboard future steering committee
   members
-- If steering committee discussions (written or verbal) could welcome any
-  community member without compromising efficiency, they should be. The
+- If steering committee discussions (written or verbal) could include
+  community members without compromising efficiency, should be invited. The
   steering committee can schedule discussions without needing to ask about the
   availability for people outside of the steering committee. If notes from
   meetings can be openly shared without compromising personal privacy, they
   should be.
 
-The current members are the tedana steering committee are. If you are interested
-in joining the steering committee, please let the current members know:
+The current members of the tedana steering committee are:
 
 - Name 1 & link to github profile
 - Name 2 & link to github profile
 - Name 3 & link to github profile
 - Name 4 & link to github profile
 - Name 5 & link to github profile
+
+If you are interested in joining the steering committee, please let the current members know.
 
 Leadership roles
 ````````````````
@@ -88,16 +89,15 @@ split the responsabilities of a role. The steering committee will include
 people who also take on leadership roles, but a person can take on a leadership
 role without also volunteering to be on the steering committee.
 
-If you are interested in taking over one of these roles, slitting a role, or
+If you are interested in taking over one of these roles, splitting a role, or
 creating a new leadership role, please talk to some of the current leaders.
 
 - | Task manager & record keeper: `Dan Handwerker <https://github.com/handwerkerd>`_
   |   Helps write & keep track of notes from meetings
   |   Keeps track of issues or items that should be addressed
-  |   Follows up with people who volunteered to address an item or alerts the 
-  |   broader community of known tasks that could use a volunteer
+  |   Follows up with people who volunteered to address an item or alerts the broader community of known tasks that could use a volunteer
 - | MR physics leader `César Caballero-Gaudes <https://github.com/CesarCaballeroGaudes>`_
-  |   Someone who can make sure calculations fit within our understand of MR physics
+  |   Someone who can make sure calculations fit within our understanding of MR physics
   |   Someone who can either answer MRI physics questions related to multi-echo or direct people to where they can find answers
 - | Processing algorithms leader `Eneko Uruñuela <https://github.com/eurunuela>`_ (Decomposiiton) & `Dan Handwerker <https://github.com/handwerkerd>`_ (Metrics & Decision Tree)
   |   Someone who can make sure algorithms are appropriately implemented (or knows enough to delegate to someone who can make sure implementation is good)
@@ -110,8 +110,8 @@ creating a new leadership role, please talk to some of the current leaders.
   |   Leads efforts to make contributor documentation more welcoming
   |   Is a point of contact for potential contributors to make them feel welcome and direct them to relevant resources or issues
 - | Multi-echo fMRI support leader `Logan Dowdle <https://github.com/dowdlelt>`_
-  |   Monitors places where people may ask questions about tedana or multi-echo fMRI and tried to find someone to answer those questions
-- | Enforcer(s) of the Code of Conduct `Elizabeth DuPre <https://elizabeth-dupre.com>`_ & `Dan Handwerker <https://github.com/handwerkerd>`_ & another volunteer
+  |   Monitors places where people may ask questions about tedana or multi-echo fMRI and tries to find someone to answer those questions
+- | Enforcer(s) of the `Code of Conduct <https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md>`_ `Elizabeth DuPre <https://elizabeth-dupre.com>`_ & `Dan Handwerker <https://github.com/handwerkerd>`_ & another volunteer
   |   A person or people someone can go to if they want to report a code of conduct violation
   |   If this is one person, that person should NOT be on the steering committee
   |   If this is more than one person, at least one should not be on the steering committee
@@ -139,21 +139,11 @@ a vote of contributors to remove an individual from a leadership role in tedana.
 Decision Making Process
 -----------------------
 
-Introduction
-````````````
-
-The tedana community sets out the following decision-making rules with the intention to:
-
-- Strive for consensus.
-- Promote open discussions.
-- Minimize the administrative burden.
-- Provide a path for when consensus cannot be achieved.
-- Grow the community.
-- Maximize the `bus factor <https://en.wikipedia.org/wiki/Bus_factor>`_ of the project.
-
-The rules outlined below are inspired by the 
-`decision-making rules for the BIDS standard <https://github.com/bids-standard/bids-specification/blob/master/DECISION-MAKING.md), which in turn were inspired by the [lazy consensus system used in the Apache Foundation](https://www.apache.org/foundation/voting.html>`_,
-and heavily depends on `GitHub Pull Request review system <https://help.github.com/articles/about-pull-requests/>`_.
+These rules outlined below are inspired by the 
+`decision-making rules for the BIDS standard <https://github.com/bids-standard/bids-specification/blob/master/DECISION-MAKING.md>`_, which in turn were inspired by the
+`lazy consensus system used in the Apache Foundation <https://www.apache.org/foundation/voting.html>`_,
+and heavily depend on the
+`GitHub Pull Request review system <https://help.github.com/articles/about-pull-requests/>`_.
 
 Definitions
 ```````````
@@ -201,17 +191,13 @@ Rules
 1. Potential modifications to the Repository should first be proposed via an 
    Issue. Rules regarding Votes apply to both Pull Requests and Issues.
 
-     - Every modification of the specification (including a correction of a
-       typo, adding a new Contributor, an extension adding support for a new
-       data type, or others) or proposal to release a new version needs to be
-       done via a Pull Request (PR) to the Repository.
+   - Every modification of the specification (including a correction of a typo, adding a new Contributor, an extension adding support for a new data type, or others) or proposal to release a new version needs to be done via a Pull Request (PR) to the Repository.
 2. Anyone can open a PR (this action is not limited to Contributors).
 3. PRs adding new Contributors must also add their GitHub names to the 
    `all-contributors file <https://github.com/ME-ICA/tedana/blob/master/.all-contributorsrc>`_. 
    This should be done with the allcontributors bot.
 
-    - Contributors may also add themselves to the Zenodo file if they wish,
-      but this is not mandatory.
+   - Contributors may also add themselves to the Zenodo file if they wish, but this is not mandatory.
 4. A PR is eligible to be merged if and only if these conditions are met:
 
    a) The PR features at least two `Reviews that Approve <https://help.github.com/articles/about-pull-request-reviews/#about-pull-request-reviews>`_
