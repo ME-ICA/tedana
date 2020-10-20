@@ -76,7 +76,7 @@ still in structured voxel space. Surface-based denoising is not currently
 within the scope of tedana, but code should be written so that it is a
 possible option in the future.
 
-Currently tedana works on a single subject, run by run basis however methods
+Currently tedana works on a single subject, run by run basis; however, methods
 that use information across multiple runs are welcome. 
 
 Visualization
