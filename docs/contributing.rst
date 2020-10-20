@@ -11,15 +11,15 @@ For a more practical guide to the tedana development, please see our
 Code of conduct
 ```````````````
 
-All ``tedana`` community members are expected to follow our `code of conduct`_
-during any interaction with the project.
+All ``tedana`` community members are expected to follow our code of conduct
+during any interaction with the project. `The full code of conduct is here`_
 That includes---but is not limited to---online conversations,
 in-person workshops or development sprints, and when giving talks about the software.
 
 As stated in the code, severe or repeated violations by community members may result in exclusion
 from collective decision-making and rejection of future contributions to the ``tedana`` project.
 
-.. _code of conduct: https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md
+.. _The full code of conduct is here: https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md
 
 tedana's development philosophy
 --------------------------------------
@@ -181,10 +181,8 @@ More information about what is required for a release to proceed is available
 in the :ref:`release checklist`.
 
 
-.. _release checklist:
-
 Release Checklist
-"""""""""""""""""
+`````````````````
 
 This is the checklist of items that must be completed when cutting a new release of tedana.
 These steps can only be completed by a project maintainer, but they are a good resource for

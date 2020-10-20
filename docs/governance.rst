@@ -19,7 +19,7 @@ following system the following goals in mind:
 - Strive for consensus.
 - Provide a path for when consensus cannot be achieved.
 - Grow the community.
-- Maximize the `bus factor <https://en.wikipedia.org/wiki/Bus_factor>`_ of the project.
+- Maximize the `bus factor`_ of the project.
 - Acknowledge the leadership and time multiple people contribute to our
   community without demanding more time than any individual can offer.
   Dividing leadership responsabilies into multiple smaller roles also
@@ -29,6 +29,8 @@ following system the following goals in mind:
 This governance structure is a work-in-progress. We welcome both people
 who want to take on a leadership role as well as ideas for our to improve
 this structure.
+
+
 
 Steering Committee and Leadership Roles
 ---------------------------------------
@@ -92,30 +94,32 @@ role without also volunteering to be on the steering committee.
 If you are interested in taking over one of these roles, splitting a role, or
 creating a new leadership role, please talk to some of the current leaders.
 
-- | Task manager & record keeper: `Dan Handwerker <https://github.com/handwerkerd>`_
+- | Task manager & record keeper: `Dan Handwerker`_
   |   Helps write & keep track of notes from meetings
   |   Keeps track of issues or items that should be addressed
   |   Follows up with people who volunteered to address an item or alerts the broader community of known tasks that could use a volunteer
-- | MR physics leader `César Caballero-Gaudes <https://github.com/CesarCaballeroGaudes>`_
+- | MR physics leader `César Caballero-Gaudes`_
   |   Someone who can make sure calculations fit within our understanding of MR physics
   |   Someone who can either answer MRI physics questions related to multi-echo or direct people to where they can find answers
-- | Processing algorithms leader `Eneko Uruñuela <https://github.com/eurunuela>`_ (Decomposiiton) & `Dan Handwerker <https://github.com/handwerkerd>`_ (Metrics & Decision Tree)
+- | Processing algorithms leader `Eneko Uruñuela`_ (Decomposiiton) & `Dan Handwerker`_ (Metrics & Decision Tree)
   |   Someone who can make sure algorithms are appropriately implemented (or knows enough to delegate to someone who can make sure implementation is good)
   |   Someone who can either answer processing algorithm questions or direct people to where they can find answers
-- | Collaborative programming leader `Elizabeth DuPre <https://elizabeth-dupre.com>`_ & `Joshua Teves <https://github.com/jbteves>`_
+- | Collaborative programming leader `Elizabeth DuPre`_ & `Joshua Teves`_
   |   Helps make sure tedana is following best practices for Python code design, testing, and communication for issues/pull requests etc.
-- | Communications leader `Joshua Teves <https://github.com/jbteves>`_
+- | Communications leader `Joshua Teves`_
   |   Mailing list manager & other outward-facing communication about the project
-- | New contributors leader `Taylor Salo <https://tsalo.github.io>`_
+- | New contributors leader `Taylor Salo`_
   |   Leads efforts to make contributor documentation more welcoming
   |   Is a point of contact for potential contributors to make them feel welcome and direct them to relevant resources or issues
-- | Multi-echo fMRI support leader `Logan Dowdle <https://github.com/dowdlelt>`_
+- | Multi-echo fMRI support leader `Logan Dowdle`_
   |   Monitors places where people may ask questions about tedana or multi-echo fMRI and tries to find someone to answer those questions
-- | Enforcer(s) of the `Code of Conduct <https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md>`_ `Elizabeth DuPre <https://elizabeth-dupre.com>`_ & `Dan Handwerker <https://github.com/handwerkerd>`_ & another volunteer
+- | Enforcer(s) of the `code of conduct`_ `Elizabeth DuPre`_ & `Dan Handwerker`_ & another volunteer
   |   A person or people someone can go to if they want to report a code of conduct violation
   |   If this is one person, that person should NOT be on the steering committee
   |   If this is more than one person, at least one should not be on the steering committee
   |   Ideal is someone who cares about tedana but DOESN’T know contributors well enough to say, ”Person X would never do that”
+
+
 
 Changing leaders
 ````````````````
@@ -134,8 +138,6 @@ If a person refuses to step down, then an enforcer of the code of conduct can ca
 a vote of contributors to remove an individual from a leadership role in tedana.
 
 
-.. _Decision_making
-
 Decision Making Process
 -----------------------
 
@@ -152,7 +154,7 @@ Repository
   `https://github.com/ME-ICA/tedana <https://github.com/ME-ICA/tedana>`_
 
 Contributor
-  Person listed in the `all-contributors file <https://github.com/ME-ICA/tedana/blob/master/.all-contributorsrc>`_.
+  Person listed in the `all-contributors file`_.
   The community decides on the content of this file using the same process as any
   other change to the Repository (see below) allowing the meaning of "Contributor"
   to evolve independently of the Decision-making rules.
@@ -165,25 +167,26 @@ Maintainer
   maintainer by request and with the support of the majority of the current
   maintainers. Current Maintainers:
 
-  +--------------------------------------------------------------------+-----------------+
-  | Name                                                               | Time commitment |
-  +====================================================================+=================+
-  | Logan Dowdle (`@dowdlelt <https://github.com/dowdlelt>`_)          | 0.5h/week       |
-  +--------------------------------------------------------------------+-----------------+
-  | Elizabeth DuPre (`@emdupre <https://github.com/emdupre>`_)         | 0.5h/week       |
-  +--------------------------------------------------------------------+-----------------+
-  | Dan Handwerker (`@handwerkerd <https://github.com/handwerkerd>`_)  | 0.5h/week       |
-  +--------------------------------------------------------------------+-----------------+
-  | Ross Markello (`@rmarkello <https://github.com/rmarkello>`_)       | 0.5h/week       |
-  +--------------------------------------------------------------------+-----------------+
-  | Taylor Salo (`@tsalo <https://github.com/tsalo>`_)                 | 3h/week         |
-  +--------------------------------------------------------------------+-----------------+
-  | Joshua Teves (`@jbteves <https://github.com/jbteves>`_)            | 0.5h/week       |
-  +--------------------------------------------------------------------+-----------------+
-  | Eneko Urunuela (`@eurunuela <https://github.com/eurunuela>`_)      | 0.5h/week       |
-  +--------------------------------------------------------------------+-----------------+
-  | Kirstie Whitaker (`@KirstieJane <https://github.com/KirstieJane>`_)| 0.5h/week       |
-  +--------------------------------------------------------------------+-----------------+
+  +-----------------------------------+-----------------+
+  | Name                              | Time commitment |
+  +===================================+=================+
+  | `Logan Dowdle`_ (@dowdlelt)       | 0.5h/week       |
+  +-----------------------------------+-----------------+
+  | `Elizabeth DuPre`_ (@emdupre)     | 0.5h/week       |
+  +-----------------------------------+-----------------+
+  | `Dan Handwerker`_ (@handwerkerd)  | 0.5h/week       |
+  +-----------------------------------+-----------------+
+  | `Ross Markello`_ (@rmarkello)     | 0.5h/week       |
+  +-----------------------------------+-----------------+
+  | `Taylor Salo`_ (@tsalo)           | 3h/week         |
+  +-----------------------------------+-----------------+
+  | `Joshua Teves`_ (@jbteves)        | 0.5h/week       |
+  +-----------------------------------+-----------------+
+  | `Eneko Uruñuela`_ (@eurunuela)    | 0.5h/week       |
+  +-----------------------------------+-----------------+
+  | `Kirstie Whitaker`_ (@KirstieJane)| 0.5h/week       |
+  +-----------------------------------+-----------------+
+
 
 Rules
 `````
@@ -194,7 +197,7 @@ Rules
    - Every modification of the specification (including a correction of a typo, adding a new Contributor, an extension adding support for a new data type, or others) or proposal to release a new version needs to be done via a Pull Request (PR) to the Repository.
 2. Anyone can open a PR (this action is not limited to Contributors).
 3. PRs adding new Contributors must also add their GitHub names to the 
-   `all-contributors file <https://github.com/ME-ICA/tedana/blob/master/.all-contributorsrc>`_. 
+   `all-contributors file`_. 
    This should be done with the allcontributors bot.
 
    - Contributors may also add themselves to the Zenodo file if they wish, but this is not mandatory.
@@ -236,3 +239,15 @@ Rules
       during that period it should be reverted.
    e) The quorum for a Vote is five votes.
    f) The outcome of the vote is decided based on a simple majority.
+
+.. _César Caballero-Gaudes: https://github.com/CesarCaballeroGaudes
+.. _Logan Dowdle: https://github.com/dowdlelt
+.. _Elizabeth DuPre: https://github.com/emdupre
+.. _Dan Handwerker: https://github.com/handwerkerd
+.. _Ross Markello: https://github.com/rmarkello
+.. _Taylor Salo: https://tsalo.github.io
+.. _Joshua Teves: https://github.com/jbteves
+.. _Eneko Uruñuela: https://github.com/eurunuela
+.. _Kirstie Whitaker: https://github.com/KirstieJane
+.. _all-contributors file: https://github.com/ME-ICA/tedana/blob/master/.all-contributorsrc
+.. _bus factor: https://en.wikipedia.org/wiki/Bus_factor
