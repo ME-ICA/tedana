@@ -58,7 +58,7 @@ majority’s decision. If voting is necessary, it can happen asynchronously and 
 defined as more than half of the members of the steering committee. If a member
 of the steering committee is unable to spend the time necessary to understand
 an issue & vote, they can recuse from a decision so that the number of committee
-members is reduced
+members is reduced.
 
 Openness is a priority:
 
