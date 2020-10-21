@@ -222,7 +222,7 @@ Rules
    changes they need to provide an explanation regarding what changes should
    be added and justification of their importance. Reviews requesting
    changes can also be used to request more time to review a PR.
-7. A Maintainer who Requested changes can Dismiss their own review or Approve
+7. A community member who Requested changes can Dismiss their own review or Approve
    changes added by the Contributor who opened the PR.
 8. If the author of a PR and Maintainer who provided Review that Requests
    changes cannot find a solution that would lead to the Maintainer dismissing
