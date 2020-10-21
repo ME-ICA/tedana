@@ -1,6 +1,8 @@
 Governance
 ==========
-
+Governance is a hugely important part of any project.
+It is especially important to have clear process and communication channels
+for open source projects that rely on a distributed network of volunteers, such as ``tedana``.
 
 Overview
 --------
