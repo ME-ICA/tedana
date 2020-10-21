@@ -218,7 +218,7 @@ Rules
       at least one Maintainer).
 5. After consultation with contributors, the steering committee can decide
    to merge any PR - even if it's not eligible to merge according to Rule 4.
-6. Any Maintainer can Review a PR and request changes. If a Maintainer Requests
+6. Any community member can Review a PR and request changes. If a community member Requests
    changes they need to provide an explanation regarding what changes should
    be added and justification of their importance. Reviews requesting
    changes can also be used to request more time to review a PR.
