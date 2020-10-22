@@ -34,7 +34,7 @@ following system with several goals in mind:
     oversights or mistakes
   - Openness provides a smoother transition to onboard future leaders
   - Leadership meetings should be open and notes should be shared unless
-    there are discusssions about senisitive personal matters.
+    there are discussions about sensitive personal matters.
 
 This governance structure is a work-in-progress. We welcome both people
 who want to take on a leadership role as well as ideas for our to improve
