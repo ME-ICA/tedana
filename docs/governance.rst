@@ -182,10 +182,10 @@ and heavily depend on the
 5. After consultation with contributors, the steering committee can decide
    to merge any PR - even if it's not eligible to merge according to Rule 4.
 6. Anyone can Review a PR and request changes. If a community
-   member Requests changes they need to provide an explanation regarding what
+   member requests changes they need to provide an explanation regarding what
    changes should be made and justification of their importance. Reviews
    requesting changes can also be used to request more time to review a PR.
-7. A reviewer who Requested changes can dismiss their own review, if
+7. A reviewer who requested changes can dismiss their own review, if
    they decide their requested changes are no longer necessary, or approve
    changes that address the issue underlying their change request.
 8. If the author of a PR and a reviewer who requests changes cannot find a
@@ -196,13 +196,13 @@ and heavily depend on the
 9. Rules governing voting:
 
    a) A vote can be triggered by any Maintainer, but only after 5 working days
-      from the time a Review Requesting Changes. If a PR has a disagreement
+      from the time a Review Requesting Changes is made. If a PR has a disagreement
       that required a vote, there must be at least 15 days from the conclusion
       of the first vote before another vote can be triggered.
    b) Only Maintainers can vote and each Maintainer gets one vote.
    c) A vote ends after 7 working days or when all Maintainers have voted or
       abstained (whichever comes first).
-   d) A vote freezes the PR - no new commits or Reviews Requesting changes can
+   d) A vote freezes the PR - no new commits or Reviews Requesting Changes can
       be added to it while a vote is ongoing. If a commit is accidentally made
       during that period it should be reverted. Comments are allowed.
    e) The quorum for a vote is five votes.
@@ -217,13 +217,13 @@ rather than making project decisions without community input.
 
 The steering committee can decide:
 
-- An issue should be prioritized for wider communal discussion 
+- An issue should be prioritized for wider communal discussion.
 - A a pull request requires more discussion or reviews than standard before
   merging.
 - How a breaking change (something that changes existing user function calls
   or program outputs) will be presented to the developer and user base for
   discussion, before decisions are made.
-- Criteria for cutting a new version release and when those criteria are met
+- Criteria for cutting a new version release and when those criteria are met.
 
 Steering committee decisions should strive for consensus. If consensus cannot
 be reached, the members of the steering committee should vote. Voting will take
