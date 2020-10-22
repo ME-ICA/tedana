@@ -54,7 +54,7 @@ Contributor
     
 
 Maintainer
-  A Contributor responsible for the long term health of the project and the
+  A Contributor is responsible for the long term health of the project and the
   community. Maintainers have additional authority (see `Decision Making Process`_) helping them to
   resolve conflicts and increase the pace of the development when necessary.
   Any maintainer can self-remove themselves. Any contributor can become a
