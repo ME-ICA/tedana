@@ -26,7 +26,7 @@ following system with several goals in mind:
   Dividing leadership responsabilies into multiple smaller roles also
   makes it easier to encourage new people to take on a leadership role
   without fearing that too much work will be required of them.
-- Openness is a priority:
+- Openness as a priority:
 
   - Promote open discussions.
   - Openness is critical to building trust with the broader community
