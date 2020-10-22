@@ -58,7 +58,7 @@ Maintainer
   community. Maintainers have additional authority (see `Decision Making Process`_) helping them to
   resolve conflicts and increase the pace of the development when necessary.
   Any maintainer can remove themselves. Any contributor can become a
-  maintainer by request and with the support of the majority of the current
+  maintainer by request, or by nomination of a current maintainer,  and with the support of the majority of the current
   maintainers. Current Maintainers:
 
   +-----------------------------------+
