@@ -157,7 +157,7 @@ and heavily depend on the
 1. Potential modifications to the Repository should first be proposed via an
    Issue.
 2. Every modification (including a correction of a typo,
-   adding a new Contributor, an extension adding support for a new data type,
+   adding a new Contributor, an extension,
    or others) or proposal to release a new version needs to be done via a
    Pull Request (PR) to the Repository.
 3. Anyone can open an Issue or a PR (this action is not limited to Contributors).
