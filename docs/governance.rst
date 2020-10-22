@@ -31,7 +31,7 @@ following system with several goals in mind:
   - Promote open discussions.
   - Openness is critical to building trust with the broader community
   - Openness provides a mechanism for non-leaders to identify and address
-    blindspots
+    oversights or mistakes
   - Openness provides a smoother transition to onboard future leaders
   - Leadership meetings should be open and notes should be shared unless
     there are discusssions about senisitive personal matters.
