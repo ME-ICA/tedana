@@ -5,16 +5,16 @@ import logging
 import os.path as op
 
 import numpy as np
-from numpy.linalg import lstsq
 import pandas as pd
 from scipy import stats
 from scipy.special import lpmv
 
 from tedana import io, utils
+from tedana.due import due, Doi
 
 LGR = logging.getLogger(__name__)
-RepLGR = logging.getLogger('REPORT')
-RefLGR = logging.getLogger('REFERENCES')
+RepLGR = logging.getLogger("REPORT")
+RefLGR = logging.getLogger("REFERENCES")
 
 
 def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
@@ -124,9 +124,16 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
     return dm_catd, dm_optcom
 
 
-def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, out_dir='.'):
+@due.dcite(Doi("10.1073/pnas.1301725110"),
+           description="Minimum image regression to remove T1-like effects "
+                       "from the denoised data.")
+def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir="."):
     """
-    Perform global signal regression.
+    Perform minimum image regression (MIR) to remove T1-like effects from
+    BOLD-like components.
+
+    While this method has not yet been described in detail in any publications,
+    we recommend that users cite [1]_.
 
     Parameters
     ----------
@@ -147,102 +154,101 @@ def gscontrol_mmix(optcom_ts, mmix, mask, comptable, ref_img, out_dir='.'):
 
     Notes
     -----
+    Minimum image regression operates by constructing a amplitude-normalized
+    form of the multi-echo high Kappa (MEHK) time series from BOLD-like ICA
+    components, and then taking voxel-wise minimum over time.
+    This "minimum map" serves as a voxel-wise estimate of the T1-like effect
+    in the time series.
+    From this minimum map, a T1-like global signal (i.e., a 1D time series)
+    is estimated.
+    The component time series in the mixing matrix are then corrected for the
+    T1-like effect by regressing out the global signal time series from each.
+    Finally, the multi-echo denoising (MEDN) and MEHK time series are
+    reconstructed from the corrected mixing matrix and are written out to new
+    files.
+
     This function writes out several files:
 
     ======================    =================================================
     Filename                  Content
     ======================    =================================================
     sphis_hik.nii             T1-like effect
-    hik_ts_OC_T1c.nii         T1-corrected BOLD (high-Kappa) time series
-    dn_ts_OC_T1c.nii          Denoised version of T1-corrected time series
-    betas_hik_OC_T1c.nii      T1 global signal-corrected components
-    meica_mix_T1c.1D          T1 global signal-corrected mixing matrix
+    hik_ts_OC_MIR.nii         T1-corrected BOLD (high-Kappa) time series
+    dn_ts_OC_MIR.nii          Denoised version of T1-corrected time series
+    betas_hik_OC_MIR.nii      T1 global signal-corrected components
+    meica_mix_MIR.1D          T1 global signal-corrected mixing matrix
     ======================    =================================================
+
+    References
+    ----------
+    .. [1] Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E.,
+           Inati, S. J., ... & Bullmore, E. T. (2013).
+           Integrated strategy for improving functional connectivity mapping
+           using multiecho fMRI.
+           Proceedings of the National Academy of Sciences, 110(40), 16187-16192.
     """
-    LGR.info('Performing T1c global signal regression to remove spatially '
-             'diffuse noise')
-    RepLGR.info("T1c global signal regression was then applied to the "
-                "data in order to remove spatially diffuse noise.")
+    LGR.info("Performing minimum image regression to remove spatially-diffuse noise")
+    RepLGR.info(
+        "Minimum image regression was then applied to the "
+        "data in order to remove spatially diffuse noise (Kundu et al., 2013)."
+    )
+    RefLGR.info(
+        "Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E., "
+        "Inati, S. J., ... & Bullmore, E. T. (2013). "
+        "Integrated strategy for improving functional connectivity mapping "
+        "using multiecho fMRI. "
+        "Proceedings of the National Academy of Sciences, 110(40), 16187-16192."
+    )
 
     all_comps = comptable.index.values
-    acc = comptable[comptable.classification == 'accepted'].index.values
-    ign = comptable[comptable.classification == 'ignored'].index.values
+    acc = comptable[comptable.classification == "accepted"].index.values
+    ign = comptable[comptable.classification == "ignored"].index.values
     not_ign = sorted(np.setdiff1d(all_comps, ign))
 
     optcom_masked = optcom_ts[mask, :]
-    optcom_mu = optcom_masked.mean(axis=-1)[:, np.newaxis]
+    optcom_mean = optcom_masked.mean(axis=-1)[:, np.newaxis]
     optcom_std = optcom_masked.std(axis=-1)[:, np.newaxis]
 
-    """
-    Compute temporal regression
-    """
-    data_norm = (optcom_masked - optcom_mu) / optcom_std
-    cbetas = lstsq(mmix, data_norm.T, rcond=None)[0].T
-    resid = data_norm - np.dot(cbetas[:, not_ign], mmix[:, not_ign].T)
+    # Compute temporal regression
+    optcom_z = stats.zscore(optcom_masked, axis=-1)
+    comp_pes = np.linalg.lstsq(mmix, optcom_z.T, rcond=None)[0].T  # component parameter estimates
+    resid = optcom_z - np.dot(comp_pes[:, not_ign], mmix[:, not_ign].T)
 
-    """
-    Build BOLD time series without amplitudes, and save T1-like effect
-    """
-    bold_ts = np.dot(cbetas[:, acc], mmix[:, acc].T)
-    t1_map = bold_ts.min(axis=-1)
+    # Build time series of just BOLD-like components (i.e., MEHK) and save T1-like effect
+    mehk_ts = np.dot(comp_pes[:, acc], mmix[:, acc].T)
+    t1_map = mehk_ts.min(axis=-1)  # map of T1-like effect
     t1_map -= t1_map.mean()
-    io.filewrite(
-        utils.unmask(t1_map, mask),
-        op.join(out_dir, 'desc-optcomAccepted_min.nii.gz'),
-        ref_img
-    )
+    io.filewrite(utils.unmask(t1_map, mask), op.join(out_dir, "desc-optcomAccepted_min"), ref_img)
     t1_map = t1_map[:, np.newaxis]
 
-    """
-    Find the global signal based on the T1-like effect
-    """
-    glob_sig = lstsq(t1_map, data_norm, rcond=None)[0]
+    # Find the global signal based on the T1-like effect
+    glob_sig = np.linalg.lstsq(t1_map, optcom_z, rcond=None)[0]
 
-    """
-    T1-correct time series by regression
-    """
-    bold_noT1gs = bold_ts - np.dot(lstsq(glob_sig.T, bold_ts.T,
-                                         rcond=None)[0].T, glob_sig)
-    hik_ts = bold_noT1gs * optcom_std
-    io.filewrite(
-        utils.unmask(hik_ts, mask),
-        op.join(out_dir, 'desc-optcomAcceptedT1cDenoised_bold.nii.gz'),
-        ref_img
+    # Remove T1-like global signal from MEHK time series
+    mehk_noT1gs = mehk_ts - np.dot(
+        np.linalg.lstsq(glob_sig.T, mehk_ts.T, rcond=None)[0].T, glob_sig
+    )
+    hik_ts = mehk_noT1gs * optcom_std  # rescale
+    io.filewrite(utils.unmask(hik_ts, mask), op.join(out_dir, "desc-optcomAcceptedMIRDenoised_bold.nii.gz"), ref_img)
+
+    # Make denoised version of T1-corrected time series
+    medn_ts = optcom_mean + ((mehk_noT1gs + resid) * optcom_std)
+    io.filewrite(utils.unmask(medn_ts, mask), op.join(out_dir, "desc-optcomMIRDenoised_bold.nii.gz"), ref_img)
+
+    # Orthogonalize mixing matrix w.r.t. T1-GS
+    mmix_noT1gs = mmix.T - np.dot(
+        np.linalg.lstsq(glob_sig.T, mmix, rcond=None)[0].T, glob_sig
+    )
+    mmix_noT1gs_z = stats.zscore(mmix_noT1gs, axis=-1)
+    mmix_noT1gs_z = np.vstack(
+        (np.atleast_2d(np.ones(max(glob_sig.shape))), glob_sig, mmix_noT1gs_z)
     )
 
-    """
-    Make denoised version of T1-corrected time series
-    """
-    medn_ts = optcom_mu + ((bold_noT1gs + resid) * optcom_std)
+    # Write T1-corrected components and mixing matrix
+    comp_pes_norm = np.linalg.lstsq(mmix_noT1gs_z.T, optcom_z.T, rcond=None)[0].T
     io.filewrite(
-        utils.unmask(medn_ts, mask),
-        op.join(out_dir, 'desc-optcomT1cDenoised_bold.nii.gz'),
-        ref_img
+        utils.unmask(comp_pes_norm[:, 2:], mask),
+        op.join(out_dir, "desc-ICAAcceptedMIRDenoised_components.nii.gz"),
+        ref_img,
     )
-
-    """
-    Orthogonalize mixing matrix w.r.t. T1-GS
-    """
-    mmixnogs = mmix.T - np.dot(lstsq(glob_sig.T, mmix, rcond=None)[0].T,
-                               glob_sig)
-    mmixnogs_mu = mmixnogs.mean(-1)[:, np.newaxis]
-    mmixnogs_std = mmixnogs.std(-1)[:, np.newaxis]
-    mmixnogs_norm = (mmixnogs - mmixnogs_mu) / mmixnogs_std
-    mmixnogs_norm = np.vstack([np.atleast_2d(np.ones(max(glob_sig.shape))),
-                               glob_sig, mmixnogs_norm])
-
-    """
-    Write T1-GS corrected components and mixing matrix
-    """
-    cbetas_norm = lstsq(mmixnogs_norm.T, data_norm.T, rcond=None)[0].T
-    io.filewrite(
-        utils.unmask(cbetas_norm[:, 2:], mask),
-        op.join(out_dir, 'desc-ICAAcceptedT1cDenoised_components.nii.gz'),
-        ref_img
-    )
-    comp_names = [io.add_decomp_prefix(comp, prefix='ica',
-                                       max_value=comptable.index.max())
-                  for comp in comptable.index.values]
-    mixing_df = pd.DataFrame(data=mmixnogs.T, columns=comp_names)
-    mixing_df.to_csv(op.join(out_dir, 'desc-ICAT1cDenoised_mixing.tsv'),
-                     sep='\t', index=False)
+    np.savetxt(op.join(out_dir, "desc-ICAMIRDenoised_mixing.tsv"), mmix_noT1gs)

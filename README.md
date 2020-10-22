@@ -127,6 +127,8 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   <tr>
     <td align="center"><a href="https://github.com/mjversluis"><img src="https://avatars0.githubusercontent.com/u/32125111?v=4" width="100px;" alt=""/><br /><sub><b>mjversluis</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=mjversluis" title="Documentation">📖</a></td>
     <td align="center"><a href="https://mvaziri.github.io/"><img src="https://avatars2.githubusercontent.com/u/4219325?v=4" width="100px;" alt=""/><br /><sub><b>Maryam</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=mvaziri" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/aykhojandi"><img src="https://avatars1.githubusercontent.com/u/38105040?v=4" width="100px;" alt=""/><br /><sub><b>aykhojandi</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=aykhojandi" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/smoia"><img src="https://avatars3.githubusercontent.com/u/35300580?v=4" width="100px;" alt=""/><br /><sub><b>Stefano Moia</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=smoia" title="Code">💻</a> <a href="https://github.com/ME-ICA/tedana/pulls?q=is%3Apr+reviewed-by%3Asmoia" title="Reviewed Pull Requests">👀</a> <a href="https://github.com/ME-ICA/tedana/commits?author=smoia" title="Documentation">📖</a></td>
   </tr>
 </table>
 

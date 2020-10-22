@@ -142,7 +142,7 @@ def test_integration_four_echo(skip_integration):
         tes=[11.8, 28.04, 44.28, 60.52],
         out_dir=out_dir,
         tedpca='kundu-stabilize',
-        gscontrol=['gsr', 't1c'],
+        gscontrol=['gsr', 'mir'],
         png_cmap='bone',
         debug=True,
         verbose=True)

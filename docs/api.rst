@@ -135,7 +135,7 @@ API
    :template: function.rst
 
    tedana.gscontrol.gscontrol_raw
-   tedana.gscontrol.gscontrol_mmix
+   tedana.gscontrol.minimum_image_regression
 
 
 .. _api_io_ref:
