@@ -175,7 +175,7 @@ and heavily depend on the
       because two other people approve it.
    c) Is not a Draft PR. That is the PR author says it is ready for review.
    d) Passes all automated tests.
-   e) Is not proposing a new release
+   e) Is not proposing a new release.
    f) The steering committee has not added extra restrictions. For example, if
       a PR is a non-trival change, the steering committee can create a system
       to get feedback from more than just two reviewers before merging.
