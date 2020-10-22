@@ -109,7 +109,7 @@ Focused Leadership Roles
   - | MR physics leader `César Caballero-Gaudes`_
     |   Someone who can make sure calculations fit within our understanding of MR physics
     |   Someone who can either answer MRI physics questions related to multi-echo or direct people to where they can find answers
-  - | Processing algorithms leader `Eneko Uruñuela`_ (Decomposiiton) & `Dan Handwerker`_ (Metrics & Decision Tree)
+  - | Processing algorithms leader `Eneko Uruñuela`_ (Decomposition) & `Dan Handwerker`_ (Metrics & Decision Tree)
     |   Someone who can make sure algorithms are appropriately implemented (or knows enough to delegate to someone who can make sure implementation is good)
     |   Someone who can either answer processing algorithm questions or direct people to where they can find answers
   - | Collaborative programming leader `Elizabeth DuPre`_ & `Joshua Teves`_
