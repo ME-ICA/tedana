@@ -94,7 +94,7 @@ Steering committee
   +----------------------------------------------+
 
 Focused Leadership Roles
-  We have identified key responsabilities or skills that help advance tedana
+  We have identified key responsibilities or skills that help advance tedana
   development and created roles for each of these responsabilities. One
   person can fill more than one role and more than one person can decide to
   share or split the responsabilities of a role. Any contributor can proposed
