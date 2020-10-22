@@ -124,9 +124,11 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
     return dm_catd, dm_optcom
 
 
-@due.dcite(Doi("10.1073/pnas.1301725110"),
-           description="Minimum image regression to remove T1-like effects "
-                       "from the denoised data.")
+@due.dcite(
+    Doi("10.1073/pnas.1301725110"),
+    description="Minimum image regression to remove T1-like effects "
+    "from the denoised data.",
+)
 def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir="."):
     """
     Perform minimum image regression (MIR) to remove T1-like effects from
@@ -211,14 +213,18 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
 
     # Compute temporal regression
     optcom_z = stats.zscore(optcom_masked, axis=-1)
-    comp_pes = np.linalg.lstsq(mmix, optcom_z.T, rcond=None)[0].T  # component parameter estimates
+    comp_pes = np.linalg.lstsq(mmix, optcom_z.T, rcond=None)[
+        0
+    ].T  # component parameter estimates
     resid = optcom_z - np.dot(comp_pes[:, not_ign], mmix[:, not_ign].T)
 
     # Build time series of just BOLD-like components (i.e., MEHK) and save T1-like effect
     mehk_ts = np.dot(comp_pes[:, acc], mmix[:, acc].T)
     t1_map = mehk_ts.min(axis=-1)  # map of T1-like effect
     t1_map -= t1_map.mean()
-    io.filewrite(utils.unmask(t1_map, mask), op.join(out_dir, "desc-optcomAccepted_min"), ref_img)
+    io.filewrite(
+        utils.unmask(t1_map, mask), op.join(out_dir, "desc-T1likeEffect_min"), ref_img
+    )
     t1_map = t1_map[:, np.newaxis]
 
     # Find the global signal based on the T1-like effect
@@ -229,11 +235,19 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
         np.linalg.lstsq(glob_sig.T, mehk_ts.T, rcond=None)[0].T, glob_sig
     )
     hik_ts = mehk_noT1gs * optcom_std  # rescale
-    io.filewrite(utils.unmask(hik_ts, mask), op.join(out_dir, "desc-optcomAcceptedMIRDenoised_bold.nii.gz"), ref_img)
+    io.filewrite(
+        utils.unmask(hik_ts, mask),
+        op.join(out_dir, "desc-optcomAcceptedMIRDenoised_bold.nii.gz"),
+        ref_img,
+    )
 
     # Make denoised version of T1-corrected time series
     medn_ts = optcom_mean + ((mehk_noT1gs + resid) * optcom_std)
-    io.filewrite(utils.unmask(medn_ts, mask), op.join(out_dir, "desc-optcomMIRDenoised_bold.nii.gz"), ref_img)
+    io.filewrite(
+        utils.unmask(medn_ts, mask),
+        op.join(out_dir, "desc-optcomMIRDenoised_bold.nii.gz"),
+        ref_img,
+    )
 
     # Orthogonalize mixing matrix w.r.t. T1-GS
     mmix_noT1gs = mmix.T - np.dot(
