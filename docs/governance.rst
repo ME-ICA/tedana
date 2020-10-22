@@ -97,7 +97,7 @@ Focused Leadership Roles
   We have identified key responsibilities or skills that help advance tedana
   development and created roles for each of these responsibilities. One
   person can fill more than one role and more than one person can decide to
-  share or split the responsabilities of a role. Any contributor can proposed
+  share or split the responsibilities of a role. Any contributor can propose
   the creation of new focused leadership roles.  A person can take on a
   leadership role without being a Maintainer or Steering Committee member
 
