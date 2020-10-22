@@ -14,7 +14,7 @@ available time plus expertise in collaborative software development, MRI
 physics, and advanced data processing methods to assume a primary project
 leader role. Even if such a person was interested, it may not benefit the
 project to overly rely on the existence of one person. We developed the
-following system the several goals in mind:
+following system with several goals in mind:
 
 - Grow the community.
 - Strive for consensus.
