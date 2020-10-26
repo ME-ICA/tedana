@@ -25,11 +25,11 @@ Scope of tedana
 ```````````````
 tedana is a collection of tools, software and a community related to echo time
 (TE) dependent analyses. The umbrella of tedana covers a number of overlapping,
-but somewhat distinct ideas related to multi-echo analysis. This scope covers
+but somewhat distinct ideas related to multi-echo analysis. This scope includes
 collecting multi-echo data (Acquisition), combining those echoes together
 (Combining), with optional noise removal (Denoising), inspecting the outputs
 (Visualization) and answering multi-echo related questions (Community). In
-general, preprocessed data is pushed through tedana, producing outputs that
+general, tedana accepts previously preprocessed data to produce outputs that
 are ready for further analyses. 
 
 Acquisition
@@ -63,12 +63,12 @@ Denoising
 tedana was developed out of a package known as multi-echo ICA (ME-ICA or meica)
 developed by Dr. Prantik Kundu. Though the usage of ICA for classification of
 signal vs noise components has continued in tedana, this is not a rule. The
-tedana community is open and encouraging of new methods, whether or not they
+tedana community is open and encouraging of new denoising methods, whether or not they
 have a basis in ICA. 
 
-We are interested in any method that seeks to use the information from multiple
+Specifically, we are interested in any method that seeks to use the information from multiple
 echoes to identify signal (defined here as BOLD signals arising from neural
-processing) and noise (defined here as spurious changes unrelated to neural
+processing) and noise (defined here as changes unrelated to neural
 processing, i.e. motion, cardiac, respiration).
 
 tedana is primarily intended to work on volume data, that is, data that is
@@ -86,7 +86,7 @@ Though tedana does not provide a GUI for inspecting results, it does produce
 figures as part of the processing stream. These figures are intended to help
 users understand the outputs from tedana and diagnose problems. Though a
 comprehensive viewer (such as fsleyes) is outside of the scope of tedana, we
-will continue to improve the figures and add new ones as needed.
+will continue to improve the reports and add new information as needed.
 
 Community
 ---------
@@ -110,7 +110,7 @@ infinite, it is worth mentioning a few points:
   or slice timing correction. While these were previously part of the ME-ICA
   pipeline, the sheer variety of possible choices, guidelines and data types
   precludes including it within the tedana package.
-- tedana will not provide analyses in the form of general linear models,
+- tedana will not provide statistical analyses in the form of general linear models,
   connectivity or decoding. Though multi-echo data is amenable to all methods
   of analysis, these methods will not be included in the tedana package.
 

@@ -141,8 +141,8 @@ If there are concerns with a tedana leader, any enforcer of the code of conduct
 can ask anyone to step down from a leadership role. If a person refuses to step
 down, then an enforcer of the code of conduct will consult with the other code
 of conduct enforces. If they reach a concensus that a person shouldn't have a
-tedana leadership position, then they should be removed. Of a code of conduct
-enforcer as a conflict of interest, then the remaining code of conduct enforcers
+tedana leadership position, then they should be removed. If a code of conduct
+enforcer has a conflict of interest, then the remaining code of conduct enforcers
 will identify someone without a conflict to include in deliberations.
 
 Decision Making Process
@@ -173,7 +173,7 @@ and heavily depend on the
    b) Does not feature any `Reviews that Request changes <https://help.github.com/articles/about-required-reviews-for-pull-requests/>`_.
       That is, if someone asked for changes, the PR should not be merged just
       because two other people approve it.
-   c) Is not a Draft PR. That is the PR author says it is ready for review.
+   c) Is not a Draft PR. That is, the PR author says it is ready for review.
    d) Passes all automated tests.
    e) Is not proposing a new release.
    f) The steering committee has not added extra restrictions. For example, if
