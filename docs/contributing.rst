@@ -219,13 +219,12 @@ releasing your own Python projects!
     #. Create a new release, using the GitHub `guide for creating a release on GitHub`_.
        `Release-drafter`_ should have already drafted release notes listing all
        changes since the last release; check to make sure these are correct.
-    #. Pulling from the ``master`` branch, locally build a new copy of tedana and
-       `upload it to PyPi`_.
 
 We have set up tedana so that releases automatically mint a new DOI with Zenodo;
 a guide for doing this integration is available `here`_.
+We have also set up the repository so that tagged releases automatically deploy
+to PyPi (for pip installation).
 
-.. _`upload it to PyPi`: https://packaging.python.org/tutorials/packaging-projects/#uploading-the-distribution-archives
 .. _`guide for creating a release on GitHub`: https://help.github.com/articles/creating-releases/
 .. _`Release-drafter`: https://github.com/apps/release-drafter
 .. _here: https://guides.github.com/activities/citable-code/

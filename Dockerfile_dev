@@ -41,13 +41,9 @@ ENV LANG="C.UTF-8" \
 
 RUN git clone https://github.com/me-ica/tedana.git /tedana
 
-COPY ["./requirements.txt", "/tedana/requirements.txt"]
-
-COPY ["./dev_requirements.txt", "/tedana/dev_requirements.txt"]
-
 RUN bash -c "conda create -yq --name tedana_py36 python=3.6 pip \
     && source activate tedana_py36 \
-    && pip install -r /tedana/dev_requirements.txt \
+    && pip install /tedana[all] \
     && pip install ipython \
     && rm -rf ~/.cache/pip/* \
     && conda clean --all"

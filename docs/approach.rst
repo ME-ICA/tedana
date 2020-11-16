@@ -13,9 +13,7 @@ and decompose the resulting data into components that can be classified as BOLD
 or non-BOLD.
 This is performed in a series of steps, including:
 
-* Principal component analysis
-* Independent component analysis
-* Component classification
+.. contents:: :local:
 
 .. image:: /_static/tedana-workflow.png
   :align: center
@@ -35,6 +33,8 @@ manner.
 
 Adaptive mask generation
 ````````````````````````
+:func:`tedana.utils.make_adaptive_mask`
+
 Longer echo times are more susceptible to signal dropout, which means that
 certain brain regions (e.g., orbitofrontal cortex, temporal poles) will only
 have good signal for some echoes.
@@ -46,15 +46,11 @@ When :math:`T_{2}^*` and :math:`S_{0}` are calculated below, each voxel's values
 are only calculated from the first :math:`n` echoes, where :math:`n` is the
 value for that voxel in the adaptive mask.
 
-`Adaptive mask code`_
-
-.. _Adaptive mask code: https://tedana.readthedocs.io/en/latest/generated/tedana.utils.make_adaptive_mask.html#tedana.utils.make_adaptive_mask
-
 .. note::
     ``tedana`` allows users to provide their own mask.
     The adaptive mask will be computed on this explicit mask, and may reduce
     it further based on the data.
-    If a mask is not provided, ``tedana`` runs `nilearn.masking.compute_epi_mask`_
+    If a mask is not provided, ``tedana`` runs :func:`nilearn.masking.compute_epi_mask`
     on the first echo's data to derive a mask prior to adaptive masking.
     The workflow does this because the adaptive mask generation function
     sometimes identifies almost the entire bounding box as "brain", and
@@ -66,6 +62,8 @@ value for that voxel in the adaptive mask.
 
 Monoexponential decay model fit
 ```````````````````````````````
+:func:`tedana.decay.fit_decay`
+
 The next step is to fit a monoexponential decay model to the data in order to
 estimate voxel-wise :math:`T_{2}^*` and :math:`S_0`.
 :math:`S_0` corresponds to the total signal in each voxel before decay and can reflect coil sensivity.
@@ -84,12 +82,7 @@ transforms the data by default.
 The BOLD data are transformed as :math:`log(|S|+1)`, where :math:`S` is the BOLD signal.
 The echo times are also multiplied by -1.
 
-`Decay model fit code`_
-
-.. _Decay model fit code: https://tedana.readthedocs.io/en/latest/generated/tedana.decay.fit_decay.html#tedana.decay.fit_decay
-
-
-.. note::
+.. tip::
     It is now possible to do a nonlinear monoexponential fit to the original, untransformed
     data values by specifiying ``--fittype curvefit``.
     This method is slightly more computationally demanding but may obtain more
@@ -136,6 +129,8 @@ We can also see where :math:`T_{2}^*` lands on this curve.
 
 Optimal combination
 ```````````````````
+:func:`tedana.combine.make_optcom`
+
 Using the :math:`T_{2}^*` estimates, ``tedana`` combines signal across echoes using a
 weighted average.
 The echoes are weighted according to the formula
@@ -160,23 +155,18 @@ The time series for the optimally combined data also looks like a combination
 of the other echoes (which it is).
 This optimally combined data is written out as **ts_OC.nii.gz**
 
-`Optimal combination code`_
-
-.. _Optimal combination code: https://tedana.readthedocs.io/en/latest/generated/tedana.combine.make_optcom.html#tedana.combine.make_optcom
-
-
 .. image:: /_static/a10_optimal_combination_timeseries.png
 
 .. note::
     An alternative method for optimal combination that
-    does not use :math:`T_{2}^*`, is the parallel-acquired inhomogeneity
+    does not use :math:`T_{2}^*` is the parallel-acquired inhomogeneity
     desensitized (PAID) ME-fMRI combination method (`Poser et al., 2006`_).
     This method specifically assumes that noise in the acquired echoes is "isotopic and
     homogeneous throughout the image," meaning it should be used on smoothed data.
-    As we do not recommend performing tedana denoising  on smoothed data,
+    As we do not recommend performing tedana denoising on smoothed data,
     we discourage using PAID within the tedana workflow.
     We do, however, make it accessible as an alternative combination method
-    in the t2smap workflow.
+    in :func:`tedana.workflows.t2smap_workflow`.
 
 Denoising
 `````````
@@ -185,7 +175,7 @@ This process can be broadly separated into three steps: **decomposition**,
 **metric calculation** and **component selection**.
 Decomposition reduces the dimensionality of the optimally combined data using
 `principal component analysis (PCA)`_ and then an `independent component analysis (ICA)`_.
-Metrics which highlights the TE-dependence or independence are derived from these components.
+Metrics that evaluate TE-dependence or independence are derived from these components.
 Component selection uses these metrics in order to identify components that
 should be kept in the data or discarded.
 Unwanted components are then removed from the optimally combined data
@@ -197,6 +187,8 @@ to produce the denoised data output.
 
 TEDPCA
 ``````
+:func:`tedana.decomposition.tedpca`
+
 The next step is to dimensionally reduce the data with TE-dependent principal
 component analysis (PCA).
 The goal of this step is to make it easier for the later ICA decomposition to converge.
@@ -208,68 +200,95 @@ Here we can see time series for some example components (we don't really care ab
 .. image:: /_static/a11_pca_component_timeseries.png
 
 These components are subjected to component selection, the specifics of which
-vary according to algorithm. Specifically, ``tedana`` offers two different approaches that perform this step.
+vary according to algorithm.
+Specifically, ``tedana`` offers two different approaches that perform this step.
 
-The simplest approach (the default `mdl`, `aic` and `kic` options for `--tedpca`) is based on a Moving Average (stationary Gaussian) process
-proposed by `Li et al (2007)`_. A moving average process is the output of a linear system (which in this case is
-a smoothing filter) that has an independent and identically distributed Gaussian process as the input. If we assume that the linear system is shift
-invariant, the moving average process is a stationary Gaussian random process. Simply put, this process more optimally
-selects the number of components for fMRI data following a subsampling scheme described in `Li et al (2007)`_. The
-selection of components is performed with either of the three options provided by `--tedpca`:
+The simplest approach (the default ``mdl``, ``aic`` and ``kic`` options for
+``--tedpca``) is based on a moving average (stationary Gaussian) process
+proposed by `Li et al (2007)`_ and used primarily in the Group ICA of fMRI Toolbox (GIFT).
+A moving average process is the output of a linear system (which, in this case, is
+a smoothing filter) that has an independent and identically distributed
+Gaussian process as the input.
+Simply put, this process more optimally selects the number of components for
+fMRI data following a subsampling scheme described in `Li et al (2007)`_.
 
-* `aic`: the Akaike Information Criterion, which is the least aggressive option; i.e., returns the largest number of components.
-* `kic`: the Kullback-Leibler Information Criterion, which stands in the middle in terms of aggressiveness.
-* `mdl`: the Minimum Description Length, which is the most aggressive (and recommended) option.
+The number of selected principal components depends on the selection criteria.
+For this PCA method in particular, ``--tedpca`` provides three different options
+to select the PCA components based on three widely-used model selection criteria:
 
-A more complicated approach involves applying a decision tree (similar to the
-decision tree described in the TEDICA section below) to identify and
-discard PCA components which, in addition to not explaining much variance,
-are also not significantly TE-dependent (i.e., have low Kappa) or
-TE-independent (i.e., have low Rho).
-These approaches can be accessed using either the `kundu` or `kundu_stabilize`
-options for the `--tedpca` flag.
-For a more thorough explanation of this approach, consider the supplemental information
-in `Kundu et al (2013)`_
+* ``mdl``: the Minimum Description Length (`MDL`_), which is the most aggressive option;
+  i.e. returns the least number of components. This option is the **default and recommeded**
+  as we have seen it yields the most reasonable results.
+* ``kic``: the Kullback-Leibler Information Criterion (`KIC`_), which stands in the
+  middle in terms of aggressiveness. You can see how KIC is related to AIC `here`_.
+* ``aic``: the Akaike Information Criterion (`AIC`_), which is the least aggressive option;
+  i.e., returns the largest number of components.
+
+.. note::
+    Please, bear in mind that this is a data-driven dimensionality reduction approach. The default
+    option ``mdl`` might not yield perfect results on your data. We suggest you explore the ``kic``
+    and ``aic`` options if running ``tedana`` with ``mdl`` returns less components than expected.
+
+In addition to the moving average process-based options described above, we also support a
+decision tree-based selection method (similar to the one in the :ref:`TEDICA` section below).
+This method involves applying a decision tree to identify and discard PCA components which,
+in addition to not explaining much variance, are also not significantly TE-dependent (i.e.,
+have low Kappa) or TE-independent (i.e., have low Rho).
+These approaches can be accessed using either the ``kundu`` or ``kundu_stabilize``
+options for the ``--tedpca`` flag.
+
+.. tip::
+  For more information on how TE-dependence and TE-independence models are
+  estimated in ``tedana``, see :ref:`dependence models`.
+  For a more thorough explanation of this approach, consider the supplemental information
+  in `Kundu et al (2013)`_.
 
 After component selection is performed, the retained components and their
 associated betas are used to reconstruct the optimally combined data, resulting
-in a dimensionally reduced version of the dataset which is then used in the `TEDICA` step.
+in a dimensionally reduced version of the dataset which is then used in the
+:ref:`TEDICA` step.
 
 .. image:: /_static/a12_pca_reduced_data.png
+.. _AIC: https://en.wikipedia.org/wiki/Akaike_information_criterion
+.. _KIC: https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence
+.. _here: https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence#Relationship_between_models_and_reality
+.. _MDL: https://en.wikipedia.org/wiki/Minimum_description_length
 
-`TEDPCA code`_
-
-.. _TEDPCA code: https://tedana.readthedocs.io/en/latest/generated/tedana.decomposition.tedpca.html#tedana.decomposition.tedpca
-
+.. _TEDICA:
 
 TEDICA
 ``````
+:func:`tedana.decomposition.tedica`
+
 Next, ``tedana`` applies TE-dependent independent component analysis (ICA) in
 order to identify and remove TE-independent (i.e., non-BOLD noise) components.
 The dimensionally reduced optimally combined data are first subjected to ICA in
 order to fit a mixing matrix to the whitened data.
-This generates a number of
-independent timeseries (saved as **meica_mix.1D**), as well as beta maps which show
-the spatial loading of these components on the brain (**betas_OC.nii.gz**).
+This generates a number of independent timeseries (saved as **meica_mix.1D**),
+as well as beta maps which show the spatial loading of these components on the
+brain (**betas_OC.nii.gz**).
 
 .. image:: /_static/a13_ica_component_timeseries.png
 
 Linear regression is used to fit the component time series to each voxel in each
 of the original, echo-specific data.
-This results in echo- and voxel-specific
-betas for each of the components.
-The beta values from the linear regression
-can be used to determine how the fluctuations (in each component timeseries) change
-across the echo times.
+This results in echo- and voxel-specific betas for each of the components.
+The beta values from the linear regression can be used to determine how the
+fluctuations (in each component timeseries) change across the echo times.
 
 TE-dependence (:math:`R_2` or :math:`1/T_{2}^*`) and TE-independence (:math:`S_0`) models can then
 be fit to these betas.
-For more information on how these models are estimated, see :ref:`dependence models`.
 These models allow calculation of F-statistics for the :math:`R_2` and :math:`S_0`
 models (referred to as :math:`\kappa` and :math:`\rho`, respectively).
 
-The grey lines show how beta values (Parameter Estimates) change over time. Refer the the
-`physics section`_ :math:`{\Delta}{S_0}` for more information about the :math:`S_0` and :math:`T_2^*` models.
+.. tip::
+  For more information on how TE-dependence and TE-independence models are
+  estimated, see :ref:`dependence models`.
+
+The grey lines below shows how beta values (a.k.a. parameter estimates) change
+with echo time, for one voxel and one component.
+The blue and red lines show the predicted values for the :math:`S_0` and
+:math:`T_2^*` models, respectively, for the same voxel and component.
 
 .. image:: /_static/a14_te_dependence_models_component_0.png
 
@@ -280,8 +299,7 @@ The grey lines show how beta values (Parameter Estimates) change over time. Refe
 A decision tree is applied to :math:`\kappa`, :math:`\rho`, and other metrics in order to
 classify ICA components as TE-dependent (BOLD signal), TE-independent
 (non-BOLD noise), or neither (to be ignored).
-These classifications are saved in
-`comp_table_ica.txt`.
+These classifications are saved in `comp_table_ica.txt`.
 The actual decision tree is dependent on the component selection algorithm employed.
 ``tedana`` includes the option `kundu` (which uses hardcoded thresholds
 applied to each of the metrics).
@@ -289,15 +307,13 @@ applied to each of the metrics).
 Components that are classified as noise are projected out of the optimally combined data,
 yielding a denoised timeseries, which is saved as `dn_ts_OC.nii.gz`.
 
-`TEDICA code`_
-
-.. _TEDICA code: https://tedana.readthedocs.io/en/latest/generated/tedana.decomposition.tedica.html#tedana.decomposition.tedica
-
-
 .. image:: /_static/a15_denoised_data_timeseries.png
+
 
 Removal of spatially diffuse noise (optional)
 `````````````````````````````````````````````
+:func:`tedana.gscontrol.gscontrol_raw`, :func:`tedana.gscontrol.gscontrol_mmix`
+
 Due to the constraints of ICA, TEDICA is able to identify and remove spatially
 localized noise components, but it cannot identify components that are spread
 out throughout the whole brain. See `Power et al. (2018)`_ for more information
@@ -306,17 +322,12 @@ One of several post-processing strategies may be applied to the ME-DN or ME-HK
 datasets in order to remove spatially diffuse (ostensibly respiration-related)
 noise.
 Methods which have been employed in the past include global signal
-regression (GSR), T1c-GSR, anatomical CompCor, Go Decomposition (GODEC), and
+regression (GSR), minimum image regression (MIR), anatomical CompCor, Go Decomposition (GODEC), and
 robust PCA.
-Currently, ``tedana`` implements GSR and T1c-GSR.
-
-`Global signal control code`_
-
-.. _Global signal control code: https://tedana.readthedocs.io/en/latest/generated/tedana.gscontrol.gscontrol_mmix.html#tedana.gscontrol.gscontrol_mmix
+Currently, ``tedana`` implements GSR and MIR.
 
 .. image:: /_static/a16_t1c_denoised_data_timeseries.png
 
-.. _nilearn.masking.compute_epi_mask: https://nilearn.github.io/modules/generated/nilearn.masking.compute_epi_mask.html
 .. _Power et al. (2018): http://www.pnas.org/content/early/2018/02/07/1720985115.short
 .. _Poser et al., 2006: https://onlinelibrary.wiley.com/doi/full/10.1002/mrm.20900
 

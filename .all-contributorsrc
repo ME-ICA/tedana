@@ -194,6 +194,26 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "aykhojandi",
+      "name": "aykhojandi",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/38105040?v=4",
+      "profile": "https://github.com/aykhojandi",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "smoia",
+      "name": "Stefano Moia",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/35300580?v=4",
+      "profile": "https://github.com/smoia",
+      "contributions": [
+        "code",
+        "review",
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 5,
