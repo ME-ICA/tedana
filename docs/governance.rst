@@ -81,17 +81,19 @@ Steering committee
   The steering committee is made up of a subset of maintainers who help guide
   the project. Current Steering Committee members:
 
-  +----------------------------------------------+
-  | `Dan Handwerker`_ (@handwerkerd) (tentative) |
-  +----------------------------------------------+ 
-  | Your name here!                              |
-  +----------------------------------------------+
-  | Your name here!                              |
-  +----------------------------------------------+
-  | Your name here!                              |
-  +----------------------------------------------+
-  | Your name here!                              |
-  +----------------------------------------------+
+  +--------------------------------------+
+  | `Logan Dowdle`_ (@dowdlelt)              | 
+  +--------------------------------------+
+  | `Elizabeth DuPre`_ (@emdupre)           |
+  +--------------------------------------+
+  | `Dan Handwerker`_ (@handwerkerd)   |
+  +--------------------------------------+
+  | `Taylor Salo`_ (@tsalo)                           |
+  +--------------------------------------+
+  | `Joshua Teves`_ (@jbteves)                  |
+  +--------------------------------------+
+  | `Eneko Uruñuela`_ (@eurunuela)          |
+  +--------------------------------------+
 
 Focused Leadership Roles
   We have identified key responsibilities or skills that help advance tedana
