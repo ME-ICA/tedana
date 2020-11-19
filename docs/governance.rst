@@ -196,11 +196,12 @@ and heavily depend on the
 9. Rules governing voting:
 
    a) A vote can be triggered by any Maintainer, but only after 5 working days
-      from the time a Review Requesting Changes is made. If a PR has a disagreement
-      that required a vote, there must be at least 15 days from the conclusion
-      of the first vote before another vote can be triggered.
-   b) Only Maintainers can vote and each Maintainer gets one vote.
-   c) A vote ends after 7 working days or when all Maintainers have voted or
+     from the time a Review Requesting Changes is made. A PR can only have one 
+      open vote at a time. If disagreements over a PR results in more than one
+      vote, the Steering Committee has the authority to create a voting process
+      to help resolve disagreements in a more efficient and respectful manner.
+   b) Only Contributors can vote and each Contributor gets one vote.
+   c) A vote ends after 15 working days or when all Contributors have voted or
       abstained (whichever comes first).
    d) A vote freezes the PR - no new commits or Reviews Requesting Changes can
       be added to it while a vote is ongoing. If a commit is accidentally made

@@ -60,7 +60,7 @@ to be developed. This is an area of active development and interest.
 Denoising
 ---------
 
-tedana was developed out of a package known as multi-echo ICA (ME-ICA or meica)
+tedana was developed out of a package known as [multi-echo ICA, ME-ICA, or MEICA](https://github.com/ME-ICA/me-ica )
 developed by Dr. Prantik Kundu. Though the usage of ICA for classification of
 signal vs noise components has continued in tedana, this is not a rule. The
 tedana community is open and encouraging of new denoising methods, whether or not they
@@ -103,7 +103,8 @@ What tedana isn’t
 While the list of things that do not fall under the scope of tedana are
 infinite, it is worth mentioning a few points:
 
-- tedana will not offer a GUI for usage - it is intended to be either a stand
+- tedana will not offer a GUI for usage 
+- it is intended to be either a stand
   alone processing package or serve as a processing step as part of a larger
   package (i.e. fmriprep or afni_proc.py). 
 - tedana will not provide basic preprocessing steps, such as motion correction
