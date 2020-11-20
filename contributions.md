@@ -3,7 +3,8 @@
 ## Contributors
 We appreciate all of our contributors!
 Each contributor below has made a statement of how they feel they've contributed to `tedana`.
-- Joshua Teves helped manage issues and pull requests for a variety of both administrative and code-specific tasks.
+- Dan Handwerker helps with project management (people wrangling & documentation), led the organization for the 2019 tedana hackathon, provides conceptual feedback on many aspects of the code, contributes to documentation, and, once in a while, even contributes to the code.
+- Joshua Teves helps manage issues and pull requests for a variety of both administrative and code-specific tasks.
 
 ## Funding
 Special thanks to the following sources of funding for `tedana`:
