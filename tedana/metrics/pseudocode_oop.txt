@@ -1,0 +1,21 @@
+Pseudocode for metric modularization
+
+I opened the PR before realizing Dan asked for pseudocode, not code-code...
+
+Pseudocode:
+    1. Define a metric class with all of the following attributes:
+        A. Name
+        B. Function Pointer
+        C. Dependency List
+        D. Value
+    2. Fill out all metrics, with a table as a static variable for the
+    Metric class that allows us to easily have metrics read each other.
+    3. Run a recursive dependency-resolver to actually harvest the needed
+    metric from the top of the metric dependency tree.
+    4. Eventually add a few nifty features:
+        A. File-based I/O to reduce memory overhead
+        B. Theoretically expand it out so that every step in the entire
+        pipeline is a node on the tree
+        C. Tests to catch any circular dependencies ahead of runtime (that
+        is, make them impossible when merging if tests are passing)
+        D. All the additional metrics you want.
