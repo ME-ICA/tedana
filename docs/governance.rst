@@ -200,7 +200,7 @@ and heavily depend on the
 9. Rules governing voting:
 
    a) A vote can be triggered by any Maintainer, but only after 5 working days
-     from the time a Review Requesting Changes is made. A PR can only have one 
+      from the time a Review Requesting Changes is made. A PR can only have one 
       open vote at a time. If disagreements over a PR results in more than one
       vote, the Steering Committee has the authority to create a voting process
       to help resolve disagreements in a more efficient and respectful manner.
