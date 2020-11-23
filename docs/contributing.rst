@@ -47,7 +47,7 @@ Our focus is on functional MRI, including both magnitude and phase data,
 however we understand that quantitative mapping has the potential to aid in
 data processing. Thus, we believe that some details on non-functional MRI
 acquisitions, such as detailed T2* mapping, may fall within the scope of
-tedana. Acquisition related details can be found in the tedana Documentation.
+tedana. [Acquisition related details can be found in the tedana Documentation](https://tedana.readthedocs.io/en/latest/acquisition.html).
 
 Combining echoes
 ----------------
@@ -72,7 +72,8 @@ processing) and noise (defined here as changes unrelated to neural
 processing, i.e. motion, cardiac, respiration).
 
 tedana is primarily intended to work on volume data, that is, data that is
-still in structured voxel space. Surface-based denoising is not currently
+still in structured voxel space. This is because several of the current used denoising metrics rely on spatial continuity, and they have not yet been updated to consider continuity over cortical vertices.
+Therefore, surface-based denoising is not currently
 within the scope of tedana, but code should be written so that it is a
 possible option in the future.
 
@@ -82,8 +83,8 @@ that use information across multiple runs are welcome.
 Visualization
 -------------
 
-Though tedana does not provide a GUI for inspecting results, it does produce
-figures as part of the processing stream. These figures are intended to help
+As part of the processing stream, tedana provides figures and an 
+HTML-based GUI for inspecting results. These are intended to help
 users understand the outputs from tedana and diagnose problems. Though a
 comprehensive viewer (such as fsleyes) is outside of the scope of tedana, we
 will continue to improve the reports and add new information as needed.
