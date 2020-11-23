@@ -10,8 +10,8 @@ denoising method that was originally defined in ME-ICA
 be more understandable, modular, and adaptable so that it can serve as a
 testing ground for novel multi-echo fMRI denoising methods. We have expanded
 to welcome additional multi-echo fMRI processing approaches, and to support
-communal resources for multi-echo fMRI, whether or not people use the tedana
-software.
+communal resources for multi-echo fMRI, whether or not they
+directly involve the tedana software.
 
 A more detailed `project scope is here <https://tedana.readthedocs.io/en/latest/contributing.html#Scope-of-tedana>`_
 

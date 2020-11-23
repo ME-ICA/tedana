@@ -37,7 +37,7 @@ following system with several goals in mind:
     there are discussions about sensitive personal matters.
 
 This governance structure is a work-in-progress. We welcome both people
-who want to take on a leadership role as well as ideas for our to improve
+who want to take on a leadership role as well as ideas to improve
 this structure.
 
 Leadership
@@ -65,6 +65,8 @@ Maintainer
   | `Logan Dowdle`_ (@dowdlelt)       | 
   +-----------------------------------+
   | `Elizabeth DuPre`_ (@emdupre)     |
+  +-----------------------------------+
+  | `Javier Gonzalez-Castillo`_ (@javiergcas) |
   +-----------------------------------+
   | `Dan Handwerker`_ (@handwerkerd)  |
   +-----------------------------------+
@@ -237,6 +239,7 @@ The outcome of a vote is based on a simple majority.
 .. _César Caballero-Gaudes: https://github.com/CesarCaballeroGaudes
 .. _Logan Dowdle: https://github.com/dowdlelt
 .. _Elizabeth DuPre: https://github.com/emdupre
+.. _Javier Gonzalez-Castillo: https://github.com/javiergcas
 .. _Dan Handwerker: https://github.com/handwerkerd
 .. _Taylor Salo: https://tsalo.github.io
 .. _Joshua Teves: https://github.com/jbteves
