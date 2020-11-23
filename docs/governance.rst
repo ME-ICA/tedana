@@ -125,11 +125,8 @@ Focused Leadership Roles
     |   Is a point of contact for potential contributors to make them feel welcome and direct them to relevant resources or issues
   - | Multi-echo fMRI support leader `Logan Dowdle`_
     |   Monitors places where people may ask questions about tedana or multi-echo fMRI and tries to find someone to answer those questions
-  - | Enforcer(s) of the `code of conduct`_ `Elizabeth DuPre`_ & `Dan Handwerker`_ & another volunteer
-    |   A person or people someone can go to if they want to report a code of conduct violation
-    |   If this is one person, that person should NOT be on the steering committee
-    |   If this is more than one person, at least one should not be on the steering committee
-    |   Ideal is someone who cares about tedana but DOESN’T know contributors well enough to say, ”Person X would never do that”
+  - | Enforcer(s) of the `code of conduct`_: `Elizabeth DuPre`_ & `Dan Handwerker`_ & another volunteer
+    |   People someone can go to if they want to report a code of conduct violation
 
 Changing leaders
 ````````````````
@@ -247,6 +244,7 @@ The outcome of a vote is based on a simple majority.
 .. _Joshua Teves: https://github.com/jbteves
 .. _Eneko Uruñuela: https://github.com/eurunuela
 .. _Kirstie Whitaker: https://github.com/KirstieJane
+.. _code of conduct: https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md
 .. _all-contributors file: https://github.com/ME-ICA/tedana/blob/master/.all-contributorsrc
 .. _bus factor: https://en.wikipedia.org/wiki/Bus_factor
 .. _Repository: https://github.com/ME-ICA/tedana>
