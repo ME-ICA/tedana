@@ -8,7 +8,9 @@ Each contributor below has made a statement of how they feel they've contributed
 - Joshua Teves helps manage issues and pull requests for a variety of both administrative and code-specific tasks.
 - Eneko Uruñuela helps with the development of dimensionality reduction and decomposition algorithms in tedana, with Principal Component Analysis to be more specific, and contributed to the development of the interactive reports. 
 
-## Funding
-Special thanks to the following sources of funding for `tedana`:
+## Funding and Operational Support
+Special thanks to the following sources of funding and operational support
+for `tedana`:
 - National Institutes of Mental Health, [Section on Functional Imaging Methods](https://fim.nimh.nih.gov) for supporting the 2019 `tedana` hackathon.
 - National Institutes of Health for supporting the 2019 AFNI Code Convergence, where work in the 2019 `tedana` hackathon was continued.
+- Mozilla Open Leaders for supporting Kirstie Whitaker.
