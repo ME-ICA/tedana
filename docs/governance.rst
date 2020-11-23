@@ -125,7 +125,7 @@ Focused Leadership Roles
     |   Is a point of contact for potential contributors to make them feel welcome and direct them to relevant resources or issues
   - | Multi-echo fMRI support leader `Logan Dowdle`_
     |   Monitors places where people may ask questions about tedana or multi-echo fMRI and tries to find someone to answer those questions
-  - | Enforcer(s) of the `code of conduct`_: `Elizabeth DuPre`_ & `Dan Handwerker`_ & another volunteer
+  - | Enforcer(s) of the `code of conduct`_: `Elizabeth DuPre`_ & `Dan Handwerker`_ & `Stefano Moia`_
     |   People someone can go to if they want to report a code of conduct violation
 
 Changing leaders
@@ -240,6 +240,7 @@ The outcome of a vote is based on a simple majority.
 .. _Elizabeth DuPre: https://github.com/emdupre
 .. _Javier Gonzalez-Castillo: https://github.com/javiergcas
 .. _Dan Handwerker: https://github.com/handwerkerd
+.. _Stefano Moia: https://github.com/smoia
 .. _Taylor Salo: https://tsalo.github.io
 .. _Joshua Teves: https://github.com/jbteves
 .. _Eneko Uruñuela: https://github.com/eurunuela
