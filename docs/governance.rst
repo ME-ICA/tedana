@@ -78,7 +78,7 @@ Maintainer
   +-----------------------------------+
 
 Steering committee
-  The steering committee is made up of a subset of maintainers who help guide
+  The :ref:`Steering Committee` is made up of a subset of maintainers who help guide
   the project. Current Steering Committee members:
 
   +--------------------------------------+
@@ -210,6 +210,8 @@ and heavily depend on the
       during that period it should be reverted. Comments are allowed.
    e) The quorum for a vote is five votes.
    f) The outcome of the vote is decided based on a simple majority.
+
+.. _Steering Committee:
 
 Steering Committee
 ```````````````````
