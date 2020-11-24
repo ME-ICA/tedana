@@ -6,7 +6,7 @@ Project vision
 
 ``tedana`` was originally developed as a place for the multi-echo fMRI
 denoising method that was originally defined in ME-ICA
-(`ME-ICA source <https://github.com/ME-ICA/me-ica>`_.
+(`ME-ICA source <https://github.com/ME-ICA/me-ica>`_).
 tedana was designed to be more understandable, modular, and adaptable so
 that it can serve as a testing ground for novel multi-echo fMRI denoising
 methods.

@@ -47,7 +47,9 @@ Our focus is on functional MRI, including both magnitude and phase data,
 however we understand that quantitative mapping has the potential to aid in
 data processing. Thus, we believe that some details on non-functional MRI
 acquisitions, such as detailed T2* mapping, may fall within the scope of
-tedana. [Acquisition related details can be found in the tedana Documentation](https://tedana.readthedocs.io/en/latest/acquisition.html).
+tedana. `Acquisition related details can be found in the tedana Documentation.`_
+
+.. _Acquisition related details can be found in the tedana Documentation.: https://tedana.readthedocs.io/en/latest/acquisition.html
 
 Combining echoes
 ----------------
@@ -60,7 +62,7 @@ to be developed. This is an area of active development and interest.
 Denoising
 ---------
 
-tedana was developed out of a package known as [multi-echo ICA, ME-ICA, or MEICA](https://github.com/ME-ICA/me-ica )
+tedana was developed out of a package known as `multi-echo ICA, ME-ICA, or MEICA`_
 developed by Dr. Prantik Kundu. Though the usage of ICA for classification of
 signal vs noise components has continued in tedana, this is not a rule. The
 tedana community is open and encouraging of new denoising methods, whether or not they
@@ -72,13 +74,15 @@ processing) and noise (defined here as changes unrelated to neural
 processing, i.e. motion, cardiac, respiration).
 
 tedana is primarily intended to work on volume data, that is, data that is
-still in structured voxel space. This is because several of the current used denoising metrics rely on spatial continuity, and they have not yet been updated to consider continuity over cortical vertices.
+still in structured voxel space. This is because several of the currently used denoising metrics rely on spatial continuity, and they have not yet been updated to consider continuity over cortical vertices.
 Therefore, surface-based denoising is not currently
 within the scope of tedana, but code should be written so that it is a
 possible option in the future.
 
 Currently tedana works on a single subject, run by run basis; however, methods
 that use information across multiple runs are welcome. 
+
+.. _`multi-echo ICA, ME-ICA, or MEICA`: https://github.com/ME-ICA/me-ica
 
 Visualization
 -------------
