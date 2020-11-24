@@ -127,28 +127,28 @@ Focused Leadership Roles
     |   Follows up with people who volunteered to address an item or 
         alerts the broader community of known tasks that could use a 
         volunteer
-  - | MR physics leader `César Caballero-Gaudes`_
+  - | MR physics leader: `César Caballero-Gaudes`_
     |   Someone who can make sure calculations fit within our 
         understanding of MR physics
     |   Someone who can either answer MRI physics questions related to 
         multi-echo or direct people to where they can find answers
-  - | Processing algorithms leader `Eneko Uruñuela`_ (Decomposition) &  `Dan Handwerker`_ (Metrics & Decision Tree)
+  - | Processing algorithms leaders: `Eneko Uruñuela`_ (Decomposition) &  `Dan Handwerker`_ (Metrics & Decision Tree)
     |   Someone who can make sure algorithms are appropriately implemented 
         (or knows enough to delegate to someone who can make sure 
         implementation is good)
     |   Someone who can either answer processing algorithm questions or 
         direct people to where they can find answers
-  - | Collaborative programming leader `Elizabeth DuPre`_ & `Joshua Teves`_
+  - | Collaborative programming leaders: `Elizabeth DuPre`_ & `Joshua Teves`_
     |   Helps make sure tedana is following best practices for Python code 
         design, testing, and communication for issues/pull requests etc.
-  - | Communications leader `Joshua Teves`_
+  - | Communications leader: `Joshua Teves`_
     |   Mailing list manager & other outward-facing communication about 
         the project
-  - | New contributors leader `Taylor Salo`_
+  - | New contributors leader: `Taylor Salo`_
     |   Leads efforts to make contributor documentation more welcoming
     |   Is a point of contact for potential contributors to make them feel
         welcome and direct them to relevant resources or issues
-  - | Multi-echo fMRI support leader `Logan Dowdle`_
+  - | Multi-echo fMRI support leader: `Logan Dowdle`_
     |   Monitors places where people may ask questions about tedana or 
         multi-echo fMRI and tries to find someone to answer those questions
   - | Enforcer(s) of the `code of conduct`_: `Elizabeth DuPre`_ &  `Dan Handwerker`_ & `Stefano Moia`_
