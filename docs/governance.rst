@@ -12,7 +12,7 @@ Tedana is a relatively small open source project that requires specialized
 knowledge in multiple domains.
 This leads to several challenges.
 No one
-person on the current tedana development team has a combination of 
+person on the current tedana development team has a combination of
 available time plus expertise in collaborative software development, MRI
 physics, and advanced data processing methods to assume a primary project
 leader role.
@@ -54,18 +54,18 @@ Contributor
   A contribution can be code, documentation, or conceptual.
   All contributors are listed in the `all-contributors file`_.
   The community decides on the content of this file using the same process
-  as any other change to the `Repository`_ (see below) allowing the 
-  meaning of "Contributor" to evolve independently of the Decision-making 
+  as any other change to the `Repository`_ (see below) allowing the
+  meaning of "Contributor" to evolve independently of the Decision-making
   rules.
-  Contributors also have the option to be added to the Zenodo file which 
+  Contributors also have the option to be added to the Zenodo file which
   may be used for authorship credit for tedana.
-    
+
 
 Maintainer
   A Contributor is responsible for the long term health of the project and
   the community.
   Maintainers have additional authority (see `Decision Making Process`_)
-  helping them to resolve conflicts and increase the pace of the 
+  helping them to resolve conflicts and increase the pace of the
   development when necessary.
   Any maintainer can remove themselves.
   Any contributor can become a maintainer by request, or by nomination of
@@ -75,7 +75,7 @@ Maintainer
   Current Maintainers:
 
   +-------------------------------------------+
-  | `Logan Dowdle`_ (@dowdlelt)               | 
+  | `Logan Dowdle`_ (@dowdlelt)               |
   +-------------------------------------------+
   | `Elizabeth DuPre`_ (@emdupre)             |
   +-------------------------------------------+
@@ -99,7 +99,7 @@ Steering committee
   Current Steering Committee members:
 
   +--------------------------------------+
-  | `Logan Dowdle`_ (@dowdlelt)          | 
+  | `Logan Dowdle`_ (@dowdlelt)          |
   +--------------------------------------+
   | `Elizabeth DuPre`_ (@emdupre)        |
   +--------------------------------------+
@@ -118,41 +118,44 @@ Focused Leadership Roles
   One person can fill more than one role and more than one person can
   decide to share or split the responsibilities of a role.
   Any contributor can propose the creation of new focused leadership roles.
-  A person can take on a leadership role without being a Maintainer or 
+  A person can take on a leadership role without being a Maintainer or
   Steering Committee member
 
   - | Task manager & record keeper: `Dan Handwerker`_
+
     |   Helps write & keep track of notes from meetings
     |   Keeps track of issues or items that should be addressed
-    |   Follows up with people who volunteered to address an item or 
-        alerts the broader community of known tasks that could use a 
+    |   Follows up with people who volunteered to address an item or
+        alerts the broader community of known tasks that could use a
         volunteer
   - | MR physics leader: `César Caballero-Gaudes`_
-    |   Someone who can make sure calculations fit within our 
+
+    |   Someone who can make sure calculations fit within our
         understanding of MR physics
-    |   Someone who can either answer MRI physics questions related to 
+    |   Someone who can either answer MRI physics questions related to
         multi-echo or direct people to where they can find answers
   - | Processing algorithms leaders: `Eneko Uruñuela`_ (Decomposition) &  `Dan Handwerker`_ (Metrics & Decision Tree)
-    |   Someone who can make sure algorithms are appropriately implemented 
-        (or knows enough to delegate to someone who can make sure 
+
+    |   Someone who can make sure algorithms are appropriately implemented
+        (or knows enough to delegate to someone who can make sure
         implementation is good)
-    |   Someone who can either answer processing algorithm questions or 
+    |   Someone who can either answer processing algorithm questions or
         direct people to where they can find answers
   - | Collaborative programming leaders: `Elizabeth DuPre`_ & `Joshua Teves`_
-    |   Helps make sure tedana is following best practices for Python code 
+    |   Helps make sure tedana is following best practices for Python code
         design, testing, and communication for issues/pull requests etc.
   - | Communications leader: `Joshua Teves`_
-    |   Mailing list manager & other outward-facing communication about 
+    |   Mailing list manager & other outward-facing communication about
         the project
   - | New contributors leader: `Taylor Salo`_
     |   Leads efforts to make contributor documentation more welcoming
     |   Is a point of contact for potential contributors to make them feel
         welcome and direct them to relevant resources or issues
   - | Multi-echo fMRI support leader: `Logan Dowdle`_
-    |   Monitors places where people may ask questions about tedana or 
+    |   Monitors places where people may ask questions about tedana or
         multi-echo fMRI and tries to find someone to answer those questions
   - | Enforcer(s) of the `code of conduct`_: `Elizabeth DuPre`_ &  `Dan Handwerker`_ & `Stefano Moia`_
-    |   People someone can go to if they want to report a code of conduct 
+    |   People someone can go to if they want to report a code of conduct
         violation
 
 Changing leaders
@@ -166,21 +169,21 @@ If individuals cannot reach consensus on who steps back and who assumes
 new roles, then a majority vote of contributors from the previous 3 years
 will assign people to roles where there are conflicts.
 
-If there are concerns with a tedana leader, any enforcer of the code of 
+If there are concerns with a tedana leader, any enforcer of the code of
 conduct can ask anyone to step down from a leadership role.
-If a person refuses to step down, then an enforcer of the code of conduct 
+If a person refuses to step down, then an enforcer of the code of conduct
 will consult with the other code of conduct enforcers.
 If they reach a concensus that a person shouldn't have a tedana leadership
 position, then they should be removed.
-If a code of conduct enforcer has a conflict of interest, then the 
-remaining code of conduct enforcers will identify someone without a 
+If a code of conduct enforcer has a conflict of interest, then the
+remaining code of conduct enforcers will identify someone without a
 conflict to include in deliberations.
 
 Decision Making Process
 -----------------------
 
-The rules outlined below are inspired by the 
-`decision-making rules for the BIDS standard <https://github.com/bids-standard/bids-specification/blob/master/DECISION-MAKING.md>`_, 
+The rules outlined below are inspired by the
+`decision-making rules for the BIDS standard <https://github.com/bids-standard/bids-specification/blob/master/DECISION-MAKING.md>`_,
 which in turn were inspired by the
 `lazy consensus system used in the Apache Foundation <https://www.apache.org/foundation/voting.html>`_,
 and heavily depend on the
@@ -188,18 +191,18 @@ and heavily depend on the
 
 1. Potential modifications to the Repository should first be proposed via
    an Issue.
-2. Every modification (including a correction of a typo, adding a new 
-   Contributor, an extension or others) or proposal to release a new 
+2. Every modification (including a correction of a typo, adding a new
+   Contributor, an extension or others) or proposal to release a new
    version needs to be done via a Pull Request (PR) to the Repository.
-3. Anyone can open an Issue or a PR (this action is not limited to 
+3. Anyone can open an Issue or a PR (this action is not limited to
    Contributors).
 4. A PR is eligible to be merged if and only if these conditions are met:
 
-   a) The PR features at least two 
+   a) The PR features at least two
       `Reviews that Approve <https://help.github.com/articles/about-pull-request-reviews/#about-pull-request-reviews>`_
       the PR of which neither is the author of the PR.
-      The reviews should be made after the last commit in the PR 
-      (equivalent to 
+      The reviews should be made after the last commit in the PR
+      (equivalent to
       `Stale review dismissal <https://help.github.com/articles/enabling-required-reviews-for-pull-requests/>`_
       option on GitHub).
       If a second review requests minor changes after
@@ -207,7 +210,7 @@ and heavily depend on the
       to re-review.
    b) Does not feature any
       `Reviews that Request changes <https://help.github.com/articles/about-required-reviews-for-pull-requests/>`_.
-      That is, if someone asked for changes, the PR should not be merged 
+      That is, if someone asked for changes, the PR should not be merged
       just because two other people approve it.
    c) Is not a Draft PR.
       That is, the PR author says it is ready for review.
@@ -223,33 +226,33 @@ and heavily depend on the
    If a community member requests changes they need to provide an
    explanation regarding what changes should be made and justification of
    their importance.
-   Reviews requesting changes can also be used to request more time to 
+   Reviews requesting changes can also be used to request more time to
    review a PR.
-7. A reviewer who requested changes can dismiss their own review, if they 
+7. A reviewer who requested changes can dismiss their own review, if they
    decide their requested changes are no longer necessary, or approve
    changes that address the issue underlying their change request.
 8. If the author of a PR and a reviewer who requests changes cannot find a
-   solution that would lead to: 
+   solution that would lead to:
 
    (1) The author closing the PR without merging
-   (2) The reviewer accepting requested changes or 
-   (3) The dismissing their review, so that the PR can be approved and 
+   (2) The reviewer accepting requested changes or
+   (3) The dismissing their review, so that the PR can be approved and
        merged, then the disagreement will be resolved with a vote.
 9. Rules governing voting:
 
-   a) A vote can be triggered by any Maintainer, but only after 5 working 
+   a) A vote can be triggered by any Maintainer, but only after 5 working
       days from the time a Review Requesting Changes is made.
       A PR can only have one open vote at a time.
       If disagreements over a PR results in more than one
-      vote, the Steering Committee has the authority to create a voting 
-      process to help resolve disagreements in a more efficient and 
+      vote, the Steering Committee has the authority to create a voting
+      process to help resolve disagreements in a more efficient and
       respectful manner.
    b) Only Contributors can vote and each Contributor gets one vote.
-   c) A vote ends after 15 working days or when all Contributors have 
+   c) A vote ends after 15 working days or when all Contributors have
       voted or abstained (whichever comes first).
-   d) A vote freezes the PR - no new commits or Reviews Requesting Changes 
+   d) A vote freezes the PR - no new commits or Reviews Requesting Changes
       can be added to it while a vote is ongoing.
-      If a commit is accidentally made during that period it should be 
+      If a commit is accidentally made during that period it should be
       reverted.
       Comments are allowed.
    e) The quorum for a vote is five votes.
@@ -260,10 +263,10 @@ and heavily depend on the
 Steering Committee
 ```````````````````
 The steering committee steers.
-The goal of the steering committee is to help guide the direction of the 
+The goal of the steering committee is to help guide the direction of the
 project.
-Decisions in the steering committee will focus on how to present project 
-issues to the broader community in a clear way rather than making project 
+Decisions in the steering committee will focus on how to present project
+issues to the broader community in a clear way rather than making project
 decisions without community input.
 
 
@@ -278,7 +281,7 @@ The steering committee can decide:
 - Criteria for cutting a new version release and when those criteria are met.
 
 Steering committee decisions should strive for consensus.
-If consensus cannot be reached, the members of the steering committee 
+If consensus cannot be reached, the members of the steering committee
 should vote.
 Voting will take place over 7 days or until every steering committee member
 votes or abstains.
