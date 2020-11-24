@@ -132,8 +132,7 @@ Focused Leadership Roles
         understanding of MR physics
     |   Someone who can either answer MRI physics questions related to 
         multi-echo or direct people to where they can find answers
-  - | Processing algorithms leader `Eneko Uruñuela`_ (Decomposition) & 
-    `Dan Handwerker`_ (Metrics & Decision Tree)
+  - | Processing algorithms leader `Eneko Uruñuela`_ (Decomposition) &  `Dan Handwerker`_ (Metrics & Decision Tree)
     |   Someone who can make sure algorithms are appropriately implemented 
         (or knows enough to delegate to someone who can make sure 
         implementation is good)
@@ -152,8 +151,7 @@ Focused Leadership Roles
   - | Multi-echo fMRI support leader `Logan Dowdle`_
     |   Monitors places where people may ask questions about tedana or 
         multi-echo fMRI and tries to find someone to answer those questions
-  - | Enforcer(s) of the `code of conduct`_: `Elizabeth DuPre`_ & 
-    `Dan Handwerker`_ & `Stefano Moia`_
+  - | Enforcer(s) of the `code of conduct`_: `Elizabeth DuPre`_ &  `Dan Handwerker`_ & `Stefano Moia`_
     |   People someone can go to if they want to report a code of conduct 
         violation
 
@@ -196,6 +194,7 @@ and heavily depend on the
 3. Anyone can open an Issue or a PR (this action is not limited to 
    Contributors).
 4. A PR is eligible to be merged if and only if these conditions are met:
+
    a) The PR features at least two 
       `Reviews that Approve <https://help.github.com/articles/about-pull-request-reviews/#about-pull-request-reviews>`_
       the PR of which neither is the author of the PR.
@@ -231,12 +230,13 @@ and heavily depend on the
    changes that address the issue underlying their change request.
 8. If the author of a PR and a reviewer who requests changes cannot find a
    solution that would lead to: 
+
    (1) The author closing the PR without merging
    (2) The reviewer accepting requested changes or 
    (3) The dismissing their review, so that the PR can be approved and 
-       merged, then the disagreement
-       will be resolved with a vote.
+       merged, then the disagreement will be resolved with a vote.
 9. Rules governing voting:
+
    a) A vote can be triggered by any Maintainer, but only after 5 working 
       days from the time a Review Requesting Changes is made.
       A PR can only have one open vote at a time.
@@ -255,8 +255,7 @@ and heavily depend on the
    e) The quorum for a vote is five votes.
    f) The outcome of the vote is decided based on a simple majority.
 
-..
-_Steering Committee:
+.. _Steering Committee:
 
 Steering Committee
 ```````````````````
@@ -269,6 +268,7 @@ decisions without community input.
 
 
 The steering committee can decide:
+
 - An issue should be prioritized for wider communal discussion.
 - A a pull request requires more discussion or reviews than standard before
   merging.
