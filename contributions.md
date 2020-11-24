@@ -13,7 +13,7 @@ Each contributor below has made a statement of how they feel they've contributed
 ## Funding and Operational Support
 Special thanks to the following sources of funding and operational support
 for `tedana`:
-- National Institutes of Mental Health, [Section on Functional Imaging Methods](https://fim.nimh.nih.gov) for supporting the 2019 `tedana` hackathon.
+- National Institutes of Mental Health, [Section on Functional Imaging Methods][sfim], for supporting the 2019 `tedana` hackathon.
 - National Institutes of Health for supporting the 2019 AFNI Code Convergence, where work in the 2019 `tedana` hackathon was continued.
 - Mozilla Open Leaders for supporting Kirstie Whitaker.
 
@@ -23,3 +23,4 @@ for `tedana`:
 [joshua-teves]: <https://github.com/jbteves>
 [eneko-urunuela]: <https://github.com/eurunuela>
 [maryam-vaziri-pashkam]: <http://maryam-vaziri.com/>
+[sfim]: <https://fim.nimh.nih.gov>
