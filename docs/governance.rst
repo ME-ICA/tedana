@@ -28,7 +28,7 @@ following system with several goals in mind:
 - Maximize the `bus factor`_ of the project.
 - Acknowledge the leadership and time multiple people contribute to our
   community without demanding more time than any individual can offer.
-  Dividing leadership responsabilities into multiple smaller roles also
+  Dividing leadership responsibilities into multiple smaller roles also
   makes it easier to encourage new people to take on a leadership role
   without fearing that too much work will be required of them.
 - Openness as a priority:
@@ -62,7 +62,7 @@ Contributor
 
 
 Maintainer
-  A Maintiner is responsible for the long term health of the project and
+  A Maintainer is responsible for the long term health of the project and
   the community.
   Maintainers have additional authority (see `Decision Making Process`_)
   helping them to resolve conflicts and increase the pace of the

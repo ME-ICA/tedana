@@ -47,9 +47,10 @@ Our focus is on functional MRI, including both magnitude and phase data,
 however we understand that quantitative mapping has the potential to aid in
 data processing. Thus, we believe that some details on non-functional MRI
 acquisitions, such as detailed T2* mapping, may fall within the scope of
-tedana. `Acquisition related details can be found in the tedana Documentation.`_
+tedana.
+Acquisition related details can be found in the `tedana Documentation.`_
 
-.. _Acquisition related details can be found in the tedana Documentation.: https://tedana.readthedocs.io/en/latest/acquisition.html
+.. _tedana Documentation.: https://tedana.readthedocs.io/en/latest/acquisition.html
 
 Combining echoes
 ----------------
