@@ -72,7 +72,7 @@ have a basis in ICA.
 Specifically, we are interested in any method that seeks to use the information from multiple
 echoes to identify signal (defined here as BOLD signals arising from neural
 processing) and noise (defined here as changes unrelated to neural
-processing, i.e. motion, cardiac, respiration).
+processing, such as motion, cardiac, respiration).
 
 tedana is primarily intended to work on volume data, that is, data that is
 still in structured voxel space. This is because several of the currently used denoising metrics rely on spatial continuity, and they have not yet been updated to consider continuity over cortical vertices.
