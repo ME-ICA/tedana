@@ -25,9 +25,9 @@ Scope of tedana
 ```````````````
 tedana is a collection of tools, software and a community related to echo time
 (TE) dependent analyses. The umbrella of tedana covers a number of overlapping,
-but somewhat distinct ideas related to multi-echo analysis. This scope includes
+but somewhat distinct, ideas related to multi-echo analysis. This scope includes
 collecting multi-echo data (Acquisition), combining those echoes together
-(Combining), with optional noise removal (Denoising), inspecting the outputs
+(Combination), with optional noise removal (Denoising), inspecting the outputs
 (Visualization) and answering multi-echo related questions (Community). In
 general, tedana accepts previously preprocessed data to produce outputs that
 are ready for further analyses. 

@@ -271,7 +271,7 @@ decisions without community input.
 The steering committee can decide:
 
 - An issue should be prioritized for wider communal discussion.
-- A a pull request requires more discussion or reviews than standard before
+- A pull request requires more discussion or reviews than standard before
   merging.
 - How a breaking change (something that changes existing user function calls
   or program outputs) will be presented to the developer and user base for
