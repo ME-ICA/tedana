@@ -278,8 +278,10 @@ Any member of the ``tedana``  community can propose that a new version is releas
 They should do so by opening an issue recommending a new release and giving a
 1-2 sentence explanation of why the changes are sufficient to update the version.
 More information about what is required for a release to proceed is available
-in the :ref:`release checklist`.
+in the :ref:`release-checklist`.
 
+
+.. _release-checklist:
 
 Release Checklist
 -----------------
