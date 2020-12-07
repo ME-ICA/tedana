@@ -147,6 +147,8 @@ def _create_kr_plt(comptable_cds):
     fig = plotting.figure(plot_width=400, plot_height=400,
                           tools=["tap,wheel_zoom,reset,pan,crosshair,save", kr_hovertool],
                           title="Kappa / Rho Plot")
+    diagonal = models.Slope(gradient=1, y_intercept=0, line_color='#D3D3D3')
+    fig.add_layout(diagonal)
     fig.circle('kappa', 'rho', size='size', color='color', alpha=0.5, source=comptable_cds,
                legend_group='classif')
     fig.xaxis.axis_label = 'Kappa'
