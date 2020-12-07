@@ -1,7 +1,7 @@
 Governance
 ==========
 Governance is a hugely important part of any project.
-It is especially important to have clear process and communication channels
+It is especially important to have clear processes and communication channels
 for open source projects that rely on a distributed network of volunteers,
 such as ``tedana``.
 
@@ -18,7 +18,7 @@ physics, and advanced data processing methods to assume a primary project
 leader role.
 Even if such a person was interested, it may not benefit the
 project to overly rely on the existence of one person.
-We developed the
+Instead, we developed the
 following system with several goals in mind:
 
 - Grow the community.
@@ -234,7 +234,7 @@ and heavily depend on the
 
    (1) The author closing the PR without merging
    (2) The reviewer accepting requested changes or
-   (3) The dismissing their review, so that the PR can be approved and
+   (3) The reviewer dismissing their review, so that the PR can be approved and
        merged, then the disagreement will be resolved with a vote.
 9. Rules governing voting:
 

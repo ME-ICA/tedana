@@ -35,7 +35,7 @@ are ready for further analyses.
 Acquisition
 -----------
 
-While the development of multi-echo sequences is far beyond the current scope
+While the development of multi-echo sequences is beyond the current scope
 of tedana, the tedana community is committed to providing guidelines on current
 multi-echo implementations. This will include both specific instructions for
 how to collect multi-echo data for multiple vendors as well as details about
@@ -77,7 +77,7 @@ processing, such as motion, cardiac, respiration).
 tedana is primarily intended to work on volume data, that is, data that is
 still in structured voxel space. This is because several of the currently used denoising metrics rely on spatial continuity, and they have not yet been updated to consider continuity over cortical vertices.
 Therefore, surface-based denoising is not currently
-within the scope of tedana, but code should be written so that it is a
+within the scope of tedana, but code could be written so that it is a
 possible option in the future.
 
 Currently tedana works on a single subject, run by run basis; however, methods
@@ -89,7 +89,7 @@ Visualization
 -------------
 
 As part of the processing stream, tedana provides figures and an 
-HTML-based GUI for inspecting results. These are intended to help
+HTML-based report for inspecting results. These are intended to help
 users understand the outputs from tedana and diagnose problems. Though a
 comprehensive viewer (such as fsleyes) is outside of the scope of tedana, we
 will continue to improve the reports and add new information as needed.
