@@ -214,6 +214,15 @@
         "review",
         "doc"
       ]
+    },
+    {
+      "login": "notZaki",
+      "name": "Zaki A.",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/9019681?v=4",
+      "profile": "https://www.notzaki.com/",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 5,
