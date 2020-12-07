@@ -221,5 +221,5 @@
   "projectOwner": "ME-ICA",
   "repoType": "github",
   "repoHost": "https://github.com",
-  "skipCi": true
+  "skipCi": false
 }
