@@ -71,7 +71,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         Mixing matrix after sign correction and resorting (if reindex is True).
     """
     # Use adaptive_mask as mask
-    mask = adaptive_mask >= 3
+    mask = adaptive_mask > 0
 
     if not (catd.shape[0] == adaptive_mask.shape[0] == tsoc.shape[0]):
         raise ValueError('First dimensions (number of samples) of catd ({0}), '

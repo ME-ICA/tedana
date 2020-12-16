@@ -131,7 +131,9 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
     tes : (E,) :obj:`numpy.ndarray`
         Array of TEs, in seconds.
     adaptive_mask : (S,) :obj:`numpy.ndarray`
-        Adaptive mask of the data indicating the number of echos with signal at each voxel
+        Adaptive mask of the data indicating the number of echos with signal at each voxel.
+        This mask may be thresholded, typically with values less than 3 set to 0 depending
+        on the thresholding method.
     t2s : (S [x T]) :obj:`numpy.ndarray` or None, optional
         Estimated T2* values. Only required if combmode = 't2s'.
         Default is None.
@@ -211,7 +213,7 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
                    'estimates')
         LGR.info(msg)
 
-    mask = adaptive_mask >= 3
+    mask = adaptive_mask > 0
     data = data[mask, :, :]  # mask out unstable voxels/samples
     tes = np.array(tes)[np.newaxis, ...]  # (1 x E) array_like
     combined = np.zeros((data.shape[0], data.shape[2]))
