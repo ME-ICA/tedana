@@ -3,7 +3,6 @@ Functions to optimally combine data across echoes.
 """
 import logging
 import numpy as np
-from tedana.utils import unmask
 from tedana.due import due, Doi
 
 LGR = logging.getLogger(__name__)
