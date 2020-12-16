@@ -213,21 +213,29 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
                    'estimates')
         LGR.info(msg)
 
-    mask = adaptive_mask > 0
-    data = data[mask, :, :]  # mask out unstable voxels/samples
+    echos_to_run = np.unique(adaptive_mask)
+    # When there is one good echo, use two
+    if 1 in echos_to_run:
+        echos_to_run = np.sort(np.unique(np.append(echos_to_run, 2)))
+    echos_to_run = echos_to_run[echos_to_run >= 2]
+
     tes = np.array(tes)[np.newaxis, ...]  # (1 x E) array_like
     combined = np.zeros((data.shape[0], data.shape[2]))
-    for echo in np.unique(adaptive_mask[mask]):
-        echo_idx = adaptive_mask[mask] == echo
+    for i_echo, echo_num in enumerate(echos_to_run):
+        if echo_num == 2:
+            # Use the first two echoes for cases where there are
+            # either one or two good echoes
+            voxel_idx = np.where(np.logical_and(adaptive_mask > 0, adaptive_mask <= echo_num))[0]
+        else:
+            voxel_idx = np.where(adaptive_mask == echo_num)[0]
 
         if combmode == 'paid':
-            combined[echo_idx, :] = _combine_paid(data[echo_idx, :echo, :],
-                                                  tes[:echo])
+            combined[voxel_idx, :] = _combine_paid(data[voxel_idx, :echo_num, :],
+                                                   tes[:, :echo_num])
         else:
-            t2s_ = t2s[mask, ..., np.newaxis]  # mask out empty voxels/samples
+            t2s_ = t2s[..., np.newaxis]  # add singleton
 
-            combined[echo_idx, :] = _combine_t2s(
-                data[echo_idx, :echo, :], tes[:, :echo], t2s_[echo_idx, ...])
+            combined[voxel_idx, :] = _combine_t2s(
+                data[voxel_idx, :echo_num, :], tes[:, :echo_num], t2s_[voxel_idx, ...])
 
-    combined = unmask(combined, mask)
     return combined

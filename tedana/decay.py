@@ -184,7 +184,7 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
         if echo_num == 2:
             # Use the first two echoes for cases where there are
             # either one or two good echoes
-            voxel_idx = np.where(adaptive_mask <= echo_num)[0]
+            voxel_idx = np.where(np.logical_and(adaptive_mask > 0, adaptive_mask <= echo_num))[0]
         else:
             voxel_idx = np.where(adaptive_mask == echo_num)[0]
 
