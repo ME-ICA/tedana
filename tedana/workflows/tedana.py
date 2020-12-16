@@ -466,7 +466,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         RepLGR.info("An initial mask was generated from the first echo using "
                     "nilearn's compute_epi_mask function.")
 
-    mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True)
+    # Create an adaptive mask with at least 3 good echoes.
+    mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True, threshold=3)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
     io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
 
