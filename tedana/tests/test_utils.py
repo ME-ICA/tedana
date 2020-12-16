@@ -88,7 +88,7 @@ def test_make_adaptive_mask():
     assert mask.shape == masksum.shape == (64350,)
     assert np.allclose(mask, (masksum >= 1).astype(bool))
     # mask has correct # of entries
-    assert mask.sum() == 41749
+    assert mask.sum() == 50786
     # masksum has correct values
     vals, counts = np.unique(masksum, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
