@@ -73,7 +73,8 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
         Echo times in milliseconds.
     adaptive_mask
         Array where each value indicates the number of echoes with good signal
-        for that voxel.
+        for that voxel. This mask may be thresholded, typically with values
+        less than 3 set to 0 depending on the thresholding method.
 
     Returns
     -------
@@ -96,6 +97,7 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
         data_cat, echo_times, adaptive_mask, report=False)
 
     echos_to_run = np.unique(adaptive_mask)
+    # When there is one good echo, use two
     if 1 in echos_to_run:
         echos_to_run = np.sort(np.unique(np.append(echos_to_run, 2)))
     echos_to_run = echos_to_run[echos_to_run >= 2]
@@ -106,6 +108,8 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
 
     for i_echo, echo_num in enumerate(echos_to_run):
         if echo_num == 2:
+            # Use the first two echoes for cases where there are
+            # either one or two good echoes
             voxel_idx = np.where(adaptive_mask <= echo_num)[0]
         else:
             voxel_idx = np.where(adaptive_mask == echo_num)[0]
@@ -167,6 +171,7 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
     n_samp, n_echos, n_vols = data_cat.shape
 
     echos_to_run = np.unique(adaptive_mask)
+    # When there is one good echo, use two
     if 1 in echos_to_run:
         echos_to_run = np.sort(np.unique(np.append(echos_to_run, 2)))
     echos_to_run = echos_to_run[echos_to_run >= 2]
@@ -177,6 +182,8 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
 
     for i_echo, echo_num in enumerate(echos_to_run):
         if echo_num == 2:
+            # Use the first two echoes for cases where there are
+            # either one or two good echoes
             voxel_idx = np.where(adaptive_mask <= echo_num)[0]
         else:
             voxel_idx = np.where(adaptive_mask == echo_num)[0]
