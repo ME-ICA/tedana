@@ -79,6 +79,11 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
     Returns
     -------
     t2s_limited, s0_limited, t2s_full, s0_full
+
+    See Also
+    --------
+    :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
+                                              parameter.
     """
     RepLGR.info("A monoexponential model was fit to the data at each voxel "
                 "using nonlinear model fitting in order to estimate T2* and S0 "
@@ -238,7 +243,8 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype):
         time AND echoes) non-zero
     adaptive_mask : (S,) array_like
         Valued array indicating number of echos that have sufficient signal in
-        given sample
+        given sample. This mask may be thresholded, typically with values
+        less than 3 set to 0 depending on the thresholding method.
     fittype : {loglin, curvefit}
         The type of model fit to use
 
@@ -273,6 +279,11 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype):
     2.  Replace infinite values in :math:`T_2^*` map with 500 and NaN values
         in :math:`S_0` map with 0.
     3.  Generate limited :math:`T_2^*` and :math:`S_0` maps by doing something.
+
+    See Also
+    --------
+    :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
+                                              parameter.
     """
     if data.shape[1] != len(tes):
         raise ValueError('Second dimension of data ({0}) does not match number '
@@ -333,7 +344,8 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
         time AND echoes) non-zero
     adaptive_mask : (S,) array_like
         Valued array indicating number of echos that have sufficient signal in
-        given sample
+        given sample. This mask may be thresholded, typically with values
+        less than 3 set to 0 depending on the thresholding method.
     fittype : :obj: `str`
         The type of model fit to use
 
@@ -353,6 +365,11 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
         Full S0 timeseries. For voxels affected by dropout, with good signal
         from only one echo, the full timeseries uses the single echo's value
         at that voxel/volume.
+
+    See Also
+    --------
+    :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
+                                              parameter.
     """
     n_samples, _, n_vols = data.shape
     tes = np.array(tes)

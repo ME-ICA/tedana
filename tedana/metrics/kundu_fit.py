@@ -70,6 +70,11 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
     betas : :obj:`numpy.ndarray`
     mmix_corrected : :obj:`numpy.ndarray`
         Mixing matrix after sign correction and resorting (if reindex is True).
+
+    See Also
+    --------
+    :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
+                                              parameter.
     """
     # Use adaptive_mask as mask
     mask = adaptive_mask > 0

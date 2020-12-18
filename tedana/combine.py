@@ -176,6 +176,11 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
            Magnetic Resonance in Medicine: An Official Journal of the
            International Society for Magnetic Resonance in Medicine,
            55(6), 1227-1235.
+
+    See Also
+    --------
+    :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
+                                              parameter.
     """
     if data.ndim != 3:
         raise ValueError('Input data must be 3D (S x E x T)')
