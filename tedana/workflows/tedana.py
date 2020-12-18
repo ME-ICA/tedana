@@ -665,10 +665,18 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     report += '\n\nReferences:\n\n' + references
     with open(repname, 'w') as fo:
         fo.write(report)
+    
+    for handler in LGR.handlers[:]:
+        handler.close()
+        LGR.removeHandler(handler)
+    for handler in RepLGR.handlers[:]:
+        handler.close()
+        RepLGR.removeHandler(handler)
+    for handler in RefLGR.handlers[:]:
+        handler.close()
+        RefLGR.removeHandler(handler)
+        
     os.remove(refname)
-
-    for handler in logging.root.handlers[:]:
-        logging.root.removeHandler(handler)
 
 
 def _main(argv=None):
