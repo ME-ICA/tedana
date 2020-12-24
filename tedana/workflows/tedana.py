@@ -375,7 +375,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     ref_handler.setFormatter(text_formatter)
     RepLGR.setLevel(logging.INFO)
     RepLGR.addHandler(rep_handler)
-    RepLGR.setLevel(logging.INFO)
+    RefLGR.setLevel(logging.INFO)
     RefLGR.addHandler(ref_handler)
 
     LGR.info('Using output directory: {}'.format(out_dir))
@@ -666,9 +666,9 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     with open(repname, 'w') as fo:
         fo.write(report)
     
-    for handler in LGR.handlers[:]:
+    for handler in logging.root.handlers[:]:
         handler.close()
-        LGR.removeHandler(handler)
+        logging.root.removeHandler(handler)
     for handler in RepLGR.handlers[:]:
         handler.close()
         RepLGR.removeHandler(handler)
