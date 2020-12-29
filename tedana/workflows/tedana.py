@@ -667,6 +667,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
 
     log_handler.close()
     logging.root.removeHandler(log_handler)
+    sh.close()
+    logging.root.removeHandler(sh)
     for local_logger in (RefLGR, RepLGR):
         for handler in local_logger.handlers[:]:
             handler.close()
