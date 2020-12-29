@@ -31,6 +31,7 @@ DOWNLOAD_URL = (
 
 REQUIRES = [
     'bokeh',
+    'mapca>=0.0.1',
     'matplotlib',
     'nibabel>=2.5.1',
     'nilearn>=0.5.2',

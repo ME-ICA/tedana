@@ -6,11 +6,11 @@ import os.path as op
 
 import numpy as np
 import pandas as pd
+from mapca import ma_pca
 from scipy import stats
 from sklearn.decomposition import PCA
 
 from tedana import metrics, utils, io
-from tedana.decomposition import ma_pca
 from tedana.stats import computefeats2
 from tedana.selection import kundu_tedpca
 
@@ -189,8 +189,8 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     if algorithm in ['mdl', 'aic', 'kic']:
         data_img = io.new_nii_like(ref_img, utils.unmask(data, mask))
         mask_img = io.new_nii_like(ref_img, mask.astype(int))
-        voxel_comp_weights, varex, varex_norm, comp_ts = ma_pca.ma_pca(
-            data_img, mask_img, algorithm)
+        voxel_comp_weights, varex, varex_norm, comp_ts = ma_pca(
+            data_img, mask_img, criterion=algorithm, normalize=True)
     elif low_mem:
         voxel_comp_weights, varex, comp_ts = low_mem_pca(data_z)
         varex_norm = varex / varex.sum()
