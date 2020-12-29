@@ -355,23 +355,17 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     # Removing handlers after basicConfig doesn't work, so we use filters
     # for the relevant handlers themselves.
     log_handler.addFilter(ContextFilter())
+    logging.root.addHandler(log_handler)
     sh = logging.StreamHandler()
     sh.addFilter(ContextFilter())
     logging.root.addHandler(sh)
-    logging.root.addHandler(log_handler)
 
     if quiet:
         logging.root.setLevel(logging.WARNING)
-        #logging.basicConfig(level=logging.WARNING,
-        #                    handlers=[log_handler, sh])
     elif debug:
         logging.root.setLevel(logging.DEBUG)
-        #logging.basicConfig(level=logging.DEBUG,
-        #                    handlers=[log_handler, sh])
     else:
         logging.root.setLevel(logging.INFO)
-        #logging.basicConfig(level=logging.INFO,
-        #                    handlers=[log_handler, sh])
 
     # Loggers for report and references
     rep_handler = logging.FileHandler(repname)
@@ -673,13 +667,10 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     
     log_handler.close()
     logging.root.removeHandler(log_handler)
-    for handler in RepLGR.handlers[:]:
-        handler.close()
-        RepLGR.removeHandler(handler)
-    for handler in RefLGR.handlers[:]:
-        handler.close()
-        RefLGR.removeHandler(handler)
-        
+    for local_logger in (RefLGR, RepLGR):
+        for handler in local_logger.handlers[:]:
+            handler.close()
+            local_logger.removeHandler(handler)        
     os.remove(refname)
 
 
