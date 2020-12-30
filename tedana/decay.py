@@ -1,12 +1,14 @@
 """Functions to estimate S0 and T2* from multi-echo data."""
 import logging
-import scipy
+
 import numpy as np
+import scipy
+
 from tedana import utils
 
 LGR = logging.getLogger(__name__)
-RepLGR = logging.getLogger('REPORT')
-RefLGR = logging.getLogger('REFERENCES')
+RepLGR = logging.getLogger("REPORT")
+RefLGR = logging.getLogger("REFERENCES")
 
 
 def _apply_t2s_floor(t2s, echo_times):
@@ -77,13 +79,15 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
     -----
     This method is slower, but more accurate, than the log-linear approach.
     """
-    RepLGR.info("A monoexponential model was fit to the data at each voxel "
-                "using nonlinear model fitting in order to estimate T2* and S0 "
-                "maps, using T2*/S0 estimates from a log-linear fit as "
-                "initial values. For each voxel, the value from the adaptive "
-                "mask was used to determine which echoes would be used to "
-                "estimate T2* and S0. In cases of model fit failure, T2*/S0 "
-                "estimates from the log-linear fit were retained instead.")
+    RepLGR.info(
+        "A monoexponential model was fit to the data at each voxel "
+        "using nonlinear model fitting in order to estimate T2* and S0 "
+        "maps, using T2*/S0 estimates from a log-linear fit as "
+        "initial values. For each voxel, the value from the adaptive "
+        "mask was used to determine which echoes would be used to "
+        "estimate T2* and S0. In cases of model fit failure, T2*/S0 "
+        "estimates from the log-linear fit were retained instead."
+    )
     n_samp, n_echos, n_vols = data_cat.shape
 
     # Currently unused
@@ -91,7 +95,8 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
     # fit_sigma = np.std(data_cat, axis=2)
 
     t2s_limited, s0_limited, t2s_full, s0_full = fit_loglinear(
-        data_cat, echo_times, adaptive_mask, report=False)
+        data_cat, echo_times, adaptive_mask, report=False
+    )
 
     echos_to_run = np.unique(adaptive_mask)
     if 1 in echos_to_run:
@@ -122,10 +127,12 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
         for voxel in voxel_idx:
             try:
                 popt, cov = scipy.optimize.curve_fit(
-                    monoexponential, echo_times_1d, data_2d[:, voxel],
+                    monoexponential,
+                    echo_times_1d,
+                    data_2d[:, voxel],
                     p0=(s0_full[voxel], t2s_full[voxel]),
-                    bounds=((np.min(data_2d[:, voxel]), 0),
-                            (np.inf, np.inf)))
+                    bounds=((np.min(data_2d[:, voxel]), 0), (np.inf, np.inf)),
+                )
                 s0_full[voxel] = popt[0]
                 t2s_full[voxel] = popt[1]
             except (RuntimeError, ValueError):
@@ -134,9 +141,11 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
 
         if fail_count:
             fail_percent = 100 * fail_count / len(voxel_idx)
-            LGR.debug('With {0} echoes, monoexponential fit failed on {1}/{2} '
-                      '({3:.2f}%) voxel(s), used log linear estimate '
-                      'instead'.format(echo_num, fail_count, len(voxel_idx), fail_percent))
+            LGR.debug(
+                "With {0} echoes, monoexponential fit failed on {1}/{2} "
+                "({3:.2f}%) voxel(s), used log linear estimate "
+                "instead".format(echo_num, fail_count, len(voxel_idx), fail_percent)
+            )
 
         t2s_asc_maps[:, i_echo] = t2s_full
         s0_asc_maps[:, i_echo] = s0_full
@@ -175,11 +184,13 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
     This method is faster, but less accurate, than the nonlinear approach.
     """
     if report:
-        RepLGR.info("A monoexponential model was fit to the data at each voxel "
-                    "using log-linear regression in order to estimate T2* and S0 "
-                    "maps. For each voxel, the value from the adaptive mask was "
-                    "used to determine which echoes would be used to estimate T2* "
-                    "and S0.")
+        RepLGR.info(
+            "A monoexponential model was fit to the data at each voxel "
+            "using log-linear regression in order to estimate T2* and S0 "
+            "maps. For each voxel, the value from the adaptive mask was "
+            "used to determine which echoes would be used to estimate T2* "
+            "and S0."
+        )
     n_samp, n_echos, n_vols = data_cat.shape
 
     echos_to_run = np.unique(adaptive_mask)
@@ -213,7 +224,7 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
 
         # Log-linear fit
         betas = np.linalg.lstsq(X, log_data, rcond=None)[0]
-        t2s = 1. / betas[1, :].T
+        t2s = 1.0 / betas[1, :].T
         s0 = np.exp(betas[0, :]).T
 
         t2s_asc_maps[voxel_idx, i_echo] = t2s
@@ -283,12 +294,16 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype):
     3.  Generate limited :math:`T_2^*` and :math:`S_0` maps by doing something.
     """
     if data.shape[1] != len(tes):
-        raise ValueError('Second dimension of data ({0}) does not match number '
-                         'of echoes provided (tes; {1})'.format(data.shape[1], len(tes)))
+        raise ValueError(
+            "Second dimension of data ({0}) does not match number "
+            "of echoes provided (tes; {1})".format(data.shape[1], len(tes))
+        )
     elif not (data.shape[0] == mask.shape[0] == adaptive_mask.shape[0]):
-        raise ValueError('First dimensions (number of samples) of data ({0}), '
-                         'mask ({1}), and adaptive_mask ({2}) do not '
-                         'match'.format(data.shape[0], mask.shape[0], adaptive_mask.shape[0]))
+        raise ValueError(
+            "First dimensions (number of samples) of data ({0}), "
+            "mask ({1}), and adaptive_mask ({2}) do not "
+            "match".format(data.shape[0], mask.shape[0], adaptive_mask.shape[0])
+        )
 
     data = data.copy()
     if data.ndim == 2:
@@ -298,24 +313,26 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype):
     data_masked = data[mask, :, :]
     adaptive_mask_masked = adaptive_mask[mask]
 
-    if fittype == 'loglin':
+    if fittype == "loglin":
         t2s_limited, s0_limited, t2s_full, s0_full = fit_loglinear(
-            data_masked, tes, adaptive_mask_masked)
-    elif fittype == 'curvefit':
+            data_masked, tes, adaptive_mask_masked
+        )
+    elif fittype == "curvefit":
         t2s_limited, s0_limited, t2s_full, s0_full = fit_monoexponential(
-            data_masked, tes, adaptive_mask_masked)
+            data_masked, tes, adaptive_mask_masked
+        )
     else:
-        raise ValueError('Unknown fittype option: {}'.format(fittype))
+        raise ValueError("Unknown fittype option: {}".format(fittype))
 
-    t2s_limited[np.isinf(t2s_limited)] = 500.  # why 500?
+    t2s_limited[np.isinf(t2s_limited)] = 500.0  # why 500?
     # let's get rid of negative values, but keep zeros where limited != full
-    t2s_limited[(adaptive_mask_masked > 1) & (t2s_limited <= 0)] = 1.
+    t2s_limited[(adaptive_mask_masked > 1) & (t2s_limited <= 0)] = 1.0
     t2s_limited = _apply_t2s_floor(t2s_limited, tes)
-    s0_limited[np.isnan(s0_limited)] = 0.  # why 0?
-    t2s_full[np.isinf(t2s_full)] = 500.  # why 500?
-    t2s_full[t2s_full <= 0] = 1.  # let's get rid of negative values!
+    s0_limited[np.isnan(s0_limited)] = 0.0  # why 0?
+    t2s_full[np.isinf(t2s_full)] = 500.0  # why 500?
+    t2s_full[t2s_full <= 0] = 1.0  # let's get rid of negative values!
     t2s_full = _apply_t2s_floor(t2s_full, tes)
-    s0_full[np.isnan(s0_full)] = 0.  # why 0?
+    s0_full[np.isnan(s0_full)] = 0.0  # why 0?
 
     t2s_limited = utils.unmask(t2s_limited, mask)
     s0_limited = utils.unmask(s0_limited, mask)
@@ -371,7 +388,8 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
 
     for vol in range(n_vols):
         t2s_limited, s0_limited, t2s_full, s0_full = fit_decay(
-            data[:, :, vol][:, :, None], tes, mask, adaptive_mask, fittype)
+            data[:, :, vol][:, :, None], tes, mask, adaptive_mask, fittype
+        )
         t2s_limited_ts[:, vol] = t2s_limited
         s0_limited_ts[:, vol] = s0_limited
         t2s_full_ts[:, vol] = t2s_full
