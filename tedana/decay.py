@@ -1,6 +1,4 @@
-"""
-Functions to estimate S0 and T2* from multi-echo data.
-"""
+"""Functions to estimate S0 and T2* from multi-echo data."""
 import logging
 import scipy
 import numpy as np
@@ -12,9 +10,7 @@ RefLGR = logging.getLogger('REFERENCES')
 
 
 def _apply_t2s_floor(t2s, echo_times):
-    """
-    Apply a floor to T2* values to prevent zero division errors during
-    optimal combination.
+    """Apply a floor to T2* values to prevent zero division errors during combination.
 
     Parameters
     ----------
@@ -41,8 +37,7 @@ def _apply_t2s_floor(t2s, echo_times):
 
 
 def monoexponential(tes, s0, t2star):
-    """
-    Specifies a monoexponential model for use with scipy curve fitting
+    """Specify a monoexponential model for use with scipy curve fitting.
 
     Parameters
     ----------
@@ -62,8 +57,7 @@ def monoexponential(tes, s0, t2star):
 
 
 def fit_monoexponential(data_cat, echo_times, adaptive_mask):
-    """
-    Fit monoexponential decay model with nonlinear curve-fitting.
+    """Fit monoexponential decay model with nonlinear curve-fitting.
 
     Parameters
     ----------
@@ -78,6 +72,10 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
     Returns
     -------
     t2s_limited, s0_limited, t2s_full, s0_full
+
+    Notes
+    -----
+    This method is slower, but more accurate, than the log-linear approach.
     """
     RepLGR.info("A monoexponential model was fit to the data at each voxel "
                 "using nonlinear model fitting in order to estimate T2* and S0 "
@@ -234,13 +232,12 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
 
 
 def fit_decay(data, tes, mask, adaptive_mask, fittype):
-    """
-    Fit voxel-wise monoexponential decay models to `data`
+    """Fit voxel-wise monoexponential decay models to ``data``.
 
     Parameters
     ----------
     data : (S x E [x T]) array_like
-        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
+        Multi-echo data array, where ``S`` is samples, ``E`` is echos, and ``T`` is
         time
     tes : (E,) :obj:`list`
         Echo times
@@ -329,13 +326,12 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype):
 
 
 def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
-    """
-    Fit voxel- and timepoint-wise monoexponential decay models to `data`
+    """Fit voxel- and timepoint-wise monoexponential decay models to ``data``.
 
     Parameters
     ----------
     data : (S x E x T) array_like
-        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
+        Multi-echo data array, where ``S`` is samples, ``E`` is echos, and ``T`` is
         time
     tes : (E,) :obj:`list`
         Echo times
@@ -345,7 +341,7 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
     adaptive_mask : (S,) array_like
         Valued array indicating number of echos that have sufficient signal in
         given sample
-    fittype : :obj: `str`
+    fittype : {loglin, curvefit}
         The type of model fit to use
 
     Returns
