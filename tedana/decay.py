@@ -156,7 +156,25 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
 
 
 def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
-    """
+    """Fit monoexponential decay model with log-linear regression.
+
+    Parameters
+    ----------
+    data_cat : (S x E x T) :obj:`numpy.ndarray`
+        Multi-echo data.
+    echo_times
+        Echo times in milliseconds.
+    adaptive_mask
+        Array where each value indicates the number of echoes with good signal
+        for that voxel.
+
+    Returns
+    -------
+    t2s_limited, s0_limited, t2s_full, s0_full
+
+    Notes
+    -----
+    This method is faster, but less accurate, than the nonlinear approach.
     """
     if report:
         RepLGR.info("A monoexponential model was fit to the data at each voxel "
