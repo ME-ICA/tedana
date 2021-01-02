@@ -282,8 +282,6 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype):
     # Mask the inputs
     data_masked = data[mask, :, :]
     adaptive_mask_masked = adaptive_mask[mask]
-    n_echoes = data_masked.shape[1]
-    adaptive_mask_masked[:] = n_echoes
 
     if fittype == 'loglin':
         t2s_limited, s0_limited, t2s_full, s0_full = fit_loglinear(
