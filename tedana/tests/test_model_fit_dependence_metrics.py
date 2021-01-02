@@ -17,58 +17,49 @@ def test_break_dependence_metrics():
     catd = np.empty((n_samples, n_echos, n_vols))
     tsoc = np.empty((n_samples, n_vols))
     mmix = np.empty((n_vols, n_comps))
-    t2s = np.empty((n_samples, n_vols))
+    adaptive_mask = np.empty((n_samples))
     tes = np.empty((n_echos))
     ref_img = ''
 
     # Shape of catd is wrong
     catd = np.empty((n_samples + 1, n_echos, n_vols))
     with pytest.raises(ValueError):
-        kundu_fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix,
-                                     t2s=t2s, tes=tes, ref_img=ref_img,
-                                     reindex=False, mmixN=None,
-                                     algorithm='kundu_v3')
+        kundu_fit.dependence_metrics(
+            catd=catd, tsoc=tsoc, mmix=mmix,
+            adaptive_mask=adaptive_mask, tes=tes, ref_img=ref_img,
+            reindex=False, mmixN=None, algorithm='kundu_v3')
 
-    # Shape of t2s is wrong
+    # Shape of adaptive_mask is wrong
     catd = np.empty((n_samples, n_echos, n_vols))
-    t2s = np.empty((n_samples + 1, n_vols))
+    adaptive_mask = np.empty((n_samples + 1))
     with pytest.raises(ValueError):
-        kundu_fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix,
-                                     t2s=t2s, tes=tes, ref_img=ref_img,
-                                     reindex=False, mmixN=None,
-                                     algorithm='kundu_v3')
+        kundu_fit.dependence_metrics(
+            catd=catd, tsoc=tsoc, mmix=mmix,
+            adaptive_mask=adaptive_mask, tes=tes, ref_img=ref_img,
+            reindex=False, mmixN=None, algorithm='kundu_v3')
 
     # Shape of tsoc is wrong
-    t2s = np.empty((n_samples, n_vols))
+    adaptive_mask = np.empty((n_samples))
     tsoc = np.empty((n_samples + 1, n_vols))
     with pytest.raises(ValueError):
-        kundu_fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix,
-                                     t2s=t2s, tes=tes, ref_img=ref_img,
-                                     reindex=False, mmixN=None,
-                                     algorithm='kundu_v3')
+        kundu_fit.dependence_metrics(
+            catd=catd, tsoc=tsoc, mmix=mmix,
+            adaptive_mask=adaptive_mask, tes=tes, ref_img=ref_img,
+            reindex=False, mmixN=None, algorithm='kundu_v3')
 
     # Shape of catd is wrong
     catd = np.empty((n_samples, n_echos + 1, n_vols))
     tsoc = np.empty((n_samples, n_vols))
     with pytest.raises(ValueError):
-        kundu_fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix,
-                                     t2s=t2s, tes=tes, ref_img=ref_img,
-                                     reindex=False, mmixN=None,
-                                     algorithm='kundu_v3')
+        kundu_fit.dependence_metrics(
+            catd=catd, tsoc=tsoc, mmix=mmix,
+            adaptive_mask=adaptive_mask, tes=tes, ref_img=ref_img,
+            reindex=False, mmixN=None, algorithm='kundu_v3')
 
     # Shape of catd is wrong
     catd = np.empty((n_samples, n_echos, n_vols + 1))
     with pytest.raises(ValueError):
-        kundu_fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix,
-                                     t2s=t2s, tes=tes, ref_img=ref_img,
-                                     reindex=False, mmixN=None,
-                                     algorithm='kundu_v3')
-
-    # Shape of t2s is wrong
-    catd = np.empty((n_samples, n_echos, n_vols))
-    t2s = np.empty((n_samples, n_vols + 1))
-    with pytest.raises(ValueError):
-        kundu_fit.dependence_metrics(catd=catd, tsoc=tsoc, mmix=mmix,
-                                     t2s=t2s, tes=tes, ref_img=ref_img,
-                                     reindex=False, mmixN=None,
-                                     algorithm='kundu_v3')
+        kundu_fit.dependence_metrics(
+            catd=catd, tsoc=tsoc, mmix=mmix,
+            adaptive_mask=adaptive_mask, tes=tes, ref_img=ref_img,
+            reindex=False, mmixN=None, algorithm='kundu_v3')

@@ -176,6 +176,54 @@
       "contributions": [
         "review"
       ]
+    },
+    {
+      "login": "mjversluis",
+      "name": "mjversluis",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/32125111?v=4",
+      "profile": "https://github.com/mjversluis",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "mvaziri",
+      "name": "Maryam",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/4219325?v=4",
+      "profile": "https://mvaziri.github.io/",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "aykhojandi",
+      "name": "aykhojandi",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/38105040?v=4",
+      "profile": "https://github.com/aykhojandi",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "smoia",
+      "name": "Stefano Moia",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/35300580?v=4",
+      "profile": "https://github.com/smoia",
+      "contributions": [
+        "code",
+        "review",
+        "doc"
+      ]
+    },
+    {
+      "login": "notZaki",
+      "name": "Zaki A.",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/9019681?v=4",
+      "profile": "https://www.notzaki.com/",
+      "contributions": [
+        "bug",
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 5,
@@ -183,5 +231,5 @@
   "projectOwner": "ME-ICA",
   "repoType": "github",
   "repoHost": "https://github.com",
-  "skipCi": true
+  "skipCi": false
 }

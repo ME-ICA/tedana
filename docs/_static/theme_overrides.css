@@ -11,3 +11,10 @@
       overflow: visible !important;
    }
 }
+
+div.admonition.caution {
+  background: #FFC3C3
+}
+.rst-content .caution .admonition-title {
+  background: #FF6F6F
+}

@@ -36,11 +36,11 @@ Anyone interested in using v3.2 may compile and install an earlier release (<=0.
 
 What is the warning about ``duecredit``?
 `````````````````````````````````````````
-``duecredit`` is a python package that is used, but not required by ``tedana``. 
-These warnings do not affect any of the processing within the ``tedana``. 
-To avoide this warning, you can install ``duecredit`` with ``pip install duecredit``. 
-For more information about ``duecredit`` and concerns about 
-the citation and visibility of software or methods, visit the `duecredit`_ github. 
+``duecredit`` is a python package that is used, but not required by ``tedana``.
+These warnings do not affect any of the processing within the ``tedana``.
+To avoid this warning, you can install ``duecredit`` with ``pip install duecredit``.
+For more information about ``duecredit`` and concerns about
+the citation and visibility of software or methods, visit the `duecredit`_ GitHub repository.
 
 .. _duecredit: https://github.com/duecredit/duecredit
 
@@ -56,14 +56,14 @@ Multi-echo fMRI
 Does multi-echo fMRI require more radio frequency pulses?
 `````````````````````````````````````````````````````````
 While multi-echo does lead to collecting more images during each TR (one per echo), there is still only a single
-radiofrequency pulse per TR. This means that there is no change in the `specific absorbtion rate`_ (SAR) limits 
-for the participant.  
+radiofrequency pulse per TR. This means that there is no change in the `specific absorption rate`_ (SAR) limits
+for the participant.
 
-.. _specific absorbtion rate: https://www.mr-tip.com/serv1.php?type=db1&dbs=Specific%20Absorption%20Rate
+.. _specific absorption rate: https://www.mr-tip.com/serv1.php?type=db1&dbs=Specific%20Absorption%20Rate
 
 Can I combine multiband (simultaneous multislice) with multi-echo fMRI?
 ```````````````````````````````````````````````````````````````````````
-Yes, these techniques are complementary. 
-Mutliband fMRI leads to collecting multiple slices within a volume  simultaneouly, while multi-echo 
-fMRI is instead related to collecting multiple unique volumes. 
-These techniques can be combined to reduce the TR in a multi-echo sequence. 
+Yes, these techniques are complementary.
+Multiband fMRI leads to collecting multiple slices within a volume  simultaneously, while multi-echo
+fMRI is instead related to collecting multiple unique volumes.
+These techniques can be combined to reduce the TR in a multi-echo sequence.

@@ -10,7 +10,7 @@ from scipy import stats
 from sklearn.decomposition import PCA
 
 from tedana import metrics, utils, io
-from tedana.decomposition import (ma_pca, _utils)
+from tedana.decomposition import ma_pca
 from tedana.stats import computefeats2
 from tedana.selection import kundu_tedpca
 
@@ -46,7 +46,7 @@ def low_mem_pca(data):
     return u, s, v
 
 
-def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
+def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
            ref_img, tes, algorithm='mdl', kdaw=10., rdaw=1.,
            out_dir='.', verbose=False, low_mem=False):
     """
@@ -65,8 +65,8 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
         Poser 2006
     mask : (S,) array_like
         Boolean mask array
-    t2s : (S,) array_like
-        Map of voxel-wise T2* estimates.
+    adaptive_mask : (S,) array_like
+        Adaptive mask of the data indicating the number of echos with signal at each voxel
     t2sG : (S,) array_like
         Map of voxel-wise T2* estimates.
     ref_img : :obj:`str` or img_like
@@ -181,19 +181,14 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
     n_samp, n_echos, n_vols = data_cat.shape
 
     LGR.info('Computing PCA of optimally combined multi-echo data')
-    data = data_oc[mask, :][:, np.newaxis, :]
-
-    eim = np.squeeze(_utils.eimask(data))
-    data = np.squeeze(data[eim])
+    data = data_oc[mask, :]
 
     data_z = ((data.T - data.T.mean(axis=0)) / data.T.std(axis=0)).T  # var normalize ts
     data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
 
     if algorithm in ['mdl', 'aic', 'kic']:
-        data_img = io.new_nii_like(
-            ref_img, utils.unmask(utils.unmask(data, eim), mask))
-        mask_img = io.new_nii_like(ref_img,
-                                   utils.unmask(eim, mask).astype(int))
+        data_img = io.new_nii_like(ref_img, utils.unmask(data, mask))
+        mask_img = io.new_nii_like(ref_img, mask.astype(int))
         voxel_comp_weights, varex, varex_norm, comp_ts = ma_pca.ma_pca(
             data_img, mask_img, algorithm)
     elif low_mem:
@@ -209,27 +204,12 @@ def tedpca(data_cat, data_oc, combmode, mask, t2s, t2sG,
         varex_norm = varex / varex.sum()
 
     # Compute Kappa and Rho for PCA comps
-    eimum = np.atleast_2d(eim)
-    eimum = np.transpose(eimum, np.argsort(eimum.shape)[::-1])
-    eimum = eimum.prod(axis=1)
-    o = np.zeros((mask.shape[0], *eimum.shape[1:]))
-    o[mask, ...] = eimum
-    eimum = np.squeeze(o).astype(bool)
-
     # Normalize each component's time series
     vTmixN = stats.zscore(comp_ts, axis=0)
-    comptable, _, _, _ = metrics.dependence_metrics(data_cat,
-                                                    data_oc,
-                                                    comp_ts,
-                                                    t2s,
-                                                    tes,
-                                                    ref_img,
-                                                    reindex=False,
-                                                    mmixN=vTmixN,
-                                                    algorithm=None,
-                                                    label='mepca_',
-                                                    out_dir=out_dir,
-                                                    verbose=verbose)
+    comptable, _, _, _ = metrics.dependence_metrics(
+                data_cat, data_oc, comp_ts, adaptive_mask, tes, ref_img,
+                reindex=False, mmixN=vTmixN, algorithm=None,
+                label='mepca_', out_dir=out_dir, verbose=verbose)
 
     # varex_norm from PCA overrides varex_norm from dependence_metrics,
     # but we retain the original
