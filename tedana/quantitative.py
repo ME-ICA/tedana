@@ -222,13 +222,9 @@ def t2star_computeFreqMap(
 
 
 def t2star_smoothFreqMap(
-    multiecho_magn,
-    multiecho_phase,
     freq,
     mask,
     echo_times,
-    mask_thresh,
-    rmse_thresh,
     smooth_downsampling,
     smooth_type,
     smooth_kernel,
@@ -237,20 +233,17 @@ def t2star_smoothFreqMap(
     # Downsample field map
     LGR.info("Downsampling field map...")
     new_shape = tuple(
-        multiecho_magn.shape[i] // smooth_downsampling[i]
-        for i in range(len(multiecho_magn.shape))
+        freq.shape[i] // smooth_downsampling[i] for i in range(len(freq.shape))
     )
-    if new_shape != multiecho_magn.shape:
-        mag_img = image.resample(
-            multiecho_magn, target_shape=new_shape, interpolation="nearest"
-        )
+    if new_shape != freq.shape:
+        freq_img = image.resample(freq, target_shape=new_shape, interpolation="nearest")
     else:
-        mag_img = multiecho_magn.copy()
+        freq_img = freq.copy()
 
     # 3d smooth frequency map (zero values are ignored)
     LGR.info("3d smoothing frequency map using method: {}...".format(smooth_type))
     if smooth_type == "gaussian":
-        mag_img = image.smooth_img(mag_img, fwhm=smooth_kernel)
+        freq_3d_smooth = image.smooth_img(freq_img, fwhm=smooth_kernel)
     elif smooth_type == "box":
         pass
     elif smooth_type == "polyfit1d":
@@ -265,20 +258,20 @@ def t2star_smoothFreqMap(
 
     # upsample data back to original resolution
     LGR.info("Upsampling data to native resolution (using nearest neighbor)...")
-    if new_shape != multiecho_magn.shape:
-        mag_img = image.resample(
-            mag_img, target_shape=multiecho_magn.shape, interpolation="nearest"
+    if new_shape != freq.shape:
+        freq_img = image.resample(
+            freq_img, target_shape=freq.shape, interpolation="nearest"
         )
 
     # Load mask
     LGR.info("Loading magnitude mask...")
-    mask = mask
 
     # apply magnitude mask
     LGR.info("Applying magnitude mask...")
     freq_3d_smooth_masked = masking.unmask(
         masking.apply_mask(freq_3d_smooth, mask), mask
     )
+    # it looks like freqGradZ_i is only defined when polyfit3d is used.
     freqGradZ_masked = masking.unmask(masking.apply_mask(freqGradZ, mask), mask)
 
     # Save smoothed frequency map
@@ -313,7 +306,112 @@ def t2star_computeCorrectedFitting(
     n_iters
     grad_z_final
     """
-    return (t2star_unc, t2star_cor, rsquared_unc, rsquared_cor, n_iters, grad_z_final)
+    # Get dimensions of the data
+    n_x, n_y, n_z, n_t = multiecho_magn.shape
+
+    # Load gradient map
+
+    # Load mask
+
+    # Check echo time(s)
+
+    # Split volumes (because of memory issue)
+
+    # Loop across slices
+    t2star_uncorr_3d = np.zeros((n_x, n_y, n_z))
+    t2star_corr_3d = np.zeros((n_x, n_y, n_z))
+    grad_z_final_3d = np.zeros((n_x, n_y, n_z))
+    rsquared_uncorr_3d = np.zeros((n_x, n_y, n_z))
+    rsquared_corr_3d = np.zeros((n_x, n_y, n_z))
+    iter_3d = np.zeros((n_x, n_y, n_z))
+
+    X = np.vstack(echo_times[:, None], np.ones((len(echo_times), 1)))
+    for i_z in range(n_z):
+        # load magnitude
+        multiecho_magn_splitZ_num = multiecho_magn[:, :, i_z, :]
+
+        # get mask indices
+        mask_idx = np.where(mask[:, :, i_z])
+        n_pixels = np.sum(mask[:, :, i_z])
+
+        # initialization
+        t2star_uncorr_2d = np.zeros((n_x, n_y))
+        t2star_corr_2d = np.zeros((n_x, n_y))
+        rsquared_uncorr_2d = np.zeros((n_x, n_y))
+        rsquared_corr_2d = np.zeros((n_x, n_y))
+        iter_2d = np.zeros((n_x, n_y))
+
+        # loop across pixels
+        if do_optimization:
+            grad_z_final_2d = np.zeros((n_x, n_y))
+            freqGradZ_final_2d = np.zeros((n_x, n_y))
+
+        data_multiecho_magn_2d = np.reshape(data_multiecho_magn, shape=(n_x * n_y, n_t))
+        grad_z_2d = np.reshape(grad_z_3d, shape=(n_x * n_y, n_z))
+        for i_pix in range(n_pixels):
+
+            # Get data magnitude in 1D
+            data_magn_1d = data_multiecho_magn_2d[mask_idx[i_pix], :]
+
+            if np.any(data_magn_1d):
+                # perform uncorrected T2* fit
+                data_magn_1d = data_magn_1d
+
+                T2star, S0, Sfit, Rsquared, iter_ = func_t2star_fit(
+                    data_magn_1d, echo_times, fitting_method, X, nt
+                )
+                rsquared_uncorr_2d[mask_idx[i_pix]] = Rsquared
+                t2star_uncorr_2d[mask_idx[i_pix]] = T2star
+
+                # get initial freqGradZ value from computed map
+                freqGradZ_init = grad_z_2d[mask_idx[i_pix], i_z]
+
+                # get final freqGradZ value
+                if do_optimization:
+                    # Minimization algorithm
+                    freqGradZ_final, _, _, _ = 1, 2, 3, 4
+                    # freqGradZ_final, sd_err, exitflag, output = fminsearch(@(delta_f) func_t2star_optimization(data_magn_1d, echo_times, delta_f, X), delta_f_init)
+                    freqGradZ_final_2d[mask_idx[i_pix]] = freqGradZ_final
+
+                else:
+                    # Just use the initial freqGradZ value - which is acceptable if nicely computed
+                    freqGradZ_final = freqGradZ_init
+
+                # Correct signal by sinc function
+                # N.B. echo time is in ms
+                data_magn_1d_corr = data_magn_1d / abs(
+                    np.sinc(freqGradZ_final * echo_times / 2000)
+                )
+
+                # perform T2* fit
+                T2star, S0, Sfit, Rsquared, iter_ = func_t2star_fit(
+                    data_magn_1d_corr, echo_times, fitting_method, X, n_t
+                )
+                rsquared_corr_2d[mask_idx[i_pix]] = Rsquared
+                t2star_corr_2d[mask_idx[i_pix]] = T2star
+                iter_2d[mask_idx[i_pix]] = iter_
+
+        # fill 3D T2* matrix
+        t2star_uncorr_3d[:, :, i_z] = t2star_uncorr_2d
+        t2star_corr_3d[:, :, i_z] = t2star_corr_2d
+        if do_optimization:
+            grad_z_final_3d[:, :, i_z] = grad_z_final_2d
+        rsquared_uncorr_3d[:, :, i_z] = rsquared_uncorr_2d
+        rsquared_corr_3d[:, :, i_z] = rsquared_corr_2d
+        iter_3d[:, :, i_z] = iter_2d
+
+    # threshold T2* map (for quantization purpose when saving in NIFTI).
+    t2star_uncorr_3d[t2star_uncorr_3d > threshold_t2star_max] = threshold_t2star_max
+    t2star_corr_3d = np.abs(t2star_corr_3d)
+    t2star_corr_3d[t2star_corr_3d > threshold_t2star_max] = threshold_t2star_max
+    return (
+        t2star_uncorr_3d,
+        t2star_corr_3d,
+        rsquared_uncorr_3d,
+        rsquared_corr_3d,
+        iter_3d,
+        grad_z_final_3d,
+    )
 
 
 def func_t2star_optimization(data_magn_1d, echo_times, delta_f, X):
@@ -323,7 +421,7 @@ def func_t2star_optimization(data_magn_1d, echo_times, delta_f, X):
 
 def func_t2star_fit(S, TE, method, X, n_t):
     """Perform T2* fit."""
-    return T2star, S0, Sfit, Rsquared, iter
+    return T2star, S0, Sfit, Rsquared, iter_
 
 
 def t2star_computeGradientZ(

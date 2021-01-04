@@ -215,6 +215,27 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
     return t2s_limited, s0_limited, t2s_full, s0_full
 
 
+def fit_gls(data_cat, echo_times, X, adaptive_mask, report=True):
+    # remove zeroed values (because of the log)
+    nonzero = data_cat
+    y = np.log(S[nonzero]).T
+    X = X[nonzero, :]
+
+    # LLS fitting
+    V = np.eye(len(y)) * repmat(1 / np.exp(y), 1, len(y))
+    a = inv(X.T * inv(V) * X) * X.T * inv(V) * y
+    T2star = -1 / a[0]
+    S0 = np.exp(a[1])
+
+    Sfit = S0 * np.exp(-echo_times / T2star)
+
+    # Compute R2 goodness of fit
+    SSresid = np.sum((S - Sfit) ** 2)
+    SStotal = (len(S) - 1) * np.var(S)
+    r_squared = 1 - (SSresid / SStotal)
+    return T2star, S0, r_squared
+
+
 def fit_decay(data, tes, mask, adaptive_mask, fittype):
     """
     Fit voxel-wise monoexponential decay models to `data`
