@@ -121,7 +121,7 @@ def t2star_computeFreqMap(
     multiecho_magn, multiecho_phase, echo_times, mask_thresh, rmse_thresh
 ):
     """Compute field map of frequencies from multi echo phase data."""
-    run_4d = False  # Added by TS
+    # run_4d = False  # Added by TS
     echo_times = np.array(echo_times)
     first_img = nib.load(multiecho_magn[0])
     dims = first_img.shape
