@@ -222,18 +222,17 @@ def fit_gls(data_cat, echo_times, X, adaptive_mask, report=True):
     X = X[nonzero, :]
 
     # LLS fitting
-    V = np.eye(len(y)) * repmat(1 / np.exp(y), 1, len(y))
-    a = inv(X.T * inv(V) * X) * X.T * inv(V) * y
+    V = np.eye(len(y)) * np.repeat(1 / np.exp(y), axis=1, repeats=len(y))
+    a = np.dot(
+        np.dot(
+            np.dot(np.linalg.pinv(np.dot(np.dot(X.T, np.linalg.pinv(V)), X)), X.T),
+            np.linalg.pinv(V),
+        ),
+        y,
+    )
     T2star = -1 / a[0]
     S0 = np.exp(a[1])
-
-    Sfit = S0 * np.exp(-echo_times / T2star)
-
-    # Compute R2 goodness of fit
-    SSresid = np.sum((S - Sfit) ** 2)
-    SStotal = (len(S) - 1) * np.var(S)
-    r_squared = 1 - (SSresid / SStotal)
-    return T2star, S0, r_squared
+    return T2star, S0
 
 
 def fit_decay(data, tes, mask, adaptive_mask, fittype):
