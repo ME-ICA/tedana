@@ -6,7 +6,9 @@ import logging
 import nibabel as nib
 import numpy as np
 from nilearn import image, masking
-from scipy import ndimage
+from scipy import ndimage, optimize
+
+from tedana import decay
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger("REPORT")
@@ -119,7 +121,7 @@ def t2star_computeFreqMap(
     multiecho_magn, multiecho_phase, echo_times, mask_thresh, rmse_thresh
 ):
     """Compute field map of frequencies from multi echo phase data."""
-    run_4d = False
+    run_4d = False  # Added by TS
     echo_times = np.array(echo_times)
     first_img = nib.load(multiecho_magn[0])
     dims = first_img.shape
@@ -139,8 +141,6 @@ def t2star_computeFreqMap(
     multiecho_phase_data = multiecho_phase_img.get_fdata()
 
     freq_map_3d = np.zeros((n_x, n_y, n_z))
-    freq_map_3d_masked = np.zeros((n_x, n_y, n_z))
-    grad_z_3d = np.zeros((n_x, n_y, n_z))
     mask_3d = np.zeros((n_x, n_y, n_z))
 
     # Create 3D frequency map
@@ -167,13 +167,11 @@ def t2star_computeFreqMap(
         # This regression could be done in parallel (volume-wise or slice-wise)
         freq_map_1d = np.zeros((n_x * n_y))
         err_phase_1d = np.zeros((n_x * n_y))
-        data_multiecho_magn_2d = np.reshape(magn_slice_data, (n_x * n_y, n_e))
         data_multiecho_phase_2d = np.reshape(phase_slice_data, (n_x * n_y, n_e))
         mask_1d = np.reshape(mask_2d, (n_x * n_y))
         X = np.concatenate((echo_times_s[:, None], np.ones((n_e, 1))), axis=1)
         mask_1d_idx = np.where(mask_1d)[0]
         for j_pix, mask_idx in enumerate(mask_1d_idx):
-            data_magn_1d = data_multiecho_magn_2d[mask_idx, :]
             data_phase_1d = data_multiecho_phase_2d[mask_idx, :]
 
             # unwrap phase
@@ -249,12 +247,13 @@ def t2star_smoothFreqMap(
     elif smooth_type == "polyfit1d":
         pass
     elif smooth_type == "polyfit3d":
-        pass
+        freqGradZ_i = 1
     else:
         raise ValueError(
             'Parameter "smooth_type" must be one of "gaussian", '
             '"box", "polyfit1d", "polyfit3d"'
         )
+    freqGradZ = freqGradZ_i
 
     # upsample data back to original resolution
     LGR.info("Upsampling data to native resolution (using nearest neighbor)...")
@@ -328,7 +327,7 @@ def t2star_computeCorrectedFitting(
     X = np.vstack(echo_times[:, None], np.ones((len(echo_times), 1)))
     for i_z in range(n_z):
         # load magnitude
-        multiecho_magn_splitZ_num = multiecho_magn[:, :, i_z, :]
+        data_multiecho_magn = multiecho_magn[:, :, i_z, :]
 
         # get mask indices
         mask_idx = np.where(mask[:, :, i_z])
@@ -347,7 +346,7 @@ def t2star_computeCorrectedFitting(
             freqGradZ_final_2d = np.zeros((n_x, n_y))
 
         data_multiecho_magn_2d = np.reshape(data_multiecho_magn, shape=(n_x * n_y, n_t))
-        grad_z_2d = np.reshape(grad_z_3d, shape=(n_x * n_y, n_z))
+        grad_z_2d = np.reshape(grad_z, shape=(n_x * n_y, n_z))
         for i_pix in range(n_pixels):
 
             # Get data magnitude in 1D
@@ -357,11 +356,11 @@ def t2star_computeCorrectedFitting(
                 # perform uncorrected T2* fit
                 data_magn_1d = data_magn_1d
 
-                T2star, S0, Sfit, Rsquared, iter_ = func_t2star_fit(
-                    data_magn_1d, echo_times, fitting_method, X, nt
+                t2s_limited, s0_limited, t2s_full, s0_full, r_squared = decay.fit_decay(
+                    data_magn_1d, echo_times, fitting_method, X, n_t
                 )
-                rsquared_uncorr_2d[mask_idx[i_pix]] = Rsquared
-                t2star_uncorr_2d[mask_idx[i_pix]] = T2star
+                rsquared_uncorr_2d[mask_idx[i_pix]] = r_squared
+                t2star_uncorr_2d[mask_idx[i_pix]] = t2s_limited
 
                 # get initial freqGradZ value from computed map
                 freqGradZ_init = grad_z_2d[mask_idx[i_pix], i_z]
@@ -369,8 +368,16 @@ def t2star_computeCorrectedFitting(
                 # get final freqGradZ value
                 if do_optimization:
                     # Minimization algorithm
-                    freqGradZ_final, _, _, _ = 1, 2, 3, 4
-                    # freqGradZ_final, sd_err, exitflag, output = fminsearch(@(delta_f) func_t2star_optimization(data_magn_1d, echo_times, delta_f, X), delta_f_init)
+                    res = optimize.minimize(
+                        func_t2star_optimization,
+                        x0=freqGradZ_init,
+                        options={
+                            "data_magn_1d": data_magn_1d,
+                            "echo_times": echo_times,
+                            "X": X,
+                        },
+                    )
+                    freqGradZ_final = res.x
                     freqGradZ_final_2d[mask_idx[i_pix]] = freqGradZ_final
 
                 else:
@@ -384,12 +391,11 @@ def t2star_computeCorrectedFitting(
                 )
 
                 # perform T2* fit
-                T2star, S0, Sfit, Rsquared, iter_ = func_t2star_fit(
+                t2s_limited, s0_limited, t2s_full, s0_full, r_squared = decay.fit_decay(
                     data_magn_1d_corr, echo_times, fitting_method, X, n_t
                 )
-                rsquared_corr_2d[mask_idx[i_pix]] = Rsquared
-                t2star_corr_2d[mask_idx[i_pix]] = T2star
-                iter_2d[mask_idx[i_pix]] = iter_
+                rsquared_corr_2d[mask_idx[i_pix]] = r_squared
+                t2star_corr_2d[mask_idx[i_pix]] = t2s_limited
 
         # fill 3D T2* matrix
         t2star_uncorr_3d[:, :, i_z] = t2star_uncorr_2d
@@ -416,12 +422,15 @@ def t2star_computeCorrectedFitting(
 
 def func_t2star_optimization(data_magn_1d, echo_times, delta_f, X):
     """Optimization function."""
+    data_magn_1d_corr = data_magn_1d / np.sinc(delta_f * echo_times / 2)
+    y = np.log(data_magn_1d_corr).T
+    a = np.dot(np.dot(np.linalg.inv(np.dot(X.T, X)), X.T), y)
+    t2star_corr = -1 / a[0]
+    # compute error
+    Sfitted = np.exp(a[1] - echo_times / t2star_corr)
+    err = Sfitted - data_magn_1d_corr
+    sd_err = np.std(err)
     return sd_err
-
-
-def func_t2star_fit(S, TE, method, X, n_t):
-    """Perform T2* fit."""
-    return T2star, S0, Sfit, Rsquared, iter_
 
 
 def t2star_computeGradientZ(
