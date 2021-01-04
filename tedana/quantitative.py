@@ -440,6 +440,33 @@ def t2star_computeGradientZ(
 
     Returns
     -------
-    grad_z
+    grad_z_3d_masked
     """
-    return grad_z
+    # Get dimensions of the data...
+    n_x, n_y, n_z, n_e, n_t = multiecho_magn.shape
+
+    # Load frequency map
+    freq_map_3d_smooth = freq_smooth
+
+    # Calculate frequency gradient in the slice direction (freqGradZ)
+    grad_z_3d = np.zeros((n_x, n_y, n_z))
+    grad_z_3d_masked = np.zeros((n_x, n_y, n_z))
+    for i_x in range(n_x):
+        for j_y in range(n_y):
+            # initialize 1D gradient values
+            grad_z = np.zeros((1, n_z))
+            # get frequency along z (discard zero values)
+            freq_z = np.squeeze(freq_map_3d_smooth[i_x, j_y, :])
+            ind_nonzero = np.where(freq_z)
+            if len(ind_nonzero) >= min_length:
+                # fit to polynomial function
+                p = np.polyfit(ind_nonzero, freq_z[ind_nonzero], poly_fit_order)
+                f = np.polyval(p, np.arange(n_z))
+                # compute frequency gradient along Z
+                grad_z = np.gradient(f, dz / 1000)
+                # fill 3D gradient matrix
+                grad_z_3d[i_x, j_y, :] = grad_z
+
+    # Mask gradient map
+    grad_z_3d_masked = masking.unmask(masking.apply_mask(grad_z_3d, mask))
+    return grad_z_3d_masked
