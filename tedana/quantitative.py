@@ -64,7 +64,7 @@ def t2star_fit(
         "poly_fit_order": 4,
     }
     # Compute field map of frequencies from multi-echo phase data
-    freq_img, mask_img = t2star_computeFreqMap(
+    freq_img, mask_img = compute_freq_map(
         multiecho_magn,
         multiecho_phase,
         echo_times,
@@ -73,7 +73,7 @@ def t2star_fit(
     )
 
     # Smooth field map of frequencies
-    freq_smooth = t2star_smoothFreqMap(
+    freq_smooth = smooth_freq_map(
         multiecho_magn,
         multiecho_phase,
         freq_img,
@@ -87,7 +87,7 @@ def t2star_fit(
     )
 
     # Correct z gradients
-    grad_z = t2star_computeGradientZ(
+    grad_z = compute_gradient_z(
         multiecho_magn,
         freq_smooth,
         mask_img,
@@ -104,7 +104,7 @@ def t2star_fit(
         rsquared_cor,
         n_iters,
         grad_z_final,
-    ) = t2star_computeCorrectedFitting(
+    ) = compute_corrected_fitting(
         multiecho_magn,
         multiecho_phase,
         fitting_method,
@@ -117,7 +117,7 @@ def t2star_fit(
     return t2star_cor
 
 
-def t2star_computeFreqMap(
+def compute_freq_map(
     multiecho_magn, multiecho_phase, echo_times, mask_thresh, rmse_thresh
 ):
     """Compute field map of frequencies from multi echo phase data."""
@@ -219,13 +219,8 @@ def t2star_computeFreqMap(
     return freq_img, mask_img
 
 
-def t2star_smoothFreqMap(
-    freq,
-    mask,
-    echo_times,
-    smooth_downsampling,
-    smooth_type,
-    smooth_kernel,
+def smooth_freq_map(
+    freq, mask, echo_times, smooth_downsampling, smooth_type, smooth_kernel
 ):
     """Smooth frequency map."""
     # Downsample field map
@@ -284,7 +279,7 @@ def t2star_smoothFreqMap(
     return freq_3d_smooth_masked
 
 
-def t2star_computeCorrectedFitting(
+def compute_corrected_fitting(
     multiecho_magn,
     multiecho_phase,
     fitting_method,
@@ -369,7 +364,7 @@ def t2star_computeCorrectedFitting(
                 if do_optimization:
                     # Minimization algorithm
                     res = optimize.minimize(
-                        func_t2star_optimization,
+                        optimize_t2star,
                         x0=freqGradZ_init,
                         options={
                             "data_magn_1d": data_magn_1d,
@@ -420,7 +415,7 @@ def t2star_computeCorrectedFitting(
     )
 
 
-def func_t2star_optimization(data_magn_1d, echo_times, delta_f, X):
+def optimize_t2star(data_magn_1d, echo_times, delta_f, X):
     """Optimization function."""
     data_magn_1d_corr = data_magn_1d / np.sinc(delta_f * echo_times / 2)
     y = np.log(data_magn_1d_corr).T
@@ -433,7 +428,7 @@ def func_t2star_optimization(data_magn_1d, echo_times, delta_f, X):
     return sd_err
 
 
-def t2star_computeGradientZ(
+def compute_gradient_z(
     multiecho_magn, freq_smooth, mask, grad_z, min_length, poly_fit_order, dz
 ):
     """Compute map of gradient frequencies along Z.
