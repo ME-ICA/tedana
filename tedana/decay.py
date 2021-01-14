@@ -289,18 +289,11 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype):
 
     Notes
     -----
-    1.  Fit monoexponential decay function to all values for a given voxel
-        across TRs, per TE, to estimate voxel-wise :math:`S_0` and
-        :math:`T_2^*`:
-
-        .. math::
-            S(TE) = S_0 * exp(-R_2^* * TE)
-
-            T_2^* = 1 / R_2^*
-
-    2.  Replace infinite values in :math:`T_2^*` map with 500 and NaN values
-        in :math:`S_0` map with 0.
-    3.  Generate limited :math:`T_2^*` and :math:`S_0` maps by doing something.
+    This function replaces infinite values in the :math:`T_2^*` map with 500 and
+    :math:`T_2^*` values less than or equal to zero with 1.
+    Additionally, very small :math:`T_2^*` values above zero are replaced with a floor
+    value to prevent zero-division errors later on in the workflow.
+    It also replaces NaN values in the :math:`S_0` map with 0.
     """
     if data.shape[1] != len(tes):
         raise ValueError('Second dimension of data ({0}) does not match number '
