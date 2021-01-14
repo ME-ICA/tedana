@@ -69,15 +69,20 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
     ----------
     data_cat : (S x E x T) :obj:`numpy.ndarray`
         Multi-echo data.
-    echo_times
+    echo_times : (E,) array_like
         Echo times in milliseconds.
-    adaptive_mask
+    adaptive_mask : (S,) :obj:`numpy.ndarray`
         Array where each value indicates the number of echoes with good signal
         for that voxel.
 
     Returns
     -------
-    t2s_limited, s0_limited, t2s_full, s0_full
+    t2s_limited, s0_limited, t2s_full, s0_full : (S,) :obj:`numpy.ndarray`
+        T2* and S0 estimate maps.
+
+    Notes
+    -----
+    This method is slower, but more accurate, than the log-linear approach.
     """
     RepLGR.info("A monoexponential model was fit to the data at each voxel "
                 "using nonlinear model fitting in order to estimate T2* and S0 "
