@@ -156,7 +156,42 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
 
 
 def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
-    """
+    """Fit monoexponential decay model with log-linear regression.
+
+    The monoexponential decay function is fitted to all values for a given
+    voxel across TRs, per TE, to estimate voxel-wise :math:`S_0` and :math:`T_2^*`.
+    At a given voxel, only those echoes with "good signal", as indicated by the
+    value of the voxel in the adaptive mask, are used.
+    Therefore, for a voxel with an adaptive mask value of five, the first five
+    echoes would be used to estimate T2* and S0.
+
+    Parameters
+    ----------
+    data_cat : (S x E x T) :obj:`numpy.ndarray`
+        Multi-echo data. S is samples, E is echoes, and T is timepoints.
+    echo_times : (E,) array_like
+        Echo times in milliseconds.
+    adaptive_mask : (S,) :obj:`numpy.ndarray`
+        Array where each value indicates the number of echoes with good signal
+        for that voxel.
+    report : :obj:`bool`, optional
+        Whether to log a description of this step or not. Default is True.
+
+    Returns
+    -------
+    t2s_limited, s0_limited, t2s_full, s0_full: (S,) :obj:`numpy.ndarray`
+        T2* and S0 estimate maps.
+
+    Notes
+    -----
+    The approach used in this function involves transforming the raw signal values
+    (:math:`log(|data| + 1)`) and then fitting a line to the transformed data using
+    ordinary least squares.
+    This results in two parameter estimates: one for the slope  and one for the intercept.
+    The slope estimate is inverted (i.e., 1 / slope) to get  :math:`T_2^*`,
+    while the intercept estimate is exponentiated (i.e., e^intercept) to get :math:`S_0`.
+
+    This method is faster, but less accurate, than the nonlinear approach.
     """
     if report:
         RepLGR.info("A monoexponential model was fit to the data at each voxel "
