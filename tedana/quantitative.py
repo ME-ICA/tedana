@@ -6,6 +6,7 @@ import logging
 import nibabel as nib
 import numpy as np
 from nilearn import image, masking
+from nilearn._utils.image import load_niimg
 from scipy import ndimage, optimize
 
 from tedana import decay
@@ -63,6 +64,15 @@ def t2star_fit(
         "threshold_t2star_max": 1000,
         "poly_fit_order": 4,
     }
+
+    # Load data and select first volume from each
+    multiecho_magn = [load_niimg(img) for img in multiecho_magn]
+    multiecho_phase = [load_niimg(img) for img in multiecho_phase]
+    multiecho_magn = [image.index_img(img, 0) for img in multiecho_magn]
+    multiecho_phase = [image.index_img(img, 0) for img in multiecho_phase]
+    multiecho_magn = image.concat_imgs(multiecho_magn)
+    multiecho_phase = image.concat_imgs(multiecho_magn)
+
     # Compute field map of frequencies from multi-echo phase data
     freq_img, mask_img = compute_freq_map(
         multiecho_magn,
@@ -120,28 +130,34 @@ def t2star_fit(
 def compute_freq_map(
     multiecho_magn, multiecho_phase, echo_times, mask_thresh, rmse_thresh
 ):
-    """Compute field map of frequencies from multi echo phase data."""
+    """Compute field map of frequencies from multi echo phase data.
+
+    Parameters
+    ----------
+    multiecho_magn, multiecho_phase : 4D niimg_like
+        Magnitude and phase data. The fourth dimension is echo, not time.
+    echo_times : array_like
+        Echo times in milliseconds.
+    mask_thresh : float
+        Masking threshold.
+    rmse_thresh : float
+        Residual mean squared error threshold.
+    """
     # run_4d = False  # Added by TS
     echo_times = np.array(echo_times)
-    first_img = nib.load(multiecho_magn[0])
+    first_img = multiecho_magn[0]
     dims = first_img.shape
     n_e = len(multiecho_magn)
     n_x, n_y, n_z, n_t = dims
     assert n_e == len(echo_times) == len(multiecho_phase)
     # convert echo times to seconds
     echo_times_s = echo_times / 1000.0
-    LGR.info("Loading data")
-    # multiecho_magn_imgs = [image.mean_img(img) for img in multiecho_magn]
-    # multiecho_phase_imgs = [image.mean_img(img) for img in multiecho_phase]
-    multiecho_magn_imgs = [image.index_img(img, 0) for img in multiecho_magn]
-    multiecho_phase_imgs = [image.index_img(img, 0) for img in multiecho_phase]
-    multiecho_magn_img = image.concat_imgs(multiecho_magn_imgs)
-    multiecho_phase_img = image.concat_imgs(multiecho_phase_imgs)
-    multiecho_magn_data = multiecho_magn_img.get_fdata()
-    multiecho_phase_data = multiecho_phase_img.get_fdata()
 
     freq_map_3d = np.zeros((n_x, n_y, n_z))
     mask_3d = np.zeros((n_x, n_y, n_z))
+
+    multiecho_magn_data = multiecho_magn.get_fdata()
+    multiecho_phase_data = multiecho_phase.get_fdata()
 
     # Create 3D frequency map
     for i_slice in range(n_z):
