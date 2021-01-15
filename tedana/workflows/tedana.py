@@ -355,18 +355,17 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     # Removing handlers after basicConfig doesn't work, so we use filters
     # for the relevant handlers themselves.
     log_handler.addFilter(ContextFilter())
+    logging.root.addHandler(log_handler)
     sh = logging.StreamHandler()
     sh.addFilter(ContextFilter())
+    logging.root.addHandler(sh)
 
     if quiet:
-        logging.basicConfig(level=logging.WARNING,
-                            handlers=[log_handler, sh])
+        logging.root.setLevel(logging.WARNING)
     elif debug:
-        logging.basicConfig(level=logging.DEBUG,
-                            handlers=[log_handler, sh])
+        logging.root.setLevel(logging.DEBUG)
     else:
-        logging.basicConfig(level=logging.INFO,
-                            handlers=[log_handler, sh])
+        logging.root.setLevel(logging.INFO)
 
     # Loggers for report and references
     rep_handler = logging.FileHandler(repname)
@@ -375,7 +374,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     ref_handler.setFormatter(text_formatter)
     RepLGR.setLevel(logging.INFO)
     RepLGR.addHandler(rep_handler)
-    RepLGR.setLevel(logging.INFO)
+    RefLGR.setLevel(logging.INFO)
     RefLGR.addHandler(ref_handler)
 
     LGR.info('Using output directory: {}'.format(out_dir))
@@ -666,10 +665,16 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     report += '\n\nReferences:\n\n' + references
     with open(repname, 'w') as fo:
         fo.write(report)
-    os.remove(refname)
 
-    for handler in logging.root.handlers[:]:
-        logging.root.removeHandler(handler)
+    log_handler.close()
+    logging.root.removeHandler(log_handler)
+    sh.close()
+    logging.root.removeHandler(sh)
+    for local_logger in (RefLGR, RepLGR):
+        for handler in local_logger.handlers[:]:
+            handler.close()
+            local_logger.removeHandler(handler)
+    os.remove(refname)
 
 
 def _main(argv=None):

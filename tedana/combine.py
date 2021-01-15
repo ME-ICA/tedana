@@ -13,7 +13,7 @@ RefLGR = logging.getLogger('REFERENCES')
 @due.dcite(Doi('10.1002/(SICI)1522-2594(199907)42:1<87::AID-MRM13>3.0.CO;2-O'),
            description='T2* method of combining data across echoes using '
                        'monoexponential equation.')
-def _combine_t2s(data, tes, ft2s):
+def _combine_t2s(data, tes, ft2s, report=True):
     """
     Combine data across echoes using weighted averaging according to voxel-
     (and sometimes volume-) wise estimates of T2*.
@@ -26,6 +26,8 @@ def _combine_t2s(data, tes, ft2s):
         Echo times in milliseconds.
     ft2s : (M [x T] X 1) array_like
         Either voxel-wise or voxel- and volume-wise estimates of T2*.
+    report : bool, optional
+        Whether to log a description of this step or not. Default is True.
 
     Returns
     -------
@@ -41,14 +43,15 @@ def _combine_t2s(data, tes, ft2s):
       Medicine: An Official Journal of the International Society
       for Magnetic Resonance in Medicine, 42(1), 87-97.
     """
-    RepLGR.info("Multi-echo data were then optimally combined using the "
-                "T2* combination method (Posse et al., 1999).")
-    RefLGR.info("Posse, S., Wiese, S., Gembris, D., Mathiak, K., Kessler, "
-                "C., Grosse‐Ruyken, M. L., ... & Kiselev, V. G. (1999). "
-                "Enhancement of BOLD‐contrast sensitivity by single‐shot "
-                "multi‐echo functional MR imaging. Magnetic Resonance in "
-                "Medicine: An Official Journal of the International Society "
-                "for Magnetic Resonance in Medicine, 42(1), 87-97.")
+    if report:
+        RepLGR.info("Multi-echo data were then optimally combined using the "
+                    "T2* combination method (Posse et al., 1999).")
+        RefLGR.info("Posse, S., Wiese, S., Gembris, D., Mathiak, K., Kessler, "
+                    "C., Grosse‐Ruyken, M. L., ... & Kiselev, V. G. (1999). "
+                    "Enhancement of BOLD‐contrast sensitivity by single‐shot "
+                    "multi‐echo functional MR imaging. Magnetic Resonance in "
+                    "Medicine: An Official Journal of the International Society "
+                    "for Magnetic Resonance in Medicine, 42(1), 87-97.")
     n_vols = data.shape[-1]
     alpha = tes * np.exp(-tes / ft2s)
     if alpha.ndim == 2:
@@ -70,7 +73,7 @@ def _combine_t2s(data, tes, ft2s):
 @due.dcite(Doi('10.1002/mrm.20900'),
            description='PAID method of combining data across echoes using just '
                        'SNR/signal and TE.')
-def _combine_paid(data, tes):
+def _combine_paid(data, tes, report=True):
     """
     Combine data across echoes using SNR/signal and TE via the
     parallel-acquired inhomogeneity desensitized (PAID) ME-fMRI combination
@@ -82,6 +85,8 @@ def _combine_paid(data, tes):
         Masked data.
     tes : (1 x E) array_like
         Echo times in milliseconds.
+    report : bool, optional
+        Whether to log a description of this step or not. Default is True.
 
     Returns
     -------
@@ -98,16 +103,17 @@ def _combine_paid(data, tes):
       International Society for Magnetic Resonance in Medicine,
       55(6), 1227-1235.
     """
-    RepLGR.info("Multi-echo data were then optimally combined using the "
-                "parallel-acquired inhomogeneity desensitized (PAID) "
-                "combination method.")
-    RefLGR.info("Poser, B. A., Versluis, M. J., Hoogduin, J. M., & Norris, "
-                "D. G. (2006). BOLD contrast sensitivity enhancement and "
-                "artifact reduction with multiecho EPI: parallel‐acquired "
-                "inhomogeneity‐desensitized fMRI. "
-                "Magnetic Resonance in Medicine: An Official Journal of the "
-                "International Society for Magnetic Resonance in Medicine, "
-                "55(6), 1227-1235.")
+    if report:
+        RepLGR.info("Multi-echo data were then optimally combined using the "
+                    "parallel-acquired inhomogeneity desensitized (PAID) "
+                    "combination method.")
+        RefLGR.info("Poser, B. A., Versluis, M. J., Hoogduin, J. M., & Norris, "
+                    "D. G. (2006). BOLD contrast sensitivity enhancement and "
+                    "artifact reduction with multiecho EPI: parallel‐acquired "
+                    "inhomogeneity‐desensitized fMRI. "
+                    "Magnetic Resonance in Medicine: An Official Journal of the "
+                    "International Society for Magnetic Resonance in Medicine, "
+                    "55(6), 1227-1235.")
     n_vols = data.shape[-1]
     snr = data.mean(axis=-1) / data.std(axis=-1)
     alpha = snr * tes
@@ -225,6 +231,7 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
 
     tes = np.array(tes)[np.newaxis, ...]  # (1 x E) array_like
     combined = np.zeros((data.shape[0], data.shape[2]))
+    report = True
     for i_echo, echo_num in enumerate(echos_to_run):
         if echo_num == 2:
             # Use the first two echoes for cases where there are
@@ -240,6 +247,7 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
             t2s_ = t2s[..., np.newaxis]  # add singleton
 
             combined[voxel_idx, :] = _combine_t2s(
-                data[voxel_idx, :echo_num, :], tes[:, :echo_num], t2s_[voxel_idx, ...])
+                data[voxel_idx, :echo_num, :], tes[:, :echo_num], t2s_[voxel_idx, ...], report=report)
+        report = False
 
     return combined
