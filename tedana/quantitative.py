@@ -1,12 +1,10 @@
-"""
-Functions to estimate S0 and T2* from complex multi-echo data.
-"""
+"""Functions to estimate S0 and T2* from complex multi-echo data."""
 import logging
 
 import nibabel as nib
 import numpy as np
 from nilearn import image, masking
-from nilearn._utils.image import load_niimg
+from nilearn._utils import load_niimg
 from scipy import ndimage, optimize
 
 from tedana import decay
@@ -20,11 +18,11 @@ def t2star_fit(
     multiecho_magn,
     multiecho_phase,
     echo_times,
-    compute_freq_map=True,
-    smooth_freq_map=True,
-    compute_corrected_fitting=True,
+    compute_freq=True,
+    smooth_freq=True,
+    compute_corrected_fit=True,
     out_dir=".",
-    fitting_method="nlls",
+    fitting_method="curvefit",
 ):
     """Estimate T2* values for complex multi-echo data.
 
@@ -32,7 +30,8 @@ def t2star_fit(
     ----------
     multiecho_magn : list of nibabel.nifti1.Nifti1Image or files
         List of magnitude images/time series. Each entry in the list is an echo.
-    multiecho_phase
+    multiecho_phase : list of nibabel.nifti1.Nifti1Image or files
+        List of phase images/time series. Each entry in the list is an echo.
     echo_times : array
         In milliseconds
     fitting_method : {'nlls', 'ols', 'gls', 'num'}, optional
@@ -49,13 +48,13 @@ def t2star_fit(
         # RMSE results from fitting the frequency slope on the phase data. Default=2.
         "rmse_thresh": 0.8,
         # 'gaussian' | 'box' | 'polyfit1d' | 'polyfit3d'. Default='polyfit3d'
-        "smooth_type": "polyfit3d",
+        "smooth_type": "gaussian",
         "smooth_kernel": [27, 27, 7],  # only for 'gaussian' and 'box'
         "smooth_poly_order": 3,
         # 3D downsample frequency map to compute gradient along Z. Default=[2 2 2].
         "smooth_downsampling": [2, 2, 2],
         # minimum length of values along Z, below which values are not considered. Default=4.
-        "min_length": 6,
+        "min_length": 4,
         "dz": 1.25,  # slice thickness in mm. N.B. SHOULD INCLUDE GAP!
         # 0: Just use the initial freqGradZ value - which is acceptable if nicely computed
         "do_optimization": False,
@@ -66,35 +65,35 @@ def t2star_fit(
     }
 
     # Load data and select first volume from each
+    # TODO: Support 4D data
     multiecho_magn = [load_niimg(img) for img in multiecho_magn]
     multiecho_phase = [load_niimg(img) for img in multiecho_phase]
-    multiecho_magn = [image.index_img(img, 0) for img in multiecho_magn]
-    multiecho_phase = [image.index_img(img, 0) for img in multiecho_phase]
+    if multiecho_magn[0].ndim == 4:
+        multiecho_magn = [image.index_img(img, 0) for img in multiecho_magn]
+        multiecho_phase = [image.index_img(img, 0) for img in multiecho_phase]
     multiecho_magn = image.concat_imgs(multiecho_magn)
-    multiecho_phase = image.concat_imgs(multiecho_magn)
+    multiecho_phase = image.concat_imgs(multiecho_phase)
 
     # Compute field map of frequencies from multi-echo phase data
-    freq_img, mask_img = compute_freq_map(
-        multiecho_magn,
-        multiecho_phase,
-        echo_times,
-        mask_thresh=params["mask_thresh"],
-        rmse_thresh=params["rmse_thresh"],
-    )
+    if compute_freq:
+        freq_img, mask_img = compute_freq_map(
+            multiecho_magn,
+            multiecho_phase,
+            echo_times,
+            mask_thresh=params["mask_thresh"],
+            rmse_thresh=params["rmse_thresh"],
+        )
 
     # Smooth field map of frequencies
-    freq_smooth = smooth_freq_map(
-        multiecho_magn,
-        multiecho_phase,
-        freq_img,
-        mask_img,
-        echo_times,
-        mask_thresh=params["mask_thresh"],
-        rmse_thresh=params["rmse_thresh"],
-        smooth_downsampling=params["smooth_downsampling"],
-        smooth_type=params["smooth_type"],
-        smooth_kernel=params["smooth_kernel"],
-    )
+    if smooth_freq:
+        freq_smooth = smooth_freq_map(
+            freq_img,
+            mask_img,
+            echo_times,
+            smooth_downsampling=None,
+            smooth_type=params["smooth_type"],
+            smooth_kernel=params["smooth_kernel"],
+        )
 
     # Correct z gradients
     grad_z = compute_gradient_z(
@@ -145,11 +144,9 @@ def compute_freq_map(
     """
     # run_4d = False  # Added by TS
     echo_times = np.array(echo_times)
-    first_img = multiecho_magn[0]
-    dims = first_img.shape
-    n_e = len(multiecho_magn)
-    n_x, n_y, n_z, n_t = dims
-    assert n_e == len(echo_times) == len(multiecho_phase)
+    dims = multiecho_magn.shape
+    n_x, n_y, n_z, n_e = dims
+    assert n_e == len(echo_times) == multiecho_phase.shape[3]
     # convert echo times to seconds
     echo_times_s = echo_times / 1000.0
 
@@ -228,8 +225,8 @@ def compute_freq_map(
         # fill 3D matrix
         freq_map_3d[:, :, i_slice] = freq_map_2d_masked
 
-    freq_img = nib.Nifti1Image(freq_map_3d, first_img.affine, header=first_img.header)
-    mask_img = nib.Nifti1Image(mask_3d, first_img.affine, header=first_img.header)
+    freq_img = nib.Nifti1Image(freq_map_3d, multiecho_magn.affine, header=multiecho_magn.header)
+    mask_img = nib.Nifti1Image(mask_3d, multiecho_magn.affine, header=multiecho_magn.header)
     freq_img.to_filename("freq.nii.gz")
     mask_img.to_filename("mask.nii.gz")
     return freq_img, mask_img
@@ -241,13 +238,17 @@ def smooth_freq_map(
     """Smooth frequency map."""
     # Downsample field map
     LGR.info("Downsampling field map...")
-    new_shape = tuple(
-        freq.shape[i] // smooth_downsampling[i] for i in range(len(freq.shape))
-    )
-    if new_shape != freq.shape:
-        freq_img = image.resample(freq, target_shape=new_shape, interpolation="nearest")
+    if smooth_downsampling is not None:
+        new_shape = tuple(
+            freq.shape[i] // smooth_downsampling[i] for i in range(len(freq.shape))
+        )
     else:
-        freq_img = freq.copy()
+        new_shape = freq.shape
+
+    if new_shape != freq.shape:
+        freq_img = image.resample_img(freq, target_shape=new_shape, interpolation="nearest")
+    else:
+        freq_img = freq
 
     # 3d smooth frequency map (zero values are ignored)
     LGR.info("3d smoothing frequency map using method: {}...".format(smooth_type))
@@ -264,12 +265,12 @@ def smooth_freq_map(
             'Parameter "smooth_type" must be one of "gaussian", '
             '"box", "polyfit1d", "polyfit3d"'
         )
-    freqGradZ = freqGradZ_i
+    #freqGradZ = freqGradZ_i
 
     # upsample data back to original resolution
     LGR.info("Upsampling data to native resolution (using nearest neighbor)...")
     if new_shape != freq.shape:
-        freq_img = image.resample(
+        freq_img = image.resample_img(
             freq_img, target_shape=freq.shape, interpolation="nearest"
         )
 
@@ -282,15 +283,15 @@ def smooth_freq_map(
         masking.apply_mask(freq_3d_smooth, mask), mask
     )
     # it looks like freqGradZ_i is only defined when polyfit3d is used.
-    freqGradZ_masked = masking.unmask(masking.apply_mask(freqGradZ, mask), mask)
+    #freqGradZ_masked = masking.unmask(masking.apply_mask(freqGradZ, mask), mask)
 
     # Save smoothed frequency map
     LGR.info("Saving smoothed frequency map...")
     freq_3d_smooth_masked.to_filename("freq_smooth.nii.gz")
 
     # Save gradient map
-    LGR.info("Saving gradient map...")
-    freqGradZ_masked.to_filename("freqGradZ.nii.gz")
+    #LGR.info("Saving gradient map...")
+    #freqGradZ_masked.to_filename("freqGradZ.nii.gz")
 
     return freq_3d_smooth_masked
 
@@ -307,6 +308,17 @@ def compute_corrected_fitting(
 ):
     """Fit T2* corrected for through-slice drop out.
 
+    Parameters
+    ----------
+    multiecho_magn
+    multiecho_phase
+    fitting_method
+    grad_z
+    mask
+    echo_times
+    do_optimization
+    threshold_t2star_max
+
     Returns
     -------
     t2star_unc
@@ -317,11 +329,13 @@ def compute_corrected_fitting(
     grad_z_final
     """
     # Get dimensions of the data
-    n_x, n_y, n_z, n_t = multiecho_magn.shape
+    n_x, n_y, n_z, n_e = multiecho_magn.shape
+    multiecho_magn_data = multiecho_magn.get_fdata()
 
     # Load gradient map
 
     # Load mask
+    mask_data = mask.get_fdata()
 
     # Check echo time(s)
 
@@ -335,14 +349,14 @@ def compute_corrected_fitting(
     rsquared_corr_3d = np.zeros((n_x, n_y, n_z))
     iter_3d = np.zeros((n_x, n_y, n_z))
 
-    X = np.vstack(echo_times[:, None], np.ones((len(echo_times), 1)))
+    X = np.vstack((echo_times[:, None], np.ones((len(echo_times), 1))))
     for i_z in range(n_z):
         # load magnitude
-        data_multiecho_magn = multiecho_magn[:, :, i_z, :]
+        multiecho_magn_data_z = multiecho_magn_data[:, :, i_z, :]
 
         # get mask indices
-        mask_idx = np.where(mask[:, :, i_z])
-        n_pixels = np.sum(mask[:, :, i_z])
+        mask_idx = np.vstack(np.where(mask_data[:, :, i_z]))
+        n_pixels = mask_idx.shape[1]
 
         # initialization
         t2star_uncorr_2d = np.zeros((n_x, n_y))
@@ -356,25 +370,22 @@ def compute_corrected_fitting(
             grad_z_final_2d = np.zeros((n_x, n_y))
             freqGradZ_final_2d = np.zeros((n_x, n_y))
 
-        data_multiecho_magn_2d = np.reshape(data_multiecho_magn, shape=(n_x * n_y, n_t))
-        grad_z_2d = np.reshape(grad_z, shape=(n_x * n_y, n_z))
-        for i_pix in range(n_pixels):
+        for j_pix in range(n_pixels):
+            j_x, j_y = mask_idx[:, j_pix]
 
             # Get data magnitude in 1D
-            data_magn_1d = data_multiecho_magn_2d[mask_idx[i_pix], :]
+            data_magn_1d = multiecho_magn_data_z[j_x, j_y, :]
 
             if np.any(data_magn_1d):
                 # perform uncorrected T2* fit
-                data_magn_1d = data_magn_1d
-
                 t2s_limited, s0_limited, t2s_full, s0_full, r_squared = decay.fit_decay(
-                    data_magn_1d, echo_times, fitting_method, X, n_t
+                    data_magn_1d[None, :], echo_times, np.array([True]), np.array([n_e]), fitting_method,
                 )
-                rsquared_uncorr_2d[mask_idx[i_pix]] = r_squared
-                t2star_uncorr_2d[mask_idx[i_pix]] = t2s_limited
+                rsquared_uncorr_2d[j_x, j_y] = r_squared
+                t2star_uncorr_2d[j_x, j_y] = t2s_limited
 
                 # get initial freqGradZ value from computed map
-                freqGradZ_init = grad_z_2d[mask_idx[i_pix], i_z]
+                freqGradZ_init = grad_z[j_x, j_y, i_z]
 
                 # get final freqGradZ value
                 if do_optimization:
@@ -389,7 +400,7 @@ def compute_corrected_fitting(
                         },
                     )
                     freqGradZ_final = res.x
-                    freqGradZ_final_2d[mask_idx[i_pix]] = freqGradZ_final
+                    freqGradZ_final_2d[mask_idx[j_pix]] = freqGradZ_final
 
                 else:
                     # Just use the initial freqGradZ value - which is acceptable if nicely computed
@@ -397,16 +408,16 @@ def compute_corrected_fitting(
 
                 # Correct signal by sinc function
                 # N.B. echo time is in ms
-                data_magn_1d_corr = data_magn_1d / abs(
+                data_magn_1d_corr = data_magn_1d / np.abs(
                     np.sinc(freqGradZ_final * echo_times / 2000)
                 )
 
                 # perform T2* fit
                 t2s_limited, s0_limited, t2s_full, s0_full, r_squared = decay.fit_decay(
-                    data_magn_1d_corr, echo_times, fitting_method, X, n_t
+                    data_magn_1d_corr[None, :], echo_times, np.array([True]), np.array([n_e]), fitting_method,
                 )
-                rsquared_corr_2d[mask_idx[i_pix]] = r_squared
-                t2star_corr_2d[mask_idx[i_pix]] = t2s_limited
+                rsquared_corr_2d[j_x, j_y] = r_squared
+                t2star_corr_2d[j_x, j_y] = t2s_limited
 
         # fill 3D T2* matrix
         t2star_uncorr_3d[:, :, i_z] = t2star_uncorr_2d
@@ -445,7 +456,7 @@ def optimize_t2star(data_magn_1d, echo_times, delta_f, X):
 
 
 def compute_gradient_z(
-    multiecho_magn, freq_smooth, mask, grad_z, min_length, poly_fit_order, dz
+    multiecho_magn, freq_smooth, mask, min_length, poly_fit_order, dz
 ):
     """Compute map of gradient frequencies along Z.
 
@@ -454,10 +465,10 @@ def compute_gradient_z(
     grad_z_3d_masked
     """
     # Get dimensions of the data...
-    n_x, n_y, n_z, n_e, n_t = multiecho_magn.shape
+    n_x, n_y, n_z, n_e = multiecho_magn.shape
 
     # Load frequency map
-    freq_map_3d_smooth = freq_smooth
+    freq_map_3d_smooth = freq_smooth.get_fdata()
 
     # Calculate frequency gradient in the slice direction (freqGradZ)
     grad_z_3d = np.zeros((n_x, n_y, n_z))
@@ -468,7 +479,7 @@ def compute_gradient_z(
             grad_z = np.zeros((1, n_z))
             # get frequency along z (discard zero values)
             freq_z = np.squeeze(freq_map_3d_smooth[i_x, j_y, :])
-            ind_nonzero = np.where(freq_z)
+            ind_nonzero = np.where(freq_z)[0]
             if len(ind_nonzero) >= min_length:
                 # fit to polynomial function
                 p = np.polyfit(ind_nonzero, freq_z[ind_nonzero], poly_fit_order)
@@ -479,5 +490,7 @@ def compute_gradient_z(
                 grad_z_3d[i_x, j_y, :] = grad_z
 
     # Mask gradient map
-    grad_z_3d_masked = masking.unmask(masking.apply_mask(grad_z_3d, mask))
+    grad_z_3d_masked = grad_z_3d * mask.get_fdata()
+    grad_z_3d_masked = nib.Nifti1Image(grad_z_3d_masked, mask.affine, mask.header)
+    grad_z_3d_masked.to_filename("gradz_masked.nii.gz")
     return grad_z_3d_masked
