@@ -9,7 +9,7 @@ import matplotlib
 matplotlib.use('AGG')
 import matplotlib.pyplot as plt
 
-from tedana.stats import get_ls_coeffs
+from tedana import stats
 from tedana.utils import get_spectrum
 
 LGR = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
 
-def trim_edge_zeros(arr):
+def _trim_edge_zeros(arr):
     """
     Trims away the zero-filled slices that surround many 3/4D arrays
 
@@ -43,8 +43,7 @@ def trim_edge_zeros(arr):
     return arr[bounding_box]
 
 
-def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
-                    png_cmap):
+def comp_figures(ts, mask, comptable, mmix, ref_img, out_dir, png_cmap):
     """
     Creates static figures that highlight certain aspects of tedana processing
     This includes a figure for each component showing the component time course,
@@ -66,23 +65,16 @@ def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
         Reference image to dictate how outputs are saved to disk
     out_dir : :obj:`str`
         Figures folder within output directory
-    png_cmap : :obj:`str`
-        The name of a matplotlib colormap to use when making figures. Optional.
-        Default colormap is 'coolwarm'
 
     """
     # Get the lenght of the timeseries
     n_vols = len(mmix)
 
-    # Check that colormap provided exists
-    if png_cmap not in plt.colormaps():
-        LGR.warning('Provided colormap is not recognized, proceeding with default')
-        png_cmap = 'coolwarm'
     # regenerate the beta images
-    ts_B = get_ls_coeffs(ts, mmix, mask)
+    ts_B = stats.get_ls_coeffs(ts, mmix, mask)
     ts_B = ts_B.reshape(ref_img.shape[:3] + ts_B.shape[1:])
     # trim edges from ts_B array
-    ts_B = trim_edge_zeros(ts_B)
+    ts_B = _trim_edge_zeros(ts_B)
 
     # Mask out remaining zeros
     ts_B = np.ma.masked_where(ts_B == 0, ts_B)
@@ -154,7 +146,7 @@ def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
         imgmax = 0.1 * np.abs(ts_B[:, :, :, compnum]).max()
         imgmin = imgmax * -1
 
-        for idx, cut in enumerate(cuts):
+        for idx, _ in enumerate(cuts):
             for imgslice in range(1, 6):
                 ax = plt.subplot2grid((5, 6), (idx + 1, imgslice - 1), rowspan=1, colspan=1)
                 ax.axis('off')
@@ -193,130 +185,3 @@ def write_comp_figs(ts, mask, comptable, mmix, ref_img, out_dir,
         compplot_name = os.path.join(out_dir, plot_name)
         plt.savefig(compplot_name)
         plt.close()
-
-
-def write_kappa_scatter(comptable, out_dir):
-    """
-    Creates a scatter plot of Kappa vs Rho values. The shape and size of the
-    points is based on classification and variance explained, respectively.
-
-    Parameters
-    ----------
-    comptable : (C x X) :obj:`pandas.DataFrame`
-        Component metric table. One row for each component, with a column for
-        each metric. Requires at least four columns: "classification",
-        "kappa", "rho", and "variance explained".
-    out_dir : :obj:`str`
-        Figures folder within output directory
-
-    """
-
-    # Creating Kappa Vs Rho plot
-    ax_scatter = plt.gca()
-
-    # Set up for varying marker shape and color
-    mkr_dict = {'accepted': ['*', 'g'], 'rejected': ['v', 'r'],
-                'ignored': ['d', 'k']}
-
-    # Prebuild legend so that the marker sizes are uniform
-    for kind in mkr_dict:
-        plt.scatter([], [], s=1, marker=mkr_dict[kind][0],
-                    c=mkr_dict[kind][1], label=kind, alpha=0.5)
-    # Create legend
-    ax_scatter.legend(markerscale=10)
-
-    # Plot actual values
-    for kind in mkr_dict:
-        d = comptable[comptable.classification == kind]
-        plt.scatter(d.kappa, d.rho,
-                    s=150 * d['variance explained'], marker=mkr_dict[kind][0],
-                    c=mkr_dict[kind][1], alpha=0.5)
-
-    # Finish labeling the plot.
-    ax_scatter.set_xlabel('kappa')
-    ax_scatter.set_ylabel('rho')
-    ax_scatter.set_title('Kappa vs Rho')
-    ax_scatter.xaxis.label.set_fontsize(20)
-    ax_scatter.yaxis.label.set_fontsize(20)
-    ax_scatter.title.set_fontsize(25)
-    scatter_title = os.path.join(out_dir, 'Kappa_vs_Rho_Scatter.png')
-    plt.savefig(scatter_title)
-
-    plt.close()
-
-
-def write_summary_fig(comptable, out_dir):
-    """
-    Creates a pie chart showing 1) The total variance explained by each
-    component in the outer ring, 2) the variance explained by each
-    individual component in the inner ring, 3) counts of each classification
-    and 4) the amount of unexplained variance.
-
-    Parameters
-    ----------
-    comptable : (C x X) :obj:`pandas.DataFrame`
-        Component metric table. One row for each component, with a column for
-        each metric. Requires at least two columns: "variance explained" and
-        "classification".
-    out_dir : :obj:`str`
-        Figures folder within output directory
-    """
-
-    var_expl = []
-    ind_var_expl = {}
-    counts = {}
-    # Get overall variance explained, each components variance and counts of comps
-    for clf in ['accepted', 'rejected', 'ignored']:
-        var_expl.append(np.sum(comptable[comptable.classification == clf]['variance explained']))
-        ind_var_expl[clf] = comptable[comptable.classification == clf]['variance explained'].values
-        counts[clf] = '{0} {1}'.format(comptable[comptable.classification == clf].count()[0], clf)
-
-    # Generate Colormaps for individual components
-    acc_colors = plt.cm.Greens(np.linspace(0.2, .6, len(ind_var_expl['accepted'].tolist())))
-    rej_colors = plt.cm.Reds(np.linspace(0.2, .6, len(ind_var_expl['rejected'].tolist())))
-    ign_colors = plt.cm.Greys(np.linspace(0.2, .8, len(ind_var_expl['ignored'].tolist())))
-    unxp_colors = np.atleast_2d(np.array(plt.cm.Greys(0)))
-
-    # Shuffle the colors so that neighboring wedges are (perhaps) visually seperable
-    np.random.shuffle(rej_colors)
-    np.random.shuffle(acc_colors)
-    np.random.shuffle(ign_colors)
-
-    # Decision on whether to include the unexplained variance in figure
-    unexpl_var = [100 - np.sum(var_expl)]
-    all_var_expl = []
-    if unexpl_var >= [0.001]:
-        var_expl += unexpl_var
-        counts['unexplained'] = 'unexplained variance'
-        # Combine individual variances from giant list
-        for value in ind_var_expl.values():
-            all_var_expl += value.tolist()
-        # Add in unexplained variance
-        all_var_expl += unexpl_var
-        outer_colors = np.stack((plt.cm.Greens(0.7), plt.cm.Reds(0.7),
-                                 plt.cm.Greys(0.7), plt.cm.Greys(0)))
-        inner_colors = np.concatenate((acc_colors, rej_colors, ign_colors, unxp_colors), axis=0)
-    else:
-        for value in ind_var_expl.values():
-            all_var_expl += value.tolist()
-        outer_colors = np.stack((plt.cm.Greens(0.7), plt.cm.Reds(0.7), plt.cm.Greys(0.7)))
-        inner_colors = np.concatenate((acc_colors, rej_colors, ign_colors), axis=0)
-
-    labels = counts.values()
-
-    fig, ax = plt.subplots(figsize=(16, 10))
-    size = 0.3
-    # Build outer, overall pie chart, and then inner individual comp pie
-    ax.pie(var_expl, radius=1, colors=outer_colors, labels=labels,
-           autopct='%1.1f%%', pctdistance=0.85, textprops={'fontsize': 20},
-           wedgeprops=dict(width=size, edgecolor='w'))
-
-    ax.pie(all_var_expl, radius=1 - size, colors=inner_colors,
-           wedgeprops=dict(width=size))
-
-    ax.set(aspect="equal")
-    ax.set_title('Variance Explained By Classification', fontdict={'fontsize': 28})
-    if unexpl_var < [0.001]:
-        plt.text(1, -1, '*Unexplained Variance less than 0.001', fontdict={'fontsize': 12})
-    sumfig_title = os.path.join(out_dir, 'Component_Overview.png')
-    plt.savefig(sumfig_title)

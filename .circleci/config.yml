@@ -1,4 +1,4 @@
-# Python CircleCI 2.0 configuration file
+# Python CircleCI 2.1 configuration file
 #
 # Check https://circleci.com/docs/2.0/language-python/ for more details
 #
@@ -14,17 +14,17 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py37-v1-{{ checksum "tedana/info.py" }}
       - run:
           name: Generate environment
           command: |
             if [ ! -d /opt/conda/envs/tedana_py37 ]; then
               conda create -yq -n tedana_py37 python=3.7
               source activate tedana_py37
-              pip install -r dev_requirements.txt
+              pip install .[tests]
             fi
       - save_cache:
-          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py37-v1-{{ checksum "tedana/info.py" }}
           paths:
               - /opt/conda/envs/tedana_py37
 
@@ -35,7 +35,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py35-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py35-v1-{{ checksum "tedana/info.py" }}
       - run:
           name: Generate environment
           command: |
@@ -43,7 +43,7 @@ jobs:
             if [ ! -d /opt/conda/envs/tedana_py35 ]; then
               conda create -yq -n tedana_py35 python=3.5
               source activate tedana_py35
-              pip install -r dev_requirements.txt
+              pip install .[tests]
             fi
       - run:
           name: Running unit tests
@@ -53,7 +53,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py35
       - save_cache:
-          key: conda-py35-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py35-v1-{{ checksum "tedana/info.py" }}
           paths:
               - /opt/conda/envs/tedana_py35
       - persist_to_workspace:
@@ -68,7 +68,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py36-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py36-v1-{{ checksum "tedana/info.py" }}
       - run:
           name: Generate environment
           command: |
@@ -76,7 +76,7 @@ jobs:
             if [ ! -d /opt/conda/envs/tedana_py36 ]; then
               conda create -yq -n tedana_py36 python=3.6
               source activate tedana_py36
-              pip install -r dev_requirements.txt
+              pip install .[tests]
             fi
       - run:
           name: Running unit tests
@@ -86,7 +86,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py36
       - save_cache:
-          key: conda-py36-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py36-v1-{{ checksum "tedana/info.py" }}
           paths:
               - /opt/conda/envs/tedana_py36
       - persist_to_workspace:
@@ -101,7 +101,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py37-v1-{{ checksum "tedana/info.py" }}
       - run:
           name: Running unit tests
           command: |
@@ -122,7 +122,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py37-v1-{{ checksum "tedana/info.py" }}
       - run:
           name: Style check
           command: |
@@ -137,7 +137,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py37-v1-{{ checksum "tedana/info.py" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -161,7 +161,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py37-v1-{{ checksum "tedana/info.py" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -185,7 +185,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py37-v1-{{ checksum "tedana/info.py" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -202,6 +202,30 @@ jobs:
           paths:
               - src/coverage/.coverage.five-echo
 
+  t2smap:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py37-v1-{{ checksum "tedana/info.py" }}
+      - run:
+          name: Run integration tests
+          no_output_timeout: 40m
+          command: |
+            apt-get install -yqq make
+            source activate tedana_py37  # depends on makeenv_37
+            make t2smap
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.t2smap
+      - store_artifacts:
+          path: /tmp/data
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+              - src/coverage/.coverage.t2smap
+
   merge_coverage:
     working_directory: /tmp/src/tedana
     docker:
@@ -211,7 +235,7 @@ jobs:
           at: /tmp
       - checkout
       - restore_cache:
-          key: conda-py37-v1-{{ checksum "dev_requirements.txt" }}
+          key: conda-py37-v1-{{ checksum "tedana/info.py" }}
       - run:
           name: Merge coverage files
           command: |
@@ -224,6 +248,28 @@ jobs:
           path: /tmp/src/coverage
       - codecov/upload:
           file: /tmp/src/coverage/coverage.xml
+
+  deploy:
+    docker:
+      - image: continuumio/miniconda3
+    steps:
+      - checkout
+      - run:
+          name: init .pypirc
+          command: |
+            echo -e "[pypi]" >> ~/.pypirc
+            echo -e "username = $PYPI_USER" >> ~/.pypirc
+            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+      - run:
+          name: create package
+          command: |
+            python setup.py sdist
+            python setup.py bdist_wheel
+      - run:
+          name: upload to pypi
+          command: |
+            pip install twine
+            twine upload dist/*
 
 workflows:
   version: 2.1
@@ -247,6 +293,9 @@ workflows:
       - five-echo:
           requires:
             - makeenv_37
+      - t2smap:
+          requires:
+            - makeenv_37
       - merge_coverage:
           requires:
             - unittest_35
@@ -255,3 +304,12 @@ workflows:
             - three-echo
             - four-echo
             - five-echo
+            - t2smap
+      - deploy:
+          requires:
+            - merge_coverage
+          filters:
+            tags:
+              only: /[0-9]+\.[0-9]+\.[0-9]+(?:rc)?(?:[0-9]+)?
+            branches:
+              ignore: /.*/
