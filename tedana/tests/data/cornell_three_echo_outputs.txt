@@ -66,9 +66,6 @@ figures/comp_061.png
 figures/comp_062.png
 figures/comp_063.png
 figures/comp_064.png
-figures/comp_065.png
-figures/comp_066.png
-figures/comp_067.png
 dn_ts_OC.nii.gz
 feats_OC2.nii.gz
 figures
