@@ -187,7 +187,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
 
     if algorithm in ['mdl', 'aic', 'kic']:
-        data_img = io.new_nii_like(ref_img, utils.unmask(data_z, mask))
+        data_img = io.new_nii_like(ref_img, utils.unmask(data, mask))
         mask_img = io.new_nii_like(ref_img, mask.astype(int))
         voxel_comp_weights, varex, varex_norm, comp_ts = ma_pca.ma_pca(
             data_img, mask_img, algorithm)

@@ -479,8 +479,8 @@ def ma_pca(data_nib, mask_nib, criteria='mdl'):
     data_non_normalized = data_nib_V[maskvec == 1, :]
     scaler = StandardScaler(with_mean=True, with_std=True)
     # TODO: determine if tedana is already normalizing before this
-    data = scaler.fit_transform(data_non_normalized)  # This was X_sc
-    data = data_non_normalized
+    data = scaler.fit_transform(data_non_normalized.T).T  # This was X_sc
+    #data = data_non_normalized
 
     LGR.info('Performing SVD on original OC data...')
     V, EigenValues = _icatb_svd(data, Nt)
@@ -549,7 +549,7 @@ def ma_pca(data_nib, mask_nib, criteria='mdl'):
             dat[:, i] = dat0[mask_s_1d == 1]
 
         # Perform Variance Normalization
-        dat = scaler.fit_transform(dat)
+        dat = scaler.fit_transform(dat.T).T
 
         # (completed)
         LGR.info('Performing SVD on subsampled i.i.d. OC data...')
