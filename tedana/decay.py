@@ -61,7 +61,7 @@ def monoexponential(tes, s0, t2star):
     return s0 * np.exp(-tes / t2star)
 
 
-def fit_monoexponential(data_cat, echo_times, adaptive_mask):
+def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True):
     """
     Fit monoexponential decay model with nonlinear curve-fitting.
 
@@ -69,23 +69,31 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
     ----------
     data_cat : (S x E x T) :obj:`numpy.ndarray`
         Multi-echo data.
-    echo_times
+    echo_times : (E,) array_like
         Echo times in milliseconds.
-    adaptive_mask
+    adaptive_mask : (S,) :obj:`numpy.ndarray`
         Array where each value indicates the number of echoes with good signal
         for that voxel.
+    report : bool, optional
+        Whether to log a description of this step or not. Default is True.
 
     Returns
     -------
-    t2s_limited, s0_limited, t2s_full, s0_full
+    t2s_limited, s0_limited, t2s_full, s0_full : (S,) :obj:`numpy.ndarray`
+        T2* and S0 estimate maps.
+
+    Notes
+    -----
+    This method is slower, but more accurate, than the log-linear approach.
     """
-    RepLGR.info("A monoexponential model was fit to the data at each voxel "
-                "using nonlinear model fitting in order to estimate T2* and S0 "
-                "maps, using T2*/S0 estimates from a log-linear fit as "
-                "initial values. For each voxel, the value from the adaptive "
-                "mask was used to determine which echoes would be used to "
-                "estimate T2* and S0. In cases of model fit failure, T2*/S0 "
-                "estimates from the log-linear fit were retained instead.")
+    if report:
+        RepLGR.info("A monoexponential model was fit to the data at each voxel "
+                    "using nonlinear model fitting in order to estimate T2* and S0 "
+                    "maps, using T2*/S0 estimates from a log-linear fit as "
+                    "initial values. For each voxel, the value from the adaptive "
+                    "mask was used to determine which echoes would be used to "
+                    "estimate T2* and S0. In cases of model fit failure, T2*/S0 "
+                    "estimates from the log-linear fit were retained instead.")
     n_samp, n_echos, n_vols = data_cat.shape
 
     # Currently unused
@@ -156,7 +164,42 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask):
 
 
 def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
-    """
+    """Fit monoexponential decay model with log-linear regression.
+
+    The monoexponential decay function is fitted to all values for a given
+    voxel across TRs, per TE, to estimate voxel-wise :math:`S_0` and :math:`T_2^*`.
+    At a given voxel, only those echoes with "good signal", as indicated by the
+    value of the voxel in the adaptive mask, are used.
+    Therefore, for a voxel with an adaptive mask value of five, the first five
+    echoes would be used to estimate T2* and S0.
+
+    Parameters
+    ----------
+    data_cat : (S x E x T) :obj:`numpy.ndarray`
+        Multi-echo data. S is samples, E is echoes, and T is timepoints.
+    echo_times : (E,) array_like
+        Echo times in milliseconds.
+    adaptive_mask : (S,) :obj:`numpy.ndarray`
+        Array where each value indicates the number of echoes with good signal
+        for that voxel.
+    report : :obj:`bool`, optional
+        Whether to log a description of this step or not. Default is True.
+
+    Returns
+    -------
+    t2s_limited, s0_limited, t2s_full, s0_full: (S,) :obj:`numpy.ndarray`
+        T2* and S0 estimate maps.
+
+    Notes
+    -----
+    The approach used in this function involves transforming the raw signal values
+    (:math:`log(|data| + 1)`) and then fitting a line to the transformed data using
+    ordinary least squares.
+    This results in two parameter estimates: one for the slope  and one for the intercept.
+    The slope estimate is inverted (i.e., 1 / slope) to get  :math:`T_2^*`,
+    while the intercept estimate is exponentiated (i.e., e^intercept) to get :math:`S_0`.
+
+    This method is faster, but less accurate, than the nonlinear approach.
     """
     if report:
         RepLGR.info("A monoexponential model was fit to the data at each voxel "
@@ -215,7 +258,7 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
     return t2s_limited, s0_limited, t2s_full, s0_full
 
 
-def fit_decay(data, tes, mask, adaptive_mask, fittype):
+def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True):
     """
     Fit voxel-wise monoexponential decay models to `data`
 
@@ -234,6 +277,8 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype):
         given sample
     fittype : {loglin, curvefit}
         The type of model fit to use
+    report : bool, optional
+        Whether to log a description of this step or not. Default is True.
 
     Returns
     -------
@@ -254,18 +299,11 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype):
 
     Notes
     -----
-    1.  Fit monoexponential decay function to all values for a given voxel
-        across TRs, per TE, to estimate voxel-wise :math:`S_0` and
-        :math:`T_2^*`:
-
-        .. math::
-            S(TE) = S_0 * exp(-R_2^* * TE)
-
-            T_2^* = 1 / R_2^*
-
-    2.  Replace infinite values in :math:`T_2^*` map with 500 and NaN values
-        in :math:`S_0` map with 0.
-    3.  Generate limited :math:`T_2^*` and :math:`S_0` maps by doing something.
+    This function replaces infinite values in the :math:`T_2^*` map with 500 and
+    :math:`T_2^*` values less than or equal to zero with 1.
+    Additionally, very small :math:`T_2^*` values above zero are replaced with a floor
+    value to prevent zero-division errors later on in the workflow.
+    It also replaces NaN values in the :math:`S_0` map with 0.
     """
     if data.shape[1] != len(tes):
         raise ValueError('Second dimension of data ({0}) does not match number '
@@ -285,10 +323,10 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype):
 
     if fittype == 'loglin':
         t2s_limited, s0_limited, t2s_full, s0_full = fit_loglinear(
-            data_masked, tes, adaptive_mask_masked)
+            data_masked, tes, adaptive_mask_masked, report=report)
     elif fittype == 'curvefit':
         t2s_limited, s0_limited, t2s_full, s0_full = fit_monoexponential(
-            data_masked, tes, adaptive_mask_masked)
+            data_masked, tes, adaptive_mask_masked, report=report)
     else:
         raise ValueError('Unknown fittype option: {}'.format(fittype))
 
@@ -355,12 +393,14 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
     t2s_full_ts = np.copy(t2s_limited_ts)
     s0_full_ts = np.copy(t2s_limited_ts)
 
+    report = True
     for vol in range(n_vols):
         t2s_limited, s0_limited, t2s_full, s0_full = fit_decay(
-            data[:, :, vol][:, :, None], tes, mask, adaptive_mask, fittype)
+            data[:, :, vol][:, :, None], tes, mask, adaptive_mask, fittype, report=report)
         t2s_limited_ts[:, vol] = t2s_limited
         s0_limited_ts[:, vol] = s0_limited
         t2s_full_ts[:, vol] = t2s_full
         s0_full_ts[:, vol] = s0_full
+        report = False
 
     return t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts
