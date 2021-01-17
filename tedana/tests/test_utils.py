@@ -74,7 +74,7 @@ def test_load_image():
     # load img_like object
     assert utils.load_image(fimg).shape == exp_shape
     # load array
-    assert utils.load_image(fimg.get_data()).shape == exp_shape
+    assert utils.load_image(fimg.get_fdata()).shape == exp_shape
 
 
 def test_make_adaptive_mask():

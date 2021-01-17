@@ -32,9 +32,9 @@ def load_image(data):
     """
 
     if isinstance(data, str):
-        data = check_niimg(data).get_data()
+        data = check_niimg(data).get_fdata()
     elif isinstance(data, nib.spatialimages.SpatialImage):
-        data = check_niimg(data).get_data()
+        data = check_niimg(data).get_fdata()
 
     fdata = data.reshape((-1,) + data.shape[3:]).squeeze()
 
@@ -267,7 +267,7 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None,
         Cluster-extent thresholded (and optionally binarized) map.
     """
     if not isinstance(img, np.ndarray):
-        arr = img.get_data()
+        arr = img.get_fdata()
     else:
         arr = img.copy()
 
