@@ -28,6 +28,17 @@ def t2star_fit(
     compute_corrected_fit=True,
     out_dir=".",
     fitting_method="curvefit",
+    mask_thresh=500,
+    rmse_thresh=0.8,
+    smooth_type="gaussian",
+    smooth_kernel=(27, 27, 7),
+    smooth_poly_order=3,
+    smooth_downsampling=(2, 2, 2),
+    min_length=4,
+    dz=1.25,
+    do_optimization=True,
+    threshold_t2star_max=1000,
+    poly_fit_order=4,
 ):
     """Estimate T2* values for complex multi-echo data.
 
@@ -39,13 +50,45 @@ def t2star_fit(
         List of phase images/time series. Each entry in the list is an echo.
     echo_times : array
         In milliseconds
-    fitting_method : {'nlls', 'ols', 'gls', 'num'}, optional
-        'nlls': Levenberg-Marquardt nonlinear fitting to exponential (default).
-        'ols': Ordinary least squares linear fit of the log of S.
-        'gls': Generalized least squares (=weighted least squares), to respect
-        heteroscedasticity of the residual when taking the log of S.
-        'num': Numerical approximation, based on the NumART2* method in
-        [Hagberg, MRM 2002]. Tends to overestimate T2*.
+    fitting_method : {"curvefit", "loglin", "gls", "num"}, optional
+        "curvefit": Levenberg-Marquardt nonlinear fitting to exponential (default).
+                    Corresponds to MATLAB version's "nlls".
+        "loglin":   Ordinary least squares linear fit of the log of S.
+                    Corresponds to MATLAB version's "ols".
+        "gls":      Generalized least squares (=weighted least squares), to respect
+                    heteroscedasticity of the residual when taking the log of S.
+                    No implementation yet.
+        "num":      Numerical approximation, based on the NumART2* method in
+                    [Hagberg, MRM 2002]. Tends to overestimate T2*.
+                    No implementation yet.
+    mask_thresh : float, optional
+        intensity under which pixels are masked. Default=500.
+    rmse_thresh : float, optional
+        threshold above which voxels are discarded for comuting the frequency map.
+        RMSE results from fitting the frequency slope on the phase data. Default=2.
+    smooth_type : {"gaussian", "box", "polyfit1d", "polyfit3d"}, optional
+        Smoothing approach. Default="gaussian". (MATLAB default is "polyfit3d")
+    smooth_kernel : length-3 tuple, optional
+        only used for "gaussian" and "box" smoothing. Default is (27, 27, 7).
+    smooth_poly_order : int, optional
+        Default=3.
+    smooth_downsampling : length-3 tuple, optional
+        3D downsample frequency map to compute gradient along Z. Default=[2 2 2].
+    min_length : int, optional
+        minimum length of values along Z, below which values are not considered. Default=4.
+        (MATLAB default is 6).
+    dz : float, optional
+        slice thickness in mm. N.B. SHOULD INCLUDE GAP! Default=1.25
+    do_optimization : bool, optional
+        If False, just use the initial freqGradZ value - which is acceptable if nicely computed.
+        If True, do optimization algorithm to find the final freqGradZ value, by minimizing the
+        standard error between corrected T2* and the signal divided by the sinc term (see [1]_).
+        Default=True. (MATLAB default is False).
+    threshold_t2star_max : float, optional
+        in ms. threshold T2* map (for quantization purpose when saving in NIFTI).
+        Default=1000.
+    poly_fit_order : int, optional
+        Default=4.
 
     Returns
     -------
@@ -69,30 +112,14 @@ def t2star_fit(
            of the International Society for Magnetic Resonance in Medicine, 53(5),
            1202-1206. https://doi.org/10.1002/mrm.20435
     """
-    params = {
-        "mask_thresh": 500,  # intensity under which pixels are masked. Default=500.
-        # threshold above which voxels are discarded for comuting the frequency map.
-        # RMSE results from fitting the frequency slope on the phase data. Default=2.
-        "rmse_thresh": 0.8,
-        # 'gaussian' | 'box' | 'polyfit1d' | 'polyfit3d'. Default='polyfit3d'
-        "smooth_type": "gaussian",
-        "smooth_kernel": [27, 27, 7],  # only for 'gaussian' and 'box'
-        "smooth_poly_order": 3,
-        # 3D downsample frequency map to compute gradient along Z. Default=[2 2 2].
-        "smooth_downsampling": [2, 2, 2],
-        # minimum length of values along Z, below which values are not considered. Default=4.
-        "min_length": 4,
-        "dz": 1.25,  # slice thickness in mm. N.B. SHOULD INCLUDE GAP!
-        # 0: Just use the initial freqGradZ value - which is acceptable if nicely computed
-        "do_optimization": False,
-        # in ms. threshold T2* map (for quantization purpose when saving in NIFTI).
-        # Suggested value=1000.
-        "threshold_t2star_max": 1000,
-        "poly_fit_order": 4,
-    }
-
     # Load data and select first volume from each
     # TODO: Support 4D data
+    # There are many ways to do this:
+    #   1. Convert functions to work with lists of 4D images instead of one 4D image
+    #      with echo as the fourth dimension.
+    #   2. Loop over split/concatenated images, basically running each function for
+    #      each timepoint.
+    #   3. Convert functions to work with 5D images (XxYxZxExT).
     multiecho_magn = [load_niimg(img) for img in multiecho_magn]
     multiecho_phase = [load_niimg(img) for img in multiecho_phase]
     if multiecho_magn[0].ndim == 4:
@@ -107,8 +134,8 @@ def t2star_fit(
             multiecho_magn,
             multiecho_phase,
             echo_times,
-            mask_thresh=params["mask_thresh"],
-            rmse_thresh=params["rmse_thresh"],
+            mask_thresh=mask_thresh,
+            rmse_thresh=rmse_thresh,
         )
 
     # Smooth field map of frequencies
@@ -118,8 +145,8 @@ def t2star_fit(
             mask_img,
             echo_times,
             smooth_downsampling=None,
-            smooth_type=params["smooth_type"],
-            smooth_kernel=params["smooth_kernel"],
+            smooth_type=smooth_type,
+            smooth_kernel=smooth_kernel,
         )
 
     # Correct z gradients
@@ -127,9 +154,9 @@ def t2star_fit(
         multiecho_magn,
         freq_smooth,
         mask_img,
-        params["min_length"],
-        params["poly_fit_order"],
-        params["dz"],
+        min_length,
+        poly_fit_order,
+        dz,
     )
 
     # Estimate corrected T2*
@@ -147,8 +174,8 @@ def t2star_fit(
         grad_z,
         mask_img,
         echo_times,
-        params["do_optimization"],
-        params["threshold_t2star_max"],
+        do_optimization,
+        threshold_t2star_max,
     )
     return t2star_cor
 
@@ -268,6 +295,8 @@ def smooth_freq_map(
 ):
     """Smooth frequency map."""
     # Downsample field map
+    # TODO: Figure out why downsampling is done. Is it just a memory thing?
+    # If so, we can often drop it.
     LGR.info("Downsampling field map...")
     if smooth_downsampling is not None:
         new_shape = tuple(
@@ -277,6 +306,7 @@ def smooth_freq_map(
         new_shape = freq.shape
 
     if new_shape != freq.shape:
+        # NOTE: This isn't set up correctly. We need an updated affine too.
         freq_img = image.resample_img(
             freq, target_shape=new_shape, interpolation="nearest"
         )
@@ -286,13 +316,22 @@ def smooth_freq_map(
     # 3d smooth frequency map (zero values are ignored)
     LGR.info("3d smoothing frequency map using method: {}...".format(smooth_type))
     if smooth_type == "gaussian":
+        # NOTE: This doesn't ignore zero values. It smooths over them.
+        # Is that something we should care about?
         freq_3d_smooth = image.smooth_img(freq_img, fwhm=smooth_kernel)
     elif smooth_type == "box":
+        LGR.warning("Not yet implemented.")
         pass
     elif smooth_type == "polyfit1d":
+        LGR.warning("Not yet implemented.")
         pass
     elif smooth_type == "polyfit3d":
-        freqGradZ_i = 1
+        # NOTE: The frequency gradient map seems to only be defined and saved when
+        # polyfit3d is used. I have commented out everything related to this map in
+        # this function, but there is still pseudocode to keep things relatively clear.
+        LGR.warning("Not yet implemented.")
+        # freqGradZ_i = 1
+        pass
     else:
         raise ValueError(
             'Parameter "smooth_type" must be one of "gaussian", '
@@ -315,7 +354,6 @@ def smooth_freq_map(
     freq_3d_smooth_masked = masking.unmask(
         masking.apply_mask(freq_3d_smooth, mask), mask
     )
-    # it looks like freqGradZ_i is only defined when polyfit3d is used.
     # freqGradZ_masked = masking.unmask(masking.apply_mask(freqGradZ, mask), mask)
 
     # Save smoothed frequency map
@@ -411,6 +449,9 @@ def compute_corrected_fitting(
 
             if np.any(data_magn_1d):
                 # perform uncorrected T2* fit
+                # NOTE: I think I can do this outside of the loop, then run the loop for
+                # the optimization/correction, and then finally fit T2*/S0 from the corrected
+                # data outside of the loop again.
                 t2s_limited, s0_limited, t2s_full, s0_full, r_squared = decay.fit_decay(
                     data_magn_1d[None, :],
                     echo_times,
