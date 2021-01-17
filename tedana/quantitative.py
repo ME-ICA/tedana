@@ -8,12 +8,17 @@ from nilearn._utils import load_niimg
 from scipy import ndimage, optimize
 
 from tedana import decay
+from tedana.due import due, Doi
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger("REPORT")
 RefLGR = logging.getLogger("REFERENCES")
 
 
+@due.dcite(
+    Doi("10.1002/mrm.20435"),
+    description="T2* estimation and correction for through-slice dropout in longer echoes.",
+)
 def t2star_fit(
     multiecho_magn,
     multiecho_phase,
@@ -41,6 +46,28 @@ def t2star_fit(
         heteroscedasticity of the residual when taking the log of S.
         'num': Numerical approximation, based on the NumART2* method in
         [Hagberg, MRM 2002]. Tends to overestimate T2*.
+
+    Returns
+    -------
+    t2star_cor : nibabel.nifti1.Nifti1Image
+        Corrected T2* map.
+
+    Notes
+    -----
+    This approach estimates T2* and corrects for through-slice dropout in longer
+    echoes according to the method described in Dahnke and Schaeffter (2005) [1]_.
+
+    This implementation is based off of Julian Cohen-Adad's MATLAB implementation
+    (https://github.com/neuropoly/t2star-mapping), which is released under an MIT
+    license. The Python implementation may include changes that would affect the
+    results of the algorithm.
+
+    References
+    ----------
+    .. [1] Dahnke, H., & Schaeffter, T. (2005). Limits of detection of SPIO at 3.0 T
+           using T2* relaxometry. Magnetic Resonance in Medicine: An Official Journal
+           of the International Society for Magnetic Resonance in Medicine, 53(5),
+           1202-1206. https://doi.org/10.1002/mrm.20435
     """
     params = {
         "mask_thresh": 500,  # intensity under which pixels are masked. Default=500.
@@ -225,8 +252,12 @@ def compute_freq_map(
         # fill 3D matrix
         freq_map_3d[:, :, i_slice] = freq_map_2d_masked
 
-    freq_img = nib.Nifti1Image(freq_map_3d, multiecho_magn.affine, header=multiecho_magn.header)
-    mask_img = nib.Nifti1Image(mask_3d, multiecho_magn.affine, header=multiecho_magn.header)
+    freq_img = nib.Nifti1Image(
+        freq_map_3d, multiecho_magn.affine, header=multiecho_magn.header
+    )
+    mask_img = nib.Nifti1Image(
+        mask_3d, multiecho_magn.affine, header=multiecho_magn.header
+    )
     freq_img.to_filename("freq.nii.gz")
     mask_img.to_filename("mask.nii.gz")
     return freq_img, mask_img
@@ -246,7 +277,9 @@ def smooth_freq_map(
         new_shape = freq.shape
 
     if new_shape != freq.shape:
-        freq_img = image.resample_img(freq, target_shape=new_shape, interpolation="nearest")
+        freq_img = image.resample_img(
+            freq, target_shape=new_shape, interpolation="nearest"
+        )
     else:
         freq_img = freq
 
@@ -265,7 +298,7 @@ def smooth_freq_map(
             'Parameter "smooth_type" must be one of "gaussian", '
             '"box", "polyfit1d", "polyfit3d"'
         )
-    #freqGradZ = freqGradZ_i
+    # freqGradZ = freqGradZ_i
 
     # upsample data back to original resolution
     LGR.info("Upsampling data to native resolution (using nearest neighbor)...")
@@ -283,15 +316,15 @@ def smooth_freq_map(
         masking.apply_mask(freq_3d_smooth, mask), mask
     )
     # it looks like freqGradZ_i is only defined when polyfit3d is used.
-    #freqGradZ_masked = masking.unmask(masking.apply_mask(freqGradZ, mask), mask)
+    # freqGradZ_masked = masking.unmask(masking.apply_mask(freqGradZ, mask), mask)
 
     # Save smoothed frequency map
     LGR.info("Saving smoothed frequency map...")
     freq_3d_smooth_masked.to_filename("freq_smooth.nii.gz")
 
     # Save gradient map
-    #LGR.info("Saving gradient map...")
-    #freqGradZ_masked.to_filename("freqGradZ.nii.gz")
+    # LGR.info("Saving gradient map...")
+    # freqGradZ_masked.to_filename("freqGradZ.nii.gz")
 
     return freq_3d_smooth_masked
 
@@ -379,7 +412,11 @@ def compute_corrected_fitting(
             if np.any(data_magn_1d):
                 # perform uncorrected T2* fit
                 t2s_limited, s0_limited, t2s_full, s0_full, r_squared = decay.fit_decay(
-                    data_magn_1d[None, :], echo_times, np.array([True]), np.array([n_e]), fitting_method,
+                    data_magn_1d[None, :],
+                    echo_times,
+                    np.array([True]),
+                    np.array([n_e]),
+                    fitting_method,
                 )
                 rsquared_uncorr_2d[j_x, j_y] = r_squared
                 t2star_uncorr_2d[j_x, j_y] = t2s_limited
@@ -414,7 +451,11 @@ def compute_corrected_fitting(
 
                 # perform T2* fit
                 t2s_limited, s0_limited, t2s_full, s0_full, r_squared = decay.fit_decay(
-                    data_magn_1d_corr[None, :], echo_times, np.array([True]), np.array([n_e]), fitting_method,
+                    data_magn_1d_corr[None, :],
+                    echo_times,
+                    np.array([True]),
+                    np.array([n_e]),
+                    fitting_method,
                 )
                 rsquared_corr_2d[j_x, j_y] = r_squared
                 t2star_corr_2d[j_x, j_y] = t2s_limited
