@@ -92,7 +92,7 @@ def test_integration_five_echo(skip_integration):
         data=datalist,
         tes=echo_times,
         out_dir=out_dir,
-        tedpca='aic',
+        tedpca=0.95,
         fittype='curvefit',
         tedort=True,
         verbose=True)

@@ -4,6 +4,26 @@ Functions for parsers.
 import os.path as op
 import logging
 
+import argparse
+
+
+def string_or_float(string):
+    """Check if argument is a float or one of a list of strings."""
+    valid_options = ("mdl", "aic", "kic", "kundu", "kundu-stabilize")
+    if string not in valid_options:
+        try:
+            string = float(string)
+        except ValueError:
+            msg = "Argument must be a float or one of: {}".format(
+                ", ".join(valid_options)
+            )
+            raise argparse.ArgumentTypeError(msg)
+
+        if not (0 <= string <= 1):
+            msg = "Argument must be between 0 and 1."
+            raise argparse.ArgumentTypeError(msg)
+    return string
+
 
 def is_valid_file(parser, arg):
     """

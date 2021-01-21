@@ -3,6 +3,7 @@ PCA and related signal decomposition methods for tedana
 """
 import logging
 import os.path as op
+from numbers import Number
 
 import numpy as np
 import pandas as pd
@@ -73,11 +74,14 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         Reference image to dictate how outputs are saved to disk
     tes : :obj:`list`
         List of echo times associated with `data_cat`, in milliseconds
-    algorithm : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
-        Method with which to select components in TEDPCA. Default is 'mdl'. PCA
+    algorithm : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic', float}, optional
+        Method with which to select components in TEDPCA. PCA
         decomposition with the mdl, kic and aic options are based on a Moving Average
-        (stationary Gaussian) process and are ordered from most to least aggresive.
-        See (Li et al., 2007).
+        (stationary Gaussian) process and are ordered from most to least aggressive
+        (see Li et al., 2007).
+        If a float is provided, then it is assumed to represent percentage of variance
+        explained (0-1) to retain from PCA.
+        Default is 'mdl'.
     kdaw : :obj:`float`, optional
         Dimensionality augmentation weight for Kappa calculations. Must be a
         non-negative float, or -1 (a special value). Default is 10.
@@ -90,6 +94,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         Whether to output files from fitmodels_direct or not. Default: False
     low_mem : :obj:`bool`, optional
         Whether to use incremental PCA (for low-memory systems) or not.
+        This is only compatible with the "kundu" or "kundu-stabilize" algorithms.
         Default: False
 
     Returns
@@ -166,6 +171,10 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
                     "connectivity mapping using multiecho fMRI. Proceedings "
                     "of the National Academy of Sciences, 110(40), "
                     "16187-16192.")
+    elif isinstance(algorithm, Number):
+        alg_str = (
+            "in which the number of components was determined based on a "
+            "variance explained threshold")
     else:
         alg_str = ("based on the PCA component estimation with a Moving Average"
                    "(stationary Gaussian) process (Li et al., 2007)")
@@ -191,6 +200,14 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         mask_img = io.new_nii_like(ref_img, mask.astype(int))
         voxel_comp_weights, varex, varex_norm, comp_ts = ma_pca.ma_pca(
             data_img, mask_img, algorithm)
+    elif isinstance(algorithm, Number):
+        ppca = PCA(copy=False, n_components=algorithm, svd_solver="full")
+        ppca.fit(data_z)
+        comp_ts = ppca.components_.T
+        varex = ppca.explained_variance_
+        voxel_comp_weights = np.dot(np.dot(data_z, comp_ts),
+                                    np.diag(1. / varex))
+        varex_norm = varex / varex.sum()
     elif low_mem:
         voxel_comp_weights, varex, comp_ts = low_mem_pca(data_z)
         varex_norm = varex / varex.sum()
@@ -227,9 +244,10 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=False)
     elif algorithm == 'kundu-stabilize':
         comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=True)
-    elif algorithm in ['mdl', 'aic', 'kic']:
+    else:
+        alg_str = "variance explained-based" if isinstance(algorithm, Number) else algorithm
         LGR.info('Selected {0} components with {1} dimensionality '
-                 'detection'.format(comptable.shape[0], algorithm))
+                 'detection'.format(comptable.shape[0], alg_str))
         comptable['classification'] = 'accepted'
         comptable['rationale'] = ''
 
