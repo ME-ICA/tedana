@@ -8,7 +8,6 @@ import shutil
 import logging
 import datetime
 from glob import glob
-from numbers import Number
 
 import argparse
 import numpy as np

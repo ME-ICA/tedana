@@ -2,16 +2,22 @@
 import argparse
 import pytest
 
-from tedana.workflows.parser_utils import string_or_float
+from tedana.workflows.parser_utils import check_tedpca_value
 
 
-def test_string_or_float():
-    """Test the string_or_float function."""
+def test_check_tedpca_value():
+    """Test the check_tedpca_value function."""
     with pytest.raises(argparse.ArgumentTypeError):
-        string_or_float("hello")
+        check_tedpca_value("hello", is_parser=True)
+
+    with pytest.raises(ValueError):
+        check_tedpca_value("hello", is_parser=False)
 
     with pytest.raises(argparse.ArgumentTypeError):
-        string_or_float(1.5)
+        check_tedpca_value(1.5, is_parser=True)
 
-    assert string_or_float(0.95) == 0.95
-    assert string_or_float("mdl") == "mdl"
+    with pytest.raises(ValueError):
+        check_tedpca_value(1.5, is_parser=False)
+
+    assert check_tedpca_value(0.95) == 0.95
+    assert check_tedpca_value("mdl") == "mdl"
