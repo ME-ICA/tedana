@@ -41,7 +41,7 @@ def _apply_t2s_floor(t2s, echo_times):
         n_voxels = temp_arr.size
         floor_percent = 100 * n_bad_voxels / n_voxels
         LGR.debug(
-            "T2* values for {0}/{1} ({2:.2f}%) voxels have been "
+            "T2* values for {0}/{1} voxels ({2:.2f}%) have been "
             "identified as close to zero and have been "
             "adjusted".format(n_bad_voxels, n_voxels, floor_percent)
         )
