@@ -21,7 +21,7 @@ from tedana import (decay, combine, decomposition, io, metrics,
                     reporting, selection, utils)
 import tedana.gscontrol as gsc
 from tedana.stats import computefeats2
-from tedana.workflows.parser_utils import is_valid_file, string_or_float, ContextFilter
+from tedana.workflows.parser_utils import is_valid_file, check_tedpca_value, ContextFilter
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
@@ -99,7 +99,7 @@ def _get_parser():
                           default='t2s')
     optional.add_argument('--tedpca',
                           dest='tedpca',
-                          type=string_or_float,
+                          type=check_tedpca_value,
                           help=('Method with which to select components in TEDPCA. '
                                 'PCA decomposition with the mdl, kic and aic options '
                                 'is based on a Moving Average (stationary Gaussian) '
@@ -395,8 +395,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         gscontrol = [gscontrol]
 
     # Check value of tedpca *if* it is a float
-    if isinstance(tedpca, Number) and not (0 <= tedpca <= 1):
-        raise ValueError("If a float is provided, tedpca must be between 0 and 1.")
+    tedpca = check_tedpca_value(tedpca, is_parser=False)
 
     LGR.info('Loading input data: {}'.format([f for f in data]))
     catd, ref_img = io.load_data(data, n_echos=n_echos)
