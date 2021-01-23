@@ -247,7 +247,11 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
             t2s_ = t2s[..., np.newaxis]  # add singleton
 
             combined[voxel_idx, :] = _combine_t2s(
-                data[voxel_idx, :echo_num, :], tes[:, :echo_num], t2s_[voxel_idx, ...], report=report)
+                data[voxel_idx, :echo_num, :],
+                tes[:, :echo_num],
+                t2s_[voxel_idx, ...],
+                report=report
+            )
         report = False
 
     return combined

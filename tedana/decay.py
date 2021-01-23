@@ -317,7 +317,7 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True):
     Additionally, very small :math:`T_2^*` values above zero are replaced with a floor
     value to prevent zero-division errors later on in the workflow.
     It also replaces NaN values in the :math:`S_0` map with 0.
-    
+
     See Also
     --------
     :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
