@@ -36,6 +36,15 @@ def _apply_t2s_floor(t2s, echo_times):
     eps = np.finfo(dtype=t2s.dtype).eps  # smallest value for datatype
     temp_arr = np.exp(-echo_times / t2s)  # (E x V) array
     bad_voxel_idx = np.any(temp_arr == 0, axis=0) & (t2s != 0)
+    n_bad_voxels = np.sum(bad_voxel_idx)
+    if n_bad_voxels > 0:
+        n_voxels = temp_arr.size
+        floor_percent = 100 * n_bad_voxels / n_voxels
+        LGR.debug(
+            "T2* values for {0}/{1} voxels ({2:.2f}%) have been "
+            "identified as close to zero and have been "
+            "adjusted".format(n_bad_voxels, n_voxels, floor_percent)
+        )
     t2s_corrected[bad_voxel_idx] = np.min(-echo_times) / np.log(eps)
     return t2s_corrected
 
