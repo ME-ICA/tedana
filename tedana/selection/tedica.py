@@ -113,6 +113,15 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     Prantik began to update these selection criteria to use SVMs to distinguish
     components, a hypercommented version of this attempt is available at:
     https://gist.github.com/emdupre/ca92d52d345d08ee85e104093b81482e
+
+    References
+    ----------
+    * Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y.,
+      Vértes, P. E., Inati, S. J., ... & Bullmore, E. T.
+      (2013). Integrated strategy for improving functional
+      connectivity mapping using multiecho fMRI. Proceedings
+      of the National Academy of Sciences, 110(40),
+      16187-16192.
     """
     LGR.info('Performing ICA component selection with Kundu decision tree v2.5')
     RepLGR.info("Next, component selection was performed to identify "

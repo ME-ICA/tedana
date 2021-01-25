@@ -6,6 +6,8 @@ This typical approach is known as single-echo fMRI.
 In contrast, multi-echo (ME) fMRI refers to collecting data at multiple echo times,
 resulting in multiple volumes with varying levels of contrast acquired per RF pulse.
 
+.. _multi-echo physics:
+
 The physics of multi-echo fMRI
 ------------------------------
 Multi-echo fMRI data is obtained by acquiring multiple echo times (commonly called
@@ -24,7 +26,7 @@ In addition, the latter echo times show areas in which is the signal has decayed
 due to inhomogeneity in the magnetic field.
 By using the information across multiple echoes these images can be combined in
 an optimal manner to take advantage of the signal
-in the earlier echoes (see `processing pipeline details`_).
+in the earlier echoes (see :ref:`optimal combination`).
 
 .. image:: /_static/physics_kundu_2017_multiple_echoes.jpg
 
@@ -77,7 +79,7 @@ and compared to one another.
 
 **Combine the results by weighted averaging**: Rather than analyzing single-echo time series separately,
 we can combine them into an "optimally combined time series".
-For more information on this combination, see `processing pipeline details`_.
+For more information on this combination, see :ref:`optimal combination`.
 Optimally combined data exhibits higher SNR and improves statistical power of analyses in regions
 traditionally affected by drop-out.
 
@@ -92,7 +94,6 @@ multi-echo data. Collecting multi-echo EPI allows us to leverage all of the info
 as well as additional information only available when looking at signal decay across multiple TEs.
 We can use this information to denoise the optimally combined time series.
 
-.. _processing pipeline details: https://tedana.readthedocs.io/en/latest/approach.html#optimal-combination
 .. _Pruim et al. (2015): https://www.sciencedirect.com/science/article/pii/S1053811915001822
 
 
@@ -125,50 +126,53 @@ isn't a non-trivial loss in SNR or an increase of artifacts.
 
 Weighted averaging may lead to an increase in SNR
 `````````````````````````````````````````````````
-Multiple studies have shown that a
-weighted average of the echoes to optimize T2* weighting, sometimes called "optimally combined,"
-gives a reliable, modest boost in data quality.
-The optimal combination of echoes can currently be calculated in several software packages including AFNI,
-fMRIPrep, and tedana. In tedana, the weighted
-average can be calculated with `t2smap`_ If no other
-acquisition compromises are necessary to acquire multi-echo data, this boost is worthwhile.
+Multiple studies have shown that a weighted average of the echoes to optimize
+T2* weighting, sometimes called "optimally combined," gives a reliable, modest
+boost in data quality.
+The optimal combination of echoes can currently be calculated in several
+software packages including AFNI, fMRIPrep, and tedana.
+In tedana, the weighted average can be calculated with
+:py:func:`tedana.workflows.t2smap_workflow`.
+If no other acquisition compromises are necessary to acquire multi-echo data,
+this boost is worthwhile.
 
 Consider the life of the dataset
 ````````````````````````````````
 If other compromises are necessary, consider the life of the data set.
-If data is being acquired for a discrete
-study that will be acquired, analyzed, and published in a year or two, it might not be worth making
-compromises to acquire multi-echo data.
-If a data set is expected to be used for future analyses in later
-years, it is likely that more powerful approaches to multi-echo denoising will sufficiently mature and add
-even more value to a data set.
+If data is being acquired for a discrete study that will be acquired, analyzed,
+and published in a year or two, it might not be worth making compromises to
+acquire multi-echo data.
+If a data set is expected to be used for future analyses in later years, it is
+likely that more powerful approaches to multi-echo denoising will sufficiently
+mature and add even more value to a data set.
 
-Other multi-echo denoising methods, such as MEICA, the predecessor to tedana, have shown the potential for
-much greater data quality improvements, as well as the ability to more accurately separate visually similar
-signal vs noise, such as scanner based drifts vs slow changes in BOLD signal.
-More powerful methods are
-still being improved, and associated algorithms are still being actively developed.
-Users need to have the time and knowledge to look
-at the denoising output from every run to make sure denoising worked as intended.
+Other multi-echo denoising methods, such as MEICA, the predecessor to tedana,
+have shown the potential for much greater data quality improvements, as well as
+the ability to more accurately separate visually similar signal vs noise, such
+as scanner based drifts vs slow changes in BOLD signal.
+More powerful methods and associated algorithms are
+still being actively developed.
+Users need to have the time and knowledge to look at the denoising output from
+every run to make sure denoising worked as intended.
 
 You may recover signal in areas affected by dropout
 ```````````````````````````````````````````````````
-Typical single echo fMRI uses an echo time that is appropriate for signal across most of the brain.
-While this is effective,
-it also leads to drop out in regions with low :math:T_2^* values.
+Typical single echo fMRI uses an echo time that is appropriate for signal
+across most of the brain.
+While this is effective, it also leads to drop out in regions with low
+:math:`T_2^*` values.
 This can lead to low or even no signal at all in some areas.
-If your research question could benefit from having either
-improved signal characteristics in regions such as the orbitofrontal cortex, ventral temporal cortex or
-the ventral striatum them multi-echo fMRI may be beneficial.
+If your research question could benefit from having improved signal
+characteristics in regions such as the orbitofrontal cortex, ventral temporal
+cortex or the ventral striatum then multi-echo fMRI may be beneficial.
 
 Consider the cost of added quality control
 ``````````````````````````````````````````
-The developers of ``tedana`` strongly support always examining data for quality concerns, whether
-or not multi-echo fMRI is used.
+The developers of ``tedana`` strongly support always examining data for quality
+concerns, whether or not multi-echo fMRI is used.
 Multi-echo data and denoising are no exception.
-For this purpose, ``tedana`` currently produces basic diagnostic images by default, which can be
-inspected in order to determine the quality of denoising.
-`See outputs`_ for more information on these outputs.
+For this purpose, ``tedana`` currently produces basic diagnostic images by
+default, which can be inspected in order to determine the quality of denoising.
+See :ref:`outputs` for more information on these outputs.
 
 .. _t2smap: https://tedana.readthedocs.io/en/latest/usage.html#run-t2smap
-.. _see outputs: https://tedana.readthedocs.io/en/latest/outputs.html

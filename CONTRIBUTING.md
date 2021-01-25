@@ -276,6 +276,9 @@ We encourage extensive documentation.
 The python code itself should follow [PEP8][link_pep8] convention
 whenever possible, with at most about 500 lines of code (not including docstrings) per script.
 
+Additionally, we have adopted a purely functional approach in `tedana`, so we
+avoid defining our own classes within the library.
+
 Our documentation is written in [ReStructuredText](#writing-in-restructuredtext),
 which we explain in more detail below.
 
@@ -299,8 +302,7 @@ And, if you have any questions, please don't hesitate to ask!
 
 We welcome and recognize [all contributions][link_all-contributors-spec]
 from documentation to testing to code development.
-You can see a list of current contributors in the
-README
+You can see a list of current contributors in the README
 (kept up to date by the [all contributors bot][link_all-contributors-bot]).
 You can see [here][link_all-contributors-bot-usage] for instructions on
 how to use the bot.

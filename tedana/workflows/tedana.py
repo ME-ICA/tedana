@@ -20,7 +20,7 @@ from tedana import (decay, combine, decomposition, io, metrics,
                     reporting, selection, utils)
 import tedana.gscontrol as gsc
 from tedana.stats import computefeats2
-from tedana.workflows.parser_utils import is_valid_file, ContextFilter
+from tedana.workflows.parser_utils import is_valid_file, check_tedpca_value, ContextFilter
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
@@ -41,7 +41,7 @@ def _get_parser():
     # Argument parser follow templtate provided by RalphyZ
     # https://stackoverflow.com/a/43456577
     optional = parser._action_groups.pop()
-    required = parser.add_argument_group('required arguments')
+    required = parser.add_argument_group('Required Arguments')
     required.add_argument('-d',
                           dest='data',
                           nargs='+',
@@ -98,12 +98,15 @@ def _get_parser():
                           default='t2s')
     optional.add_argument('--tedpca',
                           dest='tedpca',
+                          type=check_tedpca_value,
                           help=('Method with which to select components in TEDPCA. '
                                 'PCA decomposition with the mdl, kic and aic options '
                                 'is based on a Moving Average (stationary Gaussian) '
-                                'process and are ordered from most to least aggresive. '
-                                'Default=\'mdl\'.'),
-                          choices=['kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'],
+                                'process and are ordered from most to least aggressive. '
+                                "Users may also provide a float from 0 to 1, "
+                                "in which case components will be selected based on the "
+                                "cumulative variance explained. "
+                                "Default='mdl'."),
                           default='mdl')
     optional.add_argument('--seed',
                           dest='fixed_seed',
@@ -146,7 +149,7 @@ def _get_parser():
                                 'spatially diffuse noise. Default is None. '
                                 'This argument can be single value or a space '
                                 'delimited list'),
-                          choices=['t1c', 'gsr'],
+                          choices=['mir', 'gsr'],
                           default=None)
     optional.add_argument('--no-reports',
                           dest='no_reports',
@@ -198,7 +201,7 @@ def _get_parser():
     optional.add_argument('-v', '--version', action='version', version=verstr)
     parser._action_groups.append(optional)
 
-    rerungrp = parser.add_argument_group('arguments for rerunning the workflow')
+    rerungrp = parser.add_argument_group('Arguments for Rerunning the Workflow')
     rerungrp.add_argument('--t2smap',
                           dest='t2smap',
                           metavar='FILE',
@@ -222,8 +225,10 @@ def _get_parser():
                           default=None)
     rerungrp.add_argument('--manacc',
                           dest='manacc',
-                          help=('Comma separated list of manually '
-                                'accepted components'),
+                          metavar='INT',
+                          type=int,
+                          nargs='+',
+                          help='List of manually accepted components.',
                           default=None)
 
     return parser
@@ -260,12 +265,15 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         Default is 'loglin'.
     combmode : {'t2s'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default).
-    tedpca : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
-        Method with which to select components in TEDPCA. Default is 'mdl'.
+    tedpca : {'mdl', 'aic', 'kic', 'kundu', 'kundu-stabilize', float}, optional
+        Method with which to select components in TEDPCA.
+        If a float is provided, then it is assumed to represent percentage of variance
+        explained (0-1) to retain from PCA.
+        Default is 'mdl'.
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
         denoising. Default is False.
-    gscontrol : {None, 't1c', 'gsr'} or :obj:`list`, optional
+    gscontrol : {None, 'mir', 'gsr'} or :obj:`list`, optional
         Perform additional denoising to remove spatially diffuse noise. Default
         is None.
     verbose : :obj:`bool`, optional
@@ -286,10 +294,10 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         File containing component table from which to extract pre-computed
         classifications, to be used with 'mixm' when re-running the workflow.
         Default is None.
-    manacc : :obj:`list`, :obj:`str`, or None, optional
-        List of manually accepted components. Can be a list of the components,
-        a comma-separated string with component numbers, or None. Default is
-        None.
+    manacc : :obj:`list` of :obj:`int` or None, optional
+        List of manually accepted components. Can be a list of the components
+        numbers or None.
+        Default is None.
 
     Other Parameters
     ----------------
@@ -353,18 +361,17 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     # Removing handlers after basicConfig doesn't work, so we use filters
     # for the relevant handlers themselves.
     log_handler.addFilter(ContextFilter())
+    logging.root.addHandler(log_handler)
     sh = logging.StreamHandler()
     sh.addFilter(ContextFilter())
+    logging.root.addHandler(sh)
 
     if quiet:
-        logging.basicConfig(level=logging.WARNING,
-                            handlers=[log_handler, sh])
+        logging.root.setLevel(logging.WARNING)
     elif debug:
-        logging.basicConfig(level=logging.DEBUG,
-                            handlers=[log_handler, sh])
+        logging.root.setLevel(logging.DEBUG)
     else:
-        logging.basicConfig(level=logging.INFO,
-                            handlers=[log_handler, sh])
+        logging.root.setLevel(logging.INFO)
 
     # Loggers for report and references
     rep_handler = logging.FileHandler(repname)
@@ -373,7 +380,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     ref_handler.setFormatter(text_formatter)
     RepLGR.setLevel(logging.INFO)
     RepLGR.addHandler(rep_handler)
-    RepLGR.setLevel(logging.INFO)
+    RefLGR.setLevel(logging.INFO)
     RefLGR.addHandler(ref_handler)
 
     LGR.info('Using output directory: {}'.format(out_dir))
@@ -385,6 +392,9 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     # Coerce gscontrol to list
     if not isinstance(gscontrol, list):
         gscontrol = [gscontrol]
+
+    # Check value of tedpca *if* it is a float
+    tedpca = check_tedpca_value(tedpca, is_parser=False)
 
     LGR.info('Loading input data: {}'.format([f for f in data]))
     catd, ref_img = io.load_data(data, n_echos=n_echos)
@@ -420,15 +430,15 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
 
-    if isinstance(manacc, str):
-        manacc = [int(comp) for comp in manacc.split(',')]
-
     if ctab and not mixm:
         LGR.warning('Argument "ctab" requires argument "mixm".')
         ctab = None
     elif manacc is not None and not mixm:
         LGR.warning('Argument "manacc" requires argument "mixm".')
         manacc = None
+    elif manacc is not None:
+        # coerce to list of integers
+        manacc = [int(m) for m in manacc]
 
     if t2smap is not None and op.isfile(t2smap):
         t2smap = op.abspath(t2smap)
@@ -601,8 +611,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                     ref_img=ref_img,
                     out_dir=out_dir)
 
-    if 't1c' in gscontrol:
-        gsc.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img, out_dir=out_dir)
+    if 'mir' in gscontrol:
+        gsc.minimum_image_regression(data_oc, mmix, mask, comptable, ref_img, out_dir=out_dir)
 
     if verbose:
         io.writeresults_echoes(catd, mmix, mask, comptable, ref_img, out_dir=out_dir)
@@ -670,10 +680,16 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     report += '\n\nReferences:\n\n' + references
     with open(repname, 'w') as fo:
         fo.write(report)
-    os.remove(refname)
 
-    for handler in logging.root.handlers[:]:
-        logging.root.removeHandler(handler)
+    log_handler.close()
+    logging.root.removeHandler(log_handler)
+    sh.close()
+    logging.root.removeHandler(sh)
+    for local_logger in (RefLGR, RepLGR):
+        for handler in local_logger.handlers[:]:
+            handler.close()
+            local_logger.removeHandler(handler)
+    os.remove(refname)
 
 
 def _main(argv=None):
