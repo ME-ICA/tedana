@@ -11,24 +11,20 @@ import argparse
 def check_tedpca_value(string, is_parser=True):
     """Check if argument is a float in range 0-1 or one of a list of strings."""
     valid_options = ("mdl", "aic", "kic", "kundu", "kundu-stabilize")
-    msg = None
-    if string not in valid_options:
-        if not isinstance(string, Number):
-            msg = "Argument must be a float or one of: {}".format(
-                ", ".join(valid_options)
-            )
-        elif not (0 <= float(string) <= 1):
-            msg = "Argument must be between 0 and 1."
-        else:
-            string = float(string)
+    if string in valid_options:
+        return string
 
-    if msg:
-        if is_parser:
-            raise argparse.ArgumentTypeError(msg)
-        else:
-            raise ValueError(msg)
-
-    return string
+    error = argparse.ArgumentTypeError if is_parser else ValueError
+    try:
+        floatarg = float(string)
+    except ValueError:
+        msg = "Argument must be a float or one of: {}".format(
+            ", ".join(valid_options)
+        )
+        raise error(msg)
+    if not (0 <= floatarg <= 1):
+            raise error("Argument must be between 0 and 1.")
+    return floatarg
 
 
 def is_valid_file(parser, arg):
