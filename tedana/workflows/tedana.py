@@ -524,11 +524,11 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         n_restarts = 0
         seed = fixed_seed
         while bad_decomp:
-            mmix_orig, n_restarts = decomposition.tedica(
+            mmix_orig, seed = decomposition.tedica(
                 dd, n_components, seed,
                 maxit, maxrestart=(maxrestart - n_restarts)
             )
-            seed += (n_restarts + 1)
+            n_restarts = (seed + 1) - fixed_seed
 
             # Estimate betas and compute selection metrics for mixing matrix
             # generated from dimensionally reduced data using full data (i.e., data

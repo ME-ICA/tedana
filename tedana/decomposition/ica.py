@@ -38,8 +38,8 @@ def tedica(data, n_components, fixed_seed, maxit=500, maxrestart=10):
     mmix : (T x C) :obj:`numpy.ndarray`
         Z-scored mixing matrix for converting input data to component space,
         where `C` is components and `T` is the same as in `data`
-    n_restarts : :obj:`int`
-        Number of restarts used.
+    fixed_seed : :obj:`int`
+        Random seed from final decomposition.
 
     Notes
     -----
