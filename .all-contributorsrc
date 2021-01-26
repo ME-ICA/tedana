@@ -222,7 +222,8 @@
       "profile": "https://www.notzaki.com/",
       "contributions": [
         "bug",
-        "code"
+        "code",
+        "doc"
       ]
     }
   ],
