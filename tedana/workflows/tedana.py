@@ -549,7 +549,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             elif (n_bold_comps == 0):
                 LGR.warning("No BOLD components found, but maximum number of restarts reached.")
                 keep_restarting = False
-            elif (n_restarts >= maxrestart) or (n_bold_comps != 0):
+            else:
                 keep_restarting = False
 
         # Write out ICA files.
