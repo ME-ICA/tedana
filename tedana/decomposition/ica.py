@@ -66,8 +66,8 @@ def tedica(data, n_components, fixed_seed, maxit=500, maxrestart=10):
 
             w = list(filter(lambda i: issubclass(i.category, UserWarning), w))
             if len(w):
-                LGR.warning('ICA attempt {0} failed to converge after {1} '
-                            'iterations'.format(i_attempt + 1, ica.n_iter_))
+                LGR.warning('ICA with random seed {0} failed to converge after {1} '
+                            'iterations'.format(fixed_seed, ica.n_iter_))
                 if i_attempt < maxrestart - 1:
                     fixed_seed += 1
                     LGR.warning('Random seed updated to {0}'.format(fixed_seed))
