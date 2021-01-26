@@ -528,7 +528,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                 dd, n_components, seed,
                 maxit, maxrestart=(maxrestart - n_restarts)
             )
-            n_restarts = (seed + 1) - fixed_seed
+            seed += 1
+            n_restarts = seed - fixed_seed
 
             # Estimate betas and compute selection metrics for mixing matrix
             # generated from dimensionally reduced data using full data (i.e., data
