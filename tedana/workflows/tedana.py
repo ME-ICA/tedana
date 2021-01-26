@@ -520,10 +520,10 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
 
         # Perform ICA, calculate metrics, and apply decision tree
         # Restart when ICA fails to converge or too few BOLD components found
-        bad_decomp = True
+        keep_restarting = True
         n_restarts = 0
         seed = fixed_seed
-        while bad_decomp:
+        while keep_restarting:
             mmix_orig, seed = decomposition.tedica(
                 dd, n_components, seed,
                 maxit, maxrestart=(maxrestart - n_restarts)
@@ -548,8 +548,9 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                 LGR.warning("No BOLD components found. Re-attempting ICA.")
             elif (n_bold_comps == 0):
                 LGR.warning("No BOLD components found, but maximum number of restarts reached.")
+                keep_restarting = False
             elif (n_restarts >= maxrestart) or (n_bold_comps != 0):
-                bad_decomp = False
+                keep_restarting = False
 
         # Write out ICA files.
         comp_names = [io.add_decomp_prefix(comp, prefix='ica', max_value=comptable.index.max())
