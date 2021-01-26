@@ -522,11 +522,13 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         # Restart when ICA fails to converge or too few BOLD components found
         bad_decomp = True
         n_restarts = 0
+        seed = fixed_seed
         while bad_decomp:
             mmix_orig, n_restarts = decomposition.tedica(
-                dd, n_components, fixed_seed,
+                dd, n_components, seed,
                 maxit, maxrestart=(maxrestart - n_restarts)
             )
+            seed += (n_restarts + 1)
 
             # Estimate betas and compute selection metrics for mixing matrix
             # generated from dimensionally reduced data using full data (i.e., data
