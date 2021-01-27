@@ -137,7 +137,7 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
         Array of TEs, in seconds.
     adaptive_mask : (S,) :obj:`numpy.ndarray`
         Adaptive mask of the data indicating the number of echos with signal at each voxel.
-        This mask may be thresholded, typically with values less than 3 set to 0 depending
+        This mask may be thresholded; for example, with values less than 3 set to 0 depending
         on the thresholding method.
     t2s : (S [x T]) :obj:`numpy.ndarray` or None, optional
         Estimated T2* values. Only required if combmode = 't2s'.

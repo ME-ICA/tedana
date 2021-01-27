@@ -66,9 +66,9 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     mask : (S,) array_like
         Boolean mask array
     adaptive_mask : (S,) array_like
-        Adaptive mask of the data indicating the number of echos with signal at each voxel.
-        This mask may be thresholded, typically with values less than 3 set to
-        0 depending on the thresholding method.
+        Array where each value indicates the number of echoes with good signal
+        for that voxel. This mask may be thresholded; for example, with values
+        less than 3 set to 0 depending on the thresholding method.
     t2sG : (S,) array_like
         Map of voxel-wise T2* estimates.
     ref_img : :obj:`str` or img_like

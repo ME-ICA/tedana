@@ -73,7 +73,7 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True):
         Echo times in milliseconds.
     adaptive_mask : (S,) :obj:`numpy.ndarray`
         Array where each value indicates the number of echoes with good signal
-        for that voxel. This mask may be thresholded, typically with values
+        for that voxel. This mask may be thresholded; for example, with values
         less than 3 set to 0 depending on the thresholding method.
     report : bool, optional
         Whether to log a description of this step or not. Default is True.
@@ -190,7 +190,8 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
         Echo times in milliseconds.
     adaptive_mask : (S,) :obj:`numpy.ndarray`
         Array where each value indicates the number of echoes with good signal
-        for that voxel.
+        for that voxel. This mask may be thresholded; for example, with values
+        less than 3 set to 0 depending on the thresholding method.
     report : :obj:`bool`, optional
         Whether to log a description of this step or not. Default is True.
 
@@ -285,8 +286,8 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True):
         Boolean array indicating samples that are consistently (i.e., across
         time AND echoes) non-zero
     adaptive_mask : (S,) array_like
-        Valued array indicating number of echos that have sufficient signal in
-        given sample. This mask may be thresholded, typically with values
+        Array where each value indicates the number of echoes with good signal
+        for that voxel. This mask may be thresholded; for example, with values
         less than 3 set to 0 depending on the thresholding method.
     fittype : {loglin, curvefit}
         The type of model fit to use
@@ -382,7 +383,7 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
         time AND echoes) non-zero
     adaptive_mask : (S,) array_like
         Valued array indicating number of echos that have sufficient signal in
-        given sample. This mask may be thresholded, typically with values
+        given sample. This mask may be thresholded; for example, with values
         less than 3 set to 0 depending on the thresholding method.
     fittype : :obj: `str`
         The type of model fit to use
