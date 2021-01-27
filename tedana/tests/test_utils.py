@@ -80,15 +80,15 @@ def test_load_image():
 def test_make_adaptive_mask():
     # load data make masks
     data = io.load_data(fnames, n_echos=len(tes))[0]
-    mask, masksum = utils.make_adaptive_mask(data, getsum=True)
+    mask, masksum = utils.make_adaptive_mask(data, getsum=True, threshold=1)
 
     # getsum doesn't change mask values
     assert np.allclose(mask, utils.make_adaptive_mask(data))
     # shapes are all the same
     assert mask.shape == masksum.shape == (64350,)
-    assert np.allclose(mask, (masksum >= 3).astype(bool))
+    assert np.allclose(mask, (masksum >= 1).astype(bool))
     # mask has correct # of entries
-    assert mask.sum() == 41749
+    assert mask.sum() == 50786
     # masksum has correct values
     vals, counts = np.unique(masksum, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
@@ -98,7 +98,7 @@ def test_make_adaptive_mask():
     # TODO: Add mask file with no bad voxels to test against
     mask, masksum = utils.make_adaptive_mask(data, mask=pjoin(datadir,
                                                               'mask.nii.gz'),
-                                             getsum=True)
+                                             getsum=True, threshold=3)
     assert np.allclose(mask, (masksum >= 3).astype(bool))
 
 
