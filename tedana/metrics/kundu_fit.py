@@ -38,7 +38,8 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
     adaptive_mask : (S) array_like
         Array where each value indicates the number of echoes with good signal
         for that voxel. This mask may be thresholded; for example, with values
-        less than 3 set to 0 depending on the thresholding method.
+        less than 3 set to 0.
+        For more information on thresholding, see `make_adaptive_mask`.
     tes : list
         List of echo times associated with `catd`, in milliseconds
     ref_img : str or img_like
