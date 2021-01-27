@@ -22,6 +22,7 @@ for `tedana`:
 [elizabeth-dupre]: <https://github.com/emdupre>
 [javier-gonzalez-castillo]: <https://github.com/javiergcas>
 [dan-handwerker]: <https://github.com/handwerkerd>
+[taylor-salo]: <https://github.com/tsalo>
 [joshua-teves]: <https://github.com/jbteves>
 [eneko-urunuela]: <https://github.com/eurunuela>
 [maryam-vaziri-pashkam]: <http://maryam-vaziri.com/>
