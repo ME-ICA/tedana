@@ -15,7 +15,7 @@ Special thanks to the following sources of funding and operational support
 for `tedana`:
 - National Institutes of Mental Health, [Section on Functional Imaging Methods][sfim], for supporting the 2019 `tedana` hackathon.
 - National Institutes of Health for supporting the 2019 AFNI Code Convergence, where work in the 2019 `tedana` hackathon was continued.
-- Mozilla Open Leaders for supporting Kirstie Whitaker.
+- The Mozilla Open Leaders program for support in developing the tedana community structure as part of [the ME-BIDS project](https://medium.com/read-write-participate/brain-imaging-in-the-open-aac7c17bcf69).
 
 [logan-dowdle]: <https://github.com/dowdlelt>
 [javier-gonzalez-castillo]: <https://github.com/javiergcas>
