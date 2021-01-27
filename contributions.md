@@ -4,6 +4,7 @@
 We appreciate all of our contributors!
 Each contributor below has made a statement of how they feel they've contributed to `tedana`.
 - [**Logan Dowdle**][logan-dowdle] helps folks get multi-echo data collection going on their scanners, tries to keep up with the increasing number of multi-echo papers, likes making figures that explain what tedana has done to the data, and occasionally adds a new feature (with lots of help!).
+- [**Elizabeth DuPre**][elizabeth-dupre] initiated the tedana project in 2017, building on the ME-ICA codebase. She continued to develop the code and began actively creating the community structure as part of the fifth Mozilla Open Leaders cohort (mentored by Kirstie Whitaker). Since her time as interim BDFL, Elizabeth has been involved in most aspects of the project -- although she currently focuses primarily on improving tedana's integration with the broader neuroimaging ecosystem.
 - [**Javier Gonzalez-Castillo**][javier-gonzalez-castillo] contributed to the development of dimensionality reduction and decomposition algorithms in tedana, as well as to the development of the interactive reports.
 - [**Dan Handwerker**][dan-handwerker] helps with project management (people wrangling & documentation), led the organization for the 2019 tedana hackathon, provides conceptual feedback on many aspects of the code, contributes to documentation, and, once in a while, even contributes to the code.
 - [**Joshua Teves**][joshua-teves] helps manage issues and pull requests for a variety of both administrative and code-specific tasks.
@@ -18,6 +19,7 @@ for `tedana`:
 - The Mozilla Open Leaders program for support in developing the tedana community structure as part of [the ME-BIDS project](https://medium.com/read-write-participate/brain-imaging-in-the-open-aac7c17bcf69).
 
 [logan-dowdle]: <https://github.com/dowdlelt>
+[elizabeth-dupre]: <https://github.com/emdupre>
 [javier-gonzalez-castillo]: <https://github.com/javiergcas>
 [dan-handwerker]: <https://github.com/handwerkerd>
 [joshua-teves]: <https://github.com/jbteves>
