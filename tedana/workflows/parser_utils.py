@@ -21,6 +21,7 @@ def check_tedpca_value(string, is_parser=True):
             ", ".join(valid_options)
         )
         raise error(msg)
+
     if not (0 <= floatarg <= 1):
         raise error("Argument must be between 0 and 1.")
     return floatarg
