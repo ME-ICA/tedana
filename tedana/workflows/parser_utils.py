@@ -17,13 +17,13 @@ def check_tedpca_value(string, is_parser=True):
     try:
         floatarg = float(string)
     except ValueError:
-        msg = "Argument must be a float or one of: {}".format(
+        msg = "Argument to tedpca must be a float or one of: {}".format(
             ", ".join(valid_options)
         )
         raise error(msg)
 
     if not (0 <= floatarg <= 1):
-        raise error("Argument must be between 0 and 1.")
+        raise error("Float argument to tedpca must be between 0 and 1.")
     return floatarg
 
 
