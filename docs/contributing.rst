@@ -6,7 +6,7 @@ with a focus on project governance and development philosophy.
 For a more practical guide to the tedana development, please see our
 `contributing guide`_.
 
-.. _contributing guide: https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md
+.. _contributing guide: https://github.com/ME-ICA/tedana/blob/main/CONTRIBUTING.md
 
 Code of conduct
 ```````````````
@@ -19,7 +19,7 @@ in-person workshops or development sprints, and when giving talks about the soft
 As stated in the code, severe or repeated violations by community members may result in exclusion
 from collective decision-making and rejection of future contributions to the ``tedana`` project.
 
-.. _The full code of conduct is here: https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md
+.. _The full code of conduct is here: https://github.com/ME-ICA/tedana/blob/main/CODE_OF_CONDUCT.md
 
 Scope of tedana
 ```````````````
@@ -172,7 +172,7 @@ options within the existing framework, but we have chosen to focus on `the 80 pe
 You can provide feedback on this philosophy through any of the channels
 listed on the ``tedana`` :ref:`support_ref` page.
 
-.. _an LGPL2 license: https://github.com/ME-ICA/tedana/blob/master/LICENSE
+.. _an LGPL2 license: https://github.com/ME-ICA/tedana/blob/main/LICENSE
 .. _the 80 percent use cases: https://en.wikipedia.org/wiki/Pareto_principle#In_software
 
 
