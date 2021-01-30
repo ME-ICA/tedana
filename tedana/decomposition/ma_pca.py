@@ -96,9 +96,9 @@ def _parzen_win(n_points):
 
     References
     ----------
-    Harris, Fredric J. “On the Use of Windows for Harmonic Analysis
-    with the Discrete Fourier Transform.” Proceedings of the IEEE.
-    Vol. 66, January 1978, pp. 51–83.
+    * Harris, Fredric J. “On the Use of Windows for Harmonic Analysis
+      with the Discrete Fourier Transform.” Proceedings of the IEEE.
+      Vol. 66, January 1978, pp. 51–83.
     """
 
     # Check for valid window length (i.e., n < 0)
@@ -142,10 +142,10 @@ def ent_rate_sp(data, sm_window):
 
     References
     ----------
-    Li, Y.O., Adalı, T. and Calhoun, V.D., (2007).
-    Estimating the number of independent components for
-    functional magnetic resonance imaging data.
-    Human brain mapping, 28(11), pp.1251-1266.
+    * Li, Y.O., Adalı, T. and Calhoun, V.D., (2007).
+      Estimating the number of independent components for
+      functional magnetic resonance imaging data.
+      Human brain mapping, 28(11), pp.1251-1266.
     """
 
     dims = data.shape
@@ -403,10 +403,10 @@ def _eigensp_adj(lam, n, p):
 
     References
     ----------
-    Li, Y.O., Adalı, T. and Calhoun, V.D., (2007).
-    Estimating the number of independent components for
-    functional magnetic resonance imaging data.
-    Human brain mapping, 28(11), pp.1251-1266.
+    * Li, Y.O., Adalı, T. and Calhoun, V.D., (2007).
+      Estimating the number of independent components for
+      functional magnetic resonance imaging data.
+      Human brain mapping, 28(11), pp.1251-1266.
     """
 
     r = p / n
@@ -471,8 +471,8 @@ def ma_pca(data_nib, mask_nib, criteria='mdl'):
           (and recommended) option.
     """
 
-    data_nib = data_nib.get_data()
-    mask_nib = mask_nib.get_data()
+    data_nib = data_nib.get_fdata()
+    mask_nib = mask_nib.get_fdata()
     [Nx, Ny, Nz, Nt] = data_nib.shape
     data_nib_V = np.reshape(data_nib, (Nx * Ny * Nz, Nt), order='F')
     maskvec = np.reshape(mask_nib, Nx * Ny * Nz, order='F')

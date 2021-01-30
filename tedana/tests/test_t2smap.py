@@ -27,13 +27,13 @@ class TestT2smap():
 
         # Check outputs
         assert op.isfile(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
-        img = nib.load(op.join(out_dir, 'T2StarMap.nii.gz'))
+        img = nib.load(op.join(out_dir, 'T2starmap.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 'S0Map.nii.gz'))
+        img = nib.load(op.join(out_dir, 'S0map.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 'desc-full_T2StarMap.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-full_T2starmap.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 'desc-full_S0Map.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-full_S0map.nii.gz'))
         assert len(img.shape) == 3
         img = nib.load(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
         assert len(img.shape) == 4
@@ -53,13 +53,13 @@ class TestT2smap():
 
         # Check outputs
         assert op.isfile(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
-        img = nib.load(op.join(out_dir, 'T2StarMap.nii.gz'))
+        img = nib.load(op.join(out_dir, 'T2starmap.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 'S0Map.nii.gz'))
+        img = nib.load(op.join(out_dir, 'S0map.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 'desc-full_T2StarMap.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-full_T2starmap.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 'desc-full_S0Map.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-full_S0map.nii.gz'))
         assert len(img.shape) == 4
         img = nib.load(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
         assert len(img.shape) == 4
@@ -79,13 +79,13 @@ class TestT2smap():
 
         # Check outputs
         assert op.isfile(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
-        img = nib.load(op.join(out_dir, 'T2StarMap.nii.gz'))
+        img = nib.load(op.join(out_dir, 'T2starmap.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 'S0Map.nii.gz'))
+        img = nib.load(op.join(out_dir, 'S0map.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 'desc-full_T2StarMap.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-full_T2starmap.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 'desc-full_S0Map.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-full_S0map.nii.gz'))
         assert len(img.shape) == 3
         img = nib.load(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
         assert len(img.shape) == 4
@@ -105,13 +105,13 @@ class TestT2smap():
 
         # Check outputs
         assert op.isfile(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
-        img = nib.load(op.join(out_dir, 'T2StarMap.nii.gz'))
+        img = nib.load(op.join(out_dir, 'T2starmap.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 'S0Map.nii.gz'))
+        img = nib.load(op.join(out_dir, 'S0map.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 'desc-full_T2StarMap.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-full_T2starmap.nii.gz'))
         assert len(img.shape) == 4
-        img = nib.load(op.join(out_dir, 'desc-full_S0Map.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-full_S0map.nii.gz'))
         assert len(img.shape) == 4
         img = nib.load(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
         assert len(img.shape) == 4
@@ -131,13 +131,13 @@ class TestT2smap():
         workflows.t2smap._main(args)
 
         # Check outputs
-        img = nib.load(op.join(out_dir, 'T2StarMap.nii.gz'))
+        img = nib.load(op.join(out_dir, 'T2starmap.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 'S0Map.nii.gz'))
+        img = nib.load(op.join(out_dir, 'S0map.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 'desc-full_T2StarMap.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-full_T2starmap.nii.gz'))
         assert len(img.shape) == 3
-        img = nib.load(op.join(out_dir, 'desc-full_S0Map.nii.gz'))
+        img = nib.load(op.join(out_dir, 'desc-full_S0map.nii.gz'))
         assert len(img.shape) == 3
         img = nib.load(op.join(out_dir, 'desc-optcom_bold.nii.gz'))
         assert len(img.shape) == 4

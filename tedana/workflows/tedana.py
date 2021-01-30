@@ -2,6 +2,7 @@
 Run the "canonical" TE-Dependent ANAlysis workflow.
 """
 import os
+import sys
 import os.path as op
 import shutil
 import logging
@@ -15,11 +16,11 @@ from scipy import stats
 from threadpoolctl import threadpool_limits
 from nilearn.masking import compute_epi_mask
 
-from tedana import (decay, combine, decomposition, io, metrics, selection,
-                    utils, viz)
+from tedana import (decay, combine, decomposition, io, metrics,
+                    reporting, selection, utils)
 import tedana.gscontrol as gsc
 from tedana.stats import computefeats2
-from tedana.workflows.parser_utils import is_valid_file, ContextFilter
+from tedana.workflows.parser_utils import is_valid_file, check_tedpca_value, ContextFilter
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
@@ -40,7 +41,7 @@ def _get_parser():
     # Argument parser follow templtate provided by RalphyZ
     # https://stackoverflow.com/a/43456577
     optional = parser._action_groups.pop()
-    required = parser.add_argument_group('required arguments')
+    required = parser.add_argument_group('Required Arguments')
     required.add_argument('-d',
                           dest='data',
                           nargs='+',
@@ -97,12 +98,15 @@ def _get_parser():
                           default='t2s')
     optional.add_argument('--tedpca',
                           dest='tedpca',
+                          type=check_tedpca_value,
                           help=('Method with which to select components in TEDPCA. '
                                 'PCA decomposition with the mdl, kic and aic options '
                                 'is based on a Moving Average (stationary Gaussian) '
-                                'process and are ordered from most to least aggresive. '
-                                'Default=\'mdl\'.'),
-                          choices=['kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'],
+                                'process and are ordered from most to least aggressive. '
+                                "Users may also provide a float from 0 to 1, "
+                                "in which case components will be selected based on the "
+                                "cumulative variance explained. "
+                                "Default='mdl'."),
                           default='mdl')
     optional.add_argument('--seed',
                           dest='fixed_seed',
@@ -145,14 +149,15 @@ def _get_parser():
                                 'spatially diffuse noise. Default is None. '
                                 'This argument can be single value or a space '
                                 'delimited list'),
-                          choices=['t1c', 'gsr'],
+                          choices=['mir', 'gsr'],
                           default=None)
-    optional.add_argument('--no-png',
-                          dest='no_png',
+    optional.add_argument('--no-reports',
+                          dest='no_reports',
                           action='store_true',
                           help=('Creates a figures folder with static component '
                                 'maps, timecourse plots and other diagnostic '
-                                'images'),
+                                'images and displays these in an interactive '
+                                'reporting framework'),
                           default=False)
     optional.add_argument('--png-cmap',
                           dest='png_cmap',
@@ -196,7 +201,7 @@ def _get_parser():
     optional.add_argument('-v', '--version', action='version', version=verstr)
     parser._action_groups.append(optional)
 
-    rerungrp = parser.add_argument_group('arguments for rerunning the workflow')
+    rerungrp = parser.add_argument_group('Arguments for Rerunning the Workflow')
     rerungrp.add_argument('--t2smap',
                           dest='t2smap',
                           metavar='FILE',
@@ -220,8 +225,10 @@ def _get_parser():
                           default=None)
     rerungrp.add_argument('--manacc',
                           dest='manacc',
-                          help=('Comma separated list of manually '
-                                'accepted components'),
+                          metavar='INT',
+                          type=int,
+                          nargs='+',
+                          help='List of manually accepted components.',
                           default=None)
 
     return parser
@@ -231,7 +238,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                     fittype='loglin', combmode='t2s', tedpca='mdl',
                     fixed_seed=42, maxit=500, maxrestart=10,
                     tedort=False, gscontrol=None,
-                    no_png=False, png_cmap='coolwarm',
+                    no_reports=False, png_cmap='coolwarm',
                     verbose=False, low_mem=False, debug=False, quiet=False,
                     t2smap=None, mixm=None, ctab=None, manacc=None):
     """
@@ -258,18 +265,22 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         Default is 'loglin'.
     combmode : {'t2s'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default).
-    tedpca : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
-        Method with which to select components in TEDPCA. Default is 'mdl'.
+    tedpca : {'mdl', 'aic', 'kic', 'kundu', 'kundu-stabilize', float}, optional
+        Method with which to select components in TEDPCA.
+        If a float is provided, then it is assumed to represent percentage of variance
+        explained (0-1) to retain from PCA.
+        Default is 'mdl'.
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
         denoising. Default is False.
-    gscontrol : {None, 't1c', 'gsr'} or :obj:`list`, optional
+    gscontrol : {None, 'mir', 'gsr'} or :obj:`list`, optional
         Perform additional denoising to remove spatially diffuse noise. Default
         is None.
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
-    no_png : obj:'bool', optional
-        Do not generate .png plots and figures. Default is false.
+    no_reports : obj:'bool', optional
+        Do not generate .html reports and .png plots. Default is false such
+        that reports are generated.
     png_cmap : obj:'str', optional
         Name of a matplotlib colormap to be used when generating figures.
         Cannot be used with --no-png. Default is 'coolwarm'.
@@ -283,10 +294,10 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         File containing component table from which to extract pre-computed
         classifications, to be used with 'mixm' when re-running the workflow.
         Default is None.
-    manacc : :obj:`list`, :obj:`str`, or None, optional
-        List of manually accepted components. Can be a list of the components,
-        a comma-separated string with component numbers, or None. Default is
-        None.
+    manacc : :obj:`list` of :obj:`int` or None, optional
+        List of manually accepted components. Can be a list of the components
+        numbers or None.
+        Default is None.
 
     Other Parameters
     ----------------
@@ -350,18 +361,17 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     # Removing handlers after basicConfig doesn't work, so we use filters
     # for the relevant handlers themselves.
     log_handler.addFilter(ContextFilter())
+    logging.root.addHandler(log_handler)
     sh = logging.StreamHandler()
     sh.addFilter(ContextFilter())
+    logging.root.addHandler(sh)
 
     if quiet:
-        logging.basicConfig(level=logging.WARNING,
-                            handlers=[log_handler, sh])
+        logging.root.setLevel(logging.WARNING)
     elif debug:
-        logging.basicConfig(level=logging.DEBUG,
-                            handlers=[log_handler, sh])
+        logging.root.setLevel(logging.DEBUG)
     else:
-        logging.basicConfig(level=logging.INFO,
-                            handlers=[log_handler, sh])
+        logging.root.setLevel(logging.INFO)
 
     # Loggers for report and references
     rep_handler = logging.FileHandler(repname)
@@ -370,7 +380,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     ref_handler.setFormatter(text_formatter)
     RepLGR.setLevel(logging.INFO)
     RepLGR.addHandler(rep_handler)
-    RepLGR.setLevel(logging.INFO)
+    RefLGR.setLevel(logging.INFO)
     RefLGR.addHandler(ref_handler)
 
     LGR.info('Using output directory: {}'.format(out_dir))
@@ -383,18 +393,17 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if not isinstance(gscontrol, list):
         gscontrol = [gscontrol]
 
+    # Check value of tedpca *if* it is a float
+    tedpca = check_tedpca_value(tedpca, is_parser=False)
+
     LGR.info('Loading input data: {}'.format([f for f in data]))
     catd, ref_img = io.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
-    if no_png and (png_cmap != 'coolwarm'):
-        LGR.warning('Overriding --no-png since --png-cmap provided.')
-        no_png = False
-
     # check if TR is 0
     img_t_r = ref_img.header.get_zooms()[-1]
-    if img_t_r == 0 and not no_png:
+    if img_t_r == 0:
         raise IOError('Dataset has a TR of 0. This indicates incorrect'
                       ' header information. To correct this, we recommend'
                       ' using this snippet:'
@@ -421,15 +430,15 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
 
-    if isinstance(manacc, str):
-        manacc = [int(comp) for comp in manacc.split(',')]
-
     if ctab and not mixm:
         LGR.warning('Argument "ctab" requires argument "mixm".')
         ctab = None
     elif manacc is not None and not mixm:
         LGR.warning('Argument "manacc" requires argument "mixm".')
         manacc = None
+    elif manacc is not None:
+        # coerce to list of integers
+        manacc = [int(m) for m in manacc]
 
     if t2smap is not None and op.isfile(t2smap):
         t2smap = op.abspath(t2smap)
@@ -465,7 +474,10 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         RepLGR.info("An initial mask was generated from the first echo using "
                     "nilearn's compute_epi_mask function.")
 
-    mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True)
+    # Create an adaptive mask with at least 3 good echoes.
+    mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True, threshold=3)
+    LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
+    io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
 
     if t2smap is None:
         LGR.info('Computing T2* map')
@@ -510,21 +522,45 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                                                 out_dir=out_dir,
                                                 verbose=verbose,
                                                 low_mem=low_mem)
-        mmix_orig = decomposition.tedica(dd, n_components, fixed_seed,
-                                         maxit, maxrestart)
-
         if verbose:
             io.filewrite(utils.unmask(dd, mask),
                          op.join(out_dir, 'ts_OC_whitened.nii.gz'), ref_img)
 
-        LGR.info('Making second component selection guess from ICA results')
-        # Estimate betas and compute selection metrics for mixing matrix
-        # generated from dimensionally reduced data using full data (i.e., data
-        # with thermal noise)
-        comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                    catd, data_oc, mmix_orig, masksum, tes,
-                    ref_img, reindex=True, label='meica_', out_dir=out_dir,
-                    algorithm='kundu_v2', verbose=verbose)
+        # Perform ICA, calculate metrics, and apply decision tree
+        # Restart when ICA fails to converge or too few BOLD components found
+        keep_restarting = True
+        n_restarts = 0
+        seed = fixed_seed
+        while keep_restarting:
+            mmix_orig, seed = decomposition.tedica(
+                dd, n_components, seed,
+                maxit, maxrestart=(maxrestart - n_restarts)
+            )
+            seed += 1
+            n_restarts = seed - fixed_seed
+
+            # Estimate betas and compute selection metrics for mixing matrix
+            # generated from dimensionally reduced data using full data (i.e., data
+            # with thermal noise)
+            LGR.info('Making second component selection guess from ICA results')
+            comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
+                catd, data_oc, mmix_orig, masksum, tes,
+                ref_img, reindex=True, label='meica_', out_dir=out_dir,
+                algorithm='kundu_v2', verbose=verbose
+            )
+            comptable = metrics.kundu_metrics(comptable, metric_maps)
+            comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
+
+            n_bold_comps = comptable[comptable.classification == 'accepted'].shape[0]
+            if (n_restarts < maxrestart) and (n_bold_comps == 0):
+                LGR.warning("No BOLD components found. Re-attempting ICA.")
+            elif (n_bold_comps == 0):
+                LGR.warning("No BOLD components found, but maximum number of restarts reached.")
+                keep_restarting = False
+            else:
+                keep_restarting = False
+
+        # Write out ICA files.
         comp_names = [io.add_decomp_prefix(comp, prefix='ica', max_value=comptable.index.max())
                       for comp in comptable.index.values]
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
@@ -533,9 +569,6 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         io.filewrite(betas_oc,
                      op.join(out_dir, 'ica_components.nii.gz'),
                      ref_img)
-
-        comptable = metrics.kundu_metrics(comptable, metric_maps)
-        comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = pd.read_table(op.join(out_dir, 'ica_mixing.tsv')).values
@@ -557,7 +590,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                      op.join(out_dir, 'ica_components.nii.gz'),
                      ref_img)
 
-    # Save decomposition
+    # Save component table
     comptable['Description'] = 'ICA fit to dimensionally-reduced optimally combined data.'
     mmix_dict = {}
     mmix_dict['Method'] = ('Independent components analysis with FastICA '
@@ -600,38 +633,34 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                     ref_img=ref_img,
                     out_dir=out_dir)
 
-    if 't1c' in gscontrol:
-        gsc.gscontrol_mmix(data_oc, mmix, mask, comptable, ref_img, out_dir=out_dir)
+    if 'mir' in gscontrol:
+        gsc.minimum_image_regression(data_oc, mmix, mask, comptable, ref_img, out_dir=out_dir)
 
     if verbose:
         io.writeresults_echoes(catd, mmix, mask, comptable, ref_img, out_dir=out_dir)
 
-    if not no_png:
+    if not no_reports:
         LGR.info('Making figures folder with static component maps and '
                  'timecourse plots.')
         # make figure folder first
         if not op.isdir(op.join(out_dir, 'figures')):
             os.mkdir(op.join(out_dir, 'figures'))
 
-        viz.write_comp_figs(data_oc,
-                            mask=mask,
-                            comptable=comptable,
-                            mmix=mmix_orig,
-                            ref_img=ref_img,
-                            out_dir=op.join(out_dir, 'figures'),
-                            png_cmap=png_cmap)
+        reporting.static_figures.comp_figures(data_oc, mask=mask,
+                                              comptable=comptable,
+                                              mmix=mmix_orig,
+                                              ref_img=ref_img,
+                                              out_dir=op.join(out_dir,
+                                                              'figures'),
+                                              png_cmap=png_cmap)
 
-        LGR.info('Making Kappa vs Rho scatter plot')
-        viz.write_kappa_scatter(comptable=comptable,
-                                out_dir=op.join(out_dir, 'figures'))
-
-        LGR.info('Making Kappa/Rho scree plot')
-        viz.write_kappa_scree(comptable=comptable,
-                              out_dir=op.join(out_dir, 'figures'))
-
-        LGR.info('Making overall summary figure')
-        viz.write_summary_fig(comptable=comptable,
-                              out_dir=op.join(out_dir, 'figures'))
+        if sys.version_info.major == 3 and sys.version_info.minor < 6:
+            warn_msg = ("Reports requested but Python version is less than "
+                        "3.6.0. Dynamic reports will not be generated.")
+            LGR.warn(warn_msg)
+        else:
+            LGR.info('Generating dynamic report')
+            reporting.generate_report(out_dir=out_dir, tr=img_t_r)
 
     LGR.info('Workflow completed')
 
@@ -670,13 +699,19 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     with open(refname, 'r') as fo:
         reference_list = sorted(list(set(fo.readlines())))
         references = '\n'.join(reference_list)
-    report += '\n\nReferences\n' + references
+    report += '\n\nReferences:\n\n' + references
     with open(repname, 'w') as fo:
         fo.write(report)
-    os.remove(refname)
 
-    for handler in logging.root.handlers[:]:
-        logging.root.removeHandler(handler)
+    log_handler.close()
+    logging.root.removeHandler(log_handler)
+    sh.close()
+    logging.root.removeHandler(sh)
+    for local_logger in (RefLGR, RepLGR):
+        for handler in local_logger.handlers[:]:
+            handler.close()
+            local_logger.removeHandler(handler)
+    os.remove(refname)
 
 
 def _main(argv=None):

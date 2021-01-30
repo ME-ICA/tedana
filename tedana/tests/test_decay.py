@@ -7,7 +7,7 @@ import os.path as op
 import numpy as np
 import pytest
 
-from tedana import io, utils, decay as me
+from tedana import io, utils, combine, decay as me
 from tedana.tests.utils import get_test_data_path
 
 
@@ -64,6 +64,30 @@ def test_fit_decay_ts(testdata1):
     assert s0vG.ndim == 2
     assert r_squared.ndim == 2
     assert adaptive_mask.ndim == 1
+
+
+def test__apply_t2s_floor():
+    """
+    _apply_t2s_floor applies a floor to T2* values to prevent a ZeroDivisionError during
+    optimal combination.
+    """
+    n_voxels, n_echos, n_trs = 100, 5, 25
+    echo_times = np.array([2, 23, 54, 75, 96])
+    me_data = np.random.random((n_voxels, n_echos, n_trs))
+    t2s = np.random.random((n_voxels)) * 1000
+    t2s[t2s < 1] = 1  # Crop at 1 ms to be safe
+    t2s[0] = 0.001
+
+    # First establish a failure
+    with pytest.raises(ZeroDivisionError):
+        _ = combine._combine_t2s(me_data, echo_times[None, :], t2s[:, None])
+
+    # Now correct the T2* map and get a successful result.
+    t2s_corrected = me._apply_t2s_floor(t2s, echo_times)
+    assert t2s_corrected[0] != t2s[0]  # First value should be corrected
+    assert np.array_equal(t2s_corrected[1:], t2s[1:])  # No other values should be corrected
+    combined = combine._combine_t2s(me_data, echo_times[None, :], t2s_corrected[:, None])
+    assert np.all(combined != 0)
 
 
 # SMOKE TESTS

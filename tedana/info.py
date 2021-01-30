@@ -4,6 +4,8 @@
 """
 Base module variables
 """
+from pathlib import Path
+readme_path = Path(__file__).parent.parent.joinpath("README.md")
 
 from ._version import get_versions
 __version__ = get_versions()['version']
@@ -21,27 +23,31 @@ __url__ = 'https://github.com/me-ica/tedana'
 __packagename__ = 'tedana'
 __description__ = ('TE-Dependent Analysis (tedana) of multi-echo functional '
                    'magnetic resonance imaging (fMRI) data.')
-__longdesc__ = ('To do.')
+__longdesc__ = readme_path.open().read()
 
 DOWNLOAD_URL = (
     'https://github.com/ME-ICA/{name}/archive/{ver}.tar.gz'.format(
         name=__packagename__, ver=__version__))
 
 REQUIRES = [
-    'numpy >=1.14',
-    'scikit-learn',
-    'nilearn',
-    'nibabel>=2.1.0',
-    'scipy',
-    'pandas',
+    'bokeh',
     'matplotlib',
+    'nibabel>=2.5.1',
+    'nilearn>=0.5.2',
+    'numpy>=1.15',
+    'pandas',
+    'scikit-learn>=0.22',
+    'scipy>=1.3.3',
     'threadpoolctl'
 ]
 
 TESTS_REQUIRES = [
     'codecov',
+    'coverage<5.0',
+    'flake8>=3.7',
     'pytest',
-    'pytest-cov'
+    'pytest-cov',
+    'requests',
 ]
 
 EXTRA_REQUIRES = {
@@ -50,7 +56,6 @@ EXTRA_REQUIRES = {
         'sphinx>=1.5.3',
         'sphinx_rtd_theme',
         'sphinx-argparse',
-        'numpydoc'
     ],
     'tests': TESTS_REQUIRES,
     'duecredit': ['duecredit'],
