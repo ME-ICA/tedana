@@ -324,7 +324,7 @@ You're awesome. :wave::smiley:
 [markdown]: https://daringfireball.net/projects/markdown
 [rick_roll]: https://www.youtube.com/watch?v=dQw4w9WgXcQ
 [restructuredtext]: http://www.sphinx-doc.org/en/main/usage/restructuredtext/index.html
-[sphinx]: http://www.sphinx-doc.org/en/main/index.html
+[sphinx]: http://www.sphinx-doc.org/en/master/index.html
 [readthedocs]: https://docs.readthedocs.io/en/latest/index.html
 
 [link_issues]: https://github.com/ME-ICA/tedana/issues
