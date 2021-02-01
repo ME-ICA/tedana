@@ -323,7 +323,7 @@ You're awesome. :wave::smiley:
 [writing_formatting_github]: https://help.github.com/articles/getting-started-with-writing-and-formatting-on-github
 [markdown]: https://daringfireball.net/projects/markdown
 [rick_roll]: https://www.youtube.com/watch?v=dQw4w9WgXcQ
-[restructuredtext]: http://www.sphinx-doc.org/en/main/usage/restructuredtext/index.html
+[restructuredtext]: http://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html
 [sphinx]: http://www.sphinx-doc.org/en/master/index.html
 [readthedocs]: https://docs.readthedocs.io/en/latest/index.html
 
