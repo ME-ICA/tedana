@@ -125,7 +125,7 @@ This is now your own unique and online copy of `tedana`. Changes here won't affe
 
 Remember to [clone your fork][link_clonerepo] of `tedana` to your local machine, which will allow you to make local changes to `tedana`.
 
-Make sure to always [keep your fork up to date][link_updateupstreamwiki] with the master repository before and after making changes.
+Make sure to always [keep your fork up to date][link_updateupstreamwiki] with the upstream repository before and after making changes.
 
 ### 3. Run the developer setup
 
@@ -146,12 +146,12 @@ Try to keep the changes focused to the issue.
 We've found that working on a [new branch][link_branches] for each issue makes it easier to keep your changes targeted.
 Using a new branch allows you to follow the standard GitHub workflow when making changes.
 [This guide][link_gitworkflow] provides a useful overview for this workflow.
-Before making a new branch, make sure your master is up to date with the following commands:
+Before making a new branch, make sure your main is up to date with the following commands:
 
 ```
-git checkout master
-git fetch upstream master
-git merge upstream/master
+git checkout main
+git fetch upstream main
+git merge upstream/main
 ```
 
 Then, make your new branch.
@@ -331,7 +331,7 @@ You're awesome. :wave::smiley:
 [link_milestones]: https://github.com/ME-ICA/tedana/milestones/
 [link_project_boards]: https://github.com/ME-ICA/tedana/projects
 [link_gitter]: https://gitter.im/me-ica/tedana
-[link_coc]: https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md
+[link_coc]: https://github.com/ME-ICA/tedana/blob/main/CODE_OF_CONDUCT.md
 [link_stale-bot]: https://github.com/probot/stale
 
 [link_labels]: https://github.com/ME-ICA/tedana/labels

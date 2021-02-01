@@ -11,7 +11,7 @@ multi-echo functional magnetic resonance imaging (fMRI) data.
 [![License](https://img.shields.io/badge/License-LGPL%202.0-blue.svg)](https://opensource.org/licenses/LGPL-2.1)
 [![CircleCI](https://circleci.com/gh/ME-ICA/tedana.svg?style=shield)](https://circleci.com/gh/ME-ICA/tedana)
 [![Documentation Status](https://readthedocs.org/projects/tedana/badge/?version=latest)](http://tedana.readthedocs.io/en/latest/?badge=latest)
-[![Codecov](https://codecov.io/gh/me-ica/tedana/branch/master/graph/badge.svg)](https://codecov.io/gh/me-ica/tedana)
+[![Codecov](https://codecov.io/gh/me-ica/tedana/branch/main/graph/badge.svg)](https://codecov.io/gh/me-ica/tedana)
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/ME-ICA/tedana.svg)](http://isitmaintained.com/project/ME-ICA/tedana "Average time to resolve an issue")
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/ME-ICA/tedana.svg)](http://isitmaintained.com/project/ME-ICA/tedana "Percentage of issues still open")
 [![Join the chat at https://gitter.im/ME-ICA/tedana](https://badges.gitter.im/ME-ICA/tedana.svg)](https://gitter.im/ME-ICA/tedana?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -75,12 +75,12 @@ You can read more about managing conda environments and this discrepancy [here](
 
 ### Use and contribute to `tedana` as a developer
 
-If you aim to contribute to the `tedana` code base and/or documentation, please first read the developer installation instructions in [our contributing section](https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md). You can then continue to set up your preferred development environment.
+If you aim to contribute to the `tedana` code base and/or documentation, please first read the developer installation instructions in [our contributing section](https://github.com/ME-ICA/tedana/blob/main/CONTRIBUTING.md). You can then continue to set up your preferred development environment.
 
 ## Getting involved
 
 We :yellow_heart: new contributors!
-To get started, check out [our contributing guidelines](https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md)
+To get started, check out [our contributing guidelines](https://github.com/ME-ICA/tedana/blob/main/CONTRIBUTING.md)
 and our [developer's guide](https://tedana.readthedocs.io/en/latest/developing.html).
 
 Want to learn more about our plans for developing ``tedana``?
@@ -93,7 +93,7 @@ We will be happy to help you find somewhere to get started.
 If you don't want to get lots of notifications, we send out newsletters approximately once per month though our TinyLetter mailing list.
 You can view the [previous newsletters](https://tinyletter.com/tedana-devs/archive) and/or sign up to receive future ones at [https://tinyletter.com/tedana-devs](https://tinyletter.com/tedana-devs).
 
-We ask that all contributors to ``tedana`` across all project-related spaces (including but not limited to: GitHub, Gitter, and project emails), adhere to our [code of conduct](https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md).
+We ask that all contributors to ``tedana`` across all project-related spaces (including but not limited to: GitHub, Gitter, and project emails), adhere to our [code of conduct](https://github.com/ME-ICA/tedana/blob/main/CODE_OF_CONDUCT.md).
 
 ## Contributors
 
