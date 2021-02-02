@@ -242,6 +242,7 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
 
     t2s_asc_maps = np.zeros([n_samp, len(echos_to_run)])
     s0_asc_maps = np.zeros([n_samp, len(echos_to_run)])
+    r_squared_asc_maps = np.zeros([n_samp, len(echos_to_run)])
     echo_masks = np.zeros([n_samp, len(echos_to_run)], dtype=bool)
 
     for i_echo, echo_num in enumerate(echos_to_run):
@@ -259,18 +260,42 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
 
         # perform log linear fit of echo times against MR signal
         # make DV matrix: samples x (time series * echos)
-        data_2d = data_cat[voxel_idx, :echo_num, :].reshape(len(voxel_idx), -1).T
+        selected_data = data_cat[voxel_idx, :echo_num, :]
+        data_2d = selected_data.reshape(len(voxel_idx), -1).T
         log_data = np.log(np.abs(data_2d) + 1)
 
-    # Log-linear fit
-    betas = np.linalg.lstsq(X, log_data, rcond=None)[0]
-    t2s = 1. / betas[1, :].T
-    s0 = np.exp(betas[0, :]).T
+        # make IV matrix: intercept/TEs x (time series * echos)
+        x = np.column_stack([np.ones(echo_num), [-te for te in echo_times[:echo_num]]])
+        X = np.repeat(x, n_vols, axis=0)
+
+        # Log-linear fit
+        betas = np.linalg.lstsq(X, log_data, rcond=None)[0]
+        t2s = 1. / betas[1, :].T
+        s0 = np.exp(betas[0, :]).T
+
+        # Determine model fit
+        mean_data = np.mean(selected_data, axis=2)  # avg echo-wise data over time
+        r_squared = calculate_r_squared(mean_data, echo_times, s0, t2s, report=report)
+
+        t2s_asc_maps[voxel_idx, i_echo] = t2s
+        s0_asc_maps[voxel_idx, i_echo] = s0
+        r_squared_asc_maps[voxel_idx, i_echo] = r_squared
 
     # Determine model fit
     mean_data = np.mean(data_cat, axis=2)  # avg echo-wise data over time
     r_squared = calculate_r_squared(mean_data, echo_times, s0, t2s, report=report)
-    return t2s, s0, r_squared
+
+    # create limited T2* and S0 maps
+    t2s_limited = utils.unmask(t2s_asc_maps[echo_masks], adaptive_mask > 1)
+    s0_limited = utils.unmask(s0_asc_maps[echo_masks], adaptive_mask > 1)
+    r_squared_limited = utils.unmask(r_squared_asc_maps[echo_masks], adaptive_mask > 1)
+
+    # create full T2* maps with S0 estimation errors
+    t2s_full, s0_full = t2s_limited.copy(), s0_limited.copy()
+    t2s_full[adaptive_mask == 1] = t2s_asc_maps[adaptive_mask == 1, 0]
+    s0_full[adaptive_mask == 1] = s0_asc_maps[adaptive_mask == 1, 0]
+
+    return t2s_limited, s0_limited, t2s_full, s0_full, r_squared_limited
 
 
 def calculate_r_squared(data, echo_times, s0, t2s, report=True):
@@ -385,39 +410,13 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True):
     n_samp, n_echos, n_vols = data_masked.shape
 
     if fittype == 'loglin':
-        t2s_limited, s0_limited, t2s_full, s0_full = fit_loglinear(
+        t2s_limited, s0_limited, t2s_full, s0_full, r_squared = fit_loglinear(
             data_masked, tes, adaptive_mask_masked, report=report)
     elif fittype == 'curvefit':
-        t2s_limited, s0_limited, t2s_full, s0_full = fit_monoexponential(
+        t2s_limited, s0_limited, t2s_full, s0_full, r_squared = fit_monoexponential(
             data_masked, tes, adaptive_mask_masked, report=report)
     else:
         raise ValueError('Unknown fittype option: {}'.format(fittype))
-
-    # Start that loop
-    echos_to_run = np.arange(3, n_echos + 1)
-
-    t2s_asc_maps = np.zeros([n_samp, len(echos_to_run)])
-    s0_asc_maps = np.zeros([n_samp, len(echos_to_run)])
-    r_squared_asc_maps = np.zeros([n_samp, len(echos_to_run)])
-    for i_echo, echo_num in enumerate(echos_to_run):
-        temp_data = data_masked[:, :echo_num, :]
-        temp_echo_times = tes[:echo_num]
-
-        if (i_echo == 0) and report:
-            report = True
-        else:
-            report = False
-
-        if fittype == 'loglin':
-            t2s, s0, r_squared = fit_loglinear(temp_data, temp_echo_times, report=report)
-        elif fittype == 'curvefit':
-            t2s, s0, r_squared = fit_monoexponential(temp_data, temp_echo_times, report=report)
-        else:
-            raise ValueError('Unknown fittype option: {}'.format(fittype))
-
-        t2s_asc_maps[:, i_echo] = t2s
-        s0_asc_maps[:, i_echo] = s0
-        r_squared_asc_maps[:, i_echo] = r_squared
 
     # determine r_squared sitch
     adaptive_mask_r2 = np.zeros(n_samp, int)
