@@ -18,7 +18,7 @@ def main():
         __maintainer__,
         __license__,
         __description__,
-        __longdesc__,
+        #__longdesc__,
         __url__,
         DOWNLOAD_URL,
         CLASSIFIERS,
@@ -27,6 +27,9 @@ def main():
         EXTRA_REQUIRES,
         PYTHON_REQUIRES
     )
+    this_directory = op.abspath(op.dirname(__file__))
+    with open(op.join(this_directory, 'README.md'), encoding='utf-8') as f:
+            __longdesc__ = f.read()
 
     pkg_data = {
         'tedana': [
