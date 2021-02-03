@@ -19,7 +19,6 @@ from .info import (
     __url__,
     __packagename__,
     __description__,
-#    __longdesc__
 )
 
 import warnings
