@@ -18,7 +18,6 @@ def main():
         __maintainer__,
         __license__,
         __description__,
-        __longdesc__,
         __url__,
         DOWNLOAD_URL,
         CLASSIFIERS,
@@ -38,6 +37,9 @@ def main():
 
     root_dir = op.dirname(op.abspath(getfile(currentframe())))
 
+    with open(op.join(root_dir, 'README.md'), encoding='utf-8') as f:
+        long_description = f.read()
+
     version = None
     cmdclass = {}
     if op.isfile(op.join(root_dir, 'tedana', 'VERSION')):
@@ -53,7 +55,7 @@ def main():
         name=__packagename__,
         version=__version__,
         description=__description__,
-        long_description=__longdesc__,
+        long_description=long_description,
         author=__author__,
         author_email=__email__,
         maintainer=__maintainer__,
