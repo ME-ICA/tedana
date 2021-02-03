@@ -38,7 +38,7 @@ def main():
     root_dir = op.dirname(op.abspath(getfile(currentframe())))
 
     with open(op.join(root_dir, 'README.md'), encoding='utf-8') as f:
-            long_description = f.read()
+        long_description = f.read()
 
     version = None
     cmdclass = {}
