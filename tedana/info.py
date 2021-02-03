@@ -4,8 +4,6 @@
 """
 Base module variables
 """
-from pathlib import Path
-readme_path = Path(__file__).parent.parent.joinpath("README.md")
 
 from ._version import get_versions
 __version__ = get_versions()['version']
