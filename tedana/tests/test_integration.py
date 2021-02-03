@@ -49,6 +49,7 @@ def check_integration_outputs(fname, outpath):
     # Compares remaining files with those expected
     with open(fname, 'r') as f:
         tocheck = f.read().splitlines()
+    tocheck = [os.path.normpath(path) for path in tocheck]
     assert sorted(tocheck) == sorted(existing)
 
 
