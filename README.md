@@ -16,7 +16,7 @@ multi-echo functional magnetic resonance imaging (fMRI) data.
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/ME-ICA/tedana.svg)](http://isitmaintained.com/project/ME-ICA/tedana "Percentage of issues still open")
 [![Join the chat at https://gitter.im/ME-ICA/tedana](https://badges.gitter.im/ME-ICA/tedana.svg)](https://gitter.im/ME-ICA/tedana?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Join our tinyletter mailing list](https://img.shields.io/badge/receive-our%20newsletter%20❤%EF%B8%8F-blueviolet.svg)](https://tinyletter.com/tedana-devs)
-[![All Contributors](https://img.shields.io/badge/all_contributors-14-orange.svg?style=flat-square)](#contributors)
+[![All Contributors](https://img.shields.io/badge/all_contributors-20-orange.svg?style=flat-square)](#contributors)
 
 
 ## About
