@@ -56,6 +56,7 @@ def main():
         version=__version__,
         description=__description__,
         long_description=long_description,
+        long_description_content_type="text/markdown",
         author=__author__,
         author_email=__email__,
         maintainer=__maintainer__,
