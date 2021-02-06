@@ -236,7 +236,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         'd_table_score'
     ]
     comptable, _ = metrics.collect.generate_metrics(
-        data_cat, data_oc, comp_ts, mask, adaptive_mask,
+        data_cat, data_oc, comp_ts, adaptive_mask,
         tes, ref_img,
         metrics=required_metrics, sort_by=None
     )

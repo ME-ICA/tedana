@@ -543,7 +543,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                 'd_table_score'
             ]
             comptable, mmix = metrics.collect.generate_metrics(
-                catd, data_oc, mmix_orig, mask, masksum, tes, ref_img,
+                catd, data_oc, mmix_orig, masksum, tes, ref_img,
                 metrics=required_metrics, sort_by='kappa', ascending=False
             )
             comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
@@ -578,7 +578,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                 'd_table_score'
             ]
             comptable, mmix = metrics.collect.generate_metrics(
-                catd, data_oc, mmix_orig, mask, masksum, tes, ref_img,
+                catd, data_oc, mmix_orig, masksum, tes, ref_img,
                 metrics=required_metrics, sort_by='kappa', ascending=False
             )
             comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)

@@ -17,7 +17,7 @@ RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
 
-def generate_metrics(data_cat, data_optcom, mixing, mask, adaptive_mask,
+def generate_metrics(data_cat, data_optcom, mixing, adaptive_mask,
                      tes, ref_img,
                      metrics=None, sort_by='kappa', ascending=False):
     """
@@ -32,11 +32,11 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, adaptive_mask,
     mixing : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data_cat`
-    mask : (S) array_like
-        Boolean mask
     adaptive_mask : (S) array_like
-        Adaptive mask, where each voxel's value is the number of echoes with
-        "good signal".
+        Array where each value indicates the number of echoes with good signal
+        for that voxel. This mask may be thresholded; for example, with values
+        less than 3 set to 0.
+        For more information on thresholding, see `make_adaptive_mask`.
     tes : list
         List of echo times associated with `data_cat`, in milliseconds
     ref_img : str or img_like
@@ -61,12 +61,11 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, adaptive_mask,
         metrics = ['map weight']
     RepLGR.info('The following metrics were calculated: {}.'.format(', '.join(metrics)))
 
-    if not (data_cat.shape[0] == data_optcom.shape[0] == adaptive_mask.shape[0] ==
-            mask.shape[0]):
+    if not (data_cat.shape[0] == data_optcom.shape[0] == adaptive_mask.shape[0]):
         raise ValueError('First dimensions (number of samples) of data_cat ({0}), '
-                         'data_optcom ({1}), adaptive_mask ({2}), and mask ({3}) do not '
+                         'data_optcom ({1}), and adaptive_mask ({2}) do not '
                          'match'.format(data_cat.shape[0], data_optcom.shape[0],
-                                        adaptive_mask.shape[0], mask.shape[0]))
+                                        adaptive_mask.shape[0]))
     elif data_cat.shape[1] != len(tes):
         raise ValueError('Second dimension of data_cat ({0}) does not match '
                          'number of echoes provided (tes; '
@@ -76,6 +75,9 @@ def generate_metrics(data_cat, data_optcom, mixing, mask, adaptive_mask,
                          'data_optcom ({1}), and mixing ({2}) do not '
                          'match.'.format(data_cat.shape[2], data_optcom.shape[1],
                                          mixing.shape[0]))
+
+    # Derive mask from thresholded adaptive mask
+    mask = adaptive_mask >= 3
 
     INPUTS = ['data_cat', 'data_optcom', 'mixing', 'adaptive_mask',
               'mask', 'tes', 'ref_img']
