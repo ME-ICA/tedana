@@ -296,7 +296,7 @@ The outcome of a vote is based on a simple majority.
 .. _Joshua Teves: https://github.com/jbteves
 .. _Eneko Uruñuela: https://github.com/eurunuela
 .. _Kirstie Whitaker: https://github.com/KirstieJane
-.. _code of conduct: https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md
-.. _all-contributors file: https://github.com/ME-ICA/tedana/blob/master/.all-contributorsrc
+.. _code of conduct: https://github.com/ME-ICA/tedana/blob/main/CODE_OF_CONDUCT.md
+.. _all-contributors file: https://github.com/ME-ICA/tedana/blob/main/.all-contributorsrc
 .. _bus factor: https://en.wikipedia.org/wiki/Bus_factor
 .. _Repository: https://github.com/ME-ICA/tedana>

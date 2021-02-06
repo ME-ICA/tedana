@@ -84,7 +84,9 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True):
         Echo times in milliseconds.
     adaptive_mask : (S,) :obj:`numpy.ndarray`
         Array where each value indicates the number of echoes with good signal
-        for that voxel.
+        for that voxel. This mask may be thresholded; for example, with values
+        less than 3 set to 0.
+        For more information on thresholding, see `make_adaptive_mask`.
     report : bool, optional
         Whether to log a description of this step or not. Default is True.
 
@@ -96,6 +98,11 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True):
     Notes
     -----
     This method is slower, but more accurate, than the log-linear approach.
+
+    See Also
+    --------
+    :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
+                                              parameter.
     """
     if report:
         RepLGR.info("A monoexponential model was fit to the data at each voxel "
@@ -115,6 +122,7 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True):
         data_cat, echo_times, adaptive_mask, report=False)
 
     echos_to_run = np.unique(adaptive_mask)
+    # When there is one good echo, use two
     if 1 in echos_to_run:
         echos_to_run = np.sort(np.unique(np.append(echos_to_run, 2)))
     echos_to_run = echos_to_run[echos_to_run >= 2]
@@ -125,6 +133,8 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True):
 
     for i_echo, echo_num in enumerate(echos_to_run):
         if echo_num == 2:
+            # Use the first two echoes for cases where there are
+            # either one or two good echoes
             voxel_idx = np.where(adaptive_mask <= echo_num)[0]
         else:
             voxel_idx = np.where(adaptive_mask == echo_num)[0]
@@ -192,7 +202,9 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
         Echo times in milliseconds.
     adaptive_mask : (S,) :obj:`numpy.ndarray`
         Array where each value indicates the number of echoes with good signal
-        for that voxel.
+        for that voxel. This mask may be thresholded; for example, with values
+        less than 3 set to 0.
+        For more information on thresholding, see `make_adaptive_mask`.
     report : :obj:`bool`, optional
         Whether to log a description of this step or not. Default is True.
 
@@ -221,6 +233,7 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
     n_samp, n_echos, n_vols = data_cat.shape
 
     echos_to_run = np.unique(adaptive_mask)
+    # When there is one good echo, use two
     if 1 in echos_to_run:
         echos_to_run = np.sort(np.unique(np.append(echos_to_run, 2)))
     echos_to_run = echos_to_run[echos_to_run >= 2]
@@ -231,7 +244,9 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
 
     for i_echo, echo_num in enumerate(echos_to_run):
         if echo_num == 2:
-            voxel_idx = np.where(adaptive_mask <= echo_num)[0]
+            # Use the first two echoes for cases where there are
+            # either one or two good echoes
+            voxel_idx = np.where(np.logical_and(adaptive_mask > 0, adaptive_mask <= echo_num))[0]
         else:
             voxel_idx = np.where(adaptive_mask == echo_num)[0]
 
@@ -284,8 +299,10 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True):
         Boolean array indicating samples that are consistently (i.e., across
         time AND echoes) non-zero
     adaptive_mask : (S,) array_like
-        Valued array indicating number of echos that have sufficient signal in
-        given sample
+        Array where each value indicates the number of echoes with good signal
+        for that voxel. This mask may be thresholded; for example, with values
+        less than 3 set to 0.
+        For more information on thresholding, see `make_adaptive_mask`.
     fittype : {loglin, curvefit}
         The type of model fit to use
     report : bool, optional
@@ -315,6 +332,11 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True):
     Additionally, very small :math:`T_2^*` values above zero are replaced with a floor
     value to prevent zero-division errors later on in the workflow.
     It also replaces NaN values in the :math:`S_0` map with 0.
+
+    See Also
+    --------
+    :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
+                                              parameter.
     """
     if data.shape[1] != len(tes):
         raise ValueError('Second dimension of data ({0}) does not match number '
@@ -381,8 +403,10 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
         Boolean array indicating samples that are consistently (i.e., across
         time AND echoes) non-zero
     adaptive_mask : (S,) array_like
-        Valued array indicating number of echos that have sufficient signal in
-        given sample
+        Array where each value indicates the number of echoes with good signal
+        for that voxel. This mask may be thresholded; for example, with values
+        less than 3 set to 0.
+        For more information on thresholding, see `make_adaptive_mask`.
     fittype : :obj: `str`
         The type of model fit to use
 
@@ -402,6 +426,11 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
         Full S0 timeseries. For voxels affected by dropout, with good signal
         from only one echo, the full timeseries uses the single echo's value
         at that voxel/volume.
+
+    See Also
+    --------
+    :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
+                                              parameter.
     """
     n_samples, _, n_vols = data.shape
     tes = np.array(tes)

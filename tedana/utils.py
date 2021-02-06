@@ -32,16 +32,16 @@ def load_image(data):
     """
 
     if isinstance(data, str):
-        data = check_niimg(data).get_data()
+        data = check_niimg(data).get_fdata()
     elif isinstance(data, nib.spatialimages.SpatialImage):
-        data = check_niimg(data).get_data()
+        data = check_niimg(data).get_fdata()
 
     fdata = data.reshape((-1,) + data.shape[3:]).squeeze()
 
     return fdata
 
 
-def make_adaptive_mask(data, mask=None, getsum=False):
+def make_adaptive_mask(data, mask=None, getsum=False, threshold=1):
     """
     Makes map of `data` specifying longest echo a voxel can be sampled with
 
@@ -55,6 +55,9 @@ def make_adaptive_mask(data, mask=None, getsum=False):
         to generate mask from data with good signal across echoes
     getsum : :obj:`bool`, optional
         Return `masksum` in addition to `mask`. Default: False
+    threshold : :obj:`int`, optional
+        Minimum echo count to retain in the mask. Default is 1, which is
+        equivalent not thresholding.
 
     Returns
     -------
@@ -90,19 +93,20 @@ def make_adaptive_mask(data, mask=None, getsum=False):
     masksum = (np.abs(echo_means) > lthrs).sum(axis=-1)
 
     if mask is None:
-        # make it a boolean mask to (where we have at least 1 echo with good signal)
-        mask = (masksum >= 3).astype(bool)
+        # make it a boolean mask to (where we have at least `threshold` echoes with good signal)
+        mask = (masksum >= threshold).astype(bool)
+        masksum[masksum < threshold] = 0
     else:
         # if the user has supplied a binary mask
         mask = load_image(mask).astype(bool)
         masksum = masksum * mask
-        mask = (masksum >= 3).astype(bool)
         # reduce mask based on masksum
         # TODO: Use visual report to make checking the reduced mask easier
-        if np.any(masksum[mask] < 3):
-            n_bad_voxels = np.sum(masksum[mask] < 3)
+        if np.any(masksum[mask] < threshold):
+            n_bad_voxels = np.sum(masksum[mask] < threshold)
             LGR.warning('{0} voxels in user-defined mask do not have good '
                         'signal. Removing voxels from mask.'.format(n_bad_voxels))
+            masksum[masksum < threshold] = 0
             mask = masksum.astype(bool)
 
     if getsum:
@@ -273,7 +277,7 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None,
         Cluster-extent thresholded (and optionally binarized) map.
     """
     if not isinstance(img, np.ndarray):
-        arr = img.get_data()
+        arr = img.get_fdata()
     else:
         arr = img.copy()
 

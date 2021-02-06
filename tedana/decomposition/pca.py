@@ -67,7 +67,10 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     mask : (S,) array_like
         Boolean mask array
     adaptive_mask : (S,) array_like
-        Adaptive mask of the data indicating the number of echos with signal at each voxel
+        Array where each value indicates the number of echoes with good signal
+        for that voxel. This mask may be thresholded; for example, with values
+        less than 3 set to 0.
+        For more information on thresholding, see `make_adaptive_mask`.
     t2sG : (S,) array_like
         Map of voxel-wise T2* estimates.
     ref_img : :obj:`str` or img_like
@@ -152,6 +155,11 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     pca_mixing.tsv            PCA mixing matrix.
     pca_components.nii.gz     Component weight maps.
     ======================    =================================================
+
+    See Also
+    --------
+    :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
+                                              parameter.
     """
     if algorithm == 'kundu':
         alg_str = ("followed by the Kundu component selection decision "

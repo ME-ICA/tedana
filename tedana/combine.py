@@ -3,7 +3,6 @@ Functions to optimally combine data across echoes.
 """
 import logging
 import numpy as np
-from tedana.utils import unmask
 from tedana.due import due, Doi
 
 LGR = logging.getLogger(__name__)
@@ -137,7 +136,10 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
     tes : (E,) :obj:`numpy.ndarray`
         Array of TEs, in seconds.
     adaptive_mask : (S,) :obj:`numpy.ndarray`
-        Adaptive mask of the data indicating the number of echos with signal at each voxel
+        Array where each value indicates the number of echoes with good signal
+        for that voxel. This mask may be thresholded; for example, with values
+        less than 3 set to 0.
+        For more information on thresholding, see `make_adaptive_mask`.
     t2s : (S [x T]) :obj:`numpy.ndarray` or None, optional
         Estimated T2* values. Only required if combmode = 't2s'.
         Default is None.
@@ -181,6 +183,11 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
            Magnetic Resonance in Medicine: An Official Journal of the
            International Society for Magnetic Resonance in Medicine,
            55(6), 1227-1235.
+
+    See Also
+    --------
+    :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
+                                              parameter.
     """
     if data.ndim != 3:
         raise ValueError('Input data must be 3D (S x E x T)')
@@ -217,23 +224,35 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
                    'estimates')
         LGR.info(msg)
 
-    mask = adaptive_mask >= 3
-    data = data[mask, :, :]  # mask out unstable voxels/samples
+    echos_to_run = np.unique(adaptive_mask)
+    # When there is one good echo, use two
+    if 1 in echos_to_run:
+        echos_to_run = np.sort(np.unique(np.append(echos_to_run, 2)))
+    echos_to_run = echos_to_run[echos_to_run >= 2]
+
     tes = np.array(tes)[np.newaxis, ...]  # (1 x E) array_like
     combined = np.zeros((data.shape[0], data.shape[2]))
     report = True
-    for echo in np.unique(adaptive_mask[mask]):
-        echo_idx = adaptive_mask[mask] == echo
+    for i_echo, echo_num in enumerate(echos_to_run):
+        if echo_num == 2:
+            # Use the first two echoes for cases where there are
+            # either one or two good echoes
+            voxel_idx = np.where(np.logical_and(adaptive_mask > 0, adaptive_mask <= echo_num))[0]
+        else:
+            voxel_idx = np.where(adaptive_mask == echo_num)[0]
 
         if combmode == 'paid':
-            combined[echo_idx, :] = _combine_paid(data[echo_idx, :echo, :],
-                                                  tes[:echo], report=report)
+            combined[voxel_idx, :] = _combine_paid(data[voxel_idx, :echo_num, :],
+                                                   tes[:, :echo_num])
         else:
-            t2s_ = t2s[mask, ..., np.newaxis]  # mask out empty voxels/samples
+            t2s_ = t2s[..., np.newaxis]  # add singleton
 
-            combined[echo_idx, :] = _combine_t2s(
-                data[echo_idx, :echo, :], tes[:, :echo], t2s_[echo_idx, ...], report=report)
+            combined[voxel_idx, :] = _combine_t2s(
+                data[voxel_idx, :echo_num, :],
+                tes[:, :echo_num],
+                t2s_[voxel_idx, ...],
+                report=report
+            )
         report = False
 
-    combined = unmask(combined, mask)
     return combined

@@ -37,7 +37,7 @@ def test_load_data():
     d, ref = me.load_data(fnames, n_echos=len(tes))
     assert d.shape == exp_shape
     assert isinstance(ref, nib.Nifti1Image)
-    assert np.allclose(ref.get_data(), nib.load(fnames[0]).get_data())
+    assert np.allclose(ref.get_fdata(), nib.load(fnames[0]).get_fdata())
 
     # list of img_like
     d, ref = me.load_data(fimg, n_echos=len(tes))
