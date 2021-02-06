@@ -36,8 +36,10 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `catd`
     adaptive_mask : (S) array_like
-        Adaptive mask, where each voxel's value is the number of echoes with
-        "good signal".
+        Array where each value indicates the number of echoes with good signal
+        for that voxel. This mask may be thresholded; for example, with values
+        less than 3 set to 0.
+        For more information on thresholding, see `make_adaptive_mask`.
     tes : list
         List of echo times associated with `catd`, in milliseconds
     ref_img : str or img_like
@@ -69,9 +71,14 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
     betas : :obj:`numpy.ndarray`
     mmix_corrected : :obj:`numpy.ndarray`
         Mixing matrix after sign correction and resorting (if reindex is True).
+
+    See Also
+    --------
+    :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
+                                              parameter.
     """
     # Use adaptive_mask as mask
-    mask = adaptive_mask >= 3
+    mask = adaptive_mask > 0
 
     if not (catd.shape[0] == adaptive_mask.shape[0] == tsoc.shape[0]):
         raise ValueError('First dimensions (number of samples) of catd ({0}), '

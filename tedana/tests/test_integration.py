@@ -49,6 +49,7 @@ def check_integration_outputs(fname, outpath):
     # Compares remaining files with those expected
     with open(fname, 'r') as f:
         tocheck = f.read().splitlines()
+    tocheck = [os.path.normpath(path) for path in tocheck]
     assert sorted(tocheck) == sorted(existing)
 
 
@@ -92,7 +93,7 @@ def test_integration_five_echo(skip_integration):
         data=datalist,
         tes=echo_times,
         out_dir=out_dir,
-        tedpca='aic',
+        tedpca=0.95,
         fittype='curvefit',
         tedort=True,
         verbose=True)
