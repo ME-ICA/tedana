@@ -18,12 +18,11 @@ def testdata1():
     in_files = [op.join(get_test_data_path(), 'echo{0}.nii.gz'.format(i + 1))
                 for i in range(3)]
     data_cat, ref_img = io.load_data(in_files, n_echos=len(tes))
-    mask, adaptive_mask = utils.make_adaptive_mask(data_cat, getsum=True)
+    _, adaptive_mask = utils.make_adaptive_mask(data_cat, getsum=True)
     data_optcom = np.mean(data_cat, axis=1)
     mixing = np.random.random((data_optcom.shape[1], 50))
     data_dict = {'data_cat': data_cat,
                  'tes': tes,
-                 'mask': mask,
                  'data_optcom': data_optcom,
                  'adaptive_mask': adaptive_mask,
                  'ref_img': ref_img,
@@ -41,7 +40,7 @@ def test_smoke_generate_metrics(testdata1):
                'normalized variance explained', 'd_table_score']
     comptable, mixing = collect.generate_metrics(
         testdata1['data_cat'], testdata1['data_optcom'], testdata1['mixing'],
-        testdata1['mask'], testdata1['adaptive_mask'],
+        testdata1['adaptive_mask'],
         testdata1['tes'], testdata1['ref_img'],
         metrics=metrics, sort_by='kappa', ascending=False)
     assert isinstance(comptable, pd.DataFrame)
