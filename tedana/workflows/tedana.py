@@ -1,6 +1,7 @@
 """
 Run the "canonical" TE-Dependent ANAlysis workflow.
 """
+import json
 import os
 import sys
 import os.path as op
@@ -415,8 +416,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if mixm is not None and op.isfile(mixm):
         mixm = op.abspath(mixm)
         # Allow users to re-run on same folder
-        if mixm != op.join(out_dir, 'ica_mixing.tsv'):
-            shutil.copyfile(mixm, op.join(out_dir, 'ica_mixing.tsv'))
+        if mixm != op.join(out_dir, 'desc-ICA_mixing.tsv'):
+            shutil.copyfile(mixm, op.join(out_dir, 'desc-ICA_mixing.tsv'))
             shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
     elif mixm is not None:
         raise IOError('Argument "mixm" must be an existing file.')
@@ -424,8 +425,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if ctab is not None and op.isfile(ctab):
         ctab = op.abspath(ctab)
         # Allow users to re-run on same folder
-        if ctab != op.join(out_dir, 'ica_decomposition.json'):
-            shutil.copyfile(ctab, op.join(out_dir, 'ica_decomposition.json'))
+        if ctab != op.join(out_dir, 'desc-ICA_metrics.tsv'):
+            shutil.copyfile(ctab, op.join(out_dir, 'desc-ICA_metrics.tsv'))
             shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
@@ -561,13 +562,22 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             # generated from dimensionally reduced data using full data (i.e., data
             # with thermal noise)
             LGR.info('Making second component selection guess from ICA results')
-            comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
+            comptable, metric_maps, metric_metadata, betas, mmix = metrics.dependence_metrics(
                 catd, data_oc, mmix_orig, masksum, tes,
                 ref_img, reindex=True, label='ICA', out_dir=out_dir,
                 algorithm='kundu_v2', verbose=verbose
             )
-            comptable = metrics.kundu_metrics(comptable, metric_maps)
-            comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
+            comptable, metric_metadata = metrics.kundu_metrics(
+                comptable,
+                metric_maps,
+                metric_metadata,
+            )
+            comptable, metric_metadata = selection.kundu_selection_v2(
+                comptable,
+                metric_metadata,
+                n_echos,
+                n_vols,
+            )
 
             n_bold_comps = comptable[comptable.classification == 'accepted'].shape[0]
             if (n_restarts < maxrestart) and (n_bold_comps == 0):
@@ -585,39 +595,72 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         mixing_df.to_csv(op.join(out_dir, 'desc-ICA_mixing.tsv'), sep='\t', index=False)
         betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
         io.filewrite(betas_oc,
-                     op.join(out_dir, 'desc-ICAZ_components.nii.gz'),
+                     op.join(out_dir, 'desc-ICA_stat-z_components.nii.gz'),
                      ref_img)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = pd.read_table(op.join(out_dir, 'desc-ICA_mixing.tsv')).values
 
         if ctab is None:
-            comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
+            comptable, metric_maps, metric_metadata, betas, mmix = metrics.dependence_metrics(
                         catd, data_oc, mmix_orig, masksum, tes,
                         ref_img, label='ICA', out_dir=out_dir,
                         algorithm='kundu_v2', verbose=verbose)
-            comptable = metrics.kundu_metrics(comptable, metric_maps)
-            comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
+            comptable, metric_metadata = metrics.kundu_metrics(
+                comptable,
+                metric_maps,
+                metric_metadata,
+            )
+            comptable, metric_metadata = selection.kundu_selection_v2(
+                comptable,
+                metric_metadata,
+                n_echos,
+                n_vols,
+            )
         else:
             mmix = mmix_orig.copy()
             comptable = io.load_comptable(ctab)
             if manacc is not None:
-                comptable = selection.manual_selection(comptable, acc=manacc)
+                comptable, metric_metadata = selection.manual_selection(comptable, acc=manacc)
         betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
         io.filewrite(betas_oc,
-                     op.join(out_dir, 'desc-ICAZ_components.nii.gz'),
+                     op.join(out_dir, 'desc-ICA_stat-z_components.nii.gz'),
                      ref_img)
 
-    # Save component table
-    comptable['Description'] = 'ICA fit to dimensionally-reduced optimally combined data.'
-    mmix_dict = {}
-    mmix_dict['Method'] = ('Independent components analysis with FastICA '
-                           'algorithm implemented by sklearn. Components '
-                           'are sorted by Kappa in descending order. '
-                           'Component signs are flipped to best match the '
-                           'data.')
-    io.save_comptable(comptable, op.join(out_dir, 'desc-ICA_decomposition.json'),
-                      label='ica', metadata=mmix_dict)
+    # Save component table and associated json
+    comptable.index = comp_names
+    comptable.to_csv(
+        op.join(out_dir, "desc-ICA_metrics.tsv"),
+        index=True,
+        index_label="Component",
+        sep='\t',
+    )
+    metric_metadata["Component"] = {
+        "LongName": "Component identifier",
+        "Description": (
+            "The unique identifier of each component. "
+            "This identifier matches column names in the mixing matrix TSV file."
+        ),
+    }
+    with open(op.join(out_dir, "desc-ICA_metrics.json"), "w") as fo:
+        json.dump(metric_metadata, fo, sort_keys=True, indent=4)
+
+    decomp_metadata = {
+        "Method": (
+            "Independent components analysis with FastICA "
+            "algorithm implemented by sklearn. Components "
+            "are sorted by Kappa in descending order. "
+            "Component signs are flipped to best match the "
+            "data."
+        ),
+    }
+    for comp_name in comp_names:
+        decomp_metadata[comp_name] = {
+            "Description": "ICA fit to dimensionally-reduced optimally combined data.",
+            "Method": "tedana",
+        }
+    with open(op.join(out_dir, "desc-ICA_decomposition.json"), "w") as fo:
+        json.dump(decomp_metadata, fo, sort_keys=True, indent=4)
 
     if comptable[comptable.classification == 'accepted'].shape[0] == 0:
         LGR.warning('No BOLD components detected! Please check data and '

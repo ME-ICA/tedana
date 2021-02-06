@@ -81,7 +81,7 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
     sphis -= sphis.mean()
     io.filewrite(
         utils.unmask(sphis, Gmask),
-        op.join(out_dir, 'T1gs.nii.gz'),
+        op.join(out_dir, 'desc-globalSignal_map.nii.gz'),
         ref_img
     )
 

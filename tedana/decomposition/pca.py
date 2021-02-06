@@ -231,7 +231,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     # Compute Kappa and Rho for PCA comps
     # Normalize each component's time series
     vTmixN = stats.zscore(comp_ts, axis=0)
-    comptable, _, _, _ = metrics.dependence_metrics(
+    comptable, _, _, _, _ = metrics.dependence_metrics(
                 data_cat, data_oc, comp_ts, adaptive_mask, tes, ref_img,
                 reindex=False, mmixN=vTmixN, algorithm=None,
                 label='PCA', out_dir=out_dir, verbose=verbose)
@@ -272,7 +272,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
                            'explained in descending order. '
                            'Component signs are flipped to best match the '
                            'data.')
-    io.save_comptable(comptable, op.join(out_dir, 'desc-PCA_decomposition.json'),
+    io.save_comptable(comptable, op.join(out_dir, 'desc-PCA_metrics.tsv'),
                       label='pca', metadata=mmix_dict)
 
     acc = comptable[comptable.classification == 'accepted'].index.values

@@ -169,18 +169,18 @@ def writefeats(data, mmix, mask, ref_img, out_dir='.', prefix=''):
     -----
     This function writes out a file:
 
-    ===========================    =============================================
-    Filename                       Content
-    ===========================    =============================================
-    [prefix]Z_components.nii.gz    Z-normalized spatial component maps.
-    ===========================    =============================================
+    =================================    =============================================
+    Filename                             Content
+    =================================    =============================================
+    [prefix]_stat-z_components.nii.gz    Z-normalized spatial component maps.
+    =================================    =============================================
     """
 
     # write feature versions of components
     feats = utils.unmask(computefeats2(data, mmix, mask), mask)
     fname = filewrite(
         feats,
-        op.join(out_dir, '{}Z_components.nii.gz'.format(prefix)),
+        op.join(out_dir, '{}_stat-z_components.nii.gz'.format(prefix)),
         ref_img
     )
     return fname
@@ -214,19 +214,19 @@ def writeresults(ts, mask, comptable, mmix, n_vols, ref_img, out_dir='.'):
     -----
     This function writes out several files:
 
-    ===================================    =====================================
-    Filename                               Content
-    ===================================    =====================================
-    desc-optcomAccepted_bold.nii.gz        High-Kappa time series.
-    desc-optcomRejected_bold.nii.gz        Low-Kappa time series.
-    desc-optcomDenoised_bold.nii.gz        Denoised time series.
-    desc-ICA_components.nii.gz             Spatial component maps for all
-                                           components.
-    desc-ICAAccepted_components.nii.gz     Spatial component maps for accepted
-                                           components.
-    desc-ICAAcceptedZ_components.nii.gz    Z-normalized spatial component maps
-                                           for accepted components.
-    ===================================    =====================================
+    =========================================    =====================================
+    Filename                                     Content
+    =========================================    =====================================
+    desc-optcomAccepted_bold.nii.gz              High-Kappa time series.
+    desc-optcomRejected_bold.nii.gz              Low-Kappa time series.
+    desc-optcomDenoised_bold.nii.gz              Denoised time series.
+    desc-ICA_components.nii.gz                   Spatial component maps for all
+                                                 components.
+    desc-ICAAccepted_components.nii.gz           Spatial component maps for accepted
+                                                 components.
+    desc-ICAAccepted_stat-z_components.nii.gz    Z-normalized spatial component maps
+                                                 for accepted components.
+    =========================================    =====================================
 
     See Also
     --------
