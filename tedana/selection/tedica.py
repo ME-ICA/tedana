@@ -252,7 +252,7 @@ def kundu_selection_v2(comptable, metric_metadata, n_echos, n_vols):
 
         # Move decision columns to end
         comptable = clean_dataframe(comptable)
-        return comptable
+        return comptable, metric_metadata
 
     """
     Step 2: Make a guess for what the good components are, in order to
@@ -311,7 +311,7 @@ def kundu_selection_v2(comptable, metric_metadata, n_echos, n_vols):
 
         # Move decision columns to end
         comptable = clean_dataframe(comptable)
-        return comptable
+        return comptable, metric_metadata
 
     # Calculate "rate" for kappa: kappa range divided by variance explained
     # range, for potentially accepted components

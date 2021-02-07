@@ -17,7 +17,6 @@ import pandas as pd
 
 from tedana.workflows import tedana as tedana_cli
 from tedana.workflows import t2smap as t2smap_cli
-from tedana import io
 
 
 def check_integration_outputs(fname, outpath):
@@ -99,8 +98,8 @@ def test_integration_five_echo(skip_integration):
         verbose=True)
 
     # Just a check on the component table pending a unit test of load_comptable
-    comptable = os.path.join(out_dir, 'desc-ICA_decomposition.json')
-    df = io.load_comptable(comptable)
+    comptable = os.path.join(out_dir, 'desc-ICA_metrics.tsv')
+    df = pd.read_table(comptable)
     assert isinstance(df, pd.DataFrame)
 
     # Test re-running, but use the CLI
@@ -178,7 +177,7 @@ def test_integration_three_echo(skip_integration):
     args = (['-d', '/tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz',
              '-e', '14.5', '38.5', '62.5',
              '--out-dir', out_dir2, '--debug', '--verbose',
-             '--ctab', os.path.join(out_dir, 'desc-ICA_decomposition.json'),
+             '--ctab', os.path.join(out_dir, 'desc-ICA_metrics.tsv'),
              '--mix', os.path.join(out_dir, 'desc-ICA_mixing.tsv')])
     tedana_cli._main(args)
 
