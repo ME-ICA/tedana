@@ -313,7 +313,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     with open(op.join(out_dir, "desc-PCA_decomposition.json"), "w") as fo:
         json.dump(decomp_metadata, fo, sort_keys=True, indent=4)
 
-    acc = comptable.index.get_indexer_for(comptable.classification == 'accepted')
+    acc = np.where(comptable.classification == "accepted")[0]
     n_components = acc.size
     voxel_kept_comp_weighted = (voxel_comp_weights[:, acc] * varex[None, acc])
     kept_data = np.dot(voxel_kept_comp_weighted, comp_ts[:, acc].T)
