@@ -261,7 +261,5 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
         op.join(out_dir, "desc-ICAAcceptedMIRDenoised_components.nii.gz"),
         ref_img,
     )
-    comp_names = [io.add_decomp_prefix(comp, prefix="ica", max_value=mmix_noT1gs.shape[1])
-                  for comp in comptable.index.values]
-    mixing_df = pd.DataFrame(data=mmix_noT1gs, columns=comp_names)
+    mixing_df = pd.DataFrame(data=mmix_noT1gs, columns=comptable["Component"].values)
     mixing_df.to_csv(op.join(out_dir, "desc-ICAMIRDenoised_mixing.tsv"), sep='\t', index=False)

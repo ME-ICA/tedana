@@ -231,8 +231,8 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
             tsoc_B = tsoc_B[:, sort_idx]
 
     if verbose:
-        # Echo-specific weight maps for each of the ICA components.
         for i_echo in range(n_echos):
+            # Echo-specific weight maps for each of the ICA components.
             echo_betas = betas[:, i_echo, :]
             io.filewrite(
                 utils.unmask(echo_betas, mask),
@@ -241,18 +241,27 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
                 ref_img
             )
 
-        # Echo-specific maps of predicted values for R2 and S0 models for each
-        # component.
-        io.filewrite(
-            utils.unmask(pred_R2_maps, mask),
-            op.join(out_dir, 'desc-{0}R2ModelPredictions_components.nii.gz'.format(label)),
-            ref_img
-        )
-        io.filewrite(
-            utils.unmask(pred_S0_maps, mask),
-            op.join(out_dir, 'desc-{0}S0ModelPredictions_components.nii.gz'.format(label)),
-            ref_img
-        )
+            # Echo-specific maps of predicted values for R2 and S0 models for each
+            # component.
+            echo_pred_R2_maps = pred_R2_maps[:, i_echo, :]
+            io.filewrite(
+                utils.unmask(echo_pred_R2_maps, mask),
+                op.join(out_dir, 'echo-{0}_desc-{1}R2ModelPredictions_components.nii.gz'.format(
+                    i_echo + 1,
+                    label
+                )),
+                ref_img
+            )
+            echo_pred_S0_maps = pred_S0_maps[:, i_echo, :]
+            io.filewrite(
+                utils.unmask(echo_pred_S0_maps, mask),
+                op.join(out_dir, 'echo-{0}_desc-{1}S0ModelPredictions_components.nii.gz'.format(
+                    i_echo + 1,
+                    label
+                )),
+                ref_img
+            )
+
         # Weight maps used to average metrics across voxels
         io.filewrite(
             utils.unmask(Z_maps ** 2., mask),
@@ -265,7 +274,10 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
                              columns=['kappa', 'rho',
                                       'variance explained',
                                       'normalized variance explained'])
-    comptable.index.name = 'component'
+    comptable["Component"] = [
+        io.add_decomp_prefix(comp, prefix='ica', max_value=comptable.shape[0])
+        for comp in comptable.index.values
+    ]
     metric_metadata = {
         "kappa": {
             "LongName": "Kappa",
