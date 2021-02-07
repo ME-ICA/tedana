@@ -245,18 +245,18 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         # component.
         io.filewrite(
             utils.unmask(pred_R2_maps, mask),
-            op.join(out_dir, 'desc-{0}R2ModelPredictions_X.nii.gz'.format(label)),
+            op.join(out_dir, 'desc-{0}R2ModelPredictions_components.nii.gz'.format(label)),
             ref_img
         )
         io.filewrite(
             utils.unmask(pred_S0_maps, mask),
-            op.join(out_dir, 'desc-{0}S0ModelPredictions_X.nii.gz'.format(label)),
+            op.join(out_dir, 'desc-{0}S0ModelPredictions_components.nii.gz'.format(label)),
             ref_img
         )
         # Weight maps used to average metrics across voxels
         io.filewrite(
             utils.unmask(Z_maps ** 2., mask),
-            op.join(out_dir, 'desc-{0}AveragingWeights_X.nii.gz'.format(label)),
+            op.join(out_dir, 'desc-{0}AveragingWeights_components.nii.gz'.format(label)),
             ref_img
         )
         del pred_R2_maps, pred_S0_maps
