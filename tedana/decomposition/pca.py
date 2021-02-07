@@ -281,8 +281,8 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     mixing_df.to_csv(op.join(out_dir, 'desc-PCA_mixing.tsv'), sep='\t', index=False)
 
     # Save component table and associated json
-    comptable.index = comp_names
-    comptable.to_csv(
+    temp_comptable = comptable.set_index("Component", inplace=False)
+    temp_comptable.to_csv(
         op.join(out_dir, "desc-PCA_metrics.tsv"),
         index=True,
         index_label="Component",
