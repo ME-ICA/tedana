@@ -1,6 +1,7 @@
 """
 PCA and related signal decomposition methods for tedana
 """
+import json
 import logging
 import os.path as op
 from numbers import Number
@@ -231,7 +232,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     # Compute Kappa and Rho for PCA comps
     # Normalize each component's time series
     vTmixN = stats.zscore(comp_ts, axis=0)
-    comptable, _, _, _, _ = metrics.dependence_metrics(
+    comptable, _, metric_metadata, _, _ = metrics.dependence_metrics(
                 data_cat, data_oc, comp_ts, adaptive_mask, tes, ref_img,
                 reindex=False, mmixN=vTmixN, algorithm=None,
                 label='PCA', out_dir=out_dir, verbose=verbose)
@@ -244,13 +245,27 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
 
     # write component maps to 4D image
     comp_maps = utils.unmask(computefeats2(data_oc, comp_ts, mask), mask)
-    io.filewrite(comp_maps, op.join(out_dir, 'desc-PCA_components.nii.gz'), ref_img)
+    io.filewrite(comp_maps, op.join(out_dir, 'desc-PCA_stat-z_components.nii.gz'), ref_img)
 
     # Select components using decision tree
     if algorithm == 'kundu':
-        comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=False)
+        comptable, metric_metadata = kundu_tedpca(
+            comptable,
+            metric_metadata,
+            n_echos,
+            kdaw,
+            rdaw,
+            stabilize=False,
+        )
     elif algorithm == 'kundu-stabilize':
-        comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=True)
+        comptable, metric_metadata = kundu_tedpca(
+            comptable,
+            metric_metadata,
+            n_echos,
+            kdaw,
+            rdaw,
+            stabilize=True,
+        )
     else:
         alg_str = "variance explained-based" if isinstance(algorithm, Number) else algorithm
         LGR.info('Selected {0} components with {1} dimensionality '
@@ -258,24 +273,47 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         comptable['classification'] = 'accepted'
         comptable['rationale'] = ''
 
-    # Save decomposition
+    # Save decomposition files
     comp_names = [io.add_decomp_prefix(comp, prefix='pca', max_value=comptable.index.max())
                   for comp in comptable.index.values]
 
     mixing_df = pd.DataFrame(data=comp_ts, columns=comp_names)
     mixing_df.to_csv(op.join(out_dir, 'desc-PCA_mixing.tsv'), sep='\t', index=False)
 
-    comptable['Description'] = 'PCA fit to optimally combined data.'
-    mmix_dict = {}
-    mmix_dict['Method'] = ('Principal components analysis implemented by '
-                           'sklearn. Components are sorted by variance '
-                           'explained in descending order. '
-                           'Component signs are flipped to best match the '
-                           'data.')
-    io.save_comptable(comptable, op.join(out_dir, 'desc-PCA_metrics.tsv'),
-                      label='pca', metadata=mmix_dict)
+    # Save component table and associated json
+    comptable.index = comp_names
+    comptable.to_csv(
+        op.join(out_dir, "desc-PCA_metrics.tsv"),
+        index=True,
+        index_label="Component",
+        sep='\t',
+    )
+    metric_metadata["Component"] = {
+        "LongName": "Component identifier",
+        "Description": (
+            "The unique identifier of each component. "
+            "This identifier matches column names in the mixing matrix TSV file."
+        ),
+    }
+    with open(op.join(out_dir, "desc-PCA_metrics.json"), "w") as fo:
+        json.dump(metric_metadata, fo, sort_keys=True, indent=4)
 
-    acc = comptable[comptable.classification == 'accepted'].index.values
+    decomp_metadata = {
+        "Method": (
+            "Principal components analysis implemented by sklearn. "
+            "Components are sorted by variance explained in descending order. "
+            "Component signs are flipped to best match the data."
+        ),
+    }
+    for comp_name in comp_names:
+        decomp_metadata[comp_name] = {
+            "Description": "PCA fit to optimally combined data.",
+            "Method": "tedana",
+        }
+    with open(op.join(out_dir, "desc-PCA_decomposition.json"), "w") as fo:
+        json.dump(decomp_metadata, fo, sort_keys=True, indent=4)
+
+    acc = comptable.index.get_indexer_for(comptable.classification == 'accepted')
     n_components = acc.size
     voxel_kept_comp_weighted = (voxel_comp_weights[:, acc] * varex[None, acc])
     kept_data = np.dot(voxel_kept_comp_weighted, comp_ts[:, acc].T)
