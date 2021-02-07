@@ -75,7 +75,7 @@ def generate_report(out_dir, tr):
     n_vols, n_comps = comp_ts_df.shape
 
     # Load the component table
-    comptable_path = opj(out_dir, 'desc-ICA_decomposition.json')
+    comptable_path = opj(out_dir, 'desc-ICA_metrics.tsv')
     comptable_cds = df._create_data_struct(comptable_path)
 
     # Create kappa rho plot
