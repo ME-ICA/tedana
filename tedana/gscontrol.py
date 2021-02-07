@@ -91,7 +91,7 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
     glsig = stats.zscore(glsig, axis=None)
 
     glsig_df = pd.DataFrame(data=glsig.T, columns=['global_signal'])
-    glsig_df.to_csv(op.join(out_dir, 'desc-globalSignal_regressors.tsv'),
+    glsig_df.to_csv(op.join(out_dir, 'desc-globalSignal_timeseries.tsv'),
                     sep='\t', index=False)
     glbase = np.hstack([Lmix, glsig.T])
 
@@ -124,11 +124,9 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
     return dm_catd, dm_optcom
 
 
-@due.dcite(
-    Doi("10.1073/pnas.1301725110"),
-    description="Minimum image regression to remove T1-like effects "
-    "from the denoised data.",
-)
+@due.dcite(Doi("10.1073/pnas.1301725110"),
+           description="Minimum image regression to remove T1-like effects "
+                       "from the denoised data.")
 def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir="."):
     """
     Perform minimum image regression (MIR) to remove T1-like effects from
@@ -213,9 +211,7 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
 
     # Compute temporal regression
     optcom_z = stats.zscore(optcom_masked, axis=-1)
-    comp_pes = np.linalg.lstsq(mmix, optcom_z.T, rcond=None)[
-        0
-    ].T  # component parameter estimates
+    comp_pes = np.linalg.lstsq(mmix, optcom_z.T, rcond=None)[0].T  # component parameter estimates
     resid = optcom_z - np.dot(comp_pes[:, not_ign], mmix[:, not_ign].T)
 
     # Build time series of just BOLD-like components (i.e., MEHK) and save T1-like effect
@@ -223,7 +219,7 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
     t1_map = mehk_ts.min(axis=-1)  # map of T1-like effect
     t1_map -= t1_map.mean()
     io.filewrite(
-        utils.unmask(t1_map, mask), op.join(out_dir, "desc-T1likeEffect_min"), ref_img
+        utils.unmask(t1_map, mask), op.join(out_dir, "desc-T1likeEffect_min.nii.gz"), ref_img
     )
     t1_map = t1_map[:, np.newaxis]
 
@@ -265,4 +261,7 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
         op.join(out_dir, "desc-ICAAcceptedMIRDenoised_components.nii.gz"),
         ref_img,
     )
-    np.savetxt(op.join(out_dir, "desc-ICAMIRDenoised_mixing.tsv"), mmix_noT1gs)
+    comp_names = [io.add_decomp_prefix(comp, prefix="ica", max_value=mmix_noT1gs.shape[1])
+                  for comp in comptable.index.values]
+    mixing_df = pd.DataFrame(data=mmix_noT1gs, columns=comp_names)
+    mixing_df.to_csv(op.join(out_dir, "desc-ICAMIRDenoised_mixing.tsv"), sep='\t', index=False)
