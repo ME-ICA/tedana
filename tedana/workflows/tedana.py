@@ -588,14 +588,6 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             else:
                 keep_restarting = False
 
-        # Write out ICA files.
-        comp_names = comptable["Component"].values
-        mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
-        mixing_df.to_csv(op.join(out_dir, 'desc-ICA_mixing.tsv'), sep='\t', index=False)
-        betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
-        io.filewrite(betas_oc,
-                     op.join(out_dir, 'desc-ICA_stat-z_components.nii.gz'),
-                     ref_img)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = pd.read_table(op.join(out_dir, 'desc-ICA_mixing.tsv')).values
@@ -619,12 +611,31 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         else:
             mmix = mmix_orig.copy()
             comptable = pd.read_table(ctab)
+            # Try to find and load the metric metadata file
+            metadata_file = ctab.replace(".nii.gz", ".json")
+            if op.isfile(metadata_file):
+                with open(metadata_file, "r") as fo:
+                    metric_metadata = json.load(fo)
+            else:
+                metric_metadata = {}
+
             if manacc is not None:
-                comptable, metric_metadata = selection.manual_selection(comptable, {}, acc=manacc)
-        betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
-        io.filewrite(betas_oc,
-                     op.join(out_dir, 'desc-ICA_stat-z_components.nii.gz'),
-                     ref_img)
+                comptable, metric_metadata = selection.manual_selection(
+                    comptable,
+                    metric_metadata,
+                    acc=manacc
+                )
+
+    # Write out ICA files.
+    comp_names = comptable["Component"].values
+    mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
+    mixing_df.to_csv(op.join(out_dir, "desc-ICA_mixing.tsv"), sep="\t", index=False)
+    betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
+    io.filewrite(
+        betas_oc,
+        op.join(out_dir, "desc-ICA_stat-z_components.nii.gz"),
+        ref_img,
+    )
 
     # Save component table and associated json
     temp_comptable = comptable.set_index("Component", inplace=False)
