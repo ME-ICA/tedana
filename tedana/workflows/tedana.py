@@ -612,7 +612,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             mmix = mmix_orig.copy()
             comptable = pd.read_table(ctab)
             # Try to find and load the metric metadata file
-            metadata_file = ctab.replace(".nii.gz", ".json")
+            ctab_parts = ctab.split(".")
+            metadata_file = ctab_parts[0] + ".json"
             if op.isfile(metadata_file):
                 with open(metadata_file, "r") as fo:
                     metric_metadata = json.load(fo)
