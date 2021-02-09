@@ -91,3 +91,4 @@ figures/comp_018.png
 figures/comp_019.png
 figures/comp_020.png
 report.txt
+tedana_report.html
