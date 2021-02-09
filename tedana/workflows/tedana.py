@@ -620,7 +620,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             mmix = mmix_orig.copy()
             comptable = pd.read_table(ctab)
             if manacc is not None:
-                comptable, metric_metadata = selection.manual_selection(comptable, acc=manacc)
+                comptable, metric_metadata = selection.manual_selection(comptable, {}, acc=manacc)
         betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
         io.filewrite(betas_oc,
                      op.join(out_dir, 'desc-ICA_stat-z_components.nii.gz'),
