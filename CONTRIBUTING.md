@@ -306,6 +306,9 @@ You can see a list of current contributors in the README
 (kept up to date by the [all contributors bot][link_all-contributors-bot]).
 You can see [here][link_all-contributors-bot-usage] for instructions on
 how to use the bot.
+We encourage all contributors to write a brief statement and self-describe how they feel they've
+contributed, showcased [here][contributions.md].
+Thanks to all of our wonderful contributors!
 
 ## Thank you!
 
