@@ -312,13 +312,13 @@ The blue and red lines show the predicted values for the :math:`S_0` and
 A decision tree is applied to :math:`\kappa`, :math:`\rho`, and other metrics in order to
 classify ICA components as TE-dependent (BOLD signal), TE-independent
 (non-BOLD noise), or neither (to be ignored).
-These classifications are saved in `comp_table_ica.txt`.
+These classifications are saved in **desc-ICA_metrics.tsv**.
 The actual decision tree is dependent on the component selection algorithm employed.
 ``tedana`` includes the option `kundu` (which uses hardcoded thresholds
 applied to each of the metrics).
 
 Components that are classified as noise are projected out of the optimally combined data,
-yielding a denoised timeseries, which is saved as `dn_ts_OC.nii.gz`.
+yielding a denoised timeseries, which is saved as **desc-optcomDenoised_bold.nii.gz**.
 
 .. image:: /_static/a15_denoised_data_timeseries.png
 
