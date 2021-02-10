@@ -72,29 +72,31 @@ tedana_report.html                                  The interactive HTML report.
 
 If ``verbose`` is set to True:
 
-==================================================    =====================================================
-Filename                                              Content
-==================================================    =====================================================
-desc-full_T2starmap.nii.gz                            Full T2* map/time series.
-                                                      Values are in seconds.
-                                                      The difference between the limited and full maps is
-                                                      that, for voxels affected by dropout where only one
-                                                      echo contains good data, the full map uses the
-                                                      single echo's value while the limited map has a NaN.
-                                                      Only used for optimal combination.
-desc-full_S0map.nii.gz                                Full S0 map/time series. Only used for optimal
-                                                      combination.
-echo-[echo]_desc-[PCA|ICA]_components.nii.gz          Echo-wise PCA/ICA component weight maps.
-desc-[PCA|ICA]R2ModelPredictions_components.nii.gz    Component- and voxel-wise R2-model predictions.
-desc-[PCA|ICA]S0ModelPredictions_components.nii.gz    Component- and voxel-wise S0-model predictions.
-desc-[PCA|ICA]AveragingWeights_X.nii.gz               Component-wise averaging weights for metric
-                                                      calculation.
-desc-optcomPCAReduced_bold.nii.gz                     Optimally combined data after dimensionality
-                                                      reduction with PCA. This is the input to the ICA.
-echo-[echo]_desc-Accepted_bold.nii.gz                 High-Kappa time series for echo number ``echo``
-echo-[echo]_desc-Rejected_bold.nii.gz                 Low-Kappa time series for echo number ``echo``
-echo-[echo]_desc-Denoised_bold.nii.gz                 Denoised time series for echo number ``echo``
-==================================================    =====================================================
+==============================================================  =====================================================
+Filename                                                        Content
+==============================================================  =====================================================
+desc-full_T2starmap.nii.gz                                      Full T2* map/time series.
+                                                                Values are in seconds.
+                                                                The difference between the limited and full maps is
+                                                                that, for voxels affected by dropout where only one
+                                                                echo contains good data, the full map uses the
+                                                                single echo's value while the limited map has a NaN.
+                                                                Only used for optimal combination.
+desc-full_S0map.nii.gz                                          Full S0 map/time series. Only used for optimal
+                                                                combination.
+echo-[echo]_desc-[PCA|ICA]_components.nii.gz                    Echo-wise PCA/ICA component weight maps.
+echo-[echo]_desc-[PCA|ICA]R2ModelPredictions_components.nii.gz  Component- and voxel-wise R2-model predictions,
+                                                                separated by echo.
+echo-[echo]_desc-[PCA|ICA]S0ModelPredictions_components.nii.gz  Component- and voxel-wise S0-model predictions,
+                                                                separated by echo.
+desc-[PCA|ICA]AveragingWeights_X.nii.gz                         Component-wise averaging weights for metric
+                                                                calculation.
+desc-optcomPCAReduced_bold.nii.gz                               Optimally combined data after dimensionality
+                                                                reduction with PCA. This is the input to the ICA.
+echo-[echo]_desc-Accepted_bold.nii.gz                           High-Kappa time series for echo number ``echo``
+echo-[echo]_desc-Rejected_bold.nii.gz                           Low-Kappa time series for echo number ``echo``
+echo-[echo]_desc-Denoised_bold.nii.gz                           Denoised time series for echo number ``echo``
+==============================================================  =====================================================
 
 If ``gscontrol`` includes 'gsr':
 
