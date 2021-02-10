@@ -1,12 +1,10 @@
 """
 Functions to handle file input/output
 """
-import json
 import logging
 import os.path as op
 
 import numpy as np
-import pandas as pd
 import nibabel as nib
 from nibabel.filename_parser import splitext_addext
 from nilearn._utils import check_niimg
