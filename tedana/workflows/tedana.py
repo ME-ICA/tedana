@@ -18,7 +18,7 @@ from threadpoolctl import threadpool_limits
 from nilearn.masking import compute_epi_mask
 
 from tedana import (decay, combine, decomposition, io, metrics,
-                    reporting, selection, utils)
+                    reporting, selection, utils, __version__)
 import tedana.gscontrol as gsc
 from tedana.stats import computefeats2
 from tedana.workflows.parser_utils import is_valid_file, check_tedpca_value, ContextFilter
@@ -737,6 +737,26 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         else:
             LGR.info('Generating dynamic report')
             reporting.generate_report(out_dir=out_dir, tr=img_t_r)
+
+    # Write out BIDS-compatible description file
+    derivative_metadata = {
+        "Name": "tedana Outputs",
+        "BIDSVersion": "1.5.0",
+        "DatasetType": "derivative",
+        "GeneratedBy": [
+            {
+                "Name": "tedana",
+                "Version": __version__,
+                "Description": (
+                    "A denoising pipeline for the identification and removal "
+                    "of non-BOLD noise from multi-echo fMRI data."
+                ),
+                "CodeURL": "https://github.com/ME-ICA/tedana"
+            }
+        ]
+    }
+    with open(op.join(out_dir, "dataset_description.json"), "w") as fo:
+        json.dump(derivative_metadata, fo, sort_keys=True, indent=4)
 
     LGR.info('Workflow completed')
 
