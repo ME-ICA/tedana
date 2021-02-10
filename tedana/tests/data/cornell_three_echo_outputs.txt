@@ -19,7 +19,6 @@ desc-optcomDenoised_bold.nii.gz
 desc-optcomRejected_bold.nii.gz
 desc-optcom_bold.nii.gz
 report.txt
-tedana_2021-02-09T224023.tsv
 tedana_report.html
 figures
 figures/comp_000.png
