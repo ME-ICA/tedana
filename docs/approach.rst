@@ -69,7 +69,7 @@ estimate voxel-wise :math:`T_{2}^*` and :math:`S_0`.
 :math:`S_0` corresponds to the total signal in each voxel before decay and can reflect coil sensivity.
 :math:`T_{2}^*` corresponds to the rate at which a voxel decays over time, which
 is related to signal dropout and BOLD sensitivity.
-Estimates of the parameters are saved as **t2sv.nii.gz** and **s0v.nii.gz**.
+Estimates of the parameters are saved as **T2starmap.nii.gz** and **S0map.nii.gz**.
 
 While :math:`T_{2}^*` and :math:`S_0` in fact fluctuate over time, estimating
 them on a volume-by-volume basis with only a small number of echoes is not
@@ -153,7 +153,7 @@ between the distributions for other echoes.
 
 The time series for the optimally combined data also looks like a combination
 of the other echoes (which it is).
-This optimally combined data is written out as **ts_OC.nii.gz**
+This optimally combined data is written out as **desc-optcom_bold.nii.gz**
 
 .. image:: /_static/a10_optimal_combination_timeseries.png
 
@@ -194,7 +194,7 @@ component analysis (PCA).
 The goal of this step is to make it easier for the later ICA decomposition to converge.
 Dimensionality reduction is a common step prior to ICA.
 TEDPCA applies PCA to the optimally combined data in order to decompose it into component maps and
-time series (saved as **mepca_mix.1D**).
+time series (saved as **desc-PCA_mixing.tsv**).
 Here we can see time series for some example components (we don't really care about the maps):
 
 .. image:: /_static/a11_pca_component_timeseries.png
@@ -277,9 +277,9 @@ Next, ``tedana`` applies TE-dependent independent component analysis (ICA) in
 order to identify and remove TE-independent (i.e., non-BOLD noise) components.
 The dimensionally reduced optimally combined data are first subjected to ICA in
 order to fit a mixing matrix to the whitened data.
-This generates a number of independent timeseries (saved as **meica_mix.1D**),
-as well as beta maps which show the spatial loading of these components on the
-brain (**betas_OC.nii.gz**).
+This generates a number of independent timeseries (saved as **desc-ICA_mixing.tsv**),
+as well as parameter estimate maps which show the spatial loading of these components on the
+brain (**desc-ICA_components.nii.gz**).
 
 .. image:: /_static/a13_ica_component_timeseries.png
 
