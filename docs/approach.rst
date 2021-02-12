@@ -312,7 +312,7 @@ The blue and red lines show the predicted values for the :math:`S_0` and
 A decision tree is applied to :math:`\kappa`, :math:`\rho`, and other metrics in order to
 classify ICA components as TE-dependent (BOLD signal), TE-independent
 (non-BOLD noise), or neither (to be ignored).
-These classifications are saved in **desc-ICA_metrics.tsv**.
+These classifications are saved in **desc-tedana_metrics.tsv**.
 The actual decision tree is dependent on the component selection algorithm employed.
 ``tedana`` includes the option `kundu` (which uses hardcoded thresholds
 applied to each of the metrics).

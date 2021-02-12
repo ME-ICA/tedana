@@ -58,11 +58,12 @@ desc-ICA_stat-z_components.nii.gz                   Z-statistic component weight
                                                     coefficients. Each map corresponds to the same
                                                     component index in the mixing matrix and component table.
 desc-ICA_decomposition.json                         Metadata for the ICA decomposition.
-desc-ICA_metrics.tsv                                TEDICA component table. A BIDS Derivatives-compatible
+desc-tedana_metrics.tsv                             TEDICA component table. A BIDS Derivatives-compatible
                                                     TSV file with summary metrics and inclusion/exclusion
                                                     information for each component from the ICA
                                                     decomposition.
-desc-ICA_metrics.json                               Metadata about the metrics in ``desc-ICA_metrics.tsv``.
+desc-tedana_metrics.json                            Metadata about the metrics in
+                                                    ``desc-tedana_metrics.tsv``.
 desc-ICAAccepted_components.nii.gz                  High-kappa ICA coefficient feature set
 desc-ICAAcceptedZ_components.nii.gz                 Z-normalized spatial component maps
 report.txt                                          A summary report for the workflow with relevant
