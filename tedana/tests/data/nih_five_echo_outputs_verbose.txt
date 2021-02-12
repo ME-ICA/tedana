@@ -7,8 +7,8 @@ desc-ICAAveragingWeights_components.nii.gz
 desc-ICAOrth_mixing.tsv
 desc-ICA_components.nii.gz
 desc-ICA_decomposition.json
-desc-ICA_metrics.json
-desc-ICA_metrics.tsv
+desc-tedana_metrics.json
+desc-tedana_metrics.tsv
 desc-ICA_mixing.tsv
 desc-ICA_stat-z_components.nii.gz
 desc-PCAAveragingWeights_components.nii.gz

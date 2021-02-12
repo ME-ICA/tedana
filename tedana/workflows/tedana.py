@@ -425,8 +425,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if ctab is not None and op.isfile(ctab):
         ctab = op.abspath(ctab)
         # Allow users to re-run on same folder
-        if ctab != op.join(out_dir, 'desc-ICA_metrics.tsv'):
-            shutil.copyfile(ctab, op.join(out_dir, 'desc-ICA_metrics.tsv'))
+        if ctab != op.join(out_dir, 'desc-tedana_metrics.tsv'):
+            shutil.copyfile(ctab, op.join(out_dir, 'desc-tedana_metrics.tsv'))
             shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
@@ -641,7 +641,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     # Save component table and associated json
     temp_comptable = comptable.set_index("Component", inplace=False)
     temp_comptable.to_csv(
-        op.join(out_dir, "desc-ICA_metrics.tsv"),
+        op.join(out_dir, "desc-tedana_metrics.tsv"),
         index=True,
         index_label="Component",
         sep='\t',
@@ -653,7 +653,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             "This identifier matches column names in the mixing matrix TSV file."
         ),
     }
-    with open(op.join(out_dir, "desc-ICA_metrics.json"), "w") as fo:
+    with open(op.join(out_dir, "desc-tedana_metrics.json"), "w") as fo:
         json.dump(metric_metadata, fo, sort_keys=True, indent=4)
 
     decomp_metadata = {
