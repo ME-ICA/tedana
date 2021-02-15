@@ -182,7 +182,7 @@ API
    :template: function.rst
 
    tedana.stats.get_ls_coeffs
-   tedana.stats.computefeats2
+   tedana.stats.get_ls_zvalues
    tedana.stats.getfbounds
 
 

@@ -13,7 +13,7 @@ from nilearn._utils import check_niimg
 from nilearn.image import new_img_like
 
 from tedana import utils
-from tedana.stats import computefeats2, get_ls_coeffs
+from tedana.stats import get_ls_zvalues, get_ls_coeffs
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
@@ -169,7 +169,7 @@ def writefeats(data, mmix, mask, ref_img, out_dir='.', suffix=''):
     """
 
     # write feature versions of components
-    feats = utils.unmask(computefeats2(data, mmix, mask), mask)
+    feats = utils.unmask(get_ls_zvalues(data, mmix, mask), mask)
     fname = filewrite(feats, op.join(out_dir, 'feats_{0}'.format(suffix)), ref_img)
     return fname
 

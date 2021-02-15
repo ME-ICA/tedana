@@ -12,7 +12,7 @@ from sklearn.decomposition import PCA
 
 from tedana import metrics, utils, io
 from tedana.decomposition import ma_pca
-from tedana.stats import computefeats2
+from tedana.stats import get_ls_zvalues
 from tedana.selection import kundu_tedpca
 
 LGR = logging.getLogger(__name__)
@@ -249,7 +249,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     # Finally write component spatial maps in 4D files, where the spatial maps
     # will divided by its standard deviation (option normalize=True)
     comp_ts_z = stats.zscore(comp_ts, axis=0)
-    comp_maps = utils.unmask(computefeats2(data_oc, comp_ts_z, mask), mask)
+    comp_maps = utils.unmask(get_ls_zvalues(data_oc, comp_ts_z, mask), mask)
     io.filewrite(comp_maps, op.join(out_dir, 'pca_components.nii.gz'), ref_img)
 
     # Select components using decision tree

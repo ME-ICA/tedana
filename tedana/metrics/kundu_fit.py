@@ -9,7 +9,7 @@ import pandas as pd
 from scipy import stats
 
 from tedana import io, utils
-from tedana.stats import getfbounds, computefeats2, get_ls_coeffs
+from tedana.stats import getfbounds, get_ls_zvalues, get_ls_coeffs
 
 
 LGR = logging.getLogger(__name__)
@@ -109,7 +109,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
     # compute un-normalized weight dataset (features)
     if mmixN is None:
         mmixN = mmix
-    WTS = computefeats2(tsoc, mmixN, mask=None)
+    WTS = get_ls_zvalues(tsoc, mmixN, mask=None)
 
     # compute PSC dataset - shouldn't have to refit data
     tsoc_B = get_ls_coeffs(tsoc_dm, mmix, mask=None, add_const=False)

@@ -5,14 +5,14 @@ import numpy as np
 import pytest
 import random
 
-from tedana.stats import computefeats2
+from tedana.stats import get_ls_zvalues
 from tedana.stats import get_ls_coeffs
 from tedana.stats import getfbounds
 
 
-def test_break_computefeats2():
+def test_break_get_ls_zvalues():
     """
-    Ensure that computefeats2 fails when input data do not have the right
+    Ensure that get_ls_zvalues fails when input data do not have the right
     shapes.
     """
     n_samples, n_vols, n_comps = 10000, 100, 50
@@ -22,40 +22,40 @@ def test_break_computefeats2():
 
     data = np.empty((n_samples))
     with pytest.raises(ValueError):
-        computefeats2(data, mmix, mask)
+        get_ls_zvalues(data, mmix, mask)
 
     data = np.empty((n_samples, n_vols))
     mmix = np.empty((n_vols))
     with pytest.raises(ValueError):
-        computefeats2(data, mmix, mask)
+        get_ls_zvalues(data, mmix, mask)
 
     mmix = np.empty((n_vols, n_comps))
     mask = np.empty((n_samples, n_vols))
     with pytest.raises(ValueError):
-        computefeats2(data, mmix, mask)
+        get_ls_zvalues(data, mmix, mask)
 
     mask = np.empty((n_samples + 1))
     with pytest.raises(ValueError):
-        computefeats2(data, mmix, mask)
+        get_ls_zvalues(data, mmix, mask)
     data.shape[1] != mmix.shape[0]
     mask = np.empty((n_samples))
     mmix = np.empty((n_vols + 1, n_comps))
     with pytest.raises(ValueError):
-        computefeats2(data, mmix, mask)
+        get_ls_zvalues(data, mmix, mask)
 
 
-def test_smoke_computefeats2():
+def test_smoke_get_ls_zvalues():
     """
-    Ensures that computefeats2 works with random inputs and different optional parameters
+    Ensures that get_ls_zvalues works with random inputs and different optional parameters
     """
     n_samples, n_times, n_components = 100, 20, 6
     data = np.random.random((n_samples, n_times))
     mmix = np.random.random((n_times, n_components))
     mask = np.random.randint(2, size=n_samples)
 
-    assert computefeats2(data, mmix) is not None
-    assert computefeats2(data, mmix, mask=mask) is not None
-    assert computefeats2(data, mmix) is not None
+    assert get_ls_zvalues(data, mmix) is not None
+    assert get_ls_zvalues(data, mmix, mask=mask) is not None
+    assert get_ls_zvalues(data, mmix) is not None
 
 
 def test_get_ls_coeffs():

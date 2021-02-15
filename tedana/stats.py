@@ -93,7 +93,7 @@ def getfbounds(n_echos):
     return f05, f025, f01
 
 
-def computefeats2(data, mmix, mask=None):
+def get_ls_zvalues(data, mmix, mask=None):
     """
     Converts `data` to component space using `mmix`
 
