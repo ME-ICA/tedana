@@ -4,8 +4,6 @@
 """
 Base module variables
 """
-from pathlib import Path
-readme_path = Path(__file__).parent.parent.joinpath("README.md")
 
 from ._version import get_versions
 __version__ = get_versions()['version']
@@ -13,8 +11,6 @@ del get_versions
 
 __author__ = 'tedana developers'
 __copyright__ = 'Copyright 2018, tedana developers'
-__credits__ = ['Elizabeth DuPre', 'Prantik Kundu', 'Ross Markello',
-               'Taylor Salo', 'Kirstie Whitaker', 'Dan Handwerker']
 __license__ = 'LGPL 2.1'
 __maintainer__ = 'Elizabeth DuPre'
 __email__ = 'emd222@cornell.edu'
@@ -23,7 +19,6 @@ __url__ = 'https://github.com/me-ica/tedana'
 __packagename__ = 'tedana'
 __description__ = ('TE-Dependent Analysis (tedana) of multi-echo functional '
                    'magnetic resonance imaging (fMRI) data.')
-__longdesc__ = readme_path.open().read()
 
 DOWNLOAD_URL = (
     'https://github.com/ME-ICA/{name}/archive/{ver}.tar.gz'.format(

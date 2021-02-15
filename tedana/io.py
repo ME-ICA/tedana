@@ -408,7 +408,7 @@ def load_data(data, n_echos=None):
 
     img = check_niimg(data)
     (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
-    fdata = utils.load_image(img.get_data().reshape(nx, ny, nz, n_echos, -1, order='F'))
+    fdata = utils.load_image(img.get_fdata().reshape(nx, ny, nz, n_echos, -1, order='F'))
     # create reference image
     ref_img = img.__class__(np.zeros((nx, ny, nz, 1)), affine=img.affine,
                             header=img.header, extra=img.extra)

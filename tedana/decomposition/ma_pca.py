@@ -471,16 +471,14 @@ def ma_pca(data_nib, mask_nib, criteria='mdl'):
           (and recommended) option.
     """
 
-    data_nib = data_nib.get_data()
-    mask_nib = mask_nib.get_data()
+    data_nib = data_nib.get_fdata()
+    mask_nib = mask_nib.get_fdata()
     [Nx, Ny, Nz, Nt] = data_nib.shape
     data_nib_V = np.reshape(data_nib, (Nx * Ny * Nz, Nt), order='F')
     maskvec = np.reshape(mask_nib, Nx * Ny * Nz, order='F')
     data_non_normalized = data_nib_V[maskvec == 1, :]
     scaler = StandardScaler(with_mean=True, with_std=True)
-    # TODO: determine if tedana is already normalizing before this
     data = scaler.fit_transform(data_non_normalized)  # This was X_sc
-    data = data_non_normalized
 
     LGR.info('Performing SVD on original OC data...')
     V, EigenValues = _icatb_svd(data, Nt)

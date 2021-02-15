@@ -20,7 +20,7 @@ from tedana import (decay, combine, decomposition, io, metrics,
                     reporting, selection, utils)
 import tedana.gscontrol as gsc
 from tedana.stats import computefeats2
-from tedana.workflows.parser_utils import is_valid_file, ContextFilter
+from tedana.workflows.parser_utils import is_valid_file, check_tedpca_value, ContextFilter
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
@@ -98,12 +98,15 @@ def _get_parser():
                           default='t2s')
     optional.add_argument('--tedpca',
                           dest='tedpca',
+                          type=check_tedpca_value,
                           help=('Method with which to select components in TEDPCA. '
                                 'PCA decomposition with the mdl, kic and aic options '
                                 'is based on a Moving Average (stationary Gaussian) '
-                                'process and are ordered from most to least aggresive. '
-                                'Default=\'mdl\'.'),
-                          choices=['kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'],
+                                'process and are ordered from most to least aggressive. '
+                                "Users may also provide a float from 0 to 1, "
+                                "in which case components will be selected based on the "
+                                "cumulative variance explained. "
+                                "Default='mdl'."),
                           default='mdl')
     optional.add_argument('--seed',
                           dest='fixed_seed',
@@ -262,8 +265,11 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         Default is 'loglin'.
     combmode : {'t2s'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default).
-    tedpca : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic'}, optional
-        Method with which to select components in TEDPCA. Default is 'mdl'.
+    tedpca : {'mdl', 'aic', 'kic', 'kundu', 'kundu-stabilize', float}, optional
+        Method with which to select components in TEDPCA.
+        If a float is provided, then it is assumed to represent percentage of variance
+        explained (0-1) to retain from PCA.
+        Default is 'mdl'.
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
         denoising. Default is False.
@@ -387,6 +393,9 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if not isinstance(gscontrol, list):
         gscontrol = [gscontrol]
 
+    # Check value of tedpca *if* it is a float
+    tedpca = check_tedpca_value(tedpca, is_parser=False)
+
     LGR.info('Loading input data: {}'.format([f for f in data]))
     catd, ref_img = io.load_data(data, n_echos=n_echos)
     n_samp, n_echos, n_vols = catd.shape
@@ -465,7 +474,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         RepLGR.info("An initial mask was generated from the first echo using "
                     "nilearn's compute_epi_mask function.")
 
-    mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True)
+    # Create an adaptive mask with at least 3 good echoes.
+    mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True, threshold=3)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
     io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
 
@@ -505,21 +515,45 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                                                 out_dir=out_dir,
                                                 verbose=verbose,
                                                 low_mem=low_mem)
-        mmix_orig = decomposition.tedica(dd, n_components, fixed_seed,
-                                         maxit, maxrestart)
-
         if verbose:
             io.filewrite(utils.unmask(dd, mask),
                          op.join(out_dir, 'ts_OC_whitened.nii.gz'), ref_img)
 
-        LGR.info('Making second component selection guess from ICA results')
-        # Estimate betas and compute selection metrics for mixing matrix
-        # generated from dimensionally reduced data using full data (i.e., data
-        # with thermal noise)
-        comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
-                    catd, data_oc, mmix_orig, masksum, tes,
-                    ref_img, reindex=True, label='meica_', out_dir=out_dir,
-                    algorithm='kundu_v2', verbose=verbose)
+        # Perform ICA, calculate metrics, and apply decision tree
+        # Restart when ICA fails to converge or too few BOLD components found
+        keep_restarting = True
+        n_restarts = 0
+        seed = fixed_seed
+        while keep_restarting:
+            mmix_orig, seed = decomposition.tedica(
+                dd, n_components, seed,
+                maxit, maxrestart=(maxrestart - n_restarts)
+            )
+            seed += 1
+            n_restarts = seed - fixed_seed
+
+            # Estimate betas and compute selection metrics for mixing matrix
+            # generated from dimensionally reduced data using full data (i.e., data
+            # with thermal noise)
+            LGR.info('Making second component selection guess from ICA results')
+            comptable, metric_maps, betas, mmix = metrics.dependence_metrics(
+                catd, data_oc, mmix_orig, masksum, tes,
+                ref_img, reindex=True, label='meica_', out_dir=out_dir,
+                algorithm='kundu_v2', verbose=verbose
+            )
+            comptable = metrics.kundu_metrics(comptable, metric_maps)
+            comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
+
+            n_bold_comps = comptable[comptable.classification == 'accepted'].shape[0]
+            if (n_restarts < maxrestart) and (n_bold_comps == 0):
+                LGR.warning("No BOLD components found. Re-attempting ICA.")
+            elif (n_bold_comps == 0):
+                LGR.warning("No BOLD components found, but maximum number of restarts reached.")
+                keep_restarting = False
+            else:
+                keep_restarting = False
+
+        # Write out ICA files.
         comp_names = [io.add_decomp_prefix(comp, prefix='ica', max_value=comptable.index.max())
                       for comp in comptable.index.values]
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
@@ -528,9 +562,6 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         io.filewrite(betas_oc,
                      op.join(out_dir, 'ica_components.nii.gz'),
                      ref_img)
-
-        comptable = metrics.kundu_metrics(comptable, metric_maps)
-        comptable = selection.kundu_selection_v2(comptable, n_echos, n_vols)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = pd.read_table(op.join(out_dir, 'ica_mixing.tsv')).values
@@ -552,7 +583,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                      op.join(out_dir, 'ica_components.nii.gz'),
                      ref_img)
 
-    # Save decomposition
+    # Save component table
     comptable['Description'] = 'ICA fit to dimensionally-reduced optimally combined data.'
     mmix_dict = {}
     mmix_dict['Method'] = ('Independent components analysis with FastICA '
