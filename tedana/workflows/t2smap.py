@@ -30,7 +30,7 @@ def _get_parser():
     # Argument parser follow templtate provided by RalphyZ
     # https://stackoverflow.com/a/43456577
     optional = parser._action_groups.pop()
-    required = parser.add_argument_group('required arguments')
+    required = parser.add_argument_group('Required Arguments')
     required.add_argument('-d',
                           dest='data',
                           nargs='+',
@@ -154,7 +154,6 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     quiet : :obj:`bool`, optional
         If True, suppress logging/printing of messages. Default is False.
 
-
     Notes
     -----
     This workflow writes out several files, which are described below:
@@ -205,7 +204,7 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
         LGR.info('Computing adaptive mask')
     else:
         LGR.info('Using user-defined mask')
-    mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True)
+    mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True, threshold=1)
 
     LGR.info('Computing adaptive T2* map')
     if fitmode == 'all':

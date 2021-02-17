@@ -22,9 +22,9 @@ Already know what you're looking for in this guide? Jump to the following sectio
 * [Recognizing contributors](#Recognizing-contributors)
 * [Monthly calls and testing guidelines][link_developing_rtd]
 
-Don't know where to get started? 
-Read [Joining the conversation](#joining-the-conversation) and pop into 
-Gitter to introduce yourself! Let us know what your interests are and we 
+Don't know where to get started?
+Read [Joining the conversation](#joining-the-conversation) and pop into
+Gitter to introduce yourself! Let us know what your interests are and we
 will help you find an issue to contribute to. Thanks so much!
 
 ## Joining the conversation
@@ -125,18 +125,20 @@ This is now your own unique and online copy of `tedana`. Changes here won't affe
 
 Remember to [clone your fork][link_clonerepo] of `tedana` to your local machine, which will allow you to make local changes to `tedana`.
 
-Make sure to always [keep your fork up to date][link_updateupstreamwiki] with the master repository before and after making changes.
+Make sure to always [keep your fork up to date][link_updateupstreamwiki] with the upstream repository before and after making changes.
 
 ### 3. Run the developer setup
 
-To test a change, you may need to set up your local repository to run a `tedana` workflow. 
+To test a change, you may need to set up your local repository to run a `tedana` workflow.
 To do so, run
 ```
-pip install -e .
+pip install -e .[all]
 ```
-from within your local `tedana` repository. This should ensure all packages are correctly organized and linked on your user profile. 
+from within your local `tedana` repository. This should ensure all packages are correctly organized and linked on your user profile.
 
-Once you've run this, your repository should be set for most changes (i.e., you do not have to re-run with every change). 
+We recommend including the `[all]` flag when you install `tedana` so that "extra" requirements necessary for running tests and building the documentation will also be installed.
+
+Once you've run this, your repository should be set for most changes (i.e., you do not have to re-run with every change).
 
 ### 4. Make the changes you've discussed
 
@@ -144,12 +146,12 @@ Try to keep the changes focused to the issue.
 We've found that working on a [new branch][link_branches] for each issue makes it easier to keep your changes targeted.
 Using a new branch allows you to follow the standard GitHub workflow when making changes.
 [This guide][link_gitworkflow] provides a useful overview for this workflow.
-Before making a new branch, make sure your master is up to date with the following commands:
+Before making a new branch, make sure your main is up to date with the following commands:
 
 ```
-git checkout master
-git fetch upstream master
-git merge upstream/master
+git checkout main
+git fetch upstream main
+git merge upstream/main
 ```
 
 Then, make your new branch.
@@ -225,7 +227,7 @@ To push your changes to your remote, use
 git push -u origin MYBRANCH
 ```
 
-and GitHub will respond by giving you a link to open a pull request to 
+and GitHub will respond by giving you a link to open a pull request to
 ME-ICA/tedana.
 Once you have pushed changes to the repository, please do not use commands such as rebase and
 amend, as they will rewrite your history and make it difficult for developers to work with you on
@@ -274,6 +276,9 @@ We encourage extensive documentation.
 The python code itself should follow [PEP8][link_pep8] convention
 whenever possible, with at most about 500 lines of code (not including docstrings) per script.
 
+Additionally, we have adopted a purely functional approach in `tedana`, so we
+avoid defining our own classes within the library.
+
 Our documentation is written in [ReStructuredText](#writing-in-restructuredtext),
 which we explain in more detail below.
 
@@ -295,13 +300,15 @@ And, if you have any questions, please don't hesitate to ask!
 
 ## Recognizing contributors
 
-We welcome and recognize [all contributions][link_all-contributors-spec] 
+We welcome and recognize [all contributions][link_all-contributors-spec]
 from documentation to testing to code development.
-You can see a list of current contributors in the 
-README
-(kept up to date by the [all contributors bot][link_all-contributors-bot]). 
+You can see a list of current contributors in the README
+(kept up to date by the [all contributors bot][link_all-contributors-bot]).
 You can see [here][link_all-contributors-bot-usage] for instructions on
 how to use the bot.
+We encourage all contributors to write a brief statement and self-describe how they feel they've
+contributed, showcased [here][contributions.md].
+Thanks to all of our wonderful contributors!
 
 ## Thank you!
 
@@ -319,7 +326,7 @@ You're awesome. :wave::smiley:
 [writing_formatting_github]: https://help.github.com/articles/getting-started-with-writing-and-formatting-on-github
 [markdown]: https://daringfireball.net/projects/markdown
 [rick_roll]: https://www.youtube.com/watch?v=dQw4w9WgXcQ
-[restructuredtext]: http://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html 
+[restructuredtext]: http://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html
 [sphinx]: http://www.sphinx-doc.org/en/master/index.html
 [readthedocs]: https://docs.readthedocs.io/en/latest/index.html
 
@@ -327,7 +334,7 @@ You're awesome. :wave::smiley:
 [link_milestones]: https://github.com/ME-ICA/tedana/milestones/
 [link_project_boards]: https://github.com/ME-ICA/tedana/projects
 [link_gitter]: https://gitter.im/me-ica/tedana
-[link_coc]: https://github.com/ME-ICA/tedana/blob/master/CODE_OF_CONDUCT.md
+[link_coc]: https://github.com/ME-ICA/tedana/blob/main/CODE_OF_CONDUCT.md
 [link_stale-bot]: https://github.com/probot/stale
 
 [link_labels]: https://github.com/ME-ICA/tedana/labels

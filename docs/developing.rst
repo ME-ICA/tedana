@@ -1,5 +1,5 @@
 ====================
-Developer Guidelines
+Developer guidelines
 ====================
 
 This webpage is intended to guide users through making making changes to
@@ -111,7 +111,7 @@ Worked Example
 Suppose we want to add a function in ``tedana`` that creates a file called ```hello_world.txt`` to
 be stored along the outputs of the ``tedana`` workflow.
 
-First, we merge the repository's ``master`` branch into our own to make sure we're up to date, and
+First, we merge the repository's ``main`` branch into our own to make sure we're up to date, and
 then we make a new branch called something like ``feature/say_hello``.
 Any changes we make will stay on this branch.
 We make the new function and call it ``say_hello`` and locate this function inside of ``io.py``.
@@ -143,13 +143,13 @@ If not, we should continue editing the function until it passes our test.
 Let's suppose that suddenly, you realize that what would be even more useful is a function that
 takes an argument, ``place``, so that the output filename is actually ``hello_PLACE``, with
 ``PLACE`` the value passed and ``'world'`` as the default value.
-We merge any changes from the upstream master branch into our branch via
+We merge any changes from the upstream main branch into our branch via
 
 .. code-block:: bash
 
     git checkout feature/say_hello
-    git fetch upstream master
-    git merge upstream/master
+    git fetch upstream main
+    git merge upstream/main
 
 and then begin work on our test.
 We need to our unit test to be more complete, so we update it to look more like the following,
@@ -199,9 +199,9 @@ We should then do the following cleanup with our git repository:
 
 .. code-block:: bash
 
-    git checkout master
-    git fetch upstream master
-    git merge upstream/master
+    git checkout main
+    git fetch upstream main
+    git merge upstream/main
     git branch -d feature/say_hello
     git push --delete origin feature/say_hello
 
@@ -218,10 +218,10 @@ and we're good to go!
 .. _`GitHub Desktop`: https://desktop.github.com/
 .. _SourceTree: https://www.sourcetreeapp.com/
 .. _`GitHub UI`: https://help.github.com/en/github/managing-files-in-a-repository/editing-files-in-your-repository
-.. _this: https://github.com/ME-ICA/tedana/tree/master/docs
+.. _this: https://github.com/ME-ICA/tedana/tree/main/docs
 .. _ReStructuredText: http://docutils.sourceforge.net/rst.html#user-documentation
 .. _`five echo set`: https://github.com/ME-ICA/tedana/blob/37368f802f77b4327fc8d3f788296ca0f01074fd/tedana/tests/test_integration.py#L71-L95
 .. _here: https://circleci.com/docs/2.0/artifacts/#downloading-all-artifacts-for-a-build-on-circleci
 .. _`getting one`: https://circleci.com/docs/2.0/managing-api-tokens/?gclid=CjwKCAiAqqTuBRBAEiwA7B66heDkdw6l68GAYAHtR2xS1xvDNNUzy7l1fmtwQWvVN0OIa97QL8yfhhoCejoQAvD_BwE#creating-a-personal-api-token
 .. _`google calendar`: https://calendar.google.com/calendar/embed?src=pl6vb4t9fck3k6mdo2mok53iss%40group.calendar.google.com
-.. _`contributing guide`: https://github.com/ME-ICA/tedana/blob/master/CONTRIBUTING.md
+.. _`contributing guide`: https://github.com/ME-ICA/tedana/blob/main/CONTRIBUTING.md

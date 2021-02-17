@@ -11,7 +11,6 @@ from .info import (
     __version__,
     __author__,
     __copyright__,
-    __credits__,
     __license__,
     __maintainer__,
     __email__,
@@ -19,7 +18,6 @@ from .info import (
     __url__,
     __packagename__,
     __description__,
-    __longdesc__
 )
 
 import warnings

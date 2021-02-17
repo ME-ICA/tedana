@@ -4,12 +4,17 @@ The tedana roadmap
 Project vision
 --------------
 
-ME-EPI processing is not well integrated into major preprocessing packages,
-yielding duplicated and unmaintained code.
-``tedana`` has been developed to address this need and will serve as a central repository
-for standard ME-EPI denoising as well as a testing ground for novel ME-EPI denoising methods.
-This will jointly reduce the external burden on pipeline maintainers,
-facilitate increased ME-EPI adoption, and enable future development in ME-EPI denoising.
+``tedana`` was originally developed as a place for the multi-echo fMRI
+denoising method that was originally defined in ME-ICA
+(`ME-ICA source <https://github.com/ME-ICA/me-ica>`_).
+tedana was designed to be more understandable, modular, and adaptable so
+that it can serve as a testing ground for novel multi-echo fMRI denoising
+methods.
+We have expanded to welcome additional multi-echo fMRI processing
+approaches, and to support communal resources for multi-echo fMRI, whether
+or not they directly involve the tedana software.
+
+A more detailed `project scope is here <https://tedana.readthedocs.io/en/latest/contributing.html#Scope-of-tedana>`_
 
 Metrics of success and corresponding milestones
 -----------------------------------------------

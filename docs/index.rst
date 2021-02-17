@@ -32,7 +32,7 @@ multi-echo functional magnetic resonance imaging (fMRI) data.
    :target: http://tedana.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
-.. image:: https://codecov.io/gh/me-ica/tedana/branch/master/graph/badge.svg
+.. image:: https://codecov.io/gh/me-ica/tedana/branch/main/graph/badge.svg
    :target: https://codecov.io/gh/me-ica/tedana
    :alt: Codecov
 
@@ -157,10 +157,12 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
    usage
    approach
    outputs
+   reporting
    faq
    support
    contributing
    developing
+   governance
    roadmap
    api
 
