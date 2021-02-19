@@ -1,6 +1,4 @@
-"""
-Misc. utils for metric calculation.
-"""
+"""Miscellaneous utility functions for metric calculation."""
 import logging
 
 import numpy as np
@@ -10,9 +8,10 @@ LGR = logging.getLogger(__name__)
 
 
 def dependency_resolver(dict_, requested_metrics, base_inputs):
-    """
-    Identify all necessary metrics based on a list of requested metrics and
-    the metrics each one requires to be calculated, as defined in a dictionary.
+    """Identify all necessary metrics based on a list of requested metrics.
+
+    This also determines which metrics each requested metric requires to be calculated,
+    as defined in a dictionary.
 
     Parameters
     ----------
@@ -34,7 +33,7 @@ def dependency_resolver(dict_, requested_metrics, base_inputs):
     """
     not_found = [k for k in requested_metrics if k not in dict_.keys()]
     if not_found:
-        raise ValueError('Unknown metric(s): {}'.format(', '.join(not_found)))
+        raise ValueError("Unknown metric(s): {}".format(", ".join(not_found)))
 
     required_metrics = requested_metrics
     escape_counter = 0
@@ -53,14 +52,13 @@ def dependency_resolver(dict_, requested_metrics, base_inputs):
             required_metrics = required_metrics_new
         escape_counter += 1
         if escape_counter >= 10:
-            LGR.warning('dependency_resolver in infinite loop. Escaping early.')
+            LGR.warning("dependency_resolver in infinite loop. Escaping early.")
             break
     return required_metrics
 
 
 def determine_signs(weights, axis=0):
-    """
-    Determine component-wise optimal signs using voxel-wise parameter estimates.
+    """Determine component-wise optimal signs using voxel-wise parameter estimates.
 
     Parameters
     ----------
@@ -81,8 +79,7 @@ def determine_signs(weights, axis=0):
 
 
 def flip_components(*args, signs):
-    """
-    Flip an arbitrary set of input arrays based on a set of signs.
+    """Flip an arbitrary set of input arrays based on a set of signs.
 
     Parameters
     ----------
@@ -100,19 +97,20 @@ def flip_components(*args, signs):
     """
     assert signs.ndim == 1, 'Argument "signs" must be one-dimensional.'
     for arg in args:
-        assert len(signs) in arg.shape, \
-            ('Size of argument "signs" must match size of one dimension in '
-             'each of the input arguments.')
-        assert sum(x == len(signs) for x in arg.shape) == 1, \
-            ('Only one dimension of each input argument can match the length '
-             'of argument "signs".')
+        assert len(signs) in arg.shape, (
+            'Size of argument "signs" must match size of one dimension in '
+            "each of the input arguments."
+        )
+        assert sum(x == len(signs) for x in arg.shape) == 1, (
+            "Only one dimension of each input argument can match the length "
+            'of argument "signs".'
+        )
     # correct mixing & weights signs based on spatial distribution tails
     return [arg * signs for arg in args]
 
 
-def sort_df(df, by='kappa', ascending=False):
-    """
-    Sort DataFrame and get index.
+def sort_df(df, by="kappa", ascending=False):
+    """Sort DataFrame and get index.
 
     Parameters
     ----------
@@ -143,17 +141,14 @@ def sort_df(df, by='kappa', ascending=False):
 
 
 def apply_sort(*args, sort_idx, axis=0):
-    """
-    Apply a sorting index to an arbitrary set of arrays.
-    """
+    """Apply a sorting index to an arbitrary set of arrays."""
     for arg in args:
         assert arg.shape[axis] == len(sort_idx)
     return [np.take(arg, sort_idx, axis=axis) for arg in args]
 
 
 def check_mask(data, mask):
-    """
-    Check that no zero-variance voxels remain in masked data.
+    """Check that no zero-variance voxels remain in masked data.
 
     Parameters
     ----------
@@ -179,5 +174,7 @@ def check_mask(data, mask):
         zero_idx = np.where(masked_data_std == 0)
         n_bad_voxels = len(zero_idx[0])
         if n_bad_voxels > 0:
-            raise ValueError('{0} voxels in masked data have zero variance. '
-                             'Mask is too liberal.'.format(n_bad_voxels))
+            raise ValueError(
+                "{0} voxels in masked data have zero variance. "
+                "Mask is too liberal.".format(n_bad_voxels)
+            )
