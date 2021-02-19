@@ -16,8 +16,7 @@ RefLGR = logging.getLogger('REFERENCES')
 
 
 def calculate_weights(data_optcom, mixing):
-    """
-    Calculate standardized parameter estimates between data and mixing matrix.
+    """Calculate standardized parameter estimates between data and mixing matrix.
 
     Parameters
     ----------
@@ -40,9 +39,7 @@ def calculate_weights(data_optcom, mixing):
 
 
 def calculate_betas(data_optcom, mixing):
-    """
-    Calculate unstandardized parameter estimates between data and mixing
-    matrix.
+    """Calculate unstandardized parameter estimates between data and mixing matrix.
 
     Parameters
     ----------
@@ -65,9 +62,7 @@ def calculate_betas(data_optcom, mixing):
 
 
 def calculate_psc(data_optcom, optcom_betas):
-    """
-    Calculate percent signal change maps for components against optimally
-    combined data.
+    """Calculate percent signal change maps for components against optimally-combined data.
 
     Parameters
     ----------
@@ -88,9 +83,9 @@ def calculate_psc(data_optcom, optcom_betas):
 
 
 def calculate_z_maps(weights, z_max=8):
-    """
-    Calculate z-statistic maps by z-scoring standardized parameter estimate
-    maps and cropping extreme values.
+    """Calculate component-wise z-statistic maps.
+
+    This is done by z-scoring standardized parameter estimate maps and cropping extreme values.
 
     Parameters
     ----------
@@ -112,9 +107,7 @@ def calculate_z_maps(weights, z_max=8):
 
 
 def calculate_f_maps(data_cat, Z_maps, mixing, adaptive_mask, tes, f_max=500):
-    """
-    Calculate pseudo-F-statistic maps (per component) for TE-dependence
-    and -independence models.
+    """Calculate pseudo-F-statistic maps for TE-dependence and -independence models.
 
     Parameters
     ----------
@@ -188,8 +181,7 @@ def calculate_f_maps(data_cat, Z_maps, mixing, adaptive_mask, tes, f_max=500):
 
 
 def threshold_map(maps, mask, ref_img, threshold, csize=None):
-    """
-    Perform cluster-extent thresholding.
+    """Perform cluster-extent thresholding.
 
     Parameters
     ----------
@@ -229,9 +221,10 @@ def threshold_map(maps, mask, ref_img, threshold, csize=None):
 
 
 def threshold_to_match(maps, n_sig_voxels, mask, ref_img, csize=None):
-    """
-    Cluster-extent threshold a map to have roughly some requested number of
-    significant voxels (with clusters accounted for).
+    """Cluster-extent threshold a map to target number of significant voxels.
+
+    Resulting maps have roughly some requested number of significant voxels
+    (with clusters accounted for)
 
     Parameters
     ----------
@@ -294,8 +287,8 @@ def threshold_to_match(maps, n_sig_voxels, mask, ref_img, csize=None):
 
 
 def calculate_dependence_metrics(F_T2_maps, F_S0_maps, Z_maps):
-    """
-    Calculate Kappa and Rho metrics from F-statistic maps.
+    """Calculate Kappa and Rho metrics from F-statistic maps.
+
     Just a weighted average over voxels.
 
     Parameters
@@ -326,9 +319,7 @@ def calculate_dependence_metrics(F_T2_maps, F_S0_maps, Z_maps):
 
 
 def calculate_varex(optcom_betas):
-    """
-    Calculate unnormalized(?) variance explained from unstandardized
-    parameter estimate maps.
+    """Calculate unnormalized(?) variance explained from unstandardized parameter estimate maps.
 
     Parameters
     ----------
@@ -347,9 +338,7 @@ def calculate_varex(optcom_betas):
 
 
 def calculate_varex_norm(weights):
-    """
-    Calculate normalized variance explained from standardized parameter
-    estimate maps.
+    """Calculate normalized variance explained from standardized parameter estimate maps.
 
     Parameters
     ----------
@@ -367,8 +356,8 @@ def calculate_varex_norm(weights):
 
 
 def compute_dice(clmaps1, clmaps2, axis=0):
-    """
-    Compute the Dice similarity index between two thresholded and binarized maps.
+    """Compute the Dice similarity index between two thresholded and binarized maps.
+
     NaNs are converted automatically to zeroes.
 
     Parameters
@@ -390,7 +379,8 @@ def compute_dice(clmaps1, clmaps2, axis=0):
 
 
 def compute_signal_minus_noise_z(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95):
-    """
+    """Compare signal and noise z-statistic distributions with a two-sample t-test.
+
     Divide voxel-level thresholded F-statistic maps into distributions of
     signal (voxels in significant clusters) and noise (voxels from
     non-significant clusters) statistics, then compare these distributions
@@ -447,7 +437,8 @@ def compute_signal_minus_noise_z(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95):
 
 
 def compute_signal_minus_noise_t(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95):
-    """
+    """Compare signal and noise t-statistic distributions with a two-sample t-test.
+
     Divide voxel-level thresholded F-statistic maps into distributions of
     signal (voxels in significant clusters) and noise (voxels from
     non-significant clusters) statistics, then compare these distributions
@@ -492,9 +483,7 @@ def compute_signal_minus_noise_t(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95):
 
 
 def compute_countsignal(stat_cl_maps):
-    """
-    Count the number of significant voxels, per map, in a set of cluster-extent
-    thresholded maps.
+    """Count the number of significant voxels in a set of cluster-extent thresholded maps.
 
     Parameters
     ----------
@@ -511,10 +500,10 @@ def compute_countsignal(stat_cl_maps):
 
 
 def compute_countnoise(stat_maps, stat_cl_maps, stat_thresh=1.95):
-    """
-    Count the number of significant voxels (after application of
-    cluster-defining threshold) from non-significant clusters (after
-    cluster-extent thresholding).
+    """Count the number of significant voxels from non-significant clusters.
+
+    This is done after application of a cluster-defining threshold, but compared against results
+    from cluster-extent thresholding.
 
     Parameters
     ----------
@@ -538,9 +527,9 @@ def compute_countnoise(stat_maps, stat_cl_maps, stat_thresh=1.95):
 
 def generate_decision_table_score(kappa, dice_FT2, signal_minus_noise_t,
                                   countnoise, countsigFT2):
-    """
-    Generate a five-metric decision table. Metrics are ranked in either
-    descending or ascending order if they measure TE-dependence or
+    """Generate a five-metric decision table.
+
+    Metrics are ranked in either descending or ascending order if they measure TE-dependence or
     -independence, respectively, and are then averaged for each component.
 
     Parameters
