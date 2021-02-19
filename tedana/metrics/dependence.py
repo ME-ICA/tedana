@@ -52,9 +52,9 @@ def calculate_betas(data_optcom, mixing):
         Unstandardized parameter estimates
     """
     assert data_optcom.shape[1] == mixing.shape[0]
-    # demean optimal combination
+    # mean-center optimally-combined data
     data_optcom_dm = data_optcom - data_optcom.mean(axis=-1, keepdims=True)
-    # compute PSC dataset - shouldn't have to refit data
+    # betas are the result of a normal OLS fit of the mixing matrix against the mean-center data
     betas = get_coeffs(data_optcom_dm, mixing)
     return betas
 
@@ -130,6 +130,11 @@ def calculate_f_maps(data_cat, Z_maps, mixing, adaptive_mask, tes, f_max=500):
         Pseudo-F-statistic maps for TE-dependence and -independence models,
         respectively.
     """
+    assert data_cat.shape[0] == Z_maps.shape[0] == adaptive_mask.shape[0]
+    assert data_cat.shape[1] == tes.shape[0]
+    assert data_cat.shape[2] == mixing.shape[0]
+    assert Z_maps.shape[1] == mixing.shape[1]
+
     # TODO: Remove mask arg from get_coeffs
     me_betas = get_coeffs(
         data_cat, mixing, mask=np.ones(data_cat.shape[:2], bool), add_const=True
@@ -186,7 +191,7 @@ def threshold_map(maps, mask, ref_img, threshold, csize=None):
 
     Parameters
     ----------
-    maps : (S x C) array_like
+    maps : (M x C) array_like
         Statistical maps to be thresholded.
     mask : (S) array_like
         Binary mask.
@@ -200,7 +205,7 @@ def threshold_map(maps, mask, ref_img, threshold, csize=None):
 
     Returns
     -------
-    maps_thresh
+    maps_thresh : (M x C) array_like
     """
     n_voxels, n_components = maps.shape
     maps_thresh = np.zeros([n_voxels, n_components], bool)
@@ -224,12 +229,12 @@ def threshold_map(maps, mask, ref_img, threshold, csize=None):
 def threshold_to_match(maps, n_sig_voxels, mask, ref_img, csize=None):
     """Cluster-extent threshold a map to target number of significant voxels.
 
-    Resulting maps have roughly some requested number of significant voxels
-    (with clusters accounted for)
+    Resulting maps have roughly the requested number of significant voxels, after cluster-extent
+    thresholding.
 
     Parameters
     ----------
-    maps : (S x C) array_like
+    maps : (M x C) array_like
         Statistical maps to be thresholded.
     n_sig_voxels : (C) array_like
         Number of significant voxels to threshold to, for each map in maps.
@@ -246,6 +251,8 @@ def threshold_to_match(maps, n_sig_voxels, mask, ref_img, csize=None):
     clmaps : (S x C) array_like
         Cluster-extent thresholded and binarized maps.
     """
+    assert maps.shape[1] == n_sig_voxels.shape[0]
+
     n_voxels, n_components = maps.shape
     abs_maps = np.abs(maps)
     if csize is None:
@@ -313,6 +320,7 @@ def calculate_dependence_metrics(F_T2_maps, F_S0_maps, Z_maps):
         models, respectively.
     """
     assert F_T2_maps.shape == F_S0_maps.shape == Z_maps.shape
+
     RepLGR.info(
         "Kappa (kappa) and Rho (rho) were calculated as measures of "
         "TE-dependence and TE-independence, respectively."
@@ -384,6 +392,7 @@ def compute_dice(clmaps1, clmaps2, axis=0):
         DSI values.
     """
     assert clmaps1.shape == clmaps2.shape
+
     dice_values = utils.dice(clmaps1, clmaps2, axis=axis)
     dice_values = np.nan_to_num(dice_values, 0)
     return dice_values
@@ -419,6 +428,7 @@ def compute_signal_minus_noise_z(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95):
         P-values from component-wise signal > noise paired t-tests.
     """
     assert Z_maps.shape == Z_clmaps.shape == F_T2_maps.shape
+
     n_components = Z_maps.shape[1]
     signal_minus_noise_z = np.zeros(n_components)
     signal_minus_noise_p = np.zeros(n_components)
@@ -481,6 +491,7 @@ def compute_signal_minus_noise_t(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95):
         P-values from component-wise signal > noise paired t-tests.
     """
     assert Z_maps.shape == Z_clmaps.shape == F_T2_maps.shape
+
     n_components = Z_maps.shape[1]
     signal_minus_noise_t = np.zeros(n_components)
     signal_minus_noise_p = np.zeros(n_components)
@@ -536,6 +547,8 @@ def compute_countnoise(stat_maps, stat_cl_maps, stat_thresh=1.95):
     countnoise : (C) array_like
         Numbers of significant non-cluster voxels from the statistical maps.
     """
+    assert stat_maps.shape == stat_cl_maps.shape
+
     noise_idx = (np.abs(stat_maps) > stat_thresh) & (stat_cl_maps == 0)
     countnoise = noise_idx.sum(axis=0)
     return countnoise
@@ -570,6 +583,14 @@ def generate_decision_table_score(
     d_table_score : (C) array_like
         Decision table metric scores.
     """
+    assert (
+        kappa.shape
+        == dice_FT2.shape
+        == signal_minus_noise_t.shape
+        == countnoise.shape
+        == countsigFT2.shape
+    )
+
     d_table_rank = np.vstack(
         [
             len(kappa) - stats.rankdata(kappa),
