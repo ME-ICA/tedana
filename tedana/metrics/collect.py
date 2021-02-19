@@ -153,6 +153,9 @@ def generate_metrics(
     data_optcom = data_optcom[mask, :]
     adaptive_mask = adaptive_mask[mask]
 
+    # Ensure that echo times are in an array, rather than a list
+    tes = np.asarray(tes)
+
     required_metrics = dependency_resolver(METRIC_DEPENDENCIES, metrics, INPUTS)
 
     # Use copy to avoid changing the original variable outside of this function
