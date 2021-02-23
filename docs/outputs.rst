@@ -90,7 +90,7 @@ echo-[echo]_desc-[PCA|ICA]R2ModelPredictions_components.nii.gz  Component- and v
                                                                 separated by echo.
 echo-[echo]_desc-[PCA|ICA]S0ModelPredictions_components.nii.gz  Component- and voxel-wise S0-model predictions,
                                                                 separated by echo.
-desc-[PCA|ICA]AveragingWeights_X.nii.gz                         Component-wise averaging weights for metric
+desc-[PCA|ICA]AveragingWeights_components.nii.gz                Component-wise averaging weights for metric
                                                                 calculation.
 desc-optcomPCAReduced_bold.nii.gz                               Optimally combined data after dimensionality
                                                                 reduction with PCA. This is the input to the ICA.
