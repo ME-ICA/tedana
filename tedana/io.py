@@ -28,8 +28,10 @@ img_table = {
     't2star map': ('t2sv', 'T2starmap'),
     's0 map': ('s0v', 'S0map'),
     'combined': ('ts_OC', 'desc-optcom_bold'),
-    'PCA components': ('pca_components', 'desc-PCA_components'),
-    'ICA components': ('betas_OC', 'desc-ICA_components'),
+    'z-scored PCA components': ('pca_components',
+        'desc-PCA_stat-z_components'),
+    'z-scored ICA components': ('betas_OC',
+        'desc-ICA_stat-z_components'),
     'ICA accepted components': ('betas_hik_OC', 
         'desc-ICAAccepted_components'),
     'z-scored ICA accepted components': (
@@ -44,11 +46,28 @@ img_table = {
     'full t2star map': ('t2svG', 'desc-full_T2starmap'),
     'full s0 map': ('s0vG', 'desc-full_S0map'),
     'whitened': ('ts_OC_whitened', 'desc-optcomPCAReduced_bold'),
+    'echo weight PCA map split': ('e{0}_PCA_comp',
+        'echo-{0}_desc-PCA_components'),
+    'echo R2 PCA split': ('e{0}_PCA_R2',
+        'echo-{0}_desc-PCAR2ModelPredictions_components'),
+    'echo S0 PCA split': ('e{0}_PCA_S0',
+        'echo-{0}_desc-PCAS0ModelPredictions_components'),
+    'PCA component weights': ('pca_weights',
+        'desc-PCAAveragingWeights_components'),
+    'PCA reduced': ('oc_reduced', 'desc-optcomPCAReduced_bold'),
+    'echo weight ICA map split': ('e{0}_ICA_comp',
+        'echo-{0}_desc-ICA_components'),
+    'echo R2 ICA split': ('e{0}_ICA_R2',
+        'echo-{0}_desc-ICAR2ModelPredictions_components'),
+    'echo S0 ICA split': ('e{0}_ICA_S0',
+        'echo-{0}_desc-ICAS0ModelPredictions_components'),
+    'ICA component weights': ('ica_weights',
+        'desc-ICAAveragingWeights_components'),
     'high kappa ts split': ('hik_ts_e{0}',
-        'echo_{0}_desc-Accepted_bold'),
+        'echo-{0}_desc-Accepted_bold'),
     'low kappa ts split': ('lowk_ts_e{0}',
-        'echo_{0}_desc-Rejected_bold'),
-    'denoised ts split': ('dn_ts_e{0}', 'echo_{0}_desc-Denoised_bold'),
+        'echo-{0}_desc-Rejected_bold'),
+    'denoised ts split': ('dn_ts_e{0}', 'echo-{0}_desc-Denoised_bold'),
 }
 
 
@@ -305,7 +324,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, ref_img):
     write_split_ts(ts, mmix, mask, comptable, ref_img)
 
     ts_B = get_coeffs(ts, mmix, mask)
-    fout = filewrite(ts_B, 'ICA components', ref_img)
+    fout = filewrite(ts_B, 'z-scored ICA components', ref_img)
     LGR.info('Writing full ICA coefficient feature set: {}'.format(op.abspath(fout)))
 
     if len(acc) != 0:

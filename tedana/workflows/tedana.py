@@ -585,8 +585,6 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                 keep_restarting = False
             else:
                 keep_restarting = False
-
-        io.filewrite(betas_oc, 'ICA components', ref_img)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = pd.read_table(op.join(out_dir, 'desc-ICA_mixing.tsv')).values
