@@ -70,12 +70,12 @@ def generate_report(out_dir, tr):
         A generated HTML report
     """
     # Load the component time series
-    comp_ts_path = opj(out_dir, 'ica_mixing.tsv')
+    comp_ts_path = opj(out_dir, 'desc-ICA_mixing.tsv')
     comp_ts_df = pd.read_csv(comp_ts_path, sep='\t', encoding='utf=8')
     n_vols, n_comps = comp_ts_df.shape
 
     # Load the component table
-    comptable_path = opj(out_dir, 'ica_decomposition.json')
+    comptable_path = opj(out_dir, 'desc-tedana_metrics.tsv')
     comptable_cds = df._create_data_struct(comptable_path)
 
     # Create kappa rho plot

@@ -1,6 +1,7 @@
 """
 PCA and related signal decomposition methods for tedana
 """
+import json
 import logging
 import os.path as op
 from numbers import Number
@@ -148,13 +149,13 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
 
     This function writes out several files:
 
-    ======================    =================================================
-    Filename                  Content
-    ======================    =================================================
-    pca_decomposition.json    PCA component table.
-    pca_mixing.tsv            PCA mixing matrix.
-    pca_components.nii.gz     Component weight maps.
-    ======================    =================================================
+    ===========================    =============================================
+    Filename                       Content
+    ===========================    =============================================
+    desc-PCA_decomposition.json    PCA component table
+    desc-PCA_mixing.tsv            PCA mixing matrix
+    desc-PCA_components.nii.gz     Component weight maps
+    ===========================    =============================================
 
     See Also
     --------
@@ -231,10 +232,10 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     # Compute Kappa and Rho for PCA comps
     # Normalize each component's time series
     vTmixN = stats.zscore(comp_ts, axis=0)
-    comptable, _, _, _ = metrics.dependence_metrics(
+    comptable, _, metric_metadata, _, _ = metrics.dependence_metrics(
                 data_cat, data_oc, comp_ts, adaptive_mask, tes, ref_img,
                 reindex=False, mmixN=vTmixN, algorithm=None,
-                label='mepca_', out_dir=out_dir, verbose=verbose)
+                label='PCA', out_dir=out_dir, verbose=verbose)
 
     # varex_norm from PCA overrides varex_norm from dependence_metrics,
     # but we retain the original
@@ -243,15 +244,28 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     comptable['normalized variance explained'] = varex_norm
 
     # write component maps to 4D image
-    comp_ts_z = stats.zscore(comp_ts, axis=0)
     comp_maps = utils.unmask(computefeats2(data_oc, comp_ts_z, mask), mask)
     io.filewrite(comp_maps, 'PCA components', ref_img)
 
     # Select components using decision tree
     if algorithm == 'kundu':
-        comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=False)
+        comptable, metric_metadata = kundu_tedpca(
+            comptable,
+            metric_metadata,
+            n_echos,
+            kdaw,
+            rdaw,
+            stabilize=False,
+        )
     elif algorithm == 'kundu-stabilize':
-        comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=True)
+        comptable, metric_metadata = kundu_tedpca(
+            comptable,
+            metric_metadata,
+            n_echos,
+            kdaw,
+            rdaw,
+            stabilize=True,
+        )
     else:
         alg_str = "variance explained-based" if isinstance(algorithm, Number) else algorithm
         LGR.info('Selected {0} components with {1} dimensionality '
@@ -259,22 +273,45 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         comptable['classification'] = 'accepted'
         comptable['rationale'] = ''
 
-    # Save decomposition
+    # Save decomposition files
     comp_names = [io.add_decomp_prefix(comp, prefix='pca', max_value=comptable.index.max())
                   for comp in comptable.index.values]
 
     mixing_df = pd.DataFrame(data=comp_ts, columns=comp_names)
-    mixing_df.to_csv(op.join(out_dir, 'pca_mixing.tsv'), sep='\t', index=False)
+    mixing_df.to_csv(op.join(out_dir, 'desc-PCA_mixing.tsv'), sep='\t', index=False)
 
-    comptable['Description'] = 'PCA fit to optimally combined data.'
-    mmix_dict = {}
-    mmix_dict['Method'] = ('Principal components analysis implemented by '
-                           'sklearn. Components are sorted by variance '
-                           'explained in descending order. '
-                           'Component signs are flipped to best match the '
-                           'data.')
-    io.save_comptable(comptable, op.join(out_dir, 'pca_decomposition.json'),
-                      label='pca', metadata=mmix_dict)
+    # Save component table and associated json
+    temp_comptable = comptable.set_index("Component", inplace=False)
+    temp_comptable.to_csv(
+        op.join(out_dir, "desc-PCA_metrics.tsv"),
+        index=True,
+        index_label="Component",
+        sep='\t',
+    )
+    metric_metadata["Component"] = {
+        "LongName": "Component identifier",
+        "Description": (
+            "The unique identifier of each component. "
+            "This identifier matches column names in the mixing matrix TSV file."
+        ),
+    }
+    with open(op.join(out_dir, "desc-PCA_metrics.json"), "w") as fo:
+        json.dump(metric_metadata, fo, sort_keys=True, indent=4)
+
+    decomp_metadata = {
+        "Method": (
+            "Principal components analysis implemented by sklearn. "
+            "Components are sorted by variance explained in descending order. "
+            "Component signs are flipped to best match the data."
+        ),
+    }
+    for comp_name in comp_names:
+        decomp_metadata[comp_name] = {
+            "Description": "PCA fit to optimally combined data.",
+            "Method": "tedana",
+        }
+    with open(op.join(out_dir, "desc-PCA_decomposition.json"), "w") as fo:
+        json.dump(decomp_metadata, fo, sort_keys=True, indent=4)
 
     acc = comptable[comptable.classification == 'accepted'].index.values
     n_components = acc.size

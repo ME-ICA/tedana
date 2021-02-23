@@ -1,6 +1,7 @@
 """
 Estimate T2 and S0, and optimally combine data across TEs.
 """
+import json
 import os
 import os.path as op
 import logging
@@ -10,7 +11,7 @@ import numpy as np
 from scipy import stats
 from threadpoolctl import threadpool_limits
 
-from tedana import (combine, decay, io, utils)
+from tedana import (combine, decay, io, utils, __version__)
 from tedana.workflows.parser_utils import is_valid_file
 
 LGR = logging.getLogger(__name__)
@@ -236,13 +237,31 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     s0_limited[s0_limited < 0] = 0
     t2s_limited[t2s_limited < 0] = 0
 
-    io.filewrite(utils.millisec2sec(t2s_limited),
-                 op.join(out_dir, 'T2starmap.nii.gz'), ref_img)
-    io.filewrite(s0_limited, op.join(out_dir, 'S0map.nii.gz'), ref_img)
-    io.filewrite(utils.millisec2sec(t2s_full),
-                 op.join(out_dir, 'desc-full_T2starmap.nii.gz'), ref_img)
-    io.filewrite(s0_full, op.join(out_dir, 'desc-full_S0map.nii.gz'), ref_img)
-    io.filewrite(OCcatd, op.join(out_dir, 'desc-optcom_bold.nii.gz'), ref_img)
+    io.filewrite(utils.millisec2sec(t2s_limited), 't2star map', ref_img)
+    io.filewrite(s0_limited, 's0 map', ref_img)
+    io.filewrite(utils.millisec2sec(t2s_full), 'full t2star map', ref_img)
+    io.filewrite(s0_full, 'full s0 map', ref_img)
+    io.filewrite(OCcatd, 'combined', ref_img)
+
+    # Write out BIDS-compatible description file
+    derivative_metadata = {
+        "Name": "t2smap Outputs",
+        "BIDSVersion": "1.5.0",
+        "DatasetType": "derivative",
+        "GeneratedBy": [
+            {
+                "Name": "tedana",
+                "Version": __version__,
+                "Description": (
+                    "A pipeline estimating T2* from multi-echo fMRI data and "
+                    "combining data across echoes."
+                ),
+                "CodeURL": "https://github.com/ME-ICA/tedana"
+            }
+        ]
+    }
+    with open(op.join(out_dir, "dataset_description.json"), "w") as fo:
+        json.dump(derivative_metadata, fo, sort_keys=True, indent=4)
 
 
 def _main(argv=None):
