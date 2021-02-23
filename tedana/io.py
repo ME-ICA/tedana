@@ -4,6 +4,7 @@ Functions to handle file input/output
 import json
 import logging
 import os.path as op
+from enum import Enum, unique
 
 import numpy as np
 import pandas as pd
@@ -19,6 +20,86 @@ LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
+outdir = '.'
+prefix = ''
+convention = 'kundu'
+
+
+img_table = {
+    'adaptive mask': ('adaptive_mask', 'desc-adaptiveGoodSignal_mask'),
+    't2star map': ('t2sv', 'T2starmap'),
+    's0 map': ('s0v', 'S0map'),
+    'combined': ('ts_OC', 'desc-optcom_bold'),
+    'PCA components': ('pca_components', 'desc-PCA_components'),
+    'ICA components': ('betas_OC', 'desc-ICA_components'),
+    'ICA accepted components': ('betas_hik_OC', 
+        'desc-ICAAccepted_components'),
+    'z-scored ICA accepted components': (
+        'feats_OC2',
+        'desc-ICAAccepted_stat-z_components'),
+    'denoised ts': ('dn_ts_OC', 'desc-optcomDenoised_bold'),
+    'high kappa ts': ('hik_ts_OC', 'desc-optcomAccepted_bold'),
+    'low kappa ts': ('lowk_ts_OC', 'desc-optcomRejected_bold'),
+    # verbose outputs
+    'full t2star map': ('t2svG', 'desc-full_T2starmap'),
+    'full s0 map': ('s0vG', 'desc-full_S0map'),
+    'whitened': ('ts_OC_whitened', 'desc-optcomPCAReduced_bold'),
+    'high kappa ts split': ('hik_ts_e{0}',
+        'echo_{0}_desc-Accepted_bold'),
+    'low kappa ts split': ('lowk_ts_e{0}',
+        'echo_{0}_desc-Rejected_bold'),
+    'denoised ts split': ('dn_ts_e{0}', 'echo_{0}_desc-Denoised_bold'),
+}
+
+
+def gen_img_name(img_type, echo=0):
+    """
+    Generates an image file full path to simplify file output
+
+    Parameters
+    ----------
+    img_type : str
+        The description of the image. Must be a key in io.img_table
+    echo : :obj: `int`
+        The echo number of the image.
+    
+    Returns
+    -------
+    The full path for the image name
+
+    Raises
+    ------
+    KeyError, if an invalid description is supplied
+    RuntimeError, if io has no convention set
+    ValueError, if an echo is supplied when it shouldn't be
+
+    See Also
+    --------
+    io.img_table, a dict for translating various naming types
+    """
+
+    if convention == 'kundu':
+        tuple_idx = 0
+    elif convention == 'bids':
+        tuple_idx = 1
+    else:
+        if convention:
+            raise RuntimeError('Naming convention %s not supported' %
+                               convention
+            )
+        else:
+            raise RuntimeError('No naming convention given!')
+    if echo:
+        img_type += ' split'
+    format_string = img_table[img_type][tuple_idx]
+    if echo and not ('{' in format_string):
+        raise ValueError('Echo supplied when not supported!')
+    elif echo:
+        basename = format_string.format(echo)
+    else:
+        basename = format_string
+    return op.join(outdir, prefix + basename)
+    
 
 def split_ts(data, mmix, mask, comptable):
     """
@@ -60,7 +141,7 @@ def split_ts(data, mmix, mask, comptable):
     return hikts, resid
 
 
-def write_split_ts(data, mmix, mask, comptable, ref_img, out_dir='.', suffix=''):
+def write_split_ts(data, mmix, mask, comptable, ref_img, echo=0):
     """
     Splits `data` into denoised / noise / ignored time series and saves to disk
 
@@ -77,8 +158,9 @@ def write_split_ts(data, mmix, mask, comptable, ref_img, out_dir='.', suffix='')
         Reference image to dictate how outputs are saved to disk
     out_dir : :obj:`str`, optional
         Output directory.
-    suffix : :obj:`str`, optional
-        Appended to name of saved files (before extension). Default: ''
+    echo: :obj: `int`, optional
+        Echo number to generate filenames, used by some verbose
+        functions. Default 0.
 
     Returns
     -------
@@ -117,22 +199,27 @@ def write_split_ts(data, mmix, mask, comptable, ref_img, out_dir='.', suffix='')
     dnts = data[mask] - lowkts
 
     if len(acc) != 0:
-        fout = filewrite(utils.unmask(hikts, mask),
-                         op.join(out_dir, 'hik_ts_{0}'.format(suffix)), ref_img)
+        fout = filewrite(
+                utils.unmask(hikts, mask), 'high kappa ts', ref_img,
+                echo=echo
+        )
         LGR.info('Writing high-Kappa time series: {}'.format(op.abspath(fout)))
 
     if len(rej) != 0:
-        fout = filewrite(utils.unmask(lowkts, mask),
-                         op.join(out_dir, 'lowk_ts_{0}'.format(suffix)), ref_img)
+        fout = filewrite(
+                utils.unmask(lowkts, mask), 'low kappa ts', ref_img,
+                echo=echo
+        )
         LGR.info('Writing low-Kappa time series: {}'.format(op.abspath(fout)))
 
-    fout = filewrite(utils.unmask(dnts, mask),
-                     op.join(out_dir, 'dn_ts_{0}'.format(suffix)), ref_img)
+    fout = filewrite(
+            utils.unmask(dnts, mask), 'denoised ts', ref_img, echo=echo
+    )
     LGR.info('Writing denoised time series: {}'.format(op.abspath(fout)))
     return varexpl
 
 
-def writefeats(data, mmix, mask, ref_img, out_dir='.', suffix=''):
+def writefeats(data, mmix, mask, ref_img):
     """
     Converts `data` to component space with `mmix` and saves to disk
 
@@ -147,10 +234,6 @@ def writefeats(data, mmix, mask, ref_img, out_dir='.', suffix=''):
         Boolean mask array
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
-    out_dir : :obj:`str`, optional
-        Output directory.
-    suffix : :obj:`str`, optional
-        Appended to name of saved files (before extension). Default: ''
 
     Returns
     -------
@@ -170,11 +253,11 @@ def writefeats(data, mmix, mask, ref_img, out_dir='.', suffix=''):
 
     # write feature versions of components
     feats = utils.unmask(computefeats2(data, mmix, mask), mask)
-    fname = filewrite(feats, op.join(out_dir, 'feats_{0}'.format(suffix)), ref_img)
+    fname = filewrite(feats, 'z-scored ICA accepted components', ref_img)
     return fname
 
 
-def writeresults(ts, mask, comptable, mmix, n_vols, ref_img, out_dir='.'):
+def writeresults(ts, mask, comptable, mmix, n_vols, ref_img):
     """
     Denoises `ts` and saves all resulting files to disk
 
@@ -195,8 +278,6 @@ def writeresults(ts, mask, comptable, mmix, n_vols, ref_img, out_dir='.'):
         Number of volumes in original time series
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
-    out_dir : :obj:`str`, optional
-        Output directory.
 
     Notes
     -----
@@ -222,25 +303,24 @@ def writeresults(ts, mask, comptable, mmix, n_vols, ref_img, out_dir='.'):
     """
     acc = comptable[comptable.classification == 'accepted'].index.values
 
-    fout = filewrite(ts, op.join(out_dir, 'ts_OC'), ref_img)
+    fout = filewrite(ts, 'combined', ref_img)
     LGR.info('Writing optimally combined time series: {}'.format(op.abspath(fout)))
 
-    write_split_ts(ts, mmix, mask, comptable, ref_img, out_dir=out_dir, suffix='OC')
+    write_split_ts(ts, mmix, mask, comptable, ref_img)
 
     ts_B = get_coeffs(ts, mmix, mask)
-    fout = filewrite(ts_B, op.join(out_dir, 'betas_OC'), ref_img)
+    fout = filewrite(ts_B, 'ICA components', ref_img)
     LGR.info('Writing full ICA coefficient feature set: {}'.format(op.abspath(fout)))
 
     if len(acc) != 0:
-        fout = filewrite(ts_B[:, acc], op.join(out_dir, 'betas_hik_OC'), ref_img)
+        fout = filewrite(ts_B[:, acc], 'ICA accepted components', ref_img)
         LGR.info('Writing denoised ICA coefficient feature set: {}'.format(op.abspath(fout)))
         fout = writefeats(split_ts(ts, mmix, mask, comptable)[0],
-                          mmix[:, acc], mask, ref_img, out_dir=out_dir,
-                          suffix='OC2')
+                          mmix[:, acc], mask, ref_img)
         LGR.info('Writing Z-normalized spatial component maps: {}'.format(op.abspath(fout)))
 
 
-def writeresults_echoes(catd, mmix, mask, comptable, ref_img, out_dir='.'):
+def writeresults_echoes(catd, mmix, mask, comptable, ref_img):
     """
     Saves individually denoised echos to disk
 
@@ -258,8 +338,6 @@ def writeresults_echoes(catd, mmix, mask, comptable, ref_img, out_dir='.'):
         each metric. The index should be the component number.
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
-    out_dir : :obj:`str`, optional
-        Output directory.
 
     Notes
     -----
@@ -285,8 +363,9 @@ def writeresults_echoes(catd, mmix, mask, comptable, ref_img, out_dir='.'):
 
     for i_echo in range(catd.shape[1]):
         LGR.info('Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo + 1))
-        write_split_ts(catd[:, i_echo, :], mmix, mask, comptable, ref_img,
-                       out_dir=out_dir, suffix='e%i' % (i_echo + 1))
+        write_split_ts(catd[:, i_echo, :], mmix, mask, comptable, 
+                ref_img, echo=(i_echo + 1)
+        )
 
 
 def new_nii_like(ref_img, data, affine=None, copy_header=True):
@@ -325,7 +404,8 @@ def new_nii_like(ref_img, data, affine=None, copy_header=True):
     return nii
 
 
-def filewrite(data, filename, ref_img, gzip=True, copy_header=True):
+def filewrite(data, img_type, ref_img, gzip=True, copy_header=True,
+        echo=0):
     """
     Writes `data` to `filename` in format of `ref_img`
 
@@ -342,6 +422,8 @@ def filewrite(data, filename, ref_img, gzip=True, copy_header=True):
         if output dtype is NIFTI. Default: True
     copy_header : :obj:`bool`, optional
         Whether to copy header from `ref_img` to new image. Default: True
+    echo : :obj: `int`, optional
+        Indicate the echo index of the data being written.
 
     Returns
     -------
@@ -358,10 +440,7 @@ def filewrite(data, filename, ref_img, gzip=True, copy_header=True):
 
     # FIXME: we only handle writing to nifti right now
     # get root of desired output file and save as nifti image
-    root = op.dirname(filename)
-    base = op.basename(filename)
-    base, ext, add = splitext_addext(base)
-    root = op.join(root, base)
+    root = gen_img_name(img_type, echo=echo)
     name = '{}.{}'.format(root, 'nii.gz' if gzip else 'nii')
     out.to_filename(name)
 

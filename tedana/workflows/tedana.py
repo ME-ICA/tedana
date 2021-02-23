@@ -77,6 +77,18 @@ def _get_parser():
                                 "function will be used to derive a mask "
                                 "from the first echo's data."),
                           default=None)
+    optional.add_argument('--prefix',
+                          dest='prefix',
+                          type=str,
+                          help="Prefix for filenames generated.",
+                          default='')
+    optional.add_argument('--convention',
+                          dest='convention',
+                          action='store',
+                          choices=['kundu', 'bids'],
+                          help=("Filenaming convention. bids will use "
+                                "the latest BIDS derivatives version."),
+                          default='kundu')
     optional.add_argument('--fittype',
                           dest='fittype',
                           action='store',
@@ -235,6 +247,7 @@ def _get_parser():
 
 
 def tedana_workflow(data, tes, out_dir='.', mask=None,
+                    convention='kundu', prefix='',
                     fittype='loglin', combmode='t2s', tedpca='mdl',
                     fixed_seed=42, maxit=500, maxrestart=10,
                     tedort=False, gscontrol=None,
@@ -329,6 +342,12 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
+
+    io.outdir = out_dir
+    if prefix and prefix[-1] != '_':
+        prefix += '_'
+    io.prefix = prefix
+    io.convention = convention
 
     # boilerplate
     basename = 'report'
@@ -477,7 +496,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     # Create an adaptive mask with at least 3 good echoes.
     mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True, threshold=3)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
-    io.filewrite(masksum, op.join(out_dir, 'adaptive_mask.nii'), ref_img)
+    io.filewrite(masksum, 'adaptive mask', ref_img)
 
     if t2smap is None:
         LGR.info('Computing T2* map')
@@ -491,12 +510,15 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         LGR.debug('Setting cap on T2* map at {:.5f}s'.format(
             utils.millisec2sec(cap_t2s)))
         t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
-        io.filewrite(utils.millisec2sec(t2s_limited), op.join(out_dir, 't2sv.nii'), ref_img)
-        io.filewrite(s0_limited, op.join(out_dir, 's0v.nii'), ref_img)
+        io.filewrite(utils.millisec2sec(t2s_limited),  't2star map', ref_img)
+        io.filewrite(s0_limited, 's0 map', ref_img)
 
         if verbose:
-            io.filewrite(utils.millisec2sec(t2s_full), op.join(out_dir, 't2svG.nii'), ref_img)
-            io.filewrite(s0_full, op.join(out_dir, 's0vG.nii'), ref_img)
+            io.filewrite(utils.millisec2sec(t2s_full), 
+                    'full t2star map', ref_img
+            )
+            io.filewrite(s0_full, 'full s0 map', ref_img)
+
 
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, masksum, t2s=t2s_full, combmode=combmode)
@@ -516,8 +538,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                                                 verbose=verbose,
                                                 low_mem=low_mem)
         if verbose:
-            io.filewrite(utils.unmask(dd, mask),
-                         op.join(out_dir, 'ts_OC_whitened.nii.gz'), ref_img)
+            io.filewrite(utils.unmask(dd, mask), 'whitened', ref_img)
 
         # Perform ICA, calculate metrics, and apply decision tree
         # Restart when ICA fails to converge or too few BOLD components found
@@ -559,9 +580,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
         mixing_df.to_csv(op.join(out_dir, 'ica_mixing.tsv'), sep='\t', index=False)
         betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
-        io.filewrite(betas_oc,
-                     op.join(out_dir, 'ica_components.nii.gz'),
-                     ref_img)
+        io.filewrite(betas_oc, 'ICA components', ref_img)
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mmix_orig = pd.read_table(op.join(out_dir, 'ica_mixing.tsv')).values
@@ -579,9 +598,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             if manacc is not None:
                 comptable = selection.manual_selection(comptable, acc=manacc)
         betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
-        io.filewrite(betas_oc,
-                     op.join(out_dir, 'ica_components.nii.gz'),
-                     ref_img)
+        io.filewrite(betas_oc, 'ICA components', ref_img)
 
     # Save component table
     comptable['Description'] = 'ICA fit to dimensionally-reduced optimally combined data.'
@@ -623,14 +640,13 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                     comptable=comptable,
                     mmix=mmix,
                     n_vols=n_vols,
-                    ref_img=ref_img,
-                    out_dir=out_dir)
+                    ref_img=ref_img)
 
     if 'mir' in gscontrol:
         gsc.minimum_image_regression(data_oc, mmix, mask, comptable, ref_img, out_dir=out_dir)
 
     if verbose:
-        io.writeresults_echoes(catd, mmix, mask, comptable, ref_img, out_dir=out_dir)
+        io.writeresults_echoes(catd, mmix, mask, comptable, ref_img)
 
     if not no_reports:
         LGR.info('Making figures folder with static component maps and '
