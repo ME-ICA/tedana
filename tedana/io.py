@@ -20,7 +20,7 @@ RefLGR = logging.getLogger('REFERENCES')
 
 outdir = '.'
 prefix = ''
-convention = 'kundu'
+convention = 'bids'
 
 
 img_table = {
@@ -28,6 +28,7 @@ img_table = {
     't2star map': ('t2sv', 'T2starmap'),
     's0 map': ('s0v', 'S0map'),
     'combined': ('ts_OC', 'desc-optcom_bold'),
+    'ICA components': ('ica_components', 'desc-ICA_components'),
     'z-scored PCA components': ('pca_components',
         'desc-PCA_stat-z_components'),
     'z-scored ICA components': ('betas_OC',
@@ -37,8 +38,6 @@ img_table = {
     'z-scored ICA accepted components': (
         'feats_OC2',
         'desc-ICAAccepted_stat-z_components'),
-    'z-scored ICA components': ('ica_components',
-        'desc-ICA_stat-z_components'),
     'denoised ts': ('dn_ts_OC', 'desc-optcomDenoised_bold'),
     'high kappa ts': ('hik_ts_OC', 'desc-optcomAccepted_bold'),
     'low kappa ts': ('lowk_ts_OC', 'desc-optcomRejected_bold'),
@@ -68,6 +67,17 @@ img_table = {
     'low kappa ts split': ('lowk_ts_e{0}',
         'echo-{0}_desc-Rejected_bold'),
     'denoised ts split': ('dn_ts_e{0}', 'echo-{0}_desc-Denoised_bold'),
+    # global signal outputs
+    'gs map': ('T1gs', 'desc-globalSignal_map'),
+    'has gs combined': ('tsoc_orig', 'desc-optcomWithGlobalSignal_bold'),
+    'removed gs combined': ('tsoc_nogs',
+        'desc-optcomNoGlobalSingal_bold'),
+    't1 like': ('sphis_hik', 'desc-T1likeEffect_min'),
+    'ICA accepted mir denoised': ('hik_ts_OC_MIR',
+            'desc-optcomAcceptedMIRDenoised_bold'),
+    'mir denoised': ('dn_ts_OC_MIR', 'desc-optcomMIRDenoised_bold'),
+    'ICA accepted mir component weights': ('betas_hik_OC_MIR',
+            'desc-ICAAcceptedMIRDenoised_components'),
 }
 
 
@@ -324,7 +334,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, ref_img):
     write_split_ts(ts, mmix, mask, comptable, ref_img)
 
     ts_B = get_coeffs(ts, mmix, mask)
-    fout = filewrite(ts_B, 'z-scored ICA components', ref_img)
+    fout = filewrite(ts_B, 'ICA components', ref_img)
     LGR.info('Writing full ICA coefficient feature set: {}'.format(op.abspath(fout)))
 
     if len(acc) != 0:

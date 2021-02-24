@@ -81,7 +81,7 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
     sphis -= sphis.mean()
     io.filewrite(
         utils.unmask(sphis, Gmask),
-        op.join(out_dir, 'desc-globalSignal_map.nii.gz'),
+        'gs map',
         ref_img
     )
 
@@ -102,13 +102,13 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
 
     io.filewrite(
         optcom,
-        op.join(out_dir, 'desc-optcomWithGlobalSignal_bold.nii.gz'),
+        'has gs combined',
         ref_img
     )
     dm_optcom = utils.unmask(tsoc_nogs, Gmask)
     io.filewrite(
         dm_optcom,
-        op.join(out_dir, 'desc-optcomNoGlobalSignal_bold.nii.gz'),
+        'removed gs combined',
         ref_img
     )
 
@@ -219,7 +219,9 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
     t1_map = mehk_ts.min(axis=-1)  # map of T1-like effect
     t1_map -= t1_map.mean()
     io.filewrite(
-        utils.unmask(t1_map, mask), op.join(out_dir, "desc-T1likeEffect_min.nii.gz"), ref_img
+        utils.unmask(t1_map, mask),
+        't1 like',
+        ref_img
     )
     t1_map = t1_map[:, np.newaxis]
 
@@ -233,7 +235,7 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
     hik_ts = mehk_noT1gs * optcom_std  # rescale
     io.filewrite(
         utils.unmask(hik_ts, mask),
-        op.join(out_dir, "desc-optcomAcceptedMIRDenoised_bold.nii.gz"),
+        'ICA accepted mir denoised',
         ref_img,
     )
 
@@ -241,7 +243,7 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
     medn_ts = optcom_mean + ((mehk_noT1gs + resid) * optcom_std)
     io.filewrite(
         utils.unmask(medn_ts, mask),
-        op.join(out_dir, "desc-optcomMIRDenoised_bold.nii.gz"),
+        'mir denoised',
         ref_img,
     )
 
@@ -258,7 +260,7 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
     comp_pes_norm = np.linalg.lstsq(mmix_noT1gs_z.T, optcom_z.T, rcond=None)[0].T
     io.filewrite(
         utils.unmask(comp_pes_norm[:, 2:], mask),
-        op.join(out_dir, "desc-ICAAcceptedMIRDenoised_components.nii.gz"),
+        'ICA accepted mir component weights',
         ref_img,
     )
     mixing_df = pd.DataFrame(data=mmix_noT1gs.T, columns=comptable["Component"].values)

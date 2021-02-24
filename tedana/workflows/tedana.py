@@ -89,7 +89,7 @@ def _get_parser():
                           choices=['kundu', 'bids'],
                           help=("Filenaming convention. bids will use "
                                 "the latest BIDS derivatives version."),
-                          default='kundu')
+                          default='bids')
     optional.add_argument('--fittype',
                           dest='fittype',
                           action='store',
@@ -248,7 +248,7 @@ def _get_parser():
 
 
 def tedana_workflow(data, tes, out_dir='.', mask=None,
-                    convention='kundu', prefix='',
+                    convention='bids', prefix='',
                     fittype='loglin', combmode='t2s', tedpca='mdl',
                     fixed_seed=42, maxit=500, maxrestart=10,
                     tedort=False, gscontrol=None,

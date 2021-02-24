@@ -231,7 +231,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
             echo_betas = betas[:, i_echo, :]
             io.filewrite(
                 utils.unmask(echo_betas, mask),
-                'echo weight ICA map',
+                'echo weight ' + label + ' map',
                 ref_img,
                 echo=(i_echo + 1)
             )
@@ -241,14 +241,14 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
             echo_pred_R2_maps = pred_R2_maps[:, i_echo, :]
             io.filewrite(
                 utils.unmask(echo_pred_R2_maps, mask),
-                'echo R2 ICA',
+                'echo R2 ' + label,
                 ref_img,
                 echo=(i_echo + 1)
             )
             echo_pred_S0_maps = pred_S0_maps[:, i_echo, :]
             io.filewrite(
                 utils.unmask(echo_pred_S0_maps, mask),
-                'echo S0 ICA',
+                'echo S0 ' + label,
                 ref_img,
                 echo=(i_echo + 1)
             )
@@ -256,7 +256,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         # Weight maps used to average metrics across voxels
         io.filewrite(
             utils.unmask(Z_maps ** 2., mask),
-            'ICA component weights',
+            label + ' component weights',
             ref_img
         )
         del pred_R2_maps, pred_S0_maps
