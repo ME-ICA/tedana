@@ -75,10 +75,7 @@ def _create_data_struct(comptable_path, color_mapping=color_mapping):
                    'd_table_score', 'kappa ratio',
                    'rationale', 'd_table_score_scrub']
 
-    df = pd.read_json(comptable_path)
-    df.drop('Description', axis=0, inplace=True)
-    df.drop('Method', axis=1, inplace=True)
-    df = df.T
+    df = pd.read_table(comptable_path)
     n_comps = df.shape[0]
 
     # remove space from column name

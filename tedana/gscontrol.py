@@ -5,6 +5,7 @@ import logging
 import os.path as op
 
 import numpy as np
+import pandas as pd
 from scipy import stats
 from scipy.special import lpmv
 
@@ -78,13 +79,20 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
     detr = dat - np.dot(sol.T, Lmix.T)[0]
     sphis = (detr).min(axis=1)
     sphis -= sphis.mean()
-    io.filewrite(utils.unmask(sphis, Gmask), op.join(out_dir, 'T1gs'), ref_img)
+    io.filewrite(
+        utils.unmask(sphis, Gmask),
+        op.join(out_dir, 'desc-globalSignal_map.nii.gz'),
+        ref_img
+    )
 
     # find time course ofc the spatial global signal
     # make basis with the Legendre basis
     glsig = np.linalg.lstsq(np.atleast_2d(sphis).T, dat, rcond=None)[0]
     glsig = stats.zscore(glsig, axis=None)
-    np.savetxt(op.join(out_dir, 'glsig.1D'), glsig)
+
+    glsig_df = pd.DataFrame(data=glsig.T, columns=['global_signal'])
+    glsig_df.to_csv(op.join(out_dir, 'desc-globalSignal_timeseries.tsv'),
+                    sep='\t', index=False)
     glbase = np.hstack([Lmix, glsig.T])
 
     # Project global signal out of optimally combined data
@@ -92,9 +100,17 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
     tsoc_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T,
                              np.atleast_2d(glbase.T[dtrank])) + Gmu[Gmask][:, np.newaxis]
 
-    io.filewrite(optcom, op.join(out_dir, 'tsoc_orig'), ref_img)
+    io.filewrite(
+        optcom,
+        op.join(out_dir, 'desc-optcomWithGlobalSignal_bold.nii.gz'),
+        ref_img
+    )
     dm_optcom = utils.unmask(tsoc_nogs, Gmask)
-    io.filewrite(dm_optcom, op.join(out_dir, 'tsoc_nogs'), ref_img)
+    io.filewrite(
+        dm_optcom,
+        op.join(out_dir, 'desc-optcomNoGlobalSignal_bold.nii.gz'),
+        ref_img
+    )
 
     # Project glbase out of each echo
     dm_catd = catd.copy()  # don't overwrite catd
@@ -202,7 +218,9 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
     mehk_ts = np.dot(comp_pes[:, acc], mmix[:, acc].T)
     t1_map = mehk_ts.min(axis=-1)  # map of T1-like effect
     t1_map -= t1_map.mean()
-    io.filewrite(utils.unmask(t1_map, mask), op.join(out_dir, "sphis_hik"), ref_img)
+    io.filewrite(
+        utils.unmask(t1_map, mask), op.join(out_dir, "desc-T1likeEffect_min.nii.gz"), ref_img
+    )
     t1_map = t1_map[:, np.newaxis]
 
     # Find the global signal based on the T1-like effect
@@ -213,11 +231,19 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
         np.linalg.lstsq(glob_sig.T, mehk_ts.T, rcond=None)[0].T, glob_sig
     )
     hik_ts = mehk_noT1gs * optcom_std  # rescale
-    io.filewrite(utils.unmask(hik_ts, mask), op.join(out_dir, "hik_ts_OC_MIR"), ref_img)
+    io.filewrite(
+        utils.unmask(hik_ts, mask),
+        op.join(out_dir, "desc-optcomAcceptedMIRDenoised_bold.nii.gz"),
+        ref_img,
+    )
 
     # Make denoised version of T1-corrected time series
     medn_ts = optcom_mean + ((mehk_noT1gs + resid) * optcom_std)
-    io.filewrite(utils.unmask(medn_ts, mask), op.join(out_dir, "dn_ts_OC_MIR"), ref_img)
+    io.filewrite(
+        utils.unmask(medn_ts, mask),
+        op.join(out_dir, "desc-optcomMIRDenoised_bold.nii.gz"),
+        ref_img,
+    )
 
     # Orthogonalize mixing matrix w.r.t. T1-GS
     mmix_noT1gs = mmix.T - np.dot(
@@ -232,7 +258,8 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
     comp_pes_norm = np.linalg.lstsq(mmix_noT1gs_z.T, optcom_z.T, rcond=None)[0].T
     io.filewrite(
         utils.unmask(comp_pes_norm[:, 2:], mask),
-        op.join(out_dir, "betas_hik_OC_MIR"),
+        op.join(out_dir, "desc-ICAAcceptedMIRDenoised_components.nii.gz"),
         ref_img,
     )
-    np.savetxt(op.join(out_dir, "meica_mix_MIR.1D"), mmix_noT1gs)
+    mixing_df = pd.DataFrame(data=mmix_noT1gs.T, columns=comptable["Component"].values)
+    mixing_df.to_csv(op.join(out_dir, "desc-ICAMIRDenoised_mixing.tsv"), sep='\t', index=False)

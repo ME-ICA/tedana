@@ -1,12 +1,10 @@
 """
 Functions to handle file input/output
 """
-import json
 import logging
 import os.path as op
 
 import numpy as np
-import pandas as pd
 import nibabel as nib
 from nibabel.filename_parser import splitext_addext
 from nilearn._utils import check_niimg
@@ -42,7 +40,7 @@ def split_ts(data, mmix, mask, comptable):
     -------
     hikts : (S x T) :obj:`numpy.ndarray`
         Time series reconstructed using only components in `acc`
-    rest : (S x T) :obj:`numpy.ndarray`
+    resid : (S x T) :obj:`numpy.ndarray`
         Original data with `hikts` removed
     """
     acc = comptable[comptable.classification == 'accepted'].index.values
@@ -60,7 +58,7 @@ def split_ts(data, mmix, mask, comptable):
     return hikts, resid
 
 
-def write_split_ts(data, mmix, mask, comptable, ref_img, out_dir='.', suffix=''):
+def write_split_ts(data, mmix, mask, comptable, ref_img, out_dir='.', prefix=''):
     """
     Splits `data` into denoised / noise / ignored time series and saves to disk
 
@@ -77,8 +75,8 @@ def write_split_ts(data, mmix, mask, comptable, ref_img, out_dir='.', suffix='')
         Reference image to dictate how outputs are saved to disk
     out_dir : :obj:`str`, optional
         Output directory.
-    suffix : :obj:`str`, optional
-        Appended to name of saved files (before extension). Default: ''
+    prefix : :obj:`str`, optional
+        Prepended to name of saved files (before extension). Default: ''
 
     Returns
     -------
@@ -89,14 +87,13 @@ def write_split_ts(data, mmix, mask, comptable, ref_img, out_dir='.', suffix='')
     -----
     This function writes out several files:
 
-    ======================    =================================================
-    Filename                  Content
-    ======================    =================================================
-    hik_ts_[suffix].nii       High-Kappa time series.
-    midk_ts_[suffix].nii      Mid-Kappa time series.
-    low_ts_[suffix].nii       Low-Kappa time series.
-    dn_ts_[suffix].nii        Denoised time series.
-    ======================    =================================================
+    ============================    ============================================
+    Filename                        Content
+    ============================    ============================================
+    [prefix]Accepted_bold.nii.gz    High-Kappa time series.
+    [prefix]Rejected_bold.nii.gz    Low-Kappa time series.
+    [prefix]Denoised_bold.nii.gz    Denoised time series.
+    ============================    ============================================
     """
     acc = comptable[comptable.classification == 'accepted'].index.values
     rej = comptable[comptable.classification == 'rejected'].index.values
@@ -117,22 +114,31 @@ def write_split_ts(data, mmix, mask, comptable, ref_img, out_dir='.', suffix='')
     dnts = data[mask] - lowkts
 
     if len(acc) != 0:
-        fout = filewrite(utils.unmask(hikts, mask),
-                         op.join(out_dir, 'hik_ts_{0}'.format(suffix)), ref_img)
+        fout = filewrite(
+            utils.unmask(hikts, mask),
+            op.join(out_dir, '{}Accepted_bold.nii.gz'.format(prefix)),
+            ref_img
+        )
         LGR.info('Writing high-Kappa time series: {}'.format(op.abspath(fout)))
 
     if len(rej) != 0:
-        fout = filewrite(utils.unmask(lowkts, mask),
-                         op.join(out_dir, 'lowk_ts_{0}'.format(suffix)), ref_img)
+        fout = filewrite(
+            utils.unmask(lowkts, mask),
+            op.join(out_dir, '{}Rejected_bold.nii.gz'.format(prefix)),
+            ref_img
+        )
         LGR.info('Writing low-Kappa time series: {}'.format(op.abspath(fout)))
 
-    fout = filewrite(utils.unmask(dnts, mask),
-                     op.join(out_dir, 'dn_ts_{0}'.format(suffix)), ref_img)
+    fout = filewrite(
+        utils.unmask(dnts, mask),
+        op.join(out_dir, '{}Denoised_bold.nii.gz'.format(prefix)),
+        ref_img
+    )
     LGR.info('Writing denoised time series: {}'.format(op.abspath(fout)))
     return varexpl
 
 
-def writefeats(data, mmix, mask, ref_img, out_dir='.', suffix=''):
+def writefeats(data, mmix, mask, ref_img, out_dir='.', prefix=''):
     """
     Converts `data` to component space with `mmix` and saves to disk
 
@@ -149,8 +155,8 @@ def writefeats(data, mmix, mask, ref_img, out_dir='.', suffix=''):
         Reference image to dictate how outputs are saved to disk
     out_dir : :obj:`str`, optional
         Output directory.
-    suffix : :obj:`str`, optional
-        Appended to name of saved files (before extension). Default: ''
+    prefix : :obj:`str`, optional
+        Prepended to name of saved files (before extension). Default: ''
 
     Returns
     -------
@@ -161,16 +167,20 @@ def writefeats(data, mmix, mask, ref_img, out_dir='.', suffix=''):
     -----
     This function writes out a file:
 
-    ======================    =================================================
-    Filename                  Content
-    ======================    =================================================
-    feats_[suffix].nii        Z-normalized spatial component maps.
-    ======================    =================================================
+    =================================    =============================================
+    Filename                             Content
+    =================================    =============================================
+    [prefix]_stat-z_components.nii.gz    Z-normalized spatial component maps.
+    =================================    =============================================
     """
 
     # write feature versions of components
     feats = utils.unmask(computefeats2(data, mmix, mask), mask)
-    fname = filewrite(feats, op.join(out_dir, 'feats_{0}'.format(suffix)), ref_img)
+    fname = filewrite(
+        feats,
+        op.join(out_dir, '{}_stat-z_components.nii.gz'.format(prefix)),
+        ref_img
+    )
     return fname
 
 
@@ -202,41 +212,48 @@ def writeresults(ts, mask, comptable, mmix, n_vols, ref_img, out_dir='.'):
     -----
     This function writes out several files:
 
-    ======================    =================================================
-    Filename                  Content
-    ======================    =================================================
-    hik_ts_OC.nii             High-Kappa time series. Generated by
-                              :py:func:`tedana.utils.io.write_split_ts`.
-    midk_ts_OC.nii            Mid-Kappa time series. Generated by
-                              :py:func:`tedana.utils.io.write_split_ts`.
-    low_ts_OC.nii             Low-Kappa time series. Generated by
-                              :py:func:`tedana.utils.io.write_split_ts`.
-    dn_ts_OC.nii              Denoised time series. Generated by
-                              :py:func:`tedana.utils.io.write_split_ts`.
-    betas_OC.nii              Full ICA coefficient feature set.
-    betas_hik_OC.nii          Denoised ICA coefficient feature set.
-    feats_OC2.nii             Z-normalized spatial component maps. Generated
-                              by :py:func:`tedana.utils.io.writefeats`.
-    ts_OC.nii                 Optimally combined 4D time series.
-    ======================    =================================================
+    =========================================    =====================================
+    Filename                                     Content
+    =========================================    =====================================
+    desc-optcomAccepted_bold.nii.gz              High-Kappa time series.
+    desc-optcomRejected_bold.nii.gz              Low-Kappa time series.
+    desc-optcomDenoised_bold.nii.gz              Denoised time series.
+    desc-ICA_components.nii.gz                   Spatial component maps for all
+                                                 components.
+    desc-ICAAccepted_components.nii.gz           Spatial component maps for accepted
+                                                 components.
+    desc-ICAAccepted_stat-z_components.nii.gz    Z-normalized spatial component maps
+                                                 for accepted components.
+    =========================================    =====================================
+
+    See Also
+    --------
+    tedana.io.write_split_ts: Writes out time series files
+    tedana.io.writefeats: Writes out component files
     """
     acc = comptable[comptable.classification == 'accepted'].index.values
-
-    fout = filewrite(ts, op.join(out_dir, 'ts_OC'), ref_img)
-    LGR.info('Writing optimally combined time series: {}'.format(op.abspath(fout)))
-
-    write_split_ts(ts, mmix, mask, comptable, ref_img, out_dir=out_dir, suffix='OC')
-
     ts_B = get_coeffs(ts, mmix, mask)
-    fout = filewrite(ts_B, op.join(out_dir, 'betas_OC'), ref_img)
+
+    fout = filewrite(
+        ts_B,
+        op.join(out_dir, 'desc-ICA_components.nii.gz'),
+        ref_img
+    )
     LGR.info('Writing full ICA coefficient feature set: {}'.format(op.abspath(fout)))
 
+    write_split_ts(ts, mmix, mask, comptable, ref_img, out_dir=out_dir, prefix='desc-optcom')
+
     if len(acc) != 0:
-        fout = filewrite(ts_B[:, acc], op.join(out_dir, 'betas_hik_OC'), ref_img)
+        fout = filewrite(
+            ts_B[:, acc],
+            op.join(out_dir, 'desc-ICAAccepted_components.nii.gz'),
+            ref_img
+        )
         LGR.info('Writing denoised ICA coefficient feature set: {}'.format(op.abspath(fout)))
+
         fout = writefeats(split_ts(ts, mmix, mask, comptable)[0],
                           mmix[:, acc], mask, ref_img, out_dir=out_dir,
-                          suffix='OC2')
+                          prefix='desc-ICAAccepted')
         LGR.info('Writing Z-normalized spatial component maps: {}'.format(op.abspath(fout)))
 
 
@@ -265,28 +282,29 @@ def writeresults_echoes(catd, mmix, mask, comptable, ref_img, out_dir='.'):
     -----
     This function writes out several files:
 
-    ======================    =================================================
-    Filename                  Content
-    ======================    =================================================
-    hik_ts_e[echo].nii        High-Kappa timeseries for echo number ``echo``.
-                              Generated by
-                              :py:func:`tedana.utils.io.write_split_ts`.
-    midk_ts_e[echo].nii       Mid-Kappa timeseries for echo number ``echo``.
-                              Generated by
-                              :py:func:`tedana.utils.io.write_split_ts`.
-    lowk_ts_e[echo].nii       Low-Kappa timeseries for echo number ``echo``.
-                              Generated by
-                              :py:func:`tedana.utils.io.write_split_ts`.
-    dn_ts_e[echo].nii         Denoised timeseries for echo number ``echo``.
-                              Generated by
-                              :py:func:`tedana.utils.io.write_split_ts`.
-    ======================    =================================================
+    =====================================    ===================================
+    Filename                                 Content
+    =====================================    ===================================
+    echo-[echo]_desc-Accepted_bold.nii.gz    High-Kappa timeseries for echo
+                                             number ``echo``.
+    echo-[echo]_desc-Rejected_bold.nii.gz    Low-Kappa timeseries for echo
+                                             number ``echo``.
+    echo-[echo]_desc-Denoised_bold.nii.gz    Denoised timeseries for echo
+                                             number ``echo``.
+    =====================================    ===================================
+
+    See Also
+    --------
+    tedana.io.write_split_ts: Writes out the files.
     """
 
     for i_echo in range(catd.shape[1]):
         LGR.info('Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo + 1))
-        write_split_ts(catd[:, i_echo, :], mmix, mask, comptable, ref_img,
-                       out_dir=out_dir, suffix='e%i' % (i_echo + 1))
+        write_split_ts(
+            catd[:, i_echo, :], mmix, mask, comptable, ref_img,
+            out_dir=out_dir,
+            prefix='echo-{}_desc-'.format(i_echo + 1)
+        )
 
 
 def new_nii_like(ref_img, data, affine=None, copy_header=True):
@@ -443,85 +461,3 @@ def add_decomp_prefix(comp_num, prefix, max_value):
     comp_name = '{0:08d}'.format(int(comp_num))
     comp_name = '{0}_{1}'.format(prefix, comp_name[8 - n_digits:])
     return comp_name
-
-
-def _rem_column_prefix(name):
-    """
-    Remove column prefix
-    """
-    return int(name.split('_')[-1])
-
-
-def _find_comp_rows(name):
-    """
-    Find component rows
-    """
-    is_valid = False
-    temp = name.split('_')
-    if len(temp) == 2 and temp[-1].isdigit():
-        is_valid = True
-    return is_valid
-
-
-def save_comptable(df, filename, label='ica', metadata=None):
-    """
-    Save pandas DataFrame as a BIDS Derivatives-compatible json file.
-
-    Parameters
-    ----------
-    df : :obj:`pandas.DataFrame`
-        DataFrame to save to file.
-    filename : :obj:`str`
-        File to which to output DataFrame.
-    label : :obj:`str`, optional
-        Prefix to add to component names in json file. Generally either "ica"
-        or "pca".
-    metadata : :obj:`dict` or None, optional
-        Additional top-level metadata (e.g., decomposition description) to add
-        to json file. Default is None.
-    """
-    save_df = df.copy()
-
-    if 'component' not in save_df.columns:
-        save_df['component'] = save_df.index
-
-    # Rename components
-    max_value = save_df['component'].max()
-    save_df['component'] = save_df['component'].apply(
-        add_decomp_prefix, prefix=label, max_value=max_value)
-    save_df = save_df.set_index('component')
-    save_df = save_df.fillna('n/a')
-
-    data = save_df.to_dict(orient='index')
-
-    if metadata is not None:
-        data = {**data, **metadata}
-
-    with open(filename, 'w') as fo:
-        json.dump(data, fo, sort_keys=True, indent=4)
-
-
-def load_comptable(filename):
-    """
-    Load a BIDS Derivatives decomposition json file into a pandas DataFrame.
-
-    Parameters
-    ----------
-    filename : :obj:`str`
-        File from which to load DataFrame.
-
-    Returns
-    -------
-    df : :obj:`pandas.DataFrame`
-        DataFrame with contents from filename.
-    """
-    with open(filename, 'r') as fo:
-        data = json.load(fo)
-    data = {d: data[d] for d in data.keys() if _find_comp_rows(d)}
-    df = pd.DataFrame.from_dict(data, orient='index')
-    df = df.replace('n/a', np.nan)  # our jsons store nans as 'n/a'
-    df['component'] = df.index
-    df['component'] = df['component'].apply(_rem_column_prefix)
-    df = df.set_index('component', drop=True)
-    df.index.name = 'component'
-    return df
