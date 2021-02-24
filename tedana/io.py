@@ -3,11 +3,9 @@ Functions to handle file input/output
 """
 import logging
 import os.path as op
-from enum import Enum, unique
 
 import numpy as np
 import nibabel as nib
-from nibabel.filename_parser import splitext_addext
 from nilearn._utils import check_niimg
 from nilearn.image import new_img_like
 
@@ -29,15 +27,18 @@ img_table = {
     's0 map': ('s0v', 'S0map'),
     'combined': ('ts_OC', 'desc-optcom_bold'),
     'ICA components': ('ica_components', 'desc-ICA_components'),
-    'z-scored PCA components': ('pca_components',
-        'desc-PCA_stat-z_components'),
-    'z-scored ICA components': ('betas_OC',
-        'desc-ICA_stat-z_components'),
-    'ICA accepted components': ('betas_hik_OC', 
-        'desc-ICAAccepted_components'),
+    'z-scored PCA components': (
+        'pca_components', 'desc-PCA_stat-z_components'
+    ),
+    'z-scored ICA components': (
+        'betas_OC', 'desc-ICA_stat-z_components'
+    ),
+    'ICA accepted components': (
+        'betas_hik_OC', 'desc-ICAAccepted_components'
+    ),
     'z-scored ICA accepted components': (
-        'feats_OC2',
-        'desc-ICAAccepted_stat-z_components'),
+        'feats_OC2', 'desc-ICAAccepted_stat-z_components'
+    ),
     'denoised ts': ('dn_ts_OC', 'desc-optcomDenoised_bold'),
     'high kappa ts': ('hik_ts_OC', 'desc-optcomAccepted_bold'),
     'low kappa ts': ('lowk_ts_OC', 'desc-optcomRejected_bold'),
@@ -45,39 +46,52 @@ img_table = {
     'full t2star map': ('t2svG', 'desc-full_T2starmap'),
     'full s0 map': ('s0vG', 'desc-full_S0map'),
     'whitened': ('ts_OC_whitened', 'desc-optcomPCAReduced_bold'),
-    'echo weight PCA map split': ('e{0}_PCA_comp',
-        'echo-{0}_desc-PCA_components'),
-    'echo R2 PCA split': ('e{0}_PCA_R2',
-        'echo-{0}_desc-PCAR2ModelPredictions_components'),
-    'echo S0 PCA split': ('e{0}_PCA_S0',
-        'echo-{0}_desc-PCAS0ModelPredictions_components'),
-    'PCA component weights': ('pca_weights',
-        'desc-PCAAveragingWeights_components'),
+    'echo weight PCA map split': (
+        'e{0}_PCA_comp', 'echo-{0}_desc-PCA_components'
+    ),
+    'echo R2 PCA split': (
+        'e{0}_PCA_R2', 'echo-{0}_desc-PCAR2ModelPredictions_components'
+    ),
+    'echo S0 PCA split': (
+        'e{0}_PCA_S0', 'echo-{0}_desc-PCAS0ModelPredictions_components'
+    ),
+    'PCA component weights': (
+        'pca_weights', 'desc-PCAAveragingWeights_components'
+    ),
     'PCA reduced': ('oc_reduced', 'desc-optcomPCAReduced_bold'),
-    'echo weight ICA map split': ('e{0}_ICA_comp',
-        'echo-{0}_desc-ICA_components'),
-    'echo R2 ICA split': ('e{0}_ICA_R2',
-        'echo-{0}_desc-ICAR2ModelPredictions_components'),
-    'echo S0 ICA split': ('e{0}_ICA_S0',
-        'echo-{0}_desc-ICAS0ModelPredictions_components'),
-    'ICA component weights': ('ica_weights',
-        'desc-ICAAveragingWeights_components'),
-    'high kappa ts split': ('hik_ts_e{0}',
-        'echo-{0}_desc-Accepted_bold'),
-    'low kappa ts split': ('lowk_ts_e{0}',
-        'echo-{0}_desc-Rejected_bold'),
+    'echo weight ICA map split': (
+        'e{0}_ICA_comp', 'echo-{0}_desc-ICA_components'
+    ),
+    'echo R2 ICA split': (
+        'e{0}_ICA_R2', 'echo-{0}_desc-ICAR2ModelPredictions_components'
+    ),
+    'echo S0 ICA split': (
+        'e{0}_ICA_S0', 'echo-{0}_desc-ICAS0ModelPredictions_components'
+    ),
+    'ICA component weights': (
+        'ica_weights', 'desc-ICAAveragingWeights_components'
+    ),
+    'high kappa ts split': (
+        'hik_ts_e{0}', 'echo-{0}_desc-Accepted_bold'
+    ),
+    'low kappa ts split': (
+        'lowk_ts_e{0}', 'echo-{0}_desc-Rejected_bold'
+    ),
     'denoised ts split': ('dn_ts_e{0}', 'echo-{0}_desc-Denoised_bold'),
     # global signal outputs
     'gs map': ('T1gs', 'desc-globalSignal_map'),
     'has gs combined': ('tsoc_orig', 'desc-optcomWithGlobalSignal_bold'),
-    'removed gs combined': ('tsoc_nogs',
-        'desc-optcomNoGlobalSingal_bold'),
+    'removed gs combined': (
+        'tsoc_nogs', 'desc-optcomNoGlobalSignal_bold'
+    ),
     't1 like': ('sphis_hik', 'desc-T1likeEffect_min'),
-    'ICA accepted mir denoised': ('hik_ts_OC_MIR',
-            'desc-optcomAcceptedMIRDenoised_bold'),
+    'ICA accepted mir denoised': (
+        'hik_ts_OC_MIR', 'desc-optcomAcceptedMIRDenoised_bold'
+    ),
     'mir denoised': ('dn_ts_OC_MIR', 'desc-optcomMIRDenoised_bold'),
-    'ICA accepted mir component weights': ('betas_hik_OC_MIR',
-            'desc-ICAAcceptedMIRDenoised_components'),
+    'ICA accepted mir component weights': (
+            'betas_hik_OC_MIR', 'desc-ICAAcceptedMIRDenoised_components'
+    ),
 }
 
 
@@ -91,7 +105,7 @@ def gen_img_name(img_type, echo=0):
         The description of the image. Must be a key in io.img_table
     echo : :obj: `int`
         The echo number of the image.
-    
+
     Returns
     -------
     The full path for the image name
@@ -115,7 +129,7 @@ def gen_img_name(img_type, echo=0):
         if convention:
             raise RuntimeError('Naming convention %s not supported' %
                                convention
-            )
+                               )
         else:
             raise RuntimeError('No naming convention given!')
     if echo:
@@ -128,7 +142,7 @@ def gen_img_name(img_type, echo=0):
     else:
         basename = format_string
     return op.join(outdir, prefix + basename)
-    
+
 
 def split_ts(data, mmix, mask, comptable):
     """
@@ -387,8 +401,9 @@ def writeresults_echoes(catd, mmix, mask, comptable, ref_img):
 
     for i_echo in range(catd.shape[1]):
         LGR.info('Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo + 1))
-        write_split_ts(catd[:, i_echo, :], mmix, mask, comptable, 
-                ref_img, echo=(i_echo + 1)
+        write_split_ts(
+                catd[:, i_echo, :], mmix, mask, comptable, ref_img,
+                echo=(i_echo + 1)
         )
 
 
@@ -429,7 +444,7 @@ def new_nii_like(ref_img, data, affine=None, copy_header=True):
 
 
 def filewrite(data, img_type, ref_img, gzip=True, copy_header=True,
-        echo=0):
+              echo=0):
     """
     Writes `data` to `filename` in format of `ref_img`
 

@@ -178,6 +178,7 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
+    io.outdir = out_dir
 
     if debug and not quiet:
         logging.basicConfig(level=logging.DEBUG)

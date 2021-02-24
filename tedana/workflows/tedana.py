@@ -511,13 +511,13 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         LGR.debug('Setting cap on T2* map at {:.5f}s'.format(
             utils.millisec2sec(cap_t2s)))
         t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
-        io.filewrite(utils.millisec2sec(t2s_limited),  't2star map', ref_img)
+        io.filewrite(utils.millisec2sec(t2s_limited),
+                     't2star map', ref_img)
         io.filewrite(s0_limited, 's0 map', ref_img)
 
         if verbose:
-            io.filewrite(utils.millisec2sec(t2s_full), 
-                    'full t2star map', ref_img
-            )
+            io.filewrite(utils.millisec2sec(t2s_full),
+                         'full t2star map', ref_img)
             io.filewrite(s0_full, 'full s0 map', ref_img)
 
     # optimally combine data

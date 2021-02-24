@@ -138,22 +138,24 @@ def test_smoke_writefeats():
 
 def test_smoke_filewrite():
     """
-    Ensures that filewrite writes out a neuroimage with random input,
-    since there is no name, remove the image named .nii
+    Ensures that filewrite fails for no known image type, write a known key
+    in both bids and kundu formats
     """
-    n_samples, n_times, _ = 64350, 10, 6
+    n_samples, _, _ = 64350, 10, 6
     data_1d = np.random.random((n_samples))
-    data_2d = np.random.random((n_samples, n_times))
-    filename = ""
     ref_img = os.path.join(data_dir, 'mask.nii.gz')
 
-    assert me.filewrite(data_1d, filename, ref_img) is not None
-    assert me.filewrite(data_2d, filename, ref_img) is not None
+    with pytest.raises(KeyError):
+        me.filewrite(data_1d, '', ref_img)
 
-    try:
-        os.remove(".nii.gz")
-    except OSError:
-        print(".nii not generated")
+    for convention in ('bids', 'kundu'):
+        me.convention = convention
+        fname = me.filewrite(data_1d, 't2star map', ref_img)
+        assert fname is not None
+        try:
+            os.remove(fname)
+        except OSError:
+            print('File not generated!')
 
 
 def test_smoke_load_data():
