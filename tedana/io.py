@@ -60,6 +60,45 @@ def split_ts(data, mmix, mask, comptable):
     return hikts, resid
 
 
+def denoise_ts(data, mmix, mask, comptable):
+    """Apply component classifications to data for denoising.
+
+    Parameters
+    ----------
+    data
+    mmix
+    mask
+    comptable
+
+    Returns
+    -------
+    dnts : (S x T) array_like
+        Denoised optimally combined data.
+    hikts : (S x T) array_like
+        High-Kappa data.
+    lowkts : (S x T) array_like
+        Low-Kappa data.
+    """
+    acc = comptable[comptable.classification == 'accepted'].index.values
+    rej = comptable[comptable.classification == 'rejected'].index.values
+
+    # mask and de-mean data
+    mdata = data[mask]
+    dmdata = mdata.T - mdata.T.mean(axis=0)
+
+    # get variance explained by retained components
+    betas = get_coeffs(dmdata.T, mmix, mask=None)
+    varexpl = (1 - ((dmdata.T - betas.dot(mmix.T))**2.).sum() /
+               (dmdata**2.).sum()) * 100
+    LGR.info('Variance explained by ICA decomposition: {:.02f}%'.format(varexpl))
+
+    # create component and de-noised time series and save to files
+    hikts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
+    lowkts = utils.unmask(betas[:, rej].dot(mmix.T[rej, :]), mask)
+    dnts = utils.unmask(data[mask] - lowkts[mask], mask)
+    return dnts, hikts, lowkts
+
+
 def write_split_ts(data, mmix, mask, comptable, ref_img, out_dir='.', suffix=''):
     """
     Splits `data` into denoised / noise / ignored time series and saves to disk
@@ -101,35 +140,21 @@ def write_split_ts(data, mmix, mask, comptable, ref_img, out_dir='.', suffix='')
     acc = comptable[comptable.classification == 'accepted'].index.values
     rej = comptable[comptable.classification == 'rejected'].index.values
 
-    # mask and de-mean data
-    mdata = data[mask]
-    dmdata = mdata.T - mdata.T.mean(axis=0)
-
-    # get variance explained by retained components
-    betas = get_coeffs(dmdata.T, mmix, mask=None)
-    varexpl = (1 - ((dmdata.T - betas.dot(mmix.T))**2.).sum() /
-               (dmdata**2.).sum()) * 100
-    LGR.info('Variance explained by ICA decomposition: {:.02f}%'.format(varexpl))
-
-    # create component and de-noised time series and save to files
-    hikts = betas[:, acc].dot(mmix.T[acc, :])
-    lowkts = betas[:, rej].dot(mmix.T[rej, :])
-    dnts = data[mask] - lowkts
+    dnts, hikts, lowkts = denoise_ts(data, mmix, mask, comptable)
 
     if len(acc) != 0:
-        fout = filewrite(utils.unmask(hikts, mask),
+        fout = filewrite(hikts,
                          op.join(out_dir, 'hik_ts_{0}'.format(suffix)), ref_img)
         LGR.info('Writing high-Kappa time series: {}'.format(op.abspath(fout)))
 
     if len(rej) != 0:
-        fout = filewrite(utils.unmask(lowkts, mask),
+        fout = filewrite(lowkts,
                          op.join(out_dir, 'lowk_ts_{0}'.format(suffix)), ref_img)
         LGR.info('Writing low-Kappa time series: {}'.format(op.abspath(fout)))
 
-    fout = filewrite(utils.unmask(dnts, mask),
+    fout = filewrite(dnts,
                      op.join(out_dir, 'dn_ts_{0}'.format(suffix)), ref_img)
     LGR.info('Writing denoised time series: {}'.format(op.abspath(fout)))
-    return varexpl
 
 
 def writefeats(data, mmix, mask, ref_img, out_dir='.', suffix=''):
