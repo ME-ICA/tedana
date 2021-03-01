@@ -639,12 +639,23 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         if not op.isdir(op.join(out_dir, 'figures')):
             os.mkdir(op.join(out_dir, 'figures'))
 
+        dn_ts, hikts, lowkts = io.denoise_ts(data_oc, mmix, mask, comptable)
+
+        fig_dir = op.join(out_dir, "figures")
+        reporting.static_figures.carpet_plot(
+            optcom_ts=data_oc,
+            denoised_ts=dn_ts,
+            hikts=hikts,
+            lowkts=lowkts,
+            mask=mask,
+            ref_img=ref_img,
+            out_dir=fig_dir,
+        )
         reporting.static_figures.comp_figures(data_oc, mask=mask,
                                               comptable=comptable,
                                               mmix=mmix_orig,
                                               ref_img=ref_img,
-                                              out_dir=op.join(out_dir,
-                                                              'figures'),
+                                              out_dir=fig_dir,
                                               png_cmap=png_cmap)
 
         if sys.version_info.major == 3 and sys.version_info.minor < 6:
