@@ -5,7 +5,7 @@ tags:
   - fMRI
   - neuroimaging
 authors:
-  - name: Elizabeth M. DuPre^[co-first author]
+  - name: Elizabeth DuPre^[co-first author]
     affiliation: 1
     orcid: 0000-0003-1358-196X
   - name: Taylor Salo^[co-first author]
