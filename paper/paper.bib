@@ -330,16 +330,6 @@
   year      =  2002
 }
 
-@MISC{Esteban_undated-vy,
-  title  = "{FMRIPrep}: a robust preprocessing pipeline for functional {MRI}",
-  author = "Esteban, Oscar and Markiewicz, Christopher J and Blair, Ross W and
-            Moodie, Craig A and Ilkay Isik, A and Erramuzpe, Asier and Kent,
-            James D and Goncalves, Mathias and DuPre, Elizabeth and Snyder,
-            Madeleine and Oya, Hiroyuki and Ghosh, Satrajit S and Wright,
-            Jessey and Durnez, Joke and Poldrack, Russell A and Gorgolewski,
-            Krzysztof J"
-}
-
 @ARTICLE{Posse1999-lt,
   title    = "Enhancement of {BOLD-contrast} sensitivity by single-shot
               multi-echo functional {MR} imaging",
@@ -460,45 +450,6 @@
   language = "en"
 }
 
-@ARTICLE{Li2007-bz,
-  title    = "Estimating the number of independent components for functional
-              magnetic resonance imaging data",
-  author   = "Li, Yi-Ou and Adali, T{\"u}lay and Calhoun, Vince D",
-  abstract = "Multivariate analysis methods such as independent component
-              analysis (ICA) have been applied to the analysis of functional
-              magnetic resonance imaging (fMRI) data to study brain function.
-              Because of the high dimensionality and high noise level of the
-              fMRI data, order selection, i.e., estimation of the number of
-              informative components, is critical to reduce over/underfitting
-              in such methods. Dependence among fMRI data samples in the
-              spatial and temporal domain limits the usefulness of the
-              practical formulations of information-theoretic criteria (ITC)
-              for order selection, since they are based on likelihood of
-              independent and identically distributed (i.i.d.) data samples. To
-              address this issue, we propose a subsampling scheme to obtain a
-              set of effectively i.i.d. samples from the dependent data samples
-              and apply the ITC formulas to the effectively i.i.d. sample set
-              for order selection. We apply the proposed method on the
-              simulated data and show that it significantly improves the
-              accuracy of order selection from dependent data. We also perform
-              order selection on fMRI data from a visuomotor task and show that
-              the proposed method alleviates the over-estimation on the number
-              of brain sources due to the intrinsic smoothness and the smooth
-              preprocessing of fMRI data. We use the software package ICASSO
-              (Himberg et al. [ 2004]: Neuroimage 22:1214-1222) to analyze the
-              independent component (IC) estimates at different orders and show
-              that, when ICA is performed at overestimated orders, the
-              stability of the IC estimates decreases and the estimation of
-              task related brain activations show degradation.",
-  journal  = "Hum. Brain Mapp.",
-  volume   =  28,
-  number   =  11,
-  pages    = "1251--1266",
-  month    =  nov,
-  year     =  2007,
-  language = "en"
-}
-
 @ARTICLE{Chang2009-bj,
   title    = "Relationship between respiration, end-tidal {CO2}, and {BOLD}
               signals in resting-state {fMRI}",
@@ -531,61 +482,6 @@
   pages    = "1381--1393",
   month    =  oct,
   year     =  2009,
-  language = "en"
-}
-
-@ARTICLE{Kundu2017-mb,
-  title    = "Multi-echo {fMRI}: A review of applications in {fMRI} denoising
-              and analysis of {BOLD} signals",
-  author   = "Kundu, Prantik and Voon, Valerie and Balchandani, Priti and
-              Lombardo, Michael V and Poser, Benedikt A and Bandettini, Peter A",
-  abstract = "In recent years the field of fMRI research has enjoyed expanded
-              technical abilities related to resolution, as well as use across
-              many fields of brain research. At the same time, the field has
-              also dealt with uncertainty related to many known and unknown
-              effects of artifact in fMRI data. In this review we discuss an
-              emerging fMRI technology, called multi-echo (ME)-fMRI, which
-              focuses on improving the fidelity and interpretability of fMRI.
-              Where the essential problem of standard single-echo fMRI is the
-              indeterminacy of sources of signals, whether BOLD or artifact,
-              this is not the case for ME-fMRI. By acquiring multiple echo
-              images per slice, the ME approach allows T2* decay to be modeled
-              at every voxel at every time point. Since BOLD signals arise by
-              changes in T2* over time, an fMRI experiment sampling the T2*
-              signal decay can be analyzed to distinguish BOLD from artifact
-              signal constituents. While the ME approach has a long history of
-              use in theoretical and validation studies, modern MRI systems
-              enable whole-brain multi-echo fMRI at high resolution. This
-              review covers recent multi-echo fMRI acquisition methods, and the
-              analysis steps for this data to make fMRI at once more
-              principled, straightforward, and powerful. After a brief overview
-              of history and theory, T2* modeling and applications will be
-              discussed. These applications include T2* mapping and combining
-              echoes from ME data to increase BOLD contrast and mitigate
-              dropout artifacts. Next, the modeling of fMRI signal changes to
-              detect signal origins in BOLD-related T2* versus artifact-related
-              S0changes will be reviewed. A focus is on the use of ME-fMRI data
-              to extract and classify components from spatial ICA, called
-              multi-echo ICA (ME-ICA). After describing how ME-fMRI and ME-ICA
-              lead to a general model for analysis of fMRI signals,
-              applications in animal and human imaging will be discussed.
-              Applications include removing motion artifacts in resting state
-              data at subject and group level. New imaging methods such as
-              multi-band multi-echo fMRI and imaging at 7T are demonstrated
-              throughout the review, and a practical analysis pipeline is
-              described. The review culminates with evidence from recent
-              studies of major boosts in statistical power from using
-              multi-echo fMRI for detecting activation and connectivity in
-              healthy individuals and patients with neuropsychiatric disease.
-              In conclusion, the review shows evidence that the multi-echo
-              approach expands the range of experiments that is practicable
-              using fMRI. These findings suggest a compelling future role of
-              the multi-echo approach in subject-level and clinical fMRI.",
-  journal  = "Neuroimage",
-  volume   =  154,
-  pages    = "59--80",
-  month    =  jul,
-  year     =  2017,
   language = "en"
 }
 
@@ -810,36 +706,6 @@
   year     =  2017,
   keywords = "BOLD fMRI; Denoising methods; Motion artifacts; Multi-echo;
               Phase-based methods; Physiological noise",
-  language = "en"
-}
-
-@ARTICLE{Abraham2014-gb,
-  title    = "Machine learning for neuroimaging with scikit-learn",
-  author   = "Abraham, Alexandre and Pedregosa, Fabian and Eickenberg, Michael
-              and Gervais, Philippe and Mueller, Andreas and Kossaifi, Jean and
-              Gramfort, Alexandre and Thirion, Bertrand and Varoquaux, Ga{\"e}l",
-  abstract = "Statistical machine learning methods are increasingly used for
-              neuroimaging data analysis. Their main virtue is their ability to
-              model high-dimensional datasets, e.g., multivariate analysis of
-              activation images or resting-state time series. Supervised
-              learning is typically used in decoding or encoding settings to
-              relate brain images to behavioral or clinical observations, while
-              unsupervised learning can uncover hidden structures in sets of
-              images (e.g., resting state functional MRI) or find
-              sub-populations in large cohorts. By considering different
-              functional neuroimaging applications, we illustrate how
-              scikit-learn, a Python machine learning library, can be used to
-              perform some key analysis steps. Scikit-learn contains a very
-              large set of statistical learning algorithms, both supervised and
-              unsupervised, and its application to neuroimaging data provides a
-              versatile tool to study the brain.",
-  journal  = "Front. Neuroinform.",
-  volume   =  8,
-  pages    = "14",
-  month    =  feb,
-  year     =  2014,
-  keywords = "Python; machine learning; neuroimaging; scikit-learn; statistical
-              learning",
   language = "en"
 }
 
