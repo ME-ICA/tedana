@@ -5,65 +5,65 @@ tags:
   - fMRI
   - neuroimaging
 authors:
-  - affiliation: 1
-    name: Elizabeth M. DuPre
+  - name: Elizabeth M. DuPre^[co-first author]
+    affiliation: 1
     orcid: 0000-0003-1358-196X
-  - affiliation: 2
-    name: Taylor Salo
+  - name: Taylor Salo^[co-first author]
+    affiliation: 2
     orcid: 0000-0001-9813-3167
-  - affiliation: 3
-    name: Zaki Ahmed
+  - name: Zaki Ahmed
+    affiliation: 3
     orcid: 0000-0001-5648-0590
-  - affiliation: 4
-    name: Peter A. Bandettini
+  - name: Peter A. Bandettini
+    affiliation: 4
     orcid: 0000-0001-9038-4746
-  - affiliation: 2
-    name: Katherine L. Bottenhorn
+  - name: Katherine L. Bottenhorn
+    affiliation: 2
     orcid: 0000-0002-7796-8795
-  - affiliation: 5
-    name: César Caballero-Gaudes
+  - name: César Caballero-Gaudes
+    affiliation: 5
     orcid: 0000-0002-9068-5810
-  - affiliation: 6
-    name: Logan T. Dowdle
+  - name: Logan T. Dowdle
+    affiliation: 6
     orcid: 0000-0002-1879-705X
-  - affiliation: 4
-    name: Javier Gonzalez-Castillo
+  - name: Javier Gonzalez-Castillo
+    affiliation: 4
     orcid: 0000-0002-6520-5125
-  - affiliation: 7
-    name: Stephan Heunis
+  - name: Stephan Heunis
+    affiliation: 7
     orcid: 0000-0003-3503-9872
-  - affiliation: 8
-    name: Prantik Kundu
+  - name: Prantik Kundu
+    affiliation: 8
     orcid: 0000-0001-9367-3068
-  - affiliation: 2
-    name: Angela R. Laird
+  - name: Angela R. Laird
+    affiliation: 2
     orcid: 0000-0003-3379-8744
-  - affiliation: 1
-    name: Ross Markello
+  - name: Ross Markello
+    affiliation: 1
     orcid: 0000-0003-1057-1336
-  - affiliation: 9
-    name: Christopher J. Markiewicz
+  - name: Christopher J. Markiewicz
+    affiliation: 9
     orcid: 0000-0002-6533-164X
-  - affiliation: 5
-    name: Stefano Moia
+  - name: Stefano Moia
+    affiliation: 5
     orcid: 0000-0002-2553-3327
-  - affiliation: 10
-    name: Isla Staden
+  - name: Isla Staden
+    affiliation: 10
     orcid: 0000-0002-0795-1154
-  - affiliation: 4
-    name: Joshua Teves
+  - name: Joshua Teves
+    affiliation: 4
     orcid: 0000-0002-7767-0067
-  - affiliation: 5
-    name: Eneko Uruñuela
+  - name: Eneko Uruñuela
+    affiliation: 5
     orcid: 0000-0001-6849-9088
-  - affiliation: 4
-    name: Maryam Vaziri-Pashkam
+  - name: Maryam Vaziri-Pashkam
+    affiliation: 4
     orcid: 0000-0003-1830-2501
-  - affiliation: 11
-    name: Kirstie Whitaker
+  - name: Kirstie Whitaker
+    affiliation: "11, 12"
     orcid: 0000-0001-8498-4059
-  - affiliation: 4
-    name: Daniel Handwerker
+  - name: Daniel Handwerker^[corresponding author]
+    affiliation: 4
     orcid: 0000-0001-7261-4042
 affiliations:
 - index: 1
@@ -87,7 +87,9 @@ affiliations:
 - index: 10
   name: None
 - index: 11
-  name: Alan Turing Institute; Cambridge University
+  name: Alan Turing Institute
+- index: 12
+  name: Cambridge University
 date: 03 March 2021
 bibliography: paper.bib
 ---
