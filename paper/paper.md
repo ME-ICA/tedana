@@ -50,7 +50,7 @@ authors:
   - name: Isla Staden
     affiliation: 10
     orcid: 0000-0002-0795-1154
-  - name: Joshua Teves
+  - name: Joshua B. Teves
     affiliation: 4
     orcid: 0000-0002-7767-0067
   - name: Eneko Uruñuela
