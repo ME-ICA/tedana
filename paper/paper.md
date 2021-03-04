@@ -62,7 +62,7 @@ authors:
   - name: Kirstie Whitaker
     affiliation: "11, 12"
     orcid: 0000-0001-8498-4059
-  - name: Daniel Handwerker^[corresponding author]
+  - name: Daniel A. Handwerker^[corresponding author]
     affiliation: 4
     orcid: 0000-0001-7261-4042
 affiliations:
@@ -85,7 +85,7 @@ affiliations:
 - index: 9
   name: Stanford University
 - index: 10
-  name: None
+  name: Thought Machine
 - index: 11
   name: Alan Turing Institute
 - index: 12
@@ -123,5 +123,7 @@ Although *tedana* is still in alpha release, it has already been incorporated in
 # Acknowledgements
 
 We would like to thank the Mozilla Open Leaders program, and the NIMH intramural research program, including the Section on Functional Imaging Methods and the Statistical and Scientific Computing Core, which have all provided funding or resources for *tedana* development.
+
+Funding for ARL, KLB, and TS was provided by NIH R01-DA041353 and NIH U01-DA041156.
 
 # References
