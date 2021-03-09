@@ -60,7 +60,7 @@ authors:
     affiliation: 4
     orcid: 0000-0003-1830-2501
   - name: Kirstie Whitaker
-    affiliation: "11, 12"
+    affiliation: 11
     orcid: 0000-0001-8498-4059
   - name: Daniel A. Handwerker^[corresponding author]
     affiliation: 4
@@ -88,8 +88,6 @@ affiliations:
   name: Thought Machine
 - index: 11
   name: Alan Turing Institute
-- index: 12
-  name: Cambridge University
 date: 03 March 2021
 bibliography: paper.bib
 ---
@@ -110,7 +108,7 @@ We have tightly scoped *tedana* processing to focus on those portions of the fMR
 
 To date, multi-echo fMRI has not been widely adopted within the neuroimaging community. This is likely due to two constraints: (1) until recently, the lack of available multi-echo fMRI acquisition protocols, and (2) the lack of software for processing multi-echo fMRI data in a way that integrates with existing platforms, such as AFNI [@Cox1996-up], SPM [@Penny2011-vi], FSL [@Jenkinson2012-eh], and fMRIPrep [@Esteban2020-ul].
 
-*tedana* helps to address these gaps both as a software tool and as a community of practice. As a software tool, its two use-case driven workflows each cover distinct, popular analyses in multi-echo fMRI processing. The limited focus and modularity of each workflow allows for easy integration into existing fMRI processing platforms. Individual modules also allow researchers to flexibly perform T~2~^\*^/S~0~ estimation, combination across echos, decomposition with PCA or ICA, and component selection outside of a specific workflow call. As a community of practice, *tedana* serves as a resource for researchers looking to learn more about multi-echo fMRI, from theory to collection to analysis. To specifically increase the availability of multi-echo protocols, tedana’s documentation (available at https://tedana.readthedocs.io) consolidates acquisition guidelines for multi-echo sequences across a variety of field strengths and scanner vendors, as well as general recommendations for balancing relevant trade-offs in fMRI acquisition parameter choices. It further serves to consolidate community knowledge, including guides explaining the underlying principles of multi-echo fMRI and information on publicly available multi-echo datasets and general recommendations for balancing relevant trade-offs in sequence development.
+*tedana* helps to address these gaps both as a software tool and as a community of practice. As a software tool, its two use-case driven workflows each cover distinct, popular analyses in multi-echo fMRI processing. The limited focus and modularity of each workflow allows for easy integration into existing fMRI processing platforms. Individual modules also allow researchers to flexibly perform T~2~^\*^/S~0~ estimation, combination across echos, decomposition with PCA or ICA, and component selection outside of a specific workflow call. As a community of practice, *tedana* serves as a resource for researchers looking to learn more about multi-echo fMRI, from theory to collection to analysis. To specifically increase the availability of multi-echo protocols, *tedana’s* documentation (available at https://tedana.readthedocs.io) consolidates acquisition guidelines for multi-echo sequences across a variety of field strengths and scanner vendors, as well as general recommendations for balancing relevant trade-offs in fMRI acquisition parameter choices. It further serves to consolidate community knowledge, including guides explaining the underlying principles of multi-echo fMRI and information on publicly available multi-echo datasets and general recommendations for balancing relevant trade-offs in sequence development.
 
 Although *tedana* is still in alpha release, it has already been incorporated into fMRIPrep and is supported by AFNI. *tedana* has additionally been used in a number of publications and conference presentations [@Lynch2020-tz; @Moia2020-ti; @Moia2020-bb; @asyraff2020stimulus; @Cohen2021-ep]. We further hope that *tedana* will serve as a testing bed for new multi-echo related methods. To this end, we have developed a detailed contributing process and explicit project governance to encourage a healthy community and encourage other multi-echo research groups to contribute.
 
@@ -125,5 +123,5 @@ Although *tedana* is still in alpha release, it has already been incorporated in
 We would like to thank the Mozilla Open Leaders program, and the NIMH intramural research program, including the Section on Functional Imaging Methods and the Statistical and Scientific Computing Core, which have all provided funding or resources for *tedana* development.
 
 Funding for ARL, KLB, and TS was provided by NIH R01-DA041353 and NIH U01-DA041156.
-
+Funding for KJW was provided through The Alan Turing Institute under the EPSRC grant EP/N510129/1.
 # References
