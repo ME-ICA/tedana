@@ -103,7 +103,7 @@ def test_smoke_write_split_ts():
     df_data = np.column_stack((component, metric, classification))
     comptable = pd.DataFrame(df_data, columns=['component', 'metric', 'classification'])
 
-    assert me.write_split_ts(data, mmix, mask, comptable, ref_img) is not None
+    me.write_split_ts(data, mmix, mask, comptable, ref_img)
 
     # TODO: midk_ts.nii is never generated?
     for filename in ["hik_ts_.nii.gz", "lowk_ts_.nii.gz", "dn_ts_.nii.gz"]:
