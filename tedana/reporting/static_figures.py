@@ -44,7 +44,19 @@ def _trim_edge_zeros(arr):
 
 
 def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, ref_img, out_dir):
-    """"""
+    """Generate a set of carpet plots for the combined and denoised data.
+
+    Parameters
+    ----------
+    optcom_ts, denoised_ts, hikts, lowkts : (S x T) array_like
+        Different types of data to plot.
+    mask : (S,) array-like
+        Binary mask used to apply to the data.
+    ref_img : img_like
+        Reference image used to convert arrays to images.
+    out_dir : str
+        Output directory for the figure.
+    """
     mask_img = io.new_nii_like(ref_img, mask.astype(int))
     optcom_img = io.new_nii_like(ref_img, optcom_ts)
     dn_img = io.new_nii_like(ref_img, denoised_ts)
@@ -53,10 +65,34 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, ref_img, out_dir):
 
     # Carpet plot
     fig, axes = plt.subplots(figsize=(14, 28), nrows=4)
-    plotting.plot_carpet(optcom_img, mask_img, axes=axes[0], title="Optimally Combined Data")
-    plotting.plot_carpet(dn_img, mask_img, axes=axes[1], title="Denoised Data")
-    plotting.plot_carpet(hik_img, mask_img, axes=axes[2], title="High-Kappa Data")
-    plotting.plot_carpet(lowk_img, mask_img, axes=axes[3], title="Low-Kappa Data")
+    plotting.plot_carpet(
+        optcom_img,
+        mask_img,
+        figure=fig,
+        axes=axes[0],
+        title="Optimally Combined Data",
+    )
+    plotting.plot_carpet(
+        dn_img,
+        mask_img,
+        figure=fig,
+        axes=axes[1],
+        title="Denoised Data",
+    )
+    plotting.plot_carpet(
+        hik_img,
+        mask_img,
+        figure=fig,
+        axes=axes[2],
+        title="High-Kappa Data",
+    )
+    plotting.plot_carpet(
+        lowk_img,
+        mask_img,
+        figure=fig,
+        axes=axes[3],
+        title="Low-Kappa Data",
+    )
     fig.tight_layout()
     fig.savefig(os.path.join(out_dir, "carpet_plots.svg"))
 
