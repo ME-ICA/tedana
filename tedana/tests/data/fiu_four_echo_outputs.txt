@@ -49,6 +49,7 @@ ts_OC_whitened.nii.gz
 tsoc_nogs.nii.gz
 tsoc_orig.nii.gz
 figures
+figures/carpet_plots.svg
 figures/comp_000.png
 figures/comp_001.png
 figures/comp_002.png

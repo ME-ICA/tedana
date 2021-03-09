@@ -1,6 +1,7 @@
 adaptive_mask.nii.gz
 betas_OC.nii.gz
 betas_hik_OC.nii.gz
+figures/carpet_plots.svg
 figures/comp_000.png
 figures/comp_001.png
 figures/comp_002.png
