@@ -71,7 +71,7 @@ def comp_figures(ts, mask, comptable, mmix, ref_img, out_dir, png_cmap):
     n_vols = len(mmix)
 
     # regenerate the beta images
-    ts_B = stats.get_coeffs(ts, mmix, mask)
+    ts_B = stats.get_ls_coeffs(ts, mmix, mask)
     ts_B = ts_B.reshape(ref_img.shape[:3] + ts_B.shape[1:])
     # trim edges from ts_B array
     ts_B = _trim_edge_zeros(ts_B)

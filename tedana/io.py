@@ -13,7 +13,7 @@ from nilearn._utils import check_niimg
 from nilearn.image import new_img_like
 
 from tedana import utils
-from tedana.stats import computefeats2, get_coeffs
+from tedana.stats import get_ls_zvalues, get_ls_coeffs
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
@@ -47,8 +47,8 @@ def split_ts(data, mmix, mask, comptable):
     """
     acc = comptable[comptable.classification == 'accepted'].index.values
 
-    cbetas = get_coeffs(data - data.mean(axis=-1, keepdims=True),
-                        mmix, mask)
+    cbetas = get_ls_coeffs(data - data.mean(axis=-1, keepdims=True),
+                           mmix, mask)
     betas = cbetas[mask]
     if len(acc) != 0:
         hikts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
@@ -106,7 +106,7 @@ def write_split_ts(data, mmix, mask, comptable, ref_img, out_dir='.', suffix='')
     dmdata = mdata.T - mdata.T.mean(axis=0)
 
     # get variance explained by retained components
-    betas = get_coeffs(dmdata.T, mmix, mask=None)
+    betas = get_ls_coeffs(dmdata.T, mmix, mask=None)
     varexpl = (1 - ((dmdata.T - betas.dot(mmix.T))**2.).sum() /
                (dmdata**2.).sum()) * 100
     LGR.info('Variance explained by ICA decomposition: {:.02f}%'.format(varexpl))
@@ -169,7 +169,7 @@ def writefeats(data, mmix, mask, ref_img, out_dir='.', suffix=''):
     """
 
     # write feature versions of components
-    feats = utils.unmask(computefeats2(data, mmix, mask), mask)
+    feats = utils.unmask(get_ls_zvalues(data, mmix, mask), mask)
     fname = filewrite(feats, op.join(out_dir, 'feats_{0}'.format(suffix)), ref_img)
     return fname
 
@@ -227,7 +227,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, ref_img, out_dir='.'):
 
     write_split_ts(ts, mmix, mask, comptable, ref_img, out_dir=out_dir, suffix='OC')
 
-    ts_B = get_coeffs(ts, mmix, mask)
+    ts_B = get_ls_coeffs(ts, mmix, mask)
     fout = filewrite(ts_B, op.join(out_dir, 'betas_OC'), ref_img)
     LGR.info('Writing full ICA coefficient feature set: {}'.format(op.abspath(fout)))
 

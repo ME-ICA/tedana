@@ -9,7 +9,7 @@ import pandas as pd
 from scipy import stats
 
 from tedana import io, utils
-from tedana.stats import getfbounds, computefeats2, get_coeffs
+from tedana.stats import getfbounds, get_ls_zvalues, get_ls_coeffs
 
 
 LGR = logging.getLogger(__name__)
@@ -109,10 +109,10 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
     # compute un-normalized weight dataset (features)
     if mmixN is None:
         mmixN = mmix
-    WTS = computefeats2(tsoc, mmixN, mask=None, normalize=False)
+    WTS = get_ls_zvalues(tsoc, mmixN, mask=None)
 
     # compute PSC dataset - shouldn't have to refit data
-    tsoc_B = get_coeffs(tsoc_dm, mmix, mask=None, add_const=False)
+    tsoc_B = get_ls_coeffs(tsoc_dm, mmix, mask=None, add_const=False)
     del tsoc_dm
     tsoc_Babs = np.abs(tsoc_B)
     PSC = tsoc_B / tsoc.mean(axis=-1, keepdims=True) * 100
@@ -128,10 +128,10 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
     totvar_norm = (WTS**2).sum()
 
     # compute Betas and means over TEs for TE-dependence analysis
-    betas = get_coeffs(utils.unmask(catd, mask),
-                       mmix_corrected,
-                       np.repeat(mask[:, np.newaxis], len(tes), axis=1),
-                       add_const=True)
+    betas = get_ls_coeffs(utils.unmask(catd, mask),
+                          mmix_corrected,
+                          np.repeat(mask[:, np.newaxis], len(tes), axis=1),
+                          add_const=True)
     betas = betas[mask, ...]
     n_voxels, n_echos, n_components = betas.shape
     mu = catd.mean(axis=-1, dtype=float)

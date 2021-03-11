@@ -19,7 +19,7 @@ from nilearn.masking import compute_epi_mask
 from tedana import (decay, combine, decomposition, io, metrics,
                     reporting, selection, utils)
 import tedana.gscontrol as gsc
-from tedana.stats import computefeats2
+from tedana.stats import get_ls_zvalues
 from tedana.workflows.parser_utils import is_valid_file, check_tedpca_value, ContextFilter
 
 LGR = logging.getLogger(__name__)
@@ -558,7 +558,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                       for comp in comptable.index.values]
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
         mixing_df.to_csv(op.join(out_dir, 'ica_mixing.tsv'), sep='\t', index=False)
-        betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
+        betas_oc = utils.unmask(get_ls_zvalues(data_oc, mmix, mask), mask)
         io.filewrite(betas_oc,
                      op.join(out_dir, 'ica_components.nii.gz'),
                      ref_img)
@@ -578,7 +578,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             comptable = io.load_comptable(ctab)
             if manacc is not None:
                 comptable = selection.manual_selection(comptable, acc=manacc)
-        betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
+        betas_oc = utils.unmask(get_ls_zvalues(data_oc, mmix, mask), mask)
         io.filewrite(betas_oc,
                      op.join(out_dir, 'ica_components.nii.gz'),
                      ref_img)
