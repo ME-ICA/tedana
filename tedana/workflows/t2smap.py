@@ -64,6 +64,18 @@ def _get_parser():
                                 'Dependent ANAlysis. Must be in the same '
                                 'space as `data`.'),
                           default=None)
+    optional.add_argument('--prefix',
+                          dest='prefix',
+                          type=str,
+                          help='Prefix for filenames generated.',
+                          default='')
+    optional.add_argument('--convention',
+                          dest='convention',
+                          action='store',
+                          choices=['kundu', 'bids'],
+                          help=('Filenaming convention. bids will use '
+                                'the latest BIDS derivatives version.'),
+                          default='bids')
     optional.add_argument('--fittype',
                           dest='fittype',
                           action='store',
@@ -117,6 +129,7 @@ def _get_parser():
 
 
 def t2smap_workflow(data, tes, out_dir='.', mask=None,
+                    prefix='', convention='bids',
                     fittype='loglin', fitmode='all', combmode='t2s',
                     debug=False, quiet=False):
     """
@@ -179,6 +192,8 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
     io.outdir = out_dir
+    io.prefix = prefix
+    io.convention = convention
 
     if debug and not quiet:
         logging.basicConfig(level=logging.DEBUG)
