@@ -106,13 +106,12 @@ def test_smoke_write_split_ts():
     assert me.write_split_ts(data, mmix, mask, comptable, ref_img) is not None
 
     # TODO: midk_ts.nii is never generated?
-    for filename in ["hik_ts_.nii.gz", "lowk_ts_.nii.gz", "dn_ts_.nii.gz"]:
+    fn = me.gen_img_name
+    split = ('high kappa ts', 'low kappa ts', 'denoised ts')
+    fnames = [fn(f) + '.nii.gz' for f in split]
+    for filename in fnames:
         # remove all files generated
-        try:
-            os.remove(filename)
-        except OSError:
-            print(filename + " not generated")
-            pass
+        os.remove(filename)
 
 
 def test_smoke_writefeats():
@@ -129,11 +128,10 @@ def test_smoke_writefeats():
     assert me.writefeats(data, mmix, mask, ref_img) is not None
 
     # this only generates feats_.nii, so delete that
-    try:
-        os.remove("feats_.nii.gz")
-    except OSError:
-        print("feats_.nii not generated")
-        pass
+    os.remove(
+            me.gen_img_name('z-scored ICA accepted components') +
+            '.nii.gz'
+    )
 
 
 def test_smoke_filewrite():
