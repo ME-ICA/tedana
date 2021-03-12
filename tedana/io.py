@@ -18,7 +18,7 @@ RefLGR = logging.getLogger('REFERENCES')
 
 outdir = '.'
 prefix = ''
-convention = 'bids'
+convention = 'bids' # overridden in API or CLI calls
 
 
 img_table = {
