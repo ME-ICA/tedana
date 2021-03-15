@@ -11,7 +11,9 @@ from nilearn.image import new_img_like
 
 from tedana import utils
 from tedana.stats import computefeats2, get_coeffs
-from .constants import allowed_conventions, img_table, bids
+from .constants import (
+    bids, allowed_conventions, img_table, json_table, tsv_table
+)
 
 
 LGR = logging.getLogger(__name__)
@@ -23,14 +25,27 @@ prefix = ''
 convention = bids   # overridden in API or CLI calls
 
 
-def gen_img_name(img_type, echo=0):
+def check_convention() -> None:
+    """Checks set convention for io module
+
+    Raises
+    ------
+    RuntimeError, if invalid convention is set
     """
-    Generates an image file full path to simplify file output
+    if convention not in allowed_conventions:
+        raise RuntimeError(
+            ('Convention %s is not valid; allowed: ' % convention) +
+            str(allowed_conventions)
+        )
+
+
+def gen_img_name(img_type: str, echo: str = 0) -> str:
+    """Generates an image file full path to simplify file output
 
     Parameters
     ----------
     img_type : str
-        The description of the image. Must be a key in io.img_table
+        The description of the image. Must be a key in constants.img_table
     echo : :obj: `int`
         The echo number of the image.
 
@@ -40,22 +55,17 @@ def gen_img_name(img_type, echo=0):
 
     Raises
     ------
-    KeyError, if an invalid description is supplied
-    RuntimeError, if io has no convention set
+    KeyError, if an invalid description is supplied or API convention is
+        illegal
     ValueError, if an echo is supplied when it shouldn't be
 
     See Also
     --------
-    io.img_table, a dict for translating various naming types
+    constants.img_table, a dict for translating various naming types
     """
-    if not convention:
-        raise RuntimeError('Convention not set')
-    key = convention
-    if key not in allowed_conventions:
-        raise RuntimeError('Convention %s not allowed' % convention)
     if echo:
         img_type += ' split'
-    format_string = img_table[img_type][key]
+    format_string = img_table[img_type][convention]
     if echo and not ('{' in format_string):
         raise ValueError('Echo supplied when not supported!')
     elif echo:
@@ -63,6 +73,56 @@ def gen_img_name(img_type, echo=0):
     else:
         basename = format_string
     return op.join(outdir, prefix + basename)
+
+
+def gen_json_name(json_type: str) -> str:
+    """Generates a JSON file full path to simplify file output
+
+    Parameters
+    ----------
+    json_type: str
+        The description of the JSON. Must be a key in constants.json_table
+
+    Returns
+    -------
+    The full path for the JSON name
+
+    Raises
+    ------
+    KeyError, if an invalid description is supplied or API convention is
+        illegal
+
+    See Also
+    --------
+    constants.json_table, a dict for translating various json naming types
+    """
+    basename = json_table[json_type][convention]
+    return op.join(outdir, prefix + basename + '.json')
+
+
+def gen_tsv_name(tsv_type: str) -> str:
+    """Generates a TSV file full path to simplify file output
+
+    Parameters
+    ----------
+    tsv_type: str
+        The description of the TSV. Must be a key in constants.tsv_table
+
+    Returns
+    -------
+    The full path for the TSV name
+
+    Raises
+    ------
+    KeyError, if an invalid description is supplied or API convention is
+        illegal
+
+    See Also
+    --------
+    constants.tsv_table, a dict for translating various tsv naming types
+    """
+    basename = tsv_table[tsv_type][convention]
+    return op.join(outdir, prefix + basename + '.tsv')
 
 
 def split_ts(data, mmix, mask, comptable):

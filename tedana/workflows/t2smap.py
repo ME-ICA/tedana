@@ -278,7 +278,7 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
             }
         ]
     }
-    with open(op.join(out_dir, "dataset_description.json"), "w") as fo:
+    with open(io.gen_json_name('data description'), "w") as fo:
         json.dump(derivative_metadata, fo, sort_keys=True, indent=4)
 
 

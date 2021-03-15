@@ -437,8 +437,9 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if mixm is not None and op.isfile(mixm):
         mixm = op.abspath(mixm)
         # Allow users to re-run on same folder
-        if mixm != op.join(out_dir, 'desc-ICA_mixing.tsv'):
-            shutil.copyfile(mixm, op.join(out_dir, 'desc-ICA_mixing.tsv'))
+        mixing_name = io.gen_tsv_name("ICA mixing")
+        if mixm != mixing_name:
+            shutil.copyfile(mixm, mixing_name)
             shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
     elif mixm is not None:
         raise IOError('Argument "mixm" must be an existing file.')
@@ -446,8 +447,9 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if ctab is not None and op.isfile(ctab):
         ctab = op.abspath(ctab)
         # Allow users to re-run on same folder
-        if ctab != op.join(out_dir, 'desc-tedana_metrics.tsv'):
-            shutil.copyfile(ctab, op.join(out_dir, 'desc-tedana_metrics.tsv'))
+        metrics_name = io.gen_tsv_name("ICA metrics")
+        if ctab != metrics_name:
+            shutil.copyfile(ctab, metrics_name)
             shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
@@ -589,13 +591,14 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                 keep_restarting = False
     else:
         LGR.info('Using supplied mixing matrix from ICA')
-        mmix_orig = pd.read_table(op.join(out_dir, 'desc-ICA_mixing.tsv')).values
+        mixing_file = io.gen_tsv_name("ICA mixing")
+        mmix_orig = pd.read_table(mixing_file).values
 
         if ctab is None:
             comptable, metric_maps, metric_metadata, betas, mmix = metrics.dependence_metrics(
                         catd, data_oc, mmix_orig, masksum, tes,
-                        ref_img, label='ICA', out_dir=out_dir,
-                        algorithm='kundu_v2', verbose=verbose)
+                        ref_img, label='ICA', algorithm='kundu_v2',
+                        verbose=verbose)
             comptable, metric_metadata = metrics.kundu_metrics(
                 comptable,
                 metric_maps,
@@ -611,8 +614,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             mmix = mmix_orig.copy()
             comptable = pd.read_table(ctab)
             # Try to find and load the metric metadata file
-            ctab_parts = ctab.split(".")
-            metadata_file = ctab_parts[0] + ".json"
+            metadata_file = io.gen_json_name('ICA metrics')
             if op.isfile(metadata_file):
                 with open(metadata_file, "r") as fo:
                     metric_metadata = json.load(fo)
@@ -629,14 +631,14 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     # Write out ICA files.
     comp_names = comptable["Component"].values
     mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
-    mixing_df.to_csv(op.join(out_dir, "desc-ICA_mixing.tsv"), sep="\t", index=False)
+    mixing_df.to_csv(io.gen_tsv_name("ICA mixing"), sep="\t", index=False)
     betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
     io.filewrite(betas_oc, 'z-scored ICA components', ref_img)
 
     # Save component table and associated json
     temp_comptable = comptable.set_index("Component", inplace=False)
     temp_comptable.to_csv(
-        op.join(out_dir, "desc-tedana_metrics.tsv"),
+        io.gen_tsv_name("ICA metrics"),
         index=True,
         index_label="Component",
         sep='\t',
@@ -648,7 +650,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             "This identifier matches column names in the mixing matrix TSV file."
         ),
     }
-    with open(op.join(out_dir, "desc-tedana_metrics.json"), "w") as fo:
+    with open(io.gen_json_name("ICA metrics"), "w") as fo:
         json.dump(metric_metadata, fo, sort_keys=True, indent=4)
 
     decomp_metadata = {
@@ -665,7 +667,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             "Description": "ICA fit to dimensionally-reduced optimally combined data.",
             "Method": "tedana",
         }
-    with open(op.join(out_dir, "desc-ICA_decomposition.json"), "w") as fo:
+    with open(io.gen_json_name("ICA decomposition"), "w") as fo:
         json.dump(decomp_metadata, fo, sort_keys=True, indent=4)
 
     if comptable[comptable.classification == 'accepted'].shape[0] == 0:
@@ -688,7 +690,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                       for comp in comptable.index.values]
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
         mixing_df.to_csv(
-            op.join(out_dir, 'desc-ICAOrth_mixing.tsv'),
+            io.gen_tsv_name("ICA orthogonalized mixing"),
             sep='\t',
             index=False
         )
@@ -749,7 +751,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             }
         ]
     }
-    with open(op.join(out_dir, "dataset_description.json"), "w") as fo:
+    with open(io.gen_json_name("data description"), "w") as fo:
         json.dump(derivative_metadata, fo, sort_keys=True, indent=4)
 
     LGR.info('Workflow completed')

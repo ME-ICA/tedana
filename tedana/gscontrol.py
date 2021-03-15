@@ -2,7 +2,6 @@
 Global signal control methods
 """
 import logging
-import os.path as op
 
 import numpy as np
 import pandas as pd
@@ -91,7 +90,7 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
     glsig = stats.zscore(glsig, axis=None)
 
     glsig_df = pd.DataFrame(data=glsig.T, columns=['global_signal'])
-    glsig_df.to_csv(op.join(out_dir, 'desc-globalSignal_timeseries.tsv'),
+    glsig_df.to_csv(io.gen_tsv_name("global signal time series"),
                     sep='\t', index=False)
     glbase = np.hstack([Lmix, glsig.T])
 
@@ -264,4 +263,4 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
         ref_img,
     )
     mixing_df = pd.DataFrame(data=mmix_noT1gs.T, columns=comptable["Component"].values)
-    mixing_df.to_csv(op.join(out_dir, "desc-ICAMIRDenoised_mixing.tsv"), sep='\t', index=False)
+    mixing_df.to_csv(io.gen_tsv_name("ICA MIR mixing"), sep='\t', index=False)
