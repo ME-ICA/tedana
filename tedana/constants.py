@@ -147,3 +147,57 @@ img_table = {
         'bidsv1.5.0': 'desc-ICAAcceptedMIRDenoised_components',
     },
 }
+
+json_table = {
+    'data description': {
+        'orig': 'dataset_description',
+        'bidsv1.5.0': 'dataset_description',
+    },
+    'PCA decomposition': {
+        'orig': 'pca_decomposition',
+        'bidsv1.5.0': 'desc-PCA_decomposition',
+    },
+    'PCA metrics': {
+        'orig': 'pca_metrics',
+        'bidsv1.5.0': 'desc-PCA_metrics',
+    },
+    'ICA decomposition': {
+        'orig': 'ica_decomposition',
+        'bidsv1.5.0': 'desc-ICA_decomposition',
+    },
+    'ICA metrics': {
+        'orig': 'ica_metrics',
+        'bidsv1.5.0': 'desc-tedana_metrics',
+    },
+}
+
+tsv_table = {
+    'PCA mixing': {
+        'orig': 'pca_mixing',
+        'bidsv1.5.0': 'desc-PCA_mixing',
+    },
+    'PCA metrics': {
+        'orig': 'pca_metrics',
+        'bidsv1.5.0': 'desc-PCA_metrics',
+    },
+    'ICA mixing': {
+        'orig': 'ica_mixing',
+        'bidsv1.5.0': 'desc-ICA_mixing',
+    },
+    'ICA metrics': {
+        'orig': 'ica_metrics',
+        'bidsv1.5.0': 'desc-tedana_metrics',
+    },
+    'global signal time series': {
+        'orig': 'global_signal_ts',
+        'bidsv1.5.0': 'desc-globalSignal_timeseries',
+    },
+    'ICA MIR mixing': {
+        'orig': 'ica_mir_mixing',
+        'bidsv1.5.0': 'desc-ICAMIRDenoised_mixing',
+    },
+    'ICA orthogonalized mixing': {
+        'orig': 'ica_orth_mixing',
+        'bidsv1.5.0': 'desc-ICAOrth_mixing',
+    },
+}
