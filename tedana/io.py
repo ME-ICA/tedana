@@ -11,7 +11,7 @@ from nilearn.image import new_img_like
 
 from tedana import utils
 from tedana.stats import computefeats2, get_coeffs
-from .constants import allowed_conventions, img_table
+from .constants import allowed_conventions, img_table, bids
 
 
 LGR = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ RefLGR = logging.getLogger('REFERENCES')
 
 outdir = '.'
 prefix = ''
-convention = 'bids'  # overridden in API or CLI calls
+convention = bids   # overridden in API or CLI calls
 
 
 def gen_img_name(img_type, echo=0):
@@ -51,9 +51,7 @@ def gen_img_name(img_type, echo=0):
     if not convention:
         raise RuntimeError('Convention not set')
     key = convention
-    if key == 'bids':
-        key = 'bidsv1.5.0'
-    elif key not in allowed_conventions:
+    if key not in allowed_conventions:
         raise RuntimeError('Convention %s not allowed' % convention)
     if echo:
         img_type += ' split'

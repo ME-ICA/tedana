@@ -8,6 +8,7 @@ import pytest
 import pandas as pd
 
 from tedana import io as me
+from tedana import constants
 from tedana.tests.test_utils import fnames, tes
 
 from tedana.tests.utils import get_test_data_path
@@ -137,7 +138,7 @@ def test_smoke_writefeats():
 def test_smoke_filewrite():
     """
     Ensures that filewrite fails for no known image type, write a known key
-    in both bids and kundu formats
+    in both bids and orig formats
     """
     n_samples, _, _ = 64350, 10, 6
     data_1d = np.random.random((n_samples))
@@ -146,7 +147,7 @@ def test_smoke_filewrite():
     with pytest.raises(KeyError):
         me.filewrite(data_1d, '', ref_img)
 
-    for convention in ('bids', 'orig'):
+    for convention in (constants.bids, 'orig'):
         me.convention = convention
         fname = me.filewrite(data_1d, 't2star map', ref_img)
         assert fname is not None

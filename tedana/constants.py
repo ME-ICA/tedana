@@ -2,7 +2,9 @@
 Constants for tedana
 """
 
-allowed_conventions = ('orig', 'bidsv1.5.0', 'bids')
+allowed_conventions = ('orig', 'bidsv1.5.0')
+
+bids = 'bidsv1.5.0'
 
 # filename tables
 img_table = {

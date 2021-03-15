@@ -11,7 +11,7 @@ import numpy as np
 from scipy import stats
 from threadpoolctl import threadpool_limits
 
-from tedana import (combine, decay, io, utils, __version__)
+from tedana import (combine, decay, io, utils, constants, __version__)
 from tedana.workflows.parser_utils import is_valid_file
 
 LGR = logging.getLogger(__name__)
@@ -193,6 +193,8 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
         os.mkdir(out_dir)
     io.outdir = out_dir
     io.prefix = prefix
+    if convention == 'bids':
+        convention = constants.bids
     io.convention = convention
 
     if debug and not quiet:
