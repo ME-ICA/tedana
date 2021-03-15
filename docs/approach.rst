@@ -201,9 +201,9 @@ Here we can see time series for some example components (we don't really care ab
 
 These components are subjected to component selection, the specifics of which
 vary according to algorithm.
-Specifically, ``tedana`` offers two different approaches that perform this step.
+Specifically, ``tedana`` offers three different approaches that perform this step.
 
-The simplest approach (the default ``mdl``, ``aic`` and ``kic`` options for
+The recommended approach (the default ``mdl`` option, along with the ``aic`` and ``kic`` options, for
 ``--tedpca``) is based on a moving average (stationary Gaussian) process
 proposed by `Li et al (2007)`_ and used primarily in the Group ICA of fMRI Toolbox (GIFT).
 A moving average process is the output of a linear system (which, in this case, is
@@ -229,8 +229,21 @@ to select the PCA components based on three widely-used model selection criteria
     option ``mdl`` might not yield perfect results on your data. We suggest you explore the ``kic``
     and ``aic`` options if running ``tedana`` with ``mdl`` returns less components than expected.
 
-In addition to the moving average process-based options described above, we also support a
-decision tree-based selection method (similar to the one in the :ref:`TEDICA` section below).
+The simplest approach uses a user-supplied threshold applied to the cumulative variance explained
+by the PCA.
+In this approach, the user provides a value to ``--tedpca`` between 0 and 1.
+That value corresponds to the percent of variance that must be explained by the components.
+For example, if a value of 0.9 is provided, then PCA components
+(ordered by decreasing variance explained)
+cumulatively explaining up to 90% of the variance will be retained.
+Components explaining more than that threshold
+(except for the component that crosses the threshold)
+will be excluded.
+
+In addition to the moving average process-based options and the variance explained threshold
+described above,
+we also support a decision tree-based selection method
+(similar to the one in the :ref:`TEDICA` section below).
 This method involves applying a decision tree to identify and discard PCA components which,
 in addition to not explaining much variance, are also not significantly TE-dependent (i.e.,
 have low Kappa) or TE-independent (i.e., have low Rho).
