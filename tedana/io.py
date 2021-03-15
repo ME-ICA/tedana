@@ -11,6 +11,8 @@ from nilearn.image import new_img_like
 
 from tedana import utils
 from tedana.stats import computefeats2, get_coeffs
+from .constants import allowed_conventions, img_table
+
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
@@ -18,81 +20,7 @@ RefLGR = logging.getLogger('REFERENCES')
 
 outdir = '.'
 prefix = ''
-convention = 'bids' # overridden in API or CLI calls
-
-
-img_table = {
-    'adaptive mask': ('adaptive_mask', 'desc-adaptiveGoodSignal_mask'),
-    't2star map': ('t2sv', 'T2starmap'),
-    's0 map': ('s0v', 'S0map'),
-    'combined': ('ts_OC', 'desc-optcom_bold'),
-    'ICA components': ('ica_components', 'desc-ICA_components'),
-    'z-scored PCA components': (
-        'pca_components', 'desc-PCA_stat-z_components'
-    ),
-    'z-scored ICA components': (
-        'betas_OC', 'desc-ICA_stat-z_components'
-    ),
-    'ICA accepted components': (
-        'betas_hik_OC', 'desc-ICAAccepted_components'
-    ),
-    'z-scored ICA accepted components': (
-        'feats_OC2', 'desc-ICAAccepted_stat-z_components'
-    ),
-    'denoised ts': ('dn_ts_OC', 'desc-optcomDenoised_bold'),
-    'high kappa ts': ('hik_ts_OC', 'desc-optcomAccepted_bold'),
-    'low kappa ts': ('lowk_ts_OC', 'desc-optcomRejected_bold'),
-    # verbose outputs
-    'full t2star map': ('t2svG', 'desc-full_T2starmap'),
-    'full s0 map': ('s0vG', 'desc-full_S0map'),
-    'whitened': ('ts_OC_whitened', 'desc-optcomPCAReduced_bold'),
-    'echo weight PCA map split': (
-        'e{0}_PCA_comp', 'echo-{0}_desc-PCA_components'
-    ),
-    'echo R2 PCA split': (
-        'e{0}_PCA_R2', 'echo-{0}_desc-PCAR2ModelPredictions_components'
-    ),
-    'echo S0 PCA split': (
-        'e{0}_PCA_S0', 'echo-{0}_desc-PCAS0ModelPredictions_components'
-    ),
-    'PCA component weights': (
-        'pca_weights', 'desc-PCAAveragingWeights_components'
-    ),
-    'PCA reduced': ('oc_reduced', 'desc-optcomPCAReduced_bold'),
-    'echo weight ICA map split': (
-        'e{0}_ICA_comp', 'echo-{0}_desc-ICA_components'
-    ),
-    'echo R2 ICA split': (
-        'e{0}_ICA_R2', 'echo-{0}_desc-ICAR2ModelPredictions_components'
-    ),
-    'echo S0 ICA split': (
-        'e{0}_ICA_S0', 'echo-{0}_desc-ICAS0ModelPredictions_components'
-    ),
-    'ICA component weights': (
-        'ica_weights', 'desc-ICAAveragingWeights_components'
-    ),
-    'high kappa ts split': (
-        'hik_ts_e{0}', 'echo-{0}_desc-Accepted_bold'
-    ),
-    'low kappa ts split': (
-        'lowk_ts_e{0}', 'echo-{0}_desc-Rejected_bold'
-    ),
-    'denoised ts split': ('dn_ts_e{0}', 'echo-{0}_desc-Denoised_bold'),
-    # global signal outputs
-    'gs map': ('T1gs', 'desc-globalSignal_map'),
-    'has gs combined': ('tsoc_orig', 'desc-optcomWithGlobalSignal_bold'),
-    'removed gs combined': (
-        'tsoc_nogs', 'desc-optcomNoGlobalSignal_bold'
-    ),
-    't1 like': ('sphis_hik', 'desc-T1likeEffect_min'),
-    'ICA accepted mir denoised': (
-        'hik_ts_OC_MIR', 'desc-optcomAcceptedMIRDenoised_bold'
-    ),
-    'mir denoised': ('dn_ts_OC_MIR', 'desc-optcomMIRDenoised_bold'),
-    'ICA accepted mir component weights': (
-            'betas_hik_OC_MIR', 'desc-ICAAcceptedMIRDenoised_components'
-    ),
-}
+convention = 'bids'  # overridden in API or CLI calls
 
 
 def gen_img_name(img_type, echo=0):
@@ -120,21 +48,16 @@ def gen_img_name(img_type, echo=0):
     --------
     io.img_table, a dict for translating various naming types
     """
-
-    if convention == 'kundu':
-        tuple_idx = 0
-    elif convention == 'bids':
-        tuple_idx = 1
-    else:
-        if convention:
-            raise RuntimeError('Naming convention %s not supported' %
-                               convention
-                               )
-        else:
-            raise RuntimeError('No naming convention given!')
+    if not convention:
+        raise RuntimeError('Convention not set')
+    key = convention
+    if key == 'bids':
+        key = 'bidsv1.5.0'
+    elif key not in allowed_conventions:
+        raise RuntimeError('Convention %s not allowed' % convention)
     if echo:
         img_type += ' split'
-    format_string = img_table[img_type][tuple_idx]
+    format_string = img_table[img_type][key]
     if echo and not ('{' in format_string):
         raise ValueError('Echo supplied when not supported!')
     elif echo:

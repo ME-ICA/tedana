@@ -146,7 +146,7 @@ def test_smoke_filewrite():
     with pytest.raises(KeyError):
         me.filewrite(data_1d, '', ref_img)
 
-    for convention in ('bids', 'kundu'):
+    for convention in ('bids', 'orig'):
         me.convention = convention
         fname = me.filewrite(data_1d, 't2star map', ref_img)
         assert fname is not None
