@@ -434,7 +434,7 @@ def _eigensp_adj(lam, n, p):
     return lam_adj
 
 
-def ma_pca(data_nib, mask_nib, criteria='mdl'):
+def ma_pca(data_nib, mask_nib, criteria='mdl', normalize=True):
     """
     Run Singular Value Decomposition (SVD) on input data,
     automatically select components based on a Moving Average
@@ -450,6 +450,9 @@ def ma_pca(data_nib, mask_nib, criteria='mdl'):
     criteria : string in ['aic', 'kic', mdl']
                Criteria to select the number of components;
                default='mdl'.
+    normalize : bool, optional
+        Whether to normalize data (zero mean and unit standard deviation) or not.
+        Default is True.
 
     Returns
     -------
@@ -476,9 +479,12 @@ def ma_pca(data_nib, mask_nib, criteria='mdl'):
     [Nx, Ny, Nz, Nt] = data_nib.shape
     data_nib_V = np.reshape(data_nib, (Nx * Ny * Nz, Nt), order='F')
     maskvec = np.reshape(mask_nib, Nx * Ny * Nz, order='F')
-    data_non_normalized = data_nib_V[maskvec == 1, :]
+    data = data_nib_V[maskvec == 1, :]
     scaler = StandardScaler(with_mean=True, with_std=True)
-    data = scaler.fit_transform(data_non_normalized)  # This was X_sc
+    if normalize:
+        # TODO: determine if tedana is already normalizing before this
+        data = scaler.fit_transform(data.T).T  # This was X_sc
+        # X = ((X.T - X.T.mean(axis=0)) / X.T.std(axis=0)).T
 
     LGR.info('Performing SVD on original OC data...')
     V, EigenValues = _icatb_svd(data, Nt)
@@ -547,7 +553,8 @@ def ma_pca(data_nib, mask_nib, criteria='mdl'):
             dat[:, i] = dat0[mask_s_1d == 1]
 
         # Perform Variance Normalization
-        dat = scaler.fit_transform(dat)
+        temp_scaler = StandardScaler(with_mean=True, with_std=True)
+        dat = temp_scaler.fit_transform(dat.T).T
 
         # (completed)
         LGR.info('Performing SVD on subsampled i.i.d. OC data...')
