@@ -72,7 +72,7 @@ def _get_parser():
     optional.add_argument('--convention',
                           dest='convention',
                           action='store',
-                          choices=['kundu', 'bids'],
+                          choices=['orig', 'bids'],
                           help=('Filenaming convention. bids will use '
                                 'the latest BIDS derivatives version.'),
                           default='bids')

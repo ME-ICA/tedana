@@ -63,6 +63,7 @@ def gen_img_name(img_type: str, echo: str = 0) -> str:
     --------
     constants.img_table, a dict for translating various naming types
     """
+    check_convention()
     if echo:
         img_type += ' split'
     format_string = img_table[img_type][convention]
@@ -96,6 +97,7 @@ def gen_json_name(json_type: str) -> str:
     --------
     constants.json_table, a dict for translating various json naming types
     """
+    check_convention()
     basename = json_table[json_type][convention]
     return op.join(outdir, prefix + basename + '.json')
 
@@ -121,6 +123,7 @@ def gen_tsv_name(tsv_type: str) -> str:
     --------
     constants.tsv_table, a dict for translating various tsv naming types
     """
+    check_convention()
     basename = tsv_table[tsv_type][convention]
     return op.join(outdir, prefix + basename + '.tsv')
 
