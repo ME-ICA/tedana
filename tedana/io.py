@@ -1,5 +1,63 @@
 """
-Functions to handle file input/output
+=============================
+io module (:mod: `tedana.io`)
+=============================
+
+.. currentmodule:: tedana.io
+
+The io module handles most file input and output in the `tedana` workflow,
+and simplifies some naming function calls with module globals (see "Globals"
+and "Notes" below). Other functions in the module help simplify writing out
+data from multiple echoes or write very complex outputs.
+
+
+Globals
+-------
+outdir
+prefix
+convention
+
+
+Naming Functions
+----------------
+get_img_name
+get_json_name
+get_tsv_name
+add_decomp_prefix
+
+
+File Writing Functions
+----------------------
+write_split_ts
+writefeats
+writeresults
+writeresults_echoes
+filewrite
+
+
+File Loading Functions
+----------------------
+load_data
+
+
+Helper Functions
+----------------
+new_nii_like
+split_ts
+check_convention
+
+See Also
+--------
+`tedana.constants`
+
+
+Notes
+-----
+The global variables are set by default in the module to guarantee that the
+functions that use them won't fail if a workflow API is not used.
+However, API calls can override the default settings. Additionally, the
+naming functions beginning with "get" all leverage dictionaries defined in
+the `constants.py` module, as the definitions are large.
 """
 import logging
 import os.path as op
@@ -24,19 +82,7 @@ outdir = '.'
 prefix = ''
 convention = bids   # overridden in API or CLI calls
 
-
-def check_convention() -> None:
-    """Checks set convention for io module
-
-    Raises
-    ------
-    RuntimeError, if invalid convention is set
-    """
-    if convention not in allowed_conventions:
-        raise RuntimeError(
-            ('Convention %s is not valid; allowed: ' % convention) +
-            str(allowed_conventions)
-        )
+# Naming Functions
 
 
 def gen_img_name(img_type: str, echo: str = 0) -> str:
@@ -128,46 +174,34 @@ def gen_tsv_name(tsv_type: str) -> str:
     return op.join(outdir, prefix + basename + '.tsv')
 
 
-def split_ts(data, mmix, mask, comptable):
+def add_decomp_prefix(comp_num, prefix, max_value):
     """
-    Splits `data` time series into accepted component time series and remainder
+    Create component name with leading zeros matching number of components
 
     Parameters
     ----------
-    data : (S x T) array_like
-        Input data, where `S` is samples and `T` is time
-    mmix : (T x C) array_like
-        Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `data`
-    mask : (S,) array_like
-        Boolean mask array
-    comptable : (C x X) :obj:`pandas.DataFrame`
-        Component metric table. One row for each component, with a column for
-        each metric. Requires at least two columns: "component" and
-        "classification".
+    comp_num : :obj:`int`
+        Component number
+    prefix : :obj:`str`
+        A prefix to prepend to the component name. An underscore is
+        automatically added between the prefix and the component number.
+    max_value : :obj:`int`
+        The maximum component number in the whole decomposition. Used to
+        determine the appropriate number of leading zeros in the component
+        name.
 
     Returns
     -------
-    hikts : (S x T) :obj:`numpy.ndarray`
-        Time series reconstructed using only components in `acc`
-    resid : (S x T) :obj:`numpy.ndarray`
-        Original data with `hikts` removed
+    comp_name : :obj:`str`
+        Component name in the form <prefix>_<zeros><comp_num>
     """
-    acc = comptable[comptable.classification == 'accepted'].index.values
-
-    cbetas = get_coeffs(data - data.mean(axis=-1, keepdims=True),
-                        mmix, mask)
-    betas = cbetas[mask]
-    if len(acc) != 0:
-        hikts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
-    else:
-        hikts = None
-
-    resid = data - hikts
-
-    return hikts, resid
+    n_digits = int(np.log10(max_value)) + 1
+    comp_name = '{0:08d}'.format(int(comp_num))
+    comp_name = '{0}_{1}'.format(prefix, comp_name[8 - n_digits:])
+    return comp_name
 
 
+# File Writing Functions
 def write_split_ts(data, mmix, mask, comptable, ref_img, echo=0):
     """
     Splits `data` into denoised / noise / ignored time series and saves to disk
@@ -391,42 +425,6 @@ def writeresults_echoes(catd, mmix, mask, comptable, ref_img):
         )
 
 
-def new_nii_like(ref_img, data, affine=None, copy_header=True):
-    """
-    Coerces `data` into NiftiImage format like `ref_img`
-
-    Parameters
-    ----------
-    ref_img : :obj:`str` or img_like
-        Reference image
-    data : (S [x T]) array_like
-        Data to be saved
-    affine : (4 x 4) array_like, optional
-        Transformation matrix to be used. Default: `ref_img.affine`
-    copy_header : :obj:`bool`, optional
-        Whether to copy header from `ref_img` to new image. Default: True
-
-    Returns
-    -------
-    nii : :obj:`nibabel.nifti1.Nifti1Image`
-        NiftiImage
-    """
-
-    ref_img = check_niimg(ref_img)
-    newdata = data.reshape(ref_img.shape[:3] + data.shape[1:])
-    if '.nii' not in ref_img.valid_exts:
-        # this is rather ugly and may lose some information...
-        nii = nib.Nifti1Image(newdata, affine=ref_img.affine,
-                              header=ref_img.header)
-    else:
-        # nilearn's `new_img_like` is a very nice function
-        nii = new_img_like(ref_img, newdata, affine=affine,
-                           copy_header=copy_header)
-    nii.set_data_dtype(data.dtype)
-
-    return nii
-
-
 def filewrite(data, img_type, ref_img, gzip=True, copy_header=True,
               echo=0):
     """
@@ -470,6 +468,7 @@ def filewrite(data, img_type, ref_img, gzip=True, copy_header=True,
     return name
 
 
+# File Loading Functions
 def load_data(data, n_echos=None):
     """
     Coerces input `data` files to required 3D array output
@@ -520,28 +519,92 @@ def load_data(data, n_echos=None):
     return fdata, ref_img
 
 
-def add_decomp_prefix(comp_num, prefix, max_value):
+# Helper Functions
+def new_nii_like(ref_img, data, affine=None, copy_header=True):
     """
-    Create component name with leading zeros matching number of components
+    Coerces `data` into NiftiImage format like `ref_img`
 
     Parameters
     ----------
-    comp_num : :obj:`int`
-        Component number
-    prefix : :obj:`str`
-        A prefix to prepend to the component name. An underscore is
-        automatically added between the prefix and the component number.
-    max_value : :obj:`int`
-        The maximum component number in the whole decomposition. Used to
-        determine the appropriate number of leading zeros in the component
-        name.
+    ref_img : :obj:`str` or img_like
+        Reference image
+    data : (S [x T]) array_like
+        Data to be saved
+    affine : (4 x 4) array_like, optional
+        Transformation matrix to be used. Default: `ref_img.affine`
+    copy_header : :obj:`bool`, optional
+        Whether to copy header from `ref_img` to new image. Default: True
 
     Returns
     -------
-    comp_name : :obj:`str`
-        Component name in the form <prefix>_<zeros><comp_num>
+    nii : :obj:`nibabel.nifti1.Nifti1Image`
+        NiftiImage
     """
-    n_digits = int(np.log10(max_value)) + 1
-    comp_name = '{0:08d}'.format(int(comp_num))
-    comp_name = '{0}_{1}'.format(prefix, comp_name[8 - n_digits:])
-    return comp_name
+
+    ref_img = check_niimg(ref_img)
+    newdata = data.reshape(ref_img.shape[:3] + data.shape[1:])
+    if '.nii' not in ref_img.valid_exts:
+        # this is rather ugly and may lose some information...
+        nii = nib.Nifti1Image(newdata, affine=ref_img.affine,
+                              header=ref_img.header)
+    else:
+        # nilearn's `new_img_like` is a very nice function
+        nii = new_img_like(ref_img, newdata, affine=affine,
+                           copy_header=copy_header)
+    nii.set_data_dtype(data.dtype)
+
+    return nii
+
+
+def split_ts(data, mmix, mask, comptable):
+    """
+    Splits `data` time series into accepted component time series and remainder
+
+    Parameters
+    ----------
+    data : (S x T) array_like
+        Input data, where `S` is samples and `T` is time
+    mmix : (T x C) array_like
+        Mixing matrix for converting input data to component space, where `C`
+        is components and `T` is the same as in `data`
+    mask : (S,) array_like
+        Boolean mask array
+    comptable : (C x X) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component, with a column for
+        each metric. Requires at least two columns: "component" and
+        "classification".
+
+    Returns
+    -------
+    hikts : (S x T) :obj:`numpy.ndarray`
+        Time series reconstructed using only components in `acc`
+    resid : (S x T) :obj:`numpy.ndarray`
+        Original data with `hikts` removed
+    """
+    acc = comptable[comptable.classification == 'accepted'].index.values
+
+    cbetas = get_coeffs(data - data.mean(axis=-1, keepdims=True),
+                        mmix, mask)
+    betas = cbetas[mask]
+    if len(acc) != 0:
+        hikts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
+    else:
+        hikts = None
+
+    resid = data - hikts
+
+    return hikts, resid
+
+
+def check_convention() -> None:
+    """Checks set convention for io module
+
+    Raises
+    ------
+    RuntimeError, if invalid convention is set
+    """
+    if convention not in allowed_conventions:
+        raise RuntimeError(
+            ('Convention %s is not valid; allowed: ' % convention) +
+            str(allowed_conventions)
+        )
