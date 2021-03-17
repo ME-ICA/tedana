@@ -1,5 +1,6 @@
 import pandas as pd
 from bokeh import (embed, layouts, models)
+from bokeh import __version__ as bokehversion
 from pathlib import Path
 from os.path import join as opj
 from string import Template
@@ -50,7 +51,7 @@ def _save_as_html(body):
     with open(str(head_template_path), 'r') as head_file:
         head_tpl = Template(head_file.read())
 
-    html = head_tpl.substitute(version=__version__, body=body)
+    html = head_tpl.substitute(version=__version__, bokehversion=bokehversion, body=body)
     return html
 
 
