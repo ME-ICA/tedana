@@ -192,7 +192,7 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
     io.outdir = out_dir
-    io.prefix = prefix
+    io.set_prefix(prefix)
     io.set_convention(convention)
 
     if debug and not quiet:

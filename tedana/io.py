@@ -21,6 +21,7 @@ convention
 Naming Functions
 ----------------
 set_convention
+set_prefix
 gen_img_name
 gen_json_name
 gen_tsv_name
@@ -94,6 +95,10 @@ def set_convention(name: str) -> None:
     Notes
     -----
     Uses the `io.convention` module-wide variable
+
+    Raises
+    ------
+    ValueError if the name is not valid
     """
     if name in allowed_conventions:
         convention = name
@@ -101,6 +106,21 @@ def set_convention(name: str) -> None:
         convention = bids
     else:
         raise ValueError('Convention %s is invalid' % name)
+
+
+def set_prefix(pref: str) -> None:
+    """Sets the prefix for the io module
+
+    Parameters
+    ----------
+    pref: str
+        The prefix to set for the module. If the prefix is not blank,
+        filenames will have the prefix and underscore before all filenames
+    """
+    if pref:
+        pref += '_'
+    prefix = pref
+
 
 def gen_img_name(img_type: str, echo: str = 0) -> str:
     """Generates an image file full path to simplify file output

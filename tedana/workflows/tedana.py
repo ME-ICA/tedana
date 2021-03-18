@@ -345,9 +345,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         os.mkdir(out_dir)
 
     io.outdir = out_dir
-    if prefix and prefix[-1] != '_':
-        prefix += '_'
-    io.prefix = prefix
+    io.set_prefix(prefix)
     io.set_convention(convention)
 
     # boilerplate
