@@ -79,9 +79,9 @@ LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
-global outdir = '.'
-global prefix = ''
-global convention = bids   # overridden in API or CLI calls
+outdir = '.'
+prefix = ''
+convention = bids   # overridden in API or CLI calls
 
 
 # Naming Functions
@@ -107,6 +107,7 @@ def set_convention(name: str) -> None:
         convention = bids
     else:
         raise ValueError('Convention %s is invalid' % name)
+    LGR.info('Set convention as %s' % convention)
 
 
 def set_prefix(pref: str) -> None:
@@ -121,6 +122,7 @@ def set_prefix(pref: str) -> None:
     if pref:
         pref += '_'
     prefix = pref
+    LGR.info('Set prefix as %s' % prefix)
 
 
 def gen_img_name(img_type: str, echo: str = 0) -> str:
