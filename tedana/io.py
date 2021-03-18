@@ -20,9 +20,10 @@ convention
 
 Naming Functions
 ----------------
-get_img_name
-get_json_name
-get_tsv_name
+set_convention
+gen_img_name
+gen_json_name
+gen_tsv_name
 add_decomp_prefix
 
 
@@ -44,7 +45,6 @@ Helper Functions
 ----------------
 new_nii_like
 split_ts
-check_convention
 
 See Also
 --------
@@ -83,7 +83,24 @@ prefix = ''
 convention = bids   # overridden in API or CLI calls
 
 # Naming Functions
+def set_convention(name: str) -> None:
+    """Sets the convention for the io module
 
+    Parameters
+    ----------
+    name: str in ('orig', 'bidsv1.5.0', 'bids')
+        The convention name to set this module for
+
+    Notes
+    -----
+    Uses the `io.convention` module-wide variable
+    """
+    if name in allowed_conventions:
+        convention = name
+    elif name == 'bids':
+        convention = bids
+    else:
+        raise ValueError('Convention %s is invalid' % name)
 
 def gen_img_name(img_type: str, echo: str = 0) -> str:
     """Generates an image file full path to simplify file output
@@ -109,7 +126,6 @@ def gen_img_name(img_type: str, echo: str = 0) -> str:
     --------
     constants.img_table, a dict for translating various naming types
     """
-    check_convention()
     if echo:
         img_type += ' split'
     format_string = img_table[img_type][convention]
@@ -143,7 +159,6 @@ def gen_json_name(json_type: str) -> str:
     --------
     constants.json_table, a dict for translating various json naming types
     """
-    check_convention()
     basename = json_table[json_type][convention]
     return op.join(outdir, prefix + basename + '.json')
 
@@ -169,7 +184,6 @@ def gen_tsv_name(tsv_type: str) -> str:
     --------
     constants.tsv_table, a dict for translating various tsv naming types
     """
-    check_convention()
     basename = tsv_table[tsv_type][convention]
     return op.join(outdir, prefix + basename + '.tsv')
 
@@ -594,17 +608,3 @@ def split_ts(data, mmix, mask, comptable):
     resid = data - hikts
 
     return hikts, resid
-
-
-def check_convention() -> None:
-    """Checks set convention for io module
-
-    Raises
-    ------
-    RuntimeError, if invalid convention is set
-    """
-    if convention not in allowed_conventions:
-        raise RuntimeError(
-            ('Convention %s is not valid; allowed: ' % convention) +
-            str(allowed_conventions)
-        )

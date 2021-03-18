@@ -193,9 +193,7 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
         os.mkdir(out_dir)
     io.outdir = out_dir
     io.prefix = prefix
-    if convention == 'bids':
-        convention = constants.bids
-    io.convention = convention
+    io.set_convention(convention)
 
     if debug and not quiet:
         logging.basicConfig(level=logging.DEBUG)

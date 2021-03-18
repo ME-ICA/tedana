@@ -148,7 +148,7 @@ def test_smoke_filewrite():
         me.filewrite(data_1d, '', ref_img)
 
     for convention in (constants.bids, 'orig'):
-        me.convention = convention
+        me.set_convention(convention)
         fname = me.filewrite(data_1d, 't2star map', ref_img)
         assert fname is not None
         try:

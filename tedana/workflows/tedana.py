@@ -348,9 +348,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if prefix and prefix[-1] != '_':
         prefix += '_'
     io.prefix = prefix
-    if convention == 'bids':
-        convention = constants.bids
-    io.convention = convention
+    io.set_convention(convention)
 
     # boilerplate
     basename = 'report'
