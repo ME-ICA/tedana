@@ -18,7 +18,7 @@ from threadpoolctl import threadpool_limits
 from nilearn.masking import compute_epi_mask
 
 from tedana import (decay, combine, decomposition, io, metrics,
-                    reporting, selection, utils, constants, __version__)
+                    reporting, selection, utils, __version__)
 import tedana.gscontrol as gsc
 from tedana.stats import computefeats2
 from tedana.workflows.parser_utils import is_valid_file, check_tedpca_value, ContextFilter

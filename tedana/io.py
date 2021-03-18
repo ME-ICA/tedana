@@ -79,9 +79,10 @@ LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
-outdir = '.'
-prefix = ''
-convention = bids   # overridden in API or CLI calls
+global outdir = '.'
+global prefix = ''
+global convention = bids   # overridden in API or CLI calls
+
 
 # Naming Functions
 def set_convention(name: str) -> None:

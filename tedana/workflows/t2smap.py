@@ -11,7 +11,7 @@ import numpy as np
 from scipy import stats
 from threadpoolctl import threadpool_limits
 
-from tedana import (combine, decay, io, utils, constants, __version__)
+from tedana import (combine, decay, io, utils, __version__)
 from tedana.workflows.parser_utils import is_valid_file
 
 LGR = logging.getLogger(__name__)
