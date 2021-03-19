@@ -90,7 +90,7 @@ def set_convention(name: str) -> None:
 
     Parameters
     ----------
-    name: str in ('orig', 'bidsv1.5.0', 'bids')
+    name : {'orig', 'bidsv1.5.0', 'bids'}
         The convention name to set this module for
 
     Notes
