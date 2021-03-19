@@ -78,11 +78,6 @@ def _get_parser():
                                 "function will be used to derive a mask "
                                 "from the first echo's data."),
                           default=None)
-    optional.add_argument('--prefix',
-                          dest='prefix',
-                          type=str,
-                          help="Prefix for filenames generated.",
-                          default='')
     optional.add_argument('--convention',
                           dest='convention',
                           action='store',
@@ -248,7 +243,7 @@ def _get_parser():
 
 
 def tedana_workflow(data, tes, out_dir='.', mask=None,
-                    convention='bids', prefix='',
+                    convention='bids',
                     fittype='loglin', combmode='t2s', tedpca='mdl',
                     fixed_seed=42, maxit=500, maxrestart=10,
                     tedort=False, gscontrol=None,
@@ -345,7 +340,6 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         os.mkdir(out_dir)
 
     io.outdir = out_dir
-    io.set_prefix(prefix)
     io.set_convention(convention)
 
     # boilerplate
