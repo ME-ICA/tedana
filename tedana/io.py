@@ -125,7 +125,7 @@ def set_prefix(pref: str) -> None:
     LGR.info('Set prefix as %s' % prefix)
 
 
-def gen_img_name(img_type: str, echo: str = 0) -> str:
+def gen_img_name(img_type: str, echo: int = 0) -> str:
     """Generates an image file full path to simplify file output
 
     Parameters
