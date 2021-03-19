@@ -115,7 +115,7 @@ def set_prefix(pref: str) -> None:
 
     Parameters
     ----------
-    pref: str
+    pref : str
         The prefix to set for the module. If the prefix is not blank,
         filenames will have the prefix and underscore before all filenames
     """
