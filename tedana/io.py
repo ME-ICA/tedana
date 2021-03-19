@@ -14,12 +14,14 @@ data from multiple echoes or write very complex outputs.
 Globals
 -------
 outdir
+prefix
 convention
 
 
 Naming Functions
 ----------------
 set_convention
+set_prefix
 gen_img_name
 gen_json_name
 gen_tsv_name
@@ -79,11 +81,8 @@ LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
-global outdir
 outdir = '.'
-global prefix
 prefix = ''
-global convention
 convention = bids   # overridden in API or CLI calls
 
 
@@ -123,10 +122,6 @@ def set_convention(name: str) -> None:
     name : {'orig', 'bidsv1.5.0', 'bids'}
         The convention name to set this module for
 
-    Returns
-    -------
-    The valid string representation of a convention
-
     Notes
     -----
     Uses the `io.convention` module-wide variable
@@ -135,7 +130,6 @@ def set_convention(name: str) -> None:
     ------
     ValueError if the name is not valid
     """
-    global convention
     if name in allowed_conventions:
         convention = name
     elif name == 'bids':
@@ -143,6 +137,21 @@ def set_convention(name: str) -> None:
     else:
         raise ValueError('Convention %s is invalid' % name)
     LGR.info('Set convention as %s' % convention)
+
+
+def set_prefix(pref: str) -> None:
+    """Sets the prefix for the io module
+
+    Parameters
+    ----------
+    pref : str
+        The prefix to set for the module. If the prefix is not blank,
+        filenames will have the prefix and underscore before all filenames
+    """
+    if pref:
+        pref += '_'
+    prefix = pref
+    LGR.info('Set prefix as %s' % prefix)
 
 
 def gen_img_name(img_type: str, echo: int = 0) -> str:
