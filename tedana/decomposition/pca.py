@@ -147,9 +147,13 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     Outputs:
 
     This function writes out several files:
-    - PCA component table
-    - PCA mixing matrix
-    - z-scored PCA components
+    ===========================    =============================================
+    Default Filename               Content
+    ===========================    =============================================
+    desc-PCA_decomposition.json    PCA component table
+    desc-PCA_mixing.tsv            PCA mixing matrix
+    desc-PCA_components.nii.gz     Component weight maps
+    ===========================    =============================================
 
     See Also
     --------
