@@ -133,7 +133,7 @@ def gen_img_name(img_type: str, echo: int = 0) -> str:
     img_type : str
         The description of the image. Must be a key in constants.img_table
     echo : :obj: `int`
-        The echo number of the image.
+        The echo number of the image. Default is 0.
 
     Returns
     -------
