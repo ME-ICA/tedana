@@ -60,6 +60,7 @@ the `constants.py` module, as the definitions are large.
 """
 import logging
 import os.path as op
+import json
 
 import numpy as np
 import nibabel as nib
@@ -69,7 +70,8 @@ from nilearn.image import new_img_like
 from tedana import utils
 from tedana.stats import computefeats2, get_coeffs
 from .constants import (
-    bids, allowed_conventions, img_table, json_table, tsv_table
+    bids, allowed_conventions,
+    img_table_file, json_table_file, tsv_table_file
 )
 
 
@@ -83,6 +85,33 @@ global prefix
 prefix = ''
 global convention
 convention = bids   # overridden in API or CLI calls
+
+
+def load_json(path: str) -> dict:
+    """Loads a json file from path
+
+    Parameters
+    ----------
+    path: str
+        The path to the json file to load
+
+    Returns
+    -------
+    A dict representation of the JSON data
+
+    Raises
+    ------
+    FileNotFoundError if the file does not exist
+    IsADirectoryError if the path is a directory instead of a file
+    """
+    with open(path, 'r') as f:
+        data = json.load(f)
+    return data
+
+
+img_table = load_json(img_table_file)
+json_table = load_json(json_table_file)
+tsv_table = load_json(tsv_table_file)
 
 
 # Naming Functions
@@ -138,7 +167,7 @@ def gen_img_name(img_type: str, echo: int = 0) -> str:
 
     See Also
     --------
-    constants.img_table, a dict for translating various naming types
+    img_table, a dict for translating various naming types
     """
     if echo:
         img_type += ' split'
