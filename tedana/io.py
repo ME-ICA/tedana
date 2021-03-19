@@ -90,7 +90,7 @@ def set_convention(name: str) -> None:
 
     Parameters
     ----------
-    name: str in ('orig', 'bidsv1.5.0', 'bids')
+    name : {'orig', 'bidsv1.5.0', 'bids'}
         The convention name to set this module for
 
     Notes
@@ -115,7 +115,7 @@ def set_prefix(pref: str) -> None:
 
     Parameters
     ----------
-    pref: str
+    pref : str
         The prefix to set for the module. If the prefix is not blank,
         filenames will have the prefix and underscore before all filenames
     """
@@ -125,15 +125,15 @@ def set_prefix(pref: str) -> None:
     LGR.info('Set prefix as %s' % prefix)
 
 
-def gen_img_name(img_type: str, echo: str = 0) -> str:
+def gen_img_name(img_type: str, echo: int = 0) -> str:
     """Generates an image file full path to simplify file output
 
     Parameters
     ----------
     img_type : str
         The description of the image. Must be a key in constants.img_table
-    echo : :obj: `int`
-        The echo number of the image.
+    echo : :obj:`int`, optional
+        The echo number of the image. Default is 0.
 
     Returns
     -------
