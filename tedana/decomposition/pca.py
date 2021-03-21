@@ -207,7 +207,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         data_img = io.new_nii_like(ref_img, utils.unmask(data, mask))
         mask_img = io.new_nii_like(ref_img, mask.astype(int))
         voxel_comp_weights, varex, varex_norm, comp_ts = ma_pca(
-            data_img, mask_img, algorithm)
+            data_img, mask_img, algorithm, normalize=True)
     elif isinstance(algorithm, Number):
         ppca = PCA(copy=False, n_components=algorithm, svd_solver="full")
         ppca.fit(data_z)
