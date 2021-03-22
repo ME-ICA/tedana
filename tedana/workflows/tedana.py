@@ -460,12 +460,12 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         # coerce to list of integers
         manacc = [int(m) for m in manacc]
 
+    t2smap_file = io.gen_img_name('t2star map')
     if t2smap is not None and op.isfile(t2smap):
         t2smap = op.abspath(t2smap)
         # Allow users to re-run on same folder
-        if t2smap != op.join(out_dir, 'T2starmap.nii.gz'):
-            shutil.copyfile(t2smap, op.join(out_dir, 'T2starmap.nii.gz'))
-            shutil.copyfile(t2smap, op.join(out_dir, op.basename(t2smap)))
+        if t2smap != t2smap_file:
+            shutil.copyfile(t2smap, t2smap_file)
     elif t2smap is not None:
         raise IOError('Argument "t2smap" must be an existing file.')
 

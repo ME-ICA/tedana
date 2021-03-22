@@ -175,7 +175,7 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     ==========================    =================================================
     Filename                      Content
     ==========================    =================================================
-    T2starmap.nii.gz              Limited estimated T2* 3D map or 4D timeseries.
+    desc-T2starmap.nii.gz              Limited estimated T2* 3D map or 4D timeseries.
                                   Will be a 3D map if ``fitmode`` is 'all' and a
                                   4D timeseries if it is 'ts'.
     S0map.nii.gz                  Limited S0 3D map or 4D timeseries.

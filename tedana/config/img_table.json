@@ -5,11 +5,11 @@
     },
     "t2star map": {
         "orig": "t2sv",
-        "bidsv1.5.0": "T2starmap"
+        "bidsv1.5.0": "desc-T2starmap"
     },
     "s0 map": {
         "orig": "s0v",
-        "bidsv1.5.0": "S0map"
+        "bidsv1.5.0": "desc-S0map"
     },
     "combined": {
         "orig": "ts_OC",
