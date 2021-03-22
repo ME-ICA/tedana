@@ -130,6 +130,7 @@ def set_convention(name: str) -> None:
     ------
     ValueError if the name is not valid
     """
+    global convention
     if name in allowed_conventions:
         convention = name
     elif name == 'bids':
@@ -148,6 +149,7 @@ def set_prefix(pref: str) -> None:
         The prefix to set for the module. If the prefix is not blank,
         filenames will have the prefix and underscore before all filenames
     """
+    global prefix
     if pref:
         pref += '_'
     prefix = pref
