@@ -40,8 +40,8 @@ allowed_conventions = ('orig', 'bidsv1.5.0')
 
 bids = 'bidsv1.5.0'
 
-config_path = op.join(Path(__file__).parent.absolute(), 'config')
+config_path = op.join(str(Path(__file__).parent.absolute()), 'config')
 
-img_table_file = op.join(str(config_path), 'img_table.json')
-json_table_file = op.join(str(config_path), 'json_table.json')
-tsv_table_file = op.join(str(config_path), 'tsv_table.json')
+img_table_file = op.join(config_path, 'img_table.json')
+json_table_file = op.join(config_path, 'json_table.json')
+tsv_table_file = op.join(config_path, 'tsv_table.json')
