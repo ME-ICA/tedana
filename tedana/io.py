@@ -511,7 +511,7 @@ def filewrite(data, img_type, ref_img, gzip=True, copy_header=True,
         if output dtype is NIFTI. Default: True
     copy_header : :obj:`bool`, optional
         Whether to copy header from `ref_img` to new image. Default: True
-    echo : :obj: `int`, optional
+    echo : :obj:`int`, optional
         Indicate the echo index of the data being written.
 
     Returns
