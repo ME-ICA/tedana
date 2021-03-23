@@ -502,8 +502,8 @@ def filewrite(data, img_type, ref_img, gzip=True, copy_header=True,
     ----------
     data : (S [x T]) array_like
         Data to be saved
-    filename : :obj:`str`
-        Filepath where data should be saved to
+    img_type : :obj: `str`
+        The type of file to write
     ref_img : :obj:`str` or img_like
         Reference image
     gzip : :obj:`bool`, optional
