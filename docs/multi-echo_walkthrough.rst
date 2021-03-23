@@ -31,7 +31,18 @@ When you have a single echo time, you acquire one value for each voxel, at each 
 
 This works rather well, in that there is relatively high BOLD contrast as every voxel,
 although the level of contrast (and thus the signal-to-noise ratio) will vary across the brain.
-However, this
+There are many factors that impact BOLD signal, but we will focus on a small number.
+First, we have neurally-driven BOLD signal.
+This is the signal we generally care about in fMRI.
+Next, we have non-BOLD noise.
+This noise is often driven by things like instrument noise, subject motion, and thermal noise.
+Finally, we have non-neural BOLD signal.
+There are physiological sources of changes in blood oxygenation that are unrelated to neural activity,
+including heart rate and breathing changes.
+
+However, this ignores a number of useful features of the BOLD signal, including:
+(1) BOLD signal decays as echo time increases, (2) BOLD contrast _increases_ as echo time increases,
+(3) BOLD fluctuations may be driven by
 
 .. _multi-echo physics:
 
