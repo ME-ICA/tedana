@@ -3,27 +3,45 @@ What is multi-echo fMRI?
 
 .. admonition:: TL;DR
 
-    Most echo-planar image (EPI) sequences collect a single brain image following
-    a radio frequency (RF) pulse, at a rate known as the repetition time (TR).
+    Most echo-planar image (EPI) sequences collect a single brain image
+    following a radio frequency (RF) pulse, at a rate known as the
+    repetition time (TR).
     This typical approach is known as single-echo fMRI.
 
-    In contrast, multi-echo (ME) fMRI refers to collecting data at multiple echo times,
-    resulting in multiple volumes with varying levels of contrast acquired per RF pulse.
-    Multi-echo fMRI can be used to identify and remove certain types of noise that can't
-    be removed from single-echo data.
+    In contrast, multi-echo (ME) fMRI refers to collecting data at multiple
+    echo times,
+    resulting in multiple volumes with varying levels of contrast acquired per
+    RF pulse.
+    Multi-echo fMRI can be used to identify and remove certain types of noise
+    that can't be removed from single-echo data.
 
 To understand what multi-echo fMRI is and why it's useful,
 we will walk through a number of things.
+
+The physics of fMRI
+-------------------
+
+In a typical fMRI sequence,
+the protons in a brain slice are aligned perpendicularly to the main magnetic
+field of the scanner (:math:`B_0`) with an "excitation pulse".
+Those protons start releasing energy from the excitation pulse as they fall
+back in line with :math:`B_0`,
+and that energy is actively measured at an "echo time" (also known as `TE`_).
+
+The time it takes for 37% of the protons fall back in line with :math:`B_0`
+is known as the transverse relaxation time, or "T2".
+The exact value of T2 varies across voxels in the brain, based on tissue type,
+which is why protocols which are T2-weighted or which quantitatively measure
+T2 are useful for structural analyses.
+
+However,
 
 To start, let's look at the most common type of fMRI, single-echo EPI.
 
 What is single-echo fMRI?
 -------------------------
 
-In a typical single-echo EPI sequence,
-the protons in a brain slice are aligned perpendicularly to the main magnetic field of the scanner (:math:`B_0`) with an "excitation pulse".
-Those protons start releasing energy from the excitation pulse as they fall back in line with :math:`B_0`,
-and that energy is actively measured at an "echo time" (also known as `TE`_).
+
 
 When you have a single echo time, you acquire one value for each voxel, at each time point.
 
@@ -31,6 +49,7 @@ When you have a single echo time, you acquire one value for each voxel, at each 
 
 This works rather well, in that there is relatively high BOLD contrast as every voxel,
 although the level of contrast (and thus the signal-to-noise ratio) will vary across the brain.
+
 There are many factors that impact BOLD signal, but we will focus on a small number.
 First, we have neurally-driven BOLD signal.
 This is the signal we generally care about in fMRI.
