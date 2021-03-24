@@ -40,6 +40,7 @@ To set up a local environment, you will need Python >=3.5 and the following pack
 * [scikit-learn](http://scikit-learn.org/stable/)
 * [nilearn](https://nilearn.github.io/)
 * [nibabel>=2.1.0](http://nipy.org/nibabel/)
+* [mapca](https://github.com/ME-ICA/mapca)
 
 You can then install `tedana` with
 
