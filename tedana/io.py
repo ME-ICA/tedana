@@ -72,18 +72,46 @@ from nilearn.image import new_img_like
 from tedana import utils
 from tedana.stats import computefeats2, get_coeffs
 from .constants import (
-    bids, allowed_conventions,
-    img_table_file, json_table_file, tsv_table_file
+    bids,
+    allowed_conventions,
 )
+from .utils import get_resource_path
 
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
-outdir = '.'
-prefix = ''
-convention = bids   # overridden in API or CLI calls
+
+class OutputGenerator():
+    def __init__(self, reference_img, convention="bids", out_dir=".", prefix=None, config="auto"):
+
+        if config == "auto":
+            config = op.join(get_resource_path(), "outputs.json")
+
+        self.config = load_json(config)
+        self.reference_img = check_niimg(reference_img)
+        self.convention = convention
+        self.out_dir = op.abspath(out_dir)
+        self.prefix = prefix + "_" if prefix is not None else ""
+
+    def get_name(self, description):
+        name = self.config[convention][description]
+        name = self._generate_name(name)
+        return name
+
+    def _generate_name(self, name):
+        return op.join(self.out_dir, self.prefix + name)
+
+    def save_nifti(self, data, name):
+        np.atleast_3d(data)
+        img = nib.Nifti1Image(data, self.reference_img.affine, self.reference_img.header)
+        img.to_filename(name)
+
+    def save_json(self, data, name):
+        assert isinstance(data, dict)
+        with open(name, "w") as fo:
+            json.dump(fo, data, indent=4, sort_keys=True)
 
 
 def load_json(path: str) -> dict:
@@ -106,11 +134,6 @@ def load_json(path: str) -> dict:
     with open(path, 'r') as f:
         data = json.load(f)
     return data
-
-
-img_table = load_json(img_table_file)
-json_table = load_json(json_table_file)
-tsv_table = load_json(tsv_table_file)
 
 
 # Naming Functions
