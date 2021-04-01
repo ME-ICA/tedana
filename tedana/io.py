@@ -84,7 +84,16 @@ RefLGR = logging.getLogger('REFERENCES')
 
 
 class OutputGenerator():
-    def __init__(self, reference_img, convention="bids", out_dir=".", prefix=None, config="auto"):
+    """A class for managing tedana outputs.
+    """
+    def __init__(
+        self,
+        reference_img,
+        convention="bidsv1.5.0",
+        out_dir=".",
+        prefix=None,
+        config="auto",
+    ):
 
         if config == "auto":
             config = op.join(get_resource_path(), "outputs.json")
