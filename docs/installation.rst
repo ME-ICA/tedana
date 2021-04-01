@@ -10,6 +10,7 @@ packages will need to be installed:
 - numpy
 - scikit-learn
 - scipy
+- mapca
 
 You can then install ``tedana`` with:
 
