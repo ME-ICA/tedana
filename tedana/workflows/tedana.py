@@ -78,6 +78,18 @@ def _get_parser():
                                 "function will be used to derive a mask "
                                 "from the first echo's data."),
                           default=None)
+    optional.add_argument('--prefix',
+                          dest='prefix',
+                          type=str,
+                          help="Prefix for filenames generated.",
+                          default='')
+    optional.add_argument('--convention',
+                          dest='convention',
+                          action='store',
+                          choices=['orig', 'bids'],
+                          help=("Filenaming convention. bids will use "
+                                "the latest BIDS derivatives version."),
+                          default='bids')
     optional.add_argument('--fittype',
                           dest='fittype',
                           action='store',
@@ -236,6 +248,7 @@ def _get_parser():
 
 
 def tedana_workflow(data, tes, out_dir='.', mask=None,
+                    convention='bids', prefix='',
                     fittype='loglin', combmode='t2s', tedpca='mdl',
                     fixed_seed=42, maxit=500, maxrestart=10,
                     tedort=False, gscontrol=None,
@@ -331,6 +344,10 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
 
+    io.outdir = out_dir
+    io.set_prefix(prefix)
+    io.set_convention(convention)
+
     # boilerplate
     basename = 'report'
     extension = 'txt'
@@ -416,8 +433,9 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if mixm is not None and op.isfile(mixm):
         mixm = op.abspath(mixm)
         # Allow users to re-run on same folder
-        if mixm != op.join(out_dir, 'desc-ICA_mixing.tsv'):
-            shutil.copyfile(mixm, op.join(out_dir, 'desc-ICA_mixing.tsv'))
+        mixing_name = io.gen_tsv_name("ICA mixing")
+        if mixm != mixing_name:
+            shutil.copyfile(mixm, mixing_name)
             shutil.copyfile(mixm, op.join(out_dir, op.basename(mixm)))
     elif mixm is not None:
         raise IOError('Argument "mixm" must be an existing file.')
@@ -425,8 +443,9 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if ctab is not None and op.isfile(ctab):
         ctab = op.abspath(ctab)
         # Allow users to re-run on same folder
-        if ctab != op.join(out_dir, 'desc-tedana_metrics.tsv'):
-            shutil.copyfile(ctab, op.join(out_dir, 'desc-tedana_metrics.tsv'))
+        metrics_name = io.gen_tsv_name("ICA metrics")
+        if ctab != metrics_name:
+            shutil.copyfile(ctab, metrics_name)
             shutil.copyfile(ctab, op.join(out_dir, op.basename(ctab)))
     elif ctab is not None:
         raise IOError('Argument "ctab" must be an existing file.')
@@ -442,11 +461,11 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         manacc = [int(m) for m in manacc]
 
     if t2smap is not None and op.isfile(t2smap):
+        t2smap_file = io.gen_img_name('t2star map')
         t2smap = op.abspath(t2smap)
         # Allow users to re-run on same folder
-        if t2smap != op.join(out_dir, 'T2starmap.nii.gz'):
-            shutil.copyfile(t2smap, op.join(out_dir, 'T2starmap.nii.gz'))
-            shutil.copyfile(t2smap, op.join(out_dir, op.basename(t2smap)))
+        if t2smap != io.gen_img_name('t2star map'):
+            shutil.copyfile(t2smap, t2smap_file)
     elif t2smap is not None:
         raise IOError('Argument "t2smap" must be an existing file.')
 
@@ -478,11 +497,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     # Create an adaptive mask with at least 3 good echoes.
     mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True, threshold=3)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
-    io.filewrite(
-        masksum,
-        op.join(out_dir, 'desc-adaptiveGoodSignal_mask.nii.gz'),
-        ref_img
-    )
+    io.filewrite(masksum, 'adaptive mask', ref_img)
 
     if t2smap is None:
         LGR.info('Computing T2* map')
@@ -496,24 +511,14 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         LGR.debug('Setting cap on T2* map at {:.5f}s'.format(
             utils.millisec2sec(cap_t2s)))
         t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
-        io.filewrite(
-            utils.millisec2sec(t2s_limited),
-            op.join(out_dir, 'T2starmap.nii.gz'),
-            ref_img
-        )
-        io.filewrite(s0_limited, op.join(out_dir, 'S0map.nii.gz'), ref_img)
+        io.filewrite(utils.millisec2sec(t2s_limited),
+                     't2star map', ref_img)
+        io.filewrite(s0_limited, 's0 map', ref_img)
 
         if verbose:
-            io.filewrite(
-                utils.millisec2sec(t2s_full),
-                op.join(out_dir, 'desc-full_T2starmap.nii.gz'),
-                ref_img
-            )
-            io.filewrite(
-                s0_full,
-                op.join(out_dir, 'desc-full_S0map.nii.gz'),
-                ref_img
-            )
+            io.filewrite(utils.millisec2sec(t2s_full),
+                         'full t2star map', ref_img)
+            io.filewrite(s0_full, 'full s0 map', ref_img)
 
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, masksum, t2s=t2s_full, combmode=combmode)
@@ -523,11 +528,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, ref_img,
                                           out_dir=out_dir)
 
-    io.filewrite(
-        data_oc,
-        op.join(out_dir, 'desc-optcom_bold.nii.gz'),
-        ref_img
-    )
+    fout = io.filewrite(data_oc, 'combined', ref_img)
+    LGR.info('Writing optimally combined data set: {}'.format(fout))
 
     if mixm is None:
         # Identify and remove thermal noise from data
@@ -539,11 +541,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                                                 verbose=verbose,
                                                 low_mem=low_mem)
         if verbose:
-            io.filewrite(
-                utils.unmask(dd, mask),
-                op.join(out_dir, 'desc-optcomPCAReduced_bold.nii.gz'),
-                ref_img
-            )
+            io.filewrite(utils.unmask(dd, mask), 'whitened', ref_img)
 
         # Perform ICA, calculate metrics, and apply decision tree
         # Restart when ICA fails to converge or too few BOLD components found
@@ -587,16 +585,16 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                 keep_restarting = False
             else:
                 keep_restarting = False
-
     else:
         LGR.info('Using supplied mixing matrix from ICA')
-        mmix_orig = pd.read_table(op.join(out_dir, 'desc-ICA_mixing.tsv')).values
+        mixing_file = io.gen_tsv_name("ICA mixing")
+        mmix_orig = pd.read_table(mixing_file).values
 
         if ctab is None:
             comptable, metric_maps, metric_metadata, betas, mmix = metrics.dependence_metrics(
                         catd, data_oc, mmix_orig, masksum, tes,
-                        ref_img, label='ICA', out_dir=out_dir,
-                        algorithm='kundu_v2', verbose=verbose)
+                        ref_img, label='ICA', algorithm='kundu_v2',
+                        verbose=verbose)
             comptable, metric_metadata = metrics.kundu_metrics(
                 comptable,
                 metric_maps,
@@ -612,8 +610,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             mmix = mmix_orig.copy()
             comptable = pd.read_table(ctab)
             # Try to find and load the metric metadata file
-            ctab_parts = ctab.split(".")
-            metadata_file = ctab_parts[0] + ".json"
+            metadata_file = io.gen_json_name('ICA metrics')
             if op.isfile(metadata_file):
                 with open(metadata_file, "r") as fo:
                     metric_metadata = json.load(fo)
@@ -630,18 +627,14 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     # Write out ICA files.
     comp_names = comptable["Component"].values
     mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
-    mixing_df.to_csv(op.join(out_dir, "desc-ICA_mixing.tsv"), sep="\t", index=False)
+    mixing_df.to_csv(io.gen_tsv_name("ICA mixing"), sep="\t", index=False)
     betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
-    io.filewrite(
-        betas_oc,
-        op.join(out_dir, "desc-ICA_stat-z_components.nii.gz"),
-        ref_img,
-    )
+    io.filewrite(betas_oc, 'z-scored ICA components', ref_img)
 
     # Save component table and associated json
     temp_comptable = comptable.set_index("Component", inplace=False)
     temp_comptable.to_csv(
-        op.join(out_dir, "desc-tedana_metrics.tsv"),
+        io.gen_tsv_name("ICA metrics"),
         index=True,
         index_label="Component",
         sep='\t',
@@ -653,7 +646,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             "This identifier matches column names in the mixing matrix TSV file."
         ),
     }
-    with open(op.join(out_dir, "desc-tedana_metrics.json"), "w") as fo:
+    with open(io.gen_json_name("ICA metrics"), "w") as fo:
         json.dump(metric_metadata, fo, sort_keys=True, indent=4)
 
     decomp_metadata = {
@@ -670,7 +663,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             "Description": "ICA fit to dimensionally-reduced optimally combined data.",
             "Method": "tedana",
         }
-    with open(op.join(out_dir, "desc-ICA_decomposition.json"), "w") as fo:
+    with open(io.gen_json_name("ICA decomposition"), "w") as fo:
         json.dump(decomp_metadata, fo, sort_keys=True, indent=4)
 
     if comptable[comptable.classification == 'accepted'].shape[0] == 0:
@@ -693,7 +686,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                       for comp in comptable.index.values]
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
         mixing_df.to_csv(
-            op.join(out_dir, 'desc-ICAOrth_mixing.tsv'),
+            io.gen_tsv_name("ICA orthogonalized mixing"),
             sep='\t',
             index=False
         )
@@ -706,14 +699,13 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                     comptable=comptable,
                     mmix=mmix,
                     n_vols=n_vols,
-                    ref_img=ref_img,
-                    out_dir=out_dir)
+                    ref_img=ref_img)
 
     if 'mir' in gscontrol:
         gsc.minimum_image_regression(data_oc, mmix, mask, comptable, ref_img, out_dir=out_dir)
 
     if verbose:
-        io.writeresults_echoes(catd, mmix, mask, comptable, ref_img, out_dir=out_dir)
+        io.writeresults_echoes(catd, mmix, mask, comptable, ref_img)
 
     if not no_reports:
         LGR.info('Making figures folder with static component maps and '
@@ -755,7 +747,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             }
         ]
     }
-    with open(op.join(out_dir, "dataset_description.json"), "w") as fo:
+    with open(io.gen_json_name("data description"), "w") as fo:
         json.dump(derivative_metadata, fo, sort_keys=True, indent=4)
 
     LGR.info('Workflow completed')

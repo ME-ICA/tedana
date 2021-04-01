@@ -3,7 +3,6 @@ PCA and related signal decomposition methods for tedana
 """
 import json
 import logging
-import os.path as op
 from numbers import Number
 
 import numpy as np
@@ -148,9 +147,8 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     Outputs:
 
     This function writes out several files:
-
     ===========================    =============================================
-    Filename                       Content
+    Default Filename               Content
     ===========================    =============================================
     desc-PCA_decomposition.json    PCA component table
     desc-PCA_mixing.tsv            PCA mixing matrix
@@ -159,8 +157,10 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
 
     See Also
     --------
-    :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
-                                              parameter.
+    :func:`tedana.utils.make_adaptive_mask` : The function used to create
+        the ``adaptive_mask` parameter.
+    :module:`tedana.constants` : The module describing the filenames for
+        various naming conventions
     """
     if algorithm == 'kundu':
         alg_str = ("followed by the Kundu component selection decision "
@@ -245,7 +245,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
 
     # write component maps to 4D image
     comp_maps = utils.unmask(computefeats2(data_oc, comp_ts, mask), mask)
-    io.filewrite(comp_maps, op.join(out_dir, 'desc-PCA_stat-z_components.nii.gz'), ref_img)
+    io.filewrite(comp_maps, 'z-scored PCA components', ref_img)
 
     # Select components using decision tree
     if algorithm == 'kundu':
@@ -278,12 +278,12 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
                   for comp in comptable.index.values]
 
     mixing_df = pd.DataFrame(data=comp_ts, columns=comp_names)
-    mixing_df.to_csv(op.join(out_dir, 'desc-PCA_mixing.tsv'), sep='\t', index=False)
+    mixing_df.to_csv(io.gen_tsv_name("PCA mixing"), sep='\t', index=False)
 
     # Save component table and associated json
     temp_comptable = comptable.set_index("Component", inplace=False)
     temp_comptable.to_csv(
-        op.join(out_dir, "desc-PCA_metrics.tsv"),
+        io.gen_tsv_name("PCA metrics"),
         index=True,
         index_label="Component",
         sep='\t',
@@ -295,7 +295,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
             "This identifier matches column names in the mixing matrix TSV file."
         ),
     }
-    with open(op.join(out_dir, "desc-PCA_metrics.json"), "w") as fo:
+    with open(io.gen_json_name("PCA metrics"), "w") as fo:
         json.dump(metric_metadata, fo, sort_keys=True, indent=4)
 
     decomp_metadata = {
@@ -310,7 +310,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
             "Description": "PCA fit to optimally combined data.",
             "Method": "tedana",
         }
-    with open(op.join(out_dir, "desc-PCA_decomposition.json"), "w") as fo:
+    with open(io.gen_json_name("PCA decomposition"), "w") as fo:
         json.dump(decomp_metadata, fo, sort_keys=True, indent=4)
 
     acc = comptable[comptable.classification == 'accepted'].index.values

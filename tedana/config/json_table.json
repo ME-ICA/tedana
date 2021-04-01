@@ -1,0 +1,22 @@
+{
+    "data description": {
+        "orig": "dataset_description",
+        "bidsv1.5.0": "dataset_description"
+    },
+    "PCA decomposition": {
+        "orig": "pca_decomposition",
+        "bidsv1.5.0": "desc-PCA_decomposition"
+    },
+    "PCA metrics": {
+        "orig": "pca_metrics",
+        "bidsv1.5.0": "desc-PCA_metrics"
+    },
+    "ICA decomposition": {
+        "orig": "ica_decomposition",
+        "bidsv1.5.0": "desc-ICA_decomposition"
+    },
+    "ICA metrics": {
+        "orig": "ica_metrics",
+        "bidsv1.5.0": "desc-tedana_metrics"
+    }
+}

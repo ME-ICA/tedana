@@ -2,7 +2,6 @@
 Fit models.
 """
 import logging
-import os.path as op
 
 import numpy as np
 import pandas as pd
@@ -51,11 +50,6 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
     algorithm : {'kundu_v2', 'kundu_v3', None}, optional
         Decision tree to be applied to metrics. Determines which maps will be
         generated and stored in ``metric_maps``. Default: None
-    label : :obj:`str` or None, optional
-        Prefix to apply to generated files. Default is None.
-    out_dir : :obj:`str`, optional
-        Output directory for generated files. Default is current working
-        directory.
     verbose : :obj:`bool`, optional
         Whether or not to generate additional files. Default is False.
 
@@ -236,9 +230,9 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
             echo_betas = betas[:, i_echo, :]
             io.filewrite(
                 utils.unmask(echo_betas, mask),
-                op.join(out_dir, 'echo-{0}_desc-{1}_components.nii.gz'.format(
-                    i_echo + 1, label)),
-                ref_img
+                'echo weight ' + label + ' map',
+                ref_img,
+                echo=(i_echo + 1)
             )
 
             # Echo-specific maps of predicted values for R2 and S0 models for each
@@ -246,26 +240,22 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
             echo_pred_R2_maps = pred_R2_maps[:, i_echo, :]
             io.filewrite(
                 utils.unmask(echo_pred_R2_maps, mask),
-                op.join(out_dir, 'echo-{0}_desc-{1}R2ModelPredictions_components.nii.gz'.format(
-                    i_echo + 1,
-                    label
-                )),
-                ref_img
+                'echo R2 ' + label,
+                ref_img,
+                echo=(i_echo + 1)
             )
             echo_pred_S0_maps = pred_S0_maps[:, i_echo, :]
             io.filewrite(
                 utils.unmask(echo_pred_S0_maps, mask),
-                op.join(out_dir, 'echo-{0}_desc-{1}S0ModelPredictions_components.nii.gz'.format(
-                    i_echo + 1,
-                    label
-                )),
-                ref_img
+                'echo S0 ' + label,
+                ref_img,
+                echo=(i_echo + 1)
             )
 
         # Weight maps used to average metrics across voxels
         io.filewrite(
             utils.unmask(Z_maps ** 2., mask),
-            op.join(out_dir, 'desc-{0}AveragingWeights_components.nii.gz'.format(label)),
+            label + ' component weights',
             ref_img
         )
         del pred_R2_maps, pred_S0_maps

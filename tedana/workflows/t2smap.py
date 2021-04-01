@@ -64,6 +64,18 @@ def _get_parser():
                                 'Dependent ANAlysis. Must be in the same '
                                 'space as `data`.'),
                           default=None)
+    optional.add_argument('--prefix',
+                          dest='prefix',
+                          type=str,
+                          help='Prefix for filenames generated.',
+                          default='')
+    optional.add_argument('--convention',
+                          dest='convention',
+                          action='store',
+                          choices=['orig', 'bids'],
+                          help=('Filenaming convention. bids will use '
+                                'the latest BIDS derivatives version.'),
+                          default='bids')
     optional.add_argument('--fittype',
                           dest='fittype',
                           action='store',
@@ -117,6 +129,7 @@ def _get_parser():
 
 
 def t2smap_workflow(data, tes, out_dir='.', mask=None,
+                    prefix='', convention='bids',
                     fittype='loglin', fitmode='all', combmode='t2s',
                     debug=False, quiet=False):
     """
@@ -178,6 +191,9 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
+    io.outdir = out_dir
+    io.set_prefix(prefix)
+    io.set_convention(convention)
 
     if debug and not quiet:
         logging.basicConfig(level=logging.DEBUG)
@@ -237,13 +253,11 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     s0_limited[s0_limited < 0] = 0
     t2s_limited[t2s_limited < 0] = 0
 
-    io.filewrite(utils.millisec2sec(t2s_limited),
-                 op.join(out_dir, 'T2starmap.nii.gz'), ref_img)
-    io.filewrite(s0_limited, op.join(out_dir, 'S0map.nii.gz'), ref_img)
-    io.filewrite(utils.millisec2sec(t2s_full),
-                 op.join(out_dir, 'desc-full_T2starmap.nii.gz'), ref_img)
-    io.filewrite(s0_full, op.join(out_dir, 'desc-full_S0map.nii.gz'), ref_img)
-    io.filewrite(OCcatd, op.join(out_dir, 'desc-optcom_bold.nii.gz'), ref_img)
+    io.filewrite(utils.millisec2sec(t2s_limited), 't2star map', ref_img)
+    io.filewrite(s0_limited, 's0 map', ref_img)
+    io.filewrite(utils.millisec2sec(t2s_full), 'full t2star map', ref_img)
+    io.filewrite(s0_full, 'full s0 map', ref_img)
+    io.filewrite(OCcatd, 'combined', ref_img)
 
     # Write out BIDS-compatible description file
     derivative_metadata = {
@@ -262,7 +276,7 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
             }
         ]
     }
-    with open(op.join(out_dir, "dataset_description.json"), "w") as fo:
+    with open(io.gen_json_name('data description'), "w") as fo:
         json.dump(derivative_metadata, fo, sort_keys=True, indent=4)
 
 
