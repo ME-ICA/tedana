@@ -789,7 +789,14 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     with open(repname, 'w') as fo:
         fo.write(report)
 
-    teardown_loggers()
+    log_handler.close()
+    logging.root.removeHandler(log_handler)
+    sh.close()
+    logging.root.removeHandler(sh)
+    for local_logger in (RefLGR, RepLGR):
+        for handler in local_logger.handlers[:]:
+            handler.close()
+            local_logger.removeHandler(handler)
     os.remove(refname)
 
     LGR.info('Workflow completed')
