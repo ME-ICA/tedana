@@ -1,0 +1,186 @@
+{
+    "adaptive mask img": {
+        "orig": "adaptive_mask",
+        "bidsv1.5.0": "desc-adaptiveGoodSignal_mask"
+    },
+    "t2star img": {
+        "orig": "t2sv",
+        "bidsv1.5.0": "T2starmap"
+    },
+    "s0 img": {
+        "orig": "s0v",
+        "bidsv1.5.0": "S0map"
+    },
+    "combined img": {
+        "orig": "ts_OC",
+        "bidsv1.5.0": "desc-optcom_bold"
+    },
+    "ICA components img": {
+        "orig": "ica_components",
+        "bidsv1.5.0": "desc-ICA_components"
+    },
+    "z-scored PCA components img": {
+        "orig": "pca_components",
+        "bidsv1.5.0": "desc-PCA_stat-z_components"
+    },
+    "z-scored ICA components img": {
+        "orig": "betas_OC",
+        "bidsv1.5.0": "desc-ICA_stat-z_components"
+    },
+    "ICA accepted components img": {
+        "orig": "betas_hik_OC",
+        "bidsv1.5.0": "desc-ICAAccepted_components"
+    },
+    "z-scored ICA accepted components img": {
+        "orig": "feats_OC2",
+        "bidsv1.5.0": "desc-ICAAccepted_stat-z_components"
+    },
+    "denoised ts img": {
+        "orig": "dn_ts_OC",
+        "bidsv1.5.0": "desc-optcomDenoised_bold"
+    },
+    "high kappa ts img": {
+        "orig": "hik_ts_OC",
+        "bidsv1.5.0": "desc-optcomAccepted_bold"
+    },
+    "low kappa ts img": {
+        "orig": "lowk_ts_OC",
+        "bidsv1.5.0": "desc-optcomRejected_bold"
+    },
+    "full t2star img": {
+        "orig": "t2svG",
+        "bidsv1.5.0": "desc-full_T2starmap"
+    },
+    "full s0 img": {
+        "orig": "s0vG",
+        "bidsv1.5.0": "desc-full_S0map"
+    },
+    "whitened img": {
+        "orig": "ts_OC_whitened",
+        "bidsv1.5.0": "desc-optcomPCAReduced_bold"
+    },
+    "echo weight PCA map split img": {
+        "orig": "e{echo}_PCA_comp",
+        "bidsv1.5.0": "echo-{echo}_desc-PCA_components"
+    },
+    "echo R2 PCA split img": {
+        "orig": "e{echo}_PCA_R2",
+        "bidsv1.5.0": "echo-{echo}_desc-PCAR2ModelPredictions_components"
+    },
+    "echo S0 PCA split img": {
+        "orig": "e{echo}_PCA_S0",
+        "bidsv1.5.0": "echo-{echo}_desc-PCAS0ModelPredictions_components"
+    },
+    "PCA component weights img": {
+        "orig": "pca_weights",
+        "bidsv1.5.0": "desc-PCAAveragingWeights_components"
+    },
+    "PCA reduced img": {
+        "orig": "oc_reduced",
+        "bidsv1.5.0": "desc-optcomPCAReduced_bold"
+    },
+    "echo weight ICA map split img": {
+        "orig": "e{0}_ICA_comp",
+        "bidsv1.5.0": "echo-{0}_desc-ICA_components"
+    },
+    "echo R2 ICA split img": {
+        "orig": "e{0}_ICA_R2",
+        "bidsv1.5.0": "echo-{0}_desc-ICAR2ModelPredictions_components"
+    },
+    "echo S0 ICA split img": {
+        "orig": "e{0}_ICA_S0",
+        "bidsv1.5.0": "echo-{0}_desc-ICAS0ModelPredictions_components"
+    },
+    "ICA component weights img": {
+        "orig": "ica_weights",
+        "bidsv1.5.0": "desc-ICAAveragingWeights_components"
+    },
+    "high kappa ts split img": {
+        "orig": "hik_ts_e{echo}",
+        "bidsv1.5.0": "echo-{echo}_desc-Accepted_bold"
+    },
+    "low kappa ts split img": {
+        "orig": "lowk_ts_e{echo}",
+        "bidsv1.5.0": "echo-{echo}_desc-Rejected_bold"
+    },
+    "denoised ts split img": {
+        "orig": "dn_ts_e{echo}",
+        "bidsv1.5.0": "echo-{echo}_desc-Denoised_bold"
+    },
+    "gs img": {
+        "orig": "T1gs",
+        "bidsv1.5.0": "desc-globalSignal_map"
+    },
+    "has gs combined img": {
+        "orig": "tsoc_orig",
+        "bidsv1.5.0": "desc-optcomWithGlobalSignal_bold"
+    },
+    "removed gs combined img": {
+        "orig": "tsoc_nogs",
+        "bidsv1.5.0": "desc-optcomNoGlobalSignal_bold"
+    },
+    "t1 like img": {
+        "orig": "sphis_hik",
+        "bidsv1.5.0": "desc-T1likeEffect_min"
+    },
+    "ICA accepted mir denoised img": {
+        "orig": "hik_ts_OC_MIR",
+        "bidsv1.5.0": "desc-optcomAcceptedMIRDenoised_bold"
+    },
+    "mir denoised img": {
+        "orig": "dn_ts_OC_MIR",
+        "bidsv1.5.0": "desc-optcomMIRDenoised_bold"
+    },
+    "ICA accepted mir component weights img": {
+        "orig": "betas_hik_OC_MIR",
+        "bidsv1.5.0": "desc-ICAAcceptedMIRDenoised_components"
+    },
+    "data description json": {
+        "orig": "dataset_description",
+        "bidsv1.5.0": "dataset_description"
+    },
+    "PCA decomposition json": {
+        "orig": "pca_decomposition",
+        "bidsv1.5.0": "desc-PCA_decomposition"
+    },
+    "PCA metrics json": {
+        "orig": "pca_metrics",
+        "bidsv1.5.0": "desc-PCA_metrics"
+    },
+    "ICA decomposition json": {
+        "orig": "ica_decomposition",
+        "bidsv1.5.0": "desc-ICA_decomposition"
+    },
+    "ICA metrics json": {
+        "orig": "ica_metrics",
+        "bidsv1.5.0": "desc-tedana_metrics"
+    },
+    "PCA mixing tsv": {
+        "orig": "pca_mixing",
+        "bidsv1.5.0": "desc-PCA_mixing"
+    },
+    "PCA metrics tsv": {
+        "orig": "pca_metrics",
+        "bidsv1.5.0": "desc-PCA_metrics"
+    },
+    "ICA mixing tsv": {
+        "orig": "ica_mixing",
+        "bidsv1.5.0": "desc-ICA_mixing"
+    },
+    "ICA metrics tsv": {
+        "orig": "ica_metrics",
+        "bidsv1.5.0": "desc-tedana_metrics"
+    },
+    "global signal time series tsv": {
+        "orig": "global_signal_ts",
+        "bidsv1.5.0": "desc-globalSignal_timeseries"
+    },
+    "ICA MIR mixing tsv": {
+        "orig": "ica_mir_mixing",
+        "bidsv1.5.0": "desc-ICAMIRDenoised_mixing"
+    },
+    "ICA orthogonalized mixing tsv": {
+        "orig": "ica_orth_mixing",
+        "bidsv1.5.0": "desc-ICAOrth_mixing"
+    }
+}

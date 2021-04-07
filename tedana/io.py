@@ -1,81 +1,22 @@
-"""
-=============================
-io module (:mod: `tedana.io`)
-=============================
+"""The io module handles most file input and output in the `tedana` workflow.
 
-.. currentmodule:: tedana.io
-
-The io module handles most file input and output in the `tedana` workflow,
-and simplifies some naming function calls with module globals (see "Globals"
-and "Notes" below). Other functions in the module help simplify writing out
+Other functions in the module help simplify writing out
 data from multiple echoes or write very complex outputs.
-
-
-Globals
--------
-outdir
-prefix
-convention
-
-
-Naming Functions
-----------------
-set_convention
-set_prefix
-gen_img_name
-gen_json_name
-gen_tsv_name
-add_decomp_prefix
-
-
-File Writing Functions
-----------------------
-write_split_ts
-writefeats
-writeresults
-writeresults_echoes
-filewrite
-
-
-File Loading Functions
-----------------------
-load_data
-
-
-Helper Functions
-----------------
-new_nii_like
-split_ts
-
-See Also
---------
-`tedana.constants`
-
-
-Notes
------
-The global variables are set by default in the module to guarantee that the
-functions that use them won't fail if a workflow API is not used.
-However, API calls can override the default settings. Additionally, the
-naming functions beginning with "get" all leverage dictionaries defined in
-the `constants.py` module, as the definitions are large.
 """
 import logging
+import os
 import os.path as op
 import json
+from string import Formatter
 
 import numpy as np
 import nibabel as nib
+import pandas as pd
 from nilearn._utils import check_niimg
 from nilearn.image import new_img_like
 
 from tedana import utils
 from tedana.stats import computefeats2, get_coeffs
-from .constants import (
-    bids,
-    allowed_conventions,
-)
-from .utils import get_resource_path
 
 
 LGR = logging.getLogger(__name__)
@@ -96,31 +37,113 @@ class OutputGenerator():
     ):
 
         if config == "auto":
-            config = op.join(get_resource_path(), "outputs.json")
+            config = op.join(utils.get_resource_path(), "outputs.json")
 
-        self.config = load_json(config)
+        config = load_json(config)
+        cfg = {}
+        for k, v in config:
+            if convention not in v.keys():
+                raise ValueError(
+                    f"Convention {convention} is not one of the supported conventions "
+                    f"({', '.join(v.keys())})"
+                )
+            cfg[k] = v[convention]
+        self.config = cfg
         self.reference_img = check_niimg(reference_img)
         self.convention = convention
         self.out_dir = op.abspath(out_dir)
+        self.figures_dir = op.join(out_dir, "figures")
         self.prefix = prefix + "_" if prefix is not None else ""
 
-    def get_name(self, description):
-        name = self.config[convention][description]
-        name = self._generate_name(name)
+        if not op.isdir(self.out_dir):
+            LGR.info(f"Generating output directory: {self.out_dir}")
+            os.mkdir(self.out_dir)
+
+        if not op.isdir(self.figures_dir):
+            LGR.info(f"Generating figures directory: {self.figures_dir}")
+            os.mkdir(self.figures_dir)
+
+    def _determine_suffix(self, description, name):
+        if description.endswith("img"):
+            allowed_suffixes = [".nii", ".nii.gz"]
+            preferred_suffix = ".nii.gz"
+        elif description.endswith("json"):
+            allowed_suffixes = [".json"]
+            preferred_suffix = ".json"
+        elif description.endswith("tsv"):
+            allowed_suffixes = [".tsv"]
+            preferred_suffix = ".tsv"
+
+        if not any(name.endswith(suff) for suff in allowed_suffixes):
+            suffix = preferred_suffix
+
+        return suffix
+
+    def get_name(self, description, **kwargs):
+        """Generates an image file full path to simplify file output
+
+        Parameters
+        ----------
+        description : str
+            The description of the file. Must be a key in self.config.img_table
+        kwargs : keyword arguments
+            The most common is ``echo``.
+
+        Returns
+        -------
+        The full path for the image name
+        """
+        name = self.config[self.convention][description]
+        suffix = self._determine_suffix(description, name)
+
+        name_variables = get_fields(name)
+        for key, value in kwargs.items():
+            assert key in name_variables
+
+        name = name.format(**kwargs)
+        name = op.join(self.out_dir, self.prefix + name + suffix)
         return name
 
-    def _generate_name(self, name):
-        return op.join(self.out_dir, self.prefix + name)
+    def save_file(self, data, description, **kwargs):
+        name = self.get_name(description, **kwargs)
+        if description.endswith("img"):
+            self.save_img(data, name)
+        elif description.endswith("json"):
+            self.save_json(data, name)
+        elif description.endswith("tsv"):
+            self.save_tsv(data, name)
 
-    def save_nifti(self, data, name):
-        np.atleast_3d(data)
-        img = nib.Nifti1Image(data, self.reference_img.affine, self.reference_img.header)
+        return name
+
+    def save_img(self, data, name):
+        assert isinstance(data, np.ndarray)
+        assert data.ndim in (1, 2)
+        img = new_nii_like(self.reference_img, data)
         img.to_filename(name)
 
     def save_json(self, data, name):
         assert isinstance(data, dict)
         with open(name, "w") as fo:
             json.dump(fo, data, indent=4, sort_keys=True)
+
+    def save_tsv(self, data, name):
+        assert isinstance(data, pd.DataFrame)
+        data.to_csv(name, sep="\t", line_terminator="\n", na_rep="n/a", index=False)
+
+
+def get_fields(name):
+    """Identify all fields in an unformatted string.
+
+    Examples
+    --------
+    >>> string = "{field1}{field2}{field3}"
+    >>> fields = get_fields(string)
+    >>> fields
+    ["field1", "field2", "field3"]
+    """
+    formatter = Formatter()
+    fields = [temp[1] for temp in formatter.parse(name) if temp[1] is not None]
+    return fields
 
 
 def load_json(path: str) -> dict:
@@ -143,135 +166,6 @@ def load_json(path: str) -> dict:
     with open(path, 'r') as f:
         data = json.load(f)
     return data
-
-
-# Naming Functions
-def set_convention(name: str) -> None:
-    """Sets the convention for the io module
-
-    Parameters
-    ----------
-    name : {'orig', 'bidsv1.5.0', 'bids'}
-        The convention name to set this module for
-
-    Notes
-    -----
-    Uses the `io.convention` module-wide variable
-
-    Raises
-    ------
-    ValueError if the name is not valid
-    """
-    global convention
-    if name in allowed_conventions:
-        convention = name
-    elif name == 'bids':
-        convention = bids
-    else:
-        raise ValueError('Convention %s is invalid' % name)
-    LGR.info('Set convention as %s' % convention)
-
-
-def set_prefix(pref: str) -> None:
-    """Sets the prefix for the io module
-
-    Parameters
-    ----------
-    pref : str
-        The prefix to set for the module. If the prefix is not blank,
-        filenames will have the prefix and underscore before all filenames
-    """
-    global prefix
-    if pref:
-        pref += '_'
-    prefix = pref
-    LGR.info('Set prefix as %s' % prefix)
-
-
-def gen_img_name(img_type: str, echo: int = 0) -> str:
-    """Generates an image file full path to simplify file output
-
-    Parameters
-    ----------
-    img_type : str
-        The description of the image. Must be a key in constants.img_table
-    echo : :obj:`int`, optional
-        The echo number of the image. Default is 0.
-
-    Returns
-    -------
-    The full path for the image name
-
-    Raises
-    ------
-    KeyError, if an invalid description is supplied or API convention is
-        illegal
-    ValueError, if an echo is supplied when it shouldn't be
-
-    See Also
-    --------
-    img_table, a dict for translating various naming types
-    """
-    if echo:
-        img_type += ' split'
-    format_string = img_table[img_type][convention]
-    if echo and not ('{' in format_string):
-        raise ValueError('Echo supplied when not supported!')
-    elif echo:
-        basename = format_string.format(echo)
-    else:
-        basename = format_string
-    return op.join(outdir, prefix + basename)
-
-
-def gen_json_name(json_type: str) -> str:
-    """Generates a JSON file full path to simplify file output
-
-    Parameters
-    ----------
-    json_type: str
-        The description of the JSON. Must be a key in constants.json_table
-
-    Returns
-    -------
-    The full path for the JSON name
-
-    Raises
-    ------
-    KeyError, if an invalid description is supplied or API convention is
-        illegal
-
-    See Also
-    --------
-    constants.json_table, a dict for translating various json naming types
-    """
-    basename = json_table[json_type][convention]
-    return op.join(outdir, prefix + basename + '.json')
-
-
-def gen_tsv_name(tsv_type: str) -> str:
-    """Generates a TSV file full path to simplify file output
-
-    Parameters
-    ----------
-    tsv_type: str
-        The description of the TSV. Must be a key in constants.tsv_table
-
-    Returns
-    -------
-    The full path for the TSV name
-
-    Raises
-    ------
-    KeyError, if an invalid description is supplied or API convention is
-        illegal
-
-    See Also
-    --------
-    constants.tsv_table, a dict for translating various tsv naming types
-    """
-    basename = tsv_table[tsv_type][convention]
-    return op.join(outdir, prefix + basename + '.tsv')
 
 
 def add_decomp_prefix(comp_num, prefix, max_value):
@@ -302,7 +196,7 @@ def add_decomp_prefix(comp_num, prefix, max_value):
 
 
 # File Writing Functions
-def write_split_ts(data, mmix, mask, comptable, ref_img, echo=0):
+def write_split_ts(data, mmix, mask, comptable, generator, echo=0):
     """
     Splits `data` into denoised / noise / ignored time series and saves to disk
 
@@ -315,7 +209,7 @@ def write_split_ts(data, mmix, mask, comptable, ref_img, echo=0):
         is components and `T` is the same as in `data`
     mask : (S,) array_like
         Boolean mask array
-    ref_img : :obj:`str` or img_like
+    generator : :obj:`tedana.io.OutputGenerator`
         Reference image to dictate how outputs are saved to disk
     out_dir : :obj:`str`, optional
         Output directory.
@@ -359,65 +253,19 @@ def write_split_ts(data, mmix, mask, comptable, ref_img, echo=0):
     dnts = data[mask] - lowkts
 
     if len(acc) != 0:
-        fout = filewrite(
-                utils.unmask(hikts, mask), 'high kappa ts', ref_img,
-                echo=echo
-        )
-        LGR.info('Writing high-Kappa time series: {}'.format(op.abspath(fout)))
+        fout = generator.save_file(utils.unmask(hikts, mask), 'high kappa ts', echo=echo)
+        LGR.info('Writing high-Kappa time series: {}'.format(fout))
 
     if len(rej) != 0:
-        fout = filewrite(
-                utils.unmask(lowkts, mask), 'low kappa ts', ref_img,
-                echo=echo
-        )
-        LGR.info('Writing low-Kappa time series: {}'.format(op.abspath(fout)))
+        fout = generator.save_file(utils.unmask(lowkts, mask), 'low kappa ts', echo=echo)
+        LGR.info('Writing low-Kappa time series: {}'.format(fout))
 
-    fout = filewrite(
-            utils.unmask(dnts, mask), 'denoised ts', ref_img, echo=echo
-    )
-    LGR.info('Writing denoised time series: {}'.format(op.abspath(fout)))
+    fout = generator.save_file(utils.unmask(dnts, mask), 'denoised ts', echo=echo)
+    LGR.info('Writing denoised time series: {}'.format(fout))
     return varexpl
 
 
-def writefeats(data, mmix, mask, ref_img):
-    """
-    Converts `data` to component space with `mmix` and saves to disk
-
-    Parameters
-    ----------
-    data : (S x T) array_like
-        Input time series
-    mmix : (C x T) array_like
-        Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `data`
-    mask : (S,) array_like
-        Boolean mask array
-    ref_img : :obj:`str` or img_like
-        Reference image to dictate how outputs are saved to disk
-
-    Returns
-    -------
-    fname : :obj:`str`
-        Filepath to saved file
-
-    Notes
-    -----
-    This function writes out a file:
-
-    =================================    =============================================
-    Filename                             Content
-    =================================    =============================================
-    [prefix]_stat-z_components.nii.gz    Z-normalized spatial component maps.
-    =================================    =============================================
-    """
-
-    # write feature versions of components
-    feats = utils.unmask(computefeats2(data, mmix, mask), mask)
-    fname = filewrite(feats, 'z-scored ICA accepted components', ref_img)
-    return fname
-
-
-def writeresults(ts, mask, comptable, mmix, n_vols, ref_img):
+def writeresults(ts, mask, comptable, mmix, n_vols, generator):
     """
     Denoises `ts` and saves all resulting files to disk
 
@@ -460,25 +308,26 @@ def writeresults(ts, mask, comptable, mmix, n_vols, ref_img):
     See Also
     --------
     tedana.io.write_split_ts: Writes out time series files
-    tedana.io.writefeats: Writes out component files
     """
     acc = comptable[comptable.classification == 'accepted'].index.values
-    write_split_ts(ts, mmix, mask, comptable, ref_img)
+    write_split_ts(ts, mmix, mask, comptable, generator)
 
     ts_B = get_coeffs(ts, mmix, mask)
-    fout = filewrite(ts_B, 'ICA components', ref_img)
-    LGR.info('Writing full ICA coefficient feature set: {}'.format(op.abspath(fout)))
+    fout = generator.save_file(ts_B, 'ICA components')
+    LGR.info('Writing full ICA coefficient feature set: {}'.format(fout))
 
     if len(acc) != 0:
-        fout = filewrite(ts_B[:, acc], 'ICA accepted components', ref_img)
-        LGR.info('Writing denoised ICA coefficient feature set: {}'.format(op.abspath(fout)))
+        fout = generator.save_file(ts_B[:, acc], 'ICA accepted components')
+        LGR.info('Writing denoised ICA coefficient feature set: {}'.format(fout))
 
-        fout = writefeats(split_ts(ts, mmix, mask, comptable)[0],
-                          mmix[:, acc], mask, ref_img)
-        LGR.info('Writing Z-normalized spatial component maps: {}'.format(op.abspath(fout)))
+        # write feature versions of components
+        feats = computefeats2(split_ts(ts, mmix, mask, comptable)[0], mmix[:, acc], mask)
+        feats = utils.unmask(feats, mask)
+        fname = generator.save_file(feats, 'z-scored ICA accepted components')
+        LGR.info('Writing Z-normalized spatial component maps: {}'.format(fname))
 
 
-def writeresults_echoes(catd, mmix, mask, comptable, ref_img):
+def writeresults_echoes(catd, mmix, mask, comptable, generator):
     """
     Saves individually denoised echos to disk
 
@@ -519,53 +368,7 @@ def writeresults_echoes(catd, mmix, mask, comptable, ref_img):
 
     for i_echo in range(catd.shape[1]):
         LGR.info('Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo + 1))
-        write_split_ts(
-                catd[:, i_echo, :], mmix, mask, comptable, ref_img,
-                echo=(i_echo + 1)
-        )
-
-
-def filewrite(data, img_type, ref_img, gzip=True, copy_header=True,
-              echo=0):
-    """
-    Writes `data` to `filename` in format of `ref_img`
-
-    Parameters
-    ----------
-    data : (S [x T]) array_like
-        Data to be saved
-    img_type : :obj:`str`
-        The type of file to write
-    ref_img : :obj:`str` or img_like
-        Reference image
-    gzip : :obj:`bool`, optional
-        Whether to gzip output (if not specified in `filename`). Only applies
-        if output dtype is NIFTI. Default: True
-    copy_header : :obj:`bool`, optional
-        Whether to copy header from `ref_img` to new image. Default: True
-    echo : :obj:`int`, optional
-        Indicate the echo index of the data being written.
-
-    Returns
-    -------
-    name : :obj:`str`
-        Path of saved image (with added extensions, as appropriate)
-    """
-
-    # get reference image for comparison
-    if isinstance(ref_img, list):
-        ref_img = ref_img[0]
-
-    # generate out file for saving
-    out = new_nii_like(ref_img, data, copy_header=copy_header)
-
-    # FIXME: we only handle writing to nifti right now
-    # get root of desired output file and save as nifti image
-    root = gen_img_name(img_type, echo=echo)
-    name = '{}.{}'.format(root, 'nii.gz' if gzip else 'nii')
-    out.to_filename(name)
-
-    return name
+        write_split_ts(catd[:, i_echo, :], mmix, mask, comptable, generator, echo=(i_echo + 1))
 
 
 # File Loading Functions

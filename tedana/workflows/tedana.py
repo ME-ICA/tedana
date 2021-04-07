@@ -416,11 +416,19 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
 
     LGR.info('Loading input data: {}'.format([f for f in data]))
     catd, ref_img = io.load_data(data, n_echos=n_echos)
+    generator = io.OutputGenerator(
+        ref_img,
+        convention=convention,
+        out_dir=out_dir,
+        prefix=prefix,
+        config="auto",
+    )
+
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
     # check if TR is 0
-    img_t_r = ref_img.header.get_zooms()[-1]
+    img_t_r = generator.reference_image.header.get_zooms()[-1]
     if img_t_r == 0:
         raise IOError('Dataset has a TR of 0. This indicates incorrect'
                       ' header information. To correct this, we recommend'
@@ -489,7 +497,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         mask[t2s_limited == 0] = 0  # reduce mask based on T2* map
     else:
         LGR.info('Computing EPI mask from first echo')
-        first_echo_img = io.new_nii_like(ref_img, catd[:, 0, :])
+        first_echo_img = io.new_nii_like(generator.reference_image, catd[:, 0, :])
         mask = compute_epi_mask(first_echo_img)
         RepLGR.info("An initial mask was generated from the first echo using "
                     "nilearn's compute_epi_mask function.")
@@ -497,7 +505,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     # Create an adaptive mask with at least 3 good echoes.
     mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True, threshold=3)
     LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
-    io.filewrite(masksum, 'adaptive mask', ref_img)
+    generator.save_file(masksum, "adaptive mask img")
 
     if t2smap is None:
         LGR.info('Computing T2* map')
@@ -511,37 +519,33 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         LGR.debug('Setting cap on T2* map at {:.5f}s'.format(
             utils.millisec2sec(cap_t2s)))
         t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
-        io.filewrite(utils.millisec2sec(t2s_limited),
-                     't2star map', ref_img)
-        io.filewrite(s0_limited, 's0 map', ref_img)
+        generator.save_file(utils.millisec2sec(t2s_limited), 't2star map')
+        generator.save_file(s0_limited, 's0 map')
 
         if verbose:
-            io.filewrite(utils.millisec2sec(t2s_full),
-                         'full t2star map', ref_img)
-            io.filewrite(s0_full, 'full s0 map', ref_img)
+            generator.save_file(utils.millisec2sec(t2s_full), 'full t2star map')
+            generator.save_file(s0_full, 'full s0 map')
 
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, masksum, t2s=t2s_full, combmode=combmode)
 
     # regress out global signal unless explicitly not desired
     if 'gsr' in gscontrol:
-        catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, ref_img,
-                                          out_dir=out_dir)
+        catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, generator)
 
-    fout = io.filewrite(data_oc, 'combined', ref_img)
+    fout = generator.save_file(data_oc, 'combined')
     LGR.info('Writing optimally combined data set: {}'.format(fout))
 
     if mixm is None:
         # Identify and remove thermal noise from data
         dd, n_components = decomposition.tedpca(catd, data_oc, combmode, mask,
-                                                masksum, t2s_full, ref_img,
+                                                masksum, t2s_full, generator,
                                                 tes=tes, algorithm=tedpca,
                                                 kdaw=10., rdaw=1.,
-                                                out_dir=out_dir,
                                                 verbose=verbose,
                                                 low_mem=low_mem)
         if verbose:
-            io.filewrite(utils.unmask(dd, mask), 'whitened', ref_img)
+            generator.save_file(utils.unmask(dd, mask), 'whitened')
 
         # Perform ICA, calculate metrics, and apply decision tree
         # Restart when ICA fails to converge or too few BOLD components found
@@ -562,7 +566,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             LGR.info('Making second component selection guess from ICA results')
             comptable, metric_maps, metric_metadata, betas, mmix = metrics.dependence_metrics(
                 catd, data_oc, mmix_orig, masksum, tes,
-                ref_img, reindex=True, label='ICA', out_dir=out_dir,
+                generator.reference_image, reindex=True, label='ICA', out_dir=out_dir,
                 algorithm='kundu_v2', verbose=verbose
             )
             comptable, metric_metadata = metrics.kundu_metrics(
@@ -593,7 +597,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         if ctab is None:
             comptable, metric_maps, metric_metadata, betas, mmix = metrics.dependence_metrics(
                         catd, data_oc, mmix_orig, masksum, tes,
-                        ref_img, label='ICA', algorithm='kundu_v2',
+                        generator.reference_image, label='ICA', algorithm='kundu_v2',
                         verbose=verbose)
             comptable, metric_metadata = metrics.kundu_metrics(
                 comptable,
@@ -629,7 +633,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
     mixing_df.to_csv(io.gen_tsv_name("ICA mixing"), sep="\t", index=False)
     betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
-    io.filewrite(betas_oc, 'z-scored ICA components', ref_img)
+    generator.save_file(betas_oc, 'z-scored ICA components')
 
     # Save component table and associated json
     temp_comptable = comptable.set_index("Component", inplace=False)
@@ -699,27 +703,21 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                     comptable=comptable,
                     mmix=mmix,
                     n_vols=n_vols,
-                    ref_img=ref_img)
+                    generator=generator)
 
     if 'mir' in gscontrol:
-        gsc.minimum_image_regression(data_oc, mmix, mask, comptable, ref_img, out_dir=out_dir)
+        gsc.minimum_image_regression(data_oc, mmix, mask, comptable, generator)
 
     if verbose:
-        io.writeresults_echoes(catd, mmix, mask, comptable, ref_img)
+        io.writeresults_echoes(catd, mmix, mask, comptable, generator)
 
     if not no_reports:
         LGR.info('Making figures folder with static component maps and '
                  'timecourse plots.')
-        # make figure folder first
-        if not op.isdir(op.join(out_dir, 'figures')):
-            os.mkdir(op.join(out_dir, 'figures'))
-
         reporting.static_figures.comp_figures(data_oc, mask=mask,
                                               comptable=comptable,
                                               mmix=mmix_orig,
-                                              ref_img=ref_img,
-                                              out_dir=op.join(out_dir,
-                                                              'figures'),
+                                              generator=generator,
                                               png_cmap=png_cmap)
 
         if sys.version_info.major == 3 and sys.version_info.minor < 6:
@@ -728,7 +726,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             LGR.warn(warn_msg)
         else:
             LGR.info('Generating dynamic report')
-            reporting.generate_report(out_dir=out_dir, tr=img_t_r)
+            reporting.generate_report(generator, tr=img_t_r)
 
     # Write out BIDS-compatible description file
     derivative_metadata = {
@@ -791,14 +789,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     with open(repname, 'w') as fo:
         fo.write(report)
 
-    log_handler.close()
-    logging.root.removeHandler(log_handler)
-    sh.close()
-    logging.root.removeHandler(sh)
-    for local_logger in (RefLGR, RepLGR):
-        for handler in local_logger.handlers[:]:
-            handler.close()
-            local_logger.removeHandler(handler)
+    teardown_loggers()
     os.remove(refname)
 
 

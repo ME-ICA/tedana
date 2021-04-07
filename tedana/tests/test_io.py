@@ -115,26 +115,6 @@ def test_smoke_write_split_ts():
         os.remove(filename)
 
 
-def test_smoke_writefeats():
-    """
-    Ensures that writefeats writes out the expected feature with random
-    input, since there is no suffix, remove feats_.nii
-    """
-    n_samples, n_times, n_components = 64350, 10, 6
-    data = np.random.random((n_samples, n_times))
-    mmix = np.random.random((n_times, n_components))
-    mask = np.random.randint(2, size=n_samples)
-    ref_img = os.path.join(data_dir, 'mask.nii.gz')
-
-    assert me.writefeats(data, mmix, mask, ref_img) is not None
-
-    # this only generates feats_.nii, so delete that
-    os.remove(
-            me.gen_img_name('z-scored ICA accepted components') +
-            '.nii.gz'
-    )
-
-
 def test_smoke_filewrite():
     """
     Ensures that filewrite fails for no known image type, write a known key

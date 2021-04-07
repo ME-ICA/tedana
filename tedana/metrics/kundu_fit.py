@@ -19,9 +19,9 @@ F_MAX = 500
 Z_MAX = 8
 
 
-def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
+def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, generator,
                        reindex=False, mmixN=None, algorithm=None, label=None,
-                       out_dir='.', verbose=False):
+                       verbose=False):
     """
     Fit TE-dependence and -independence models to components.
 
@@ -41,8 +41,6 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         For more information on thresholding, see `make_adaptive_mask`.
     tes : list
         List of echo times associated with `catd`, in milliseconds
-    ref_img : str or img_like
-        Reference image to dictate how outputs are saved to disk
     reindex : bool, optional
         Whether to sort components in descending order by Kappa. Default: False
     mmixN : (T x C) array_like, optional
@@ -228,35 +226,31 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         for i_echo in range(n_echos):
             # Echo-specific weight maps for each of the ICA components.
             echo_betas = betas[:, i_echo, :]
-            io.filewrite(
+            generator.save_file(
                 utils.unmask(echo_betas, mask),
                 'echo weight ' + label + ' map',
-                ref_img,
                 echo=(i_echo + 1)
             )
 
             # Echo-specific maps of predicted values for R2 and S0 models for each
             # component.
             echo_pred_R2_maps = pred_R2_maps[:, i_echo, :]
-            io.filewrite(
+            generator.save_file(
                 utils.unmask(echo_pred_R2_maps, mask),
                 'echo R2 ' + label,
-                ref_img,
                 echo=(i_echo + 1)
             )
             echo_pred_S0_maps = pred_S0_maps[:, i_echo, :]
-            io.filewrite(
+            generator.save_file(
                 utils.unmask(echo_pred_S0_maps, mask),
                 'echo S0 ' + label,
-                ref_img,
                 echo=(i_echo + 1)
             )
 
         # Weight maps used to average metrics across voxels
-        io.filewrite(
+        generator.save_file(
             utils.unmask(Z_maps ** 2., mask),
             label + ' component weights',
-            ref_img
         )
         del pred_R2_maps, pred_S0_maps
 
@@ -321,7 +315,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         for i_comp in range(n_components):
             # Cluster-extent threshold and binarize F-maps
             ccimg = io.new_nii_like(
-                ref_img,
+                generator.reference_image,
                 np.squeeze(utils.unmask(F_R2_maps[:, i_comp], mask)))
             F_R2_clmaps[:, i_comp] = utils.threshold_map(
                 ccimg, min_cluster_size=csize, threshold=fmin, mask=mask,
@@ -329,7 +323,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
             countsigFR2 = F_R2_clmaps[:, i_comp].sum()
 
             ccimg = io.new_nii_like(
-                ref_img,
+                generator.reference_image,
                 np.squeeze(utils.unmask(F_S0_maps[:, i_comp], mask)))
             F_S0_clmaps[:, i_comp] = utils.threshold_map(
                 ccimg, min_cluster_size=csize, threshold=fmin, mask=mask,
@@ -338,7 +332,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
 
             # Cluster-extent threshold and binarize Z-maps with CDT of p < 0.05
             ccimg = io.new_nii_like(
-                ref_img,
+                generator.reference_image,
                 np.squeeze(utils.unmask(Z_maps[:, i_comp], mask)))
             Z_clmaps[:, i_comp] = utils.threshold_map(
                 ccimg, min_cluster_size=csize, threshold=1.95, mask=mask,
@@ -346,7 +340,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
 
             # Cluster-extent threshold and binarize ranked signal-change map
             ccimg = io.new_nii_like(
-                ref_img,
+                generator.reference_image,
                 utils.unmask(stats.rankdata(tsoc_Babs[:, i_comp]), mask))
             Br_R2_clmaps[:, i_comp] = utils.threshold_map(
                 ccimg, min_cluster_size=csize,
