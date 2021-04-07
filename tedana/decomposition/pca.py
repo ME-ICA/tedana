@@ -7,11 +7,11 @@ from numbers import Number
 
 import numpy as np
 import pandas as pd
+from mapca import ma_pca
 from scipy import stats
 from sklearn.decomposition import PCA
 
 from tedana import metrics, utils, io
-from tedana.decomposition import ma_pca
 from tedana.stats import computefeats2
 from tedana.selection import kundu_tedpca
 
@@ -204,8 +204,8 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     if algorithm in ['mdl', 'aic', 'kic']:
         data_img = io.new_nii_like(generator.reference_image, utils.unmask(data, mask))
         mask_img = io.new_nii_like(generator.reference_image, mask.astype(int))
-        voxel_comp_weights, varex, varex_norm, comp_ts = ma_pca.ma_pca(
-            data_img, mask_img, algorithm)
+        voxel_comp_weights, varex, varex_norm, comp_ts = ma_pca(
+            data_img, mask_img, algorithm, normalize=True)
     elif isinstance(algorithm, Number):
         ppca = PCA(copy=False, n_components=algorithm, svd_solver="full")
         ppca.fit(data_z)

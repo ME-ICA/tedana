@@ -792,6 +792,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     teardown_loggers()
     os.remove(refname)
 
+    LGR.info('Workflow completed')
+
 
 def _main(argv=None):
     """Tedana entry point"""
