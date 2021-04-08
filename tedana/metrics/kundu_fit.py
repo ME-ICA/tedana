@@ -198,8 +198,6 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         Z_maps[:, i_comp] = wtsZ
 
         # compute Kappa and Rho
-        F_S0[F_S0 > F_MAX] = F_MAX
-        F_R2[F_R2 > F_MAX] = F_MAX
         norm_weights = np.abs(wtsZ ** 2.)
         kappas[i_comp] = np.average(F_R2, weights=norm_weights)
         rhos[i_comp] = np.average(F_S0, weights=norm_weights)
