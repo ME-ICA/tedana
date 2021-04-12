@@ -641,31 +641,6 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if verbose:
         io.writeresults_echoes(catd, mmix, mask, comptable, ref_img, out_dir=out_dir)
 
-    if not no_reports:
-        LGR.info('Making figures folder with static component maps and '
-                 'timecourse plots.')
-        # make figure folder first
-        if not op.isdir(op.join(out_dir, 'figures')):
-            os.mkdir(op.join(out_dir, 'figures'))
-
-        reporting.static_figures.comp_figures(data_oc, mask=mask,
-                                              comptable=comptable,
-                                              mmix=mmix_orig,
-                                              ref_img=ref_img,
-                                              out_dir=op.join(out_dir,
-                                                              'figures'),
-                                              png_cmap=png_cmap)
-
-        if sys.version_info.major == 3 and sys.version_info.minor < 6:
-            warn_msg = ("Reports requested but Python version is less than "
-                        "3.6.0. Dynamic reports will not be generated.")
-            LGR.warn(warn_msg)
-        else:
-            LGR.info('Generating dynamic report')
-            reporting.generate_report(out_dir=out_dir, tr=img_t_r)
-
-    LGR.info('Workflow completed')
-
     RepLGR.info("This workflow used numpy (Van Der Walt, Colbert, & "
                 "Varoquaux, 2011), scipy (Jones et al., 2001), pandas "
                 "(McKinney, 2010), scikit-learn (Pedregosa et al., 2011), "
@@ -705,6 +680,29 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     with open(repname, 'w') as fo:
         fo.write(report)
 
+    if not no_reports:
+        LGR.info('Making figures folder with static component maps and '
+                 'timecourse plots.')
+        # make figure folder first
+        if not op.isdir(op.join(out_dir, 'figures')):
+            os.mkdir(op.join(out_dir, 'figures'))
+
+        reporting.static_figures.comp_figures(data_oc, mask=mask,
+                                              comptable=comptable,
+                                              mmix=mmix_orig,
+                                              ref_img=ref_img,
+                                              out_dir=op.join(out_dir,
+                                                              'figures'),
+                                              png_cmap=png_cmap)
+
+        if sys.version_info.major == 3 and sys.version_info.minor < 6:
+            warn_msg = ("Reports requested but Python version is less than "
+                        "3.6.0. Dynamic reports will not be generated.")
+            LGR.warn(warn_msg)
+        else:
+            LGR.info('Generating dynamic report')
+            reporting.generate_report(out_dir=out_dir, tr=img_t_r)
+
     log_handler.close()
     logging.root.removeHandler(log_handler)
     sh.close()
@@ -714,6 +712,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             handler.close()
             local_logger.removeHandler(handler)
     os.remove(refname)
+
+    LGR.info('Workflow completed')
 
 
 def _main(argv=None):
