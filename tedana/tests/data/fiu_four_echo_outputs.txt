@@ -70,9 +70,3 @@ figures/comp_017.png
 figures/comp_018.png
 figures/comp_019.png
 figures/comp_020.png
-figures/comp_021.png
-figures/comp_022.png
-figures/comp_023.png
-figures/comp_024.png
-figures/comp_025.png
-figures/comp_026.png
