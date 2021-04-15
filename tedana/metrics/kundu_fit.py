@@ -199,8 +199,8 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
 
         # compute Kappa and Rho
         norm_weights = np.abs(wtsZ ** 2.)
-        kappas[i_comp] = np.average(F_R2, weights=norm_weights)
-        rhos[i_comp] = np.average(F_S0, weights=norm_weights)
+        kappas[i_comp] = np.average(F_R2_maps[:, i_comp], weights=norm_weights)
+        rhos[i_comp] = np.average(F_S0_maps[:, i_comp], weights=norm_weights)
     del SSE_S0, SSE_R2, wtsZ, F_S0, F_R2, norm_weights, comp_betas
     if algorithm != 'kundu_v3':
         del WTS, PSC, tsoc_B
