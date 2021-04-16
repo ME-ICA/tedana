@@ -49,8 +49,6 @@ def _fetch_cambridge_functional(participants, data_dir, url, resume,
     -------
     func : list of str (Nifti files)
         Paths to functional MRI data (4D) for each subject.
-    regressors : list of str (tsv files)
-        Paths to regressors related to each subject.
     """
     dataset_name = 'cambridge'
     data_dir = _get_dataset_dir(dataset_name, data_dir=data_dir,
@@ -115,8 +113,6 @@ def _fetch_cambridge_regressors(participants, data_dir, url, resume,
         Defines the level of verbosity of the output.
     Returns
     -------
-    func : list of str (Nifti files)
-        Paths to functional MRI data (4D) for each subject.
     regressors : list of str (tsv files)
         Paths to regressors related to each subject.
     """
@@ -165,7 +161,7 @@ def fetch_cambridge(n_subjects=None, reduce_confounds=True,
     ----------
     n_subjects : int, optional
         The number of subjects to load. If None, all the subjects are
-        loaded. Total 155 subjects.
+        loaded. Total 88 subjects.
     reduce_confounds : bool, optional
         If True, the returned confounds only include 6 motion parameters,
         mean framewise displacement, signal from white matter, csf, and
@@ -195,16 +191,19 @@ def fetch_cambridge(n_subjects=None, reduce_confounds=True,
     Notes
     -----
     The original data is downloaded from OpenNeuro
-    https://openneuro.org/datasets/ds000228/versions/1.0.0
+    https://openneuro.org/datasets/ds000258/versions/1.0.0
     This fetcher downloads preprocessed data that are available on Open
     Science Framework (OSF): https://osf.io/9wcb8/
 
     References
     ----------
-    .. [1] Richardson, H., Lisandrelli, G., Riobueno-Naylor, A., & Saxe, R. (2018).
-       Development of the social brain from age three to twelve years.
-       Nature communications, 9(1), 1027.
-       https://www.nature.com/articles/s41467-018-03399-2
+    .. [1] Power, J., Plitt, M., Gotts, S., Kundu, P., Voon, V.,
+       Bandettini, P., & Martin, A. (2018).
+       Ridding fMRI data of motion-related influences:
+       removal of signals with distinct spatial and physical bases
+       in multi-echo data.
+       PNAS, 115(9), E2105-2114.
+       www.pnas.org/content/115/9/E2105
     """
     dataset_name = 'cambridge'
     data_dir = _get_dataset_dir(dataset_name, data_dir=data_dir,
