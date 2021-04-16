@@ -1,3 +1,4 @@
+**/.DS_Store
 docs/generated/
 .pytest_cache/
 
@@ -108,4 +109,4 @@ ENV/
 
 # jupyter notebooks
 .ipynb_checkpoints/
-*.ipynb
+#*.ipynb

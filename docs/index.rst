@@ -152,6 +152,7 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
 
    installation
    multi-echo
+   multi-echo_walkthrough
    acquisition
    resources
    usage
