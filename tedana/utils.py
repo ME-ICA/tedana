@@ -368,3 +368,63 @@ def millisec2sec(arr):
         Values in seconds.
     """
     return arr / 1000.
+
+
+class ContextFilter(logging.Filter):
+    """
+    A filter to allow specific logging handlers to ignore specific loggers.
+    We use this to prevent our report-generation and reference-compiling
+    loggers from printing to the general log file or to stdout.
+    """
+    NAMES = ['REPORT', 'REFERENCES']
+
+    def filter(self, record):
+        if not any([n in record.name for n in self.NAMES]):
+            return True
+
+
+def setup_loggers(logname, repname, refname, quiet=False, debug=False):
+    # Set up the general logger
+    log_formatter = logging.Formatter(
+        '%(asctime)s\t%(filename)-12s\t%(levelname)-8s\t%(message)s',
+        datefmt='%Y-%m-%dT%H:%M:%S')
+    # set up logging file and open it for writing
+    log_handler = logging.FileHandler(logname)
+    log_handler.setFormatter(log_formatter)
+    # Removing handlers after basicConfig doesn't work, so we use filters
+    # for the relevant handlers themselves.
+    log_handler.addFilter(ContextFilter())
+    logging.root.addHandler(log_handler)
+    sh = logging.StreamHandler()
+    sh.setFormatter(log_formatter)
+    sh.addFilter(ContextFilter())
+    logging.root.addHandler(sh)
+
+    if quiet:
+        logging.root.setLevel(logging.WARNING)
+    elif debug:
+        logging.root.setLevel(logging.DEBUG)
+    else:
+        logging.root.setLevel(logging.INFO)
+
+    # LGR.propagate = False  # do not print to console, except for messages for StreamHandler
+
+    # Loggers for report and references
+    text_formatter = logging.Formatter('%(message)s')
+    rep_handler = logging.FileHandler(repname)
+    rep_handler.setFormatter(text_formatter)
+    ref_handler = logging.FileHandler(refname)
+    ref_handler.setFormatter(text_formatter)
+    RepLGR.setLevel(logging.INFO)
+    RepLGR.addHandler(rep_handler)
+    RepLGR.propagate = False
+    RefLGR.setLevel(logging.INFO)
+    RefLGR.addHandler(ref_handler)
+    RefLGR.propagate = False
+
+
+def teardown_loggers():
+    for local_logger in (RefLGR, RepLGR, LGR):
+        for handler in local_logger.handlers[:]:
+            handler.close()
+            local_logger.removeHandler(handler)
