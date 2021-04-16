@@ -1,10 +1,24 @@
 import os
+import numpy as np
 from sklearn.utils import Bunch
 from nilearn.datasets.utils import (_get_dataset_dir, _fetch_files,
-                                    _get_dataset_descr, _read_md5_sum_file,
-                                    _tree, _filter_columns, _fetch_file,
-                                    _uncompress_file)
+                                    _get_dataset_descr)
 from nilearn._utils.numpy_conversions import csv_to_array
+
+
+def _reduce_confounds(regressors, keep_confounds):
+    reduced_regressors = []
+    for in_file in regressors:
+        out_file = in_file.replace('desc-confounds',
+                                   'desc-reducedConfounds')
+        if not os.path.isfile(out_file):
+            confounds = np.recfromcsv(in_file, delimiter='\t')
+            selected_confounds = confounds[keep_confounds]
+            header = '\t'.join(selected_confounds.dtype.names)
+            np.savetxt(out_file, np.array(selected_confounds.tolist()),
+                       header=header, delimiter='\t', comments='')
+        reduced_regressors.append(out_file)
+    return reduced_regressors
 
 
 def _fetch_cambridge_functional(participants, data_dir, url, resume,
@@ -66,12 +80,79 @@ def _fetch_cambridge_functional(participants, data_dir, url, resume,
         this_osf_id = osf_data[osf_data['participant_id'] == participant_id]
         # Download bold images
         func_url = url.format(this_osf_id['key_b'][0])
-        func_file = [(func.format(participant_id, participant_id), func_url,
+        func_file = [(func.format(participant_id, this_osf_id['echo_id'][0]),
+                      func_url,
                       {'move': func.format(participant_id)})]
         path_to_func = _fetch_files(data_dir, func_file, resume=resume,
                                     verbose=verbose)[0]
         funcs.append(path_to_func)
     return funcs
+
+
+def _fetch_cambridge_regressors(participants, data_dir, url, resume,
+                                verbose):
+    """Helper function to fetch_cambridge.
+    This function helps in downloading the regressor time series for each run
+    of multi-echo functional MRI data in the Cambridge dataset.
+    Files are downloaded from Open Science Framework (OSF).
+    For more information on the data and its preprocessing, see:
+    https://osf.io/9wcb8/
+
+    Parameters
+    ----------
+    participants : numpy.ndarray
+        Should contain column participant_id which represents subjects id. The
+        number of files are fetched based on ids in this column.
+    data_dir : str
+        Path of the data directory. Used to force data storage in a specified
+        location. If None is given, data are stored in home directory.
+    url : str
+        Override download URL. Used for test only (or if you setup a mirror of
+        the data).
+    resume : bool
+        Whether to resume download of a partly-downloaded file.
+    verbose : int
+        Defines the level of verbosity of the output.
+    Returns
+    -------
+    func : list of str (Nifti files)
+        Paths to functional MRI data (4D) for each subject.
+    regressors : list of str (tsv files)
+        Paths to regressors related to each subject.
+    """
+    dataset_name = 'cambridge'
+    data_dir = _get_dataset_dir(dataset_name, data_dir=data_dir,
+                                verbose=verbose)
+
+    if url is None:
+        # Download from the relevant OSF project, using hashes generated
+        # from the OSF API. Note the trailing slash. For more info, see:
+        # https://gist.github.com/emdupre/3cb4d564511d495ea6bf89c6a577da74
+        url = 'https://osf.io/download/{}/'
+
+    regr = '{0}_task-rest_desc-confounds_timeseries.tsv'
+
+    # The gzip contains unique download keys per Nifti file and confound
+    # pre-extracted from OSF. Required for downloading files.
+    package_directory = os.path.dirname(os.path.abspath(__file__))
+    dtype = [('participant_id', 'U12'), ('key_regressor', 'U24')]
+    names = ['participant_id', 'key_r']
+    # csv file contains download information related to OpenScience(osf)
+    osf_data = csv_to_array(os.path.join(package_directory, "data",
+                                         "cambridge_confounds.csv"),
+                            skip_header=True, dtype=dtype, names=names)
+    regressors = []
+
+    for participant_id in participants['participant_id']:
+        this_osf_id = osf_data[osf_data['participant_id'] == participant_id]
+        # Download bold images
+        regr_url = url.format(this_osf_id['key_r'][0])
+        regr_file = [(regr.format(participant_id), regr_url,
+                      {'move': regr.format(participant_id)})]
+        path_to_regr = _fetch_files(data_dir, regr_file, resume=resume,
+                                    verbose=verbose)[0]
+        regressors.append(path_to_regr)
+    return regressors
 
 
 def fetch_cambridge(n_subjects=None, reduce_confounds=True,
@@ -136,13 +217,14 @@ def fetch_cambridge(n_subjects=None, reduce_confounds=True,
 
     # Dataset description
     fdescr = _get_dataset_descr(dataset_name)
-    funcs= _fetch_cambridge_functional(participants,
-                                       data_dir=data_dir,
-                                       url=None,
-                                       resume=resume,
-                                       verbose=verbose)
+    funcs = _fetch_cambridge_functional(
+        participants, data_dir=data_dir, url=None,
+        resume=resume, verbose=verbose)
 
+    regressors = _fetch_cambridge_regressors(
+        participants, data_dir=data_dir, url=None,
+        resume=resume, verbose=verbose)
     if reduce_confounds:
         regressors = _reduce_confounds(regressors, keep_confounds)
-    return Bunch(func=funcs, confounds=regressors, phenotypic=participants,
-                 description=fdescr)
+
+    return Bunch(func=funcs, confounds=regressors, description=fdescr)
