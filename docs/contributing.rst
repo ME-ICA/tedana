@@ -30,7 +30,7 @@ collecting multi-echo data (Acquisition), combining those echoes together
 (Combination), with optional noise removal (Denoising), inspecting the outputs
 (Visualization) and answering multi-echo related questions (Community). In
 general, tedana accepts previously preprocessed data to produce outputs that
-are ready for further analyses. 
+are ready for further analyses.
 
 Acquisition
 -----------
@@ -67,7 +67,7 @@ tedana was developed out of a package known as `multi-echo ICA, ME-ICA, or MEICA
 developed by Dr. Prantik Kundu. Though the usage of ICA for classification of
 signal vs noise components has continued in tedana, this is not a rule. The
 tedana community is open and encouraging of new denoising methods, whether or not they
-have a basis in ICA. 
+have a basis in ICA.
 
 Specifically, we are interested in any method that seeks to use the information from multiple
 echoes to identify signal (defined here as BOLD signals arising from neural
@@ -81,14 +81,14 @@ within the scope of tedana, but code could be written so that it is a
 possible option in the future.
 
 Currently tedana works on a single subject, run by run basis; however, methods
-that use information across multiple runs are welcome. 
+that use information across multiple runs are welcome.
 
 .. _`multi-echo ICA, ME-ICA, or MEICA`: https://github.com/ME-ICA/me-ica
 
 Visualization
 -------------
 
-As part of the processing stream, tedana provides figures and an 
+As part of the processing stream, tedana provides figures and an
 HTML-based report for inspecting results. These are intended to help
 users understand the outputs from tedana and diagnose problems. Though a
 comprehensive viewer (such as fsleyes) is outside of the scope of tedana, we
@@ -99,9 +99,9 @@ Community
 
 tedana is intended to be a community of multi-echo users. The primary resource
 is the github repository and related documentation. In addition, the tedana
-group will attempt to answer multi-echo related questions on NeuroStars 
+group will attempt to answer multi-echo related questions on NeuroStars
 (`multi-echo tag <https://neurostars.org/tag/multi-echo>`_ or
-`tedana tag <https://neurostars.org/tag/tedana>`_). 
+`tedana tag <https://neurostars.org/tag/tedana>`_).
 
 What tedana isn’t
 -----------------
@@ -109,10 +109,10 @@ What tedana isn’t
 While the list of things that do not fall under the scope of tedana are
 infinite, it is worth mentioning a few points:
 
-- tedana will not offer a GUI for usage 
+- tedana will not offer a GUI for usage
 - it is intended to be either a stand
   alone processing package or serve as a processing step as part of a larger
-  package (i.e. fmriprep or afni_proc.py). 
+  package (i.e. fmriprep or afni_proc.py).
 - tedana will not provide basic preprocessing steps, such as motion correction
   or slice timing correction. While these were previously part of the ME-ICA
   pipeline, the sheer variety of possible choices, guidelines and data types
@@ -294,6 +294,11 @@ releasing your own Python projects!
     #. Create a new release, using the GitHub `guide for creating a release on GitHub`_.
        `Release-drafter`_ should have already drafted release notes listing all
        changes since the last release; check to make sure these are correct.
+
+  .. warning::
+    Do not directly release the `Release-drafter`_-generated release draft.
+    You **must** copy the contents of the auto-generated draft to a new draft to be released.
+    `Release-drafter`_-generated releases **will not** deploy to PyPi.
 
 We have set up tedana so that releases automatically mint a new DOI with Zenodo;
 a guide for doing this integration is available `here`_.
