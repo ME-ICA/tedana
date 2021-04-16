@@ -1,7 +1,7 @@
 """The io module handles most file input and output in the `tedana` workflow.
 
-Other functions in the module help simplify writing out
-data from multiple echoes or write very complex outputs.
+Other functions in the module help simplify writing out data from multiple echoes or write very
+complex outputs.
 """
 import logging
 import os
@@ -26,6 +26,36 @@ RefLGR = logging.getLogger('REFERENCES')
 
 class OutputGenerator():
     """A class for managing tedana outputs.
+
+    Parameters
+    ----------
+    reference_img : img_like
+        The reference image which defines affine, shape, etc. of output images.
+    convention : {"bidsv1.5.0", "orig", or other str}, optional
+        Default is "bidsv1.5.0". Must correspond to a key in ``config``.
+    out_dir : str, optional
+        Output directory. Default is current working directory (".").
+    prefix : None or str, optional
+        Prefix to prepend to output filenames. Default is None, which means no prefix will be used.
+    config : str, optional
+        Path to configuration json file, which determines appropriate filenames based on file
+        descriptions. Default is "auto", which uses tedana's default configuration file.
+
+    Attributes
+    ----------
+    config : dict
+        File naming configuration information.
+    reference_img : img_like
+        The reference image which defines affine, shape, etc. of output images.
+    convention : str
+        The naming convention for output files.
+    out_dir : str
+        Directory in which outputs will be saved.
+    figures_dir : str
+        Directory in which figures will be saved.
+        This will correspond to a "figures" subfolder of ``out_dir``.
+    prefix : str
+        Prefix to prepend to output filenames.
     """
     def __init__(
         self,
@@ -63,48 +93,79 @@ class OutputGenerator():
             LGR.info(f"Generating figures directory: {self.figures_dir}")
             os.mkdir(self.figures_dir)
 
-    def _determine_suffix(self, description, name):
-        if description.endswith("img"):
-            allowed_suffixes = [".nii", ".nii.gz"]
-            preferred_suffix = ".nii.gz"
-        elif description.endswith("json"):
-            allowed_suffixes = [".json"]
-            preferred_suffix = ".json"
-        elif description.endswith("tsv"):
-            allowed_suffixes = [".tsv"]
-            preferred_suffix = ".tsv"
-
-        if not any(name.endswith(suff) for suff in allowed_suffixes):
-            suffix = preferred_suffix
-
-        return suffix
-
-    def get_name(self, description, **kwargs):
-        """Generates an image file full path to simplify file output
+    def _determine_extension(self, description, name):
+        """Infer the extension for a file based on its description.
 
         Parameters
         ----------
         description : str
-            The description of the file. Must be a key in self.config.img_table
+            The description of the file. Corresponds to a key in ``self.config``.
+        name : str
+            Filename corresponding to the description within ``self.config``.
+
+        Returns
+        -------
+        extension : str
+            File extension for the filename.
+        """
+        if description.endswith("img"):
+            allowed_extensions = [".nii", ".nii.gz"]
+            preferred_extension = ".nii.gz"
+        elif description.endswith("json"):
+            allowed_extensions = [".json"]
+            preferred_extension = ".json"
+        elif description.endswith("tsv"):
+            allowed_extensions = [".tsv"]
+            preferred_extension = ".tsv"
+
+        if not any(name.endswith(ext) for ext in allowed_extensions):
+            extension = preferred_extension
+
+        return extension
+
+    def get_name(self, description, **kwargs):
+        """Generate a file full path to simplify file output.
+
+        Parameters
+        ----------
+        description : str
+            The description of the file. Must be a key in ``self.config``.
         kwargs : keyword arguments
+            Additional arguments used to format the base filename string.
             The most common is ``echo``.
 
         Returns
         -------
-        The full path for the image name
+        name : str
+            The full path for the filename.
         """
         name = self.config[self.convention][description]
-        suffix = self._determine_suffix(description, name)
+        extension = self._determine_extension(description, name)
 
         name_variables = get_fields(name)
         for key, value in kwargs.items():
             assert key in name_variables
 
         name = name.format(**kwargs)
-        name = op.join(self.out_dir, self.prefix + name + suffix)
+        name = op.join(self.out_dir, self.prefix + name + extension)
         return name
 
     def save_file(self, data, description, **kwargs):
+        """Save data to a filename determined by the file's description and config info.
+
+        Parameters
+        ----------
+        data : dict or img_like or pandas.DataFrame
+            Data to save to file.
+        description : str
+            Description of the data, used to determine the appropriate filename from
+            ``self.config``.
+
+        Returns
+        -------
+        name : str
+            The full file path of the saved file.
+        """
         name = self.get_name(description, **kwargs)
         if description.endswith("img"):
             self.save_img(data, name)
@@ -116,17 +177,44 @@ class OutputGenerator():
         return name
 
     def save_img(self, data, name):
+        """Save image data to a nifti file.
+
+        Parameters
+        ----------
+        data : img_like
+            Data to save to a file.
+        name : str
+            Full file path for output file.
+        """
         assert isinstance(data, np.ndarray)
         assert data.ndim in (1, 2)
         img = new_nii_like(self.reference_img, data)
         img.to_filename(name)
 
     def save_json(self, data, name):
+        """Save dictionary data to a json file.
+
+        Parameters
+        ----------
+        data : dict
+            Data to save to a file.
+        name : str
+            Full file path for output file.
+        """
         assert isinstance(data, dict)
         with open(name, "w") as fo:
             json.dump(fo, data, indent=4, sort_keys=True)
 
     def save_tsv(self, data, name):
+        """Save DataFrame to a tsv file.
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            Data to save to a file.
+        name : str
+            Full file path for output file.
+        """
         assert isinstance(data, pd.DataFrame)
         data.to_csv(name, sep="\t", line_terminator="\n", na_rep="n/a", index=False)
 
@@ -147,7 +235,7 @@ def get_fields(name):
 
 
 def load_json(path: str) -> dict:
-    """Loads a json file from path
+    """Load a json file from path.
 
     Parameters
     ----------
@@ -156,7 +244,8 @@ def load_json(path: str) -> dict:
 
     Returns
     -------
-    A dict representation of the JSON data
+    data : dict
+        A dictionary representation of the JSON data.
 
     Raises
     ------
