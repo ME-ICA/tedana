@@ -56,7 +56,7 @@ def _save_as_html(body):
     return html
 
 
-def generate_report(out_dir, tr):
+def generate_report(generator, tr):
     """
     Parameters
     ----------
@@ -72,12 +72,12 @@ def generate_report(out_dir, tr):
         A generated HTML report
     """
     # Load the component time series
-    comp_ts_path = gen_tsv_name("ICA mixing")
+    comp_ts_path = generator.get_name("ICA mixing tsv")
     comp_ts_df = pd.read_csv(comp_ts_path, sep='\t', encoding='utf=8')
     n_vols, n_comps = comp_ts_df.shape
 
     # Load the component table
-    comptable_path = gen_tsv_name("ICA metrics")
+    comptable_path = generator.get_name("ICA metrics tsv")
     comptable_cds = df._create_data_struct(comptable_path)
 
     # Create kappa rho plot

@@ -276,16 +276,12 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
                   for comp in comptable.index.values]
 
     mixing_df = pd.DataFrame(data=comp_ts, columns=comp_names)
-    mixing_df.to_csv(io.gen_tsv_name("PCA mixing"), sep='\t', index=False)
+    generator.save_file(mixing_df, "PCA mixing tsv")
 
     # Save component table and associated json
     temp_comptable = comptable.set_index("Component", inplace=False)
-    temp_comptable.to_csv(
-        io.gen_tsv_name("PCA metrics"),
-        index=True,
-        index_label="Component",
-        sep='\t',
-    )
+    generator.save_file(temp_comptable, "PCA metrics tsv")
+
     metric_metadata["Component"] = {
         "LongName": "Component identifier",
         "Description": (
@@ -293,8 +289,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
             "This identifier matches column names in the mixing matrix TSV file."
         ),
     }
-    with open(io.gen_json_name("PCA metrics"), "w") as fo:
-        json.dump(metric_metadata, fo, sort_keys=True, indent=4)
+    generator.save_file(metric_metadata, "PCA metrics json")
 
     decomp_metadata = {
         "Method": (
@@ -308,8 +303,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
             "Description": "PCA fit to optimally combined data.",
             "Method": "tedana",
         }
-    with open(io.gen_json_name("PCA decomposition"), "w") as fo:
-        json.dump(decomp_metadata, fo, sort_keys=True, indent=4)
+    generator.save_file(decomp_metadata, "PCA decomposition json")
 
     acc = comptable[comptable.classification == 'accepted'].index.values
     n_components = acc.size

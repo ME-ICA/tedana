@@ -57,6 +57,7 @@ class OutputGenerator():
     prefix : str
         Prefix to prepend to output filenames.
     """
+
     def __init__(
         self,
         reference_img,
