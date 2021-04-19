@@ -386,7 +386,7 @@ class ContextFilter(logging.Filter):
 def setup_loggers(logname, repname, refname, quiet=False, debug=False):
     # Set up the general logger
     log_formatter = logging.Formatter(
-        '%(asctime)s\t%(filename)-12s\t%(levelname)-8s\t%(message)s',
+        '%(asctime)s\t%(module)s.%(filename)-12s\t%(levelname)-8s\t%(message)s',
         datefmt='%Y-%m-%dT%H:%M:%S')
     # set up logging file and open it for writing
     log_handler = logging.FileHandler(logname)
