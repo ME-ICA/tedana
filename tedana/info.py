@@ -32,8 +32,8 @@ REQUIRES = [
     'nilearn>=0.5.2',
     'numpy>=1.15',
     'pandas',
-    'scikit-learn>=0.22',
-    'scipy>=1.3.3',
+    'scikit-learn>=0.19.1',
+    'scipy>=1.1.0',
     'threadpoolctl'
 ]
 
