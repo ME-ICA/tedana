@@ -717,6 +717,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             local_logger.removeHandler(handler)
     os.remove(refname)
 
+    LGR.info('Workflow completed')
+
 
 def _main(argv=None):
     """Tedana entry point"""

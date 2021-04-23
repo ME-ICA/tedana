@@ -26,6 +26,7 @@ DOWNLOAD_URL = (
 
 REQUIRES = [
     'bokeh',
+    'mapca~=0.0.1',
     'matplotlib',
     'nibabel>=2.5.1',
     'nilearn>=0.5.2',
@@ -62,7 +63,7 @@ EXTRA_REQUIRES['all'] = list(set([
 
 # Supported Python versions using PEP 440 version specifiers
 # Should match the same set of Python versions as classifiers
-PYTHON_REQUIRES = ">=3.5"
+PYTHON_REQUIRES = ">=3.6"
 
 # Package classifiers
 CLASSIFIERS = [
@@ -70,7 +71,8 @@ CLASSIFIERS = [
     'Intended Audience :: Science/Research',
     'Topic :: Scientific/Engineering :: Information Analysis',
     'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
-    'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
-    'Programming Language :: Python :: 3.7'
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
 ]

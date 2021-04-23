@@ -174,6 +174,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
             SSE_S0 = (comp_betas[:j_echo] - pred_S0)**2
             SSE_S0 = SSE_S0.sum(axis=0)  # (S,) prediction error map
             F_S0 = (alpha - SSE_S0) * (j_echo - 1) / (SSE_S0)
+            F_S0[F_S0 > F_MAX] = F_MAX
             F_S0_maps[mask_idx[mask], i_comp] = F_S0[mask_idx[mask]]
 
             # R2 Model
@@ -183,6 +184,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
             SSE_R2 = (comp_betas[:j_echo] - pred_R2)**2
             SSE_R2 = SSE_R2.sum(axis=0)
             F_R2 = (alpha - SSE_R2) * (j_echo - 1) / (SSE_R2)
+            F_R2[F_R2 > F_MAX] = F_MAX
             F_R2_maps[mask_idx[mask], i_comp] = F_R2[mask_idx[mask]]
 
             if verbose:
@@ -196,11 +198,9 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         Z_maps[:, i_comp] = wtsZ
 
         # compute Kappa and Rho
-        F_S0[F_S0 > F_MAX] = F_MAX
-        F_R2[F_R2 > F_MAX] = F_MAX
         norm_weights = np.abs(wtsZ ** 2.)
-        kappas[i_comp] = np.average(F_R2, weights=norm_weights)
-        rhos[i_comp] = np.average(F_S0, weights=norm_weights)
+        kappas[i_comp] = np.average(F_R2_maps[:, i_comp], weights=norm_weights)
+        rhos[i_comp] = np.average(F_S0_maps[:, i_comp], weights=norm_weights)
     del SSE_S0, SSE_R2, wtsZ, F_S0, F_R2, norm_weights, comp_betas
     if algorithm != 'kundu_v3':
         del WTS, PSC, tsoc_B
