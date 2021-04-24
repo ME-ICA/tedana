@@ -1,8 +1,7 @@
 import os
 import numpy as np
 from sklearn.utils import Bunch
-from nilearn.datasets.utils import (_get_dataset_dir, _fetch_files,
-                                    _get_dataset_descr)
+from nilearn.datasets.utils import (_get_dataset_dir, _fetch_files)
 from nilearn._utils.numpy_conversions import csv_to_array
 
 
@@ -16,12 +15,14 @@ def _reduce_confounds(regressors, keep_confounds):
             selected_confounds = confounds[keep_confounds]
             header = '\t'.join(selected_confounds.dtype.names)
             np.savetxt(out_file, np.array(selected_confounds.tolist()),
+                       fmt=('%.18e %.18e %.18e %.18e %.18e %.18e %f '
+                            '%.18e %.18e %.18e %.18e %.18e %.18e %.18e %.18e'),
                        header=header, delimiter='\t', comments='')
         reduced_regressors.append(out_file)
     return reduced_regressors
 
 
-def _fetch_cambridge_functional(participants, data_dir, url, resume,
+def _fetch_cambridge_functional(n_subjects, data_dir, url, resume,
                                 verbose):
     """Helper function to fetch_cambridge.
     This function helps in downloading multi-echo functional MRI data
@@ -32,9 +33,9 @@ def _fetch_cambridge_functional(participants, data_dir, url, resume,
 
     Parameters
     ----------
-    participants : numpy.ndarray
-        Should contain column participant_id which represents subjects id. The
-        number of files are fetched based on ids in this column.
+    n_subjects : int
+        The number of subjects to load. If None, all the subjects are
+        loaded. Total 88 subjects.
     data_dir : str
         Path of the data directory. Used to force data storage in a specified
         location. If None is given, data are stored in home directory.
@@ -73,21 +74,26 @@ def _fetch_cambridge_functional(participants, data_dir, url, resume,
                                          "cambridge_echos.csv"),
                             skip_header=True, dtype=dtype, names=names)
     funcs = []
+    participant_id, echo_id, uuid = zip(*osf_data)
+    participants = np.unique(participant_id)[:n_subjects]
 
-    for participant_id in participants['participant_id']:
+    for participant_id in participants:
         this_osf_id = osf_data[osf_data['participant_id'] == participant_id]
-        # Download bold images
-        func_url = url.format(this_osf_id['key_b'][0])
-        func_file = [(func.format(participant_id, this_osf_id['echo_id'][0]),
-                      func_url,
-                      {'move': func.format(participant_id)})]
-        path_to_func = _fetch_files(data_dir, func_file, resume=resume,
-                                    verbose=verbose)[0]
-        funcs.append(path_to_func)
+
+        for entry in this_osf_id:
+            echo_id = entry['echo_id']
+            # Download bold images for each echo
+            func_url = url.format(entry['key_b'])
+            func_file = [(func.format(participant_id, echo_id),
+                          func_url,
+                          {'move': func.format(participant_id, echo_id)})]
+            path_to_func = _fetch_files(data_dir, func_file, resume=resume,
+                                        verbose=verbose)[0]
+            funcs.append(path_to_func)
     return funcs
 
 
-def _fetch_cambridge_regressors(participants, data_dir, url, resume,
+def _fetch_cambridge_regressors(n_subjects, data_dir, url, resume,
                                 verbose):
     """Helper function to fetch_cambridge.
     This function helps in downloading the regressor time series for each run
@@ -98,9 +104,9 @@ def _fetch_cambridge_regressors(participants, data_dir, url, resume,
 
     Parameters
     ----------
-    participants : numpy.ndarray
-        Should contain column participant_id which represents subjects id. The
-        number of files are fetched based on ids in this column.
+    n_subjects : int
+        The number of subjects to load. If None, all the subjects are
+        loaded. Total 88 subjects.
     data_dir : str
         Path of the data directory. Used to force data storage in a specified
         location. If None is given, data are stored in home directory.
@@ -139,12 +145,11 @@ def _fetch_cambridge_regressors(participants, data_dir, url, resume,
                             skip_header=True, dtype=dtype, names=names)
     regressors = []
 
-    for participant_id in participants['participant_id']:
-        this_osf_id = osf_data[osf_data['participant_id'] == participant_id]
-        # Download bold images
-        regr_url = url.format(this_osf_id['key_r'][0])
+    for participant_id, key_r in osf_data[:n_subjects]:
+        # Download regressor files
+        regr_url = url.format(key_r)
         regr_file = [(regr.format(participant_id), regr_url,
-                      {'move': regr.format(participant_id)})]
+                        {'move': regr.format(participant_id)})]
         path_to_regr = _fetch_files(data_dir, regr_file, resume=resume,
                                     verbose=verbose)[0]
         regressors.append(path_to_regr)
@@ -215,13 +220,21 @@ def fetch_cambridge(n_subjects=None, reduce_confounds=True,
                       'white_matter']
 
     # Dataset description
-    fdescr = _get_dataset_descr(dataset_name)
+    package_directory = os.path.dirname(os.path.abspath(__file__))
+    try:
+        with open(os.path.join(
+                    package_directory, 'data', dataset_name + '.rst'),
+                  'r') as rst_file:
+            fdescr = rst_file.read()
+    except IOError:
+        fdescr = ''
+
     funcs = _fetch_cambridge_functional(
-        participants, data_dir=data_dir, url=None,
+        n_subjects, data_dir=data_dir, url=None,
         resume=resume, verbose=verbose)
 
     regressors = _fetch_cambridge_regressors(
-        participants, data_dir=data_dir, url=None,
+        n_subjects, data_dir=data_dir, url=None,
         resume=resume, verbose=verbose)
     if reduce_confounds:
         regressors = _reduce_confounds(regressors, keep_confounds)
