@@ -1,8 +1,10 @@
 import os
 import numpy as np
 from sklearn.utils import Bunch
-from nilearn.datasets.utils import (_get_dataset_dir, _fetch_files)
+from nilearn.datasets.utils import _fetch_files
 from nilearn._utils.numpy_conversions import csv_to_array
+
+from .utils import _get_dataset_dir
 
 
 def _reduce_confounds(regressors, keep_confounds):
@@ -149,7 +151,7 @@ def _fetch_cambridge_regressors(n_subjects, data_dir, url, resume,
         # Download regressor files
         regr_url = url.format(key_r)
         regr_file = [(regr.format(participant_id), regr_url,
-                        {'move': regr.format(participant_id)})]
+                      {'move': regr.format(participant_id)})]
         path_to_regr = _fetch_files(data_dir, regr_file, resume=resume,
                                     verbose=verbose)[0]
         regressors.append(path_to_regr)
