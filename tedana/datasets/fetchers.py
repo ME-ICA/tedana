@@ -81,6 +81,7 @@ def _fetch_cambridge_functional(n_subjects, data_dir, url, resume,
 
     for participant_id in participants:
         this_osf_id = osf_data[osf_data['participant_id'] == participant_id]
+        participant_funcs = []
 
         for entry in this_osf_id:
             echo_id = entry['echo_id']
@@ -91,7 +92,8 @@ def _fetch_cambridge_functional(n_subjects, data_dir, url, resume,
                           {'move': func.format(participant_id, echo_id)})]
             path_to_func = _fetch_files(data_dir, func_file, resume=resume,
                                         verbose=verbose)[0]
-            funcs.append(path_to_func)
+            participant_funcs.append(path_to_func)
+        funcs.append[tuple(participant_funcs)]
     return funcs
 
 
