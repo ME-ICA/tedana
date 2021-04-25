@@ -6,6 +6,17 @@ Adapted from the nilearn dataset fetchers.
 """
 
 
+def readlinkabs(link):
+    """
+    Return an absolute path for the destination
+    of a symlink
+    """
+    path = os.readlink(link)
+    if os.path.isabs(path):
+        return path
+    return os.path.join(os.path.dirname(link), path)
+
+
 def get_data_dirs(data_dir=None):
     """Returns the directories in which tedana looks for data.
     This is typically useful for the end-user to check where the data is
