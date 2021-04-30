@@ -165,13 +165,9 @@ class OutputGenerator():
         for key, value in kwargs.items():
             if key not in name_variables:
                 raise ValueError(
-                    f'Argument {key} passed but has no match in format' +
-                    'string. Available format variables: ' +
-                    ', '.join(name_variables) +
-                    ' from ' +
-                    str(kwargs) +
-                    ' and ' +
-                    name
+                    f'Argument {key} passed but has no match in format'
+                    f'string. Available format variables: '
+                    f'{name_variables} from {kwargs} and {name}.'
                 )
 
         name = name.format(**kwargs)
@@ -214,15 +210,15 @@ class OutputGenerator():
         name : str
             Full file path for output file.
         """
+        data_type = type(data)
         if not isinstance(data, np.ndarray):
             raise TypeError(
-                "Data supplied must of type np.ndarray, not " +
-                str(type(data))
+                f"Data supplied must of type np.ndarray, not {data_type}."
             )
         if data.ndim not in (1, 2):
             raise TypeError(
-                "Data must have number of dimensions in (1, 2), not " +
-                str(data.ndim)
+                "Data must have number of dimensions in (1, 2), not"
+                f"{data.ndim}"
             )
         img = new_nii_like(self.reference_img, data)
         img.to_filename(name)
@@ -237,11 +233,9 @@ class OutputGenerator():
         name : str
             Full file path for output file.
         """
+        data_type = type(data)
         if not isinstance(data, dict):
-            raise TypeError(
-                "data must be a dict, not type " +
-                str(type(data))
-            )
+            raise TypeError(f"data must be a dict, not type {data_type}.")
         with open(name, "w") as fo:
             json.dump(data, fo, indent=4, sort_keys=True)
 
@@ -255,11 +249,9 @@ class OutputGenerator():
         name : str
             Full file path for output file.
         """
+        data_type = type(data)
         if not isinstance(data, pd.DataFrame):
-            raise TypeError(
-                "data must be a pandas dataframe, not type " +
-                str(type(data))
-            )
+            raise TypeError(f"data must be pd.Data, not type {data_type}.")
         data.to_csv(name, sep="\t", line_terminator="\n", na_rep="n/a", index=False)
 
 
