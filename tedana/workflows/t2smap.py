@@ -217,6 +217,7 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
         out_dir=out_dir,
         prefix=prefix,
         config="auto",
+        make_figures=False,
     )
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))

@@ -40,6 +40,8 @@ class OutputGenerator():
     config : str, optional
         Path to configuration json file, which determines appropriate filenames based on file
         descriptions. Default is "auto", which uses tedana's default configuration file.
+    make_figures : bool, optional
+        Whether or not to actually make a figures directory
 
     Attributes
     ----------
@@ -65,6 +67,7 @@ class OutputGenerator():
         out_dir=".",
         prefix="",
         config="auto",
+        make_figures=True
     ):
 
         if config == "auto":
@@ -97,7 +100,7 @@ class OutputGenerator():
             LGR.info(f"Generating output directory: {self.out_dir}")
             os.mkdir(self.out_dir)
 
-        if not op.isdir(self.figures_dir):
+        if not op.isdir(self.figures_dir) and make_figures:
             LGR.info(f"Generating figures directory: {self.figures_dir}")
             os.mkdir(self.figures_dir)
 
