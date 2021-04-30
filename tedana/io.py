@@ -217,7 +217,7 @@ class OutputGenerator():
             )
         if data.ndim not in (1, 2):
             raise TypeError(
-                "Data must have number of dimensions in (1, 2), not"
+                "Data must have number of dimensions in (1, 2), not "
                 f"{data.ndim}"
             )
         img = new_nii_like(self.reference_img, data)
