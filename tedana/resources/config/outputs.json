@@ -80,16 +80,16 @@
         "bidsv1.5.0": "desc-optcomPCAReduced_bold"
     },
     "echo weight ICA map split img": {
-        "orig": "e{0}_ICA_comp",
-        "bidsv1.5.0": "echo-{0}_desc-ICA_components"
+        "orig": "e{echo}_ICA_comp",
+        "bidsv1.5.0": "echo-{echo}_desc-ICA_components"
     },
     "echo R2 ICA split img": {
-        "orig": "e{0}_ICA_R2",
-        "bidsv1.5.0": "echo-{0}_desc-ICAR2ModelPredictions_components"
+        "orig": "e{echo}_ICA_R2",
+        "bidsv1.5.0": "echo-{echo}_desc-ICAR2ModelPredictions_components"
     },
     "echo S0 ICA split img": {
-        "orig": "e{0}_ICA_S0",
-        "bidsv1.5.0": "echo-{0}_desc-ICAS0ModelPredictions_components"
+        "orig": "e{echo}_ICA_S0",
+        "bidsv1.5.0": "echo-{echo}_desc-ICAS0ModelPredictions_components"
     },
     "ICA component weights img": {
         "orig": "ica_weights",

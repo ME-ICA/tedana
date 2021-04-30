@@ -6,7 +6,6 @@ from os.path import join as opj
 from string import Template
 from tedana.info import __version__
 from tedana.reporting import dynamic_figures as df
-from tedana.io import gen_tsv_name
 
 
 def _update_template_bokeh(bokeh_id, about, bokeh_js):
@@ -60,8 +59,8 @@ def generate_report(generator, tr):
     """
     Parameters
     ----------
-    out_dir : str
-        File path to a completed tedana output directory
+    generator : tedana.io.OutputGenerator
+        Generator object for this workflow's output
     tr : float
         The repetition time (TR) for the collected multi-echo
         sequence
@@ -99,7 +98,7 @@ def generate_report(generator, tr):
     div_content = models.Div(width=500, height=750, height_policy='fixed')
 
     for fig in figs:
-        df._link_figures(fig, comptable_cds, div_content, out_dir=out_dir)
+        df._link_figures(fig, comptable_cds, div_content, generator)
 
     # Create a layout
     app = layouts.gridplot([[
@@ -112,10 +111,10 @@ def generate_report(generator, tr):
     kr_script, kr_div = embed.components(app)
 
     # Read in relevant methods
-    with open(opj(out_dir, 'report.txt'), 'r+') as f:
+    with open(opj(generator.out_dir, 'report.txt'), 'r+') as f:
         about = f.read()
 
     body = _update_template_bokeh(kr_div, about, kr_script)
     html = _save_as_html(body)
-    with open(opj(out_dir, 'tedana_report.html'), 'wb') as f:
+    with open(opj(generator.out_dir, 'tedana_report.html'), 'wb') as f:
         f.write(html.encode('utf-8'))

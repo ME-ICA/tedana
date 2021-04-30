@@ -63,16 +63,23 @@ class OutputGenerator():
         reference_img,
         convention="bidsv1.5.0",
         out_dir=".",
-        prefix=None,
+        prefix="",
         config="auto",
     ):
 
         if config == "auto":
-            config = op.join(utils.get_resource_path(), "outputs.json")
+            config = op.join(utils.get_resource_path(), "config", "outputs.json")
+
+        if convention == "bids":
+            # modify to update default bids convention number
+            convention = "bidsv1.5.0"
 
         config = load_json(config)
+
+        
         cfg = {}
-        for k, v in config:
+        keys = config.keys()
+        for k, v in config.items():
             if convention not in v.keys():
                 raise ValueError(
                     f"Convention {convention} is not one of the supported conventions "
@@ -84,7 +91,7 @@ class OutputGenerator():
         self.convention = convention
         self.out_dir = op.abspath(out_dir)
         self.figures_dir = op.join(out_dir, "figures")
-        self.prefix = prefix + "_" if prefix is not None else ""
+        self.prefix = prefix + "_" if prefix is not "" else ""
 
         if not op.isdir(self.out_dir):
             LGR.info(f"Generating output directory: {self.out_dir}")
@@ -121,6 +128,8 @@ class OutputGenerator():
 
         if not any(name.endswith(ext) for ext in allowed_extensions):
             extension = preferred_extension
+        else:
+            extension = ""
 
         return extension
 
@@ -139,13 +148,30 @@ class OutputGenerator():
         -------
         name : str
             The full path for the filename.
+
+        Notes
+        -----
+        This function uses kwargs to allow us to match named format
+        specifiers in a configuration with a variable passed to this
+        function. get_fields simplifies this process by creating a set of
+        name variables based on the configuration which we expect to match
+        a passed variable name, and then we fill in the value.
         """
-        name = self.config[self.convention][description]
+        name = self.config[description]
         extension = self._determine_extension(description, name)
 
         name_variables = get_fields(name)
         for key, value in kwargs.items():
-            assert key in name_variables
+            if key not in name_variables:
+                raise ValueError(
+                    f'Argument {key} passed but has no match in format'
+                    'string. Available format variables: '
+                    + ', '.join(name_variables)
+                    + ' from '
+                    + str(kwargs)
+                    + ' and '
+                    + name
+                )
 
         name = name.format(**kwargs)
         name = op.join(self.out_dir, self.prefix + name + extension)
@@ -187,8 +213,16 @@ class OutputGenerator():
         name : str
             Full file path for output file.
         """
-        assert isinstance(data, np.ndarray)
-        assert data.ndim in (1, 2)
+        if not isinstance(data, np.ndarray):
+            raise TypeError(
+                "Data supplied must of type np.ndarray, not "
+                + str(type(data))
+            )
+        if not data.ndim in (1, 2):
+            raise TypeError(
+                "Data must have number of dimensions in (1, 2), not "
+                + str(data.ndim)
+            )
         img = new_nii_like(self.reference_img, data)
         img.to_filename(name)
 
@@ -202,9 +236,13 @@ class OutputGenerator():
         name : str
             Full file path for output file.
         """
-        assert isinstance(data, dict)
+        if not isinstance(data, dict):
+            raise TypeError(
+                "data must be a dict, not type "
+                + str(type(data))
+            )
         with open(name, "w") as fo:
-            json.dump(fo, data, indent=4, sort_keys=True)
+            json.dump(data, fo, indent=4, sort_keys=True)
 
     def save_tsv(self, data, name):
         """Save DataFrame to a tsv file.
@@ -216,7 +254,11 @@ class OutputGenerator():
         name : str
             Full file path for output file.
         """
-        assert isinstance(data, pd.DataFrame)
+        if not isinstance(data, pd.DataFrame):
+            raise TypeError(
+                "data must be a pandas dataframe, not type "
+                + str(type(data))
+            )
         data.to_csv(name, sep="\t", line_terminator="\n", na_rep="n/a", index=False)
 
 
@@ -254,7 +296,12 @@ def load_json(path: str) -> dict:
     IsADirectoryError if the path is a directory instead of a file
     """
     with open(path, 'r') as f:
-        data = json.load(f)
+        try:
+            data = json.load(f)
+        except json.decoder.JSONDecodeError as e:
+            raise ValueError(f"File {path} is not a valid JSON.")
+        except:
+            raise
     return data
 
 
@@ -343,14 +390,46 @@ def write_split_ts(data, mmix, mask, comptable, generator, echo=0):
     dnts = data[mask] - lowkts
 
     if len(acc) != 0:
-        fout = generator.save_file(utils.unmask(hikts, mask), 'high kappa ts', echo=echo)
+        if echo != 0:
+            fout = generator.save_file(
+                utils.unmask(hikts, mask),
+                'high kappa ts split img',
+                echo=echo
+            )
+
+        else:
+            fout = generator.save_file(
+                utils.unmask(hikts, mask),
+                'high kappa ts img',
+            )
         LGR.info('Writing high-Kappa time series: {}'.format(fout))
 
     if len(rej) != 0:
-        fout = generator.save_file(utils.unmask(lowkts, mask), 'low kappa ts', echo=echo)
+        if echo != 0:
+            fout = generator.save_file(
+                utils.unmask(lowkts, mask),
+                'low kappa ts split img',
+                echo=echo
+            )
+        else:
+            fout = generator.save_file(
+                utils.unmask(lowkts, mask),
+                'low kappa ts img',
+            )
         LGR.info('Writing low-Kappa time series: {}'.format(fout))
 
-    fout = generator.save_file(utils.unmask(dnts, mask), 'denoised ts', echo=echo)
+    if echo != 0:
+        fout = generator.save_file(
+            utils.unmask(dnts, mask),
+            'denoised ts split img',
+            echo=echo
+        )
+    else:
+        fout = generator.save_file(
+            utils.unmask(dnts, mask),
+            'denoised ts img',
+        )
+
     LGR.info('Writing denoised time series: {}'.format(fout))
     return varexpl
 
@@ -403,17 +482,23 @@ def writeresults(ts, mask, comptable, mmix, n_vols, generator):
     write_split_ts(ts, mmix, mask, comptable, generator)
 
     ts_B = get_coeffs(ts, mmix, mask)
-    fout = generator.save_file(ts_B, 'ICA components')
+    fout = generator.save_file(ts_B, 'ICA components img')
     LGR.info('Writing full ICA coefficient feature set: {}'.format(fout))
 
     if len(acc) != 0:
-        fout = generator.save_file(ts_B[:, acc], 'ICA accepted components')
+        fout = generator.save_file(
+            ts_B[:, acc],
+            'ICA accepted components img'
+        )
         LGR.info('Writing denoised ICA coefficient feature set: {}'.format(fout))
 
         # write feature versions of components
         feats = computefeats2(split_ts(ts, mmix, mask, comptable)[0], mmix[:, acc], mask)
         feats = utils.unmask(feats, mask)
-        fname = generator.save_file(feats, 'z-scored ICA accepted components')
+        fname = generator.save_file(
+            feats,
+            'z-scored ICA accepted components img'
+        )
         LGR.info('Writing Z-normalized spatial component maps: {}'.format(fname))
 
 

@@ -424,7 +424,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
     # check if TR is 0
-    img_t_r = generator.reference_image.header.get_zooms()[-1]
+    img_t_r = generator.reference_img.header.get_zooms()[-1]
     if img_t_r == 0:
         raise IOError('Dataset has a TR of 0. This indicates incorrect'
                       ' header information. To correct this, we recommend'
@@ -493,7 +493,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         mask[t2s_limited == 0] = 0  # reduce mask based on T2* map
     else:
         LGR.info('Computing EPI mask from first echo')
-        first_echo_img = io.new_nii_like(generator.reference_image, catd[:, 0, :])
+        first_echo_img = io.new_nii_like(generator.reference_img, catd[:, 0, :])
         mask = compute_epi_mask(first_echo_img)
         RepLGR.info("An initial mask was generated from the first echo using "
                     "nilearn's compute_epi_mask function.")
@@ -541,7 +541,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                                                 verbose=verbose,
                                                 low_mem=low_mem)
         if verbose:
-            generator.save_file(utils.unmask(dd, mask), 'whitened')
+            generator.save_file(utils.unmask(dd, mask), 'whitened img')
 
         # Perform ICA, calculate metrics, and apply decision tree
         # Restart when ICA fails to converge or too few BOLD components found

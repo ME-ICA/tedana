@@ -43,7 +43,7 @@ def _trim_edge_zeros(arr):
     return arr[bounding_box]
 
 
-def comp_figures(ts, mask, comptable, mmix, ref_img, out_dir, png_cmap):
+def comp_figures(ts, mask, comptable, mmix, generator, png_cmap):
     """
     Creates static figures that highlight certain aspects of tedana processing
     This includes a figure for each component showing the component time course,
@@ -61,26 +61,23 @@ def comp_figures(ts, mask, comptable, mmix, ref_img, out_dir, png_cmap):
     mmix : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    ref_img : :obj:`str` or img_like
-        Reference image to dictate how outputs are saved to disk
-    out_dir : :obj:`str`
-        Figures folder within output directory
-
+    generator : :obj:`tedana.io.OutputGenerator`
+        Output Generator object to use for this workflow
     """
     # Get the lenght of the timeseries
     n_vols = len(mmix)
 
     # regenerate the beta images
     ts_B = stats.get_coeffs(ts, mmix, mask)
-    ts_B = ts_B.reshape(ref_img.shape[:3] + ts_B.shape[1:])
+    ts_B = ts_B.reshape(generator.reference_img.shape[:3] + ts_B.shape[1:])
     # trim edges from ts_B array
     ts_B = _trim_edge_zeros(ts_B)
 
     # Mask out remaining zeros
     ts_B = np.ma.masked_where(ts_B == 0, ts_B)
 
-    # Get repetition time from ref_img
-    tr = ref_img.header.get_zooms()[-1]
+    # Get repetition time from reference image
+    tr = generator.reference_img.header.get_zooms()[-1]
 
     # Create indices for 6 cuts, based on dimensions
     cuts = [ts_B.shape[dim] // 6 for dim in range(3)]
@@ -182,6 +179,6 @@ def comp_figures(ts, mask, comptable, mmix, ref_img, out_dir, png_cmap):
         # Fix spacing so TR label does overlap with other plots
         allplot.subplots_adjust(hspace=0.4)
         plot_name = 'comp_{}.png'.format(str(compnum).zfill(3))
-        compplot_name = os.path.join(out_dir, plot_name)
+        compplot_name = os.path.join(generator.out_dir, 'figures', plot_name)
         plt.savefig(compplot_name)
         plt.close()

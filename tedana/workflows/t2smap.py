@@ -191,9 +191,6 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
-    io.outdir = out_dir
-    io.set_prefix(prefix)
-    io.set_convention(convention)
 
     if debug and not quiet:
         logging.basicConfig(level=logging.DEBUG)
@@ -214,6 +211,13 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
 
     LGR.info('Loading input data: {}'.format([f for f in data]))
     catd, ref_img = io.load_data(data, n_echos=n_echos)
+    generator = io.OutputGenerator(
+        ref_img,
+        convention=convention,
+        out_dir=out_dir,
+        prefix=prefix,
+        config="auto",
+    )
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
@@ -253,11 +257,20 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     s0_limited[s0_limited < 0] = 0
     t2s_limited[t2s_limited < 0] = 0
 
-    io.filewrite(utils.millisec2sec(t2s_limited), 't2star map', ref_img)
-    io.filewrite(s0_limited, 's0 map', ref_img)
-    io.filewrite(utils.millisec2sec(t2s_full), 'full t2star map', ref_img)
-    io.filewrite(s0_full, 'full s0 map', ref_img)
-    io.filewrite(OCcatd, 'combined', ref_img)
+    generator.save_file(
+        utils.millisec2sec(t2s_limited),
+        't2star img',
+    )
+    generator.save_file(s0_limited, 's0 img')
+    generator.save_file(
+        utils.millisec2sec(t2s_full),
+        'full t2star img',
+    )
+    generator.save_file(
+        s0_full,
+        'full s0 img',
+    )
+    generator.save_file(OCcatd, 'combined img')
 
     # Write out BIDS-compatible description file
     derivative_metadata = {
@@ -276,8 +289,7 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
             }
         ]
     }
-    with open(io.gen_json_name('data description'), "w") as fo:
-        json.dump(derivative_metadata, fo, sort_keys=True, indent=4)
+    generator.save_file(derivative_metadata, 'data description json')
 
 
 def _main(argv=None):

@@ -26,10 +26,6 @@ def test_new_nii_like():
     assert nimg.shape == (39, 50, 33, 3, 5)
 
 
-def test_filewrite():
-    pass
-
-
 def test_load_data():
     fimg = [nib.load(f) for f in fnames]
     exp_shape = (64350, 3, 5)
@@ -98,18 +94,19 @@ def test_smoke_write_split_ts():
     # ref_img has shape of (39, 50, 33) so data is 64350 (39*33*50) x 10
     # creating the component table with component as random floats,
     # a "metric," and random classification
+    generator = me.OutputGenerator(ref_img)
     component = np.random.random((n_components))
     metric = np.random.random((n_components))
     classification = np.random.choice(["accepted", "rejected", "ignored"], n_components)
     df_data = np.column_stack((component, metric, classification))
     comptable = pd.DataFrame(df_data, columns=['component', 'metric', 'classification'])
 
-    assert me.write_split_ts(data, mmix, mask, comptable, ref_img) is not None
+    assert me.write_split_ts(data, mmix, mask, comptable, generator) is not None
 
     # TODO: midk_ts.nii is never generated?
-    fn = me.gen_img_name
-    split = ('high kappa ts', 'low kappa ts', 'denoised ts')
-    fnames = [fn(f) + '.nii.gz' for f in split]
+    fn = generator.get_name
+    split = ('high kappa ts img', 'low kappa ts img', 'denoised ts img')
+    fnames = [fn(f) for f in split]
     for filename in fnames:
         # remove all files generated
         os.remove(filename)
@@ -123,13 +120,14 @@ def test_smoke_filewrite():
     n_samples, _, _ = 64350, 10, 6
     data_1d = np.random.random((n_samples))
     ref_img = os.path.join(data_dir, 'mask.nii.gz')
+    generator = me.OutputGenerator(ref_img)
 
     with pytest.raises(KeyError):
-        me.filewrite(data_1d, '', ref_img)
+        generator.save_file(data_1d, '')
 
-    for convention in (constants.bids, 'orig'):
-        me.set_convention(convention)
-        fname = me.filewrite(data_1d, 't2star map', ref_img)
+    for convention in ('bidsv1.5.0', 'orig'):
+        generator.convention = convention
+        fname = generator.save_file(data_1d, 't2star img')
         assert fname is not None
         try:
             os.remove(fname)
