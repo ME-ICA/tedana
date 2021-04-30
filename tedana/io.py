@@ -165,7 +165,7 @@ class OutputGenerator():
         for key, value in kwargs.items():
             if key not in name_variables:
                 raise ValueError(
-                    f'Argument {key} passed but has no match in format'
+                    f'Argument {key} passed but has no match in format '
                     f'string. Available format variables: '
                     f'{name_variables} from {kwargs} and {name}.'
                 )
