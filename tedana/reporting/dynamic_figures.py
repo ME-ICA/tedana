@@ -251,7 +251,7 @@ def _tap_callback(comptable_cds, div_content, generator):
     return models.CustomJS(args=dict(source_comp_table=comptable_cds,
                                      div=div_content,
                                      outdir=generator.out_dir),
-                                     code=tap_callback_jscode)
+                           code=tap_callback_jscode)
 
 
 def _link_figures(fig, comptable_ds, div_content, generator):

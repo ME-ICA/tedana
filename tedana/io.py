@@ -79,9 +79,7 @@ class OutputGenerator():
 
         config = load_json(config)
 
-        
         cfg = {}
-        keys = config.keys()
         for k, v in config.items():
             if convention not in v.keys():
                 raise ValueError(
@@ -94,7 +92,7 @@ class OutputGenerator():
         self.convention = convention
         self.out_dir = op.abspath(out_dir)
         self.figures_dir = op.join(out_dir, "figures")
-        self.prefix = prefix + "_" if prefix is not "" else ""
+        self.prefix = prefix + "_" if prefix != "" else ""
 
         if not op.isdir(self.out_dir):
             LGR.info(f"Generating output directory: {self.out_dir}")
@@ -167,13 +165,13 @@ class OutputGenerator():
         for key, value in kwargs.items():
             if key not in name_variables:
                 raise ValueError(
-                    f'Argument {key} passed but has no match in format'
-                    'string. Available format variables: '
-                    + ', '.join(name_variables)
-                    + ' from '
-                    + str(kwargs)
-                    + ' and '
-                    + name
+                    f'Argument {key} passed but has no match in format' +
+                    'string. Available format variables: ' +
+                    ', '.join(name_variables) +
+                    ' from ' +
+                    str(kwargs) +
+                    ' and ' +
+                    name
                 )
 
         name = name.format(**kwargs)
@@ -218,13 +216,13 @@ class OutputGenerator():
         """
         if not isinstance(data, np.ndarray):
             raise TypeError(
-                "Data supplied must of type np.ndarray, not "
-                + str(type(data))
+                "Data supplied must of type np.ndarray, not " +
+                str(type(data))
             )
-        if not data.ndim in (1, 2):
+        if data.ndim not in (1, 2):
             raise TypeError(
-                "Data must have number of dimensions in (1, 2), not "
-                + str(data.ndim)
+                "Data must have number of dimensions in (1, 2), not " +
+                str(data.ndim)
             )
         img = new_nii_like(self.reference_img, data)
         img.to_filename(name)
@@ -241,8 +239,8 @@ class OutputGenerator():
         """
         if not isinstance(data, dict):
             raise TypeError(
-                "data must be a dict, not type "
-                + str(type(data))
+                "data must be a dict, not type " +
+                str(type(data))
             )
         with open(name, "w") as fo:
             json.dump(data, fo, indent=4, sort_keys=True)
@@ -259,8 +257,8 @@ class OutputGenerator():
         """
         if not isinstance(data, pd.DataFrame):
             raise TypeError(
-                "data must be a pandas dataframe, not type "
-                + str(type(data))
+                "data must be a pandas dataframe, not type " +
+                str(type(data))
             )
         data.to_csv(name, sep="\t", line_terminator="\n", na_rep="n/a", index=False)
 
@@ -301,10 +299,8 @@ def load_json(path: str) -> dict:
     with open(path, 'r') as f:
         try:
             data = json.load(f)
-        except json.decoder.JSONDecodeError as e:
+        except json.decoder.JSONDecodeError:
             raise ValueError(f"File {path} is not a valid JSON.")
-        except:
-            raise
     return data
 
 

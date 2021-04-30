@@ -1,7 +1,6 @@
 """
 PCA and related signal decomposition methods for tedana
 """
-import json
 import logging
 from numbers import Number
 

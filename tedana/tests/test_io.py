@@ -8,7 +8,6 @@ import pytest
 import pandas as pd
 
 from tedana import io as me
-from tedana import constants
 from tedana.tests.test_utils import fnames, tes
 
 from tedana.tests.utils import get_test_data_path
