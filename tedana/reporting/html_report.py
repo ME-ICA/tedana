@@ -55,12 +55,12 @@ def _save_as_html(body):
     return html
 
 
-def generate_report(generator, tr):
+def generate_report(io_generator, tr):
     """
     Parameters
     ----------
-    generator : tedana.io.OutputGenerator
-        Generator object for this workflow's output
+    io_generator : tedana.io.OutputGenerator
+        io_generator object for this workflow's output
     tr : float
         The repetition time (TR) for the collected multi-echo
         sequence
@@ -71,12 +71,12 @@ def generate_report(generator, tr):
         A generated HTML report
     """
     # Load the component time series
-    comp_ts_path = generator.get_name("ICA mixing tsv")
+    comp_ts_path = io_generator.get_name("ICA mixing tsv")
     comp_ts_df = pd.read_csv(comp_ts_path, sep='\t', encoding='utf=8')
     n_vols, n_comps = comp_ts_df.shape
 
     # Load the component table
-    comptable_path = generator.get_name("ICA metrics tsv")
+    comptable_path = io_generator.get_name("ICA metrics tsv")
     comptable_cds = df._create_data_struct(comptable_path)
 
     # Create kappa rho plot
@@ -98,7 +98,7 @@ def generate_report(generator, tr):
     div_content = models.Div(width=500, height=750, height_policy='fixed')
 
     for fig in figs:
-        df._link_figures(fig, comptable_cds, div_content, generator)
+        df._link_figures(fig, comptable_cds, div_content, io_generator)
 
     # Create a layout
     app = layouts.gridplot([[
@@ -111,10 +111,10 @@ def generate_report(generator, tr):
     kr_script, kr_div = embed.components(app)
 
     # Read in relevant methods
-    with open(opj(generator.out_dir, 'report.txt'), 'r+') as f:
+    with open(opj(io_generator.out_dir, 'report.txt'), 'r+') as f:
         about = f.read()
 
     body = _update_template_bokeh(kr_div, about, kr_script)
     html = _save_as_html(body)
-    with open(opj(generator.out_dir, 'tedana_report.html'), 'wb') as f:
+    with open(opj(io_generator.out_dir, 'tedana_report.html'), 'wb') as f:
         f.write(html.encode('utf-8'))

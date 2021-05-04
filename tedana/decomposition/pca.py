@@ -47,7 +47,7 @@ def low_mem_pca(data):
 
 
 def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
-           generator, tes, algorithm='mdl', kdaw=10., rdaw=1.,
+           io_generator, tes, algorithm='mdl', kdaw=10., rdaw=1.,
            verbose=False, low_mem=False):
     """
     Use principal components analysis (PCA) to identify and remove thermal
@@ -72,7 +72,8 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         For more information on thresholding, see `make_adaptive_mask`.
     t2sG : (S,) array_like
         Map of voxel-wise T2* estimates.
-    generator :
+    io_generator : :obj:`tedana.io.OutputGenerator`
+        The output generation object for this workflow
     tes : :obj:`list`
         List of echo times associated with `data_cat`, in milliseconds
     algorithm : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic', float}, optional
@@ -201,8 +202,8 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
 
     if algorithm in ['mdl', 'aic', 'kic']:
-        data_img = io.new_nii_like(generator.reference_img, utils.unmask(data, mask))
-        mask_img = io.new_nii_like(generator.reference_img, mask.astype(int))
+        data_img = io.new_nii_like(io_generator.reference_img, utils.unmask(data, mask))
+        mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
         voxel_comp_weights, varex, varex_norm, comp_ts = ma_pca(
             data_img, mask_img, algorithm, normalize=True)
     elif isinstance(algorithm, Number):
@@ -229,7 +230,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     # Normalize each component's time series
     vTmixN = stats.zscore(comp_ts, axis=0)
     comptable, _, metric_metadata, _, _ = metrics.dependence_metrics(
-        data_cat, data_oc, comp_ts, adaptive_mask, tes, generator,
+        data_cat, data_oc, comp_ts, adaptive_mask, tes, io_generator,
         reindex=False, mmixN=vTmixN, algorithm=None,
         label='PCA', verbose=verbose
     )
@@ -242,7 +243,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
 
     # write component maps to 4D image
     comp_maps = utils.unmask(computefeats2(data_oc, comp_ts, mask), mask)
-    generator.save_file(comp_maps, 'z-scored PCA components img')
+    io_generator.save_file(comp_maps, 'z-scored PCA components img')
 
     # Select components using decision tree
     if algorithm == 'kundu':
@@ -275,11 +276,11 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
                   for comp in comptable.index.values]
 
     mixing_df = pd.DataFrame(data=comp_ts, columns=comp_names)
-    generator.save_file(mixing_df, "PCA mixing tsv")
+    io_generator.save_file(mixing_df, "PCA mixing tsv")
 
     # Save component table and associated json
     temp_comptable = comptable.set_index("Component", inplace=False)
-    generator.save_file(temp_comptable, "PCA metrics tsv")
+    io_generator.save_file(temp_comptable, "PCA metrics tsv")
 
     metric_metadata["Component"] = {
         "LongName": "Component identifier",
@@ -288,7 +289,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
             "This identifier matches column names in the mixing matrix TSV file."
         ),
     }
-    generator.save_file(metric_metadata, "PCA metrics json")
+    io_generator.save_file(metric_metadata, "PCA metrics json")
 
     decomp_metadata = {
         "Method": (
@@ -302,7 +303,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
             "Description": "PCA fit to optimally combined data.",
             "Method": "tedana",
         }
-    generator.save_file(decomp_metadata, "PCA decomposition json")
+    io_generator.save_file(decomp_metadata, "PCA decomposition json")
 
     acc = comptable[comptable.classification == 'accepted'].index.values
     n_components = acc.size

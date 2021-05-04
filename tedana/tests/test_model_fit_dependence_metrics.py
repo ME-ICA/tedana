@@ -25,14 +25,14 @@ def test_break_dependence_metrics():
     mmix = np.empty((n_vols, n_comps))
     adaptive_mask = np.empty((n_samples))
     tes = np.empty((n_echos))
-    generator = OutputGenerator(ref_img)
+    io_generator = OutputGenerator(ref_img)
 
     # Shape of catd is wrong
     catd = np.empty((n_samples + 1, n_echos, n_vols))
     with pytest.raises(ValueError):
         kundu_fit.dependence_metrics(
             catd=catd, tsoc=tsoc, mmix=mmix,
-            adaptive_mask=adaptive_mask, tes=tes, generator=generator,
+            adaptive_mask=adaptive_mask, tes=tes, io_generator=io_generator,
             reindex=False, mmixN=None, algorithm='kundu_v3')
 
     # Shape of adaptive_mask is wrong
@@ -41,7 +41,7 @@ def test_break_dependence_metrics():
     with pytest.raises(ValueError):
         kundu_fit.dependence_metrics(
             catd=catd, tsoc=tsoc, mmix=mmix,
-            adaptive_mask=adaptive_mask, tes=tes, generator=generator,
+            adaptive_mask=adaptive_mask, tes=tes, io_generator=io_generator,
             reindex=False, mmixN=None, algorithm='kundu_v3')
 
     # Shape of tsoc is wrong
@@ -50,7 +50,7 @@ def test_break_dependence_metrics():
     with pytest.raises(ValueError):
         kundu_fit.dependence_metrics(
             catd=catd, tsoc=tsoc, mmix=mmix,
-            adaptive_mask=adaptive_mask, tes=tes, generator=generator,
+            adaptive_mask=adaptive_mask, tes=tes, io_generator=io_generator,
             reindex=False, mmixN=None, algorithm='kundu_v3')
 
     # Shape of catd is wrong
@@ -59,7 +59,7 @@ def test_break_dependence_metrics():
     with pytest.raises(ValueError):
         kundu_fit.dependence_metrics(
             catd=catd, tsoc=tsoc, mmix=mmix,
-            adaptive_mask=adaptive_mask, tes=tes, generator=generator,
+            adaptive_mask=adaptive_mask, tes=tes, io_generator=io_generator,
             reindex=False, mmixN=None, algorithm='kundu_v3')
 
     # Shape of catd is wrong
@@ -67,5 +67,5 @@ def test_break_dependence_metrics():
     with pytest.raises(ValueError):
         kundu_fit.dependence_metrics(
             catd=catd, tsoc=tsoc, mmix=mmix,
-            adaptive_mask=adaptive_mask, tes=tes, generator=generator,
+            adaptive_mask=adaptive_mask, tes=tes, io_generator=io_generator,
             reindex=False, mmixN=None, algorithm='kundu_v3')

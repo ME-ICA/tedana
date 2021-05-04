@@ -325,7 +325,7 @@ def add_decomp_prefix(comp_num, prefix, max_value):
 
 
 # File Writing Functions
-def write_split_ts(data, mmix, mask, comptable, generator, echo=0):
+def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
     """
     Splits `data` into denoised / noise / ignored time series and saves to disk
 
@@ -338,7 +338,7 @@ def write_split_ts(data, mmix, mask, comptable, generator, echo=0):
         is components and `T` is the same as in `data`
     mask : (S,) array_like
         Boolean mask array
-    generator : :obj:`tedana.io.OutputGenerator`
+    io_generator : :obj:`tedana.io.OutputGenerator`
         Reference image to dictate how outputs are saved to disk
     out_dir : :obj:`str`, optional
         Output directory.
@@ -383,14 +383,14 @@ def write_split_ts(data, mmix, mask, comptable, generator, echo=0):
 
     if len(acc) != 0:
         if echo != 0:
-            fout = generator.save_file(
+            fout = io_generator.save_file(
                 utils.unmask(hikts, mask),
                 'high kappa ts split img',
                 echo=echo
             )
 
         else:
-            fout = generator.save_file(
+            fout = io_generator.save_file(
                 utils.unmask(hikts, mask),
                 'high kappa ts img',
             )
@@ -398,26 +398,26 @@ def write_split_ts(data, mmix, mask, comptable, generator, echo=0):
 
     if len(rej) != 0:
         if echo != 0:
-            fout = generator.save_file(
+            fout = io_generator.save_file(
                 utils.unmask(lowkts, mask),
                 'low kappa ts split img',
                 echo=echo
             )
         else:
-            fout = generator.save_file(
+            fout = io_generator.save_file(
                 utils.unmask(lowkts, mask),
                 'low kappa ts img',
             )
         LGR.info('Writing low-Kappa time series: {}'.format(fout))
 
     if echo != 0:
-        fout = generator.save_file(
+        fout = io_generator.save_file(
             utils.unmask(dnts, mask),
             'denoised ts split img',
             echo=echo
         )
     else:
-        fout = generator.save_file(
+        fout = io_generator.save_file(
             utils.unmask(dnts, mask),
             'denoised ts img',
         )
@@ -426,7 +426,7 @@ def write_split_ts(data, mmix, mask, comptable, generator, echo=0):
     return varexpl
 
 
-def writeresults(ts, mask, comptable, mmix, n_vols, generator):
+def writeresults(ts, mask, comptable, mmix, n_vols, io_generator):
     """
     Denoises `ts` and saves all resulting files to disk
 
@@ -471,14 +471,14 @@ def writeresults(ts, mask, comptable, mmix, n_vols, generator):
     tedana.io.write_split_ts: Writes out time series files
     """
     acc = comptable[comptable.classification == 'accepted'].index.values
-    write_split_ts(ts, mmix, mask, comptable, generator)
+    write_split_ts(ts, mmix, mask, comptable, io_generator)
 
     ts_B = get_coeffs(ts, mmix, mask)
-    fout = generator.save_file(ts_B, 'ICA components img')
+    fout = io_generator.save_file(ts_B, 'ICA components img')
     LGR.info('Writing full ICA coefficient feature set: {}'.format(fout))
 
     if len(acc) != 0:
-        fout = generator.save_file(
+        fout = io_generator.save_file(
             ts_B[:, acc],
             'ICA accepted components img'
         )
@@ -487,14 +487,14 @@ def writeresults(ts, mask, comptable, mmix, n_vols, generator):
         # write feature versions of components
         feats = computefeats2(split_ts(ts, mmix, mask, comptable)[0], mmix[:, acc], mask)
         feats = utils.unmask(feats, mask)
-        fname = generator.save_file(
+        fname = io_generator.save_file(
             feats,
             'z-scored ICA accepted components img'
         )
         LGR.info('Writing Z-normalized spatial component maps: {}'.format(fname))
 
 
-def writeresults_echoes(catd, mmix, mask, comptable, generator):
+def writeresults_echoes(catd, mmix, mask, comptable, io_generator):
     """
     Saves individually denoised echos to disk
 
@@ -535,7 +535,7 @@ def writeresults_echoes(catd, mmix, mask, comptable, generator):
 
     for i_echo in range(catd.shape[1]):
         LGR.info('Writing Kappa-filtered echo #{:01d} timeseries'.format(i_echo + 1))
-        write_split_ts(catd[:, i_echo, :], mmix, mask, comptable, generator, echo=(i_echo + 1))
+        write_split_ts(catd[:, i_echo, :], mmix, mask, comptable, io_generator, echo=(i_echo + 1))
 
 
 # File Loading Functions

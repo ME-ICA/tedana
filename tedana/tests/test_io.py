@@ -93,17 +93,17 @@ def test_smoke_write_split_ts():
     # ref_img has shape of (39, 50, 33) so data is 64350 (39*33*50) x 10
     # creating the component table with component as random floats,
     # a "metric," and random classification
-    generator = me.OutputGenerator(ref_img)
+    io_generator = me.OutputGenerator(ref_img)
     component = np.random.random((n_components))
     metric = np.random.random((n_components))
     classification = np.random.choice(["accepted", "rejected", "ignored"], n_components)
     df_data = np.column_stack((component, metric, classification))
     comptable = pd.DataFrame(df_data, columns=['component', 'metric', 'classification'])
 
-    assert me.write_split_ts(data, mmix, mask, comptable, generator) is not None
+    assert me.write_split_ts(data, mmix, mask, comptable, io_generator) is not None
 
     # TODO: midk_ts.nii is never generated?
-    fn = generator.get_name
+    fn = io_generator.get_name
     split = ('high kappa ts img', 'low kappa ts img', 'denoised ts img')
     fnames = [fn(f) for f in split]
     for filename in fnames:
@@ -119,14 +119,14 @@ def test_smoke_filewrite():
     n_samples, _, _ = 64350, 10, 6
     data_1d = np.random.random((n_samples))
     ref_img = os.path.join(data_dir, 'mask.nii.gz')
-    generator = me.OutputGenerator(ref_img)
+    io_generator = me.OutputGenerator(ref_img)
 
     with pytest.raises(KeyError):
-        generator.save_file(data_1d, '')
+        io_generator.save_file(data_1d, '')
 
     for convention in ('bidsv1.5.0', 'orig'):
-        generator.convention = convention
-        fname = generator.save_file(data_1d, 't2star img')
+        io_generator.convention = convention
+        fname = io_generator.save_file(data_1d, 't2star img')
         assert fname is not None
         try:
             os.remove(fname)

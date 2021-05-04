@@ -210,7 +210,7 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
 
     LGR.info('Loading input data: {}'.format([f for f in data]))
     catd, ref_img = io.load_data(data, n_echos=n_echos)
-    generator = io.OutputGenerator(
+    io_generator = io.OutputGenerator(
         ref_img,
         convention=convention,
         out_dir=out_dir,
@@ -257,20 +257,20 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     s0_limited[s0_limited < 0] = 0
     t2s_limited[t2s_limited < 0] = 0
 
-    generator.save_file(
+    io_generator.save_file(
         utils.millisec2sec(t2s_limited),
         't2star img',
     )
-    generator.save_file(s0_limited, 's0 img')
-    generator.save_file(
+    io_generator.save_file(s0_limited, 's0 img')
+    io_generator.save_file(
         utils.millisec2sec(t2s_full),
         'full t2star img',
     )
-    generator.save_file(
+    io_generator.save_file(
         s0_full,
         'full s0 img',
     )
-    generator.save_file(OCcatd, 'combined img')
+    io_generator.save_file(OCcatd, 'combined img')
 
     # Write out BIDS-compatible description file
     derivative_metadata = {
@@ -289,7 +289,7 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
             }
         ]
     }
-    generator.save_file(derivative_metadata, 'data description json')
+    io_generator.save_file(derivative_metadata, 'data description json')
 
 
 def _main(argv=None):
