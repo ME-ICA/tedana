@@ -1,7 +1,8 @@
 """The io module handles most file input and output in the `tedana` workflow.
 
-Other functions in the module help simplify writing out data from multiple echoes or write very
-complex outputs.
+Other functions in the module help write outputs which require multiple
+data sources, assist in writing per-echo verbose outputs, or act as helper
+functions for any of the above.
 """
 import logging
 import os
