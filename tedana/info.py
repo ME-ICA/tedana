@@ -32,8 +32,8 @@ REQUIRES = [
     'nilearn>=0.5.2',
     'numpy>=1.15',
     'pandas',
-    'scikit-learn>=0.22',
-    'scipy>=1.3.3',
+    'scikit-learn>=0.19.1',
+    'scipy>=1.1.0',
     'threadpoolctl'
 ]
 
@@ -63,7 +63,7 @@ EXTRA_REQUIRES['all'] = list(set([
 
 # Supported Python versions using PEP 440 version specifiers
 # Should match the same set of Python versions as classifiers
-PYTHON_REQUIRES = ">=3.5"
+PYTHON_REQUIRES = ">=3.6"
 
 # Package classifiers
 CLASSIFIERS = [
@@ -71,7 +71,8 @@ CLASSIFIERS = [
     'Intended Audience :: Science/Research',
     'Topic :: Scientific/Engineering :: Information Analysis',
     'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
-    'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
-    'Programming Language :: Python :: 3.7'
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
 ]

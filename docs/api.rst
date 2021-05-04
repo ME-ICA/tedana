@@ -161,7 +161,6 @@ API
    tedana.io.add_decomp_prefix
    tedana.io.split_ts
    tedana.io.write_split_ts
-   tedana.io.writefeats
    tedana.io.writeresults
    tedana.io.writeresults_echoes
 

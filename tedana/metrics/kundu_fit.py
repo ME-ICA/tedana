@@ -19,9 +19,9 @@ F_MAX = 500
 Z_MAX = 8
 
 
-def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
+def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, io_generator,
                        reindex=False, mmixN=None, algorithm=None, label=None,
-                       out_dir='.', verbose=False):
+                       verbose=False):
     """
     Fit TE-dependence and -independence models to components.
 
@@ -41,8 +41,8 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         For more information on thresholding, see `make_adaptive_mask`.
     tes : list
         List of echo times associated with `catd`, in milliseconds
-    ref_img : str or img_like
-        Reference image to dictate how outputs are saved to disk
+    io_generator : tedana.io.OutputGenerator
+        The output generation object for this workflow
     reindex : bool, optional
         Whether to sort components in descending order by Kappa. Default: False
     mmixN : (T x C) array_like, optional
@@ -171,6 +171,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
             SSE_S0 = (comp_betas[:j_echo] - pred_S0)**2
             SSE_S0 = SSE_S0.sum(axis=0)  # (S,) prediction error map
             F_S0 = (alpha - SSE_S0) * (j_echo - 1) / (SSE_S0)
+            F_S0[F_S0 > F_MAX] = F_MAX
             F_S0_maps[mask_idx[mask], i_comp] = F_S0[mask_idx[mask]]
 
             # R2 Model
@@ -180,6 +181,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
             SSE_R2 = (comp_betas[:j_echo] - pred_R2)**2
             SSE_R2 = SSE_R2.sum(axis=0)
             F_R2 = (alpha - SSE_R2) * (j_echo - 1) / (SSE_R2)
+            F_R2[F_R2 > F_MAX] = F_MAX
             F_R2_maps[mask_idx[mask], i_comp] = F_R2[mask_idx[mask]]
 
             if verbose:
@@ -193,11 +195,9 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         Z_maps[:, i_comp] = wtsZ
 
         # compute Kappa and Rho
-        F_S0[F_S0 > F_MAX] = F_MAX
-        F_R2[F_R2 > F_MAX] = F_MAX
         norm_weights = np.abs(wtsZ ** 2.)
-        kappas[i_comp] = np.average(F_R2, weights=norm_weights)
-        rhos[i_comp] = np.average(F_S0, weights=norm_weights)
+        kappas[i_comp] = np.average(F_R2_maps[:, i_comp], weights=norm_weights)
+        rhos[i_comp] = np.average(F_S0_maps[:, i_comp], weights=norm_weights)
     del SSE_S0, SSE_R2, wtsZ, F_S0, F_R2, norm_weights, comp_betas
     if algorithm != 'kundu_v3':
         del WTS, PSC, tsoc_B
@@ -228,35 +228,31 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         for i_echo in range(n_echos):
             # Echo-specific weight maps for each of the ICA components.
             echo_betas = betas[:, i_echo, :]
-            io.filewrite(
+            io_generator.save_file(
                 utils.unmask(echo_betas, mask),
-                'echo weight ' + label + ' map',
-                ref_img,
+                'echo weight ' + label + ' map split img',
                 echo=(i_echo + 1)
             )
 
             # Echo-specific maps of predicted values for R2 and S0 models for each
             # component.
             echo_pred_R2_maps = pred_R2_maps[:, i_echo, :]
-            io.filewrite(
+            io_generator.save_file(
                 utils.unmask(echo_pred_R2_maps, mask),
-                'echo R2 ' + label,
-                ref_img,
+                'echo R2 ' + label + ' split img',
                 echo=(i_echo + 1)
             )
             echo_pred_S0_maps = pred_S0_maps[:, i_echo, :]
-            io.filewrite(
+            io_generator.save_file(
                 utils.unmask(echo_pred_S0_maps, mask),
-                'echo S0 ' + label,
-                ref_img,
+                'echo S0 ' + label + ' split img',
                 echo=(i_echo + 1)
             )
 
         # Weight maps used to average metrics across voxels
-        io.filewrite(
+        io_generator.save_file(
             utils.unmask(Z_maps ** 2., mask),
-            label + ' component weights',
-            ref_img
+            label + ' component weights img',
         )
         del pred_R2_maps, pred_S0_maps
 
@@ -321,7 +317,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
         for i_comp in range(n_components):
             # Cluster-extent threshold and binarize F-maps
             ccimg = io.new_nii_like(
-                ref_img,
+                io_generator.reference_img,
                 np.squeeze(utils.unmask(F_R2_maps[:, i_comp], mask)))
             F_R2_clmaps[:, i_comp] = utils.threshold_map(
                 ccimg, min_cluster_size=csize, threshold=fmin, mask=mask,
@@ -329,7 +325,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
             countsigFR2 = F_R2_clmaps[:, i_comp].sum()
 
             ccimg = io.new_nii_like(
-                ref_img,
+                io_generator.reference_img,
                 np.squeeze(utils.unmask(F_S0_maps[:, i_comp], mask)))
             F_S0_clmaps[:, i_comp] = utils.threshold_map(
                 ccimg, min_cluster_size=csize, threshold=fmin, mask=mask,
@@ -338,7 +334,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
 
             # Cluster-extent threshold and binarize Z-maps with CDT of p < 0.05
             ccimg = io.new_nii_like(
-                ref_img,
+                io_generator.reference_img,
                 np.squeeze(utils.unmask(Z_maps[:, i_comp], mask)))
             Z_clmaps[:, i_comp] = utils.threshold_map(
                 ccimg, min_cluster_size=csize, threshold=1.95, mask=mask,
@@ -346,7 +342,7 @@ def dependence_metrics(catd, tsoc, mmix, adaptive_mask, tes, ref_img,
 
             # Cluster-extent threshold and binarize ranked signal-change map
             ccimg = io.new_nii_like(
-                ref_img,
+                io_generator.reference_img,
                 utils.unmask(stats.rankdata(tsoc_Babs[:, i_comp]), mask))
             Br_R2_clmaps[:, i_comp] = utils.threshold_map(
                 ccimg, min_cluster_size=csize,

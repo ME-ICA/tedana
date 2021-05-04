@@ -8,7 +8,6 @@ import pytest
 import pandas as pd
 
 from tedana import io as me
-from tedana import constants
 from tedana.tests.test_utils import fnames, tes
 
 from tedana.tests.utils import get_test_data_path
@@ -24,10 +23,6 @@ def test_new_nii_like():
 
     assert isinstance(nimg, nib.Nifti1Image)
     assert nimg.shape == (39, 50, 33, 3, 5)
-
-
-def test_filewrite():
-    pass
 
 
 def test_load_data():
@@ -98,41 +93,22 @@ def test_smoke_write_split_ts():
     # ref_img has shape of (39, 50, 33) so data is 64350 (39*33*50) x 10
     # creating the component table with component as random floats,
     # a "metric," and random classification
+    io_generator = me.OutputGenerator(ref_img)
     component = np.random.random((n_components))
     metric = np.random.random((n_components))
     classification = np.random.choice(["accepted", "rejected", "ignored"], n_components)
     df_data = np.column_stack((component, metric, classification))
     comptable = pd.DataFrame(df_data, columns=['component', 'metric', 'classification'])
 
-    assert me.write_split_ts(data, mmix, mask, comptable, ref_img) is not None
+    assert me.write_split_ts(data, mmix, mask, comptable, io_generator) is not None
 
     # TODO: midk_ts.nii is never generated?
-    fn = me.gen_img_name
-    split = ('high kappa ts', 'low kappa ts', 'denoised ts')
-    fnames = [fn(f) + '.nii.gz' for f in split]
+    fn = io_generator.get_name
+    split = ('high kappa ts img', 'low kappa ts img', 'denoised ts img')
+    fnames = [fn(f) for f in split]
     for filename in fnames:
         # remove all files generated
         os.remove(filename)
-
-
-def test_smoke_writefeats():
-    """
-    Ensures that writefeats writes out the expected feature with random
-    input, since there is no suffix, remove feats_.nii
-    """
-    n_samples, n_times, n_components = 64350, 10, 6
-    data = np.random.random((n_samples, n_times))
-    mmix = np.random.random((n_times, n_components))
-    mask = np.random.randint(2, size=n_samples)
-    ref_img = os.path.join(data_dir, 'mask.nii.gz')
-
-    assert me.writefeats(data, mmix, mask, ref_img) is not None
-
-    # this only generates feats_.nii, so delete that
-    os.remove(
-            me.gen_img_name('z-scored ICA accepted components') +
-            '.nii.gz'
-    )
 
 
 def test_smoke_filewrite():
@@ -143,13 +119,14 @@ def test_smoke_filewrite():
     n_samples, _, _ = 64350, 10, 6
     data_1d = np.random.random((n_samples))
     ref_img = os.path.join(data_dir, 'mask.nii.gz')
+    io_generator = me.OutputGenerator(ref_img)
 
     with pytest.raises(KeyError):
-        me.filewrite(data_1d, '', ref_img)
+        io_generator.save_file(data_1d, '')
 
-    for convention in (constants.bids, 'orig'):
-        me.set_convention(convention)
-        fname = me.filewrite(data_1d, 't2star map', ref_img)
+    for convention in ('bidsv1.5.0', 'orig'):
+        io_generator.convention = convention
+        fname = io_generator.save_file(data_1d, 't2star img')
         assert fname is not None
         try:
             os.remove(fname)
