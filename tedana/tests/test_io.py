@@ -25,10 +25,6 @@ def test_new_nii_like():
     assert nimg.shape == (39, 50, 33, 3, 5)
 
 
-def test_filewrite():
-    pass
-
-
 def test_load_data():
     fimg = [nib.load(f) for f in fnames]
     exp_shape = (64350, 3, 5)
@@ -97,63 +93,45 @@ def test_smoke_write_split_ts():
     # ref_img has shape of (39, 50, 33) so data is 64350 (39*33*50) x 10
     # creating the component table with component as random floats,
     # a "metric," and random classification
+    io_generator = me.OutputGenerator(ref_img)
     component = np.random.random((n_components))
     metric = np.random.random((n_components))
     classification = np.random.choice(["accepted", "rejected", "ignored"], n_components)
     df_data = np.column_stack((component, metric, classification))
     comptable = pd.DataFrame(df_data, columns=['component', 'metric', 'classification'])
 
-    assert me.write_split_ts(data, mmix, mask, comptable, ref_img) is not None
+    assert me.write_split_ts(data, mmix, mask, comptable, io_generator) is not None
 
     # TODO: midk_ts.nii is never generated?
-    for filename in ["hik_ts_.nii.gz", "lowk_ts_.nii.gz", "dn_ts_.nii.gz"]:
+    fn = io_generator.get_name
+    split = ('high kappa ts img', 'low kappa ts img', 'denoised ts img')
+    fnames = [fn(f) for f in split]
+    for filename in fnames:
         # remove all files generated
-        try:
-            os.remove(filename)
-        except OSError:
-            print(filename + " not generated")
-            pass
-
-
-def test_smoke_writefeats():
-    """
-    Ensures that writefeats writes out the expected feature with random
-    input, since there is no suffix, remove feats_.nii
-    """
-    n_samples, n_times, n_components = 64350, 10, 6
-    data = np.random.random((n_samples, n_times))
-    mmix = np.random.random((n_times, n_components))
-    mask = np.random.randint(2, size=n_samples)
-    ref_img = os.path.join(data_dir, 'mask.nii.gz')
-
-    assert me.writefeats(data, mmix, mask, ref_img) is not None
-
-    # this only generates feats_.nii, so delete that
-    try:
-        os.remove("feats_.nii.gz")
-    except OSError:
-        print("feats_.nii not generated")
-        pass
+        os.remove(filename)
 
 
 def test_smoke_filewrite():
     """
-    Ensures that filewrite writes out a neuroimage with random input,
-    since there is no name, remove the image named .nii
+    Ensures that filewrite fails for no known image type, write a known key
+    in both bids and orig formats
     """
-    n_samples, n_times, _ = 64350, 10, 6
+    n_samples, _, _ = 64350, 10, 6
     data_1d = np.random.random((n_samples))
-    data_2d = np.random.random((n_samples, n_times))
-    filename = ""
     ref_img = os.path.join(data_dir, 'mask.nii.gz')
+    io_generator = me.OutputGenerator(ref_img)
 
-    assert me.filewrite(data_1d, filename, ref_img) is not None
-    assert me.filewrite(data_2d, filename, ref_img) is not None
+    with pytest.raises(KeyError):
+        io_generator.save_file(data_1d, '')
 
-    try:
-        os.remove(".nii.gz")
-    except OSError:
-        print(".nii not generated")
+    for convention in ('bidsv1.5.0', 'orig'):
+        io_generator.convention = convention
+        fname = io_generator.save_file(data_1d, 't2star img')
+        assert fname is not None
+        try:
+            os.remove(fname)
+        except OSError:
+            print('File not generated!')
 
 
 def test_smoke_load_data():

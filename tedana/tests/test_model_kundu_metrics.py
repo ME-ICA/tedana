@@ -33,5 +33,9 @@ def test_smoke_kundu_metrics():
     metric_maps['Br_R2_clmaps'] = np.random.randint(low=0, high=2,
                                                     size=(n_voxels, n_comps))
 
-    comptable = kundu_fit.kundu_metrics(comptable, metric_maps)
+    comptable, metric_metadata = kundu_fit.kundu_metrics(
+        comptable,
+        metric_maps,
+        metric_metadata={},
+    )
     assert comptable is not None
