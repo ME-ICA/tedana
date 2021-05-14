@@ -36,27 +36,35 @@ def calculate_weights(data_optcom, mixing):
     return weights
 
 
-def calculate_betas(data_optcom, mixing):
+def calculate_betas(data, mixing):
     """Calculate unstandardized parameter estimates between data and mixing matrix.
 
     Parameters
     ----------
-    data_optcom : (M x T) array_like
-        Optimally combined data
+    data : (M x [E] x T) array_like
+        Data to calculate betas for
     mixing : (T x C) array_like
         Mixing matrix
 
     Returns
     -------
-    betas : (M x C) array_like
+    betas : (M x [E] x C) array_like
         Unstandardized parameter estimates
     """
-    assert data_optcom.shape[1] == mixing.shape[0]
-    # mean-center optimally-combined data
-    data_optcom_dm = data_optcom - data_optcom.mean(axis=-1, keepdims=True)
-    # betas are the result of a normal OLS fit of the mixing matrix against the mean-center data
-    betas = get_coeffs(data_optcom_dm, mixing)
-    return betas
+    if len(data.shape) == 2:
+        data_optcom = data
+        assert data_optcom.shape[1] == mixing.shape[0]
+        # mean-center optimally-combined data
+        data_optcom_dm = data_optcom - data_optcom.mean(axis=-1, keepdims=True)
+        # betas are the result of a normal OLS fit of the mixing matrix
+        # against the mean-center data
+        betas = get_coeffs(data_optcom_dm, mixing)
+        return betas
+    else:
+        betas = np.zeros([data.shape[0], data.shape[1], mixing.shape[1]])
+        for n_echo in range(data.shape[1]):
+            betas[:, n_echo, :] = get_coeffs(data[:, n_echo, :], mixing)
+        return betas
 
 
 def calculate_psc(data_optcom, optcom_betas):
@@ -126,7 +134,7 @@ def calculate_f_maps(data_cat, Z_maps, mixing, adaptive_mask, tes, f_max=500):
 
     Returns
     -------
-    F_T2_maps, F_S0_maps : (M x C) array_like
+    F_T2_maps, F_S0_maps, pred_T2_maps, pred_S0_maps : (M x C) array_like
         Pseudo-F-statistic maps for TE-dependence and -independence models,
         respectively.
     """
@@ -149,6 +157,8 @@ def calculate_f_maps(data_cat, Z_maps, mixing, adaptive_mask, tes, f_max=500):
 
     F_T2_maps = np.zeros([n_voxels, n_components])
     F_S0_maps = np.zeros([n_voxels, n_components])
+    pred_T2_maps = np.zeros([n_voxels, len(tes), n_components])
+    pred_S0_maps = np.zeros([n_voxels, len(tes), n_components])
 
     for i_comp in range(n_components):
         # size of comp_betas is (n_echoes, n_samples)
@@ -183,7 +193,10 @@ def calculate_f_maps(data_cat, Z_maps, mixing, adaptive_mask, tes, f_max=500):
             F_T2[F_T2 > f_max] = f_max
             F_T2_maps[mask_idx, i_comp] = F_T2[mask_idx]
 
-    return F_T2_maps, F_S0_maps
+            pred_S0_maps[mask_idx, :j_echo, i_comp] = pred_S0.T[mask_idx, :]
+            pred_T2_maps[mask_idx, :j_echo, i_comp] = pred_T2.T[mask_idx, :]
+
+    return F_T2_maps, F_S0_maps, pred_T2_maps, pred_S0_maps
 
 
 def threshold_map(maps, mask, ref_img, threshold, csize=None):

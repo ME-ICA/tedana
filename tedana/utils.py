@@ -2,6 +2,7 @@
 Utilities for tedana package
 """
 import logging
+import os.path as op
 
 import numpy as np
 import nibabel as nib
@@ -374,3 +375,12 @@ def millisec2sec(arr):
         Values in seconds.
     """
     return arr / 1000.
+
+
+def get_resource_path():
+    """Return the path to general resources, terminated with separator.
+
+    Resources are kept outside package folder in "datasets".
+    Based on function by Yaroslav Halchenko used in Neurosynth Python package.
+    """
+    return op.abspath(op.join(op.dirname(__file__), "resources") + op.sep)

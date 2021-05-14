@@ -7,6 +7,7 @@ from scipy import stats
 
 from tedana.stats import getfbounds
 from tedana.selection._utils import getelbow, clean_dataframe
+from tedana.metrics import collect
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
@@ -30,6 +31,9 @@ def manual_selection(comptable, acc=None, rej=None):
     -------
     comptable : (C x M) :obj:`pandas.DataFrame`
         Component metric table with classification.
+    metric_metadata : :obj:`dict`
+        Dictionary with metadata about calculated metrics.
+        Each entry corresponds to a column in ``comptable``.
     """
     LGR.info('Performing manual ICA component selection')
     RepLGR.info("Next, components were manually classified as "
@@ -70,7 +74,8 @@ def manual_selection(comptable, acc=None, rej=None):
 
     # Move decision columns to end
     comptable = clean_dataframe(comptable)
-    return comptable
+    metric_metadata = collect.get_metadata(comptable)
+    return comptable, metric_metadata
 
 
 def kundu_selection_v2(comptable, n_echos, n_vols):
@@ -89,6 +94,9 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     comptable : (C x M) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
+    metric_metadata : :obj:`dict`
+        Dictionary with metadata about calculated metrics.
+        Each entry corresponds to a column in ``comptable``.
     n_echos : :obj:`int`
         Number of echos in original data
     n_vols : :obj:`int`
@@ -99,6 +107,9 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     comptable : :obj:`pandas.DataFrame`
         Updated component table with additional metrics and with
         classification (accepted, rejected, or ignored)
+    metric_metadata : :obj:`dict`
+        Dictionary with metadata about calculated metrics.
+        Each entry corresponds to a column in ``comptable``.
 
     Notes
     -----
@@ -199,7 +210,8 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
 
         # Move decision columns to end
         comptable = clean_dataframe(comptable)
-        return comptable
+        metric_metadata = collect.get_metadata(comptable)
+        return comptable, metric_metadata
 
     """
     Step 2: Make a guess for what the good components are, in order to
@@ -258,7 +270,8 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
 
         # Move decision columns to end
         comptable = clean_dataframe(comptable)
-        return comptable
+        metric_metadata = collect.get_metadata(comptable)
+        return comptable, metric_metadata
 
     # Calculate "rate" for kappa: kappa range divided by variance explained
     # range, for potentially accepted components
@@ -372,4 +385,5 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
 
     # Move decision columns to end
     comptable = clean_dataframe(comptable)
-    return comptable
+    metric_metadata = collect.get_metadata(comptable)
+    return comptable, metric_metadata

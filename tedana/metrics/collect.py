@@ -12,6 +12,9 @@ from ._utils import (
     apply_sort,
     dependency_resolver,
 )
+
+from tedana import io
+from tedana import utils
 from tedana.stats import getfbounds
 
 
@@ -26,7 +29,8 @@ def generate_metrics(
     mixing,
     adaptive_mask,
     tes,
-    ref_img,
+    io_generator,
+    label,
     metrics=None,
     sort_by="kappa",
     ascending=False,
@@ -49,8 +53,10 @@ def generate_metrics(
         For more information on thresholding, see `make_adaptive_mask`.
     tes : list
         List of echo times associated with `data_cat`, in milliseconds
-    ref_img : str or img_like
-        Reference image to dictate how outputs are saved to disk
+    io_generator : tedana.io.OutputGenerator
+        The output generator object for this workflow
+    label : str in ['ICA', 'PCA']
+        The label for this metric generation type
     metrics : list
         List of metrics to return
     sort_by : str, optional
@@ -156,6 +162,9 @@ def generate_metrics(
     # Ensure that echo times are in an array, rather than a list
     tes = np.asarray(tes)
 
+    # Get reference image from io_generator
+    ref_img = io_generator.reference_img
+
     required_metrics = dependency_resolver(METRIC_DEPENDENCIES, metrics, INPUTS)
 
     # Use copy to avoid changing the original variable outside of this function
@@ -165,7 +174,12 @@ def generate_metrics(
     # throughout this function
     n_components = mixing.shape[1]
     comptable = pd.DataFrame(index=np.arange(n_components, dtype=int))
-
+    comptable["Component"] = [
+        io.add_decomp_prefix(
+            comp, prefix=label, max_value=comptable.shape[0]
+        )
+        for comp in comptable.index.values
+    ]
     # Metric maps
     # Maps will be stored as arrays in an easily-indexable dictionary
     metric_maps = {}
@@ -182,6 +196,10 @@ def generate_metrics(
         metric_maps["map optcom betas"] = dependence.calculate_betas(
             data_optcom, mixing
         )
+        if io_generator.verbose:
+            metric_maps["map echo betas"] = dependence.calculate_betas(
+                data_cat, mixing
+            )
 
     if "map percent signal change" in required_metrics:
         LGR.info("Calculating percent signal change maps")
@@ -194,11 +212,21 @@ def generate_metrics(
         LGR.info("Calculating z-statistic maps")
         metric_maps["map Z"] = dependence.calculate_z_maps(metric_maps["map weight"])
 
+        if io_generator.verbose:
+            io_generator.save_file(
+                utils.unmask(metric_maps["map Z"] ** 2, mask),
+                label + ' component weights img',
+            )
+
     if ("map FT2" in required_metrics) or ("map FS0" in required_metrics):
         LGR.info("Calculating F-statistic maps")
-        metric_maps["map FT2"], metric_maps["map FS0"] = dependence.calculate_f_maps(
+        m_T2, m_S0, p_m_T2, p_m_S0 = dependence.calculate_f_maps(
             data_cat, metric_maps["map Z"], mixing, adaptive_mask, tes
         )
+        metric_maps["map FT2"] = m_T2
+        metric_maps["map FS0"] = m_S0
+        metric_maps["map predicted T2"] = p_m_T2
+        metric_maps["map predicted S0"] = p_m_S0
 
     if "map Z clusterized" in required_metrics:
         LGR.info("Thresholding z-statistic maps")
@@ -358,4 +386,268 @@ def generate_metrics(
     # Sort the component table and mixing matrix
     comptable, sort_idx = sort_df(comptable, by=sort_by, ascending=ascending)
     (mixing,) = apply_sort(mixing, sort_idx=sort_idx, axis=1)
+
+    # Write verbose metrics if needed
+    if io_generator.verbose:
+        write_betas = "map echo betas" in metric_maps
+        write_T2S0 = "map predicted T2" in metric_maps
+        if write_betas:
+            betas = metric_maps["map echo betas"]
+        if write_T2S0:
+            pred_T2_maps = metric_maps["map predicted T2"]
+            pred_S0_maps = metric_maps["map predicted S0"]
+
+        for i_echo in range(len(tes)):
+            if write_betas:
+                echo_betas = betas[:, i_echo, :]
+                io_generator.save_file(
+                    utils.unmask(echo_betas, mask),
+                    'echo weight ' + label + ' map split img',
+                    echo=(i_echo + 1)
+                )
+
+            if write_T2S0:
+                echo_pred_T2_maps = pred_T2_maps[:, i_echo, :]
+                io_generator.save_file(
+                    utils.unmask(echo_pred_T2_maps, mask),
+                    'echo R2 ' + label + ' split img',
+                    echo=(i_echo + 1)
+                )
+
+                echo_pred_S0_maps = pred_S0_maps[:, i_echo, :]
+                io_generator.save_file(
+                    utils.unmask(echo_pred_S0_maps, mask),
+                    'echo S0 ' + label + ' split img',
+                    echo=(i_echo + 1)
+                )
     return comptable, mixing
+
+
+def get_metadata(comptable):
+    """Fills in metric metadata for a given comptable
+
+    Parameters
+    ----------
+    comptable: pandas.DataFrame
+        The component table for this workflow
+
+    Returns
+    -------
+    A dict containing the metadata for each column in the comptable for
+    which we have a metadata description, plus the "Component" metadata
+    description (always).
+    """
+
+    metric_metadata = {}
+    if "kappa" in comptable:
+        metric_metadata["kappa"] = {
+            "LongName": "Kappa",
+            "Description": (
+                "A pseudo-F-statistic indicating TE-dependence of the "
+                "component. This metric is calculated by computing fit to "
+                "the TE-dependence model at each voxel, and then "
+                "performing a weighted average based on the voxel-wise "
+                "weights of the component."
+            ),
+            "Units": "arbitrary",
+        }
+    if "rho" in comptable:
+        metric_metadata["rho"] = {
+            "LongName": "Rho",
+            "Description": (
+                "A pseudo-F-statistic indicating TE-independence of the "
+                "component. This metric is calculated by computing fit to "
+                "the TE-independence model at each voxel, and then "
+                "performing a weighted average based on the voxel-wise "
+                "weights of the component."
+            ),
+            "Units": "arbitrary",
+        }
+    if "variance explained" in comptable:
+        metric_metadata["variance explained"] = {
+            "LongName": "Variance explained",
+            "Description": (
+                "Variance explained in the optimally combined data of "
+                "each component. On a scale from 0 to 100."
+            ),
+            "Units": "arbitrary",
+        }
+    if "normalized variance explained" in comptable:
+        metric_metadata["normalized variance explained"] = {
+            "LongName": "Normalized variance explained",
+            "Description": (
+                "Normalized variance explained in the optimally combined "
+                "data of each component."
+                "On a scale from 0 to 1."
+            ),
+            "Units": "arbitrary",
+        }
+    if "countsigFT2" in comptable:
+        metric_metadata["countsigFT2"] = {
+            "LongName": "T2 model F-statistic map significant voxel count",
+            "Description": (
+                "Number of significant voxels from the cluster-extent "
+                "thresholded T2 model F-statistic map for each component."
+            ),
+            "Units": "voxel",
+        }
+    if "countsigFS0" in comptable:
+        metric_metadata["countsigFS0"] = {
+            "LongName": "S0 model F-statistic map significant voxel count",
+            "Description": (
+                "Number of significant voxels from the cluster-extent "
+                "thresholded S0 model F-statistic map for each component."
+            ),
+            "Units": "voxel",
+        }
+    if "dice_FT2" in comptable:
+        metric_metadata["dice_FT2"] = {
+            "LongName": "T2 model beta map-F-statistic map Dice similarity index",
+            "Description": (
+                "Dice value of cluster-extent thresholded maps of "
+                "T2-model betas and F-statistics."
+            ),
+            "Units": "arbitrary",
+        }
+    if "dice_FS0" in comptable:
+        metric_metadata["dice_FS0"] = {
+            "LongName": (
+                "S0 model beta map-F-statistic map Dice similarity index"
+            ),
+            "Description": (
+                "Dice value of cluster-extent thresholded maps of "
+                "S0-model betas and F-statistics."
+            ),
+            "Units": "arbitrary",
+        }
+    if "countnoise" in comptable:
+        metric_metadata["countnoise"] = {
+            "LongName": "Noise voxel count",
+            "Description": (
+                "Number of 'noise' voxels (voxels highly weighted for "
+                "component, but not from clusters) from each component."
+            ),
+            "Units": "voxel",
+        }
+    if "signal-noise_t" in comptable:
+        metric_metadata["signal-noise_t"] = {
+            "LongName": "Signal > noise t-statistic",
+            "Description": (
+                "T-statistic for two-sample t-test of F-statistics from "
+                "'signal' voxels (voxels in clusters) against 'noise' "
+                "voxels (voxels not in clusters) for T2 model."
+            ),
+            "Units": "arbitrary",
+        }
+    if "signal-noise_p" in comptable:
+        metric_metadata["signal-noise_p"] = {
+            "LongName": "Signal > noise p-value",
+            "Description": (
+                "P-value for two-sample t-test of F-statistics from "
+                "'signal' voxels (voxels in clusters) against 'noise' "
+                "voxels (voxels not in clusters) for R2 model."
+            ),
+            "Units": "arbitrary",
+        }
+    if "d_table_score" in comptable:
+        metric_metadata["d_table_score"] = {
+            "LongName": "Decision table score",
+            "Description": (
+                "Summary score compiled from five metrics, with smaller "
+                "values (i.e., higher ranks) indicating more BOLD "
+                "dependence and less noise."
+            ),
+            "Units": "arbitrary",
+        }
+    if "original_classification" in comptable:
+        metric_metadata["original_classification"] = {
+            "LongName": "Original classification",
+            "Description": (
+                "Classification from the original decision tree."
+            ),
+            "Levels": {
+                "accepted": (
+                    "A BOLD-like component included in denoised and "
+                    "high-Kappa data."
+                ),
+                "rejected": (
+                    "A non-BOLD component excluded from denoised and "
+                    "high-Kappa data."
+                ),
+                "ignored": (
+                    "A low-variance component included in denoised, "
+                    "but excluded from high-Kappa data."
+                ),
+            },
+        }
+    if "original_rationale" in comptable:
+        metric_metadata["original_rationale"] = {
+            "LongName": "Original rationale",
+            "Description": (
+                "The reason for the original classification. "
+                "Please see tedana's documentation for information about "
+                "possible rationales."
+            ),
+        }
+    if "classification" in comptable:
+        metric_metadata["classification"] = {
+            "LongName": "Component classification",
+            "Description": (
+                "Classification from the manual classification procedure."
+            ),
+            "Levels": {
+                "accepted": (
+                    "A BOLD-like component included in denoised and "
+                    "high-Kappa data."
+                ),
+                "rejected": (
+                    "A non-BOLD component excluded from denoised and "
+                    "high-Kappa data."
+                ),
+                "ignored": (
+                    "A low-variance component included in denoised, "
+                    "but excluded from high-Kappa data."
+                ),
+            },
+        }
+    if "rationale" in comptable:
+        metric_metadata["rationale"] = {
+            "LongName": "Rationale for component classification",
+            "Description": (
+                "The reason for the original classification. "
+                "Please see tedana's documentation for information about "
+                "possible rationales."
+            ),
+        }
+    if "kappa ratio" in comptable:
+        metric_metadata["kappa ratio"] = {
+            "LongName": "Kappa ratio",
+            "Description": (
+                "Ratio score calculated by dividing range of kappa "
+                "values by range of variance explained values."
+            ),
+            "Units": "arbitrary",
+        }
+    if "d_table_score_scrub" in comptable:
+        metric_metadata["d_table_score_scrub"] = {
+            "LongName": "Updated decision table score",
+            "Description": (
+                "Summary score compiled from five metrics and computed "
+                "from a subset of components, with smaller values "
+                "(i.e., higher ranks) indicating more BOLD dependence "
+                "and less noise."
+            ),
+            "Units": "arbitrary",
+        }
+
+    # There are always components in the comptable, definitionally
+    metric_metadata["Component"] = {
+        "LongName": "Component identifier",
+        "Description": (
+            "The unique identifier of each component. "
+            "This identifier matches column names in the mixing matrix "
+            "TSV file."
+        ),
+    }
+
+    return metric_metadata

@@ -21,12 +21,13 @@ def testdata1():
     _, adaptive_mask = utils.make_adaptive_mask(data_cat, getsum=True)
     data_optcom = np.mean(data_cat, axis=1)
     mixing = np.random.random((data_optcom.shape[1], 50))
+    io_generator = io.OutputGenerator(ref_img)
     data_dict = {
         "data_cat": data_cat,
         "tes": tes,
         "data_optcom": data_optcom,
         "adaptive_mask": adaptive_mask,
-        "ref_img": ref_img,
+        "generator": io_generator,
         "mixing": mixing,
     }
     return data_dict
@@ -53,7 +54,8 @@ def test_smoke_generate_metrics(testdata1):
         testdata1["mixing"],
         testdata1["adaptive_mask"],
         testdata1["tes"],
-        testdata1["ref_img"],
+        testdata1["generator"],
+        'ICA',
         metrics=metrics,
         sort_by="kappa",
         ascending=False,
@@ -104,7 +106,7 @@ def test_smoke_calculate_f_maps():
     mixing = np.random.random((n_volumes, n_components))
     adaptive_mask = np.random.randint(1, n_echos + 1, size=n_voxels)
     tes = np.array([15, 25, 35, 45, 55])
-    F_T2_maps, F_S0_maps = dependence.calculate_f_maps(
+    F_T2_maps, F_S0_maps, _, _ = dependence.calculate_f_maps(
         data_cat, Z_maps, mixing, adaptive_mask, tes, f_max=500
     )
     assert F_T2_maps.shape == F_S0_maps.shape == (n_voxels, n_components)

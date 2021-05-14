@@ -75,10 +75,7 @@ def _create_data_struct(comptable_path, color_mapping=color_mapping):
                    'd_table_score', 'kappa ratio',
                    'rationale', 'd_table_score_scrub']
 
-    df = pd.read_json(comptable_path)
-    df.drop('Description', axis=0, inplace=True)
-    df.drop('Method', axis=1, inplace=True)
-    df = df.T
+    df = pd.read_table(comptable_path)
     n_comps = df.shape[0]
 
     # remove space from column name
@@ -232,7 +229,7 @@ def _create_varexp_pie_plt(comptable_cds, n_comps):
     return fig
 
 
-def _tap_callback(comptable_cds, div_content, out_dir):
+def _tap_callback(comptable_cds, div_content, io_generator):
     """
     Javacript function to animate tap events and show component info on the right
 
@@ -243,6 +240,9 @@ def _tap_callback(comptable_cds, div_content, out_dir):
     div: bokeh.models.Div
         Target Div element where component images will be loaded
 
+    io_generator: tedana.io.OutputGenerator
+        Output generating object for this workflow
+
     Returns
     -------
     CustomJS: bokeh.models.CustomJS
@@ -250,10 +250,11 @@ def _tap_callback(comptable_cds, div_content, out_dir):
     """
     return models.CustomJS(args=dict(source_comp_table=comptable_cds,
                                      div=div_content,
-                                     outdir=out_dir), code=tap_callback_jscode)
+                                     outdir=io_generator.out_dir),
+                           code=tap_callback_jscode)
 
 
-def _link_figures(fig, comptable_ds, div_content, out_dir):
+def _link_figures(fig, comptable_ds, div_content, io_generator):
     """
     Links figures and adds interaction on mouse-click.
 
@@ -269,8 +270,8 @@ def _link_figures(fig, comptable_ds, div_content, out_dir):
     div_content : bokeh.models.Div
         Div element for additional HTML content.
 
-    out_dir : str
-        Output directory of tedana results.
+    io_generator: `tedana.io.OutputGenerator`
+        Output generating object for this workflow
 
     Returns
     -------
@@ -282,5 +283,5 @@ def _link_figures(fig, comptable_ds, div_content, out_dir):
     fig.js_on_event(events.Tap,
                     _tap_callback(comptable_ds,
                                   div_content,
-                                  out_dir))
+                                  io_generator))
     return fig
