@@ -138,13 +138,14 @@ html_theme_options = {
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+html_js_files = [
+    'zenodo.js',
+]
 
 
 # https://github.com/rtfd/sphinx_rtd_theme/issues/117
 def setup(app):
     app.add_css_file('theme_overrides.css')
-    app.add_javascript("https://cdn.rawgit.com/chrisfilo/zenodo.js/v0.1/zenodo.js")
-
 
 html_favicon = '_static/tedana_favicon.png'
 
