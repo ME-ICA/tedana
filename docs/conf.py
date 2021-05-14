@@ -29,7 +29,7 @@ from github_link import make_linkcode_resolve
 
 # If your documentation needs a minimal Sphinx version, state it here.
 
-# needs_sphinx = '1.0'
+needs_sphinx = '1.8'
 
 # generate autosummary even if no references
 autosummary_generate = True
