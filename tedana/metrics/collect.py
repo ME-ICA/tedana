@@ -410,7 +410,7 @@ def generate_metrics(
                 echo_pred_T2_maps = pred_T2_maps[:, i_echo, :]
                 io_generator.save_file(
                     utils.unmask(echo_pred_T2_maps, mask),
-                    'echo R2 ' + label + ' split img',
+                    'echo T2 ' + label + ' split img',
                     echo=(i_echo + 1)
                 )
 
@@ -545,7 +545,7 @@ def get_metadata(comptable):
             "Description": (
                 "P-value for two-sample t-test of F-statistics from "
                 "'signal' voxels (voxels in clusters) against 'noise' "
-                "voxels (voxels not in clusters) for R2 model."
+                "voxels (voxels not in clusters) for T2 model."
             ),
             "Units": "arbitrary",
         }
