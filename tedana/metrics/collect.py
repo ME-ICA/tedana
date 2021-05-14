@@ -420,7 +420,29 @@ def generate_metrics(
                     'echo S0 ' + label + ' split img',
                     echo=(i_echo + 1)
                 )
-    return comptable, mixing
+
+    # Build new comptable, re-ordered like previous tedana versions
+    previous_order = (
+        "kappa", "rho", "variance explained", 
+        "normalized variance explained",
+        "estimated normalized variance explained",
+        "countsigFT2", "countsigFS0",
+        "dice_FT2", "dice_FS0",
+        "countnoise", "signal-noise_t", "signal-noise_p",
+        "d_table_score", "kappa ratio", "d_table_score_scrub",
+        "classification", "rationale",
+    )
+    reordered = pd.DataFrame()
+    for metric in previous_order:
+        if metric in comptable:
+            reordered[metric] = comptable[metric]
+    # Add in things with less relevant order
+    cmp_cols = comptable.columns
+    disordered = set(cmp_cols) & (set(cmp_cols) ^ set(previous_order))
+    for metric in disordered:
+        reordered[metric] = comptable[metric]
+
+    return reordered, mixing
 
 
 def get_metadata(comptable):
