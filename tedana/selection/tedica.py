@@ -14,7 +14,7 @@ RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
 
-def manual_selection(comptable, acc=None, rej=None):
+def manual_selection(comptable, metric_metadata, acc=None, rej=None):
     """
     Perform manual selection of components.
 
@@ -22,6 +22,9 @@ def manual_selection(comptable, acc=None, rej=None):
     ----------
     comptable : (C x M) :obj:`pandas.DataFrame`
         Component metric table, where `C` is components and `M` is metrics
+    metric_metadata : :obj:`dict`
+        Dictionary with metadata about calculated metrics.
+        Each entry corresponds to a column in ``comptable``.
     acc : :obj:`list`, optional
         List of accepted components. Default is None.
     rej : :obj:`list`, optional
@@ -43,6 +46,26 @@ def manual_selection(comptable, acc=None, rej=None):
             'original_classification' not in comptable.columns):
         comptable['original_classification'] = comptable['classification']
         comptable['original_rationale'] = comptable['rationale']
+        metric_metadata["original_classification"] = {
+            "LongName": "Original classification",
+            "Description": (
+                "Classification from the original decision tree."
+            ),
+            "Levels": {
+                "accepted": "A BOLD-like component included in denoised and high-Kappa data.",
+                "rejected": "A non-BOLD component excluded from denoised and high-Kappa data.",
+                "ignored": (
+                    "A low-variance component included in denoised, "
+                    "but excluded from high-Kappa data."),
+            },
+        }
+        metric_metadata["original_rationale"] = {
+            "LongName": "Original rationale",
+            "Description": (
+                "The reason for the original classification. "
+                "Please see tedana's documentation for information about possible rationales."
+            ),
+        }
 
     comptable['classification'] = 'accepted'
     comptable['rationale'] = ''
@@ -72,13 +95,34 @@ def manual_selection(comptable, acc=None, rej=None):
     comptable.loc[ign, 'classification'] = 'ignored'
     comptable.loc[ign, 'rationale'] += 'I001;'
 
+    metric_metadata["classification"] = {
+        "LongName": "Component classification",
+        "Description": (
+            "Classification from the manual classification procedure."
+        ),
+        "Levels": {
+            "accepted": "A BOLD-like component included in denoised and high-Kappa data.",
+            "rejected": "A non-BOLD component excluded from denoised and high-Kappa data.",
+            "ignored": (
+                "A low-variance component included in denoised, "
+                "but excluded from high-Kappa data."),
+        },
+    }
+    metric_metadata["rationale"] = {
+        "LongName": "Rationale for component classification",
+        "Description": (
+            "The reason for the original classification. "
+            "Please see tedana's documentation for information about possible rationales."
+        ),
+    }
+
     # Move decision columns to end
     comptable = clean_dataframe(comptable)
     metric_metadata = collect.get_metadata(comptable)
     return comptable, metric_metadata
 
 
-def kundu_selection_v2(comptable, n_echos, n_vols):
+def kundu_selection_v2(comptable, metric_metadata, n_echos, n_vols):
     """
     Classify components as "accepted," "rejected," or "ignored" based on
     relevant metrics.
@@ -281,6 +325,14 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
                   (np.max(comptable.loc[acc_prov, 'variance explained']) -
                    np.min(comptable.loc[acc_prov, 'variance explained'])))
     comptable['kappa ratio'] = kappa_rate * comptable['variance explained'] / comptable['kappa']
+    metric_metadata["kappa ratio"] = {
+        "LongName": "Kappa ratio",
+        "Description": (
+            "Ratio score calculated by dividing range of kappa values by range of "
+            "variance explained values."
+        ),
+        "Units": "arbitrary",
+    }
 
     # Calculate bounds for variance explained
     varex_lower = stats.scoreatpercentile(
@@ -338,6 +390,16 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
                    (comptable.loc[unclf, 'rho'] < rho_elbow)),
             np.sum(comptable.loc[unclf, 'kappa'] > kappa_elbow)]))
 
+        metric_metadata["d_table_score_scrub"] = {
+            "LongName": "Updated decision table score",
+            "Description": (
+                "Summary score compiled from five metrics and computed from a "
+                "subset of components, with smaller values "
+                "(i.e., higher ranks) indicating more BOLD dependence and less noise."
+            ),
+            "Units": "arbitrary",
+        }
+
         # Rejection candidate based on artifact type A: candartA
         conservative_guess = num_acc_guess / RESTRICT_FACTOR
         candartA = np.intersect1d(
@@ -382,6 +444,27 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
         comptable.loc[ign_add1, 'rationale'] += 'I012;'
 
     # at this point, unclf is equivalent to accepted
+
+    metric_metadata["classification"] = {
+        "LongName": "Component classification",
+        "Description": (
+            "Classification from the classification procedure."
+        ),
+        "Levels": {
+            "accepted": "A BOLD-like component included in denoised and high-Kappa data.",
+            "rejected": "A non-BOLD component excluded from denoised and high-Kappa data.",
+            "ignored": (
+                "A low-variance component included in denoised, "
+                "but excluded from high-Kappa data."),
+        },
+    }
+    metric_metadata["rationale"] = {
+        "LongName": "Rationale for component classification",
+        "Description": (
+            "The reason for the original classification. "
+            "Please see tedana's documentation for information about possible rationales."
+        ),
+    }
 
     # Move decision columns to end
     comptable = clean_dataframe(comptable)

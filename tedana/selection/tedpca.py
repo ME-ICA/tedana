@@ -16,7 +16,7 @@ RefLGR = logging.getLogger('REFERENCES')
 F_MAX = 500
 
 
-def kundu_tedpca(comptable, n_echos, kdaw=10., rdaw=1., stabilize=False):
+def kundu_tedpca(comptable, metric_metadata, n_echos, kdaw=10., rdaw=1., stabilize=False):
     """
     Select PCA components using Kundu's decision tree approach.
 
@@ -25,6 +25,9 @@ def kundu_tedpca(comptable, n_echos, kdaw=10., rdaw=1., stabilize=False):
     comptable : :obj:`pandas.DataFrame`
         Component table with relevant metrics: kappa, rho, and normalized
         variance explained. Component number should be the index.
+    metric_metadata : :obj:`dict`
+        Dictionary with metadata about calculated metrics.
+        Each entry corresponds to a column in ``comptable``.
     n_echos : :obj:`int`
         Number of echoes in dataset.
     kdaw : :obj:`float`, optional
@@ -120,6 +123,24 @@ def kundu_tedpca(comptable, n_echos, kdaw=10., rdaw=1., stabilize=False):
         under_fmin2 = comptable['rho'] <= fmin
         comptable.loc[under_fmin2, 'classification'] = 'rejected'
         comptable.loc[under_fmin2, 'rationale'] += 'P007;'
+
+    metric_metadata["classification"] = {
+        "LongName": "Component classification",
+        "Description": (
+            "Classification from the classification procedure."
+        ),
+        "Levels": {
+            "accepted": "A BOLD-like component included in dimensionally-reduced data.",
+            "rejected": "A non-BOLD component removed from dimensionally-reduced data.",
+        },
+    }
+    metric_metadata["rationale"] = {
+        "LongName": "Rationale for component classification",
+        "Description": (
+            "The reason for the original classification. "
+            "Please see tedana's documentation for information about possible rationales."
+        ),
+    }
 
     n_components = comptable.loc[comptable['classification'] == 'accepted'].shape[0]
     LGR.info('Selected {0} components with Kappa threshold: {1:.02f}, Rho '
