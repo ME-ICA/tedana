@@ -293,6 +293,10 @@ def threshold_to_match(maps, n_sig_voxels, mask, ref_img, csize=None):
                 mask=mask,
                 binarize=True,
             )
+            # TODO: remove break statement for smarter clustering
+            # TEMPORARILY left here so that we can make main and this
+            # branch aligned
+            break
             if rank_thresh <= 0:  # all voxels significant
                 break
 
