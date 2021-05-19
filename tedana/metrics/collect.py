@@ -423,7 +423,7 @@ def generate_metrics(
 
     # Build new comptable, re-ordered like previous tedana versions
     previous_order = (
-        "kappa", "rho", "variance explained", 
+        "kappa", "rho", "variance explained",
         "normalized variance explained",
         "estimated normalized variance explained",
         "countsigFT2", "countsigFS0",
