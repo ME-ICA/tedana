@@ -142,8 +142,8 @@ html_static_path = ['_static']
 
 # https://github.com/rtfd/sphinx_rtd_theme/issues/117
 def setup(app):
-    app.add_stylesheet('theme_overrides.css')
-    app.add_javascript("https://cdn.rawgit.com/chrisfilo/zenodo.js/v0.1/zenodo.js")
+    app.add_css_file('theme_overrides.css')
+    app.add_js_file("https://cdn.rawgit.com/chrisfilo/zenodo.js/v0.1/zenodo.js")
 
 
 html_favicon = '_static/tedana_favicon.png'
