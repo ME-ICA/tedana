@@ -180,6 +180,7 @@ def generate_metrics(
         )
         for comp in comptable.index.values
     ]
+
     # Metric maps
     # Maps will be stored as arrays in an easily-indexable dictionary
     metric_maps = {}
@@ -441,6 +442,13 @@ def generate_metrics(
     disordered = set(cmp_cols) & (set(cmp_cols) ^ set(previous_order))
     for metric in disordered:
         reordered[metric] = comptable[metric]
+    # Add in component labels with new ordering
+    reordered["Component"] = [
+        io.add_decomp_prefix(
+            comp, prefix=label, max_value=reordered.shape[0]
+        )
+        for comp in reordered.index.values
+    ]
 
     return reordered, mixing
 
