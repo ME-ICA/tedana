@@ -449,7 +449,6 @@ def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
         )
 
     LGR.info('Writing denoised time series: {}'.format(fout))
-    return varexpl
 
 
 def writeresults(ts, mask, comptable, mmix, n_vols, io_generator):
