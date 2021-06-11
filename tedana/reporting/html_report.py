@@ -102,7 +102,10 @@ def generate_report(io_generator, tr):
 
     # Create carpet plot div
     carpet_plot = models.Div(
-        text="<span><h1>Carpet plots</h1><img src='./figures/carpet_plots.svg' alt='Carpet plot' style='width: 1000px !important'><span>",
+        text=(
+            "<span><h1>Carpet plots</h1><img src='./figures/carpet_plots.svg' "
+            "alt='Carpet plot' style='width: 1000px !important'><span>"
+        ),
         css_classes=["carpet_style"],
     )
 
