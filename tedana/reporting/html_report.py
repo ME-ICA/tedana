@@ -143,6 +143,8 @@ def generate_report(io_generator, tr):
                         layouts.row(rho_sorted_plot, kappa_sorted_plot),
                     ),
                     layouts.column(div_content),
+                ),
+                layouts.column(
                     layouts.row(carpet_section),
                     layouts.row(carpet_optcom),
                     layouts.row(carpet_denoised),
