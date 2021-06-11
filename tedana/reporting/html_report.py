@@ -101,10 +101,34 @@ def generate_report(io_generator, tr):
         df._link_figures(fig, comptable_cds, div_content, io_generator)
 
     # Create carpet plot div
-    carpet_plot = models.Div(
+    carpet_section = models.Div(
+        text="<span><h1>Carpet plots</h1>",
+    )
+    carpet_optcom = models.Div(
         text=(
-            "<span><h1>Carpet plots</h1><img src='./figures/carpet_plots.svg' "
-            "alt='Carpet plot' style='width: 1000px !important'><span>"
+            "<img src='./figures/carpet_optcom.svg' "
+            "alt='Optimally Combined Data' style='width: 1000px !important'><span>"
+        ),
+        css_classes=["carpet_style"],
+    )
+    carpet_denoised = models.Div(
+        text=(
+            "<img src='./figures/carpet_denoised.svg' "
+            "alt='Denoised Data' style='width: 1000px !important'><span>"
+        ),
+        css_classes=["carpet_style"],
+    )
+    carpet_accepted = models.Div(
+        text=(
+            "<img src='./figures/carpet_accepted.svg' "
+            "alt='High-Kappa Data' style='width: 1000px !important'><span>"
+        ),
+        css_classes=["carpet_style"],
+    )
+    carpet_rejected = models.Div(
+        text=(
+            "<img src='./figures/carpet_rejected.svg' "
+            "alt='Low-Kappa Data' style='width: 1000px !important'><span>"
         ),
         css_classes=["carpet_style"],
     )
@@ -119,7 +143,11 @@ def generate_report(io_generator, tr):
                         layouts.row(rho_sorted_plot, kappa_sorted_plot),
                     ),
                     layouts.column(div_content),
-                    layouts.row(carpet_plot),
+                    layouts.row(carpet_section),
+                    layouts.row(carpet_optcom),
+                    layouts.row(carpet_denoised),
+                    layouts.row(carpet_accepted),
+                    layouts.row(carpet_rejected),
                 )
             ]
         ],

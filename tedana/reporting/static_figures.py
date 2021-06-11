@@ -63,38 +63,50 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator):
     hik_img = io.new_nii_like(io_generator.reference_img, hikts)
     lowk_img = io.new_nii_like(io_generator.reference_img, lowkts)
 
-    # Carpet plot
-    fig, axes = plt.subplots(figsize=(14, 28), nrows=4)
+    # Carpet plots
+    fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
         optcom_img,
         mask_img,
         figure=fig,
-        axes=axes[0],
+        axes=ax,
         title="Optimally Combined Data",
     )
+    fig.tight_layout()
+    fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_optcom.svg"))
+
+    fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
         dn_img,
         mask_img,
         figure=fig,
-        axes=axes[1],
+        axes=ax,
         title="Denoised Data",
     )
+    fig.tight_layout()
+    fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_denoised.svg"))
+
+    fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
         hik_img,
         mask_img,
         figure=fig,
-        axes=axes[2],
+        axes=ax,
         title="High-Kappa Data",
     )
+    fig.tight_layout()
+    fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_accepted.svg"))
+
+    fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
         lowk_img,
         mask_img,
         figure=fig,
-        axes=axes[3],
+        axes=ax,
         title="Low-Kappa Data",
     )
     fig.tight_layout()
-    fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_plots.svg"))
+    fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_rejected.svg"))
 
 
 def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
