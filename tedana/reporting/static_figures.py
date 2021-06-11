@@ -43,7 +43,7 @@ def _trim_edge_zeros(arr):
     return arr[bounding_box]
 
 
-def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, ref_img, out_dir):
+def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator):
     """Generate a set of carpet plots for the combined and denoised data.
 
     Parameters
@@ -57,11 +57,11 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, ref_img, out_dir):
     out_dir : str
         Output directory for the figure.
     """
-    mask_img = io.new_nii_like(ref_img, mask.astype(int))
-    optcom_img = io.new_nii_like(ref_img, optcom_ts)
-    dn_img = io.new_nii_like(ref_img, denoised_ts)
-    hik_img = io.new_nii_like(ref_img, hikts)
-    lowk_img = io.new_nii_like(ref_img, lowkts)
+    mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
+    optcom_img = io.new_nii_like(io_generator.reference_img, optcom_ts)
+    dn_img = io.new_nii_like(io_generator.reference_img, denoised_ts)
+    hik_img = io.new_nii_like(io_generator.reference_img, hikts)
+    lowk_img = io.new_nii_like(io_generator.reference_img, lowkts)
 
     # Carpet plot
     fig, axes = plt.subplots(figsize=(14, 28), nrows=4)
@@ -94,7 +94,7 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, ref_img, out_dir):
         title="Low-Kappa Data",
     )
     fig.tight_layout()
-    fig.savefig(os.path.join(out_dir, "carpet_plots.svg"))
+    fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_plots.svg"))
 
 
 def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):

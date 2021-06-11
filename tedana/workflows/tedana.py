@@ -707,23 +707,6 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if verbose:
         io.writeresults_echoes(catd, mmix, mask, comptable, io_generator)
 
-    if not no_reports:
-        LGR.info('Making figures folder with static component maps and '
-                 'timecourse plots.')
-        reporting.static_figures.comp_figures(data_oc, mask=mask,
-                                              comptable=comptable,
-                                              mmix=mmix_orig,
-                                              io_generator=io_generator,
-                                              png_cmap=png_cmap)
-
-        if sys.version_info.major == 3 and sys.version_info.minor < 6:
-            warn_msg = ("Reports requested but Python version is less than "
-                        "3.6.0. Dynamic reports will not be generated.")
-            LGR.warn(warn_msg)
-        else:
-            LGR.info('Generating dynamic report')
-            reporting.generate_report(io_generator, tr=img_t_r)
-
     # Write out BIDS-compatible description file
     derivative_metadata = {
         "Name": "tedana Outputs",
@@ -747,30 +730,26 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     LGR.info('Workflow completed')
 
     if not no_reports:
-        LGR.info('Making figures folder with static component maps and '
-                 'timecourse plots.')
-        # make figure folder first
-        if not op.isdir(op.join(out_dir, 'figures')):
-            os.mkdir(op.join(out_dir, 'figures'))
+        LGR.info('Making figures folder with static component maps and timecourse plots.')
 
         dn_ts, hikts, lowkts = io.denoise_ts(data_oc, mmix, mask, comptable)
 
-        fig_dir = op.join(out_dir, "figures")
         reporting.static_figures.carpet_plot(
             optcom_ts=data_oc,
             denoised_ts=dn_ts,
             hikts=hikts,
             lowkts=lowkts,
             mask=mask,
-            ref_img=ref_img,
-            out_dir=fig_dir,
+            io_generator=io_generator,
         )
-        reporting.static_figures.comp_figures(data_oc, mask=mask,
-                                              comptable=comptable,
-                                              mmix=mmix_orig,
-                                              ref_img=ref_img,
-                                              out_dir=fig_dir,
-                                              png_cmap=png_cmap)
+        reporting.static_figures.comp_figures(
+            data_oc,
+            mask=mask,
+            comptable=comptable,
+            mmix=mmix_orig,
+            io_generator=io_generator,
+            png_cmap=png_cmap,
+        )
 
         if sys.version_info.major == 3 and sys.version_info.minor < 6:
             warn_msg = ("Reports requested but Python version is less than "
@@ -778,7 +757,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             LGR.warn(warn_msg)
         else:
             LGR.info('Generating dynamic report')
-            reporting.generate_report(out_dir=out_dir, tr=img_t_r)
+            reporting.generate_report(io_generator, tr=img_t_r)
 
     LGR.info('Workflow completed')
 
