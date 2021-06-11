@@ -409,44 +409,22 @@ def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
 
     if len(acc) != 0:
         if echo != 0:
-            fout = io_generator.save_file(
-                utils.unmask(hikts, mask),
-                'high kappa ts split img',
-                echo=echo
-            )
-
+            fout = io_generator.save_file(hikts, 'high kappa ts split img', echo=echo)
         else:
-            fout = io_generator.save_file(
-                utils.unmask(hikts, mask),
-                'high kappa ts img',
-            )
+            fout = io_generator.save_file(hikts, 'high kappa ts img')
         LGR.info('Writing high-Kappa time series: {}'.format(fout))
 
     if len(rej) != 0:
         if echo != 0:
-            fout = io_generator.save_file(
-                utils.unmask(lowkts, mask),
-                'low kappa ts split img',
-                echo=echo
-            )
+            fout = io_generator.save_file(lowkts, 'low kappa ts split img', echo=echo)
         else:
-            fout = io_generator.save_file(
-                utils.unmask(lowkts, mask),
-                'low kappa ts img',
-            )
+            fout = io_generator.save_file(lowkts, 'low kappa ts img')
         LGR.info('Writing low-Kappa time series: {}'.format(fout))
 
     if echo != 0:
-        fout = io_generator.save_file(
-            utils.unmask(dnts, mask),
-            'denoised ts split img',
-            echo=echo
-        )
+        fout = io_generator.save_file(dnts, 'denoised ts split img', echo=echo)
     else:
-        fout = io_generator.save_file(
-            utils.unmask(dnts, mask),
-            'denoised ts img',
-        )
+        fout = io_generator.save_file(dnts, 'denoised ts img')
 
     LGR.info('Writing denoised time series: {}'.format(fout))
 

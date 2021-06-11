@@ -159,6 +159,7 @@ API
    tedana.io.save_comptable
    tedana.io.load_comptable
    tedana.io.add_decomp_prefix
+   tedana.io.denoise_ts
    tedana.io.split_ts
    tedana.io.write_split_ts
    tedana.io.writeresults
