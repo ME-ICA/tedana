@@ -418,6 +418,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         out_dir=out_dir,
         prefix=prefix,
         config="auto",
+        verbose=verbose,
     )
 
     n_samp, n_echos, n_vols = catd.shape
@@ -560,21 +561,19 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             # generated from dimensionally reduced data using full data (i.e., data
             # with thermal noise)
             LGR.info('Making second component selection guess from ICA results')
-            comptable, metric_maps, metric_metadata, betas, mmix = metrics.dependence_metrics(
+            required_metrics = [
+                'kappa', 'rho', 'countnoise', 'countsigFT2', 'countsigFS0',
+                'dice_FT2', 'dice_FS0', 'signal-noise_t',
+                'variance explained', 'normalized variance explained',
+                'd_table_score'
+            ]
+            comptable, mmix = metrics.collect.generate_metrics(
                 catd, data_oc, mmix_orig, masksum, tes,
-                io_generator, reindex=True, label='ICA',
-                algorithm='kundu_v2', verbose=verbose,
-            )
-            comptable, metric_metadata = metrics.kundu_metrics(
-                comptable,
-                metric_maps,
-                metric_metadata,
+                io_generator, 'ICA',
+                metrics=required_metrics, sort_by='kappa', ascending=False,
             )
             comptable, metric_metadata = selection.kundu_selection_v2(
-                comptable,
-                metric_metadata,
-                n_echos,
-                n_vols,
+                comptable, n_echos, n_vols
             )
 
             n_bold_comps = comptable[comptable.classification == 'accepted'].shape[0]
@@ -591,36 +590,27 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         mmix_orig = pd.read_table(mixing_file).values
 
         if ctab is None:
-            comptable, metric_maps, metric_metadata, betas, mmix = metrics.dependence_metrics(
-                        catd, data_oc, mmix_orig, masksum, tes,
-                        io_generator, label='ICA', algorithm='kundu_v2',
-                        verbose=verbose)
-            comptable, metric_metadata = metrics.kundu_metrics(
-                comptable,
-                metric_maps,
-                metric_metadata,
+            required_metrics = [
+                'kappa', 'rho', 'countnoise', 'countsigFT2', 'countsigFS0',
+                'dice_FT2', 'dice_FS0', 'signal-noise_t',
+                'variance explained', 'normalized variance explained',
+                'd_table_score'
+            ]
+            comptable, mmix = metrics.collect.generate_metrics(
+                catd, data_oc, mmix_orig, masksum, tes,
+                io_generator, 'ICA',
+                metrics=required_metrics, sort_by='kappa', ascending=False
             )
             comptable, metric_metadata = selection.kundu_selection_v2(
-                comptable,
-                metric_metadata,
-                n_echos,
-                n_vols,
+                    comptable, n_echos, n_vols
             )
         else:
             mmix = mmix_orig.copy()
             comptable = pd.read_table(ctab)
-            # Try to find and load the metric metadata file
-            metadata_file = io_generator.get_name('ICA metrics json')
-            if op.isfile(metadata_file):
-                with open(metadata_file, "r") as fo:
-                    metric_metadata = json.load(fo)
-            else:
-                metric_metadata = {}
 
             if manacc is not None:
                 comptable, metric_metadata = selection.manual_selection(
                     comptable,
-                    metric_metadata,
                     acc=manacc
                 )
 
@@ -639,15 +629,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         index_label="Component",
         sep='\t',
     )
-    metric_metadata["Component"] = {
-        "LongName": "Component identifier",
-        "Description": (
-            "The unique identifier of each component. "
-            "This identifier matches column names in the mixing matrix TSV file."
-        ),
-    }
-    with open(io_generator.get_name("ICA metrics json"), "w") as fo:
-        json.dump(metric_metadata, fo, sort_keys=True, indent=4)
+    metric_metadata = metrics.collect.get_metadata(temp_comptable)
+    io_generator.save_file(metric_metadata, "ICA metrics json")
 
     decomp_metadata = {
         "Method": (

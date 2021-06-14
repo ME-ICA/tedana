@@ -7,13 +7,14 @@ from scipy import stats
 
 from tedana.stats import getfbounds
 from tedana.selection._utils import getelbow, clean_dataframe
+from tedana.metrics import collect
 
 LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
 
-def manual_selection(comptable, metric_metadata, acc=None, rej=None):
+def manual_selection(comptable, acc=None, rej=None):
     """
     Perform manual selection of components.
 
@@ -21,9 +22,6 @@ def manual_selection(comptable, metric_metadata, acc=None, rej=None):
     ----------
     comptable : (C x M) :obj:`pandas.DataFrame`
         Component metric table, where `C` is components and `M` is metrics
-    metric_metadata : :obj:`dict`
-        Dictionary with metadata about calculated metrics.
-        Each entry corresponds to a column in ``comptable``.
     acc : :obj:`list`, optional
         List of accepted components. Default is None.
     rej : :obj:`list`, optional
@@ -45,26 +43,6 @@ def manual_selection(comptable, metric_metadata, acc=None, rej=None):
             'original_classification' not in comptable.columns):
         comptable['original_classification'] = comptable['classification']
         comptable['original_rationale'] = comptable['rationale']
-        metric_metadata["original_classification"] = {
-            "LongName": "Original classification",
-            "Description": (
-                "Classification from the original decision tree."
-            ),
-            "Levels": {
-                "accepted": "A BOLD-like component included in denoised and high-Kappa data.",
-                "rejected": "A non-BOLD component excluded from denoised and high-Kappa data.",
-                "ignored": (
-                    "A low-variance component included in denoised, "
-                    "but excluded from high-Kappa data."),
-            },
-        }
-        metric_metadata["original_rationale"] = {
-            "LongName": "Original rationale",
-            "Description": (
-                "The reason for the original classification. "
-                "Please see tedana's documentation for information about possible rationales."
-            ),
-        }
 
     comptable['classification'] = 'accepted'
     comptable['rationale'] = ''
@@ -94,33 +72,13 @@ def manual_selection(comptable, metric_metadata, acc=None, rej=None):
     comptable.loc[ign, 'classification'] = 'ignored'
     comptable.loc[ign, 'rationale'] += 'I001;'
 
-    metric_metadata["classification"] = {
-        "LongName": "Component classification",
-        "Description": (
-            "Classification from the manual classification procedure."
-        ),
-        "Levels": {
-            "accepted": "A BOLD-like component included in denoised and high-Kappa data.",
-            "rejected": "A non-BOLD component excluded from denoised and high-Kappa data.",
-            "ignored": (
-                "A low-variance component included in denoised, "
-                "but excluded from high-Kappa data."),
-        },
-    }
-    metric_metadata["rationale"] = {
-        "LongName": "Rationale for component classification",
-        "Description": (
-            "The reason for the original classification. "
-            "Please see tedana's documentation for information about possible rationales."
-        ),
-    }
-
     # Move decision columns to end
     comptable = clean_dataframe(comptable)
+    metric_metadata = collect.get_metadata(comptable)
     return comptable, metric_metadata
 
 
-def kundu_selection_v2(comptable, metric_metadata, n_echos, n_vols):
+def kundu_selection_v2(comptable, n_echos, n_vols):
     """
     Classify components as "accepted," "rejected," or "ignored" based on
     relevant metrics.
@@ -136,9 +94,6 @@ def kundu_selection_v2(comptable, metric_metadata, n_echos, n_vols):
     comptable : (C x M) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
-    metric_metadata : :obj:`dict`
-        Dictionary with metadata about calculated metrics.
-        Each entry corresponds to a column in ``comptable``.
     n_echos : :obj:`int`
         Number of echos in original data
     n_vols : :obj:`int`
@@ -215,17 +170,17 @@ def kundu_selection_v2(comptable, metric_metadata, n_echos, n_vols):
     comptable.loc[temp_rej0a, 'classification'] = 'rejected'
     comptable.loc[temp_rej0a, 'rationale'] += 'I002;'
 
-    # Number of significant voxels for S0 model is higher than number for R2
-    # model *and* number for R2 model is greater than zero.
-    temp_rej0b = all_comps[((comptable['countsigFS0'] > comptable['countsigFR2']) &
-                            (comptable['countsigFR2'] > 0))]
+    # Number of significant voxels for S0 model is higher than number for T2
+    # model *and* number for T2 model is greater than zero.
+    temp_rej0b = all_comps[((comptable['countsigFS0'] > comptable['countsigFT2']) &
+                            (comptable['countsigFT2'] > 0))]
     comptable.loc[temp_rej0b, 'classification'] = 'rejected'
     comptable.loc[temp_rej0b, 'rationale'] += 'I003;'
     rej = np.union1d(temp_rej0a, temp_rej0b)
 
-    # Dice score for S0 maps is higher than Dice score for R2 maps and variance
+    # Dice score for S0 maps is higher than Dice score for T2 maps and variance
     # explained is higher than the median across components.
-    temp_rej1 = all_comps[(comptable['dice_FS0'] > comptable['dice_FR2']) &
+    temp_rej1 = all_comps[(comptable['dice_FS0'] > comptable['dice_FT2']) &
                           (comptable['variance explained'] >
                            np.median(comptable['variance explained']))]
     comptable.loc[temp_rej1, 'classification'] = 'rejected'
@@ -252,6 +207,7 @@ def kundu_selection_v2(comptable, metric_metadata, n_echos, n_vols):
 
         # Move decision columns to end
         comptable = clean_dataframe(comptable)
+        metric_metadata = collect.get_metadata(comptable)
         return comptable, metric_metadata
 
     """
@@ -260,8 +216,8 @@ def kundu_selection_v2(comptable, metric_metadata, n_echos, n_vols):
     a. Not outlier variance
     b. Kappa>kappa_elbow
     c. Rho<Rho_elbow
-    d. High R2* dice compared to S0 dice
-    e. Gain of F_R2 in clusters vs noise
+    d. High T2* dice compared to S0 dice
+    e. Gain of F_T2 in clusters vs noise
     f. Estimate a low and high variance
     """
     # Step 2a
@@ -311,6 +267,7 @@ def kundu_selection_v2(comptable, metric_metadata, n_echos, n_vols):
 
         # Move decision columns to end
         comptable = clean_dataframe(comptable)
+        metric_metadata = collect.get_metadata(comptable)
         return comptable, metric_metadata
 
     # Calculate "rate" for kappa: kappa range divided by variance explained
@@ -321,14 +278,6 @@ def kundu_selection_v2(comptable, metric_metadata, n_echos, n_vols):
                   (np.max(comptable.loc[acc_prov, 'variance explained']) -
                    np.min(comptable.loc[acc_prov, 'variance explained'])))
     comptable['kappa ratio'] = kappa_rate * comptable['variance explained'] / comptable['kappa']
-    metric_metadata["kappa ratio"] = {
-        "LongName": "Kappa ratio",
-        "Description": (
-            "Ratio score calculated by dividing range of kappa values by range of "
-            "variance explained values."
-        ),
-        "Units": "arbitrary",
-    }
 
     # Calculate bounds for variance explained
     varex_lower = stats.scoreatpercentile(
@@ -376,25 +325,15 @@ def kundu_selection_v2(comptable, metric_metadata, n_echos, n_vols):
         # Recompute the midk steps on the limited set to clean up the tail
         d_table_rank = np.vstack([
             len(unclf) - stats.rankdata(comptable.loc[unclf, 'kappa']),
-            len(unclf) - stats.rankdata(comptable.loc[unclf, 'dice_FR2']),
+            len(unclf) - stats.rankdata(comptable.loc[unclf, 'dice_FT2']),
             len(unclf) - stats.rankdata(comptable.loc[unclf, 'signal-noise_t']),
             stats.rankdata(comptable.loc[unclf, 'countnoise']),
-            len(unclf) - stats.rankdata(comptable.loc[unclf, 'countsigFR2'])]).T
+            len(unclf) - stats.rankdata(comptable.loc[unclf, 'countsigFT2'])]).T
         comptable.loc[unclf, 'd_table_score_scrub'] = d_table_rank.mean(1)
         num_acc_guess = int(np.mean([
             np.sum((comptable.loc[unclf, 'kappa'] > kappa_elbow) &
                    (comptable.loc[unclf, 'rho'] < rho_elbow)),
             np.sum(comptable.loc[unclf, 'kappa'] > kappa_elbow)]))
-
-        metric_metadata["d_table_score_scrub"] = {
-            "LongName": "Updated decision table score",
-            "Description": (
-                "Summary score compiled from five metrics and computed from a "
-                "subset of components, with smaller values "
-                "(i.e., higher ranks) indicating more BOLD dependence and less noise."
-            ),
-            "Units": "arbitrary",
-        }
 
         # Rejection candidate based on artifact type A: candartA
         conservative_guess = num_acc_guess / RESTRICT_FACTOR
@@ -441,27 +380,7 @@ def kundu_selection_v2(comptable, metric_metadata, n_echos, n_vols):
 
     # at this point, unclf is equivalent to accepted
 
-    metric_metadata["classification"] = {
-        "LongName": "Component classification",
-        "Description": (
-            "Classification from the classification procedure."
-        ),
-        "Levels": {
-            "accepted": "A BOLD-like component included in denoised and high-Kappa data.",
-            "rejected": "A non-BOLD component excluded from denoised and high-Kappa data.",
-            "ignored": (
-                "A low-variance component included in denoised, "
-                "but excluded from high-Kappa data."),
-        },
-    }
-    metric_metadata["rationale"] = {
-        "LongName": "Rationale for component classification",
-        "Description": (
-            "The reason for the original classification. "
-            "Please see tedana's documentation for information about possible rationales."
-        ),
-    }
-
     # Move decision columns to end
     comptable = clean_dataframe(comptable)
+    metric_metadata = collect.get_metadata(comptable)
     return comptable, metric_metadata

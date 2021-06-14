@@ -69,8 +69,8 @@ def _create_data_struct(comptable_path, color_mapping=color_mapping):
         Data structure with all the fields to plot or hover over
     """
     unused_cols = ['normalized variance explained',
-                   'countsigFR2', 'countsigFS0',
-                   'dice_FS0', 'countnoise', 'dice_FR2',
+                   'countsigFT2', 'countsigFS0',
+                   'dice_FS0', 'countnoise', 'dice_FT2',
                    'signal-noise_t', 'signal-noise_p',
                    'd_table_score', 'kappa ratio',
                    'rationale', 'd_table_score_scrub']
