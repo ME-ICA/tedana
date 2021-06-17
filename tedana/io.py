@@ -59,6 +59,8 @@ class OutputGenerator():
         This will correspond to a "figures" subfolder of ``out_dir``.
     prefix : str
         Prefix to prepend to output filenames.
+    verbose : bool
+        Whether or not to generate verbose output
     """
 
     def __init__(
@@ -68,7 +70,8 @@ class OutputGenerator():
         out_dir=".",
         prefix="",
         config="auto",
-        make_figures=True
+        make_figures=True,
+        verbose=False,
     ):
 
         if config == "auto":
@@ -94,6 +97,7 @@ class OutputGenerator():
         self.out_dir = op.abspath(out_dir)
         self.figures_dir = op.join(out_dir, "figures")
         self.prefix = prefix + "_" if prefix != "" else ""
+        self.verbose = verbose
 
         if not op.isdir(self.out_dir):
             LGR.info(f"Generating output directory: {self.out_dir}")

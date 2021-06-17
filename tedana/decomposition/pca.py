@@ -227,12 +227,16 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         varex_norm = varex / varex.sum()
 
     # Compute Kappa and Rho for PCA comps
-    # Normalize each component's time series
-    vTmixN = stats.zscore(comp_ts, axis=0)
-    comptable, _, metric_metadata, _, _ = metrics.dependence_metrics(
-        data_cat, data_oc, comp_ts, adaptive_mask, tes, io_generator,
-        reindex=False, mmixN=vTmixN, algorithm=None,
-        label='PCA', verbose=verbose
+    required_metrics = [
+        'kappa', 'rho', 'countnoise', 'countsigFT2', 'countsigFS0',
+        'dice_FT2', 'dice_FS0', 'signal-noise_t',
+        'variance explained', 'normalized variance explained',
+        'd_table_score'
+    ]
+    comptable, _ = metrics.collect.generate_metrics(
+        data_cat, data_oc, comp_ts, adaptive_mask,
+        tes, io_generator, 'PCA',
+        metrics=required_metrics, sort_by=None
     )
 
     # varex_norm from PCA overrides varex_norm from dependence_metrics,
@@ -249,7 +253,6 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     if algorithm == 'kundu':
         comptable, metric_metadata = kundu_tedpca(
             comptable,
-            metric_metadata,
             n_echos,
             kdaw,
             rdaw,
@@ -258,7 +261,6 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     elif algorithm == 'kundu-stabilize':
         comptable, metric_metadata = kundu_tedpca(
             comptable,
-            metric_metadata,
             n_echos,
             kdaw,
             rdaw,
@@ -282,13 +284,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     temp_comptable = comptable.set_index("Component", inplace=False)
     io_generator.save_file(temp_comptable, "PCA metrics tsv")
 
-    metric_metadata["Component"] = {
-        "LongName": "Component identifier",
-        "Description": (
-            "The unique identifier of each component. "
-            "This identifier matches column names in the mixing matrix TSV file."
-        ),
-    }
+    metric_metadata = metrics.collect.get_metadata(temp_comptable)
     io_generator.save_file(metric_metadata, "PCA metrics json")
 
     decomp_metadata = {

@@ -94,6 +94,7 @@ def test_integration_five_echo(skip_integration):
         out_dir=out_dir,
         tedpca=0.95,
         fittype='curvefit',
+        fixed_seed=49,
         tedort=True,
         verbose=True)
 
