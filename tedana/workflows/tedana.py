@@ -500,7 +500,12 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                     "nilearn's compute_epi_mask function.")
 
     # Create an adaptive mask with at least 1 good echo, for denoising
-    mask_denoise, masksum_denoise = utils.make_adaptive_mask(catd, mask=mask, getsum=True, threshold=1)
+    mask_denoise, masksum_denoise = utils.make_adaptive_mask(
+        catd,
+        mask=mask,
+        getsum=True,
+        threshold=1
+    )
     LGR.debug('Retaining {}/{} samples for denoising'.format(mask_denoise.sum(), n_samp))
     io_generator.save_file(masksum_denoise, "adaptive mask img")
 
