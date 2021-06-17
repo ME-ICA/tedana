@@ -690,23 +690,6 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if verbose:
         io.writeresults_echoes(catd, mmix, mask, comptable, io_generator)
 
-    if not no_reports:
-        LGR.info('Making figures folder with static component maps and '
-                 'timecourse plots.')
-        reporting.static_figures.comp_figures(data_oc, mask=mask,
-                                              comptable=comptable,
-                                              mmix=mmix_orig,
-                                              io_generator=io_generator,
-                                              png_cmap=png_cmap)
-
-        if sys.version_info.major == 3 and sys.version_info.minor < 6:
-            warn_msg = ("Reports requested but Python version is less than "
-                        "3.6.0. Dynamic reports will not be generated.")
-            LGR.warn(warn_msg)
-        else:
-            LGR.info('Generating dynamic report')
-            reporting.generate_report(io_generator, tr=img_t_r)
-
     # Write out BIDS-compatible description file
     derivative_metadata = {
         "Name": "tedana Outputs",
@@ -767,6 +750,23 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     report += '\n\nReferences:\n\n' + references
     with open(repname, 'w') as fo:
         fo.write(report)
+
+    if not no_reports:
+        LGR.info('Making figures folder with static component maps and '
+                 'timecourse plots.')
+        reporting.static_figures.comp_figures(data_oc, mask=mask,
+                                              comptable=comptable,
+                                              mmix=mmix_orig,
+                                              io_generator=io_generator,
+                                              png_cmap=png_cmap)
+
+        if sys.version_info.major == 3 and sys.version_info.minor < 6:
+            warn_msg = ("Reports requested but Python version is less than "
+                        "3.6.0. Dynamic reports will not be generated.")
+            LGR.warn(warn_msg)
+        else:
+            LGR.info('Generating dynamic report')
+            reporting.generate_report(io_generator, tr=img_t_r)
 
     log_handler.close()
     logging.root.removeHandler(log_handler)
