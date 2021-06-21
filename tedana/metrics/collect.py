@@ -1,5 +1,6 @@
 """Tools to collect and generate metrics."""
 import logging
+import os.path as op
 
 import numpy as np
 import pandas as pd
@@ -75,7 +76,7 @@ def generate_metrics(
     """
     # Load metric dependency tree from json file
     dependency_config = op.join(utils.get_resource_path(), "config", "metrics.json")
-    dependency_config = load_json(dependency_config)
+    dependency_config = io.load_json(dependency_config)
 
     if metrics is None:
         metrics = ["map weight"]
