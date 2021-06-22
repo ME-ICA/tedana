@@ -1,5 +1,6 @@
-The tedana pipeline
-===================
+***************************
+tedana's denoising approach
+***************************
 
 ``tedana`` works by decomposing multi-echo BOLD data via principal component analysis (PCA)
 and independent component analysis (ICA).

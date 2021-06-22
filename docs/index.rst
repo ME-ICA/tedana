@@ -152,19 +152,17 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
 
    installation
    multi-echo
-   acquisition
-   resources
    usage
    approach
    outputs
-   reporting
    faq
    support
    contributing
-   developing
-   governance
    roadmap
    api
+
+   developing
+   governance
 
 .. toctree::
    :hidden:
