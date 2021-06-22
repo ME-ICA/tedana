@@ -156,7 +156,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     --------
     :func:`tedana.utils.make_adaptive_mask` : The function used to create
         the ``adaptive_mask` parameter.
-    :module:`tedana.constants` : The module describing the filenames for
+    :py:mod:`tedana.constants` : The module describing the filenames for
         various naming conventions
     """
     if algorithm == 'kundu':
