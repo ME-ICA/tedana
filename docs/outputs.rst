@@ -130,10 +130,7 @@ Component tables
 ================
 TEDPCA and TEDICA use component tables to track relevant metrics, component
 classifications, and rationales behind classifications.
-The component tables are stored as json files for BIDS-compatibility.
-This format is not very conducive to manual review, which is why we have
-:py:func:`tedana.io.load_comptable` to load the json file into a pandas
-DataFrame.
+The component tables are stored as tsv files for BIDS-compatibility.
 
 In order to make sense of the rationale codes in the component tables,
 consult the tables below.
