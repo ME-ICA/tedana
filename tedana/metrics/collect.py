@@ -6,13 +6,7 @@ import numpy as np
 import pandas as pd
 
 from . import dependence
-from ._utils import (
-    determine_signs,
-    flip_components,
-    sort_df,
-    apply_sort,
-    dependency_resolver,
-)
+from ._utils import determine_signs, flip_components, dependency_resolver
 
 from tedana import io
 from tedana import utils
@@ -33,8 +27,6 @@ def generate_metrics(
     io_generator,
     label,
     metrics=None,
-    sort_by="kappa",
-    ascending=False,
 ):
     """Fit TE-dependence and -independence models to components.
 
@@ -60,11 +52,6 @@ def generate_metrics(
         The label for this metric generation type
     metrics : list
         List of metrics to return
-    sort_by : str, optional
-        Metric to sort component table by. Default is 'kappa'.
-    ascending : bool, optional
-        Whether to sort the table in ascending or descending order.
-        Default is False.
 
     Returns
     -------
@@ -339,10 +326,6 @@ def generate_metrics(
             comptable["countnoise"],
             comptable["countsigFT2"],
         )
-
-    # Sort the component table and mixing matrix
-    comptable, sort_idx = sort_df(comptable, by=sort_by, ascending=ascending)
-    (mixing,) = apply_sort(mixing, sort_idx=sort_idx, axis=1)
 
     # Write verbose metrics if needed
     if io_generator.verbose:
