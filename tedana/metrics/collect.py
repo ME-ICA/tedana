@@ -59,7 +59,7 @@ def generate_metrics(
         Component metric table. One row for each component, with a column for
         each metric. The index is the component number.
     mixing : :obj:`numpy.ndarray`
-        Mixing matrix after sign flipping and sorting.
+        Mixing matrix after sign flipping.
     """
     # Load metric dependency tree from json file
     dependency_config = op.join(utils.get_resource_path(), "config", "metrics.json")

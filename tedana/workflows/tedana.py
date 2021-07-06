@@ -635,8 +635,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     decomp_metadata = {
         "Method": (
             "Independent components analysis with FastICA "
-            "algorithm implemented by sklearn. Components "
-            "are sorted by Kappa in descending order. "
+            "algorithm implemented by sklearn. "
             "Component signs are flipped to best match the "
             "data."
         ),
