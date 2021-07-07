@@ -84,7 +84,7 @@ listed on the ``tedana`` :ref:`support_ref` page.
 .. _prioritizing project developments:
 
 Structuring project developments
---------------------------------
+================================
 
 The ``tedana``  developers have chosen to structure ongoing development around specific goals.
 When implemented successfully, this focuses the direction of the project and helps new contributors
@@ -109,7 +109,7 @@ This allows us to:
 .. _backwards compatibility with meica:
 
 Is ``tedana`` backwards compatible with MEICA?
-----------------------------------------------
+==============================================
 
 The short answer is No.
 
@@ -138,7 +138,7 @@ If you'd like to use MEICA as has been previously published the code is availabl
 .. _future-proofing for continuous development:
 
 How does ``tedana`` future-proof its development?
--------------------------------------------------
+=================================================
 
 ``tedana``  is a reasonably young project that is run by volunteers.
 No one involved in the development is paid for their time.
@@ -159,7 +159,7 @@ applicable in the future as other needs arise.
 .. _when to release new software versions:
 
 When to release a new version
------------------------------
+=============================
 
 In the broadest sense, we have adopted a "you know it when you see it" approach
 to releasing new versions of the software.
@@ -189,7 +189,7 @@ in the :ref:`release-checklist`.
 .. _release-checklist:
 
 Release Checklist
------------------
+=================
 
 This is the checklist of items that must be completed when cutting a new release of tedana.
 These steps can only be completed by a project maintainer, but they are a good resource for
