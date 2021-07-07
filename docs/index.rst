@@ -1,7 +1,8 @@
 .. include:: <isonum.txt>
 
+#############################
 tedana: TE Dependent ANAlysis
-=============================
+#############################
 
 The ``tedana`` package is part of the ME-ICA pipeline, performing TE-dependent
 analysis of multi-echo functional magnetic resonance imaging (fMRI) data.
@@ -52,8 +53,10 @@ multi-echo functional magnetic resonance imaging (fMRI) data.
    :target: https://tinyletter.com/tedana-devs
    :alt: Join our tinyletter mailing list
 
+
+*****
 About
------
+*****
 
 .. image:: https://user-images.githubusercontent.com/7406227/40031156-57b7cbb8-57bc-11e8-8c51-5b29f2e86a48.png
   :target: http://tedana.readthedocs.io/
@@ -73,8 +76,10 @@ visit `Processing pipeline details`_.
 .. _Multi-echo fMRI: https://tedana.readthedocs.io/en/latest/multi-echo.html
 .. _Processing pipeline details: https://tedana.readthedocs.io/en/latest/approach.html#
 
+
+*********
 Citations
----------
+*********
 
 When using tedana, please include the following citations:
 
@@ -134,15 +139,18 @@ You can also learn more about `why citing software is important`_.
 .. _`why citing software is important`: https://www.software.ac.uk/how-cite-software
 
 
+*******
 Posters
--------
+*******
 
 .. image:: /_static/tedana-ohbm2019-poster.png
 
 .. image:: /_static/tedana-ohbm2018-poster.png
 
+
+*******************
 License Information
--------------------
+*******************
 
 tedana is licensed under GNU Lesser General Public License version 2.1.
 
@@ -161,17 +169,16 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
    roadmap
    api
 
-   developing
-   governance
-
 .. toctree::
    :hidden:
    :name: hiddentoc
 
    dependence_metrics
 
+
+******************
 Indices and tables
-------------------
+******************
 
 * :ref:`genindex`
 * :ref:`modindex`

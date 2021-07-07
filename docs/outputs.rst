@@ -4,8 +4,10 @@
 Outputs of tedana
 #################
 
+
+******************************
 Outputs of the tedana workflow
-==============================
+******************************
 
 ================================================    =====================================================
 Filename                                            Content
@@ -126,8 +128,11 @@ desc-TEDICAAcceptedT1cDenoised_components.nii.gz    T1-GS corrected high-kappa c
 desc-TEDICAT1cDenoised_mixing.tsv                   T1-GS corrected mixing matrix
 ================================================    =====================================================
 
+
+****************
 Component tables
-================
+****************
+
 TEDPCA and TEDICA use component tables to track relevant metrics, component
 classifications, and rationales behind classifications.
 The component tables are stored as tsv files for BIDS-compatibility.
@@ -145,8 +150,10 @@ ignored            Low-variance components included in denoised, but excluded
                    from high-Kappa data
 ===============    =============================================================
 
+
 TEDPCA codes
-------------
+============
+
 =====  ===============  ========================================================
 Code   Classification   Description
 =====  ===============  ========================================================
@@ -160,8 +167,10 @@ P006   rejected         Kappa below fmin (only in stabilized PCA decision tree)
 P007   rejected         Rho below fmin (only in stabilized PCA decision tree)
 =====  ===============  ========================================================
 
+
 TEDICA codes
-------------
+============
+
 =====  =================  ========================================================
 Code   Classification     Description
 =====  =================  ========================================================
@@ -181,8 +190,10 @@ I011   ignored            ign_add0
 I012   ignored            ign_add1
 =====  =================  ========================================================
 
+
+**************************
 Citable workflow summaries
-==========================
+**************************
 
 ``tedana`` generates a report for the workflow, customized based on the parameters used and including relevant citations.
 The report is saved in a plain-text file, report.txt, in the output directory.
@@ -215,10 +226,12 @@ An example report
 
   Van Der Walt, S., Colbert, S. C., & Varoquaux, G. (2011). The NumPy array: a structure for efficient numerical computation. Computing in Science & Engineering, 13(2), 22.
 
+
 .. _interactive reports:
 
+*********************
 ICA Components Report
-=====================
+*********************
 
 The reporting page for the tedana decomposition presents a series
 of interactive plots designed to help you evaluate the quality of your
@@ -228,8 +241,9 @@ You can also play around with `our demo`_.
 
 .. _our demo: https://me-ica.github.io/tedana-ohbm-2020/
 
+
 Report Structure
-----------------
+================
 
 The image below shows a representative report, which has two sections: a) the summary view,
 and b) the individual component view.
@@ -241,8 +255,10 @@ and b) the individual component view.
   When a report is initially loaded, as no component is selected on the
   summary view, the individual component view appears empty.
 
+
 Summary View
-````````````
+------------
+
 This view provides an overview of the decomposition and component
 selection results. It includes four different plots.
 
@@ -288,8 +304,10 @@ selection results. It includes four different plots.
   :align: center
   :height: 400px
 
+
 Individual Component View
-`````````````````````````
+-------------------------
+
 This view provides detailed information about an individual
 component (selected in the summary view, see below). It includes three different plots.
 
@@ -318,8 +336,9 @@ component (selected in the summary view, see below). It includes three different
   :align: center
   :height: 150px
 
+
 Reports User Interactions
--------------------------
+=========================
 
 As previously mentioned, all summary plots in the report allow user interactions. While the
 Kappa/Rho Scatter plot allows full user interaction (see the toolbar that accompanies the plot

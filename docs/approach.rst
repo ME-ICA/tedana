@@ -1,6 +1,6 @@
-***************************
+###########################
 tedana's denoising approach
-***************************
+###########################
 
 ``tedana`` works by decomposing multi-echo BOLD data via principal component analysis (PCA)
 and independent component analysis (ICA).
@@ -19,8 +19,10 @@ This is performed in a series of steps, including:
 .. image:: /_static/tedana-workflow.png
   :align: center
 
+
+***************
 Multi-echo data
-```````````````
+***************
 
 Here are the echo-specific time series for a single voxel in an example
 resting-state scan with 8 echoes.
@@ -32,8 +34,11 @@ manner.
 
 .. image:: /_static/a02_echo_value_distributions.png
 
+
+************************
 Adaptive mask generation
-````````````````````````
+************************
+
 :func:`tedana.utils.make_adaptive_mask`
 
 Longer echo times are more susceptible to signal dropout, which means that
@@ -61,8 +66,11 @@ value for that voxel in the adaptive mask.
   :width: 600 px
   :align: center
 
+
+*******************************
 Monoexponential decay model fit
-```````````````````````````````
+*******************************
+
 :func:`tedana.decay.fit_decay`
 
 The next step is to fit a monoexponential decay model to the data in order to
@@ -126,10 +134,13 @@ We can also see where :math:`T_{2}^*` lands on this curve.
 
 .. image:: /_static/a07_monoexponential_decay_model_with_t2.png
 
+
 .. _optimal combination:
 
+*******************
 Optimal combination
-```````````````````
+*******************
+
 :func:`tedana.combine.make_optcom`
 
 Using the :math:`T_{2}^*` estimates, ``tedana`` combines signal across echoes using a
@@ -169,8 +180,11 @@ This optimally combined data is written out as **desc-optcom_bold.nii.gz**
     We do, however, make it accessible as an alternative combination method
     in :func:`tedana.workflows.t2smap_workflow`.
 
+
+*********
 Denoising
-`````````
+*********
+
 The next step is an attempt to remove noise from the data.
 This process can be broadly separated into three steps: **decomposition**,
 **metric calculation** and **component selection**.
@@ -186,8 +200,10 @@ to produce the denoised data output.
 .. _independent component Analysis (ICA): https://en.wikipedia.org/wiki/Independent_component_analysis
 
 
+******
 TEDPCA
-``````
+******
+
 :func:`tedana.decomposition.tedpca`
 
 The next step is to dimensionally reduce the data with TE-dependent principal
@@ -268,10 +284,13 @@ in a dimensionally reduced version of the dataset which is then used in the
 .. _here: https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence#Relationship_between_models_and_reality
 .. _MDL: https://en.wikipedia.org/wiki/Minimum_description_length
 
+
 .. _TEDICA:
 
+******
 TEDICA
-``````
+******
+
 :func:`tedana.decomposition.tedica`
 
 Next, ``tedana`` applies TE-dependent independent component analysis (ICA) in
@@ -324,8 +343,10 @@ yielding a denoised timeseries, which is saved as **desc-optcomDenoised_bold.nii
 .. image:: /_static/a15_denoised_data_timeseries.png
 
 
+*********************************************
 Removal of spatially diffuse noise (optional)
-`````````````````````````````````````````````
+*********************************************
+
 :func:`tedana.gscontrol.gscontrol_raw`, :func:`tedana.gscontrol.gscontrol_mmix`
 
 Due to the constraints of ICA, TEDICA is able to identify and remove spatially

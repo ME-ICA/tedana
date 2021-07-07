@@ -1,19 +1,24 @@
-*********************
+#####################
 About multi-echo fMRI
-*********************
+#####################
 
+
+************************
 What is multi-echo fMRI?
-========================
+************************
+
 Most echo-planar image (EPI) sequences collect a single brain image following
 a radio frequency (RF) pulse, at a rate known as the repetition time (TR).
 This typical approach is known as single-echo fMRI.
 In contrast, multi-echo (ME) fMRI refers to collecting data at multiple echo times,
 resulting in multiple volumes with varying levels of contrast acquired per RF pulse.
 
+
 .. _multi-echo physics:
 
 The physics of multi-echo fMRI
-------------------------------
+==============================
+
 Multi-echo fMRI data is obtained by acquiring multiple echo times (commonly called
 `TEs`_) for each MRI volume during data collection.
 While fMRI signal contains important neural information (termed the blood
@@ -72,7 +77,8 @@ For a more comprehensive review of these topics and others, see `Kundu et al. (2
 
 
 Why use multi-echo?
--------------------
+===================
+
 There are many potential reasons an investigator would be interested in using multi-echo EPI (ME-EPI).
 Among these are the different levels of analysis ME-EPI enables.
 Specifically, by collecting multi-echo data, researchers are able to:
@@ -102,16 +108,21 @@ We can use this information to denoise the optimally combined time series.
 
 
 Considerations for ME-fMRI
---------------------------
+==========================
+
 Multi-echo fMRI acquisition sequences and analysis methods are rapidly maturing.
 Someone who has access to a multi-echo fMRI sequence should seriously consider using it.
 
+
 Costs and benefits of multi-echo fMRI
--------------------------------------
+=====================================
+
 The following are a few points to consider when deciding whether or not to collect multi-echo data.
 
+
 Possible increase in TR
-```````````````````````
+-----------------------
+
 The one difference with multi-echo is a slight time cost.
 For multi-echo fMRI, the shortest echo time (TE) is essentially free since it is collected in the
 gap between the RF pulse and the single-echo acquisition.
@@ -128,8 +139,10 @@ Instead of compromising on slice coverage or TR, one can increase acceleration.
 If one increases acceleration, it is worth doing an empirical comparison to make sure there
 isn't a non-trivial loss in SNR or an increase of artifacts.
 
+
 Weighted averaging may lead to an increase in SNR
-`````````````````````````````````````````````````
+-------------------------------------------------
+
 Multiple studies have shown that a weighted average of the echoes to optimize
 T2* weighting, sometimes called "optimally combined," gives a reliable, modest
 boost in data quality.
@@ -140,8 +153,10 @@ In tedana, the weighted average can be calculated with
 If no other acquisition compromises are necessary to acquire multi-echo data,
 this boost is worthwhile.
 
+
 Consider the life of the dataset
-````````````````````````````````
+--------------------------------
+
 If other compromises are necessary, consider the life of the data set.
 If data is being acquired for a discrete study that will be acquired, analyzed,
 and published in a year or two, it might not be worth making compromises to
@@ -159,8 +174,10 @@ still being actively developed.
 Users need to have the time and knowledge to look at the denoising output from
 every run to make sure denoising worked as intended.
 
+
 You may recover signal in areas affected by dropout
-```````````````````````````````````````````````````
+---------------------------------------------------
+
 Typical single echo fMRI uses an echo time that is appropriate for signal
 across most of the brain.
 While this is effective, it also leads to drop out in regions with low
@@ -170,8 +187,10 @@ If your research question could benefit from having improved signal
 characteristics in regions such as the orbitofrontal cortex, ventral temporal
 cortex or the ventral striatum then multi-echo fMRI may be beneficial.
 
+
 Consider the cost of added quality control
-``````````````````````````````````````````
+------------------------------------------
+
 The developers of ``tedana`` strongly support always examining data for quality
 concerns, whether or not multi-echo fMRI is used.
 Multi-echo data and denoising are no exception.
@@ -181,11 +200,15 @@ See :ref:`outputs` for more information on these outputs.
 
 .. _t2smap: https://tedana.readthedocs.io/en/latest/usage.html#run-t2smap
 
+
+*************************
 Acquiring multi-echo data
-=========================
+*************************
+
 
 Available multi-echo fMRI sequences
------------------------------------
+===================================
+
 We have attempted to compile some basic multi-echo fMRI protocols in an `OSF project`_.
 The parameter choices in these protocols run and seem reasonable, but they have
 not been optimized for a specific situation.
@@ -196,9 +219,11 @@ and make sure to run pilot scans to test your choices.
 
 .. _OSF project: https://osf.io/ebkrp/
 
+
 Siemens
-```````
-**For Siemens** users, there are two options for Works In Progress (WIPs) Sequences.
+-------
+
+**For Siemens users**, there are two options for Works In Progress (WIPs) Sequences.
 
 * | The Center for Magnetic Resonance Research at the University of Minnesota
   | provides a custom MR sequence that allows users to collect multiple echoes
@@ -217,7 +242,8 @@ Siemens
 
 
 GE
-```
+--
+
 **For GE users**, there are currently two sharable pulse sequences:
 
 * Multi-echo EPI (MEPI) – Software releases: DV24, MP24 and DV25 (with offline recon)
@@ -233,9 +259,11 @@ of the current ATSM (i.e. prototypes).
 
 .. _GE Collaboration Portal: https://collaborate.mr.gehealthcare.com
 
+
 Philips
-```````
-**For Philips** users, sequences can be defined using product software.
+-------
+
+**For Philips users**, sequences can be defined using product software.
 
 Multi-echo EPI (ME-EPI) can be acquired using the product software and can be combined with
 SENSE parallel imaging and MultiBand.
@@ -246,8 +274,10 @@ As a starting point to develop a 3 echo EPI protocol start by opening the defaul
 modify the following: increase number of echoes to 3 on the Contrast tab, set SENSE = 3, MB-SENSE = 3,
 set to 3mm isotropic voxels and adjust TEs to your preference.
 
+
 Other available multi-echo MRI sequences
-----------------------------------------
+========================================
+
 In addition to ME-fMRI, other MR sequences benefit from acquiring multiple
 echoes, including T1-weighted imaging (MEMPRAGE) and susceptibility weighted imaging.
 While most of these kinds of sequences fall outside the purview of this documentation,
@@ -272,8 +302,10 @@ learning more about this topic.
 .. _Cohen-Adad et al. (2012): https://doi.org/10.1016/j.neuroimage.2012.01.053
 .. _Ruuth et al. (2019): https://doi.org/10.1016/j.ejro.2018.12.006
 
+
 Acquisition parameter recommendations
--------------------------------------
+=====================================
+
 There is no empirically tested best parameter set for multi-echo fMRI acquisition.
 The guidelines for optimizing parameters are similar to single-echo fMRI.
 For multi-echo fMRI, the same factors that may guide priorities for single echo
@@ -318,7 +350,8 @@ and guidelines are discussed in the `appendix of Dipasquale et al. (2017)`_.
 .. _common multi-echo parameters:
 
 ME-fMRI parameters
-------------------
+==================
+
 The following section highlights a selection of parameters collected from published papers that have
 used multi-echo fMRI.
 You can see the spreadsheet of publications at :ref:`spreadsheet of publications`.
@@ -361,10 +394,12 @@ The following plots reflect the average values for studies conducted at 3 Tesla.
     plt.ylabel('Count')
     plt.show()
 
+
 .. _constructing ME-EPI pipelines:
 
+**************************
 Processing multi-echo fMRI
-==========================
+**************************
 
 ``tedana`` must be called in the context of a larger ME-EPI preprocessing pipeline.
 Two common pipelines which support ME-EPI processing include `fMRIPrep`_ and `afni_proc.py`_.
@@ -374,8 +409,9 @@ There are several general principles to keep in mind when constructing ME-EPI pr
 
 In general, we recommend
 
+
 1. Perform slice timing correction and motion correction **before** ``tedana``
-------------------------------------------------------------------------------
+==============================================================================
 
 Similarly to single-echo EPI data, slice time correction allows us to assume that voxels across
 slices represent roughly simultaneous events.
@@ -388,8 +424,9 @@ For single-echo EPI data, that excitation time would be the same regardless of t
 and the same is true when one is collecting multiple echoes after a single excitation pulse.
 Therefore, we suggest using the same slice timing for all echoes in an ME-EPI series.
 
+
 2. Perform distortion correction, spatial normalization, smoothing, and any rescaling or filtering **after** ``tedana``
------------------------------------------------------------------------------------------------------------------------
+=======================================================================================================================
 
 When preparing ME-EPI data for multi-echo denoising as in ``tedana``, it is important
 not to do anything that mean shifts the data or otherwise separately
@@ -411,11 +448,15 @@ and apply the resulting transformation to all echoes.
     See the description of ``tedana``'s :doc:`approach <\approach>` for more details
     on how T2* values are calculated.
 
+
+*****************
 General Resources
-=================
+*****************
+
 
 Journal articles describing multi-echo methods
-----------------------------------------------
+==============================================
+
 * | :ref:`spreadsheet of publications` catalogues papers using multi-echo fMRI,
   | with information about acquisition parameters.
 * | `Multi-echo acquisition`_
@@ -436,8 +477,10 @@ Journal articles describing multi-echo methods
 .. _Enhanced identification of BOLD-like components with MESMS and MEICA: https://www.ncbi.nlm.nih.gov/pubmed/25743045
 .. _Comparing resting state fMRI de-noising approaches using multi- and single-echo acquisitions: https://www.ncbi.nlm.nih.gov/pubmed/28323821
 
+
 Videos
-------
+======
+
 * An `educational session from OHBM 2017`_ by Dr. Prantik Kundu about multi-echo denoising
 * A `series of lectures from the OHBM 2017 multi-echo session`_ on multiple facets of multi-echo data analysis
 * | Multi-echo fMRI lecture from the `2018 NIH FMRI Summer Course`_ by Javier Gonzalez-Castillo
@@ -448,8 +491,10 @@ Videos
 .. _2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/course/fmrif_course/2018/14_Javier_20180713
 .. _Slides from 2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/COURSE/fmrif_course/2018/content/14_Javier_20180713.pdf
 
+
 Multi-echo preprocessing software
----------------------------------
+=================================
+
 tedana requires data that has already been preprocessed for head motion, alignment, etc.
 
 AFNI can process multi-echo data natively as well as apply tedana denoising through the use of
@@ -465,8 +510,10 @@ For more details, see the `fmriprep workflows page`_.
 
 Currently SPM and FSL do not natively support multi-echo fmri data processing.
 
+
 Other software that uses multi-echo fMRI
-----------------------------------------
+========================================
+
 ``tedana`` represents only one approach to processing multi-echo data.
 Currently there are a number of methods that can take advantage of or use the
 information contained in multi-echo data.
@@ -499,8 +546,10 @@ These include:
 .. _Dual Echo Denoising: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3518782/
 .. _qMRLab: https://github.com/qMRLab/qMRLab
 
+
 Datasets
---------
+========
+
 A number of multi-echo datasets have been made public so far.
 This list is not necessarily up to date, so please check out OpenNeuro to potentially find more.
 
@@ -516,10 +565,12 @@ This list is not necessarily up to date, so please check out OpenNeuro to potent
 .. _Valence processing differs across stimulus modalities: https://openneuro.org/datasets/ds001491
 .. _Cambridge Centre for Ageing Neuroscience (Cam-CAN): https://camcan-archive.mrc-cbu.cam.ac.uk/dataaccess/
 
+
 .. _spreadsheet of publications:
 
 Publications using multi-echo fMRI
-----------------------------------
+==================================
+
 You can view and suggest additions to this spreadsheet `here`_
 This is a volunteer-led effort so, if you know of a excluded publication, whether or not it is yours,
 please add it.

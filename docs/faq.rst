@@ -1,9 +1,13 @@
 
+###
 FAQ
-===
+###
 
+
+************************************
 [tedana] ICA has failed to converge.
-------------------------------------
+************************************
+
 The TEDICA step may fail to converge if TEDPCA is either too strict
 (i.e., there are too few components) or too lenient (there are too many).
 
@@ -14,14 +18,19 @@ If you are confident that your data have been preprocessed correctly prior to
 applying tedana, and you encounter this problem, please submit a question to `NeuroStars`_.
 
 
+
+********************************************************************************
 [tedana] I think that some BOLD ICA components have been misclassified as noise.
---------------------------------------------------------------------------------
+********************************************************************************
+
 ``tedana`` allows users to manually specify accepted components when calling the pipeline.
 You can use the ``--manacc`` argument to specify the indices of components to accept.
 
 
+*************************************************************************************
 [tedana] Why isn't v3.2 of the component selection algorithm supported in ``tedana``?
--------------------------------------------------------------------------------------
+*************************************************************************************
+
 There is a lot of solid logic behind the updated version of the TEDICA component
 selection algorithm, first added to the original ME-ICA codebase `here`_ by Dr. Prantik Kundu.
 However, we (the ``tedana`` developers) have encountered certain difficulties
@@ -31,8 +40,11 @@ the v3.2 code, with the goal of revisiting it when ``tedana`` is more stable.
 
 Anyone interested in using v3.2 may compile and install an earlier release (<=0.0.4) of ``tedana``.
 
+
+*************************************************
 [tedana] What is the warning about ``duecredit``?
--------------------------------------------------
+*************************************************
+
 ``duecredit`` is a python package that is used, but not required by ``tedana``.
 These warnings do not affect any of the processing within the ``tedana``.
 To avoid this warning, you can install ``duecredit`` with ``pip install duecredit``.
@@ -47,16 +59,22 @@ the citation and visibility of software or methods, visit the `duecredit`_ GitHu
 .. _fMRIPrep: https://fmriprep.readthedocs.io
 .. _afni_proc.py: https://afni.nimh.nih.gov/pub/dist/doc/program_help/afni_proc.py.html
 
+
+*******************************************************************
 [ME-fMRI] Does multi-echo fMRI require more radio frequency pulses?
--------------------------------------------------------------------
+*******************************************************************
+
 While multi-echo does lead to collecting more images during each TR (one per echo), there is still only a single
 radiofrequency pulse per TR. This means that there is no change in the `specific absorption rate`_ (SAR) limits
 for the participant.
 
 .. _specific absorption rate: https://www.mr-tip.com/serv1.php?type=db1&dbs=Specific%20Absorption%20Rate
 
+
+*********************************************************************************
 [ME-fMRI] Can I combine multiband (simultaneous multislice) with multi-echo fMRI?
----------------------------------------------------------------------------------
+*********************************************************************************
+
 Yes, these techniques are complementary.
 Multiband fMRI leads to collecting multiple slices within a volume  simultaneously, while multi-echo
 fMRI is instead related to collecting multiple unique volumes.
