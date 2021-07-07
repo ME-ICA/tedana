@@ -1,8 +1,8 @@
 .. _support_ref:
 
-*************************
+#########################
 Support and communication
-*************************
+#########################
 
 All bugs, concerns and enhancement requests for this software can be submitted here: https://github.com/ME-ICA/tedana/issues.
 
@@ -18,8 +18,10 @@ We will also attempt to archive certain common questions and associate answers i
 .. _NeuroStars: https://neurostars.org
 .. _tedana tag: https://neurostars.org/tags/tedana
 
+
+*******************************
 Internal Communication Pathways
-===============================
+*******************************
 
 There are multiple mechanisms for development-related communication, which can lead to confusion.
 Here we attempt to clarify when and how each communication pathway should be used:
