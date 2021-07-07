@@ -18,8 +18,9 @@ approaches, and to support communal resources for multi-echo fMRI, whether
 or not they directly involve the tedana software.
 
 
+***************
 Scope of tedana
-===============
+***************
 
 tedana is a collection of tools, software and a community related to echo time
 (TE) dependent analyses. The umbrella of tedana covers a number of overlapping,
@@ -32,7 +33,7 @@ are ready for further analyses.
 
 
 Acquisition
------------
+===========
 
 While the development of multi-echo sequences is beyond the current scope
 of tedana, the tedana community is committed to providing guidelines on current
@@ -53,7 +54,7 @@ Acquisition related details can be found in the `tedana Documentation.`_
 
 
 Combining echoes
-----------------
+================
 
 An early step in processing data collected with multiple echoes is the
 combination of the data into a single time series. We currently implement
@@ -62,7 +63,7 @@ to be developed. This is an area of active development and interest.
 
 
 Denoising
----------
+=========
 
 tedana was developed out of a package known as `multi-echo ICA, ME-ICA, or MEICA`_
 developed by Dr. Prantik Kundu. Though the usage of ICA for classification of
@@ -88,7 +89,7 @@ that use information across multiple runs are welcome.
 
 
 Visualization
--------------
+=============
 
 As part of the processing stream, tedana provides figures and an
 HTML-based report for inspecting results. These are intended to help
@@ -98,7 +99,7 @@ will continue to improve the reports and add new information as needed.
 
 
 Community
----------
+=========
 
 tedana is intended to be a community of multi-echo users. The primary resource
 is the github repository and related documentation. In addition, the tedana
@@ -108,7 +109,7 @@ group will attempt to answer multi-echo related questions on NeuroStars
 
 
 What tedana isn’t
------------------
+=================
 
 While the list of things that do not fall under the scope of tedana are
 infinite, it is worth mentioning a few points:
@@ -126,8 +127,9 @@ infinite, it is worth mentioning a few points:
   of analysis, these methods will not be included in the tedana package.
 
 
+***********************************************
 Metrics of success and corresponding milestones
------------------------------------------------
+***********************************************
 
 We will know that we have been successful in creating ``tedana`` when we have succeeded in providing
 several concrete deliverables, which can be broadly categorized into:
