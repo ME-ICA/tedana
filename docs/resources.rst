@@ -107,12 +107,29 @@ This list is not necessarily up to date, so please check out OpenNeuro to potent
 
 Publications using multi-echo fMRI
 ----------------------------------
-You can view and suggest additions to this spreadsheet `here`_
-This is a volunteer-led effort so, if you know of a excluded publication, whether or not it is yours,
-please add it.
+The sheet at the bottom of this page contains an extensive list of multi-echo
+fMRI publications. You can view and suggest additions to this spreadsheet `here`_.
+This is a volunteer-led effort so, if you know of a excluded publication,
+whether or not it is yours, please add it.
+
+.. _here: https://docs.google.com/spreadsheets/d/1WERojJyxFoqcg_tndUm5Kj0H1UfUc9Ban0jFGGfPaBk/edit#gid=0
+
+
+Interactive visualizations of publications and parameters
+---------------------------------------------------------
+
+You can explore interactive and accessible information about multi-echo
+studies from the list of publications below, their study design parameters,
+and MRI sequence parameter options using `this web application`_. If you'd
+like to add more studies, parameters or visualization options to the
+application, feel free to create an issue or send a pull request on the
+application's `GitHub repository`_.
+
+.. _this web application: https://me-fmri-overview.herokuapp.com/
+.. _GitHub repository: https://github.com/jsheunis/me-fmri-overview
+
+------------
 
 .. raw:: html
 
-    <iframe style="position: absolute; height: 60%; width: 60%; border: none" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vS0nEVp27NpwdzPunvMLflyKzcZbCo4k2qPk5zxEiaoJTD_IY1OGbWICizogAEZlTyL7d_7aDA92uwf/pubhtml?widget=true&amp;headers=false"></iframe>
-
-.. _here: https://docs.google.com/spreadsheets/d/1WERojJyxFoqcg_tndUm5Kj0H1UfUc9Ban0jFGGfPaBk/edit#gid=0
+  <iframe style="position: absolute; height: 60%; width: 60%; border: none" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vS0nEVp27NpwdzPunvMLflyKzcZbCo4k2qPk5zxEiaoJTD_IY1OGbWICizogAEZlTyL7d_7aDA92uwf/pubhtml?widget=true&amp;headers=false"></iframe>
