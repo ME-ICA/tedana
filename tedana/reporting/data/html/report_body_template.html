@@ -1,31 +1,155 @@
 <style type="text/css">
-    .content {
-        padding: 35px 20px 10px 20px;
-        margin-left: 50px;
-        margin-top: 50px;
-        height: 3100px;
-    }
-    .about {
-        position: relative;
-        top: -50px;
-        margin-left: 5%;
-        margin-right: 5%;
-        white-space: pre-line;
-        font-family: Arial, Helvetica, sans-serif;
-        font-size: larger;
-    }
- .carpet_style {
-     left: -810px !important;
-     top: 900px !important;
- }
+  .content {
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-bottom: 150px;
+    height: auto;
+  }
 
+  .about {
+    position: relative;
+    top: -50px;
+    margin-left: 5%;
+    margin-right: 5%;
+    white-space: pre-line;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: larger;
+  }
+
+  .carpet-plots {
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-bottom: 100px;
+  }
+
+  button {
+    margin-right: 15px;
+    width: auto;
+    border-radius: 6px;
+    border-top: none;
+    text-align: center;
+    color: black;
+    padding: 10px;
+    float: left;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  button:hover {
+    opacity: 0.8;
+  }
+
+  button:active {
+    width: auto;
+    border-radius: 6px;
+    border-top: none;
+    text-align: center;
+    color: black;
+    padding: 10px;
+    margin-top: 3px;
+    float: left;
+  }
+
+  .blue {
+    background: #8caef9;
+    border-bottom: #6684c6 3px solid;
+    border-left: #6684c6 1px solid;
+    border-right: #6684c6 1px solid;
+  }
+
+  .blue:active {
+    background: #7fa5f8;
+    border-bottom: #6684c6 1px solid;
+    border-left: #6684c8 1px solid;
+    border-right: #6684c6 1px solid;
+  }
+
+  .red {
+    background: #ec5e57;
+    border-bottom: #bb3d36 3px solid;
+    border-left: #bb3d36 1px solid;
+    border-right: #bb3d36 1px solid;
+  }
+
+  .red:active {
+    background: #ea4c44;
+    border-bottom: #bb3d36 1px solid;
+    border-left: #bb3d36 1px solid;
+    border-right: #bb3d36 1px solid;
+  }
+
+  .green {
+    background: #74ca74;
+    border-bottom: #509d51 3px solid;
+    border-left: #509d51 1px solid;
+    border-right: #509d51 1px solid;
+  }
+
+  .green:active {
+    background: #64c465;
+    border-bottom: #509d51 1px solid;
+    border-left: #509d51 1px solid;
+    border-right: #509d51 1px solid;
+  }
+
+  .yellow {
+    background: #f7ce5f;
+    border-bottom: #c5a13e 3px solid;
+    border-left: #c5a13e 1px solid;
+    border-right: #c5a13e 1px solid;
+  }
+
+  .yellow:active {
+    background: #f6c94d;
+    border-bottom: #c5a13e 1px solid;
+    border-left: #c5a13e 1px solid;
+    border-right: #c5a13e 1px solid;
+  }
 </style>
+<script language="javascript">
+  function updateCarpetPlot(name) {
+    if (name == "optcom") {
+      document.getElementById("imgCarpetPlot").src =
+        "./figures/carpet_optcom.svg";
+    } else if (name == "denoised") {
+      document.getElementById("imgCarpetPlot").src =
+        "./figures/carpet_denoised.svg";
+    } else if (name == "accepted") {
+      document.getElementById("imgCarpetPlot").src =
+        "./figures/carpet_accepted.svg";
+    } else if (name == "rejected") {
+      document.getElementById("imgCarpetPlot").src =
+        "./figures/carpet_rejected.svg";
+    }
+  }
+</script>
 <div class="content">
-    $content
+  <h1>ICA components</h1>
+  $content
+</div>
+<div class="carpet-plots">
+  <h1>Carpet plots</h1>
+  <div class="carpet-buttons">
+    <button class="blue" type="button" onClick="updateCarpetPlot('optcom')">
+      Optimally combined
+    </button>
+    <button class="yellow" type="button" onClick="updateCarpetPlot('denoised')">
+      Denoised
+    </button>
+    <button class="green" type="button" onClick="updateCarpetPlot('accepted')">
+      Accepted
+    </button>
+    <button class="red" type="button" onClick="updateCarpetPlot('rejected')">
+      Rejected
+    </button>
+  </div>
+  <div class="carpet-plots-image">
+    <img id="imgCarpetPlot" src="./figures/carpet_optcom.svg" />
+  </div>
 </div>
 <div class="about">
-    <h1>About tedana</h1>
-    $about
+  <h1>About tedana</h1>
+  $about
 </div>
 
 $javascript

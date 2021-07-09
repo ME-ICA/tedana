@@ -73,7 +73,7 @@ def generate_report(io_generator, tr):
     """
     # Load the component time series
     comp_ts_path = io_generator.get_name("ICA mixing tsv")
-    comp_ts_df = pd.read_csv(comp_ts_path, sep='\t', encoding='utf=8')
+    comp_ts_df = pd.read_csv(comp_ts_path, sep="\t", encoding="utf=8")
     n_vols, n_comps = comp_ts_df.shape
 
     # Load the component table
@@ -100,39 +100,6 @@ def generate_report(io_generator, tr):
     for fig in figs:
         df._link_figures(fig, comptable_cds, div_content, io_generator)
 
-    # Create carpet plot div
-    carpet_section = models.Div(
-        text="<span><h1>Carpet plots</h1>",
-    )
-    carpet_optcom = models.Div(
-        text=(
-            "<img src='./figures/carpet_optcom.svg' "
-            "alt='Optimally Combined Data' style='width: 1000px !important'><span>"
-        ),
-        css_classes=["carpet_style"],
-    )
-    carpet_denoised = models.Div(
-        text=(
-            "<img src='./figures/carpet_denoised.svg' "
-            "alt='Denoised Data' style='width: 1000px !important'><span>"
-        ),
-        css_classes=["carpet_style"],
-    )
-    carpet_accepted = models.Div(
-        text=(
-            "<img src='./figures/carpet_accepted.svg' "
-            "alt='High-Kappa Data' style='width: 1000px !important'><span>"
-        ),
-        css_classes=["carpet_style"],
-    )
-    carpet_rejected = models.Div(
-        text=(
-            "<img src='./figures/carpet_rejected.svg' "
-            "alt='Low-Kappa Data' style='width: 1000px !important'><span>"
-        ),
-        css_classes=["carpet_style"],
-    )
-
     # Create a layout
     app = layouts.gridplot(
         [
@@ -143,13 +110,6 @@ def generate_report(io_generator, tr):
                         layouts.row(rho_sorted_plot, kappa_sorted_plot),
                     ),
                     layouts.column(div_content),
-                ),
-                layouts.column(
-                    layouts.row(carpet_section),
-                    layouts.row(carpet_optcom),
-                    layouts.row(carpet_denoised),
-                    layouts.row(carpet_accepted),
-                    layouts.row(carpet_rejected),
                 )
             ]
         ],
@@ -160,10 +120,10 @@ def generate_report(io_generator, tr):
     kr_script, kr_div = embed.components(app)
 
     # Read in relevant methods
-    with open(opj(io_generator.out_dir, 'report.txt'), 'r+') as f:
+    with open(opj(io_generator.out_dir, "report.txt"), "r+") as f:
         about = f.read()
 
     body = _update_template_bokeh(kr_div, about, kr_script)
     html = _save_as_html(body)
-    with open(opj(io_generator.out_dir, 'tedana_report.html'), 'wb') as f:
-        f.write(html.encode('utf-8'))
+    with open(opj(io_generator.out_dir, "tedana_report.html"), "wb") as f:
+        f.write(html.encode("utf-8"))
