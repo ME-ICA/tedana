@@ -1,5 +1,6 @@
 """Tools to collect and generate metrics."""
 import logging
+import os.path as op
 
 import numpy as np
 import pandas as pd
@@ -73,6 +74,10 @@ def generate_metrics(
     mixing : :obj:`numpy.ndarray`
         Mixing matrix after sign flipping and sorting.
     """
+    # Load metric dependency tree from json file
+    dependency_config = op.join(utils.get_resource_path(), "config", "metrics.json")
+    dependency_config = io.load_json(dependency_config)
+
     if metrics is None:
         metrics = ["map weight"]
     RepLGR.info("The following metrics were calculated: {}.".format(", ".join(metrics)))
@@ -101,59 +106,6 @@ def generate_metrics(
     # Derive mask from thresholded adaptive mask
     mask = adaptive_mask >= 3
 
-    INPUTS = [
-        "data_cat",
-        "data_optcom",
-        "mixing",
-        "adaptive_mask",
-        "mask",
-        "tes",
-        "ref_img",
-    ]
-    METRIC_DEPENDENCIES = {
-        "kappa": ["map FT2", "map Z"],
-        "rho": ["map FS0", "map Z"],
-        "countnoise": ["map Z", "map Z clusterized"],
-        "countsigFT2": ["map FT2 clusterized"],
-        "countsigFS0": ["map FS0 clusterized"],
-        "dice_FT2": ["map beta T2 clusterized", "map FT2 clusterized"],
-        "dice_FS0": ["map beta S0 clusterized", "map FS0 clusterized"],
-        "signal-noise_t": ["map Z", "map Z clusterized", "map FT2"],
-        "variance explained": ["map optcom betas"],
-        "normalized variance explained": ["map weight"],
-        "d_table_score": [
-            "kappa",
-            "dice_FT2",
-            "signal-noise_t",
-            "countnoise",
-            "countsigFT2",
-        ],
-        "map FT2": ["map Z", "mixing", "tes", "data_cat", "adaptive_mask"],
-        "map FS0": ["map Z", "mixing", "tes", "data_cat", "adaptive_mask"],
-        "map Z": ["map weight"],
-        "map weight": ["data_optcom", "mixing"],
-        "map optcom betas": ["data_optcom", "mixing"],
-        "map percent signal change": ["data_optcom", "map optcom betas"],
-        "map Z clusterized": ["map Z", "mask", "ref_img", "tes"],
-        "map FT2 clusterized": ["map FT2", "mask", "ref_img", "tes"],
-        "map FS0 clusterized": ["map FS0", "mask", "ref_img", "tes"],
-        "map beta T2 clusterized": [
-            "map FT2 clusterized",
-            "map optcom betas",
-            "countsigFT2",
-            "mask",
-            "ref_img",
-            "tes",
-        ],
-        "map beta S0 clusterized": [
-            "map FS0 clusterized",
-            "map optcom betas",
-            "countsigFS0",
-            "mask",
-            "ref_img",
-            "tes",
-        ],
-    }
     # Apply masks before anything else
     data_cat = data_cat[mask, ...]
     data_optcom = data_optcom[mask, :]
@@ -165,7 +117,11 @@ def generate_metrics(
     # Get reference image from io_generator
     ref_img = io_generator.reference_img
 
-    required_metrics = dependency_resolver(METRIC_DEPENDENCIES, metrics, INPUTS)
+    required_metrics = dependency_resolver(
+        dependency_config["dependencies"],
+        metrics,
+        dependency_config["inputs"],
+    )
 
     # Use copy to avoid changing the original variable outside of this function
     mixing = mixing.copy()

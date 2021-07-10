@@ -39,6 +39,7 @@ jobs:
       - run:
           name: Generate environment
           command: |
+            apt-get update
             apt-get install -yqq make
             if [ ! -d /opt/conda/envs/tedana_py36 ]; then
               conda create -yq -n tedana_py36 python=3.6
@@ -72,6 +73,7 @@ jobs:
       - run:
           name: Running unit tests
           command: |
+            apt-get update
             apt-get install -y make
             source activate tedana_py37  # depends on makeenv_37
             make unittest
@@ -93,6 +95,7 @@ jobs:
       - run:
           name: Generate environment
           command: |
+            apt-get update
             apt-get install -yqq make
             if [ ! -d /opt/conda/envs/tedana_py38 ]; then
               conda create -yq -n tedana_py38 python=3.8
@@ -126,6 +129,7 @@ jobs:
       - run:
           name: Generate environment
           command: |
+            apt-get update
             apt-get install -yqq make
             if [ ! -d /opt/conda/envs/tedana_py39 ]; then
               conda create -yq -n tedana_py39 python=3.9
@@ -159,6 +163,7 @@ jobs:
       - run:
           name: Style check
           command: |
+            apt-get update
             apt-get install -yqq make
             source activate tedana_py37  # depends on makeenv37
             make lint
@@ -175,6 +180,7 @@ jobs:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
+            apt-get update
             apt-get install -yqq make
             source activate tedana_py37  # depends on makeenv_37
             make three-echo
@@ -199,6 +205,7 @@ jobs:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
+            apt-get update
             apt-get install -yqq make
             source activate tedana_py37  # depends on makeenv_37
             make four-echo
@@ -223,6 +230,7 @@ jobs:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
+            apt-get update
             apt-get install -yqq make
             source activate tedana_py37  # depends on makeenv_37
             make five-echo
@@ -247,6 +255,7 @@ jobs:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
+            apt-get update
             apt-get install -yqq make
             source activate tedana_py37  # depends on makeenv_37
             make t2smap
@@ -272,6 +281,7 @@ jobs:
       - run:
           name: Merge coverage files
           command: |
+            apt-get update
             apt-get install -yqq curl
             source activate tedana_py37  # depends on makeenv37
             cd /tmp/src/coverage/
