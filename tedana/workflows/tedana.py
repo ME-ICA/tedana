@@ -755,8 +755,10 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         fo.write(report)
 
     # Save system info to json
-    system_info = utils.get_system_info()
-    io_generator.save_file(system_info, "System info json")
+    info_dict = utils.get_system_info()
+    info_dict["Python"] = sys.version
+    info_dict["Tedana"] = __version__
+    io_generator.save_file(info_dict, "System info json")
 
     if not no_reports:
         LGR.info('Making figures folder with static component maps and '
