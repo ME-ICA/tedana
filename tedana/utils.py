@@ -384,3 +384,19 @@ def get_resource_path():
     Based on function by Yaroslav Halchenko used in Neurosynth Python package.
     """
     return op.abspath(op.join(op.dirname(__file__), "resources") + op.sep)
+
+
+def get_system_info():
+    """Return information about the system tedana is being run on."""
+    system_info = platform.uname()
+
+    system_dict = {
+        "System": system_info.system,
+        "Node": system_info.node,
+        "Release": system_info.release,
+        "Version": system_info.version,
+        "Machine": system_info.machine,
+        "Processor": system_info.processor,
+    }
+
+    return system_dict

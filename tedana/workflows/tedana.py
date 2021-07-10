@@ -754,6 +754,10 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     with open(repname, 'w') as fo:
         fo.write(report)
 
+    # Save system info to json
+    system_info = utils.get_system_info()
+    io_generator.save_file(system_info, "System info json")
+
     if not no_reports:
         LGR.info('Making figures folder with static component maps and '
                  'timecourse plots.')
