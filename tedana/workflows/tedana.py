@@ -421,6 +421,13 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         verbose=verbose,
     )
 
+    # Save system info to json
+    info_dict = utils.get_system_info()
+    info_dict["Python"] = sys.version
+    info_dict["Tedana"] = __version__
+    info_dict["Command"] = " ".join(sys.argv)
+    io_generator.save_file(info_dict, "System info json")
+
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
@@ -753,12 +760,6 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     report += '\n\nReferences:\n\n' + references
     with open(repname, 'w') as fo:
         fo.write(report)
-
-    # Save system info to json
-    info_dict = utils.get_system_info()
-    info_dict["Python"] = sys.version
-    info_dict["Tedana"] = __version__
-    io_generator.save_file(info_dict, "System info json")
 
     if not no_reports:
         LGR.info('Making figures folder with static component maps and '

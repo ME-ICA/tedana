@@ -65,10 +65,11 @@ def _generate_info_table(info_dict):
     """
     resource_path = Path(__file__).resolve().parent.joinpath('data', 'html')
 
-    info_template_name = 'report_body_template.html'
+    info_template_name = 'report_info_table_template.html'
     info_template_path = resource_path.joinpath(info_template_name)
     with open(str(info_template_path), 'r') as info_file:
         info_tpl = Template(info_file.read())
+
     info_html = info_tpl.substitute(command=info_dict["Command"],
                                     system=info_dict["System"],
                                     node=info_dict["Node"],
