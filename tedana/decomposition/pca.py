@@ -282,7 +282,12 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
 
     # Save component table and associated json
     temp_comptable = comptable.set_index("Component", inplace=False)
-    io_generator.save_file(temp_comptable, "PCA metrics tsv")
+    temp_comptable.to_csv(
+        io_generator.get_name("PCA metrics tsv"),
+        index=True,
+        index_label="Component",
+        sep='\t',
+    )
 
     metric_metadata = metrics.collect.get_metadata(temp_comptable)
     io_generator.save_file(metric_metadata, "PCA metrics json")
