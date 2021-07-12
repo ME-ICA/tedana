@@ -365,6 +365,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     utils.setup_loggers(logname, repname, refname, quiet=quiet, debug=debug)
 
     LGR.info('Using output directory: {}'.format(out_dir))
+    raise Exception(LGR.handlers)
 
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
