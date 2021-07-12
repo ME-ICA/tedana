@@ -109,44 +109,6 @@ def flip_components(*args, signs):
     return [arg * signs for arg in args]
 
 
-def sort_df(df, by="kappa", ascending=False):
-    """Sort DataFrame and get index.
-
-    Parameters
-    ----------
-    df : :obj:`pandas.DataFrame`
-        DataFrame to sort.
-    by : :obj:`str` or None, optional
-        Column by which to sort the DataFrame. Default is 'kappa'.
-    ascending : :obj:`bool`, optional
-        Whether to sort the DataFrame in ascending (True) or descending (False)
-        order. Default is False.
-
-    Returns
-    -------
-    df : :obj:`pandas.DataFrame`
-        DataFrame after sorting, with index resetted.
-    argsort : array_like
-        Sorting index.
-    """
-    if by is None:
-        return df, df.index.values
-
-    # Order of kwargs is preserved at 3.6+
-    argsort = df[by].argsort()
-    if not ascending:
-        argsort = argsort[::-1]
-    df = df.loc[argsort].reset_index(drop=True)
-    return df, argsort
-
-
-def apply_sort(*args, sort_idx, axis=0):
-    """Apply a sorting index to an arbitrary set of arrays."""
-    for arg in args:
-        assert arg.shape[axis] == len(sort_idx)
-    return [np.take(arg, sort_idx, axis=axis) for arg in args]
-
-
 def check_mask(data, mask):
     """Check that no zero-variance voxels remain in masked data.
 

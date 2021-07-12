@@ -57,8 +57,6 @@ def test_smoke_generate_metrics(testdata1):
         testdata1["generator"],
         'ICA',
         metrics=metrics,
-        sort_by="kappa",
-        ascending=False,
     )
     assert isinstance(comptable, pd.DataFrame)
 

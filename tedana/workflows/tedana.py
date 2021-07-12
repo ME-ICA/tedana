@@ -570,7 +570,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             comptable, mmix = metrics.collect.generate_metrics(
                 catd, data_oc, mmix_orig, masksum, tes,
                 io_generator, 'ICA',
-                metrics=required_metrics, sort_by='kappa', ascending=False,
+                metrics=required_metrics,
             )
             comptable, metric_metadata = selection.kundu_selection_v2(
                 comptable, n_echos, n_vols
@@ -602,7 +602,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             comptable, mmix = metrics.collect.generate_metrics(
                 catd, data_oc, mmix_orig, masksum, tes,
                 io_generator, 'ICA',
-                metrics=required_metrics, sort_by='kappa', ascending=False
+                metrics=required_metrics,
             )
             comptable, metric_metadata = selection.kundu_selection_v2(
                     comptable, n_echos, n_vols
@@ -638,8 +638,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     decomp_metadata = {
         "Method": (
             "Independent components analysis with FastICA "
-            "algorithm implemented by sklearn. Components "
-            "are sorted by Kappa in descending order. "
+            "algorithm implemented by sklearn. "
             "Component signs are flipped to best match the "
             "data."
         ),
