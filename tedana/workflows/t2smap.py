@@ -191,12 +191,7 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
 
-    if debug and not quiet:
-        logging.basicConfig(level=logging.DEBUG)
-    elif quiet:
-        logging.basicConfig(level=logging.WARNING)
-    else:
-        logging.basicConfig(level=logging.INFO)
+    utils.setup_loggers(quiet=quiet, debug=debug)
 
     LGR.info('Using output directory: {}'.format(out_dir))
 
@@ -290,6 +285,9 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
         ]
     }
     io_generator.save_file(derivative_metadata, 'data description json')
+
+    LGR.info("Workflow completed")
+    utils.teardown_loggers()
 
 
 def _main(argv=None):

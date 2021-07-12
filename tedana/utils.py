@@ -390,7 +390,7 @@ class ContextFilter(logging.Filter):
             return True
 
 
-def setup_loggers(logname, repname, refname, quiet=False, debug=False):
+def setup_loggers(logname=None, repname=None, refname=None, quiet=False, debug=False):
     # Set up the general logger
     log_formatter = logging.Formatter(
         '%(asctime)s\t%(module)s.%(funcName)-12s\t%(levelname)-8s\t%(message)s',
@@ -399,10 +399,11 @@ def setup_loggers(logname, repname, refname, quiet=False, debug=False):
         "%(levelname)-8s %(module)s:%(funcName)s:%(lineno)d %(message)s"
     )
     # set up general logging file and open it for writing
-    log_handler = logging.FileHandler(logname)
-    log_handler.setFormatter(log_formatter)
-    log_handler.addFilter(ContextFilter())
-    LGR.addHandler(log_handler)
+    if logname:
+        log_handler = logging.FileHandler(logname)
+        log_handler.setFormatter(log_formatter)
+        log_handler.addFilter(ContextFilter())
+        LGR.addHandler(log_handler)
 
     stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(stream_formatter)
@@ -418,16 +419,19 @@ def setup_loggers(logname, repname, refname, quiet=False, debug=False):
 
     # Loggers for report and references
     text_formatter = logging.Formatter('%(message)s')
-    rep_handler = logging.FileHandler(repname)
-    rep_handler.setFormatter(text_formatter)
-    ref_handler = logging.FileHandler(refname)
-    ref_handler.setFormatter(text_formatter)
-    RepLGR.setLevel(logging.INFO)
-    RepLGR.addHandler(rep_handler)
-    RepLGR.propagate = False
-    RefLGR.setLevel(logging.INFO)
-    RefLGR.addHandler(ref_handler)
-    RefLGR.propagate = False
+    if repname:
+        rep_handler = logging.FileHandler(repname)
+        rep_handler.setFormatter(text_formatter)
+        RepLGR.setLevel(logging.INFO)
+        RepLGR.addHandler(rep_handler)
+        RepLGR.propagate = False
+
+    if refname:
+        ref_handler = logging.FileHandler(refname)
+        ref_handler.setFormatter(text_formatter)
+        RefLGR.setLevel(logging.INFO)
+        RefLGR.addHandler(ref_handler)
+        RefLGR.propagate = False
 
 
 def teardown_loggers():

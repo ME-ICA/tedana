@@ -679,8 +679,6 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     with open(io_generator.get_name("data description json"), "w") as fo:
         json.dump(derivative_metadata, fo, sort_keys=True, indent=4)
 
-    LGR.info('Workflow completed')
-
     RepLGR.info("This workflow used numpy (Van Der Walt, Colbert, & "
                 "Varoquaux, 2011), scipy (Jones et al., 2001), pandas "
                 "(McKinney, 2010), scikit-learn (Pedregosa et al., 2011), "
@@ -737,10 +735,9 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             LGR.info('Generating dynamic report')
             reporting.generate_report(io_generator, tr=img_t_r)
 
+    LGR.info('Workflow completed')
     utils.teardown_loggers()
     os.remove(refname)
-
-    LGR.info('Workflow completed')
 
 
 def _main(argv=None):
