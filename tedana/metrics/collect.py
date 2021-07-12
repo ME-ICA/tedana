@@ -361,8 +361,10 @@ def generate_metrics(
                 )
 
     # Reorder component table columns based on previous tedana versions
+    # NOTE: Some new columns will be calculated and columns may be reordered during
+    # component selection
     preferred_order = (
-        "kappa", "rho", "variance explained",
+        "Component", "kappa", "rho", "variance explained",
         "normalized variance explained",
         "estimated normalized variance explained",
         "countsigFT2", "countsigFS0",
