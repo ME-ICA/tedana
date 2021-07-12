@@ -74,8 +74,9 @@ def determine_signs(weights, axis=0):
     """
     # compute skews to determine signs based on unnormalized weights,
     signs = stats.skew(weights, axis=axis)
+    signs[signs == 0] = 1  # Default to not flipping
     signs /= np.abs(signs)
-    return signs
+    return signs.astype(int)
 
 
 def flip_components(*args, signs):
