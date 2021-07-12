@@ -2,6 +2,7 @@
 Utilities for tedana package
 """
 import logging
+import os.path as op
 
 import numpy as np
 import nibabel as nib
@@ -159,7 +160,7 @@ def unmask(data, mask):
                   'volume={5},'
                   'pages={1--34}}'),
            description='Introduction of Sorenson-Dice index by Sorenson in 1948.')
-def dice(arr1, arr2):
+def dice(arr1, arr2, axis=None):
     """
     Compute Dice's similarity index between two numpy arrays. Arrays will be
     binarized before comparison.
@@ -168,6 +169,9 @@ def dice(arr1, arr2):
     ----------
     arr1, arr2 : array_like
         Input arrays, arrays to binarize and compare.
+    axis : None or int, optional
+        Axis along which the DSIs are computed.
+        The default is to compute the DSI of the flattened arrays.
 
     Returns
     -------
@@ -186,12 +190,15 @@ def dice(arr1, arr2):
     if arr1.shape != arr2.shape:
         raise ValueError('Shape mismatch: arr1 and arr2 must have the same shape.')
 
-    arr_sum = arr1.sum() + arr2.sum()
-    if arr_sum == 0:
-        dsi = 0
+    if axis is not None and axis > (arr1.ndim - 1):
+        raise ValueError('Axis provided {} not supported by the input arrays.'.format(axis))
+
+    arr_sum = arr1.sum(axis=axis) + arr2.sum(axis=axis)
+    if np.all(arr_sum == 0):
+        dsi = np.zeros(arr_sum.shape)
     else:
         intersection = np.logical_and(arr1, arr2)
-        dsi = (2. * intersection.sum()) / arr_sum
+        dsi = (2. * intersection.sum(axis=axis)) / arr_sum
 
     return dsi
 
@@ -407,8 +414,6 @@ def setup_loggers(logname, repname, refname, quiet=False, debug=False):
     else:
         logging.root.setLevel(logging.INFO)
 
-    # LGR.propagate = False  # do not print to console, except for messages for StreamHandler
-
     # Loggers for report and references
     text_formatter = logging.Formatter('%(message)s')
     rep_handler = logging.FileHandler(repname)
@@ -428,3 +433,12 @@ def teardown_loggers():
         for handler in local_logger.handlers[:]:
             handler.close()
             local_logger.removeHandler(handler)
+
+
+def get_resource_path():
+    """Return the path to general resources, terminated with separator.
+
+    Resources are kept outside package folder in "datasets".
+    Based on function by Yaroslav Halchenko used in Neurosynth Python package.
+    """
+    return op.abspath(op.join(op.dirname(__file__), "resources") + op.sep)

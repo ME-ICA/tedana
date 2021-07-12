@@ -93,11 +93,10 @@ API
 
 .. autosummary::
    :toctree: generated/
-   :template: function.rst
+   :template: module.rst
 
-   tedana.metrics.dependence_metrics
-   tedana.metrics.kundu_metrics
-
+   tedana.metrics.collect
+   tedana.metrics.dependence
 
 .. _api_selection_ref:
 
@@ -161,7 +160,6 @@ API
    tedana.io.add_decomp_prefix
    tedana.io.split_ts
    tedana.io.write_split_ts
-   tedana.io.writefeats
    tedana.io.writeresults
    tedana.io.writeresults_echoes
 

@@ -6,6 +6,7 @@ import numpy as np
 
 from tedana import utils
 from tedana.stats import getfbounds
+from tedana.metrics import collect
 from tedana.selection._utils import (getelbow_cons, getelbow, clean_dataframe)
 
 LGR = logging.getLogger(__name__)
@@ -41,6 +42,9 @@ def kundu_tedpca(comptable, n_echos, kdaw=10., rdaw=1., stabilize=False):
     comptable : :obj:`pandas.DataFrame`
         Component table with components classified as 'accepted', 'rejected',
         or 'ignored'.
+    metric_metadata : :obj:`dict`
+        Dictionary with metadata about calculated metrics.
+        Each entry corresponds to a column in ``comptable``.
     """
     LGR.info('Performing PCA component selection with Kundu decision tree')
     comptable['classification'] = 'accepted'
@@ -123,4 +127,6 @@ def kundu_tedpca(comptable, n_echos, kdaw=10., rdaw=1., stabilize=False):
 
     # Move decision columns to end
     comptable = clean_dataframe(comptable)
-    return comptable
+
+    metric_metadata = collect.get_metadata(comptable)
+    return comptable, metric_metadata
