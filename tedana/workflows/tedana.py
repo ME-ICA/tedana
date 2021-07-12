@@ -766,6 +766,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             lowkts=lowkts,
             mask=mask,
             io_generator=io_generator,
+            gscontrol=gscontrol,
         )
         reporting.static_figures.comp_figures(
             data_oc,

@@ -43,7 +43,7 @@ def _trim_edge_zeros(arr):
     return arr[bounding_box]
 
 
-def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator):
+def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscontrol=None):
     """Generate a set of carpet plots for the combined and denoised data.
 
     Parameters
@@ -107,6 +107,44 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator):
     )
     fig.tight_layout()
     fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_rejected.svg"))
+
+    if (gscontrol is not None) and ("gsr" in gscontrol):
+        optcom_with_gs_img = io_generator.get_name("has gs combined img")
+        fig, ax = plt.subplots(figsize=(14, 7))
+        plotting.plot_carpet(
+            optcom_with_gs_img,
+            mask_img,
+            figure=fig,
+            axes=ax,
+            title="Optimally Combined Data (Pre-GSR)",
+        )
+        fig.tight_layout()
+        fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_optcom_nogsr.svg"))
+
+    if (gscontrol is not None) and ("mir" in gscontrol):
+        mir_denoised_img = io_generator.get_name("mir denoised img")
+        fig, ax = plt.subplots(figsize=(14, 7))
+        plotting.plot_carpet(
+            mir_denoised_img,
+            mask_img,
+            figure=fig,
+            axes=ax,
+            title="Denoised Data (Post-MIR)",
+        )
+        fig.tight_layout()
+        fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_denoised_mir.svg"))
+
+        mir_denoised_img = io_generator.get_name("ICA accepted mir denoised img")
+        fig, ax = plt.subplots(figsize=(14, 7))
+        plotting.plot_carpet(
+            mir_denoised_img,
+            mask_img,
+            figure=fig,
+            axes=ax,
+            title="High-Kappa Data (Post-MIR)",
+        )
+        fig.tight_layout()
+        fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_accepted_mir.svg"))
 
 
 def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):

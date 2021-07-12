@@ -120,6 +120,15 @@
     } else if (name == "rejected") {
       document.getElementById("imgCarpetPlot").src =
         "./figures/carpet_rejected.svg";
+    } else if (name == "denoised_mir") {
+      document.getElementById("imgCarpetPlot").src =
+        "./figures/carpet_denoised_mir.svg";
+    } else if (name == "accepted_mir") {
+      document.getElementById("imgCarpetPlot").src =
+        "./figures/carpet_accepted_mir.svg";
+    } else if (name == "optcom_nogsr") {
+      document.getElementById("imgCarpetPlot").src =
+        "./figures/carpet_optcom_nogsr.svg";
     }
   }
 </script>
@@ -130,14 +139,23 @@
 <div class="carpet-plots">
   <h1>Carpet plots</h1>
   <div class="carpet-buttons">
+    <button class="blue" type="button" onClick="updateCarpetPlot('optcom_nogsr')">
+      Optimally combined with global signal
+    </button>
     <button class="blue" type="button" onClick="updateCarpetPlot('optcom')">
-      Optimally combined
+      Optimally combined without global signal
     </button>
     <button class="yellow" type="button" onClick="updateCarpetPlot('denoised')">
-      Denoised
+      Denoised before MIR
+    </button>
+    <button class="yellow" type="button" onClick="updateCarpetPlot('denoised_mir')">
+      Denoised after MIR
     </button>
     <button class="green" type="button" onClick="updateCarpetPlot('accepted')">
-      Accepted
+      Accepted before MIR
+    </button>
+    <button class="green" type="button" onClick="updateCarpetPlot('accepted_mir')">
+      Accepted after MIR
     </button>
     <button class="red" type="button" onClick="updateCarpetPlot('rejected')">
       Rejected
