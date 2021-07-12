@@ -632,7 +632,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     comp_names = comptable["Component"].values
     mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
     mixing_df.to_csv(io_generator.get_name("ICA mixing tsv"), sep="\t", index=False)
-    betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask_clf), mask_clf)
+    betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask_denoise), mask_denoise)
     io_generator.save_file(betas_oc, 'z-scored ICA components img')
 
     # Save component table and associated json
