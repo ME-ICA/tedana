@@ -58,8 +58,6 @@ def generate_metrics(
     comptable : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index is the component number.
-    mixing : :obj:`numpy.ndarray`
-        Mixing matrix after sign flipping.
     """
     # Load metric dependency tree from json file
     dependency_config = op.join(utils.get_resource_path(), "config", "metrics.json")
@@ -131,6 +129,7 @@ def generate_metrics(
         LGR.info("Calculating weight maps")
         metric_maps["map weight"] = dependence.calculate_weights(data_optcom, mixing)
         signs = determine_signs(metric_maps["map weight"], axis=0)
+        comptable["optimal sign"] = signs
         metric_maps["map weight"], mixing = flip_components(
             metric_maps["map weight"], mixing, signs=signs
         )
@@ -361,8 +360,8 @@ def generate_metrics(
                     echo=(i_echo + 1)
                 )
 
-    # Build new comptable, re-ordered like previous tedana versions
-    previous_order = (
+    # Reorder component table columns based on previous tedana versions
+    preferred_order = (
         "kappa", "rho", "variance explained",
         "normalized variance explained",
         "estimated normalized variance explained",
@@ -372,24 +371,11 @@ def generate_metrics(
         "d_table_score", "kappa ratio", "d_table_score_scrub",
         "classification", "rationale",
     )
-    reordered = pd.DataFrame()
-    for metric in previous_order:
-        if metric in comptable:
-            reordered[metric] = comptable[metric]
-    # Add in things with less relevant order
-    cmp_cols = comptable.columns
-    disordered = set(cmp_cols) & (set(cmp_cols) ^ set(previous_order))
-    for metric in disordered:
-        reordered[metric] = comptable[metric]
-    # Add in component labels with new ordering
-    reordered["Component"] = [
-        io.add_decomp_prefix(
-            comp, prefix=label, max_value=reordered.shape[0]
-        )
-        for comp in reordered.index.values
-    ]
+    first_columns = [col for col in preferred_order if col in comptable.columns]
+    other_columns = [col for col in comptable.columns if col not in preferred_order]
+    comptable = comptable[first_columns + other_columns]
 
-    return reordered, mixing
+    return comptable
 
 
 def get_metadata(comptable):
@@ -607,6 +593,19 @@ def get_metadata(comptable):
                 "and less noise."
             ),
             "Units": "arbitrary",
+        }
+    if "optimal sign" in comptable:
+        metric_metadata["optimal sign"] = {
+            "LongName": "Optimal component sign",
+            "Description": (
+                "Optimal sign determined based on skew direction of component parameter estimates "
+                "across the brain. In cases where components were left-skewed (-1), the component "
+                "time series is flipped prior to metric calculation."
+            ),
+            "Levels": {
+                1: "Component is not flipped prior to metric calculation.",
+                -1: "Component is flipped prior to metric calculation.",
+            },
         }
 
     # There are always components in the comptable, definitionally

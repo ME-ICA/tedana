@@ -550,7 +550,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         n_restarts = 0
         seed = fixed_seed
         while keep_restarting:
-            mmix_orig, seed = decomposition.tedica(
+            mmix, seed = decomposition.tedica(
                 dd, n_components, seed,
                 maxit, maxrestart=(maxrestart - n_restarts)
             )
@@ -567,8 +567,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                 'variance explained', 'normalized variance explained',
                 'd_table_score'
             ]
-            comptable, mmix = metrics.collect.generate_metrics(
-                catd, data_oc, mmix_orig, masksum, tes,
+            comptable = metrics.collect.generate_metrics(
+                catd, data_oc, mmix, masksum, tes,
                 io_generator, 'ICA',
                 metrics=required_metrics,
             )
@@ -590,7 +590,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mixing_file = io_generator.get_name("ICA mixing tsv")
-        mmix_orig = pd.read_table(mixing_file).values
+        mmix = pd.read_table(mixing_file).values
 
         if ctab is None:
             required_metrics = [
@@ -599,8 +599,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                 'variance explained', 'normalized variance explained',
                 'd_table_score'
             ]
-            comptable, mmix = metrics.collect.generate_metrics(
-                catd, data_oc, mmix_orig, masksum, tes,
+            comptable = metrics.collect.generate_metrics(
+                catd, data_oc, mmix, masksum, tes,
                 io_generator, 'ICA',
                 metrics=required_metrics,
             )
@@ -608,7 +608,6 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                     comptable, n_echos, n_vols
             )
         else:
-            mmix = mmix_orig.copy()
             comptable = pd.read_table(ctab)
 
             if manacc is not None:

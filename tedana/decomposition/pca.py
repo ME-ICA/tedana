@@ -233,7 +233,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         'variance explained', 'normalized variance explained',
         'd_table_score'
     ]
-    comptable, _ = metrics.collect.generate_metrics(
+    comptable = metrics.collect.generate_metrics(
         data_cat, data_oc, comp_ts, adaptive_mask,
         tes, io_generator, 'PCA',
         metrics=required_metrics,
