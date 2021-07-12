@@ -638,8 +638,6 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         "Method": (
             "Independent components analysis with FastICA "
             "algorithm implemented by sklearn. "
-            "Component signs are flipped to best match the "
-            "data."
         ),
     }
     for comp_name in comp_names:

@@ -291,7 +291,6 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         "Method": (
             "Principal components analysis implemented by sklearn. "
             "Components are sorted by variance explained in descending order. "
-            "Component signs are flipped to best match the data."
         ),
     }
     for comp_name in comp_names:
