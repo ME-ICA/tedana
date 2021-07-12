@@ -13,7 +13,7 @@ from threadpoolctl import threadpool_limits
 from tedana import (combine, decay, io, utils, __version__)
 from tedana.workflows.parser_utils import is_valid_file
 
-LGR = logging.getLogger(__name__)
+LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 

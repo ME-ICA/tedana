@@ -9,7 +9,7 @@ from tedana.stats import getfbounds
 from tedana.metrics import collect
 from tedana.selection._utils import (getelbow_cons, getelbow, clean_dataframe)
 
-LGR = logging.getLogger(__name__)
+LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 

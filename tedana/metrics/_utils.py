@@ -4,7 +4,7 @@ import logging
 import numpy as np
 from scipy import stats
 
-LGR = logging.getLogger(__name__)
+LGR = logging.getLogger("GENERAL")
 
 
 def dependency_resolver(dict_, requested_metrics, base_inputs):

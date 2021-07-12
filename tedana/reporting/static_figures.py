@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from tedana import stats
 from tedana.utils import get_spectrum
 
-LGR = logging.getLogger(__name__)
+LGR = logging.getLogger("GENERAL")
 MPL_LGR = logging.getLogger('matplotlib')
 MPL_LGR.setLevel(logging.WARNING)
 RepLGR = logging.getLogger('REPORT')

@@ -12,7 +12,7 @@ from sklearn.utils import check_array
 
 from tedana.due import due, BibTeX
 
-LGR = logging.getLogger(__name__)
+LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
@@ -393,12 +393,12 @@ class ContextFilter(logging.Filter):
 def setup_loggers(logname, repname, refname, quiet=False, debug=False):
     # Set up the general logger
     log_formatter = logging.Formatter(
-        '%(asctime)s\t%(module)s.%(filename)-12s\t%(levelname)-8s\t%(message)s',
+        '%(asctime)s\t%(module)s.%(funcName)-12s\t%(levelname)-8s\t%(message)s',
         datefmt='%Y-%m-%dT%H:%M:%S')
     stream_formatter = logging.Formatter(
-        "%(levelname)-8s %(name)s:%(filename)s:%(lineno)d %(message)s"
+        "%(levelname)-8s %(module)s:%(funcName)s:%(lineno)d %(message)s"
     )
-    # set up logging file and open it for writing
+    # set up general logging file and open it for writing
     log_handler = logging.FileHandler(logname)
     log_handler.setFormatter(log_formatter)
     # Removing handlers after basicConfig doesn't work, so we use filters

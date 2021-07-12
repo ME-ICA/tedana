@@ -20,7 +20,7 @@ from tedana import utils
 from tedana.stats import computefeats2, get_coeffs
 
 
-LGR = logging.getLogger(__name__)
+LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
