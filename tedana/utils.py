@@ -377,19 +377,6 @@ def millisec2sec(arr):
     return arr / 1000.
 
 
-class ContextFilter(logging.Filter):
-    """
-    A filter to allow specific logging handlers to ignore specific loggers.
-    We use this to prevent our report-generation and reference-compiling
-    loggers from printing to the general log file or to stdout.
-    """
-    NAMES = ['REPORT', 'REFERENCES']
-
-    def filter(self, record):
-        if not any([n in record.name for n in self.NAMES]):
-            return True
-
-
 def setup_loggers(logname=None, repname=None, refname=None, quiet=False, debug=False):
     # Set up the general logger
     log_formatter = logging.Formatter(
@@ -402,20 +389,18 @@ def setup_loggers(logname=None, repname=None, refname=None, quiet=False, debug=F
     if logname:
         log_handler = logging.FileHandler(logname)
         log_handler.setFormatter(log_formatter)
-        log_handler.addFilter(ContextFilter())
         LGR.addHandler(log_handler)
 
     stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(stream_formatter)
-    stream_handler.addFilter(ContextFilter())
     LGR.addHandler(stream_handler)
 
     if quiet:
-        logging.root.setLevel(logging.WARNING)
+        LGR.setLevel(logging.WARNING)
     elif debug:
-        logging.root.setLevel(logging.DEBUG)
+        LGR.setLevel(logging.DEBUG)
     else:
-        logging.root.setLevel(logging.INFO)
+        LGR.setLevel(logging.INFO)
 
     # Loggers for report and references
     text_formatter = logging.Formatter('%(message)s')
