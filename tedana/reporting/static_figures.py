@@ -52,10 +52,13 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
         Different types of data to plot.
     mask : (S,) array-like
         Binary mask used to apply to the data.
-    ref_img : img_like
-        Reference image used to convert arrays to images.
-    out_dir : str
-        Output directory for the figure.
+    io_generator : :obj:`tedana.io.OutputGenerator`
+        The output generator for this workflow
+    gscontrol : {None, 'mir', 'gsr'} or :obj:`list`, optional
+        Additional denoising steps applied in the workflow.
+        If any gscontrol methods were applied, then additional carpet plots will be generated for
+        pertinent outputs from those steps.
+        Default is None.
     """
     mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
     optcom_img = io.new_nii_like(io_generator.reference_img, optcom_ts)

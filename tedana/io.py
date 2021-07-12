@@ -333,19 +333,25 @@ def denoise_ts(data, mmix, mask, comptable):
 
     Parameters
     ----------
-    data
-    mmix
-    mask
-    comptable
+    data : (S x T) array_like
+        Input time series
+    mmix : (C x T) array_like
+        Mixing matrix for converting input data to component space, where `C`
+        is components and `T` is the same as in `data`
+    mask : (S,) array_like
+        Boolean mask array
+    comptable : (C x X) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component, with a column for
+        each metric. Requires at least one column: "classification".
 
     Returns
     -------
     dnts : (S x T) array_like
-        Denoised optimally combined data.
+        Denoised data (i.e., data with rejected components removed).
     hikts : (S x T) array_like
-        High-Kappa data.
+        High-Kappa data (i.e., data composed only of accepted components).
     lowkts : (S x T) array_like
-        Low-Kappa data.
+        Low-Kappa data (i.e., data composed only of rejected components).
     """
     acc = comptable[comptable.classification == 'accepted'].index.values
     rej = comptable[comptable.classification == 'rejected'].index.values
@@ -358,7 +364,7 @@ def denoise_ts(data, mmix, mask, comptable):
     betas = get_coeffs(dmdata.T, mmix, mask=None)
     varexpl = (1 - ((dmdata.T - betas.dot(mmix.T))**2.).sum() /
                (dmdata**2.).sum()) * 100
-    LGR.info('Variance explained by ICA decomposition: {:.02f}%'.format(varexpl))
+    LGR.info('Variance explained by decomposition: {:.02f}%'.format(varexpl))
 
     # create component and de-noised time series and save to files
     hikts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
