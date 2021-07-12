@@ -401,14 +401,13 @@ def setup_loggers(logname, repname, refname, quiet=False, debug=False):
     # set up general logging file and open it for writing
     log_handler = logging.FileHandler(logname)
     log_handler.setFormatter(log_formatter)
-    # Removing handlers after basicConfig doesn't work, so we use filters
-    # for the relevant handlers themselves.
     log_handler.addFilter(ContextFilter())
-    logging.root.addHandler(log_handler)
-    sh = logging.StreamHandler()
-    sh.setFormatter(stream_formatter)
-    sh.addFilter(ContextFilter())
-    logging.root.addHandler(sh)
+    LGR.addHandler(log_handler)
+
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(stream_formatter)
+    stream_handler.addFilter(ContextFilter())
+    LGR.addHandler(stream_handler)
 
     if quiet:
         logging.root.setLevel(logging.WARNING)
