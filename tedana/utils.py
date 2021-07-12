@@ -395,6 +395,9 @@ def setup_loggers(logname, repname, refname, quiet=False, debug=False):
     log_formatter = logging.Formatter(
         '%(asctime)s\t%(module)s.%(filename)-12s\t%(levelname)-8s\t%(message)s',
         datefmt='%Y-%m-%dT%H:%M:%S')
+    stream_formatter = logging.Formatter(
+        "%(levelname)-8s %(name)s:%(filename)s:%(lineno)d %(message)s"
+    )
     # set up logging file and open it for writing
     log_handler = logging.FileHandler(logname)
     log_handler.setFormatter(log_formatter)
@@ -403,7 +406,7 @@ def setup_loggers(logname, repname, refname, quiet=False, debug=False):
     log_handler.addFilter(ContextFilter())
     logging.root.addHandler(log_handler)
     sh = logging.StreamHandler()
-    sh.setFormatter(log_formatter)
+    sh.setFormatter(stream_formatter)
     sh.addFilter(ContextFilter())
     logging.root.addHandler(sh)
 
