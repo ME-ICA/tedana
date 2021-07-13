@@ -1,3 +1,4 @@
+import os
 from os.path import join as opj
 from pathlib import Path
 from string import Template
@@ -9,7 +10,35 @@ from tedana.info import __version__
 from tedana.reporting import dynamic_figures as df
 
 
-def _update_template_bokeh(bokeh_id, about, bokeh_js):
+def _generate_buttons(out_dir):
+    resource_path = Path(__file__).resolve().parent.joinpath("data", "html")
+
+    images_list = [img for img in os.listdir(out_dir) if ".svg" in img]
+    optcom_nogsr_disp = "none"
+    if "carpet_optcom_nogsr.svg" in images_list:
+        optcom_nogsr_disp = "block"
+
+    denoised_mir_disp = "none"
+    if "carpet_denoised_mir.svg" in images_list:
+        denoised_mir_disp = "block"
+
+    accepted_mir_disp = "none"
+    if "carpet_accepted_mir.svg" in images_list:
+        accepted_mir_disp = "block"
+
+    buttons_template_name = "report_carpet_buttons_template.html"
+    buttons_template_path = resource_path.joinpath(buttons_template_name)
+    with open(str(buttons_template_path), "r") as buttons_file:
+        buttons_tpl = Template(buttons_file.read())
+
+    buttons_html = buttons_tpl.substitute(optcomdisp=optcom_nogsr_disp,
+                                          denoiseddisp=denoised_mir_disp,
+                                          accepteddisp=accepted_mir_disp)
+
+    return buttons_html
+
+
+def _update_template_bokeh(bokeh_id, about, bokeh_js, buttons):
     """
     Populate a report with content.
 
@@ -31,7 +60,7 @@ def _update_template_bokeh(bokeh_id, about, bokeh_js):
     body_template_path = resource_path.joinpath(body_template_name)
     with open(str(body_template_path), "r") as body_file:
         body_tpl = Template(body_file.read())
-    body = body_tpl.substitute(content=bokeh_id, about=about, javascript=bokeh_js)
+    body = body_tpl.substitute(content=bokeh_id, about=about, javascript=bokeh_js, buttons=buttons)
     return body
 
 
@@ -119,11 +148,14 @@ def generate_report(io_generator, tr):
     # Embed for reporting and save out HTML
     kr_script, kr_div = embed.components(app)
 
+    # Generate html of buttons (only for images that were generated)
+    buttons_html = _generate_buttons(opj(io_generator.out_dir, "figures"))
+
     # Read in relevant methods
     with open(opj(io_generator.out_dir, "report.txt"), "r+") as f:
         about = f.read()
 
-    body = _update_template_bokeh(kr_div, about, kr_script)
+    body = _update_template_bokeh(kr_div, about, kr_script, buttons_html)
     html = _save_as_html(body)
     with open(opj(io_generator.out_dir, "tedana_report.html"), "wb") as f:
         f.write(html.encode("utf-8"))

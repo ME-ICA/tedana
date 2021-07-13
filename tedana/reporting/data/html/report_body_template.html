@@ -4,6 +4,7 @@
     margin-right: 5%;
     margin-bottom: 150px;
     height: auto;
+    float: left;
   }
 
   .about {
@@ -14,12 +15,30 @@
     white-space: pre-line;
     font-family: Arial, Helvetica, sans-serif;
     font-size: larger;
+    float: left;
+    width: 80%;
+  }
+
+  .carpet-wrapper {
+    margin-top: 30px;
+  }
+
+  .carpet-plots {
+    float: left;
   }
 
   .carpet-plots {
     margin-left: 5%;
     margin-right: 5%;
     margin-bottom: 100px;
+  }
+
+  .carpet-buttons {
+    height: 40px;
+  }
+
+  .carpet-image {
+    margin-top: 20px;
   }
 
   button {
@@ -33,6 +52,7 @@
     float: left;
     font-size: 18px;
     font-weight: 700;
+    height: 40px;
   }
 
   button:hover {
@@ -138,31 +158,13 @@
 </div>
 <div class="carpet-plots">
   <h1>Carpet plots</h1>
-  <div class="carpet-buttons">
-    <button class="blue" type="button" onClick="updateCarpetPlot('optcom_nogsr')">
-      Optimally combined with global signal
-    </button>
-    <button class="blue" type="button" onClick="updateCarpetPlot('optcom')">
-      Optimally combined without global signal
-    </button>
-    <button class="yellow" type="button" onClick="updateCarpetPlot('denoised')">
-      Denoised before MIR
-    </button>
-    <button class="yellow" type="button" onClick="updateCarpetPlot('denoised_mir')">
-      Denoised after MIR
-    </button>
-    <button class="green" type="button" onClick="updateCarpetPlot('accepted')">
-      Accepted before MIR
-    </button>
-    <button class="green" type="button" onClick="updateCarpetPlot('accepted_mir')">
-      Accepted after MIR
-    </button>
-    <button class="red" type="button" onClick="updateCarpetPlot('rejected')">
-      Rejected
-    </button>
-  </div>
-  <div class="carpet-plots-image">
-    <img id="imgCarpetPlot" src="./figures/carpet_optcom.svg" />
+  <div class="carpet-wrapper">
+    <div class="carpet-buttons">
+      $buttons
+    </div>
+    <div class="carpet-plots-image">
+      <img id="imgCarpetPlot" src="./figures/carpet_optcom.svg" />
+    </div>
   </div>
 </div>
 <div class="about">
