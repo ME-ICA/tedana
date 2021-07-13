@@ -10,14 +10,14 @@ tedana derivatives
 Filename                                            Content
 ================================================    =====================================================
 dataset_description.json                            Top-level metadata for the workflow.
-T2starmap.nii.gz                                    Limited estimated T2* 3D map.
+T2starmap.nii.gz                                    Full estimated T2* 3D map.
                                                     Values are in seconds.
                                                     The difference between the limited and full maps
                                                     is that, for voxels affected by dropout where
                                                     only one echo contains good data, the full map
                                                     uses the single echo's value while the limited
                                                     map has a NaN.
-S0map.nii.gz                                        Limited S0 3D map.
+S0map.nii.gz                                        Full S0 3D map.
                                                     The difference between the limited and full maps
                                                     is that, for voxels affected by dropout where
                                                     only one echo contains good data, the full map
@@ -76,15 +76,13 @@ If ``verbose`` is set to True:
 ==============================================================  =====================================================
 Filename                                                        Content
 ==============================================================  =====================================================
-desc-full_T2starmap.nii.gz                                      Full T2* map/time series.
+desc-limited_T2starmap.nii.gz                                   Limited T2* map/time series.
                                                                 Values are in seconds.
                                                                 The difference between the limited and full maps is
                                                                 that, for voxels affected by dropout where only one
                                                                 echo contains good data, the full map uses the
                                                                 single echo's value while the limited map has a NaN.
-                                                                Only used for optimal combination.
-desc-full_S0map.nii.gz                                          Full S0 map/time series. Only used for optimal
-                                                                combination.
+desc-limited_S0map.nii.gz                                       Limited S0 map/time series.
 echo-[echo]_desc-[PCA|ICA]_components.nii.gz                    Echo-wise PCA/ICA component weight maps.
 echo-[echo]_desc-[PCA|ICA]R2ModelPredictions_components.nii.gz  Component- and voxel-wise R2-model predictions,
                                                                 separated by echo.

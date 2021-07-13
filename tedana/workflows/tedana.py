@@ -513,7 +513,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     masksum_clf = masksum_denoise.copy()
     masksum_clf[masksum_clf < 3] = 0
     mask_clf = masksum_clf.astype(bool)
-    LGR.debug('Retaining {}/{} samples for denoising'.format(mask_clf.sum(), n_samp))
+    LGR.debug('Retaining {}/{} samples for classification'.format(mask_clf.sum(), n_samp))
 
     if t2smap is None:
         LGR.info('Computing T2* map')
@@ -522,17 +522,17 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
 
         # set a hard cap for the T2* map
         # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
-        cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5,
+        cap_t2s = stats.scoreatpercentile(t2s_full.flatten(), 99.5,
                                           interpolation_method='lower')
         LGR.debug('Setting cap on T2* map at {:.5f}s'.format(
             utils.millisec2sec(cap_t2s)))
-        t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
-        io_generator.save_file(utils.millisec2sec(t2s_limited), 't2star img')
-        io_generator.save_file(s0_limited, 's0 img')
+        t2s_full[t2s_full > cap_t2s * 10] = cap_t2s
+        io_generator.save_file(utils.millisec2sec(t2s_full), 't2star img')
+        io_generator.save_file(s0_full, 's0 img')
 
         if verbose:
-            io_generator.save_file(utils.millisec2sec(t2s_full), 'full t2star img')
-            io_generator.save_file(s0_full, 'full s0 img')
+            io_generator.save_file(utils.millisec2sec(t2s_limited), 'limited t2star img')
+            io_generator.save_file(s0_limited, 'limited s0 img')
 
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, masksum_denoise, t2s=t2s_full, combmode=combmode)
