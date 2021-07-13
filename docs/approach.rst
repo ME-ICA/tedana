@@ -99,12 +99,9 @@ this voxel), so the line is fit to all available data.
     ``tedana`` actually performs and uses two sets of :math:`T_{2}^*`/:math:`S_0` model fits.
     In one case, ``tedana`` estimates :math:`T_{2}^*` and :math:`S_0` for voxels with good signal in at
     least two echoes.
-    The resulting "limited" :math:`T_{2}^*` and :math:`S_0` maps are used throughout
-    most of the pipeline.
     In the other case, ``tedana`` estimates :math:`T_{2}^*` and :math:`S_0` for voxels
     with good data in only one echo as well, but uses the first two echoes for those voxels.
-    The resulting "full" :math:`T_{2}^*` and :math:`S_0` maps are used to generate the
-    optimally combined data.
+    The resulting "full" :math:`T_{2}^*` and :math:`S_0` maps are used throughout the rest of the pipeline.
 
 .. image:: /_static/a05_loglinear_regression.png
 

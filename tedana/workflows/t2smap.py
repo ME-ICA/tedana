@@ -171,9 +171,9 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     -----
     This workflow writes out several files, which are described below:
 
-    ==========================    =================================================
+    ============================= =================================================
     Filename                      Content
-    ==========================    =================================================
+    ============================= =================================================
     T2starmap.nii.gz              Estimated T2* 3D map or 4D timeseries.
                                   Will be a 3D map if ``fitmode`` is 'all' and a
                                   4D timeseries if it is 'ts'.
@@ -181,11 +181,17 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     desc-limited_T2starmap.nii.gz Limited T2* map/timeseries. The difference between
                                   the limited and full maps is that, for voxels
                                   affected by dropout where only one echo contains
-                                  good data, the full map uses the single echo's
-                                  value while the limited map has a NaN.
-    desc-limited_S0map.nii.gz     Limited S0 map/timeseries.
+                                  good data, the full map uses the T2* estimate
+                                  from the first two echos, while the limited map
+                                  will have a NaN.
+    desc-limited_S0map.nii.gz     Limited S0 map/timeseries. The difference between
+                                  the limited and full maps is that, for voxels
+                                  affected by dropout where only one echo contains
+                                  good data, the full map uses the S0 estimate
+                                  from the first two echos, while the limited map
+                                  will have a NaN.
     desc-optcom_bold.nii.gz       Optimally combined timeseries.
-    ==========================    =================================================
+    ============================= =================================================
     """
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
