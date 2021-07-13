@@ -174,16 +174,16 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     ==========================    =================================================
     Filename                      Content
     ==========================    =================================================
-    T2starmap.nii.gz              Limited estimated T2* 3D map or 4D timeseries.
+    T2starmap.nii.gz              Estimated T2* 3D map or 4D timeseries.
                                   Will be a 3D map if ``fitmode`` is 'all' and a
                                   4D timeseries if it is 'ts'.
-    S0map.nii.gz                  Limited S0 3D map or 4D timeseries.
-    desc-full_T2starmap.nii.gz    Full T2* map/timeseries. The difference between
+    S0map.nii.gz                  S0 3D map or 4D timeseries.
+    desc-limited_T2starmap.nii.gz Limited T2* map/timeseries. The difference between
                                   the limited and full maps is that, for voxels
                                   affected by dropout where only one echo contains
                                   good data, the full map uses the single echo's
                                   value while the limited map has a NaN.
-    desc-full_S0map.nii.gz        Full S0 map/timeseries.
+    desc-limited_S0map.nii.gz     Limited S0 map/timeseries.
     desc-optcom_bold.nii.gz       Optimally combined timeseries.
     ==========================    =================================================
     """
