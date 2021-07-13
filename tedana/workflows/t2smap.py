@@ -239,11 +239,11 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
 
     # set a hard cap for the T2* map/timeseries
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
-    cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5,
+    cap_t2s = stats.scoreatpercentile(t2s_full.flatten(), 99.5,
                                       interpolation_method='lower')
     cap_t2s_sec = utils.millisec2sec(cap_t2s * 10.)
     LGR.debug('Setting cap on T2* map at {:.5f}s'.format(cap_t2s_sec))
-    t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
+    t2s_full[t2s_full > cap_t2s * 10] = cap_t2s
 
     LGR.info('Computing optimal combination')
     # optimally combine data
@@ -251,24 +251,24 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
                                  combmode=combmode)
 
     # clean up numerical errors
-    for arr in (OCcatd, s0_limited, t2s_limited):
+    for arr in (OCcatd, s0_full, t2s_full):
         np.nan_to_num(arr, copy=False)
 
-    s0_limited[s0_limited < 0] = 0
-    t2s_limited[t2s_limited < 0] = 0
+    s0_full[s0_full < 0] = 0
+    t2s_full[t2s_full < 0] = 0
 
     io_generator.save_file(
-        utils.millisec2sec(t2s_limited),
+        utils.millisec2sec(t2s_full),
         't2star img',
     )
-    io_generator.save_file(s0_limited, 's0 img')
+    io_generator.save_file(s0_full, 's0 img')
     io_generator.save_file(
-        utils.millisec2sec(t2s_full),
-        'full t2star img',
+        utils.millisec2sec(t2s_limited),
+        'limited t2star img',
     )
     io_generator.save_file(
-        s0_full,
-        'full s0 img',
+        s0_limited,
+        'limited s0 img',
     )
     io_generator.save_file(OCcatd, 'combined img')
 
