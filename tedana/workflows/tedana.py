@@ -619,19 +619,13 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     # Write out ICA files.
     comp_names = comptable["Component"].values
     mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
-    mixing_df.to_csv(io_generator.get_name("ICA mixing tsv"), sep="\t", index=False)
+    io_generator.save_file(mixing_df, "ICA mixing tsv")
     betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
     io_generator.save_file(betas_oc, 'z-scored ICA components img')
 
     # Save component table and associated json
-    temp_comptable = comptable.set_index("Component", inplace=False)
-    temp_comptable.to_csv(
-        io_generator.get_name("ICA metrics tsv"),
-        index=True,
-        index_label="Component",
-        sep='\t',
-    )
-    metric_metadata = metrics.collect.get_metadata(temp_comptable)
+    io_generator.save_file(comptable, "ICA metrics tsv")
+    metric_metadata = metrics.collect.get_metadata(comptable)
     io_generator.save_file(metric_metadata, "ICA metrics json")
 
     decomp_metadata = {
@@ -667,11 +661,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         comp_names = [io.add_decomp_prefix(comp, prefix='ica', max_value=comptable.index.max())
                       for comp in comptable.index.values]
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
-        mixing_df.to_csv(
-            io_generator.get_name("ICA orthogonalized mixing tsv"),
-            sep='\t',
-            index=False
-        )
+        io_generator.save_file(mixing_df, "ICA orthogonalized mixing tsv")
         RepLGR.info("Rejected components' time series were then "
                     "orthogonalized with respect to accepted components' time "
                     "series.")
