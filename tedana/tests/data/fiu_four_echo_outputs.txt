@@ -76,6 +76,9 @@ figures/carpet_optcom.svg
 figures/carpet_denoised.svg
 figures/carpet_accepted.svg
 figures/carpet_rejected.svg
+figures/carpet_optcom_nogsr.svg
+figures/carpet_denoised_mir.svg
+figures/carpet_accepted_mir.svg
 figures/comp_000.png
 figures/comp_001.png
 figures/comp_002.png
