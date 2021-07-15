@@ -410,7 +410,7 @@ def get_system_info():
 
 
 def write_tedana_command(arg_vals):
-    """[summary]
+    """Write a CLI-style command with the arguments given to run tedana.
 
     Parameters
     ----------
@@ -427,12 +427,12 @@ def write_tedana_command(arg_vals):
 
     command = "tedana"
 
-    for key in arg_vals.keys():
+    for key, val in arg_vals.keys():
         # Data and TE are lists
-        if type(arg_vals[key]) is list:
-            values = " ".join(str(v) for v in arg_vals[key])
+        if type(val) is list:
+            values = " ".join(str(x) for x in val)
         else:
-            values = arg_vals[key]
+            values = val
         command += f" <b>--{key}</b> {values}"
 
     return command
