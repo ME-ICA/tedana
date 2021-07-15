@@ -182,9 +182,5 @@
     "ICA orthogonalized mixing tsv": {
         "orig": "ica_orth_mixing",
         "bidsv1.5.0": "desc-ICAOrth_mixing"
-    },
-    "System info json": {
-        "orig": "system_info",
-        "bidsv1.5.0": "system_info"
     }
 }

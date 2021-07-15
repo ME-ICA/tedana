@@ -1,3 +1,4 @@
+from platform import python_version
 import pandas as pd
 from bokeh import (embed, layouts, models)
 from bokeh import __version__ as bokehversion
@@ -70,14 +71,19 @@ def _generate_info_table(info_dict):
     with open(str(info_template_path), 'r') as info_file:
         info_tpl = Template(info_file.read())
 
-    info_html = info_tpl.substitute(command=info_dict["Command"],
+    info_dict = info_dict["GeneratedBy"][0]
+    command = info_dict["Command"]
+    version_python = info_dict["Python"]
+    info_dict = info_dict["Node"]
+
+    info_html = info_tpl.substitute(command=command,
                                     system=info_dict["System"],
-                                    node=info_dict["Node"],
+                                    node=info_dict["Name"],
                                     release=info_dict["Release"],
                                     sysversion=info_dict["Version"],
                                     machine=info_dict["Machine"],
                                     processor=info_dict["Processor"],
-                                    python=info_dict["Python"],
+                                    python=version_python,
                                     tedana=__version__)
     return info_html
 
@@ -142,11 +148,11 @@ def generate_report(io_generator, tr):
         about = f.read()
 
     # Read info table
-    infojson_path = io_generator.get_name("System info json")
-    info_dict = load_json(infojson_path)
+    data_descr_path = io_generator.get_name("data description json")
+    data_descr_dict = load_json(data_descr_path)
 
     # Create info table
-    info_table = _generate_info_table(info_dict)
+    info_table = _generate_info_table(data_descr_dict)
 
     body = _update_template_bokeh(kr_div, info_table, about, kr_script)
     html = _save_as_html(body)

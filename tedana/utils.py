@@ -388,7 +388,13 @@ def get_resource_path():
 
 
 def get_system_info():
-    """Return information about the system tedana is being run on."""
+    """Return information about the system tedana is being run on.
+
+    Returns
+    -------
+    dict
+        Info about system where tedana is run on.
+    """
     system_info = platform.uname()
 
     system_dict = {
@@ -401,3 +407,32 @@ def get_system_info():
     }
 
     return system_dict
+
+
+def write_tedana_command(arg_vals):
+    """[summary]
+
+    Parameters
+    ----------
+    arg_vals : dict
+        Dictionary with arguments and values of passed to the tedana function.
+
+    Returns
+    -------
+    str
+        Arguments given to tedana and their values formatted in CLI-style.
+    """
+    # Deleta frame from dictionary
+    del arg_vals["frame"]
+
+    command = "tedana"
+
+    for key in arg_vals.keys():
+        # Data and TE are lists
+        if type(arg_vals[key]) is list:
+            values = " ".join(str(v) for v in arg_vals[key])
+        else:
+            values = arg_vals[key]
+        command += f" <b>--{key}</b> {values}"
+
+    return command
