@@ -427,7 +427,7 @@ def write_tedana_command(arg_vals):
 
     command = "tedana"
 
-    for key, val in arg_vals:
+    for key, val in arg_vals.items():
         # Data and TE are lists
         if type(val) is list:
             values = " ".join(str(x) for x in val)
