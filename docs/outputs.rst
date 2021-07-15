@@ -373,6 +373,20 @@ Save          |Save|   Saves an image reproduction of the plot in PNG format.
   icon, while inactive ones lack the line.
 
 
+************
+Carpet plots
+************
+
+In additional to the elements described above, ``tedana``'s interactive reports include carpet plots for the main outputs of the workflow:
+the optimally combined data, the denoised data, the high-Kappa (accepted) data, and the low-Kappa (rejected) data.
+
+These plots may be useful for visual quality control of the overall denoising run.
+
+.. image:: /_static/rep01_carpet_overview.png
+  :align: center
+  :height: 400px
+
+
 **************************
 Citable workflow summaries
 **************************
@@ -407,17 +421,3 @@ An example report
   Sørensen, T. J. (1948). A method of establishing groups of equal amplitude in plant sociology based on similarity of species content and its application to analyses of the vegetation on Danish commons. I kommission hos E. Munksgaard.
 
   Van Der Walt, S., Colbert, S. C., & Varoquaux, G. (2011). The NumPy array: a structure for efficient numerical computation. Computing in Science & Engineering, 13(2), 22.
-
-
-************
-Carpet plots
-************
-
-In additional to the elements described above, ``tedana``'s interactive reports include carpet plots for the main outputs of the workflow:
-the optimally combined data, the denoised data, the high-Kappa (accepted) data, and the low-Kappa (rejected) data.
-
-These plots may be useful for visual quality control of the overall denoising run.
-
-.. image:: /_static/rep01_carpet_overview.png
-  :align: center
-  :height: 400px
