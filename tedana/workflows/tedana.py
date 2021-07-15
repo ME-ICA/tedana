@@ -428,7 +428,6 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     # Save system info to json
     info_dict = utils.get_system_info()
     info_dict["Python"] = sys.version
-    info_dict["Command"] = " ".join(sys.argv)
 
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))

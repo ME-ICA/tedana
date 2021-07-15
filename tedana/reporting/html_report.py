@@ -1,4 +1,3 @@
-from platform import python_version
 import pandas as pd
 from bokeh import (embed, layouts, models)
 from bokeh import __version__ as bokehversion
