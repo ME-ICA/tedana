@@ -48,7 +48,7 @@ def test_smoke_generate_metrics(testdata1):
         "normalized variance explained",
         "d_table_score",
     ]
-    comptable, mixing = collect.generate_metrics(
+    comptable = collect.generate_metrics(
         testdata1["data_cat"],
         testdata1["data_optcom"],
         testdata1["mixing"],
@@ -57,8 +57,6 @@ def test_smoke_generate_metrics(testdata1):
         testdata1["generator"],
         'ICA',
         metrics=metrics,
-        sort_by="kappa",
-        ascending=False,
     )
     assert isinstance(comptable, pd.DataFrame)
 

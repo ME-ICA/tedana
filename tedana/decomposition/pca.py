@@ -147,16 +147,20 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     ===========================    =============================================
     Default Filename               Content
     ===========================    =============================================
-    desc-PCA_decomposition.json    PCA component table
+    desc-PCA_metrics.tsv           PCA component table
+    desc-PCA_metrics.json          Metadata sidecar file describing the
+                                   component table
     desc-PCA_mixing.tsv            PCA mixing matrix
     desc-PCA_components.nii.gz     Component weight maps
+    desc-PCA_decomposition.json    Metadata sidecar file describing the PCA
+                                   decomposition
     ===========================    =============================================
 
     See Also
     --------
     :func:`tedana.utils.make_adaptive_mask` : The function used to create
         the ``adaptive_mask` parameter.
-    :module:`tedana.constants` : The module describing the filenames for
+    :py:mod:`tedana.constants` : The module describing the filenames for
         various naming conventions
     """
     if algorithm == 'kundu':
@@ -233,10 +237,10 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         'variance explained', 'normalized variance explained',
         'd_table_score'
     ]
-    comptable, _ = metrics.collect.generate_metrics(
+    comptable = metrics.collect.generate_metrics(
         data_cat, data_oc, comp_ts, adaptive_mask,
         tes, io_generator, 'PCA',
-        metrics=required_metrics, sort_by=None
+        metrics=required_metrics,
     )
 
     # varex_norm from PCA overrides varex_norm from dependence_metrics,
@@ -281,17 +285,15 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     io_generator.save_file(mixing_df, "PCA mixing tsv")
 
     # Save component table and associated json
-    temp_comptable = comptable.set_index("Component", inplace=False)
-    io_generator.save_file(temp_comptable, "PCA metrics tsv")
+    io_generator.save_file(comptable, "PCA metrics tsv")
 
-    metric_metadata = metrics.collect.get_metadata(temp_comptable)
+    metric_metadata = metrics.collect.get_metadata(comptable)
     io_generator.save_file(metric_metadata, "PCA metrics json")
 
     decomp_metadata = {
         "Method": (
             "Principal components analysis implemented by sklearn. "
             "Components are sorted by variance explained in descending order. "
-            "Component signs are flipped to best match the data."
         ),
     }
     for comp_name in comp_names:

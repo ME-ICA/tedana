@@ -1,5 +1,6 @@
+############
 Installation
-------------
+############
 
 You'll need to set up a working development environment to use ``tedana``.
 To set up a local environment, you will need Python >=3.6 and the following
