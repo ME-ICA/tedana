@@ -15,16 +15,22 @@ def _generate_buttons(out_dir):
 
     images_list = [img for img in os.listdir(out_dir) if ".svg" in img]
     optcom_nogsr_disp = "none"
+    optcom_name = ""
     if "carpet_optcom_nogsr.svg" in images_list:
         optcom_nogsr_disp = "block"
+        optcom_name = "before MIR"
 
     denoised_mir_disp = "none"
+    denoised_name = ""
     if "carpet_denoised_mir.svg" in images_list:
         denoised_mir_disp = "block"
+        denoised_name = "before MIR"
 
     accepted_mir_disp = "none"
+    accepted_name = ""
     if "carpet_accepted_mir.svg" in images_list:
         accepted_mir_disp = "block"
+        accepted_name = "before MIR"
 
     buttons_template_name = "report_carpet_buttons_template.html"
     buttons_template_path = resource_path.joinpath(buttons_template_name)
@@ -33,7 +39,10 @@ def _generate_buttons(out_dir):
 
     buttons_html = buttons_tpl.substitute(optcomdisp=optcom_nogsr_disp,
                                           denoiseddisp=denoised_mir_disp,
-                                          accepteddisp=accepted_mir_disp)
+                                          accepteddisp=accepted_mir_disp,
+                                          optcomname=optcom_name,
+                                          denoisedname=denoised_name,
+                                          acceptedname=accepted_name)
 
     return buttons_html
 
