@@ -211,6 +211,17 @@ make html
 ```
 from the `docs` directory in your local `tedana` repository. You should then be able to access the rendered files in the `docs/_build` directory, and view them in your browser.
 
+Most of `tedana`'s documentation is written in restructuredText, rather than Markdown.
+Among many other differences, restructuredText allows a great deal of flexibility in how section headings are defined.
+For consistency, we have adopted the following standard for our section headings:
+
+- `#` with overline, for parts
+- `*` with overline, for chapters
+- `=`, for sections
+- `-`, for subsections
+- `^`, for subsubsections
+- `"`, for paragraphs
+
 ### 6. Submit a [pull request][link_pullrequest]
 
 When opening the pull request, we ask that you follow some [specific conventions](#pull-requests). We outline these below.

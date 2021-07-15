@@ -147,16 +147,20 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     ===========================    =============================================
     Default Filename               Content
     ===========================    =============================================
-    desc-PCA_decomposition.json    PCA component table
+    desc-PCA_metrics.tsv           PCA component table
+    desc-PCA_metrics.json          Metadata sidecar file describing the
+                                   component table
     desc-PCA_mixing.tsv            PCA mixing matrix
     desc-PCA_components.nii.gz     Component weight maps
+    desc-PCA_decomposition.json    Metadata sidecar file describing the PCA
+                                   decomposition
     ===========================    =============================================
 
     See Also
     --------
     :func:`tedana.utils.make_adaptive_mask` : The function used to create
         the ``adaptive_mask` parameter.
-    :module:`tedana.constants` : The module describing the filenames for
+    :py:mod:`tedana.constants` : The module describing the filenames for
         various naming conventions
     """
     if algorithm == 'kundu':
