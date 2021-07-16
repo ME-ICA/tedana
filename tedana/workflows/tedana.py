@@ -579,7 +579,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                 'd_table_score'
             ]
             comptable = metrics.collect.generate_metrics(
-                catd, data_oc, mmix_orig, masksum_clf, tes,
+                catd, data_oc, mmix, masksum_clf, tes,
                 io_generator, 'ICA',
                 metrics=required_metrics,
             )
@@ -611,7 +611,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                 'd_table_score'
             ]
             comptable = metrics.collect.generate_metrics(
-                catd, data_oc, mmix_orig, masksum_clf, tes,
+                catd, data_oc, mmix, masksum_clf, tes,
                 io_generator, 'ICA',
                 metrics=required_metrics,
             )
