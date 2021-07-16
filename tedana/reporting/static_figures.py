@@ -67,6 +67,9 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
     # Get the lenght of the timeseries
     n_vols = len(mmix)
 
+    # Flip signs of mixing matrix as needed
+    mmix = mmix * comptable["optimal sign"].values
+
     # regenerate the beta images
     ts_B = stats.get_coeffs(ts, mmix, mask)
     ts_B = ts_B.reshape(io_generator.reference_img.shape[:3] + ts_B.shape[1:])

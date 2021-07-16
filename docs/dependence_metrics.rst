@@ -1,7 +1,8 @@
 .. _dependence models:
 
+########################
 TE (In)Dependence Models
-````````````````````````
+########################
 
 Functional MRI signal can be described in terms of fluctuations in :math:`S_0`
 and :math:`T_2^*`.
@@ -64,6 +65,8 @@ For a **TE-dependence model**, if there were no fluctuations in :math:`S_0`:
 
 Note that TE is a parameter in this model. Hence, it is TE-dependent.
 
+
+******************************************
 Applying our models to signal decay curves
 ******************************************
 
@@ -101,6 +104,8 @@ The actual model fits can be calculated as F-statistics.
 Then, the F-statistics per voxel are averaged across voxels into the Kappa and
 Rho pseudo-F-statistics.
 
+
+****************************************************
 Applying our models to spatiotemporal decompositions
 ****************************************************
 

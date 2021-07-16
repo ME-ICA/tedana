@@ -561,7 +561,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         n_restarts = 0
         seed = fixed_seed
         while keep_restarting:
-            mmix_orig, seed = decomposition.tedica(
+            mmix, seed = decomposition.tedica(
                 dd, n_components, seed,
                 maxit, maxrestart=(maxrestart - n_restarts)
             )
@@ -578,10 +578,10 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                 'variance explained', 'normalized variance explained',
                 'd_table_score'
             ]
-            comptable, mmix = metrics.collect.generate_metrics(
+            comptable = metrics.collect.generate_metrics(
                 catd, data_oc, mmix_orig, masksum_clf, tes,
                 io_generator, 'ICA',
-                metrics=required_metrics, sort_by='kappa', ascending=False,
+                metrics=required_metrics,
             )
             comptable, metric_metadata = selection.kundu_selection_v2(
                 comptable, n_echos, n_vols
@@ -601,7 +601,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     else:
         LGR.info('Using supplied mixing matrix from ICA')
         mixing_file = io_generator.get_name("ICA mixing tsv")
-        mmix_orig = pd.read_table(mixing_file).values
+        mmix = pd.read_table(mixing_file).values
 
         if ctab is None:
             required_metrics = [
@@ -610,16 +610,15 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                 'variance explained', 'normalized variance explained',
                 'd_table_score'
             ]
-            comptable, mmix = metrics.collect.generate_metrics(
+            comptable = metrics.collect.generate_metrics(
                 catd, data_oc, mmix_orig, masksum_clf, tes,
                 io_generator, 'ICA',
-                metrics=required_metrics, sort_by='kappa', ascending=False
+                metrics=required_metrics,
             )
             comptable, metric_metadata = selection.kundu_selection_v2(
                     comptable, n_echos, n_vols
             )
         else:
-            mmix = mmix_orig.copy()
             comptable = pd.read_table(ctab)
 
             if manacc is not None:
@@ -631,28 +630,19 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     # Write out ICA files.
     comp_names = comptable["Component"].values
     mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
-    mixing_df.to_csv(io_generator.get_name("ICA mixing tsv"), sep="\t", index=False)
+    io_generator.save_file(mixing_df, "ICA mixing tsv")
     betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask_denoise), mask_denoise)
     io_generator.save_file(betas_oc, 'z-scored ICA components img')
 
     # Save component table and associated json
-    temp_comptable = comptable.set_index("Component", inplace=False)
-    temp_comptable.to_csv(
-        io_generator.get_name("ICA metrics tsv"),
-        index=True,
-        index_label="Component",
-        sep='\t',
-    )
-    metric_metadata = metrics.collect.get_metadata(temp_comptable)
+    io_generator.save_file(comptable, "ICA metrics tsv")
+    metric_metadata = metrics.collect.get_metadata(comptable)
     io_generator.save_file(metric_metadata, "ICA metrics json")
 
     decomp_metadata = {
         "Method": (
             "Independent components analysis with FastICA "
-            "algorithm implemented by sklearn. Components "
-            "are sorted by Kappa in descending order. "
-            "Component signs are flipped to best match the "
-            "data."
+            "algorithm implemented by sklearn. "
         ),
     }
     for comp_name in comp_names:
@@ -682,11 +672,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         comp_names = [io.add_decomp_prefix(comp, prefix='ica', max_value=comptable.index.max())
                       for comp in comptable.index.values]
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
-        mixing_df.to_csv(
-            io_generator.get_name("ICA orthogonalized mixing tsv"),
-            sep='\t',
-            index=False
-        )
+        io_generator.save_file(mixing_df, "ICA orthogonalized mixing tsv")
         RepLGR.info("Rejected components' time series were then "
                     "orthogonalized with respect to accepted components' time "
                     "series.")
