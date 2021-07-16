@@ -233,15 +233,21 @@ def _get_parser():
                           dest='ctab',
                           metavar='FILE',
                           type=lambda x: is_valid_file(parser, x),
-                          help=('File containing a component table from which '
-                                'to extract pre-computed classifications.'),
+                          help=(
+                              'File containing a component table from which '
+                              'to extract pre-computed classifications. '
+                              "Requires --mix."
+                          ),
                           default=None)
     rerungrp.add_argument('--manacc',
                           dest='manacc',
                           metavar='INT',
                           type=int,
                           nargs='+',
-                          help='List of manually accepted components.',
+                          help=(
+                              'List of manually accepted components. '
+                              "Requires --ctab and --mix."
+                          ),
                           default=None)
 
     return parser
@@ -311,6 +317,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     manacc : :obj:`list` of :obj:`int` or None, optional
         List of manually accepted components. Can be a list of the components
         numbers or None.
+        If provided, this parameter requires ``mixm`` and ``ctab`` to be provided as well.
         Default is None.
 
     Other Parameters
@@ -458,8 +465,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if ctab and not mixm:
         LGR.warning('Argument "ctab" requires argument "mixm".')
         ctab = None
-    elif manacc is not None and not mixm:
-        LGR.warning('Argument "manacc" requires argument "mixm".')
+    elif manacc is not None and (not mixm or not ctab):
+        LGR.warning('Argument "manacc" requires arguments "mixm" and "ctab".')
         manacc = None
     elif manacc is not None:
         # coerce to list of integers
