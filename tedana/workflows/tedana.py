@@ -513,6 +513,13 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     masksum_clf = masksum_denoise.copy()
     masksum_clf[masksum_clf < 3] = 0
     mask_clf = masksum_clf.astype(bool)
+    RepLGR.info(
+        "A two-stage masking procedure was applied, in which a liberal mask "
+        "(including voxels with good data in at least the first echo) was used for "
+        "optimal combination, T2*/S0 estimation, and denoising, while a more conservative mask "
+        "(restricted to voxels with good data in at least the first three echoes) was used for "
+        "the component classification procedure."
+    )
     LGR.debug('Retaining {}/{} samples for classification'.format(mask_clf.sum(), n_samp))
 
     if t2smap is None:
