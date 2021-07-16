@@ -366,7 +366,7 @@ def denoise_ts(data, mmix, mask, comptable):
                (dmdata**2.).sum()) * 100
     LGR.info('Variance explained by decomposition: {:.02f}%'.format(varexpl))
 
-    # create component and de-noised time series and save to files
+    # create component-based data
     hikts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
     lowkts = utils.unmask(betas[:, rej].dot(mmix.T[rej, :]), mask)
     dnts = utils.unmask(data[mask] - lowkts[mask], mask)
