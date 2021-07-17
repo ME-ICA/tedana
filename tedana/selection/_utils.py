@@ -41,6 +41,13 @@ def getelbow_cons(arr, return_val=False):
     """
     if arr.ndim != 1:
         raise ValueError('Parameter arr should be 1d, not {0}d'.format(arr.ndim))
+
+    if not arr.size:
+        raise ValueError(
+            "Empty array detected. This is often a random error, so consider re-running tedana "
+            "with a different random seed."
+        )
+
     arr = np.sort(arr)[::-1]
     nk = len(arr)
     temp1 = [(arr[nk - 5 - ii - 1] > arr[nk - 5 - ii:nk].mean() + 2 * arr[nk - 5 - ii:nk].std())
@@ -79,6 +86,13 @@ def getelbow(arr, return_val=False):
     """
     if arr.ndim != 1:
         raise ValueError('Parameter arr should be 1d, not {0}d'.format(arr.ndim))
+
+    if not arr.size:
+        raise ValueError(
+            "Empty array detected. This is often a random error, so consider re-running tedana "
+            "with a different random seed."
+        )
+
     arr = np.sort(arr)[::-1]
     n_components = arr.shape[0]
     coords = np.array([np.arange(n_components), arr])
