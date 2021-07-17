@@ -14,7 +14,7 @@ RefLGR = logging.getLogger("REFERENCES")
 
 @due.dcite(
     Doi("10.1002/(SICI)1522-2594(199907)42:1<87::AID-MRM13>3.0.CO;2-O"),
-    description="T2* method of combining data across echoes using " "monoexponential equation.",
+    description="T2* method of combining data across echoes using monoexponential equation.",
 )
 def _combine_t2s(data, tes, ft2s, report=True):
     """
@@ -79,7 +79,7 @@ def _combine_t2s(data, tes, ft2s, report=True):
 
 @due.dcite(
     Doi("10.1002/mrm.20900"),
-    description="PAID method of combining data across echoes using just " "SNR/signal and TE.",
+    description="PAID method of combining data across echoes using just SNR/signal and TE.",
 )
 def _combine_paid(data, tes, report=True):
     """
@@ -222,7 +222,7 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s", verbose=True
     if combmode not in ["t2s", "paid"]:
         raise ValueError("Argument 'combmode' must be either 't2s' or 'paid'")
     elif combmode == "t2s" and t2s is None:
-        raise ValueError("Argument 't2s' must be supplied if 'combmode' is " "set to 't2s'.")
+        raise ValueError("Argument 't2s' must be supplied if 'combmode' is set to 't2s'.")
     elif combmode == "paid" and t2s is not None:
         LGR.warning(
             "Argument 't2s' is not required if 'combmode' is 'paid'. "
@@ -238,7 +238,7 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s", verbose=True
         if t2s.ndim == 1:
             msg = "Optimally combining data with voxel-wise T2* estimates"
         else:
-            msg = "Optimally combining data with voxel- and volume-wise T2* " "estimates"
+            msg = "Optimally combining data with voxel- and volume-wise T2* estimates"
         LGR.info(msg)
 
     echos_to_run = np.unique(adaptive_mask)

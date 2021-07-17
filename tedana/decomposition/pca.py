@@ -177,7 +177,7 @@ def tedpca(
         various naming conventions
     """
     if algorithm == "kundu":
-        alg_str = "followed by the Kundu component selection decision " "tree (Kundu et al., 2013)"
+        alg_str = "followed by the Kundu component selection decision tree (Kundu et al., 2013)"
         RefLGR.info(
             "Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
             "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "

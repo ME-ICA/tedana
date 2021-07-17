@@ -65,7 +65,7 @@ def manual_selection(comptable, acc=None, rej=None):
         acc = sorted(np.setdiff1d(all_comps, rej))
     elif acc is None and rej is None:
         LGR.info(
-            "No manually accepted or rejected components supplied. " "Accepting all components."
+            "No manually accepted or rejected components supplied. Accepting all components."
         )
         # Accept all components if no manual selection provided
         acc = all_comps[:]
@@ -86,7 +86,7 @@ def manual_selection(comptable, acc=None, rej=None):
 
 def kundu_selection_v2(comptable, n_echos, n_vols):
     """
-    Classify components as "accepted," "rejected," or "ignored" based on
+    Classify components as "accepted", "rejected", or "ignored" based on
     relevant metrics.
 
     The selection process uses previously calculated parameters listed in
@@ -212,7 +212,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
 
     # Quit early if no potentially accepted components remain
     if len(unclf) == 0:
-        LGR.warning("No BOLD-like components detected. Ignoring all remaining " "components.")
+        LGR.warning("No BOLD-like components detected. Ignoring all remaining components.")
         ign = sorted(np.setdiff1d(all_comps, rej))
         comptable.loc[ign, "classification"] = "ignored"
         comptable.loc[ign, "rationale"] += "I006;"
@@ -281,7 +281,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
 
     # Quit early if no potentially accepted components remain
     if len(acc_prov) <= 1:
-        LGR.warning("Too few BOLD-like components detected. " "Ignoring all remaining.")
+        LGR.warning("Too few BOLD-like components detected. Ignoring all remaining.")
         ign = sorted(np.setdiff1d(all_comps, rej))
         comptable.loc[ign, "classification"] = "ignored"
         comptable.loc[ign, "rationale"] += "I006;"

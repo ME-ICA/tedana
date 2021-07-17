@@ -112,7 +112,7 @@ def _get_parser():
         dest="convention",
         action="store",
         choices=["orig", "bids"],
-        help=("Filenaming convention. bids will use " "the latest BIDS derivatives version."),
+        help=("Filenaming convention. bids will use the latest BIDS derivatives version."),
         default="bids",
     )
     optional.add_argument(
@@ -136,7 +136,7 @@ def _get_parser():
         dest="combmode",
         action="store",
         choices=["t2s"],
-        help=("Combination scheme for TEs: " "t2s (Posse 1999, default)"),
+        help=("Combination scheme for TEs: t2s (Posse 1999, default)"),
         default="t2s",
     )
     optional.add_argument(
@@ -196,7 +196,7 @@ def _get_parser():
         dest="tedort",
         action="store_true",
         help=(
-            "Orthogonalize rejected components w.r.t. " "accepted components prior to denoising."
+            "Orthogonalize rejected components w.r.t. accepted components prior to denoising."
         ),
         default=False,
     )
@@ -285,7 +285,7 @@ def _get_parser():
         dest="t2smap",
         metavar="FILE",
         type=lambda x: is_valid_file(parser, x),
-        help=("Precalculated T2* map in the same space as " "the input data."),
+        help=("Precalculated T2* map in the same space as the input data."),
         default=None,
     )
     rerungrp.add_argument(
@@ -293,7 +293,7 @@ def _get_parser():
         dest="mixm",
         metavar="FILE",
         type=lambda x: is_valid_file(parser, x),
-        help=("File containing mixing matrix. If not " "provided, ME-PCA & ME-ICA is done."),
+        help=("File containing mixing matrix. If not provided, ME-PCA & ME-ICA is done."),
         default=None,
     )
     rerungrp.add_argument(
@@ -314,7 +314,7 @@ def _get_parser():
         metavar="INT",
         type=int,
         nargs="+",
-        help=("List of manually accepted components. " "Requires --ctab and --mix."),
+        help=("List of manually accepted components. Requires --ctab and --mix."),
         default=None,
     )
 
@@ -753,7 +753,7 @@ def tedana_workflow(
 
     decomp_metadata = {
         "Method": (
-            "Independent components analysis with FastICA " "algorithm implemented by sklearn. "
+            "Independent components analysis with FastICA algorithm implemented by sklearn. "
         ),
     }
     for comp_name in comp_names:
@@ -765,7 +765,7 @@ def tedana_workflow(
         json.dump(decomp_metadata, fo, sort_keys=True, indent=4)
 
     if comptable[comptable.classification == "accepted"].shape[0] == 0:
-        LGR.warning("No BOLD components detected! Please check data and " "results!")
+        LGR.warning("No BOLD components detected! Please check data and results!")
 
     mmix_orig = mmix.copy()
     if tedort:
@@ -859,7 +859,7 @@ def tedana_workflow(
     )
 
     RepLGR.info(
-        "This workflow also used the Dice similarity index " "(Dice, 1945; Sørensen, 1948)."
+        "This workflow also used the Dice similarity index (Dice, 1945; Sørensen, 1948)."
     )
     RefLGR.info(
         "Dice, L. R. (1945). Measures of the amount of ecologic "

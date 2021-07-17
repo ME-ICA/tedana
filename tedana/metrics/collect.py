@@ -515,9 +515,9 @@ def get_metadata(comptable):
             "LongName": "Original classification",
             "Description": ("Classification from the original decision tree."),
             "Levels": {
-                "accepted": ("A BOLD-like component included in denoised and " "high-Kappa data."),
+                "accepted": ("A BOLD-like component included in denoised and high-Kappa data."),
                 "rejected": (
-                    "A non-BOLD component excluded from denoised and " "high-Kappa data."
+                    "A non-BOLD component excluded from denoised and high-Kappa data."
                 ),
                 "ignored": (
                     "A low-variance component included in denoised, "
@@ -539,9 +539,9 @@ def get_metadata(comptable):
             "LongName": "Component classification",
             "Description": ("Classification from the manual classification procedure."),
             "Levels": {
-                "accepted": ("A BOLD-like component included in denoised and " "high-Kappa data."),
+                "accepted": ("A BOLD-like component included in denoised and high-Kappa data."),
                 "rejected": (
-                    "A non-BOLD component excluded from denoised and " "high-Kappa data."
+                    "A non-BOLD component excluded from denoised and high-Kappa data."
                 ),
                 "ignored": (
                     "A low-variance component included in denoised, "

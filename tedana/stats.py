@@ -59,7 +59,7 @@ def computefeats2(data, mmix, mask=None, normalize=True):
     if data.ndim != 2:
         raise ValueError("Parameter data should be 2d, not {0}d".format(data.ndim))
     elif mmix.ndim not in [2]:
-        raise ValueError("Parameter mmix should be 2d, not " "{0}d".format(mmix.ndim))
+        raise ValueError("Parameter mmix should be 2d, not {0}d".format(mmix.ndim))
     elif (mask is not None) and (mask.ndim != 1):
         raise ValueError("Parameter mask should be 1d, not {0}d".format(mask.ndim))
     elif (mask is not None) and (data.shape[0] != mask.shape[0]):
@@ -214,7 +214,7 @@ def t_to_z(t_values, dof):
         "described in Hughett (2007)."
     )
     RefLGR.info(
-        "Sochat, V. (2015). TtoZ Original Release. Zenodo. " "http://doi.org/10.5281/zenodo.32508."
+        "Sochat, V. (2015). TtoZ Original Release. Zenodo. http://doi.org/10.5281/zenodo.32508."
     )
     RefLGR.info(
         "Hughett, P. (2007). Accurate Computation of the F-to-z and "

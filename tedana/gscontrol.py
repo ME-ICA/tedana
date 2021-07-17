@@ -120,7 +120,7 @@ def gscontrol_raw(catd, optcom, n_echos, io_generator, dtrank=4):
 
 @due.dcite(
     Doi("10.1073/pnas.1301725110"),
-    description="Minimum image regression to remove T1-like effects " "from the denoised data.",
+    description="Minimum image regression to remove T1-like effects from the denoised data.",
 )
 def minimum_image_regression(optcom_ts, mmix, mask, comptable, io_generator):
     """

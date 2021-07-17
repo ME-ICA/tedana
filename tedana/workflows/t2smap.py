@@ -83,7 +83,7 @@ def _get_parser():
         dest="convention",
         action="store",
         choices=["orig", "bids"],
-        help=("Filenaming convention. bids will use " "the latest BIDS derivatives version."),
+        help=("Filenaming convention. bids will use the latest BIDS derivatives version."),
         default="bids",
     )
     optional.add_argument(
@@ -118,7 +118,7 @@ def _get_parser():
         dest="combmode",
         action="store",
         choices=["t2s", "paid"],
-        help=("Combination scheme for TEs: " "t2s (Posse 1999, default), paid (Poser)"),
+        help=("Combination scheme for TEs: t2s (Posse 1999, default), paid (Poser)"),
         default="t2s",
     )
     optional.add_argument(
