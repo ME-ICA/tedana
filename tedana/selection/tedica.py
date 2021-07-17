@@ -246,12 +246,13 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     f05, _, f01 = getfbounds(n_echos)
     kappas_nonsig = comptable.loc[comptable['kappa'] < f01, 'kappa']
     # NOTE: Would an elbow from all Kappa values *ever* be lower than one from
-    # a subset of lower values?
-    kappa_elbow = np.min((getelbow(kappas_nonsig, return_val=True),
-                          getelbow(comptable['kappa'], return_val=True)))
-    rho_elbow = np.mean((getelbow(comptable.loc[ncls, 'rho'], return_val=True),
-                         getelbow(comptable['rho'], return_val=True),
-                         f05))
+    # a subset of lower (i.e., nonsignificant) values?
+    kappas_nonsig_elbow = getelbow(kappas_nonsig, return_val=True)
+    kappas_all_elbow = getelbow(comptable['kappa'], return_val=True)
+    kappa_elbow = np.min((kappas_all_elbow, kappas_nonsig_elbow))
+    rhos_ncls_elbow = getelbow(comptable.loc[ncls, 'rho'], return_val=True)
+    rhos_all_elbow = getelbow(comptable['rho'], return_val=True)
+    rho_elbow = np.mean((rhos_ncls_elbow, rhos_all_elbow, f05))
 
     # Provisionally accept components based on Kappa and Rho elbows
     acc_prov = ncls[(comptable.loc[ncls, 'kappa'] >= kappa_elbow) &
