@@ -328,6 +328,51 @@ def add_decomp_prefix(comp_num, prefix, max_value):
     return comp_name
 
 
+def denoise_ts(data, mmix, mask, comptable):
+    """Apply component classifications to data for denoising.
+
+    Parameters
+    ----------
+    data : (S x T) array_like
+        Input time series
+    mmix : (C x T) array_like
+        Mixing matrix for converting input data to component space, where `C`
+        is components and `T` is the same as in `data`
+    mask : (S,) array_like
+        Boolean mask array
+    comptable : (C x X) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component, with a column for
+        each metric. Requires at least one column: "classification".
+
+    Returns
+    -------
+    dnts : (S x T) array_like
+        Denoised data (i.e., data with rejected components removed).
+    hikts : (S x T) array_like
+        High-Kappa data (i.e., data composed only of accepted components).
+    lowkts : (S x T) array_like
+        Low-Kappa data (i.e., data composed only of rejected components).
+    """
+    acc = comptable[comptable.classification == 'accepted'].index.values
+    rej = comptable[comptable.classification == 'rejected'].index.values
+
+    # mask and de-mean data
+    mdata = data[mask]
+    dmdata = mdata.T - mdata.T.mean(axis=0)
+
+    # get variance explained by retained components
+    betas = get_coeffs(dmdata.T, mmix, mask=None)
+    varexpl = (1 - ((dmdata.T - betas.dot(mmix.T))**2.).sum() /
+               (dmdata**2.).sum()) * 100
+    LGR.info('Variance explained by decomposition: {:.02f}%'.format(varexpl))
+
+    # create component-based data
+    hikts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
+    lowkts = utils.unmask(betas[:, rej].dot(mmix.T[rej, :]), mask)
+    dnts = utils.unmask(data[mask] - lowkts[mask], mask)
+    return dnts, hikts, lowkts
+
+
 # File Writing Functions
 def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
     """
@@ -370,64 +415,28 @@ def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
     acc = comptable[comptable.classification == 'accepted'].index.values
     rej = comptable[comptable.classification == 'rejected'].index.values
 
-    # mask and de-mean data
-    mdata = data[mask]
-    dmdata = mdata.T - mdata.T.mean(axis=0)
-
-    # get variance explained by retained components
-    betas = get_coeffs(dmdata.T, mmix, mask=None)
-    varexpl = (1 - ((dmdata.T - betas.dot(mmix.T))**2.).sum() /
-               (dmdata**2.).sum()) * 100
-    LGR.info('Variance explained by ICA decomposition: {:.02f}%'.format(varexpl))
-
-    # create component and de-noised time series and save to files
-    hikts = betas[:, acc].dot(mmix.T[acc, :])
-    lowkts = betas[:, rej].dot(mmix.T[rej, :])
-    dnts = data[mask] - lowkts
+    dnts, hikts, lowkts = denoise_ts(data, mmix, mask, comptable)
 
     if len(acc) != 0:
         if echo != 0:
-            fout = io_generator.save_file(
-                utils.unmask(hikts, mask),
-                'high kappa ts split img',
-                echo=echo
-            )
-
+            fout = io_generator.save_file(hikts, 'high kappa ts split img', echo=echo)
         else:
-            fout = io_generator.save_file(
-                utils.unmask(hikts, mask),
-                'high kappa ts img',
-            )
+            fout = io_generator.save_file(hikts, 'high kappa ts img')
         LGR.info('Writing high-Kappa time series: {}'.format(fout))
 
     if len(rej) != 0:
         if echo != 0:
-            fout = io_generator.save_file(
-                utils.unmask(lowkts, mask),
-                'low kappa ts split img',
-                echo=echo
-            )
+            fout = io_generator.save_file(lowkts, 'low kappa ts split img', echo=echo)
         else:
-            fout = io_generator.save_file(
-                utils.unmask(lowkts, mask),
-                'low kappa ts img',
-            )
+            fout = io_generator.save_file(lowkts, 'low kappa ts img')
         LGR.info('Writing low-Kappa time series: {}'.format(fout))
 
     if echo != 0:
-        fout = io_generator.save_file(
-            utils.unmask(dnts, mask),
-            'denoised ts split img',
-            echo=echo
-        )
+        fout = io_generator.save_file(dnts, 'denoised ts split img', echo=echo)
     else:
-        fout = io_generator.save_file(
-            utils.unmask(dnts, mask),
-            'denoised ts img',
-        )
+        fout = io_generator.save_file(dnts, 'denoised ts img')
 
     LGR.info('Writing denoised time series: {}'.format(fout))
-    return varexpl
 
 
 def writeresults(ts, mask, comptable, mmix, n_vols, io_generator):
