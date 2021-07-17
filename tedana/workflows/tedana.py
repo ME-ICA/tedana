@@ -536,7 +536,7 @@ def tedana_workflow(
             shutil.copyfile(mixm, mixing_name)
             shutil.copyfile(mixm, op.join(io_generator.out_dir, op.basename(mixm)))
     elif mixm is not None:
-        raise IOError('Argument "mixm" must be an existing file.')
+        raise IOError("Argument 'mixm' must be an existing file.")
 
     if ctab is not None and op.isfile(ctab):
         ctab = op.abspath(ctab)
@@ -546,13 +546,13 @@ def tedana_workflow(
             shutil.copyfile(ctab, metrics_name)
             shutil.copyfile(ctab, op.join(io_generator.out_dir, op.basename(ctab)))
     elif ctab is not None:
-        raise IOError('Argument "ctab" must be an existing file.')
+        raise IOError("Argument 'ctab' must be an existing file.")
 
     if ctab and not mixm:
-        LGR.warning('Argument "ctab" requires argument "mixm".')
+        LGR.warning("Argument 'ctab' requires argument 'mixm'.")
         ctab = None
     elif manacc is not None and (not mixm or not ctab):
-        LGR.warning('Argument "manacc" requires arguments "mixm" and "ctab".')
+        LGR.warning("Argument 'manacc' requires arguments 'mixm' and 'ctab'.")
         manacc = None
     elif manacc is not None:
         # coerce to list of integers
@@ -565,7 +565,7 @@ def tedana_workflow(
         if t2smap != t2smap_file:
             shutil.copyfile(t2smap, t2smap_file)
     elif t2smap is not None:
-        raise IOError('Argument "t2smap" must be an existing file.')
+        raise IOError("Argument 't2smap' must be an existing file.")
 
     RepLGR.info("TE-dependence analysis was performed on input data.")
     if mask and not t2smap:
