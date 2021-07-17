@@ -64,9 +64,7 @@ def manual_selection(comptable, acc=None, rej=None):
     elif acc is None and rej is not None:
         acc = sorted(np.setdiff1d(all_comps, rej))
     elif acc is None and rej is None:
-        LGR.info(
-            "No manually accepted or rejected components supplied. Accepting all components."
-        )
+        LGR.info("No manually accepted or rejected components supplied. Accepting all components.")
         # Accept all components if no manual selection provided
         acc = all_comps[:]
         rej = []

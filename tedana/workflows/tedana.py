@@ -195,9 +195,7 @@ def _get_parser():
         "--tedort",
         dest="tedort",
         action="store_true",
-        help=(
-            "Orthogonalize rejected components w.r.t. accepted components prior to denoising."
-        ),
+        help=("Orthogonalize rejected components w.r.t. accepted components prior to denoising."),
         default=False,
     )
     optional.add_argument(
@@ -858,9 +856,7 @@ def tedana_workflow(
         "nipy/nibabel. Zenodo. http://doi.org/10.5281/zenodo.3233118"
     )
 
-    RepLGR.info(
-        "This workflow also used the Dice similarity index (Dice, 1945; Sørensen, 1948)."
-    )
+    RepLGR.info("This workflow also used the Dice similarity index (Dice, 1945; Sørensen, 1948).")
     RefLGR.info(
         "Dice, L. R. (1945). Measures of the amount of ecologic "
         "association between species. Ecology, 26(3), 297-302."

@@ -17,9 +17,6 @@ exclude = '''
   )/
   | get_version.py
   | versioneer.py
-  | tedana/info.py
-  | tedana/_version.py
-  | tedana/due.py
 )
 '''
 
