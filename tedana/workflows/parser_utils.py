@@ -1,10 +1,9 @@
 """
 Functions for parsers.
 """
-import os.path as op
-import logging
-
 import argparse
+import logging
+import os.path as op
 
 
 def check_tedpca_value(string, is_parser=True):
@@ -17,9 +16,7 @@ def check_tedpca_value(string, is_parser=True):
     try:
         floatarg = float(string)
     except ValueError:
-        msg = "Argument to tedpca must be a float or one of: {}".format(
-            ", ".join(valid_options)
-        )
+        msg = "Argument to tedpca must be a float or one of: {}".format(", ".join(valid_options))
         raise error(msg)
 
     if not (0 <= floatarg <= 1):
@@ -32,7 +29,7 @@ def is_valid_file(parser, arg):
     Check if argument is existing file.
     """
     if not op.isfile(arg) and arg is not None:
-        parser.error('The file {0} does not exist!'.format(arg))
+        parser.error("The file {0} does not exist!".format(arg))
 
     return arg
 
@@ -43,7 +40,8 @@ class ContextFilter(logging.Filter):
     We use this to prevent our report-generation and reference-compiling
     loggers from printing to the general log file or to stdout.
     """
-    NAMES = ['REPORT', 'REFERENCES']
+
+    NAMES = ["REPORT", "REFERENCES"]
 
     def filter(self, record):
         if not any([n in record.name for n in self.NAMES]):

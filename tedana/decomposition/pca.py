@@ -10,13 +10,13 @@ from mapca import ma_pca
 from scipy import stats
 from sklearn.decomposition import PCA
 
-from tedana import metrics, utils, io
-from tedana.stats import computefeats2
+from tedana import io, metrics, utils
 from tedana.selection import kundu_tedpca
+from tedana.stats import computefeats2
 
 LGR = logging.getLogger(__name__)
-RepLGR = logging.getLogger('REPORT')
-RefLGR = logging.getLogger('REFERENCES')
+RepLGR = logging.getLogger("REPORT")
+RefLGR = logging.getLogger("REFERENCES")
 
 
 def low_mem_pca(data):
@@ -38,17 +38,30 @@ def low_mem_pca(data):
         Component timeseries.
     """
     from sklearn.decomposition import IncrementalPCA
+
     ppca = IncrementalPCA(n_components=(data.shape[-1] - 1))
     ppca.fit(data)
     v = ppca.components_.T
     s = ppca.explained_variance_
-    u = np.dot(np.dot(data, v), np.diag(1. / s))
+    u = np.dot(np.dot(data, v), np.diag(1.0 / s))
     return u, s, v
 
 
-def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
-           io_generator, tes, algorithm='mdl', kdaw=10., rdaw=1.,
-           verbose=False, low_mem=False):
+def tedpca(
+    data_cat,
+    data_oc,
+    combmode,
+    mask,
+    adaptive_mask,
+    t2sG,
+    io_generator,
+    tes,
+    algorithm="mdl",
+    kdaw=10.0,
+    rdaw=1.0,
+    verbose=False,
+    low_mem=False,
+):
     """
     Use principal components analysis (PCA) to identify and remove thermal
     noise from multi-echo data.
@@ -163,60 +176,72 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     :py:mod:`tedana.constants` : The module describing the filenames for
         various naming conventions
     """
-    if algorithm == 'kundu':
-        alg_str = ("followed by the Kundu component selection decision "
-                   "tree (Kundu et al., 2013)")
-        RefLGR.info("Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
-                    "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
-                    "(2013). Integrated strategy for improving functional "
-                    "connectivity mapping using multiecho fMRI. Proceedings "
-                    "of the National Academy of Sciences, 110(40), "
-                    "16187-16192.")
-    elif algorithm == 'kundu-stabilize':
-        alg_str = ("followed by the 'stabilized' Kundu component "
-                   "selection decision tree (Kundu et al., 2013)")
-        RefLGR.info("Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
-                    "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
-                    "(2013). Integrated strategy for improving functional "
-                    "connectivity mapping using multiecho fMRI. Proceedings "
-                    "of the National Academy of Sciences, 110(40), "
-                    "16187-16192.")
+    if algorithm == "kundu":
+        alg_str = "followed by the Kundu component selection decision " "tree (Kundu et al., 2013)"
+        RefLGR.info(
+            "Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
+            "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
+            "(2013). Integrated strategy for improving functional "
+            "connectivity mapping using multiecho fMRI. Proceedings "
+            "of the National Academy of Sciences, 110(40), "
+            "16187-16192."
+        )
+    elif algorithm == "kundu-stabilize":
+        alg_str = (
+            "followed by the 'stabilized' Kundu component "
+            "selection decision tree (Kundu et al., 2013)"
+        )
+        RefLGR.info(
+            "Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
+            "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
+            "(2013). Integrated strategy for improving functional "
+            "connectivity mapping using multiecho fMRI. Proceedings "
+            "of the National Academy of Sciences, 110(40), "
+            "16187-16192."
+        )
     elif isinstance(algorithm, Number):
         alg_str = (
             "in which the number of components was determined based on a "
-            "variance explained threshold")
+            "variance explained threshold"
+        )
     else:
-        alg_str = ("based on the PCA component estimation with a Moving Average"
-                   "(stationary Gaussian) process (Li et al., 2007)")
-        RefLGR.info("Li, Y.O., Adalı, T. and Calhoun, V.D., (2007). "
-                    "Estimating the number of independent components for "
-                    "functional magnetic resonance imaging data. "
-                    "Human brain mapping, 28(11), pp.1251-1266.")
+        alg_str = (
+            "based on the PCA component estimation with a Moving Average"
+            "(stationary Gaussian) process (Li et al., 2007)"
+        )
+        RefLGR.info(
+            "Li, Y.O., Adalı, T. and Calhoun, V.D., (2007). "
+            "Estimating the number of independent components for "
+            "functional magnetic resonance imaging data. "
+            "Human brain mapping, 28(11), pp.1251-1266."
+        )
 
-    RepLGR.info("Principal component analysis {0} was applied to "
-                "the optimally combined data for dimensionality "
-                "reduction.".format(alg_str))
+    RepLGR.info(
+        "Principal component analysis {0} was applied to "
+        "the optimally combined data for dimensionality "
+        "reduction.".format(alg_str)
+    )
 
     n_samp, n_echos, n_vols = data_cat.shape
 
-    LGR.info('Computing PCA of optimally combined multi-echo data')
+    LGR.info("Computing PCA of optimally combined multi-echo data")
     data = data_oc[mask, :]
 
     data_z = ((data.T - data.T.mean(axis=0)) / data.T.std(axis=0)).T  # var normalize ts
     data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
 
-    if algorithm in ['mdl', 'aic', 'kic']:
+    if algorithm in ["mdl", "aic", "kic"]:
         data_img = io.new_nii_like(io_generator.reference_img, utils.unmask(data, mask))
         mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
         voxel_comp_weights, varex, varex_norm, comp_ts = ma_pca(
-            data_img, mask_img, algorithm, normalize=True)
+            data_img, mask_img, algorithm, normalize=True
+        )
     elif isinstance(algorithm, Number):
         ppca = PCA(copy=False, n_components=algorithm, svd_solver="full")
         ppca.fit(data_z)
         comp_ts = ppca.components_.T
         varex = ppca.explained_variance_
-        voxel_comp_weights = np.dot(np.dot(data_z, comp_ts),
-                                    np.diag(1. / varex))
+        voxel_comp_weights = np.dot(np.dot(data_z, comp_ts), np.diag(1.0 / varex))
         varex_norm = varex / varex.sum()
     elif low_mem:
         voxel_comp_weights, varex, comp_ts = low_mem_pca(data_z)
@@ -226,35 +251,47 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         ppca.fit(data_z)
         comp_ts = ppca.components_.T
         varex = ppca.explained_variance_
-        voxel_comp_weights = np.dot(np.dot(data_z, comp_ts),
-                                    np.diag(1. / varex))
+        voxel_comp_weights = np.dot(np.dot(data_z, comp_ts), np.diag(1.0 / varex))
         varex_norm = varex / varex.sum()
 
     # Compute Kappa and Rho for PCA comps
     required_metrics = [
-        'kappa', 'rho', 'countnoise', 'countsigFT2', 'countsigFS0',
-        'dice_FT2', 'dice_FS0', 'signal-noise_t',
-        'variance explained', 'normalized variance explained',
-        'd_table_score'
+        "kappa",
+        "rho",
+        "countnoise",
+        "countsigFT2",
+        "countsigFS0",
+        "dice_FT2",
+        "dice_FS0",
+        "signal-noise_t",
+        "variance explained",
+        "normalized variance explained",
+        "d_table_score",
     ]
     comptable = metrics.collect.generate_metrics(
-        data_cat, data_oc, comp_ts, adaptive_mask,
-        tes, io_generator, 'PCA',
+        data_cat,
+        data_oc,
+        comp_ts,
+        adaptive_mask,
+        tes,
+        io_generator,
+        "PCA",
         metrics=required_metrics,
     )
 
     # varex_norm from PCA overrides varex_norm from dependence_metrics,
     # but we retain the original
-    comptable['estimated normalized variance explained'] = \
-        comptable['normalized variance explained']
-    comptable['normalized variance explained'] = varex_norm
+    comptable["estimated normalized variance explained"] = comptable[
+        "normalized variance explained"
+    ]
+    comptable["normalized variance explained"] = varex_norm
 
     # write component maps to 4D image
     comp_maps = utils.unmask(computefeats2(data_oc, comp_ts, mask), mask)
-    io_generator.save_file(comp_maps, 'z-scored PCA components img')
+    io_generator.save_file(comp_maps, "z-scored PCA components img")
 
     # Select components using decision tree
-    if algorithm == 'kundu':
+    if algorithm == "kundu":
         comptable, metric_metadata = kundu_tedpca(
             comptable,
             n_echos,
@@ -262,7 +299,7 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
             rdaw,
             stabilize=False,
         )
-    elif algorithm == 'kundu-stabilize':
+    elif algorithm == "kundu-stabilize":
         comptable, metric_metadata = kundu_tedpca(
             comptable,
             n_echos,
@@ -272,14 +309,18 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         )
     else:
         alg_str = "variance explained-based" if isinstance(algorithm, Number) else algorithm
-        LGR.info('Selected {0} components with {1} dimensionality '
-                 'detection'.format(comptable.shape[0], alg_str))
-        comptable['classification'] = 'accepted'
-        comptable['rationale'] = ''
+        LGR.info(
+            "Selected {0} components with {1} dimensionality "
+            "detection".format(comptable.shape[0], alg_str)
+        )
+        comptable["classification"] = "accepted"
+        comptable["rationale"] = ""
 
     # Save decomposition files
-    comp_names = [io.add_decomp_prefix(comp, prefix='pca', max_value=comptable.index.max())
-                  for comp in comptable.index.values]
+    comp_names = [
+        io.add_decomp_prefix(comp, prefix="pca", max_value=comptable.index.max())
+        for comp in comptable.index.values
+    ]
 
     mixing_df = pd.DataFrame(data=comp_ts, columns=comp_names)
     io_generator.save_file(mixing_df, "PCA mixing tsv")
@@ -303,9 +344,9 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         }
     io_generator.save_file(decomp_metadata, "PCA decomposition json")
 
-    acc = comptable[comptable.classification == 'accepted'].index.values
+    acc = comptable[comptable.classification == "accepted"].index.values
     n_components = acc.size
-    voxel_kept_comp_weighted = (voxel_comp_weights[:, acc] * varex[None, acc])
+    voxel_kept_comp_weighted = voxel_comp_weights[:, acc] * varex[None, acc]
     kept_data = np.dot(voxel_kept_comp_weighted, comp_ts[:, acc].T)
 
     kept_data = stats.zscore(kept_data, axis=1)  # variance normalize time series
