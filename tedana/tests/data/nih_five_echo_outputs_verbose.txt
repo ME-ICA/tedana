@@ -73,6 +73,10 @@ echo-5_desc-Rejected_bold.nii.gz
 report.txt
 tedana_report.html
 figures
+figures/carpet_optcom.svg
+figures/carpet_denoised.svg
+figures/carpet_accepted.svg
+figures/carpet_rejected.svg
 figures/comp_000.png
 figures/comp_001.png
 figures/comp_002.png

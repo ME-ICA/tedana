@@ -748,13 +748,27 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         fo.write(report)
 
     if not no_reports:
-        LGR.info('Making figures folder with static component maps and '
-                 'timecourse plots.')
-        reporting.static_figures.comp_figures(data_oc, mask=mask,
-                                              comptable=comptable,
-                                              mmix=mmix_orig,
-                                              io_generator=io_generator,
-                                              png_cmap=png_cmap)
+        LGR.info('Making figures folder with static component maps and timecourse plots.')
+
+        dn_ts, hikts, lowkts = io.denoise_ts(data_oc, mmix, mask, comptable)
+
+        reporting.static_figures.carpet_plot(
+            optcom_ts=data_oc,
+            denoised_ts=dn_ts,
+            hikts=hikts,
+            lowkts=lowkts,
+            mask=mask,
+            io_generator=io_generator,
+            gscontrol=gscontrol,
+        )
+        reporting.static_figures.comp_figures(
+            data_oc,
+            mask=mask,
+            comptable=comptable,
+            mmix=mmix_orig,
+            io_generator=io_generator,
+            png_cmap=png_cmap,
+        )
 
         if sys.version_info.major == 3 and sys.version_info.minor < 6:
             warn_msg = ("Reports requested but Python version is less than "
