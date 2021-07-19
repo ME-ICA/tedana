@@ -45,9 +45,11 @@ def getelbow_cons(arr, return_val=False):
     if not arr.size:
         raise ValueError(
             "Empty array detected during elbow calculation. "
-            "The cause behind this failure is not currently known, so please open an issue at "
+            "This error happens when getelbow_cons is incorrectly called on no components. "
+            "If you see this message, please open an issue at "
             "https://github.com/ME-ICA/tedana/issues with the full traceback and any data "
-            "necessary to reproduce this error."
+            "necessary to reproduce this error, so that we create additional data checks to "
+            "prevent this from happening."
         )
 
     arr = np.sort(arr)[::-1]
@@ -92,9 +94,11 @@ def getelbow(arr, return_val=False):
     if not arr.size:
         raise ValueError(
             "Empty array detected during elbow calculation. "
-            "The cause behind this failure is not currently known, so please open an issue at "
+            "This error happens when getelbow is incorrectly called on no components. "
+            "If you see this message, please open an issue at "
             "https://github.com/ME-ICA/tedana/issues with the full traceback and any data "
-            "necessary to reproduce this error."
+            "necessary to reproduce this error, so that we create additional data checks to "
+            "prevent this from happening."
         )
 
     arr = np.sort(arr)[::-1]
