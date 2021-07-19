@@ -213,12 +213,26 @@ class OutputGenerator:
             Data to save to a file.
         name : str
             Full file path for output file.
+
+        Notes
+        -----
+        Will coerce 64-bit float and int arrays into 32-bit arrays.
         """
         data_type = type(data)
         if not isinstance(data, np.ndarray):
             raise TypeError(f"Data supplied must of type np.ndarray, not {data_type}.")
         if data.ndim not in (1, 2):
-            raise TypeError("Data must have number of dimensions in (1, 2), not " f"{data.ndim}")
+            raise TypeError(f"Data must have number of dimensions in (1, 2), not {data.ndim}")
+
+        # Coerce data to be 32-bit max in the cases of float64, int64
+        # Note that int64 niftis cannot be read by mricroGL, AFNI
+        vox_type = data.dtype
+        if vox_type == np.int64:
+            data = np.int32(data)
+        elif vox_type == np.float64:
+            data = np.float32(data)
+
+        # Make new img and save
         img = new_nii_like(self.reference_img, data)
         img.to_filename(name)
 
