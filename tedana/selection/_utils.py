@@ -44,8 +44,10 @@ def getelbow_cons(arr, return_val=False):
 
     if not arr.size:
         raise ValueError(
-            "Empty array detected. This is often a random error, so consider re-running tedana "
-            "with a different random seed."
+            "Empty array detected during elbow calculation. "
+            "The cause behind this failure is not currently known, so please open an issue at "
+            "https://github.com/ME-ICA/tedana/issues with the full traceback and any data "
+            "necessary to reproduce this error."
         )
 
     arr = np.sort(arr)[::-1]
@@ -89,8 +91,10 @@ def getelbow(arr, return_val=False):
 
     if not arr.size:
         raise ValueError(
-            "Empty array detected. This is often a random error, so consider re-running tedana "
-            "with a different random seed."
+            "Empty array detected during elbow calculation. "
+            "The cause behind this failure is not currently known, so please open an issue at "
+            "https://github.com/ME-ICA/tedana/issues with the full traceback and any data "
+            "necessary to reproduce this error."
         )
 
     arr = np.sort(arr)[::-1]
