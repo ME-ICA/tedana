@@ -248,7 +248,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     if not kappas_nonsig.size:
         LGR.warning(
             "No nonsignificant kappa values detected. "
-            "Only calculating elbow from all values instead."
+            "Only using elbow calculated from all kappa values."
         )
         kappas_nonsig_elbow = np.nan
     else:
