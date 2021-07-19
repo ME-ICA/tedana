@@ -100,7 +100,7 @@ def test_smoke_write_split_ts():
     df_data = np.column_stack((component, metric, classification))
     comptable = pd.DataFrame(df_data, columns=['component', 'metric', 'classification'])
 
-    assert me.write_split_ts(data, mmix, mask, comptable, io_generator) is not None
+    me.write_split_ts(data, mmix, mask, comptable, io_generator)
 
     # TODO: midk_ts.nii is never generated?
     fn = io_generator.get_name

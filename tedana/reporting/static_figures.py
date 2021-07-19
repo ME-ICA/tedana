@@ -8,9 +8,9 @@ import numpy as np
 import matplotlib
 matplotlib.use('AGG')
 import matplotlib.pyplot as plt
+from nilearn import plotting
 
-from tedana import stats
-from tedana.utils import get_spectrum
+from tedana import io, stats, utils
 
 LGR = logging.getLogger(__name__)
 MPL_LGR = logging.getLogger('matplotlib')
@@ -41,6 +41,113 @@ def _trim_edge_zeros(arr):
                          slice(np.min(indexes), np.max(indexes) + 1)
                          for indexes in np.where(mask))
     return arr[bounding_box]
+
+
+def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscontrol=None):
+    """Generate a set of carpet plots for the combined and denoised data.
+
+    Parameters
+    ----------
+    optcom_ts, denoised_ts, hikts, lowkts : (S x T) array_like
+        Different types of data to plot.
+    mask : (S,) array-like
+        Binary mask used to apply to the data.
+    io_generator : :obj:`tedana.io.OutputGenerator`
+        The output generator for this workflow
+    gscontrol : {None, 'mir', 'gsr'} or :obj:`list`, optional
+        Additional denoising steps applied in the workflow.
+        If any gscontrol methods were applied, then additional carpet plots will be generated for
+        pertinent outputs from those steps.
+        Default is None.
+    """
+    mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
+    optcom_img = io.new_nii_like(io_generator.reference_img, optcom_ts)
+    dn_img = io.new_nii_like(io_generator.reference_img, denoised_ts)
+    hik_img = io.new_nii_like(io_generator.reference_img, hikts)
+    lowk_img = io.new_nii_like(io_generator.reference_img, lowkts)
+
+    # Carpet plots
+    fig, ax = plt.subplots(figsize=(14, 7))
+    plotting.plot_carpet(
+        optcom_img,
+        mask_img,
+        figure=fig,
+        axes=ax,
+        title="Optimally Combined Data",
+    )
+    fig.tight_layout()
+    fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_optcom.svg"))
+
+    fig, ax = plt.subplots(figsize=(14, 7))
+    plotting.plot_carpet(
+        dn_img,
+        mask_img,
+        figure=fig,
+        axes=ax,
+        title="Denoised Data",
+    )
+    fig.tight_layout()
+    fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_denoised.svg"))
+
+    fig, ax = plt.subplots(figsize=(14, 7))
+    plotting.plot_carpet(
+        hik_img,
+        mask_img,
+        figure=fig,
+        axes=ax,
+        title="High-Kappa Data",
+    )
+    fig.tight_layout()
+    fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_accepted.svg"))
+
+    fig, ax = plt.subplots(figsize=(14, 7))
+    plotting.plot_carpet(
+        lowk_img,
+        mask_img,
+        figure=fig,
+        axes=ax,
+        title="Low-Kappa Data",
+    )
+    fig.tight_layout()
+    fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_rejected.svg"))
+
+    if (gscontrol is not None) and ("gsr" in gscontrol):
+        optcom_with_gs_img = io_generator.get_name("has gs combined img")
+        fig, ax = plt.subplots(figsize=(14, 7))
+        plotting.plot_carpet(
+            optcom_with_gs_img,
+            mask_img,
+            figure=fig,
+            axes=ax,
+            title="Optimally Combined Data (Pre-GSR)",
+        )
+        fig.tight_layout()
+        fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_optcom_nogsr.svg"))
+
+    if (gscontrol is not None) and ("mir" in gscontrol):
+        mir_denoised_img = io_generator.get_name("mir denoised img")
+        fig, ax = plt.subplots(figsize=(14, 7))
+        plotting.plot_carpet(
+            mir_denoised_img,
+            mask_img,
+            figure=fig,
+            axes=ax,
+            title="Denoised Data (Post-MIR)",
+        )
+        fig.tight_layout()
+        fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_denoised_mir.svg"))
+
+        mir_denoised_img = io_generator.get_name("ICA accepted mir denoised img")
+        fig, ax = plt.subplots(figsize=(14, 7))
+        plotting.plot_carpet(
+            mir_denoised_img,
+            mask_img,
+            figure=fig,
+            axes=ax,
+            title="High-Kappa Data (Post-MIR)",
+        )
+        fig.tight_layout()
+        fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_accepted_mir.svg"))
 
 
 def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
@@ -169,7 +276,7 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
 
         # Get fft and freqs for this subject
         # adapted from @dangom
-        spectrum, freqs = get_spectrum(mmix[:, compnum], tr)
+        spectrum, freqs = utils.get_spectrum(mmix[:, compnum], tr)
 
         # Plot it
         ax_fft = plt.subplot2grid((5, 6), (4, 0), rowspan=1, colspan=6)

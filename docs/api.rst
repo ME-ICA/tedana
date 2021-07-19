@@ -170,6 +170,7 @@ API
    tedana.io.load_data
    tedana.io.new_nii_like
    tedana.io.add_decomp_prefix
+   tedana.io.denoise_ts
    tedana.io.split_ts
    tedana.io.write_split_ts
    tedana.io.writeresults

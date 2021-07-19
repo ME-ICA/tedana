@@ -233,15 +233,21 @@ def _get_parser():
                           dest='ctab',
                           metavar='FILE',
                           type=lambda x: is_valid_file(parser, x),
-                          help=('File containing a component table from which '
-                                'to extract pre-computed classifications.'),
+                          help=(
+                              'File containing a component table from which '
+                              'to extract pre-computed classifications. '
+                              "Requires --mix."
+                          ),
                           default=None)
     rerungrp.add_argument('--manacc',
                           dest='manacc',
                           metavar='INT',
                           type=int,
                           nargs='+',
-                          help='List of manually accepted components.',
+                          help=(
+                              'List of manually accepted components. '
+                              "Requires --ctab and --mix."
+                          ),
                           default=None)
 
     return parser
@@ -311,6 +317,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     manacc : :obj:`list` of :obj:`int` or None, optional
         List of manually accepted components. Can be a list of the components
         numbers or None.
+        If provided, this parameter requires ``mixm`` and ``ctab`` to be provided as well.
         Default is None.
 
     Other Parameters
@@ -458,8 +465,8 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if ctab and not mixm:
         LGR.warning('Argument "ctab" requires argument "mixm".')
         ctab = None
-    elif manacc is not None and not mixm:
-        LGR.warning('Argument "manacc" requires argument "mixm".')
+    elif manacc is not None and (not mixm or not ctab):
+        LGR.warning('Argument "manacc" requires arguments "mixm" and "ctab".')
         manacc = None
     elif manacc is not None:
         # coerce to list of integers
@@ -759,13 +766,27 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         fo.write(report)
 
     if not no_reports:
-        LGR.info('Making figures folder with static component maps and '
-                 'timecourse plots.')
-        reporting.static_figures.comp_figures(data_oc, mask=mask_denoise,
-                                              comptable=comptable,
-                                              mmix=mmix_orig,
-                                              io_generator=io_generator,
-                                              png_cmap=png_cmap)
+        LGR.info('Making figures folder with static component maps and timecourse plots.')
+
+        dn_ts, hikts, lowkts = io.denoise_ts(data_oc, mmix, mask, comptable)
+
+        reporting.static_figures.carpet_plot(
+            optcom_ts=data_oc,
+            denoised_ts=dn_ts,
+            hikts=hikts,
+            lowkts=lowkts,
+            mask=mask_denoise,
+            io_generator=io_generator,
+            gscontrol=gscontrol,
+        )
+        reporting.static_figures.comp_figures(
+            data_oc,
+            mask=mask_denoise,
+            comptable=comptable,
+            mmix=mmix_orig,
+            io_generator=io_generator,
+            png_cmap=png_cmap,
+        )
 
         if sys.version_info.major == 3 and sys.version_info.minor < 6:
             warn_msg = ("Reports requested but Python version is less than "
