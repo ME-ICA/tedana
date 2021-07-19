@@ -768,7 +768,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if not no_reports:
         LGR.info('Making figures folder with static component maps and timecourse plots.')
 
-        dn_ts, hikts, lowkts = io.denoise_ts(data_oc, mmix, mask, comptable)
+        dn_ts, hikts, lowkts = io.denoise_ts(data_oc, mmix, mask_denoise, comptable)
 
         reporting.static_figures.carpet_plot(
             optcom_ts=data_oc,
