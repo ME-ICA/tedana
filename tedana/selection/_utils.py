@@ -42,6 +42,17 @@ def getelbow_cons(arr, return_val=False):
     """
     if arr.ndim != 1:
         raise ValueError("Parameter arr should be 1d, not {0}d".format(arr.ndim))
+
+    if not arr.size:
+        raise ValueError(
+            "Empty array detected during elbow calculation. "
+            "This error happens when getelbow_cons is incorrectly called on no components. "
+            "If you see this message, please open an issue at "
+            "https://github.com/ME-ICA/tedana/issues with the full traceback and any data "
+            "necessary to reproduce this error, so that we create additional data checks to "
+            "prevent this from happening."
+        )
+
     arr = np.sort(arr)[::-1]
     nk = len(arr)
     temp1 = [
@@ -82,6 +93,17 @@ def getelbow(arr, return_val=False):
     """
     if arr.ndim != 1:
         raise ValueError("Parameter arr should be 1d, not {0}d".format(arr.ndim))
+
+    if not arr.size:
+        raise ValueError(
+            "Empty array detected during elbow calculation. "
+            "This error happens when getelbow is incorrectly called on no components. "
+            "If you see this message, please open an issue at "
+            "https://github.com/ME-ICA/tedana/issues with the full traceback and any data "
+            "necessary to reproduce this error, so that we create additional data checks to "
+            "prevent this from happening."
+        )
+
     arr = np.sort(arr)[::-1]
     n_components = arr.shape[0]
     coords = np.array([np.arange(n_components), arr])
