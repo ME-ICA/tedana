@@ -14,7 +14,7 @@ from tedana import metrics, utils, io
 from tedana.stats import computefeats2
 from tedana.selection import kundu_tedpca
 
-LGR = logging.getLogger(__name__)
+LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 

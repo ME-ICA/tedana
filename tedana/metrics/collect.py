@@ -13,7 +13,7 @@ from tedana import utils
 from tedana.stats import getfbounds
 
 
-LGR = logging.getLogger(__name__)
+LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 RefLGR = logging.getLogger("REFERENCES")
 

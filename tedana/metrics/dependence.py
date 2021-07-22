@@ -8,7 +8,7 @@ from tedana import io, utils
 from tedana.stats import computefeats2, get_coeffs, t_to_z
 
 
-LGR = logging.getLogger(__name__)
+LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 RefLGR = logging.getLogger("REFERENCES")
 
