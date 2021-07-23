@@ -1,5 +1,6 @@
+########################
 What is multi-echo fMRI?
-========================
+########################
 
 .. admonition:: TL;DR
 
@@ -18,8 +19,10 @@ What is multi-echo fMRI?
 To understand what multi-echo fMRI is and why it's useful,
 we will walk through a number of things.
 
+
+*******************
 The physics of fMRI
--------------------
+*******************
 
 In a typical fMRI sequence,
 the protons in a brain slice are aligned perpendicularly to the main magnetic
@@ -38,10 +41,10 @@ However,
 
 To start, let's look at the most common type of fMRI, single-echo EPI.
 
+
+*************************
 What is single-echo fMRI?
--------------------------
-
-
+*************************
 
 When you have a single echo time, you acquire one value for each voxel, at each time point.
 
@@ -63,10 +66,13 @@ However, this ignores a number of useful features of the BOLD signal, including:
 (1) BOLD signal decays as echo time increases, (2) BOLD contrast _increases_ as echo time increases,
 (3) BOLD fluctuations may be driven by
 
+
 .. _multi-echo physics:
 
+******************************
 The physics of multi-echo fMRI
-------------------------------
+******************************
+
 Multi-echo fMRI data is obtained by acquiring multiple echo times (commonly called
 `TEs`_) for each MRI volume during data collection.
 While fMRI signal contains important neural information (termed the blood
@@ -121,8 +127,10 @@ For a more comprehensive review of these topics and others, see `Kundu et al. (2
 .. _Kundu et al. (2017): https://www.sciencedirect.com/science/article/pii/S1053811917302410?via%3Dihub
 
 
+*******************
 Why use multi-echo?
--------------------
+*******************
+
 There are many potential reasons an investigator would be interested in using multi-echo EPI (ME-EPI).
 Among these are the different levels of analysis ME-EPI enables.
 Specifically, by collecting multi-echo data, researchers are able to:
