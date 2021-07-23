@@ -14,18 +14,25 @@ def test_manual_selection():
     accepted and rejected components.
     """
     comptable = pd.DataFrame(index=np.arange(100))
-    comptable = selection.manual_selection(comptable, acc=[1, 3, 5])
+    comptable, metric_metadata = selection.manual_selection(
+            comptable, acc=[1, 3, 5]
+    )
     assert comptable.loc[comptable.classification == 'accepted'].shape[0] == 3
     assert (comptable.loc[comptable.classification == 'rejected'].shape[0] ==
             (comptable.shape[0] - 3))
 
-    comptable = selection.manual_selection(comptable, rej=[1, 3, 5])
+    comptable, metric_metadata = selection.manual_selection(
+            comptable, rej=[1, 3, 5]
+    )
     assert comptable.loc[comptable.classification == 'rejected'].shape[0] == 3
     assert (comptable.loc[comptable.classification == 'accepted'].shape[0] ==
             (comptable.shape[0] - 3))
 
-    comptable = selection.manual_selection(comptable, acc=[0, 2, 4],
-                                           rej=[1, 3, 5])
+    comptable, metric_metadata = selection.manual_selection(
+        comptable,
+        acc=[0, 2, 4],
+        rej=[1, 3, 5]
+    )
     assert comptable.loc[comptable.classification == 'accepted'].shape[0] == 3
     assert comptable.loc[comptable.classification == 'rejected'].shape[0] == 3
     assert (comptable.loc[comptable.classification == 'ignored'].shape[0] ==

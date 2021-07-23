@@ -17,7 +17,6 @@ import pandas as pd
 
 from tedana.workflows import tedana as tedana_cli
 from tedana.workflows import t2smap as t2smap_cli
-from tedana import io
 
 
 def check_integration_outputs(fname, outpath):
@@ -95,20 +94,21 @@ def test_integration_five_echo(skip_integration):
         out_dir=out_dir,
         tedpca=0.95,
         fittype='curvefit',
+        fixed_seed=49,
         tedort=True,
         verbose=True)
 
     # Just a check on the component table pending a unit test of load_comptable
-    comptable = os.path.join(out_dir, 'ica_decomposition.json')
-    df = io.load_comptable(comptable)
+    comptable = os.path.join(out_dir, 'desc-tedana_metrics.tsv')
+    df = pd.read_table(comptable)
     assert isinstance(df, pd.DataFrame)
 
     # Test re-running, but use the CLI
     out_dir2 = '/tmp/data/five-echo/TED.five-echo-manual'
     acc_comps = df.loc[df['classification'] == 'accepted'].index.values
     acc_comps = [str(c) for c in acc_comps]
-    mixing = os.path.join(out_dir, 'ica_mixing.tsv')
-    t2smap = os.path.join(out_dir, 't2sv.nii.gz')
+    mixing = os.path.join(out_dir, 'desc-ICA_mixing.tsv')
+    t2smap = os.path.join(out_dir, 'T2starmap.nii.gz')
     args = (['-d'] + datalist + ['-e'] + [str(te) for te in echo_times] +
             ['--out-dir', out_dir2, '--debug', '--verbose',
              '--manacc', *acc_comps,
@@ -178,8 +178,8 @@ def test_integration_three_echo(skip_integration):
     args = (['-d', '/tmp/data/three-echo/three_echo_Cornell_zcat.nii.gz',
              '-e', '14.5', '38.5', '62.5',
              '--out-dir', out_dir2, '--debug', '--verbose',
-             '--ctab', os.path.join(out_dir, 'ica_decomposition.json'),
-             '--mix', os.path.join(out_dir, 'ica_mixing.tsv')])
+             '--ctab', os.path.join(out_dir, 'desc-tedana_metrics.tsv'),
+             '--mix', os.path.join(out_dir, 'desc-ICA_mixing.tsv')])
     tedana_cli._main(args)
 
     # compare the generated output files

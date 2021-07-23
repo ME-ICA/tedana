@@ -5,7 +5,7 @@ import logging
 import numpy as np
 from tedana.due import due, Doi
 
-LGR = logging.getLogger(__name__)
+LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 

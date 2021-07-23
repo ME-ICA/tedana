@@ -2,21 +2,21 @@
 Global signal control methods
 """
 import logging
-import os.path as op
 
 import numpy as np
+import pandas as pd
 from scipy import stats
 from scipy.special import lpmv
 
-from tedana import io, utils
+from tedana import utils
 from tedana.due import due, Doi
 
-LGR = logging.getLogger(__name__)
+LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 RefLGR = logging.getLogger("REFERENCES")
 
 
-def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
+def gscontrol_raw(catd, optcom, n_echos, io_generator, dtrank=4):
     """
     Removes global signal from individual echo `catd` and `optcom` time series
 
@@ -34,10 +34,8 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
         Optimally combined functional data (i.e., the output of `make_optcom`)
     n_echos : :obj:`int`
         Number of echos in data. Should be the same as `E` dimension of `catd`
-    ref_img : :obj:`str` or img_like
-        Reference image to dictate how outputs are saved to disk
-    out_dir : :obj:`str`, optional
-        Output directory.
+    io_generator : :obj:`tedana.io.OutputGenerator`
+        The output generator for this workflow
     dtrank : :obj:`int`, optional
         Specifies degree of Legendre polynomial basis function for estimating
         spatial global signal. Default: 4
@@ -78,13 +76,15 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
     detr = dat - np.dot(sol.T, Lmix.T)[0]
     sphis = (detr).min(axis=1)
     sphis -= sphis.mean()
-    io.filewrite(utils.unmask(sphis, Gmask), op.join(out_dir, 'T1gs'), ref_img)
+    io_generator.save_file(utils.unmask(sphis, Gmask), "gs img")
 
     # find time course ofc the spatial global signal
     # make basis with the Legendre basis
     glsig = np.linalg.lstsq(np.atleast_2d(sphis).T, dat, rcond=None)[0]
     glsig = stats.zscore(glsig, axis=None)
-    np.savetxt(op.join(out_dir, 'glsig.1D'), glsig)
+
+    glsig_df = pd.DataFrame(data=glsig.T, columns=['global_signal'])
+    io_generator.save_file(glsig_df, "global signal time series tsv")
     glbase = np.hstack([Lmix, glsig.T])
 
     # Project global signal out of optimally combined data
@@ -92,9 +92,9 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
     tsoc_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T,
                              np.atleast_2d(glbase.T[dtrank])) + Gmu[Gmask][:, np.newaxis]
 
-    io.filewrite(optcom, op.join(out_dir, 'tsoc_orig'), ref_img)
+    io_generator.save_file(optcom, "has gs combined img")
     dm_optcom = utils.unmask(tsoc_nogs, Gmask)
-    io.filewrite(dm_optcom, op.join(out_dir, 'tsoc_nogs'), ref_img)
+    io_generator.save_file(dm_optcom, "removed gs combined img")
 
     # Project glbase out of each echo
     dm_catd = catd.copy()  # don't overwrite catd
@@ -111,7 +111,7 @@ def gscontrol_raw(catd, optcom, n_echos, ref_img, out_dir='.', dtrank=4):
 @due.dcite(Doi("10.1073/pnas.1301725110"),
            description="Minimum image regression to remove T1-like effects "
                        "from the denoised data.")
-def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir="."):
+def minimum_image_regression(optcom_ts, mmix, mask, comptable, io_generator):
     """
     Perform minimum image regression (MIR) to remove T1-like effects from
     BOLD-like components.
@@ -131,10 +131,8 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
     comptable : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
-    ref_img : :obj:`str` or img_like
-        Reference image to dictate how outputs are saved to disk
-    out_dir : :obj:`str`, optional
-        Output directory.
+    io_generator : :obj:`tedana.io.OutputGenerator`
+        The output generating object for this workflow
 
     Notes
     -----
@@ -202,7 +200,7 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
     mehk_ts = np.dot(comp_pes[:, acc], mmix[:, acc].T)
     t1_map = mehk_ts.min(axis=-1)  # map of T1-like effect
     t1_map -= t1_map.mean()
-    io.filewrite(utils.unmask(t1_map, mask), op.join(out_dir, "sphis_hik"), ref_img)
+    io_generator.save_file(utils.unmask(t1_map, mask), "t1 like img")
     t1_map = t1_map[:, np.newaxis]
 
     # Find the global signal based on the T1-like effect
@@ -213,11 +211,11 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
         np.linalg.lstsq(glob_sig.T, mehk_ts.T, rcond=None)[0].T, glob_sig
     )
     hik_ts = mehk_noT1gs * optcom_std  # rescale
-    io.filewrite(utils.unmask(hik_ts, mask), op.join(out_dir, "hik_ts_OC_MIR"), ref_img)
+    io_generator.save_file(utils.unmask(hik_ts, mask), "ICA accepted mir denoised img")
 
     # Make denoised version of T1-corrected time series
     medn_ts = optcom_mean + ((mehk_noT1gs + resid) * optcom_std)
-    io.filewrite(utils.unmask(medn_ts, mask), op.join(out_dir, "dn_ts_OC_MIR"), ref_img)
+    io_generator.save_file(utils.unmask(medn_ts, mask), "mir denoised img")
 
     # Orthogonalize mixing matrix w.r.t. T1-GS
     mmix_noT1gs = mmix.T - np.dot(
@@ -230,9 +228,9 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, ref_img, out_dir=
 
     # Write T1-corrected components and mixing matrix
     comp_pes_norm = np.linalg.lstsq(mmix_noT1gs_z.T, optcom_z.T, rcond=None)[0].T
-    io.filewrite(
+    io_generator.save_file(
         utils.unmask(comp_pes_norm[:, 2:], mask),
-        op.join(out_dir, "betas_hik_OC_MIR"),
-        ref_img,
+        "ICA accepted mir component weights img",
     )
-    np.savetxt(op.join(out_dir, "meica_mix_MIR.1D"), mmix_noT1gs)
+    mixing_df = pd.DataFrame(data=mmix_noT1gs.T, columns=comptable["Component"].values)
+    io_generator.save_file(mixing_df, "ICA MIR mixing tsv")

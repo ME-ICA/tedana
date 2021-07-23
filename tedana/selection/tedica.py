@@ -7,8 +7,9 @@ from scipy import stats
 
 from tedana.stats import getfbounds
 from tedana.selection._utils import getelbow, clean_dataframe
+from tedana.metrics import collect
 
-LGR = logging.getLogger(__name__)
+LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
@@ -30,6 +31,9 @@ def manual_selection(comptable, acc=None, rej=None):
     -------
     comptable : (C x M) :obj:`pandas.DataFrame`
         Component metric table with classification.
+    metric_metadata : :obj:`dict`
+        Dictionary with metadata about calculated metrics.
+        Each entry corresponds to a column in ``comptable``.
     """
     LGR.info('Performing manual ICA component selection')
     RepLGR.info("Next, components were manually classified as "
@@ -70,7 +74,8 @@ def manual_selection(comptable, acc=None, rej=None):
 
     # Move decision columns to end
     comptable = clean_dataframe(comptable)
-    return comptable
+    metric_metadata = collect.get_metadata(comptable)
+    return comptable, metric_metadata
 
 
 def kundu_selection_v2(comptable, n_echos, n_vols):
@@ -99,6 +104,9 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     comptable : :obj:`pandas.DataFrame`
         Updated component table with additional metrics and with
         classification (accepted, rejected, or ignored)
+    metric_metadata : :obj:`dict`
+        Dictionary with metadata about calculated metrics.
+        Each entry corresponds to a column in ``comptable``.
 
     Notes
     -----
@@ -162,17 +170,17 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     comptable.loc[temp_rej0a, 'classification'] = 'rejected'
     comptable.loc[temp_rej0a, 'rationale'] += 'I002;'
 
-    # Number of significant voxels for S0 model is higher than number for R2
-    # model *and* number for R2 model is greater than zero.
-    temp_rej0b = all_comps[((comptable['countsigFS0'] > comptable['countsigFR2']) &
-                            (comptable['countsigFR2'] > 0))]
+    # Number of significant voxels for S0 model is higher than number for T2
+    # model *and* number for T2 model is greater than zero.
+    temp_rej0b = all_comps[((comptable['countsigFS0'] > comptable['countsigFT2']) &
+                            (comptable['countsigFT2'] > 0))]
     comptable.loc[temp_rej0b, 'classification'] = 'rejected'
     comptable.loc[temp_rej0b, 'rationale'] += 'I003;'
     rej = np.union1d(temp_rej0a, temp_rej0b)
 
-    # Dice score for S0 maps is higher than Dice score for R2 maps and variance
+    # Dice score for S0 maps is higher than Dice score for T2 maps and variance
     # explained is higher than the median across components.
-    temp_rej1 = all_comps[(comptable['dice_FS0'] > comptable['dice_FR2']) &
+    temp_rej1 = all_comps[(comptable['dice_FS0'] > comptable['dice_FT2']) &
                           (comptable['variance explained'] >
                            np.median(comptable['variance explained']))]
     comptable.loc[temp_rej1, 'classification'] = 'rejected'
@@ -199,7 +207,8 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
 
         # Move decision columns to end
         comptable = clean_dataframe(comptable)
-        return comptable
+        metric_metadata = collect.get_metadata(comptable)
+        return comptable, metric_metadata
 
     """
     Step 2: Make a guess for what the good components are, in order to
@@ -207,8 +216,8 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     a. Not outlier variance
     b. Kappa>kappa_elbow
     c. Rho<Rho_elbow
-    d. High R2* dice compared to S0 dice
-    e. Gain of F_R2 in clusters vs noise
+    d. High T2* dice compared to S0 dice
+    e. Gain of F_T2 in clusters vs noise
     f. Estimate a low and high variance
     """
     # Step 2a
@@ -236,13 +245,23 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     # Compute elbows from other elbows
     f05, _, f01 = getfbounds(n_echos)
     kappas_nonsig = comptable.loc[comptable['kappa'] < f01, 'kappa']
+    if not kappas_nonsig.size:
+        LGR.warning(
+            "No nonsignificant kappa values detected. "
+            "Only using elbow calculated from all kappa values."
+        )
+        kappas_nonsig_elbow = np.nan
+    else:
+        kappas_nonsig_elbow = getelbow(kappas_nonsig, return_val=True)
+
+    kappas_all_elbow = getelbow(comptable['kappa'], return_val=True)
+
     # NOTE: Would an elbow from all Kappa values *ever* be lower than one from
-    # a subset of lower values?
-    kappa_elbow = np.min((getelbow(kappas_nonsig, return_val=True),
-                          getelbow(comptable['kappa'], return_val=True)))
-    rho_elbow = np.mean((getelbow(comptable.loc[ncls, 'rho'], return_val=True),
-                         getelbow(comptable['rho'], return_val=True),
-                         f05))
+    # a subset of lower (i.e., nonsignificant) values?
+    kappa_elbow = np.nanmin((kappas_all_elbow, kappas_nonsig_elbow))
+    rhos_ncls_elbow = getelbow(comptable.loc[ncls, 'rho'], return_val=True)
+    rhos_all_elbow = getelbow(comptable['rho'], return_val=True)
+    rho_elbow = np.mean((rhos_ncls_elbow, rhos_all_elbow, f05))
 
     # Provisionally accept components based on Kappa and Rho elbows
     acc_prov = ncls[(comptable.loc[ncls, 'kappa'] >= kappa_elbow) &
@@ -258,7 +277,8 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
 
         # Move decision columns to end
         comptable = clean_dataframe(comptable)
-        return comptable
+        metric_metadata = collect.get_metadata(comptable)
+        return comptable, metric_metadata
 
     # Calculate "rate" for kappa: kappa range divided by variance explained
     # range, for potentially accepted components
@@ -315,10 +335,10 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
         # Recompute the midk steps on the limited set to clean up the tail
         d_table_rank = np.vstack([
             len(unclf) - stats.rankdata(comptable.loc[unclf, 'kappa']),
-            len(unclf) - stats.rankdata(comptable.loc[unclf, 'dice_FR2']),
+            len(unclf) - stats.rankdata(comptable.loc[unclf, 'dice_FT2']),
             len(unclf) - stats.rankdata(comptable.loc[unclf, 'signal-noise_t']),
             stats.rankdata(comptable.loc[unclf, 'countnoise']),
-            len(unclf) - stats.rankdata(comptable.loc[unclf, 'countsigFR2'])]).T
+            len(unclf) - stats.rankdata(comptable.loc[unclf, 'countsigFT2'])]).T
         comptable.loc[unclf, 'd_table_score_scrub'] = d_table_rank.mean(1)
         num_acc_guess = int(np.mean([
             np.sum((comptable.loc[unclf, 'kappa'] > kappa_elbow) &
@@ -372,4 +392,5 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
 
     # Move decision columns to end
     comptable = clean_dataframe(comptable)
-    return comptable
+    metric_metadata = collect.get_metadata(comptable)
+    return comptable, metric_metadata

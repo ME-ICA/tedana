@@ -10,10 +10,10 @@ import numpy as np
 from scipy import stats
 from threadpoolctl import threadpool_limits
 
-from tedana import (combine, decay, io, utils)
+from tedana import (combine, decay, io, utils, __version__)
 from tedana.workflows.parser_utils import is_valid_file
 
-LGR = logging.getLogger(__name__)
+LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
@@ -63,6 +63,18 @@ def _get_parser():
                                 'Dependent ANAlysis. Must be in the same '
                                 'space as `data`.'),
                           default=None)
+    optional.add_argument('--prefix',
+                          dest='prefix',
+                          type=str,
+                          help='Prefix for filenames generated.',
+                          default='')
+    optional.add_argument('--convention',
+                          dest='convention',
+                          action='store',
+                          choices=['orig', 'bids'],
+                          help=('Filenaming convention. bids will use '
+                                'the latest BIDS derivatives version.'),
+                          default='bids')
     optional.add_argument('--fittype',
                           dest='fittype',
                           action='store',
@@ -116,6 +128,7 @@ def _get_parser():
 
 
 def t2smap_workflow(data, tes, out_dir='.', mask=None,
+                    prefix='', convention='bids',
                     fittype='loglin', fitmode='all', combmode='t2s',
                     debug=False, quiet=False):
     """
@@ -178,12 +191,7 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
 
-    if debug and not quiet:
-        logging.basicConfig(level=logging.DEBUG)
-    elif quiet:
-        logging.basicConfig(level=logging.WARNING)
-    else:
-        logging.basicConfig(level=logging.INFO)
+    utils.setup_loggers(quiet=quiet, debug=debug)
 
     LGR.info('Using output directory: {}'.format(out_dir))
 
@@ -197,6 +205,14 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
 
     LGR.info('Loading input data: {}'.format([f for f in data]))
     catd, ref_img = io.load_data(data, n_echos=n_echos)
+    io_generator = io.OutputGenerator(
+        ref_img,
+        convention=convention,
+        out_dir=out_dir,
+        prefix=prefix,
+        config="auto",
+        make_figures=False,
+    )
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug('Resulting data shape: {}'.format(catd.shape))
 
@@ -236,13 +252,42 @@ def t2smap_workflow(data, tes, out_dir='.', mask=None,
     s0_limited[s0_limited < 0] = 0
     t2s_limited[t2s_limited < 0] = 0
 
-    io.filewrite(utils.millisec2sec(t2s_limited),
-                 op.join(out_dir, 'T2starmap.nii.gz'), ref_img)
-    io.filewrite(s0_limited, op.join(out_dir, 'S0map.nii.gz'), ref_img)
-    io.filewrite(utils.millisec2sec(t2s_full),
-                 op.join(out_dir, 'desc-full_T2starmap.nii.gz'), ref_img)
-    io.filewrite(s0_full, op.join(out_dir, 'desc-full_S0map.nii.gz'), ref_img)
-    io.filewrite(OCcatd, op.join(out_dir, 'desc-optcom_bold.nii.gz'), ref_img)
+    io_generator.save_file(
+        utils.millisec2sec(t2s_limited),
+        't2star img',
+    )
+    io_generator.save_file(s0_limited, 's0 img')
+    io_generator.save_file(
+        utils.millisec2sec(t2s_full),
+        'full t2star img',
+    )
+    io_generator.save_file(
+        s0_full,
+        'full s0 img',
+    )
+    io_generator.save_file(OCcatd, 'combined img')
+
+    # Write out BIDS-compatible description file
+    derivative_metadata = {
+        "Name": "t2smap Outputs",
+        "BIDSVersion": "1.5.0",
+        "DatasetType": "derivative",
+        "GeneratedBy": [
+            {
+                "Name": "tedana",
+                "Version": __version__,
+                "Description": (
+                    "A pipeline estimating T2* from multi-echo fMRI data and "
+                    "combining data across echoes."
+                ),
+                "CodeURL": "https://github.com/ME-ICA/tedana"
+            }
+        ]
+    }
+    io_generator.save_file(derivative_metadata, 'data description json')
+
+    LGR.info("Workflow completed")
+    utils.teardown_loggers()
 
 
 def _main(argv=None):
