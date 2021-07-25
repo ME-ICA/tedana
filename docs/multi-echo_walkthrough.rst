@@ -24,51 +24,183 @@ The physics of fMRI
 In a typical fMRI sequence,
 the protons in a brain slice are aligned perpendicularly to the main magnetic
 field of the scanner (:math:`B_0`) with an "excitation pulse".
-Those protons start releasing energy from the excitation pulse as they fall
-back in line with :math:`B_0`,
+Those protons start releasing energy from the excitation pulse as they fall back in line with :math:`B_0`,
 and that energy is actively measured at an "echo time" (also known as `TE`_).
 
 The time it takes for 37% of the protons fall back in line with :math:`B_0`
 is known as the transverse relaxation time, or "T2".
 The exact value of T2 varies across voxels in the brain, based on tissue type,
-which is why protocols which are T2-weighted or which quantitatively measure
-T2 are useful for structural analyses.
+which is why protocols which are T2-weighted or which quantitatively measure T2 are useful for structural analyses.
 
-However,
+fMRI works based on the fact that differences in blood oxygenation
+(indicative of gross differences in neural metabolism ostensibly driven by neural activity)
+also impact observed T2, also known as T2*.
+Thus, changes in the measured signal from an fMRI sequence reflect (at least in part) changes in blood oxygenation.
 
-To start, let's look at the most common type of fMRI, single-echo EPI.
+
+*****************************
+BOLD signal and BOLD contrast
+*****************************
+
+As mentioned above, energy is released after the excitation pulse, and this is our observed fMRI signal.
+The echo time is the point at which that signal is recorded.
+
+Let's take a look at how fMRI signal varies as a function of echo time.
+
+.. image:: /_static/physics_signal_decay.png
+
+As you can see, signal decays as echo time increases.
+However, one very important feature of this signal decay is that the signal decays differently
+depending on the level of blood oxygenation in the voxel.
+
+When a voxel contains more deoxygenated blood,
+its signal decays more slowly than when the blood within it is more oxygenated.
+
+.. image:: /_static/physics_signal_decay_activity.png
+
+This is the "BOLD contrast" functional neuroimagers care about.
+Namely, you can compare the signal from a voxel during a cognitive task
+(when you expect that voxel's brain region to be more "active")
+against that voxel's signal from a different cognitive task in order to determine if there is a
+meaningful different in activation between the two tasks.
+
+There are two relevant features to the BOLD contrast.
+First, as repeatedly noted above, overall signal decays as echo time increases.
+Eventually, with a long enough echo time, there is not enough signal to detect over noise
+(i.e., signal-to-noise ratio is too low)
+and meaningful signal cannot be observed.
+Second, BOLD contrast increases as echo time increases.
+That is, the relative difference in signal between active and inactive states increases with echo time,
+even as the overall signal decreases.
+
+While the signal decay curve can be described using many models,
+one of the most useful approximations (and the one we used to simulate the signals in this walkthrough)
+is a monoexponential decay curve.
+In this model, the signal is driven by two factors:
+the "intercept" (signal at echo time = 0s), also known as S0; and the "slope" (decay rate), also known as T2*.
+For more information about different models of fMRI signal decay, please see XXXXX.
+
+.. note:: T2*
+    We said above that observed T2 is T2*, and now we're saying that the slope of the decay is T2*.
+    That's because they're the same thing!
+
+In the above figure, the difference between the "inactive" and "active" signals was driven by a change in T2* from 20ms to 40ms.
+Thus, the point at which the difference in signal is maximized between the two states in this voxel is ~30ms.
+
+And, in fact, this is the standard approach for the most common version of fMRI: single-echo fMRI.
 
 
 *************************
 What is single-echo fMRI?
 *************************
 
-When you have a single echo time, you acquire one value for each voxel, at each time point.
+Above, we saw that the difference in BOLD signal between active and inactive voxels is maximized at a specific echo time.
 
-.. image:: /_static/mr_schematic_single_echo.png
+With single-echo fMRI, we have one echo time for each excitation pulse.
+As such, we record one data point for each voxel, at each time point.
+That data point is assumed to reflect blood oxygenation-level dependent signal,
+and the single echo time is chosen to maximize BOLD contrast across the brain.
 
-This works rather well, in that there is relatively high BOLD contrast as every voxel,
-although the level of contrast (and thus the signal-to-noise ratio) will vary across the brain.
+However, a major drawback to this approach is that it ignores several features of fMRI data:
 
-However, one drawback of this approach is that it cannot distinguish between different sources
-of observed signal fluctuations.
+1. T2* varies across voxels in the brain, depending on features like tissue type distribution, brain-air boundaries, etc.
+   As such, the "optimal" echo time _also_ varies across the brain.
+2. Fluctuations in voxel activation (i.e., T2*) mean that T2* (and thus optimal echo time)
+   varies _within_ each voxel as well as between voxels.
+   Basically, "activation" is not a binary state: a voxel can be active at many different levels, and each level reflects a change in T2*.
+3. With only a single data point at each time point, there is no way to characterize the signal decay curve.
+   Unfortunately, there are multiple factors which can influence how signal decays, and many of them are problematic.
+   With single-echo fMRI, we must rely on more standard signal- and image-processing techniques to remove noise.
+
+Taking these drawbacks into account, one might wonder why anyone would use single-echo fMRI
+when there _must_ be something called multi-echo fMRI (what with that being the topic of this walkthrough).
+There are a bunch of reasons, but perhaps the biggest is that fMRI is always balancing the amount of data against its utility.
+You can always get more useful information from data that is closer to its original form (e.g., in k-space, before combining across coils),
+but this involves increased work for the researcher, in that they must choose the appropriate tools and process all of those data,
+as well as _massively_ increased storage requirements.
+
+Single-echo fMRI performs quite well considering its limitations.
+While T2* varies across the brain, for _most_ regions the typical echo time for a given magnetic strength
+(e.g., 30ms for 3T) will result in sufficient signal-to-noise ratio (SNR).
+BOLD contrast can reliably be detected over noise, and in most analyses the SNR is sufficient.
+With a standard univariate analysis, more data will generally swamp issues like thermal noise,
+especially when those issues are not correlated with measures of interest (like cognitive tasks).
+
+
+==========================================
+Sources of fMRI signal fluctuations
+==========================================
 
 There are, in fact, many factors that impact observed fMRI signal, but we will focus on a small number.
-First, we have neurally-driven BOLD signal.
-This is the signal we generally care about in fMRI.
-Next, we have non-BOLD noise.
-This noise is often driven by things like instrument noise, subject motion, and thermal noise.
-Finally, we have non-neural BOLD signal.
-There are physiological sources of changes in blood oxygenation that are unrelated to neural activity,
-including heart rate and breathing changes.
 
-However, this ignores a number of useful features of the BOLD signal, including:
-(1) BOLD signal decays as echo time increases,
-(2) BOLD contrast _increases_ as echo time increases, and
-(3) the echo time at which BOLD signal and BOLD contrast are both optimally maximized varies across the brain.
+1. Neurally-driven BOLD signal.
+   This is the signal we generally care about in fMRI.
+2. Non-BOLD noise.
+   This noise is often driven by things like instrument noise, subject motion, and thermal noise.
+3. Non-neural BOLD signal.
+   There are physiological sources of changes in blood oxygenation that are unrelated to neural activity,
+   including heart rate and breathing changes.
+
+Let's take a look at what single-echo data looks like over time.
+
+.. image:: /_static/fluctuations_single-echo.gif
+
+As you can see, the single data point fluctuates over time.
+Let's assume that those fluctuations reflect meaningful BOLD signal.
+Nothing to be concerned about, right?
+
+Okay, let's check out the underlying signal decay curve we're sampling from.
+
+.. image:: /_static/fluctuations_single-echo_with_curve.gif
+
+Everything still looks fine, right?
+We know there's an underlying signal decay curve, and we're sampling that curve at a single point, at our TE.
+
+What if we describe the curve in terms of S0 and T2*?
+
+.. image:: /_static/fluctuations_single-echo_with_curve_and_t2s_s0.gif
+
+Now we see that the changes in the signal are driven by changes in _both_ S0 and T2*.
+Why should we care about that?
+Well, we know that T2* reflects BOLD signal, but we don't really care about S0.
+In fact, S0 changes are driven by non-BOLD noise.
+Things like motion, thermal noise, instrument noise, etc.
+
+So if our observed signal is affected by both S0 and T2*,
+and the S0 changes are introducing noise into our data,
+is there anything we can do?
+
+Well, first, let's see if there's a way to tell S0-based fluctuations and T2*-based fluctuations apart.
+We'll plot two signal decay curves.
+One will _only_ include S0 changes and the other will only include T2* changes.
+
+To make sure we can _really_ see the curves, we'll also make the S0 and T2* changes roughly equivalent.
+They have different scales, so we'll use the same time series of fluctuations,
+scaled to have matching percent signal changes between the two values.
+
+.. image:: /_static/fluctuations_t2s_s0.gif
+
+Hey, look at that!
+The curves change differently!
+If you look at the whole curve, you can differentiate S0 changes from T2* changes.
+
+Now that we know that, what about single-echo fMRI?
+
+.. image:: /_static/fluctuations_t2s_s0_single-echo.gif
+
+Hm... with only one data point per time point, we really can't tell whether the changes are due to S0 or T2*.
+
+What if... what if we had _multiple_ data points for each volume?
+
+.. image:: /_static/fluctuations_t2s_s0_single-echo.gif
+
+Now we can tell the two curves apart again!
+
+Okay, so what does this all mean?
+Simply put, you need multiple echoes in order to differentiate S0 and T2* fluctuations in your fMRI data.
 
 
-.. _multi-echo physics:
+.. _multi-echo physics2:
 
 ******************************
 The physics of multi-echo fMRI
