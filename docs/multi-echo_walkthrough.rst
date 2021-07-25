@@ -192,7 +192,19 @@ Hm... with only one data point per time point, we really can't tell whether the 
 
 What if... what if we had _multiple_ data points for each volume?
 
-.. image:: /_static/fluctuations_t2s_s0_single-echo.gif
+***************
+Multi-echo fMRI
+***************
+
+Multi-echo fMRI involves defining and acquiring multiple echo times in your sequence.
+Instead of sampling the decay curve at one point, you sample at multiple points.
+
+Typical multi-echo protocols use somewhere between three and five echoes,
+though more are possible if you make certain compromises with your parameters.
+
+Here we have some simulated data with six echoes.
+
+.. image:: /_static/fluctuations_t2s_s0_multi-echo.gif
 
 Now we can tell the two curves apart again!
 
