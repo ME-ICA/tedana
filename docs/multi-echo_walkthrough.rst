@@ -4,15 +4,12 @@ What is multi-echo fMRI?
 
 .. admonition:: TL;DR
 
-    Most echo-planar image (EPI) sequences collect a single brain image
-    following a radio frequency (RF) pulse, at a rate known as the
-    repetition time (TR).
+    Most echo-planar image (EPI) sequences collect a single brain image following
+    a radio frequency (RF) pulse, at a rate known as the repetition time (TR).
     This typical approach is known as single-echo fMRI.
 
-    In contrast, multi-echo (ME) fMRI refers to collecting data at multiple
-    echo times,
-    resulting in multiple volumes with varying levels of contrast acquired per
-    RF pulse.
+    In contrast, multi-echo (ME) fMRI refers to collecting data at multiple echo times,
+    resulting in multiple volumes with varying levels of contrast acquired per RF pulse.
     Multi-echo fMRI can be used to identify and remove certain types of noise
     that can't be removed from single-echo data.
 
@@ -53,7 +50,10 @@ When you have a single echo time, you acquire one value for each voxel, at each 
 This works rather well, in that there is relatively high BOLD contrast as every voxel,
 although the level of contrast (and thus the signal-to-noise ratio) will vary across the brain.
 
-There are many factors that impact BOLD signal, but we will focus on a small number.
+However, one drawback of this approach is that it cannot distinguish between different sources
+of observed signal fluctuations.
+
+There are, in fact, many factors that impact observed fMRI signal, but we will focus on a small number.
 First, we have neurally-driven BOLD signal.
 This is the signal we generally care about in fMRI.
 Next, we have non-BOLD noise.
@@ -63,8 +63,9 @@ There are physiological sources of changes in blood oxygenation that are unrelat
 including heart rate and breathing changes.
 
 However, this ignores a number of useful features of the BOLD signal, including:
-(1) BOLD signal decays as echo time increases, (2) BOLD contrast _increases_ as echo time increases,
-(3) BOLD fluctuations may be driven by
+(1) BOLD signal decays as echo time increases,
+(2) BOLD contrast _increases_ as echo time increases, and
+(3) the echo time at which BOLD signal and BOLD contrast are both optimally maximized varies across the brain.
 
 
 .. _multi-echo physics:
