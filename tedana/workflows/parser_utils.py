@@ -1,9 +1,8 @@
 """
 Functions for parsers.
 """
-import os.path as op
-
 import argparse
+import os.path as op
 
 
 def check_tedpca_value(string, is_parser=True):
