@@ -30,11 +30,7 @@ from tedana import (
     utils,
 )
 from tedana.stats import computefeats2
-from tedana.workflows.parser_utils import (
-    ContextFilter,
-    check_tedpca_value,
-    is_valid_file,
-)
+from tedana.workflows.parser_utils import check_tedpca_value, is_valid_file
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
