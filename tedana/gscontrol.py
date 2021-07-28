@@ -11,7 +11,7 @@ from scipy.special import lpmv
 from tedana import utils
 from tedana.due import Doi, due
 
-LGR = logging.getLogger(__name__)
+LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 RefLGR = logging.getLogger("REFERENCES")
 

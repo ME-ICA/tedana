@@ -13,7 +13,7 @@ from nilearn import plotting
 
 from tedana import io, stats, utils
 
-LGR = logging.getLogger(__name__)
+LGR = logging.getLogger("GENERAL")
 MPL_LGR = logging.getLogger("matplotlib")
 MPL_LGR.setLevel(logging.WARNING)
 RepLGR = logging.getLogger("REPORT")

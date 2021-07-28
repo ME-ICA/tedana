@@ -11,7 +11,7 @@ from tedana.stats import getfbounds
 from . import dependence
 from ._utils import dependency_resolver, determine_signs, flip_components
 
-LGR = logging.getLogger(__name__)
+LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 RefLGR = logging.getLogger("REFERENCES")
 

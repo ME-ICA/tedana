@@ -32,11 +32,11 @@ REQUIRES = [
     "mapca~=0.0.1",
     "matplotlib",
     "nibabel>=2.5.1",
-    "nilearn>=0.5.2",
-    "numpy>=1.15",
-    "pandas",
-    "scikit-learn>=0.19.1",
-    "scipy>=1.1.0",
+    "nilearn>=0.7",
+    "numpy>=1.16",
+    "pandas>=0.24",
+    "scikit-learn>=0.21",
+    "scipy>=1.2.0",
     "threadpoolctl",
 ]
 
