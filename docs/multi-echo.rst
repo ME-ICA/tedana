@@ -401,17 +401,33 @@ The following plots reflect the average values for studies conducted at 3 Tesla.
 Processing multi-echo fMRI
 **************************
 
-``tedana`` must be called in the context of a larger ME-EPI preprocessing pipeline.
+Most multi-echo denoising methods, including ``tedana``,
+must be called in the context of a larger ME-EPI preprocessing pipeline.
 Two common pipelines which support ME-EPI processing include `fMRIPrep`_ and `afni_proc.py`_.
 
-Users can also construct their own preprocessing pipeline for ME-EPI data from which to call ``tedana``.
+Users can also construct their own preprocessing pipeline for ME-EPI data from which to call the
+multi-echo denoising method of their choice.
 There are several general principles to keep in mind when constructing ME-EPI processing pipelines.
 
-In general, we recommend
+In general, we recommend the following:
 
 
-1. Perform slice timing correction and motion correction **before** ``tedana``
-==============================================================================
+1. Estimate motion correction parameters from one echo and apply those parameters to all echoes
+===============================================================================================
+
+When preparing ME-EPI data for multi-echo denoising with a tool like ``tedana``,
+it is important not to do anything that mean shifts the data or otherwise separately
+scales the voxelwise values at each echo.
+
+For example, head-motion correction parameters should *not* be calculated and applied at an
+individual echo level (see above).
+Instead, we recommend that researchers apply the same transforms to all echoes in an ME-EPI series.
+That is, that they calculate head motion correction parameters from one echo
+and apply the resulting transformation to all echoes.
+
+
+2. Perform slice timing correction and motion correction **before** multi-echo denoising
+========================================================================================
 
 Similarly to single-echo EPI data, slice time correction allows us to assume that voxels across
 slices represent roughly simultaneous events.
@@ -425,18 +441,12 @@ and the same is true when one is collecting multiple echoes after a single excit
 Therefore, we suggest using the same slice timing for all echoes in an ME-EPI series.
 
 
-2. Perform distortion correction, spatial normalization, smoothing, and any rescaling or filtering **after** ``tedana``
-=======================================================================================================================
+3. Perform distortion correction, spatial normalization, smoothing, and any rescaling or filtering **after** denoising
+======================================================================================================================
 
-When preparing ME-EPI data for multi-echo denoising as in ``tedana``, it is important
-not to do anything that mean shifts the data or otherwise separately
-scales the voxelwise values at each echo.
-
-For example, head-motion correction parameters should *not* be calculated and applied at an
-individual echo level.
-Instead, we recommend that researchers apply the same transforms to all echoes in an ME-EPI series.
-That is, that they calculate head motion correction parameters from one echo
-and apply the resulting transformation to all echoes.
+Steps which rescale or warp the data at the run level (rather than the volume level),
+such as distortion correction and spatial normalization, can be applied to the optimally
+combined data *after* denoising.
 
 .. note::
     Any intensity normalization or nuisance regressors should be applied to the data
