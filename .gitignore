@@ -1,5 +1,6 @@
 **/.DS_Store
 docs/generated/
+docs/_generated_images/
 .pytest_cache/
 
 # Byte-compiled / optimized / DLL files

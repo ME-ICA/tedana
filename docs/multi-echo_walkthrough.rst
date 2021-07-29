@@ -47,7 +47,8 @@ The echo time is the point at which that signal is recorded.
 
 Let's take a look at how fMRI signal varies as a function of echo time.
 
-.. image:: /_static/physics_signal_decay.png
+.. image:: https://osf.io/m7aw3/
+   alt: physics_signal_decay.png
 
 As you can see, signal decays as echo time increases.
 However, one very important feature of this signal decay is that the signal decays differently
