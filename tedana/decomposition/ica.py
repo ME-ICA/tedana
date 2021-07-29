@@ -8,7 +8,7 @@ import numpy as np
 from scipy import stats
 from sklearn.decomposition import FastICA
 
-LGR = logging.getLogger(__name__)
+LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 

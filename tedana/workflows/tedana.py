@@ -21,9 +21,9 @@ from tedana import (decay, combine, decomposition, io, metrics,
                     reporting, selection, utils, __version__)
 import tedana.gscontrol as gsc
 from tedana.stats import computefeats2
-from tedana.workflows.parser_utils import is_valid_file, check_tedpca_value, ContextFilter
+from tedana.workflows.parser_utils import is_valid_file, check_tedpca_value
 
-LGR = logging.getLogger(__name__)
+LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
@@ -369,40 +369,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     extension = 'tsv'
     start_time = datetime.datetime.now().strftime('%Y-%m-%dT%H%M%S')
     logname = op.join(out_dir, (basename + start_time + '.' + extension))
-
-    # set logging format
-    log_formatter = logging.Formatter(
-        '%(asctime)s\t%(name)-12s\t%(levelname)-8s\t%(message)s',
-        datefmt='%Y-%m-%dT%H:%M:%S')
-    text_formatter = logging.Formatter('%(message)s')
-
-    # set up logging file and open it for writing
-    log_handler = logging.FileHandler(logname)
-    log_handler.setFormatter(log_formatter)
-    # Removing handlers after basicConfig doesn't work, so we use filters
-    # for the relevant handlers themselves.
-    log_handler.addFilter(ContextFilter())
-    logging.root.addHandler(log_handler)
-    sh = logging.StreamHandler()
-    sh.addFilter(ContextFilter())
-    logging.root.addHandler(sh)
-
-    if quiet:
-        logging.root.setLevel(logging.WARNING)
-    elif debug:
-        logging.root.setLevel(logging.DEBUG)
-    else:
-        logging.root.setLevel(logging.INFO)
-
-    # Loggers for report and references
-    rep_handler = logging.FileHandler(repname)
-    rep_handler.setFormatter(text_formatter)
-    ref_handler = logging.FileHandler(refname)
-    ref_handler.setFormatter(text_formatter)
-    RepLGR.setLevel(logging.INFO)
-    RepLGR.addHandler(rep_handler)
-    RefLGR.setLevel(logging.INFO)
-    RefLGR.addHandler(ref_handler)
+    utils.setup_loggers(logname, repname, refname, quiet=quiet, debug=debug)
 
     LGR.info('Using output directory: {}'.format(out_dir))
 
@@ -724,8 +691,6 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     with open(io_generator.get_name("data description json"), "w") as fo:
         json.dump(derivative_metadata, fo, sort_keys=True, indent=4)
 
-    LGR.info('Workflow completed')
-
     RepLGR.info("This workflow used numpy (Van Der Walt, Colbert, & "
                 "Varoquaux, 2011), scipy (Jones et al., 2001), pandas "
                 "(McKinney, 2010), scikit-learn (Pedregosa et al., 2011), "
@@ -796,17 +761,9 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
             LGR.info('Generating dynamic report')
             reporting.generate_report(io_generator, tr=img_t_r)
 
-    log_handler.close()
-    logging.root.removeHandler(log_handler)
-    sh.close()
-    logging.root.removeHandler(sh)
-    for local_logger in (RefLGR, RepLGR):
-        for handler in local_logger.handlers[:]:
-            handler.close()
-            local_logger.removeHandler(handler)
-    os.remove(refname)
-
     LGR.info('Workflow completed')
+    utils.teardown_loggers()
+    os.remove(refname)
 
 
 def _main(argv=None):
