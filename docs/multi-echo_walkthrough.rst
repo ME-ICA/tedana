@@ -47,7 +47,7 @@ The echo time is the point at which that signal is recorded.
 
 Let's take a look at how fMRI signal varies as a function of echo time.
 
-.. image:: https://osf.io/m7aw3/
+.. image:: https://mfr.osf.io/render?url=https://osf.io/m7aw3/?direct%26mode=render%26action=download%26mode=render
    :alt: physics_signal_decay.png
 
 As you can see, signal decays as echo time increases.
@@ -57,7 +57,7 @@ depending on the level of blood oxygenation in the voxel.
 When a voxel contains more deoxygenated blood,
 its signal decays more slowly than when the blood within it is more oxygenated.
 
-.. image:: https://osf.io/ve7cf/
+.. image:: https://mfr.osf.io/render?url=https://osf.io/ve7cf/?direct%26mode=render%26action=download%26mode=render
    :alt: physics_signal_decay_activity.png
 
 This is the "BOLD contrast" functional neuroimagers care about.
@@ -145,7 +145,7 @@ There are, in fact, many factors that impact observed fMRI signal, but we will f
 
 Let's take a look at what single-echo data looks like over time.
 
-.. image:: https://osf.io/g9dqc/
+.. image:: https://mfr.osf.io/render?url=https://osf.io/g9dqc/?direct%26mode=render%26action=download%26mode=render
    :alt: fluctuations_single-echo.gif
 
 As you can see, the single data point fluctuates over time.
@@ -154,7 +154,7 @@ Nothing to be concerned about, right?
 
 Okay, let's check out the underlying signal decay curve we're sampling from.
 
-.. image:: https://osf.io/5yjwx/
+.. image:: https://mfr.osf.io/render?url=https://osf.io/5yjwx/?direct%26mode=render%26action=download%26mode=render
    :alt: fluctuations_single-echo_with_curve.gif
 
 Everything still looks fine, right?
@@ -162,7 +162,7 @@ We know there's an underlying signal decay curve, and we're sampling that curve 
 
 What if we describe the curve in terms of S0 and T2*?
 
-.. image:: https://osf.io/6a7nv/
+.. image:: https://mfr.osf.io/render?url=https://osf.io/6a7nv/?direct%26mode=render%26action=download%26mode=render
    :alt: fluctuations_single-echo_with_curve_and_t2s_s0.gif
 
 Now we see that the changes in the signal are driven by changes in _both_ S0 and T2*.
@@ -183,7 +183,7 @@ To make sure we can _really_ see the curves, we'll also make the S0 and T2* chan
 They have different scales, so we'll use the same time series of fluctuations,
 scaled to have matching percent signal changes between the two values.
 
-.. image:: https://osf.io/g29ez/
+.. image:: https://mfr.osf.io/render?url=https://osf.io/g29ez/?direct%26mode=render%26action=download%26mode=render
    :alt: fluctuations_t2s_s0.gif
 
 Hey, look at that!
@@ -192,7 +192,7 @@ If you look at the whole curve, you can differentiate S0 changes from T2* change
 
 Now that we know that, what about single-echo fMRI?
 
-.. image:: https://osf.io/mx4ku/
+.. image:: https://mfr.osf.io/render?url=https://osf.io/mx4ku/?direct%26mode=render%26action=download%26mode=render
    :alt: fluctuations_t2s_s0_single-echo.gif
 
 Hm... with only one data point per time point, we really can't tell whether the changes are due to S0 or T2*.
@@ -211,7 +211,7 @@ though more are possible if you make certain compromises with your parameters.
 
 Here we have some simulated data with six echoes.
 
-.. image:: https://osf.io/mf3ae/
+.. image:: https://mfr.osf.io/render?url=https://osf.io/mf3ae/?direct%26mode=render%26action=download%26mode=render
    :alt: fluctuations_t2s_s0_multi-echo.gif
 
 Now we can tell the two curves apart again!
@@ -244,10 +244,10 @@ By using the information across multiple echos these images can be combined in
 an optimal manner to take advantage of the signal
 in the earlier echos (see :ref:`optimal combination`).
 
-.. image:: https://osf.io/m7aw3/
+.. image:: https://mfr.osf.io/render?url=https://osf.io/m7aw3/?direct%26mode=render%26action=download%26mode=render
    :alt: physics_signal_decay.png
 
-.. image:: https://osf.io/m7aw3/
+.. image:: https://mfr.osf.io/render?url=https://osf.io/m7aw3/?direct%26mode=render%26action=download%26mode=render
    :alt: physics_multiple_echos.png
 
 In order to classify the relationship between the signal and the echo time we can consider a
