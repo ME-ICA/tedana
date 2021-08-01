@@ -181,6 +181,7 @@ jobs:
           command: |
             apt-get update
             apt-get install -yqq make
+            apt-get install npm
             source activate tedana_py37  # depends on makeenv_37
             make three-echo
             mkdir /tmp/src/coverage
@@ -232,6 +233,7 @@ jobs:
           command: |
             apt-get update
             apt-get install -yqq make
+            apt-get install npm
             source activate tedana_py37  # depends on makeenv_37
             make five-echo
             mkdir /tmp/src/coverage
