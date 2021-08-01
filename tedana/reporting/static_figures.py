@@ -6,17 +6,18 @@ import os
 
 import numpy as np
 import matplotlib
-matplotlib.use('AGG')
+
+matplotlib.use("AGG")
 import matplotlib.pyplot as plt
 from nilearn import plotting
 
 from tedana import io, stats, utils
 
 LGR = logging.getLogger("GENERAL")
-MPL_LGR = logging.getLogger('matplotlib')
+MPL_LGR = logging.getLogger("matplotlib")
 MPL_LGR.setLevel(logging.WARNING)
-RepLGR = logging.getLogger('REPORT')
-RefLGR = logging.getLogger('REFERENCES')
+RepLGR = logging.getLogger("REPORT")
+RefLGR = logging.getLogger("REFERENCES")
 
 
 def _trim_edge_zeros(arr):
@@ -38,12 +39,14 @@ def _trim_edge_zeros(arr):
 
     mask = arr != 0
     bounding_box = tuple(
-                         slice(np.min(indexes), np.max(indexes) + 1)
-                         for indexes in np.where(mask))
+        slice(np.min(indexes), np.max(indexes) + 1) for indexes in np.where(mask)
+    )
     return arr[bounding_box]
 
 
-def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscontrol=None):
+def carpet_plot(
+    optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscontrol=None
+):
     """Generate a set of carpet plots for the combined and denoised data.
 
     Parameters
@@ -66,6 +69,9 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
     hik_img = io.new_nii_like(io_generator.reference_img, hikts)
     lowk_img = io.new_nii_like(io_generator.reference_img, lowkts)
 
+    out_dir = os.path.join(io_generator.out_dir, "report", "public", "figures")
+    os.makedirs(out_dir, exist_ok=True)
+
     # Carpet plots
     fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
@@ -76,7 +82,7 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
         title="Optimally Combined Data",
     )
     fig.tight_layout()
-    fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_optcom.svg"))
+    fig.savefig(os.path.join(out_dir, "carpet_optcom.svg"))
 
     fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
@@ -87,7 +93,7 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
         title="Denoised Data",
     )
     fig.tight_layout()
-    fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_denoised.svg"))
+    fig.savefig(os.path.join(out_dir, "carpet_denoised.svg"))
 
     fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
@@ -98,7 +104,7 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
         title="High-Kappa Data",
     )
     fig.tight_layout()
-    fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_accepted.svg"))
+    fig.savefig(os.path.join(out_dir, "carpet_accepted.svg"))
 
     fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
@@ -109,7 +115,7 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
         title="Low-Kappa Data",
     )
     fig.tight_layout()
-    fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_rejected.svg"))
+    fig.savefig(os.path.join(out_dir, "carpet_rejected.svg"))
 
     if (gscontrol is not None) and ("gsr" in gscontrol):
         optcom_with_gs_img = io_generator.get_name("has gs combined img")
@@ -122,7 +128,7 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
             title="Optimally Combined Data (Pre-GSR)",
         )
         fig.tight_layout()
-        fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_optcom_nogsr.svg"))
+        fig.savefig(os.path.join(out_dir, "carpet_optcom_nogsr.svg"))
 
     if (gscontrol is not None) and ("mir" in gscontrol):
         mir_denoised_img = io_generator.get_name("mir denoised img")
@@ -135,7 +141,7 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
             title="Denoised Data (Post-MIR)",
         )
         fig.tight_layout()
-        fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_denoised_mir.svg"))
+        fig.savefig(os.path.join(out_dir, "carpet_denoised_mir.svg"))
 
         mir_denoised_img = io_generator.get_name("ICA accepted mir denoised img")
         fig, ax = plt.subplots(figsize=(14, 7))
@@ -147,7 +153,7 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
             title="High-Kappa Data (Post-MIR)",
         )
         fig.tight_layout()
-        fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_accepted_mir.svg"))
+        fig.savefig(os.path.join(out_dir, "carpet_accepted_mir.svg"))
 
 
 def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
@@ -171,6 +177,10 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
     io_generator : :obj:`tedana.io.OutputGenerator`
         Output Generator object to use for this workflow
     """
+
+    out_dir = os.path.join(io_generator.out_dir, "report", "public", "figures")
+    os.makedirs(out_dir, exist_ok=True)
+
     # Get the lenght of the timeseries
     n_vols = len(mmix)
 
@@ -191,32 +201,30 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
 
     # Create indices for 6 cuts, based on dimensions
     cuts = [ts_B.shape[dim] // 6 for dim in range(3)]
-    expl_text = ''
+    expl_text = ""
 
     # Remove trailing ';' from rationale column
-    comptable['rationale'] = comptable['rationale'].str.rstrip(';')
+    comptable["rationale"] = comptable["rationale"].str.rstrip(";")
     for compnum in comptable.index.values:
-        if comptable.loc[compnum, "classification"] == 'accepted':
-            line_color = 'g'
-            expl_text = 'accepted'
-        elif comptable.loc[compnum, "classification"] == 'rejected':
-            line_color = 'r'
-            expl_text = 'rejection reason(s): ' + comptable.loc[compnum, "rationale"]
-        elif comptable.loc[compnum, "classification"] == 'ignored':
-            line_color = 'k'
-            expl_text = 'ignored reason(s): ' + comptable.loc[compnum, "rationale"]
+        if comptable.loc[compnum, "classification"] == "accepted":
+            line_color = "g"
+            expl_text = "accepted"
+        elif comptable.loc[compnum, "classification"] == "rejected":
+            line_color = "r"
+            expl_text = "rejection reason(s): " + comptable.loc[compnum, "rationale"]
+        elif comptable.loc[compnum, "classification"] == "ignored":
+            line_color = "k"
+            expl_text = "ignored reason(s): " + comptable.loc[compnum, "rationale"]
         else:
             # Classification not added
             # If new, this will keep code running
-            line_color = '0.75'
-            expl_text = 'other classification'
+            line_color = "0.75"
+            expl_text = "other classification"
 
         allplot = plt.figure(figsize=(10, 9))
-        ax_ts = plt.subplot2grid((5, 6), (0, 0),
-                                 rowspan=1, colspan=6,
-                                 fig=allplot)
+        ax_ts = plt.subplot2grid((5, 6), (0, 0), rowspan=1, colspan=6, fig=allplot)
 
-        ax_ts.set_xlabel('TRs')
+        ax_ts.set_xlabel("TRs")
         ax_ts.set_xlim(0, n_vols)
         plt.yticks([])
         # Make a second axis with units of time (s)
@@ -235,7 +243,7 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
         ax_ts2.set_xticks(ax1Xs)
         ax_ts2.set_xlim(ax_ts.get_xbound())
         ax_ts2.set_xticklabels(ax2Xs)
-        ax_ts2.set_xlabel('seconds')
+        ax_ts2.set_xlabel("seconds")
 
         ax_ts.plot(mmix[:, compnum], color=line_color)
 
@@ -243,9 +251,9 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
         comp_var = "{0:.2f}".format(comptable.loc[compnum, "variance explained"])
         comp_kappa = "{0:.2f}".format(comptable.loc[compnum, "kappa"])
         comp_rho = "{0:.2f}".format(comptable.loc[compnum, "rho"])
-        plt_title = ('Comp. {}: variance: {}%, kappa: {}, rho: {}, '
-                     '{}'.format(compnum, comp_var, comp_kappa, comp_rho,
-                                 expl_text))
+        plt_title = "Comp. {}: variance: {}%, kappa: {}, rho: {}, " "{}".format(
+            compnum, comp_var, comp_kappa, comp_rho, expl_text
+        )
         title = ax_ts.set_title(plt_title)
         title.set_y(1.5)
 
@@ -255,8 +263,10 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
 
         for idx, _ in enumerate(cuts):
             for imgslice in range(1, 6):
-                ax = plt.subplot2grid((5, 6), (idx + 1, imgslice - 1), rowspan=1, colspan=1)
-                ax.axis('off')
+                ax = plt.subplot2grid(
+                    (5, 6), (idx + 1, imgslice - 1), rowspan=1, colspan=1
+                )
+                ax.axis("off")
 
                 if idx == 0:
                     to_plot = np.rot90(ts_B[imgslice * cuts[idx], :, :, compnum])
@@ -265,14 +275,15 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
                 if idx == 2:
                     to_plot = ts_B[:, :, imgslice * cuts[idx], compnum]
 
-                ax_im = ax.imshow(to_plot, vmin=imgmin, vmax=imgmax, aspect='equal',
-                                  cmap=png_cmap)
+                ax_im = ax.imshow(
+                    to_plot, vmin=imgmin, vmax=imgmax, aspect="equal", cmap=png_cmap
+                )
 
         # Add a color bar to the plot.
         ax_cbar = allplot.add_axes([0.8, 0.3, 0.03, 0.37])
         cbar = allplot.colorbar(ax_im, ax_cbar)
-        cbar.set_label('Component Beta', rotation=90)
-        cbar.ax.yaxis.set_label_position('left')
+        cbar.set_label("Component Beta", rotation=90)
+        cbar.ax.yaxis.set_label_position("left")
 
         # Get fft and freqs for this subject
         # adapted from @dangom
@@ -281,14 +292,14 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
         # Plot it
         ax_fft = plt.subplot2grid((5, 6), (4, 0), rowspan=1, colspan=6)
         ax_fft.plot(freqs, spectrum)
-        ax_fft.set_title('One Sided fft')
-        ax_fft.set_xlabel('Hz')
+        ax_fft.set_title("One Sided fft")
+        ax_fft.set_xlabel("Hz")
         ax_fft.set_xlim(freqs[0], freqs[-1])
         plt.yticks([])
 
         # Fix spacing so TR label does overlap with other plots
         allplot.subplots_adjust(hspace=0.4)
-        plot_name = 'comp_{}.png'.format(str(compnum).zfill(3))
-        compplot_name = os.path.join(io_generator.out_dir, 'figures', plot_name)
+        plot_name = "comp_{}.png".format(str(compnum).zfill(3))
+        compplot_name = os.path.join(out_dir, plot_name)
         plt.savefig(compplot_name)
         plt.close()

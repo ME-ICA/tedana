@@ -1,0 +1,172 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap");
+
+:root {
+  --c1: black;
+  --c2: hsl(207, 14%, 36%);
+  --c3: hsl(207, 14%, 52%);
+  --c4: hsl(207, 14%, 68%);
+  --c5: hsl(205, 20%, 78%);
+  --c6: hsl(207, 20%, 92%);
+  --icons: rgb(20, 23, 26);
+  --selection: rgba(29, 161, 242, 0.08);
+  --selectionHover: rgba(29, 161, 242, 0.2);
+  --buttonWhite: white;
+  --buttonWhiteText: hsl(207, 14%, 28%);
+  --bg0: white;
+  --bg0_transparent: rgba(255, 255, 255, 0);
+  --bg1: rgb(253, 253, 254);
+  --bg1_transparent: rgba(253, 253, 254, 0);
+  --bg2: hsl(204, 33%, 98%);
+  --bg3: hsl(204, 33%, 97%);
+  --bg4: hsl(204, 33%, 94%);
+  --tooltip: rgb(253, 253, 254);
+  --twitter_accent: rgb(29, 161, 242);
+  --accent1: rgb(29, 161, 242);
+  --accent1rgb: 29, 161, 242;
+  --accent2: rgb(29, 161, 242);
+  --error: hsl(360, 90%, 60%);
+  --errorHighlighting: hsla(352, 100%, 55%, 0.2);
+  --success: hsl(130, 55%, 44%);
+  --success-transparent: hsla(130, 55%, 44%, 0.1);
+  --orange: hsl(29, 100%, 58%);
+  --dark-orange: hsl(29, 90%, 50%);
+  --uiBorderColor: hsl(204, 25%, 94%);
+  --shadowColor: hsla(200, 60%, 20%, 0.05);
+  --modalBackground: hsla(0, 0%, 0%, 0.2);
+  --verified-badge: rgb(29, 161, 242);
+}
+
+body {
+  background-color: var(--bg0);
+}
+
+.main-container {
+  font-family: "Roboto Mono", monospace !important;
+  text-align: center;
+  overflow: hidden;
+}
+
+#app {
+  border-radius: 3px;
+  border: 1px solid var(--c6);
+  margin: 15px;
+  background-color: var(--bg0);
+}
+
+.title {
+  font-weight: 700;
+  color: var(--c1);
+}
+
+.tab {
+  /* padding: 25px; */
+  color: var(--c1);
+  margin-left: 5%;
+  margin-right: 5%;
+  text-align: justify;
+}
+
+ul {
+  border-bottom: 1px solid var(--uiBorderColor);
+}
+
+ul.inline {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 0;
+  -webkit-margin-before: 0;
+  -webkit-margin-after: 0;
+  -webkit-margin-start: 0px;
+  -webkit-margin-end: 0px;
+  -webkit-padding-start: 0px;
+}
+
+ul.inline,
+li {
+  display: inline-block;
+  margin-left: 0;
+  padding: 10px;
+  transition: all 0.5s;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--c3);
+}
+
+ul.inline,
+li.selected {
+  background: var(--c6);
+  border-radius: 10%;
+  color: var(--c1);
+}
+
+.info {
+  margin-left: 10%;
+  margin-right: 10%;
+  margin-top: 2%;
+}
+
+.carpet-plots-image {
+  margin-top: 2%;
+}
+
+.dd-menu {
+  color: var(--c1);
+  font-size: 16px;
+  padding: 10px;
+  border-radius: 5px;
+  margin-left: 2%;
+}
+
+.dd-option {
+  color: var(--c3);
+}
+
+.plot-container-out {
+  /* margin: 20px auto; */
+  width: 100%;
+  height: auto;
+  background-color: #fff;
+  display: table;
+}
+
+.plot-container-in {
+  /* margin: 20px auto; */
+  width: 50%;
+  height: auto;
+  background-color: #fff;
+  display: grid;
+  grid-template-columns: 40% 40%;
+  grid-row: auto auto;
+  grid-column-gap: 5%;
+  grid-row-gap: 6%;
+  float: left;
+  position: absolute;
+  /* display: table-cell; */
+}
+
+.plot-box {
+  background-color: white;
+  padding: 30px;
+  border-radius: 10px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  font-family: sans-serif;
+  width: 100%;
+  height: 99%;
+  position: relative;
+}
+
+.component-plots-image {
+  display: flex;
+  width: 45%;
+  float: right;
+  margin-top: 5%;
+}
+
+.imgComponentPlot {
+  max-width: 100% !important;
+  width: 100%;
+}
