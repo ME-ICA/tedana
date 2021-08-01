@@ -909,7 +909,6 @@ def tedana_workflow(
         reporting.build_report(os.path.join(io_generator.out_dir, "report"))
         reporting.clean_report_directory(os.path.join(io_generator.out_dir, "report"))
 
-    breakpoint()
     LGR.info("Workflow completed")
     utils.teardown_loggers()
     os.remove(refname)
