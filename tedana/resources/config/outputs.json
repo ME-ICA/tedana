@@ -4,11 +4,11 @@
         "bidsv1.5.0": "desc-adaptiveGoodSignal_mask"
     },
     "t2star img": {
-        "orig": "t2sv",
+        "orig": "t2svG",
         "bidsv1.5.0": "T2starmap"
     },
     "s0 img": {
-        "orig": "s0v",
+        "orig": "s0vG",
         "bidsv1.5.0": "S0map"
     },
     "combined img": {
@@ -47,13 +47,13 @@
         "orig": "lowk_ts_OC",
         "bidsv1.5.0": "desc-optcomRejected_bold"
     },
-    "full t2star img": {
-        "orig": "t2svG",
-        "bidsv1.5.0": "desc-full_T2starmap"
+    "limited t2star img": {
+        "orig": "t2sv",
+        "bidsv1.5.0": "desc-limited_T2starmap"
     },
-    "full s0 img": {
-        "orig": "s0vG",
-        "bidsv1.5.0": "desc-full_S0map"
+    "limited s0 img": {
+        "orig": "s0v",
+        "bidsv1.5.0": "desc-limited_S0map"
     },
     "whitened img": {
         "orig": "ts_OC_whitened",
