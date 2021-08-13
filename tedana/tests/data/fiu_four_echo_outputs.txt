@@ -20,10 +20,10 @@ desc-PCA_mixing.tsv
 desc-PCA_stat-z_components.nii.gz
 desc-T1likeEffect_min.nii.gz
 desc-adaptiveGoodSignal_mask.nii.gz
-desc-full_S0map.nii.gz
-desc-full_T2starmap.nii.gz
 desc-globalSignal_map.nii.gz
 desc-globalSignal_timeseries.tsv
+desc-limited_S0map.nii.gz
+desc-limited_T2starmap.nii.gz
 desc-optcomAcceptedMIRDenoised_bold.nii.gz
 desc-optcomAccepted_bold.nii.gz
 desc-optcomDenoised_bold.nii.gz

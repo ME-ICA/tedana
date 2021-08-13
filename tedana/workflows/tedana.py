@@ -473,32 +473,50 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
         RepLGR.info("An initial mask was generated from the first echo using "
                     "nilearn's compute_epi_mask function.")
 
-    # Create an adaptive mask with at least 3 good echoes.
-    mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True, threshold=3)
-    LGR.debug('Retaining {}/{} samples'.format(mask.sum(), n_samp))
-    io_generator.save_file(masksum, "adaptive mask img")
+    # Create an adaptive mask with at least 1 good echo, for denoising
+    mask_denoise, masksum_denoise = utils.make_adaptive_mask(
+        catd,
+        mask=mask,
+        getsum=True,
+        threshold=1,
+    )
+    LGR.debug('Retaining {}/{} samples for denoising'.format(mask_denoise.sum(), n_samp))
+    io_generator.save_file(masksum_denoise, "adaptive mask img")
+
+    # Create an adaptive mask with at least 3 good echoes, for classification
+    masksum_clf = masksum_denoise.copy()
+    masksum_clf[masksum_clf < 3] = 0
+    mask_clf = masksum_clf.astype(bool)
+    RepLGR.info(
+        "A two-stage masking procedure was applied, in which a liberal mask "
+        "(including voxels with good data in at least the first echo) was used for "
+        "optimal combination, T2*/S0 estimation, and denoising, while a more conservative mask "
+        "(restricted to voxels with good data in at least the first three echoes) was used for "
+        "the component classification procedure."
+    )
+    LGR.debug('Retaining {}/{} samples for classification'.format(mask_clf.sum(), n_samp))
 
     if t2smap is None:
         LGR.info('Computing T2* map')
         t2s_limited, s0_limited, t2s_full, s0_full = decay.fit_decay(
-            catd, tes, mask, masksum, fittype)
+            catd, tes, mask_denoise, masksum_denoise, fittype)
 
         # set a hard cap for the T2* map
         # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
-        cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5,
+        cap_t2s = stats.scoreatpercentile(t2s_full.flatten(), 99.5,
                                           interpolation_method='lower')
         LGR.debug('Setting cap on T2* map at {:.5f}s'.format(
             utils.millisec2sec(cap_t2s)))
-        t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
-        io_generator.save_file(utils.millisec2sec(t2s_limited), 't2star img')
-        io_generator.save_file(s0_limited, 's0 img')
+        t2s_full[t2s_full > cap_t2s * 10] = cap_t2s
+        io_generator.save_file(utils.millisec2sec(t2s_full), 't2star img')
+        io_generator.save_file(s0_full, 's0 img')
 
         if verbose:
-            io_generator.save_file(utils.millisec2sec(t2s_full), 'full t2star img')
-            io_generator.save_file(s0_full, 'full s0 img')
+            io_generator.save_file(utils.millisec2sec(t2s_limited), 'limited t2star img')
+            io_generator.save_file(s0_limited, 'limited s0 img')
 
     # optimally combine data
-    data_oc = combine.make_optcom(catd, tes, masksum, t2s=t2s_full, combmode=combmode)
+    data_oc = combine.make_optcom(catd, tes, masksum_denoise, t2s=t2s_full, combmode=combmode)
 
     # regress out global signal unless explicitly not desired
     if 'gsr' in gscontrol:
@@ -509,14 +527,14 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
 
     if mixm is None:
         # Identify and remove thermal noise from data
-        dd, n_components = decomposition.tedpca(catd, data_oc, combmode, mask,
-                                                masksum, t2s_full, io_generator,
+        dd, n_components = decomposition.tedpca(catd, data_oc, combmode, mask_clf,
+                                                masksum_clf, t2s_full, io_generator,
                                                 tes=tes, algorithm=tedpca,
                                                 kdaw=10., rdaw=1.,
                                                 verbose=verbose,
                                                 low_mem=low_mem)
         if verbose:
-            io_generator.save_file(utils.unmask(dd, mask), 'whitened img')
+            io_generator.save_file(utils.unmask(dd, mask_clf), 'whitened img')
 
         # Perform ICA, calculate metrics, and apply decision tree
         # Restart when ICA fails to converge or too few BOLD components found
@@ -542,7 +560,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                 'd_table_score'
             ]
             comptable = metrics.collect.generate_metrics(
-                catd, data_oc, mmix, masksum, tes,
+                catd, data_oc, mmix, masksum_clf, tes,
                 io_generator, 'ICA',
                 metrics=required_metrics,
             )
@@ -574,7 +592,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                 'd_table_score'
             ]
             comptable = metrics.collect.generate_metrics(
-                catd, data_oc, mmix, masksum, tes,
+                catd, data_oc, mmix, masksum_clf, tes,
                 io_generator, 'ICA',
                 metrics=required_metrics,
             )
@@ -594,7 +612,7 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     comp_names = comptable["Component"].values
     mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
     io_generator.save_file(mixing_df, "ICA mixing tsv")
-    betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask), mask)
+    betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask_denoise), mask_denoise)
     io_generator.save_file(betas_oc, 'z-scored ICA components img')
 
     # Save component table and associated json
@@ -641,17 +659,17 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
                     "series.")
 
     io.writeresults(data_oc,
-                    mask=mask,
+                    mask=mask_denoise,
                     comptable=comptable,
                     mmix=mmix,
                     n_vols=n_vols,
                     io_generator=io_generator)
 
     if 'mir' in gscontrol:
-        gsc.minimum_image_regression(data_oc, mmix, mask, comptable, io_generator)
+        gsc.minimum_image_regression(data_oc, mmix, mask_denoise, comptable, io_generator)
 
     if verbose:
-        io.writeresults_echoes(catd, mmix, mask, comptable, io_generator)
+        io.writeresults_echoes(catd, mmix, mask_denoise, comptable, io_generator)
 
     # Write out BIDS-compatible description file
     derivative_metadata = {
@@ -715,20 +733,20 @@ def tedana_workflow(data, tes, out_dir='.', mask=None,
     if not no_reports:
         LGR.info('Making figures folder with static component maps and timecourse plots.')
 
-        dn_ts, hikts, lowkts = io.denoise_ts(data_oc, mmix, mask, comptable)
+        dn_ts, hikts, lowkts = io.denoise_ts(data_oc, mmix, mask_denoise, comptable)
 
         reporting.static_figures.carpet_plot(
             optcom_ts=data_oc,
             denoised_ts=dn_ts,
             hikts=hikts,
             lowkts=lowkts,
-            mask=mask,
+            mask=mask_denoise,
             io_generator=io_generator,
             gscontrol=gscontrol,
         )
         reporting.static_figures.comp_figures(
             data_oc,
-            mask=mask,
+            mask=mask_denoise,
             comptable=comptable,
             mmix=mmix_orig,
             io_generator=io_generator,
