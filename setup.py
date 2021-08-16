@@ -32,7 +32,7 @@ def main():
             'tests/data/*',
             'reporting/data/*',
             'reporting/data/html/*',
-            'resources/*',
+            'resources/config/*',
         ]
     }
 
