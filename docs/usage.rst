@@ -15,6 +15,9 @@ fMRI preprocessing pipelines such as `fMRIPrep`_ or `afni_proc.py`_.
 fMRIPrep currently supports :ref:`optimal combination` through ``tedana``, but
 not the full multi-echo denoising pipeline, although there are plans underway
 to integrate it.
+In the meantime, if you plan to use fMRIPrep and tedana together, please see
+`collecting fMRIPrepped data`_.
+
 Users can also construct their own preprocessing pipelines from which to call
 ``tedana``; for recommendations on doing so, see our general guidelines for
 :ref:`constructing ME-EPI pipelines`.

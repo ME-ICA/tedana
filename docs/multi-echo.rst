@@ -504,7 +504,7 @@ AFNI can process multi-echo data natively as well as apply tedana denoising thro
 
 `fmriprep` can also process multi-echo data, but is currently limited to using the optimally combined
 timeseries.
-For more details, see the `fmriprep workflows page`_.
+For more details, see the `fmriprep workflows page`_ and `collecting fMRIPrepped data`_.
 
 .. _fmriprep workflows page: https://fmriprep.readthedocs.io/en/stable/workflows.html
 
