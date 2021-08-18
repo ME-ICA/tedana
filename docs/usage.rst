@@ -16,7 +16,7 @@ fMRIPrep currently supports :ref:`optimal combination` through ``tedana``, but
 not the full multi-echo denoising pipeline, although there are plans underway
 to integrate it.
 In the meantime, if you plan to use fMRIPrep and tedana together, please see
-:ref:`collecting fMRIPrepped data`_.
+:ref:`collecting fMRIPrepped data`.
 
 Users can also construct their own preprocessing pipelines from which to call
 ``tedana``; for recommendations on doing so, see our general guidelines for
