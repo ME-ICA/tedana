@@ -449,6 +449,9 @@ and apply the resulting transformation to all echoes.
     on how T2* values are calculated.
 
 
+.. _fMRIPrep: https://fmriprep.readthedocs.io
+.. _afni_proc.py: https://afni.nimh.nih.gov/pub/dist/doc/program_help/afni_proc.py.html
+
 *****************
 General Resources
 *****************
@@ -504,7 +507,7 @@ AFNI can process multi-echo data natively as well as apply tedana denoising thro
 
 `fmriprep` can also process multi-echo data, but is currently limited to using the optimally combined
 timeseries.
-For more details, see the `fmriprep workflows page`_ and `collecting fMRIPrepped data`_.
+For more details, see the `fmriprep workflows page`_ and :ref:`collecting fMRIPrepped data`_.
 
 .. _fmriprep workflows page: https://fmriprep.readthedocs.io/en/stable/workflows.html
 
