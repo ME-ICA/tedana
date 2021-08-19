@@ -28,6 +28,9 @@ Nevertheless, we have some code (thanks to Julio Peraza) that works for version 
     We will try to keep the following gist up-to-date, but there is no guarantee that it will work for a given version.
     Use it with caution!
 
+    If you do find that the gist isn't working for an fMRIPrep version >= 20.2.1,
+    please comment on https://github.com/ME-ICA/tedana/issues/717 and we will take a look at the problem.
+
 .. raw:: html
 
     <script src="https://gist.github.com/tsalo/83828e0c1e9009f3cbd82caed888afba.js"></script>
