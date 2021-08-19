@@ -559,8 +559,7 @@ This list is not necessarily up to date, so please check out OpenNeuro to potent
 * `Valence processing differs across stimulus modalities`_
 * `Cambridge Centre for Ageing Neuroscience (Cam-CAN)`_
 * `rt-me-fMRI - A task and resting state dataset for real-time, multi-echo fMRI methods development and validation`_
-* `EuskalIBUR`_: 7 subjects, 10 sessions per subject, five-echo fMRI with one task (breath-hold).
-  Also includes physio.
+* `EuskalIBUR`_
 
 .. _Multi-echo fMRI replication sample of autobiographical memory, prospection and theory of mind reasoning tasks: https://openneuro.org/datasets/ds000210/
 .. _Multi-echo Cambridge: https://openneuro.org/datasets/ds000258
