@@ -3,6 +3,7 @@ Utilities for tedana package
 """
 import logging
 import os.path as op
+import warnings
 
 import nibabel as nib
 import numpy as np
@@ -208,7 +209,12 @@ def dice(arr1, arr2, axis=None):
         dsi = np.zeros(arr_sum.shape)
     else:
         intersection = np.logical_and(arr1, arr2)
-        dsi = (2.0 * intersection.sum(axis=axis)) / arr_sum
+        if np.any(arr_sum == 0):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                dsi = (2. * intersection.sum(axis=axis)) / arr_sum
+        else:
+            dsi = (2. * intersection.sum(axis=axis)) / arr_sum
 
     return dsi
 
