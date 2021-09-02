@@ -4,6 +4,39 @@ FAQ
 ###
 
 
+.. _collecting fMRIPrepped data:
+
+***************************************************
+[tedana] How do I use tedana with fMRIPrepped data?
+***************************************************
+
+`fMRIPrep`_ outputs the preprocessed, optimally-combined fMRI data, rather than echo-wise data.
+This means that you cannot use the standard fMRIPrep outputs with tedana for multi-echo denoising.
+
+However, as long as you still have access to fMRIPrep's working directory,
+you can extract the partially-preprocessed echo-wise data,
+along with the necessary transform file to linearly transform that echo-wise data into the native structural scan space.
+The transform from that structural scan space to standard space will already be available,
+so you can easily chain these transforms to get your echo-wise data
+(or, more importantly, the scanner-space multi-echo denoised data) into standard space.
+
+Unfortunately, fMRIPrep's working directory structure is not stable across versions,
+so writing code to grab the relevant files from the working directory is a bit of a moving target.
+Nevertheless, we have some code (thanks to Julio Peraza) that works for version 20.2.1.
+
+.. warning::
+    We will try to keep the following gist up-to-date, but there is no guarantee that it will work for a given version.
+    Use it with caution!
+
+    If you do find that the gist isn't working for an fMRIPrep version >= 20.2.1,
+    please comment on `Issue #717 <https://github.com/ME-ICA/tedana/issues/717>`_ (even if it's closed)
+    and we will take a look at the problem.
+
+.. raw:: html
+
+    <script src="https://gist.github.com/tsalo/83828e0c1e9009f3cbd82caed888afba.js"></script>
+
+
 ************************************
 [tedana] ICA has failed to converge.
 ************************************
@@ -16,7 +49,6 @@ the data, or when improper steps have been applied to the data (e.g., distortion
 correction, rescaling, nuisance regression).
 If you are confident that your data have been preprocessed correctly prior to
 applying tedana, and you encounter this problem, please submit a question to `NeuroStars`_.
-
 
 
 ********************************************************************************
