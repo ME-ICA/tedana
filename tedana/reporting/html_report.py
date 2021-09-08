@@ -172,5 +172,3 @@ def generate_report(io_generator, tr):
     html = _save_as_html(body)
     with open(opj(io_generator.out_dir, "tedana_report.html"), "wb") as f:
         f.write(html.encode("utf-8"))
-
-    breakpoint()
