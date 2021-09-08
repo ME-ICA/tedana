@@ -37,12 +37,14 @@ def _generate_buttons(out_dir):
     with open(str(buttons_template_path), "r") as buttons_file:
         buttons_tpl = Template(buttons_file.read())
 
-    buttons_html = buttons_tpl.substitute(optcomdisp=optcom_nogsr_disp,
-                                          denoiseddisp=denoised_mir_disp,
-                                          accepteddisp=accepted_mir_disp,
-                                          optcomname=optcom_name,
-                                          denoisedname=denoised_name,
-                                          acceptedname=accepted_name)
+    buttons_html = buttons_tpl.substitute(
+        optcomdisp=optcom_nogsr_disp,
+        denoiseddisp=denoised_mir_disp,
+        accepteddisp=accepted_mir_disp,
+        optcomname=optcom_name,
+        denoisedname=denoised_name,
+        acceptedname=accepted_name,
+    )
 
     return buttons_html
 
@@ -69,7 +71,9 @@ def _update_template_bokeh(bokeh_id, about, bokeh_js, buttons):
     body_template_path = resource_path.joinpath(body_template_name)
     with open(str(body_template_path), "r") as body_file:
         body_tpl = Template(body_file.read())
-    body = body_tpl.substitute(content=bokeh_id, about=about, javascript=bokeh_js, buttons=buttons)
+    body = body_tpl.substitute(
+        content=bokeh_id, about=about, javascript=bokeh_js, buttons=buttons
+    )
     return body
 
 
@@ -168,3 +172,5 @@ def generate_report(io_generator, tr):
     html = _save_as_html(body)
     with open(opj(io_generator.out_dir, "tedana_report.html"), "wb") as f:
         f.write(html.encode("utf-8"))
+
+    breakpoint()
