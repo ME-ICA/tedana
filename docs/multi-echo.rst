@@ -444,19 +444,22 @@ Therefore, we suggest using the same slice timing for all echoes in an ME-EPI se
 3. Perform distortion correction, spatial normalization, smoothing, and any rescaling or filtering **after** denoising
 ======================================================================================================================
 
-Steps which rescale or warp the data at the run level (rather than the volume level),
-such as distortion correction and spatial normalization, can be applied to the optimally
-combined data *after* denoising.
+Any step that will alter the relationship of signal magnitudes between echoes should occur after denoising and combining
+of the echoes. For example, if echo is separately scaled by its mean signal over time, then resulting intensity gradients
+and the subsequent calculation of voxelwise T2* values will be distorted or incorrect. See the description of
+``tedana``'s :doc:`approach <\approach>` for more details on how T2* values are calculated. An agressive temporal filter
+(i.e. a 0.1Hz low pass filter) or spatial smoothing could similarly distort the relationship between the echoes at each
+time point.
 
 .. note::
-    Any intensity normalization or nuisance regressors should be applied to the data
-    *after* ``tedana`` calculates the BOLD and non-BOLD weighting of components.
-    If this is not considered, resulting intensity gradients (e.g., in the case of scaling)
-    or alignment parameters (e.g., in the case of motion correction, normalization)
-    are likely to differ across echos,
-    and the subsequent calculation of voxelwise T2* values will be distorted or incorrect.
-    See the description of ``tedana``'s :doc:`approach <\approach>` for more details
-    on how T2* values are calculated.
+    We are assuming that spatial normalization and distortion correction, particularly non-linear normalization methods
+    with higher order interpolation functions are likely to distort the relationship between echoes while rigid body
+    motion correction would linearly alter each echo in a similar manner. This assumption has not yet been empirically
+    tested and an affine normalzation with bilinear interpolation may not distort the relationship between echoes.
+    Additionally, there are benefits to applying only one spatial transform to data rather than applying one spatial
+    transform for motion correction and a later transform for normalization and distortion correction. Our advise
+    against doing normalization and distortion correction is a conservative choice and we encourage additional
+    research to better understand how these steps can be applied before denoising.
 
 
 *****************
