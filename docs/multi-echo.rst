@@ -453,11 +453,11 @@ time point.
 
 .. note::
     We are assuming that spatial normalization and distortion correction, particularly non-linear normalization methods
-    with higher order interpolation functions are likely to distort the relationship between echoes while rigid body
+    with higher order interpolation functions, are likely to distort the relationship between echoes while rigid body
     motion correction would linearly alter each echo in a similar manner. This assumption has not yet been empirically
     tested and an affine normalzation with bilinear interpolation may not distort the relationship between echoes.
     Additionally, there are benefits to applying only one spatial transform to data rather than applying one spatial
-    transform for motion correction and a later transform for normalization and distortion correction. Our advise
+    transform for motion correction and a later transform for normalization and distortion correction. Our advice
     against doing normalization and distortion correction is a conservative choice and we encourage additional
     research to better understand how these steps can be applied before denoising.
 
