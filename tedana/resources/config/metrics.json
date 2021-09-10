@@ -13,7 +13,15 @@
             "map FT2",
             "map Z"
         ],
+        "kappa rank": [
+            "map FT2",
+            "map Z"
+        ],
         "rho": [
+            "map FS0",
+            "map Z"
+        ],
+        "rho rank": [
             "map FS0",
             "map Z"
         ],
@@ -41,6 +49,9 @@
             "map FT2"
         ],
         "variance explained": [
+            "map optcom betas"
+        ],
+        "variance explained rank": [
             "map optcom betas"
         ],
         "normalized variance explained": [
