@@ -2,17 +2,20 @@
 Functions to optimally combine data across echoes.
 """
 import logging
+
 import numpy as np
-from tedana.due import due, Doi
+
+from tedana.due import Doi, due
 
 LGR = logging.getLogger("GENERAL")
-RepLGR = logging.getLogger('REPORT')
-RefLGR = logging.getLogger('REFERENCES')
+RepLGR = logging.getLogger("REPORT")
+RefLGR = logging.getLogger("REFERENCES")
 
 
-@due.dcite(Doi('10.1002/(SICI)1522-2594(199907)42:1<87::AID-MRM13>3.0.CO;2-O'),
-           description='T2* method of combining data across echoes using '
-                       'monoexponential equation.')
+@due.dcite(
+    Doi("10.1002/(SICI)1522-2594(199907)42:1<87::AID-MRM13>3.0.CO;2-O"),
+    description="T2* method of combining data across echoes using monoexponential equation.",
+)
 def _combine_t2s(data, tes, ft2s, report=True):
     """
     Combine data across echoes using weighted averaging according to voxel-
@@ -44,14 +47,18 @@ def _combine_t2s(data, tes, ft2s, report=True):
       for Magnetic Resonance in Medicine, 42(1), 87-97.
     """
     if report:
-        RepLGR.info("Multi-echo data were then optimally combined using the "
-                    "T2* combination method (Posse et al., 1999).")
-        RefLGR.info("Posse, S., Wiese, S., Gembris, D., Mathiak, K., Kessler, "
-                    "C., Grosse‐Ruyken, M. L., ... & Kiselev, V. G. (1999). "
-                    "Enhancement of BOLD‐contrast sensitivity by single‐shot "
-                    "multi‐echo functional MR imaging. Magnetic Resonance in "
-                    "Medicine: An Official Journal of the International Society "
-                    "for Magnetic Resonance in Medicine, 42(1), 87-97.")
+        RepLGR.info(
+            "Multi-echo data were then optimally combined using the "
+            "T2* combination method (Posse et al., 1999)."
+        )
+        RefLGR.info(
+            "Posse, S., Wiese, S., Gembris, D., Mathiak, K., Kessler, "
+            "C., Grosse‐Ruyken, M. L., ... & Kiselev, V. G. (1999). "
+            "Enhancement of BOLD‐contrast sensitivity by single‐shot "
+            "multi‐echo functional MR imaging. Magnetic Resonance in "
+            "Medicine: An Official Journal of the International Society "
+            "for Magnetic Resonance in Medicine, 42(1), 87-97."
+        )
     n_vols = data.shape[-1]
     alpha = tes * np.exp(-tes / ft2s)
     if alpha.ndim == 2:
@@ -65,14 +72,15 @@ def _combine_t2s(data, tes, ft2s, report=True):
         # If all values across echos are 0, set to 1 to avoid
         # divide-by-zero errors
         ax0_idx, ax2_idx = np.where(np.all(alpha == 0, axis=1))
-        alpha[ax0_idx, :, ax2_idx] = 1.
+        alpha[ax0_idx, :, ax2_idx] = 1.0
     combined = np.average(data, axis=1, weights=alpha)
     return combined
 
 
-@due.dcite(Doi('10.1002/mrm.20900'),
-           description='PAID method of combining data across echoes using just '
-                       'SNR/signal and TE.')
+@due.dcite(
+    Doi("10.1002/mrm.20900"),
+    description="PAID method of combining data across echoes using just SNR/signal and TE.",
+)
 def _combine_paid(data, tes, report=True):
     """
     Combine data across echoes using SNR/signal and TE via the
@@ -104,16 +112,20 @@ def _combine_paid(data, tes, report=True):
       55(6), 1227-1235.
     """
     if report:
-        RepLGR.info("Multi-echo data were then optimally combined using the "
-                    "parallel-acquired inhomogeneity desensitized (PAID) "
-                    "combination method.")
-        RefLGR.info("Poser, B. A., Versluis, M. J., Hoogduin, J. M., & Norris, "
-                    "D. G. (2006). BOLD contrast sensitivity enhancement and "
-                    "artifact reduction with multiecho EPI: parallel‐acquired "
-                    "inhomogeneity‐desensitized fMRI. "
-                    "Magnetic Resonance in Medicine: An Official Journal of the "
-                    "International Society for Magnetic Resonance in Medicine, "
-                    "55(6), 1227-1235.")
+        RepLGR.info(
+            "Multi-echo data were then optimally combined using the "
+            "parallel-acquired inhomogeneity desensitized (PAID) "
+            "combination method."
+        )
+        RefLGR.info(
+            "Poser, B. A., Versluis, M. J., Hoogduin, J. M., & Norris, "
+            "D. G. (2006). BOLD contrast sensitivity enhancement and "
+            "artifact reduction with multiecho EPI: parallel‐acquired "
+            "inhomogeneity‐desensitized fMRI. "
+            "Magnetic Resonance in Medicine: An Official Journal of the "
+            "International Society for Magnetic Resonance in Medicine, "
+            "55(6), 1227-1235."
+        )
     n_vols = data.shape[-1]
     snr = data.mean(axis=-1) / data.std(axis=-1)
     alpha = snr * tes
@@ -122,7 +134,7 @@ def _combine_paid(data, tes, report=True):
     return combined
 
 
-def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True):
+def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s", verbose=True):
     """
     Optimally combine BOLD data across TEs, using only those echos with reliable signal
     across at least three echos. If the number of echos providing reliable signal is greater
@@ -190,38 +202,43 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
                                               parameter.
     """
     if data.ndim != 3:
-        raise ValueError('Input data must be 3D (S x E x T)')
+        raise ValueError("Input data must be 3D (S x E x T)")
 
     if len(tes) != data.shape[1]:
-        raise ValueError('Number of echos provided does not match second '
-                         'dimension of input data: {0} != '
-                         '{1}'.format(len(tes), data.shape[1]))
+        raise ValueError(
+            "Number of echos provided does not match second "
+            "dimension of input data: {0} != "
+            "{1}".format(len(tes), data.shape[1])
+        )
 
     if adaptive_mask.ndim != 1:
-        raise ValueError('Mask is not 1D')
+        raise ValueError("Mask is not 1D")
     elif adaptive_mask.shape[0] != data.shape[0]:
-        raise ValueError('Mask and data do not have same number of '
-                         'voxels/samples: {0} != {1}'.format(
-                             adaptive_mask.shape[0], data.shape[0]))
+        raise ValueError(
+            "Mask and data do not have same number of "
+            "voxels/samples: {0} != {1}".format(adaptive_mask.shape[0], data.shape[0])
+        )
 
-    if combmode not in ['t2s', 'paid']:
+    if combmode not in ["t2s", "paid"]:
         raise ValueError("Argument 'combmode' must be either 't2s' or 'paid'")
-    elif combmode == 't2s' and t2s is None:
-        raise ValueError("Argument 't2s' must be supplied if 'combmode' is "
-                         "set to 't2s'.")
-    elif combmode == 'paid' and t2s is not None:
-        LGR.warning("Argument 't2s' is not required if 'combmode' is 'paid'. "
-                    "'t2s' array will not be used.")
+    elif combmode == "t2s" and t2s is None:
+        raise ValueError("Argument 't2s' must be supplied if 'combmode' is set to 't2s'.")
+    elif combmode == "paid" and t2s is not None:
+        LGR.warning(
+            "Argument 't2s' is not required if 'combmode' is 'paid'. "
+            "'t2s' array will not be used."
+        )
 
-    if combmode == 'paid':
-        LGR.info('Optimally combining data with parallel-acquired '
-                 'inhomogeneity desensitized (PAID) method')
+    if combmode == "paid":
+        LGR.info(
+            "Optimally combining data with parallel-acquired "
+            "inhomogeneity desensitized (PAID) method"
+        )
     else:
         if t2s.ndim == 1:
-            msg = 'Optimally combining data with voxel-wise T2* estimates'
+            msg = "Optimally combining data with voxel-wise T2* estimates"
         else:
-            msg = ('Optimally combining data with voxel- and volume-wise T2* '
-                   'estimates')
+            msg = "Optimally combining data with voxel- and volume-wise T2* estimates"
         LGR.info(msg)
 
     echos_to_run = np.unique(adaptive_mask)
@@ -241,9 +258,10 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
         else:
             voxel_idx = np.where(adaptive_mask == echo_num)[0]
 
-        if combmode == 'paid':
-            combined[voxel_idx, :] = _combine_paid(data[voxel_idx, :echo_num, :],
-                                                   tes[:, :echo_num])
+        if combmode == "paid":
+            combined[voxel_idx, :] = _combine_paid(
+                data[voxel_idx, :echo_num, :], tes[:, :echo_num]
+            )
         else:
             t2s_ = t2s[..., np.newaxis]  # add singleton
 
@@ -251,7 +269,7 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode='t2s', verbose=True
                 data[voxel_idx, :echo_num, :],
                 tes[:, :echo_num],
                 t2s_[voxel_idx, ...],
-                report=report
+                report=report,
             )
         report = False
 

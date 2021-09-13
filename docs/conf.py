@@ -19,7 +19,8 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('sphinxext'))
+
+sys.path.insert(0, os.path.abspath("sphinxext"))
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 
 from github_link import make_linkcode_resolve
@@ -39,39 +40,41 @@ add_module_names = False
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'matplotlib.sphinxext.plot_directive',
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.doctest',
-    'sphinx.ext.ifconfig',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.linkcode',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.todo',
-    'sphinxarg.ext',
+    "matplotlib.sphinxext.plot_directive",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.doctest",
+    "sphinx.ext.ifconfig",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.linkcode",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.todo",
+    "sphinxarg.ext",
 ]
 
 import sphinx
 from distutils.version import LooseVersion
-if LooseVersion(sphinx.__version__) < LooseVersion('1.4'):
-    extensions.append('sphinx.ext.pngmath')
+
+if LooseVersion(sphinx.__version__) < LooseVersion("1.4"):
+    extensions.append("sphinx.ext.pngmath")
 else:
-    extensions.append('sphinx.ext.imgmath')
+    extensions.append("sphinx.ext.imgmath")
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # General information about the project.
 from datetime import datetime  # access current time and date
-project = 'tedana'
-copyright = '2017-' + datetime.today().strftime("%Y") + ', tedana developers'
-author = 'tedana developers'
+
+project = "tedana"
+copyright = "2017-" + datetime.today().strftime("%Y") + ", tedana developers"
+author = "tedana developers"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -79,6 +82,7 @@ author = 'tedana developers'
 #
 # The short X.Y version.
 import tedana
+
 version = tedana.__version__
 # The full version, including alpha/beta/rc tags.
 release = tedana.__version__
@@ -93,10 +97,10 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
@@ -124,41 +128,41 @@ napoleon_use_rtype = False
 #
 # installing theme package
 import sphinx_rtd_theme
-html_theme = 'sphinx_rtd_theme'
+
+html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 
 html_theme_options = {
-    'includehidden': False,
+    "includehidden": False,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 
 # https://github.com/rtfd/sphinx_rtd_theme/issues/117
 def setup(app):
-    app.add_css_file('theme_overrides.css')
+    app.add_css_file("theme_overrides.css")
     app.add_js_file("https://cdn.rawgit.com/chrisfilo/zenodo.js/v0.1/zenodo.js")
 
 
-html_favicon = '_static/tedana_favicon.png'
+html_favicon = "_static/tedana_favicon.png"
 
 
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'tedanadoc'
+htmlhelp_basename = "tedanadoc"
 
 # The following is used by sphinx.ext.linkcode to provide links to github
-linkcode_resolve = make_linkcode_resolve('tedana',
-                                         u'https://github.com/me-ica/'
-                                         'tedana/blob/{revision}/'
-                                         '{package}/{path}#L{lineno}')
+linkcode_resolve = make_linkcode_resolve(
+    "tedana", "https://github.com/me-ica/" "tedana/blob/{revision}/" "{package}/{path}#L{lineno}"
+)
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
@@ -168,5 +172,5 @@ intersphinx_mapping = {
     "matplotlib": ("https://matplotlib.org/", None),
     "nibabel": ("https://nipy.org/nibabel/", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
-    "nilearn": ("http://nilearn.github.io/", None)
+    "nilearn": ("http://nilearn.github.io/", None),
 }

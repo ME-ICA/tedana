@@ -7,7 +7,6 @@ from scipy import stats
 from tedana import io, utils
 from tedana.stats import computefeats2, get_coeffs, t_to_z
 
-
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 RefLGR = logging.getLogger("REFERENCES")
@@ -144,9 +143,7 @@ def calculate_f_maps(data_cat, Z_maps, mixing, adaptive_mask, tes, f_max=500):
     assert Z_maps.shape[1] == mixing.shape[1]
 
     # TODO: Remove mask arg from get_coeffs
-    me_betas = get_coeffs(
-        data_cat, mixing, mask=np.ones(data_cat.shape[:2], bool), add_const=True
-    )
+    me_betas = get_coeffs(data_cat, mixing, mask=np.ones(data_cat.shape[:2], bool), add_const=True)
     n_voxels, n_echos, n_components = me_betas.shape
     mu = data_cat.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))
@@ -229,9 +226,7 @@ def threshold_map(maps, mask, ref_img, threshold, csize=None):
 
     for i_comp in range(n_components):
         # Cluster-extent threshold and binarize F-maps
-        ccimg = io.new_nii_like(
-            ref_img, np.squeeze(utils.unmask(maps[:, i_comp], mask))
-        )
+        ccimg = io.new_nii_like(ref_img, np.squeeze(utils.unmask(maps[:, i_comp], mask)))
 
         maps_thresh[:, i_comp] = utils.threshold_map(
             ccimg, min_cluster_size=csize, threshold=threshold, mask=mask, binarize=True
@@ -279,9 +274,7 @@ def threshold_to_match(maps, n_sig_voxels, mask, ref_img, csize=None):
         # of significant voxels from the F-statistic maps. This threshold
         # will be relaxed until the number of significant voxels from both
         # maps is roughly equal.
-        ccimg = io.new_nii_like(
-            ref_img, utils.unmask(stats.rankdata(abs_maps[:, i_comp]), mask)
-        )
+        ccimg = io.new_nii_like(ref_img, utils.unmask(stats.rankdata(abs_maps[:, i_comp]), mask))
         step = int(n_sig_voxels[i_comp] / 10)
         rank_thresh = n_voxels - n_sig_voxels[i_comp]
 
@@ -343,9 +336,7 @@ def calculate_dependence_metrics(F_T2_maps, F_S0_maps, Z_maps):
     n_components = Z_maps.shape[1]
     kappas, rhos = np.zeros(n_components), np.zeros(n_components)
     for i_comp in range(n_components):
-        kappas[i_comp] = np.average(
-            F_T2_maps[:, i_comp], weights=weight_maps[:, i_comp]
-        )
+        kappas[i_comp] = np.average(F_T2_maps[:, i_comp], weights=weight_maps[:, i_comp])
         rhos[i_comp] = np.average(F_S0_maps[:, i_comp], weights=weight_maps[:, i_comp])
     return kappas, rhos
 
@@ -567,9 +558,7 @@ def compute_countnoise(stat_maps, stat_cl_maps, stat_thresh=1.95):
     return countnoise
 
 
-def generate_decision_table_score(
-    kappa, dice_FT2, signal_minus_noise_t, countnoise, countsigFT2
-):
+def generate_decision_table_score(kappa, dice_FT2, signal_minus_noise_t, countnoise, countsigFT2):
     """Generate a five-metric decision table.
 
     Metrics are ranked in either descending or ascending order if they measure TE-dependence or

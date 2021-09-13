@@ -1,12 +1,12 @@
 """Tests for tedana.metrics."""
 import os.path as op
 
-import pytest
 import numpy as np
 import pandas as pd
+import pytest
 
 from tedana import io, utils
-from tedana.metrics import dependence, collect
+from tedana.metrics import collect, dependence
 from tedana.tests.utils import get_test_data_path
 
 
@@ -14,9 +14,7 @@ from tedana.tests.utils import get_test_data_path
 def testdata1():
     """Data used for tests of the metrics module."""
     tes = np.array([14.5, 38.5, 62.5])
-    in_files = [
-        op.join(get_test_data_path(), "echo{0}.nii.gz".format(i + 1)) for i in range(3)
-    ]
+    in_files = [op.join(get_test_data_path(), "echo{0}.nii.gz".format(i + 1)) for i in range(3)]
     data_cat, ref_img = io.load_data(in_files, n_echos=len(tes))
     _, adaptive_mask = utils.make_adaptive_mask(data_cat, getsum=True)
     data_optcom = np.mean(data_cat, axis=1)
@@ -55,7 +53,7 @@ def test_smoke_generate_metrics(testdata1):
         testdata1["adaptive_mask"],
         testdata1["tes"],
         testdata1["generator"],
-        'ICA',
+        "ICA",
         metrics=metrics,
     )
     assert isinstance(comptable, pd.DataFrame)
@@ -146,9 +144,7 @@ def test_smoke_compute_signal_minus_noise_z():
     (
         signal_minus_noise_z,
         signal_minus_noise_p,
-    ) = dependence.compute_signal_minus_noise_z(
-        Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95
-    )
+    ) = dependence.compute_signal_minus_noise_z(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95)
     assert signal_minus_noise_z.shape == signal_minus_noise_p.shape == (n_components,)
 
 
@@ -161,9 +157,7 @@ def test_smoke_compute_signal_minus_noise_t():
     (
         signal_minus_noise_t,
         signal_minus_noise_p,
-    ) = dependence.compute_signal_minus_noise_t(
-        Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95
-    )
+    ) = dependence.compute_signal_minus_noise_t(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95)
     assert signal_minus_noise_t.shape == signal_minus_noise_p.shape == (n_components,)
 
 
@@ -180,9 +174,7 @@ def test_smoke_compute_countnoise():
     n_voxels, n_components = 1000, 50
     stat_maps = np.random.normal(size=(n_voxels, n_components))
     stat_cl_maps = np.random.randint(0, 2, size=(n_voxels, n_components))
-    countnoise = dependence.compute_countnoise(
-        stat_maps, stat_cl_maps, stat_thresh=1.95
-    )
+    countnoise = dependence.compute_countnoise(stat_maps, stat_cl_maps, stat_thresh=1.95)
     assert countnoise.shape == (n_components,)
 
 

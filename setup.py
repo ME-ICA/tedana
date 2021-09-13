@@ -4,7 +4,7 @@
 
 
 def main():
-    """ Install entry-point """
+    """Install entry-point"""
     import versioneer
     from io import open
     from os import path as op
@@ -24,29 +24,29 @@ def main():
         REQUIRES,
         TESTS_REQUIRES,
         EXTRA_REQUIRES,
-        PYTHON_REQUIRES
+        PYTHON_REQUIRES,
     )
 
     pkg_data = {
-        'tedana': [
-            'tests/data/*',
-            'reporting/data/*',
-            'reporting/data/html/*',
-            'resources/config/*',
+        "tedana": [
+            "tests/data/*",
+            "reporting/data/*",
+            "reporting/data/html/*",
+            "resources/config/*",
         ]
     }
 
     root_dir = op.dirname(op.abspath(getfile(currentframe())))
 
-    with open(op.join(root_dir, 'README.md'), encoding='utf-8') as f:
+    with open(op.join(root_dir, "README.md"), encoding="utf-8") as f:
         long_description = f.read()
 
     version = None
     cmdclass = {}
-    if op.isfile(op.join(root_dir, 'tedana', 'VERSION')):
-        with open(op.join(root_dir, 'tedana', 'VERSION')) as vfile:
+    if op.isfile(op.join(root_dir, "tedana", "VERSION")):
+        with open(op.join(root_dir, "tedana", "VERSION")) as vfile:
             version = vfile.readline().strip()
-        pkg_data['tedana'].insert(0, 'VERSION')
+        pkg_data["tedana"].insert(0, "VERSION")
 
     if version is None:
         version = versioneer.get_version()
@@ -71,16 +71,18 @@ def main():
         install_requires=REQUIRES,
         tests_require=TESTS_REQUIRES,
         extras_require=EXTRA_REQUIRES,
-        entry_points={'console_scripts': [
-            't2smap=tedana.workflows.t2smap:_main',
-            'tedana=tedana.workflows.tedana:_main'
-        ]},
+        entry_points={
+            "console_scripts": [
+                "t2smap=tedana.workflows.t2smap:_main",
+                "tedana=tedana.workflows.tedana:_main",
+            ]
+        },
         packages=find_packages(exclude=("tests",)),
         package_data=pkg_data,
         zip_safe=False,
-        cmdclass=cmdclass
+        cmdclass=cmdclass,
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

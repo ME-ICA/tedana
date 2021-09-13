@@ -1,5 +1,6 @@
 """Test workflow parser utility functions."""
 import argparse
+
 import pytest
 
 from tedana.workflows.parser_utils import check_tedpca_value
@@ -20,5 +21,5 @@ def test_check_tedpca_value():
         check_tedpca_value(1.5, is_parser=False)
 
     assert check_tedpca_value(0.95) == 0.95
-    assert check_tedpca_value('0.95') == 0.95
+    assert check_tedpca_value("0.95") == 0.95
     assert check_tedpca_value("mdl") == "mdl"
