@@ -11,7 +11,8 @@ tap_callback_jscode = """
     // Accessing the selected component ID
     var data          = source_comp_table.data;
     var selected_idx = source_comp_table.selected.indices;
-    if(selected_idx > 0) {
+    console.log('Selected idx is ' + selected_idx)
+    if(selected_idx >= 0) {
         // A component has been selected
         // -----------------------------
         var components = data['component']
@@ -295,7 +296,11 @@ def _tap_callback(comptable_cds, div_content, io_generator):
         Javascript function that adds the tapping functionality
     """
     return models.CustomJS(
-        args=dict(source_comp_table=comptable_cds, div=div_content, outdir=io_generator.out_dir),
+        args=dict(
+            source_comp_table=comptable_cds,
+            div=div_content,
+            outdir=io_generator.out_dir,
+        ),
         code=tap_callback_jscode,
     )
 
