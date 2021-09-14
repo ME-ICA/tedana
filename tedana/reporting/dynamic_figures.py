@@ -91,9 +91,9 @@ def _create_data_struct(comptable_path, color_mapping=color_mapping):
 
     # For providing sizes based on Var Explained that are visible
     mm_scaler = MinMaxScaler(feature_range=(4, 20))
-    df["var_exp_size"] = mm_scaler.fit_transform(
-        df[["var_exp", "normalized variance explained"]]
-    )[:, 0]
+    df["var_exp_size"] = mm_scaler.fit_transform(df[["var_exp", "normalized variance explained"]])[
+        :, 0
+    ]
 
     # Calculate Kappa and Rho ranks
     df["rho_rank"] = df["rho"].rank(ascending=False).values

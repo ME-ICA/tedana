@@ -72,9 +72,7 @@ def _update_template_bokeh(bokeh_id, about, bokeh_js, buttons):
     body_template_path = resource_path.joinpath(body_template_name)
     with open(str(body_template_path), "r") as body_file:
         body_tpl = Template(body_file.read())
-    body = body_tpl.substitute(
-        content=bokeh_id, about=about, javascript=bokeh_js, buttons=buttons
-    )
+    body = body_tpl.substitute(content=bokeh_id, about=about, javascript=bokeh_js, buttons=buttons)
     return body
 
 
