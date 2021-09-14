@@ -6,6 +6,7 @@ from string import Template
 import pandas as pd
 from bokeh import __version__ as bokehversion
 from bokeh import embed, layouts, models
+
 from tedana.info import __version__
 from tedana.reporting import dynamic_figures as df
 
@@ -92,9 +93,7 @@ def _save_as_html(body):
     with open(str(head_template_path), "r") as head_file:
         head_tpl = Template(head_file.read())
 
-    html = head_tpl.substitute(
-        version=__version__, bokehversion=bokehversion, body=body
-    )
+    html = head_tpl.substitute(version=__version__, bokehversion=bokehversion, body=body)
     return html
 
 

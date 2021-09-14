@@ -5,13 +5,11 @@ import os.path as op
 import numpy as np
 import pandas as pd
 
-from . import dependence
-from ._utils import determine_signs, flip_components, dependency_resolver
-
-from tedana import io
-from tedana import utils
+from tedana import io, utils
 from tedana.stats import getfbounds
 
+from . import dependence
+from ._utils import dependency_resolver, determine_signs, flip_components
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -71,9 +69,7 @@ def generate_metrics(
         raise ValueError(
             "First dimensions (number of samples) of data_cat ({0}), "
             "data_optcom ({1}), and adaptive_mask ({2}) do not "
-            "match".format(
-                data_cat.shape[0], data_optcom.shape[0], adaptive_mask.shape[0]
-            )
+            "match".format(data_cat.shape[0], data_optcom.shape[0], adaptive_mask.shape[0])
         )
     elif data_cat.shape[1] != len(tes):
         raise ValueError(
@@ -116,9 +112,7 @@ def generate_metrics(
     n_components = mixing.shape[1]
     comptable = pd.DataFrame(index=np.arange(n_components, dtype=int))
     comptable["Component"] = [
-        io.add_decomp_prefix(
-            comp, prefix=label, max_value=comptable.shape[0]
-        )
+        io.add_decomp_prefix(comp, prefix=label, max_value=comptable.shape[0])
         for comp in comptable.index.values
     ]
 
@@ -136,13 +130,9 @@ def generate_metrics(
 
     if "map optcom betas" in required_metrics:
         LGR.info("Calculating parameter estimate maps for optimally combined data")
-        metric_maps["map optcom betas"] = dependence.calculate_betas(
-            data_optcom, mixing
-        )
+        metric_maps["map optcom betas"] = dependence.calculate_betas(data_optcom, mixing)
         if io_generator.verbose:
-            metric_maps["map echo betas"] = dependence.calculate_betas(
-                data_cat, mixing
-            )
+            metric_maps["map echo betas"] = dependence.calculate_betas(data_cat, mixing)
 
     if "map percent signal change" in required_metrics:
         LGR.info("Calculating percent signal change maps")
@@ -158,7 +148,7 @@ def generate_metrics(
         if io_generator.verbose:
             io_generator.save_file(
                 utils.unmask(metric_maps["map Z"] ** 2, mask),
-                label + ' component weights img',
+                label + " component weights img",
             )
 
     if ("map FT2" in required_metrics) or ("map FS0" in required_metrics):
@@ -207,17 +197,13 @@ def generate_metrics(
 
     # Back to maps
     if "map beta T2 clusterized" in required_metrics:
-        LGR.info(
-            "Thresholding optimal combination beta maps to match T2* F-statistic maps"
-        )
+        LGR.info("Thresholding optimal combination beta maps to match T2* F-statistic maps")
         metric_maps["map beta T2 clusterized"] = dependence.threshold_to_match(
             metric_maps["map optcom betas"], comptable["countsigFT2"], mask, ref_img
         )
 
     if "map beta S0 clusterized" in required_metrics:
-        LGR.info(
-            "Thresholding optimal combination beta maps to match S0 F-statistic maps"
-        )
+        LGR.info("Thresholding optimal combination beta maps to match S0 F-statistic maps")
         metric_maps["map beta S0 clusterized"] = dependence.threshold_to_match(
             metric_maps["map optcom betas"], comptable["countsigFS0"], mask, ref_img
         )
@@ -341,37 +327,47 @@ def generate_metrics(
                 echo_betas = betas[:, i_echo, :]
                 io_generator.save_file(
                     utils.unmask(echo_betas, mask),
-                    'echo weight ' + label + ' map split img',
-                    echo=(i_echo + 1)
+                    "echo weight " + label + " map split img",
+                    echo=(i_echo + 1),
                 )
 
             if write_T2S0:
                 echo_pred_T2_maps = pred_T2_maps[:, i_echo, :]
                 io_generator.save_file(
                     utils.unmask(echo_pred_T2_maps, mask),
-                    'echo T2 ' + label + ' split img',
-                    echo=(i_echo + 1)
+                    "echo T2 " + label + " split img",
+                    echo=(i_echo + 1),
                 )
 
                 echo_pred_S0_maps = pred_S0_maps[:, i_echo, :]
                 io_generator.save_file(
                     utils.unmask(echo_pred_S0_maps, mask),
-                    'echo S0 ' + label + ' split img',
-                    echo=(i_echo + 1)
+                    "echo S0 " + label + " split img",
+                    echo=(i_echo + 1),
                 )
 
     # Reorder component table columns based on previous tedana versions
     # NOTE: Some new columns will be calculated and columns may be reordered during
     # component selection
     preferred_order = (
-        "Component", "kappa", "rho", "variance explained",
+        "Component",
+        "kappa",
+        "rho",
+        "variance explained",
         "normalized variance explained",
         "estimated normalized variance explained",
-        "countsigFT2", "countsigFS0",
-        "dice_FT2", "dice_FS0",
-        "countnoise", "signal-noise_t", "signal-noise_p",
-        "d_table_score", "kappa ratio", "d_table_score_scrub",
-        "classification", "rationale",
+        "countsigFT2",
+        "countsigFS0",
+        "dice_FT2",
+        "dice_FS0",
+        "countnoise",
+        "signal-noise_t",
+        "signal-noise_p",
+        "d_table_score",
+        "kappa ratio",
+        "d_table_score_scrub",
+        "classification",
+        "rationale",
     )
     first_columns = [col for col in preferred_order if col in comptable.columns]
     other_columns = [col for col in comptable.columns if col not in preferred_order]
@@ -468,9 +464,7 @@ def get_metadata(comptable):
         }
     if "dice_FS0" in comptable:
         metric_metadata["dice_FS0"] = {
-            "LongName": (
-                "S0 model beta map-F-statistic map Dice similarity index"
-            ),
+            "LongName": ("S0 model beta map-F-statistic map Dice similarity index"),
             "Description": (
                 "Dice value of cluster-extent thresholded maps of "
                 "S0-model betas and F-statistics."
@@ -519,18 +513,10 @@ def get_metadata(comptable):
     if "original_classification" in comptable:
         metric_metadata["original_classification"] = {
             "LongName": "Original classification",
-            "Description": (
-                "Classification from the original decision tree."
-            ),
+            "Description": ("Classification from the original decision tree."),
             "Levels": {
-                "accepted": (
-                    "A BOLD-like component included in denoised and "
-                    "high-Kappa data."
-                ),
-                "rejected": (
-                    "A non-BOLD component excluded from denoised and "
-                    "high-Kappa data."
-                ),
+                "accepted": ("A BOLD-like component included in denoised and high-Kappa data."),
+                "rejected": ("A non-BOLD component excluded from denoised and high-Kappa data."),
                 "ignored": (
                     "A low-variance component included in denoised, "
                     "but excluded from high-Kappa data."
@@ -549,18 +535,10 @@ def get_metadata(comptable):
     if "classification" in comptable:
         metric_metadata["classification"] = {
             "LongName": "Component classification",
-            "Description": (
-                "Classification from the manual classification procedure."
-            ),
+            "Description": ("Classification from the manual classification procedure."),
             "Levels": {
-                "accepted": (
-                    "A BOLD-like component included in denoised and "
-                    "high-Kappa data."
-                ),
-                "rejected": (
-                    "A non-BOLD component excluded from denoised and "
-                    "high-Kappa data."
-                ),
+                "accepted": ("A BOLD-like component included in denoised and high-Kappa data."),
+                "rejected": ("A non-BOLD component excluded from denoised and high-Kappa data."),
                 "ignored": (
                     "A low-variance component included in denoised, "
                     "but excluded from high-Kappa data."

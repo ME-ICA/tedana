@@ -44,6 +44,8 @@ TESTS_REQUIRES = [
     "codecov",
     "coverage<5.0",
     "flake8>=3.7",
+    "flake8-black",
+    "flake8-isort",
     "pytest",
     "pytest-cov",
     "requests",

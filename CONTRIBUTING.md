@@ -274,6 +274,7 @@ Thanks for contributing!
 - [ ] Make sure you have docstrings for any new functions
 - [ ] Make sure that docstrings are updated for edited functions
 - [ ] Make sure you note any issues that will be closed by your PR
+- [ ] Make sure your code follows `tedana`'s preferred style by running [black][link_black] and [isort][link_isort].
 - [ ] Take a look at the automatically generated readthedocs for your PR (Show all checks -> continuous-documentation/readthedocs -> Details)
 
 ### Comprehensive Developer Guide
@@ -284,11 +285,13 @@ For additional, in-depth information on contributing to `tedana`, please see our
 Docstrings should follow [numpydoc][link_numpydoc] convention.
 We encourage extensive documentation.
 
-The python code itself should follow [PEP8][link_pep8] convention
-whenever possible, with at most about 500 lines of code (not including docstrings) per script.
+The Python code itself should follow [PEP8][link_pep8] convention,
+with at most about 500 lines of code (not including docstrings) per script.
+We use [black][link_black] and [isort][link_isort] to enforce this code style,
+and we strongly recommend running both tools on your fork before opening a pull request.
 
-Additionally, we have adopted a purely functional approach in `tedana`, so we
-avoid defining our own classes within the library.
+Additionally, we have adopted a primarily functional approach in `tedana`,
+so we avoid defining our own classes within the library unless absolutely necessary.
 
 Our documentation is written in [ReStructuredText](#writing-in-restructuredtext),
 which we explain in more detail below.
@@ -367,6 +370,8 @@ You're awesome. :wave::smiley:
 
 [link_numpydoc]: https://numpydoc.readthedocs.io/en/latest/format.html
 [link_pep8]: https://www.python.org/dev/peps/pep-0008/
+[link_black]: https://black.readthedocs.io/en/stable/
+[link_isort]: https://pycqa.github.io/isort/
 [link_rst_guide]: http://docs.sphinxdocs.com/en/latest/step-1.html
 
 [link_contributors]: https://github.com/ME-ICA/tedana/graphs/contributors

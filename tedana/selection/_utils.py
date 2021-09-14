@@ -6,8 +6,8 @@ import logging
 import numpy as np
 
 LGR = logging.getLogger("GENERAL")
-RepLGR = logging.getLogger('REPORT')
-RefLGR = logging.getLogger('REFERENCES')
+RepLGR = logging.getLogger("REPORT")
+RefLGR = logging.getLogger("REFERENCES")
 
 
 def clean_dataframe(comptable):
@@ -15,10 +15,11 @@ def clean_dataframe(comptable):
     Reorder columns in component table so "rationale" and "classification" are
     last and remove trailing semicolons from rationale column.
     """
-    cols_at_end = ['classification', 'rationale']
-    comptable = comptable[[c for c in comptable if c not in cols_at_end] +
-                          [c for c in cols_at_end if c in comptable]]
-    comptable['rationale'] = comptable['rationale'].str.rstrip(';')
+    cols_at_end = ["classification", "rationale"]
+    comptable = comptable[
+        [c for c in comptable if c not in cols_at_end] + [c for c in cols_at_end if c in comptable]
+    ]
+    comptable["rationale"] = comptable["rationale"].str.rstrip(";")
     return comptable
 
 
@@ -40,7 +41,7 @@ def getelbow_cons(arr, return_val=False):
         elbow index (if return_val is False)
     """
     if arr.ndim != 1:
-        raise ValueError('Parameter arr should be 1d, not {0}d'.format(arr.ndim))
+        raise ValueError("Parameter arr should be 1d, not {0}d".format(arr.ndim))
 
     if not arr.size:
         raise ValueError(
@@ -54,8 +55,10 @@ def getelbow_cons(arr, return_val=False):
 
     arr = np.sort(arr)[::-1]
     nk = len(arr)
-    temp1 = [(arr[nk - 5 - ii - 1] > arr[nk - 5 - ii:nk].mean() + 2 * arr[nk - 5 - ii:nk].std())
-             for ii in range(nk - 5)]
+    temp1 = [
+        (arr[nk - 5 - ii - 1] > arr[nk - 5 - ii : nk].mean() + 2 * arr[nk - 5 - ii : nk].std())
+        for ii in range(nk - 5)
+    ]
     ds = np.array(temp1[::-1], dtype=np.int)
     dsum = []
     c_ = 0
@@ -89,7 +92,7 @@ def getelbow(arr, return_val=False):
         elbow index (if return_val is False)
     """
     if arr.ndim != 1:
-        raise ValueError('Parameter arr should be 1d, not {0}d'.format(arr.ndim))
+        raise ValueError("Parameter arr should be 1d, not {0}d".format(arr.ndim))
 
     if not arr.size:
         raise ValueError(

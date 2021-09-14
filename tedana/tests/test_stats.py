@@ -1,13 +1,12 @@
 """
 Tests for the tedana stats module
 """
-import numpy as np
-import pytest
 import random
 
-from tedana.stats import computefeats2
-from tedana.stats import get_coeffs
-from tedana.stats import getfbounds
+import numpy as np
+import pytest
+
+from tedana.stats import computefeats2, get_coeffs, getfbounds
 
 
 def test_break_computefeats2():
@@ -71,11 +70,11 @@ def test_get_coeffs():
 
     betas = get_coeffs(data, X, mask=None, add_const=False)
     betas = np.squeeze(betas)
-    assert np.allclose(betas, np.array([5., 5.]))
+    assert np.allclose(betas, np.array([5.0, 5.0]))
 
     betas = get_coeffs(data, X, mask=None, add_const=True)
     betas = np.squeeze(betas)
-    assert np.allclose(betas, np.array([5., 5.]))
+    assert np.allclose(betas, np.array([5.0, 5.0]))
 
     betas = get_coeffs(data, X, mask=mask, add_const=False)
     betas = np.squeeze(betas)
