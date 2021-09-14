@@ -501,11 +501,13 @@ Videos
 * A `series of lectures from the OHBM 2017 multi-echo session`_ on multiple facets of multi-echo data analysis
 * | Multi-echo fMRI lecture from the `2018 NIH FMRI Summer Course`_ by Javier Gonzalez-Castillo
   | `Slides from 2018 NIH FMRI Summer Course`_
+* An `NIMH Center for Multimodal Neuroimaging video`_ by the Section on Functional Imaging Methods
 
 .. _educational session from OHBM 2017: https://www.pathlms.com/ohbm/courses/5158/sections/7788/video_presentations/75977
 .. _series of lectures from the OHBM 2017 multi-echo session: https://www.pathlms.com/ohbm/courses/5158/sections/7822
 .. _2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/course/fmrif_course/2018/14_Javier_20180713
 .. _Slides from 2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/COURSE/fmrif_course/2018/content/14_Javier_20180713.pdf
+.. _NIMH Center for Multimodal Neuroimaging video: https://youtu.be/G1Ftd2IwF14
 
 
 Multi-echo preprocessing software
