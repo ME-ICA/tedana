@@ -67,6 +67,10 @@ def test_load_data():
     with pytest.raises(TypeError):
         d, ref = me.load_data(fimg_tuple)
 
+    # two echos should raise value error
+    with pytest.raises(ValueError):
+        me.load_data(fnames[:2])
+
     # imagine z-cat img
     d, ref = me.load_data(fnames[0], n_echos=3)
     assert d.shape == (21450, 3, 5)

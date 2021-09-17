@@ -116,6 +116,12 @@ def test_smoke_reshape_niimg():
     assert utils.reshape_niimg(data_3d) is not None
     assert utils.reshape_niimg(data_4d) is not None
 
+    with pytest.raises(TypeError):
+        utils.reshape_niimg(5)
+
+    with pytest.raises(ValueError):
+        utils.reshape_niimg("/path/to/nonexistent/file")
+
 
 def test_smoke_make_adaptive_mask():
     """
