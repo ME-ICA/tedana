@@ -34,11 +34,38 @@ def test_load_data():
     assert isinstance(ref, nib.Nifti1Image)
     assert np.allclose(ref.get_fdata(), nib.load(fnames[0]).get_fdata())
 
+    # list of filepath to images *without n_echos*
+    d, ref = me.load_data(fnames)
+    assert d.shape == exp_shape
+    assert isinstance(ref, nib.Nifti1Image)
+    assert np.allclose(ref.get_fdata(), nib.load(fnames[0]).get_fdata())
+
     # list of img_like
     d, ref = me.load_data(fimg, n_echos=len(tes))
     assert d.shape == exp_shape
     assert isinstance(ref, nib.Nifti1Image)
     assert ref == fimg[0]
+
+    # list of img_like *without n_echos*
+    d, ref = me.load_data(fimg)
+    assert d.shape == exp_shape
+    assert isinstance(ref, nib.Nifti1Image)
+    assert ref == fimg[0]
+
+    # bad entry
+    fimg_with_bad_item = fimg[:]
+    fimg_with_bad_item[-1] = 5
+    with pytest.raises(TypeError):
+        d, ref = me.load_data(fimg_with_bad_item)
+
+    # unsupported tuple of img_like
+    fimg_tuple = tuple(fimg)
+    with pytest.raises(TypeError):
+        d, ref = me.load_data(fimg_tuple, n_echos=len(tes))
+
+    # tuple of img_like *without n_echos*
+    with pytest.raises(TypeError):
+        d, ref = me.load_data(fimg_tuple)
 
     # imagine z-cat img
     d, ref = me.load_data(fnames[0], n_echos=3)
@@ -46,8 +73,19 @@ def test_load_data():
     assert isinstance(ref, nib.Nifti1Image)
     assert ref.shape == (39, 50, 11, 1)
 
+    # z-cat without n_echos should raise an error
     with pytest.raises(ValueError):
         me.load_data(fnames[0])
+
+    # imagine z-cat img in list
+    d, ref = me.load_data(fnames[:1], n_echos=3)
+    assert d.shape == (21450, 3, 5)
+    assert isinstance(ref, nib.Nifti1Image)
+    assert ref.shape == (39, 50, 11, 1)
+
+    # z-cat in list without n_echos should raise an error
+    with pytest.raises(ValueError):
+        me.load_data(fnames[:1])
 
 
 # SMOKE TESTS
