@@ -2,20 +2,20 @@
 Tests for tedana.utils
 """
 
-from os.path import join as pjoin, dirname
+import random
+from os.path import dirname
+from os.path import join as pjoin
 
 import nibabel as nib
 import numpy as np
 import pytest
 
-import random
-
-from tedana import (utils, io)
+from tedana import io, utils
 
 rs = np.random.RandomState(1234)
-datadir = pjoin(dirname(__file__), 'data')
-fnames = [pjoin(datadir, 'echo{}.nii.gz'.format(n)) for n in range(1, 4)]
-tes = ['14.5', '38.5', '62.5']
+datadir = pjoin(dirname(__file__), "data")
+fnames = [pjoin(datadir, "echo{}.nii.gz".format(n)) for n in range(1, 4)]
+tes = ["14.5", "38.5", "62.5"]
 
 
 def test_unmask():
@@ -27,7 +27,7 @@ def test_unmask():
         (rs.rand(n_data, 3), float),  # 2D float
         (rs.rand(n_data, 3, 3), float),  # 3D float
         (rs.randint(10, size=(n_data, 3)), int),  # 2D int
-        (rs.randint(10, size=(n_data, 3, 3)), int)  # 3D int
+        (rs.randint(10, size=(n_data, 3, 3)), int),  # 3D int
     ]
 
     for (input, dtype) in inputs:
@@ -61,8 +61,7 @@ def test_andb():
 
     # confirm error raised when dimensions are not the same
     with pytest.raises(ValueError):
-        utils.andb([rs.randint(10, size=(10, 10)),
-                    rs.randint(10, size=(20, 20))])
+        utils.andb([rs.randint(10, size=(10, 10)), rs.randint(10, size=(20, 20))])
 
 
 def test_load_image():
@@ -96,13 +95,14 @@ def test_make_adaptive_mask():
 
     # test user-defined mask
     # TODO: Add mask file with no bad voxels to test against
-    mask, masksum = utils.make_adaptive_mask(data, mask=pjoin(datadir,
-                                                              'mask.nii.gz'),
-                                             getsum=True, threshold=3)
+    mask, masksum = utils.make_adaptive_mask(
+        data, mask=pjoin(datadir, "mask.nii.gz"), getsum=True, threshold=3
+    )
     assert np.allclose(mask, (masksum >= 3).astype(bool))
 
 
 # SMOKE TESTS
+
 
 def test_smoke_load_image():
     """
@@ -203,8 +203,8 @@ def test_smoke_threshold_map():
     assert utils.threshold_map(img, min_cluster_size, threshold=threshold) is not None
     assert utils.threshold_map(img, min_cluster_size, mask=mask) is not None
     assert utils.threshold_map(img, min_cluster_size, binarize=False) is not None
-    assert utils.threshold_map(img, min_cluster_size, sided='one') is not None
-    assert utils.threshold_map(img, min_cluster_size, sided='bi') is not None
+    assert utils.threshold_map(img, min_cluster_size, sided="one") is not None
+    assert utils.threshold_map(img, min_cluster_size, sided="bi") is not None
 
 
 def test_sec2millisec():

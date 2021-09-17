@@ -28,39 +28,6 @@ jobs:
           paths:
               - /opt/conda/envs/tedana_py37
 
-  unittest_35:
-    docker:
-      - image: continuumio/miniconda3
-    working_directory: /tmp/src/tedana
-    steps:
-      - checkout
-      - restore_cache:
-          key: conda-py35-v1-{{ checksum "tedana/info.py" }}
-      - run:
-          name: Generate environment
-          command: |
-            apt-get install -yqq make
-            if [ ! -d /opt/conda/envs/tedana_py35 ]; then
-              conda create -yq -n tedana_py35 python=3.5
-              source activate tedana_py35
-              pip install .[tests]
-            fi
-      - run:
-          name: Running unit tests
-          command: |
-            source activate tedana_py35
-            make unittest
-            mkdir /tmp/src/coverage
-            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py35
-      - save_cache:
-          key: conda-py35-v1-{{ checksum "tedana/info.py" }}
-          paths:
-              - /opt/conda/envs/tedana_py35
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-              - src/coverage/.coverage.py35
-
   unittest_36:
     docker:
       - image: continuumio/miniconda3
@@ -72,6 +39,7 @@ jobs:
       - run:
           name: Generate environment
           command: |
+            apt-get update
             apt-get install -yqq make
             if [ ! -d /opt/conda/envs/tedana_py36 ]; then
               conda create -yq -n tedana_py36 python=3.6
@@ -105,6 +73,7 @@ jobs:
       - run:
           name: Running unit tests
           command: |
+            apt-get update
             apt-get install -y make
             source activate tedana_py37  # depends on makeenv_37
             make unittest
@@ -114,6 +83,74 @@ jobs:
           root: /tmp
           paths:
               - src/coverage/.coverage.py37
+
+  unittest_38:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py38-v1-{{ checksum "tedana/info.py" }}
+      - run:
+          name: Generate environment
+          command: |
+            apt-get update
+            apt-get install -yqq make
+            if [ ! -d /opt/conda/envs/tedana_py38 ]; then
+              conda create -yq -n tedana_py38 python=3.8
+              source activate tedana_py38
+              pip install .[tests]
+            fi
+      - run:
+          name: Running unit tests
+          command: |
+            source activate tedana_py38
+            make unittest
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py38
+      - save_cache:
+          key: conda-py38-v1-{{ checksum "tedana/info.py" }}
+          paths:
+              - /opt/conda/envs/tedana_py38
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+              - src/coverage/.coverage.py38
+
+  unittest_39:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py39-v1-{{ checksum "tedana/info.py" }}
+      - run:
+          name: Generate environment
+          command: |
+            apt-get update
+            apt-get install -yqq make
+            if [ ! -d /opt/conda/envs/tedana_py39 ]; then
+              conda create -yq -n tedana_py39 python=3.9
+              source activate tedana_py39
+              pip install .[tests]
+            fi
+      - run:
+          name: Running unit tests
+          command: |
+            source activate tedana_py39
+            make unittest
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py39
+      - save_cache:
+          key: conda-py39-v1-{{ checksum "tedana/info.py" }}
+          paths:
+              - /opt/conda/envs/tedana_py39
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+              - src/coverage/.coverage.py39
 
   style_check:
     docker:
@@ -126,6 +163,7 @@ jobs:
       - run:
           name: Style check
           command: |
+            apt-get update
             apt-get install -yqq make
             source activate tedana_py37  # depends on makeenv37
             make lint
@@ -142,6 +180,7 @@ jobs:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
+            apt-get update
             apt-get install -yqq make
             source activate tedana_py37  # depends on makeenv_37
             make three-echo
@@ -166,6 +205,7 @@ jobs:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
+            apt-get update
             apt-get install -yqq make
             source activate tedana_py37  # depends on makeenv_37
             make four-echo
@@ -190,6 +230,7 @@ jobs:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
+            apt-get update
             apt-get install -yqq make
             source activate tedana_py37  # depends on makeenv_37
             make five-echo
@@ -214,6 +255,7 @@ jobs:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
+            apt-get update
             apt-get install -yqq make
             source activate tedana_py37  # depends on makeenv_37
             make t2smap
@@ -239,6 +281,7 @@ jobs:
       - run:
           name: Merge coverage files
           command: |
+            apt-get update
             apt-get install -yqq curl
             source activate tedana_py37  # depends on makeenv37
             cd /tmp/src/coverage/
@@ -254,7 +297,6 @@ workflows:
   build_test:
     jobs:
       - makeenv_37
-      - unittest_35
       - unittest_36
       - unittest_37:
           requires:
@@ -274,11 +316,14 @@ workflows:
       - t2smap:
           requires:
             - makeenv_37
+      - unittest_38
+      - unittest_39
       - merge_coverage:
           requires:
-            - unittest_35
             - unittest_36
             - unittest_37
+            - unittest_38
+            - unittest_39
             - three-echo
             - four-echo
             - five-echo

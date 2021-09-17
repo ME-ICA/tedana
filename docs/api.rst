@@ -2,13 +2,16 @@
 
 .. currentmodule:: tedana
 
+###
 API
-===
+###
+
 
 .. _api_workflows_ref:
 
+*****************************************
 :mod:`tedana.workflows`: Common workflows
---------------------------------------------------
+*****************************************
 
 .. automodule:: tedana.workflows
    :no-members:
@@ -26,8 +29,9 @@ API
 
 .. _api_decay_ref:
 
+********************************************************
 :mod:`tedana.decay`: Modeling signal decay across echoes
---------------------------------------------------------
+********************************************************
 
 .. automodule:: tedana.decay
    :no-members:
@@ -45,8 +49,9 @@ API
 
 .. _api_combine_ref:
 
+**********************************************************
 :mod:`tedana.combine`: Combining time series across echoes
-----------------------------------------------------------
+**********************************************************
 
 .. automodule:: tedana.combine
    :no-members:
@@ -63,8 +68,9 @@ API
 
 .. _api_decomposition_ref:
 
+***********************************************
 :mod:`tedana.decomposition`: Data decomposition
---------------------------------------------------
+***********************************************
 
 .. automodule:: tedana.decomposition
    :no-members:
@@ -82,8 +88,9 @@ API
 
 .. _api_metrics_ref:
 
+******************************************************
 :mod:`tedana.metrics`: Computing TE-dependence metrics
---------------------------------------------------------
+******************************************************
 
 .. automodule:: tedana.metrics
    :no-members:
@@ -93,16 +100,17 @@ API
 
 .. autosummary::
    :toctree: generated/
-   :template: function.rst
+   :template: module.rst
 
-   tedana.metrics.dependence_metrics
-   tedana.metrics.kundu_metrics
+   tedana.metrics.collect
+   tedana.metrics.dependence
 
 
 .. _api_selection_ref:
 
+********************************************
 :mod:`tedana.selection`: Component selection
---------------------------------------------------
+********************************************
 
 .. automodule:: tedana.selection
    :no-members:
@@ -121,8 +129,9 @@ API
 
 .. _api_gscontrol_ref:
 
+**********************************************
 :mod:`tedana.gscontrol`: Global signal control
---------------------------------------------------
+**********************************************
 
 .. automodule:: tedana.gscontrol
    :no-members:
@@ -140,8 +149,9 @@ API
 
 .. _api_io_ref:
 
+******************************************
 :mod:`tedana.io`: Reading and writing data
-------------------------------------------
+******************************************
 
 .. automodule:: tedana.io
    :no-members:
@@ -151,25 +161,27 @@ API
 
 .. autosummary::
    :toctree: generated/
+   :template: class.rst
+
+   tedana.io.OutputGenerator
+
    :template: function.rst
 
    tedana.io.load_data
-   tedana.io.filewrite
    tedana.io.new_nii_like
-   tedana.io.save_comptable
-   tedana.io.load_comptable
    tedana.io.add_decomp_prefix
+   tedana.io.denoise_ts
    tedana.io.split_ts
    tedana.io.write_split_ts
-   tedana.io.writefeats
    tedana.io.writeresults
    tedana.io.writeresults_echoes
 
 
 .. _api_stats_ref:
 
+******************************************
 :mod:`tedana.stats`: Statistical functions
---------------------------------------------------
+******************************************
 
 .. automodule:: tedana.stats
    :no-members:
@@ -188,8 +200,9 @@ API
 
 .. _api_utils_ref:
 
+**************************************
 :mod:`tedana.utils`: Utility functions
---------------------------------------
+**************************************
 
 .. automodule:: tedana.utils
    :no-members:

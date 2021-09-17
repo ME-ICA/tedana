@@ -2,22 +2,21 @@
 PCA and related signal decomposition methods for tedana
 """
 import logging
-import os.path as op
 from numbers import Number
 
 import numpy as np
 import pandas as pd
+from mapca import ma_pca
 from scipy import stats
 from sklearn.decomposition import PCA
 
-from tedana import metrics, utils, io
-from tedana.decomposition import ma_pca
-from tedana.stats import computefeats2
+from tedana import io, metrics, utils
 from tedana.selection import kundu_tedpca
+from tedana.stats import computefeats2
 
-LGR = logging.getLogger(__name__)
-RepLGR = logging.getLogger('REPORT')
-RefLGR = logging.getLogger('REFERENCES')
+LGR = logging.getLogger("GENERAL")
+RepLGR = logging.getLogger("REPORT")
+RefLGR = logging.getLogger("REFERENCES")
 
 
 def low_mem_pca(data):
@@ -39,17 +38,30 @@ def low_mem_pca(data):
         Component timeseries.
     """
     from sklearn.decomposition import IncrementalPCA
+
     ppca = IncrementalPCA(n_components=(data.shape[-1] - 1))
     ppca.fit(data)
     v = ppca.components_.T
     s = ppca.explained_variance_
-    u = np.dot(np.dot(data, v), np.diag(1. / s))
+    u = np.dot(np.dot(data, v), np.diag(1.0 / s))
     return u, s, v
 
 
-def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
-           ref_img, tes, algorithm='mdl', kdaw=10., rdaw=1.,
-           out_dir='.', verbose=False, low_mem=False):
+def tedpca(
+    data_cat,
+    data_oc,
+    combmode,
+    mask,
+    adaptive_mask,
+    t2sG,
+    io_generator,
+    tes,
+    algorithm="mdl",
+    kdaw=10.0,
+    rdaw=1.0,
+    verbose=False,
+    low_mem=False,
+):
     """
     Use principal components analysis (PCA) to identify and remove thermal
     noise from multi-echo data.
@@ -73,8 +85,8 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         For more information on thresholding, see `make_adaptive_mask`.
     t2sG : (S,) array_like
         Map of voxel-wise T2* estimates.
-    ref_img : :obj:`str` or img_like
-        Reference image to dictate how outputs are saved to disk
+    io_generator : :obj:`tedana.io.OutputGenerator`
+        The output generation object for this workflow
     tes : :obj:`list`
         List of echo times associated with `data_cat`, in milliseconds
     algorithm : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic', float}, optional
@@ -91,8 +103,6 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     rdaw : :obj:`float`, optional
         Dimensionality augmentation weight for Rho calculations. Must be a
         non-negative float, or -1 (a special value). Default is 1.
-    out_dir : :obj:`str`, optional
-        Output directory.
     verbose : :obj:`bool`, optional
         Whether to output files from fitmodels_direct or not. Default: False
     low_mem : :obj:`bool`, optional
@@ -147,74 +157,91 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
     Outputs:
 
     This function writes out several files:
-
-    ======================    =================================================
-    Filename                  Content
-    ======================    =================================================
-    pca_decomposition.json    PCA component table.
-    pca_mixing.tsv            PCA mixing matrix.
-    pca_components.nii.gz     Component weight maps.
-    ======================    =================================================
+    ===========================    =============================================
+    Default Filename               Content
+    ===========================    =============================================
+    desc-PCA_metrics.tsv           PCA component table
+    desc-PCA_metrics.json          Metadata sidecar file describing the
+                                   component table
+    desc-PCA_mixing.tsv            PCA mixing matrix
+    desc-PCA_components.nii.gz     Component weight maps
+    desc-PCA_decomposition.json    Metadata sidecar file describing the PCA
+                                   decomposition
+    ===========================    =============================================
 
     See Also
     --------
-    :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
-                                              parameter.
+    :func:`tedana.utils.make_adaptive_mask` : The function used to create
+        the ``adaptive_mask` parameter.
+    :py:mod:`tedana.constants` : The module describing the filenames for
+        various naming conventions
     """
-    if algorithm == 'kundu':
-        alg_str = ("followed by the Kundu component selection decision "
-                   "tree (Kundu et al., 2013)")
-        RefLGR.info("Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
-                    "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
-                    "(2013). Integrated strategy for improving functional "
-                    "connectivity mapping using multiecho fMRI. Proceedings "
-                    "of the National Academy of Sciences, 110(40), "
-                    "16187-16192.")
-    elif algorithm == 'kundu-stabilize':
-        alg_str = ("followed by the 'stabilized' Kundu component "
-                   "selection decision tree (Kundu et al., 2013)")
-        RefLGR.info("Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
-                    "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
-                    "(2013). Integrated strategy for improving functional "
-                    "connectivity mapping using multiecho fMRI. Proceedings "
-                    "of the National Academy of Sciences, 110(40), "
-                    "16187-16192.")
+    if algorithm == "kundu":
+        alg_str = "followed by the Kundu component selection decision tree (Kundu et al., 2013)"
+        RefLGR.info(
+            "Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
+            "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
+            "(2013). Integrated strategy for improving functional "
+            "connectivity mapping using multiecho fMRI. Proceedings "
+            "of the National Academy of Sciences, 110(40), "
+            "16187-16192."
+        )
+    elif algorithm == "kundu-stabilize":
+        alg_str = (
+            "followed by the 'stabilized' Kundu component "
+            "selection decision tree (Kundu et al., 2013)"
+        )
+        RefLGR.info(
+            "Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
+            "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
+            "(2013). Integrated strategy for improving functional "
+            "connectivity mapping using multiecho fMRI. Proceedings "
+            "of the National Academy of Sciences, 110(40), "
+            "16187-16192."
+        )
     elif isinstance(algorithm, Number):
         alg_str = (
             "in which the number of components was determined based on a "
-            "variance explained threshold")
+            "variance explained threshold"
+        )
     else:
-        alg_str = ("based on the PCA component estimation with a Moving Average"
-                   "(stationary Gaussian) process (Li et al., 2007)")
-        RefLGR.info("Li, Y.O., Adalı, T. and Calhoun, V.D., (2007). "
-                    "Estimating the number of independent components for "
-                    "functional magnetic resonance imaging data. "
-                    "Human brain mapping, 28(11), pp.1251-1266.")
+        alg_str = (
+            "based on the PCA component estimation with a Moving Average"
+            "(stationary Gaussian) process (Li et al., 2007)"
+        )
+        RefLGR.info(
+            "Li, Y.O., Adalı, T. and Calhoun, V.D., (2007). "
+            "Estimating the number of independent components for "
+            "functional magnetic resonance imaging data. "
+            "Human brain mapping, 28(11), pp.1251-1266."
+        )
 
-    RepLGR.info("Principal component analysis {0} was applied to "
-                "the optimally combined data for dimensionality "
-                "reduction.".format(alg_str))
+    RepLGR.info(
+        "Principal component analysis {0} was applied to "
+        "the optimally combined data for dimensionality "
+        "reduction.".format(alg_str)
+    )
 
     n_samp, n_echos, n_vols = data_cat.shape
 
-    LGR.info('Computing PCA of optimally combined multi-echo data')
+    LGR.info("Computing PCA of optimally combined multi-echo data")
     data = data_oc[mask, :]
 
     data_z = ((data.T - data.T.mean(axis=0)) / data.T.std(axis=0)).T  # var normalize ts
     data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
 
-    if algorithm in ['mdl', 'aic', 'kic']:
-        data_img = io.new_nii_like(ref_img, utils.unmask(data, mask))
-        mask_img = io.new_nii_like(ref_img, mask.astype(int))
-        voxel_comp_weights, varex, varex_norm, comp_ts = ma_pca.ma_pca(
-            data_img, mask_img, algorithm)
+    if algorithm in ["mdl", "aic", "kic"]:
+        data_img = io.new_nii_like(io_generator.reference_img, utils.unmask(data, mask))
+        mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
+        voxel_comp_weights, varex, varex_norm, comp_ts = ma_pca(
+            data_img, mask_img, algorithm, normalize=True
+        )
     elif isinstance(algorithm, Number):
         ppca = PCA(copy=False, n_components=algorithm, svd_solver="full")
         ppca.fit(data_z)
         comp_ts = ppca.components_.T
         varex = ppca.explained_variance_
-        voxel_comp_weights = np.dot(np.dot(data_z, comp_ts),
-                                    np.diag(1. / varex))
+        voxel_comp_weights = np.dot(np.dot(data_z, comp_ts), np.diag(1.0 / varex))
         varex_norm = varex / varex.sum()
     elif low_mem:
         voxel_comp_weights, varex, comp_ts = low_mem_pca(data_z)
@@ -224,61 +251,102 @@ def tedpca(data_cat, data_oc, combmode, mask, adaptive_mask, t2sG,
         ppca.fit(data_z)
         comp_ts = ppca.components_.T
         varex = ppca.explained_variance_
-        voxel_comp_weights = np.dot(np.dot(data_z, comp_ts),
-                                    np.diag(1. / varex))
+        voxel_comp_weights = np.dot(np.dot(data_z, comp_ts), np.diag(1.0 / varex))
         varex_norm = varex / varex.sum()
 
     # Compute Kappa and Rho for PCA comps
-    # Normalize each component's time series
-    vTmixN = stats.zscore(comp_ts, axis=0)
-    comptable, _, _, _ = metrics.dependence_metrics(
-                data_cat, data_oc, comp_ts, adaptive_mask, tes, ref_img,
-                reindex=False, mmixN=vTmixN, algorithm=None,
-                label='mepca_', out_dir=out_dir, verbose=verbose)
+    required_metrics = [
+        "kappa",
+        "rho",
+        "countnoise",
+        "countsigFT2",
+        "countsigFS0",
+        "dice_FT2",
+        "dice_FS0",
+        "signal-noise_t",
+        "variance explained",
+        "normalized variance explained",
+        "d_table_score",
+    ]
+    comptable = metrics.collect.generate_metrics(
+        data_cat,
+        data_oc,
+        comp_ts,
+        adaptive_mask,
+        tes,
+        io_generator,
+        "PCA",
+        metrics=required_metrics,
+    )
 
     # varex_norm from PCA overrides varex_norm from dependence_metrics,
     # but we retain the original
-    comptable['estimated normalized variance explained'] = \
-        comptable['normalized variance explained']
-    comptable['normalized variance explained'] = varex_norm
+    comptable["estimated normalized variance explained"] = comptable[
+        "normalized variance explained"
+    ]
+    comptable["normalized variance explained"] = varex_norm
 
     # write component maps to 4D image
-    comp_ts_z = stats.zscore(comp_ts, axis=0)
-    comp_maps = utils.unmask(computefeats2(data_oc, comp_ts_z, mask), mask)
-    io.filewrite(comp_maps, op.join(out_dir, 'pca_components.nii.gz'), ref_img)
+    comp_maps = utils.unmask(computefeats2(data_oc, comp_ts, mask), mask)
+    io_generator.save_file(comp_maps, "z-scored PCA components img")
 
     # Select components using decision tree
-    if algorithm == 'kundu':
-        comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=False)
-    elif algorithm == 'kundu-stabilize':
-        comptable = kundu_tedpca(comptable, n_echos, kdaw, rdaw, stabilize=True)
+    if algorithm == "kundu":
+        comptable, metric_metadata = kundu_tedpca(
+            comptable,
+            n_echos,
+            kdaw,
+            rdaw,
+            stabilize=False,
+        )
+    elif algorithm == "kundu-stabilize":
+        comptable, metric_metadata = kundu_tedpca(
+            comptable,
+            n_echos,
+            kdaw,
+            rdaw,
+            stabilize=True,
+        )
     else:
         alg_str = "variance explained-based" if isinstance(algorithm, Number) else algorithm
-        LGR.info('Selected {0} components with {1} dimensionality '
-                 'detection'.format(comptable.shape[0], alg_str))
-        comptable['classification'] = 'accepted'
-        comptable['rationale'] = ''
+        LGR.info(
+            "Selected {0} components with {1} dimensionality "
+            "detection".format(comptable.shape[0], alg_str)
+        )
+        comptable["classification"] = "accepted"
+        comptable["rationale"] = ""
 
-    # Save decomposition
-    comp_names = [io.add_decomp_prefix(comp, prefix='pca', max_value=comptable.index.max())
-                  for comp in comptable.index.values]
+    # Save decomposition files
+    comp_names = [
+        io.add_decomp_prefix(comp, prefix="pca", max_value=comptable.index.max())
+        for comp in comptable.index.values
+    ]
 
     mixing_df = pd.DataFrame(data=comp_ts, columns=comp_names)
-    mixing_df.to_csv(op.join(out_dir, 'pca_mixing.tsv'), sep='\t', index=False)
+    io_generator.save_file(mixing_df, "PCA mixing tsv")
 
-    comptable['Description'] = 'PCA fit to optimally combined data.'
-    mmix_dict = {}
-    mmix_dict['Method'] = ('Principal components analysis implemented by '
-                           'sklearn. Components are sorted by variance '
-                           'explained in descending order. '
-                           'Component signs are flipped to best match the '
-                           'data.')
-    io.save_comptable(comptable, op.join(out_dir, 'pca_decomposition.json'),
-                      label='pca', metadata=mmix_dict)
+    # Save component table and associated json
+    io_generator.save_file(comptable, "PCA metrics tsv")
 
-    acc = comptable[comptable.classification == 'accepted'].index.values
+    metric_metadata = metrics.collect.get_metadata(comptable)
+    io_generator.save_file(metric_metadata, "PCA metrics json")
+
+    decomp_metadata = {
+        "Method": (
+            "Principal components analysis implemented by sklearn. "
+            "Components are sorted by variance explained in descending order. "
+        ),
+    }
+    for comp_name in comp_names:
+        decomp_metadata[comp_name] = {
+            "Description": "PCA fit to optimally combined data.",
+            "Method": "tedana",
+        }
+    io_generator.save_file(decomp_metadata, "PCA decomposition json")
+
+    acc = comptable[comptable.classification == "accepted"].index.values
     n_components = acc.size
-    voxel_kept_comp_weighted = (voxel_comp_weights[:, acc] * varex[None, acc])
+    voxel_kept_comp_weighted = voxel_comp_weights[:, acc] * varex[None, acc]
     kept_data = np.dot(voxel_kept_comp_weighted, comp_ts[:, acc].T)
 
     kept_data = stats.zscore(kept_data, axis=1)  # variance normalize time series

@@ -108,3 +108,6 @@ ENV/
 
 # jupyter notebooks
 .ipynb_checkpoints/
+
+# vim swap files
+*.swp

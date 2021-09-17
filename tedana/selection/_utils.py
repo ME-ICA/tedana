@@ -5,9 +5,9 @@ import logging
 
 import numpy as np
 
-LGR = logging.getLogger(__name__)
-RepLGR = logging.getLogger('REPORT')
-RefLGR = logging.getLogger('REFERENCES')
+LGR = logging.getLogger("GENERAL")
+RepLGR = logging.getLogger("REPORT")
+RefLGR = logging.getLogger("REFERENCES")
 
 
 def clean_dataframe(comptable):
@@ -15,10 +15,11 @@ def clean_dataframe(comptable):
     Reorder columns in component table so "rationale" and "classification" are
     last and remove trailing semicolons from rationale column.
     """
-    cols_at_end = ['classification', 'rationale']
-    comptable = comptable[[c for c in comptable if c not in cols_at_end] +
-                          [c for c in cols_at_end if c in comptable]]
-    comptable['rationale'] = comptable['rationale'].str.rstrip(';')
+    cols_at_end = ["classification", "rationale"]
+    comptable = comptable[
+        [c for c in comptable if c not in cols_at_end] + [c for c in cols_at_end if c in comptable]
+    ]
+    comptable["rationale"] = comptable["rationale"].str.rstrip(";")
     return comptable
 
 
@@ -40,11 +41,24 @@ def getelbow_cons(arr, return_val=False):
         elbow index (if return_val is False)
     """
     if arr.ndim != 1:
-        raise ValueError('Parameter arr should be 1d, not {0}d'.format(arr.ndim))
+        raise ValueError("Parameter arr should be 1d, not {0}d".format(arr.ndim))
+
+    if not arr.size:
+        raise ValueError(
+            "Empty array detected during elbow calculation. "
+            "This error happens when getelbow_cons is incorrectly called on no components. "
+            "If you see this message, please open an issue at "
+            "https://github.com/ME-ICA/tedana/issues with the full traceback and any data "
+            "necessary to reproduce this error, so that we create additional data checks to "
+            "prevent this from happening."
+        )
+
     arr = np.sort(arr)[::-1]
     nk = len(arr)
-    temp1 = [(arr[nk - 5 - ii - 1] > arr[nk - 5 - ii:nk].mean() + 2 * arr[nk - 5 - ii:nk].std())
-             for ii in range(nk - 5)]
+    temp1 = [
+        (arr[nk - 5 - ii - 1] > arr[nk - 5 - ii : nk].mean() + 2 * arr[nk - 5 - ii : nk].std())
+        for ii in range(nk - 5)
+    ]
     ds = np.array(temp1[::-1], dtype=np.int)
     dsum = []
     c_ = 0
@@ -78,7 +92,18 @@ def getelbow(arr, return_val=False):
         elbow index (if return_val is False)
     """
     if arr.ndim != 1:
-        raise ValueError('Parameter arr should be 1d, not {0}d'.format(arr.ndim))
+        raise ValueError("Parameter arr should be 1d, not {0}d".format(arr.ndim))
+
+    if not arr.size:
+        raise ValueError(
+            "Empty array detected during elbow calculation. "
+            "This error happens when getelbow is incorrectly called on no components. "
+            "If you see this message, please open an issue at "
+            "https://github.com/ME-ICA/tedana/issues with the full traceback and any data "
+            "necessary to reproduce this error, so that we create additional data checks to "
+            "prevent this from happening."
+        )
+
     arr = np.sort(arr)[::-1]
     n_components = arr.shape[0]
     coords = np.array([np.arange(n_components), arr])

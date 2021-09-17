@@ -12,6 +12,7 @@
 [![Join the chat at https://gitter.im/ME-ICA/tedana](https://badges.gitter.im/ME-ICA/tedana.svg)](https://gitter.im/ME-ICA/tedana?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Join our tinyletter mailing list](https://img.shields.io/badge/receive-our%20newsletter%20❤%EF%B8%8F-blueviolet.svg)](https://tinyletter.com/tedana-devs)
 [![All Contributors](https://img.shields.io/badge/all_contributors-20-orange.svg?style=flat-square)](#contributors)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 
 ``TE``-``de``pendent ``ana``lysis (``tedana``) is a Python library for denoising multi-echo functional magnetic resonance imaging (fMRI) data.
@@ -28,13 +29,14 @@ More information and documentation can be found at https://tedana.readthedocs.io
 ### Use `tedana` with your local Python environment
 
 You'll need to set up a working development environment to use `tedana`.
-To set up a local environment, you will need Python >=3.5 and the following packages will need to be installed:
+To set up a local environment, you will need Python >=3.6 and the following packages will need to be installed:
 
-* [numpy>=1.14](http://www.numpy.org/)
+* [numpy](http://www.numpy.org/)
 * [scipy](https://www.scipy.org/)
 * [scikit-learn](http://scikit-learn.org/stable/)
 * [nilearn](https://nilearn.github.io/)
-* [nibabel>=2.1.0](http://nipy.org/nibabel/)
+* [nibabel](http://nipy.org/nibabel/)
+* [mapca](https://github.com/ME-ICA/mapca)
 
 You can then install `tedana` with
 
@@ -90,7 +92,7 @@ If you aim to contribute to the `tedana` code base and/or documentation, please 
 
 We :yellow_heart: new contributors!
 To get started, check out [our contributing guidelines](https://github.com/ME-ICA/tedana/blob/main/CONTRIBUTING.md)
-and our [developer's guide](https://tedana.readthedocs.io/en/latest/developing.html).
+and our [developer's guide](https://tedana.readthedocs.io/en/latest/contributing.html#developer-guidelines).
 
 Want to learn more about our plans for developing ``tedana``?
 Have a question, comment, or suggestion?
