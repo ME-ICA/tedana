@@ -1,10 +1,5 @@
 # tedana: TE Dependent ANAlysis
 
-The ``tedana`` package is part of the ME-ICA pipeline, performing TE-dependent
-analysis of multi-echo functional magnetic resonance imaging (fMRI) data.
-``TE``-``de``pendent ``ana``lysis (``tedana``) is a Python module for denoising
-multi-echo functional magnetic resonance imaging (fMRI) data.
-
 [![Latest Version](https://img.shields.io/pypi/v/tedana.svg)](https://pypi.python.org/pypi/tedana/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tedana.svg)](https://pypi.python.org/pypi/tedana/)
 [![DOI](https://zenodo.org/badge/110845855.svg)](https://zenodo.org/badge/latestdoi/110845855)
@@ -19,10 +14,10 @@ multi-echo functional magnetic resonance imaging (fMRI) data.
 [![All Contributors](https://img.shields.io/badge/all_contributors-20-orange.svg?style=flat-square)](#contributors)
 
 
-## About
-
-``tedana`` originally came about as a part of the [ME-ICA](https://github.com/me-ica/me-ica) pipeline.
-The ME-ICA pipeline originally performed both pre-processing and TE-dependent analysis of multi-echo fMRI data; however, ``tedana`` now assumes that you're working with data which has been previously preprocessed.
+``TE``-``de``pendent ``ana``lysis (``tedana``) is a Python library for denoising multi-echo functional magnetic resonance imaging (fMRI) data.
+``tedana`` originally came about as a part of the [ME-ICA](https://github.com/me-ica/me-ica) pipeline, although it has since diverged.
+An important distinction is that while the ME-ICA pipeline originally performed both pre-processing and TE-dependent analysis of multi-echo fMRI data,
+``tedana`` now assumes that you're working with data which has been previously preprocessed.
 
 ![http://tedana.readthedocs.io/](https://user-images.githubusercontent.com/7406227/40031156-57b7cbb8-57bc-11e8-8c51-5b29f2e86a48.png)
 
@@ -72,6 +67,20 @@ conda deactivate
 
 NOTE: Conda < 4.6 users will need to use the soon-to-be-deprecated option `source` rather than `conda` for the activation and deactivation steps.
 You can read more about managing conda environments and this discrepancy [here](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html).
+
+You can confirm that ``tedana`` has successfully installed by launching a Python instance and running:
+
+```python
+import tedana
+```
+
+You can check that it is available through the command line interface (CLI) with:
+
+```bash
+tedana --help
+```
+
+If no error occurs, ``tedana`` has correctly installed in your environment!
 
 ### Use and contribute to `tedana` as a developer
 

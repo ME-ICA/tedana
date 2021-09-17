@@ -18,6 +18,9 @@ This is performed in a series of steps, including:
 .. image:: /_static/tedana-workflow.png
   :align: center
 
+We provide more detail on each step below.
+The figures shown in this walkthrough are generated in the `provided notebooks <>`_.
+
 Multi-echo data
 ```````````````
 

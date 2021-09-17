@@ -132,7 +132,7 @@ Make sure to always [keep your fork up to date][link_updateupstreamwiki] with th
 To test a change, you may need to set up your local repository to run a `tedana` workflow.
 To do so, run
 ```
-pip install -e .[all]
+pip install -e .'[all]'
 ```
 from within your local `tedana` repository. This should ensure all packages are correctly organized and linked on your user profile.
 
