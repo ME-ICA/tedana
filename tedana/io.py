@@ -594,6 +594,7 @@ def load_data(data, n_echos=None):
             ref_img.header.extensions = []
             return np.atleast_3d(fdata), ref_img
 
+    # Z-concatenated file/img
     img = check_niimg(data)
     (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
     fdata = utils.reshape_niimg(img.get_fdata().reshape(nx, ny, nz, n_echos, -1, order="F"))
