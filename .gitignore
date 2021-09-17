@@ -108,4 +108,3 @@ ENV/
 
 # jupyter notebooks
 .ipynb_checkpoints/
-*.ipynb
