@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import pandas as pd
 from sklearn.utils import Bunch
 from nilearn.datasets.utils import _fetch_files
 from nilearn._utils.numpy_conversions import csv_to_array
@@ -13,13 +14,9 @@ def _reduce_confounds(regressors, keep_confounds):
         out_file = in_file.replace('desc-confounds',
                                    'desc-reducedConfounds')
         if not os.path.isfile(out_file):
-            confounds = np.recfromcsv(in_file, delimiter='\t')
+            confounds = pd.read_table(in_file)
             selected_confounds = confounds[keep_confounds]
-            header = '\t'.join(selected_confounds.dtype.names)
-            np.savetxt(out_file, np.array(selected_confounds.tolist()),
-                       fmt=('%.18e %.18e %.18e %.18e %.18e %.18e %f '
-                            '%.18e %.18e %.18e %.18e %.18e %.18e %.18e %.18e'),
-                       header=header, delimiter='\t', comments='')
+            selected_confounds.to_csv(out_file, sep="\t", line_terminator="\n", index=False)
         reduced_regressors.append(out_file)
     return reduced_regressors
 
@@ -93,7 +90,7 @@ def _fetch_cambridge_functional(n_subjects, data_dir, url, resume,
             path_to_func = _fetch_files(data_dir, func_file, resume=resume,
                                         verbose=verbose)[0]
             participant_funcs.append(path_to_func)
-        funcs.append[tuple(participant_funcs)]
+        funcs.append(tuple(participant_funcs))
     return funcs
 
 
