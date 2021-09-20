@@ -7,10 +7,7 @@ Adapted from the nilearn dataset fetchers.
 
 
 def readlinkabs(link):
-    """
-    Return an absolute path for the destination
-    of a symlink
-    """
+    """Return an absolute path for the destination of a symlink."""
     path = os.readlink(link)
     if os.path.isabs(path):
         return path
@@ -18,18 +15,22 @@ def readlinkabs(link):
 
 
 def get_data_dirs(data_dir=None):
-    """Returns the directories in which tedana looks for data.
+    """Return the directories in which tedana looks for data.
+
     This is typically useful for the end-user to check where the data is
     downloaded and stored.
+
     Parameters
     ----------
     data_dir : string, optional
         Path of the data directory. Used to force data storage in a specified
         location. Default: None
+
     Returns
     -------
     paths : list of strings
         Paths of the dataset directories.
+
     Notes
     -----
     This function retrieves the datasets directories using the following
@@ -51,21 +52,21 @@ def get_data_dirs(data_dir=None):
 
     # If data_dir has not been specified, then we crawl default locations
     if data_dir is None:
-        global_data = os.getenv('TEDANA_SHARED_DATA')
+        global_data = os.getenv("TEDANA_SHARED_DATA")
         if global_data is not None:
             paths.extend(global_data.split(os.pathsep))
 
-        local_data = os.getenv('TEDANA_DATA')
+        local_data = os.getenv("TEDANA_DATA")
         if local_data is not None:
             paths.extend(local_data.split(os.pathsep))
 
-        paths.append(os.path.expanduser('~/tedana_data'))
+        paths.append(os.path.expanduser("~/tedana_data"))
     return paths
 
 
-def _get_dataset_dir(dataset_name, data_dir=None, default_paths=None,
-                     verbose=1):
-    """Creates if necessary and returns data directory of given dataset.
+def _get_dataset_dir(dataset_name, data_dir=None, default_paths=None, verbose=1):
+    """Create if necessary and return data directory of given dataset.
+
     Parameters
     ----------
     dataset_name : string
@@ -78,10 +79,12 @@ def _get_dataset_dir(dataset_name, data_dir=None, default_paths=None,
         installed by a third party software. They will be checked first.
     verbose : int, optional
         Verbosity level (0 means no message). Default=1.
+
     Returns
     -------
     data_dir : string
         Path of the given dataset directory.
+
     Notes
     -----
     This function retrieves the datasets directory (or data directory) using
@@ -101,7 +104,7 @@ def _get_dataset_dir(dataset_name, data_dir=None, default_paths=None,
     paths.extend([(d, False) for d in get_data_dirs(data_dir=data_dir)])
 
     if verbose > 2:
-        print('Dataset search paths: %s' % paths)
+        print("Dataset search paths: %s" % paths)
 
     # Check if the dataset exists somewhere
     for path, is_pre_dir in paths:
@@ -112,7 +115,7 @@ def _get_dataset_dir(dataset_name, data_dir=None, default_paths=None,
             path = readlinkabs(path)
         if os.path.exists(path) and os.path.isdir(path):
             if verbose > 1:
-                print('\nDataset found in %s\n' % path)
+                print("\nDataset found in %s\n" % path)
             return path
 
     # If not, create a folder in the first writeable directory
@@ -124,12 +127,12 @@ def _get_dataset_dir(dataset_name, data_dir=None, default_paths=None,
             try:
                 os.makedirs(path)
                 if verbose > 0:
-                    print('\nDataset created in %s\n' % path)
+                    print("\nDataset created in %s\n" % path)
                 return path
             except Exception as exc:
-                short_error_message = getattr(exc, 'strerror', str(exc))
-                errors.append('\n -{0} ({1})'.format(
-                    path, short_error_message))
+                short_error_message = getattr(exc, "strerror", str(exc))
+                errors.append("\n -{0} ({1})".format(path, short_error_message))
 
-    raise OSError('tedana tried to store the dataset in the following '
-                  'directories, but:' + ''.join(errors))
+    raise OSError(
+        "tedana tried to store the dataset in the following directories, but:" + "".join(errors)
+    )
