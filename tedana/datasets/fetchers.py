@@ -1,7 +1,6 @@
 """Functions for fetching datasets."""
 import os
 
-import numpy as np
 import pandas as pd
 from nilearn._utils.numpy_conversions import csv_to_array
 from nilearn.datasets.utils import _fetch_files
@@ -74,24 +73,22 @@ def _fetch_cambridge_functional(n_subjects, low_resolution, data_dir, url, resum
     # The gzip contains unique download keys per Nifti file and confound
     # pre-extracted from OSF. Required for downloading files.
     package_directory = os.path.dirname(os.path.abspath(__file__))
-    dtype = [("participant_id", "U12"), ("echo_id", "U12"), (csv_col, "U24")]
-    names = ["participant_id", "echo_id", csv_col]
 
     # csv file contains download information related to OpenScience(osf)
     csv_file = os.path.join(package_directory, "data", "cambridge_echos.csv")
-    osf_data = csv_to_array(csv_file, skip_header=True, dtype=dtype, names=names)
+    df = pd.read_csv(csv_file)
+    participants = df["participant_id"].unique()[:n_subjects]
     funcs = []
-    participant_id, echo_id, uuid = zip(*osf_data)
-    participants = np.unique(participant_id)[:n_subjects]
 
     for participant_id in participants:
-        this_osf_id = osf_data[osf_data["participant_id"] == participant_id]
+        this_osf_id = df.loc[df["participant_id"] == participant_id]
         participant_funcs = []
 
-        for entry in this_osf_id:
-            echo_id = entry["echo_id"]
+        for i_row, row in this_osf_id.iterrows():
+            echo_id = row["echo_id"]
+            hash_ = row[csv_col]
             # Download bold images for each echo
-            func_url = url.format(entry[csv_col])
+            func_url = url.format(hash_)
             func_file = [
                 (
                     func.format(participant_id, echo_id),
