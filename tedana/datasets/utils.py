@@ -1,9 +1,8 @@
-import os
+"""Utilities for downloading selected multi-echo neuroimaging datasets.
 
-"""
-Utilities for downloading selected multi-echo neuroimaging datasets.
 Adapted from the nilearn dataset fetchers.
 """
+import os
 
 
 def readlinkabs(link):
