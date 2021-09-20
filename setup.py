@@ -33,6 +33,7 @@ def main():
             "reporting/data/*",
             "reporting/data/html/*",
             "resources/config/*",
+            "datasets/data/*",
         ]
     }
 
