@@ -554,47 +554,50 @@ def writeresults_echoes(catd, mmix, mask, comptable, io_generator):
 
 # File Loading Functions
 def load_data(data, n_echos=None):
-    """
-    Coerces input `data` files to required 3D array output
+    """Coerce input `data` files to required 3D array output.
 
     Parameters
     ----------
-    data : (X x Y x M x T) array_like or :obj:`list` of img_like
-        Input multi-echo data array, where `X` and `Y` are spatial dimensions,
-        `M` is the Z-spatial dimensions with all the input echos concatenated,
-        and `T` is time. A list of image-like objects (e.g., .nii) are
-        accepted, as well
+    data : :obj:`list` of img_like, :obj:`list` of :obj:`str`, :obj:`str`, or img_like
+        A list of echo-wise img objects or paths to files.
+        Single img objects or filenames are allowed as well, to support z-concatenated data.
     n_echos : :obj:`int`, optional
-        Number of echos in provided data array. Only necessary if `data` is
-        array_like. Default: None
+        Number of echos in provided data array. Only necessary if `data` is a single,
+        z-concatenated file. Default: None
 
     Returns
     -------
     fdata : (S x E x T) :obj:`numpy.ndarray`
-        Output data where `S` is samples, `E` is echos, and `T` is time
-    ref_img : :obj:`str` or :obj:`numpy.ndarray`
-        Filepath to reference image for saving output files or NIFTI-like array
+        Output data where `S` is samples, `E` is echos, and `T` is time.
+    ref_img : img_like
+        Reference image object for saving output files.
     """
-    if n_echos is None:
+    if n_echos is None and (isinstance(data, str) or len(data) == 1):
         raise ValueError(
-            "Number of echos must be specified. "
-            "Confirm that TE times are provided with the `-e` argument."
+            "Number of echos must be specified when a single z-concatenated file is supplied."
         )
 
-    if isinstance(data, list):
+    if not isinstance(data, (list, str, nib.spatialimages.SpatialImage)):
+        raise TypeError(f"Unsupported type: {type(data)}")
+    elif isinstance(data, list):
+        for item in data:
+            if not isinstance(item, (str, nib.spatialimages.SpatialImage)):
+                raise TypeError(f"Unsupported type: {type(item)}")
+
         if len(data) == 1:  # a z-concatenated file was provided
             data = data[0]
         elif len(data) == 2:  # inviable -- need more than 2 echos
-            raise ValueError("Cannot run `tedana` with only two echos: {}".format(data))
+            raise ValueError(f"Cannot run `tedana` with only two echos: {data}")
         else:  # individual echo files were provided (surface or volumetric)
-            fdata = np.stack([utils.load_image(f) for f in data], axis=1)
+            fdata = np.stack([utils.reshape_niimg(f) for f in data], axis=1)
             ref_img = check_niimg(data[0])
             ref_img.header.extensions = []
             return np.atleast_3d(fdata), ref_img
 
+    # Z-concatenated file/img
     img = check_niimg(data)
     (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
-    fdata = utils.load_image(img.get_fdata().reshape(nx, ny, nz, n_echos, -1, order="F"))
+    fdata = utils.reshape_niimg(img.get_fdata().reshape(nx, ny, nz, n_echos, -1, order="F"))
     # create reference image
     ref_img = img.__class__(
         np.zeros((nx, ny, nz, 1)), affine=img.affine, header=img.header, extra=img.extra

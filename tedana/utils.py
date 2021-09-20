@@ -17,9 +17,8 @@ RepLGR = logging.getLogger("REPORT")
 RefLGR = logging.getLogger("REFERENCES")
 
 
-def load_image(data):
-    """
-    Takes input `data` and returns a sample x time array
+def reshape_niimg(data):
+    """Take input `data` and return a sample x time array.
 
     Parameters
     ----------
@@ -31,11 +30,10 @@ def load_image(data):
     fdata : (S [x T]) :obj:`numpy.ndarray`
         Reshaped `data`, where `S` is samples and `T` is time
     """
-
-    if isinstance(data, str):
+    if isinstance(data, (str, nib.spatialimages.SpatialImage)):
         data = check_niimg(data).get_fdata()
-    elif isinstance(data, nib.spatialimages.SpatialImage):
-        data = check_niimg(data).get_fdata()
+    elif not isinstance(data, np.ndarray):
+        raise TypeError(f"Unsupported type {type(data)}")
 
     fdata = data.reshape((-1,) + data.shape[3:]).squeeze()
 
@@ -101,7 +99,7 @@ def make_adaptive_mask(data, mask=None, getsum=False, threshold=1):
         masksum[masksum < threshold] = 0
     else:
         # if the user has supplied a binary mask
-        mask = load_image(mask).astype(bool)
+        mask = reshape_niimg(mask).astype(bool)
         masksum = masksum * mask
         # reduce mask based on masksum
         # TODO: Use visual report to make checking the reduced mask easier

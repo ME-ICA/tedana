@@ -217,7 +217,7 @@ API
    tedana.utils.andb
    tedana.utils.dice
    tedana.utils.get_spectrum
-   tedana.utils.load_image
+   tedana.utils.reshape_niimg
    tedana.utils.make_adaptive_mask
    tedana.utils.threshold_map
    tedana.utils.unmask
