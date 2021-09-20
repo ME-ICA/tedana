@@ -165,10 +165,7 @@ def _fetch_cambridge_regressors(n_subjects, data_dir, url, resume, verbose):
     return regressors
 
 
-@due.dcite(
-    Doi("10.1073/pnas.1720985115"),
-    description="Introduces the Cambridge dataset.",
-)
+@due.dcite(Doi("10.1073/pnas.1720985115"), description="Introduces the Cambridge dataset.")
 def fetch_cambridge(n_subjects=None, reduce_confounds=True, data_dir=None, resume=True, verbose=1):
     """Fetch Cambridge multi-echo data.
 

@@ -27,6 +27,25 @@ API
    tedana.workflows.t2smap_workflow
 
 
+.. _api_datasets_ref:
+
+*************************************************************
+:mod:`tedana.datasets`: Automatic multi-echo dataset fetching
+*************************************************************
+
+.. automodule:: tedana.datasets
+   :no-members:
+   :no-inherited-members:
+
+.. currentmodule:: tedana.datasets
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+
+   tedana.datasets.fetch_cambridge
+
+
 .. _api_decay_ref:
 
 ********************************************************
