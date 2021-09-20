@@ -1,13 +1,14 @@
 """Functions for fetching datasets."""
 import os
+
 import numpy as np
 import pandas as pd
-from sklearn.utils import Bunch
-from nilearn.datasets.utils import _fetch_files
 from nilearn._utils.numpy_conversions import csv_to_array
+from nilearn.datasets.utils import _fetch_files
+from sklearn.utils import Bunch
 
-from .utils import _get_dataset_dir
 from ..due import Doi, due
+from .utils import _get_dataset_dir
 
 
 def _reduce_confounds(regressors, keep_confounds):
