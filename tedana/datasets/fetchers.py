@@ -23,7 +23,7 @@ def _reduce_confounds(regressors, keep_confounds):
     return reduced_regressors
 
 
-def _fetch_cambridge_functional(n_subjects, data_dir, url, resume, verbose):
+def _fetch_cambridge_functional(n_subjects, low_resolution, data_dir, url, resume, verbose):
     """Helper function to fetch_cambridge.
 
     This function helps in downloading multi-echo functional MRI data
@@ -37,6 +37,8 @@ def _fetch_cambridge_functional(n_subjects, data_dir, url, resume, verbose):
     n_subjects : int
         The number of subjects to load. If None, all the subjects are
         loaded. Total 88 subjects.
+    low_resolution : bool
+        If True, download downsampled versions of the fMRI files, which is useful for testing.
     data_dir : str
         Path of the data directory. Used to force data storage in a specified
         location. If None is given, data are stored in home directory.
@@ -62,20 +64,22 @@ def _fetch_cambridge_functional(n_subjects, data_dir, url, resume, verbose):
         # https://gist.github.com/emdupre/3cb4d564511d495ea6bf89c6a577da74
         url = "https://osf.io/download/{}/"
 
-    func = "{0}_task-rest_{1}_space-scanner_desc-partialPreproc_bold.nii.gz"
+    if low_resolution:
+        func = "{0}_task-rest_{1}_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz"
+        csv_col = "key_bold_lowres"
+    else:
+        func = "{0}_task-rest_{1}_space-scanner_desc-partialPreproc_bold.nii.gz"
+        csv_col = "key_bold_nativeres"
 
     # The gzip contains unique download keys per Nifti file and confound
     # pre-extracted from OSF. Required for downloading files.
     package_directory = os.path.dirname(os.path.abspath(__file__))
-    dtype = [("participant_id", "U12"), ("echo_id", "U12"), ("key_bold", "U24")]
-    names = ["participant_id", "echo_id", "key_b"]
+    dtype = [("participant_id", "U12"), ("echo_id", "U12"), (csv_col, "U24")]
+    names = ["participant_id", "echo_id", csv_col]
+
     # csv file contains download information related to OpenScience(osf)
-    osf_data = csv_to_array(
-        os.path.join(package_directory, "data", "cambridge_echos.csv"),
-        skip_header=True,
-        dtype=dtype,
-        names=names,
-    )
+    csv_file = os.path.join(package_directory, "data", "cambridge_echos.csv")
+    osf_data = csv_to_array(csv_file, skip_header=True, dtype=dtype, names=names)
     funcs = []
     participant_id, echo_id, uuid = zip(*osf_data)
     participants = np.unique(participant_id)[:n_subjects]
@@ -87,7 +91,7 @@ def _fetch_cambridge_functional(n_subjects, data_dir, url, resume, verbose):
         for entry in this_osf_id:
             echo_id = entry["echo_id"]
             # Download bold images for each echo
-            func_url = url.format(entry["key_b"])
+            func_url = url.format(entry[csv_col])
             func_file = [
                 (
                     func.format(participant_id, echo_id),
@@ -168,7 +172,14 @@ def _fetch_cambridge_regressors(n_subjects, data_dir, url, resume, verbose):
 
 
 @due.dcite(Doi("10.1073/pnas.1720985115"), description="Introduces the Cambridge dataset.")
-def fetch_cambridge(n_subjects=None, reduce_confounds=True, data_dir=None, resume=True, verbose=1):
+def fetch_cambridge(
+    n_subjects=None,
+    low_resolution=False,
+    reduce_confounds=True,
+    data_dir=None,
+    resume=True,
+    verbose=1,
+):
     """Fetch Cambridge multi-echo data.
 
     See Notes below for more information on this dataset.
@@ -179,6 +190,9 @@ def fetch_cambridge(n_subjects=None, reduce_confounds=True, data_dir=None, resum
     n_subjects : int, optional
         The number of subjects to load. If None, all the subjects are
         loaded. Total 88 subjects.
+    low_resolution : bool, optional
+        If True, download downsampled versions of the fMRI files, which is useful for testing.
+        Default is False.
     reduce_confounds : bool, optional
         If True, the returned confounds only include 6 motion parameters,
         mean framewise displacement, signal from white matter, csf, and
@@ -198,29 +212,32 @@ def fetch_cambridge(n_subjects=None, reduce_confounds=True, data_dir=None, resum
 
     Returns
     -------
-    data : Bunch
-        Dictionary-like object, the interest attributes are :
-        - 'func': list of str (Nifti files)
-            Paths to downsampled functional MRI data (4D) for each subject.
-        - 'confounds': list of str (tsv files)
-            Paths to confounds related to each subject.
+    data : :obj:`sklearn.datasets.base.Bunch`
+        Dictionary-like object, the attributes of interest are :
+
+        - 'func': List of paths to nifti files containing downsampled functional MRI data (4D) for
+          each  subject.
+        - 'confounds': List of paths to tsv files containing confounds related to each subject.
 
     Notes
     -----
-    The original data is downloaded from OpenNeuro
-    https://openneuro.org/datasets/ds000258/versions/1.0.0
     This fetcher downloads preprocessed data that are available on Open
-    Science Framework (OSF): https://osf.io/9wcb8/
+    Science Framework (OSF): https://osf.io/9wcb8/ .
+    These data have been partially preprocessed with fMRIPrep v20.2.1.
+    Specifically, the "func" files are in native BOLD space and have been slice-timing corrected
+    and motion corrected.
+
+    The original, raw data are available on OpenNeuro at
+    https://openneuro.org/datasets/ds000258/versions/1.0.0 .
 
     References
     ----------
-    .. [1] Power, J., Plitt, M., Gotts, S., Kundu, P., Voon, V.,
-       Bandettini, P., & Martin, A. (2018).
-       Ridding fMRI data of motion-related influences:
-       removal of signals with distinct spatial and physical bases
-       in multi-echo data.
-       PNAS, 115(9), E2105-2114.
-       www.pnas.org/content/115/9/E2105
+    .. [1] Power, J., Plitt, M., Gotts, S., Kundu, P., Voon, V., Bandettini, P., & Martin, A.
+           (2018).
+           Ridding fMRI data of motion-related influences: removal of signals with distinct
+           spatial and physical bases in multi-echo data.
+           PNAS, 115(9), E2105-2114.
+           www.pnas.org/content/115/9/E2105
     """
     dataset_name = "cambridge"
     data_dir = _get_dataset_dir(dataset_name, data_dir=data_dir, verbose=1)
@@ -251,7 +268,12 @@ def fetch_cambridge(n_subjects=None, reduce_confounds=True, data_dir=None, resum
         fdescr = ""
 
     funcs = _fetch_cambridge_functional(
-        n_subjects, data_dir=data_dir, url=None, resume=resume, verbose=verbose
+        n_subjects,
+        low_resolution=low_resolution,
+        data_dir=data_dir,
+        url=None,
+        resume=resume,
+        verbose=verbose,
     )
 
     regressors = _fetch_cambridge_regressors(
