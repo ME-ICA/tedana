@@ -4,11 +4,6 @@
 tedana: TE Dependent ANAlysis
 #############################
 
-The ``tedana`` package is part of the ME-ICA pipeline, performing TE-dependent
-analysis of multi-echo functional magnetic resonance imaging (fMRI) data.
-``TE``-``de``\pendent ``ana``\lysis (``tedana``) is a Python module for denoising
-multi-echo functional magnetic resonance imaging (fMRI) data.
-
 .. image:: https://img.shields.io/pypi/v/tedana.svg
    :target: https://pypi.python.org/pypi/tedana/
    :alt: Latest Version
@@ -62,13 +57,14 @@ multi-echo functional magnetic resonance imaging (fMRI) data.
 About
 *****
 
+``TE``-``de``pendent ``ana``lysis (``tedana``) is a Python library for denoising multi-echo functional magnetic resonance imaging (fMRI) data.
+``tedana`` originally came about as a part of the [ME-ICA](https://github.com/me-ica/me-ica) pipeline, although it has since diverged.
+An important distinction is that while the ME-ICA pipeline originally performed both pre-processing and TE-dependent analysis of multi-echo fMRI data,
+``tedana`` now assumes that you're working with data which has been previously preprocessed.
+
+
 .. image:: https://user-images.githubusercontent.com/7406227/40031156-57b7cbb8-57bc-11e8-8c51-5b29f2e86a48.png
   :target: http://tedana.readthedocs.io/
-
-``tedana`` originally came about as a part of the `ME-ICA`_ pipeline.
-The ME-ICA pipeline originally performed both pre-processing and TE-dependent
-analysis of multi-echo fMRI data; however, ``tedana`` now assumes that you're
-working with data which has been previously preprocessed.
 
 For a summary of multi-echo fMRI, which is the imaging technique ``tedana`` builds on,
 visit `Multi-echo fMRI`_.
@@ -116,12 +112,12 @@ When using tedana, please include the following citations:
       <img src onerror='fillCitation()' alt=""/>
 
       <p>
-      2. Kundu, P., Inati, S. J., Evans, J. W., Luh, W. M. & Bandettini, P. A. (2011).
+      1. Kundu, P., Inati, S. J., Evans, J. W., Luh, W. M. & Bandettini, P. A. (2011).
       <a href=https://doi.org/10.1016/j.neuroimage.2011.12.028>Differentiating BOLD and non-BOLD signals in fMRI time series using multi-echo EPI.</a>
       <i>NeuroImage</i>, <i>60</i>, 1759-1770.
       </p>
       <p>
-      3. Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E., Inati, S. J.,
+      1. Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E., Inati, S. J.,
       Saad, Z. S., Bandettini, P. A., & Bullmore, E. T. (2013).
       <a href=https://doi.org/10.1073/pnas.1301725110>Integrated strategy for improving functional connectivity mapping using multiecho fMRI.</a>
       <i>Proceedings of the National Academy of Sciences</i>, <i>110</i>, 16187-16192.

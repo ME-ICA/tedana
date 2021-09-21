@@ -13,14 +13,18 @@ packages will need to be installed:
 - scipy
 - mapca
 
-You can then install ``tedana`` with:
+You can also install several optional dependencies, notably ``duecredit``.
+Please see the :doc:`FAQ <faq>` for more information on how tedana uses ``duecredit``.
+
+After installing relevant dependencies, you can then install ``tedana`` with:
 
 .. code-block:: bash
 
   pip install tedana
 
 In addition to the Python package, installing ``tedana`` will add the ``tedana``
-and ``t2smap`` workflow CLIs to your path.You can confirm that ``tedana`` has successfully installed by launching a Python instance and running:
+and ``t2smap`` workflow CLIs to your path.
+You can confirm that ``tedana`` has successfully installed by launching a Python instance and running:
 
 .. code-block:: python
 
