@@ -209,7 +209,16 @@ def dice(arr1, arr2, axis=None):
         dsi = np.zeros(arr_sum.shape)
     else:
         intersection = np.logical_and(arr1, arr2)
-        if np.any(arr_sum == 0):
+        # Count number of zero-elements in the denominator and report
+        total_zeros = np.count_nonzero(arr_sum == 0)
+        if total_zeros > 0:
+            LGR.warning(
+                f"Calculating dice coefficient with {total_zeros} "
+                "zero-elements in the denominator. "
+                "Please check your component table for dice columns with 0-"
+                "values"
+            )
+
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 dsi = (2. * intersection.sum(axis=axis)) / arr_sum
