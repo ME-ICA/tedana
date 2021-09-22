@@ -221,9 +221,9 @@ def dice(arr1, arr2, axis=None):
 
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                dsi = (2. * intersection.sum(axis=axis)) / arr_sum
+                dsi = (2.0 * intersection.sum(axis=axis)) / arr_sum
         else:
-            dsi = (2. * intersection.sum(axis=axis)) / arr_sum
+            dsi = (2.0 * intersection.sum(axis=axis)) / arr_sum
 
     return dsi
 
