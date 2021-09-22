@@ -37,7 +37,11 @@ def _apply_t2s_floor(t2s, echo_times):
         echo_times = echo_times[:, None]
 
     eps = np.finfo(dtype=t2s.dtype).eps  # smallest value for datatype
-    temp_arr = np.exp(-echo_times / t2s)  # (E x V) array
+    nonzerovox = t2s != 0
+    # Exclude values where t2s is 0 when dividing by t2s.
+    # These voxels are also excluded from bad_voxel_idx
+    temp_arr = np.zeros((len(echo_times), len(t2s)))
+    temp_arr[:, nonzerovox] = np.exp(-echo_times / t2s[nonzerovox])  # (E x V) array
     bad_voxel_idx = np.any(temp_arr == 0, axis=0) & (t2s != 0)
     n_bad_voxels = np.sum(bad_voxel_idx)
     if n_bad_voxels > 0:
