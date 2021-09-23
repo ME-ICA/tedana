@@ -261,7 +261,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     kappas_nonsig = comptable.loc[comptable["kappa"] < f01, "kappa"]
     if kappas_nonsig.size <= 1:
         LGR.warning(
-            "Only 0 or 1 nonsignificant kappa values detected. "
+            f"Only {kappas_nonsig.size} nonsignificant kappa values detected. "
             "Only using elbow calculated from all kappa values."
         )
         kappas_nonsig_elbow = np.nan
@@ -278,7 +278,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     else:
         LGR.info(
             f"Kappa elbow is {kappa_elbow} and calculated based on {kappas_nonsig.size}"
-            f" components with non-significant kappa fits"
+            f" components with non-significant kappa values"
         )
     rhos_ncls_elbow = getelbow(comptable.loc[ncls, "rho"], return_val=True)
     rhos_all_elbow = getelbow(comptable["rho"], return_val=True)
