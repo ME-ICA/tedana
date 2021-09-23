@@ -277,7 +277,8 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
         LGR.info(f"Kappa elbow is {kappa_elbow} and calculated based on all components")
     else:
         LGR.info(
-            f"Kappa elbow is {kappa_elbow} and calculated based on {kappas_nonsig.size} components with non-significant kappa fits"
+            f"Kappa elbow is {kappa_elbow} and calculated based on {kappas_nonsig.size}"
+            f" components with non-significant kappa fits"
         )
     rhos_ncls_elbow = getelbow(comptable.loc[ncls, "rho"], return_val=True)
     rhos_all_elbow = getelbow(comptable["rho"], return_val=True)
