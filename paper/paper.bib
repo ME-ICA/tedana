@@ -1,0 +1,859 @@
+@ARTICLE{Caballero-Gaudes2019-lv,
+  title    = "A deconvolution algorithm for multi-echo functional {MRI}:
+              Multi-echo Sparse Paradigm Free Mapping",
+  author   = "Caballero-Gaudes, C{\'e}sar and Moia, Stefano and Panwar, Puja
+              and Bandettini, Peter A and Gonzalez-Castillo, Javier",
+  abstract = "This work introduces a novel algorithm for deconvolution of the
+              BOLD signal in multi-echo fMRI data: Multi-echo Sparse Paradigm
+              Free Mapping (ME-SPFM). Assuming a linear dependence of the BOLD
+              percent signal change on the echo time (TE) and using
+              sparsity-promoting regularized least squares estimation, ME-SPFM
+              yields voxelwise time-varying estimates of the changes in the
+              apparent transverse relaxation ($\Delta$R) without prior
+              knowledge of the timings of individual BOLD events. Our results
+              in multi-echo fMRI data collected during a multi-task
+              event-related paradigm at 3 Tesla demonstrate that the maps of R
+              changes obtained with ME-SPFM at the times of the stimulus trials
+              show high spatial and temporal concordance with the activation
+              maps and BOLD signals obtained with standard model-based
+              analysis. This method yields estimates of $\Delta$R having
+              physiologically plausible values. Owing to its ability to blindly
+              detect events, ME-SPFM also enables us to map $\Delta$R
+              associated with spontaneous, transient BOLD responses occurring
+              between trials. This framework is a step towards deciphering the
+              dynamic nature of brain activity in naturalistic paradigms,
+              resting-state or experimental paradigms with unknown timing of
+              the BOLD events.",
+  journal  = "Neuroimage",
+  volume   =  202,
+  pages    = "116081",
+  month    =  nov,
+  year     =  2019,
+  keywords = "BOLD fMRI; Deconvolution; Multi-echo; Single-trial",
+  language = "en",
+  doi = {10.1016/j.neuroimage.2019.116081}
+}
+
+@ARTICLE{Kundu2013-xm,
+  title    = "Integrated strategy for improving functional connectivity mapping
+              using multiecho {fMRI}",
+  author   = "Kundu, Prantik and Brenowitz, Noah D and Voon, Valerie and Worbe,
+              Yulia and V{\'e}rtes, Petra E and Inati, Souheil J and Saad, Ziad
+              S and Bandettini, Peter A and Bullmore, Edward T",
+  abstract = "Functional connectivity analysis of resting state blood oxygen
+              level-dependent (BOLD) functional MRI is widely used for
+              noninvasively studying brain functional networks. Recent findings
+              have indicated, however, that even small ($\leq$1 mm) amounts of
+              head movement during scanning can disproportionately bias
+              connectivity estimates, despite various preprocessing efforts.
+              Further complications for interregional connectivity estimation
+              from time domain signals include the unaccounted reduction in
+              BOLD degrees of freedom related to sensitivity losses from high
+              subject motion. To address these issues, we describe an
+              integrated strategy for data acquisition, denoising, and
+              connectivity estimation. This strategy builds on our previously
+              published technique combining data acquisition with multiecho
+              (ME) echo planar imaging and analysis with spatial independent
+              component analysis (ICA), called ME-ICA, which distinguishes BOLD
+              (neuronal) and non-BOLD (artifactual) components based on linear
+              echo-time dependence of signals-a characteristic property of BOLD
+              T*2 signal changes. Here we show for 32 control subjects that
+              this method provides a physically principled and nearly
+              operator-independent way of removing complex artifacts such as
+              motion from resting state data. We then describe a robust
+              estimator of functional connectivity based on interregional
+              correlation of BOLD-independent component coefficients. This
+              estimator, called independent components regression, considerably
+              simplifies statistical inference for functional connectivity
+              because degrees of freedom equals the number of independent
+              coefficients. Compared with traditional connectivity estimation
+              methods, the proposed strategy results in fourfold improvements
+              in signal-to-noise ratio, functional connectivity analysis with
+              improved specificity, and valid statistical inference with
+              nominal control of type 1 error in contrasts of connectivity
+              between groups with different levels of subject motion.",
+  journal  = "Proceedings of the National Academy of Sciences of the United States of America",
+  volume   =  110,
+  number   =  40,
+  pages    = "16187--16192",
+  month    =  oct,
+  year     =  2013,
+  keywords = "human neuroimaging; resting state fMRI; time series",
+  language = "en",
+  doi = {10.1073/pnas.1301725110}
+}
+
+@ARTICLE{Kundu2012-bq,
+  title    = "Differentiating {BOLD} and {non-BOLD} signals in {fMRI} time
+              series using multi-echo {EPI}",
+  author   = "Kundu, Prantik and Inati, Souheil J and Evans, Jennifer W and
+              Luh, Wen-Ming and Bandettini, Peter A",
+  abstract = "A central challenge in the fMRI based study of functional
+              connectivity is distinguishing neuronally related signal
+              fluctuations from the effects of motion, physiology, and other
+              nuisance sources. Conventional techniques for removing nuisance
+              effects include modeling of noise time courses based on external
+              measurements followed by temporal filtering. These techniques
+              have limited effectiveness. Previous studies have shown using
+              multi-echo fMRI that neuronally related fluctuations are Blood
+              Oxygen Level Dependent (BOLD) signals that can be characterized
+              in terms of changes in R(2)* and initial signal intensity (S(0))
+              based on the analysis of echo-time (TE) dependence. We
+              hypothesized that if TE-dependence could be used to differentiate
+              BOLD and non-BOLD signals, non-BOLD signal could be removed to
+              denoise data without conventional noise modeling. To test this
+              hypothesis, whole brain multi-echo data were acquired at 3 TEs
+              and decomposed with Independent Components Analysis (ICA) after
+              spatially concatenating data across space and TE. Components were
+              analyzed for the degree to which their signal changes fit models
+              for R(2)* and S(0) change, and summary scores were developed to
+              characterize each component as BOLD-like or not BOLD-like. These
+              scores clearly differentiated BOLD-like ``functional network''
+              components from non BOLD-like components related to motion,
+              pulsatility, and other nuisance effects. Using non BOLD-like
+              component time courses as noise regressors dramatically improved
+              seed-based correlation mapping by reducing the effects of high
+              and low frequency non-BOLD fluctuations. A comparison with
+              seed-based correlation mapping using conventional noise
+              regressors demonstrated the superiority of the proposed technique
+              for both individual and group level seed-based connectivity
+              analysis, especially in mapping subcortical-cortical
+              connectivity. The differentiation of BOLD and non-BOLD components
+              based on TE-dependence was highly robust, which allowed for the
+              identification of BOLD-like components and the removal of non
+              BOLD-like components to be implemented as a fully automated
+              procedure.",
+  journal  = "Neuroimage",
+  volume   =  60,
+  number   =  3,
+  pages    = "1759--1770",
+  month    =  apr,
+  year     =  2012,
+  language = "en",
+  doi = {10.1016/j.neuroimage.2011.12.028}
+}
+
+% The entry below contains non-ASCII chars that could not be converted
+% to a LaTeX equivalent.
+@MISC{Heunis2020-bd,
+  title     = "The effects of multi-echo {fMRI} combination and rapid
+               T2*-mapping on offline and real-time {BOLD} sensitivity",
+  author    = "Heunis, S and Breeuwer, M and Caballero-Gaudes, C and Hellrung, Lydia and Huijbers, Willem and Jansen, Jacobus FA and Lamerichs, Rolf and Zinger, Svitlana  and Aldenkamp, Albert P",
+  abstract  = "A variety of strategies are used to combine multi-echo
+               functional magnetic resonance imaging (fMRI) data, yet recent
+               literature lacks a systematic comparison of the available
+               options. Here we compare six different approaches derived from
+               multi-echo data and …",
+  journal   = "bioRxiv",
+  url       = {https://doi.org/10.1101/2020.12.08.416768},
+  doi       = {10.1101/2020.12.08.416768},
+  year      =  2020
+}
+
+@BOOK{Penny2011-vi,
+  title     = "Statistical Parametric Mapping: The Analysis of Functional Brain
+               Images",
+  author    = "Penny, William D and Friston, Karl J and Ashburner, John T and
+               Kiebel, Stefan J and Nichols, Thomas E",
+  abstract  = "In an age where the amount of data collected from brain imaging
+               is increasing constantly, it is of critical importance to
+               analyse those data within an accepted framework to ensure proper
+               integration and comparison of the information collected. This
+               book describes the ideas and procedures that underlie the
+               analysis of signals produced by the brain. The aim is to
+               understand how the brain works, in terms of its functional
+               architecture and dynamics. This book provides the background and
+               methodology for the analysis of all types of brain imaging data,
+               from functional magnetic resonance imaging to
+               magnetoencephalography. Critically, Statistical Parametric
+               Mapping provides a widely accepted conceptual framework which
+               allows treatment of all these different modalities. This rests
+               on an understanding of the brain's functional anatomy and the
+               way that measured signals are caused experimentally. The book
+               takes the reader from the basic concepts underlying the analysis
+               of neuroimaging data to cutting edge approaches that would be
+               difficult to find in any other source. Critically, the material
+               is presented in an incremental way so that the reader can
+               understand the precedents for each new development. This book
+               will be particularly useful to neuroscientists engaged in any
+               form of brain mapping; who have to contend with the real-world
+               problems of data analysis and understanding the techniques they
+               are using. It is primarily a scientific treatment and a didactic
+               introduction to the analysis of brain imaging data. It can be
+               used as both a textbook for students and scientists starting to
+               use the techniques, as well as a reference for practicing
+               neuroscientists. The book also serves as a companion to the
+               software packages that have been developed for brain imaging
+               data analysis. An essential reference and companion for users of
+               the SPM software Provides a complete description of the concepts
+               and procedures entailed by the analysis of brain images Offers
+               full didactic treatment of the basic mathematics behind the
+               analysis of brain imaging data Stands as a compendium of all the
+               advances in neuroimaging data analysis over the past decade
+               Adopts an easy to understand and incremental approach that takes
+               the reader from basic statistics to state of the art approaches
+               such as Variational Bayes Structured treatment of data analysis
+               issues that links different modalities and models Includes a
+               series of appendices and tutorial-style chapters that makes even
+               the most sophisticated approaches accessible",
+  publisher = "Elsevier",
+  month     =  apr,
+  year      =  2011,
+  language  = "en",
+  ISBN = {9780123725608}
+}
+
+@ARTICLE{Esteban2020-ul,
+  title    = "Analysis of task-based functional {MRI} data preprocessed with
+              {fMRIPrep}",
+  author   = "Esteban, Oscar and Ciric, Rastko and Finc, Karolina and Blair,
+              Ross W and Markiewicz, Christopher J and Moodie, Craig A and
+              Kent, James D and Goncalves, Mathias and DuPre, Elizabeth and
+              Gomez, Daniel E P and Ye, Zhifang and Salo, Taylor and
+              Valabregue, Romain and Amlien, Inge K and Liem, Franziskus and
+              Jacoby, Nir and Stoji{\'c}, Hrvoje and Cieslak, Matthew and
+              Urchs, Sebastian and Halchenko, Yaroslav O and Ghosh, Satrajit S
+              and De La Vega, Alejandro and Yarkoni, Tal and Wright, Jessey and
+              Thompson, William H and Poldrack, Russell A and Gorgolewski,
+              Krzysztof J",
+  abstract = "Functional magnetic resonance imaging (fMRI) is a standard tool
+              to investigate the neural correlates of cognition. fMRI
+              noninvasively measures brain activity, allowing identification of
+              patterns evoked by tasks performed during scanning. Despite the
+              long history of this technique, the idiosyncrasies of each
+              dataset have led to the use of ad-hoc preprocessing protocols
+              customized for nearly every different study. This approach is
+              time consuming, error prone and unsuitable for combining datasets
+              from many sources. Here we showcase fMRIPrep
+              (http://fmriprep.org), a robust tool to prepare human fMRI data
+              for statistical analysis. This software instrument addresses the
+              reproducibility concerns of the established protocols for fMRI
+              preprocessing. By leveraging the Brain Imaging Data Structure to
+              standardize both the input datasets (MRI data as stored by the
+              scanner) and the outputs (data ready for modeling and analysis),
+              fMRIPrep is capable of preprocessing a diversity of datasets
+              without manual intervention. In support of the growing popularity
+              of fMRIPrep, this protocol describes how to integrate the tool in
+              a task-based fMRI investigation workflow.",
+  journal  = "Nature Protocols",
+  volume   =  15,
+  number   =  7,
+  pages    = "2186--2202",
+  month    =  jul,
+  year     =  2020,
+  language = "en",
+  doi = {10.1038/s41596-020-0327-3}
+}
+
+@ARTICLE{Cox1996-up,
+  title    = "{AFNI}: software for analysis and visualization of functional
+              magnetic resonance neuroimages",
+  author   = "Cox, R W",
+  abstract = "A package of computer programs for analysis and visualization of
+              three-dimensional human brain functional magnetic resonance
+              imaging (FMRI) results is described. The software can color
+              overlay neural activation maps onto higher resolution anatomical
+              scans. Slices in each cardinal plane can be viewed
+              simultaneously. Manual placement of markers on anatomical
+              landmarks allows transformation of anatomical and functional
+              scans into stereotaxic (Talairach-Tournoux) coordinates. The
+              techniques for automatically generating transformed functional
+              data sets from manually labeled anatomical data sets are
+              described. Facilities are provided for several types of
+              statistical analyses of multiple 3D functional data sets. The
+              programs are written in ANSI C and Motif 1.2 to run on Unix
+              workstations.",
+  journal  = "Computers and Biomedical Research",
+  volume   =  29,
+  number   =  3,
+  pages    = "162--173",
+  month    =  jun,
+  year     =  1996,
+  language = "en",
+  doi = {10.1006/cbmr.1996.0014}
+}
+
+% The entry below contains non-ASCII chars that could not be converted
+% to a LaTeX equivalent.
+@ARTICLE{Gonzalez-Castillo2016-tj,
+  title    = "Evaluation of multi-echo {ICA} denoising for task based {fMRI}
+              studies: Block designs, rapid event-related designs, and
+              cardiac-gated {fMRI}",
+  author   = "Gonzalez-Castillo, Javier and Panwar, Puja and Buchanan, Laura C
+              and Caballero-Gaudes, Cesar and Handwerker, Daniel A and Jangraw,
+              David C and Zachariou, Valentinos and Inati, Souheil and
+              Roopchansingh, Vinai and Derbyshire, John A and Bandettini, Peter
+              A",
+  abstract = "Multi-echo fMRI, particularly the multi-echo independent
+              component analysis (ME-ICA) algorithm, has previously proven
+              useful for increasing the sensitivity and reducing false
+              positives for functional MRI (fMRI) based resting state
+              connectivity studies. Less is known about its efficacy for
+              task-based fMRI, especially at the single subject level. This
+              work, which focuses exclusively on individual subject results,
+              compares ME-ICA to single-echo fMRI and a voxel-wise T2(⁎)
+              weighted combination of multi-echo data for task-based fMRI under
+              the following scenarios: cardiac-gated block designs, constant
+              repetition time (TR) block designs, and constant TR rapid
+              event-related designs. Performance is evaluated primarily in
+              terms of sensitivity (i.e., activation extent, activation
+              magnitude, percent detected trials and effect size estimates)
+              using five different tasks expected to evoke neuronal activity in
+              a distributed set of regions. The ME-ICA algorithm significantly
+              outperformed all other evaluated processing alternatives in all
+              scenarios. Largest improvements were observed for the
+              cardiac-gated dataset, where ME-ICA was able to reliably detect
+              and remove non-neural T1 signal fluctuations caused by
+              non-constant repetition times. Although ME-ICA also outperformed
+              the other options in terms of percent detection of individual
+              trials for rapid event-related experiments, only 46\% of all
+              events were detected after ME-ICA; suggesting additional
+              improvements in sensitivity are required to reliably detect
+              individual short event occurrences. We conclude the manuscript
+              with a detailed evaluation of ME-ICA outcomes and a discussion of
+              how the ME-ICA algorithm could be further improved. Overall, our
+              results suggest that ME-ICA constitutes a versatile, powerful
+              approach for advanced denoising of task-based fMRI, not just
+              resting-state data.",
+  journal  = "Neuroimage",
+  volume   =  141,
+  pages    = "452--468",
+  month    =  nov,
+  year     =  2016,
+  keywords = "Block design; ME-ICA; Multi-echo fMRI; Rapid event related;
+              Sensitivity",
+  language = "en",
+  doi = {10.1016/j.neuroimage.2016.07.049}
+}
+
+@ARTICLE{Logothetis2002-af,
+  title     = "The neural basis of the blood--oxygen--level--dependent
+               functional magnetic resonance imaging signal",
+  author    = "Logothetis, Nikos K",
+  journal   = "Philosophical Transactions of the Royal Society B: Biological Sciences",
+  publisher = "The Royal Society",
+  volume    =  357,
+  number    =  1424,
+  pages     = "1003--1037",
+  year      =  2002,
+  doi = {10.1098/rstb.2002.1114}
+}
+
+@ARTICLE{Posse1999-lt,
+  title    = "Enhancement of {BOLD-contrast} sensitivity by single-shot
+              multi-echo functional {MR} imaging",
+  author   = "Posse, S and Wiese, S and Gembris, D and Mathiak, K and Kessler,
+              C and Grosse-Ruyken, M L and Elghahwagi, B and Richards, T and
+              Dager, S R and Kiselev, V G",
+  abstract = "Improved data acquisition and processing strategies for blood
+              oxygenation level-dependent (BOLD)-contrast functional magnetic
+              resonance imaging (fMRI), which enhance the functional
+              contrast-to-noise ratio (CNR) by sampling multiple echo times in
+              a single shot, are described. The dependence of the CNR on T2*,
+              the image encoding time, and the number of sampled echo times are
+              investigated for exponential fitting, echo summation, weighted
+              echo summation, and averaging of correlation maps obtained at
+              different echo times. The method is validated in vivo using
+              visual stimulation and turbo proton echoplanar spectroscopic
+              imaging (turbo-PEPSI), a new single-shot multi-slice MR
+              spectroscopic imaging technique, which acquires up to 12
+              consecutive echoplanar images with echo times ranging from 12 to
+              213 msec. Quantitative T2*-mapping significantly increases the
+              measured extent of activation and the mean correlation
+              coefficient compared with conventional echoplanar imaging. The
+              sensitivity gain with echo summation, which is computationally
+              efficient provides similar sensitivity as fitting. For all data
+              processing methods sensitivity is optimum when echo times up to
+              3.2 T2* are sampled. This methodology has implications for
+              comparing functional sensitivity at different magnetic field
+              strengths and between brain regions with different magnetic field
+              inhomogeneities.",
+  journal  = "Magnetic Resonance in Medicine",
+  volume   =  42,
+  number   =  1,
+  pages    = "87--97",
+  month    =  jul,
+  year     =  1999,
+  language = "en",
+  doi = {10.1002/(sici)1522-2594(199907)42:1<87::aid-mrm13>3.0.co;2-o}
+}
+
+@ARTICLE{Cohen2021-ep,
+  title    = "Improved resting state functional connectivity sensitivity and
+              reproducibility using a multiband multi-echo acquisition",
+  author   = "Cohen, Alexander D and Yang, Baolian and Fernandez, Brice and
+              Banerjee, Suchandrima and Wang, Yang",
+  abstract = "Recent advances in functional MRI techniques include multiband
+              (MB) imaging and multi-echo (ME) imaging. In MB imaging multiple
+              slices are acquired simultaneously leading to significant
+              increases in temporal and spatial resolution. Multi-echo imaging
+              enables multiple echoes to be acquired in one shot, where the ME
+              images can be used to denoise the BOLD time series and increase
+              BOLD sensitivity. In this study, resting state fMRI (rs-fMRI)
+              data were collected using a combined MBME sequence and compared
+              to an MB single echo sequence. In total, 29 subjects were imaged,
+              and 18 of them returned within two weeks for repeat imaging.
+              Participants underwent one MBME scan with three echoes and one MB
+              scan with one echo. Both datasets were processed using standard
+              denoising and advanced denoising. Advanced denoising included
+              multi-echo independent component analysis (ME-ICA) for the MBME
+              data and ICA-AROMA for the MB data. Resting state functional
+              connectivity (RSFC) was evaluated using both selective seed-based
+              and whole grey matter (GM) region-of-interest (ROI) based
+              approaches. The reproducibility of connectivity metrics was also
+              analyzed in the repeat subjects. In addition, functional
+              connectivity density (FCD), a data-driven approach that counts
+              the number of significant connections, both within a local
+              cluster and globally, with each voxel was analyzed. Regardless of
+              the standard or advanced denoising technique, all seed-based RSFC
+              was significantly higher for MBME compared to MB. Much more GM
+              ROI combinations showed significantly higher RSFC for MBME vs.
+              MB. Reproducibility, evaluated using the dice coefficient was
+              significantly higher for MBME relative to MB data. Finally, FCD
+              was also higher for MBME vs. MB data. This study showed higher
+              RSFC for MBME vs. MB data using selected seed-based, whole GM
+              ROI-based, and data-driven approaches. Reproducibility found also
+              higher for MBME data. Taken together, these results indicate that
+              MBME is a promising technique for rs-fMRI.",
+  journal  = "Neuroimage",
+  volume   =  225,
+  pages    = "117461",
+  month    =  jan,
+  year     =  2021,
+  keywords = "Functional connectivity density; Multi-echo; Multi-echo
+              independent component analysis; Multiband; Reproducibility;
+              Resting state functional MRI",
+  language = "en",
+  doi = {10.1016/j.neuroimage.2020.117461}
+}
+
+@ARTICLE{Lynch2020-tz,
+  title    = "Rapid Precision Functional Mapping of Individuals Using
+              {Multi-Echo} {fMRI}",
+  author   = "Lynch, Charles J and Power, Jonathan D and Scult, Matthew A and
+              Dubin, Marc and Gunning, Faith M and Liston, Conor",
+  abstract = "Resting-state functional magnetic resonance imaging (fMRI) is
+              widely used in cognitive and clinical neuroscience, but
+              long-duration scans are currently needed to reliably characterize
+              individual differences in functional connectivity (FC) and brain
+              network topology. In this report, we demonstrate that multi-echo
+              fMRI can improve the reliability of FC-based measurements. In
+              four densely sampled individual humans, just 10 min of multi-echo
+              data yielded better test-retest reliability than 30 min of
+              single-echo data in independent datasets. This effect is
+              pronounced in clinically important brain regions, including the
+              subgenual cingulate, basal ganglia, and cerebellum, and is linked
+              to three biophysical signal mechanisms (thermal noise, regional
+              variability in the rate of T decay, and S-dependent artifacts)
+              with spatially distinct influences. Together, these findings
+              establish the potential utility of multi-echo fMRI for rapid
+              precision mapping using experimentally and clinically tractable
+              scan times and will facilitate longitudinal neuroimaging of
+              clinical populations.",
+  journal  = "Cell Reports",
+  volume   =  33,
+  number   =  12,
+  pages    = "108540",
+  month    =  dec,
+  year     =  2020,
+  keywords = "functional brain networks; multi-echo fMRI; precision functional
+              mapping; test-retest reliability",
+  language = "en",
+  doi = {10.1016/j.celrep.2020.108540}
+}
+
+@ARTICLE{Chang2009-bj,
+  title    = "Relationship between respiration, end-tidal {CO2}, and {BOLD}
+              signals in resting-state {fMRI}",
+  author   = "Chang, Catie and Glover, Gary H",
+  abstract = "A significant component of BOLD fMRI physiological noise is
+              caused by variations in the depth and rate of respiration. It has
+              previously been demonstrated that a breath-to-breath metric of
+              respiratory variation (respiratory volume per time; RVT),
+              computed from pneumatic belt measurements of chest expansion, has
+              a strong linear relationship with resting-state BOLD signals
+              across the brain. RVT is believed to capture breathing-induced
+              changes in arterial CO(2), which is a cerebral vasodilator;
+              indeed, separate studies have found that spontaneous fluctuations
+              in end-tidal CO(2) (PETCO(2)) are correlated with BOLD signal
+              time series. The present study quantifies the degree to which RVT
+              and PETCO(2) measurements relate to one another and explain
+              common aspects of the resting-state BOLD signal. It is found that
+              RVT (particularly when convolved with a particular impulse
+              response, the ``respiration response function'') is highly
+              correlated with PETCO(2), and that both explain remarkably
+              similar spatial and temporal BOLD signal variance across the
+              brain. In addition, end-tidal O(2) is shown to be largely
+              redundant with PETCO(2). Finally, the latency at which PETCO(2)
+              and respiration belt measures are correlated with the time series
+              of individual voxels is found to vary across the brain and may
+              reveal properties of intrinsic vascular response delays.",
+  journal  = "Neuroimage",
+  volume   =  47,
+  number   =  4,
+  pages    = "1381--1393",
+  month    =  oct,
+  year     =  2009,
+  language = "en",
+  doi = {10.1016/j.neuroimage.2009.04.048}
+}
+
+@ARTICLE{Peters2007-lc,
+  title    = "T2* measurements in human brain at 1.5, 3 and 7 {T}",
+  author   = "Peters, Andrew M and Brookes, Matthew J and Hoogenraad, Frank G
+              and Gowland, Penny A and Francis, Susan T and Morris, Peter G and
+              Bowtell, Richard",
+  abstract = "Measurements have been carried out in six subjects at magnetic
+              fields of 1.5, 3 and 7 T, with the aim of characterizing the
+              variation of T2* with field strength in human brain. Accurate
+              measurement of T2* in the presence of macroscopic magnetic field
+              inhomogeneity is problematic due to signal decay resulting from
+              through-slice dephasing. The approach employed here allowed the
+              signal decay due to through-slice dephasing to be characterized
+              and removed from data, thus facilitating an accurate measurement
+              of T2* even at ultrahigh field. Using double inversion recovery
+              turbo spin-echo images for tissue classification, an analysis of
+              T2* relaxation times in cortical grey matter and white matter was
+              carried out, along with an evaluation of the variation of T2*
+              with field strength in the caudate nucleus and putamen. The
+              results show an approximately linear increase in relaxation rate
+              R2* with field strength for all tissues, leading to a greater
+              range of relaxation times across tissue types at 7 T that can be
+              exploited in high-resolution T2*-weighted imaging.",
+  journal  = "Magnetic Resonance Imaging",
+  volume   =  25,
+  number   =  6,
+  pages    = "748--753",
+  month    =  jul,
+  year     =  2007,
+  language = "en",
+  doi = {10.1016/j.mri.2007.02.014}
+}
+
+@ARTICLE{Jenkinson2012-eh,
+  title    = "{FSL}",
+  author   = "Jenkinson, Mark and Beckmann, Christian F and Behrens, Timothy E
+              J and Woolrich, Mark W and Smith, Stephen M",
+  abstract = "FSL (the FMRIB Software Library) is a comprehensive library of
+              analysis tools for functional, structural and diffusion MRI brain
+              imaging data, written mainly by members of the Analysis Group,
+              FMRIB, Oxford. For this NeuroImage special issue on ``20 years of
+              fMRI'' we have been asked to write about the history,
+              developments and current status of FSL. We also include some
+              descriptions of parts of FSL that are not well covered in the
+              existing literature. We hope that some of this content might be
+              of interest to users of FSL, and also maybe to new research
+              groups considering creating, releasing and supporting new
+              software packages for brain image analysis.",
+  journal  = "Neuroimage",
+  volume   =  62,
+  number   =  2,
+  pages    = "782--790",
+  month    =  aug,
+  year     =  2012,
+  language = "en",
+  doi = {10.1016/j.neuroimage.2011.09.015}
+}
+
+@ARTICLE{Silvennoinen2003-kg,
+  title    = "Comparison of the dependence of blood {R2} and R2* on oxygen
+              saturation at 1.5 and 4.7 Tesla",
+  author   = "Silvennoinen, M J and Clingman, C S and Golay, X and Kauppinen, R
+              A and van Zijl, P C M",
+  abstract = "Gradient-echo (GRE) blood oxygen level-dependent (BOLD) effects
+              have both intra- and extravascular contributions. To better
+              understand the intravascular contribution in quantitative terms,
+              the spin-echo (SE) and GRE transverse relaxation rates, R(2) and
+              R(2)(*), of isolated blood were measured as a function of
+              oxygenation in a perfusion system. Over the normal oxygenation
+              saturation range of blood between veins, capillaries, and
+              arteries, the difference between these rates, R'(2) = R(2)(*) -
+              R(2), ranged from 1.5 to 2.1 Hz at 1.5 T and from 26 to 36 Hz at
+              4.7 T. The blood data were used to calculate the expected
+              intravascular BOLD effects for physiological oxygenation changes
+              that are typical during visual activation. This modeling showed
+              that intravascular DeltaR(2)(*) is caused mainly by R(2)
+              relaxation changes, namely 85\% and 78\% at 1.5T and 4.7T,
+              respectively. The simulations also show that at longer TEs (>70
+              ms), the intravascular contribution to the percentual BOLD change
+              is smaller at high field than at low field, especially for GRE
+              experiments. At shorter TE values, the opposite is the case. For
+              pure parenchyma, the intravascular BOLD signal changes originate
+              predominantly from venules for all TEs at low field and for short
+              TEs at high field. At longer TEs at high field, the capillary
+              contribution dominates. The possible influence of partial volume
+              contributions with large vessels was also simulated, showing
+              large (two- to threefold) increases in the total intravascular
+              BOLD effect for both GRE and SE.",
+  journal  = "Magnetic Resonance in Medicine",
+  volume   =  49,
+  number   =  1,
+  pages    = "47--60",
+  month    =  jan,
+  year     =  2003,
+  language = "en",
+  doi = {10.1002/mrm.10355}
+}
+
+@ARTICLE{Power2018-ca,
+  title    = "Ridding {fMRI} data of motion-related influences: Removal of
+              signals with distinct spatial and physical bases in multiecho
+              data",
+  author   = "Power, Jonathan D and Plitt, Mark and Gotts, Stephen J and Kundu,
+              Prantik and Voon, Valerie and Bandettini, Peter A and Martin,
+              Alex",
+  abstract = "``Functional connectivity'' techniques are commonplace tools for
+              studying brain organization. A critical element of these analyses
+              is to distinguish variance due to neurobiological signals from
+              variance due to nonneurobiological signals. Multiecho fMRI
+              techniques are a promising means for making such distinctions
+              based on signal decay properties. Here, we report that multiecho
+              fMRI techniques enable excellent removal of certain kinds of
+              artifactual variance, namely, spatially focal artifacts due to
+              motion. By removing these artifacts, multiecho techniques reveal
+              frequent, large-amplitude blood oxygen level-dependent (BOLD)
+              signal changes present across all gray matter that are also
+              linked to motion. These whole-brain BOLD signals could reflect
+              widespread neural processes or other processes, such as
+              alterations in blood partial pressure of carbon dioxide (pCO) due
+              to ventilation changes. By acquiring multiecho data while
+              monitoring breathing, we demonstrate that whole-brain BOLD
+              signals in the resting state are often caused by changes in
+              breathing that co-occur with head motion. These widespread
+              respiratory fMRI signals cannot be isolated from neurobiological
+              signals by multiecho techniques because they occur via the same
+              BOLD mechanism. Respiratory signals must therefore be removed by
+              some other technique to isolate neurobiological covariance in
+              fMRI time series. Several methods for removing global artifacts
+              are demonstrated and compared, and were found to yield fMRI time
+              series essentially free of motion-related influences. These
+              results identify two kinds of motion-associated fMRI variance,
+              with different physical mechanisms and spatial profiles, each of
+              which strongly and differentially influences functional
+              connectivity patterns. Distance-dependent patterns in covariance
+              are nearly entirely attributable to non-BOLD artifacts.",
+  journal  = "Proceedings of the National Academy of Sciences of the United States of America",
+  volume   =  115,
+  number   =  9,
+  pages    = "E2105--E2114",
+  month    =  feb,
+  year     =  2018,
+  keywords = "fMRI; functional connectivity; motion artifact; multiecho;
+              respiration",
+  language = "en",
+  doi = {10.1073/pnas.1720985115}
+}
+
+% The entry below contains non-ASCII chars that could not be converted
+% to a LaTeX equivalent.
+@ARTICLE{Murphy2013-vo,
+  title    = "Resting-state {fMRI} confounds and cleanup",
+  author   = "Murphy, Kevin and Birn, Rasmus M and Bandettini, Peter A",
+  abstract = "The goal of resting-state functional magnetic resonance imaging
+              (fMRI) is to investigate the brain's functional connections by
+              using the temporal similarity between blood oxygenation level
+              dependent (BOLD) signals in different regions of the brain ``at
+              rest'' as an indicator of synchronous neural activity. Since this
+              measure relies on the temporal correlation of fMRI signal changes
+              between different parts of the brain, any non-neural
+              activity-related process that affects the signals will influence
+              the measure of functional connectivity, yielding spurious
+              results. To understand the sources of these resting-state fMRI
+              confounds, this article describes the origins of the BOLD signal
+              in terms of MR physics and cerebral physiology. Potential
+              confounds arising from motion, cardiac and respiratory cycles,
+              arterial CO₂ concentration, blood pressure/cerebral
+              autoregulation, and vasomotion are discussed. Two classes of
+              techniques to remove confounds from resting-state BOLD time
+              series are reviewed: 1) those utilising external recordings of
+              physiology and 2) data-based cleanup methods that only use the
+              resting-state fMRI data itself. Further methods that remove noise
+              from functional connectivity measures at a group level are also
+              discussed. For successful interpretation of resting-state fMRI
+              comparisons and results, noise cleanup is an often over-looked
+              but essential step in the analysis pipeline.",
+  journal  = "Neuroimage",
+  volume   =  80,
+  pages    = "349--359",
+  month    =  oct,
+  year     =  2013,
+  keywords = "Functional connectivity; Functional magnetic resonance imaging
+              (fMRI); Noise correction; Physiological noise; Resting-state",
+  language = "en",
+  doi = {10.1016/j.neuroimage.2013.04.001}
+}
+
+@ARTICLE{Caballero-Gaudes2017-ix,
+  title    = "Methods for cleaning the {BOLD} {fMRI} signal",
+  author   = "Caballero-Gaudes, C{\'e}sar and Reynolds, Richard C",
+  abstract = "Blood oxygen-level-dependent functional magnetic resonance
+              imaging (BOLD fMRI) has rapidly become a popular technique for
+              the investigation of brain function in healthy individuals,
+              patients as well as in animal studies. However, the BOLD signal
+              arises from a complex mixture of neuronal, metabolic and vascular
+              processes, being therefore an indirect measure of neuronal
+              activity, which is further severely corrupted by multiple
+              non-neuronal fluctuations of instrumental, physiological or
+              subject-specific origin. This review aims to provide a
+              comprehensive summary of existing methods for cleaning the BOLD
+              fMRI signal. The description is given from a methodological point
+              of view, focusing on the operation of the different techniques in
+              addition to pointing out the advantages and limitations in their
+              application. Since motion-related and physiological noise
+              fluctuations are two of the main noise components of the signal,
+              techniques targeting their removal are primarily addressed,
+              including both data-driven approaches and using external
+              recordings. Data-driven approaches, which are less specific in
+              the assumed model and can simultaneously reduce multiple noise
+              fluctuations, are mainly based on data decomposition techniques
+              such as principal and independent component analysis.
+              Importantly, the usefulness of strategies that benefit from the
+              information available in the phase component of the signal, or in
+              multiple signal echoes is also highlighted. The use of global
+              signal regression for denoising is also addressed. Finally,
+              practical recommendations regarding the optimization of the
+              preprocessing pipeline for the purpose of denoising and future
+              venues of research are indicated. Through the review, we
+              summarize the importance of signal denoising as an essential step
+              in the analysis pipeline of task-based and resting state fMRI
+              studies.",
+  journal  = "Neuroimage",
+  volume   =  154,
+  pages    = "128--149",
+  month    =  jul,
+  year     =  2017,
+  keywords = "BOLD fMRI; Denoising methods; Motion artifacts; Multi-echo;
+              Phase-based methods; Physiological noise",
+  language = "en",
+  doi = {10.1016/j.neuroimage.2016.12.018}
+}
+
+@MISC{asyraff2020stimulus,
+  title  =    "Stimulus-independent neural coding of event semantics:
+               Evidence from cross-sentence fMRI decoding",
+  author =    "Asyraff, Aliff and Lemarchand, Rafael and Tamm, Andres and Hoffman, Paul",
+  journal =   "bioRxiv",
+  year    =   2020,
+  doi = {10.1101/2020.10.06.327817},
+  url = {https://www.biorxiv.org/content/10.1101/2020.10.06.327817v1}
+}
+
+@ARTICLE{Stocker2006-ae,
+  title    = "Dependence of amygdala activation on echo time: results from
+              olfactory {fMRI} experiments",
+  author   = "St{\"o}cker, Tony and Kellermann, Thilo and Schneider, Frank and
+              Habel, Ute and Amunts, Katrin and Pieperhoff, Peter and Zilles,
+              Karl and Shah, N Jon",
+  abstract = "Echo time dependence of the BOLD sensitivity is an important
+              topic in fMRI whenever brain regions are considered where the EPI
+              data quality suffers from susceptibility gradients. Here, an fMRI
+              study is presented showing that a reduced echo time EPI sequence
+              significantly enhances the statistical inference in subcortical
+              (limbic) brain regions, with special focus on the amygdala. As a
+              consequence, to facilitate whole-brain fMRI with optimal echo
+              times, a sequence with slice-dependent echo time is demonstrated
+              with a focus on structures suffering from susceptibility changes.
+              The applicability of this method is shown in a second fMRI study
+              aimed at both, cortical, and limbic brain regions. The results
+              are in good agreement with theoretical descriptions of the BOLD
+              sensitivity under the influence of susceptibility gradients.",
+  journal  = "Neuroimage",
+  volume   =  30,
+  number   =  1,
+  pages    = "151--159",
+  month    =  mar,
+  year     =  2006,
+  language = "en",
+  doi = {10.1016/j.neuroimage.2005.09.050}
+}
+
+@ARTICLE{Moia2020-bb,
+  title    = "Voxelwise optimization of hemodynamic lags to improve regional
+              {CVR} estimates in breath-hold {fMRI}",
+  author   = "Moia, Stefano and Stickland, Rachael C and Ayyagari, Apoorva and
+              Termenon, Maite and Caballero-Gaudes, Cesar and Bright, Molly G",
+  abstract = "Cerebrovascular Reactivity (CVR), the responsiveness of blood
+              vessels to a vasodilatory stimulus, is an important indicator of
+              cerebrovascular health. Assessing CVR with fMRI, we can measure
+              the change in the Blood Oxygen Level Dependent (BOLD) response
+              induced by a change in CO2 pressure (\%BOLD/mmHg). However, there
+              exists a temporal offset between the recorded CO2 pressure and
+              the local BOLD response, due to both measurement and
+              physiological delays. If this offset is not corrected for,
+              voxel-wise CVR values will not be accurate. In this paper, we
+              propose a framework for mapping hemodynamic lag in breath-hold
+              fMRI data. As breath-hold tasks drive task-correlated head motion
+              artifacts in BOLD fMRI data, our framework for lag estimation
+              fits a model that includes polynomial terms and head motion
+              parameters, as well as a shifted variant of the CO2 regressor
+              ($\pm$9 s in 0.3 s increments), and the hemodynamic lag at each
+              voxel is the shift producing the maximum total model R2 within
+              physiological constraints. This approach is evaluated in 8
+              subjects with multi-echo fMRI data, resulting in robust maps of
+              hemodynamic delay that show consistent regional variation across
+              subjects, and improved contrast-to-noise compared to methods
+              where motion regression is ignored or performed earlier in
+              preprocessing.Clinical Relevance- We map hemodynamic lag using
+              breathhold fMRI, providing insight into vascular transit times
+              and improving the regional accuracy of cerebrovascular reactivity
+              measurements.",
+  journal  = "Conference proceedings - IEEE engineering in medicine and biology society",
+  volume   =  2020,
+  pages    = "1489--1492",
+  month    =  jul,
+  year     =  2020,
+  language = "en",
+  doi = {10.1109/EMBC44109.2020.9176225}
+}
+
+@ARTICLE{Moia2021-ti,
+  title    = "{ICA-based} Denoising Strategies in {Breath-Hold} Induced
+              Cerebrovascular Reactivity Mapping with Multi Echo {BOLD} {fMRI}",
+  author   = "Moia, Stefano and Termenon, Maite and Uru{\~n}uela, Eneko and
+              Chen, Gang and Stickland, Rachael C and Bright, Molly G and
+              Caballero-Gaudes, C{\'e}sar",
+  abstract = "Performing a BOLD functional MRI (fMRI) acquisition during
+              breath-hold (BH) tasks is a non-invasive, robust method to
+              estimate cerebrovascular reactivity (CVR). However, movement and
+              breathing-related artefacts caused by the BH can substantially
+              hinder CVR estimates due to their high temporal collinearity with
+              the effect of interest, and attention has to be paid when
+              choosing which analysis model should be applied to the data. In
+              this study, we evaluate the performance of multiple analysis
+              strategies based on lagged general linear models applied on
+              multi-echo BOLD fMRI data, acquired in ten subjects performing a
+              BH task during ten sessions, to obtain subjectspecific CVR and
+              haemodynamic lag estimates. The evaluated approaches range from
+              conventional regression models including drifts and motion
+              timecourses as nuisance regressors applied on singleecho or
+              optimally-combined data, to more complex models including
+              regressors obtained from multi-echo independent component
+              analysis with different grades of orthogonalization in order to
+              preserve the effect of interest, i.e. the CVR. We compare these
+              models in terms of their ability to make signal intensity changes
+              independent from motion, as well as the reliability as measured
+              by voxelwise intraclass correlation coefficients of both CVR and
+              lag maps over time. Our results reveal that a conservative
+              independent component analysis model applied on the
+              optimally-combined multi-echo fMRI signal offers the largest
+              reduction of motion-related effects in the signal, while yielding
+              reliable CVR amplitude and lag estimates, although a conventional
+              regression model applied on the optimally-combined data results
+              in similar estimates. This work demonstrate the usefulness of
+              multi-echo based fMRI acquisitions and independent component
+              analysis denoising for precision mapping of CVR in single
+              subjects based on BH paradigms, fostering its potential as a
+              clinically-viable neuroimaging tool for individual patients. It
+              also proves that the way in which data-driven regressors should
+              be incorporated in the analysis model is not straight-forward due
+              to their complex interaction with the BH-induced BOLD response.
+              \#\#\# Competing Interest Statement The authors have declared no
+              competing interest.",
+  journal = {NeuroImage},
+  pages = {117914},
+  year = {2021},
+  issn = {1053-8119},
+  doi = {10.1016/j.neuroimage.2021.117914},
+  url = {https://www.sciencedirect.com/science/article/pii/S1053811921001919},
+  language = "en"
+}
