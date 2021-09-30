@@ -43,9 +43,9 @@ def getelbow_cons(arr, return_val=False):
     if arr.ndim != 1:
         raise ValueError("Parameter arr should be 1d, not {0}d".format(arr.ndim))
 
-    if not arr.size:
+    if arr.size < 5:
         raise ValueError(
-            "Empty array detected during elbow calculation. "
+            f"Only {arr.size} components used in elbow calculation. >=5 are required. "
             "This error happens when getelbow_cons is incorrectly called on no components. "
             "If you see this message, please open an issue at "
             "https://github.com/ME-ICA/tedana/issues with the full traceback and any data "
@@ -94,9 +94,9 @@ def getelbow(arr, return_val=False):
     if arr.ndim != 1:
         raise ValueError("Parameter arr should be 1d, not {0}d".format(arr.ndim))
 
-    if arr.size <= 1:
+    if arr.size < 5:
         raise ValueError(
-            "Only 0 or 1 components used in elbow calculation. "
+            f"Only {arr.size} components used in elbow calculation. >=5 are required. "
             "This error happens when getelbow is incorrectly called on too few components. "
             "If you see this message, please open an issue at "
             "https://github.com/ME-ICA/tedana/issues with the full traceback and any data "
