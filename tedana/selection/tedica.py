@@ -262,7 +262,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     if kappas_nonsig.size < 5:
         LGR.warning(
             f"Only {kappas_nonsig.size} nonsignificant kappa values detected. "
-            "A minimum of 5 values are required to calculate an elbow."
+            "A minimum of 5 values are required to calculate an elbow. "
             "Only using elbow calculated from all kappa values."
         )
         kappas_nonsig_elbow = np.nan
