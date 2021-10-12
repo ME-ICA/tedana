@@ -12,9 +12,13 @@ tedana: TE Dependent ANAlysis
    :target: https://pypi.python.org/pypi/tedana/
    :alt: PyPI - Python Version
 
+.. image:: https://joss.theoj.org/papers/10.21105/joss.03669/status.svg
+   :target: https://doi.org/10.21105/joss.03669
+   :alt: JOSS DOI
+
 .. image:: https://zenodo.org/badge/110845855.svg
    :target: https://zenodo.org/badge/latestdoi/110845855
-   :alt: DOI
+   :alt: Zenodo DOI
 
 .. image:: https://circleci.com/gh/ME-ICA/tedana.svg?style=shield
    :target: https://circleci.com/gh/ME-ICA/tedana
