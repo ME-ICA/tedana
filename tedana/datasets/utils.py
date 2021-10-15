@@ -5,7 +5,7 @@ Adapted from the nilearn dataset fetchers.
 import os
 
 
-def readlinkabs(link):
+def _readlinkabs(link):
     """Return an absolute path for the destination of a symlink."""
     path = os.readlink(link)
     if os.path.isabs(path):
@@ -16,29 +16,27 @@ def readlinkabs(link):
 def get_data_dirs(data_dir=None):
     """Return the directories in which tedana looks for data.
 
-    This is typically useful for the end-user to check where the data is
-    downloaded and stored.
+    This is typically useful for the end-user to check where the data is downloaded and stored.
 
     Parameters
     ----------
-    data_dir : string, optional
-        Path of the data directory. Used to force data storage in a specified
-        location. Default: None
+    data_dir : :obj:`str` or None, optional
+        Path of the data directory. Used to force data storage in a specified location.
+        Default: None
 
     Returns
     -------
-    paths : list of strings
+    paths : :obj:`list` of :obj:`str`
         Paths of the dataset directories.
 
     Notes
     -----
-    This function retrieves the datasets directories using the following
-    priority :
-    1. defaults system paths
-    2. the keyword argument data_dir
-    3. the global environment variable TEDANA_SHARED_DATA
-    4. the user environment variable TEDANA_DATA
-    5. tedana_data in the user home folder
+    This function retrieves the dataset's directory using the following priority :
+
+    1. the keyword argument ``data_dir``
+    2. the global environment variable ``TEDANA_SHARED_DATA``
+    3. the user environment variable ``TEDANA_DATA``
+    4. ``tedana_data`` in the user home folder
     """
     # We build an array of successive paths by priority
     # The boolean indicates if it is a pre_dir: in that case, we won't add the
@@ -68,31 +66,32 @@ def _get_dataset_dir(dataset_name, data_dir=None, default_paths=None, verbose=1)
 
     Parameters
     ----------
-    dataset_name : string
+    dataset_name : :obj:`str`
         The unique name of the dataset.
-    data_dir : string, optional
-        Path of the data directory. Used to force data storage in a specified
-        location. Default: None
-    default_paths : list of string, optional
-        Default system paths in which the dataset may already have been
-        installed by a third party software. They will be checked first.
-    verbose : int, optional
+    data_dir : :obj:`str` or None, optional
+        Path of the data directory. Used to force data storage in a specified location.
+        Default: None
+    default_paths : :obj:`list` of :obj:`str`, optional
+        Default system paths in which the dataset may already have been installed by a third party
+        software. They will be checked first.
+    verbose : :obj:`int`, optional
         Verbosity level (0 means no message). Default=1.
 
     Returns
     -------
-    data_dir : string
+    data_dir : :obj:`str`
         Path of the given dataset directory.
 
     Notes
     -----
-    This function retrieves the datasets directory (or data directory) using
-    the following priority :
+    This function retrieves the dataset's directory (or data directory) using the following
+    priority :
+
     1. defaults system paths
-    2. the keyword argument data_dir
-    3. the global environment variable TEDANA_SHARED_DATA
-    4. the user environment variable TEDANA_DATA
-    5. tedana_data in the user home folder
+    2. the keyword argument ``data_dir``
+    3. the global environment variable ``TEDANA_SHARED_DATA``
+    4. the user environment variable ``TEDANA_DATA``
+    5. ``tedana_data`` in the user home folder
     """
     paths = []
     # Search possible data-specific system paths
@@ -103,18 +102,21 @@ def _get_dataset_dir(dataset_name, data_dir=None, default_paths=None, verbose=1)
     paths.extend([(d, False) for d in get_data_dirs(data_dir=data_dir)])
 
     if verbose > 2:
-        print("Dataset search paths: %s" % paths)
+        print(f"Dataset search paths: {paths}")
 
     # Check if the dataset exists somewhere
     for path, is_pre_dir in paths:
         if not is_pre_dir:
             path = os.path.join(path, dataset_name)
+
         if os.path.islink(path):
             # Resolve path
-            path = readlinkabs(path)
+            path = _readlinkabs(path)
+
         if os.path.exists(path) and os.path.isdir(path):
             if verbose > 1:
-                print("\nDataset found in %s\n" % path)
+                print(f"\nDataset found in {path}\n")
+
             return path
 
     # If not, create a folder in the first writeable directory
@@ -122,16 +124,18 @@ def _get_dataset_dir(dataset_name, data_dir=None, default_paths=None, verbose=1)
     for (path, is_pre_dir) in paths:
         if not is_pre_dir:
             path = os.path.join(path, dataset_name)
+
         if not os.path.exists(path):
             try:
                 os.makedirs(path)
                 if verbose > 0:
-                    print("\nDataset created in %s\n" % path)
+                    print(f"\nDataset created in {path}\n")
                 return path
+
             except Exception as exc:
                 short_error_message = getattr(exc, "strerror", str(exc))
-                errors.append("\n -{0} ({1})".format(path, short_error_message))
+                errors.append(f"\n -{path} ({short_error_message})")
 
     raise OSError(
-        "tedana tried to store the dataset in the following directories, but:" + "".join(errors)
+        f"tedana tried to store the dataset in the following directories, but: {', '.join(errors)}"
     )

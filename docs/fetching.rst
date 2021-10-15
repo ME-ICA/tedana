@@ -12,12 +12,13 @@ tedana's ``datasets`` module contains a number of functions for downloading mult
 
     The fetching functions in tedana use the same approach as ``nilearn``.
     Namely, data fetched using tedana's functions will be downloaded to the disk.
-    These files will be saved to one of the following directories:
+    These files will be saved to one of the following directories
+    (ordered in terms of descending priority):
 
-    - the folder specified by ``data_dir`` parameter in the fetching function
-    - the global environment variable ``TEDANA_SHARED_DATA``
-    - the user environment variable ``TEDANA_DATA``
-    - the ``tedana_data`` folder in the user home folder
+    1. the folder specified by ``data_dir`` parameter in the fetching function
+    2. the global environment variable ``TEDANA_SHARED_DATA``
+    3. the user environment variable ``TEDANA_DATA``
+    4. the ``tedana_data`` folder in the user home folder
 
     The two different environment variables (``TEDANA_SHARED_DATA`` and ``TEDANA_DATA``) are provided for multi-user systems,
     to distinguish a global dataset repository that may be read-only at the user-level.

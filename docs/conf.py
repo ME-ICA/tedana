@@ -173,4 +173,5 @@ intersphinx_mapping = {
     "nibabel": ("https://nipy.org/nibabel/", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
     "nilearn": ("http://nilearn.github.io/", None),
+    "sklearn": ("https://scikit-learn.org/stable/", None),
 }

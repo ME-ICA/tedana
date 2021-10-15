@@ -32,12 +32,15 @@ API
 *************************************************************
 :mod:`tedana.datasets`: Automatic multi-echo dataset fetching
 *************************************************************
-For more information about fetching data from the internet,
-see :ref:`fetching tools`.
 
 .. automodule:: tedana.datasets
    :no-members:
    :no-inherited-members:
+
+.. tip::
+
+   For more information about fetching data from the internet,
+   see :ref:`fetching tools`.
 
 .. currentmodule:: tedana.datasets
 
@@ -46,6 +49,7 @@ see :ref:`fetching tools`.
    :template: function.rst
 
    tedana.datasets.fetch_cambridge
+   tedana.datasets.utils.get_data_dirs
 
 
 .. _api_decay_ref:

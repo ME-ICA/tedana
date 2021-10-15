@@ -174,42 +174,39 @@ def fetch_cambridge(
 
     Parameters
     ----------
-    n_subjects : int, optional
-        The number of subjects to load. If None, all the subjects are
-        loaded. Total 88 subjects.
-    low_resolution : bool, optional
+    n_subjects : :obj:`int` or None, optional
+        The number of subjects to load. If None, all the subjects are loaded. Total 88 subjects.
+    low_resolution : :obj:`bool`, optional
         If True, download downsampled versions of the fMRI files, which is useful for testing.
         Default is False.
-    reduce_confounds : bool, optional
-        If True, the returned confounds only include 6 motion parameters,
-        mean framewise displacement, signal from white matter, csf, and
-        6 anatomical compcor parameters. This selection only serves the
-        purpose of having realistic examples. Depending on your research
-        question, other confounds might be more appropriate.
-        If False, returns all fmriprep confounds.
-        Default=True.
-    data_dir : str, optional
-        Path of the data directory. Used to force data storage in a specified
-        location. If None, data are stored in home directory.
-    resume : bool, optional
-        Whether to resume download of a partly-downloaded file.
-        Default=True.
-    verbose : int, optional
+    reduce_confounds : :obj:`bool`, optional
+        If True, the returned confounds only include 6 motion parameters, mean framewise
+        displacement, signal from white matter, csf, and 6 anatomical compcor parameters.
+        This selection only serves the purpose of having realistic examples.
+        Depending on your research question, other confounds might be more appropriate.
+        If False, returns all fmriprep confounds. Default=True.
+    data_dir : :obj:`str`, optional
+        Path of the data directory. Used to force data storage in a specified location.
+        If None, data are stored in home directory.
+        A folder called ``cambridge`` will be created within the ``data_dir``.
+    resume : :obj:`bool`, optional
+        Whether to resume download of a partly-downloaded file. Default=True.
+    verbose : :obj:`int`, optional
         Defines the level of verbosity of the output. Default=1.
 
     Returns
     -------
-    data : :obj:`sklearn.datasets.base.Bunch`
+    data : :obj:`sklearn.utils.Bunch`
         Dictionary-like object, the attributes of interest are :
 
-        - 'func': List of paths to nifti files containing downsampled functional MRI data (4D) for
-          each  subject.
-        - 'confounds': List of paths to tsv files containing confounds related to each subject.
+        - ``'func'``: List of paths to nifti files containing downsampled functional MRI data (4D)
+          for each subject.
+        - ``'confounds'``: List of paths to tsv files containing confounds related to each subject.
 
     Notes
     -----
-    This fetcher downloads preprocessed data that are available on Open
-    Science Framework (OSF): https://osf.io/9wcb8/ .
+    This fetcher downloads preprocessed data that are available on Open Science Framework (OSF):
+    https://osf.io/9wcb8/ .
     These data have been partially preprocessed with fMRIPrep v20.2.1.
     Specifically, the "func" files are in native BOLD space and have been slice-timing corrected
     and motion corrected.
@@ -225,6 +222,10 @@ def fetch_cambridge(
            spatial and physical bases in multi-echo data.
            PNAS, 115(9), E2105-2114.
            www.pnas.org/content/115/9/E2105
+
+    See Also
+    --------
+    tedana.datasets.utils.get_data_dirs
     """
     DATASET_NAME = "cambridge"
     KEEP_CONFOUNDS = [
