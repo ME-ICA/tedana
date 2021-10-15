@@ -542,7 +542,20 @@ def tedana_workflow(
     elif t2smap is not None:
         raise IOError("Argument 't2smap' must be an existing file.")
 
-    RepLGR.info("TE-dependence analysis was performed on input data.")
+    RepLGR.info(
+        "TE-dependence analysis was performed on input data using the tedana workflow "
+        "(DuPre, Salo et al., 2021)."
+    )
+    RefLGR.info(
+        "DuPre, E. M., Salo, T., Ahmed, Z., Bandettini, P. A., Bottenhorn, K. L., "
+        "Caballero-Gaudes, C., Dowdle, L. T., Gonzalez-Castillo, J., Heunis, S., "
+        "Kundu, P., Laird, A. R., Markello, R., Markiewicz, C. J., Moia, S., "
+        "Staden, I., Teves, J. B., Uruñuela, E., Vaziri-Pashkam, M., "
+        "Whitaker, K., & Handwerker, D. A. (2021). "
+        "TE-dependent analysis of multi-echo fMRI with tedana. "
+        "Journal of Open Source Software, 6(66), 3669. doi:10.21105/joss.03669."
+    )
+
     if mask and not t2smap:
         # TODO: add affine check
         LGR.info("Using user-defined mask")
