@@ -210,12 +210,17 @@ def dice(arr1, arr2, axis=None):
     total_zeros = np.count_nonzero(arr_sum == 0)
     if total_zeros > 0:
         LGR.warning(
-            f"{total_zeros} of {arr_sum.size} components have empty maps, resulting in Dice values of 0. "
+            f"{total_zeros} of {arr_sum.size} components have empty maps, resulting in Dice values "
+            "of 0. "
             "Please check your component table for dice columns with 0-values."
         )
 
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=RuntimeWarning, message="invalid value encountered in true_divide")
+        warnings.filterwarnings(
+            "ignore",
+            category=RuntimeWarning,
+            message="invalid value encountered in true_divide"
+        )
         dsi = (2.0 * intersection.sum(axis=axis)) / arr_sum
     dsi = np.nan_to_num(dsi)
 
