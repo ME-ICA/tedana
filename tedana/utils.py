@@ -207,6 +207,9 @@ def dice(arr1, arr2, axis=None):
     arr_sum = arr1.sum(axis=axis) + arr2.sum(axis=axis)
     if np.all(arr_sum == 0):
         dsi = np.zeros(arr_sum.shape)
+        LGR.warning(
+            "All components found to have empty maps during dice calculation"
+        )
     else:
         intersection = np.logical_and(arr1, arr2)
         # Count number of zero-elements in the denominator and report
@@ -217,11 +220,9 @@ def dice(arr1, arr2, axis=None):
                 "Please check your component table for dice columns with 0-values."
             )
 
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                dsi = (2.0 * intersection.sum(axis=axis)) / arr_sum
-        else:
-            dsi = (2.0 * intersection.sum(axis=axis)) / arr_sum
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning, message="invalid value encountered in true_divide")
+        dsi = (2.0 * intersection.sum(axis=axis)) / arr_sum
 
     return dsi
 
