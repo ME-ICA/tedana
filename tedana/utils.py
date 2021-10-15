@@ -215,7 +215,7 @@ def dice(arr1, arr2, axis=None):
         )
 
     with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=RuntimeWarning, message="invalid value encountered in true_divide")
+        warnings.filterwarnings("ignore", category=RuntimeWarning, message="invalid value encountered in true_divide")
         dsi = (2.0 * intersection.sum(axis=axis)) / arr_sum
 
     return dsi
