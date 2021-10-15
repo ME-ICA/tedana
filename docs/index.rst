@@ -117,7 +117,7 @@ When using tedana, please include the following citations:
       </p>
 
       <p>
-      DuPre, E. M., Salo, T., Ahmed, Z., Bandettini, P. A., Bottenhorn, K. L.,
+      2. DuPre, E. M., Salo, T., Ahmed, Z., Bandettini, P. A., Bottenhorn, K. L.,
       Caballero-Gaudes, C., Dowdle, L. T., Gonzalez-Castillo, J., Heunis, S.,
       Kundu, P., Laird, A. R., Markello, R., Markiewicz, C. J., Moia, S.,
       Staden, I., Teves, J. B., Uruñuela, E., Vaziri-Pashkam, M.,
@@ -128,13 +128,13 @@ When using tedana, please include the following citations:
       </p>
 
       <p>
-      Kundu, P., Inati, S. J., Evans, J. W., Luh, W. M., & Bandettini, P. A. (2011).
+      3. Kundu, P., Inati, S. J., Evans, J. W., Luh, W. M., & Bandettini, P. A. (2011).
       <a href=https://doi.org/10.1016/j.neuroimage.2011.12.028>Differentiating BOLD and non-BOLD signals in fMRI time series using multi-echo EPI.</a>
       <i>NeuroImage</i>, <i>60</i>, 1759-1770.
       </p>
 
       <p>
-      Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E., Inati, S. J.,
+      4. Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E., Inati, S. J.,
       Saad, Z. S., Bandettini, P. A., & Bullmore, E. T. (2013).
       <a href=https://doi.org/10.1073/pnas.1301725110>Integrated strategy for improving functional connectivity mapping using multiecho fMRI.</a>
       <i>Proceedings of the National Academy of Sciences</i>, <i>110</i>, 16187-16192.
