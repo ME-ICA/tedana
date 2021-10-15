@@ -34,16 +34,14 @@ def _fetch_cambridge_functional(n_subjects, low_resolution, data_dir, url, resum
     Parameters
     ----------
     n_subjects : int
-        The number of subjects to load. If None, all the subjects are
-        loaded. Total 88 subjects.
+        The number of subjects to load. If None, all the subjects are loaded. Total 88 subjects.
     low_resolution : bool
         If True, download downsampled versions of the fMRI files, which is useful for testing.
     data_dir : str
         Path of the data directory. Used to force data storage in a specified
         location. If None is given, data are stored in home directory.
     url : str
-        Override download URL. Used for test only (or if you setup a mirror of
-        the data).
+        Override download URL. Used for test only (or if you setup a mirror of the data).
     resume : bool
         Whether to resume download of a partly-downloaded file.
     verbose : int
@@ -54,9 +52,6 @@ def _fetch_cambridge_functional(n_subjects, low_resolution, data_dir, url, resum
     func : list of str (Nifti files)
         Paths to functional MRI data (4D) for each subject.
     """
-    dataset_name = "cambridge"
-    data_dir = _get_dataset_dir(dataset_name, data_dir=data_dir, verbose=verbose)
-
     if url is None:
         # Download from the relevant OSF project, using hashes generated
         # from the OSF API. Note the trailing slash. For more info, see:
@@ -114,14 +109,12 @@ def _fetch_cambridge_regressors(n_subjects, data_dir, url, resume, verbose):
     Parameters
     ----------
     n_subjects : int
-        The number of subjects to load. If None, all the subjects are
-        loaded. Total 88 subjects.
+        The number of subjects to load. If None, all the subjects are loaded. Total 88 subjects.
     data_dir : str
         Path of the data directory. Used to force data storage in a specified
         location. If None is given, data are stored in home directory.
     url : str
-        Override download URL. Used for test only (or if you setup a mirror of
-        the data).
+        Override download URL. Used for test only (or if you setup a mirror of the data).
     resume : bool
         Whether to resume download of a partly-downloaded file.
     verbose : int
@@ -132,9 +125,6 @@ def _fetch_cambridge_regressors(n_subjects, data_dir, url, resume, verbose):
     regressors : list of str (tsv files)
         Paths to regressors related to each subject.
     """
-    dataset_name = "cambridge"
-    data_dir = _get_dataset_dir(dataset_name, data_dir=data_dir, verbose=verbose)
-
     if url is None:
         # Download from the relevant OSF project, using hashes generated
         # from the OSF API. Note the trailing slash. For more info, see:
@@ -236,9 +226,8 @@ def fetch_cambridge(
            PNAS, 115(9), E2105-2114.
            www.pnas.org/content/115/9/E2105
     """
-    dataset_name = "cambridge"
-    data_dir = _get_dataset_dir(dataset_name, data_dir=data_dir, verbose=1)
-    keep_confounds = [
+    DATASET_NAME = "cambridge"
+    KEEP_CONFOUNDS = [
         "trans_x",
         "trans_y",
         "trans_z",
@@ -255,11 +244,12 @@ def fetch_cambridge(
         "csf",
         "white_matter",
     ]
+    data_dir = _get_dataset_dir(DATASET_NAME, data_dir=data_dir, verbose=verbose)
 
     # Dataset description
     package_directory = os.path.dirname(os.path.abspath(__file__))
     try:
-        with open(os.path.join(package_directory, "data", dataset_name + ".rst"), "r") as rst_file:
+        with open(os.path.join(package_directory, "data", DATASET_NAME + ".rst"), "r") as rst_file:
             fdescr = rst_file.read()
     except IOError:
         fdescr = ""
@@ -272,11 +262,15 @@ def fetch_cambridge(
         resume=resume,
         verbose=verbose,
     )
-
     regressors = _fetch_cambridge_regressors(
-        n_subjects, data_dir=data_dir, url=None, resume=resume, verbose=verbose
+        n_subjects,
+        data_dir=data_dir,
+        url=None,
+        resume=resume,
+        verbose=verbose,
     )
+
     if reduce_confounds:
-        regressors = _reduce_confounds(regressors, keep_confounds)
+        regressors = _reduce_confounds(regressors, KEEP_CONFOUNDS)
 
     return Bunch(func=funcs, confounds=regressors, description=fdescr)

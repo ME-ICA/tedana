@@ -32,6 +32,8 @@ API
 *************************************************************
 :mod:`tedana.datasets`: Automatic multi-echo dataset fetching
 *************************************************************
+For more information about fetching data from the internet,
+see :ref:`fetching tools`.
 
 .. automodule:: tedana.datasets
    :no-members:
