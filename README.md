@@ -2,7 +2,7 @@
 
 [![Latest Version](https://img.shields.io/pypi/v/tedana.svg)](https://pypi.python.org/pypi/tedana/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tedana.svg)](https://pypi.python.org/pypi/tedana/)
-[![DOI](https://joss.theoj.org/papers/10.21105/joss.03669/status.svg)](https://doi.org/10.21105/joss.03669)
+[![JOSS DOI](https://joss.theoj.org/papers/10.21105/joss.03669/status.svg)](https://doi.org/10.21105/joss.03669)
 [![Zenodo DOI](https://zenodo.org/badge/110845855.svg)](https://zenodo.org/badge/latestdoi/110845855)
 [![License](https://img.shields.io/badge/License-LGPL%202.0-blue.svg)](https://opensource.org/licenses/LGPL-2.1)
 [![CircleCI](https://circleci.com/gh/ME-ICA/tedana.svg?style=shield)](https://circleci.com/gh/ME-ICA/tedana)
