@@ -20,7 +20,7 @@ def get_data_dirs(data_dir=None):
 
     Parameters
     ----------
-    data_dir : :obj:`str` or None, optional
+    data_dir : :obj:`pathlib.Path` or :obj:`str` or None, optional
         Path of the data directory. Used to force data storage in a specified location.
         Default: None
 
@@ -45,7 +45,7 @@ def get_data_dirs(data_dir=None):
 
     # Check data_dir which force storage in a specific location
     if data_dir is not None:
-        paths.extend(data_dir.split(os.pathsep))
+        paths.extend(str(data_dir).split(os.pathsep))
 
     # If data_dir has not been specified, then we crawl default locations
     if data_dir is None:
@@ -68,7 +68,7 @@ def _get_dataset_dir(dataset_name, data_dir=None, default_paths=None, verbose=1)
     ----------
     dataset_name : :obj:`str`
         The unique name of the dataset.
-    data_dir : :obj:`str` or None, optional
+    data_dir : :obj:`pathlib.Path` or :obj:`str` or None, optional
         Path of the data directory. Used to force data storage in a specified location.
         Default: None
     default_paths : :obj:`list` of :obj:`str`, optional
