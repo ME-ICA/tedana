@@ -220,9 +220,9 @@ def dice(arr1, arr2, axis=None):
                 "Please check your component table for dice columns with 0-values."
             )
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=RuntimeWarning, message="invalid value encountered in true_divide")
-        dsi = (2.0 * intersection.sum(axis=axis)) / arr_sum
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning, message="invalid value encountered in true_divide")
+            dsi = (2.0 * intersection.sum(axis=axis)) / arr_sum
 
     return dsi
 
