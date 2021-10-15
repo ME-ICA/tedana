@@ -24,6 +24,26 @@ An important distinction is that while the ME-ICA pipeline originally performed 
 
 More information and documentation can be found at https://tedana.readthedocs.io.
 
+## Citing `tedana`
+
+If you use `tedana`, please cite the following papers, as well as our [most recent Zenodo release](https://zenodo.org/badge/latestdoi/110845855):
+
+- DuPre, E. M., Salo, T., Ahmed, Z., Bandettini, P. A., Bottenhorn, K. L.,
+  Caballero-Gaudes, C., Dowdle, L. T., Gonzalez-Castillo, J., Heunis, S.,
+  Kundu, P., Laird, A. R., Markello, R., Markiewicz, C. J., Moia, S.,
+  Staden, I., Teves, J. B., Uruñuela, E., Vaziri-Pashkam, M.,
+  Whitaker, K., & Handwerker, D. A. (2021).
+  [TE-dependent analysis of multi-echo fMRI with tedana.](https://doi.org/10.21105/joss.03669)
+  _Journal of Open Source Software_, _6(66)_, 3669.
+  doi:10.21105/joss.03669.
+- Kundu, P., Inati, S. J., Evans, J. W., Luh, W. M., & Bandettini, P. A. (2011).
+  [Differentiating BOLD and non-BOLD signals in fMRI time series using multi-echo EPI.](https://doi.org/10.1016/j.neuroimage.2011.12.028)
+  _NeuroImage_, _60_, 1759-1770.
+- Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E., Inati, S. J.,
+  Saad, Z. S., Bandettini, P. A., & Bullmore, E. T. (2013).
+  [Integrated strategy for improving functional connectivity mapping using multiecho fMRI.](https://doi.org/10.1073/pnas.1301725110)
+  _Proceedings of the National Academy of Sciences_, _110_, 16187-16192.
+
 ## Installation
 
 ### Use `tedana` with your local Python environment
