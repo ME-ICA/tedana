@@ -351,5 +351,5 @@ def tedpca(
 
     kept_data = stats.zscore(kept_data, axis=1)  # variance normalize time series
     kept_data = stats.zscore(kept_data, axis=None)  # variance normalize everything
-    LGR.info("PCA done")
+
     return kept_data, n_components
