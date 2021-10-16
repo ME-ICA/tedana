@@ -45,6 +45,7 @@ def tedica(data, n_components, fixed_seed, maxit=500, maxrestart=10):
     -----
     Uses `sklearn` implementation of FastICA for decomposition
     """
+    LGR.info("ICA")
     warnings.filterwarnings(action="ignore", module="scipy", message="^internal gelsd")
     RepLGR.info(
         "Independent component analysis was then used to "
@@ -62,6 +63,7 @@ def tedica(data, n_components, fixed_seed, maxit=500, maxrestart=10):
             max_iter=maxit,
             random_state=fixed_seed,
         )
+        LGR.info("ICA initialized")
 
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered in order to capture
@@ -69,6 +71,7 @@ def tedica(data, n_components, fixed_seed, maxit=500, maxrestart=10):
             warnings.simplefilter("always")
 
             ica.fit(data)
+            LGR.info("ICA fitted")
 
             w = list(filter(lambda i: issubclass(i.category, UserWarning), w))
             if len(w):
