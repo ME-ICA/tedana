@@ -99,12 +99,11 @@ def make_adaptive_mask(data, mask=None, getsum=False, threshold=1, ignore_zeros=
         masksum[masksum < threshold] = 0
     else:
         # if the user has supplied a binary mask
-        mask = reshape_niimg(mask)
+        mask = reshape_niimg(mask).astype(bool)
         if ignore_zeros:
             # Use value of 1 when mask include voxel but masksum says it's all bad data
-            masksum = np.maximum(masksum, mask)
+            masksum = np.maximum(masksum, mask, dtype=int)
         else:
-            mask = mask.astype(bool)
             masksum = masksum * mask
 
         # reduce mask based on masksum
