@@ -531,10 +531,12 @@ def tedana_workflow(
         raise IOError("Argument 't2smap' must be an existing file.")
 
     RepLGR.info("TE-dependence analysis was performed on input data.")
+    ignore_zeros = False
     if mask and not t2smap:
         # TODO: add affine check
         LGR.info("Using user-defined mask")
         RepLGR.info("A user-defined mask was applied to the data.")
+        ignore_zeros = True
     elif t2smap and not mask:
         LGR.info("Using user-defined T2* map to generate mask")
         t2s_limited_sec = utils.reshape_niimg(t2smap)
@@ -548,6 +550,7 @@ def tedana_workflow(
         t2s_full = t2s_limited.copy()
         mask = utils.reshape_niimg(mask)
         mask[t2s_limited == 0] = 0  # reduce mask based on T2* map
+        ignore_zeros = True
     else:
         LGR.info("Computing EPI mask from first echo")
         first_echo_img = io.new_nii_like(io_generator.reference_img, catd[:, 0, :])
@@ -563,6 +566,7 @@ def tedana_workflow(
         mask=mask,
         getsum=True,
         threshold=1,
+        ignore_zeros=ignore_zeros,
     )
     LGR.debug("Retaining {}/{} samples for denoising".format(mask_denoise.sum(), n_samp))
     io_generator.save_file(masksum_denoise, "adaptive mask img")

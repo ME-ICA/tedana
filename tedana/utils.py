@@ -40,7 +40,7 @@ def reshape_niimg(data):
     return fdata
 
 
-def make_adaptive_mask(data, mask=None, getsum=False, threshold=1):
+def make_adaptive_mask(data, mask=None, getsum=False, threshold=1, ignore_zeros=False):
     """
     Makes map of `data` specifying longest echo a voxel can be sampled with
 
@@ -99,8 +99,14 @@ def make_adaptive_mask(data, mask=None, getsum=False, threshold=1):
         masksum[masksum < threshold] = 0
     else:
         # if the user has supplied a binary mask
-        mask = reshape_niimg(mask).astype(bool)
-        masksum = masksum * mask
+        mask = reshape_niimg(mask)
+        if ignore_zeros:
+            # Use value of 1 when mask include voxel but masksum says it's all bad data
+            masksum = np.maximum(masksum, mask)
+        else:
+            mask = mask.astype(bool)
+            masksum = masksum * mask
+
         # reduce mask based on masksum
         # TODO: Use visual report to make checking the reduced mask easier
         if np.any(masksum[mask] < threshold):
