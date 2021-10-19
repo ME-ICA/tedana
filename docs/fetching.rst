@@ -7,6 +7,7 @@ Fetching resources from the internet
 :mod:`tedana.datasets`
 
 tedana's ``datasets`` module contains a number of functions for downloading multi-echo data from the internet.
+For a comprehensive list of datasets that can be fetched, see :mod:`tedana.datasets`.
 
 .. topic:: Where do downloaded resources end up?
 
