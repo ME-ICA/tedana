@@ -144,9 +144,8 @@ def test_smoke_write_split_ts():
 
     me.write_split_ts(data, mmix, mask, comptable, io_generator)
 
-    # TODO: midk_ts.nii is never generated?
     fn = io_generator.get_name
-    split = ("high kappa ts img", "low kappa ts img", "denoised ts img")
+    split = ("denoised ts img",)
     fnames = [fn(f) for f in split]
     for filename in fnames:
         # remove all files generated
