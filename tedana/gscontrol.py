@@ -166,9 +166,7 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, io_generator):
     Filename                  Content
     ======================    =================================================
     sphis_hik.nii             T1-like effect
-    hik_ts_OC_MIR.nii         T1-corrected BOLD (high-Kappa) time series
     dn_ts_OC_MIR.nii          Denoised version of T1-corrected time series
-    betas_hik_OC_MIR.nii      T1 global signal-corrected components
     meica_mix_MIR.1D          T1 global signal-corrected mixing matrix
     ======================    =================================================
 
@@ -221,8 +219,6 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, io_generator):
     mehk_noT1gs = mehk_ts - np.dot(
         np.linalg.lstsq(glob_sig.T, mehk_ts.T, rcond=None)[0].T, glob_sig
     )
-    hik_ts = mehk_noT1gs * optcom_std  # rescale
-    io_generator.save_file(utils.unmask(hik_ts, mask), "ICA accepted mir denoised img")
 
     # Make denoised version of T1-corrected time series
     medn_ts = optcom_mean + ((mehk_noT1gs + resid) * optcom_std)
@@ -235,11 +231,6 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, io_generator):
         (np.atleast_2d(np.ones(max(glob_sig.shape))), glob_sig, mmix_noT1gs_z)
     )
 
-    # Write T1-corrected components and mixing matrix
-    comp_pes_norm = np.linalg.lstsq(mmix_noT1gs_z.T, optcom_z.T, rcond=None)[0].T
-    io_generator.save_file(
-        utils.unmask(comp_pes_norm[:, 2:], mask),
-        "ICA accepted mir component weights img",
-    )
+    # Write T1-corrected mixing matrix
     mixing_df = pd.DataFrame(data=mmix_noT1gs.T, columns=comptable["Component"].values)
     io_generator.save_file(mixing_df, "ICA MIR mixing tsv")
