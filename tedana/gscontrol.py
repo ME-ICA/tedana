@@ -226,10 +226,6 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, io_generator):
 
     # Orthogonalize mixing matrix w.r.t. T1-GS
     mmix_noT1gs = mmix.T - np.dot(np.linalg.lstsq(glob_sig.T, mmix, rcond=None)[0].T, glob_sig)
-    mmix_noT1gs_z = stats.zscore(mmix_noT1gs, axis=-1)
-    mmix_noT1gs_z = np.vstack(
-        (np.atleast_2d(np.ones(max(glob_sig.shape))), glob_sig, mmix_noT1gs_z)
-    )
 
     # Write T1-corrected mixing matrix
     mixing_df = pd.DataFrame(data=mmix_noT1gs.T, columns=comptable["Component"].values)
