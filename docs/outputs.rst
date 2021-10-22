@@ -27,12 +27,8 @@ S0map.nii.gz                                        Full S0 3D map.
                                                     the S0 estimate from the first two echoes, while the
                                                     limited map has a NaN.
 desc-optcom_bold.nii.gz                             Optimally combined time series.
-desc-optcomDenoised_bold.nii.gz                     Denoised optimally combined time series. Recommended
+desc-denoised_bold.nii.gz                           Denoised optimally combined time series. Recommended
                                                     dataset for analysis.
-desc-optcomRejected_bold.nii.gz                     Combined time series from rejected components.
-desc-optcomAccepted_bold.nii.gz                     High-kappa time series. This dataset does not
-                                                    include thermal noise or low variance components.
-                                                    Not the recommended dataset for analysis.
 desc-adaptiveGoodSignal_mask.nii.gz                 Integer-valued mask used in the workflow, where
                                                     each voxel's value corresponds to the number of good
                                                     echoes to be used for T2\*/S0 estimation.
@@ -67,8 +63,6 @@ desc-tedana_metrics.tsv                             TEDICA component table. A BI
                                                     decomposition.
 desc-tedana_metrics.json                            Metadata about the metrics in
                                                     ``desc-tedana_metrics.tsv``.
-desc-ICAAccepted_components.nii.gz                  High-kappa ICA coefficient feature set
-desc-ICAAcceptedZ_components.nii.gz                 Z-normalized spatial component maps
 report.txt                                          A summary report for the workflow with relevant
                                                     citations.
 tedana_report.html                                  The interactive HTML report.
@@ -101,9 +95,7 @@ desc-[PCA|ICA]AveragingWeights_components.nii.gz                Component-wise a
                                                                 calculation.
 desc-optcomPCAReduced_bold.nii.gz                               Optimally combined data after dimensionality
                                                                 reduction with PCA. This is the input to the ICA.
-echo-[echo]_desc-Accepted_bold.nii.gz                           High-Kappa time series for echo number ``echo``
-echo-[echo]_desc-Rejected_bold.nii.gz                           Low-Kappa time series for echo number ``echo``
-echo-[echo]_desc-Denoised_bold.nii.gz                           Denoised time series for echo number ``echo``
+echo-[echo]_desc-denoised_bold.nii.gz                           Denoised time series for echo number ``echo``
 ==============================================================  =====================================================
 
 If ``gscontrol`` includes 'gsr':
@@ -120,16 +112,14 @@ desc-optcomNoGlobalSignal_bold.nii.gz               Optimally combined time seri
                                                     removed.
 ================================================    =====================================================
 
-If ``gscontrol`` includes 't1c':
+If ``gscontrol`` includes 'mir':
 
 ================================================    =====================================================
 Filename                                            Content
 ================================================    =====================================================
 desc-T1likeEffect_min.nii.gz                        T1-like effect
-desc-optcomAcceptedT1cDenoised_bold.nii.gz          T1-corrected high-kappa time series by regression
-desc-optcomT1cDenoised_bold.nii.gz                  T1-corrected denoised time series
-desc-TEDICAAcceptedT1cDenoised_components.nii.gz    T1-GS corrected high-kappa components
-desc-TEDICAT1cDenoised_mixing.tsv                   T1-GS corrected mixing matrix
+desc-MIRDenoised_bold.nii.gz                        T1-corrected denoised time series
+desc-ICAMIRDenoised_mixing.tsv                      T1-GS corrected mixing matrix
 ================================================    =====================================================
 
 
