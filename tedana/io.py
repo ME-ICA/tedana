@@ -17,7 +17,7 @@ from nilearn._utils import check_niimg
 from nilearn.image import new_img_like
 
 from tedana import utils
-from tedana.stats import computefeats2, get_coeffs
+from tedana.stats import get_coeffs
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -371,7 +371,7 @@ def denoise_ts(data, mmix, mask, comptable):
     # get variance explained by retained components
     betas = get_coeffs(dmdata.T, mmix, mask=None)
     varexpl = (1 - ((dmdata.T - betas.dot(mmix.T)) ** 2.0).sum() / (dmdata ** 2.0).sum()) * 100
-    LGR.info("Variance explained by decomposition: {:.02f}%".format(varexpl))
+    LGR.info(f"Variance explained by decomposition: {varexpl:.02f}%")
 
     # create component-based data
     hikts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
@@ -382,8 +382,7 @@ def denoise_ts(data, mmix, mask, comptable):
 
 # File Writing Functions
 def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
-    """
-    Splits `data` into denoised / noise / ignored time series and saves to disk
+    """Split `data` into denoised / noise / ignored time series and save to disk.
 
     Parameters
     ----------
@@ -394,11 +393,11 @@ def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
         is components and `T` is the same as in `data`
     mask : (S,) array_like
         Boolean mask array
+    comptable : (C x X) :obj:`pandas.DataFrame`
+        Metric table with one row for each component. One column must be named "classification".
     io_generator : :obj:`tedana.io.OutputGenerator`
         Reference image to dictate how outputs are saved to disk
-    out_dir : :obj:`str`, optional
-        Output directory.
-    echo: :obj: `int`, optional
+    echo : :obj:`int`, optional
         Echo number to generate filenames, used by some verbose
         functions. Default 0.
 
@@ -411,44 +410,25 @@ def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
     -----
     This function writes out several files:
 
-    ============================    ============================================
-    Filename                        Content
-    ============================    ============================================
-    [prefix]Accepted_bold.nii.gz    High-Kappa time series.
-    [prefix]Rejected_bold.nii.gz    Low-Kappa time series.
-    [prefix]Denoised_bold.nii.gz    Denoised time series.
-    ============================    ============================================
+    =======================================    ===============================================
+    Filename                                   Content
+    =======================================    ===============================================
+    [echo-(echo)_]desc-denoised_bold.nii.gz    Denoised time series. If ``echo`` is not 0,
+                                               then the filename will include the echo entity.
+    =======================================    ===============================================
     """
-    acc = comptable[comptable.classification == "accepted"].index.values
-    rej = comptable[comptable.classification == "rejected"].index.values
-
-    dnts, hikts, lowkts = denoise_ts(data, mmix, mask, comptable)
-
-    if len(acc) != 0:
-        if echo != 0:
-            fout = io_generator.save_file(hikts, "high kappa ts split img", echo=echo)
-        else:
-            fout = io_generator.save_file(hikts, "high kappa ts img")
-        LGR.info("Writing high-Kappa time series: {}".format(fout))
-
-    if len(rej) != 0:
-        if echo != 0:
-            fout = io_generator.save_file(lowkts, "low kappa ts split img", echo=echo)
-        else:
-            fout = io_generator.save_file(lowkts, "low kappa ts img")
-        LGR.info("Writing low-Kappa time series: {}".format(fout))
+    dnts, _, _ = denoise_ts(data, mmix, mask, comptable)
 
     if echo != 0:
         fout = io_generator.save_file(dnts, "denoised ts split img", echo=echo)
     else:
         fout = io_generator.save_file(dnts, "denoised ts img")
 
-    LGR.info("Writing denoised time series: {}".format(fout))
+    LGR.info(f"Writing denoised time series: {fout}")
 
 
-def writeresults(ts, mask, comptable, mmix, n_vols, io_generator):
-    """
-    Denoises `ts` and saves all resulting files to disk
+def writeresults(ts, mask, comptable, mmix, io_generator):
+    """Denoise `ts` and save all resulting files to disk.
 
     Parameters
     ----------
@@ -463,9 +443,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, io_generator):
     mmix : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    n_vols : :obj:`int`
-        Number of volumes in original time series
-    ref_img : :obj:`str` or img_like
+    io_generator : :obj:`tedana.io.OutputGenerator`
         Reference image to dictate how outputs are saved to disk
 
     Notes
@@ -475,42 +453,24 @@ def writeresults(ts, mask, comptable, mmix, n_vols, io_generator):
     =========================================    =====================================
     Filename                                     Content
     =========================================    =====================================
-    desc-optcomAccepted_bold.nii.gz              High-Kappa time series.
-    desc-optcomRejected_bold.nii.gz              Low-Kappa time series.
-    desc-optcomDenoised_bold.nii.gz              Denoised time series.
+    desc-denoised_bold.nii.gz              Denoised time series.
     desc-ICA_components.nii.gz                   Spatial component maps for all
                                                  components.
-    desc-ICAAccepted_components.nii.gz           Spatial component maps for accepted
-                                                 components.
-    desc-ICAAccepted_stat-z_components.nii.gz    Z-normalized spatial component maps
-                                                 for accepted components.
     =========================================    =====================================
 
     See Also
     --------
     tedana.io.write_split_ts: Writes out time series files
     """
-    acc = comptable[comptable.classification == "accepted"].index.values
     write_split_ts(ts, mmix, mask, comptable, io_generator)
 
-    ts_B = get_coeffs(ts, mmix, mask)
-    fout = io_generator.save_file(ts_B, "ICA components img")
-    LGR.info("Writing full ICA coefficient feature set: {}".format(fout))
-
-    if len(acc) != 0:
-        fout = io_generator.save_file(ts_B[:, acc], "ICA accepted components img")
-        LGR.info("Writing denoised ICA coefficient feature set: {}".format(fout))
-
-        # write feature versions of components
-        feats = computefeats2(split_ts(ts, mmix, mask, comptable)[0], mmix[:, acc], mask)
-        feats = utils.unmask(feats, mask)
-        fname = io_generator.save_file(feats, "z-scored ICA accepted components img")
-        LGR.info("Writing Z-normalized spatial component maps: {}".format(fname))
+    component_weights = get_coeffs(ts, mmix, mask)
+    fout = io_generator.save_file(component_weights, "ICA components img")
+    LGR.info(f"Writing full ICA coefficient feature set: {fout}")
 
 
 def writeresults_echoes(catd, mmix, mask, comptable, io_generator):
-    """
-    Saves individually denoised echos to disk
+    """Save individually denoised echos to disk.
 
     Parameters
     ----------
@@ -524,23 +484,18 @@ def writeresults_echoes(catd, mmix, mask, comptable, io_generator):
     comptable : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
-    ref_img : :obj:`str` or img_like
+    io_generator : :obj:`tedana.io.OutputGenerator`
         Reference image to dictate how outputs are saved to disk
 
     Notes
     -----
     This function writes out several files:
 
-    =====================================    ===================================
+    =====================================    =============================================
     Filename                                 Content
-    =====================================    ===================================
-    echo-[echo]_desc-Accepted_bold.nii.gz    High-Kappa timeseries for echo
-                                             number ``echo``.
-    echo-[echo]_desc-Rejected_bold.nii.gz    Low-Kappa timeseries for echo
-                                             number ``echo``.
-    echo-[echo]_desc-Denoised_bold.nii.gz    Denoised timeseries for echo
-                                             number ``echo``.
-    =====================================    ===================================
+    =====================================    =============================================
+    echo-[echo]_desc-denoised_bold.nii.gz    Denoised timeseries for echo number ``echo``.
+    =====================================    =============================================
 
     See Also
     --------
