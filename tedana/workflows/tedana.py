@@ -771,7 +771,6 @@ def tedana_workflow(
         mask=mask_denoise,
         comptable=comptable,
         mmix=mmix,
-        n_vols=n_vols,
         io_generator=io_generator,
     )
 
