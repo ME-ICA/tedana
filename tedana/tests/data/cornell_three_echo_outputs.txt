@@ -1,8 +1,6 @@
 S0map.nii.gz
 T2starmap.nii.gz
 dataset_description.json
-desc-ICAAccepted_components.nii.gz
-desc-ICAAccepted_stat-z_components.nii.gz
 desc-ICA_components.nii.gz
 desc-ICA_decomposition.json
 desc-tedana_metrics.json
@@ -15,9 +13,7 @@ desc-PCA_metrics.tsv
 desc-PCA_mixing.tsv
 desc-PCA_stat-z_components.nii.gz
 desc-adaptiveGoodSignal_mask.nii.gz
-desc-optcomAccepted_bold.nii.gz
-desc-optcomDenoised_bold.nii.gz
-desc-optcomRejected_bold.nii.gz
+desc-denoised_bold.nii.gz
 desc-optcom_bold.nii.gz
 report.txt
 tedana_report.html
