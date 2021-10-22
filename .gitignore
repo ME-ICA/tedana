@@ -1,3 +1,4 @@
+.DS_Store
 docs/generated/
 .pytest_cache/
 
