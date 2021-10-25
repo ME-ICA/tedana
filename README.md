@@ -2,7 +2,8 @@
 
 [![Latest Version](https://img.shields.io/pypi/v/tedana.svg)](https://pypi.python.org/pypi/tedana/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tedana.svg)](https://pypi.python.org/pypi/tedana/)
-[![DOI](https://zenodo.org/badge/110845855.svg)](https://zenodo.org/badge/latestdoi/110845855)
+[![JOSS DOI](https://joss.theoj.org/papers/10.21105/joss.03669/status.svg)](https://doi.org/10.21105/joss.03669)
+[![Zenodo DOI](https://zenodo.org/badge/110845855.svg)](https://zenodo.org/badge/latestdoi/110845855)
 [![License](https://img.shields.io/badge/License-LGPL%202.0-blue.svg)](https://opensource.org/licenses/LGPL-2.1)
 [![CircleCI](https://circleci.com/gh/ME-ICA/tedana.svg?style=shield)](https://circleci.com/gh/ME-ICA/tedana)
 [![Documentation Status](https://readthedocs.org/projects/tedana/badge/?version=latest)](http://tedana.readthedocs.io/en/latest/?badge=latest)
@@ -22,6 +23,26 @@ An important distinction is that while the ME-ICA pipeline originally performed 
 ![http://tedana.readthedocs.io/](https://user-images.githubusercontent.com/7406227/40031156-57b7cbb8-57bc-11e8-8c51-5b29f2e86a48.png)
 
 More information and documentation can be found at https://tedana.readthedocs.io.
+
+## Citing `tedana`
+
+If you use `tedana`, please cite the following papers, as well as our [most recent Zenodo release](https://zenodo.org/badge/latestdoi/110845855):
+
+- DuPre, E. M., Salo, T., Ahmed, Z., Bandettini, P. A., Bottenhorn, K. L.,
+  Caballero-Gaudes, C., Dowdle, L. T., Gonzalez-Castillo, J., Heunis, S.,
+  Kundu, P., Laird, A. R., Markello, R., Markiewicz, C. J., Moia, S.,
+  Staden, I., Teves, J. B., Uruñuela, E., Vaziri-Pashkam, M.,
+  Whitaker, K., & Handwerker, D. A. (2021).
+  [TE-dependent analysis of multi-echo fMRI with tedana.](https://doi.org/10.21105/joss.03669)
+  _Journal of Open Source Software_, _6(66)_, 3669.
+  doi:10.21105/joss.03669.
+- Kundu, P., Inati, S. J., Evans, J. W., Luh, W. M., & Bandettini, P. A. (2011).
+  [Differentiating BOLD and non-BOLD signals in fMRI time series using multi-echo EPI.](https://doi.org/10.1016/j.neuroimage.2011.12.028)
+  _NeuroImage_, _60_, 1759-1770.
+- Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E., Inati, S. J.,
+  Saad, Z. S., Bandettini, P. A., & Bullmore, E. T. (2013).
+  [Integrated strategy for improving functional connectivity mapping using multiecho fMRI.](https://doi.org/10.1073/pnas.1301725110)
+  _Proceedings of the National Academy of Sciences_, _110_, 16187-16192.
 
 ## Installation
 
