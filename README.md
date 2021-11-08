@@ -162,6 +162,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/smoia"><img src="https://avatars3.githubusercontent.com/u/35300580?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Stefano Moia</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=smoia" title="Code">💻</a> <a href="https://github.com/ME-ICA/tedana/pulls?q=is%3Apr+reviewed-by%3Asmoia" title="Reviewed Pull Requests">👀</a> <a href="https://github.com/ME-ICA/tedana/commits?author=smoia" title="Documentation">📖</a></td>
     <td align="center"><a href="https://www.notzaki.com/"><img src="https://avatars1.githubusercontent.com/u/9019681?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Zaki A.</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/issues?q=author%3AnotZaki" title="Bug reports">🐛</a> <a href="https://github.com/ME-ICA/tedana/commits?author=notZaki" title="Code">💻</a> <a href="https://github.com/ME-ICA/tedana/commits?author=notZaki" title="Documentation">📖</a></td>
   </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/manfredg"><img src="https://avatars.githubusercontent.com/u/1173430?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Manfred G Kitzbichler</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=manfredg" title="Code">💻</a></td>
+  </tr>
 </table>
 
 <!-- markdownlint-restore -->
