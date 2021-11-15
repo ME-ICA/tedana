@@ -23,32 +23,33 @@ Let's start by loading the necessary data.
 
     # For this, you need the mixing matrix, the data you're denoising,
     # a brain mask, and an index of "bad" components
-    data_file = "preprocessed_data.nii.gz"
-    mixing_file = "mixing.tsv"
-    mask_file = "mask.nii.gz"
-    den_idx = np.array([0, 1, 2, 3, 4, 5])
+    data_file = "desc-optcom_bold.nii.gz"
+    mixing_file = "desc-ICA_mixing.tsv"
+    metrics_file = "desc-tedana_metrics.tsv"
+    mask_file = "desc-adaptiveGoodSignal_mask.nii.gz"
 
     # Load the mixing matrix
     mixing_df = pd.read_table(mixing_file, index_col="component")
-    mixing = mixing_df.data
+    mixing = mixing_df.data  # Shape is time-by-components
+
+    # Load the component table
+    metrics_df = pd.read_table(metrics_file)
+    rejected_components_idx = metrics_df.loc[
+        metrics_df["classification"] == "rejected"
+    ].index.values
+    kept_components_idx = metrics_df.loc[
+        metrics_df["classification"] != "rejected"
+    ].index.values
+
+    # Select "bad" components from the mixing matrix
+    rejected_components = mixing[:, rejected_components_idx]
+
+    # Binarize the adaptive mask
+    mask_img = image.math_img("img >= 1", img=mask_file)
 
     # Apply the mask to the data image to get a 2d array
     data = masking.apply_mask(data_file, mask_file)
-
-    # Transpose to voxels-by-time
-    data = data.T
-
-    # The first dimension should be time
-    assert data.shape[1] == mixing.shape[0]
-
-.. tab:: FSL
-
-  .. code-block:: bash
-
-    data_file=preprocessed_data.nii.gz
-    mixing_file=mixing.tsv
-    mask_file=mask.nii.gz
-    den_idx=(0, 1, 2, 3, 4, 5)
+    data = data.T  # Transpose to voxels-by-time
 
 .. tab:: AFNI
 
@@ -71,21 +72,15 @@ then retain the residuals for further analysis, you are doing aggressive denoisi
   .. code-block:: python
 
     # Fit GLM to bad components only
-    betas = np.linalg.lstsq(motion_components, data, rcond=None)[0]
+    betas = np.linalg.lstsq(rejected_components, data, rcond=None)[0]
 
     # Denoise the data with the bad components
-    pred_data = np.dot(motion_components, betas)
+    pred_data = np.dot(rejected_components, betas)
     data_denoised = data - pred_data
 
     # Save to file
     img_denoised = masking.unmask(data_denoised.T, mask_file)
-    img_denoised.to_filename("denoised.nii.gz")
-
-.. tab:: FSL
-
-  .. code-block:: bash
-
-    3dcalc --input stuff
+    img_denoised.to_filename("desc-aggrDenoised_bold.nii.gz")
 
 .. tab:: AFNI
 
@@ -108,18 +103,12 @@ you are doing nonaggressive denoising.
     betas = np.linalg.lstsq(mixing, data, rcond=None)[0]
 
     # Denoise the data using the betas from just the bad components
-    pred_data = np.dot(motion_components, betas[den_idx, :])
+    pred_data = np.dot(rejected_components, betas[den_idx, :])
     data_denoised = data - pred_data
 
     # Save to file
     img_denoised = masking.unmask(data_denoised.T, mask_file)
-    img_denoised.to_filename("denoised.nii.gz")
-
-.. tab:: FSL
-
-  .. code-block:: bash
-
-    3dcalc --input stuff
+    img_denoised.to_filename("desc-nonaggrDenoised_bold.nii.gz")
 
 .. tab:: AFNI
 
@@ -142,25 +131,17 @@ This way, you can regress the rejected components out of the data in the form of
 
   .. code-block:: python
 
-    good_idx = np.setdiff1d(np.arange(mixing.shape[1]), den_idx)
-
     # Separate the mixing matrix into "good" and "bad" components
-    bad_mixing = mixing[:, den_idx]
-    good_mixing = mixing[:, good_idx]
+    rejected_components = mixing[:, rejected_components_idx]
+    kept_components = mixing[:, kept_components_idx]
 
     # Regress the good components out of the bad ones
-    betas = np.linalg.lstsq(good_mixing, bad_mixing, rcond=None)[0]
-    pred_bad_mixing = np.dot(good_mixing, betas)
-    orth_motion_components = bad_mixing - pred_bad_mixing
+    betas = np.linalg.lstsq(kept_components, rejected_components, rcond=None)[0]
+    pred_rejected_components = np.dot(kept_components, betas)
+    orth_rejected_components = rejected_components - pred_rejected_components
 
     # Replace the old component time series in the mixing matrix with the new ones
-    mixing[:, den_idx] = orth_motion_components
-
-.. tab:: FSL
-
-  .. code-block:: bash
-
-    3dcalc --input stuff
+    mixing[:, rejected_components_idx] = orth_rejected_components
 
 .. tab:: AFNI
 
@@ -175,21 +156,15 @@ Once you have these "pure evil" components, you can perform aggressive denoising
   .. code-block:: python
 
     # Fit GLM to bad components only
-    betas = np.linalg.lstsq(orth_motion_components, data, rcond=None)[0]
+    betas = np.linalg.lstsq(orth_rejected_components, data, rcond=None)[0]
 
     # Denoise the data with the bad components
-    pred_data = np.dot(orth_motion_components, betas)
+    pred_data = np.dot(orth_rejected_components, betas)
     data_denoised = data - pred_data
 
     # Save to file
     img_denoised = masking.unmask(data_denoised.T, mask_file)
-    img_denoised.to_filename("denoised.nii.gz")
-
-.. tab:: FSL
-
-  .. code-block:: bash
-
-    3dcalc --input stuff
+    img_denoised.to_filename("desc-orthAggrDenoised_bold.nii.gz")
 
 .. tab:: AFNI
 
