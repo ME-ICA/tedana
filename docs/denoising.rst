@@ -61,7 +61,7 @@ Let's start by loading the necessary data.
     mask_file=desc-adaptiveGoodSignal_mask.nii.gz
 
 ********************
-Aggressive Denoising
+Aggressive denoising
 ********************
 
 If you regress just nuisance regressors (i.e., rejected components) out of your data,
@@ -90,7 +90,7 @@ then retain the residuals for further analysis, you are doing aggressive denoisi
     3dcalc --input stuff
 
 ************************
-Non-Aggressive Denoising
+Non-aggressive denoising
 ************************
 
 If you include both nuisance regressors and regressors of interest in your regression,
@@ -128,6 +128,10 @@ Unlike principal components analysis, the components from ICA are not orthogonal
 If you want to ensure that variance shared between the accepted and rejected components does not contaminate the denoised data,
 you may wish to orthogonalize the rejected components with respect to the accepted components.
 This way, you can regress the rejected components out of the data in the form of, what we call, "pure evil" components.
+
+.. note::
+  The ``tedana`` workflow's ``--tedort`` option performs this orthogonalization automatically and
+  writes out a separate mixing matrix file.
 
 .. tab:: Python
 
