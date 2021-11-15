@@ -19,7 +19,7 @@ Let's start by loading the necessary data.
 
     import numpy as np
     import pandas as pd
-    from nilearn import masking
+    from nilearn import image, masking
 
     # For this, you need the mixing matrix, the data you're denoising,
     # a brain mask, and an index of "bad" components
@@ -55,10 +55,10 @@ Let's start by loading the necessary data.
 
   .. code-block:: bash
 
-    data_file=preprocessed_data.nii.gz
-    mixing_file=mixing.tsv
-    mask_file=mask.nii.gz
-    den_idx=(0, 1, 2, 3, 4, 5)
+    data_file=desc-optcom_bold.nii.gz
+    mixing_file=desc-ICA_mixing.tsv
+    metrics_file=desc-tedana_metrics.tsv
+    mask_file=desc-adaptiveGoodSignal_mask.nii.gz
 
 ********************
 Aggressive Denoising
@@ -71,8 +71,9 @@ then retain the residuals for further analysis, you are doing aggressive denoisi
 
   .. code-block:: python
 
-    # Fit GLM to bad components only
-    betas = np.linalg.lstsq(rejected_components, data, rcond=None)[0]
+    # Fit GLM to bad components only (after adding a constant term)
+    regressors = np.hstack((rejected_components, np.ones(rejected_components.shape[0], 1)))
+    betas = np.linalg.lstsq(regressors, data, rcond=None)[0][:-1]
 
     # Denoise the data with the bad components
     pred_data = np.dot(rejected_components, betas)
@@ -99,8 +100,9 @@ you are doing nonaggressive denoising.
 
   .. code-block:: python
 
-    # Fit GLM to all components
-    betas = np.linalg.lstsq(mixing, data, rcond=None)[0]
+    # Fit GLM to all components (after adding a constant term)
+    regressors = np.hstack((mixing, np.ones(mixing.shape[0], 1)))
+    betas = np.linalg.lstsq(regressors, data, rcond=None)[0][:-1]
 
     # Denoise the data using the betas from just the bad components
     pred_data = np.dot(rejected_components, betas[den_idx, :])
@@ -155,8 +157,11 @@ Once you have these "pure evil" components, you can perform aggressive denoising
 
   .. code-block:: python
 
-    # Fit GLM to bad components only
-    betas = np.linalg.lstsq(orth_rejected_components, data, rcond=None)[0]
+    # Fit GLM to bad components only (after adding a constant term)
+    regressors = np.hstack(
+        (orth_rejected_components, np.ones(orth_rejected_components.shape[0], 1))
+    )
+    betas = np.linalg.lstsq(orth_rejected_components, data, rcond=None)[0][:-1]
 
     # Denoise the data with the bad components
     pred_data = np.dot(orth_rejected_components, betas)
