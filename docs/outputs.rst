@@ -32,6 +32,8 @@ desc-denoised_bold.nii.gz                           Denoised optimally combined 
 desc-adaptiveGoodSignal_mask.nii.gz                 Integer-valued mask used in the workflow, where
                                                     each voxel's value corresponds to the number of good
                                                     echoes to be used for T2\*/S0 estimation.
+
+                                                    **Original name**: adaptive_mask.nii.gz
 desc-PCA_mixing.tsv                                 Mixing matrix (component time series) from PCA
                                                     decomposition in a tab-delimited file. Each column is
                                                     a different component, and the column name is the
