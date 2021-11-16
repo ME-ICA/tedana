@@ -98,7 +98,7 @@ desc-optcomPCAReduced_bold.nii.gz                               Optimally combin
 echo-[echo]_desc-denoised_bold.nii.gz                           Denoised time series for echo number ``echo``
 ==============================================================  =====================================================
 
-If ``gscontrol`` includes 'gsr':
+If ``gscontrol`` includes 'gsr' (see :func:`tedana.gscontrol.gscontrol_raw`):
 
 ================================================    =====================================================
 Filename                                            Content
@@ -112,7 +112,7 @@ desc-optcomNoGlobalSignal_bold.nii.gz               Optimally combined time seri
                                                     removed.
 ================================================    =====================================================
 
-If ``gscontrol`` includes 'mir':
+If ``gscontrol`` includes 'mir' (see :func:`tedana.gscontrol.minimum_image_regression`):
 
 ================================================    =====================================================
 Filename                                            Content
