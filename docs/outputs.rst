@@ -9,9 +9,9 @@ Outputs of tedana
 Outputs of the tedana workflow
 ******************************
 
-================================================    =====================================================
+================================================    =======================================================================
 Filename                                            Content
-================================================    =====================================================
+================================================    =======================================================================
 dataset_description.json                            Top-level metadata for the workflow.
 T2starmap.nii.gz                                    Full estimated T2* 3D map.
                                                     Values are in seconds.
@@ -21,23 +21,35 @@ T2starmap.nii.gz                                    Full estimated T2* 3D map.
                                                     the T2* estimate from the first two echoes, while the
                                                     limited map has a NaN.
 
-                                                    **Original name**: t2svG.nii.gz
+                                                    **meica.py - v.0.0.10** (``orig``): t2svG.nii.gz
 
-                                                    **v0.0.11 - v0.0.11**: desc-full_T2starmap.nii.gz
+                                                    **v0.0.11 - v0.0.11** (``bidsv1.5.0``): desc-full_T2starmap.nii.gz
+
+                                                    **v0.0.12 -** (``bidsv1.6.0``): T2starmap.nii.gz
 S0map.nii.gz                                        Full S0 3D map.
                                                     The difference between the limited and full maps
                                                     is that, for voxels affected by dropout where
                                                     only one echo contains good data, the full map uses
                                                     the S0 estimate from the first two echoes, while the
                                                     limited map has a NaN.
+
+                                                    **meica.py - v.0.0.10** (``orig``): s0vG.nii.gz
+
+                                                    **v0.0.11 - v0.0.11** (``bidsv1.5.0``): desc-full_S0map.nii.gz
+
+                                                    **v0.0.12 -** (``bidsv1.6.0``): S0map.nii.gz
 desc-optcom_bold.nii.gz                             Optimally combined time series.
+
+                                                    **meica.py - v.0.0.10** (``orig``): ts_OC.nii.gz
+
+                                                    **v0.0.11 -** (``bidsv1.5.0``, ``bidsv1.6.0``): desc-optcom_bold.nii.gz
 desc-denoised_bold.nii.gz                           Denoised optimally combined time series. Recommended
                                                     dataset for analysis.
 desc-adaptiveGoodSignal_mask.nii.gz                 Integer-valued mask used in the workflow, where
                                                     each voxel's value corresponds to the number of good
                                                     echoes to be used for T2\*/S0 estimation.
 
-                                                    **Original name**: adaptive_mask.nii.gz
+                                                    **meica.py - v.0.0.10**: adaptive_mask.nii.gz
 desc-PCA_mixing.tsv                                 Mixing matrix (component time series) from PCA
                                                     decomposition in a tab-delimited file. Each column is
                                                     a different component, and the column name is the
