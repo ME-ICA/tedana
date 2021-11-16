@@ -20,6 +20,10 @@ T2starmap.nii.gz                                    Full estimated T2* 3D map.
                                                     only one echo contains good data, the full map uses
                                                     the T2* estimate from the first two echoes, while the
                                                     limited map has a NaN.
+
+                                                    **Original name**: t2svG.nii.gz
+
+                                                    **Before version 0.0.11**: desc-full_T2starmap.nii.gz
 S0map.nii.gz                                        Full S0 3D map.
                                                     The difference between the limited and full maps
                                                     is that, for voxels affected by dropout where

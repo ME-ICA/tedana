@@ -27,12 +27,16 @@ RefLGR = logging.getLogger("REFERENCES")
 class OutputGenerator:
     """A class for managing tedana outputs.
 
+    .. versionchanged:: 0.0.12
+
+        * Default naming convention changed from bidsv1.5.0 to bidsv1.6.0.
+
     Parameters
     ----------
     reference_img : img_like
         The reference image which defines affine, shape, etc. of output images.
-    convention : {"bidsv1.5.0", "orig", or other str}, optional
-        Default is "bidsv1.5.0". Must correspond to a key in ``config``.
+    convention : {"bidsv1.6.0", "bidsv1.5.0", "orig", :obj:`str`}, optional
+        Default is "bidsv1.6.0". Must correspond to a key in ``config``.
     out_dir : str, optional
         Output directory. Default is current working directory (".").
     prefix : None or str, optional
@@ -65,7 +69,7 @@ class OutputGenerator:
     def __init__(
         self,
         reference_img,
-        convention="bidsv1.5.0",
+        convention="bidsv1.6.0",
         out_dir=".",
         prefix="",
         config="auto",
@@ -78,7 +82,7 @@ class OutputGenerator:
 
         if convention == "bids":
             # modify to update default bids convention number
-            convention = "bidsv1.5.0"
+            convention = "bidsv1.6.0"
 
         config = load_json(config)
 

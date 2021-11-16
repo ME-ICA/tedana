@@ -107,8 +107,15 @@ def _get_parser():
         "--convention",
         dest="convention",
         action="store",
-        choices=["orig", "bids"],
-        help=("Filenaming convention. bids will use the latest BIDS derivatives version."),
+        choices=["bids", "bidsv1.5.0", "orig"],
+        help=(
+            "Filenaming convention. "
+            "'bids' will use the latest BIDS derivatives version. "
+            "'bidsv1.5.0' will use the BIDS derivatives naming convention applied before tedana "
+            "version 0.0.12. "
+            "'orig' will use the non-BIDS-compatible naming convention originally used in the "
+            "meica.py."
+        ),
         default="bids",
     )
     optional.add_argument(
@@ -358,6 +365,11 @@ def tedana_workflow(
         spatially aligned with `data`. If an explicit mask is not provided,
         then Nilearn's compute_epi_mask function will be used to derive a mask
         from the first echo's data.
+    convention : {"bids", "bidsv1.5.0", "orig"}, optional
+        Filenaming convention. 'bids' will use the latest BIDS derivatives version.
+        'bidsv1.5.0' will use the BIDS derivatives naming convention applied before tedana
+        version 0.0.12.
+        'orig' will use the non-BIDS-compatible naming convention originally used in the meica.py.
     fittype : {'loglin', 'curvefit'}, optional
         Monoexponential fitting method. 'loglin' uses the the default linear
         fit to the log of the data. 'curvefit' uses a monoexponential fit to
