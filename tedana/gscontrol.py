@@ -46,6 +46,12 @@ def gscontrol_raw(catd, optcom, n_echos, io_generator, dtrank=4):
         Input `catd` with global signal removed from time series
     dm_optcom : (S x T) array_like
         Input `optcom` with global signal removed from time series
+
+    Warning
+    -------
+    This GSR approach is rather dissimilar to the more common approach of extracting global signal
+    using a gray matter or whole brain mask, and regressing the mean of that signal from the rest
+    of the brain.
     """
     LGR.info("Applying amplitude-based T1 equilibration correction")
     RepLGR.info(
