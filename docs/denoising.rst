@@ -40,22 +40,14 @@ Let's start by loading the necessary data.
 
     # Load the component table
     metrics_df = pd.read_table(metrics_file)
-    rejected_components_idx = metrics_df.loc[
-        metrics_df["classification"] == "rejected"
-    ].index.values
-    kept_components_idx = metrics_df.loc[
-        metrics_df["classification"] != "rejected"
-    ].index.values
+    rejected_components_idx = metrics_df.loc[metrics_df["classification"] == "rejected"].index.values
+    kept_components_idx = metrics_df.loc[metrics_df["classification"] != "rejected"].index.values
 
     # Select "bad" components from the mixing matrix
     rejected_components = mixing[:, rejected_components_idx]
 
     # Binarize the adaptive mask
     mask_img = image.math_img("img >= 1", img=mask_file)
-
-
-
-
 
 .. tab:: Python with fMRIPrep confounds
 
@@ -79,12 +71,8 @@ Let's start by loading the necessary data.
 
     # Load the component table
     metrics_df = pd.read_table(metrics_file)
-    rejected_components_idx = metrics_df.loc[
-        metrics_df["classification"] == "rejected"
-    ].index.values
-    kept_components_idx = metrics_df.loc[
-        metrics_df["classification"] != "rejected"
-    ].index.values
+    rejected_components_idx = metrics_df.loc[metrics_df["classification"] == "rejected"].index.values
+    kept_components_idx = metrics_df.loc[metrics_df["classification"] != "rejected"].index.values
 
     # Load the confounds file
     confounds_df = pd.read_table(confounds_file)
@@ -168,9 +156,9 @@ then retain the residuals for further analysis, you are doing aggressive denoisi
 
     3dcalc --input stuff
 
-*******************************************************************************************************************************
-Remove noise-correlated fluctuations that aren't correlated with fluctuations in accepted components (Non-aggressive denoising)
-*******************************************************************************************************************************
+*********************************************************************************************************************************
+Remove noise-correlated fluctuations that aren't correlated with fluctuations in accepted components ("non-aggressive" denoising)
+*********************************************************************************************************************************
 
 If you include both nuisance regressors and regressors of interest in your regression,
 you are doing nonaggressive denoising.
@@ -232,9 +220,9 @@ you are doing nonaggressive denoising.
     3dcalc --input stuff
 
 
-********************************************************************************
-Component orthogonalization
-********************************************************************************
+************************************************************************************
+Orthogonalize the noise components w.r.t. the accepted components prior to denoising
+************************************************************************************
 
 Independent component analysis decomposes the data into _independent_ components, obviously.
 Unlike principal components analysis, the components from ICA are not orthogonal, so they may explain shared variance.
