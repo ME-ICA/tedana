@@ -4,12 +4,18 @@ Denoising Data with Components
 
 Decomposition-based denoising methods like ``tedana`` will produce two important outputs: component time series and component classifications.
 The component classifications will indicate whether each componet is "good" (accepted) or "bad" (rejected).
-To remove noise from your data, you can regress the "bad" components out of it, though there are multiple methods to accomplish this.
+To remove noise from your data, you can regress the "bad" components out of it, though there are multiple ways to accomplish this.
 
-``tedana`` will produce **non-aggressively denoised** data automatically.
-However, users may wish to incorporate other regressors in their denoising step,
-in which case further denoising the ``tedana``-denoised data is not recommended.
-Alternatively, users may wish to employ a different denoising approach (e.g., **aggressive denoising**).
+By default, ``tedana`` will perform a regression including both "good" and "bad" components, and then will selectively remove the "bad" components from the data.
+This is colloquially known as "non-aggressive denoising".
+
+However, users may wish to apply a different type of denoising, or to incorporate other regressors into their denoising step, and we will discuss these alternatives here.
+
+This pages has three purposes:
+
+1. Describe different approaches to denoising using ICA components.
+2. Provide sample code using common code to perform each type of denoising.
+3. Describe how to incorporate external regressors (e.g., motion parameters) into the denoising step.
 
 Let's start by loading the necessary data.
 
@@ -46,10 +52,6 @@ Let's start by loading the necessary data.
 
     # Binarize the adaptive mask
     mask_img = image.math_img("img >= 1", img=mask_file)
-
-    # Apply the mask to the data image to get a 2d array
-    data = masking.apply_mask(data_file, mask_img)
-    data = data.T  # Transpose to voxels-by-time
 
 .. tab:: Python with fMRIPrep confounds
 
@@ -89,10 +91,6 @@ Let's start by loading the necessary data.
     # Select "bad" components from the mixing matrix
     rejected_components = mixing[:, rejected_components_idx]
 
-    # Apply the mask to the data image to get a 2d array
-    data = masking.apply_mask(data_file, mask_file)
-    data = data.T  # Transpose to voxels-by-time
-
 .. tab:: AFNI
 
   .. code-block:: bash
@@ -113,33 +111,52 @@ then retain the residuals for further analysis, you are doing aggressive denoisi
 
   .. code-block:: python
 
-    # Fit GLM to bad components only (after adding a constant term)
-    regressors = np.hstack((rejected_components, np.ones(rejected_components.shape[0], 1)))
-    betas = np.linalg.lstsq(regressors, data, rcond=None)[0][:-1]
+    from nilearn.input_data import NiftiMasker
 
-    # Denoise the data with the bad components
-    pred_data = np.dot(rejected_components, betas)
-    data_denoised = data - pred_data
+    masker = NiftiMasker(
+        mask_img=mask_img,
+        standardize_confounds=True,
+        standardize=False,
+        smoothing_fwhm=None,
+        detrend=False,
+        low_pass=False,
+        high_pass=False,
+        t_r=None,  # This shouldn't be necessary since we aren't bandpass filtering
+        reports=False,
+    )
+
+    # Denoise the data by fitting and transforming the data file using the masker
+    denoised_img = masker.fit_transform(data_file, confounds=rejected_components)
 
     # Save to file
-    img_denoised = masking.unmask(data_denoised.T, mask_file)
     img_denoised.to_filename("desc-aggrDenoised_bold.nii.gz")
 
 .. tab:: Python with fMRIPrep confounds
 
   .. code-block:: python
 
-    # Fit GLM to bad components and nuisance regressors only (after adding a constant term)
-    regressors = np.hstack((rejected_components, confounds, np.ones(rejected_components.shape[0], 1)))
-    betas = np.linalg.lstsq(regressors, data, rcond=None)[0][:-1]
+    from nilearn.input_data import NiftiMasker
 
-    # Denoise the data with the bad components and other nuisance regressors
-    pred_data = np.dot(rejected_components, betas)
-    data_denoised = data - pred_data
+    # Combine the rejected components and the fMRIPrep confounds into a single array
+    regressors = np.hstack((rejected_components, confounds))
+
+    masker = NiftiMasker(
+        mask_img=mask_file,
+        standardize_confounds=True,
+        standardize=False,
+        smoothing_fwhm=None,
+        detrend=False,
+        low_pass=False,
+        high_pass=False,
+        t_r=None,  # This shouldn't be necessary since we aren't bandpass filtering
+        reports=False,
+    )
+
+    # Denoise the data by fitting and transforming the data file using the masker
+    denoised_img = masker.fit_transform(data_file, confounds=regressors)
 
     # Save to file
-    img_denoised = masking.unmask(data_denoised.T, mask_file)
-    img_denoised.to_filename("desc-aggrDenoised_bold.nii.gz")
+    denoised_img.to_filename("desc-aggrDenoised_bold.nii.gz")
 
 .. tab:: AFNI
 
@@ -156,7 +173,14 @@ you are doing nonaggressive denoising.
 
 .. tab:: Python
 
+  Unfortunately, "non-aggressive" denoising is difficult to do with nilearn's Masker
+  objects, so we will end up using numpy directly for this approach.
+
   .. code-block:: python
+
+    # Apply the mask to the data image to get a 2d array
+    data = masking.apply_mask(data_file, mask_img)
+    data = data.T  # Transpose to voxels-by-time
 
     # Fit GLM to all components (after adding a constant term)
     regressors = np.hstack((mixing, np.ones(mixing.shape[0], 1)))
@@ -172,7 +196,14 @@ you are doing nonaggressive denoising.
 
 .. tab:: Python with fMRIPrep confounds
 
+  Unfortunately, "non-aggressive" denoising is difficult to do with nilearn's Masker
+  objects, so we will end up using numpy directly for this approach.
+
   .. code-block:: python
+
+    # Apply the mask to the data image to get a 2d array
+    data = masking.apply_mask(data_file, mask_file)
+    data = data.T  # Transpose to voxels-by-time
 
     # Fit GLM to all components and nuisance regressors (after adding a constant term)
     regressors = np.hstack((confounds, mixing, np.ones(mixing.shape[0], 1)))
@@ -210,6 +241,8 @@ This way, you can regress the rejected components out of the data in the form of
 .. note::
   The ``tedana`` workflow's ``--tedort`` option performs this orthogonalization automatically and
   writes out a separate mixing matrix file.
+  However, this orthogonalization only takes the components into account,
+  so you will need to separately perform the orthogonalization if you have other regressors you want to account for.
 
 .. tab:: Python
 
@@ -224,8 +257,24 @@ This way, you can regress the rejected components out of the data in the form of
     pred_rejected_components = np.dot(kept_components, betas)
     orth_rejected_components = rejected_components - pred_rejected_components
 
-    # Replace the old component time series in the mixing matrix with the new ones
-    mixing[:, rejected_components_idx] = orth_rejected_components
+    # Once you have these "pure evil" components, you can perform aggressive denoising on the data
+    masker = NiftiMasker(
+        mask_img=mask_img,
+        standardize_confounds=True,
+        standardize=False,
+        smoothing_fwhm=None,
+        detrend=False,
+        low_pass=False,
+        high_pass=False,
+        t_r=None,  # This shouldn't be necessary since we aren't bandpass filtering
+        reports=False,
+    )
+
+    # Denoise the data by fitting and transforming the data file using the masker
+    denoised_img = masker.fit_transform(data_file, confounds=orth_rejected_components)
+
+    # Save to file
+    denoised_img.to_filename("desc-orthAggrDenoised_bold.nii.gz")
 
 .. tab:: Python with fMRIPrep confounds
 
@@ -241,53 +290,24 @@ This way, you can regress the rejected components out of the data in the form of
     pred_bad_timeseries = np.dot(kept_components, betas)
     orth_bad_timeseries = bad_timeseries - pred_bad_timeseries
 
-    # Replace the old component time series in the mixing matrix with the new ones
-    mixing[:, rejected_components_idx] = orth_bad_timeseries[:rejected_components.shape[1]]
-    orth_confounds = orth_bad_timeseries[rejected_components.shape[1]:]
-
-.. tab:: AFNI
-
-  .. code-block:: bash
-
-    3dcalc --input stuff
-
-Once you have these "pure evil" components, you can perform aggressive denoising on the data.
-
-.. tab:: Python
-
-  .. code-block:: python
-
-    # Fit GLM to bad components only (after adding a constant term)
-    regressors = np.hstack(
-        (orth_rejected_components, np.ones(orth_rejected_components.shape[0], 1))
+    # Once you have these "pure evil" components, you can perform aggressive denoising on the data
+    masker = NiftiMasker(
+        mask_img=mask_file,
+        standardize_confounds=True,
+        standardize=False,
+        smoothing_fwhm=None,
+        detrend=False,
+        low_pass=False,
+        high_pass=False,
+        t_r=None,  # This shouldn't be necessary since we aren't bandpass filtering
+        reports=False,
     )
-    betas = np.linalg.lstsq(orth_rejected_components, data, rcond=None)[0][:-1]
 
-    # Denoise the data with the bad components
-    pred_data = np.dot(orth_rejected_components, betas)
-    data_denoised = data - pred_data
+    # Denoise the data by fitting and transforming the data file using the masker
+    denoised_img = masker.fit_transform(data_file, confounds=orth_bad_timeseries)
 
     # Save to file
-    img_denoised = masking.unmask(data_denoised.T, mask_file)
-    img_denoised.to_filename("desc-orthAggrDenoised_bold.nii.gz")
-
-.. tab:: Python with fMRIPrep confounds
-
-  .. code-block:: python
-
-    # Fit GLM to bad components only (after adding a constant term)
-    regressors = np.hstack(
-        (orth_bad_timeseries, np.ones(orth_bad_timeseries.shape[0], 1))
-    )
-    betas = np.linalg.lstsq(regressors, data, rcond=None)[0][:-1]
-
-    # Denoise the data with the bad components
-    pred_data = np.dot(regressors, betas)
-    data_denoised = data - pred_data
-
-    # Save to file
-    img_denoised = masking.unmask(data_denoised.T, mask_file)
-    img_denoised.to_filename("desc-orthAggrDenoised_bold.nii.gz")
+    denoised_img.to_filename("desc-orthAggrDenoised_bold.nii.gz")
 
 .. tab:: AFNI
 
