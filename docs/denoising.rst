@@ -53,6 +53,10 @@ Let's start by loading the necessary data.
     # Binarize the adaptive mask
     mask_img = image.math_img("img >= 1", img=mask_file)
 
+
+
+
+
 .. tab:: Python with fMRIPrep confounds
 
   .. code-block:: python
