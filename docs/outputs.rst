@@ -9,10 +9,20 @@ Outputs of tedana
 Outputs of the tedana workflow
 ******************************
 
+In the following tables, we describe each file that the ``tedana`` workflow will generate,
+depending on the settings used.
+The base filename does not include a user-provided prefix or output directory.
+
+.. important::
+  Some of the filenames in the following tables may have changed across tedana versions.
+  In the content column, we have annotated each file with any past filenames and the tedana versions which generated them.
+
 ================================================    =======================================================================
 Filename                                            Content
 ================================================    =======================================================================
 dataset_description.json                            Top-level metadata for the workflow.
+
+                                                    Added in **v0.0.11**
 T2starmap.nii.gz                                    Full estimated T2* 3D map.
                                                     Values are in seconds.
                                                     The difference between the limited and full maps
