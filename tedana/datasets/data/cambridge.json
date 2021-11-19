@@ -1,0 +1,4842 @@
+{
+    "sub-04570/func/sub-04570_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "6033160934d30403d1e39b74"
+    },
+    "sub-04570/func/sub-04570_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086502a7166fa00eae90cee"
+    },
+    "sub-04570/func/sub-04570_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033160f34d30403d0e39abb"
+    },
+    "sub-04570/func/sub-04570_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865027a9746601072fb561"
+    },
+    "sub-04570/func/sub-04570_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603316164ad52e03b06e395d"
+    },
+    "sub-04570/func/sub-04570_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865028f1616001039d013a"
+    },
+    "sub-04570/func/sub-04570_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033161f88ea1a03aeee978a"
+    },
+    "sub-04570/func/sub-04570_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086502aa9746601032f9409"
+    },
+    "sub-04570/func/sub-04570_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033162b34d30403d1e39c3f"
+    },
+    "sub-04710/func/sub-04710_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603316eb34d30403d1e3a042"
+    },
+    "sub-04710/func/sub-04710_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650297166fa00f4e8d038"
+    },
+    "sub-04710/func/sub-04710_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603316f34ad52e03c86e1eb7"
+    },
+    "sub-04710/func/sub-04710_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086502b7166fa00f4e8d04a"
+    },
+    "sub-04710/func/sub-04710_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603316fc4ad52e03c36e2422"
+    },
+    "sub-04710/func/sub-04710_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086502c7166fa00ebe94a42"
+    },
+    "sub-04710/func/sub-04710_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033170334d30403d1e3a0e0"
+    },
+    "sub-04710/func/sub-04710_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086502cf1616000ff9ce0c8"
+    },
+    "sub-04710/func/sub-04710_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033170934d30403d0e39e7e"
+    },
+    "sub-04800/func/sub-04800_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603317bf88ea1a03aeee9ba9"
+    },
+    "sub-04800/func/sub-04800_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865030a9746600f92fd488"
+    },
+    "sub-04800/func/sub-04800_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603317c74ad52e03c86e22b5"
+    },
+    "sub-04800/func/sub-04800_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650377166fa00ebe94a75"
+    },
+    "sub-04800/func/sub-04800_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603317d134d30403d1e3a4ba"
+    },
+    "sub-04800/func/sub-04800_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865037a9746601032f9438"
+    },
+    "sub-04800/func/sub-04800_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603317df88ea1a03b1ee94ea"
+    },
+    "sub-04800/func/sub-04800_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865037a9746601072fb5b9"
+    },
+    "sub-04800/func/sub-04800_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603317e788ea1a03b2ee982d"
+    },
+    "sub-11310/func/sub-11310_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603318c14ad52e03ba6e1dcb"
+    },
+    "sub-11310/func/sub-11310_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650377166fa00f4e8d099"
+    },
+    "sub-11310/func/sub-11310_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603318da34d30403d1e3a9d0"
+    },
+    "sub-11310/func/sub-11310_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865033f1616000ff9ce0db"
+    },
+    "sub-11310/func/sub-11310_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603318f234d30403cde3a93c"
+    },
+    "sub-11310/func/sub-11310_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865037a9746601032f943c"
+    },
+    "sub-11310/func/sub-11310_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033190988ea1a03b1ee9956"
+    },
+    "sub-11310/func/sub-11310_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086503c7166fa00ebe94a80"
+    },
+    "sub-11310/func/sub-11310_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033191488ea1a03b1ee9987"
+    },
+    "sub-12599/func/sub-12599_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603319fb4ad52e03c36e2970"
+    },
+    "sub-12599/func/sub-12599_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086503fa9746600f92fd49c"
+    },
+    "sub-12599/func/sub-12599_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331a144ad52e03c86e2ebe"
+    },
+    "sub-12599/func/sub-12599_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086503d7166fa00e4e91638"
+    },
+    "sub-12599/func/sub-12599_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331a2c88ea1a03b1ee9d16"
+    },
+    "sub-12599/func/sub-12599_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086503ff1616001039d01b2"
+    },
+    "sub-12599/func/sub-12599_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331a3334d30403d0e3a965"
+    },
+    "sub-12599/func/sub-12599_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086503ca9746601032f9454"
+    },
+    "sub-12599/func/sub-12599_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331a3b88ea1a03b2eea43d"
+    },
+    "sub-16053/func/sub-16053_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60331b144ad52e03cc6e18bc"
+    },
+    "sub-16053/func/sub-16053_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865043a9746601072fb600"
+    },
+    "sub-16053/func/sub-16053_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331b1f88ea1a03b1ee9ff3"
+    },
+    "sub-16053/func/sub-16053_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865040f1616001039d01bc"
+    },
+    "sub-16053/func/sub-16053_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331b284ad52e03cb6e1894"
+    },
+    "sub-16053/func/sub-16053_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865043a9746600f92fd4a2"
+    },
+    "sub-16053/func/sub-16053_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331b2f88ea1a03b8ee8e19"
+    },
+    "sub-16053/func/sub-16053_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865043f1616001039d01c9"
+    },
+    "sub-16053/func/sub-16053_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331b364ad52e03c76e2884"
+    },
+    "sub-17821/func/sub-17821_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60331bd888ea1a03b2eea939"
+    },
+    "sub-17821/func/sub-17821_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650467166fa00f4e8d0fa"
+    },
+    "sub-17821/func/sub-17821_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331bdf4ad52e03cb6e1aea"
+    },
+    "sub-17821/func/sub-17821_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865048a9746601022f70e7"
+    },
+    "sub-17821/func/sub-17821_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331be84ad52e03cc6e1cf3"
+    },
+    "sub-17821/func/sub-17821_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865048a9746601072fb61c"
+    },
+    "sub-17821/func/sub-17821_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331bf388ea1a03b2eea970"
+    },
+    "sub-17821/func/sub-17821_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865047f1616000ff9ce122"
+    },
+    "sub-17821/func/sub-17821_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331bfb34d30403c7e3a7a5"
+    },
+    "sub-19284/func/sub-19284_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60331ca188ea1a03b8ee9532"
+    },
+    "sub-19284/func/sub-19284_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086504aa9746601032f948b"
+    },
+    "sub-19284/func/sub-19284_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331caa34d30403cde3aff7"
+    },
+    "sub-19284/func/sub-19284_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086504d7166fa00e1e8d5e1"
+    },
+    "sub-19284/func/sub-19284_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331cb088ea1a03b8ee9581"
+    },
+    "sub-19284/func/sub-19284_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086504d7166fa00ebe94ac7"
+    },
+    "sub-19284/func/sub-19284_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331cb834d30403cce3a649"
+    },
+    "sub-19284/func/sub-19284_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086504ca9746601072fb63a"
+    },
+    "sub-19284/func/sub-19284_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331cc24ad52e03c86e35cd"
+    },
+    "sub-19774/func/sub-19774_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60331d894ad52e03d16e18fd"
+    },
+    "sub-19774/func/sub-19774_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086504ca9746601022f70ee"
+    },
+    "sub-19774/func/sub-19774_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331d9234d30403dae39994"
+    },
+    "sub-19774/func/sub-19774_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086504ea9746601072fb645"
+    },
+    "sub-19774/func/sub-19774_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331d9b88ea1a03bcee8d3c"
+    },
+    "sub-19774/func/sub-19774_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865053f1616001039d020f"
+    },
+    "sub-19774/func/sub-19774_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331da488ea1a03bdee8e10"
+    },
+    "sub-19774/func/sub-19774_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086504ff1616000fe9cbf6d"
+    },
+    "sub-19774/func/sub-19774_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331dac4ad52e03cc6e2400"
+    },
+    "sub-19943/func/sub-19943_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60331e6788ea1a03bdee91c2"
+    },
+    "sub-19943/func/sub-19943_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650537166fa00f4e8d153"
+    },
+    "sub-19943/func/sub-19943_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331e6f4ad52e03d06e1b2d"
+    },
+    "sub-19943/func/sub-19943_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865051a9746600f62f90ef"
+    },
+    "sub-19943/func/sub-19943_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331e7934d30403d0e3b4e0"
+    },
+    "sub-19943/func/sub-19943_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865051a9746600f92fd4b0"
+    },
+    "sub-19943/func/sub-19943_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331e8188ea1a03bcee9085"
+    },
+    "sub-19943/func/sub-19943_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865054a9746601032f94ae"
+    },
+    "sub-19943/func/sub-19943_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331e884ad52e03d06e1b7f"
+    },
+    "sub-19979/func/sub-19979_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60331f2934d30403dae39f1e"
+    },
+    "sub-19979/func/sub-19979_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865055f1616000ff9ce153"
+    },
+    "sub-19979/func/sub-19979_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331f2f4ad52e03d06e1dcd"
+    },
+    "sub-19979/func/sub-19979_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865055a9746601072fb666"
+    },
+    "sub-19979/func/sub-19979_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331f3734d30403dbe3a25d"
+    },
+    "sub-19979/func/sub-19979_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865057a9746601032f94bb"
+    },
+    "sub-19979/func/sub-19979_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331f3e88ea1a03bdee95d5"
+    },
+    "sub-19979/func/sub-19979_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650597166fa00f4e8d180"
+    },
+    "sub-19979/func/sub-19979_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60331f464ad52e03d16e21d6"
+    },
+    "sub-20094/func/sub-20094_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60331ff94ad52e03c76e2c07"
+    },
+    "sub-20094/func/sub-20094_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650587166fa00f4e8d178"
+    },
+    "sub-20094/func/sub-20094_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603320034ad52e03cc6e28ba"
+    },
+    "sub-20094/func/sub-20094_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086505df1616001039d0247"
+    },
+    "sub-20094/func/sub-20094_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033200b88ea1a03bdee9997"
+    },
+    "sub-20094/func/sub-20094_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086505ef1616000ff9ce174"
+    },
+    "sub-20094/func/sub-20094_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033201134d30403d7e39db1"
+    },
+    "sub-20094/func/sub-20094_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086505aa9746601072fb679"
+    },
+    "sub-20094/func/sub-20094_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603320184ad52e03c86e38ef"
+    },
+    "sub-20407/func/sub-20407_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603320d034d30403c4e39fa3"
+    },
+    "sub-20407/func/sub-20407_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086505ca9746600f62f90f6"
+    },
+    "sub-20407/func/sub-20407_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603320dd88ea1a03b7ee9a41"
+    },
+    "sub-20407/func/sub-20407_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865061f1616001039d0264"
+    },
+    "sub-20407/func/sub-20407_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603320e788ea1a03b2eeafc4"
+    },
+    "sub-20407/func/sub-20407_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865061f1616000fe9cbf8f"
+    },
+    "sub-20407/func/sub-20407_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603320f088ea1a03bcee98aa"
+    },
+    "sub-20407/func/sub-20407_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650607166fa00ebe94afe"
+    },
+    "sub-20407/func/sub-20407_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603320f988ea1a03b8eea10d"
+    },
+    "sub-20408/func/sub-20408_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603321a74ad52e03d06e2619"
+    },
+    "sub-20408/func/sub-20408_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086505ff1616001039d0253"
+    },
+    "sub-20408/func/sub-20408_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603321ae34d30403dbe3af20"
+    },
+    "sub-20408/func/sub-20408_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865065f1616000fe9cbf97"
+    },
+    "sub-20408/func/sub-20408_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603321b734d30403dae3a7c9"
+    },
+    "sub-20408/func/sub-20408_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865064f1616000ff9ce18f"
+    },
+    "sub-20408/func/sub-20408_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603321bf34d30403d6e39d99"
+    },
+    "sub-20408/func/sub-20408_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865065f1616001039d027e"
+    },
+    "sub-20408/func/sub-20408_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603321c74ad52e03c86e3a14"
+    },
+    "sub-20409/func/sub-20409_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "6033226534d30403d1e3c310"
+    },
+    "sub-20409/func/sub-20409_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865065a9746601032f94e4"
+    },
+    "sub-20409/func/sub-20409_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033226e88ea1a03b8eea47e"
+    },
+    "sub-20409/func/sub-20409_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865068a9746601032f94ef"
+    },
+    "sub-20409/func/sub-20409_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603322764ad52e03cb6e2542"
+    },
+    "sub-20409/func/sub-20409_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865068a9746601072fb6bd"
+    },
+    "sub-20409/func/sub-20409_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033228088ea1a03bdeea586"
+    },
+    "sub-20409/func/sub-20409_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086506ba9746601072fb6cc"
+    },
+    "sub-20409/func/sub-20409_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033228988ea1a03a8ee977e"
+    },
+    "sub-20450/func/sub-20450_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "6033233334d30403dbe3b6db"
+    },
+    "sub-20450/func/sub-20450_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865069a9746601032f94f8"
+    },
+    "sub-20450/func/sub-20450_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033233a4ad52e03d16e35ac"
+    },
+    "sub-20450/func/sub-20450_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086506c7166fa00f4e8d204"
+    },
+    "sub-20450/func/sub-20450_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033234734d30403dae3ad40"
+    },
+    "sub-20450/func/sub-20450_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865070f1616001039d02a9"
+    },
+    "sub-20450/func/sub-20450_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033234f88ea1a03b7ee9d9d"
+    },
+    "sub-20450/func/sub-20450_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086506c7166fa00e1e8d5ec"
+    },
+    "sub-20450/func/sub-20450_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033235788ea1a03b8eea67f"
+    },
+    "sub-20462/func/sub-20462_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603324024ad52e03cc6e304b"
+    },
+    "sub-20462/func/sub-20462_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086506da9746601072fb6da"
+    },
+    "sub-20462/func/sub-20462_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603324074ad52e03d06e2e63"
+    },
+    "sub-20462/func/sub-20462_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650747166fa00ebe94b44"
+    },
+    "sub-20462/func/sub-20462_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033241088ea1a03bdeeace0"
+    },
+    "sub-20462/func/sub-20462_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650747166fa00f4e8d254"
+    },
+    "sub-20462/func/sub-20462_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603324194ad52e03cb6e2726"
+    },
+    "sub-20462/func/sub-20462_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650707166fa00f4e8d22f"
+    },
+    "sub-20462/func/sub-20462_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033242288ea1a03bceea3b1"
+    },
+    "sub-20494/func/sub-20494_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603324bd88ea1a03bdeeb07d"
+    },
+    "sub-20494/func/sub-20494_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650707166fa00f4e8d22b"
+    },
+    "sub-20494/func/sub-20494_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603324c434d30403d7e3a5f0"
+    },
+    "sub-20494/func/sub-20494_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650737166fa00f4e8d24b"
+    },
+    "sub-20494/func/sub-20494_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603324ca88ea1a03bdeeb0ae"
+    },
+    "sub-20494/func/sub-20494_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865073a9746601072fb702"
+    },
+    "sub-20494/func/sub-20494_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603324d388ea1a03bdeeb0de"
+    },
+    "sub-20494/func/sub-20494_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650777166fa00f4e8d26a"
+    },
+    "sub-20494/func/sub-20494_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603324da34d30403d0e3b7a8"
+    },
+    "sub-20503/func/sub-20503_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603325774ad52e03c36e2fc7"
+    },
+    "sub-20503/func/sub-20503_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865078a9746601032f9533"
+    },
+    "sub-20503/func/sub-20503_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033257f88ea1a03bceea85d"
+    },
+    "sub-20503/func/sub-20503_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865078a9746601072fb717"
+    },
+    "sub-20503/func/sub-20503_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033258888ea1a03bdeeb437"
+    },
+    "sub-20503/func/sub-20503_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650787166fa00eae90d85"
+    },
+    "sub-20503/func/sub-20503_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033259188ea1a03bdeeb461"
+    },
+    "sub-20503/func/sub-20503_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865078f1616000ff9ce1ce"
+    },
+    "sub-20503/func/sub-20503_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033259988ea1a03b1eea645"
+    },
+    "sub-20758/func/sub-20758_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "6033263934d30403dbe3c696"
+    },
+    "sub-20758/func/sub-20758_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086507d7166fa00f4e8d294"
+    },
+    "sub-20758/func/sub-20758_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033263e34d30403dbe3c6ba"
+    },
+    "sub-20758/func/sub-20758_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086507c7166fa00eae90d91"
+    },
+    "sub-20758/func/sub-20758_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033264534d30403d6e3a208"
+    },
+    "sub-20758/func/sub-20758_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086507da9746601072fb731"
+    },
+    "sub-20758/func/sub-20758_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033264b4ad52e03d06e3637"
+    },
+    "sub-20758/func/sub-20758_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086507d7166fa00eae90d9a"
+    },
+    "sub-20758/func/sub-20758_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603326514ad52e03d16e4644"
+    },
+    "sub-20823/func/sub-20823_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603326fe34d30403d7e3a998"
+    },
+    "sub-20823/func/sub-20823_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086507da9746600f92fd4cb"
+    },
+    "sub-20823/func/sub-20823_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033270488ea1a03adee9d51"
+    },
+    "sub-20823/func/sub-20823_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086507fa9746601072fb73e"
+    },
+    "sub-20823/func/sub-20823_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033270c88ea1a03bdeebba3"
+    },
+    "sub-20823/func/sub-20823_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650837166fa00ebe94b7c"
+    },
+    "sub-20823/func/sub-20823_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603327124ad52e03cb6e29dc"
+    },
+    "sub-20823/func/sub-20823_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650837166fa00e1e8d5f2"
+    },
+    "sub-20823/func/sub-20823_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033271988ea1a03bceead9d"
+    },
+    "sub-20824/func/sub-20824_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603327d188ea1a03bceeb084"
+    },
+    "sub-20824/func/sub-20824_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865083a9746601032f955b"
+    },
+    "sub-20824/func/sub-20824_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603327d94ad52e03d06e3b7b"
+    },
+    "sub-20824/func/sub-20824_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650837166fa00ebe94b79"
+    },
+    "sub-20824/func/sub-20824_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603327e04ad52e03d06e3ba2"
+    },
+    "sub-20824/func/sub-20824_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650847166fa00f4e8d2ba"
+    },
+    "sub-20824/func/sub-20824_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603327e84ad52e03d16e4e6a"
+    },
+    "sub-20824/func/sub-20824_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086508bf1616001039d032b"
+    },
+    "sub-20824/func/sub-20824_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603327f188ea1a03b7eea40b"
+    },
+    "sub-20835/func/sub-20835_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "6033288e34d30403dae3c03c"
+    },
+    "sub-20835/func/sub-20835_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086508bf1616000f59d2231"
+    },
+    "sub-20835/func/sub-20835_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033289588ea1a03b8eeb265"
+    },
+    "sub-20835/func/sub-20835_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650897166fa00e4e9166a"
+    },
+    "sub-20835/func/sub-20835_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033289d34d30403d7e3acf4"
+    },
+    "sub-20835/func/sub-20835_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650897166fa00f4e8d2e2"
+    },
+    "sub-20835/func/sub-20835_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603328a388ea1a03bdeec3e9"
+    },
+    "sub-20835/func/sub-20835_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650897166fa00f4e8d2e8"
+    },
+    "sub-20835/func/sub-20835_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603328a934d30403d6e3a458"
+    },
+    "sub-20847/func/sub-20847_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "6033293788ea1a03b7eea5a4"
+    },
+    "sub-20847/func/sub-20847_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865091f1616001039d0348"
+    },
+    "sub-20847/func/sub-20847_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033294188ea1a03b8eeb3af"
+    },
+    "sub-20847/func/sub-20847_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086508d7166fa00f4e8d30b"
+    },
+    "sub-20847/func/sub-20847_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033294a88ea1a03b2eeb4ca"
+    },
+    "sub-20847/func/sub-20847_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086508d7166fa00e4e9166e"
+    },
+    "sub-20847/func/sub-20847_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603329594ad52e03d16e563e"
+    },
+    "sub-20847/func/sub-20847_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865092f1616000f59d2244"
+    },
+    "sub-20847/func/sub-20847_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603329664ad52e03d16e569e"
+    },
+    "sub-20851/func/sub-20851_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60332a034ad52e03cc6e3b81"
+    },
+    "sub-20851/func/sub-20851_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086508ff1616001039d033f"
+    },
+    "sub-20851/func/sub-20851_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332a0a88ea1a03bceeb81d"
+    },
+    "sub-20851/func/sub-20851_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865092f1616000fe9cbfed"
+    },
+    "sub-20851/func/sub-20851_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332a144ad52e03c86e3f2b"
+    },
+    "sub-20851/func/sub-20851_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865092a9746601022f7154"
+    },
+    "sub-20851/func/sub-20851_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332a1c4ad52e03d16e5a58"
+    },
+    "sub-20851/func/sub-20851_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865095f1616001039d0364"
+    },
+    "sub-20851/func/sub-20851_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332a2288ea1a03bdeecb6d"
+    },
+    "sub-20859/func/sub-20859_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60332abb4ad52e03d06e453b"
+    },
+    "sub-20859/func/sub-20859_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865098f1616000f59d2251"
+    },
+    "sub-20859/func/sub-20859_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332ac388ea1a03bdeece53"
+    },
+    "sub-20859/func/sub-20859_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650957166fa00eae90dc3"
+    },
+    "sub-20859/func/sub-20859_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332acd4ad52e03c36e3187"
+    },
+    "sub-20859/func/sub-20859_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865099f1616001039d0384"
+    },
+    "sub-20859/func/sub-20859_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332ad834d30403d6e3a640"
+    },
+    "sub-20859/func/sub-20859_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865097f1616000f59d224c"
+    },
+    "sub-20859/func/sub-20859_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332ae288ea1a03bdeecef7"
+    },
+    "sub-20860/func/sub-20860_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60332b8788ea1a03b8eeb88e"
+    },
+    "sub-20860/func/sub-20860_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865099a9746601072fb7b1"
+    },
+    "sub-20860/func/sub-20860_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332b9034d30403dbe3e301"
+    },
+    "sub-20860/func/sub-20860_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865099f1616000ff9ce25b"
+    },
+    "sub-20860/func/sub-20860_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332b994ad52e03d16e6206"
+    },
+    "sub-20860/func/sub-20860_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086509b7166fa00f4e8d36f"
+    },
+    "sub-20860/func/sub-20860_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332ba034d30403dae3cb3f"
+    },
+    "sub-20860/func/sub-20860_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086509c7166fa00eae90dd5"
+    },
+    "sub-20860/func/sub-20860_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332ba734d30403dbe3e38f"
+    },
+    "sub-20861/func/sub-20861_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60332c3e34d30403dae3cd51"
+    },
+    "sub-20861/func/sub-20861_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650a1f1616000ff9ce27b"
+    },
+    "sub-20861/func/sub-20861_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332c4488ea1a03bdeed5f8"
+    },
+    "sub-20861/func/sub-20861_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650a1a9746601022f7176"
+    },
+    "sub-20861/func/sub-20861_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332c4b4ad52e03cb6e2e9c"
+    },
+    "sub-20861/func/sub-20861_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650a27166fa00f4e8d39b"
+    },
+    "sub-20861/func/sub-20861_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332c524ad52e03cc6e3f01"
+    },
+    "sub-20861/func/sub-20861_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650a3f1616001039d03c2"
+    },
+    "sub-20861/func/sub-20861_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332c584ad52e03cc6e3f12"
+    },
+    "sub-20862/func/sub-20862_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60332d0134d30403d1e3c864"
+    },
+    "sub-20862/func/sub-20862_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650a1f1616000ff9ce280"
+    },
+    "sub-20862/func/sub-20862_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332d0c4ad52e03cc6e4049"
+    },
+    "sub-20862/func/sub-20862_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650a4f1616001039d03cd"
+    },
+    "sub-20862/func/sub-20862_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332d1188ea1a03b8eebc1b"
+    },
+    "sub-20862/func/sub-20862_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650a6a9746601072fb7e4"
+    },
+    "sub-20862/func/sub-20862_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332d1a88ea1a03bceec266"
+    },
+    "sub-20862/func/sub-20862_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650a67166fa00f4e8d3bd"
+    },
+    "sub-20862/func/sub-20862_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332d2234d30403dae3d08f"
+    },
+    "sub-20863/func/sub-20863_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60332dc534d30403dbe3eee4"
+    },
+    "sub-20863/func/sub-20863_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650a8a9746601072fb7f4"
+    },
+    "sub-20863/func/sub-20863_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332dce34d30403d7e3b58b"
+    },
+    "sub-20863/func/sub-20863_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650a9f1616001039d03f0"
+    },
+    "sub-20863/func/sub-20863_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332dd834d30403dae3d30e"
+    },
+    "sub-20863/func/sub-20863_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650a97166fa00ebe94c08"
+    },
+    "sub-20863/func/sub-20863_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332de034d30403d6e3a92a"
+    },
+    "sub-20863/func/sub-20863_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650aaf1616000fe9cc02b"
+    },
+    "sub-20863/func/sub-20863_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332de788ea1a03bdeede3c"
+    },
+    "sub-20864/func/sub-20864_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60332e9634d30403dbe3f309"
+    },
+    "sub-20864/func/sub-20864_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650aaf1616001039d03f6"
+    },
+    "sub-20864/func/sub-20864_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332e9e88ea1a03bceec7d4"
+    },
+    "sub-20864/func/sub-20864_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650ae7166fa00f4e8d3f8"
+    },
+    "sub-20864/func/sub-20864_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332ea688ea1a03b8eec02a"
+    },
+    "sub-20864/func/sub-20864_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650ad7166fa00f4e8d3eb"
+    },
+    "sub-20864/func/sub-20864_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332eaf4ad52e03d06e5348"
+    },
+    "sub-20864/func/sub-20864_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650b2a9746601072fb828"
+    },
+    "sub-20864/func/sub-20864_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332eb788ea1a03bceec853"
+    },
+    "sub-20866/func/sub-20866_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60332f5588ea1a03bdeee653"
+    },
+    "sub-20866/func/sub-20866_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650ae7166fa00ebe94c20"
+    },
+    "sub-20866/func/sub-20866_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332f5e34d30403e5e398f5"
+    },
+    "sub-20866/func/sub-20866_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650b27166fa00ebe94c31"
+    },
+    "sub-20866/func/sub-20866_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332f6834d30403e5e39916"
+    },
+    "sub-20866/func/sub-20866_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650b1a9746601022f7191"
+    },
+    "sub-20866/func/sub-20866_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332f724ad52e03c86e425a"
+    },
+    "sub-20866/func/sub-20866_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650b6f1616001039d042c"
+    },
+    "sub-20866/func/sub-20866_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60332f7934d30403dbe3f730"
+    },
+    "sub-20892/func/sub-20892_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "6033301434d30403e4e39cbb"
+    },
+    "sub-20892/func/sub-20892_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650b27166fa00ebe94c34"
+    },
+    "sub-20892/func/sub-20892_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033301a34d30403e5e39b7f"
+    },
+    "sub-20892/func/sub-20892_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650b47166fa00f4e8d427"
+    },
+    "sub-20892/func/sub-20892_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033302534d30403e4e39d12"
+    },
+    "sub-20892/func/sub-20892_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650baf1616001039d043c"
+    },
+    "sub-20892/func/sub-20892_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033302c4ad52e03d06e5610"
+    },
+    "sub-20892/func/sub-20892_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650baa9746601072fb852"
+    },
+    "sub-20892/func/sub-20892_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033303588ea1a03bdeeead8"
+    },
+    "sub-20893/func/sub-20893_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603330f14ad52e03d86e1fb0"
+    },
+    "sub-20893/func/sub-20893_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650b6f1616000fe9cc047"
+    },
+    "sub-20893/func/sub-20893_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603330f888ea1a03b7eeb04a"
+    },
+    "sub-20893/func/sub-20893_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650bdf1616001039d044c"
+    },
+    "sub-20893/func/sub-20893_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603330fd34d30403dbe3fa46"
+    },
+    "sub-20893/func/sub-20893_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650b8a9746601072fb846"
+    },
+    "sub-20893/func/sub-20893_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033310488ea1a03b7eeb052"
+    },
+    "sub-20893/func/sub-20893_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650bea9746601032f9622"
+    },
+    "sub-20893/func/sub-20893_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033310d88ea1a03bdeeef2a"
+    },
+    "sub-20907/func/sub-20907_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603331ab34d30403e5e3a0e0"
+    },
+    "sub-20907/func/sub-20907_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650bba9746601072fb85a"
+    },
+    "sub-20907/func/sub-20907_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603331b634d30403e5e3a10b"
+    },
+    "sub-20907/func/sub-20907_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650c0f1616001039d0465"
+    },
+    "sub-20907/func/sub-20907_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603331c14ad52e03d76e1fd1"
+    },
+    "sub-20907/func/sub-20907_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650bea9746601072fb871"
+    },
+    "sub-20907/func/sub-20907_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603331ca88ea1a03bceed420"
+    },
+    "sub-20907/func/sub-20907_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650bf7166fa00ebe94c57"
+    },
+    "sub-20907/func/sub-20907_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603331d14ad52e03d86e246b"
+    },
+    "sub-20932/func/sub-20932_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603332b74ad52e03d86e2917"
+    },
+    "sub-20932/func/sub-20932_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650c4f1616000fe9cc068"
+    },
+    "sub-20932/func/sub-20932_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603332cc88ea1a03b7eeb2c4"
+    },
+    "sub-20932/func/sub-20932_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650c57166fa00f4e8d478"
+    },
+    "sub-20932/func/sub-20932_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603332d388ea1a03b7eeb2d5"
+    },
+    "sub-20932/func/sub-20932_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650c7a9746601032f9648"
+    },
+    "sub-20932/func/sub-20932_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603332e588ea1a03b7eeb2f3"
+    },
+    "sub-20932/func/sub-20932_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650c6a9746601072fb89b"
+    },
+    "sub-20932/func/sub-20932_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603332f634d30403dbe3fe62"
+    },
+    "sub-20946/func/sub-20946_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603333dc88ea1a03bdeefd01"
+    },
+    "sub-20946/func/sub-20946_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650c4f1616001039d0481"
+    },
+    "sub-20946/func/sub-20946_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603333ee88ea1a03b8eecd58"
+    },
+    "sub-20946/func/sub-20946_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650c8f1616000ff9ce312"
+    },
+    "sub-20946/func/sub-20946_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603333f534d30403e5e3a8db"
+    },
+    "sub-20946/func/sub-20946_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650cba9746601032f965e"
+    },
+    "sub-20946/func/sub-20946_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603333fe88ea1a03aeeea9de"
+    },
+    "sub-20946/func/sub-20946_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650c87166fa00f4e8d48b"
+    },
+    "sub-20946/func/sub-20946_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603334034ad52e03d16e7e41"
+    },
+    "sub-20950/func/sub-20950_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603334c834d30403e5e3abba"
+    },
+    "sub-20950/func/sub-20950_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650caf1616001039d04a5"
+    },
+    "sub-20950/func/sub-20950_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603334cd4ad52e03d76e29fa"
+    },
+    "sub-20950/func/sub-20950_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650cff1616000ff9ce330"
+    },
+    "sub-20950/func/sub-20950_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603334e04ad52e03d86e3374"
+    },
+    "sub-20950/func/sub-20950_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650cdf1616001039d04bc"
+    },
+    "sub-20950/func/sub-20950_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603334f34ad52e03d76e2a73"
+    },
+    "sub-20950/func/sub-20950_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650cea9746601072fb8c7"
+    },
+    "sub-20950/func/sub-20950_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603334fa4ad52e03cc6e47f7"
+    },
+    "sub-20976/func/sub-20976_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603335c934d30403e4e3b9c0"
+    },
+    "sub-20976/func/sub-20976_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650cdf1616001039d04c1"
+    },
+    "sub-20976/func/sub-20976_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603335d84ad52e03d76e2d33"
+    },
+    "sub-20976/func/sub-20976_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650d27166fa00f4e8d4c3"
+    },
+    "sub-20976/func/sub-20976_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603335e088ea1a03bceee322"
+    },
+    "sub-20976/func/sub-20976_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650d3f1616000ff9ce34d"
+    },
+    "sub-20976/func/sub-20976_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603335f134d30403e4e3ba9d"
+    },
+    "sub-20976/func/sub-20976_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650d4a9746600f62f9122"
+    },
+    "sub-20976/func/sub-20976_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603335f888ea1a03adeea105"
+    },
+    "sub-20983/func/sub-20983_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603336bf88ea1a03bdef0be2"
+    },
+    "sub-20983/func/sub-20983_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650d4f1616001039d04e4"
+    },
+    "sub-20983/func/sub-20983_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603336d24ad52e03d16e8382"
+    },
+    "sub-20983/func/sub-20983_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650d5f1616001039d04ef"
+    },
+    "sub-20983/func/sub-20983_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603336e134d30403e5e3b269"
+    },
+    "sub-20983/func/sub-20983_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650d6a9746601032f9684"
+    },
+    "sub-20983/func/sub-20983_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603336e788ea1a03b8eed3a5"
+    },
+    "sub-20983/func/sub-20983_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650d8a9746601072fb900"
+    },
+    "sub-20983/func/sub-20983_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603336ef4ad52e03d86e3e44"
+    },
+    "sub-20984/func/sub-20984_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603337be88ea1a03bdef10be"
+    },
+    "sub-20984/func/sub-20984_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650d8a9746601022f71de"
+    },
+    "sub-20984/func/sub-20984_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603337c688ea1a03b8eed5a3"
+    },
+    "sub-20984/func/sub-20984_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650d87166fa00f4e8d4f2"
+    },
+    "sub-20984/func/sub-20984_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603337ce88ea1a03bdef1112"
+    },
+    "sub-20984/func/sub-20984_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650daa9746601032f969b"
+    },
+    "sub-20984/func/sub-20984_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603337d488ea1a03b8eed5bf"
+    },
+    "sub-20984/func/sub-20984_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650daf1616000ff9ce361"
+    },
+    "sub-20984/func/sub-20984_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603337e334d30403dae3e137"
+    },
+    "sub-21036/func/sub-21036_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603338af4ad52e03de6e19d0"
+    },
+    "sub-21036/func/sub-21036_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650df7166fa00e1e8d60b"
+    },
+    "sub-21036/func/sub-21036_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603338bc88ea1a03bceeed4a"
+    },
+    "sub-21036/func/sub-21036_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650df7166fa00f4e8d51f"
+    },
+    "sub-21036/func/sub-21036_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603338cc4ad52e03de6e1a4d"
+    },
+    "sub-21036/func/sub-21036_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650dff1616000ff9ce36d"
+    },
+    "sub-21036/func/sub-21036_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603338d24ad52e03d16e866d"
+    },
+    "sub-21036/func/sub-21036_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650dea9746601072fb921"
+    },
+    "sub-21036/func/sub-21036_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603338e188ea1a03bceeedd4"
+    },
+    "sub-21116/func/sub-21116_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603339994ad52e03dd6e1bdd"
+    },
+    "sub-21116/func/sub-21116_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650dda9746601022f71ea"
+    },
+    "sub-21116/func/sub-21116_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603339a034d30403e5e3b764"
+    },
+    "sub-21116/func/sub-21116_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650e3a9746601032f96c5"
+    },
+    "sub-21116/func/sub-21116_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603339b188ea1a03b8eed98f"
+    },
+    "sub-21116/func/sub-21116_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650e47166fa00f4e8d54b"
+    },
+    "sub-21116/func/sub-21116_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603339c388ea1a03adeea1f6"
+    },
+    "sub-21116/func/sub-21116_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650e47166fa00e1e8d610"
+    },
+    "sub-21116/func/sub-21116_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603339cd88ea1a03aeeeab48"
+    },
+    "sub-21124/func/sub-21124_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60333a9f34d30403e4e3c9bc"
+    },
+    "sub-21124/func/sub-21124_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650e4a9746600f62f9131"
+    },
+    "sub-21124/func/sub-21124_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333ab14ad52e03d86e484e"
+    },
+    "sub-21124/func/sub-21124_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650e37166fa00ebe94cd2"
+    },
+    "sub-21124/func/sub-21124_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333aba4ad52e03de6e23d3"
+    },
+    "sub-21124/func/sub-21124_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650e8a9746600f92fd529"
+    },
+    "sub-21124/func/sub-21124_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333ac234d30403e9e3a03e"
+    },
+    "sub-21124/func/sub-21124_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650e77166fa00f4e8d566"
+    },
+    "sub-21124/func/sub-21124_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333ad688ea1a03b8eedc10"
+    },
+    "sub-21126/func/sub-21126_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60333b964ad52e03de6e2801"
+    },
+    "sub-21126/func/sub-21126_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650e7f1616000ff9ce39f"
+    },
+    "sub-21126/func/sub-21126_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333b9e4ad52e03d16e880f"
+    },
+    "sub-21126/func/sub-21126_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650ebf1616001039d0583"
+    },
+    "sub-21126/func/sub-21126_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333ba734d30403eae3aa09"
+    },
+    "sub-21126/func/sub-21126_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650eca9746601022f7214"
+    },
+    "sub-21126/func/sub-21126_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333bba88ea1a03bdef236f"
+    },
+    "sub-21126/func/sub-21126_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650eda9746601032f96f2"
+    },
+    "sub-21126/func/sub-21126_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333bc188ea1a03b7eebd3c"
+    },
+    "sub-21127/func/sub-21127_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60333cab4ad52e03d86e4b6b"
+    },
+    "sub-21127/func/sub-21127_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650ed7166fa00ebe94cef"
+    },
+    "sub-21127/func/sub-21127_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333cb14ad52e03de6e2d6f"
+    },
+    "sub-21127/func/sub-21127_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650ed7166fa00f4e8d583"
+    },
+    "sub-21127/func/sub-21127_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333cb834d30403eae3af2a"
+    },
+    "sub-21127/func/sub-21127_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650ee7166fa00f4e8d58e"
+    },
+    "sub-21127/func/sub-21127_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333cbe4ad52e03de6e2db0"
+    },
+    "sub-21127/func/sub-21127_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650efa9746601072fb986"
+    },
+    "sub-21127/func/sub-21127_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333cc634d30403eae3af7d"
+    },
+    "sub-21187/func/sub-21187_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60333d634ad52e03dd6e2829"
+    },
+    "sub-21187/func/sub-21187_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650f1a9746601072fb994"
+    },
+    "sub-21187/func/sub-21187_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333d6c34d30403e9e3a866"
+    },
+    "sub-21187/func/sub-21187_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650f2f1616000fe9cc0c1"
+    },
+    "sub-21187/func/sub-21187_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333d7688ea1a03b8eee160"
+    },
+    "sub-21187/func/sub-21187_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650f2a9746601032f9708"
+    },
+    "sub-21187/func/sub-21187_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333d8034d30403eee39898"
+    },
+    "sub-21187/func/sub-21187_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650f27166fa00ebe94d05"
+    },
+    "sub-21187/func/sub-21187_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333d894ad52e03de6e3176"
+    },
+    "sub-21193/func/sub-21193_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60333e0734d30403e4e3ce8e"
+    },
+    "sub-21193/func/sub-21193_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650f5f1616000ff9ce3c2"
+    },
+    "sub-21193/func/sub-21193_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333e0d4ad52e03d76e39ce"
+    },
+    "sub-21193/func/sub-21193_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650f57166fa00eae90e6d"
+    },
+    "sub-21193/func/sub-21193_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333e1688ea1a03b2eec08d"
+    },
+    "sub-21193/func/sub-21193_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650f5a9746600f62f913d"
+    },
+    "sub-21193/func/sub-21193_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333e1f88ea1a03b7eebfde"
+    },
+    "sub-21193/func/sub-21193_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650f6a9746601072fb9b1"
+    },
+    "sub-21193/func/sub-21193_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333e284ad52e03de6e347d"
+    },
+    "sub-21215/func/sub-21215_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60333ebd34d30403eee39c96"
+    },
+    "sub-21215/func/sub-21215_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650f5f1616001039d05b5"
+    },
+    "sub-21215/func/sub-21215_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333ec434d30403efe39f31"
+    },
+    "sub-21215/func/sub-21215_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650faa9746601072fb9c5"
+    },
+    "sub-21215/func/sub-21215_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333ecb34d30403efe39f59"
+    },
+    "sub-21215/func/sub-21215_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650fc7166fa00f4e8d5dd"
+    },
+    "sub-21215/func/sub-21215_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333ed188ea1a03bcef010a"
+    },
+    "sub-21215/func/sub-21215_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650fcf1616000ff9ce3d4"
+    },
+    "sub-21215/func/sub-21215_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333ed84ad52e03de6e37d2"
+    },
+    "sub-21252/func/sub-21252_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60333f7b34d30403eee39f17"
+    },
+    "sub-21252/func/sub-21252_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650fc7166fa00ebe94d22"
+    },
+    "sub-21252/func/sub-21252_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333f8288ea1a03b8eee5e3"
+    },
+    "sub-21252/func/sub-21252_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650faa9746600f92fd53e"
+    },
+    "sub-21252/func/sub-21252_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333f8a34d30403eee39f5e"
+    },
+    "sub-21252/func/sub-21252_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608650fef1616000ff9ce3dd"
+    },
+    "sub-21252/func/sub-21252_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333f904ad52e03d86e500f"
+    },
+    "sub-21252/func/sub-21252_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865100a9746601032f972d"
+    },
+    "sub-21252/func/sub-21252_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60333f954ad52e03de6e3bc9"
+    },
+    "sub-21253/func/sub-21253_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "6033402f4ad52e03dd6e31db"
+    },
+    "sub-21253/func/sub-21253_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651017166fa00f4e8d5ff"
+    },
+    "sub-21253/func/sub-21253_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033403688ea1a03b8eee76f"
+    },
+    "sub-21253/func/sub-21253_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865100f1616000fe9cc0db"
+    },
+    "sub-21253/func/sub-21253_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033403f4ad52e03de6e3f78"
+    },
+    "sub-21253/func/sub-21253_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651007166fa00f4e8d5f4"
+    },
+    "sub-21253/func/sub-21253_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033404688ea1a03bdef3963"
+    },
+    "sub-21253/func/sub-21253_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865104f1616000ff9ce3fd"
+    },
+    "sub-21253/func/sub-21253_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033404c88ea1a03bdef3989"
+    },
+    "sub-21254/func/sub-21254_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603340e44ad52e03dd6e3472"
+    },
+    "sub-21254/func/sub-21254_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651037166fa00f4e8d60e"
+    },
+    "sub-21254/func/sub-21254_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603340ea34d30403efe3aa10"
+    },
+    "sub-21254/func/sub-21254_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651057166fa00ebe94d4d"
+    },
+    "sub-21254/func/sub-21254_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603340f034d30403efe3aa34"
+    },
+    "sub-21254/func/sub-21254_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651057166fa00f4e8d61b"
+    },
+    "sub-21254/func/sub-21254_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603340f94ad52e03de6e43a9"
+    },
+    "sub-21254/func/sub-21254_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865106f1616000fe9cc0f1"
+    },
+    "sub-21254/func/sub-21254_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603341014ad52e03de6e43da"
+    },
+    "sub-21256/func/sub-21256_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "6033419f34d30403efe3add1"
+    },
+    "sub-21256/func/sub-21256_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086510a7166fa00f4e8d639"
+    },
+    "sub-21256/func/sub-21256_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603341a94ad52e03dd6e372b"
+    },
+    "sub-21256/func/sub-21256_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865108f1616001039d0609"
+    },
+    "sub-21256/func/sub-21256_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603341b14ad52e03dd6e374b"
+    },
+    "sub-21256/func/sub-21256_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086510b7166fa00eae90eb2"
+    },
+    "sub-21256/func/sub-21256_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603341b734d30403efe3ae51"
+    },
+    "sub-21256/func/sub-21256_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086510a7166fa00f4e8d63e"
+    },
+    "sub-21256/func/sub-21256_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603341bf88ea1a03bdef4112"
+    },
+    "sub-21258/func/sub-21258_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "6033425788ea1a03b1eeaf0b"
+    },
+    "sub-21258/func/sub-21258_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086510a7166fa00f4e8d643"
+    },
+    "sub-21258/func/sub-21258_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603342614ad52e03d76e3d4c"
+    },
+    "sub-21258/func/sub-21258_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086510ef1616001039d0625"
+    },
+    "sub-21258/func/sub-21258_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033426f4ad52e03de6e4b43"
+    },
+    "sub-21258/func/sub-21258_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086510d7166fa00ebe94d74"
+    },
+    "sub-21258/func/sub-21258_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603342774ad52e03d16e8b44"
+    },
+    "sub-21258/func/sub-21258_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086510ea9746600f62f9149"
+    },
+    "sub-21258/func/sub-21258_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033427d34d30403eee3a90b"
+    },
+    "sub-21260/func/sub-21260_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603343144ad52e03d76e3dba"
+    },
+    "sub-21260/func/sub-21260_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651107166fa00ebe94d83"
+    },
+    "sub-21260/func/sub-21260_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033431a34d30403efe3b57c"
+    },
+    "sub-21260/func/sub-21260_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651117166fa00f4e8d671"
+    },
+    "sub-21260/func/sub-21260_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603343214ad52e03de6e4ead"
+    },
+    "sub-21260/func/sub-21260_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865112a9746601072fba4d"
+    },
+    "sub-21260/func/sub-21260_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603343294ad52e03dd6e3c0a"
+    },
+    "sub-21260/func/sub-21260_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651127166fa00eae90ec7"
+    },
+    "sub-21260/func/sub-21260_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033433034d30403eae3bbb5"
+    },
+    "sub-21261/func/sub-21261_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603343c488ea1a03c4ee9272"
+    },
+    "sub-21261/func/sub-21261_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865113f1616001039d063b"
+    },
+    "sub-21261/func/sub-21261_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603343ca4ad52e03de6e51f2"
+    },
+    "sub-21261/func/sub-21261_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865113a9746601032f977d"
+    },
+    "sub-21261/func/sub-21261_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603343d188ea1a03c3ee9071"
+    },
+    "sub-21261/func/sub-21261_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865117f1616000ff9ce445"
+    },
+    "sub-21261/func/sub-21261_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603343d64ad52e03de6e5230"
+    },
+    "sub-21261/func/sub-21261_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865117a9746601032f9787"
+    },
+    "sub-21261/func/sub-21261_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603343dd4ad52e03de6e524f"
+    },
+    "sub-21262/func/sub-21262_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "6033446634d30403eee3af87"
+    },
+    "sub-21262/func/sub-21262_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865117a9746600f62f9151"
+    },
+    "sub-21262/func/sub-21262_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033447188ea1a03c4ee9558"
+    },
+    "sub-21262/func/sub-21262_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865117a9746601022f7275"
+    },
+    "sub-21262/func/sub-21262_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033447888ea1a03c4ee9573"
+    },
+    "sub-21262/func/sub-21262_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086511b7166fa00f4e8d6a4"
+    },
+    "sub-21262/func/sub-21262_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033448088ea1a03c3ee925a"
+    },
+    "sub-21262/func/sub-21262_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086511d7166fa00e4e916d9"
+    },
+    "sub-21262/func/sub-21262_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033448888ea1a03c3ee9277"
+    },
+    "sub-21270/func/sub-21270_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603345154ad52e03d06e6284"
+    },
+    "sub-21270/func/sub-21270_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086511df1616000ff9ce45e"
+    },
+    "sub-21270/func/sub-21270_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033451a88ea1a03c4ee9862"
+    },
+    "sub-21270/func/sub-21270_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086511d7166fa00eae90ee3"
+    },
+    "sub-21270/func/sub-21270_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033452188ea1a03b8eeed50"
+    },
+    "sub-21270/func/sub-21270_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086511d7166fa00ebe94dab"
+    },
+    "sub-21270/func/sub-21270_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603345294ad52e03de6e5884"
+    },
+    "sub-21270/func/sub-21270_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086511ea9746601072fba82"
+    },
+    "sub-21270/func/sub-21270_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033452f4ad52e03dd6e4259"
+    },
+    "sub-21273/func/sub-21273_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603345cc88ea1a03c3ee9671"
+    },
+    "sub-21273/func/sub-21273_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651227166fa00eae90ef2"
+    },
+    "sub-21273/func/sub-21273_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603345da4ad52e03de6e5c2b"
+    },
+    "sub-21273/func/sub-21273_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865122a9746601072fba96"
+    },
+    "sub-21273/func/sub-21273_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603345e24ad52e03dd6e44de"
+    },
+    "sub-21273/func/sub-21273_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865122a9746601032f97b2"
+    },
+    "sub-21273/func/sub-21273_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603345eb4ad52e03de6e5c86"
+    },
+    "sub-21273/func/sub-21273_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865122f1616000ff9ce470"
+    },
+    "sub-21273/func/sub-21273_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603345f188ea1a03c4ee9c71"
+    },
+    "sub-21277/func/sub-21277_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "6033468834d30403efe3c775"
+    },
+    "sub-21277/func/sub-21277_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651237166fa00eae90ef7"
+    },
+    "sub-21277/func/sub-21277_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033468f34d30403eae3c0d3"
+    },
+    "sub-21277/func/sub-21277_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086512af1616000ff9ce48b"
+    },
+    "sub-21277/func/sub-21277_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033469588ea1a03bdef4c4b"
+    },
+    "sub-21277/func/sub-21277_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651287166fa00eae90f05"
+    },
+    "sub-21277/func/sub-21277_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033469c34d30403eae3c0e4"
+    },
+    "sub-21277/func/sub-21277_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651287166fa00f4e8d6f9"
+    },
+    "sub-21277/func/sub-21277_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603346a488ea1a03c4ee9fb3"
+    },
+    "sub-21278/func/sub-21278_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "6033473c88ea1a03c4eea25b"
+    },
+    "sub-21278/func/sub-21278_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651277166fa00f4e8d6e8"
+    },
+    "sub-21278/func/sub-21278_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603347414ad52e03de6e633d"
+    },
+    "sub-21278/func/sub-21278_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865128a9746601032f97ca"
+    },
+    "sub-21278/func/sub-21278_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033474934d30403efe3cb44"
+    },
+    "sub-21278/func/sub-21278_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086512b7166fa00f4e8d70e"
+    },
+    "sub-21278/func/sub-21278_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033474e88ea1a03c4eea2ad"
+    },
+    "sub-21278/func/sub-21278_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086512ef1616001039d06d5"
+    },
+    "sub-21278/func/sub-21278_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033475488ea1a03c4eea2b8"
+    },
+    "sub-21279/func/sub-21279_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603347ec34d30403eae3c2d0"
+    },
+    "sub-21279/func/sub-21279_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865130a9746601032f97e2"
+    },
+    "sub-21279/func/sub-21279_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603347f334d30403eee3bb7a"
+    },
+    "sub-21279/func/sub-21279_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651307166fa00ebe94dec"
+    },
+    "sub-21279/func/sub-21279_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603347f94ad52e03dd6e4c1f"
+    },
+    "sub-21279/func/sub-21279_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651307166fa00e4e916e9"
+    },
+    "sub-21279/func/sub-21279_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033480188ea1a03c3ee9d52"
+    },
+    "sub-21279/func/sub-21279_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865130f1616001039d06e2"
+    },
+    "sub-21279/func/sub-21279_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033480988ea1a03bdef4f3f"
+    },
+    "sub-21281/func/sub-21281_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "6033489f34d30403efe3d21c"
+    },
+    "sub-21281/func/sub-21281_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865132f1616001039d06fe"
+    },
+    "sub-21281/func/sub-21281_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603348a64ad52e03dd6e4e40"
+    },
+    "sub-21281/func/sub-21281_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865136a9746601072fbaf6"
+    },
+    "sub-21281/func/sub-21281_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603348ac88ea1a03c4eea8f4"
+    },
+    "sub-21281/func/sub-21281_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865133f1616000fe9cc15b"
+    },
+    "sub-21281/func/sub-21281_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603348b588ea1a03c4eea918"
+    },
+    "sub-21281/func/sub-21281_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651357166fa00eae90f26"
+    },
+    "sub-21281/func/sub-21281_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603348bd88ea1a03c3ee9f72"
+    },
+    "sub-21283/func/sub-21283_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "6033497634d30403f5e39a22"
+    },
+    "sub-21283/func/sub-21283_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651367166fa00ebe94e08"
+    },
+    "sub-21283/func/sub-21283_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033497c34d30403f4e399bd"
+    },
+    "sub-21283/func/sub-21283_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651397166fa00ebe94e17"
+    },
+    "sub-21283/func/sub-21283_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033498734d30403f5e39a89"
+    },
+    "sub-21283/func/sub-21283_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865139f1616001039d0729"
+    },
+    "sub-21283/func/sub-21283_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033499234d30403f5e39abd"
+    },
+    "sub-21283/func/sub-21283_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651397166fa00eae90f2d"
+    },
+    "sub-21283/func/sub-21283_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033499d88ea1a03c3eea2c8"
+    },
+    "sub-21300/func/sub-21300_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60334a3034d30403f5e39df7"
+    },
+    "sub-21300/func/sub-21300_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086513df1616000ff9ce4cc"
+    },
+    "sub-21300/func/sub-21300_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334a394ad52e03e56e1b1d"
+    },
+    "sub-21300/func/sub-21300_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086513df1616001039d073b"
+    },
+    "sub-21300/func/sub-21300_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334a424ad52e03e46e1d07"
+    },
+    "sub-21300/func/sub-21300_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651407166fa00f4e8d790"
+    },
+    "sub-21300/func/sub-21300_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334a4a88ea1a03bdef53a6"
+    },
+    "sub-21300/func/sub-21300_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086513e7166fa00eae90f3b"
+    },
+    "sub-21300/func/sub-21300_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334a5088ea1a03c3eea505"
+    },
+    "sub-21302/func/sub-21302_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60334adc4ad52e03d86e609a"
+    },
+    "sub-21302/func/sub-21302_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086513df1616001039d073e"
+    },
+    "sub-21302/func/sub-21302_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334ae334d30403f4e39e3d"
+    },
+    "sub-21302/func/sub-21302_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865143f1616001039d0768"
+    },
+    "sub-21302/func/sub-21302_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334aeb4ad52e03d76e42b7"
+    },
+    "sub-21302/func/sub-21302_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651417166fa00e4e916fd"
+    },
+    "sub-21302/func/sub-21302_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334af44ad52e03e56e1d6b"
+    },
+    "sub-21302/func/sub-21302_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865143a9746601032f9820"
+    },
+    "sub-21302/func/sub-21302_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334afa4ad52e03e56e1d8a"
+    },
+    "sub-21304/func/sub-21304_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60334b7b4ad52e03d76e42e1"
+    },
+    "sub-21304/func/sub-21304_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651427166fa00f4e8d79b"
+    },
+    "sub-21304/func/sub-21304_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334b8234d30403f5e3a4e5"
+    },
+    "sub-21304/func/sub-21304_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865147f1616000f59d2303"
+    },
+    "sub-21304/func/sub-21304_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334b884ad52e03e56e1f69"
+    },
+    "sub-21304/func/sub-21304_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865147f1616000ff9ce4f0"
+    },
+    "sub-21304/func/sub-21304_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334b8e88ea1a03bcef16ac"
+    },
+    "sub-21304/func/sub-21304_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865147f1616000fe9cc195"
+    },
+    "sub-21304/func/sub-21304_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334b974ad52e03e46e23f4"
+    },
+    "sub-21305/func/sub-21305_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60334c3934d30403f8e399c9"
+    },
+    "sub-21305/func/sub-21305_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865146a9746601022f72c9"
+    },
+    "sub-21305/func/sub-21305_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334c404ad52e03ea6e19d2"
+    },
+    "sub-21305/func/sub-21305_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865148a9746601072fbb46"
+    },
+    "sub-21305/func/sub-21305_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334c4734d30403eae3c652"
+    },
+    "sub-21305/func/sub-21305_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086514ba9746601072fbb5b"
+    },
+    "sub-21305/func/sub-21305_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334c4e88ea1a03caee9088"
+    },
+    "sub-21305/func/sub-21305_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086514ef1616000fe9cc1a2"
+    },
+    "sub-21305/func/sub-21305_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334c5634d30403f8e39a30"
+    },
+    "sub-21306/func/sub-21306_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60334cf588ea1a03caee9383"
+    },
+    "sub-21306/func/sub-21306_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086514ef1616001039d07a4"
+    },
+    "sub-21306/func/sub-21306_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334cfe4ad52e03e96e1b7e"
+    },
+    "sub-21306/func/sub-21306_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086514bf1616001039d0793"
+    },
+    "sub-21306/func/sub-21306_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334d054ad52e03ea6e1dd3"
+    },
+    "sub-21306/func/sub-21306_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086514ea9746601032f9847"
+    },
+    "sub-21306/func/sub-21306_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334d0c88ea1a03caee93da"
+    },
+    "sub-21306/func/sub-21306_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651507166fa00e4e91710"
+    },
+    "sub-21306/func/sub-21306_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334d1534d30403f9e39edf"
+    },
+    "sub-21317/func/sub-21317_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60334dc588ea1a03c4eebc53"
+    },
+    "sub-21317/func/sub-21317_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651527166fa00e4e91715"
+    },
+    "sub-21317/func/sub-21317_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334dcc88ea1a03cdee8ec7"
+    },
+    "sub-21317/func/sub-21317_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865153a9746601072fbb88"
+    },
+    "sub-21317/func/sub-21317_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334dd234d30403f8e39f07"
+    },
+    "sub-21317/func/sub-21317_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865152a9746601072fbb81"
+    },
+    "sub-21317/func/sub-21317_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334dd94ad52e03e96e1e8f"
+    },
+    "sub-21317/func/sub-21317_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651537166fa00f4e8d80e"
+    },
+    "sub-21317/func/sub-21317_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334de088ea1a03b8eef195"
+    },
+    "sub-21318/func/sub-21318_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60334e7388ea1a03caee9735"
+    },
+    "sub-21318/func/sub-21318_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865156f1616001039d07d4"
+    },
+    "sub-21318/func/sub-21318_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334e7b4ad52e03e96e204c"
+    },
+    "sub-21318/func/sub-21318_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651577166fa00f4e8d828"
+    },
+    "sub-21318/func/sub-21318_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334e8588ea1a03cdee9229"
+    },
+    "sub-21318/func/sub-21318_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865155a9746601032f9862"
+    },
+    "sub-21318/func/sub-21318_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334e8c88ea1a03cdee9252"
+    },
+    "sub-21318/func/sub-21318_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651567166fa00ebe94e94"
+    },
+    "sub-21318/func/sub-21318_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334e944ad52e03de6e72d0"
+    },
+    "sub-21324/func/sub-21324_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60334f6034d3040400e3993e"
+    },
+    "sub-21324/func/sub-21324_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865158a9746601072fbba8"
+    },
+    "sub-21324/func/sub-21324_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334f6788ea1a03d2ee8d47"
+    },
+    "sub-21324/func/sub-21324_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086515b7166fa00f4e8d840"
+    },
+    "sub-21324/func/sub-21324_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334f6f88ea1a03d2ee8d68"
+    },
+    "sub-21324/func/sub-21324_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086515ff1616000ff9ce54c"
+    },
+    "sub-21324/func/sub-21324_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334f7488ea1a03d1ee8d1a"
+    },
+    "sub-21324/func/sub-21324_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086515ba9746601072fbbb4"
+    },
+    "sub-21324/func/sub-21324_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60334f7b34d3040400e399e0"
+    },
+    "sub-21371/func/sub-21371_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603350214ad52e03f16e1930"
+    },
+    "sub-21371/func/sub-21371_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086515ca9746601072fbbbf"
+    },
+    "sub-21371/func/sub-21371_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603350284ad52e03e46e2aad"
+    },
+    "sub-21371/func/sub-21371_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086515f7166fa00eae90f9c"
+    },
+    "sub-21371/func/sub-21371_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033503288ea1a03d1ee9010"
+    },
+    "sub-21371/func/sub-21371_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651607166fa00ebe94ec5"
+    },
+    "sub-21371/func/sub-21371_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033503a88ea1a03d1ee9027"
+    },
+    "sub-21371/func/sub-21371_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651607166fa00f4e8d864"
+    },
+    "sub-21371/func/sub-21371_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033504588ea1a03d1ee904f"
+    },
+    "sub-21384/func/sub-21384_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603350f74ad52e03f46e1dc7"
+    },
+    "sub-21384/func/sub-21384_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651607166fa00ebe94ec4"
+    },
+    "sub-21384/func/sub-21384_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603350ff34d3040401e39e84"
+    },
+    "sub-21384/func/sub-21384_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651647166fa00f4e8d882"
+    },
+    "sub-21384/func/sub-21384_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033510b34d3040400e3a23e"
+    },
+    "sub-21384/func/sub-21384_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865166f1616000fe9cc1d1"
+    },
+    "sub-21384/func/sub-21384_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603351134ad52e03f56e20d0"
+    },
+    "sub-21384/func/sub-21384_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865165a9746601022f72ff"
+    },
+    "sub-21384/func/sub-21384_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033511e88ea1a03d2ee95c2"
+    },
+    "sub-21448/func/sub-21448_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603351d634d3040400e3a63c"
+    },
+    "sub-21448/func/sub-21448_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865164a9746601032f989b"
+    },
+    "sub-21448/func/sub-21448_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603351df88ea1a03d1ee9622"
+    },
+    "sub-21448/func/sub-21448_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865164f1616000ff9ce55d"
+    },
+    "sub-21448/func/sub-21448_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603351e634d3040401e3a197"
+    },
+    "sub-21448/func/sub-21448_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086516ba9746601032f98b5"
+    },
+    "sub-21448/func/sub-21448_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603351f14ad52e03f56e24fe"
+    },
+    "sub-21448/func/sub-21448_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086516b7166fa00ebe94f02"
+    },
+    "sub-21448/func/sub-21448_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603351fb88ea1a03cdee9c0f"
+    },
+    "sub-21449/func/sub-21449_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "6033529d88ea1a03d2ee9d1a"
+    },
+    "sub-21449/func/sub-21449_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086516ba9746601072fbc0c"
+    },
+    "sub-21449/func/sub-21449_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603352a34ad52e03e56e23ed"
+    },
+    "sub-21449/func/sub-21449_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865169a9746601072fbc03"
+    },
+    "sub-21449/func/sub-21449_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603352ac4ad52e03f56e28f6"
+    },
+    "sub-21449/func/sub-21449_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086516bf1616001039d083c"
+    },
+    "sub-21449/func/sub-21449_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603352b44ad52e03f56e2921"
+    },
+    "sub-21449/func/sub-21449_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086516e7166fa00ebe94f09"
+    },
+    "sub-21449/func/sub-21449_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603352be34d3040401e3a46b"
+    },
+    "sub-21452/func/sub-21452_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "6033535f88ea1a03d2eea0df"
+    },
+    "sub-21452/func/sub-21452_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651717166fa00f4e8d8cf"
+    },
+    "sub-21452/func/sub-21452_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033536988ea1a03caee9c07"
+    },
+    "sub-21452/func/sub-21452_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865171f1616000fe9cc1ec"
+    },
+    "sub-21452/func/sub-21452_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033537088ea1a03d1ee9bcd"
+    },
+    "sub-21452/func/sub-21452_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865171a9746601032f98d4"
+    },
+    "sub-21452/func/sub-21452_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603353774ad52e03f56e2d44"
+    },
+    "sub-21452/func/sub-21452_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651717166fa00e1e8d648"
+    },
+    "sub-21452/func/sub-21452_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033537d34d3040401e3a6fb"
+    },
+    "sub-21453/func/sub-21453_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "6033542c4ad52e03f46e28e9"
+    },
+    "sub-21453/func/sub-21453_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865172a9746601072fbc3b"
+    },
+    "sub-21453/func/sub-21453_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033543688ea1a03d2eea519"
+    },
+    "sub-21453/func/sub-21453_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651777166fa00ebe94f33"
+    },
+    "sub-21453/func/sub-21453_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033543f34d30403fde3a1c3"
+    },
+    "sub-21453/func/sub-21453_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865175a9746600f92fd5d9"
+    },
+    "sub-21453/func/sub-21453_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603354484ad52e03f46e293f"
+    },
+    "sub-21453/func/sub-21453_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865176a9746601032f98f2"
+    },
+    "sub-21453/func/sub-21453_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603354514ad52e03f56e3172"
+    },
+    "sub-21456/func/sub-21456_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603354ea34d3040400e3b62a"
+    },
+    "sub-21456/func/sub-21456_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865176f1616000ff9ce59c"
+    },
+    "sub-21456/func/sub-21456_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603354f588ea1a03d2eea840"
+    },
+    "sub-21456/func/sub-21456_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651787166fa00ebe94f3a"
+    },
+    "sub-21456/func/sub-21456_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033550234d30403f5e3ae45"
+    },
+    "sub-21456/func/sub-21456_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086517cf1616001039d08a0"
+    },
+    "sub-21456/func/sub-21456_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033550a4ad52e03fd6e1798"
+    },
+    "sub-21456/func/sub-21456_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865179f1616001039d0889"
+    },
+    "sub-21456/func/sub-21456_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603355124ad52e03f46e2bb2"
+    },
+    "sub-21611/func/sub-21611_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603355cb4ad52e03e96e25c6"
+    },
+    "sub-21611/func/sub-21611_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086517ca9746601032f990a"
+    },
+    "sub-21611/func/sub-21611_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603355d34ad52e03fd6e1b4a"
+    },
+    "sub-21611/func/sub-21611_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865180a9746600f62f9181"
+    },
+    "sub-21611/func/sub-21611_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603355db88ea1a03d1eea2ac"
+    },
+    "sub-21611/func/sub-21611_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865180a9746601032f991e"
+    },
+    "sub-21611/func/sub-21611_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603355e34ad52e03fd6e1b9b"
+    },
+    "sub-21611/func/sub-21611_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086517c7166fa00ebe94f4d"
+    },
+    "sub-21611/func/sub-21611_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603355ec34d304040ae39cee"
+    },
+    "sub-21641/func/sub-21641_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603356a588ea1a03d2eeac32"
+    },
+    "sub-21641/func/sub-21641_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086517f7166fa00eae90fe6"
+    },
+    "sub-21641/func/sub-21641_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603356ad34d3040406e39b6a"
+    },
+    "sub-21641/func/sub-21641_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865181a9746601072fbc89"
+    },
+    "sub-21641/func/sub-21641_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603356bb4ad52e03fd6e202d"
+    },
+    "sub-21641/func/sub-21641_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865181f1616000fe9cc215"
+    },
+    "sub-21641/func/sub-21641_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603356ca88ea1a03d8ee9578"
+    },
+    "sub-21641/func/sub-21641_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865185a9746600f92fd5ee"
+    },
+    "sub-21641/func/sub-21641_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603356d788ea1a03d2eeac98"
+    },
+    "sub-21644/func/sub-21644_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603357794ad52e03fe6e1fdf"
+    },
+    "sub-21644/func/sub-21644_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865186a9746600f62f918b"
+    },
+    "sub-21644/func/sub-21644_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033577f88ea1a03d8ee9917"
+    },
+    "sub-21644/func/sub-21644_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865184a9746601072fbca9"
+    },
+    "sub-21644/func/sub-21644_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033578688ea1a03d8ee9938"
+    },
+    "sub-21644/func/sub-21644_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865186f1616000f59d2348"
+    },
+    "sub-21644/func/sub-21644_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033578d88ea1a03cdeea459"
+    },
+    "sub-21644/func/sub-21644_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865187f1616000ff9ce5e3"
+    },
+    "sub-21644/func/sub-21644_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033579388ea1a03d2eeae0d"
+    },
+    "sub-21645/func/sub-21645_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "6033585b34d3040406e39f62"
+    },
+    "sub-21645/func/sub-21645_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086518bf1616001039d08ee"
+    },
+    "sub-21645/func/sub-21645_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033586788ea1a03d2eeb11f"
+    },
+    "sub-21645/func/sub-21645_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086518ba9746601032f995b"
+    },
+    "sub-21645/func/sub-21645_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603358704ad52e03fa6e1e96"
+    },
+    "sub-21645/func/sub-21645_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086518b7166fa00f4e8d965"
+    },
+    "sub-21645/func/sub-21645_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033587834d3040409e3a5dd"
+    },
+    "sub-21645/func/sub-21645_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086518bf1616000ff9ce5f3"
+    },
+    "sub-21645/func/sub-21645_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033588434d3040400e3b8fc"
+    },
+    "sub-21646/func/sub-21646_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603359264ad52e03fe6e27c3"
+    },
+    "sub-21646/func/sub-21646_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086518ca9746601022f7363"
+    },
+    "sub-21646/func/sub-21646_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033592e88ea1a03c3eeb068"
+    },
+    "sub-21646/func/sub-21646_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651907166fa00eae91016"
+    },
+    "sub-21646/func/sub-21646_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603359364ad52e03fe6e27fb"
+    },
+    "sub-21646/func/sub-21646_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651947166fa00e4e9175b"
+    },
+    "sub-21646/func/sub-21646_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033593d88ea1a03d7ee9e6d"
+    },
+    "sub-21646/func/sub-21646_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651957166fa00ebe94fa0"
+    },
+    "sub-21646/func/sub-21646_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "6033594588ea1a03d8eea544"
+    },
+    "sub-21652/func/sub-21652_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "603359e188ea1a03d1eea840"
+    },
+    "sub-21652/func/sub-21652_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651947166fa00f4e8d99f"
+    },
+    "sub-21652/func/sub-21652_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603359e94ad52e03fe6e2a64"
+    },
+    "sub-21652/func/sub-21652_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865195a9746601072fbcf6"
+    },
+    "sub-21652/func/sub-21652_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603359f24ad52e03fe6e2a94"
+    },
+    "sub-21652/func/sub-21652_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865195f1616000fe9cc247"
+    },
+    "sub-21652/func/sub-21652_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "603359f888ea1a03d7eea0f9"
+    },
+    "sub-21652/func/sub-21652_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865198a9746601072fbd09"
+    },
+    "sub-21652/func/sub-21652_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60335a0088ea1a03d7eea11e"
+    },
+    "sub-21656/func/sub-21656_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60335a9734d304040ae3b8f4"
+    },
+    "sub-21656/func/sub-21656_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "60865198f1616001039d0936"
+    },
+    "sub-21656/func/sub-21656_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60335a9e4ad52e03fd6e3876"
+    },
+    "sub-21656/func/sub-21656_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086519bf1616001039d0947"
+    },
+    "sub-21656/func/sub-21656_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60335aa84ad52e03fd6e38b1"
+    },
+    "sub-21656/func/sub-21656_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086519ba9746601072fbd22"
+    },
+    "sub-21656/func/sub-21656_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60335ab034d3040409e3add9"
+    },
+    "sub-21656/func/sub-21656_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086519aa9746601032f99a6"
+    },
+    "sub-21656/func/sub-21656_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60335ab94ad52e03fe6e2d1b"
+    },
+    "sub-21657/func/sub-21657_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60335b4e34d304040ae3bd5f"
+    },
+    "sub-21657/func/sub-21657_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651a1a9746601022f7394"
+    },
+    "sub-21657/func/sub-21657_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60335b5788ea1a03d8eeaf8f"
+    },
+    "sub-21657/func/sub-21657_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086519ea9746601032f99b6"
+    },
+    "sub-21657/func/sub-21657_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60335b5e34d304040ae3bdb4"
+    },
+    "sub-21657/func/sub-21657_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086519f7166fa00e1e8d65d"
+    },
+    "sub-21657/func/sub-21657_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60335b694ad52e03fd6e3c8d"
+    },
+    "sub-21657/func/sub-21657_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086519e7166fa00f4e8d9cc"
+    },
+    "sub-21657/func/sub-21657_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60335b6f34d3040409e3b086"
+    },
+    "sub-21658/func/sub-21658_task-rest_desc-confounds_timeseries.tsv": {
+        "groups": [
+            "lowres",
+            "nativeres"
+        ],
+        "key": "60335c0e4ad52e03fa6e24aa"
+    },
+    "sub-21658/func/sub-21658_task-rest_echo-1_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "6086519f7166fa00f4e8d9d5"
+    },
+    "sub-21658/func/sub-21658_task-rest_echo-1_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60335c1788ea1a03d2eeb8ad"
+    },
+    "sub-21658/func/sub-21658_task-rest_echo-2_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651a37166fa00ebe94fd4"
+    },
+    "sub-21658/func/sub-21658_task-rest_echo-2_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60335c254ad52e03fd6e4061"
+    },
+    "sub-21658/func/sub-21658_task-rest_echo-3_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651a6f1616001089c984e"
+    },
+    "sub-21658/func/sub-21658_task-rest_echo-3_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60335c2c34d304040ae3c1ab"
+    },
+    "sub-21658/func/sub-21658_task-rest_echo-4_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz": {
+        "groups": [
+            "lowres"
+        ],
+        "key": "608651a37166fa00f4e8d9e4"
+    },
+    "sub-21658/func/sub-21658_task-rest_echo-4_space-scanner_desc-partialPreproc_res-native_bold.nii.gz": {
+        "groups": [
+            "nativeres"
+        ],
+        "key": "60335c3388ea1a03d7eea868"
+    }
+}

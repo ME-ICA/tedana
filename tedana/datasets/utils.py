@@ -139,3 +139,103 @@ def _get_dataset_dir(dataset_name, data_dir=None, default_paths=None, verbose=1)
     raise OSError(
         f"tedana tried to store the dataset in the following directories, but: {', '.join(errors)}"
     )
+
+
+def query_files():
+    VALID_ENTITIES = {
+        "coordinates.tsv.gz": ["data", "version"],
+        "metadata.tsv.gz": ["data", "version"],
+        "features.npz": ["data", "version", "vocab", "source", "type"],
+        "vocabulary.txt": ["data", "version", "vocab"],
+        "metadata.json": ["data", "version", "vocab"],
+        "keys.tsv": ["data", "version", "vocab"],
+    }
+
+
+def _find_entities(filename, search_pairs, log=False):
+    """Search file for any matching patterns of entities."""
+    # Convert all string-based kwargs to lists
+    search_pairs = {k: [v] if isinstance(v, str) else v for k, v in search_pairs.items()}
+    search_pairs = [[f"{k}-{v_i}" for v_i in v] for k, v in search_pairs.items()]
+    searches = list(itertools.product(*search_pairs))
+
+    file_parts = filename.split("_")
+    suffix = file_parts[-1]
+    valid_entities_for_suffix = VALID_ENTITIES[suffix]
+    for search in searches:
+        temp_search = [term for term in search if term.split("-")[0] in valid_entities_for_suffix]
+        if all(term in file_parts for term in temp_search):
+            return True
+
+    return False
+
+
+def _fetch_dataset(config_file, data_dir, search_pairs, overwrite=False):
+    """Fetch generic database."""
+    import json
+
+    with open(config_file, "r") as fo:
+        config = json.load(fo)
+
+    os.makedirs(data_dir, exist_ok=True)
+
+    found_files = []
+    for filename in config:
+        if _find_entities(filename, search_pairs):
+            found_files.append(filename)
+
+    return found_files
+
+
+
+def fetch_neurosynth(data_dir=None, overwrite=False, **kwargs):
+    """Download the latest data files from NeuroSynth.
+
+    Parameters
+    ----------
+    data_dir : :obj:`pathlib.Path` or :obj:`str`, optional
+        Path where data should be downloaded. By default, files are downloaded in home directory.
+        A subfolder, named ``neurosynth``, will be created in ``data_dir``, which is where the
+        files will be located.
+    version : str or list, optional
+        The version to fetch. The default is "7" (Neurosynth's latest version).
+    overwrite : bool, optional
+        Whether to overwrite existing files or not. Default is False.
+    kwargs : dict, optional
+        Keyword arguments to select relevant feature files.
+        Valid kwargs include: source, vocab, type.
+        Each kwarg may be a string or a list of strings.
+        If no kwargs are provided, all feature files for the specified database version will be
+        downloaded.
+
+    Returns
+    -------
+    found_databases : :obj:`list` of :obj:`dict`
+        List of dictionaries indicating datasets downloaded.
+        Each list entry is a different database, containing a dictionary with three keys:
+        "coordinates", "metadata", and "features". "coordinates" and "metadata" will be filenames.
+        "features" will be a list of dictionaries, each containing "id", "vocab", and "features"
+        keys with associated files.
+
+    Notes
+    -----
+    This function was adapted from neurosynth.base.dataset.download().
+
+    Warning
+    -------
+    Starting in version 0.0.10, this function operates on the new Neurosynth/NeuroQuery file
+    format. Old code using this function **will not work** with the new version.
+    """
+    URL = (
+        "https://github.com/neurosynth/neurosynth-data/blob/"
+        "209c33cd009d0b069398a802198b41b9c488b9b7/"
+    )
+    dataset_name = "cambridge"
+
+    data_dir = _get_dataset_dir(dataset_name, data_dir=data_dir)
+
+    config_file = f"data/{dataset_name}.json"
+
+    found_files = _fetch_dataset(config_file, data_dir, kwargs, overwrite=overwrite)
+
+    return found_databases

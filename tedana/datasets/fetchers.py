@@ -62,7 +62,7 @@ def _fetch_cambridge_functional(n_subjects, low_resolution, data_dir, url, resum
         func = "{0}_task-rest_{1}_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz"
         csv_col = "key_bold_lowres"
     else:
-        func = "{0}_task-rest_{1}_space-scanner_desc-partialPreproc_bold.nii.gz"
+        func = "{0}_task-rest_{1}_space-scanner_desc-partialPreproc_res-native_bold.nii.gz"
         csv_col = "key_bold_nativeres"
 
     # The gzip contains unique download keys per Nifti file and confound
