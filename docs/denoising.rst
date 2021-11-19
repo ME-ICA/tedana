@@ -11,6 +11,17 @@ This is colloquially known as "non-aggressive denoising".
 
 However, users may wish to apply a different type of denoising, or to incorporate other regressors into their denoising step, and we will discuss these alternatives here.
 
+.. topic:: Independence vs. Orthogonality
+  ``tedana`` uses independent component analysis (ICA) to decompose the data into time series that are assumed to reflect meaningful underlying signals.
+  It then classifies each time series (a.k.a. component) as "accepted" (BOLD-like) or "rejected" (non-BOLD-like).
+
+  The components from an ICA are `statistically independent`, rather than orthogonal.
+  Orthogonal time series are uncorrected, so there is no shared variance.
+  With independent components, however, the time series may be correlated with one another, and thus share variance.
+  If a rejected component shares meaningful variance with an accepted component,
+  then regressing the rejected components from your data may also remove meaningful signal associated with the accepted component as well.
+  This conundrum is what motivates the different approaches used for decomposition-based denoising methods described here.
+
 This pages has three purposes:
 
 1. Describe different approaches to denoising using ICA components.
@@ -240,8 +251,6 @@ you are doing nonaggressive denoising.
 Orthogonalize the noise components w.r.t. the accepted components prior to denoising
 ************************************************************************************
 
-Independent component analysis decomposes the data into components that are `statistically independent`.
-Unlike principal components analysis, the components from ICA are not orthogonal, so they may explain shared variance.
 If you want to ensure that variance shared between the accepted and rejected components does not contaminate the denoised data,
 you may wish to orthogonalize the rejected components with respect to the accepted components.
 This way, you can regress the rejected components out of the data in the form of, what we call, "pure evil" components.
