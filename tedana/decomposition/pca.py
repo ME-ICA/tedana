@@ -119,62 +119,52 @@ def tedpca(
 
     Notes
     -----
-    ======================    =================================================
+    ======================    ===================================================================
     Notation                  Meaning
-    ======================    =================================================
-    :math:`\\kappa`            Component pseudo-F statistic for TE-dependent
-                              (BOLD) model.
-    :math:`\\rho`              Component pseudo-F statistic for TE-independent
-                              (artifact) model.
+    ======================    ===================================================================
+    :math:`\\kappa`            Component pseudo-F statistic for TE-dependent (BOLD) model.
+    :math:`\\rho`              Component pseudo-F statistic for TE-independent (artifact) model.
     :math:`v`                 Voxel
     :math:`V`                 Total number of voxels in mask
     :math:`\\zeta`             Something
     :math:`c`                 Component
     :math:`p`                 Something else
-    ======================    =================================================
+    ======================    ===================================================================
 
     Steps:
 
-    1.  Variance normalize either multi-echo or optimally combined data,
-        depending on settings.
+    1.  Variance normalize either multi-echo or optimally combined data, depending on settings.
     2.  Decompose normalized data using PCA or SVD.
-    3.  Compute :math:`{\\kappa}` and :math:`{\\rho}`:
+    3.  Compute :math:`{\\kappa}` and :math:`{\\rho}`.
 
-            .. math::
-                {\\kappa}_c = \\frac{\\sum_{v}^V {\\zeta}_{c,v}^p * \
-                      F_{c,v,R_2^*}}{\\sum {\\zeta}_{c,v}^p}
+        .. math::
+            {\\kappa}_c = \\frac{\\sum_{v}^V {\\zeta}_{c,v}^p * \
+                    F_{c,v,R_2^*}}{\\sum {\\zeta}_{c,v}^p}
 
-                {\\rho}_c = \\frac{\\sum_{v}^V {\\zeta}_{c,v}^p * \
-                      F_{c,v,S_0}}{\\sum {\\zeta}_{c,v}^p}
+            {\\rho}_c = \\frac{\\sum_{v}^V {\\zeta}_{c,v}^p * \
+                    F_{c,v,S_0}}{\\sum {\\zeta}_{c,v}^p}
 
     4.  Some other stuff. Something about elbows.
-    5.  Classify components as thermal noise if they meet both of the
-        following criteria:
+    5.  Classify components as thermal noise if they meet both of the following criteria.
 
             - Nonsignificant :math:`{\\kappa}` and :math:`{\\rho}`.
             - Nonsignificant variance explained.
 
-    Outputs:
-
     This function writes out several files:
-    ===========================    =============================================
+
+    ===========================    ======================================================
     Default Filename               Content
-    ===========================    =============================================
+    ===========================    ======================================================
     desc-PCA_metrics.tsv           PCA component table
-    desc-PCA_metrics.json          Metadata sidecar file describing the
-                                   component table
+    desc-PCA_metrics.json          Metadata sidecar file describing the component table
     desc-PCA_mixing.tsv            PCA mixing matrix
     desc-PCA_components.nii.gz     Component weight maps
-    desc-PCA_decomposition.json    Metadata sidecar file describing the PCA
-                                   decomposition
-    ===========================    =============================================
+    desc-PCA_decomposition.json    Metadata sidecar file describing the PCA decomposition
+    ===========================    ======================================================
 
     See Also
     --------
-    :func:`tedana.utils.make_adaptive_mask` : The function used to create
-        the ``adaptive_mask` parameter.
-    :py:mod:`tedana.constants` : The module describing the filenames for
-        various naming conventions
+    :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``.
     """
     if algorithm == "kundu":
         alg_str = "followed by the Kundu component selection decision tree (Kundu et al., 2013)"

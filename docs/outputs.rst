@@ -94,7 +94,7 @@ desc-tedana_metrics.json                            Metadata about the metrics i
 report.txt                                          A summary report for the workflow with relevant
                                                     citations.
 tedana_report.html                                  The interactive HTML report.
-================================================    =====================================================
+================================================    =======================================================================
 
 If ``verbose`` is set to True:
 

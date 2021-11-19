@@ -457,7 +457,7 @@ def writeresults(ts, mask, comptable, mmix, io_generator):
     =========================================    =====================================
     Filename                                     Content
     =========================================    =====================================
-    desc-denoised_bold.nii.gz              Denoised time series.
+    desc-denoised_bold.nii.gz                    Denoised time series.
     desc-ICA_components.nii.gz                   Spatial component maps for all
                                                  components.
     =========================================    =====================================
