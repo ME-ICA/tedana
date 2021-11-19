@@ -180,7 +180,7 @@ then retain the residuals for further analysis, you are doing aggressive denoisi
     denoised_img = masker.fit_transform(data_file, confounds=regressors)
 
     # Save to file
-    denoised_img.to_filename("desc-aggrDenoised_bold.nii.gz")
+    denoised_img.to_filename("sub-01_task-rest_space-MNI152NLin2009cAsym_desc-aggrDenoised_bold.nii.gz")
 
 .. tab:: AFNI
 
@@ -243,7 +243,7 @@ you are doing nonaggressive denoising.
 
     # Save to file
     img_denoised = masking.unmask(data_denoised.T, mask_file)
-    img_denoised.to_filename("desc-nonaggrDenoised_bold.nii.gz")
+    img_denoised.to_filename("sub-01_task-rest_space-MNI152NLin2009cAsym_desc-nonaggrDenoised_bold.nii.gz")
 
 .. tab:: AFNI
 
@@ -329,7 +329,7 @@ This way, you can regress the rejected components out of the data in the form of
     denoised_img = masker.fit_transform(data_file, confounds=orth_bad_timeseries)
 
     # Save to file
-    denoised_img.to_filename("desc-orthAggrDenoised_bold.nii.gz")
+    denoised_img.to_filename("sub-01_task-rest_space-MNI152NLin2009cAsym_desc-orthAggrDenoised_bold.nii.gz")
 
 .. tab:: AFNI
 
