@@ -39,3 +39,8 @@ div.admonition-independence-vs-orthogonality .admonition-title {
 div.admonition-independence-vs-orthogonality .admonition-title:before {
    content: none;
 }
+
+code {
+   color: #49759c !important;
+   background-color: transparent !important;
+}
