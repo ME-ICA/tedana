@@ -21,11 +21,17 @@ Let's start by loading the necessary data.
 
 .. tab:: Python
 
+  The "Python" examples show how to perform the different types of denoising using files taken directly from a tedana output directory.
+  These examples only use the component time series for denoising, so no external regressors, such as motion parameters or task regressors, are included.
+  For examples that incorporate external regressors, see the "Python with fMRIPrep confounds" tab.
+
+  For the most part, the "Python" examples rely on ``nilearn``.
+
   .. code-block:: python
 
-    import numpy as np
-    import pandas as pd
-    from nilearn import image, masking
+    import numpy as np  # A library for working with numerical data
+    import pandas as pd  # A library for working with tabular data
+    from nilearn import image, masking  # A library for processing/analyzing neuroimaging data
 
     # For this, you need the mixing matrix, the data you're denoising,
     # a brain mask, and an index of "bad" components
@@ -53,11 +59,17 @@ Let's start by loading the necessary data.
 
 .. tab:: Python with fMRIPrep confounds
 
+  The "Python with fMRIPrep confounds" examples show how to denoise outputs of the ``fMRIPrep`` workflow.
+  As such, the filenames we use reflect the current standard for ``fMRIPrep`` outputs, although you will need to adjust them based on your own data.
+  Additionally, these examples show how to incorporate external regressors (in this case, nuisance regressors like motion parameters) into your denoising step.
+
+  For the most part, the "Python with fMRIPrep confounds" examples rely on ``nilearn``.
+
   .. code-block:: python
 
-    import numpy as np
-    import pandas as pd
-    from nilearn import masking
+    import numpy as np  # A library for working with numerical data
+    import pandas as pd  # A library for working with tabular data
+    from nilearn import image, masking  # A library for processing/analyzing neuroimaging data
 
     # For this, you need the mixing matrix, the data you're denoising,
     # a brain mask, and an index of "bad" components
@@ -107,7 +119,7 @@ then retain the residuals for further analysis, you are doing aggressive denoisi
 
   .. code-block:: python
 
-    from nilearn.input_data import NiftiMasker
+    from nilearn.input_data import NiftiMasker  # A class for masking and denoising fMRI data
 
     masker = NiftiMasker(
         mask_img=mask_img,
@@ -131,7 +143,7 @@ then retain the residuals for further analysis, you are doing aggressive denoisi
 
   .. code-block:: python
 
-    from nilearn.input_data import NiftiMasker
+    from nilearn.input_data import NiftiMasker  # A class for masking and denoising fMRI data
 
     # Combine the rejected components and the fMRIPrep confounds into a single array
     regressors = np.hstack((rejected_components, confounds))
@@ -169,8 +181,8 @@ you are doing nonaggressive denoising.
 
 .. tab:: Python
 
-  Unfortunately, "non-aggressive" denoising is difficult to do with nilearn's Masker
-  objects, so we will end up using numpy directly for this approach.
+  Unfortunately, "non-aggressive" denoising is difficult to do with ``nilearn``'s Masker
+  objects, so we will end up using ``numpy`` directly for this approach.
 
   .. code-block:: python
 
@@ -192,8 +204,8 @@ you are doing nonaggressive denoising.
 
 .. tab:: Python with fMRIPrep confounds
 
-  Unfortunately, "non-aggressive" denoising is difficult to do with nilearn's Masker
-  objects, so we will end up using numpy directly for this approach.
+  Unfortunately, "non-aggressive" denoising is difficult to do with ``nilearn``'s Masker
+  objects, so we will end up using ``numpy`` directly for this approach.
 
   .. code-block:: python
 
@@ -228,7 +240,7 @@ you are doing nonaggressive denoising.
 Orthogonalize the noise components w.r.t. the accepted components prior to denoising
 ************************************************************************************
 
-Independent component analysis decomposes the data into _independent_ components, obviously.
+Independent component analysis decomposes the data into components that are `statistically independent`.
 Unlike principal components analysis, the components from ICA are not orthogonal, so they may explain shared variance.
 If you want to ensure that variance shared between the accepted and rejected components does not contaminate the denoised data,
 you may wish to orthogonalize the rejected components with respect to the accepted components.
