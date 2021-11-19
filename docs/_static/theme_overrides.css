@@ -18,3 +18,8 @@ div.admonition.caution {
 .rst-content .caution .admonition-title {
   background: #FF6F6F
 }
+div.topic {
+  border-radius: 25px;
+  padding: 20px;
+  border-style: solid;
+}

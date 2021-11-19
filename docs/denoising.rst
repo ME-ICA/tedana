@@ -22,7 +22,7 @@ However, users may wish to apply a different type of denoising, or to incorporat
   then regressing the rejected components from your data may also remove meaningful signal associated with the accepted component as well.
   This conundrum is what motivates the different approaches used for decomposition-based denoising methods described here.
 
-This pages has three purposes:
+This page has three purposes:
 
 1. Describe different approaches to denoising using ICA components.
 2. Provide sample code using common code to perform each type of denoising.
