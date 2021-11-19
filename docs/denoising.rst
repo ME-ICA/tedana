@@ -40,7 +40,9 @@ Let's start by loading the necessary data.
 
     # Load the component table
     metrics_df = pd.read_table(metrics_file)
-    rejected_components_idx = metrics_df.loc[metrics_df["classification"] == "rejected"].index.values
+    rejected_components_idx = metrics_df.loc[
+        metrics_df["classification"] == "rejected"
+    ].index.values
     kept_components_idx = metrics_df.loc[metrics_df["classification"] != "rejected"].index.values
 
     # Select "bad" components from the mixing matrix
@@ -71,7 +73,9 @@ Let's start by loading the necessary data.
 
     # Load the component table
     metrics_df = pd.read_table(metrics_file)
-    rejected_components_idx = metrics_df.loc[metrics_df["classification"] == "rejected"].index.values
+    rejected_components_idx = metrics_df.loc[
+        metrics_df["classification"] == "rejected"
+    ].index.values
     kept_components_idx = metrics_df.loc[metrics_df["classification"] != "rejected"].index.values
 
     # Load the confounds file
@@ -249,7 +253,7 @@ This way, you can regress the rejected components out of the data in the form of
     pred_rejected_components = np.dot(kept_components, betas)
     orth_rejected_components = rejected_components - pred_rejected_components
 
-    # Once you have these "pure evil" components, you can perform aggressive denoising on the data
+    # Once you have these "pure evil" components, you can denoise the data
     masker = NiftiMasker(
         mask_img=mask_img,
         standardize_confounds=True,
@@ -282,7 +286,7 @@ This way, you can regress the rejected components out of the data in the form of
     pred_bad_timeseries = np.dot(kept_components, betas)
     orth_bad_timeseries = bad_timeseries - pred_bad_timeseries
 
-    # Once you have these "pure evil" components, you can perform aggressive denoising on the data
+    # Once you have these "pure evil" components, you can denoise the data
     masker = NiftiMasker(
         mask_img=mask_file,
         standardize_confounds=True,
