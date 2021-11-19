@@ -11,7 +11,7 @@ This is colloquially known as "non-aggressive denoising".
 
 However, users may wish to apply a different type of denoising, or to incorporate other regressors into their denoising step, and we will discuss these alternatives here.
 
-.. topic:: Independence vs. Orthogonality
+.. admonition:: Independence vs. Orthogonality
 
   ``tedana`` uses independent component analysis (ICA) to decompose the data into time series that are assumed to reflect meaningful underlying signals.
   It then classifies each time series (a.k.a. component) as "accepted" (BOLD-like) or "rejected" (non-BOLD-like).
@@ -61,7 +61,9 @@ Let's start by loading the necessary data.
     rejected_components_idx = metrics_df.loc[
         metrics_df["classification"] == "rejected"
     ].index.values
-    kept_components_idx = metrics_df.loc[metrics_df["classification"] != "rejected"].index.values
+    kept_components_idx = metrics_df.loc[
+        metrics_df["classification"] != "rejected"
+    ].index.values
 
     # Select "bad" components from the mixing matrix
     rejected_components = mixing[:, rejected_components_idx]
@@ -100,7 +102,9 @@ Let's start by loading the necessary data.
     rejected_components_idx = metrics_df.loc[
         metrics_df["classification"] == "rejected"
     ].index.values
-    kept_components_idx = metrics_df.loc[metrics_df["classification"] != "rejected"].index.values
+    kept_components_idx = metrics_df.loc[
+        metrics_df["classification"] != "rejected"
+    ].index.values
 
     # Load the confounds file
     confounds_df = pd.read_table(confounds_file)

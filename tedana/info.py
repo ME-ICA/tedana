@@ -57,6 +57,7 @@ EXTRA_REQUIRES = {
         "sphinx>=1.5.3",
         "sphinx_rtd_theme",
         "sphinx-argparse",
+        "sphinx-copybutton",
         "sphinx-inline-tabs",
     ],
     "tests": TESTS_REQUIRES,

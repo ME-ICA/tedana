@@ -49,6 +49,7 @@ extensions = [
     "sphinx.ext.linkcode",
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
+    "sphinx_copybutton",
     "sphinx_inline_tabs",
     "sphinxarg.ext",
 ]
@@ -101,7 +102,7 @@ language = None
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = "sphinx"
+pygments_style = "tango"
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
