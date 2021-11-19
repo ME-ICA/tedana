@@ -12,6 +12,7 @@ This is colloquially known as "non-aggressive denoising".
 However, users may wish to apply a different type of denoising, or to incorporate other regressors into their denoising step, and we will discuss these alternatives here.
 
 .. topic:: Independence vs. Orthogonality
+
   ``tedana`` uses independent component analysis (ICA) to decompose the data into time series that are assumed to reflect meaningful underlying signals.
   It then classifies each time series (a.k.a. component) as "accepted" (BOLD-like) or "rejected" (non-BOLD-like).
 
