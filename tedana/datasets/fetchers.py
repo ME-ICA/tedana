@@ -22,7 +22,7 @@ def _reduce_confounds(regressors, keep_confounds):
     return reduced_regressors
 
 
-def _fetch_cambridge_functional(n_subjects, low_resolution, data_dir, url, resume, verbose):
+def _fetch_cambridge_functional(n_subjects, groups, data_dir, url, resume, verbose):
     """Helper function to fetch_cambridge.
 
     This function helps in downloading multi-echo functional MRI data
