@@ -134,7 +134,7 @@ def carpet_plot(optcom_ts, mask, comptable, mixing, io_generator, gscontrol=None
 
     if (gscontrol is not None) and ("mir" in gscontrol):
         mixing_mir_file = io_generator.get_name("ICA MIR mixing tsv")
-        mixing_mir = pd.read_table(mixing_mir_file, index_col="component").values
+        mixing_mir = pd.read_table(mixing_mir_file).values
         denoised_ts_mir, high_kappa_ts_mir, _ = io.denoise_ts(
             optcom_ts, mixing_mir, mask, comptable
         )
