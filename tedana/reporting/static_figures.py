@@ -6,6 +6,7 @@ import os
 
 import matplotlib
 import numpy as np
+import pandas as pd
 
 matplotlib.use("AGG")
 import matplotlib.pyplot as plt
@@ -42,15 +43,21 @@ def _trim_edge_zeros(arr):
     return arr[bounding_box]
 
 
-def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscontrol=None):
+def carpet_plot(optcom_ts, mask, comptable, mixing, io_generator, gscontrol=None):
     """Generate a set of carpet plots for the combined and denoised data.
 
     Parameters
     ----------
-    optcom_ts, denoised_ts, hikts, lowkts : (S x T) array_like
-        Different types of data to plot.
+    optcom_ts : (S x T) array_like
+        Optimally combined data.
     mask : (S,) array-like
         Binary mask used to apply to the data.
+    comptable : (C x X) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component, with a column for
+        each metric. The index should be the component number.
+    mixing : (C x T) array_like
+        Mixing matrix for converting input data to component space, where `C`
+        is components and `T` is the same as in `data`.
     io_generator : :obj:`tedana.io.OutputGenerator`
         The output generator for this workflow
     gscontrol : {None, 'mir', 'gsr'} or :obj:`list`, optional
@@ -59,11 +66,13 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
         pertinent outputs from those steps.
         Default is None.
     """
+    denoised_ts, high_kappa_ts, rejected_ts = io.denoise_ts(optcom_ts, mixing, mask, comptable)
+
     mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
     optcom_img = io.new_nii_like(io_generator.reference_img, optcom_ts)
     dn_img = io.new_nii_like(io_generator.reference_img, denoised_ts)
-    hik_img = io.new_nii_like(io_generator.reference_img, hikts)
-    lowk_img = io.new_nii_like(io_generator.reference_img, lowkts)
+    hik_img = io.new_nii_like(io_generator.reference_img, high_kappa_ts)
+    lowk_img = io.new_nii_like(io_generator.reference_img, rejected_ts)
 
     # Carpet plots
     fig, ax = plt.subplots(figsize=(14, 7))
@@ -124,10 +133,17 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
         fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_optcom_nogsr.svg"))
 
     if (gscontrol is not None) and ("mir" in gscontrol):
-        mir_denoised_img = io_generator.get_name("mir denoised img")
+        mixing_mir_file = io_generator.get_name("ICA MIR mixing tsv")
+        mixing_mir = pd.read_table(mixing_mir_file, index_col="component").values
+        denoised_ts_mir, high_kappa_ts_mir, _ = io.denoise_ts(
+            optcom_ts, mixing_mir, mask, comptable
+        )
+        denoised_img_mir = io.new_nii_like(io_generator.reference_img, denoised_ts_mir)
+        high_kappa_img_mir = io.new_nii_like(io_generator.reference_img, high_kappa_ts_mir)
+
         fig, ax = plt.subplots(figsize=(14, 7))
         plotting.plot_carpet(
-            mir_denoised_img,
+            denoised_img_mir,
             mask_img,
             figure=fig,
             axes=ax,
@@ -136,10 +152,9 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
         fig.tight_layout()
         fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_denoised_mir.svg"))
 
-        mir_denoised_img = io_generator.get_name("ICA accepted mir denoised img")
         fig, ax = plt.subplots(figsize=(14, 7))
         plotting.plot_carpet(
-            mir_denoised_img,
+            high_kappa_img_mir,
             mask_img,
             figure=fig,
             axes=ax,
