@@ -161,7 +161,7 @@ def _fetch_cambridge_regressors(n_subjects, data_dir, url, resume, verbose):
 @due.dcite(Doi("10.1073/pnas.1720985115"), description="Introduces the Cambridge dataset.")
 def fetch_cambridge(
     n_subjects=None,
-    low_resolution=False,
+    groups=("minimal_nativeres",),
     reduce_confounds=True,
     data_dir=None,
     resume=True,
@@ -176,9 +176,7 @@ def fetch_cambridge(
     ----------
     n_subjects : :obj:`int` or None, optional
         The number of subjects to load. If None, all the subjects are loaded. Total 88 subjects.
-    low_resolution : :obj:`bool`, optional
-        If True, download downsampled versions of the fMRI files, which is useful for testing.
-        Default is False.
+    groups : {"minimal_nativeres", "minimal_lowres", "all_nativeres"}
     reduce_confounds : :obj:`bool`, optional
         If True, the returned confounds only include 6 motion parameters, mean framewise
         displacement, signal from white matter, csf, and 6 anatomical compcor parameters.
