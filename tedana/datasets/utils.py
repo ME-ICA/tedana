@@ -2,7 +2,95 @@
 
 Adapted from the nilearn dataset fetchers.
 """
+import json
 import os
+import re
+
+
+def build_json_from_manifest(manifest_file, out_file):
+    """Generate a tedana-format json file from an OSF manifest file.
+
+    This function reorganizes the data stored in the manifest file and annotates each file
+    according to the groups with which it should be associated.
+    These groups are strongly linked to fMRIPrep derivatives, as well as dev-generated
+    low-resolution versions of those derivatives.
+
+    Parameters
+    ----------
+    manifest_file : :obj:`str`
+        Path to the OSF manifest JSON file.
+    out_file : :obj:`str`
+        Path to the output JSON file.
+
+    Notes
+    -----
+    The three groups currently included are:
+
+    - "minimal_nativeres": The minimal files necessary for analyses of native-resolution echo-wise
+      functional data. This includes the semi-preprocessed functional files, the native-space
+      brain mask, confounds, transforms necessary to warp to standard space, and the dataset
+      description file.
+    - "minimal_lowres": The minimal files necessary for analyses of downsampled (5mm3) echo-wise
+      functional data. This includes the downsampled, semi-preprocessed functional files,
+      confounds, and the dataset description file.
+    - "all_nativeres": All of the fMRIPrep derivatives, except for dev-generated downsampled files.
+    """
+    DROP_ENTITIES_FOR_TYPE = ["sub", "ses", "echo"]
+    IGNORE_FOLDERS_FOR_TYPE = ["figures", "log"]
+
+    with open(manifest_file, "r") as fo:
+        data = json.load(fo)
+
+    new_data = {}
+    for fn, link in data.items():
+        new_data[fn] = {}
+        new_data[fn]["groups"] = []
+        new_data[fn]["url"] = link
+
+        # Preprocessed echo-wise data and brain mask go in associated minimal groups
+        if ("desc-partialPreproc_bold" in fn) and ("res-5mm" not in fn):
+            new_data[fn]["groups"].append("minimal_nativeres")
+        elif ("desc-partialPreproc_bold" in fn) and ("res-5mm" in fn):
+            new_data[fn]["groups"].append("minimal_lowres")
+        elif "space-scanner_desc-brain_mask" in fn:
+            new_data[fn]["groups"].append("minimal_nativeres")
+
+        # Transforms go in native-res minimal group
+        if fn.endswith("from-T1w_to-scanner_mode-image_xfm.txt"):
+            new_data[fn]["groups"].append("minimal_nativeres")
+        elif fn.endswith("from-scanner_to-T1w_mode-image_xfm.txt"):
+            new_data[fn]["groups"].append("minimal_nativeres")
+        elif fn.endswith("from-T1w_to-MNI152NLin2009cAsym_mode-image_xfm.h5"):
+            new_data[fn]["groups"].append("minimal_nativeres")
+
+        # Confounds go in both minimal groups
+        if "desc-confounds_timeseries" in fn:
+            new_data[fn]["groups"].append("minimal_nativeres")
+            new_data[fn]["groups"].append("minimal_lowres")
+
+        # Dataset description goes in both minimal groups
+        if "dataset_description.json" in fn:
+            new_data[fn]["groups"].append("minimal_nativeres")
+            new_data[fn]["groups"].append("minimal_lowres")
+
+        # All files not flagged as low-resolution go in the "all" group
+        if "res-5mm" not in fn:
+            new_data[fn]["groups"].append("all_nativeres")
+
+        # Now to apply "type" labels
+        if any(ignore_folder in fn.split("/") for ignore_folder in IGNORE_FOLDERS_FOR_TYPE):
+            new_data[fn]["type"] = ""
+        elif fn.endswith(".html"):
+            new_data[fn]["type"] = "report"
+        else:
+            mapped_name = os.path.basename(fn)
+            for ent in DROP_ENTITIES_FOR_TYPE:
+                mapped_name = re.sub(f"{ent}-[0-9a-zA-Z]+_", "", mapped_name)
+
+            new_data[fn]["type"] = mapped_name
+
+    with open(out_file, "w") as fo:
+        json.dump(new_data, fo, sort_keys=True, indent=4)
 
 
 def _readlinkabs(link):

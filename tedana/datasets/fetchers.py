@@ -1,168 +1,23 @@
 """Functions for fetching datasets."""
+import json
+import logging
 import os
+import re
 
-import pandas as pd
-from nilearn._utils.numpy_conversions import csv_to_array
-from nilearn.datasets.utils import _fetch_files
 from sklearn.utils import Bunch
 
 from ..due import Doi, due
 from .utils import _get_dataset_dir
 
-
-def _reduce_confounds(regressors, keep_confounds):
-    reduced_regressors = []
-    for in_file in regressors:
-        out_file = in_file.replace("desc-confounds", "desc-reducedConfounds")
-        if not os.path.isfile(out_file):
-            confounds = pd.read_table(in_file)
-            selected_confounds = confounds[keep_confounds]
-            selected_confounds.to_csv(out_file, sep="\t", line_terminator="\n", index=False)
-        reduced_regressors.append(out_file)
-    return reduced_regressors
-
-
-def _fetch_cambridge_functional(n_subjects, groups, data_dir, url, resume, verbose):
-    """Helper function to fetch_cambridge.
-
-    This function helps in downloading multi-echo functional MRI data
-    for each subject in the Cambridge dataset.
-    Files are downloaded from Open Science Framework (OSF).
-    For more information on the data and its preprocessing, see:
-    https://osf.io/9wcb8/
-
-    Parameters
-    ----------
-    n_subjects : int
-        The number of subjects to load. If None, all the subjects are loaded. Total 88 subjects.
-    low_resolution : bool
-        If True, download downsampled versions of the fMRI files, which is useful for testing.
-    data_dir : str
-        Path of the data directory. Used to force data storage in a specified
-        location. If None is given, data are stored in home directory.
-    url : str
-        Override download URL. Used for test only (or if you setup a mirror of the data).
-    resume : bool
-        Whether to resume download of a partly-downloaded file.
-    verbose : int
-        Defines the level of verbosity of the output.
-
-    Returns
-    -------
-    func : list of str (Nifti files)
-        Paths to functional MRI data (4D) for each subject.
-    """
-    if url is None:
-        # Download from the relevant OSF project, using hashes generated
-        # from the OSF API. Note the trailing slash. For more info, see:
-        # https://gist.github.com/emdupre/3cb4d564511d495ea6bf89c6a577da74
-        url = "https://osf.io/download/{}/"
-
-    if low_resolution:
-        func = "{0}_task-rest_{1}_space-scanner_desc-partialPreproc_res-5mm_bold.nii.gz"
-        csv_col = "key_bold_lowres"
-    else:
-        func = "{0}_task-rest_{1}_space-scanner_desc-partialPreproc_res-native_bold.nii.gz"
-        csv_col = "key_bold_nativeres"
-
-    # The gzip contains unique download keys per Nifti file and confound
-    # pre-extracted from OSF. Required for downloading files.
-    package_directory = os.path.dirname(os.path.abspath(__file__))
-
-    # csv file contains download information related to OpenScience(osf)
-    csv_file = os.path.join(package_directory, "data", "cambridge_echos.csv")
-    df = pd.read_csv(csv_file)
-    participants = df["participant_id"].unique()[:n_subjects]
-    funcs = []
-
-    for participant_id in participants:
-        this_osf_id = df.loc[df["participant_id"] == participant_id]
-        participant_funcs = []
-
-        for i_row, row in this_osf_id.iterrows():
-            echo_id = row["echo_id"]
-            hash_ = row[csv_col]
-            # Download bold images for each echo
-            func_url = url.format(hash_)
-            func_file = [
-                (
-                    func.format(participant_id, echo_id),
-                    func_url,
-                    {"move": func.format(participant_id, echo_id)},
-                )
-            ]
-            path_to_func = _fetch_files(data_dir, func_file, resume=resume, verbose=verbose)[0]
-            participant_funcs.append(path_to_func)
-        funcs.append(tuple(participant_funcs))
-    return funcs
-
-
-def _fetch_cambridge_regressors(n_subjects, data_dir, url, resume, verbose):
-    """Helper function to fetch_cambridge.
-
-    This function helps in downloading the regressor time series for each run
-    of multi-echo functional MRI data in the Cambridge dataset.
-    Files are downloaded from Open Science Framework (OSF).
-    For more information on the data and its preprocessing, see:
-    https://osf.io/9wcb8/
-
-    Parameters
-    ----------
-    n_subjects : int
-        The number of subjects to load. If None, all the subjects are loaded. Total 88 subjects.
-    data_dir : str
-        Path of the data directory. Used to force data storage in a specified
-        location. If None is given, data are stored in home directory.
-    url : str
-        Override download URL. Used for test only (or if you setup a mirror of the data).
-    resume : bool
-        Whether to resume download of a partly-downloaded file.
-    verbose : int
-        Defines the level of verbosity of the output.
-
-    Returns
-    -------
-    regressors : list of str (tsv files)
-        Paths to regressors related to each subject.
-    """
-    if url is None:
-        # Download from the relevant OSF project, using hashes generated
-        # from the OSF API. Note the trailing slash. For more info, see:
-        # https://gist.github.com/emdupre/3cb4d564511d495ea6bf89c6a577da74
-        url = "https://osf.io/download/{}/"
-
-    regr = "{0}_task-rest_desc-confounds_timeseries.tsv"
-
-    # The gzip contains unique download keys per Nifti file and confound
-    # pre-extracted from OSF. Required for downloading files.
-    package_directory = os.path.dirname(os.path.abspath(__file__))
-    dtype = [("participant_id", "U12"), ("key_regressor", "U24")]
-    names = ["participant_id", "key_r"]
-    # csv file contains download information related to OpenScience(osf)
-    osf_data = csv_to_array(
-        os.path.join(package_directory, "data", "cambridge_confounds.csv"),
-        skip_header=True,
-        dtype=dtype,
-        names=names,
-    )
-    regressors = []
-
-    for participant_id, key_r in osf_data[:n_subjects]:
-        # Download regressor files
-        regr_url = url.format(key_r)
-        regr_file = [
-            (regr.format(participant_id), regr_url, {"move": regr.format(participant_id)})
-        ]
-        path_to_regr = _fetch_files(data_dir, regr_file, resume=resume, verbose=verbose)[0]
-        regressors.append(path_to_regr)
-    return regressors
+LGR = logging.getLogger("GENERAL")
 
 
 @due.dcite(Doi("10.1073/pnas.1720985115"), description="Introduces the Cambridge dataset.")
+@due.dcite(Doi("10.1038/s41592-018-0235-4"), description="Original citation for fMRIPrep.")
+@due.dcite(Doi("10.1038/s41596-020-0327-3"), description="Updated citation for fMRIPrep.")
 def fetch_cambridge(
     n_subjects=None,
     groups=("minimal_nativeres",),
-    reduce_confounds=True,
     data_dir=None,
     resume=True,
     verbose=1,
@@ -170,19 +25,15 @@ def fetch_cambridge(
     """Fetch Cambridge multi-echo data.
 
     See Notes below for more information on this dataset.
-    Please cite [1]_ if you are using this dataset.
+    Please cite [1]_ if you are using this dataset, as well as [2]_ and [3]_ because it was
+    preprocessed with fMRIPrep.
 
     Parameters
     ----------
     n_subjects : :obj:`int` or None, optional
         The number of subjects to load. If None, all the subjects are loaded. Total 88 subjects.
-    groups : {"minimal_nativeres", "minimal_lowres", "all_nativeres"}
-    reduce_confounds : :obj:`bool`, optional
-        If True, the returned confounds only include 6 motion parameters, mean framewise
-        displacement, signal from white matter, csf, and 6 anatomical compcor parameters.
-        This selection only serves the purpose of having realistic examples.
-        Depending on your research question, other confounds might be more appropriate.
-        If False, returns all fmriprep confounds. Default=True.
+    groups : tuple of {"minimal_nativeres", "minimal_lowres", "all_nativeres"}
+        Which groups of files to download. Default = ``("minimal_nativeres",)``.
     data_dir : :obj:`str`, optional
         Path of the data directory. Used to force data storage in a specified location.
         If None, data are stored in home directory.
@@ -212,6 +63,11 @@ def fetch_cambridge(
     The original, raw data are available on OpenNeuro at
     https://openneuro.org/datasets/ds000258/versions/1.0.0 .
 
+    Warning
+    -------
+    The grouping and labeling approach we use for our datasets will not work well with the
+    inheritance principle. We also ignore figure and log files in the returned Bunch objects.
+
     References
     ----------
     .. [1] Power, J., Plitt, M., Gotts, S., Kundu, P., Voon, V., Bandettini, P., & Martin, A.
@@ -220,29 +76,22 @@ def fetch_cambridge(
            spatial and physical bases in multi-echo data.
            PNAS, 115(9), E2105-2114.
            www.pnas.org/content/115/9/E2105
+    .. [2] Esteban, O., Markiewicz, C. J., Blair, R. W., Moodie, C. A., Isik, A. I., Erramuzpe, A.,
+           ... & Gorgolewski, K. J. (2019).
+           fMRIPrep: a robust preprocessing pipeline for functional MRI.
+           Nature methods, 16(1), 111-116.
+           https://doi.org/10.1038/s41592-018-0235-4
+    .. [3] Esteban, O., Ciric, R., Finc, K., Blair, R. W., Markiewicz, C. J., Moodie, C. A.,
+           ...  & Gorgolewski, K. J. (2020).
+           Analysis of task-based functional MRI data preprocessed with fMRIPrep.
+           Nature protocols, 15(7), 2186-2202.
+           https://doi.org/10.1038/s41596-020-0327-3
 
     See Also
     --------
     tedana.datasets.utils.get_data_dirs
     """
     DATASET_NAME = "cambridge"
-    KEEP_CONFOUNDS = [
-        "trans_x",
-        "trans_y",
-        "trans_z",
-        "rot_x",
-        "rot_y",
-        "rot_z",
-        "framewise_displacement",
-        "a_comp_cor_00",
-        "a_comp_cor_01",
-        "a_comp_cor_02",
-        "a_comp_cor_03",
-        "a_comp_cor_04",
-        "a_comp_cor_05",
-        "csf",
-        "white_matter",
-    ]
     data_dir = _get_dataset_dir(DATASET_NAME, data_dir=data_dir, verbose=verbose)
 
     # Dataset description
@@ -253,23 +102,70 @@ def fetch_cambridge(
     except IOError:
         fdescr = ""
 
-    funcs = _fetch_cambridge_functional(
-        n_subjects,
-        low_resolution=low_resolution,
-        data_dir=data_dir,
-        url=None,
-        resume=resume,
-        verbose=verbose,
-    )
-    regressors = _fetch_cambridge_regressors(
-        n_subjects,
-        data_dir=data_dir,
-        url=None,
-        resume=resume,
-        verbose=verbose,
-    )
+    config_file = os.path.join(package_directory, "data", DATASET_NAME + ".json")
+    with open(config_file, "r") as fo:
+        config_data = json.load(fo)
 
-    if reduce_confounds:
-        regressors = _reduce_confounds(regressors, KEEP_CONFOUNDS)
+    if isinstance(groups, str):
+        groups = (groups,)
 
-    return Bunch(func=funcs, confounds=regressors, description=fdescr)
+    # files_to_download = select_files(config_data, n_subjects=n_subjects, groups=groups)
+    # Reduce by groups
+    reduced_config_data = {
+        k: v for k, v in config_data.items() if any(g in v["groups"] for g in groups)
+    }
+
+    all_files = sorted(list(reduced_config_data.keys()))
+    subject_search = "(sub-[a-zA-Z0-9]+)"
+    general_files = [f for f in all_files if not re.findall(subject_search, f)]
+    subject_files = [f for f in all_files if re.findall(subject_search, f)]
+    subjects = [re.findall(subject_search, f)[0] for f in subject_files]
+    subjects = sorted(list(set(subjects)))
+
+    if n_subjects > len(subjects):
+        LGR.warning(
+            f"{n_subjects} requested, but only {len(subjects)} available. "
+            f"Downloading {len(subjects)}."
+        )
+        n_subjects = len(subjects)
+
+    subjects = subjects[:n_subjects]
+    selected_files = [f for f in subject_files if any(sub in f for sub in subjects)]
+    selected_files += general_files
+    selected_files = sorted(selected_files)
+
+    # Should probably *download* the selected files here.
+
+    # bunch = group_files(selected_files, description=fdescr)
+    grouped_files = {}
+    reduced_config_data_again = {
+        k: v for k, v in reduced_config_data.items() if k in selected_files
+    }
+    unique_types = sorted(list(set([v["type"] for v in reduced_config_data.values()])))
+    unique_types = [v for v in unique_types if v]  # Drop empty ("") types
+    for type_ in unique_types:
+        grouped_files[type_] = []
+        type_files = [f for f in selected_files if reduced_config_data_again[f]["type"] == type_]
+
+        type_general_files = sorted([f for f in type_files if f in general_files])
+        if len(type_general_files) == 1:
+            type_general_files = type_general_files[0]
+
+        if type_general_files:
+            # must have been a subject-wise file
+            grouped_files[type_].append(type_general_files)
+        else:
+            for subject in subjects:
+                subject_type_files = sorted([f for f in type_files if subject in f])
+                if len(subject_type_files) == 1:
+                    subject_type_files = subject_type_files[0]
+
+                grouped_files[type_].append(subject_type_files)
+
+    grouped_files["participant_id"] = subjects
+
+    # Would be great to extract useful metadata here (esp. EchoTimes) and add it to the Bunch.
+
+    bunch = Bunch(description=fdescr, **grouped_files)
+
+    return bunch
