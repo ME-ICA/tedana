@@ -29,6 +29,14 @@ This page has three purposes:
 2. Provide sample code using common code to perform each type of denoising.
 3. Describe how to incorporate external regressors (e.g., motion parameters) into the denoising step.
 
+.. admonition:: Which should you use?
+
+  The decision about which denoising approach you should use depends on a number of factors.
+
+  The main difference between orthogonalizing and non-aggressive is that with orthogonalization,
+  all the variance common across the accepted and rejected components is put in the accepted basket and therefore it is not removed in the nuisance regression.
+  In contrast, with the non-aggressive denoising, the shared variance is smartly split during the estimation process and therefore some amount is removed.
+
 Let's start by loading the necessary data.
 
 .. tab:: Python

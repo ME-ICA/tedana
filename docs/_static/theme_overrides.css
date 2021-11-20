@@ -40,7 +40,23 @@ div.admonition-independence-vs-orthogonality .admonition-title:before {
    content: none;
 }
 
-code {
-   color: #49759c !important;
-   background-color: transparent !important;
-}
+/* Formatting rules specifically for admonition in denoising.rst */
+div.admonition-which-should-you-use {
+   border-radius: 25px;
+   padding: 20px;
+   border-style: solid;
+   background: #dbe29b
+ }
+
+ div.admonition-which-should-you-use .admonition-title {
+    border-radius: 25px;
+    padding: 10px;
+    border-style: solid;
+    font-size: larger;
+    text-align: center;
+    background: #eff180
+ }
+
+ div.admonition-which-should-you-use .admonition-title:before {
+    content: none;
+ }
