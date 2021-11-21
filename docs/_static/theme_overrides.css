@@ -20,11 +20,11 @@ div.admonition.caution {
 }
 
 /* Formatting rules specifically for admonition in denoising.rst */
-div.admonition-independence-vs-orthogonality .rst-content {
+div.admonition-independence-vs-orthogonality {
   border-radius: 25px;
   padding: 20px;
   border-style: solid;
-  background: #b19be2
+  background: #dac9ff !important;
 }
 
 div.admonition-independence-vs-orthogonality .admonition-title {
@@ -33,7 +33,7 @@ div.admonition-independence-vs-orthogonality .admonition-title {
    border-style: solid;
    font-size: larger;
    text-align: center;
-   background: #a280f1
+   background: #a280f1;
 }
 
 div.admonition-independence-vs-orthogonality .admonition-title:before {
@@ -41,22 +41,22 @@ div.admonition-independence-vs-orthogonality .admonition-title:before {
 }
 
 /* Formatting rules specifically for admonition in denoising.rst */
-div.admonition-which-should-you-use .rst-content {
+div.admonition-which-should-you-use {
    border-radius: 25px;
    padding: 20px;
    border-style: solid;
-   background: #dbe29b
- }
+   background: #c8e2c5 !important;
+}
 
- div.admonition-which-should-you-use .admonition-title {
-    border-radius: 25px;
-    padding: 10px;
-    border-style: solid;
-    font-size: larger;
-    text-align: center;
-    background: #eff180
- }
+div.admonition-which-should-you-use .admonition-title {
+   border-radius: 25px;
+   padding: 10px;
+   border-style: solid;
+   font-size: larger;
+   text-align: center;
+   background: #78c46f;
+}
 
- div.admonition-which-should-you-use .admonition-title:before {
-    content: none;
- }
+div.admonition-which-should-you-use .admonition-title:before {
+   content: none;
+}
