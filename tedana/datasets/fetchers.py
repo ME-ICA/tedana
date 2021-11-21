@@ -4,6 +4,7 @@ import logging
 import os
 import re
 
+from nilearn.datasets.utils import _fetch_files
 from sklearn.utils import Bunch
 
 from ..due import Doi, due
@@ -20,6 +21,7 @@ def fetch_cambridge(
     groups=("minimal_nativeres",),
     data_dir=None,
     resume=True,
+    overwrite=False,
     verbose=1,
 ):
     """Fetch Cambridge multi-echo data.
@@ -109,7 +111,6 @@ def fetch_cambridge(
     if isinstance(groups, str):
         groups = (groups,)
 
-    # files_to_download = select_files(config_data, n_subjects=n_subjects, groups=groups)
     # Reduce by groups
     reduced_config_data = {
         k: v for k, v in config_data.items() if any(g in v["groups"] for g in groups)
@@ -134,9 +135,7 @@ def fetch_cambridge(
     selected_files += general_files
     selected_files = sorted(selected_files)
 
-    # Should probably *download* the selected files here.
-
-    # bunch = group_files(selected_files, description=fdescr)
+    # Group files
     grouped_files = {}
     reduced_config_data_again = {
         k: v for k, v in reduced_config_data.items() if k in selected_files
@@ -148,6 +147,7 @@ def fetch_cambridge(
         type_files = [f for f in selected_files if reduced_config_data_again[f]["type"] == type_]
 
         type_general_files = sorted([f for f in type_files if f in general_files])
+        type_general_files = [os.path.join(data_dir, f) for f in type_general_files]
         if len(type_general_files) == 1:
             type_general_files = type_general_files[0]
 
@@ -157,6 +157,7 @@ def fetch_cambridge(
         else:
             for subject in subjects:
                 subject_type_files = sorted([f for f in type_files if subject in f])
+                subject_type_files = [os.path.join(data_dir, f) for f in subject_type_files]
                 if len(subject_type_files) == 1:
                     subject_type_files = subject_type_files[0]
 
@@ -164,8 +165,16 @@ def fetch_cambridge(
 
     grouped_files["participant_id"] = subjects
 
-    # Would be great to extract useful metadata here (esp. EchoTimes) and add it to the Bunch.
+    # TODO: Extract useful metadata here (esp. EchoTimes) and add it to the Bunch.
 
     bunch = Bunch(description=fdescr, **grouped_files)
+
+    # Download the files
+    URL = "https://osf.io/download/{}/"
+    file_tuple_list = [
+        (k, URL.format(v["key"]), {"move": k, "overwrite": overwrite})
+        for k, v in reduced_config_data_again.items()
+    ]
+    _fetch_files(data_dir, file_tuple_list)
 
     return bunch

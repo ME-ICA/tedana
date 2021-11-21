@@ -45,7 +45,7 @@ def build_json_from_manifest(manifest_file, out_file):
     for fn, link in data.items():
         new_data[fn] = {}
         new_data[fn]["groups"] = []
-        new_data[fn]["url"] = link
+        new_data[fn]["key"] = os.path.basename(link)
 
         # Preprocessed echo-wise data and brain mask go in associated minimal groups
         if ("desc-partialPreproc_bold" in fn) and ("res-5mm" not in fn):
