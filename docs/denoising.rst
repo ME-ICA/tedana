@@ -25,9 +25,9 @@ However, users may wish to apply a different type of denoising, or to incorporat
 
 This page has three purposes:
 
-1. Describe different approaches to denoising using ICA components.
-2. Provide sample code using common code to perform each type of denoising.
-3. Describe how to incorporate external regressors (e.g., motion parameters) into the denoising step.
+1.  Describe different approaches to denoising using ICA components.
+2.  Provide sample code using common code to perform each type of denoising.
+3.  Describe how to incorporate external regressors (e.g., motion parameters) into the denoising step.
 
 .. admonition:: Which should you use?
 
