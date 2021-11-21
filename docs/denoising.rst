@@ -33,6 +33,12 @@ This page has three purposes:
 
   The decision about which denoising approach you should use depends on a number of factors.
 
+  The first thing to know is that aggressive denoising, while appropriate for orthogonal time series,
+  may remove signal associated with "good" time series that are independent to, but not orthogonal with,
+  the "bad" time series being regressed out.
+
+  As an alternative, users may want to try non-aggressive denoising or aggressive denoising combined with component orthogonalization.
+
   The main difference between orthogonalizing and non-aggressive is that with orthogonalization,
   all the variance common across the accepted and rejected components is put in the accepted basket and therefore it is not removed in the nuisance regression.
   In contrast, with the non-aggressive denoising, the shared variance is smartly split during the estimation process and therefore some amount is removed.
