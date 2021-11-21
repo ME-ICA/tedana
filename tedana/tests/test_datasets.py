@@ -37,22 +37,28 @@ def test_fetch_cambridge(tmp_path_factory):
     cambridge_bunch = datasets.fetch_cambridge(
         n_subjects=1,
         data_dir=tmpdir,
-        low_resolution=True,
-        reduce_confounds=True,
+        groups="minimal_nativeres",
     )
     assert isinstance(cambridge_bunch, sklearn.utils.Bunch)
 
     # Check the functional files
-    assert isinstance(cambridge_bunch["func"], list)
-    assert isinstance(cambridge_bunch["func"][0], tuple)
-    assert len(cambridge_bunch["func"]) == 1
-    assert len(cambridge_bunch["func"][0]) == 4
-    assert all(os.path.isfile(f) for f in cambridge_bunch["func"][0])
+    assert isinstance(
+        cambridge_bunch["task-rest_space-scanner_desc-partialPreproc_bold.nii.gz"], list
+    )
+    assert len(cambridge_bunch["task-rest_space-scanner_desc-partialPreproc_bold.nii.gz"]) == 1
+    assert isinstance(
+        cambridge_bunch["task-rest_space-scanner_desc-partialPreproc_bold.nii.gz"][0], list
+    )
+    assert len(cambridge_bunch["task-rest_space-scanner_desc-partialPreproc_bold.nii.gz"][0]) == 4
+    assert all(
+        os.path.isfile(f)
+        for f in cambridge_bunch["task-rest_space-scanner_desc-partialPreproc_bold.nii.gz"][0]
+    )
 
     # Check the confounds files
-    assert isinstance(cambridge_bunch["confounds"], list)
-    assert len(cambridge_bunch["confounds"]) == 1
-    assert os.path.isfile(cambridge_bunch["confounds"][0])
+    assert isinstance(cambridge_bunch["task-rest_desc-confounds_timeseries.json"], list)
+    assert len(cambridge_bunch["task-rest_desc-confounds_timeseries.json"]) == 1
+    assert os.path.isfile(cambridge_bunch["task-rest_desc-confounds_timeseries.json"][0])
 
     # Check the description
     assert isinstance(cambridge_bunch["description"], str)
