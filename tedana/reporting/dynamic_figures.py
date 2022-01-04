@@ -17,11 +17,8 @@ tap_callback_jscode = """
         // -----------------------------
         var components = data['component']
         var selected = components[selected_idx]
-        var selected_padded = '' + selected;
-        while (selected_padded.length < 2) {
-            selected_padded = '0' + selected_padded;
-        }
-        var selected_padded_forIMG = '0' + selected_padded
+        var selected_padded = String(selected).padStart(3,0)
+        var selected_padded_forIMG = selected_padded
         var selected_padded_C = 'ica_' + selected_padded
 
         // Find color for selected component

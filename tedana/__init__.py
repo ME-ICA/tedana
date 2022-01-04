@@ -7,7 +7,7 @@ tedana: A Python package for TE-dependent analysis of multi-echo data.
 
 import warnings
 
-from .due import Doi, due
+from .due import BibTeX, Doi, due
 from .info import (
     __author__,
     __copyright__,
@@ -23,6 +23,14 @@ from .info import (
 
 # cmp is not used, so ignore nipype-generated warnings
 warnings.filterwarnings("ignore", r"cmp not installed")
+
+# Citation for the package JOSS paper.
+due.cite(
+    Doi("10.21105/joss.03669"),
+    description="Publication introducing tedana.",
+    path="tedana",
+    cite_module=True,
+)
 
 # Citation for the algorithm.
 due.cite(
