@@ -6,11 +6,12 @@ from numbers import Number
 
 import numpy as np
 import pandas as pd
-from mapca import ma_pca
+from mapca import MovingAveragePCA
 from scipy import stats
 from sklearn.decomposition import PCA
 
 from tedana import io, metrics, utils
+from tedana.reporting import pca_criteria as plot_pca_criteria
 from tedana.selection import kundu_tedpca
 from tedana.stats import computefeats2
 
@@ -233,9 +234,19 @@ def tedpca(
     if algorithm in ["mdl", "aic", "kic"]:
         data_img = io.new_nii_like(io_generator.reference_img, utils.unmask(data, mask))
         mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
-        voxel_comp_weights, varex, varex_norm, comp_ts = ma_pca(
-            data_img, mask_img, algorithm, normalize=True
-        )
+        ma_pca = MovingAveragePCA(criterion=algorithm, normalize=True)
+        _ = ma_pca.fit_transform(data_img, mask_img)
+        voxel_comp_weights = ma_pca.u_
+        varex = ma_pca.explained_variance_
+        varex_norm = ma_pca.explained_variance_ratio_
+        comp_ts = ma_pca.components_.T
+
+        pca_optimization_curves = np.array([ma_pca.aic, ma_pca.kic, ma_pca.mdl])
+        pca_criteria_components = np.array([ma_pca.n_aic, ma_pca.n_kic, ma_pca.n_mdl])
+
+        LGR.info("Plotting maPCA optimization curves")
+        plot_pca_criteria(pca_optimization_curves, pca_criteria_components, io_generator)
+
     elif isinstance(algorithm, Number):
         ppca = PCA(copy=False, n_components=algorithm, svd_solver="full")
         ppca.fit(data_z)

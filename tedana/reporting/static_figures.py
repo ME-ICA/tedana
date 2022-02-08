@@ -288,3 +288,61 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
         compplot_name = os.path.join(io_generator.out_dir, "figures", plot_name)
         plt.savefig(compplot_name)
         plt.close()
+
+
+def pca_criteria(criteria, n_components, io_generator):
+    """
+    Plot the PCA optimization curve for each criteria.
+
+    Parameters
+    ----------
+    criteria : array-like
+        AIC, KIC, and MDL optimization values for increasing number of components.
+    n_components : array-like
+        Number of optimal components given by each criteria.
+    io_generator : object
+        An object containing all the information needed to generate the output.
+    """
+    plt.figure(figsize=(10, 9))
+    plt.title("PCA Criteria")
+    plt.xlabel("PCA components")
+    plt.ylabel("Arbitrary Units")
+
+    # AIC curve
+    plt.plot(criteria[0, :], color="tab:blue", label="AIC")
+    # KIC curve
+    plt.plot(criteria[1, :], color="tab:orange", label="KIC")
+    # MDL curve
+    plt.plot(criteria[2, :], color="tab:green", label="MDL")
+
+    # Vertical line depicting the optimal number of components given by AIC
+    plt.vlines(
+        n_components[0],
+        ymin=np.min(criteria),
+        ymax=np.max(criteria),
+        color="tab:blue",
+        linestyles="dashed",
+    )
+    # Vertical line depicting the optimal number of components given by KIC
+    plt.vlines(
+        n_components[1],
+        ymin=np.min(criteria),
+        ymax=np.max(criteria),
+        color="tab:orange",
+        linestyles="dashed",
+    )
+    # Vertical line depicting the optimal number of components given by MDL
+    plt.vlines(
+        n_components[2],
+        ymin=np.min(criteria),
+        ymax=np.max(criteria),
+        color="tab:green",
+        linestyles="dashed",
+    )
+
+    plt.legend()
+
+    #  Save the plot
+    plot_name = "pca_criteria.png"
+    pca_criteria_name = os.path.join(io_generator.out_dir, "figures", plot_name)
+    plt.savefig(pca_criteria_name)
