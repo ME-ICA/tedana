@@ -61,7 +61,7 @@ tedana: TE Dependent ANAlysis
 About
 *****
 
-``TE``-``de``pendent ``ana``lysis (``tedana``) is a Python library for denoising multi-echo functional magnetic resonance imaging (fMRI) data.
+TE DEpendent ANAlysis (``tedana``) is a Python library for denoising multi-echo functional magnetic resonance imaging (fMRI) data.
 ``tedana`` originally came about as a part of the `ME-ICA`_ pipeline, although it has since diverged.
 An important distinction is that while the ME-ICA pipeline originally performed both pre-processing and TE-dependent analysis of multi-echo fMRI data,
 ``tedana`` now assumes that you're working with data which has been previously preprocessed.
@@ -112,12 +112,15 @@ When using tedana, please include the following citations:
       }
       </script>
       <p>
-      <span id="tedana_citation">tedana</span> Available from: <a id="tedana_doi_url" href="https://doi.org/10.5281/zenodo.1250561">https://doi.org/10.5281/zenodo.1250561</a>
+      <span id="tedana_citation">tedana</span> 
+      This link is for the most recent version of the code and that page has links to DOIs 
+      for older versions. To support reproducibility, please cite the version you used: 
+      <a id="tedana_doi_url" href="https://doi.org/10.5281/zenodo.1250561">https://doi.org/10.5281/zenodo.1250561</a>
       <img src onerror='fillCitation()' alt=""/>
       </p>
 
       <p>
-      2. DuPre, E. M., Salo, T., Ahmed, Z., Bandettini, P. A., Bottenhorn, K. L.,
+      1. DuPre, E. M., Salo, T., Ahmed, Z., Bandettini, P. A., Bottenhorn, K. L.,
       Caballero-Gaudes, C., Dowdle, L. T., Gonzalez-Castillo, J., Heunis, S.,
       Kundu, P., Laird, A. R., Markello, R., Markiewicz, C. J., Moia, S.,
       Staden, I., Teves, J. B., Uruñuela, E., Vaziri-Pashkam, M.,
@@ -128,13 +131,13 @@ When using tedana, please include the following citations:
       </p>
 
       <p>
-      3. Kundu, P., Inati, S. J., Evans, J. W., Luh, W. M., & Bandettini, P. A. (2011).
+      1. Kundu, P., Inati, S. J., Evans, J. W., Luh, W. M., & Bandettini, P. A. (2011).
       <a href=https://doi.org/10.1016/j.neuroimage.2011.12.028>Differentiating BOLD and non-BOLD signals in fMRI time series using multi-echo EPI.</a>
       <i>NeuroImage</i>, <i>60</i>, 1759-1770.
       </p>
 
       <p>
-      4. Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E., Inati, S. J.,
+      1. Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E., Inati, S. J.,
       Saad, Z. S., Bandettini, P. A., & Bullmore, E. T. (2013).
       <a href=https://doi.org/10.1073/pnas.1301725110>Integrated strategy for improving functional connectivity mapping using multiecho fMRI.</a>
       <i>Proceedings of the National Academy of Sciences</i>, <i>110</i>, 16187-16192.
