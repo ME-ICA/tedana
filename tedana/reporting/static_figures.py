@@ -339,6 +339,24 @@ def pca_criteria(criteria, n_components, io_generator):
         color="tab:green",
         linestyles="dashed",
     )
+    # Vertical line depicting the optimal number of components for 90% variance explained
+    plt.vlines(
+        n_components[3],
+        ymin=np.min(criteria),
+        ymax=np.max(criteria),
+        color="tab:red",
+        linestyles="dashed",
+        label="90% varexp",
+    )
+    # Vertical line depicting the optimal number of components for 95% variance explained
+    plt.vlines(
+        n_components[4],
+        ymin=np.min(criteria),
+        ymax=np.max(criteria),
+        color="tab:purple",
+        linestyles="dashed",
+        label="95% varexp",
+    )
 
     plt.legend()
 

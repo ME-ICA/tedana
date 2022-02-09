@@ -240,9 +240,14 @@ def tedpca(
         varex = ma_pca.explained_variance_
         varex_norm = ma_pca.explained_variance_ratio_
         comp_ts = ma_pca.components_.T
+        aic = ma_pca.aic_
+        kic = ma_pca.kic_
+        mdl = ma_pca.mdl_
+        varex_90 = ma_pca.varexp_90_
+        varex_95 = ma_pca.varexp_95_
 
-        pca_optimization_curves = np.array([ma_pca.aic, ma_pca.kic, ma_pca.mdl])
-        pca_criteria_components = np.array([ma_pca.n_aic, ma_pca.n_kic, ma_pca.n_mdl])
+        pca_optimization_curves = np.array([aic["value"], kic["value"], mdl["value"]])
+        pca_criteria_components = np.array([aic["n_components"], kic["n_components"], mdl["n_components"], varex_90["n_components"], varex_95["n_components"]])
 
         LGR.info("Plotting maPCA optimization curves")
         plot_pca_criteria(pca_optimization_curves, pca_criteria_components, io_generator)
