@@ -246,8 +246,41 @@ def tedpca(
         varex_90 = ma_pca.varexp_90_
         varex_95 = ma_pca.varexp_95_
 
+        # Extract number of components and variance explained for logging and plotting
+        n_aic = aic["n_components"]
+        aic_varexp = np.round(aic["explained_variance_total"], 3)
+        n_kic = kic["n_components"]
+        kic_varexp = np.round(kic["explained_variance_total"], 3)
+        n_mdl = mdl["n_components"]
+        mdl_varexp = np.round(mdl["explained_variance_total"], 3)
+        n_varex_90 = varex_90["n_components"]
+        varex_90_varexp = np.round(varex_90["explained_variance_total"], 3)
+        n_varex_95 = varex_95["n_components"]
+        varex_95_varexp = np.round(varex_95["explained_variance_total"], 3)
+
+        # Print out the results
+        LGR.info("Optimal number of components based on different criteria:")
+        LGR.info(
+            f"AIC: {n_aic} | KIC: {n_kic} | MDL: {n_mdl} | 90% varexp: {n_varex_90} "
+            f"| 95% varexp: {n_varex_95}"
+        )
+
+        LGR.info("Explained variance based on different criteria:")
+        LGR.info(
+            f"AIC: {aic_varexp}% | KIC: {kic_varexp}% | MDL: {mdl_varexp}% | "
+            f"90% varexp: {varex_90_varexp}% | 95% varexp: {varex_95_varexp}%"
+        )
+
         pca_optimization_curves = np.array([aic["value"], kic["value"], mdl["value"]])
-        pca_criteria_components = np.array([aic["n_components"], kic["n_components"], mdl["n_components"], varex_90["n_components"], varex_95["n_components"]])
+        pca_criteria_components = np.array(
+            [
+                n_aic,
+                n_kic,
+                n_mdl,
+                n_varex_90,
+                n_varex_95,
+            ]
+        )
 
         LGR.info("Plotting maPCA optimization curves")
         plot_pca_criteria(pca_optimization_curves, pca_criteria_components, io_generator)
