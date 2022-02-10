@@ -29,7 +29,7 @@ DOWNLOAD_URL = "https://github.com/ME-ICA/{name}/archive/{ver}.tar.gz".format(
 
 REQUIRES = [
     "bokeh<2.3.0",
-    "mapca~=0.0.1",
+    "mapca>0.0.1",
     "matplotlib",
     "nibabel>=2.5.1",
     "nilearn>=0.7",
