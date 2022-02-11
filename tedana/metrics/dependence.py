@@ -332,7 +332,7 @@ def calculate_dependence_metrics(F_T2_maps, F_S0_maps, Z_maps):
         "TE-dependence and TE-independence, respectively."
     )
 
-    weight_maps = Z_maps ** 2.0
+    weight_maps = Z_maps**2.0
     n_components = Z_maps.shape[1]
     kappas, rhos = np.zeros(n_components), np.zeros(n_components)
     for i_comp in range(n_components):
@@ -355,7 +355,7 @@ def calculate_varex(optcom_betas):
     varex : (C) array_like
         Unnormalized variance explained for each component.
     """
-    compvar = (optcom_betas ** 2).sum(axis=0)
+    compvar = (optcom_betas**2).sum(axis=0)
     varex = 100 * (compvar / compvar.sum())
     return varex
 
@@ -373,7 +373,7 @@ def calculate_varex_norm(weights):
     varex_norm : (C) array_like
         Normalized variance explained scaled from 0 to 1.
     """
-    compvar = (weights ** 2).sum(axis=0)
+    compvar = (weights**2).sum(axis=0)
     varex_norm = compvar / compvar.sum()
     return varex_norm
 
