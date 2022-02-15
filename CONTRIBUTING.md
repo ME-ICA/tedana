@@ -24,14 +24,14 @@ Already know what you're looking for in this guide? Jump to the following sectio
 
 Don't know where to get started?
 Read [Joining the conversation](#joining-the-conversation) and pop into
-Gitter to introduce yourself! Let us know what your interests are and we
+Mattermost to introduce yourself! Let us know what your interests are and we
 will help you find an issue to contribute to. Thanks so much!
 
 ## Joining the conversation
 
 `tedana` is a young project maintained by a growing group of enthusiastic developers&mdash; and we're excited to have you join!
 Most of our discussions will take place on open [issues][link_issues].
-We also maintain a [gitter chat room][link_gitter] for more informal conversations and general project updates.
+We also maintain a [Mattermost chat room][link_mattermost] for more informal conversations and general project updates.
 
 There is significant cross-talk between these two spaces, and we look forward to hearing from you in either venue!
 As a reminder, we expect all contributions to `tedana` to adhere to our [code of conduct][link_coc].
@@ -347,7 +347,7 @@ You're awesome. :wave::smiley:
 [link_issues]: https://github.com/ME-ICA/tedana/issues
 [link_milestones]: https://github.com/ME-ICA/tedana/milestones/
 [link_project_boards]: https://github.com/ME-ICA/tedana/projects
-[link_gitter]: https://gitter.im/me-ica/tedana
+[link_mattermost]: https://mattermost.brainhack.org/brainhack/channels/tedana
 [link_coc]: https://github.com/ME-ICA/tedana/blob/main/CODE_OF_CONDUCT.md
 [link_stale-bot]: https://github.com/probot/stale
 
