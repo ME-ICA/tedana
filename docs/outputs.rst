@@ -386,7 +386,7 @@ the optimally combined data, the denoised data, the high-Kappa (accepted) data, 
 
 These plots may be useful for visual quality control of the overall denoising run.
 
-.. image:: /_static/rep01_carpet_overview.png
+.. image:: /_static/carpet_overview.png
   :align: center
   :height: 400px
 

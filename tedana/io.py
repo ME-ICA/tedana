@@ -370,7 +370,7 @@ def denoise_ts(data, mmix, mask, comptable):
 
     # get variance explained by retained components
     betas = get_coeffs(dmdata.T, mmix, mask=None)
-    varexpl = (1 - ((dmdata.T - betas.dot(mmix.T)) ** 2.0).sum() / (dmdata ** 2.0).sum()) * 100
+    varexpl = (1 - ((dmdata.T - betas.dot(mmix.T)) ** 2.0).sum() / (dmdata**2.0).sum()) * 100
     LGR.info("Variance explained by decomposition: {:.02f}%".format(varexpl))
 
     # create component-based data
