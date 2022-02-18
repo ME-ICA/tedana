@@ -135,7 +135,10 @@ To do so, run
 pip install -e .'[all]'
 ```
 from within your local `tedana` repository. This should ensure all packages are correctly organized and linked on your user profile.
-
+If the above command didnot worked for you try using the following command :
+```
+pip install -e .[all]
+```
 We recommend including the `[all]` flag when you install `tedana` so that "extra" requirements necessary for running tests and building the documentation will also be installed.
 
 Once you've run this, your repository should be set for most changes (i.e., you do not have to re-run with every change).
