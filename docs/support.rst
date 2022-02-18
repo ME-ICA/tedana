@@ -27,10 +27,9 @@ There are multiple mechanisms for development-related communication, which can l
 Here we attempt to clarify when and how each communication pathway should be used:
 
 - GitHub Issues and Pull Requests: Issues and PRs should be the **main avenue of communication** for questions and proposals related to tedana's development.
-- Gitter: While tedana does have a Gitter channel, this channel should not be used for discussions. Instead, its primary use is to redirect to **existing** Issues and PRs, whether open or closed.
 - Monthly Newsletter: The `monthly newsletter`_ is used to make announcements from the tedana developers to the tedana users. Discussions that start in Issues or PRs may move to the newsletter if they are news-worthy.
 - NeuroStars: The NeuroStars forum is to be used by tedana users to ask questions about how to use tedana. tedana's developers may answer usage questions on NeuroStars, but development-related discussions should happen in GitHub Issues and PRs.
-- Mattermost: There is a `tedana channel in the BrainHack Mattermost`_. This is primarily used for online discussions during BrainHack-related hackathons (for example, the annual OHBM hackathon), if and when there is a tedana-related project. **This channel is not regularly monitored by tedana developers** and should not be used outside of hackathons.
+- Mattermost: There is a `tedana channel in the BrainHack Mattermost`_. This is primarily used for online discussions during BrainHack-related hackathons (for example, the annual OHBM hackathon), if and when there is a tedana-related project. We also use this channel to redirect to **existing** Issues and PRs, whether open or closed.
 
 .. _monthly newsletter: https://github.com/ME-ICA/newsletters
 .. _tedana channel in the BrainHack Mattermost: https://mattermost.brainhack.org/brainhack/channels/tedana

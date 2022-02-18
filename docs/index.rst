@@ -44,8 +44,8 @@ tedana: TE Dependent ANAlysis
    :target: http://isitmaintained.com/project/ME-ICA/tedana
    :alt: Percentage of issues still open
 
-.. image:: https://badges.gitter.im/ME-ICA/tedana.svg
-   :target: https://gitter.im/ME-ICA/tedana
+.. image:: https://img.shields.io/badge/Chat%20on-Mattermost-purple.svg
+   :target: https://mattermost.brainhack.org/brainhack/channels/tedana
    :alt: Join the chat
 
 .. image:: https://img.shields.io/badge/receive-our%20newsletter%20❤%EF%B8%8F-blueviolet.svg
