@@ -10,7 +10,18 @@ FAQ
 [tedana] How do I use tedana with fMRIPrepped data?
 ***************************************************
 
-`fMRIPrep`_ outputs the preprocessed, optimally-combined fMRI data, rather than echo-wise data.
+fMRIPrep versions >= 21.0.0
+===========================
+
+Starting with version 21.0.0, `fMRIPrep`_ added the ``--me-output-echos`` argument,
+which outputs individual echoes after slice timing, motion correction, and distortion correction have been performed.
+These preprocessed echoes can be denoised with tedana,
+after which warps written out by fMRIPrep can be applied to transform the denoised data to standard space.
+
+fMRIPrep versions < 21.0.0
+==========================
+
+Prior to version 21.0.0, `fMRIPrep`_ outputted the preprocessed, optimally-combined fMRI data, rather than echo-wise data.
 This means that you cannot use the standard fMRIPrep outputs with tedana for multi-echo denoising.
 
 However, as long as you still have access to fMRIPrep's working directory,
@@ -24,18 +35,46 @@ Unfortunately, fMRIPrep's working directory structure is not stable across versi
 so writing code to grab the relevant files from the working directory is a bit of a moving target.
 Nevertheless, we have some code (thanks to Julio Peraza) that works for version 20.2.1.
 
-.. warning::
-    We will try to keep the following gist up-to-date, but there is no guarantee that it will work for a given version.
-    Use it with caution!
-
-    If you do find that the gist isn't working for an fMRIPrep version >= 20.2.1,
-    please comment on `Issue #717 <https://github.com/ME-ICA/tedana/issues/717>`_ (even if it's closed)
-    and we will take a look at the problem.
-
 .. raw:: html
 
     <script src="https://gist.github.com/tsalo/83828e0c1e9009f3cbd82caed888afba.js"></script>
 
+Warping scanner-space fMRIPrep outputs to standard space
+========================================================
+
+Here is a basic approach to normalizing scanner-space tedana-denoised data created from fMRIPrep outputs,
+using ANTS's antsApplyTransforms tool.
+The actual filenames of fMRIPrep derivatives depend on the filenames in the BIDS dataset
+(e.g., the name of the task, run numbers, etc.),
+but in this example we chose to use the simple example of "sub-01" and "task-rest".
+The standard space template in this example is "MNI152NLin2009cAsym", but will depend on fMRIPrep settings in practice.
+
+.. code-block:: bash
+
+    # First, let's define some paths to the fMRIPrep and tedana outputs
+    fmriprep_dir="/path/to/fmriprep/derivatives/of/subject"
+    tedana_dir="/path/to/tedana/derivatives"
+
+    # Result of denoising the scanner-space multi-echo data with tedana
+    file_to_warp="${tedana_dir}/sub-01_task-rest_desc-optcomDenoised_bold.nii.gz"
+
+    # Name of the standard-space denoised data file to be written out
+    out_file="${tedana_dir}/sub-01_task-rest_space-MNI152NLin2009cAsym_desc-optcomDenoised_bold.nii.gz"
+
+    # An existing standard-space
+    standard_space_file="${fmriprep_dir}/func/sub-01_task-rest_space-MNI152NLin2009cAsym_boldref.nii.gz"
+
+    # Transforms
+    xform_native_to_t1w="${fmriprep_dir}/func/sub-01_task-rest_from-scanner_to-T1w_mode-image_xfm.txt"
+    xform_t1w_to_std="${fmriprep_dir}/anat/sub-01_from-T1w_to-MNI152NLin2009cAsym_mode-image_xfm.h5"
+
+    antsApplyTransforms \
+        -e 3 \
+        -i ${file_to_warp} \
+        -r ${standard_space_file} \
+        -o ${out_file} \
+        -n LanczosWindowedSinc \
+        -t ${xform_native_to_t1w} ${xform_t1w_to_std}
 
 ************************************
 [tedana] ICA has failed to converge.
