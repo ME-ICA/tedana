@@ -19,8 +19,6 @@ desc-optcomAccepted_bold.nii.gz
 desc-optcomDenoised_bold.nii.gz
 desc-optcomRejected_bold.nii.gz
 desc-optcom_bold.nii.gz
-report.txt
-tedana_report.html
 figures
 figures/carpet_optcom.svg
 figures/carpet_denoised.svg
@@ -95,4 +93,5 @@ figures/comp_065.png
 figures/comp_066.png
 figures/comp_067.png
 figures/comp_068.png
-figures/comp_069.png
+report.txt
+tedana_report.html
