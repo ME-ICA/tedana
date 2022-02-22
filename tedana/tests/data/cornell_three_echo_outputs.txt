@@ -91,3 +91,4 @@ figures/comp_061.png
 figures/comp_062.png
 figures/comp_063.png
 figures/comp_064.png
+figures/pca_criteria.png
