@@ -183,8 +183,10 @@ def test_integration_three_echo(skip_integration):
         tes=[14.5, 38.5, 62.5],
         out_dir=out_dir,
         low_mem=True,
-        tedpca="mdl",
+        tedpca="aic",
     )
+
+    breakpoint()
 
     # Test re-running, but use the CLI
     args = [
