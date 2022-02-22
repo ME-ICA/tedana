@@ -186,8 +186,6 @@ def test_integration_three_echo(skip_integration):
         tedpca="aic",
     )
 
-    breakpoint()
-
     # Test re-running, but use the CLI
     args = [
         "-d",
