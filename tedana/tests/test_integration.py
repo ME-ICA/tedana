@@ -115,7 +115,7 @@ def test_integration_five_echo(skip_integration):
         + [str(te) for te in echo_times]
         + [
             "--out-dir",
-            out_dir2,
+            out_dir,
             "--debug",
             "--verbose",
             "--manacc",
