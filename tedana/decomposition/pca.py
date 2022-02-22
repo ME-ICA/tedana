@@ -158,6 +158,7 @@ def tedpca(
     Outputs:
 
     This function writes out several files:
+
     ===========================    =============================================
     Default Filename               Content
     ===========================    =============================================
@@ -173,7 +174,7 @@ def tedpca(
     See Also
     --------
     :func:`tedana.utils.make_adaptive_mask` : The function used to create
-        the ``adaptive_mask` parameter.
+        the ``adaptive_mask`` parameter.
     :py:mod:`tedana.constants` : The module describing the filenames for
         various naming conventions
     """
