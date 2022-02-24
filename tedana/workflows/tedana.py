@@ -736,6 +736,7 @@ def tedana_workflow(
             )
             comptable, metric_metadata = selection.kundu_selection_v2(comptable, n_echos, n_vols)
         else:
+            LGR.info("Using supplied component table for classification")
             comptable = pd.read_table(ctab)
 
             if manacc is not None:
