@@ -11,7 +11,7 @@ from scipy import stats
 from sklearn.decomposition import PCA
 
 from tedana import io, metrics, utils
-from tedana.reporting import pca_criteria as plot_pca_criteria
+from tedana.reporting import pca_results as plot_pca_results
 from tedana.selection import kundu_tedpca
 from tedana.stats import computefeats2
 
@@ -246,6 +246,7 @@ def tedpca(
         mdl = ma_pca.mdl_
         varex_90 = ma_pca.varexp_90_
         varex_95 = ma_pca.varexp_95_
+        all_comps = ma_pca.all_
 
         # Extract number of components and variance explained for logging and plotting
         n_aic = aic["n_components"]
@@ -258,6 +259,7 @@ def tedpca(
         varex_90_varexp = np.round(varex_90["explained_variance_total"], 3)
         n_varex_95 = varex_95["n_components"]
         varex_95_varexp = np.round(varex_95["explained_variance_total"], 3)
+        all_varex = np.round(all_comps["explained_variance_total"], 3)
 
         # Print out the results
         LGR.info("Optimal number of components based on different criteria:")
@@ -272,6 +274,7 @@ def tedpca(
             f"90% varexp: {varex_90_varexp}% | 95% varexp: {varex_95_varexp}%"
         )
 
+        breakpoint()
         pca_optimization_curves = np.array([aic["value"], kic["value"], mdl["value"]])
         pca_criteria_components = np.array(
             [
@@ -284,7 +287,18 @@ def tedpca(
         )
 
         LGR.info("Plotting maPCA optimization curves")
-        plot_pca_criteria(pca_optimization_curves, pca_criteria_components, io_generator)
+        plot_pca_results(pca_optimization_curves, pca_criteria_components, all_varex, io_generator)
+
+        # Save the results into a dictionary
+        pca_results = {
+            "aic": aic,
+            "kic": kic,
+            "mdl": mdl,
+            "varex_90": varex_90,
+            "varex_95": varex_95,
+            "all_comps": all_comps,
+        }
+        io_generator.save_file(pca_results, "PCA cross component metrics json")
 
     elif isinstance(algorithm, Number):
         ppca = PCA(copy=False, n_components=algorithm, svd_solver="full")
