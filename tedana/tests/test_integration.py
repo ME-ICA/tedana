@@ -186,7 +186,7 @@ def test_integration_four_echo(skip_integration):
         tedpca="kundu-stabilize",
         gscontrol=["gsr", "mir"],
         png_cmap="bone",
-        mmix=mixing_matrix,
+        mixm=mixing_matrix,
         ctab=temporary_comptable,
         debug=True,
         verbose=False,
