@@ -191,6 +191,7 @@ def test_integration_four_echo(skip_integration):
         debug=True,
         verbose=False,
     )
+    os.remove(temporary_comptable)
 
     # compare the generated output files
     fn = resource_filename("tedana", "tests/data/fiu_four_echo_outputs.txt")
