@@ -72,13 +72,19 @@ def download_test_data(osf, outpath):
 
 
 def test_integration_five_echo(skip_integration):
-    """Integration test of the full tedana workflow using five-echo test data"""
+    """Integration test of the full tedana workflow using five-echo test data."""
 
     if skip_integration:
         pytest.skip("Skipping five-echo integration test")
+
     out_dir = "/tmp/data/five-echo/TED.five-echo"
+    out_dir_manual = "/tmp/data/five-echo/TED.five-echo-manual"
+
     if os.path.exists(out_dir):
         shutil.rmtree(out_dir)
+
+    if os.path.exists(out_dir_manual):
+        shutil.rmtree(out_dir_manual)
 
     # download data and run the test
     download_test_data("https://osf.io/9c42e/download", os.path.dirname(out_dir))
@@ -103,8 +109,7 @@ def test_integration_five_echo(skip_integration):
     assert isinstance(df, pd.DataFrame)
 
     # Test re-running, but use the CLI
-    out_dir2 = "/tmp/data/five-echo/TED.five-echo-manual"
-    acc_comps = df.loc[df["classification"] == "accepted"].index.values
+    acc_comps = df.loc[df["classification"] == "ignored"].index.values
     acc_comps = [str(c) for c in acc_comps]
     mixing = os.path.join(out_dir, "desc-ICA_mixing.tsv")
     t2smap = os.path.join(out_dir, "T2starmap.nii.gz")
@@ -115,7 +120,7 @@ def test_integration_five_echo(skip_integration):
         + [str(te) for te in echo_times]
         + [
             "--out-dir",
-            out_dir2,
+            out_dir_manual,
             "--debug",
             "--verbose",
             "--manacc",
@@ -198,10 +203,15 @@ def test_integration_three_echo(skip_integration):
 
     if skip_integration:
         pytest.skip("Skipping three-echo integration test")
+
     out_dir = "/tmp/data/three-echo/TED.three-echo"
-    out_dir2 = "/tmp/data/three-echo/TED.three-echo-rerun"
+    out_dir_manual = "/tmp/data/three-echo/TED.three-echo-rerun"
+
     if os.path.exists(out_dir):
         shutil.rmtree(out_dir)
+
+    if os.path.exists(out_dir_manual):
+        shutil.rmtree(out_dir_manual)
 
     # download data and run the test
     download_test_data("https://osf.io/rqhfc/download", os.path.dirname(out_dir))
@@ -222,7 +232,7 @@ def test_integration_three_echo(skip_integration):
         "38.5",
         "62.5",
         "--out-dir",
-        out_dir2,
+        out_dir_manual,
         "--debug",
         "--verbose",
         "--ctab",
