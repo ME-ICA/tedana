@@ -140,9 +140,15 @@ def test_integration_four_echo(skip_integration):
 
     if skip_integration:
         pytest.skip("Skipping four-echo integration test")
+
     out_dir = "/tmp/data/four-echo/TED.four-echo"
+    out_dir_manual = "/tmp/data/four-echo/TED.four-echo-manual"
+
     if os.path.exists(out_dir):
         shutil.rmtree(out_dir)
+
+    if os.path.exists(out_dir_manual):
+        shutil.rmtree(out_dir_manual)
 
     # download data and run the test
     download_test_data("https://osf.io/gnj73/download", os.path.dirname(out_dir))
@@ -161,8 +167,29 @@ def test_integration_four_echo(skip_integration):
         verbose=True,
     )
 
+    # Test re-running with the component table
+    mixing_matrix = os.path.join(out_dir, "desc-ICA_mixing.tsv")
+    comptable = os.path.join(out_dir, "desc-tedana_metrics.tsv")
+    temporary_comptable = os.path.join(out_dir, "temporary_metrics.tsv")
+    comptable_df = pd.read_table(comptable)
+    comptable_df.loc[comptable_df["classification"] == "ignored", "classification"] = "accepted"
+    comptable_df.to_csv(temporary_comptable, sep="\t", index=False)
+    tedana_cli.tedana_workflow(
+        data=datalist,
+        tes=[11.8, 28.04, 44.28, 60.52],
+        out_dir=out_dir_manual,
+        tedpca="kundu-stabilize",
+        gscontrol=["gsr", "mir"],
+        png_cmap="bone",
+        mmix=mixing_matrix,
+        ctab=temporary_comptable,
+        debug=True,
+        verbose=False,
+    )
+
     # compare the generated output files
     fn = resource_filename("tedana", "tests/data/fiu_four_echo_outputs.txt")
+
     check_integration_outputs(fn, out_dir)
 
 
