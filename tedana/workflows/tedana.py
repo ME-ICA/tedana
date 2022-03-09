@@ -738,7 +738,12 @@ def tedana_workflow(
         else:
             comptable = pd.read_table(ctab)
 
-            if manacc is not None:
+            # If manacc is None and if comptable has a column named original_classification
+            if manacc is None and "original_classification" in comptable.columns:
+                # Get index of rows that have accepted on their classification column in comptable
+                manacc = comptable.index[comptable['classification']=="accepted"].tolist()
+                comptable, metric_metadata = selection.manual_selection(comptable, acc=manacc)
+            elif manacc is not None:
                 comptable, metric_metadata = selection.manual_selection(comptable, acc=manacc)
 
     # Write out ICA files.
