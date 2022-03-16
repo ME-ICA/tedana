@@ -324,7 +324,7 @@ def tedana_workflow(
     prefix="",
     fittype="loglin",
     combmode="t2s",
-    tedpca="mdl",
+    tedpca="aic",
     fixed_seed=42,
     maxit=500,
     maxrestart=10,
@@ -371,7 +371,7 @@ def tedana_workflow(
         Method with which to select components in TEDPCA.
         If a float is provided, then it is assumed to represent percentage of variance
         explained (0-1) to retain from PCA.
-        Default is 'mdl'.
+        Default is 'aic'.
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
         denoising. Default is False.
