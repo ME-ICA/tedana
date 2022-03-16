@@ -225,7 +225,9 @@ def tedpca(
 
     n_samp, n_echos, n_vols = data_cat.shape
 
-    LGR.info("Computing PCA of optimally combined multi-echo data")
+    LGR.info(
+        f"Computing PCA of optimally combined multi-echo data with selection criteria: {algorithm}"
+    )
     data = data_oc[mask, :]
 
     data_z = ((data.T - data.T.mean(axis=0)) / data.T.std(axis=0)).T  # var normalize ts
