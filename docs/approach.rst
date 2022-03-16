@@ -244,8 +244,8 @@ to select the PCA components based on three widely-used model selection criteria
 
 .. note::
     Please, bear in mind that this is a data-driven dimensionality reduction approach. The default
-    option ``aic`` might not yield perfect results on your data. We suggest you explore the ``kic``
-    and ``mdl`` options if running ``tedana`` with ``aic`` returns more components than expected.
+    option ``aic`` might not yield perfect results on your data. Consider ``kic``
+    and ``mdl`` options if running ``tedana`` with ``aic`` returns more components than expected. There is no definitively right number of components, but, for typical fMRI datasets, if the PCA explains more than 98% of the variance or if the number of components is more than half the number of time points, then it may be worth considering more aggressive threshold.
 
 The simplest approach uses a user-supplied threshold applied to the cumulative variance explained
 by the PCA.
