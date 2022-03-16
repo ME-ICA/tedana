@@ -237,6 +237,8 @@ def tedpca(
         mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
         ma_pca = MovingAveragePCA(criterion=algorithm, normalize=True)
         _ = ma_pca.fit_transform(data_img, mask_img)
+
+        # Extract results from maPCA
         voxel_comp_weights = ma_pca.u_
         varex = ma_pca.explained_variance_
         varex_norm = ma_pca.explained_variance_ratio_
@@ -274,7 +276,6 @@ def tedpca(
             f"90% varexp: {varex_90_varexp}% | 95% varexp: {varex_95_varexp}%"
         )
 
-        breakpoint()
         pca_optimization_curves = np.array([aic["value"], kic["value"], mdl["value"]])
         pca_criteria_components = np.array(
             [
@@ -286,19 +287,39 @@ def tedpca(
             ]
         )
 
+        # Plot maPCA optimization curves
         LGR.info("Plotting maPCA optimization curves")
         plot_pca_results(pca_optimization_curves, pca_criteria_components, all_varex, io_generator)
 
-        # Save the results into a dictionary
-        pca_results = {
-            "aic": aic,
-            "kic": kic,
-            "mdl": mdl,
-            "varex_90": varex_90,
-            "varex_95": varex_95,
-            "all_comps": all_comps,
+        # Save maPCA results into a dictionary
+        mapca_results = {
+            "aic": {
+                "n_components": n_aic,
+                "explained_variance_total": aic_varexp,
+                "curve": aic["value"],
+            },
+            "kic": {
+                "n_components": n_kic,
+                "explained_variance_total": kic_varexp,
+                "curve": kic["value"],
+            },
+            "mdl": {
+                "n_components": n_mdl,
+                "explained_variance_total": mdl_varexp,
+                "curve": mdl["value"],
+            },
+            "varex_90": {
+                "n_components": n_varex_90,
+                "explained_variance_total": varex_90_varexp,
+            },
+            "varex_95": {
+                "n_components": n_varex_95,
+                "explained_variance_total": varex_95_varexp,
+            },
         }
-        io_generator.save_file(pca_results, "PCA cross component metrics json")
+
+        # Save dictionary
+        io_generator.save_file(mapca_results, "PCA cross component metrics json")
 
     elif isinstance(algorithm, Number):
         ppca = PCA(copy=False, n_components=algorithm, svd_solver="full")
