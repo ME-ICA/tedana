@@ -707,7 +707,7 @@ def prep_data_for_json(d) -> dict:
     To speed things up since there are a small number of conversions, this
     function does not check for serializability, but does use conversion
     rules for cases encountered where things were not serializable.
-    Add more conversion rules to this function in cases where a 
+    Add more conversion rules to this function in cases where a
     tedana-generated object does not serialize to JSON.
     """
     if not isinstance(d, dict):
