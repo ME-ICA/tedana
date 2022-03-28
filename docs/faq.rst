@@ -18,6 +18,14 @@ which outputs individual echoes after slice timing, motion correction, and disto
 These preprocessed echoes can be denoised with tedana,
 after which warps written out by fMRIPrep can be applied to transform the denoised data to standard space.
 
+As the fMRIPrep outputs become more formalized,
+it is possible to write functions that can select the appropriate derivative files and run tedana on them.
+Below is one example of such a function.
+
+.. raw:: html
+
+    <script src="https://gist.github.com/jbdenniso/73ec8281229d584721563a41aba410cf.js"></script>
+
 fMRIPrep versions < 21.0.0
 ==========================
 
