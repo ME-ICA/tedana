@@ -74,7 +74,8 @@ The standard space template in this example is "MNI152NLin2009cAsym", but will d
         -r ${standard_space_file} \
         -o ${out_file} \
         -n LanczosWindowedSinc \
-        -t ${xform_native_to_t1w} ${xform_t1w_to_std}
+        -t ${xform_native_to_t1w} \
+        -t ${xform_t1w_to_std}
 
 ************************************
 [tedana] ICA has failed to converge.
