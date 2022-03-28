@@ -736,6 +736,7 @@ def tedana_workflow(
             )
             comptable, metric_metadata = selection.kundu_selection_v2(comptable, n_echos, n_vols)
         else:
+            LGR.info("Using supplied component table for classification")
             comptable = pd.read_table(ctab)
             # Change rationale value of rows with NaN to empty strings
             comptable.loc[comptable.rationale.isna(), "rationale"] = ""
