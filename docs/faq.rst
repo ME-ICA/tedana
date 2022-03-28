@@ -57,32 +57,9 @@ The actual filenames of fMRIPrep derivatives depend on the filenames in the BIDS
 but in this example we chose to use the simple example of "sub-01" and "task-rest".
 The standard space template in this example is "MNI152NLin2009cAsym", but will depend on fMRIPrep settings in practice.
 
-.. code-block:: bash
+.. raw:: html
 
-    # First, let's define some paths to the fMRIPrep and tedana outputs
-    fmriprep_dir="/path/to/fmriprep/derivatives/of/subject"
-    tedana_dir="/path/to/tedana/derivatives"
-
-    # Result of denoising the scanner-space multi-echo data with tedana
-    file_to_warp="${tedana_dir}/sub-01_task-rest_desc-optcomDenoised_bold.nii.gz"
-
-    # Name of the standard-space denoised data file to be written out
-    out_file="${tedana_dir}/sub-01_task-rest_space-MNI152NLin2009cAsym_desc-optcomDenoised_bold.nii.gz"
-
-    # An existing standard-space
-    standard_space_file="${fmriprep_dir}/func/sub-01_task-rest_space-MNI152NLin2009cAsym_boldref.nii.gz"
-
-    # Transforms
-    xform_native_to_t1w="${fmriprep_dir}/func/sub-01_task-rest_from-scanner_to-T1w_mode-image_xfm.txt"
-    xform_t1w_to_std="${fmriprep_dir}/anat/sub-01_from-T1w_to-MNI152NLin2009cAsym_mode-image_xfm.h5"
-
-    antsApplyTransforms \
-        -e 3 \
-        -i ${file_to_warp} \
-        -r ${standard_space_file} \
-        -o ${out_file} \
-        -n LanczosWindowedSinc \
-        -t ${xform_native_to_t1w} ${xform_t1w_to_std}
+    <script src="https://gist.github.com/tsalo/f9f38e9aba901e99ddb720465bb5222b.js"></script>
 
 ************************************
 [tedana] ICA has failed to converge.
