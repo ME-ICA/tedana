@@ -38,6 +38,7 @@ REQUIRES = [
     "scikit-learn>=0.21",
     "scipy>=1.2.0",
     "threadpoolctl",
+    "jinja2==3.0.1",
 ]
 
 TESTS_REQUIRES = [
