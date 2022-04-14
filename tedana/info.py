@@ -39,6 +39,7 @@ REQUIRES = [
     "scipy>=1.2.0",
     "threadpoolctl",
     "jinja2==3.0.1",
+    "duecredit",
 ]
 
 TESTS_REQUIRES = [
