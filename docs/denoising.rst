@@ -3,7 +3,7 @@ Denoising Data with Components
 ##############################
 
 Decomposition-based denoising methods like ``tedana`` will produce two important outputs: component time series and component classifications.
-The component classifications will indicate whether each componet is "good" (accepted) or "bad" (rejected).
+The component classifications will indicate whether each component is "good" (accepted) or "bad" (rejected).
 To remove noise from your data, you can regress the "bad" components out of it, though there are multiple ways to accomplish this.
 
 By default, ``tedana`` will perform a regression including both "good" and "bad" components, and then will selectively remove the "bad" components from the data.
