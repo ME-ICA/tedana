@@ -7,8 +7,8 @@ tedana: A Python package for TE-dependent analysis of multi-echo data.
 
 import warnings
 
-from .due import BibTeX, Doi, due
 from ._version import get_versions
+from .due import BibTeX, Doi, due
 
 __version__ = get_versions()["version"]
 
