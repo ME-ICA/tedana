@@ -7,7 +7,7 @@ import pandas as pd
 from bokeh import __version__ as bokehversion
 from bokeh import embed, layouts, models
 
-from tedana.info import __version__
+from tedana import __version__
 from tedana.reporting import dynamic_figures as df
 
 
