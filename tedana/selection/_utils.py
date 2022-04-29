@@ -7,7 +7,6 @@ import numpy as np
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 def clean_dataframe(comptable):

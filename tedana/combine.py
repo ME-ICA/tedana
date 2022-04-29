@@ -5,21 +5,16 @@ import logging
 
 import numpy as np
 
-from tedana.due import Doi, due
-
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
-@due.dcite(
-    Doi("10.1002/(SICI)1522-2594(199907)42:1<87::AID-MRM13>3.0.CO;2-O"),
-    description="T2* method of combining data across echoes using monoexponential equation.",
-)
 def _combine_t2s(data, tes, ft2s, report=True):
     """
     Combine data across echoes using weighted averaging according to voxel-
     (and sometimes volume-) wise estimates of T2*.
+
+    This method was proposed in :footcite:p:`posse1999enhancement`.
 
     Parameters
     ----------
@@ -39,26 +34,14 @@ def _combine_t2s(data, tes, ft2s, report=True):
 
     References
     ----------
-    * Posse, S., Wiese, S., Gembris, D., Mathiak, K., Kessler,
-      C., Grosse‐Ruyken, M. L., ... & Kiselev, V. G. (1999).
-      Enhancement of BOLD‐contrast sensitivity by single‐shot
-      multi‐echo functional MR imaging. Magnetic Resonance in
-      Medicine: An Official Journal of the International Society
-      for Magnetic Resonance in Medicine, 42(1), 87-97.
+    .. footbibliography::
     """
     if report:
         RepLGR.info(
             "Multi-echo data were then optimally combined using the "
-            "T2* combination method (Posse et al., 1999)."
+            "T2* combination method \\cite{posse1999enhancement}."
         )
-        RefLGR.info(
-            "Posse, S., Wiese, S., Gembris, D., Mathiak, K., Kessler, "
-            "C., Grosse‐Ruyken, M. L., ... & Kiselev, V. G. (1999). "
-            "Enhancement of BOLD‐contrast sensitivity by single‐shot "
-            "multi‐echo functional MR imaging. Magnetic Resonance in "
-            "Medicine: An Official Journal of the International Society "
-            "for Magnetic Resonance in Medicine, 42(1), 87-97."
-        )
+
     n_vols = data.shape[-1]
     alpha = tes * np.exp(-tes / ft2s)
     if alpha.ndim == 2:
@@ -77,15 +60,13 @@ def _combine_t2s(data, tes, ft2s, report=True):
     return combined
 
 
-@due.dcite(
-    Doi("10.1002/mrm.20900"),
-    description="PAID method of combining data across echoes using just SNR/signal and TE.",
-)
 def _combine_paid(data, tes, report=True):
     """
     Combine data across echoes using SNR/signal and TE via the
     parallel-acquired inhomogeneity desensitized (PAID) ME-fMRI combination
     method.
+
+    This method was first proposed in :footcite:p:`poser2006bold`.
 
     Parameters
     ----------
@@ -103,29 +84,15 @@ def _combine_paid(data, tes, report=True):
 
     References
     ----------
-    * Poser, B. A., Versluis, M. J., Hoogduin, J. M., & Norris,
-      D. G. (2006). BOLD contrast sensitivity enhancement and
-      artifact reduction with multiecho EPI: parallel‐acquired
-      inhomogeneity‐desensitized fMRI.
-      Magnetic Resonance in Medicine: An Official Journal of the
-      International Society for Magnetic Resonance in Medicine,
-      55(6), 1227-1235.
+    .. footbibliography::
     """
     if report:
         RepLGR.info(
             "Multi-echo data were then optimally combined using the "
             "parallel-acquired inhomogeneity desensitized (PAID) "
-            "combination method."
+            "combination method \\cite{poser2006bold}."
         )
-        RefLGR.info(
-            "Poser, B. A., Versluis, M. J., Hoogduin, J. M., & Norris, "
-            "D. G. (2006). BOLD contrast sensitivity enhancement and "
-            "artifact reduction with multiecho EPI: parallel‐acquired "
-            "inhomogeneity‐desensitized fMRI. "
-            "Magnetic Resonance in Medicine: An Official Journal of the "
-            "International Society for Magnetic Resonance in Medicine, "
-            "55(6), 1227-1235."
-        )
+
     n_vols = data.shape[-1]
     snr = data.mean(axis=-1) / data.std(axis=-1)
     alpha = snr * tes
@@ -168,9 +135,9 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s", verbose=True
 
     Notes
     -----
-    This function supports both the ``'t2s'`` method [1]_ and the ``'paid'``
-    method [2]_. The ``'t2s'`` method operates according to the following
-    logic:
+    This function supports both the ``'t2s'`` method :footcite:t:`posse1999enhancement`
+    and the ``'paid'`` method :footcite:t:`poser2006bold`.
+    The ``'t2s'`` method operates according to the following logic:
 
     1.  Estimate voxel- and TE-specific weights based on estimated :math:`T_2^*`:
 
@@ -182,19 +149,7 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s", verbose=True
 
     References
     ----------
-    .. [1] Posse, S., Wiese, S., Gembris, D., Mathiak, K., Kessler,
-           C., Grosse‐Ruyken, M. L., ... & Kiselev, V. G. (1999).
-           Enhancement of BOLD‐contrast sensitivity by single‐shot
-           multi‐echo functional MR imaging. Magnetic Resonance in
-           Medicine: An Official Journal of the International Society
-           for Magnetic Resonance in Medicine, 42(1), 87-97.
-    .. [2] Poser, B. A., Versluis, M. J., Hoogduin, J. M., & Norris,
-           D. G. (2006). BOLD contrast sensitivity enhancement and
-           artifact reduction with multiecho EPI: parallel‐acquired
-           inhomogeneity‐desensitized fMRI.
-           Magnetic Resonance in Medicine: An Official Journal of the
-           International Society for Magnetic Resonance in Medicine,
-           55(6), 1227-1235.
+    .. footbibliography::
 
     See Also
     --------

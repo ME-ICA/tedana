@@ -34,7 +34,6 @@ from tedana.workflows.parser_utils import check_tedpca_value, is_valid_file
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 def _get_parser():
@@ -344,7 +343,7 @@ def tedana_workflow(
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
-    Please remember to cite [1]_.
+    Please remember to cite :footcite:p:`dupre2021te`.
 
     Parameters
     ----------
@@ -431,13 +430,7 @@ def tedana_workflow(
 
     References
     ----------
-    .. [1] DuPre, E. M., Salo, T., Ahmed, Z., Bandettini, P. A., Bottenhorn, K. L.,
-           Caballero-Gaudes, C., Dowdle, L. T., Gonzalez-Castillo, J., Heunis, S.,
-           Kundu, P., Laird, A. R., Markello, R., Markiewicz, C. J., Moia, S.,
-           Staden, I., Teves, J. B., Uruñuela, E., Vaziri-Pashkam, M.,
-           Whitaker, K., & Handwerker, D. A. (2021).
-           TE-dependent analysis of multi-echo fMRI with tedana.
-           Journal of Open Source Software, 6(66), 3669. doi:10.21105/joss.03669.
+    .. footbibliography::
     """
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
@@ -454,14 +447,13 @@ def tedana_workflow(
         previousparts = op.splitext(f)
         newname = previousparts[0] + "_old" + previousparts[1]
         os.rename(f, newname)
-    refname = op.join(out_dir, "_references.txt")
 
     # create logfile name
     basename = "tedana_"
     extension = "tsv"
     start_time = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
     logname = op.join(out_dir, (basename + start_time + "." + extension))
-    utils.setup_loggers(logname, repname, refname, quiet=quiet, debug=debug)
+    utils.setup_loggers(logname, repname, quiet=quiet, debug=debug)
 
     LGR.info("Using output directory: {}".format(out_dir))
 
@@ -544,16 +536,7 @@ def tedana_workflow(
 
     RepLGR.info(
         "TE-dependence analysis was performed on input data using the tedana workflow "
-        "(DuPre, Salo et al., 2021)."
-    )
-    RefLGR.info(
-        "DuPre, E. M., Salo, T., Ahmed, Z., Bandettini, P. A., Bottenhorn, K. L., "
-        "Caballero-Gaudes, C., Dowdle, L. T., Gonzalez-Castillo, J., Heunis, S., "
-        "Kundu, P., Laird, A. R., Markello, R., Markiewicz, C. J., Moia, S., "
-        "Staden, I., Teves, J. B., Uruñuela, E., Vaziri-Pashkam, M., "
-        "Whitaker, K., & Handwerker, D. A. (2021). "
-        "TE-dependent analysis of multi-echo fMRI with tedana. "
-        "Journal of Open Source Software, 6(66), 3669. doi:10.21105/joss.03669."
+        "\\cite{dupre2021te}."
     )
 
     if mask and not t2smap:
@@ -830,58 +813,22 @@ def tedana_workflow(
         json.dump(derivative_metadata, fo, sort_keys=True, indent=4)
 
     RepLGR.info(
-        "This workflow used numpy (Van Der Walt, Colbert, & "
-        "Varoquaux, 2011), scipy (Jones et al., 2001), pandas "
-        "(McKinney, 2010), scikit-learn (Pedregosa et al., 2011), "
-        "nilearn, and nibabel (Brett et al., 2019)."
-    )
-    RefLGR.info(
-        "Van Der Walt, S., Colbert, S. C., & Varoquaux, G. (2011). The "
-        "NumPy array: a structure for efficient numerical computation. "
-        "Computing in Science & Engineering, 13(2), 22."
-    )
-    RefLGR.info(
-        "Jones E, Oliphant E, Peterson P, et al. SciPy: Open Source "
-        "Scientific Tools for Python, 2001-, http://www.scipy.org/"
-    )
-    RefLGR.info(
-        "McKinney, W. (2010, June). Data structures for statistical "
-        "computing in python. In Proceedings of the 9th Python in "
-        "Science Conference (Vol. 445, pp. 51-56)."
-    )
-    RefLGR.info(
-        "Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., "
-        "Thirion, B., Grisel, O., ... & Vanderplas, J. (2011). "
-        "Scikit-learn: Machine learning in Python. Journal of machine "
-        "learning research, 12(Oct), 2825-2830."
-    )
-    RefLGR.info(
-        "Brett, M., Markiewicz, C. J., Hanke, M., Côté, M.-A., "
-        "Cipollini, B., McCarthy, P., … freec84. (2019, May 28). "
-        "nipy/nibabel. Zenodo. http://doi.org/10.5281/zenodo.3233118"
+        "This workflow used numpy \\cite{van2011numpy}, scipy \\cite{virtanen2020scipy}, "
+        "pandas \\cite{mckinney2010data,reback2020pandas}, "
+        "scikit-learn \\cite{pedregosa2011scikit}, "
+        "nilearn, bokeh \\cite{bokehmanual}, matplotlib \\cite{Hunter:2007}, "
+        "and nibabel \\cite{brett_matthew_2019_3233118}."
     )
 
     RepLGR.info(
-        "This workflow also used the Dice similarity index " "(Dice, 1945; Sørensen, 1948)."
-    )
-    RefLGR.info(
-        "Dice, L. R. (1945). Measures of the amount of ecologic "
-        "association between species. Ecology, 26(3), 297-302."
-    )
-    RefLGR.info(
-        "Sørensen, T. J. (1948). A method of establishing groups of "
-        "equal amplitude in plant sociology based on similarity of "
-        "species content and its application to analyses of the "
-        "vegetation on Danish commons. I kommission hos E. Munksgaard."
+        "This workflow also used the Dice similarity index "
+        "\\cite{dice1945measures,sorensen1948method}."
     )
 
     with open(repname, "r") as fo:
         report = [line.rstrip() for line in fo.readlines()]
         report = " ".join(report)
-    with open(refname, "r") as fo:
-        reference_list = sorted(list(set(fo.readlines())))
-        references = "\n".join(reference_list)
-    report += "\n\nReferences:\n\n" + references
+
     with open(repname, "w") as fo:
         fo.write(report)
 
@@ -920,7 +867,6 @@ def tedana_workflow(
 
     LGR.info("Workflow completed")
     utils.teardown_loggers()
-    os.remove(refname)
 
 
 def _main(argv=None):

@@ -10,11 +10,8 @@ from nilearn._utils import check_niimg
 from scipy import ndimage
 from sklearn.utils import check_array
 
-from tedana.due import BibTeX, due
-
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 def reshape_niimg(data):
@@ -141,39 +138,13 @@ def unmask(data, mask):
     return out
 
 
-@due.dcite(
-    BibTeX(
-        "@article{dice1945measures,"
-        "author={Dice, Lee R},"
-        "title={Measures of the amount of ecologic association between species},"
-        "year = {1945},"
-        "publisher = {Wiley Online Library},"
-        "journal = {Ecology},"
-        "volume={26},"
-        "number={3},"
-        "pages={297--302}}"
-    ),
-    description="Introduction of Sorenson-Dice index by Dice in 1945.",
-)
-@due.dcite(
-    BibTeX(
-        "@article{sorensen1948method,"
-        "author={S{\\o}rensen, Thorvald},"
-        "title={A method of establishing groups of equal amplitude "
-        "in plant sociology based on similarity of species and its "
-        "application to analyses of the vegetation on Danish commons},"
-        "year = {1948},"
-        "publisher = {Wiley Online Library},"
-        "journal = {Biol. Skr.},"
-        "volume={5},"
-        "pages={1--34}}"
-    ),
-    description="Introduction of Sorenson-Dice index by Sorenson in 1948.",
-)
 def dice(arr1, arr2, axis=None):
     """
     Compute Dice's similarity index between two numpy arrays. Arrays will be
     binarized before comparison.
+
+    This method was first proposed in :footcite:p:`dice1945measures` and
+    :footcite:p:`sorensen1948method`.
 
     Parameters
     ----------
@@ -188,11 +159,14 @@ def dice(arr1, arr2, axis=None):
     dsi : :obj:`float`
         Dice-Sorenson index.
 
+    Notes
+    -----
+    This implementation was based on
+    https://gist.github.com/brunodoamaral/e130b4e97aa4ebc468225b7ce39b3137.
+
     References
     ----------
-    REF_
-
-    .. _REF: https://gist.github.com/brunodoamaral/e130b4e97aa4ebc468225b7ce39b3137
+    .. footbibliography::
     """
     arr1 = np.array(arr1 != 0).astype(int)
     arr2 = np.array(arr2 != 0).astype(int)
@@ -386,7 +360,7 @@ def millisec2sec(arr):
     return arr / 1000.0
 
 
-def setup_loggers(logname=None, repname=None, refname=None, quiet=False, debug=False):
+def setup_loggers(logname=None, repname=None, quiet=False, debug=False):
     # Set up the general logger
     log_formatter = logging.Formatter(
         "%(asctime)s\t%(module)s.%(funcName)-12s\t%(levelname)-8s\t%(message)s",
@@ -421,16 +395,9 @@ def setup_loggers(logname=None, repname=None, refname=None, quiet=False, debug=F
         RepLGR.addHandler(rep_handler)
         RepLGR.propagate = False
 
-    if refname:
-        ref_handler = logging.FileHandler(refname)
-        ref_handler.setFormatter(text_formatter)
-        RefLGR.setLevel(logging.INFO)
-        RefLGR.addHandler(ref_handler)
-        RefLGR.propagate = False
-
 
 def teardown_loggers():
-    for local_logger in (RefLGR, RepLGR, LGR):
+    for local_logger in (RepLGR, LGR):
         for handler in local_logger.handlers[:]:
             handler.close()
             local_logger.removeHandler(handler)

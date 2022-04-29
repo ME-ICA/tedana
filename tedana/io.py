@@ -21,7 +21,6 @@ from tedana.stats import computefeats2, get_coeffs
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 class OutputGenerator:
