@@ -50,6 +50,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinxarg.ext",
+    "sphinxcontrib.bibtex",  # for foot-citations
 ]
 
 import sphinx
@@ -153,6 +154,13 @@ def setup(app):
 
 html_favicon = "_static/tedana_favicon.png"
 
+# -----------------------------------------------------------------------------
+# sphinxcontrib-bibtex
+# -----------------------------------------------------------------------------
+bibtex_bibfiles = ["./references.bib"]
+bibtex_style = "unsrt"
+bibtex_reference_style = "author_year"
+bibtex_footbibliography_header = ""
 
 # -- Options for HTMLHelp output ------------------------------------------
 

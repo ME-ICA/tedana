@@ -14,7 +14,7 @@ def _combine_t2s(data, tes, ft2s, report=True):
     Combine data across echoes using weighted averaging according to voxel-
     (and sometimes volume-) wise estimates of T2*.
 
-    This method was proposed in :footcite:p:`posse1999enhancement`.
+    This method was proposed in :footcite:t:`posse1999enhancement`.
 
     Parameters
     ----------
@@ -66,7 +66,7 @@ def _combine_paid(data, tes, report=True):
     parallel-acquired inhomogeneity desensitized (PAID) ME-fMRI combination
     method.
 
-    This method was first proposed in :footcite:p:`poser2006bold`.
+    This method was first proposed in :footcite:t:`poser2006bold`.
 
     Parameters
     ----------
@@ -135,8 +135,8 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s", verbose=True
 
     Notes
     -----
-    This function supports both the ``'t2s'`` method :footcite:t:`posse1999enhancement`
-    and the ``'paid'`` method :footcite:t:`poser2006bold`.
+    This function supports both the ``'t2s'`` method :footcite:p:`posse1999enhancement`
+    and the ``'paid'`` method :footcite:p:`poser2006bold`.
     The ``'t2s'`` method operates according to the following logic:
 
     1.  Estimate voxel- and TE-specific weights based on estimated :math:`T_2^*`:

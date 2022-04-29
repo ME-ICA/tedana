@@ -343,7 +343,7 @@ def tedana_workflow(
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
 
-    Please remember to cite :footcite:p:`dupre2021te`.
+    Please remember to cite :footcite:t:`dupre2021te`.
 
     Parameters
     ----------

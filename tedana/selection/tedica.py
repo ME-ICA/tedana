@@ -118,7 +118,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     https://github.com/ME-ICA/me-ica/blob/\
     b2781dd087ab9de99a2ec3925f04f02ce84f0adc/meica.libs/select_model.py
 
-    The appropriate citation is :footcite:p:`kundu2013integrated`.
+    The appropriate citation is :footcite:t:`kundu2013integrated`.
 
     This component selection process uses multiple, previously calculated
     metrics that include kappa, rho, variance explained, noise and spatial

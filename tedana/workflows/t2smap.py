@@ -160,7 +160,7 @@ def t2smap_workflow(
     """
     Estimate T2 and S0, and optimally combine data across TEs.
 
-    Please remember to cite :footcite:p:`dupre2021te`.
+    Please remember to cite :footcite:t:`dupre2021te`.
 
     Parameters
     ----------

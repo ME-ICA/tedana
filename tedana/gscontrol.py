@@ -122,7 +122,7 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, io_generator):
     BOLD-like components.
 
     While this method has not yet been described in detail in any publications,
-    we recommend that users cite :footcite:p:`kundu2013integrated`.
+    we recommend that users cite :footcite:t:`kundu2013integrated`.
 
     Parameters
     ----------

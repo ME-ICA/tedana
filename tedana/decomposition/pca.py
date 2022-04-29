@@ -92,7 +92,7 @@ def tedpca(
         Method with which to select components in TEDPCA. PCA
         decomposition with the mdl, kic and aic options are based on a Moving Average
         (stationary Gaussian) process and are ordered from most to least aggressive
-        (see :footcite:t:`li2007estimating`).
+        (see :footcite:p:`li2007estimating`).
         If a float is provided, then it is assumed to represent percentage of variance
         explained (0-1) to retain from PCA.
         Default is 'aic'.
