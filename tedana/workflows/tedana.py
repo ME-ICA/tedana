@@ -45,7 +45,7 @@ def _get_parser():
     -------
     parser.parse_args() : argparse dict
     """
-    from ..info import __version__
+    from tedana import __version__
 
     verstr = "tedana v{}".format(__version__)
     parser = argparse.ArgumentParser()
@@ -324,7 +324,7 @@ def tedana_workflow(
     prefix="",
     fittype="loglin",
     combmode="t2s",
-    tedpca="mdl",
+    tedpca="aic",
     fixed_seed=42,
     maxit=500,
     maxrestart=10,
@@ -371,7 +371,7 @@ def tedana_workflow(
         Method with which to select components in TEDPCA.
         If a float is provided, then it is assumed to represent percentage of variance
         explained (0-1) to retain from PCA.
-        Default is 'mdl'.
+        Default is 'aic'.
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
         denoising. Default is False.
@@ -736,7 +736,10 @@ def tedana_workflow(
             )
             comptable, metric_metadata = selection.kundu_selection_v2(comptable, n_echos, n_vols)
         else:
+            LGR.info("Using supplied component table for classification")
             comptable = pd.read_table(ctab)
+            # Change rationale value of rows with NaN to empty strings
+            comptable.loc[comptable.rationale.isna(), "rationale"] = ""
 
             if manacc is not None:
                 comptable, metric_metadata = selection.manual_selection(comptable, acc=manacc)

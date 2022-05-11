@@ -7,19 +7,10 @@ tedana: A Python package for TE-dependent analysis of multi-echo data.
 
 import warnings
 
+from ._version import get_versions
 from .due import BibTeX, Doi, due
-from .info import (
-    __author__,
-    __copyright__,
-    __description__,
-    __email__,
-    __license__,
-    __maintainer__,
-    __packagename__,
-    __status__,
-    __url__,
-    __version__,
-)
+
+__version__ = get_versions()["version"]
 
 # cmp is not used, so ignore nipype-generated warnings
 warnings.filterwarnings("ignore", r"cmp not installed")
@@ -54,3 +45,5 @@ due.cite(
     path="tedana",
     cite_module=True,
 )
+
+del get_versions

@@ -132,10 +132,12 @@ Make sure to always [keep your fork up to date][link_updateupstreamwiki] with th
 To test a change, you may need to set up your local repository to run a `tedana` workflow.
 To do so, run
 ```
-pip install -e .'[all]'
+# UNIX (MacOS/Linux)
+pip install -e '.[all]'
+# Windows
+pip install -e .[all]
 ```
 from within your local `tedana` repository. This should ensure all packages are correctly organized and linked on your user profile.
-
 We recommend including the `[all]` flag when you install `tedana` so that "extra" requirements necessary for running tests and building the documentation will also be installed.
 
 Once you've run this, your repository should be set for most changes (i.e., you do not have to re-run with every change).

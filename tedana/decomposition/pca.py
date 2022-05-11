@@ -57,7 +57,7 @@ def tedpca(
     t2sG,
     io_generator,
     tes,
-    algorithm="mdl",
+    algorithm="aic",
     kdaw=10.0,
     rdaw=1.0,
     verbose=False,
@@ -97,7 +97,7 @@ def tedpca(
         (see Li et al., 2007).
         If a float is provided, then it is assumed to represent percentage of variance
         explained (0-1) to retain from PCA.
-        Default is 'mdl'.
+        Default is 'aic'.
     kdaw : :obj:`float`, optional
         Dimensionality augmentation weight for Kappa calculations. Must be a
         non-negative float, or -1 (a special value). Default is 10.
@@ -226,7 +226,9 @@ def tedpca(
 
     n_samp, n_echos, n_vols = data_cat.shape
 
-    LGR.info("Computing PCA of optimally combined multi-echo data")
+    LGR.info(
+        f"Computing PCA of optimally combined multi-echo data with selection criteria: {algorithm}"
+    )
     data = data_oc[mask, :]
 
     data_z = ((data.T - data.T.mean(axis=0)) / data.T.std(axis=0)).T  # var normalize ts
