@@ -476,7 +476,7 @@ def tedana_workflow(
         gscontrol = [gscontrol]
 
     # Check value of tedpca *if* it is a predefined string,
-    # a float between 0 & 1 or an int >= 1
+    # a float on [0, 1] or an int >= 1
     tedpca = check_tedpca_value(tedpca, is_parser=False)
 
     LGR.info("Loading input data: {}".format([f for f in data]))
