@@ -99,7 +99,7 @@ def tedpca(
         (see Li et al., 2007).
         If a float is provided, then it is assumed to represent percentage of variance
         explained (0-1) to retain from PCA.
-        If an int is provide, then it is assumed to be the number of components
+        If an int is provided, then it is assumed to be the number of components
         to select
         Default is 'aic'.
     kdaw : :obj:`float`, optional
