@@ -34,6 +34,8 @@ def low_mem_pca(data):
         Component weight map for each component.
     s : (C,) array_like
         Variance explained for each component.
+    varex_norm : array-like, shape (n_components,)
+        Explained variance ratio.
     v : (C x T) array_like
         Component timeseries.
     """
@@ -44,7 +46,8 @@ def low_mem_pca(data):
     v = ppca.components_.T
     s = ppca.explained_variance_
     u = np.dot(np.dot(data, v), np.diag(1.0 / s))
-    return u, s, v
+    varex_norm = ppca.explained_variance_ratio_
+    return u, s, varex_norm, v
 
 
 def tedpca(
@@ -96,6 +99,8 @@ def tedpca(
         (see Li et al., 2007).
         If a float is provided, then it is assumed to represent percentage of variance
         explained (0-1) to retain from PCA.
+        If an int is provide, then it is assumed to be the number of components
+        to select
         Default is 'aic'.
     kdaw : :obj:`float`, optional
         Dimensionality augmentation weight for Kappa calculations. Must be a
@@ -201,10 +206,13 @@ def tedpca(
             "16187-16192."
         )
     elif isinstance(algorithm, Number):
-        alg_str = (
-            "in which the number of components was determined based on a "
-            "variance explained threshold"
-        )
+        if isinstance(algorithm, float):
+            alg_str = (
+                "in which the number of components was determined based on a "
+                "variance explained threshold"
+            )
+        else:
+            alg_str = "in which the number of components is pre-defined"
     else:
         alg_str = (
             "based on the PCA component estimation with a Moving Average"
@@ -245,17 +253,16 @@ def tedpca(
         comp_ts = ppca.components_.T
         varex = ppca.explained_variance_
         voxel_comp_weights = np.dot(np.dot(data_z, comp_ts), np.diag(1.0 / varex))
-        varex_norm = varex / varex.sum()
+        varex_norm = ppca.explained_variance_ratio_
     elif low_mem:
-        voxel_comp_weights, varex, comp_ts = low_mem_pca(data_z)
-        varex_norm = varex / varex.sum()
+        voxel_comp_weights, varex, varex_norm, comp_ts = low_mem_pca(data_z)
     else:
         ppca = PCA(copy=False, n_components=(n_vols - 1))
         ppca.fit(data_z)
         comp_ts = ppca.components_.T
         varex = ppca.explained_variance_
         voxel_comp_weights = np.dot(np.dot(data_z, comp_ts), np.diag(1.0 / varex))
-        varex_norm = varex / varex.sum()
+        varex_norm = ppca.explained_variance_ratio_
 
     # Compute Kappa and Rho for PCA comps
     required_metrics = [
@@ -311,10 +318,15 @@ def tedpca(
             stabilize=True,
         )
     else:
-        alg_str = "variance explained-based" if isinstance(algorithm, Number) else algorithm
+        if isinstance(algorithm, float):
+            alg_str = "variance explained-based"
+        elif isinstance(algorithm, int):
+            alg_str = "a fixed number of components and no"
+        else:
+            alg_str = algorithm
         LGR.info(
-            "Selected {0} components with {1} dimensionality "
-            "detection".format(comptable.shape[0], alg_str)
+            f"Selected {comptable.shape[0]} components with {round(100*varex_norm.sum(),2)}% "
+            f"normalized variance explained using {alg_str} dimensionality detection"
         )
         comptable["classification"] = "accepted"
         comptable["rationale"] = ""
