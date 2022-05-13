@@ -719,7 +719,11 @@ def prep_data_for_json(d) -> dict:
             # One of the values in the dict is the problem, need to recurse
             v = prep_data_for_json(v)
         elif isinstance(v, np.ndarray):
+            if v.dtype == np.int64 or v.dtype == np.uint64:
+                v = int(v)
             v = v.tolist()
+        elif isinstance(v, np.int64) or isinstance(v, np.uint64):
+            v = int(v)
         # NOTE: add more special cases for type conversions above this
         # comment line as an elif block
         d[k] = v
