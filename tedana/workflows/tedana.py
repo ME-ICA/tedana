@@ -146,10 +146,12 @@ def _get_parser():
             "process and are ordered from most to least aggressive. "
             "Users may also provide a float from 0 to 1, "
             "in which case components will be selected based on the "
-            "cumulative variance explained. "
-            "Default='mdl'."
+            "cumulative variance explained or an integer greater than 1"
+            "in which case the specificed number of components will be"
+            "selected."
+            "Default='aic'."
         ),
-        default="mdl",
+        default="aic",
     )
     optional.add_argument(
         "--seed",
@@ -473,7 +475,8 @@ def tedana_workflow(
     if not isinstance(gscontrol, list):
         gscontrol = [gscontrol]
 
-    # Check value of tedpca *if* it is a float
+    # Check value of tedpca *if* it is a predefined string,
+    # a float on [0, 1] or an int >= 1
     tedpca = check_tedpca_value(tedpca, is_parser=False)
 
     LGR.info("Loading input data: {}".format([f for f in data]))
