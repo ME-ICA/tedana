@@ -428,5 +428,4 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     plot_name = "pca_variance_explained.png"
     pca_variance_explained_name = os.path.join(io_generator.out_dir, "figures", plot_name)
     plt.savefig(pca_variance_explained_name)
-    breakpoint()
     plt.close()
