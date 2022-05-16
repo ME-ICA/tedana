@@ -379,8 +379,8 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     # Vertical line depicting the optimal number of components given by AIC
     plt.vlines(
         n_components[0],
-        ymin=np.min(criteria),
-        ymax=np.max(criteria),
+        ymin=0,
+        ymax=1,
         color="tab:blue",
         linestyles="dashed",
         label="AIC",
@@ -388,8 +388,8 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     # Vertical line depicting the optimal number of components given by KIC
     plt.vlines(
         n_components[1],
-        ymin=np.min(criteria),
-        ymax=np.max(criteria),
+        ymin=0,
+        ymax=1,
         color="tab:orange",
         linestyles="dashed",
         label="KIC",
@@ -397,8 +397,8 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     # Vertical line depicting the optimal number of components given by MDL
     plt.vlines(
         n_components[2],
-        ymin=np.min(criteria),
-        ymax=np.max(criteria),
+        ymin=0,
+        ymax=1,
         color="tab:green",
         linestyles="dashed",
         label="MDL",
@@ -406,8 +406,8 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     # Vertical line depicting the optimal number of components for 90% variance explained
     plt.vlines(
         n_components[3],
-        ymin=np.min(criteria),
-        ymax=np.max(criteria),
+        ymin=0,
+        ymax=1,
         color="tab:red",
         linestyles="dashed",
         label="90% varexp",
@@ -415,8 +415,8 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     # Vertical line depicting the optimal number of components for 95% variance explained
     plt.vlines(
         n_components[4],
-        ymin=np.min(criteria),
-        ymax=np.max(criteria),
+        ymin=0,
+        ymax=1,
         color="tab:purple",
         linestyles="dashed",
         label="95% varexp",
@@ -428,4 +428,5 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     plot_name = "pca_variance_explained.png"
     pca_variance_explained_name = os.path.join(io_generator.out_dir, "figures", plot_name)
     plt.savefig(pca_variance_explained_name)
+    breakpoint()
     plt.close()
