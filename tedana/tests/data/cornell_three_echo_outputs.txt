@@ -9,6 +9,7 @@ desc-tedana_metrics.json
 desc-tedana_metrics.tsv
 desc-ICA_mixing.tsv
 desc-ICA_stat-z_components.nii.gz
+desc-PCA_cross_component_metrics.json
 desc-PCA_decomposition.json
 desc-PCA_metrics.json
 desc-PCA_metrics.tsv
@@ -93,5 +94,7 @@ figures/comp_065.png
 figures/comp_066.png
 figures/comp_067.png
 figures/comp_068.png
+figures/pca_criteria.png
+figures/pca_variance_explained.png
 report.txt
 tedana_report.html

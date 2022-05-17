@@ -6,11 +6,12 @@ from numbers import Number
 
 import numpy as np
 import pandas as pd
-from mapca import ma_pca
+from mapca import MovingAveragePCA
 from scipy import stats
 from sklearn.decomposition import PCA
 
 from tedana import io, metrics, utils
+from tedana.reporting import pca_results as plot_pca_results
 from tedana.selection import kundu_tedpca
 from tedana.stats import computefeats2
 
@@ -244,9 +245,92 @@ def tedpca(
     if algorithm in ["mdl", "aic", "kic"]:
         data_img = io.new_nii_like(io_generator.reference_img, utils.unmask(data, mask))
         mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
-        voxel_comp_weights, varex, varex_norm, comp_ts = ma_pca(
-            data_img, mask_img, algorithm, normalize=True
+        ma_pca = MovingAveragePCA(criterion=algorithm, normalize=True)
+        _ = ma_pca.fit_transform(data_img, mask_img)
+
+        # Extract results from maPCA
+        voxel_comp_weights = ma_pca.u_
+        varex = ma_pca.explained_variance_
+        varex_norm = ma_pca.explained_variance_ratio_
+        comp_ts = ma_pca.components_.T
+        aic = ma_pca.aic_
+        kic = ma_pca.kic_
+        mdl = ma_pca.mdl_
+        varex_90 = ma_pca.varexp_90_
+        varex_95 = ma_pca.varexp_95_
+        all_comps = ma_pca.all_
+
+        # Extract number of components and variance explained for logging and plotting
+        n_aic = aic["n_components"]
+        aic_varexp = np.round(aic["explained_variance_total"], 3)
+        n_kic = kic["n_components"]
+        kic_varexp = np.round(kic["explained_variance_total"], 3)
+        n_mdl = mdl["n_components"]
+        mdl_varexp = np.round(mdl["explained_variance_total"], 3)
+        n_varex_90 = varex_90["n_components"]
+        varex_90_varexp = np.round(varex_90["explained_variance_total"], 3)
+        n_varex_95 = varex_95["n_components"]
+        varex_95_varexp = np.round(varex_95["explained_variance_total"], 3)
+        all_varex = np.round(all_comps["explained_variance_total"], 3)
+
+        # Print out the results
+        LGR.info("Optimal number of components based on different criteria:")
+        LGR.info(
+            f"AIC: {n_aic} | KIC: {n_kic} | MDL: {n_mdl} | 90% varexp: {n_varex_90} "
+            f"| 95% varexp: {n_varex_95}"
         )
+
+        LGR.info("Explained variance based on different criteria:")
+        LGR.info(
+            f"AIC: {aic_varexp}% | KIC: {kic_varexp}% | MDL: {mdl_varexp}% | "
+            f"90% varexp: {varex_90_varexp}% | 95% varexp: {varex_95_varexp}%"
+        )
+
+        pca_optimization_curves = np.array([aic["value"], kic["value"], mdl["value"]])
+        pca_criteria_components = np.array(
+            [
+                n_aic,
+                n_kic,
+                n_mdl,
+                n_varex_90,
+                n_varex_95,
+            ]
+        )
+
+        # Plot maPCA optimization curves
+        LGR.info("Plotting maPCA optimization curves")
+        plot_pca_results(pca_optimization_curves, pca_criteria_components, all_varex, io_generator)
+
+        # Save maPCA results into a dictionary
+        mapca_results = {
+            "aic": {
+                "n_components": n_aic,
+                "explained_variance_total": aic_varexp,
+                "curve": aic["value"],
+            },
+            "kic": {
+                "n_components": n_kic,
+                "explained_variance_total": kic_varexp,
+                "curve": kic["value"],
+            },
+            "mdl": {
+                "n_components": n_mdl,
+                "explained_variance_total": mdl_varexp,
+                "curve": mdl["value"],
+            },
+            "varex_90": {
+                "n_components": n_varex_90,
+                "explained_variance_total": varex_90_varexp,
+            },
+            "varex_95": {
+                "n_components": n_varex_95,
+                "explained_variance_total": varex_95_varexp,
+            },
+        }
+
+        # Save dictionary
+        io_generator.save_file(mapca_results, "PCA cross component metrics json")
+
     elif isinstance(algorithm, Number):
         ppca = PCA(copy=False, n_components=algorithm, svd_solver="full")
         ppca.fit(data_z)

@@ -147,6 +147,10 @@
         "orig": "pca_metrics",
         "bidsv1.5.0": "desc-PCA_metrics"
     },
+    "PCA cross component metrics json": {
+        "orig": "pca_cross_component_metrics",
+        "bidsv1.5.0": "desc-PCA_cross_component_metrics"
+    },
     "ICA decomposition json": {
         "orig": "ica_decomposition",
         "bidsv1.5.0": "desc-ICA_decomposition"
