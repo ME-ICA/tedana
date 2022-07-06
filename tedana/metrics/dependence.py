@@ -5,7 +5,7 @@ import numpy as np
 from scipy import stats
 
 from tedana import io, utils
-from tedana.stats import computefeats2, get_coeffs, t_to_z
+from tedana.stats import get_ls_zvalues, get_ls_coeffs, t_to_z
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -29,9 +29,9 @@ def calculate_weights(data_optcom, mixing):
         the mixing matrix.
     """
     assert data_optcom.shape[1] == mixing.shape[0]
-    mixing_z = stats.zscore(mixing, axis=0)
     # compute un-normalized weight dataset (features)
-    weights = computefeats2(data_optcom, mixing_z, normalize=False)
+    weights = get_ls_zvalues(data_optcom, mixing)
+
     return weights
 
 
@@ -53,16 +53,17 @@ def calculate_betas(data, mixing):
     if len(data.shape) == 2:
         data_optcom = data
         assert data_optcom.shape[1] == mixing.shape[0]
-        # mean-center optimally-combined data
-        data_optcom_dm = data_optcom - data_optcom.mean(axis=-1, keepdims=True)
-        # betas are the result of a normal OLS fit of the mixing matrix
-        # against the mean-center data
-        betas = get_coeffs(data_optcom_dm, mixing)
+
+        # betas are the result of a normal OLS fit of the mixing matrix on the mean-centered data
+        betas = get_ls_coeffs(data_optcom, mixing, add_const=True)
+
         return betas
+
     else:
         betas = np.zeros([data.shape[0], data.shape[1], mixing.shape[1]])
         for n_echo in range(data.shape[1]):
-            betas[:, n_echo, :] = get_coeffs(data[:, n_echo, :], mixing)
+            betas[:, n_echo, :] = get_ls_coeffs(data[:, n_echo, :], mixing, add_const=True)
+
         return betas
 
 
@@ -142,8 +143,13 @@ def calculate_f_maps(data_cat, Z_maps, mixing, adaptive_mask, tes, f_max=500):
     assert data_cat.shape[2] == mixing.shape[0]
     assert Z_maps.shape[1] == mixing.shape[1]
 
-    # TODO: Remove mask arg from get_coeffs
-    me_betas = get_coeffs(data_cat, mixing, mask=np.ones(data_cat.shape[:2], bool), add_const=True)
+    # TODO: Remove mask arg from get_ls_coeffs
+    me_betas = get_ls_coeffs(
+        data_cat,
+        mixing,
+        mask=np.ones(data_cat.shape[:2], bool),
+        add_const=True,
+    )
     n_voxels, n_echos, n_components = me_betas.shape
     mu = data_cat.mean(axis=-1, dtype=float)
     tes = np.reshape(tes, (n_echos, 1))

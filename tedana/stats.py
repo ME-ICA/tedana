@@ -116,20 +116,17 @@ def getfbounds(n_echos):
 
 
 def get_ls_zvalues(data, mmix, mask=None):
-    """
-    Converts `data` to component space using `mmix`
+    """Calculate voxel-wise z-statistics from OLS of mixing matrix on data.
 
     Parameters
     ----------
     data : (S x T) array_like
-        Input data
+        Input time series.
     mmix : (T [x C]) array_like
         Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `data`
+        is components and `T` is the same as in `data`.
     mask : (S,) array_like or None, optional
         Boolean mask array. Default: None
-    normalize : bool, optional
-        Whether to z-score output. Default: True
 
     Returns
     -------
@@ -156,6 +153,7 @@ def get_ls_zvalues(data, mmix, mask=None):
     # demean masked data
     if mask is not None:
         data = data[mask, ...]
+
     # normalize data (minus mean and divide by std)
     data_vn = stats.zscore(data, axis=-1)
 
@@ -182,7 +180,8 @@ def get_ls_coeffs(data, X, mask=None, add_const=False, compute_zvalues=False, mi
     mask : (S [x E]) array_like
         Boolean mask array
     add_const : bool, optional
-        Add intercept column to `X` before fitting. Default: False
+        Add intercept column to `X` before fitting. If True, the intercept's parameter estimates
+        will be calculated, but not returned. Default: False.
     compute_zvalues : bool, optional
         Compute z-values of the betas (predictors)
     min_df : integer, optional
