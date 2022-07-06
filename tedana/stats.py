@@ -13,7 +13,10 @@ LGR = logging.getLogger(__name__)
 RepLGR = logging.getLogger('REPORT')
 RefLGR = logging.getLogger('REFERENCES')
 
-T2Z_TRANSFORM = BibTeX("""
+
+@due.dcite(
+    BibTeX(
+        """
     @article{hughett2007accurate,
       title={Accurate Computation of the F-to-z and t-to-z Transforms
              for Large Arguments},
@@ -25,19 +28,38 @@ T2Z_TRANSFORM = BibTeX("""
       year={2007},
       publisher={Foundation for Open Access Statistics}
     }
-    """)
-T2Z_IMPLEMENTATION = Doi('10.5281/zenodo.32508')
-
-
-@due.dcite(T2Z_TRANSFORM,
-           description='Introduces T-to-Z transform.')
-@due.dcite(T2Z_IMPLEMENTATION,
-           description='Python implementation of T-to-Z transform.')
-def t_to_z(t_values, dof):
     """
-    From Vanessa Sochat's TtoZ package.
-    Copyright (c) 2015 Vanessa Sochat
-    MIT Licensed
+    ),
+    description="Introduces T-to-Z transform.",
+)
+@due.dcite(
+    Doi("10.5281/zenodo.32508"),
+    description="Python implementation of T-to-Z transform.",
+)
+def t_to_z(t_values, dof):
+    """Convert t-statistics to z-statistics.
+
+    An implementation of [1]_ from Vanessa Sochat's TtoZ package [2]_.
+
+    Parameters
+    ----------
+    t_values : array_like
+        T-statistics
+    dof : int
+        Degrees of freedom
+
+    Returns
+    -------
+    z_values : array_like
+        Z-statistics
+
+    References
+    ----------
+    .. [1] Hughett, P. (2007). Accurate Computation of the F-to-z and t-to-z
+           Transforms for Large Arguments. Journal of Statistical Software,
+           23(1), 1-5.
+    .. [2] Sochat, V. (2015, October 21). TtoZ Original Release. Zenodo.
+           http://doi.org/10.5281/zenodo.32508
     """
 
     # check if t_values is np.array, and convert if required
