@@ -1,13 +1,12 @@
 """
 Tests for the tedana stats module
 """
-import numpy as np
-import pytest
 import random
 
-from tedana.stats import get_ls_zvalues
-from tedana.stats import get_ls_coeffs
-from tedana.stats import getfbounds
+import numpy as np
+import pytest
+
+from tedana.stats import get_ls_zvalues, get_ls_coeffs, getfbounds
 
 
 def test_break_get_ls_zvalues():
@@ -71,11 +70,11 @@ def test_get_ls_coeffs():
 
     betas = get_ls_coeffs(data, X, mask=None, add_const=False)
     betas = np.squeeze(betas)
-    assert np.allclose(betas, np.array([5., 5.]))
+    assert np.allclose(betas, np.array([5.0, 5.0]))
 
     betas = get_ls_coeffs(data, X, mask=None, add_const=True)
     betas = np.squeeze(betas)
-    assert np.allclose(betas, np.array([5., 5.]))
+    assert np.allclose(betas, np.array([5.0, 5.0]))
 
     betas = get_ls_coeffs(data, X, mask=mask, add_const=False)
     betas = np.squeeze(betas)

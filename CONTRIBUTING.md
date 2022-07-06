@@ -24,14 +24,14 @@ Already know what you're looking for in this guide? Jump to the following sectio
 
 Don't know where to get started?
 Read [Joining the conversation](#joining-the-conversation) and pop into
-Gitter to introduce yourself! Let us know what your interests are and we
+Mattermost to introduce yourself! Let us know what your interests are and we
 will help you find an issue to contribute to. Thanks so much!
 
 ## Joining the conversation
 
 `tedana` is a young project maintained by a growing group of enthusiastic developers&mdash; and we're excited to have you join!
 Most of our discussions will take place on open [issues][link_issues].
-We also maintain a [gitter chat room][link_gitter] for more informal conversations and general project updates.
+We also maintain a [Mattermost chat room][link_mattermost] for more informal conversations and general project updates.
 
 There is significant cross-talk between these two spaces, and we look forward to hearing from you in either venue!
 As a reminder, we expect all contributions to `tedana` to adhere to our [code of conduct][link_coc].
@@ -132,10 +132,12 @@ Make sure to always [keep your fork up to date][link_updateupstreamwiki] with th
 To test a change, you may need to set up your local repository to run a `tedana` workflow.
 To do so, run
 ```
+# UNIX (MacOS/Linux)
+pip install -e '.[all]'
+# Windows
 pip install -e .[all]
 ```
 from within your local `tedana` repository. This should ensure all packages are correctly organized and linked on your user profile.
-
 We recommend including the `[all]` flag when you install `tedana` so that "extra" requirements necessary for running tests and building the documentation will also be installed.
 
 Once you've run this, your repository should be set for most changes (i.e., you do not have to re-run with every change).
@@ -211,6 +213,17 @@ make html
 ```
 from the `docs` directory in your local `tedana` repository. You should then be able to access the rendered files in the `docs/_build` directory, and view them in your browser.
 
+Most of `tedana`'s documentation is written in restructuredText, rather than Markdown.
+Among many other differences, restructuredText allows a great deal of flexibility in how section headings are defined.
+For consistency, we have adopted the following standard for our section headings:
+
+- `#` with overline, for parts
+- `*` with overline, for chapters
+- `=`, for sections
+- `-`, for subsections
+- `^`, for subsubsections
+- `"`, for paragraphs
+
 ### 6. Submit a [pull request][link_pullrequest]
 
 When opening the pull request, we ask that you follow some [specific conventions](#pull-requests). We outline these below.
@@ -263,6 +276,7 @@ Thanks for contributing!
 - [ ] Make sure you have docstrings for any new functions
 - [ ] Make sure that docstrings are updated for edited functions
 - [ ] Make sure you note any issues that will be closed by your PR
+- [ ] Make sure your code follows `tedana`'s preferred style by running [black][link_black] and [isort][link_isort].
 - [ ] Take a look at the automatically generated readthedocs for your PR (Show all checks -> continuous-documentation/readthedocs -> Details)
 
 ### Comprehensive Developer Guide
@@ -273,11 +287,13 @@ For additional, in-depth information on contributing to `tedana`, please see our
 Docstrings should follow [numpydoc][link_numpydoc] convention.
 We encourage extensive documentation.
 
-The python code itself should follow [PEP8][link_pep8] convention
-whenever possible, with at most about 500 lines of code (not including docstrings) per script.
+The Python code itself should follow [PEP8][link_pep8] convention,
+with at most about 500 lines of code (not including docstrings) per script.
+We use [black][link_black] and [isort][link_isort] to enforce this code style,
+and we strongly recommend running both tools on your fork before opening a pull request.
 
-Additionally, we have adopted a purely functional approach in `tedana`, so we
-avoid defining our own classes within the library.
+Additionally, we have adopted a primarily functional approach in `tedana`,
+so we avoid defining our own classes within the library unless absolutely necessary.
 
 Our documentation is written in [ReStructuredText](#writing-in-restructuredtext),
 which we explain in more detail below.
@@ -333,7 +349,7 @@ You're awesome. :wave::smiley:
 [link_issues]: https://github.com/ME-ICA/tedana/issues
 [link_milestones]: https://github.com/ME-ICA/tedana/milestones/
 [link_project_boards]: https://github.com/ME-ICA/tedana/projects
-[link_gitter]: https://gitter.im/me-ica/tedana
+[link_mattermost]: https://mattermost.brainhack.org/brainhack/channels/tedana
 [link_coc]: https://github.com/ME-ICA/tedana/blob/main/CODE_OF_CONDUCT.md
 [link_stale-bot]: https://github.com/probot/stale
 
@@ -356,6 +372,8 @@ You're awesome. :wave::smiley:
 
 [link_numpydoc]: https://numpydoc.readthedocs.io/en/latest/format.html
 [link_pep8]: https://www.python.org/dev/peps/pep-0008/
+[link_black]: https://black.readthedocs.io/en/stable/
+[link_isort]: https://pycqa.github.io/isort/
 [link_rst_guide]: http://docs.sphinxdocs.com/en/latest/step-1.html
 
 [link_contributors]: https://github.com/ME-ICA/tedana/graphs/contributors

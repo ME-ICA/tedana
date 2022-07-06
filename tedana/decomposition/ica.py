@@ -8,9 +8,9 @@ import numpy as np
 from scipy import stats
 from sklearn.decomposition import FastICA
 
-LGR = logging.getLogger(__name__)
-RepLGR = logging.getLogger('REPORT')
-RefLGR = logging.getLogger('REFERENCES')
+LGR = logging.getLogger("GENERAL")
+RepLGR = logging.getLogger("REPORT")
+RefLGR = logging.getLogger("REFERENCES")
 
 
 def tedica(data, n_components, fixed_seed, maxit=500, maxrestart=10):
@@ -45,35 +45,45 @@ def tedica(data, n_components, fixed_seed, maxit=500, maxrestart=10):
     -----
     Uses `sklearn` implementation of FastICA for decomposition
     """
-    warnings.filterwarnings(action='ignore', module='scipy',
-                            message='^internal gelsd')
-    RepLGR.info("Independent component analysis was then used to "
-                "decompose the dimensionally reduced dataset.")
+    warnings.filterwarnings(action="ignore", module="scipy", message="^internal gelsd")
+    RepLGR.info(
+        "Independent component analysis was then used to "
+        "decompose the dimensionally reduced dataset."
+    )
 
     if fixed_seed == -1:
         fixed_seed = np.random.randint(low=1, high=1000)
 
     for i_attempt in range(maxrestart):
-        ica = FastICA(n_components=n_components, algorithm='parallel',
-                      fun='logcosh', max_iter=maxit, random_state=fixed_seed)
+        ica = FastICA(
+            n_components=n_components,
+            algorithm="parallel",
+            fun="logcosh",
+            max_iter=maxit,
+            random_state=fixed_seed,
+        )
 
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered in order to capture
             # convergence failures.
-            warnings.simplefilter('always')
+            warnings.simplefilter("always")
 
             ica.fit(data)
 
             w = list(filter(lambda i: issubclass(i.category, UserWarning), w))
             if len(w):
-                LGR.warning('ICA with random seed {0} failed to converge after {1} '
-                            'iterations'.format(fixed_seed, ica.n_iter_))
+                LGR.warning(
+                    "ICA with random seed {0} failed to converge after {1} "
+                    "iterations".format(fixed_seed, ica.n_iter_)
+                )
                 if i_attempt < maxrestart - 1:
                     fixed_seed += 1
-                    LGR.warning('Random seed updated to {0}'.format(fixed_seed))
+                    LGR.warning("Random seed updated to {0}".format(fixed_seed))
             else:
-                LGR.info('ICA with random seed {0} converged in {1} '
-                         'iterations'.format(fixed_seed, ica.n_iter_))
+                LGR.info(
+                    "ICA with random seed {0} converged in {1} "
+                    "iterations".format(fixed_seed, ica.n_iter_)
+                )
                 break
 
     mmix = ica.mixing_

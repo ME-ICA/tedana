@@ -1,5 +1,6 @@
+######################
 Contributing to tedana
-======================
+######################
 
 This document explains contributing to ``tedana`` at a very high level,
 with a focus on project governance and development philosophy.
@@ -8,8 +9,10 @@ For a more practical guide to the tedana development, please see our
 
 .. _contributing guide: https://github.com/ME-ICA/tedana/blob/main/CONTRIBUTING.md
 
+
+***************
 Code of conduct
-```````````````
+***************
 
 All ``tedana`` community members are expected to follow our code of conduct
 during any interaction with the project. `The full code of conduct is here`_.
@@ -21,108 +24,10 @@ from collective decision-making and rejection of future contributions to the ``t
 
 .. _The full code of conduct is here: https://github.com/ME-ICA/tedana/blob/main/CODE_OF_CONDUCT.md
 
-Scope of tedana
-```````````````
-tedana is a collection of tools, software and a community related to echo time
-(TE) dependent analyses. The umbrella of tedana covers a number of overlapping,
-but somewhat distinct, ideas related to multi-echo analysis. This scope includes
-collecting multi-echo data (Acquisition), combining those echoes together
-(Combination), with optional noise removal (Denoising), inspecting the outputs
-(Visualization) and answering multi-echo related questions (Community). In
-general, tedana accepts previously preprocessed data to produce outputs that
-are ready for further analyses. 
 
-Acquisition
------------
-
-While the development of multi-echo sequences is beyond the current scope
-of tedana, the tedana community is committed to providing guidelines on current
-multi-echo implementations. This will include both specific instructions for
-how to collect multi-echo data for multiple vendors as well as details about
-what types of data have been collected thus far. These details are subject to
-change, and are intended to provide users with an idea of what is possible,
-rather than definitive recommendations.
-
-Our focus is on functional MRI, including both magnitude and phase data,
-however we understand that quantitative mapping has the potential to aid in
-data processing. Thus, we believe that some details on non-functional MRI
-acquisitions, such as detailed T2* mapping, may fall within the scope of
-tedana.
-Acquisition related details can be found in the `tedana Documentation.`_
-
-.. _tedana Documentation.: https://tedana.readthedocs.io/en/latest/acquisition.html
-
-Combining echoes
-----------------
-
-An early step in processing data collected with multiple echoes is the
-combination of the data into a single time series. We currently implement
-multiple options to combine multi-echo data and will add more as they continue
-to be developed. This is an area of active development and interest.
-
-Denoising
----------
-
-tedana was developed out of a package known as `multi-echo ICA, ME-ICA, or MEICA`_
-developed by Dr. Prantik Kundu. Though the usage of ICA for classification of
-signal vs noise components has continued in tedana, this is not a rule. The
-tedana community is open and encouraging of new denoising methods, whether or not they
-have a basis in ICA. 
-
-Specifically, we are interested in any method that seeks to use the information from multiple
-echoes to identify signal (defined here as BOLD signals arising from neural
-processing) and noise (defined here as changes unrelated to neural
-processing, such as motion, cardiac, respiration).
-
-tedana is primarily intended to work on volume data, that is, data that is
-still in structured voxel space. This is because several of the currently used denoising metrics rely on spatial continuity, and they have not yet been updated to consider continuity over cortical vertices.
-Therefore, surface-based denoising is not currently
-within the scope of tedana, but code could be written so that it is a
-possible option in the future.
-
-Currently tedana works on a single subject, run by run basis; however, methods
-that use information across multiple runs are welcome. 
-
-.. _`multi-echo ICA, ME-ICA, or MEICA`: https://github.com/ME-ICA/me-ica
-
-Visualization
--------------
-
-As part of the processing stream, tedana provides figures and an 
-HTML-based report for inspecting results. These are intended to help
-users understand the outputs from tedana and diagnose problems. Though a
-comprehensive viewer (such as fsleyes) is outside of the scope of tedana, we
-will continue to improve the reports and add new information as needed.
-
-Community
----------
-
-tedana is intended to be a community of multi-echo users. The primary resource
-is the github repository and related documentation. In addition, the tedana
-group will attempt to answer multi-echo related questions on NeuroStars 
-(`multi-echo tag <https://neurostars.org/tag/multi-echo>`_ or
-`tedana tag <https://neurostars.org/tag/tedana>`_). 
-
-What tedana isn’t
------------------
-
-While the list of things that do not fall under the scope of tedana are
-infinite, it is worth mentioning a few points:
-
-- tedana will not offer a GUI for usage 
-- it is intended to be either a stand
-  alone processing package or serve as a processing step as part of a larger
-  package (i.e. fmriprep or afni_proc.py). 
-- tedana will not provide basic preprocessing steps, such as motion correction
-  or slice timing correction. While these were previously part of the ME-ICA
-  pipeline, the sheer variety of possible choices, guidelines and data types
-  precludes including it within the tedana package.
-- tedana will not provide statistical analyses in the form of general linear models,
-  connectivity or decoding. Though multi-echo data is amenable to all methods
-  of analysis, these methods will not be included in the tedana package.
-
+*******************************
 tedana's development philosophy
-```````````````````````````````
+*******************************
 
 In contributing to any open source project,
 we have found that it is hugely valuable to understand the core maintainers' development philosophy.
@@ -140,7 +45,7 @@ These are:
 .. _exposing options to the user:
 
 Which options are available to users?
--------------------------------------
+=====================================
 
 The ``tedana``  developers are committed to providing useful and interpretable outputs
 for a majority of use cases.
@@ -179,7 +84,7 @@ listed on the ``tedana`` :ref:`support_ref` page.
 .. _prioritizing project developments:
 
 Structuring project developments
---------------------------------
+================================
 
 The ``tedana``  developers have chosen to structure ongoing development around specific goals.
 When implemented successfully, this focuses the direction of the project and helps new contributors
@@ -192,19 +97,19 @@ Feedback can be provided through any of the channels listed on our :ref:`support
 In order to more directly map between our :doc:`roadmap` and ongoing `project issues`_,
 we have also created `milestones in our github repository`_.
 
-.. _project issues: https://github.com/ME-ICA/tedana/issues
-.. _milestones in our github repository: https://github.com/me-ica/tedana/milestones
-
 This allows us to:
 
 1. Label individual issues as supporting specific aims, and
 2. Measure progress towards each aim's concrete deliverable(s).
 
+.. _project issues: https://github.com/ME-ICA/tedana/issues
+.. _milestones in our github repository: https://github.com/me-ica/tedana/milestones
+
 
 .. _backwards compatibility with meica:
 
 Is ``tedana`` backwards compatible with MEICA?
-----------------------------------------------
+==============================================
 
 The short answer is No.
 
@@ -233,15 +138,13 @@ If you'd like to use MEICA as has been previously published the code is availabl
 .. _future-proofing for continuous development:
 
 How does ``tedana`` future-proof its development?
--------------------------------------------------
+=================================================
 
 ``tedana``  is a reasonably young project that is run by volunteers.
 No one involved in the development is paid for their time.
 In order to focus our limited time, we have made the decision to not let future possibilities limit
 or over-complicate the most immediately required features.
 That is, to `not let the perfect be the enemy of the good`_.
-
-.. _not let the perfect be the enemy of the good: https://en.wikipedia.org/wiki/Perfect_is_the_enemy_of_good
 
 While this stance will almost certainly yield ongoing refactoring as the scope of the software expands,
 the team's commitment to transparency, reproducibility, and extensive testing
@@ -250,11 +153,13 @@ mean that this work should be relatively manageable.
 We hope that the lessons we learn building something useful in the short term will be
 applicable in the future as other needs arise.
 
+.. _not let the perfect be the enemy of the good: https://en.wikipedia.org/wiki/Perfect_is_the_enemy_of_good
+
 
 .. _when to release new software versions:
 
 When to release a new version
------------------------------
+=============================
 
 In the broadest sense, we have adopted a "you know it when you see it" approach
 to releasing new versions of the software.
@@ -263,8 +168,6 @@ To try to be more concrete, if a change to the project substantially changes the
 of working with ``tedana``, we recommend releasing an updated version.
 Additional functionality and bug fixes are very clear opportunities to release updated versions,
 but there will be many other reasons to update the software as hosted on `PyPi`_.
-
-.. _PyPi: https://pypi.org/project/tedana/
 
 To give two concrete examples of slightly less obvious cases:
 
@@ -280,11 +183,13 @@ They should do so by opening an issue recommending a new release and giving a
 More information about what is required for a release to proceed is available
 in the :ref:`release-checklist`.
 
+.. _PyPi: https://pypi.org/project/tedana/
+
 
 .. _release-checklist:
 
 Release Checklist
------------------
+=================
 
 This is the checklist of items that must be completed when cutting a new release of tedana.
 These steps can only be completed by a project maintainer, but they are a good resource for
@@ -295,11 +200,564 @@ releasing your own Python projects!
        `Release-drafter`_ should have already drafted release notes listing all
        changes since the last release; check to make sure these are correct.
 
+  .. warning::
+    Do not directly release the `Release-drafter`_-generated release draft.
+    You **must** copy the contents of the auto-generated draft to a new draft to be released.
+    `Release-drafter`_-generated releases **will not** deploy to PyPi.
+
 We have set up tedana so that releases automatically mint a new DOI with Zenodo;
-a guide for doing this integration is available `here`_.
+a guide for doing this integration is available in `GitHub's citable code guide`_.
 We have also set up the repository so that tagged releases automatically deploy
 to PyPi (for pip installation).
 
 .. _`guide for creating a release on GitHub`: https://help.github.com/articles/creating-releases/
 .. _`Release-drafter`: https://github.com/apps/release-drafter
-.. _here: https://guides.github.com/activities/citable-code/
+.. _`GitHub's citable code guide`: https://guides.github.com/activities/citable-code/
+
+
+********************
+Developer guidelines
+********************
+
+This section is intended to guide users through making making changes to
+``tedana``'s codebase, in particular working with tests.
+The worked example also offers some guidelines on approaching testing when
+adding new functions.
+Please check out our `contributing guide`_ for getting started.
+
+
+Monthly Developer Calls
+=======================
+
+We run monthly developer calls via Zoom.
+You can see the schedule via the tedana `google calendar`_.
+
+Everyone is welcome.
+We look forward to meeting you there!
+
+
+Adding and Modifying Tests
+==========================
+
+Testing is an important component of development.
+For simplicity, we have migrated all tests to ``pytest``.
+There are two basic kinds of tests: unit and integration tests.
+Unit tests focus on testing individual functions, whereas integration tests focus on making sure
+that the whole workflow runs correctly.
+
+
+Unit Tests
+----------
+
+For unit tests, we try to keep tests from the same module grouped into one file.
+Make sure the function you're testing is imported, then write your test.
+Good tests will make sure that edge cases are accounted for as well as common cases.
+You may also use ``pytest.raises`` to ensure that errors are thrown for invalid inputs to a
+function.
+
+
+Integration Tests
+-----------------
+
+Adding integration tests is relatively rare.
+An integration test will be a complete multi-echo dataset called with some set of options to ensure
+end-to-end pipeline functionality.
+These tests are relatively computationally expensive but aid us in making sure the pipeline is
+stable during large sets of changes.
+If you believe you have a dataset that will test ``tedana`` more completely, please open an issue
+before attempting to add an integration test.
+After securing the appropriate permission from the dataset owner to share it with ``tedana``, you
+can use the following procedure:
+
+(1) Make a ``tar.gz`` file which will unzip to be only the files you'd like to
+run a workflow on.
+You can do this with the following, which would make an archive ``my_data.tar.gz``:
+
+.. code-block:: bash
+
+    tar czf my_data.tar.gz my_data/*.nii.gz
+
+(2) Run the workflow with a known-working version, and put the outputs into a text file inside
+``$TEDANADIR/tedana/tests/data/``, where ``TEDANADIR`` is your local ``tedana repository``.
+We encourage using the convention ``<DATASET>_<n_echoes>_echo_outputs.txt``, appending ``verbose``
+to the filename if the integration test uses ``tedana`` in the verbose mode.
+
+(3) Write a test function in ``test_integration.py``.
+To write the test function you can follow the model of our `five echo set`_, which takes the following steps:
+
+1. Check if a pytest user is skipping integration, skip if so
+#. Use ``download_test_data`` to retrieve the test data from OSF
+#. Run a workflow
+#. Use ``resources_filename`` and ``check_integration_outputs`` to compare your expected output to
+   actual output.
+
+(4) If you need to upload new data, you will need to contact the maintainers and ask them to either add
+it to the `tedana OSF project`_ or give you permission to add it.
+
+(5) Once you've tested your integration test locally and it is working, you will need to add it to the
+CircleCI config and the ``Makefile``.
+Following the model of the three-echo and five-echo sets, define a name for your integration test
+and on an indented line below put
+
+.. code-block:: bash
+
+    @py.test --cov-append --cov-report term-missing --cov=tedana -k TEST
+
+with ``TEST`` your test function's name.
+This call basically adds code coverage reports to account for the new test, and runs the actual
+test in addition.
+
+(6) Using the five-echo set as a template, you should then edit ``.circlec/config.yml`` to add your
+test, calling the same name you define in the ``Makefile``.
+
+
+Viewing CircleCI Outputs
+------------------------
+
+If you need to take a look at a failed test on CircleCI rather than locally, you can use the
+following block to retrieve artifacts (see CircleCI documentation here_)
+
+.. code-block:: bash
+
+    export CIRCLE_TOKEN=':your_token'
+
+    curl https://circleci.com/api/v1.1/project/:vcs-type/:username/:project/$build_number/artifacts?circle-token=$CIRCLE_TOKEN \
+       | grep -o 'https://[^"]*' \
+       | sed -e "s/$/?circle-token=$CIRCLE_TOKEN/" \
+       | wget -v -i -
+
+To get a CircleCI token, follow the instructions for `getting one`_.
+You cannot do this unless you are part of the ME-ICA/tedana organization.
+If you don't want all of the artifacts, you can go to the test details and use the browser to
+manually select the files you would like.
+
+
+Worked Example
+==============
+
+Suppose we want to add a function in ``tedana`` that creates a file called ```hello_world.txt`` to
+be stored along the outputs of the ``tedana`` workflow.
+
+First, we merge the repository's ``main`` branch into our own to make sure we're up to date, and
+then we make a new branch called something like ``feature/say_hello``.
+Any changes we make will stay on this branch.
+We make the new function and call it ``say_hello`` and locate this function inside of ``io.py``.
+We'll also need to make a unit test.
+(Some developers actually make the unit test before the new function; this is a great way to make
+sure you don't forget to create it!)
+Since the function lives in ``io.py``, its unit test should go into ``test_io.py``.
+The job of this test is exclusively to tell if the function we wrote does what it claims to do
+without errors.
+So, we define a new function in ``test_io.py`` that looks something like this:
+
+.. code-block:: python
+
+    def test_say_hello():
+        # run the function
+        say_hello()
+        # test the function
+        assert op.exists('hello_world.txt')
+        # clean up
+        os.remove('hello_world.txt')
+
+We should see that our unit test is successful via
+
+.. code-block:: bash
+
+    pytest $TEDANADIR/tedana/tests/test_io.py -k test_say_hello
+
+If not, we should continue editing the function until it passes our test.
+Let's suppose that suddenly, you realize that what would be even more useful is a function that
+takes an argument, ``place``, so that the output filename is actually ``hello_PLACE``, with
+``PLACE`` the value passed and ``'world'`` as the default value.
+We merge any changes from the upstream main branch into our branch via
+
+.. code-block:: bash
+
+    git checkout feature/say_hello
+    git fetch upstream main
+    git merge upstream/main
+
+and then begin work on our test.
+We need to our unit test to be more complete, so we update it to look more like the following,
+adding several cases to make sure our function is robust to the name supplied:
+
+.. code-block:: python
+
+    def test_say_hello():
+        # prefix of all files to be checked
+        prefix = 'hello_'
+        # suffix of all files to be checked
+        suffix  = '.txt'
+        # run the function with several cases
+        for x in ['world', 'solar system', 'galaxy', 'universe']:
+            # current test name
+            outname = prefix + x + suffix
+            # call the function
+            say_hello(x)
+            # test the function
+            assert op.exists(outname)
+            # clean up from this call
+            os.remove(outname)
+
+Once that test is passing, we may need to adjust the integration test.
+Our program creates a file, ``hello_world.txt``, which the older version would not have produced.
+Therefore, we need to add the file to ``$TEDANADIR/tedana/tests/data/tedana_outputs.txt`` and its
+counterpart, R2-D2-- uh, we mean, ``tedana_outputs_verbose.txt``.
+With that edit complete, we can run the full ``pytest`` suite via
+
+.. code-block:: bash
+
+    pytest $TEDANADIR/tedana/tests
+
+Once that filename is added, all of the tests should be passing and we should open a PR to have our
+change reviewed.
+
+From here, others working on the project may request changes and we'll have to make sure that our
+tests are kept up to date with any changes made as we did before updating the unit test.
+For example, if a new parameter is added, ``greeting``, with a default of ``hello``, we'll need to
+adjust the unit test.
+However, since this doesn't change the typical workflow of ``tedana``, there's no need to change
+the integration test; we're still matching the original filename.
+Once we are happy with the changes and some members of ``tedana`` have approved the changes, our
+changes will be merged!
+
+We should then do the following cleanup with our git repository:
+
+.. code-block:: bash
+
+    git checkout main
+    git fetch upstream main
+    git merge upstream/main
+    git branch -d feature/say_hello
+    git push --delete origin feature/say_hello
+
+and we're good to go!
+
+.. _`tedana OSF project`: https://osf.io/bpe8h/
+.. _git: https://git-scm.com/
+.. _`git pro`: https://git-scm.com/book/en/v2
+.. _Fork: https://help.github.com/en/github/getting-started-with-github/fork-a-repo
+.. _`pull request`: https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request
+.. _GitKraken: https://www.gitkraken.com/
+.. _`GitHub Desktop`: https://desktop.github.com/
+.. _SourceTree: https://www.sourcetreeapp.com/
+.. _`GitHub UI`: https://help.github.com/en/github/managing-files-in-a-repository/editing-files-in-your-repository
+.. _this: https://github.com/ME-ICA/tedana/tree/main/docs
+.. _ReStructuredText: http://docutils.sourceforge.net/rst.html#user-documentation
+.. _`five echo set`: https://github.com/ME-ICA/tedana/blob/37368f802f77b4327fc8d3f788296ca0f01074fd/tedana/tests/test_integration.py#L71-L95
+.. _here: https://circleci.com/docs/2.0/artifacts/#downloading-all-artifacts-for-a-build-on-circleci
+.. _`getting one`: https://circleci.com/docs/2.0/managing-api-tokens/?gclid=CjwKCAiAqqTuBRBAEiwA7B66heDkdw6l68GAYAHtR2xS1xvDNNUzy7l1fmtwQWvVN0OIa97QL8yfhhoCejoQAvD_BwE#creating-a-personal-api-token
+.. _`google calendar`: https://calendar.google.com/calendar/embed?src=pl6vb4t9fck3k6mdo2mok53iss%40group.calendar.google.com
+.. _`contributing guide`: https://github.com/ME-ICA/tedana/blob/main/CONTRIBUTING.md
+
+
+**********
+Governance
+**********
+
+Governance is a hugely important part of any project.
+It is especially important to have clear processes and communication channels
+for open source projects that rely on a distributed network of volunteers,
+such as ``tedana``.
+
+
+Overview
+========
+
+Tedana is a relatively small open source project that requires specialized
+knowledge in multiple domains.
+This leads to several challenges.
+No one
+person on the current tedana development team has a combination of
+available time plus expertise in collaborative software development, MRI
+physics, and advanced data processing methods to assume a primary project
+leader role.
+Even if such a person was interested, it may not benefit the
+project to overly rely on the existence of one person.
+Instead, we developed the
+following system with several goals in mind:
+
+- Grow the community.
+- Strive for consensus.
+- Provide a path for when consensus cannot be achieved.
+- Minimize the administrative burden.
+- Maximize the `bus factor`_ of the project.
+- Acknowledge the leadership and time multiple people contribute to our
+  community without demanding more time than any individual can offer.
+  Dividing leadership responsibilities into multiple smaller roles also
+  makes it easier to encourage new people to take on a leadership role
+  without fearing that too much work will be required of them.
+- Openness as a priority:
+
+  - Promote open discussions.
+  - Openness is critical to building trust with the broader community
+  - Openness provides a mechanism for non-leaders to identify and address
+    oversights or mistakes
+  - Openness provides a smoother transition to onboard future leaders
+  - Leadership meetings should be open and notes should be shared unless
+    there are discussions about sensitive personal matters.
+
+This governance structure is a work-in-progress.
+We welcome both people
+who want to take on a leadership role as well as ideas to improve
+this structure.
+
+
+Leadership
+==========
+
+Contributor
+  A contributor is someone who has made a contribution to tedana.
+  A contribution can be code, documentation, or conceptual.
+  All contributors are listed in the `all-contributors file`_.
+  The community decides on the content of this file using the same process
+  as any other change to the `Repository`_ (see below) allowing the
+  meaning of "Contributor" to evolve independently of the Decision-making
+  rules.
+  Contributors also have the option to be added to the Zenodo file which
+  may be used for authorship credit for tedana.
+
+
+Maintainer
+  A Maintainer is responsible for the long term health of the project and
+  the community.
+  Maintainers have additional authority (see `Decision Making Process`_)
+  helping them to resolve conflicts and increase the pace of the
+  development when necessary.
+  Any maintainer can remove themselves.
+  Any contributor can become a maintainer by request, or by nomination of
+  a current maintainer,  and with the support of the majority of the
+  current maintainers.
+
+  Current Maintainers:
+
+  +-------------------------------------------+
+  | `Logan Dowdle`_ (@dowdlelt)               |
+  +-------------------------------------------+
+  | `Elizabeth DuPre`_ (@emdupre)             |
+  +-------------------------------------------+
+  | `Javier Gonzalez-Castillo`_ (@javiergcas) |
+  +-------------------------------------------+
+  | `Dan Handwerker`_ (@handwerkerd)          |
+  +-------------------------------------------+
+  | `Taylor Salo`_ (@tsalo)                   |
+  +-------------------------------------------+
+  | `Joshua Teves`_ (@jbteves)                |
+  +-------------------------------------------+
+  | `Eneko Uruñuela`_ (@eurunuela)            |
+  +-------------------------------------------+
+
+Steering committee
+  The :ref:`Steering Committee` is made up of a subset of maintainers who
+  help guide the project.
+
+  Current Steering Committee members:
+
+  +--------------------------------------+
+  | `Logan Dowdle`_ (@dowdlelt)          |
+  +--------------------------------------+
+  | `Elizabeth DuPre`_ (@emdupre)        |
+  +--------------------------------------+
+  | `Dan Handwerker`_ (@handwerkerd)     |
+  +--------------------------------------+
+  | `Taylor Salo`_ (@tsalo)              |
+  +--------------------------------------+
+  | `Joshua Teves`_ (@jbteves)           |
+  +--------------------------------------+
+  | `Eneko Uruñuela`_ (@eurunuela)       |
+  +--------------------------------------+
+
+Focused Leadership Roles
+  We have identified key responsibilities or skills that help advance
+  tedana development and created roles for each of these responsibilities.
+  One person can fill more than one role and more than one person can
+  decide to share or split the responsibilities of a role.
+  Any contributor can propose the creation of new focused leadership roles.
+  A person can take on a leadership role without being a Maintainer or
+  Steering Committee member
+
+  - | Task manager & record keeper: `Dan Handwerker`_
+
+    |   Helps write & keep track of notes from meetings
+    |   Keeps track of issues or items that should be addressed
+    |   Follows up with people who volunteered to address an item or
+        alerts the broader community of known tasks that could use a
+        volunteer
+  - | MR physics leader: `César Caballero-Gaudes`_
+
+    |   Someone who can make sure calculations fit within our
+        understanding of MR physics
+    |   Someone who can either answer MRI physics questions related to
+        multi-echo or direct people to where they can find answers
+  - | Processing algorithms leaders: `Eneko Uruñuela`_ (Decomposition) &  `Dan Handwerker`_ (Metrics & Decision Tree)
+
+    |   Someone who can make sure algorithms are appropriately implemented
+        (or knows enough to delegate to someone who can make sure
+        implementation is good)
+    |   Someone who can either answer processing algorithm questions or
+        direct people to where they can find answers
+  - | Collaborative programming leaders: `Elizabeth DuPre`_ & `Joshua Teves`_
+    |   Helps make sure tedana is following best practices for Python code
+        design, testing, and communication for issues/pull requests etc.
+  - | Communications leader: `Joshua Teves`_
+    |   Mailing list manager & other outward-facing communication about
+        the project
+  - | New contributors leader: `Taylor Salo`_
+    |   Leads efforts to make contributor documentation more welcoming
+    |   Is a point of contact for potential contributors to make them feel
+        welcome and direct them to relevant resources or issues
+  - | Multi-echo fMRI support leader: `Logan Dowdle`_
+    |   Monitors places where people may ask questions about tedana or
+        multi-echo fMRI and tries to find someone to answer those questions
+  - | Enforcer(s) of the `code of conduct`_: `Elizabeth DuPre`_ &  `Dan Handwerker`_ & `Stefano Moia`_
+    |   People someone can go to if they want to report a code of conduct
+        violation
+
+
+Changing leaders
+----------------
+
+Any leader can remove themselves for a role at any time and open up a call
+for a new self-nomination.
+Anyone can request to take on a leadership role at any time.
+Once per year, there should be an explicit call to the larger contributor
+community asking if anyone wants to self nominate for a leadership role.
+If individuals cannot reach consensus on who steps back and who assumes
+new roles, then a majority vote of contributors from the previous 3 years
+will assign people to roles where there are conflicts.
+
+If there are concerns with a tedana leader, any enforcer of the code of
+conduct can ask anyone to step down from a leadership role.
+If a person refuses to step down, then an enforcer of the code of conduct
+will consult with the other code of conduct enforcers.
+If they reach a concensus that a person shouldn't have a tedana leadership
+position, then they should be removed.
+If a code of conduct enforcer has a conflict of interest, then the
+remaining code of conduct enforcers will identify someone without a
+conflict to include in deliberations.
+
+
+Decision Making Process
+=======================
+
+The rules outlined below are inspired by the
+`decision-making rules for the BIDS standard <https://github.com/bids-standard/bids-specification/blob/master/DECISION-MAKING.md>`_,
+which in turn were inspired by the
+`lazy consensus system used in the Apache Foundation <https://www.apache.org/foundation/voting.html>`_,
+and heavily depend on the
+`GitHub Pull Request review system <https://help.github.com/articles/about-pull-requests/>`_.
+
+1. Potential modifications to the Repository should first be proposed via
+   an Issue.
+2. Every modification (including a correction of a typo, adding a new
+   Contributor, an extension or others) or proposal to release a new
+   version needs to be done via a Pull Request (PR) to the Repository.
+3. Anyone can open an Issue or a PR (this action is not limited to
+   Contributors).
+4. A PR is eligible to be merged if and only if these conditions are met:
+
+   a) The PR features at least two
+      `Reviews that Approve <https://help.github.com/articles/about-pull-request-reviews/#about-pull-request-reviews>`_
+      the PR of which neither is the author of the PR.
+      The reviews should be made after the last commit in the PR
+      (equivalent to
+      `Stale review dismissal <https://help.github.com/articles/enabling-required-reviews-for-pull-requests/>`_
+      option on GitHub).
+      If a second review requests minor changes after
+      another reviewer approved the PR, the first review does not need
+      to re-review.
+   b) Does not feature any
+      `Reviews that Request changes <https://help.github.com/articles/about-required-reviews-for-pull-requests/>`_.
+      That is, if someone asked for changes, the PR should not be merged
+      just because two other people approve it.
+   c) Is not a Draft PR.
+      That is, the PR author says it is ready for review.
+   d) Passes all automated tests.
+   e) Is not proposing a new release.
+   f) The steering committee has not added extra restrictions.
+      For example, if a PR is a non-trival change, the steering committee
+      can create a system to get feedback from more than just two reviewers
+      before merging.
+5. After consultation with contributors, the steering committee can decide
+   to merge any PR - even if it's not eligible to merge according to Rule 4.
+6. Anyone can Review a PR and request changes.
+   If a community member requests changes they need to provide an
+   explanation regarding what changes should be made and justification of
+   their importance.
+   Reviews requesting changes can also be used to request more time to
+   review a PR.
+7. A reviewer who requested changes can dismiss their own review, if they
+   decide their requested changes are no longer necessary, or approve
+   changes that address the issue underlying their change request.
+8. If the author of a PR and a reviewer who requests changes cannot find a
+   solution that would lead to:
+
+   (1) The author closing the PR without merging
+   (2) The reviewer accepting requested changes or
+   (3) The reviewer dismissing their review, so that the PR can be approved and
+       merged, then the disagreement will be resolved with a vote.
+9. Rules governing voting:
+
+   a) A vote can be triggered by any Maintainer, but only after 5 working
+      days from the time a Review Requesting Changes is made.
+      A PR can only have one open vote at a time.
+      If disagreements over a PR results in more than one
+      vote, the Steering Committee has the authority to create a voting
+      process to help resolve disagreements in a more efficient and
+      respectful manner.
+   b) Only Contributors can vote and each Contributor gets one vote.
+   c) A vote ends after 15 working days or when all Contributors have
+      voted or abstained (whichever comes first).
+   d) A vote freezes the PR - no new commits or Reviews Requesting Changes
+      can be added to it while a vote is ongoing.
+      If a commit is accidentally made during that period it should be
+      reverted.
+      Comments are allowed.
+   e) The quorum for a vote is five votes.
+   f) The outcome of the vote is decided based on a simple majority.
+
+
+.. _Steering Committee:
+
+Steering Committee
+------------------
+
+The steering committee steers.
+The goal of the steering committee is to help guide the direction of the
+project.
+Decisions in the steering committee will focus on how to present project
+issues to the broader community in a clear way rather than making project
+decisions without community input.
+
+The steering committee can decide:
+
+- An issue should be prioritized for wider communal discussion.
+- A pull request requires more discussion or reviews than standard before
+  merging.
+- How a breaking change (something that changes existing user function calls
+  or program outputs) will be presented to the developer and user base for
+  discussion, before decisions are made.
+- Criteria for cutting a new version release and when those criteria are met.
+
+Steering committee decisions should strive for consensus.
+If consensus cannot be reached, the members of the steering committee
+should vote.
+Voting will take place over 7 days or until every steering committee member
+votes or abstains.
+The outcome of a vote is based on a simple majority.
+
+.. _César Caballero-Gaudes: https://github.com/CesarCaballeroGaudes
+.. _Logan Dowdle: https://github.com/dowdlelt
+.. _Elizabeth DuPre: https://github.com/emdupre
+.. _Javier Gonzalez-Castillo: https://github.com/javiergcas
+.. _Dan Handwerker: https://github.com/handwerkerd
+.. _Stefano Moia: https://github.com/smoia
+.. _Taylor Salo: https://tsalo.github.io
+.. _Joshua Teves: https://github.com/jbteves
+.. _Eneko Uruñuela: https://github.com/eurunuela
+.. _Kirstie Whitaker: https://github.com/KirstieJane
+.. _code of conduct: https://github.com/ME-ICA/tedana/blob/main/CODE_OF_CONDUCT.md
+.. _all-contributors file: https://github.com/ME-ICA/tedana/blob/main/.all-contributorsrc
+.. _bus factor: https://en.wikipedia.org/wiki/Bus_factor
+.. _Repository: https://github.com/ME-ICA/tedana>

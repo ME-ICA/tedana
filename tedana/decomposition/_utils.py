@@ -6,9 +6,9 @@ import logging
 import numpy as np
 from scipy import stats
 
-LGR = logging.getLogger(__name__)
-RepLGR = logging.getLogger('REPORT')
-RefLGR = logging.getLogger('REFERENCES')
+LGR = logging.getLogger("GENERAL")
+RepLGR = logging.getLogger("REPORT")
+RefLGR = logging.getLogger("REFERENCES")
 
 
 def eimask(dd, ees=None):
@@ -33,14 +33,12 @@ def eimask(dd, ees=None):
     imask = np.zeros((dd.shape[0], len(ees)), dtype=bool)
     for ee in ees:
         if len(ees) == 1:
-            LGR.debug('Creating eimask for optimal combination')
+            LGR.debug("Creating eimask for optimal combination")
         else:
-            LGR.debug('Creating eimask for echo {}'.format(ee))
-        perc98 = stats.scoreatpercentile(dd[:, ee, :].flatten(), 98,
-                                         interpolation_method='lower')
+            LGR.debug("Creating eimask for echo {}".format(ee))
+        perc98 = stats.scoreatpercentile(dd[:, ee, :].flatten(), 98, interpolation_method="lower")
         lthr, hthr = 0.001 * perc98, 5 * perc98
-        LGR.debug('Eimask threshold boundaries: '
-                  '{:.03f} {:.03f}'.format(lthr, hthr))
+        LGR.debug("Eimask threshold boundaries: {:.03f} {:.03f}".format(lthr, hthr))
         m = dd[:, ee, :].mean(axis=1)
         imask[np.logical_and(m > lthr, m < hthr), ee] = True
 

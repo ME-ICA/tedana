@@ -7,11 +7,11 @@ import numpy as np
 from scipy import stats
 
 from tedana import utils
-from tedana.due import due, BibTeX, Doi
+from tedana.due import BibTeX, Doi, due
 
-LGR = logging.getLogger(__name__)
-RepLGR = logging.getLogger('REPORT')
-RefLGR = logging.getLogger('REFERENCES')
+LGR = logging.getLogger("GENERAL")
+RepLGR = logging.getLogger("REPORT")
+RefLGR = logging.getLogger("REFERENCES")
 
 
 @due.dcite(
@@ -137,22 +137,21 @@ def get_ls_zvalues(data, mmix, mask=None):
         Data in component space
     """
     if data.ndim != 2:
-        raise ValueError('Parameter data should be 2d, not '
-                         '{0}d'.format(data.ndim))
+        raise ValueError("Parameter data should be 2d, not {0}d".format(data.ndim))
     elif mmix.ndim not in [2]:
-        raise ValueError('Parameter mmix should be 2d, not '
-                         '{0}d'.format(mmix.ndim))
+        raise ValueError("Parameter mmix should be 2d, not {0}d".format(mmix.ndim))
     elif (mask is not None) and (mask.ndim != 1):
-        raise ValueError('Parameter mask should be 1d, not '
-                         '{0}d'.format(mask.ndim))
+        raise ValueError("Parameter mask should be 1d, not {0}d".format(mask.ndim))
     elif (mask is not None) and (data.shape[0] != mask.shape[0]):
-        raise ValueError('First dimensions (number of samples) of data ({0}) '
-                         'and mask ({1}) do not match.'.format(data.shape[0],
-                                                               mask.shape[0]))
+        raise ValueError(
+            "First dimensions (number of samples) of data ({0}) "
+            "and mask ({1}) do not match.".format(data.shape[0], mask.shape[0])
+        )
     elif data.shape[1] != mmix.shape[0]:
-        raise ValueError('Second dimensions (number of volumes) of data ({0}) '
-                         'and mmix ({1}) do not match.'.format(data.shape[0],
-                                                               mmix.shape[0]))
+        raise ValueError(
+            "Second dimensions (number of volumes) of data ({0}) "
+            "and mmix ({1}) do not match.".format(data.shape[0], mmix.shape[0])
+        )
 
     # demean masked data
     if mask is not None:
@@ -198,23 +197,25 @@ def get_ls_coeffs(data, X, mask=None, add_const=False, compute_zvalues=False, mi
 
     """
     if data.ndim not in [2, 3]:
-        raise ValueError('Parameter data should be 2d or 3d, not '
-                         '{0}d'.format(data.ndim))
+        raise ValueError("Parameter data should be 2d or 3d, not {0}d".format(data.ndim))
     elif X.ndim not in [2]:
-        raise ValueError('Parameter X should be 2d, not {0}d'.format(X.ndim))
+        raise ValueError("Parameter X should be 2d, not {0}d".format(X.ndim))
     elif data.shape[-1] != X.shape[0]:
-        raise ValueError('Last dimension (dimension {0}) of data ({1}) does '
-                         'not match first dimension of X '
-                         '({2})'.format(data.ndim, data.shape[-1], X.shape[0]))
+        raise ValueError(
+            "Last dimension (dimension {0}) of data ({1}) does not "
+            "match first dimension of "
+            "X ({2})".format(data.ndim, data.shape[-1], X.shape[0])
+        )
 
     # mask data and flip (time x samples)
     if mask is not None:
         if mask.ndim not in [1, 2]:
-            raise ValueError('Parameter data should be 1d or 2d, not '
-                             '{0}d'.format(mask.ndim))
+            raise ValueError("Parameter data should be 1d or 2d, not {0}d".format(mask.ndim))
         elif data.shape[0] != mask.shape[0]:
-            raise ValueError('First dimensions of data ({0}) and mask ({1}) do'
-                             ' not match'.format(data.shape[0], mask.shape[0]))
+            raise ValueError(
+                "First dimensions of data ({0}) and mask ({1}) do not "
+                "match".format(data.shape[0], mask.shape[0])
+            )
         mdata = data[mask, :].T
     else:
         mdata = data.T
