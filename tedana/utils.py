@@ -1,9 +1,9 @@
 """
 Utilities for tedana package
 """
-import re
 import logging
 import os.path as op
+import re
 
 import nibabel as nib
 import numpy as np
