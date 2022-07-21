@@ -189,3 +189,32 @@ def test_smoke_load_data():
 
 
 # TODO: "BREAK" AND UNIT TESTS
+
+
+def test_prep_data_for_json():
+    """
+    Tests for prep_data_for_json
+    """
+    # Should reject non-dict entities since that is required for saver
+    with pytest.raises(TypeError):
+        me.prep_data_for_json(1)
+
+    # Should not modify something with no special types
+    d = {"mustang": "vroom"}
+    new_d = me.prep_data_for_json(d)
+    assert new_d == d
+
+    # Should coerce an ndarray into a list
+    d = {"number": np.ndarray(1)}
+    new_d = me.prep_data_for_json(d)
+    assert isinstance(new_d["number"], list)
+
+    # Should work for nested dict
+    d = {
+        "dictionary": {
+            "serializable": "cat",
+            "array": np.ndarray([1, 2, 3]),
+        }
+    }
+    new_d = me.prep_data_for_json(d)
+    assert isinstance(new_d["dictionary"]["array"], list)
