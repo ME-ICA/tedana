@@ -137,7 +137,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
         "Next, component selection was performed to identify "
         "BOLD (TE-dependent), non-BOLD (TE-independent), and "
         "uncertain (low-variance) components using the Kundu "
-        "decision tree (v2.5) \\cite{kundu2013integrated}."
+        "decision tree (v2.5) \\citep{kundu2013integrated}."
     )
 
     comptable["classification"] = "accepted"

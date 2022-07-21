@@ -39,7 +39,7 @@ def _combine_t2s(data, tes, ft2s, report=True):
     if report:
         RepLGR.info(
             "Multi-echo data were then optimally combined using the "
-            "T2* combination method \\cite{posse1999enhancement}."
+            "T2* combination method \\citep{posse1999enhancement}."
         )
 
     n_vols = data.shape[-1]
@@ -90,7 +90,7 @@ def _combine_paid(data, tes, report=True):
         RepLGR.info(
             "Multi-echo data were then optimally combined using the "
             "parallel-acquired inhomogeneity desensitized (PAID) "
-            "combination method \\cite{poser2006bold}."
+            "combination method \\citep{poser2006bold}."
         )
 
     n_vols = data.shape[-1]

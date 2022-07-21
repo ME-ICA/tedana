@@ -189,8 +189,8 @@ def t_to_z(t_values, dof):
 
     RepLGR.info(
         "T-statistics were converted to z-statistics using Dr. "
-        "Vanessa Sochat's implementation \\cite{sochat2015ttoz} of the method "
-        "described in \\cite{hughett2008accurate}."
+        "Vanessa Sochat's implementation \\citep{sochat2015ttoz} of the method "
+        "described in \\citep{hughett2008accurate}."
     )
 
     # Select just the nonzero voxels

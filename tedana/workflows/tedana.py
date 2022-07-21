@@ -540,7 +540,7 @@ def tedana_workflow(
 
     RepLGR.info(
         "TE-dependence analysis was performed on input data using the tedana workflow "
-        "\\cite{dupre2021te}."
+        "\\citep{dupre2021te}."
     )
 
     if mask and not t2smap:
@@ -817,16 +817,16 @@ def tedana_workflow(
         json.dump(derivative_metadata, fo, sort_keys=True, indent=4)
 
     RepLGR.info(
-        "This workflow used numpy \\cite{van2011numpy}, scipy \\cite{virtanen2020scipy}, "
-        "pandas \\cite{mckinney2010data,reback2020pandas}, "
-        "scikit-learn \\cite{pedregosa2011scikit}, "
-        "nilearn, bokeh \\cite{bokehmanual}, matplotlib \\cite{Hunter:2007}, "
-        "and nibabel \\cite{brett_matthew_2019_3233118}."
+        "This workflow used numpy \\citep{van2011numpy}, scipy \\citep{virtanen2020scipy}, "
+        "pandas \\citep{mckinney2010data,reback2020pandas}, "
+        "scikit-learn \\citep{pedregosa2011scikit}, "
+        "nilearn, bokeh \\citep{bokehmanual}, matplotlib \\citep{Hunter:2007}, "
+        "and nibabel \\citep{brett_matthew_2019_3233118}."
     )
 
     RepLGR.info(
         "This workflow also used the Dice similarity index "
-        "\\cite{dice1945measures,sorensen1948method}."
+        "\\citep{dice1945measures,sorensen1948method}."
     )
 
     with open(repname, "r") as fo:

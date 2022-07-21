@@ -188,12 +188,12 @@ def tedpca(
     """
     if algorithm == "kundu":
         alg_str = (
-            "followed by the Kundu component selection decision tree \\cite{kundu2013integrated}"
+            "followed by the Kundu component selection decision tree \\citep{kundu2013integrated}"
         )
     elif algorithm == "kundu-stabilize":
         alg_str = (
             "followed by the 'stabilized' Kundu component "
-            "selection decision tree \\cite{kundu2013integrated}"
+            "selection decision tree \\citep{kundu2013integrated}"
         )
     elif isinstance(algorithm, Number):
         if isinstance(algorithm, float):
@@ -206,7 +206,7 @@ def tedpca(
     else:
         alg_str = (
             "based on the PCA component estimation with a Moving Average"
-            "(stationary Gaussian) process \\cite{li2007estimating}"
+            "(stationary Gaussian) process \\citep{li2007estimating}"
         )
 
     RepLGR.info(

@@ -173,7 +173,7 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, io_generator):
     LGR.info("Performing minimum image regression to remove spatially-diffuse noise")
     RepLGR.info(
         "Minimum image regression was then applied to the "
-        "data in order to remove spatially diffuse noise \\cite{kundu2013integrated}."
+        "data in order to remove spatially diffuse noise \\citep{kundu2013integrated}."
     )
 
     all_comps = comptable.index.values
