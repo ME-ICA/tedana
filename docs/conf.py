@@ -169,14 +169,14 @@ htmlhelp_basename = "tedanadoc"
 
 # The following is used by sphinx.ext.linkcode to provide links to github
 linkcode_resolve = make_linkcode_resolve(
-    "tedana", "https://github.com/me-ica/" "tedana/blob/{revision}/" "{package}/{path}#L{lineno}"
+    "tedana", "https://github.com/me-ica/tedana/blob/{revision}/{package}/{path}#L{lineno}"
 )
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "matplotlib": ("https://matplotlib.org/", None),
     "nibabel": ("https://nipy.org/nibabel/", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
