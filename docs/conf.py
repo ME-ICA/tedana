@@ -20,6 +20,8 @@
 import os
 import sys
 
+import sphinx_rtd_theme
+
 sys.path.insert(0, os.path.abspath("sphinxext"))
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 
@@ -128,8 +130,6 @@ napoleon_use_rtype = False
 # a list of builtin themes.
 #
 # installing theme package
-import sphinx_rtd_theme
-
 html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -157,7 +157,7 @@ html_favicon = "_static/tedana_favicon.png"
 # -----------------------------------------------------------------------------
 # sphinxcontrib-bibtex
 # -----------------------------------------------------------------------------
-bibtex_bibfiles = ["./references.bib"]
+bibtex_bibfiles = ["../tedana/resources/references.bib"]
 bibtex_style = "unsrt"
 bibtex_reference_style = "author_year"
 bibtex_footbibliography_header = ""

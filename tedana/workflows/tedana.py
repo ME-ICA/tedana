@@ -440,6 +440,7 @@ def tedana_workflow(
     basename = "report"
     extension = "txt"
     repname = op.join(out_dir, (basename + "." + extension))
+    bibtex_file = op.join(out_dir, "references.bib")
     repex = op.join(out_dir, (basename + "*"))
     previousreps = glob(repex)
     previousreps.sort(reverse=True)
@@ -831,6 +832,12 @@ def tedana_workflow(
 
     with open(repname, "w") as fo:
         fo.write(report)
+
+    # Collect BibTeX entries for cited papers
+    references = utils.get_description_references(report)
+
+    with open(bibtex_file, "w") as fo:
+        fo.write(references)
 
     if not no_reports:
         LGR.info("Making figures folder with static component maps and timecourse plots.")
