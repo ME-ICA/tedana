@@ -124,10 +124,8 @@ def test_integration_four_echo(skip_integration):
     out_dir = "/tmp/data/four-echo/TED.four-echo"
     out_dir_manual = "/tmp/data/four-echo/TED.four-echo-manual"
 
-    """
     if os.path.exists(out_dir):
         shutil.rmtree(out_dir)
-    """
 
     if os.path.exists(out_dir_manual):
         shutil.rmtree(out_dir_manual)
@@ -138,7 +136,6 @@ def test_integration_four_echo(skip_integration):
     prepend += "sub-PILOT_ses-01_task-localizerDetection_run-01_echo-"
     suffix = "_space-sbref_desc-preproc_bold+orig.HEAD"
     datalist = [prepend + str(i + 1) + suffix for i in range(4)]
-    """
     tedana_cli.tedana_workflow(
         data=datalist,
         tes=[11.8, 28.04, 44.28, 60.52],
@@ -149,7 +146,6 @@ def test_integration_four_echo(skip_integration):
         debug=True,
         verbose=True,
     )
-    """
 
     post_tedana(
         op.join(out_dir, "desc-tedana_registry.json"),
