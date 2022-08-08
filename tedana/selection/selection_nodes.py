@@ -2,24 +2,25 @@
 Functions that will be used as steps in a decision tree
 """
 import logging
+
 import numpy as np
 import pandas as pd
+from scipy.stats import scoreatpercentile
+
+from tedana.metrics.dependence import generate_decision_table_score
+from tedana.selection.selection_utils import (  # get_new_meanmetricrank,
+    change_comptable_classifications,
+    confirm_metrics_exist,
+    get_extend_factor,
+    getelbow,
+    kappa_elbow_kundu,
+    log_decision_tree_step,
+    selectcomps2use,
+)
+from tedana.stats import getfbounds
 
 # from scipy import stats
 
-from scipy.stats import scoreatpercentile
-from tedana.stats import getfbounds
-from tedana.selection.selection_utils import (
-    confirm_metrics_exist,
-    selectcomps2use,
-    log_decision_tree_step,
-    change_comptable_classifications,
-    getelbow,
-    get_extend_factor,
-    kappa_elbow_kundu,
-    # get_new_meanmetricrank,
-)
-from tedana.metrics.dependence import generate_decision_table_score
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")

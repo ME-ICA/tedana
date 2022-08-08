@@ -18,14 +18,7 @@ from scipy import stats
 from threadpoolctl import threadpool_limits
 
 import tedana.gscontrol as gsc
-from tedana import (
-    __version__,
-    io,
-    reporting,
-    selection,
-    utils,
-    stats,
-)
+from tedana import __version__, io, reporting, selection, stats, utils
 from tedana.workflows.parser_utils import is_valid_file
 
 LGR = logging.getLogger("GENERAL")

@@ -1,13 +1,13 @@
 """Tests for the tedana.selection.selection_nodes module."""
-from re import S
-import numpy as np
-import pytest
 import os
-import pandas as pd
+from re import S
 
+import numpy as np
+import pandas as pd
+import pytest
+
+from tedana.selection import selection_nodes, selection_utils
 from tedana.selection.ComponentSelector import ComponentSelector
-from tedana.selection import selection_utils
-from tedana.selection import selection_nodes
 from tedana.tests.test_selection_utils import sample_component_table, sample_selector
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))

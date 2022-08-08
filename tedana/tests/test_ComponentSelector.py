@@ -1,13 +1,15 @@
 """Tests for the decision tree modularization"""
-import pytest
-import json, os, glob
+import glob
+import json
+import os
 import os.path as op
 
 import numpy as np
 import pandas as pd
+import pytest
 
-from tedana.selection import ComponentSelector
 from tedana import io
+from tedana.selection import ComponentSelector
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 

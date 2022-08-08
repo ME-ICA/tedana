@@ -6,9 +6,8 @@ import logging
 import numpy as np
 from scipy import stats
 
-from tedana.stats import getfbounds
-from tedana.selection.ComponentSelector import ComponentSelector
 from tedana.metrics import collect
+from tedana.selection.ComponentSelector import ComponentSelector
 from tedana.selection.selection_utils import clean_dataframe, getelbow
 from tedana.stats import getfbounds
 

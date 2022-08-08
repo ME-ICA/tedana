@@ -4,9 +4,11 @@ Utility functions for tedana.selection
 
 import logging
 import re
+
 import numpy as np
-from tedana.stats import getfbounds
+
 from tedana.metrics.dependence import generate_decision_table_score
+from tedana.stats import getfbounds
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")

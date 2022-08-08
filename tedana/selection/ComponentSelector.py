@@ -2,20 +2,21 @@
 Functions that include workflows to identify and label
 TE-dependent and TE-independent components.
 """
-import os.path as op
 import inspect
 import logging
-from pkg_resources import resource_filename
-from numpy import asarray
-import pandas as pd
+import os.path as op
 
+import pandas as pd
+from numpy import asarray
+from pkg_resources import resource_filename
+
+from tedana.io import load_json
+from tedana.selection import selection_nodes
 from tedana.selection.selection_utils import (
     clean_dataframe,
     confirm_metrics_exist,
     log_classification_counts,
 )
-from tedana.selection import selection_nodes
-from tedana.io import load_json
 from tedana.utils import get_resource_path
 
 LGR = logging.getLogger("GENERAL")
