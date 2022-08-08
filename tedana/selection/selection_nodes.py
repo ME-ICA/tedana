@@ -1260,11 +1260,7 @@ def calc_max_good_meanmetricrank(
 
     function_name_idx = f"Step {selector.current_node_idx}: calc_max_good_meanmetricrank"
 
-    if (
-        (metric_suffix is not None)
-        and (metric_suffix != "")
-        and isinstance(metric_suffix, str)
-    ):
+    if ((metric_suffix is not None) and (metric_suffix != "") and isinstance(metric_suffix, str)):
         metric_name = f"max_good_meanmetricrank_{metric_suffix}"
     else:
         metric_name = "max_good_meanmetricrank"

@@ -43,7 +43,13 @@ def _trim_edge_zeros(arr):
 
 
 def carpet_plot(
-    optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscontrol=None
+    optcom_ts,
+    denoised_ts,
+    hikts,
+    lowkts,
+    mask,
+    io_generator,
+    gscontrol=None
 ):
     """Generate a set of carpet plots for the combined and denoised data.
 

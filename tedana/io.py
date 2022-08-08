@@ -32,6 +32,7 @@ class CustomEncoder(json.JSONEncoder):
     # noqa: E501
     See here: https://stackoverflow.com/questions/50916422/python-typeerror-object-of-type-int64-is-not-json-serializable/50916741
     """
+
     def default(self, obj):
         # int64 non-serializable but is a numpy output
         if isinstance(obj, np.integer):

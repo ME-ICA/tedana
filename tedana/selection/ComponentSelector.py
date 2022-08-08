@@ -211,9 +211,7 @@ def validate_tree(tree):
             compclass = compclass | set(tmp_comp)
         nonstandard_labels = compclass.difference(all_classifications)
         if nonstandard_labels:
-            LGR.warning(
-                f"{compclass} in node {i} of the decision tree includes a classification "
-            )
+            LGR.warning(f"{compclass} in node {i} of the decision tree includes a classification")
         if "decide_comps" in node.get("parameters").keys():
             tmp_comp = node["parameters"]["decide_comps"]
             if isinstance(tmp_comp, str):
