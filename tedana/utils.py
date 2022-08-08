@@ -3,11 +3,9 @@ Utilities for tedana package
 """
 import logging
 import os.path as op
-import re
 
 import nibabel as nib
 import numpy as np
-import pandas as pd
 from nilearn._utils import check_niimg
 from scipy import ndimage
 from sklearn.utils import check_array

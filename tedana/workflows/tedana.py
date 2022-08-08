@@ -29,6 +29,7 @@ from tedana import (
     selection,
     utils,
 )
+from tedana.bibtex import get_description_references
 from tedana.stats import computefeats2
 from tedana.workflows.parser_utils import check_tedpca_value, is_valid_file
 
@@ -837,7 +838,7 @@ def tedana_workflow(
         fo.write(report)
 
     # Collect BibTeX entries for cited papers
-    references = utils.get_description_references(report)
+    references = get_description_references(report)
 
     with open(bibtex_file, "w") as fo:
         fo.write(references)

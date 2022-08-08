@@ -214,7 +214,12 @@ API
    :toctree: generated/
    :template: function.rst
 
-   tedana.bibtex.
+   tedana.bibtex.find_braces
+   tedana.bibtex.reduce_idx
+   tedana.bibtex.index_bibtex_identifiers
+   tedana.bibtex.find_citations
+   tedana.bibtex.reduce_references
+   tedana.bibtex.get_description_references
 
 
 .. _api_utils_ref:

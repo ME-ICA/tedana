@@ -8,6 +8,8 @@ import re
 import numpy as np
 import pandas as pd
 
+from tedana.utils import get_resource_path
+
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
