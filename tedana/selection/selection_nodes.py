@@ -512,19 +512,19 @@ def dec_left_op_right(
         )
 
     else:
-        _ = parse_vals(left)
-        _ = parse_vals(right)
+        left1_val = parse_vals(left)  # noqa: F841
+        right1_val = parse_vals(right)  # noqa: F841
         decision_boolean = eval(f"(left_scale*left1_val) {op} (right_scale * right1_val)")
         if is_compound >= 2:
-            _ = parse_vals(left2)
-            _ = parse_vals(right2)
+            left2_val = parse_vals(left2)  # noqa: F841
+            right2_val = parse_vals(right2)  # noqa: F841
             statement1 = decision_boolean.copy()
             statement2 = eval(f"(left2_scale*left2_val) {op2} (right2_scale * right2_val)")
             # logical dot product for compound statement
             decision_boolean = statement1 * statement2
         if is_compound == 3:
-            _ = parse_vals(left3)
-            _ = parse_vals(right3)
+            left3_val = parse_vals(left3)  # noqa: F841
+            right3_val = parse_vals(right3)  # noqa: F841
             # statement 1 is now the combination of the first two conditional statements
             statement1 = decision_boolean.copy()
             # statement 2 is now the third conditional statement
