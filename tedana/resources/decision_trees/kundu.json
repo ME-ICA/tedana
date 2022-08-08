@@ -1,0 +1,427 @@
+{
+    "tree_id": "kundu_MEICA27_decision_tree",
+    "info": "Following the full decision tree designed by Prantik Kundu",
+    "report": "This is based on the criteria of the original MEICA decision tree",
+    "refs": "Kundu 2013",
+    "necessary_metrics": [
+        "kappa",
+        "rho",
+        "countsigFS0",
+        "countsigFT2",
+        "dice_FS0",
+        "dice_FT2",
+        "signal-noise_t",
+        "variance explained",
+        "d_table_score"
+    ],
+    "intermediate_classifications": [
+        "provisionalaccept",
+        "provisionalreject"
+    ],
+    "classification_tags": [
+        "Likely BOLD",
+        "Unlikely BOLD",
+        "Less likely BOLD",
+        "Low variance",
+        "Accept borderline",
+        "No provisional accept"
+    ],
+    "nodes": [
+        {
+            "functionname": "manual_classify",
+            "parameters": {
+                "new_classification": "unclassified",
+                "decide_comps": "all"
+            },
+            "kwargs": {
+                "log_extra_info": "Initializing all classifications as unclassified and all classification tags as blank",
+                "log_extra_report": "",
+                "clear_classification_tags": true,
+                "dont_warn_reclassify": true
+            }
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "ifTrue": "rejected",
+                "ifFalse": "nochange",
+                "decide_comps": "all",
+                "op": ">",
+                "left": "rho",
+                "right": "kappa"
+            },
+            "kwargs": {
+                "log_extra_info": "Reject if Kappa>Rho",
+                "log_extra_report": "",
+                "tag_ifTrue": "Unlikely BOLD"
+            }
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "ifTrue": "rejected",
+                "ifFalse": "nochange",
+                "decide_comps": "all",
+                "op": ">",
+                "left": "countsigFS0",
+                "right": "countsigFT2"
+            },
+            "kwargs": {
+                "log_extra_info": "Reject if countsig_in S0clusters > T2clusters",
+                "log_extra_report": "",
+                "tag_ifTrue": "Unlikely BOLD"
+            }
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "ifTrue": "rejected",
+                "ifFalse": "nochange",
+                "decide_comps": "all",
+                "op": ">",
+                "left": "dice_FS0",
+                "right": "dice_FT2"
+            },
+            "kwargs": {
+                "log_extra_info": "Reject if DICE S0>T2",
+                "log_extra_report": "",
+                "tag_ifTrue": "Unlikely BOLD"
+            }
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "ifTrue": "rejected",
+                "ifFalse": "nochange",
+                "decide_comps": "all",
+                "op": ">",
+                "left": 0,
+                "right": "signal-noise_t"
+            },
+            "kwargs": {
+                "log_extra_info": "Reject if T2fitdiff_invsout_ICAmap_Tstat<0",
+                "log_extra_report": "",
+                "tag_ifTrue": "Unlikely BOLD"
+            }
+        },
+        {
+            "functionname": "calc_kappa_rho_elbows_kundu",
+            "parameters": {
+                "decide_comps": "unclassified"
+            },
+            "kwargs": {
+                "log_extra_info": "",
+                "log_extra_report": ""
+            }
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "ifTrue": "provisionalaccept",
+                "ifFalse": "provisionalreject",
+                "decide_comps": "unclassified",
+                "op": ">",
+                "left": "kappa",
+                "right": "kappa_elbow_kundu"
+            },
+            "kwargs": {
+                "log_extra_info": "Provisionally accept if kappa>elbow and provisionally reject if kappa<elbow",
+                "log_extra_report": ""
+            }
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "ifTrue": "nochange",
+                "ifFalse": "provisionalreject",
+                "decide_comps": [
+                    "provisionalreject",
+                    "provisionalaccept"
+                ],
+                "op": ">",
+                "left": "rho",
+                "right": "rho_elbow_kundu"
+            },
+            "kwargs": {
+                "log_extra_info": "Provisionally reject if rho>elbow",
+                "log_extra_report": ""
+            }
+        },
+        {
+            "functionname": "dec_classification_doesnt_exist",
+            "parameters": {
+                "new_classification": "accepted",
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject",
+                    "unclassified"
+                ],
+                "class_comp_exists": "provisionalaccept"
+            },
+            "kwargs": {
+                "tag_ifTrue": "No provisional accept",
+                "log_extra_info": "If nothing is provisionally accepted by this point, be conservative and accept everything",
+                "log_extra_report": ""
+            }
+        },
+        {
+            "functionname": "calc_varex_thresh",
+            "parameters": {
+                "decide_comps": "provisionalaccept",
+                "thresh_label": "upper",
+                "percentile_thresh": 90
+            },
+            "kwargs": {
+                "log_extra_info": "Calculuate a high variance threshold based on the 90th percentile variance component"
+            }
+        },
+        {
+            "functionname": "calc_varex_thresh",
+            "parameters": {
+                "decide_comps": "provisionalaccept",
+                "thresh_label": "lower",
+                "percentile_thresh": 25
+            },
+            "kwargs": {
+                "log_extra_info": "Calculuate a low variance threshold based on the 25th percentile variance component"
+            }
+        },
+        {
+            "functionname": "calc_extend_factor",
+            "parameters": {},
+            "kwargs": {
+                "log_extra_info": "2 if fewer than 90 fMRI volumes, 3 if more than 110 and linear in-between"
+            },
+            "_comment": "This is a scaling number that is used for a few thresholds"
+        },
+        {
+            "functionname": "calc_max_good_meanmetricrank",
+            "parameters": {
+                "decide_comps": "provisionalaccept"
+            },
+            "kwargs": {
+                "log_extra_info": "Number of provisionalaccept components * extend_factor"
+            }
+        },
+        {
+            "functionname": "calc_varex_kappa_ratio",
+            "parameters": {
+                "decide_comps": "provisionalaccept"
+            },
+            "kwargs": {
+                "log_extra_info": "Scaled ratio of variance/kappa"
+            },
+            "_comment": "This is used to calculate the new 'varex kappa ratio' column in the component_table"
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "ifTrue": "rejected",
+                "ifFalse": "nochange",
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject"
+                ],
+                "op": ">",
+                "left": "d_table_score",
+                "right": "max_good_meanmetricrank"
+            },
+            "kwargs": {
+                "op2": ">",
+                "left2": "variance explained",
+                "right2": "varex_upper_thresh",
+                "log_extra_info": "If variance and d_table_scores are high, then reject"
+            },
+            "_comment": "One of several steps that makes it more likely to reject high variance components"
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "ifTrue": "accepted",
+                "ifFalse": "nochange",
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject"
+                ],
+                "op": "<",
+                "left": "d_table_score",
+                "right": "max_good_meanmetricrank"
+            },
+            "kwargs": {
+                "tag_ifTrue": "Low variance",
+                "op2": "<",
+                "left2": "variance explained",
+                "right2": "varex_lower_thresh",
+                "op3": ">",
+                "left3": "kappa",
+                "right3": "kappa_elbow_kundu",
+                "log_extra_info": "If low variance and good kappa & d_table_scores accept even if rho or other metrics are bad"
+            }
+        },
+        {
+            "functionname": "dec_classification_doesnt_exist",
+            "parameters": {
+                "new_classification": "accepted",
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject"
+                ],
+                "class_comp_exists": "provisionalreject"
+            },
+            "kwargs": {
+                "tag_ifTrue": "Likely BOLD",
+                "log_extra_info": "If nothing left is provisionalreject, then accept all",
+                "log_extra_report": ""
+            }
+        },
+        {
+            "functionname": "calc_revised_meanmetricrank_guesses",
+            "parameters": {
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject"
+                ]
+            },
+            "kwargs": {},
+            "_comment": "Add more here"
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "ifTrue": "rejected",
+                "ifFalse": "nochange",
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject"
+                ],
+                "op": ">",
+                "left": "d_table_score_node17",
+                "right": "conservative_guess"
+            },
+            "kwargs": {
+                "tag_ifTrue": "Less likely BOLD",
+                "op2": ">",
+                "left2": "varex kappa ratio",
+                "right2": "extend_factor",
+                "right2_scale": 2,
+                "op3": ">",
+                "left3": "variance explained",
+                "right3": "varex_upper_thresh",
+                "right3_scale": "extend_factor",
+                "log_extra_info": "Reject if a combination of kappa, variance, and other factors are ranked worse than others"
+            },
+            "_comment": "Quirky combination 1 of a bunch of metrics that deal with rejecting some edge cases"
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "ifTrue": "rejected",
+                "ifFalse": "nochange",
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject"
+                ],
+                "op": ">",
+                "left": "d_table_score_node17",
+                "right": "num_acc_guess"
+            },
+            "kwargs": {
+                "tag_ifTrue": "Less likely BOLD",
+                "right_scale": 0.9,
+                "op2": ">",
+                "left2": "variance explained",
+                "right2": "varex_lower_thresh",
+                "right2_scale": "extend_factor",
+                "log_extra_info": "Reject if a combination of variance and ranks of other metrics are worse than others"
+            },
+            "_comment": "Quirky combination 2 of a bunch of metrics that deal with rejecting some edge cases"
+        },
+        {
+            "functionname": "calc_varex_thresh",
+            "parameters": {
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject"
+                ],
+                "thresh_label": "new_lower",
+                "percentile_thresh": 25
+            },
+            "kwargs": {
+                "log_extra_info": "Calculuate a low variance threshold based on the 25th percentile variance component"
+            },
+            "_comment": "In the original kundu code, this is run only on the first num_acc_guess remaining component... probably sorted for the lowest variance. Adding that functionality here would be messy and unlikely to significantly alter results"
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "ifTrue": "rejected",
+                "ifFalse": "nochange",
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject"
+                ],
+                "op": ">",
+                "left": "d_table_score_node17",
+                "right": "num_acc_guess"
+            },
+            "kwargs": {
+                "tag_ifTrue": "Accept borderline",
+                "op2": ">",
+                "left2": "variance explained",
+                "right2": "varex_new_lower_thresh",
+                "log_extra_info": "Accept components with a bad d_table_score, but are at the higher end of the remaining variance so more cautious to not remove"
+            },
+            "_comment": "Yet another quirky criterion, but this one to keep components. In the original tree, varex_new_lower_thresh would be lower than it is here. If there are differences in results, might be worth adding a scaling factor"
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "ifTrue": "rejected",
+                "ifFalse": "nochange",
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject"
+                ],
+                "op": "<=",
+                "left": "kappa",
+                "right": "kappa_elbow_kundu"
+            },
+            "kwargs": {
+                "tag_ifTrue": "Accept borderline",
+                "op2": ">",
+                "left2": "variance explained",
+                "right2": "varex_new_lower_thresh",
+                "log_extra_info": "Accept components above the kappa elbow, but are at the higher end of the remaining variance so more cautious to not remove"
+            },
+            "_comment": "Yet another quirky criterion, but this one to keep components. In the original tree, varex_new_lower_thresh would be lower than it is here. If there are differences in results, might be worth adding a scaling factor"
+        },
+        {
+            "functionname": "manual_classify",
+            "parameters": {
+                "new_classification": "accepted",
+                "decide_comps": "provisionalaccept"
+            },
+            "kwargs": {
+                "log_extra_info": "Anything that is still provisionalaccept should be accepted",
+                "log_extra_report": "",
+                "tag": "Likely BOLD"
+            }
+        },
+        {
+            "functionname": "manual_classify",
+            "parameters": {
+                "new_classification": "rejected",
+                "decide_comps": [
+                    "provisionalreject",
+                    "unclassified"
+                ]
+            },
+            "kwargs": {
+                "log_extra_info": "Anything that is still provisionalreject should be rejected",
+                "log_extra_report": "",
+                "tag": "Unlikely BOLD"
+            },
+            "_comment": "According to a comment in the meica 2.7 code, nothing should be provisionalreject by this point."
+        }
+    ]
+}

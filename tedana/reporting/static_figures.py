@@ -42,7 +42,9 @@ def _trim_edge_zeros(arr):
     return arr[bounding_box]
 
 
-def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscontrol=None):
+def carpet_plot(
+    optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscontrol=None
+):
     """Generate a set of carpet plots for the combined and denoised data.
 
     Parameters
@@ -121,7 +123,9 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
             title="Optimally Combined Data (Pre-GSR)",
         )
         fig.tight_layout()
-        fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_optcom_nogsr.svg"))
+        fig.savefig(
+            os.path.join(io_generator.out_dir, "figures", "carpet_optcom_nogsr.svg")
+        )
 
     if (gscontrol is not None) and ("mir" in gscontrol):
         mir_denoised_img = io_generator.get_name("mir denoised img")
@@ -134,7 +138,9 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
             title="Denoised Data (Post-MIR)",
         )
         fig.tight_layout()
-        fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_denoised_mir.svg"))
+        fig.savefig(
+            os.path.join(io_generator.out_dir, "figures", "carpet_denoised_mir.svg")
+        )
 
         mir_denoised_img = io_generator.get_name("ICA accepted mir denoised img")
         fig, ax = plt.subplots(figsize=(14, 7))
@@ -146,7 +152,9 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
             title="High-Kappa Data (Post-MIR)",
         )
         fig.tight_layout()
-        fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_accepted_mir.svg"))
+        fig.savefig(
+            os.path.join(io_generator.out_dir, "figures", "carpet_accepted_mir.svg")
+        )
 
 
 def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
@@ -193,17 +201,24 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
     expl_text = ""
 
     # Remove trailing ';' from rationale column
-    comptable["rationale"] = comptable["rationale"].str.rstrip(";")
+    #comptable["rationale"] = comptable["rationale"].str.rstrip(";")
     for compnum in comptable.index.values:
         if comptable.loc[compnum, "classification"] == "accepted":
             line_color = "g"
-            expl_text = "accepted"
+            expl_text = (
+                "accepted reason(s): " + comptable.loc[compnum, "classification_tags"]
+            )
         elif comptable.loc[compnum, "classification"] == "rejected":
             line_color = "r"
-            expl_text = "rejection reason(s): " + comptable.loc[compnum, "rationale"]
+            expl_text = (
+                "rejected reason(s): " + comptable.loc[compnum, "classification_tags"]
+            )
+
         elif comptable.loc[compnum, "classification"] == "ignored":
             line_color = "k"
-            expl_text = "ignored reason(s): " + comptable.loc[compnum, "rationale"]
+            expl_text = (
+                "ignored reason(s): " + comptable.loc[compnum, "classification_tags"]
+            )
         else:
             # Classification not added
             # If new, this will keep code running

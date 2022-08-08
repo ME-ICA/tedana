@@ -328,6 +328,7 @@ def t2smap_workflow(
         ],
     }
     io_generator.save_file(derivative_metadata, "data description json")
+    io_generator.save_self()
 
     LGR.info("Workflow completed")
     utils.teardown_loggers()

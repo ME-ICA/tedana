@@ -154,6 +154,17 @@ def _get_parser():
         default="aic",
     )
     optional.add_argument(
+        "--tree",
+        dest="tree",
+        help=(
+            "Decision tree to use. You may use a "
+            "packaged tree (kundu, minimal) or supply a JSON "
+            "file which matches the decision tree file "
+            "specification."
+        ),
+        default="minimal",
+    )
+    optional.add_argument(
         "--seed",
         dest="fixed_seed",
         metavar="INT",
@@ -270,13 +281,6 @@ def _get_parser():
         default=False,
     )
     optional.add_argument(
-        "--quiet", dest="quiet", help=argparse.SUPPRESS, action="store_true", default=False
-    )
-    optional.add_argument("-v", "--version", action="version", version=verstr)
-    parser._action_groups.append(optional)
-
-    rerungrp = parser.add_argument_group("Arguments for Rerunning the Workflow")
-    rerungrp.add_argument(
         "--t2smap",
         dest="t2smap",
         metavar="FILE",
@@ -284,7 +288,7 @@ def _get_parser():
         help=("Precalculated T2* map in the same space as the input data."),
         default=None,
     )
-    rerungrp.add_argument(
+    optional.add_argument(
         "--mix",
         dest="mixm",
         metavar="FILE",
@@ -292,27 +296,19 @@ def _get_parser():
         help=("File containing mixing matrix. If not provided, ME-PCA & ME-ICA is done."),
         default=None,
     )
-    rerungrp.add_argument(
-        "--ctab",
-        dest="ctab",
-        metavar="FILE",
-        type=lambda x: is_valid_file(parser, x),
-        help=(
-            "File containing a component table from which "
-            "to extract pre-computed classifications. "
-            "Requires --mix."
-        ),
-        default=None,
+
+    optional.add_argument(
+        "--quiet", dest="quiet", help=argparse.SUPPRESS, action="store_true", default=False
     )
-    rerungrp.add_argument(
-        "--manacc",
-        dest="manacc",
-        metavar="INT",
-        type=int,
-        nargs="+",
-        help=("List of manually accepted components. Requires --ctab and --mix."),
-        default=None,
+    parser.add_argument(
+        "--force",
+        "-f",
+        dest="force",
+        action="store_true",
+        help="Force overwriting of files. Default False.",
     )
+    optional.add_argument("-v", "--version", action="version", version=verstr)
+    parser._action_groups.append(optional)
 
     return parser
 
@@ -326,6 +322,7 @@ def tedana_workflow(
     prefix="",
     fittype="loglin",
     combmode="t2s",
+    tree="minimal",
     tedpca="aic",
     fixed_seed=42,
     maxit=500,
@@ -338,10 +335,9 @@ def tedana_workflow(
     low_mem=False,
     debug=False,
     quiet=False,
+    force=False,
     t2smap=None,
     mixm=None,
-    ctab=None,
-    manacc=None,
 ):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
@@ -394,15 +390,6 @@ def tedana_workflow(
     mixm : :obj:`str` or None, optional
         File containing mixing matrix, to be used when re-running the workflow.
         If not provided, ME-PCA and ME-ICA are done. Default is None.
-    ctab : :obj:`str` or None, optional
-        File containing component table from which to extract pre-computed
-        classifications, to be used with 'mixm' when re-running the workflow.
-        Default is None.
-    manacc : :obj:`list` of :obj:`int` or None, optional
-        List of manually accepted components. Can be a list of the components
-        numbers or None.
-        If provided, this parameter requires ``mixm`` and ``ctab`` to be provided as well.
-        Default is None.
 
     Other Parameters
     ----------------
@@ -487,6 +474,7 @@ def tedana_workflow(
         out_dir=out_dir,
         prefix=prefix,
         config="auto",
+        force=force,
         verbose=verbose,
     )
 
@@ -515,26 +503,6 @@ def tedana_workflow(
             shutil.copyfile(mixm, op.join(io_generator.out_dir, op.basename(mixm)))
     elif mixm is not None:
         raise IOError("Argument 'mixm' must be an existing file.")
-
-    if ctab is not None and op.isfile(ctab):
-        ctab = op.abspath(ctab)
-        # Allow users to re-run on same folder
-        metrics_name = io_generator.get_name("ICA metrics tsv")
-        if ctab != metrics_name:
-            shutil.copyfile(ctab, metrics_name)
-            shutil.copyfile(ctab, op.join(io_generator.out_dir, op.basename(ctab)))
-    elif ctab is not None:
-        raise IOError("Argument 'ctab' must be an existing file.")
-
-    if ctab and not mixm:
-        LGR.warning("Argument 'ctab' requires argument 'mixm'.")
-        ctab = None
-    elif manacc is not None and (not mixm or not ctab):
-        LGR.warning("Argument 'manacc' requires arguments 'mixm' and 'ctab'.")
-        manacc = None
-    elif manacc is not None:
-        # coerce to list of integers
-        manacc = [int(m) for m in manacc]
 
     if t2smap is not None and op.isfile(t2smap):
         t2smap_file = io_generator.get_name("t2star img")
@@ -695,9 +663,8 @@ def tedana_workflow(
                 "ICA",
                 metrics=required_metrics,
             )
-            comptable, metric_metadata = selection.kundu_selection_v2(comptable, n_echos, n_vols)
-
-            n_bold_comps = comptable[comptable.classification == "accepted"].shape[0]
+            ica_selection = selection.automatic_selection(comptable, n_echos, n_vols, tree=tree)
+            n_bold_comps = ica_selection.n_bold_comps
             if (n_restarts < maxrestart) and (n_bold_comps == 0):
                 LGR.warning("No BOLD components found. Re-attempting ICA.")
             elif n_bold_comps == 0:
@@ -713,49 +680,48 @@ def tedana_workflow(
         mixing_file = io_generator.get_name("ICA mixing tsv")
         mmix = pd.read_table(mixing_file).values
 
-        if ctab is None:
-            required_metrics = [
-                "kappa",
-                "rho",
-                "countnoise",
-                "countsigFT2",
-                "countsigFS0",
-                "dice_FT2",
-                "dice_FS0",
-                "signal-noise_t",
-                "variance explained",
-                "normalized variance explained",
-                "d_table_score",
-            ]
-            comptable = metrics.collect.generate_metrics(
-                catd,
-                data_oc,
-                mmix,
-                masksum_clf,
-                tes,
-                io_generator,
-                "ICA",
-                metrics=required_metrics,
-            )
-            comptable, metric_metadata = selection.kundu_selection_v2(comptable, n_echos, n_vols)
-        else:
-            LGR.info("Using supplied component table for classification")
-            comptable = pd.read_table(ctab)
-            # Change rationale value of rows with NaN to empty strings
-            comptable.loc[comptable.rationale.isna(), "rationale"] = ""
+        required_metrics = [
+            "kappa",
+            "rho",
+            "countnoise",
+            "countsigFT2",
+            "countsigFS0",
+            "dice_FT2",
+            "dice_FS0",
+            "signal-noise_t",
+            "variance explained",
+            "normalized variance explained",
+            "d_table_score",
+        ]
+        comptable = metrics.collect.generate_metrics(
+            catd,
+            data_oc,
+            mmix,
+            masksum_clf,
+            tes,
+            io_generator,
+            "ICA",
+            metrics=required_metrics,
+        )
+        ica_selection = selection.automatic_selection(
+            comptable,
+            n_echos,
+            n_vols,
+            tree=tree,
+        )
 
-            if manacc is not None:
-                comptable, metric_metadata = selection.manual_selection(comptable, acc=manacc)
-
-    # Write out ICA files.
+    # TODO The ICA mixing matrix should be written out after it is created
+    #     It is currently being writen after component selection is done
+    #     and rewritten if an existing mixing matrix is given as an input
     comp_names = comptable["Component"].values
     mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
     io_generator.save_file(mixing_df, "ICA mixing tsv")
     betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask_denoise), mask_denoise)
     io_generator.save_file(betas_oc, "z-scored ICA components img")
 
-    # Save component table and associated json
-    io_generator.save_file(comptable, "ICA metrics tsv")
+    # Save component selector and tree
+    ica_selection.to_files(io_generator)
+    # Save metrics and metadata
     metric_metadata = metrics.collect.get_metadata(comptable)
     io_generator.save_file(metric_metadata, "ICA metrics json")
 
@@ -769,25 +735,27 @@ def tedana_workflow(
             "Description": "ICA fit to dimensionally-reduced optimally combined data.",
             "Method": "tedana",
         }
-    with open(io_generator.get_name("ICA decomposition json"), "w") as fo:
-        json.dump(decomp_metadata, fo, sort_keys=True, indent=4)
+    io_generator.save_file(decomp_metadata, "ICA decomposition json")
 
-    if comptable[comptable.classification == "accepted"].shape[0] == 0:
+    if ica_selection.n_bold_comps == 0:
         LGR.warning("No BOLD components detected! Please check data and results!")
+
+    # TODO: un-hack separate comptable
+    comptable = ica_selection.component_table
 
     mmix_orig = mmix.copy()
     if tedort:
-        acc_idx = comptable.loc[~comptable.classification.str.contains("rejected")].index.values
-        rej_idx = comptable.loc[comptable.classification.str.contains("rejected")].index.values
-        acc_ts = mmix[:, acc_idx]
-        rej_ts = mmix[:, rej_idx]
+        comps_accepted = ica_selection.accepted_comps
+        comps_rejected = ica_selection.rejected_comps
+        acc_ts = mmix[:, comps_accepted]
+        rej_ts = mmix[:, comps_rejected]
         betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
         pred_rej_ts = np.dot(acc_ts, betas)
         resid = rej_ts - pred_rej_ts
-        mmix[:, rej_idx] = resid
+        mmix[:, comps_rejected] = resid
         comp_names = [
             io.add_decomp_prefix(comp, prefix="ica", max_value=comptable.index.max())
-            for comp in comptable.index.values
+            for comp in range(ica_selection.n_comps)
         ]
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
         io_generator.save_file(mixing_df, "ICA orthogonalized mixing tsv")
@@ -811,6 +779,9 @@ def tedana_workflow(
 
     if verbose:
         io.writeresults_echoes(catd, mmix, mask_denoise, comptable, io_generator)
+
+    # Write out registry of outputs
+    io_generator.save_self()
 
     # Write out BIDS-compatible description file
     derivative_metadata = {

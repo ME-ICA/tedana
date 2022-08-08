@@ -7,6 +7,10 @@ desc-ICA_components.nii.gz
 desc-ICA_decomposition.json
 desc-tedana_metrics.json
 desc-tedana_metrics.tsv
+desc-tedana_registry.json
+desc-ICA_cross_component_metrics.json
+desc-ICA_status_table.tsv
+desc-ICA_decision_tree.json
 desc-ICA_mixing.tsv
 desc-ICA_stat-z_components.nii.gz
 desc-PCA_cross_component_metrics.json

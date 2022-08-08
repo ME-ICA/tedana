@@ -175,6 +175,18 @@
         "orig": "ica_metrics",
         "bidsv1.5.0": "desc-tedana_metrics"
     },
+    "ICA cross component metrics json": {
+        "orig": "ica_cross_component_metrics",
+        "bidsv1.5.0": "desc-ICA_cross_component_metrics"
+    },
+    "ICA status table tsv": {
+        "orig": "ica_status_table",
+        "bidsv1.5.0": "desc-ICA_status_table"
+    },
+    "ICA decision tree json": {
+        "orig": "ica_decision_tree",
+        "bidsv1.5.0": "desc-ICA_decision_tree"
+    },
     "global signal time series tsv": {
         "orig": "global_signal_ts",
         "bidsv1.5.0": "desc-globalSignal_timeseries"
@@ -186,5 +198,9 @@
     "ICA orthogonalized mixing tsv": {
         "orig": "ica_orth_mixing",
         "bidsv1.5.0": "desc-ICAOrth_mixing"
+    },
+    "registry json": {
+        "orig": "registry",
+        "bidsv1.5.0": "desc-tedana_registry"
     }
 }

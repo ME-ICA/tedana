@@ -25,7 +25,27 @@ RepLGR = logging.getLogger("REPORT")
 RefLGR = logging.getLogger("REFERENCES")
 
 
-class OutputGenerator:
+class CustomEncoder(json.JSONEncoder):
+    """Convert some types because of JSON serialization and numpy
+    incompatibilities
+
+    See here: https://stackoverflow.com/questions/50916422/python-typeerror-object-of-type-int64-is-not-json-serializable/50916741
+    """
+    def default(self, obj):
+        # int64 non-serializable but is a numpy output
+        if isinstance(obj, np.integer):
+            return int(obj)
+    
+        # containers that are not serializable
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance (obj, set):
+            return list(obj)
+
+        return super(CustomEncoder, self).default(obj)
+
+
+class OutputGenerator():
     """A class for managing tedana outputs.
 
     Parameters
@@ -43,6 +63,8 @@ class OutputGenerator:
         descriptions. Default is "auto", which uses tedana's default configuration file.
     make_figures : bool, optional
         Whether or not to actually make a figures directory
+    force : bool, optional
+        Whether to force overwrites of data. Default False.
 
     Attributes
     ----------
@@ -59,8 +81,12 @@ class OutputGenerator:
         This will correspond to a "figures" subfolder of ``out_dir``.
     prefix : str
         Prefix to prepend to output filenames.
+    force: bool
+        Whether to force file overwrites.
     verbose : bool
-        Whether or not to generate verbose output
+        Whether or not to generate verbose output.
+    registry: dict
+        A registry of all files saved
     """
 
     def __init__(
@@ -71,6 +97,7 @@ class OutputGenerator:
         prefix="",
         config="auto",
         make_figures=True,
+        force=False,
         verbose=False,
     ):
 
@@ -97,7 +124,9 @@ class OutputGenerator:
         self.out_dir = op.abspath(out_dir)
         self.figures_dir = op.join(out_dir, "figures")
         self.prefix = prefix + "_" if prefix != "" else ""
+        self.force = force
         self.verbose = verbose
+        self.registry = {}
 
         if not op.isdir(self.out_dir):
             LGR.info(f"Generating output directory: {self.out_dir}")
@@ -196,6 +225,12 @@ class OutputGenerator:
             The full file path of the saved file.
         """
         name = self.get_name(description, **kwargs)
+        if op.exists(name) and not self.force:
+            raise RuntimeError(
+                f"File {name} already exists. In order to allow overwrite "
+                "please use the --force option in the command line or the "
+                "force parameter in the Python API."
+            )
         if description.endswith("img"):
             self.save_img(data, name)
         elif description.endswith("json"):
@@ -203,6 +238,8 @@ class OutputGenerator:
             self.save_json(prepped, name)
         elif description.endswith("tsv"):
             self.save_tsv(data, name)
+
+        self.registry[description] = op.basename(name)
 
         return name
 
@@ -221,7 +258,10 @@ class OutputGenerator:
         Will coerce 64-bit float and int arrays into 32-bit arrays.
         """
         data_type = type(data)
-        if not isinstance(data, np.ndarray):
+        if isinstance(data, nib.nifti1.Nifti1Image):
+            data.to_filename(name)
+            return
+        elif not isinstance(data, np.ndarray):
             raise TypeError(f"Data supplied must of type np.ndarray, not {data_type}.")
         if data.ndim not in (1, 2):
             raise TypeError(f"Data must have number of dimensions in (1, 2), not {data.ndim}")
@@ -252,7 +292,7 @@ class OutputGenerator:
         if not isinstance(data, dict):
             raise TypeError(f"data must be a dict, not type {data_type}.")
         with open(name, "w") as fo:
-            json.dump(data, fo, indent=4, sort_keys=True)
+            json.dump(data, fo, indent=4, sort_keys=True, cls=CustomEncoder)
 
     def save_tsv(self, data, name):
         """Save DataFrame to a tsv file.
@@ -268,6 +308,38 @@ class OutputGenerator:
         if not isinstance(data, pd.DataFrame):
             raise TypeError(f"data must be pd.Data, not type {data_type}.")
         data.to_csv(name, sep="\t", line_terminator="\n", na_rep="n/a", index=False)
+
+    def save_self(self):
+        fname = self.save_file(self.registry, "registry json")
+        return fname
+
+
+class InputHarvester:
+    """Turns a registry file into a lookup table to get previous data."""
+    loaders = {
+        "json": lambda f: load_json(f),
+        "tsv": lambda f: pd.read_csv(f, delimiter="\t"),
+        "img": lambda f: nib.load(f),
+    }
+
+    def __init__(self, path):
+        self._full_path = path
+        self._base_dir = op.dirname(path)
+        self._registry = load_json(path)
+
+    def get_file_path(self, description):
+        if description in self._registry.keys():
+            return op.join(self._base_dir, self._registry[description])
+        else:
+            return None
+
+    def get_file_contents(self, description):
+        for ftype, loader in InputHarvester.loaders.items():
+            if ftype in description:
+                return loader(self.get_file_path(description))
+        # Since we restrict to just these three types, this function should
+        # always return. If more types are added, the loaders dict will
+        # need to be updated with an appopriate loader
 
 
 def get_fields(name):

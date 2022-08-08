@@ -4,6 +4,7 @@ Integration tests for "real" data
 
 import glob
 import os
+import os.path as op
 import re
 import shutil
 import tarfile
@@ -17,6 +18,7 @@ from pkg_resources import resource_filename
 
 from tedana.workflows import t2smap as t2smap_cli
 from tedana.workflows import tedana as tedana_cli
+from tedana.workflows.tedana_reclassify import post_tedana
 
 
 def check_integration_outputs(fname, outpath):
@@ -108,33 +110,6 @@ def test_integration_five_echo(skip_integration):
     df = pd.read_table(comptable)
     assert isinstance(df, pd.DataFrame)
 
-    # Test re-running, but use the CLI
-    acc_comps = df.loc[df["classification"] == "ignored"].index.values
-    acc_comps = [str(c) for c in acc_comps]
-    mixing = os.path.join(out_dir, "desc-ICA_mixing.tsv")
-    t2smap = os.path.join(out_dir, "T2starmap.nii.gz")
-    args = (
-        ["-d"]
-        + datalist
-        + ["-e"]
-        + [str(te) for te in echo_times]
-        + [
-            "--out-dir",
-            out_dir_manual,
-            "--debug",
-            "--verbose",
-            "--manacc",
-            *acc_comps,
-            "--ctab",
-            comptable,
-            "--mix",
-            mixing,
-            "--t2smap",
-            t2smap,
-        ]
-    )
-    tedana_cli._main(args)
-
     # compare the generated output files
     fn = resource_filename("tedana", "tests/data/nih_five_echo_outputs_verbose.txt")
     check_integration_outputs(fn, out_dir)
@@ -149,8 +124,10 @@ def test_integration_four_echo(skip_integration):
     out_dir = "/tmp/data/four-echo/TED.four-echo"
     out_dir_manual = "/tmp/data/four-echo/TED.four-echo-manual"
 
+    """
     if os.path.exists(out_dir):
         shutil.rmtree(out_dir)
+    """
 
     if os.path.exists(out_dir_manual):
         shutil.rmtree(out_dir_manual)
@@ -161,6 +138,7 @@ def test_integration_four_echo(skip_integration):
     prepend += "sub-PILOT_ses-01_task-localizerDetection_run-01_echo-"
     suffix = "_space-sbref_desc-preproc_bold+orig.HEAD"
     datalist = [prepend + str(i + 1) + suffix for i in range(4)]
+    """
     tedana_cli.tedana_workflow(
         data=datalist,
         tes=[11.8, 28.04, 44.28, 60.52],
@@ -171,27 +149,15 @@ def test_integration_four_echo(skip_integration):
         debug=True,
         verbose=True,
     )
+    """
 
-    # Test re-running with the component table
-    mixing_matrix = os.path.join(out_dir, "desc-ICA_mixing.tsv")
-    comptable = os.path.join(out_dir, "desc-tedana_metrics.tsv")
-    temporary_comptable = os.path.join(out_dir, "temporary_metrics.tsv")
-    comptable_df = pd.read_table(comptable)
-    comptable_df.loc[comptable_df["classification"] == "ignored", "classification"] = "accepted"
-    comptable_df.to_csv(temporary_comptable, sep="\t", index=False)
-    tedana_cli.tedana_workflow(
-        data=datalist,
-        tes=[11.8, 28.04, 44.28, 60.52],
+    post_tedana(
+        op.join(out_dir, "desc-tedana_registry.json"),
+        accept=[1, 2, 3],
+        reject=[4, 5, 6],
         out_dir=out_dir_manual,
-        tedpca="kundu-stabilize",
-        gscontrol=["gsr", "mir"],
-        png_cmap="bone",
-        mixm=mixing_matrix,
-        ctab=temporary_comptable,
-        debug=True,
-        verbose=False,
+        mir=True,
     )
-    os.remove(temporary_comptable)
 
     # compare the generated output files
     fn = resource_filename("tedana", "tests/data/fiu_four_echo_outputs.txt")
@@ -236,8 +202,7 @@ def test_integration_three_echo(skip_integration):
         out_dir_manual,
         "--debug",
         "--verbose",
-        "--ctab",
-        os.path.join(out_dir, "desc-tedana_metrics.tsv"),
+        "-f",
         "--mix",
         os.path.join(out_dir, "desc-ICA_mixing.tsv"),
     ]
