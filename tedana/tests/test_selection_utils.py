@@ -203,7 +203,7 @@ def test_change_comptable_classifications_succeeds():
     assert numTrue == 2
     assert numFalse == 2
     # check every element that was supposed to change, did change
-    changeidx = decision_boolean.index[np.asarray(decision_boolean) is True]
+    changeidx = decision_boolean.index[np.asarray(decision_boolean) == True]  # noqa: E712
     new_vals = selector.component_table.loc[changeidx, "classification"]
     for val in new_vals:
         assert val == "accepted"
