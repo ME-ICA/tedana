@@ -373,7 +373,8 @@ def dec_left_op_right(
                     )
                 else:
                     raise ValueError(
-                        f"{val} is neither a metric in selector.component_table nor selector.cross_component_metrics"
+                        f"{val} is neither a metric in selector.component_table "
+                        "nor selector.cross_component_metrics"
                     )
         if isnum:
             if not isinstance(val, (int, float)):
@@ -493,7 +494,7 @@ def dec_left_op_right(
     )
 
     def parse_vals(val):
-        """Get the actual metric values for the selected components or return the constant int or float"""
+        """Get the metric values for the selected components or relevant constant"""
         if isinstance(val, str):
             return selector.component_table.loc[comps2use, val].copy()
         else:
@@ -511,19 +512,19 @@ def dec_left_op_right(
         )
 
     else:
-        left1_val = parse_vals(left)
-        right1_val = parse_vals(right)
+        _ = parse_vals(left)
+        _ = parse_vals(right)
         decision_boolean = eval(f"(left_scale*left1_val) {op} (right_scale * right1_val)")
         if is_compound >= 2:
-            left2_val = parse_vals(left2)
-            right2_val = parse_vals(right2)
+            _ = parse_vals(left2)
+            _ = parse_vals(right2)
             statement1 = decision_boolean.copy()
             statement2 = eval(f"(left2_scale*left2_val) {op2} (right2_scale * right2_val)")
             # logical dot product for compound statement
             decision_boolean = statement1 * statement2
         if is_compound == 3:
-            left3_val = parse_vals(left3)
-            right3_val = parse_vals(right3)
+            _ = parse_vals(left3)
+            _ = parse_vals(right3)
             # statement 1 is now the combination of the first two conditional statements
             statement1 = decision_boolean.copy()
             # statement 2 is now the third conditional statement
@@ -775,13 +776,15 @@ def calc_kappa_rho_elbows_kundu(
         "kappa_elbow_kundu" in outputs["calc_cross_comp_metrics"]
     ):
         LGR.warning(
-            f"kappa_elbow_kundu already calculated. Overwriting previous value in {function_name_idx}"
+            "kappa_elbow_kundu already calculated."
+            f"Overwriting previous value in {function_name_idx}"
         )
     if ("rho_elbow_kundu" in selector.cross_component_metrics) and (
         "rho_elbow_kundu" in outputs["calc_cross_comp_metrics"]
     ):
         LGR.warning(
-            f"rho_elbow_kundu already calculated. Overwriting previous value in {function_name_idx}"
+            "rho_elbow_kundu already calculated."
+            f"Overwriting previous value in {function_name_idx}"
         )
     if "varex_upper_p" in selector.cross_component_metrics:
         LGR.warning(
@@ -992,7 +995,11 @@ def dec_classification_doesnt_exist(
         )
     else:  # do_comps_exist is None:
         # should be True for all components in comps2use
-        # decision_boolean = pd.Series(data=False, index=np.arange(len(selector.component_table)), dtype=bool)
+        # decision_boolean = pd.Series(
+        #   data=False,
+        #   index=np.arange(len(selector.component_table)),
+        #   dtype=bool
+        # )
         # decision_boolean.iloc[comps2use] = True
         decision_boolean = pd.Series(True, index=comps2use)
 
@@ -1061,7 +1068,7 @@ def calc_varex_thresh(
 
     function_name_idx = f"Step {selector.current_node_idx}: calc_varex_thresh"
     thresh_label = thresh_label.lower()
-    if thresh_label is None or thresh_label is "":
+    if thresh_label is None or thresh_label == "":
         varex_name = "varex_thresh"
         perc_name = "perc"
     else:
@@ -1157,7 +1164,8 @@ def calc_extend_factor(
     {custom_node_label}
     {only_used_metrics}
     extend_factor: :obj:`float`
-        If a number, then use rather than calculating anything. If None than calculate. default=None
+        If a number, then use rather than calculating anything.
+        If None than calculate. default=None
 
     Returns
     -------
@@ -1229,7 +1237,8 @@ def calc_max_good_meanmetricrank(
     {decide_comps}
     metric_suffix: :obj:`str`
         By default, this will output a value called "max_good_meanmetricrank"
-        If this variable is not None or "" then it will output: "max_good_meanmetricrank_[metric_suffix]
+        If this variable is not None or "" then it will output:
+        "max_good_meanmetricrank_[metric_suffix]"
     {log_extra}
     {custom_node_label}
     {only_used_metrics}
@@ -1253,7 +1262,7 @@ def calc_max_good_meanmetricrank(
 
     if (
         (metric_suffix is not None)
-        and (metric_suffix is not "")
+        and (metric_suffix != "")
         and isinstance(metric_suffix, str)
     ):
         metric_name = f"max_good_meanmetricrank_{metric_suffix}"
@@ -1273,7 +1282,8 @@ def calc_max_good_meanmetricrank(
 
     if metric_name in selector.cross_component_metrics:
         LGR.warning(
-            f"max_good_meanmetricrank already calculated. Overwriting previous value in {function_name_idx}"
+            "max_good_meanmetricrank already calculated."
+            f"Overwriting previous value in {function_name_idx}"
         )
 
     if custom_node_label:
@@ -1377,7 +1387,9 @@ def calc_varex_kappa_ratio(
 
     if "varex kappa ratio" in selector.component_table:
         raise ValueError(
-            f"'varex kappa ratio' is already a column in the component_table. Recalculating in {function_name_idx} can cause problems since these are only calculated on a subset of components"
+            "'varex kappa ratio' is already a column in the component_table."
+            f"Recalculating in {function_name_idx} can cause problems since these "
+            "are only calculated on a subset of components"
         )
 
     if custom_node_label:
@@ -1416,7 +1428,8 @@ def calc_varex_kappa_ratio(
             * selector.component_table.loc[comps2use, "variance explained"]
             / selector.component_table.loc[comps2use, "kappa"]
         )
-        # Unclear if necessary, but this may clean up a weird issue on passing references in a data frame
+        # Unclear if necessary, but this may clean up a weird issue on passing
+        # references in a data frame.
         # See longer comment in selection_utils.comptable_classification_changer
         selector.component_table = selector.component_table.copy()
 
@@ -1442,7 +1455,8 @@ def calc_revised_meanmetricrank_guesses(
     only_used_metrics=False,
 ):
     """
-    Calculates a new d_table_score (meanmetricrank) on a subset of components defiend in decide_comps
+    Calculates a new d_table_score (meanmetricrank) on a subset of
+    components defined in decide_comps.
     Also saves a bunch of cross_component_metrics that are used for various thresholds. These
     are:
     num_acc_guess: A guess of the final number of accepted components
@@ -1505,25 +1519,30 @@ def calc_revised_meanmetricrank_guesses(
 
     if "conservative_guess" in selector.cross_component_metrics:
         LGR.warning(
-            f"conservative_guess already calculated. Overwriting previous value in {function_name_idx}"
+            "conservative_guess already calculated. "
+            f"Overwriting previous value in {function_name_idx}"
         )
 
     if "restrict_factor" in selector.cross_component_metrics:
         LGR.warning(
-            f"restrict_factor already calculated. Overwriting previous value in {function_name_idx}"
+            "restrict_factor already calculated. "
+            f"Overwriting previous value in {function_name_idx}"
         )
     if not isinstance(restrict_factor, (int, float)):
         raise ValueError(f"restrict_factor needs to be a number. It is: {restrict_factor}")
 
     if f"d_table_score_node{selector.current_node_idx}" in selector.component_table:
         raise ValueError(
-            f"d_table_score_node{selector.current_node_idx} is already a column in the component_table. Recalculating in {function_name_idx} can cause problems since these are only calculated on a subset of components"
+            f"d_table_score_node{selector.current_node_idx} is already a column"
+            f"in the component_table. Recalculating in {function_name_idx} can "
+            "cause problems since these are only calculated on a subset of components"
         )
 
     for xcompmetric in outputs["used_cross_component_metrics"]:
         if xcompmetric not in selector.cross_component_metrics:
             raise ValueError(
-                f"{xcompmetric} not in cross_component_metrics. It needs to be calculated before {function_name_idx}"
+                f"{xcompmetric} not in cross_component_metrics. "
+                f"It needs to be calculated before {function_name_idx}"
             )
 
     if custom_node_label:
@@ -1583,7 +1602,8 @@ def calc_revised_meanmetricrank_guesses(
         selector.component_table.loc[
             comps2use, f"d_table_score_node{selector.current_node_idx}"
         ] = tmp_d_table_score
-        # Unclear if necessary, but this may clean up a weird issue on passing references in a data frame
+        # Unclear if necessary, but this may clean up a weird issue on passing
+        # references in a data frame.
         # See longer comment in selection_utils.comptable_classification_changer
         selector.component_table = selector.component_table.copy()
 

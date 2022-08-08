@@ -3,7 +3,6 @@ Utility functions for tedana.selection
 """
 
 import logging
-import re
 
 import numpy as np
 
@@ -65,17 +64,21 @@ def selectcomps2use(selector, decide_comps):
         # decide_comps is already a string of indices
         if len(selector.component_table) <= max(decide_comps):
             raise ValueError(
-                f"decide_comps for selectcomps2use is selecting for a component with index {max(decide_comps)} (0 indexing) which is greater than the number of components: {len(selector.component_table)}"
+                "decide_comps for selectcomps2use is selecting for a component with index"
+                f"{max(decide_comps)} (0 indexing) which is greater than the number "
+                f"of components: {len(selector.component_table)}"
             )
         elif min(decide_comps) < 0:
             raise ValueError(
-                f"decide_comps for selectcomps2use is selecting for a component with index {min(decide_comps)}, which is less than 0"
+                "decide_comps for selectcomps2use is selecting for a component "
+                f"with index {min(decide_comps)}, which is less than 0"
             )
         else:
             comps2use = decide_comps
     else:
         raise ValueError(
-            f"decide_comps in selectcomps2use needs to be a list or a single element of strings or integers. It is {decide_comps}"
+            "decide_comps in selectcomps2use needs to be a list or a single element "
+            f"of strings or integers. It is {decide_comps}"
         )
 
     # If no components are selected, then return None.
@@ -268,7 +271,8 @@ def comptable_classification_changer(
                     )
         else:
             LGR.info(
-                f"Step {selector.current_node_idx}: No components fit criterion {boolstate} to change classification"
+                f"Step {selector.current_node_idx}: No components fit criterion "
+                f"{boolstate} to change classification"
             )
     return selector
 
@@ -424,7 +428,8 @@ def log_decision_tree_step(
             LGR.info(f"{function_name_idx} calculated: {', '.join(calc_summaries)}")
         else:
             LGR.warning(
-                f"{function_name_idx} logged to write out cross_component_metrics, but none were calculated"
+                f"{function_name_idx} logged to write out cross_component_metrics, "
+                "but none were calculated"
             )
 
 
@@ -650,8 +655,6 @@ def get_extend_factor(n_vols=None, extend_factor=None):
     return extend_factor
 
 
-# This will likely need to be revived to run the kundu decision tree, but it will be slightly differe
-#  So commenting out for now.
 def get_new_meanmetricrank(component_table, comps2use, decision_node_idx, calc_new_rank=False):
     """
     If a revised d_table_score was already calculated, use that.

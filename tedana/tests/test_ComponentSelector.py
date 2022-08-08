@@ -4,11 +4,9 @@ import json
 import os
 import os.path as op
 
-import numpy as np
 import pandas as pd
 import pytest
 
-from tedana import io
 from tedana.selection import ComponentSelector
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -94,7 +92,8 @@ def dicts_to_test(treechoice):
                 "functionname": "manual_classify",
                 "parameters": {
                     "new_classification": "accepted",
-                    # Warning for an non-predefined classification used to select components to operate on
+                    # Warning for an non-predefined classification used to select
+                    # components to operate on
                     "decide_comps": "random2notpredefined",
                 },
                 "kwargs": {

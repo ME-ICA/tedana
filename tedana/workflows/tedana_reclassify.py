@@ -3,23 +3,17 @@ Run the reclassification workflow for a previous tedana run
 """
 import argparse
 import datetime
-import json
 import logging
 import os
 import os.path as op
-import shutil
 import sys
 from glob import glob
 
 import numpy as np
 import pandas as pd
-from nilearn.masking import compute_epi_mask
-from scipy import stats
-from threadpoolctl import threadpool_limits
 
 import tedana.gscontrol as gsc
-from tedana import __version__, io, reporting, selection, stats, utils
-from tedana.workflows.parser_utils import is_valid_file
+from tedana import __version__, io, reporting, selection, utils
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -207,7 +201,7 @@ def post_tedana(
         if a in rej:
             in_both.append(a)
     for r in rej:
-        if r in acc and not r in rej:
+        if r in acc and r not in rej:
             in_both.append(r)
     if len(in_both) != 0:
         raise ValueError("The following components were both accepted and rejected: " f"{in_both}")
@@ -306,7 +300,7 @@ def post_tedana(
         betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
         pred_rej_ts = np.dot(acc_ts, betas)
         resid = rej_ts - pred_rej_ts
-        # TODO rej_idx not here right now. Need to fix bug
+        rej_idx = comps_accepted[comps_accepted].index
         mmix[:, rej_idx] = resid
         comp_names = [
             io.add_decomp_prefix(comp, prefix="ica", max_value=comptable.index.max())
@@ -417,16 +411,5 @@ def post_tedana(
     os.remove(refname)
 
 
-def _main(argv=None):
-    """Tedana entry point"""
-    # TODO change this _main function to fix _get_parser and tedana_workflow
-    options = _get_parser().parse_args(argv)
-    kwargs = vars(options)
-    n_threads = kwargs.pop("n_threads")
-    n_threads = None if n_threads == -1 else n_threads
-    with threadpool_limits(limits=n_threads, user_api=None):
-        tedana_workflow(**kwargs)
-
-
 if __name__ == "__main__":
-    _main()
+    main()

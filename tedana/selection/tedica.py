@@ -4,12 +4,10 @@ Functions to identify TE-dependent and TE-independent components.
 import logging
 
 import numpy as np
-from scipy import stats
 
 from tedana.metrics import collect
 from tedana.selection.ComponentSelector import ComponentSelector
-from tedana.selection.selection_utils import clean_dataframe, getelbow
-from tedana.stats import getfbounds
+from tedana.selection.selection_utils import clean_dataframe
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")

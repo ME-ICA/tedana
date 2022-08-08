@@ -6,9 +6,7 @@ import inspect
 import logging
 import os.path as op
 
-import pandas as pd
 from numpy import asarray
-from pkg_resources import resource_filename
 
 from tedana.io import load_json
 from tedana.selection import selection_nodes
@@ -52,11 +50,17 @@ def load_config(tree):
         The `dict` has several required fields to describe the entire tree
         `tree_id`: :obj:`str` The name of the tree
         `info`: :obj:`str` A brief description of the tree for info logging
-        `report`: :obj:`str` A narrative description of the tree that could be used in report logging
+        `report`: :obj:`str`
+        A narrative description of the tree that could be used in report logging
         `refs`: :obj:`str` Publications that should be referenced, when this tree is used
-        `necessary_metrics`: :obj:`list[str]` The metrics in `component_table` that will be used by this tree
-        `intermediate_classifications`: :obj:`list[str]` User specified component classification labels. 'accepted', 'rejected', and 'unclassified' are defaults that don't need to be included here
-        `classification_tags`: :obj:`list[str]` Descriptive labels that can be used to explain why a component was accepted or rejected. For example, ["Likely BOLD","Low variance"]
+        `necessary_metrics`: :obj:`list[str]`
+        The metrics in `component_table` that will be used by this tree
+        `intermediate_classifications`: :obj:`list[str]`
+        User specified component classification labels. 'accepted', 'rejected', and
+        'unclassified' are defaults that don't need to be included here
+        `classification_tags`: :obj:`list[str]`
+        Descriptive labels that can be used to explain why a component was accepted or rejected.
+        For example, ["Likely BOLD","Low variance"]
         `nodes`: :obj:`list[dict]` Each dictionary includes the information
         to run one node in the decision tree. Each node should either be able
         to change component classifications (function names starting with dec_)
@@ -208,9 +212,7 @@ def validate_tree(tree):
         nonstandard_labels = compclass.difference(all_classifications)
         if nonstandard_labels:
             LGR.warning(
-                "{} in node {} of the decision tree includes a classification label that was not predefined".format(
-                    compclass, i
-                )
+                f"{compclass} in node {i} of the decision tree includes a classification "
             )
         if "decide_comps" in node.get("parameters").keys():
             tmp_comp = node["parameters"]["decide_comps"]
@@ -220,7 +222,8 @@ def validate_tree(tree):
         nonstandard_labels = compclass.difference(all_decide_comps)
         if nonstandard_labels:
             LGR.warning(
-                f"{compclass} in node {i} of the decision tree includes a classification label that was not predefined"
+                f"{compclass} in node {i} of the decision tree includes a classification "
+                "label that was not predefined"
             )
 
         tagset = set()
@@ -233,7 +236,8 @@ def validate_tree(tree):
         undefined_classification_tags = tagset.difference(set(tree.get("classification_tags")))
         if undefined_classification_tags:
             LGR.warning(
-                f"{tagset} in node {i} of the decision tree includes a classification tag that was not predefined"
+                f"{tagset} in node {i} of the decision tree includes a classification "
+                "tag that was not predefined"
             )
 
     if err_msg:
@@ -414,7 +418,7 @@ class ComponentSelector:
             current_node_idx
         """
         # TODO: force-add classification tags
-        if not "classification_tags" in self.component_table.columns:
+        if "classification_tags" not in self.component_table.columns:
             self.component_table["classification_tags"] = ""
         # this will crash the program with an error message if not all
         # necessary_metrics are in the comptable
@@ -513,11 +517,13 @@ class ComponentSelector:
         not_used = self.necessary_metrics - self.tree["used_metrics"]
         if len(not_declared) > 0:
             LGR.warning(
-                f"Decision tree {self.tree_name} used the following metrics that were not declared as necessary: {not_declared}"
+                f"Decision tree {self.tree_name} used the following metrics that were "
+                "not declared as necessary: {not_declared}"
             )
         if len(not_used) > 0:
             LGR.warning(
-                f"Decision tree {self.tree_name} did not use the following metrics that were declared as necessary: {not_used}"
+                f"Decision tree {self.tree_name} did not use the following metrics "
+                "that were declared as necessary: {not_used}"
             )
 
     def are_all_components_accepted_or_rejected(self):
@@ -532,7 +538,9 @@ class ComponentSelector:
             for nonfinal_class in nonfinal_classifications:
                 numcomp = asarray(self.component_table["classification"] == nonfinal_class).sum()
                 LGR.warning(
-                    f"{numcomp} components have a final classification of {nonfinal_class}. At the end of the selection process, all components are expected to be 'accepted' or 'rejected'"
+                    f"{numcomp} components have a final classification of {nonfinal_class}. "
+                    "At the end of the selection process, all components are expected "
+                    "to be 'accepted' or 'rejected'"
                 )
 
     @property
@@ -573,19 +581,10 @@ class ComponentSelector:
         io_generator: tedana.io.OutputGenerator
             The output generator to use for filename generation and saving.
         """
-        comptable_fname = io_generator.save_file(
-            self.component_table,
-            "ICA metrics tsv",
-        )
-        xcomp_fname = io_generator.save_file(
+        io_generator.save_file(self.component_table, "ICA metrics tsv")
+        io_generator.save_file(
             self.cross_component_metrics,
             "ICA cross component metrics json",
         )
-        status_fname = io_generator.save_file(
-            self.component_status_table,
-            "ICA status table tsv",
-        )
-        tree_fname = io_generator.save_file(
-            self.tree,
-            "ICA decision tree json",
-        )
+        io_generator.save_file(self.component_status_table, "ICA status table tsv")
+        io_generator.save_file(self.tree, "ICA decision tree json")

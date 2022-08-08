@@ -91,7 +91,10 @@ def test_selectcomps2use_succeeds():
         comps2use = selection_utils.selectcomps2use(selector, decide_comps)
         assert (
             len(comps2use) == decide_comps_lengths[idx]
-        ), f"selectcomps2use test should select {decide_comps_lengths[idx]} with decide_comps={decide_comps}, but it selected {len(comps2use)}"
+        ), (
+            f"selectcomps2use test should select {decide_comps_lengths[idx]} with "
+            f"decide_comps={decide_comps}, but it selected {len(comps2use)}"
+        )
 
 
 def test_selectcomps2use_fails():
@@ -104,7 +107,7 @@ def test_selectcomps2use_fails():
         ["accepted", 4],  # needs to be either int or string, not both
         [4, 3, -1, 9],  # no index should be < 0
         [2, 4, 6, 21],  # no index should be > number of 0 indexed components
-        22,  ## no index should be > number of 0 indexed components
+        22,  # no index should be > number of 0 indexed components
     ]
     for decide_comps in decide_comps_options:
         with pytest.raises(ValueError):
@@ -152,7 +155,8 @@ def test_comptable_classification_changer_succeeds():
     )
     validate_changes("rejected")
 
-    # Change from accepted to rejected, which should output a warning (test if the warning appears?)
+    # Change from accepted to rejected, which should output a warning
+    # (test if the warning appears?)
     selector = sample_selector(options="provclass")
     decision_boolean = selector.component_table["classification"] == "accepted"
     boolstate = True
@@ -181,7 +185,8 @@ def test_change_comptable_classifications_succeeds():
 
     selector = sample_selector(options="provclass")
 
-    # Given the rho values in the sample table, decision_boolean should have 2 True and 2 False values
+    # Given the rho values in the sample table, decision_boolean should have
+    # 2 True and 2 False values
     comps2use = selection_utils.selectcomps2use(selector, "provisional accept")
     rho = selector.component_table.loc[comps2use, "rho"]
     decision_boolean = rho < 13.5
@@ -198,7 +203,7 @@ def test_change_comptable_classifications_succeeds():
     assert numTrue == 2
     assert numFalse == 2
     # check every element that was supposed to change, did change
-    changeidx = decision_boolean.index[np.asarray(decision_boolean) == True]
+    changeidx = decision_boolean.index[np.asarray(decision_boolean) is True]
     new_vals = selector.component_table.loc[changeidx, "classification"]
     for val in new_vals:
         assert val == "accepted"

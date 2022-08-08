@@ -1,14 +1,10 @@
 """Tests for the tedana.selection.selection_nodes module."""
 import os
-from re import S
 
-import numpy as np
-import pandas as pd
 import pytest
 
-from tedana.selection import selection_nodes, selection_utils
-from tedana.selection.ComponentSelector import ComponentSelector
-from tedana.tests.test_selection_utils import sample_component_table, sample_selector
+from tedana.selection import selection_nodes
+from tedana.tests.test_selection_utils import sample_selector
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -38,7 +34,8 @@ def test_manual_classify_smoke():
         custom_node_label="custom label",
         tag="test tag",
     )
-    # There should be 4 selected components and component_status_table should have a new column "Node 0"
+    # There should be 4 selected components and component_status_table should
+    # have a new column "Node 0"
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 4
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numFalse"] == 0
     assert f"Node {selector.current_node_idx}" in selector.component_status_table
@@ -79,7 +76,8 @@ def test_dec_left_op_right_succeeds():
     )
     assert len(used_metrics - {"kappa", "rho"}) == 0
 
-    # Standard execution where components with kappa>rho are changed from "provisional accept" to "accepted"
+    # Standard execution where components with kappa>rho are changed from
+    # "provisional accept" to "accepted"
     # And all extra logging code and options are run
     # left and right are both component_table_metrics
     selector = selection_nodes.dec_left_op_right(
@@ -98,7 +96,8 @@ def test_dec_left_op_right_succeeds():
         tag_ifTrue="test true tag",
         tag_ifFalse="test false tag",
     )
-    # scales are set to make sure 3 components are true and 1 is false using the sample component table
+    # scales are set to make sure 3 components are true and 1 is false using
+    # the sample component table
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 3
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numFalse"] == 1
     assert f"Node {selector.current_node_idx}" in selector.component_status_table
@@ -118,7 +117,8 @@ def test_dec_left_op_right_succeeds():
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 0
     assert f"Node {selector.current_node_idx}" not in selector.component_status_table
 
-    # Re-initializing selector so that it has components classificated as "provisional accept" again
+    # Re-initializing selector so that it has components classificated as
+    # "provisional accept" again
     selector = sample_selector(options="provclass")
     # Test when left is a component_table_metric, & right is a cross_component_metric
     selector = selection_nodes.dec_left_op_right(
@@ -446,7 +446,8 @@ def test_calc_kappa_rho_elbows_kundu():
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["rho_elbow_kundu"] > 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_upper_p"] > 0
 
-    # Run warning logging code for if any of the cross_component_metrics already existed and would be over-written
+    # Run warning logging code for if any of the cross_component_metrics
+    # already existed and would be over-written
     selector = sample_selector(options="unclass")
     selector.cross_component_metrics["kappa_elbow_kundu"] = 1
     selector.cross_component_metrics["rho_elbow_kundu"] = 1
@@ -511,10 +512,10 @@ def test_calc_kappa_rho_elbows_kundu():
     selector = selection_nodes.calc_kappa_rho_elbows_kundu(selector, "NotAClassification")
     calc_cross_comp_metrics = {"kappa_elbow_kundu", "rho_elbow_kundu", "varex_upper_p"}
     assert (
-        selector.tree["nodes"][selector.current_node_idx]["outputs"]["kappa_elbow_kundu"] == None
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["kappa_elbow_kundu"] is None
     )
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["rho_elbow_kundu"] == None
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_upper_p"] == None
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["rho_elbow_kundu"] is None
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_upper_p"] is None
 
 
 def test_dec_classification_doesnt_exist_smoke():
@@ -634,7 +635,8 @@ def test_calc_varex_thresh_smoke():
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_thresh"] > 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["perc"] == 90
 
-    # Run warning logging code to see if any of the cross_component_metrics already existed and would be over-written
+    # Run warning logging code to see if any of the cross_component_metrics
+    # already existed and would be over-written
     selector = sample_selector(options="provclass")
     selector.cross_component_metrics["varex_upper_thresh"] = 1
     selector.cross_component_metrics["upper_perc"] = 1
@@ -672,7 +674,7 @@ def test_calc_varex_thresh_smoke():
         selector, decide_comps="NotAClassification", thresh_label="upper", percentile_thresh=90
     )
     assert (
-        selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_upper_thresh"] == None
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_upper_thresh"] is None
     )
     # percentile_thresh doesn't depend on components and is assigned
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["upper_perc"] == 90
@@ -702,7 +704,8 @@ def test_calc_extend_factor_smoke():
     assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["extend_factor"] > 0
 
-    # Run warning logging code for if any of the cross_component_metrics already existed and would be over-written
+    # Run warning logging code for if any of the cross_component_metrics
+    # already existed and would be over-written
     selector = sample_selector()
     selector.cross_component_metrics["extend_factor"] = 1.0
     selector = selection_nodes.calc_extend_factor(selector)
@@ -750,7 +753,8 @@ def test_max_good_meanmetricrank_smoke():
         selector.tree["nodes"][selector.current_node_idx]["outputs"]["max_good_meanmetricrank"] > 0
     )
 
-    # Run warning logging code for if any of the cross_component_metrics already existed and would be over-written
+    # Run warning logging code for if any of the cross_component_metrics
+    # already existed and would be over-written
     selector = sample_selector("provclass")
     selector.cross_component_metrics["max_good_meanmetricrank"] = 10
     selector.cross_component_metrics["extend_factor"] = 2.0
@@ -774,7 +778,7 @@ def test_max_good_meanmetricrank_smoke():
     selector = selection_nodes.calc_max_good_meanmetricrank(selector, "NotAClassification")
     assert (
         selector.tree["nodes"][selector.current_node_idx]["outputs"]["max_good_meanmetricrank"]
-        == None
+        is None
     )
 
 
@@ -806,7 +810,8 @@ def test_calc_varex_kappa_ratio_smoke():
     assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["kappa_rate"] > 0
 
-    # Run warning logging code for if any of the cross_component_metrics already existed and would be over-written
+    # Run warning logging code for if any of the cross_component_metrics
+    # already existed and would be over-written
     selector = sample_selector("provclass")
     selector.cross_component_metrics["kappa_rate"] = 10
     selector = selection_nodes.calc_varex_kappa_ratio(selector, "provisional accept")
@@ -817,7 +822,7 @@ def test_calc_varex_kappa_ratio_smoke():
     # Log without running if no components of decide_comps are in the component table
     selector = sample_selector()
     selector = selection_nodes.calc_varex_kappa_ratio(selector, "NotAClassification")
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["kappa_rate"] == None
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["kappa_rate"] is None
 
     # Raise error if "varex kappa ratio" is already in component_table
     selector = sample_selector("provclass")
@@ -867,7 +872,8 @@ def test_calc_revised_meanmetricrank_guesses_smoke():
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["conservative_guess"] > 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["restrict_factor"] == 2
 
-    # Run warning logging code for if any of the cross_component_metrics already existed and would be over-written
+    # Run warning logging code for if any of the cross_component_metrics
+    # already existed and would be over-written
     selector = sample_selector("provclass")
     selector.cross_component_metrics["kappa_elbow_kundu"] = 19.1
     selector.cross_component_metrics["rho_elbow_kundu"] = 15.2
@@ -888,9 +894,9 @@ def test_calc_revised_meanmetricrank_guesses_smoke():
     selector.cross_component_metrics["kappa_elbow_kundu"] = 19.1
     selector.cross_component_metrics["rho_elbow_kundu"] = 15.2
     selector = selection_nodes.calc_revised_meanmetricrank_guesses(selector, "NotAClassification")
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["num_acc_guess"] == None
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["num_acc_guess"] is None
     assert (
-        selector.tree["nodes"][selector.current_node_idx]["outputs"]["conservative_guess"] == None
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["conservative_guess"] is None
     )
 
     # Raise error if "d_table_score_node0" is already in component_table

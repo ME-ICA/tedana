@@ -541,7 +541,8 @@ def get_metadata(comptable):
         metric_metadata["classification_tags"] = {
             "LongName": "Component classification tags",
             "Description": (
-                "A single tag or a comma separated list of tags to describe why a component received its classification"
+                "A single tag or a comma separated list of tags to describe why a component"
+                " received its classification"
             ),
         }
     if "rationale" in comptable:

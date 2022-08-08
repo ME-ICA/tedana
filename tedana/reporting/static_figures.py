@@ -201,7 +201,7 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
     expl_text = ""
 
     # Remove trailing ';' from rationale column
-    #comptable["rationale"] = comptable["rationale"].str.rstrip(";")
+    # comptable["rationale"] = comptable["rationale"].str.rstrip(";")
     for compnum in comptable.index.values:
         if comptable.loc[compnum, "classification"] == "accepted":
             line_color = "g"
