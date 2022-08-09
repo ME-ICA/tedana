@@ -89,7 +89,7 @@ def test_selectcomps2use_succeeds():
 
     for idx, decide_comps in enumerate(decide_comps_options):
         comps2use = selection_utils.selectcomps2use(selector, decide_comps)
-        assert (len(comps2use) == decide_comps_lengths[idx]), (
+        assert len(comps2use) == decide_comps_lengths[idx], (
             f"selectcomps2use test should select {decide_comps_lengths[idx]} with "
             f"decide_comps={decide_comps}, but it selected {len(comps2use)}"
         )

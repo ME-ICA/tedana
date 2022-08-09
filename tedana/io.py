@@ -47,7 +47,7 @@ class CustomEncoder(json.JSONEncoder):
         return super(CustomEncoder, self).default(obj)
 
 
-class OutputGenerator():
+class OutputGenerator:
     """A class for managing tedana outputs.
 
     Parameters
@@ -318,6 +318,7 @@ class OutputGenerator():
 
 class InputHarvester:
     """Turns a registry file into a lookup table to get previous data."""
+
     loaders = {
         "json": lambda f: load_json(f),
         "tsv": lambda f: pd.read_csv(f, delimiter="\t"),
