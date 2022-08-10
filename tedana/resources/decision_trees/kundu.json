@@ -132,8 +132,8 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "ifTrue": "nochange",
-                "ifFalse": "provisionalreject",
+                "ifTrue": "provisionalreject",
+                "ifFalse": "nochange",
                 "decide_comps": [
                     "provisionalreject",
                     "provisionalaccept"

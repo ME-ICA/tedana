@@ -114,7 +114,7 @@
             "functionname": "dec_left_op_right",
             "parameters": {
                 "ifTrue": "provisionalaccept",
-                "ifFalse": "nochange",
+                "ifFalse": "provisionalreject",
                 "decide_comps": "unclassified",
                 "op": ">",
                 "left": "kappa",
@@ -145,10 +145,10 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "ifTrue": "nochange",
-                "ifFalse": "provisionalreject",
+                "ifTrue": "provisionalreject",
+                "ifFalse": "nochange",
                 "decide_comps": [
-                    "unclassified",
+                    "provisionalreject",
                     "provisionalaccept"
                 ],
                 "op": ">",
@@ -165,10 +165,7 @@
             "parameters": {
                 "ifTrue": "accepted",
                 "ifFalse": "nochange",
-                "decide_comps": [
-                    "provisionalreject",
-                    "unclassified"
-                ]
+                "decide_comps": "provisionalreject"
             },
             "kwargs": {
                 "var_metric": "variance explained",
