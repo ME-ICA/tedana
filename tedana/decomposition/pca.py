@@ -17,7 +17,6 @@ from tedana.stats import computefeats2
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 def low_mem_pca(data):
@@ -97,7 +96,7 @@ def tedpca(
         Method with which to select components in TEDPCA. PCA
         decomposition with the mdl, kic and aic options are based on a Moving Average
         (stationary Gaussian) process and are ordered from most to least aggressive
-        (see Li et al., 2007).
+        (see :footcite:p:`li2007estimating`).
         If a float is provided, then it is assumed to represent percentage of variance
         explained (0-1) to retain from PCA.
         If an int is provided, then it is assumed to be the number of components
@@ -176,6 +175,10 @@ def tedpca(
                                    decomposition
     ===========================    =============================================
 
+    References
+    ----------
+    .. footbibliography::
+
     See Also
     --------
     :func:`tedana.utils.make_adaptive_mask` : The function used to create
@@ -184,27 +187,13 @@ def tedpca(
         various naming conventions
     """
     if algorithm == "kundu":
-        alg_str = "followed by the Kundu component selection decision tree (Kundu et al., 2013)"
-        RefLGR.info(
-            "Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
-            "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
-            "(2013). Integrated strategy for improving functional "
-            "connectivity mapping using multiecho fMRI. Proceedings "
-            "of the National Academy of Sciences, 110(40), "
-            "16187-16192."
+        alg_str = (
+            "followed by the Kundu component selection decision tree \\citep{kundu2013integrated}"
         )
     elif algorithm == "kundu-stabilize":
         alg_str = (
             "followed by the 'stabilized' Kundu component "
-            "selection decision tree (Kundu et al., 2013)"
-        )
-        RefLGR.info(
-            "Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
-            "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
-            "(2013). Integrated strategy for improving functional "
-            "connectivity mapping using multiecho fMRI. Proceedings "
-            "of the National Academy of Sciences, 110(40), "
-            "16187-16192."
+            "selection decision tree \\citep{kundu2013integrated}"
         )
     elif isinstance(algorithm, Number):
         if isinstance(algorithm, float):
@@ -217,19 +206,13 @@ def tedpca(
     else:
         alg_str = (
             "based on the PCA component estimation with a Moving Average"
-            "(stationary Gaussian) process (Li et al., 2007)"
-        )
-        RefLGR.info(
-            "Li, Y.O., Adalı, T. and Calhoun, V.D., (2007). "
-            "Estimating the number of independent components for "
-            "functional magnetic resonance imaging data. "
-            "Human brain mapping, 28(11), pp.1251-1266."
+            "(stationary Gaussian) process \\citep{li2007estimating}"
         )
 
     RepLGR.info(
-        "Principal component analysis {0} was applied to "
+        f"Principal component analysis {alg_str} was applied to "
         "the optimally combined data for dimensionality "
-        "reduction.".format(alg_str)
+        "reduction."
     )
 
     n_samp, n_echos, n_vols = data_cat.shape

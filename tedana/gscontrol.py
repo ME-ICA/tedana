@@ -9,11 +9,9 @@ from scipy import stats
 from scipy.special import lpmv
 
 from tedana import utils
-from tedana.due import Doi, due
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 def gscontrol_raw(catd, optcom, n_echos, io_generator, dtrank=4):
@@ -118,17 +116,13 @@ def gscontrol_raw(catd, optcom, n_echos, io_generator, dtrank=4):
     return dm_catd, dm_optcom
 
 
-@due.dcite(
-    Doi("10.1073/pnas.1301725110"),
-    description="Minimum image regression to remove T1-like effects from the denoised data.",
-)
 def minimum_image_regression(optcom_ts, mmix, mask, comptable, io_generator):
     """
     Perform minimum image regression (MIR) to remove T1-like effects from
     BOLD-like components.
 
     While this method has not yet been described in detail in any publications,
-    we recommend that users cite [1]_.
+    we recommend that users cite :footcite:t:`kundu2013integrated`.
 
     Parameters
     ----------
@@ -174,23 +168,12 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, io_generator):
 
     References
     ----------
-    .. [1] Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E.,
-           Inati, S. J., ... & Bullmore, E. T. (2013).
-           Integrated strategy for improving functional connectivity mapping
-           using multiecho fMRI.
-           Proceedings of the National Academy of Sciences, 110(40), 16187-16192.
+    .. footbibliography::
     """
     LGR.info("Performing minimum image regression to remove spatially-diffuse noise")
     RepLGR.info(
         "Minimum image regression was then applied to the "
-        "data in order to remove spatially diffuse noise (Kundu et al., 2013)."
-    )
-    RefLGR.info(
-        "Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E., "
-        "Inati, S. J., ... & Bullmore, E. T. (2013). "
-        "Integrated strategy for improving functional connectivity mapping "
-        "using multiecho fMRI. "
-        "Proceedings of the National Academy of Sciences, 110(40), 16187-16192."
+        "data in order to remove spatially diffuse noise \\citep{kundu2013integrated}."
     )
 
     all_comps = comptable.index.values

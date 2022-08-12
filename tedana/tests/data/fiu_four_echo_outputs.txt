@@ -69,6 +69,7 @@ echo-4_desc-PCAT2ModelPredictions_components.nii.gz
 echo-4_desc-PCAS0ModelPredictions_components.nii.gz
 echo-4_desc-PCA_components.nii.gz
 echo-4_desc-Rejected_bold.nii.gz
+references.bib
 report.txt
 tedana_report.html
 figures

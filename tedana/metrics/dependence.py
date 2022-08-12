@@ -9,7 +9,6 @@ from tedana.stats import computefeats2, get_coeffs, t_to_z
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 def calculate_weights(data_optcom, mixing):
