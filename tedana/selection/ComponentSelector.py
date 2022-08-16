@@ -180,13 +180,15 @@ def validate_tree(tree):
                 i, invalid_params
             )
 
-        invalid_kwargs = set(node.get("kwargs").keys()) - kwargs
-        if len(invalid_kwargs) > 0:
-            err_msg += (
-                "Node {} has additional, undefined optional parameters (kwargs): {}\n".format(
-                    i, invalid_kwargs
+        # Only if kwargs are inputted, make sure they are all valid
+        if node.get("kwargs") is not None:
+            invalid_kwargs = set(node.get("kwargs").keys()) - kwargs
+            if len(invalid_kwargs) > 0:
+                err_msg += (
+                    "Node {} has additional, undefined optional parameters (kwargs): {}\n".format(
+                        i, invalid_kwargs
+                    )
                 )
-            )
 
         # Gather all the classification labels used in each tree both for
         # changing classifications and for decide_comps which defines which
@@ -224,19 +226,20 @@ def validate_tree(tree):
                 "label that was not predefined"
             )
 
-        tagset = set()
-        if "tag_ifTrue" in node.get("kwargs").keys():
-            tagset.update(set([node["kwargs"]["tag_ifTrue"]]))
-        if "tag_ifFalse" in node.get("kwargs").keys():
-            tagset.update(set([node["kwargs"]["tag_ifFalse"]]))
-        if "tag" in node.get("kwargs").keys():
-            tagset.update(set([node["kwargs"]["tag"]]))
-        undefined_classification_tags = tagset.difference(set(tree.get("classification_tags")))
-        if undefined_classification_tags:
-            LGR.warning(
-                f"{tagset} in node {i} of the decision tree includes a classification "
-                "tag that was not predefined"
-            )
+        if node.get("kwargs") is not None:
+            tagset = set()
+            if "tag_ifTrue" in node.get("kwargs").keys():
+                tagset.update(set([node["kwargs"]["tag_ifTrue"]]))
+            if "tag_ifFalse" in node.get("kwargs").keys():
+                tagset.update(set([node["kwargs"]["tag_ifFalse"]]))
+            if "tag" in node.get("kwargs").keys():
+                tagset.update(set([node["kwargs"]["tag"]]))
+            undefined_classification_tags = tagset.difference(set(tree.get("classification_tags")))
+            if undefined_classification_tags:
+                LGR.warning(
+                    f"{tagset} in node {i} of the decision tree includes a classification "
+                    "tag that was not predefined"
+                )
 
     if err_msg:
         raise TreeError("\n" + err_msg)
@@ -429,17 +432,28 @@ class ComponentSelector:
             # parse the variables to use with the function
             fcn = getattr(selection_nodes, node["functionname"])
 
-            params, kwargs = node["parameters"], node["kwargs"]
+            params = node["parameters"]
+
             params = self.check_null(params, node["functionname"])
-            kwargs = self.check_null(kwargs, node["functionname"])
+
+            if "kwargs" in node:
+                kwargs = node["kwargs"]
+                kwargs = self.check_null(kwargs, node["functionname"])
+                all_params = {**params, **kwargs}
+            else:
+                kwargs = None
+                all_params = {**params}
             # log the function name and parameters used
             LGR.info(
                 "Step {}: Running function {} with parameters: {}".format(
-                    self.current_node_idx, node["functionname"], {**params, **kwargs}
+                    self.current_node_idx, node["functionname"], all_params
                 )
             )
             # run the decision node function
-            self = fcn(self, **params, **kwargs)
+            if kwargs is not None:
+                self = fcn(self, **params, **kwargs)
+            else:
+                self = fcn(self, **params)
             self.tree["used_metrics"].update(
                 self.tree["nodes"][self.current_node_idx]["outputs"]["used_metrics"]
             )

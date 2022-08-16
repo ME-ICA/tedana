@@ -423,9 +423,9 @@ def dec_left_op_right(
     is_compound = 0
 
     # If any of the values for the second boolean statement are set
-    if left2 or right2 or op2:
+    if left2 is not None or right2 is not None or op2 is not None:
         # Check if they're all set & use them all or raise an error
-        if left2 and right2 and op2:
+        if left2 is not None and right2 is not None and op2 is not None:
             is_compound = 2
             left2_scale, left2, right2_scale, right2 = confirm_valid_conditional(
                 left2_scale, left2, right2_scale, right2, op2
@@ -683,6 +683,104 @@ def dec_variance_lessthan_thresholds(
 dec_variance_lessthan_thresholds.__doc__ = dec_variance_lessthan_thresholds.__doc__.format(
     **decision_docs
 )
+
+
+def calc_median(
+    selector,
+    decide_comps,
+    metric_name,
+    median_label,
+    log_extra_report="",
+    log_extra_info="",
+    custom_node_label="",
+    only_used_metrics=False,
+):
+    """
+    Calculates the median across comopnents for the metric defined by metric_name
+
+    Parameters
+    ----------
+    {selector}
+    {decide_comps}
+    metric_name: :obj:`str`
+        The name of a column in selector.component_table. The median of
+        the values in this column will be calculated
+    median_label: :obj:`str`
+        The median will be saved in "median_(median_label)"
+    {log_extra}
+    {custom_node_label}
+    {only_used_metrics}
+
+    Returns
+    -------
+    {basicreturns}
+
+    """
+
+    function_name_idx = f"Step {selector.current_node_idx}: calc_median"
+    if not isinstance(median_label, str):
+        raise ValueError(
+            f"{function_name_idx}: median_label must be a string. It is: {median_label}"
+        )
+    else:
+        label_name = f"median_{median_label}"
+
+    if not isinstance(metric_name, str):
+        raise ValueError(
+            f"{function_name_idx}: metric_name must be a string. It is: {metric_name}"
+        )
+
+    outputs = {
+        "decision_node_idx": selector.current_node_idx,
+        "node_label": None,
+        label_name: None,
+        "used_metrics": set([metric_name]),
+        "calc_cross_comp_metrics": [label_name],
+    }
+
+    if only_used_metrics:
+        return outputs["used_metrics"]
+
+    if label_name in selector.cross_component_metrics:
+        LGR.warning(
+            f"{label_name} already calculated. Overwriting previous value in {function_name_idx}"
+        )
+
+    if custom_node_label:
+        outputs["node_label"] = custom_node_label
+    else:
+        outputs["node_label"] = f"Calc {label_name}"
+
+    if log_extra_info:
+        LGR.info(log_extra_info)
+    if log_extra_report:
+        RepLGR.info(log_extra_report)
+
+    comps2use = selectcomps2use(selector, decide_comps)
+    confirm_metrics_exist(
+        selector.component_table, outputs["used_metrics"], function_name=function_name_idx
+    )
+
+    if not comps2use:
+        log_decision_tree_step(
+            function_name_idx,
+            comps2use,
+            decide_comps=decide_comps,
+        )
+    else:
+
+        outputs[label_name] = np.median(selector.component_table.loc[comps2use, metric_name])
+
+        selector.cross_component_metrics[label_name] = outputs[label_name]
+
+        log_decision_tree_step(function_name_idx, comps2use, calc_outputs=outputs)
+
+    selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
+
+    return selector
+
+
+calc_median.__doc__ = calc_median.__doc__.format(**decision_docs)
 
 
 def calc_kappa_rho_elbows_kundu(

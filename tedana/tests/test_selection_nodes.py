@@ -518,6 +518,83 @@ def test_calc_kappa_rho_elbows_kundu():
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_upper_p"] is None
 
 
+def test_calc_median_smoke():
+    """Smoke tests for calc_median"""
+
+    selector = sample_selector()
+    decide_comps = "all"
+
+    # Outputs just the metrics used in this function {"variance explained"}
+    used_metrics = selection_nodes.calc_median(
+        selector,
+        decide_comps,
+        metric_name="variance explained",
+        median_label="varex",
+        only_used_metrics=True,
+    )
+    assert len(used_metrics - set(["variance explained"])) == 0
+
+    # Standard call to this function.
+    selector = selection_nodes.calc_median(
+        selector,
+        decide_comps,
+        metric_name="variance explained",
+        median_label="varex",
+        log_extra_report="report log",
+        log_extra_info="info log",
+        custom_node_label="custom label",
+    )
+    calc_cross_comp_metrics = {"median_varex"}
+    output_calc_cross_comp_metrics = set(
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["calc_cross_comp_metrics"]
+    )
+    # Confirming the intended metrics are added to outputs and they have non-zero values
+    assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["median_varex"] > 0
+
+    # repeating standard call and should make a warning because metric_varex already exists
+    selector = selection_nodes.calc_median(
+        selector, decide_comps, metric_name="variance explained", median_label="varex"
+    )
+    # Confirming the intended metrics are added to outputs and they have non-zero values
+    assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["median_varex"] > 0
+
+    # Log without running if no components of decide_comps are in the component table
+    selector = sample_selector()
+    selector = selection_nodes.calc_median(
+        selector,
+        decide_comps="NotAClassification",
+        metric_name="variance explained",
+        median_label="varex",
+    )
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["median_varex"] is None
+
+    # Crashes because median_label is not a string
+    with pytest.raises(ValueError):
+        selector = selection_nodes.calc_median(
+            selector,
+            decide_comps,
+            metric_name="variance explained",
+            median_label=5,
+            log_extra_report="report log",
+            log_extra_info="info log",
+            custom_node_label="custom label",
+        )
+
+    # Crashes because median_name is not a string
+    with pytest.raises(ValueError):
+        selector = selection_nodes.calc_median(
+            selector,
+            decide_comps,
+            metric_name=5,
+            median_label="varex",
+            log_extra_report="report log",
+            log_extra_info="info log",
+            custom_node_label="custom label",
+        )
+
+
 def test_dec_classification_doesnt_exist_smoke():
     """Smoke tests for dec_classification_doesnt_exist"""
 
