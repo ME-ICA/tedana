@@ -665,8 +665,8 @@ def test_calc_varex_thresh_smoke():
     """Smoke tests for calc_varex_thresh"""
 
     # Standard use of this function requires some components to be "provisional accept"
-    selector = sample_selector(options="provclass")
-    decide_comps = "provisional accept"
+    selector = sample_selector()
+    decide_comps = "all"
 
     # Outputs just the metrics used in this function {"variance explained"}
     used_metrics = selection_nodes.calc_varex_thresh(
@@ -711,6 +711,75 @@ def test_calc_varex_thresh_smoke():
     assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_thresh"] > 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["perc"] == 90
+
+    # Standard call using num_lowest_var_comps as an integer
+    selector = selection_nodes.calc_varex_thresh(
+        selector,
+        decide_comps,
+        thresh_label="new_lower",
+        percentile_thresh=25,
+        num_lowest_var_comps=8,
+    )
+    calc_cross_comp_metrics = {"varex_new_lower_thresh", "new_lower_perc"}
+    output_calc_cross_comp_metrics = set(
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["calc_cross_comp_metrics"]
+    )
+    # Confirming the intended metrics are added to outputs and they have non-zero values
+    assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
+    assert (
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_new_lower_thresh"] > 0
+    )
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["new_lower_perc"] == 25
+
+    # Standard call using num_lowest_var_comps as a value in cross_component_metrics
+    selector.cross_component_metrics["num_acc_guess"] = 10
+    selector = selection_nodes.calc_varex_thresh(
+        selector,
+        decide_comps,
+        thresh_label="new_lower",
+        percentile_thresh=25,
+        num_lowest_var_comps="num_acc_guess",
+    )
+    calc_cross_comp_metrics = {"varex_new_lower_thresh", "new_lower_perc"}
+    output_calc_cross_comp_metrics = set(
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["calc_cross_comp_metrics"]
+    )
+    # Confirming the intended metrics are added to outputs and they have non-zero values
+    assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
+    assert (
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_new_lower_thresh"] > 0
+    )
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["new_lower_perc"] == 25
+
+    # Raise error if num_lowest_var_comps is a string, but not in cross_component_metrics
+    with pytest.raises(ValueError):
+        selector = selection_nodes.calc_varex_thresh(
+            selector,
+            decide_comps,
+            thresh_label="new_lower",
+            percentile_thresh=25,
+            num_lowest_var_comps="NotACrossCompMetric",
+        )
+
+    # Raise error if num_lowest_var_comps is not an integer
+    with pytest.raises(ValueError):
+        selector = selection_nodes.calc_varex_thresh(
+            selector,
+            decide_comps,
+            thresh_label="new_lower",
+            percentile_thresh=25,
+            num_lowest_var_comps=9.5,
+        )
+
+    # Raise error if num_lowest_var_comps is larger than the number of selected components
+    with pytest.raises(ValueError):
+        selector = selection_nodes.calc_varex_thresh(
+            selector,
+            decide_comps,
+            thresh_label="new_lower",
+            percentile_thresh=25,
+            num_lowest_var_comps=55,
+        )
 
     # Run warning logging code to see if any of the cross_component_metrics
     # already existed and would be over-written

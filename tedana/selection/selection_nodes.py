@@ -1133,6 +1133,7 @@ def calc_varex_thresh(
     decide_comps,
     thresh_label,
     percentile_thresh,
+    num_lowest_var_comps=None,
     log_extra_report="",
     log_extra_info="",
     custom_node_label="",
@@ -1154,6 +1155,11 @@ def calc_varex_thresh(
         A percentile threshold to apply to components to set the variance threshold.
         In the original kundu decision tree this was 90 for varex_upper_thresh and
         25 for varex_lower_thresh
+    num_lowest_var_comps: :obj:`str` :obj:`int`
+        percentile can be calculated on the num_lowest_var_comps components with the
+        lowest variance. Either input an integer directory or input a string that is
+        a parameter stored in selector.cross_component_metrics ("num_acc_guess" in
+        original decision tree). Default is None
     {log_extra}
     {custom_node_label}
     {only_used_metrics}
@@ -1177,6 +1183,7 @@ def calc_varex_thresh(
         "decision_node_idx": selector.current_node_idx,
         "node_label": None,
         varex_name: None,
+        "num_lowest_var_comps": num_lowest_var_comps,
         "used_metrics": set(["variance explained"]),
     }
     if (
@@ -1204,6 +1211,19 @@ def calc_varex_thresh(
             f"{perc_name} already calculated. Overwriting previous value in {function_name_idx}"
         )
 
+    if num_lowest_var_comps is not None:
+        if isinstance(num_lowest_var_comps, str):
+            if num_lowest_var_comps in selector.cross_component_metrics:
+                num_lowest_var_comps = selector.cross_component_metrics[num_lowest_var_comps]
+            else:
+                raise ValueError(
+                    f"{function_name_idx}: num_lowest_var_comps ( {num_lowest_var_comps}) is not in selector.cross_component_metrics"
+                )
+        if not isinstance(num_lowest_var_comps, int):
+            raise ValueError(
+                f"{function_name_idx}: num_lowest_var_comps ( {num_lowest_var_comps}) is used as an array index and should be an integer"
+            )
+
     if custom_node_label:
         outputs["node_label"] = custom_node_label
     else:
@@ -1226,11 +1246,23 @@ def calc_varex_thresh(
             decide_comps=decide_comps,
         )
     else:
-
-        outputs[varex_name] = scoreatpercentile(
-            selector.component_table.loc[comps2use, "variance explained"], percentile_thresh
-        )
-
+        if num_lowest_var_comps is None:
+            outputs[varex_name] = scoreatpercentile(
+                selector.component_table.loc[comps2use, "variance explained"], percentile_thresh
+            )
+        else:
+            # Using only the first num_lowest_var_comps components sorted to include lowest variance
+            if num_lowest_var_comps <= len(comps2use):
+                sorted_varex = np.sort(
+                    (selector.component_table.loc[comps2use, "variance explained"]).to_numpy()
+                )
+                outputs[varex_name] = scoreatpercentile(
+                    sorted_varex[:num_lowest_var_comps], percentile_thresh
+                )
+            else:
+                raise ValueError(
+                    f"{function_name_idx}: num_lowest_var_comps ({num_lowest_var_comps}) needs to be <= len(comps2use) ({len(comps2use)})"
+                )
         selector.cross_component_metrics[varex_name] = outputs[varex_name]
 
         log_decision_tree_step(function_name_idx, comps2use, calc_outputs=outputs)

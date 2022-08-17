@@ -63,9 +63,20 @@
                 "right": "countsigFT2"
             },
             "kwargs": {
-                "log_extra_info": "Reject if countsig_in S0clusters > T2clusters",
+                "left2": "countsigFT2",
+                "op2": ">",
+                "right2": 0,
+                "log_extra_info": "Reject if countsig_in S0clusters > T2clusters & countsig_in_T2clusters>0",
                 "log_extra_report": "",
                 "tag_ifTrue": "Unlikely BOLD"
+            }
+        },
+        {
+            "functionname": "calc_median",
+            "parameters": {
+                "decide_comps": "all",
+                "metric_name": "variance explained",
+                "median_label": "varex"
             }
         },
         {
@@ -79,7 +90,10 @@
                 "right": "dice_FT2"
             },
             "kwargs": {
-                "log_extra_info": "Reject if dice S0>T2",
+                "left2": "variance explained",
+                "op2": ">",
+                "right2": "median_varex",
+                "log_extra_info": "Reject if DICE S0>T2  & varex>median",
                 "log_extra_report": "",
                 "tag_ifTrue": "Unlikely BOLD"
             }
@@ -95,7 +109,10 @@
                 "right": "signal-noise_t"
             },
             "kwargs": {
-                "log_extra_info": "Reject if T2fitdiff_invsout_ICAmap_Tstat<0",
+                "left2": "variance explained",
+                "op2": ">",
+                "right2": "median_varex",
+                "log_extra_info": "Reject if T2fitdiff_invsout_ICAmap_Tstat<0 & varex>median",
                 "log_extra_report": "",
                 "tag_ifTrue": "Unlikely BOLD"
             }
@@ -116,7 +133,7 @@
                 "ifTrue": "provisionalaccept",
                 "ifFalse": "provisionalreject",
                 "decide_comps": "unclassified",
-                "op": ">",
+                "op": ">=",
                 "left": "kappa",
                 "right": "kappa_elbow_kundu"
             },

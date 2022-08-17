@@ -261,19 +261,19 @@
                     "provisionalaccept",
                     "provisionalreject"
                 ],
-                "op": "<",
+                "op": ">",
                 "left": "d_table_score",
                 "right": "max_good_meanmetricrank"
             },
             "kwargs": {
                 "tag_ifTrue": "Low variance",
-                "op2": "<",
+                "op2": "<=",
                 "left2": "variance explained",
                 "right2": "varex_lower_thresh",
-                "op3": ">",
+                "op3": "<=",
                 "left3": "kappa",
                 "right3": "kappa_elbow_kundu",
-                "log_extra_info": "If low variance and good kappa & d_table_scores accept even if rho or other metrics are bad"
+                "log_extra_info": "If low variance, accept even if bad kappa & d_table_scores"
             }
         },
         {
@@ -365,14 +365,14 @@
                 "percentile_thresh": 25
             },
             "kwargs": {
+                "num_lowest_var_comps": "num_acc_guess",
                 "log_extra_info": "Calculuate a low variance threshold based on the 25th percentile variance component"
-            },
-            "_comment": "In the original kundu code, this is run only on the first num_acc_guess remaining component... probably sorted for the lowest variance. Adding that functionality here would be messy and unlikely to significantly alter results"
+            }
         },
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "ifTrue": "rejected",
+                "ifTrue": "accepted",
                 "ifFalse": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
@@ -394,7 +394,7 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "ifTrue": "rejected",
+                "ifTrue": "accepted",
                 "ifFalse": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
@@ -417,29 +417,16 @@
             "functionname": "manual_classify",
             "parameters": {
                 "new_classification": "accepted",
-                "decide_comps": "provisionalaccept"
-            },
-            "kwargs": {
-                "log_extra_info": "Anything that is still provisionalaccept should be accepted",
-                "log_extra_report": "",
-                "tag": "Likely BOLD"
-            }
-        },
-        {
-            "functionname": "manual_classify",
-            "parameters": {
-                "new_classification": "rejected",
                 "decide_comps": [
-                    "provisionalreject",
-                    "unclassified"
+                    "provisionalaccept",
+                    "provisionalreject"
                 ]
             },
             "kwargs": {
-                "log_extra_info": "Anything that is still provisionalreject should be rejected",
+                "log_extra_info": "Anything still provisional (accepted or rejected) should be accepted",
                 "log_extra_report": "",
-                "tag": "Unlikely BOLD"
-            },
-            "_comment": "According to a comment in the meica 2.7 code, nothing should be provisionalreject by this point."
+                "tag": "Likely BOLD"
+            }
         }
     ]
 }
