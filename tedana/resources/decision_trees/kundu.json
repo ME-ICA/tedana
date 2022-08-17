@@ -129,7 +129,8 @@
             "kwargs": {
                 "log_extra_info": "",
                 "log_extra_report": ""
-            }
+            },
+            "_comment": "In original code, this was followed by a step that turned everything not rejected to ignored (accepted) if there are no unclassified components left. At this point, components are either rejected or unclassified so it is not clear how that could ever happen"
         },
         {
             "functionname": "dec_left_op_right",
