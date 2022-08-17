@@ -1217,11 +1217,13 @@ def calc_varex_thresh(
                 num_lowest_var_comps = selector.cross_component_metrics[num_lowest_var_comps]
             else:
                 raise ValueError(
-                    f"{function_name_idx}: num_lowest_var_comps ( {num_lowest_var_comps}) is not in selector.cross_component_metrics"
+                    f"{function_name_idx}: num_lowest_var_comps ( {num_lowest_var_comps}) "
+                    "is not in selector.cross_component_metrics"
                 )
         if not isinstance(num_lowest_var_comps, int):
             raise ValueError(
-                f"{function_name_idx}: num_lowest_var_comps ( {num_lowest_var_comps}) is used as an array index and should be an integer"
+                f"{function_name_idx}: num_lowest_var_comps ( {num_lowest_var_comps}) "
+                "is used as an array index and should be an integer"
             )
 
     if custom_node_label:
@@ -1251,7 +1253,8 @@ def calc_varex_thresh(
                 selector.component_table.loc[comps2use, "variance explained"], percentile_thresh
             )
         else:
-            # Using only the first num_lowest_var_comps components sorted to include lowest variance
+            # Using only the first num_lowest_var_comps components sorted to include
+            # lowest variance
             if num_lowest_var_comps <= len(comps2use):
                 sorted_varex = np.sort(
                     (selector.component_table.loc[comps2use, "variance explained"]).to_numpy()
@@ -1261,7 +1264,8 @@ def calc_varex_thresh(
                 )
             else:
                 raise ValueError(
-                    f"{function_name_idx}: num_lowest_var_comps ({num_lowest_var_comps}) needs to be <= len(comps2use) ({len(comps2use)})"
+                    f"{function_name_idx}: num_lowest_var_comps ({num_lowest_var_comps})"
+                    f"needs to be <= len(comps2use) ({len(comps2use)})"
                 )
         selector.cross_component_metrics[varex_name] = outputs[varex_name]
 
