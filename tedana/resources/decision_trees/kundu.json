@@ -138,7 +138,7 @@
                 "ifTrue": "provisionalaccept",
                 "ifFalse": "provisionalreject",
                 "decide_comps": "unclassified",
-                "op": ">",
+                "op": ">=",
                 "left": "kappa",
                 "right": "kappa_elbow_kundu"
             },
