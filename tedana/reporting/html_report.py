@@ -135,21 +135,26 @@ def generate_report(io_generator, tr):
         of the suffix. If more than one metric has the prefix then the alphabetically
         first one will be used and a warning will be logged
         """
-        elbow_val = [val for key, val in cross_comp_metrics_dict.items() if elbow_prefix in key]
-        if not elbow_val or len(elbow_val) == 0:
+
+        elbow_keys = [k for k in cross_comp_metrics_dict.keys() if elbow_prefix in k]
+        elbow_keys.sort()
+        if len(elbow_keys) == 0:
             LGR.warning(
                 f"No {elbow_prefix} saved in cross_component_metrics so not displaying in report"
             )
             return None
-        elif len(elbow_val) > 1:
+        elif len(elbow_keys) == 1:
+            return cross_comp_metrics_dict[elbow_keys[0]]
+        else:
+            printed_key = elbow_keys[0]
+            unprinted_keys = elbow_keys[1:]
+
             LGR.warning(
                 "More than one key saved in cross_component_metrics begins with "
-                f"{elbow_prefix}. The lines on the plots will be for {elbow_val[0]} "
-                f"NOT {elbow_val[1:]}"
+                f"{elbow_prefix}. The lines on the plots will be for {printed_key} "
+                f"NOT {unprinted_keys}"
             )
-            return elbow_val[0]
-        else:
-            return elbow_val[0]  # Return a value, not a list with a single value
+            return cross_comp_metrics_dict[printed_key]
 
     kappa_elbow = get_elbow_val("kappa_elbow")
     rho_elbow = get_elbow_val("rho_elbow")
