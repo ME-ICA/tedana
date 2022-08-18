@@ -1,3 +1,4 @@
+import logging
 import os
 from os.path import join as opj
 from pathlib import Path
@@ -8,10 +9,8 @@ from bokeh import __version__ as bokehversion
 from bokeh import embed, layouts, models
 
 from tedana import __version__
-from tedana.reporting import dynamic_figures as df
 from tedana.io import load_json
-
-import logging
+from tedana.reporting import dynamic_figures as df
 
 LGR = logging.getLogger("GENERAL")
 
@@ -145,7 +144,8 @@ def generate_report(io_generator, tr):
         elif len(elbow_val) > 1:
             LGR.warning(
                 "More than one key saved in cross_component_metrics begins with "
-                f"{elbow_prefix}. Displaying the alphabetially first one in report"
+                f"{elbow_prefix}. The lines on the plots will be for {elbow_val[0]} "
+                f"NOT {elbow_val[1:]}"
             )
             return elbow_val[0]
         else:
