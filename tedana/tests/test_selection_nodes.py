@@ -518,6 +518,83 @@ def test_calc_kappa_rho_elbows_kundu():
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_upper_p"] is None
 
 
+def test_calc_median_smoke():
+    """Smoke tests for calc_median"""
+
+    selector = sample_selector()
+    decide_comps = "all"
+
+    # Outputs just the metrics used in this function {"variance explained"}
+    used_metrics = selection_nodes.calc_median(
+        selector,
+        decide_comps,
+        metric_name="variance explained",
+        median_label="varex",
+        only_used_metrics=True,
+    )
+    assert len(used_metrics - set(["variance explained"])) == 0
+
+    # Standard call to this function.
+    selector = selection_nodes.calc_median(
+        selector,
+        decide_comps,
+        metric_name="variance explained",
+        median_label="varex",
+        log_extra_report="report log",
+        log_extra_info="info log",
+        custom_node_label="custom label",
+    )
+    calc_cross_comp_metrics = {"median_varex"}
+    output_calc_cross_comp_metrics = set(
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["calc_cross_comp_metrics"]
+    )
+    # Confirming the intended metrics are added to outputs and they have non-zero values
+    assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["median_varex"] > 0
+
+    # repeating standard call and should make a warning because metric_varex already exists
+    selector = selection_nodes.calc_median(
+        selector, decide_comps, metric_name="variance explained", median_label="varex"
+    )
+    # Confirming the intended metrics are added to outputs and they have non-zero values
+    assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["median_varex"] > 0
+
+    # Log without running if no components of decide_comps are in the component table
+    selector = sample_selector()
+    selector = selection_nodes.calc_median(
+        selector,
+        decide_comps="NotAClassification",
+        metric_name="variance explained",
+        median_label="varex",
+    )
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["median_varex"] is None
+
+    # Crashes because median_label is not a string
+    with pytest.raises(ValueError):
+        selector = selection_nodes.calc_median(
+            selector,
+            decide_comps,
+            metric_name="variance explained",
+            median_label=5,
+            log_extra_report="report log",
+            log_extra_info="info log",
+            custom_node_label="custom label",
+        )
+
+    # Crashes because median_name is not a string
+    with pytest.raises(ValueError):
+        selector = selection_nodes.calc_median(
+            selector,
+            decide_comps,
+            metric_name=5,
+            median_label="varex",
+            log_extra_report="report log",
+            log_extra_info="info log",
+            custom_node_label="custom label",
+        )
+
+
 def test_dec_classification_doesnt_exist_smoke():
     """Smoke tests for dec_classification_doesnt_exist"""
 
@@ -588,8 +665,8 @@ def test_calc_varex_thresh_smoke():
     """Smoke tests for calc_varex_thresh"""
 
     # Standard use of this function requires some components to be "provisional accept"
-    selector = sample_selector(options="provclass")
-    decide_comps = "provisional accept"
+    selector = sample_selector()
+    decide_comps = "all"
 
     # Outputs just the metrics used in this function {"variance explained"}
     used_metrics = selection_nodes.calc_varex_thresh(
@@ -634,6 +711,75 @@ def test_calc_varex_thresh_smoke():
     assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_thresh"] > 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["perc"] == 90
+
+    # Standard call using num_lowest_var_comps as an integer
+    selector = selection_nodes.calc_varex_thresh(
+        selector,
+        decide_comps,
+        thresh_label="new_lower",
+        percentile_thresh=25,
+        num_lowest_var_comps=8,
+    )
+    calc_cross_comp_metrics = {"varex_new_lower_thresh", "new_lower_perc"}
+    output_calc_cross_comp_metrics = set(
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["calc_cross_comp_metrics"]
+    )
+    # Confirming the intended metrics are added to outputs and they have non-zero values
+    assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
+    assert (
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_new_lower_thresh"] > 0
+    )
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["new_lower_perc"] == 25
+
+    # Standard call using num_lowest_var_comps as a value in cross_component_metrics
+    selector.cross_component_metrics["num_acc_guess"] = 10
+    selector = selection_nodes.calc_varex_thresh(
+        selector,
+        decide_comps,
+        thresh_label="new_lower",
+        percentile_thresh=25,
+        num_lowest_var_comps="num_acc_guess",
+    )
+    calc_cross_comp_metrics = {"varex_new_lower_thresh", "new_lower_perc"}
+    output_calc_cross_comp_metrics = set(
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["calc_cross_comp_metrics"]
+    )
+    # Confirming the intended metrics are added to outputs and they have non-zero values
+    assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
+    assert (
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_new_lower_thresh"] > 0
+    )
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["new_lower_perc"] == 25
+
+    # Raise error if num_lowest_var_comps is a string, but not in cross_component_metrics
+    with pytest.raises(ValueError):
+        selector = selection_nodes.calc_varex_thresh(
+            selector,
+            decide_comps,
+            thresh_label="new_lower",
+            percentile_thresh=25,
+            num_lowest_var_comps="NotACrossCompMetric",
+        )
+
+    # Raise error if num_lowest_var_comps is not an integer
+    with pytest.raises(ValueError):
+        selector = selection_nodes.calc_varex_thresh(
+            selector,
+            decide_comps,
+            thresh_label="new_lower",
+            percentile_thresh=25,
+            num_lowest_var_comps=9.5,
+        )
+
+    # Raise error if num_lowest_var_comps is larger than the number of selected components
+    with pytest.raises(ValueError):
+        selector = selection_nodes.calc_varex_thresh(
+            selector,
+            decide_comps,
+            thresh_label="new_lower",
+            percentile_thresh=25,
+            num_lowest_var_comps=55,
+        )
 
     # Run warning logging code to see if any of the cross_component_metrics
     # already existed and would be over-written

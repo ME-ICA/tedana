@@ -144,7 +144,8 @@ def generate_report(io_generator, tr):
             return None
         elif len(elbow_val) > 1:
             LGR.warning(
-                f"More than one key saved in cross_component_metrics begins with {elbow_prefix}. Displaying the alphabetially first one in report"
+                "More than one key saved in cross_component_metrics begins with "
+                f"{elbow_prefix}. Displaying the alphabetially first one in report"
             )
             return elbow_val[0]
         else:
