@@ -8,7 +8,7 @@ import pandas as pd
 from scipy.stats import scoreatpercentile
 
 from tedana.metrics.dependence import generate_decision_table_score
-from tedana.selection.selection_utils import (  # get_new_meanmetricrank,
+from tedana.selection.selection_utils import (
     change_comptable_classifications,
     confirm_metrics_exist,
     get_extend_factor,
