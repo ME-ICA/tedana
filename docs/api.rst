@@ -116,6 +116,8 @@ API
    :no-members:
    :no-inherited-members:
 
+
+
 .. currentmodule:: tedana.selection
 
 .. autosummary::
@@ -123,8 +125,14 @@ API
    :template: function.rst
 
    tedana.selection.manual_selection
-   tedana.selection.kundu_selection_v2
    tedana.selection.kundu_tedpca
+
+.. autosummary:: tedana.selection.ComponentSelector
+   :toctree: generated/
+
+   tedana.selection.ComponentSelector
+
+
 
 
 .. _api_gscontrol_ref:
