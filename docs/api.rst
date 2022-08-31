@@ -130,9 +130,8 @@ API
 .. autosummary:: tedana.selection.ComponentSelector
    :toctree: generated/
 
-   tedana.selection.ComponentSelector
-
-
+   tedana.selection.ComponentSelector.ComponentSelector
+   tedana.selection.ComponentSelector.load_config
 
 
 .. _api_gscontrol_ref:
