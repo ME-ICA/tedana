@@ -715,7 +715,8 @@ def tedana_workflow(
     #     and rewritten if an existing mixing matrix is given as an input
     comp_names = comptable["Component"].values
     mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
-    io_generator.save_file(mixing_df, "ICA mixing tsv")
+    if not op.exists(io_generator.get_name("ICA mixing tsv")):
+        io_generator.save_file(mixing_df, "ICA mixing tsv")
     betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask_denoise), mask_denoise)
     io_generator.save_file(betas_oc, "z-scored ICA components img")
 
