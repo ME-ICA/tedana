@@ -15,8 +15,7 @@
         "d_table_score"
     ],
     "intermediate_classifications": [
-        "provisionalaccept",
-        "provisionalreject"
+        "provisionalaccept"
     ],
     "classification_tags": [
         "Likely BOLD",
@@ -122,38 +121,50 @@
             }
         },
         {
-            "functionname": "calc_kappa_rho_elbows_kundu",
+            "functionname": "calc_kappa_elbow",
             "parameters": {
-                "decide_comps": "unclassified"
+                "decide_comps": "all"
             },
             "kwargs": {
                 "log_extra_info": "",
                 "log_extra_report": ""
             },
-            "_comment": "In original code, this was followed by a step that turned everything not rejected to ignored (accepted) if there are no unclassified components left. At this point, components are either rejected or unclassified so it is not clear how that could ever happen"
+            "_comment": ""
+        },
+        {
+            "functionname": "calc_rho_elbow",
+            "parameters": {
+                "decide_comps": "all"
+            },
+            "kwargs": {
+                "subset_decide_comps": "unclassified",
+                "rho_elbow_type": "kundu",
+                "log_extra_info": "",
+                "log_extra_report": ""
+            },
+            "_comment": ""
         },
         {
             "functionname": "dec_left_op_right",
             "parameters": {
                 "ifTrue": "provisionalaccept",
-                "ifFalse": "provisionalreject",
+                "ifFalse": "nochange",
                 "decide_comps": "unclassified",
                 "op": ">=",
                 "left": "kappa",
                 "right": "kappa_elbow_kundu"
             },
             "kwargs": {
-                "log_extra_info": "Provisionally accept if kappa>elbow and provisionally reject if kappa<elbow",
+                "log_extra_info": "Provisionally accept if kappa>elbow",
                 "log_extra_report": ""
             }
         },
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "ifTrue": "provisionalreject",
+                "ifTrue": "unclassified",
                 "ifFalse": "nochange",
                 "decide_comps": [
-                    "provisionalreject",
                     "provisionalaccept"
                 ],
                 "op": ">",
@@ -161,7 +172,7 @@
                 "right": "rho_elbow_kundu"
             },
             "kwargs": {
-                "log_extra_info": "Provisionally reject if rho>elbow",
+                "log_extra_info": "Move any provisionally accepted components back to unclassified if rho>elbow",
                 "log_extra_report": ""
             }
         },
@@ -171,7 +182,6 @@
                 "new_classification": "accepted",
                 "decide_comps": [
                     "provisionalaccept",
-                    "provisionalreject",
                     "unclassified"
                 ],
                 "class_comp_exists": "provisionalaccept"
@@ -238,7 +248,7 @@
                 "ifFalse": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
-                    "provisionalreject"
+                    "unclassified"
                 ],
                 "op": ">",
                 "left": "d_table_score",
@@ -259,7 +269,7 @@
                 "ifFalse": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
-                    "provisionalreject"
+                    "unclassified"
                 ],
                 "op": ">",
                 "left": "d_table_score",
@@ -282,13 +292,13 @@
                 "new_classification": "accepted",
                 "decide_comps": [
                     "provisionalaccept",
-                    "provisionalreject"
+                    "unclassified"
                 ],
-                "class_comp_exists": "provisionalreject"
+                "class_comp_exists": "unclassified"
             },
             "kwargs": {
                 "tag_ifTrue": "Likely BOLD",
-                "log_extra_info": "If nothing left is provisionalreject, then accept all",
+                "log_extra_info": "If nothing left is unclassified, then accept all",
                 "log_extra_report": ""
             }
         },
@@ -297,7 +307,7 @@
             "parameters": {
                 "decide_comps": [
                     "provisionalaccept",
-                    "provisionalreject"
+                    "unclassified"
                 ]
             },
             "kwargs": {},
@@ -310,10 +320,10 @@
                 "ifFalse": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
-                    "provisionalreject"
+                    "unclassified"
                 ],
                 "op": ">",
-                "left": "d_table_score_node18",
+                "left": "d_table_score_node19",
                 "right": "conservative_guess"
             },
             "kwargs": {
@@ -337,10 +347,10 @@
                 "ifFalse": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
-                    "provisionalreject"
+                    "unclassified"
                 ],
                 "op": ">",
-                "left": "d_table_score_node18",
+                "left": "d_table_score_node19",
                 "right": "num_acc_guess"
             },
             "kwargs": {
@@ -359,7 +369,7 @@
             "parameters": {
                 "decide_comps": [
                     "provisionalaccept",
-                    "provisionalreject"
+                    "unclassified"
                 ],
                 "thresh_label": "new_lower",
                 "percentile_thresh": 25
@@ -376,10 +386,10 @@
                 "ifFalse": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
-                    "provisionalreject"
+                    "unclassified"
                 ],
                 "op": ">",
-                "left": "d_table_score_node18",
+                "left": "d_table_score_node19",
                 "right": "num_acc_guess"
             },
             "kwargs": {
@@ -398,7 +408,7 @@
                 "ifFalse": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
-                    "provisionalreject"
+                    "unclassified"
                 ],
                 "op": "<=",
                 "left": "kappa",
@@ -419,7 +429,7 @@
                 "new_classification": "accepted",
                 "decide_comps": [
                     "provisionalaccept",
-                    "provisionalreject"
+                    "unclassified"
                 ]
             },
             "kwargs": {
