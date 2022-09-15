@@ -26,3 +26,8 @@ exclude = '''
 [tool.isort]
 profile = "black"
 multi_line_output = 3
+
+[project.scripts]
+tedana = "tedana.workflows.tedana:_main"
+tedana_reclassify = "tedana.workflows.tedana_reclassify:main"
+

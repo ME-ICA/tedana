@@ -21,13 +21,12 @@ RefLGR = logging.getLogger("REFERENCES")
 
 
 def main():
-    from ..info import __version__
+    from tedana import __version__
 
     verstr = "tedana v{}".format(__version__)
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "registry",
-        dest="registry",
         help="File registry from a previous tedana run",
     )
     parser.add_argument(
