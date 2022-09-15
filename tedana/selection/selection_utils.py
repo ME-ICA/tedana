@@ -332,7 +332,7 @@ def confirm_metrics_exist(component_table, necessary_metrics, function_name=None
 
     If metrics_exist is False then raise an error and end the program
 
-    Notes
+    Note
     -----
     This doesn't check if there are data in each metric's column, just that
     the columns exist. Also, this requires identical strings for the names
@@ -562,50 +562,219 @@ def getelbow(arr, return_val=False):
         return k_min_ind
 
 
-def kappa_elbow_kundu(comptable, n_echos):
+def kappa_elbow_kundu(component_table, n_echos, comps2use=None):
     """
     Calculate an elbow for kappa using the approach originally in
     Prantik Kundu's MEICA v2.7 code
 
     Parameters
     ----------
-    comptable : (C x M) :obj:`pandas.DataFrame`
+    component_table : (C x M) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
         Only the 'kappa' column is used in this function
     n_echos: :obj:`int`
         The number of echos in the multi-echo data
+    comps2use: :obj:`list[int]`
+        A list of component indices used to calculate the elbow
+        default=None which means use all components
 
     Returns
     -------
     kappa_elbow: :obj:`float`
         The 'elbow' value for kappa values, above which components are considered
-        more likely to contain T2* weighted signals
-    """
-    # low kappa threshold
-    f05, _, f01 = getfbounds(n_echos)
-    # get kappa values for components below a significance threshold
-    kappas_nonsig = comptable.loc[comptable["kappa"] < f01, "kappa"]
+        more likely to contain T2* weighted signals.
+        minimum of kappa_allcomps_elbow and kappa_nonsig_elbow
+    kappa_allcomps_elbow: :obj:`float`
+        The elbow for kappa values using all components in comps2use
+    kappa_nonsig_elbow: :obj:`float`
+        The elbow for kappa values excluding kappa values above a threshold
+        None if there are fewer than 6 values remaining after thresholding
 
-    # Would an elbow from all Kappa values *ever* be lower than one from
+    Note
+    ----
+    The kappa elbow calculation in Kundu's original meica code calculates
+    one elbow using all components' kappa values, one elbow excluding kappa
+    values above a threshold, and then selects the lower of the two thresholds.
+    This is replicated by setting comps2use to None or by giving a list that
+    includes all component numbers. If comps2use includes indices for only a
+    subset of components then the kappa values from just those components
+    will be used for both elbow calculations.
+    """
+
+    # If comps2use is None then set to a list of all component numbers
+    if not comps2use:
+        comps2use = list(range(component_table.shape[0]))
+    kappas2use = component_table.loc[comps2use, "kappa"].to_numpy()
+
+    # low kappa threshold
+    _, _, f01 = getfbounds(n_echos)
+    # get kappa values for components below a significance threshold
+    kappas_nonsig = kappas2use[kappas2use < f01]
+
+    kappa_allcomps_elbow = getelbow(kappas2use, return_val=True)
+    # How often would an elbow from all Kappa values ever be lower than one from
     # a subset of lower values?
-    # Note: Only use the subset of values if it includes at least 5 data point
+    # Note: Only use the subset of values if it includes at least 6 data points
     #  That is enough to calculate an elbow of a curve
-    #  This is an arbitrary threshold not from the original meica as is
+    #  This is an arbitrary threshold not from the original meica and is
     #  worth reconsidering at some point
-    if kappas_nonsig.size > 5:
-        kappa_elbow = np.min(
-            (
-                getelbow(kappas_nonsig, return_val=True),
-                getelbow(comptable["kappa"], return_val=True),
-            )
-        )
+    if kappas_nonsig.size >= 6:
+        kappa_nonsig_elbow = getelbow(kappas_nonsig, return_val=True)
+
+        kappa_elbow = np.min((kappa_nonsig_elbow, kappa_allcomps_elbow))
         LGR.info(("Calculating kappa elbow based on min of all and nonsig components."))
     else:
-        kappa_elbow = getelbow(comptable["kappa"], return_val=True)
+        kappa_elbow = kappa_allcomps_elbow
+        kappa_nonsig_elbow = None
         LGR.info(("Calculating kappa elbow based on all components."))
 
-    return kappa_elbow
+    return kappa_elbow, kappa_allcomps_elbow, kappa_nonsig_elbow
+
+
+def rho_elbow_kundu_liberal(
+    component_table, n_echos, rho_elbow_type="kundu", comps2use=None, subset_comps2use=-1
+):
+    """
+    Calculate an elbow for rho using the approach originally in
+    Prantik Kundu's MEICA v2.7 code and with a slightly more
+    liberal threshold
+
+    Parameters
+    ----------
+    component_table : (C x M) :obj:`pandas.DataFrame`
+        Component metric table. One row for each component, with a column for
+        each metric. The index should be the component number.
+        Only the 'kappa' column is used in this function
+    n_echos: :obj:`int`
+        The number of echos in the multi-echo data
+    rho_elbow_type: :obj:`str`
+        The algorithm used to calculate the rho elbow. Current options are:
+        kundu (default): Method used by Kundu in MEICA v2.7. It is the mean between
+            the rho elbow calculated on all components and a subset of unclassificated
+            components with some extra quirks
+        liberal: Same as kundu but is the maximum of the two elbows, which will minimize
+            the number of components rejected by having values greater than the rho elbow
+    comps2use: :obj:`list[int]`
+        A list of component indices used to calculate the elbow
+        default=None which means use all components
+    subset_comps2use: :obj:`list[int]`
+        A list of component indices used to calculate the elbow
+        If None then only calculate a threshold using all components
+        default=-1 which means use only 'unclassified' components
+
+
+    Returns
+    -------
+    rho_elbow: :obj:`float`
+        The 'elbow' value for rho values, above which components are considered
+        more likely to contain S0 weighted signals
+    varex_upper_p: :obj:`float`
+        This is the median "variance explained" across components with kappa values
+        greater than the kappa_elbow calculated using all components
+        None if subset_comps2use is None
+    rho_allcomps_elbow: :obj:`float`
+        rho elbow calculated using all components in comps2use
+    rho_unclassified_elbow: :obj:`float`
+        rho elbow clculated using all components in subset_comps2use
+        None if subset_comps2use is None
+    elbow_f05: :obj:`float`
+        A significant threshold based on the number of echoes. Used
+        as part of the mean for rho_elbow_type=='kundu'
+
+    Note
+    ----
+    The rho elbow calculation in Kundu's original meica code calculates
+    one elbow using all components' rho values, one elbow using only
+    unclassified components (plus some quirky stuff with high variance components),
+    on threshold based on the number of echos, and takes the mean of those 3 values
+    To replicate the original code, comps2use should include indices for all components
+    and subset_comps2use should includes indices for unclassified components
+
+    Also, in practice, one of these elbows is sometimes extremely low and the
+    mean creates an overly agressive rho threshold (values >rho_elbow are more
+    likely rejected). The liberal threshold option takes the max of the two
+    elbows based on rho values. The assumption is that the thrshold on
+    unclassified components is always lower and can likely be excluded. Both
+    rho elbows are now logged so that it will be possible to confirm this with
+    data & make additional adjustments to this threshold
+    """
+
+    if rho_elbow_type not in ["kundu", "liberal"]:
+        raise ValueError(
+            f"rho_elbow_kundu_liberal: rho_elbow_type must be 'kundu' or 'liberal'"
+            f"It is {rho_elbow_type} "
+        )
+
+    # If comps2use is None then set to a list of all component numbers
+    if not comps2use:
+        comps2use = list(range(component_table.shape[0]))
+
+    # If subset_comps2use is -1 then set to a list of all unclassified components
+    if subset_comps2use == -1:
+        subset_comps2use = component_table.index[
+            component_table["classification"] == "unclassified"
+        ].tolist()
+
+    # One rho elbow threshold set just on the number of echoes
+    elbow_f05, _, _ = getfbounds(n_echos)
+
+    # One rho elbow threshold set using all componets in comps2use
+    rhos_comps2use = component_table.loc[comps2use, "rho"].to_numpy()
+    rho_allcomps_elbow = getelbow(rhos_comps2use, return_val=True)
+
+    # low kappa threshold
+    # get kappa values for components below a significance threshold
+    # kappas_nonsig = kappas2use[kappas2use < f01]
+
+    # Only calculate
+    if not subset_comps2use:
+        LGR.warning(
+            "No unclassified components for rho elbow calculation only elbow based "
+            "on all components is used"
+        )
+        varex_upper_p = None
+        rho_unclassified_elbow = None
+        rho_elbow = rho_allcomps_elbow
+
+    else:
+        # Calculating varex_upper_p
+        # Upper limit for variance explained is median across components with high
+        # Kappa values. High Kappa is defined as Kappa above Kappa elbow.
+        kappa_comps2use = component_table.loc[comps2use, "kappa"]
+        high_kappa_idx = list(
+            kappa_comps2use.index[
+                kappa_comps2use
+                > getelbow(component_table.loc[comps2use, "kappa"], return_val=True)
+            ]
+        )
+        varex_upper_p = np.median(
+            component_table.loc[
+                high_kappa_idx,
+                "variance explained",
+            ]
+        )
+
+        # Removing large gaps in variance in the subset_comps2use before
+        # calculating this subset elbow threshold
+        for i_loop in range(3):
+            temp_comptable = component_table.loc[subset_comps2use].sort_values(
+                by=["variance explained"], ascending=False
+            )
+            diff_vals = temp_comptable["variance explained"].diff(-1)
+            diff_vals = diff_vals.fillna(0)
+            subset_comps2use = temp_comptable.loc[diff_vals < varex_upper_p].index.values
+
+        rho_unclassified_elbow = getelbow(
+            component_table.loc[subset_comps2use, "rho"], return_val=True
+        )
+
+        if rho_elbow_type == "kundu":
+            rho_elbow = np.mean((rho_allcomps_elbow, rho_unclassified_elbow, elbow_f05))
+        else:  # rho_elbow_type == 'liberal'
+            rho_elbow = np.maximum(rho_allcomps_elbow, rho_unclassified_elbow)
+
+    return rho_elbow, varex_upper_p, rho_allcomps_elbow, rho_unclassified_elbow, elbow_f05
 
 
 def get_extend_factor(n_vols=None, extend_factor=None):

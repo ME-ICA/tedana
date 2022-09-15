@@ -118,14 +118,28 @@
             }
         },
         {
-            "functionname": "calc_kappa_rho_elbows_kundu",
+            "functionname": "calc_kappa_elbow",
             "parameters": {
-                "decide_comps": "unclassified"
+                "decide_comps": "all"
             },
             "kwargs": {
                 "log_extra_info": "",
                 "log_extra_report": ""
-            }
+            },
+            "_comment": ""
+        },
+        {
+            "functionname": "calc_rho_elbow",
+            "parameters": {
+                "decide_comps": "all"
+            },
+            "kwargs": {
+                "subset_decide_comps": "unclassified",
+                "rho_elbow_type": "liberal",
+                "log_extra_info": "",
+                "log_extra_report": ""
+            },
+            "_comment": ""
         },
         {
             "functionname": "dec_left_op_right",
@@ -170,7 +184,7 @@
                 ],
                 "op": ">",
                 "left": "rho",
-                "right": "rho_elbow_kundu"
+                "right": "rho_elbow_liberal"
             },
             "kwargs": {
                 "log_extra_info": "rho>elbow",
