@@ -1245,16 +1245,31 @@ def calc_varex_thresh(
             f"{perc_name} already calculated. Overwriting previous value in {function_name_idx}"
         )
 
+    comps2use = selectcomps2use(selector, decide_comps)
+    confirm_metrics_exist(
+        selector.component_table, outputs["used_metrics"], function_name=function_name_idx
+    )
+
     if num_lowest_var_comps is not None:
         if isinstance(num_lowest_var_comps, str):
             if num_lowest_var_comps in selector.cross_component_metrics:
                 num_lowest_var_comps = selector.cross_component_metrics[num_lowest_var_comps]
+            elif not comps2use:
+                # Note: It is possible the comps2use requested for this function
+                #  is not empty, but the comps2use requested to calcualte
+                # {num_lowest_var_comps} was empty. Given the way this node is
+                # used, that's unlikely, but worth a comment.
+                LGR.info(
+                    f"{function_name_idx}:  num_lowest_var_comps ( {num_lowest_var_comps}) "
+                    "is not in selector.cross_component_metrics, but no components with "
+                    f"{decide_comps} remain by this node so nothing happens"
+                )
             else:
                 raise ValueError(
                     f"{function_name_idx}: num_lowest_var_comps ( {num_lowest_var_comps}) "
                     "is not in selector.cross_component_metrics"
                 )
-        if not isinstance(num_lowest_var_comps, int):
+        if not isinstance(num_lowest_var_comps, int) and comps2use:
             raise ValueError(
                 f"{function_name_idx}: num_lowest_var_comps ( {num_lowest_var_comps}) "
                 "is used as an array index and should be an integer"
@@ -1269,11 +1284,6 @@ def calc_varex_thresh(
         LGR.info(log_extra_info)
     if log_extra_report:
         RepLGR.info(log_extra_report)
-
-    comps2use = selectcomps2use(selector, decide_comps)
-    confirm_metrics_exist(
-        selector.component_table, outputs["used_metrics"], function_name=function_name_idx
-    )
 
     if not comps2use:
         log_decision_tree_step(
@@ -1650,6 +1660,11 @@ def calc_revised_meanmetricrank_guesses(
     unclear how much the relative magnitudes will change and when the
     recalculation will affect results, but this was in the original
     kundu tree and will be replicated here to allow for comparisions
+
+    This also hard-codes for kappa_elbow_kundu and rho_elbow_kundu in
+    the cross component metrics. If someone decides to keep using
+    this function with other elbow thresholds, the code would need to
+    be altered to account for that
     """
 
     function_name_idx = f"Step {selector.current_node_idx}: calc_revised_meanmetricrank_guesses"
@@ -1702,12 +1717,24 @@ def calc_revised_meanmetricrank_guesses(
             "cause problems since these are only calculated on a subset of components"
         )
 
+    comps2use = selectcomps2use(selector, decide_comps)
+    confirm_metrics_exist(
+        selector.component_table, outputs["used_metrics"], function_name=function_name_idx
+    )
+
     for xcompmetric in outputs["used_cross_component_metrics"]:
         if xcompmetric not in selector.cross_component_metrics:
-            raise ValueError(
-                f"{xcompmetric} not in cross_component_metrics. "
-                f"It needs to be calculated before {function_name_idx}"
-            )
+            if not comps2use:
+                LGR.info(
+                    f"{function_name_idx}: {xcompmetric} is not in "
+                    "selector.cross_component_metrics, but no components with "
+                    f"{decide_comps} remain by this node so nothing happens"
+                )
+            else:
+                raise ValueError(
+                    f"{xcompmetric} not in cross_component_metrics. "
+                    f"It needs to be calculated before {function_name_idx}"
+                )
 
     if custom_node_label:
         outputs["node_label"] = custom_node_label

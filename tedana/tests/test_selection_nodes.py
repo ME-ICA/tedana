@@ -812,6 +812,22 @@ def test_calc_varex_thresh_smoke():
             num_lowest_var_comps="NotACrossCompMetric",
         )
 
+    # Do not raise error if num_lowest_var_comps is a string & not in cross_component_metrics,
+    # but decide_comps doesn't select any components
+    selector = selection_nodes.calc_varex_thresh(
+        selector,
+        decide_comps="NoComponents",
+        thresh_label="new_lower",
+        percentile_thresh=25,
+        num_lowest_var_comps="NotACrossCompMetric",
+    )
+    assert (
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_new_lower_thresh"]
+        is None
+    )
+    # percentile_thresh doesn't depend on components and is assigned
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["new_lower_perc"] == 25
+
     # Raise error if num_lowest_var_comps is not an integer
     with pytest.raises(ValueError):
         selector = selection_nodes.calc_varex_thresh(
@@ -833,7 +849,7 @@ def test_calc_varex_thresh_smoke():
         )
 
     # Run warning logging code to see if any of the cross_component_metrics
-    # already existed and would be over-written
+    # already exists and would be over-written
     selector = sample_selector(options="provclass")
     selector.cross_component_metrics["varex_upper_thresh"] = 1
     selector.cross_component_metrics["upper_perc"] = 1
@@ -1124,3 +1140,16 @@ def test_calc_revised_meanmetricrank_guesses_smoke():
         selector = selection_nodes.calc_revised_meanmetricrank_guesses(
             selector, ["provisional accept", "provisional reject", "unclassified"]
         )
+
+    # Do not raise error if kappa_elbow_kundu isn't in cross_component_metrics
+    # and there are no components in decide_comps
+    selector = sample_selector("provclass")
+    selector.cross_component_metrics["rho_elbow_kundu"] = 15.2
+
+    selector = selection_nodes.calc_revised_meanmetricrank_guesses(
+        selector, decide_comps="NoComponents"
+    )
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["num_acc_guess"] is None
+    assert (
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["conservative_guess"] is None
+    )
