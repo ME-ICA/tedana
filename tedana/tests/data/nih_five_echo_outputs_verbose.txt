@@ -9,9 +9,13 @@ desc-ICA_components.nii.gz
 desc-ICA_decomposition.json
 desc-tedana_metrics.json
 desc-tedana_metrics.tsv
+desc-ICAS0_stat-F_statmap.nii.gz
+desc-ICAT2_stat-F_statmap.nii.gz
 desc-ICA_mixing.tsv
 desc-ICA_stat-z_components.nii.gz
 desc-PCAAveragingWeights_components.nii.gz
+desc-PCAS0_stat-F_statmap.nii.gz
+desc-PCAT2_stat-F_statmap.nii.gz
 desc-PCA_decomposition.json
 desc-PCA_metrics.json
 desc-PCA_metrics.tsv
