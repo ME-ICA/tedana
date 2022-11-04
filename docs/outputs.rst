@@ -101,6 +101,8 @@ echo-[echo]_desc-[PCA|ICA]S0ModelPredictions_components.nii.gz  Component- and v
                                                                 separated by echo.
 desc-[PCA|ICA]AveragingWeights_components.nii.gz                Component-wise averaging weights for metric
                                                                 calculation.
+desc-[PCA|ICA]S0_stat-F_statmap.nii.gz                          F-statistic map for each component, for the S0 model.
+desc-[PCA|ICA]T2_stat-F_statmap.nii.gz                          F-statistic map for each component, for the T2 model.
 desc-optcomPCAReduced_bold.nii.gz                               Optimally combined data after dimensionality
                                                                 reduction with PCA. This is the input to the ICA.
 echo-[echo]_desc-Accepted_bold.nii.gz                           High-Kappa time series for echo number ``echo``
