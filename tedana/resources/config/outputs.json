@@ -75,11 +75,11 @@
         "orig": "pca_weights",
         "bidsv1.5.0": "desc-PCAAveragingWeights_components"
     },
-    "PCA component T2 img": {
+    "PCA component F-T2 img": {
         "orig": "pca_FT2",
         "bidsv1.5.0": "desc-PCAT2_stat-F_statmap"
     },
-    "PCA component S0 img": {
+    "PCA component F-S0 img": {
         "orig": "pca_FS0",
         "bidsv1.5.0": "desc-PCAS0_stat-F_statmap"
     },
@@ -103,11 +103,11 @@
         "orig": "ica_weights",
         "bidsv1.5.0": "desc-ICAAveragingWeights_components"
     },
-    "ICA component T2 img": {
+    "ICA component F-T2 img": {
         "orig": "ica_FT2",
         "bidsv1.5.0": "desc-ICAT2_stat-F_statmap"
     },
-    "ICA component S0 img": {
+    "ICA component F-S0 img": {
         "orig": "ica_FS0",
         "bidsv1.5.0": "desc-ICAS0_stat-F_statmap"
     },
