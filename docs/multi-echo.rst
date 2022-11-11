@@ -474,14 +474,6 @@ we recommend using your first echo time, as this will exhibit the least dropout.
 If your first echo time is very short, and exhibits poor gray/white contrast, then a later echo time may be preferable.
 In any case, you should calculate the spatial transform from just one of your echoes and apply it across all of them.
 
-.. important::
-
-    As noted by Dr. Logan Dowdle in
-    `this NeuroStars thread <https://neurostars.org/t/multi-echo-pepolar-fieldmaps-bids-spec-sdcflows-grayzone/23933/5>`_,
-    ultra-high resolution fMRI, the differences in distortion across echoes can become noticeable.
-    This shouldn't be a concern for the majority of multi-echo fMRI studies,
-    but is worth investigating for high resolution acquisitions.
-
 
 .. _fMRIPrep: https://fmriprep.readthedocs.io
 .. _afni_proc.py: https://afni.nimh.nih.gov/pub/dist/doc/program_help/afni_proc.py.html

@@ -140,8 +140,5 @@ you should use the first echo time's images to generate the undistortion transfo
 as long as that first echo has sufficient gray/white constrast to be useful for alignment
 (in which case, use the earliest echo that does have good contrast).
 
-One edge case that will become more common over time is ultra-high resolution multi-echo fMRI.
-In ultra-high resolution data (voxels <1 mm3), minute differences in distortion can become meaningful.
-
 For context, please see
 `this NeuroStars thread <https://neurostars.org/t/multi-echo-pepolar-fieldmaps-bids-spec-sdcflows-grayzone/23933/5>`_.
