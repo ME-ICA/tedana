@@ -28,8 +28,7 @@ class CustomEncoder(json.JSONEncoder):
     """Convert some types because of JSON serialization and numpy
     incompatibilities
 
-    # noqa: E501
-    See here: https://stackoverflow.com/questions/50916422/python-typeerror-object-of-type-int64-is-not-json-serializable/50916741
+    See here: https://stackoverflow.com/q/50916422/2589328
     """
 
     def default(self, obj):
