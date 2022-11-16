@@ -7,7 +7,7 @@ tedana = "tedana.workflows.tedana:_main"
 tedana_reclassify = "tedana.workflows.tedana_reclassify:main"
 
 [build-system]
-requires = ["setuptools==58.2.0", "wheel"]
+requires = ["setuptools>=64", "wheel"]
 
 [tool.black]
 line-length = 99
