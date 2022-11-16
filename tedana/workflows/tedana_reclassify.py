@@ -365,9 +365,9 @@ def post_tedana(
 
     # Collect BibTeX entries for cited papers
     references = get_description_references(report)
-    
+
     with open(bibtex_file, "w") as fo:
-    	fo.write(references)
+        fo.write(references)
 
     if not no_reports:
         LGR.info("Making figures folder with static component maps and timecourse plots.")
