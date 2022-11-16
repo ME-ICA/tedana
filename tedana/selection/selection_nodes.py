@@ -13,11 +13,10 @@ from tedana.selection.selection_utils import (
     confirm_metrics_exist,
     get_extend_factor,
     kappa_elbow_kundu,
-    rho_elbow_kundu_liberal,
     log_decision_tree_step,
+    rho_elbow_kundu_liberal,
     selectcomps2use,
 )
-
 
 # from scipy import stats
 
