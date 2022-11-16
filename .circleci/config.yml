@@ -388,6 +388,7 @@ workflows:
       - unittest_38
       - unittest_39
       - unittest_310
+      - unittest_311
       - merge_coverage:
           requires:
             - unittest_36
