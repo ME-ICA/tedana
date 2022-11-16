@@ -159,7 +159,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py310-v1-{{ checksum "tedana/info.py" }}
+          key: conda-py310-v1-{{ checksum "setup.cfg" }}
       - run:
           name: Generate environment
           command: |
@@ -178,13 +178,48 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py310
       - save_cache:
-          key: conda-py310-v1-{{ checksum "tedana/info.py" }}
+          key: conda-py310-v1-{{ checksum "setup.cfg" }}
           paths:
               - /opt/conda/envs/tedana_py310
       - persist_to_workspace:
           root: /tmp
           paths:
               - src/coverage/.coverage.py310
+
+  unittest_311:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py311-v1-{{ checksum "setup.cfg" }}
+      - run:
+          name: Generate environment
+          command: |
+            apt-get update
+            apt-get install -yqq make
+            if [ ! -d /opt/conda/envs/tedana_py311 ]; then
+              conda create -yq -n tedana_py310 python=3.11
+              source activate tedana_py311
+              pip install .[tests]
+            fi
+      - run:
+          name: Running unit tests
+          command: |
+            source activate tedana_py311
+            make unittest
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py311
+      - save_cache:
+          key: conda-py311-v1-{{ checksum "setup.cfg" }}
+          paths:
+              - /opt/conda/envs/tedana_py311
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+              - src/coverage/.coverage.py311
+
 
   style_check:
     docker:
