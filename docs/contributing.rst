@@ -437,7 +437,6 @@ and we're good to go!
 .. _`tedana OSF project`: https://osf.io/bpe8h/
 .. _git: https://git-scm.com/
 .. _`git pro`: https://git-scm.com/book/en/v2
-.. _repository: https://github.com/ME-ICA/tedana
 .. _Fork: https://help.github.com/en/github/getting-started-with-github/fork-a-repo
 .. _`pull request`: https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request
 .. _GitKraken: https://www.gitkraken.com/

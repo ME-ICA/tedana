@@ -10,7 +10,26 @@ FAQ
 [tedana] How do I use tedana with fMRIPrepped data?
 ***************************************************
 
-`fMRIPrep`_ outputs the preprocessed, optimally-combined fMRI data, rather than echo-wise data.
+fMRIPrep versions >= 21.0.0
+===========================
+
+Starting with version 21.0.0, `fMRIPrep`_ added the ``--me-output-echos`` argument,
+which outputs individual echoes after slice timing, motion correction, and distortion correction have been performed.
+These preprocessed echoes can be denoised with tedana,
+after which warps written out by fMRIPrep can be applied to transform the denoised data to standard space.
+
+As the fMRIPrep outputs become more formalized,
+it is possible to write functions that can select the appropriate derivative files and run tedana on them.
+Below is one example of such a function.
+
+.. raw:: html
+
+    <script src="https://gist.github.com/jbdenniso/73ec8281229d584721563a41aba410cf.js"></script>
+
+fMRIPrep versions < 21.0.0
+==========================
+
+Prior to version 21.0.0, `fMRIPrep`_ outputted the preprocessed, optimally-combined fMRI data, rather than echo-wise data.
 This means that you cannot use the standard fMRIPrep outputs with tedana for multi-echo denoising.
 
 However, as long as you still have access to fMRIPrep's working directory,
@@ -24,18 +43,23 @@ Unfortunately, fMRIPrep's working directory structure is not stable across versi
 so writing code to grab the relevant files from the working directory is a bit of a moving target.
 Nevertheless, we have some code (thanks to Julio Peraza) that works for version 20.2.1.
 
-.. warning::
-    We will try to keep the following gist up-to-date, but there is no guarantee that it will work for a given version.
-    Use it with caution!
-
-    If you do find that the gist isn't working for an fMRIPrep version >= 20.2.1,
-    please comment on `Issue #717 <https://github.com/ME-ICA/tedana/issues/717>`_ (even if it's closed)
-    and we will take a look at the problem.
-
 .. raw:: html
 
     <script src="https://gist.github.com/tsalo/83828e0c1e9009f3cbd82caed888afba.js"></script>
 
+Warping scanner-space fMRIPrep outputs to standard space
+========================================================
+
+Here is a basic approach to normalizing scanner-space tedana-denoised data created from fMRIPrep outputs,
+using ANTS's antsApplyTransforms tool.
+The actual filenames of fMRIPrep derivatives depend on the filenames in the BIDS dataset
+(e.g., the name of the task, run numbers, etc.),
+but in this example we chose to use the simple example of "sub-01" and "task-rest".
+The standard space template in this example is "MNI152NLin2009cAsym", but will depend on fMRIPrep settings in practice.
+
+.. raw:: html
+
+    <script src="https://gist.github.com/tsalo/f9f38e9aba901e99ddb720465bb5222b.js"></script>
 
 ************************************
 [tedana] ICA has failed to converge.
@@ -72,18 +96,6 @@ the v3.2 code, with the goal of revisiting it when ``tedana`` is more stable.
 
 Anyone interested in using v3.2 may compile and install an earlier release (<=0.0.4) of ``tedana``.
 
-
-*************************************************
-[tedana] What is the warning about ``duecredit``?
-*************************************************
-
-``duecredit`` is a python package that is used, but not required by ``tedana``.
-These warnings do not affect any of the processing within the ``tedana``.
-To avoid this warning, you can install ``duecredit`` with ``pip install duecredit``.
-For more information about ``duecredit`` and concerns about
-the citation and visibility of software or methods, visit the `duecredit`_ GitHub repository.
-
-.. _duecredit: https://github.com/duecredit/duecredit
 
 .. _here: https://bitbucket.org/prantikk/me-ica/commits/906bd1f6db7041f88cd0efcac8a74074d673f4f5
 

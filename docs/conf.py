@@ -20,6 +20,8 @@
 import os
 import sys
 
+import sphinx_rtd_theme
+
 sys.path.insert(0, os.path.abspath("sphinxext"))
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 
@@ -50,6 +52,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinxarg.ext",
+    "sphinxcontrib.bibtex",  # for foot-citations
 ]
 
 import sphinx
@@ -127,8 +130,6 @@ napoleon_use_rtype = False
 # a list of builtin themes.
 #
 # installing theme package
-import sphinx_rtd_theme
-
 html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -153,6 +154,13 @@ def setup(app):
 
 html_favicon = "_static/tedana_favicon.png"
 
+# -----------------------------------------------------------------------------
+# sphinxcontrib-bibtex
+# -----------------------------------------------------------------------------
+bibtex_bibfiles = ["../tedana/resources/references.bib"]
+bibtex_style = "unsrt"
+bibtex_reference_style = "author_year"
+bibtex_footbibliography_header = ""
 
 # -- Options for HTMLHelp output ------------------------------------------
 
@@ -161,14 +169,14 @@ htmlhelp_basename = "tedanadoc"
 
 # The following is used by sphinx.ext.linkcode to provide links to github
 linkcode_resolve = make_linkcode_resolve(
-    "tedana", "https://github.com/me-ica/" "tedana/blob/{revision}/" "{package}/{path}#L{lineno}"
+    "tedana", "https://github.com/me-ica/tedana/blob/{revision}/{package}/{path}#L{lineno}"
 )
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/reference/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "matplotlib": ("https://matplotlib.org/", None),
     "nibabel": ("https://nipy.org/nibabel/", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),

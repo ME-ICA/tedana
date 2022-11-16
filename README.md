@@ -2,14 +2,15 @@
 
 [![Latest Version](https://img.shields.io/pypi/v/tedana.svg)](https://pypi.python.org/pypi/tedana/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/tedana.svg)](https://pypi.python.org/pypi/tedana/)
-[![DOI](https://zenodo.org/badge/110845855.svg)](https://zenodo.org/badge/latestdoi/110845855)
+[![JOSS DOI](https://joss.theoj.org/papers/10.21105/joss.03669/status.svg)](https://doi.org/10.21105/joss.03669)
+[![Zenodo DOI](https://zenodo.org/badge/110845855.svg)](https://zenodo.org/badge/latestdoi/110845855)
 [![License](https://img.shields.io/badge/License-LGPL%202.0-blue.svg)](https://opensource.org/licenses/LGPL-2.1)
 [![CircleCI](https://circleci.com/gh/ME-ICA/tedana.svg?style=shield)](https://circleci.com/gh/ME-ICA/tedana)
 [![Documentation Status](https://readthedocs.org/projects/tedana/badge/?version=latest)](http://tedana.readthedocs.io/en/latest/?badge=latest)
 [![Codecov](https://codecov.io/gh/me-ica/tedana/branch/main/graph/badge.svg)](https://codecov.io/gh/me-ica/tedana)
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/ME-ICA/tedana.svg)](http://isitmaintained.com/project/ME-ICA/tedana "Average time to resolve an issue")
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/ME-ICA/tedana.svg)](http://isitmaintained.com/project/ME-ICA/tedana "Percentage of issues still open")
-[![Join the chat at https://gitter.im/ME-ICA/tedana](https://badges.gitter.im/ME-ICA/tedana.svg)](https://gitter.im/ME-ICA/tedana?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat on Mattermost](https://img.shields.io/badge/Chat%20on-Mattermost-purple.svg)](https://mattermost.brainhack.org/brainhack/channels/tedana)
 [![Join our tinyletter mailing list](https://img.shields.io/badge/receive-our%20newsletter%20❤%EF%B8%8F-blueviolet.svg)](https://tinyletter.com/tedana-devs)
 [![All Contributors](https://img.shields.io/badge/all_contributors-20-orange.svg?style=flat-square)](#contributors)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -22,6 +23,26 @@ An important distinction is that while the ME-ICA pipeline originally performed 
 ![http://tedana.readthedocs.io/](https://user-images.githubusercontent.com/7406227/40031156-57b7cbb8-57bc-11e8-8c51-5b29f2e86a48.png)
 
 More information and documentation can be found at https://tedana.readthedocs.io.
+
+## Citing `tedana`
+
+If you use `tedana`, please cite the following papers, as well as our [most recent Zenodo release](https://zenodo.org/badge/latestdoi/110845855):
+
+- DuPre, E. M., Salo, T., Ahmed, Z., Bandettini, P. A., Bottenhorn, K. L.,
+  Caballero-Gaudes, C., Dowdle, L. T., Gonzalez-Castillo, J., Heunis, S.,
+  Kundu, P., Laird, A. R., Markello, R., Markiewicz, C. J., Moia, S.,
+  Staden, I., Teves, J. B., Uruñuela, E., Vaziri-Pashkam, M.,
+  Whitaker, K., & Handwerker, D. A. (2021).
+  [TE-dependent analysis of multi-echo fMRI with tedana.](https://doi.org/10.21105/joss.03669)
+  _Journal of Open Source Software_, _6(66)_, 3669.
+  doi:10.21105/joss.03669.
+- Kundu, P., Inati, S. J., Evans, J. W., Luh, W. M., & Bandettini, P. A. (2011).
+  [Differentiating BOLD and non-BOLD signals in fMRI time series using multi-echo EPI.](https://doi.org/10.1016/j.neuroimage.2011.12.028)
+  _NeuroImage_, _60_, 1759-1770.
+- Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E., Inati, S. J.,
+  Saad, Z. S., Bandettini, P. A., & Bullmore, E. T. (2013).
+  [Integrated strategy for improving functional connectivity mapping using multiecho fMRI.](https://doi.org/10.1073/pnas.1301725110)
+  _Proceedings of the National Academy of Sciences_, _110_, 16187-16192.
 
 ## Installation
 
@@ -97,13 +118,13 @@ Want to learn more about our plans for developing ``tedana``?
 Have a question, comment, or suggestion?
 Open or comment on one of [our issues](https://github.com/ME-ICA/tedana/issues)!
 
-If you're not sure where to begin, feel free to pop into [Gitter](https://gitter.im/ME-ICA/tedana) and introduce yourself!
+If you're not sure where to begin, feel free to pop into [Mattermost](https://mattermost.brainhack.org/brainhack/channels/tedana) and introduce yourself!
 We will be happy to help you find somewhere to get started.
 
 If you don't want to get lots of notifications, we send out newsletters approximately once per month though our TinyLetter mailing list.
 You can view the [previous newsletters](https://tinyletter.com/tedana-devs/archive) and/or sign up to receive future ones at [https://tinyletter.com/tedana-devs](https://tinyletter.com/tedana-devs).
 
-We ask that all contributors to ``tedana`` across all project-related spaces (including but not limited to: GitHub, Gitter, and project emails), adhere to our [code of conduct](https://github.com/ME-ICA/tedana/blob/main/CODE_OF_CONDUCT.md).
+We ask that all contributors to ``tedana`` across all project-related spaces (including but not limited to: GitHub, Mattermost, and project emails), adhere to our [code of conduct](https://github.com/ME-ICA/tedana/blob/main/CODE_OF_CONDUCT.md).
 
 ## Contributors
 
@@ -140,6 +161,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/aykhojandi"><img src="https://avatars1.githubusercontent.com/u/38105040?v=4?s=100" width="100px;" alt=""/><br /><sub><b>aykhojandi</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=aykhojandi" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/smoia"><img src="https://avatars3.githubusercontent.com/u/35300580?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Stefano Moia</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=smoia" title="Code">💻</a> <a href="https://github.com/ME-ICA/tedana/pulls?q=is%3Apr+reviewed-by%3Asmoia" title="Reviewed Pull Requests">👀</a> <a href="https://github.com/ME-ICA/tedana/commits?author=smoia" title="Documentation">📖</a></td>
     <td align="center"><a href="https://www.notzaki.com/"><img src="https://avatars1.githubusercontent.com/u/9019681?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Zaki A.</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/issues?q=author%3AnotZaki" title="Bug reports">🐛</a> <a href="https://github.com/ME-ICA/tedana/commits?author=notZaki" title="Code">💻</a> <a href="https://github.com/ME-ICA/tedana/commits?author=notZaki" title="Documentation">📖</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/manfredg"><img src="https://avatars.githubusercontent.com/u/1173430?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Manfred G Kitzbichler</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=manfredg" title="Code">💻</a></td>
   </tr>
 </table>
 

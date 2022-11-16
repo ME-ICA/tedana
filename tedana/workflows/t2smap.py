@@ -15,7 +15,6 @@ from tedana.workflows.parser_utils import is_valid_file
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 def _get_parser():
@@ -161,6 +160,8 @@ def t2smap_workflow(
     """
     Estimate T2 and S0, and optimally combine data across TEs.
 
+    Please remember to cite :footcite:t:`dupre2021te`.
+
     Parameters
     ----------
     data : :obj:`str` or :obj:`list` of :obj:`str`
@@ -219,6 +220,10 @@ def t2smap_workflow(
                                   will have a NaN.
     desc-optcom_bold.nii.gz       Optimally combined timeseries.
     ============================= =================================================
+
+    References
+    ----------
+    .. footbibliography::
     """
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):

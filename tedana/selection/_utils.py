@@ -7,7 +7,6 @@ import numpy as np
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 def clean_dataframe(comptable):
@@ -109,9 +108,9 @@ def getelbow(arr, return_val=False):
     coords = np.array([np.arange(n_components), arr])
     p = coords - coords[:, 0].reshape(2, 1)
     b = p[:, -1]
-    b_hat = np.reshape(b / np.sqrt((b ** 2).sum()), (2, 1))
+    b_hat = np.reshape(b / np.sqrt((b**2).sum()), (2, 1))
     proj_p_b = p - np.dot(b_hat.T, p) * np.tile(b_hat, (1, n_components))
-    d = np.sqrt((proj_p_b ** 2).sum(axis=0))
+    d = np.sqrt((proj_p_b**2).sum(axis=0))
     k_min_ind = d.argmax()
 
     if return_val:
