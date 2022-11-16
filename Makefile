@@ -23,9 +23,6 @@ three-echo:
 four-echo:
 	@py.test --log-cli-level=INFO --cov-append --cov-report term-missing --cov=tedana -k test_integration_four_echo tedana/tests/test_integration.py
 
-four-echo:
-	@py.test --cov-append --cov-report term-missing --cov=tedana -k test_integration_four_echo tedana/tests/test_integration.py
-
 five-echo:
 	@py.test --log-cli-level=INFO --cov-append --cov-report term-missing --cov=tedana -k test_integration_five_echo tedana/tests/test_integration.py
 
