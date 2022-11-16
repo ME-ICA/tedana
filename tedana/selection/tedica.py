@@ -11,7 +11,6 @@ from tedana.selection.selection_utils import clean_dataframe
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 def manual_selection(comptable, acc=None, rej=None):
@@ -103,7 +102,35 @@ def automatic_selection(comptable, n_echos, n_vols, tree="minimal"):
     See Also
     --------
     ComponentSelector, the class used to represent the classification process
+    Notes
+    -----
+    The selection algorithm used in this function was originated in ME-ICA
+    by Prantik Kundu, and his original implementation is available at:
+    https://github.com/ME-ICA/me-ica/blob/\
+    b2781dd087ab9de99a2ec3925f04f02ce84f0adc/meica.libs/select_model.py
+
+    The appropriate citation is :footcite:t:`kundu2013integrated`.
+
+    This component selection process uses multiple, previously calculated
+    metrics that include kappa, rho, variance explained, noise and spatial
+    frequency metrics, and measures of spatial overlap across metrics.
+
+    Prantik began to update these selection criteria to use SVMs to distinguish
+    components, a hypercommented version of this attempt is available at:
+    https://gist.github.com/emdupre/ca92d52d345d08ee85e104093b81482e
+
+    References
+    ----------
+    .. footbibliography::
     """
+    LGR.info("Performing ICA component selection with Kundu decision tree v2.5")
+    RepLGR.info(
+        "Next, component selection was performed to identify "
+        "BOLD (TE-dependent), non-BOLD (TE-independent), and "
+        "uncertain (low-variance) components using the Kundu "
+        "decision tree (v2.5) \\citep{kundu2013integrated}."
+    )
+
     comptable["classification_tags"] = ""
     xcomp = {
         "n_echos": n_echos,

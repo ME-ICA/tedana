@@ -174,8 +174,10 @@ If you are new to ``git`` and would like to work in a graphical user interface (
 
 You can run style checks by running the following:
 ```
-flake8 $TEDANADIR/tedana
+make lint
 ```
+which will use flake8, black, and isort to perform various style checks.
+Please make sure you have all 3 of these programs on your path, or the check will pass even in circumstances where it shouldn't.
 
 and unit/integration tests by running `pytest` (more details below).
 If you know a file will test your change, you can run only that test (see "One test file only" below).

@@ -14,10 +14,10 @@ import pandas as pd
 
 import tedana.gscontrol as gsc
 from tedana import __version__, io, reporting, selection, utils
+from tedana.bibtex import get_description_references
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 def main():
@@ -209,6 +209,7 @@ def post_tedana(
     basename = "report"
     extension = "txt"
     repname = op.join(out_dir, (basename + "." + extension))
+    bibtex_file = op.join(out_dir, "references.bib")
     repex = op.join(out_dir, (basename + "*"))
     previousreps = glob(repex)
     previousreps.sort(reverse=True)
@@ -216,14 +217,13 @@ def post_tedana(
         previousparts = op.splitext(f)
         newname = previousparts[0] + "_old" + previousparts[1]
         os.rename(f, newname)
-    refname = op.join(out_dir, "_references.txt")
 
     # create logfile name
     basename = "tedana_"
     extension = "tsv"
     start_time = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
     logname = op.join(out_dir, (basename + start_time + "." + extension))
-    utils.setup_loggers(logname, repname, refname, quiet=quiet, debug=debug)
+    utils.setup_loggers(logname=logname, repname=repname, quiet=quiet, debug=debug)
 
     LGR.info("Using output directory: {}".format(out_dir))
 
@@ -363,6 +363,12 @@ def post_tedana(
     with open(repname, "w") as fo:
         fo.write(report)
 
+    # Collect BibTeX entries for cited papers
+    references = get_description_references(report)
+    
+    with open(bibtex_file, "w") as fo:
+    	fo.write(references)
+
     if not no_reports:
         LGR.info("Making figures folder with static component maps and timecourse plots.")
 
@@ -407,7 +413,6 @@ def post_tedana(
     io_generator.save_self()
     LGR.info("Workflow completed")
     utils.teardown_loggers()
-    os.remove(refname)
 
 
 if __name__ == "__main__":

@@ -100,5 +100,6 @@ figures/comp_067.png
 figures/comp_068.png
 figures/pca_criteria.png
 figures/pca_variance_explained.png
+references.bib
 report.txt
 tedana_report.html

@@ -1,3 +1,11 @@
+[project]
+name = "tedana"
+version = "0.0.12"
+
+[project.scripts]
+tedana = "tedana.workflows.tedana:_main"
+tedana_reclassify = "tedana.workflows.tedana_reclassify:main"
+
 [build-system]
 requires = ["setuptools==58.2.0", "wheel"]
 
@@ -27,7 +35,4 @@ exclude = '''
 profile = "black"
 multi_line_output = 3
 
-[project.scripts]
-tedana = "tedana.workflows.tedana:_main"
-tedana_reclassify = "tedana.workflows.tedana_reclassify:main"
 

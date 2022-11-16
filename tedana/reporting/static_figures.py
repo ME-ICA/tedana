@@ -17,7 +17,6 @@ LGR = logging.getLogger("GENERAL")
 MPL_LGR = logging.getLogger("matplotlib")
 MPL_LGR.setLevel(logging.WARNING)
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 def _trim_edge_zeros(arr):

@@ -11,7 +11,6 @@ from tedana import utils
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 def _apply_t2s_floor(t2s, echo_times):
