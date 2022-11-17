@@ -23,7 +23,7 @@ RepLGR = logging.getLogger("REPORT")
 def main():
     from tedana import __version__
 
-    verstr = "tedana v{}".format(__version__)
+    verstr = "tedana_reclassify v{}".format(__version__)
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "registry",
@@ -47,6 +47,7 @@ def main():
         "--config",
         dest="config",
         help="File naming configuration. Default auto (prepackaged).",
+        default="auto",
     )
     parser.add_argument(
         "--out-dir",
@@ -118,9 +119,24 @@ def main():
     )
     parser.add_argument("-v", "--version", action="version", version=verstr)
 
-    parser.parse_args()
+    args = parser.parse_args()
 
     # Run post-tedana
+    post_tedana(
+        args.registry,
+        accept=args.manual_accept,
+        reject=args.manual_reject,
+        out_dir=args.out_dir,
+        config=args.config,
+        convention=args.convention,
+        tedort=args.tedort,
+        mir=args.mir,
+        no_reports=args.no_reports,
+        png_cmap=args.png_cmap,
+        force=args.force,
+        debug=args.debug,
+        quiet=args.quiet,
+    )
 
 
 def post_tedana(
@@ -193,8 +209,20 @@ def post_tedana(
         os.mkdir(out_dir)
 
     # Check that there is no overlap in accepted/rejected components
-    acc = set(accept)
-    rej = set(reject)
+    if accept:
+        acc = set(accept)
+    else:
+        acc = ()
+    if reject:
+        rej = set(reject)
+    else:
+        rej = ()
+
+    if (not accept) and (not reject):
+        raise ValueError(
+            'Must manually accept or reject at least one component'
+        )
+
     in_both = []
     for a in acc:
         if a in rej:
@@ -259,8 +287,10 @@ def post_tedana(
         previous_tree_fname, comptable, cross_component_metrics=xcomp, status_table=status_table
     )
 
-    selector.add_manual(accept, "accepted")
-    selector.add_manual(reject, "rejected")
+    if accept:
+        selector.add_manual(accept, "accepted")
+    if reject:
+        selector.add_manual(reject, "rejected")
     selector.select()
     comptable = selector.component_table
 
