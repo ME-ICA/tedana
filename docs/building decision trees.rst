@@ -193,7 +193,7 @@ In addition to the intermediate and default ("accepted" "rejected" "unclassified
 for functions that should be applied to all components regardless of their classifications
 
 Most decision functions also include "ifTrue" and "ifFalse" which specify how to change the classification of each component
-based on whether a the decision criterion is true or also. In addition to the default and intermediate classification options,
+based on whether a the decision criterion is true or false. In addition to the default and intermediate classification options,
 this can also be "nochange" (i.e. For components where a>b is true, "reject". For components where a>b is false, "nochange").
 The optional parameters "tag_ifTrue" and "tag_ifFalse" define the classification tags to be assigned to components.
 Currently, the only exception is "manual_classify" which uses "new_classification" to designate the new component classification
@@ -218,7 +218,7 @@ examples for how to meet these expectations.
 
 Create a dictionary called "outputs" that includes key fields that should be recorded. 
 The following line should be at the end of each function ``selector.nodes[selector.current_node_idx]["outputs"] = outputs`` 
-Additional fields can be used to log funciton-specific information, but the following fields are common and may be used by other parts of the code:
+Additional fields can be used to log function-specific information, but the following fields are common and may be used by other parts of the code:
 
 - "decision_node_idx" (required): the ordered index for the current function in the decision tree.
 - "node_label" (required): A decriptive label for what happens in the node.
@@ -233,7 +233,7 @@ This will be useful to gather all metrics a tree will use without requiring a sp
 Existing functions define ``function_name_idx = f"Step {selector.current_node_idx}: [text of function_name]`` This is used in logging and is cleaner to initialize near the top of each function.
 
 
-Each function has code that creates a default node label in ``outputs["node_label"]``. The default node lable
+Each function has code that creates a default node label in ``outputs["node_label"]``. The default node label
 may be used in decision tree visualization so it should be relatively short. Within this section, if there is
 a user-provided custom_node_label, that should be used instead.
 
