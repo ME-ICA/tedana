@@ -308,7 +308,7 @@ class OutputGenerator:
         if not isinstance(data, pd.DataFrame):
             raise TypeError(f"data must be pd.Data, not type {data_type}.")
         # Replace blanks with numpy NaN
-        deblanked = data.replace('', np.nan)
+        deblanked = data.replace("", np.nan)
         deblanked.to_csv(name, sep="\t", line_terminator="\n", na_rep="n/a", index=False)
 
     def save_self(self):

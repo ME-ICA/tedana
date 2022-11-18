@@ -219,7 +219,7 @@ def post_tedana(
         rej = ()
 
     if (not accept) and (not reject):
-        raise ValueError('Must manually accept or reject at least one component')
+        raise ValueError("Must manually accept or reject at least one component")
 
     in_both = []
     for a in acc:
