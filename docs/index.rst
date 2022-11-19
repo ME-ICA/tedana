@@ -44,8 +44,8 @@ tedana: TE Dependent ANAlysis
    :target: http://isitmaintained.com/project/ME-ICA/tedana
    :alt: Percentage of issues still open
 
-.. image:: https://badges.gitter.im/ME-ICA/tedana.svg
-   :target: https://gitter.im/ME-ICA/tedana
+.. image:: https://img.shields.io/badge/Chat%20on-Mattermost-purple.svg
+   :target: https://mattermost.brainhack.org/brainhack/channels/tedana
    :alt: Join the chat
 
 .. image:: https://img.shields.io/badge/receive-our%20newsletter%20❤%EF%B8%8F-blueviolet.svg
@@ -61,7 +61,7 @@ tedana: TE Dependent ANAlysis
 About
 *****
 
-``TE``-``de``pendent ``ana``lysis (``tedana``) is a Python library for denoising multi-echo functional magnetic resonance imaging (fMRI) data.
+``TE``\ -``de``\ pendent ``ana``\ lysis (``tedana``\ )is a Python library for denoising multi-echo functional magnetic resonance imaging (fMRI) data.
 ``tedana`` originally came about as a part of the `ME-ICA`_ pipeline, although it has since diverged.
 An important distinction is that while the ME-ICA pipeline originally performed both pre-processing and TE-dependent analysis of multi-echo fMRI data,
 ``tedana`` now assumes that you're working with data which has been previously preprocessed.
@@ -112,7 +112,10 @@ When using tedana, please include the following citations:
       }
       </script>
       <p>
-      <span id="tedana_citation">tedana</span> Available from: <a id="tedana_doi_url" href="https://doi.org/10.5281/zenodo.1250561">https://doi.org/10.5281/zenodo.1250561</a>
+      <span id="tedana_citation">tedana</span>
+      This link is for the most recent version of the code and that page has links to DOIs
+      for older versions. To support reproducibility, please cite the version you used:
+      <a id="tedana_doi_url" href="https://doi.org/10.5281/zenodo.1250561">https://doi.org/10.5281/zenodo.1250561</a>
       <img src onerror='fillCitation()' alt=""/>
       </p>
 
@@ -140,19 +143,12 @@ When using tedana, please include the following citations:
       <i>Proceedings of the National Academy of Sciences</i>, <i>110</i>, 16187-16192.
       </p>
 
-Alternatively, you can automatically compile relevant citations by running your
-tedana code with `duecredit`_. For example, if you plan to run a script using
-tedana (in this case, ``tedana_script.py``):
-
-.. code-block:: bash
-
- python -m duecredit tedana_script.py
+Alternatively, you can use the text and citations produced by the tedana workflow.
 
 You can also learn more about `why citing software is important`_.
 
 .. _Differentiating BOLD and non-BOLD signals in fMRI time series using multi-echo EPI.: https://doi.org/10.1016/j.neuroimage.2011.12.028
 .. _Integrated strategy for improving functional connectivity mapping using multiecho fMRI.: https://doi.org/10.1073/pnas.1301725110
-.. _duecredit: https://github.com/duecredit/duecredit
 .. _`why citing software is important`: https://www.software.ac.uk/how-cite-software
 
 

@@ -10,7 +10,6 @@ from sklearn.decomposition import FastICA
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 def tedica(data, n_components, fixed_seed, maxit=500, maxrestart=10):

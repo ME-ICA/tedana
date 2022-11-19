@@ -13,7 +13,6 @@ from ._utils import dependency_resolver, determine_signs, flip_components
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 def generate_metrics(
@@ -160,6 +159,16 @@ def generate_metrics(
         metric_maps["map FS0"] = m_S0
         metric_maps["map predicted T2"] = p_m_T2
         metric_maps["map predicted S0"] = p_m_S0
+
+        if io_generator.verbose:
+            io_generator.save_file(
+                utils.unmask(metric_maps["map FT2"], mask),
+                label + " component F-T2 img",
+            )
+            io_generator.save_file(
+                utils.unmask(metric_maps["map FS0"], mask),
+                label + " component F-S0 img",
+            )
 
     if "map Z clusterized" in required_metrics:
         LGR.info("Thresholding z-statistic maps")

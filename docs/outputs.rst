@@ -71,6 +71,8 @@ desc-ICAAccepted_components.nii.gz                  High-kappa ICA coefficient f
 desc-ICAAcceptedZ_components.nii.gz                 Z-normalized spatial component maps
 report.txt                                          A summary report for the workflow with relevant
                                                     citations.
+references.bib                                      The BibTeX entries for references cited in
+                                                    report.txt.
 tedana_report.html                                  The interactive HTML report.
 ================================================    =====================================================
 
@@ -99,6 +101,8 @@ echo-[echo]_desc-[PCA|ICA]S0ModelPredictions_components.nii.gz  Component- and v
                                                                 separated by echo.
 desc-[PCA|ICA]AveragingWeights_components.nii.gz                Component-wise averaging weights for metric
                                                                 calculation.
+desc-[PCA|ICA]S0_stat-F_statmap.nii.gz                          F-statistic map for each component, for the S0 model.
+desc-[PCA|ICA]T2_stat-F_statmap.nii.gz                          F-statistic map for each component, for the T2 model.
 desc-optcomPCAReduced_bold.nii.gz                               Optimally combined data after dimensionality
                                                                 reduction with PCA. This is the input to the ICA.
 echo-[echo]_desc-Accepted_bold.nii.gz                           High-Kappa time series for echo number ``echo``
@@ -386,7 +390,7 @@ the optimally combined data, the denoised data, the high-Kappa (accepted) data, 
 
 These plots may be useful for visual quality control of the overall denoising run.
 
-.. image:: /_static/rep01_carpet_overview.png
+.. image:: /_static/carpet_overview.png
   :align: center
   :height: 400px
 
@@ -400,28 +404,129 @@ The report is saved in a plain-text file, report.txt, in the output directory.
 
 An example report
 
-  TE-dependence analysis was performed on input data. An initial mask was generated from the first echo using nilearn's compute_epi_mask function. An adaptive mask was then generated, in which each voxel's value reflects the number of echoes with 'good' data. A monoexponential model was fit to the data at each voxel using nonlinear model fitting in order to estimate T2* and S0 maps, using T2*/S0 estimates from a log-linear fit as initial values. For each voxel, the value from the adaptive mask was used to determine which echoes would be used to estimate T2* and S0. In cases of model fit failure, T2*/S0 estimates from the log-linear fit were retained instead. Multi-echo data were then optimally combined using the T2* combination method (Posse et al., 1999). Principal component analysis in which the number of components was determined based on a variance explained threshold was applied to the optimally combined data for dimensionality reduction. A series of TE-dependence metrics were calculated for each component, including Kappa, Rho, and variance explained. Independent component analysis was then used to decompose the dimensionally reduced dataset. A series of TE-dependence metrics were calculated for each component, including Kappa, Rho, and variance explained. Next, component selection was performed to identify BOLD (TE-dependent), non-BOLD (TE-independent), and uncertain (low-variance) components using the Kundu decision tree (v2.5; Kundu et al., 2013). Rejected components' time series were then orthogonalized with respect to accepted components' time series.
+  .. note::
 
-  This workflow used numpy (Van Der Walt, Colbert, & Varoquaux, 2011), scipy (Jones et al., 2001), pandas (McKinney, 2010), scikit-learn (Pedregosa et al., 2011), nilearn, and nibabel (Brett et al., 2019).
+    The boilerplate text includes citations in LaTeX format.
+    \\citep refers to parenthetical citations, while \\cite refers to textual ones.
 
-  This workflow also used the Dice similarity index (Dice, 1945; Sørensen, 1948).
+  TE-dependence analysis was performed on input data using the tedana workflow \\citep{dupre2021te}.
+  An adaptive mask was then generated, in which each voxel's value reflects the number of echoes with 'good' data.
+  A two-stage masking procedure was applied, in which a liberal mask (including voxels with good data in at least the first echo) was used for optimal combination, T2*/S0 estimation, and denoising, while a more conservative mask (restricted to voxels with good data in at least the first three echoes) was used for the component classification procedure.
+  Multi-echo data were then optimally combined using the T2* combination method \\citep{posse1999enhancement}.
+  Next, components were manually classified as BOLD (TE-dependent), non-BOLD (TE-independent), or uncertain (low-variance).
+  This workflow used numpy \\citep{van2011numpy}, scipy \\citep{virtanen2020scipy}, pandas \\citep{mckinney2010data,reback2020pandas}, scikit-learn \\citep{pedregosa2011scikit}, nilearn, bokeh \\citep{bokehmanual}, matplotlib \\citep{Hunter:2007}, and nibabel \\citep{brett_matthew_2019_3233118}.
+  This workflow also used the Dice similarity index \\citep{dice1945measures,sorensen1948method}.
 
   References
 
-  Brett, M., Markiewicz, C. J., Hanke, M., Côté, M.-A., Cipollini, B., McCarthy, P., … freec84. (2019, May 28). nipy/nibabel. Zenodo. http://doi.org/10.5281/zenodo.3233118
+  .. note::
 
-  Dice, L. R. (1945). Measures of the amount of ecologic association between species. Ecology, 26(3), 297-302.
+    The references are also provided in the ``references.bib`` output file.
 
-  Jones E, Oliphant E, Peterson P, et al. SciPy: Open Source Scientific Tools for Python, 2001-, http://www.scipy.org/
+  .. code-block:: bibtex
 
-  Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. (2013). Integrated strategy for improving functional connectivity mapping using multiecho fMRI. Proceedings of the National Academy of Sciences, 110(40), 16187-16192.
-
-  McKinney, W. (2010, June). Data structures for statistical computing in python. In Proceedings of the 9th Python in Science Conference (Vol. 445, pp. 51-56).
-
-  Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., ... & Vanderplas, J. (2011). Scikit-learn: Machine learning in Python. Journal of machine learning research, 12(Oct), 2825-2830.
-
-  Posse, S., Wiese, S., Gembris, D., Mathiak, K., Kessler, C., Grosse‐Ruyken, M. L., ... & Kiselev, V. G. (1999). Enhancement of BOLD‐contrast sensitivity by single‐shot multi‐echo functional MR imaging. Magnetic Resonance in Medicine: An Official Journal of the International Society for Magnetic Resonance in Medicine, 42(1), 87-97.
-
-  Sørensen, T. J. (1948). A method of establishing groups of equal amplitude in plant sociology based on similarity of species content and its application to analyses of the vegetation on Danish commons. I kommission hos E. Munksgaard.
-
-  Van Der Walt, S., Colbert, S. C., & Varoquaux, G. (2011). The NumPy array: a structure for efficient numerical computation. Computing in Science & Engineering, 13(2), 22.
+    @Manual{bokehmanual,
+        title = {Bokeh: Python library for interactive visualization},
+        author = {{Bokeh Development Team}},
+        year = {2018},
+        url = {https://bokeh.pydata.org/en/latest/},
+    }
+    @article{dice1945measures,
+        title={Measures of the amount of ecologic association between species},
+        author={Dice, Lee R},
+        journal={Ecology},
+        volume={26},
+        number={3},
+        pages={297--302},
+        year={1945},
+        publisher={JSTOR},
+        url={https://doi.org/10.2307/1932409},
+        doi={10.2307/1932409}
+    }
+    @article{dupre2021te,
+        title={TE-dependent analysis of multi-echo fMRI with* tedana},
+        author={DuPre, Elizabeth and Salo, Taylor and Ahmed, Zaki and Bandettini, Peter A and Bottenhorn, Katherine L and Caballero-Gaudes, C{\'e}sar and Dowdle, Logan T and Gonzalez-Castillo, Javier and Heunis, Stephan and Kundu, Prantik and others},
+        journal={Journal of Open Source Software},
+        volume={6},
+        number={66},
+        pages={3669},
+        year={2021},
+        url={https://doi.org/10.21105/joss.03669},
+        doi={10.21105/joss.03669}
+    }
+    @inproceedings{mckinney2010data,
+        title={Data structures for statistical computing in python},
+        author={McKinney, Wes and others},
+        booktitle={Proceedings of the 9th Python in Science Conference},
+        volume={445},
+        number={1},
+        pages={51--56},
+        year={2010},
+        organization={Austin, TX},
+        url={https://doi.org/10.25080/Majora-92bf1922-00a},
+        doi={10.25080/Majora-92bf1922-00a}
+    }
+    @article{pedregosa2011scikit,
+        title={Scikit-learn: Machine learning in Python},
+        author={Pedregosa, Fabian and Varoquaux, Ga{\"e}l and Gramfort, Alexandre and Michel, Vincent and Thirion, Bertrand and Grisel, Olivier and Blondel, Mathieu and Prettenhofer, Peter and Weiss, Ron and Dubourg, Vincent and others},
+        journal={the Journal of machine Learning research},
+        volume={12},
+        pages={2825--2830},
+        year={2011},
+        publisher={JMLR. org},
+        url={http://jmlr.org/papers/v12/pedregosa11a.html}
+    }
+    @article{posse1999enhancement,
+        title={Enhancement of BOLD-contrast sensitivity by single-shot multi-echo functional MR imaging},
+        author={Posse, Stefan and Wiese, Stefan and Gembris, Daniel and Mathiak, Klaus and Kessler, Christoph and Grosse-Ruyken, Maria-Liisa and Elghahwagi, Barbara and Richards, Todd and Dager, Stephen R and Kiselev, Valerij G},
+        journal={Magnetic Resonance in Medicine: An Official Journal of the International Society for Magnetic Resonance in Medicine},
+        volume={42},
+        number={1},
+        pages={87--97},
+        year={1999},
+        publisher={Wiley Online Library},
+        url={https://doi.org/10.1002/(SICI)1522-2594(199907)42:1<87::AID-MRM13>3.0.CO;2-O},
+        doi={10.1002/(SICI)1522-2594(199907)42:1<87::AID-MRM13>3.0.CO;2-O}
+    }
+    @software{reback2020pandas,
+        author = {The pandas development team},
+        title = {pandas-dev/pandas: Pandas},
+        month = feb,
+        year = 2020,
+        publisher = {Zenodo},
+        version = {latest},
+        doi = {10.5281/zenodo.3509134},
+        url = {https://doi.org/10.5281/zenodo.3509134}
+    }
+    @article{sorensen1948method,
+        title={A method of establishing groups of equal amplitude in plant sociology based on similarity of species content and its application to analyses of the vegetation on Danish commons},
+        author={Sorensen, Th A},
+        journal={Biol. Skar.},
+        volume={5},
+        pages={1--34},
+        year={1948}
+    }
+    @article{van2011numpy,
+        title={The NumPy array: a structure for efficient numerical computation},
+        author={Van Der Walt, Stefan and Colbert, S Chris and Varoquaux, Gael},
+        journal={Computing in science \& engineering},
+        volume={13},
+        number={2},
+        pages={22--30},
+        year={2011},
+        publisher={IEEE},
+        url={https://doi.org/10.1109/MCSE.2011.37},
+        doi={10.1109/MCSE.2011.37}
+    }
+    @article{virtanen2020scipy,
+        title={SciPy 1.0: fundamental algorithms for scientific computing in Python},
+        author={Virtanen, Pauli and Gommers, Ralf and Oliphant, Travis E and Haberland, Matt and Reddy, Tyler and Cournapeau, David and Burovski, Evgeni and Peterson, Pearu and Weckesser, Warren and Bright, Jonathan and others},
+        journal={Nature methods},
+        volume={17},
+        number={3},
+        pages={261--272},
+        year={2020},
+        publisher={Nature Publishing Group},
+        url={https://doi.org/10.1038/s41592-019-0686-2},
+        doi={10.1038/s41592-019-0686-2}
+    }

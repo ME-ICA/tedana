@@ -15,7 +15,6 @@ from tedana.workflows.parser_utils import is_valid_file
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 def _get_parser():
@@ -161,7 +160,7 @@ def t2smap_workflow(
     """
     Estimate T2 and S0, and optimally combine data across TEs.
 
-    Please remember to cite [1]_.
+    Please remember to cite :footcite:t:`dupre2021te`.
 
     Parameters
     ----------
@@ -224,13 +223,7 @@ def t2smap_workflow(
 
     References
     ----------
-    .. [1] DuPre, E. M., Salo, T., Ahmed, Z., Bandettini, P. A., Bottenhorn, K. L.,
-           Caballero-Gaudes, C., Dowdle, L. T., Gonzalez-Castillo, J., Heunis, S.,
-           Kundu, P., Laird, A. R., Markello, R., Markiewicz, C. J., Moia, S.,
-           Staden, I., Teves, J. B., Uruñuela, E., Vaziri-Pashkam, M.,
-           Whitaker, K., & Handwerker, D. A. (2021).
-           TE-dependent analysis of multi-echo fMRI with tedana.
-           Journal of Open Source Software, 6(66), 3669. doi:10.21105/joss.03669.
+    .. footbibliography::
     """
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):

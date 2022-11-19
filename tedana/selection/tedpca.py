@@ -12,7 +12,6 @@ from tedana.stats import getfbounds
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 F_MAX = 500
 

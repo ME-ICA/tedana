@@ -12,7 +12,6 @@ from tedana.stats import getfbounds
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 def manual_selection(comptable, acc=None, rej=None):
@@ -116,7 +115,10 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
     -----
     The selection algorithm used in this function was originated in ME-ICA
     by Prantik Kundu, and his original implementation is available at:
-    https://github.com/ME-ICA/me-ica/blob/b2781dd087ab9de99a2ec3925f04f02ce84f0adc/meica.libs/select_model.py
+    https://github.com/ME-ICA/me-ica/blob/\
+    b2781dd087ab9de99a2ec3925f04f02ce84f0adc/meica.libs/select_model.py
+
+    The appropriate citation is :footcite:t:`kundu2013integrated`.
 
     This component selection process uses multiple, previously calculated
     metrics that include kappa, rho, variance explained, noise and spatial
@@ -128,28 +130,16 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
 
     References
     ----------
-    * Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y.,
-      Vértes, P. E., Inati, S. J., ... & Bullmore, E. T.
-      (2013). Integrated strategy for improving functional
-      connectivity mapping using multiecho fMRI. Proceedings
-      of the National Academy of Sciences, 110(40),
-      16187-16192.
+    .. footbibliography::
     """
     LGR.info("Performing ICA component selection with Kundu decision tree v2.5")
     RepLGR.info(
         "Next, component selection was performed to identify "
         "BOLD (TE-dependent), non-BOLD (TE-independent), and "
         "uncertain (low-variance) components using the Kundu "
-        "decision tree (v2.5; Kundu et al., 2013)."
+        "decision tree (v2.5) \\citep{kundu2013integrated}."
     )
-    RefLGR.info(
-        "Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
-        "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
-        "(2013). Integrated strategy for improving functional "
-        "connectivity mapping using multiecho fMRI. Proceedings "
-        "of the National Academy of Sciences, 110(40), "
-        "16187-16192."
-    )
+
     comptable["classification"] = "accepted"
     comptable["rationale"] = ""
 
