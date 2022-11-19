@@ -72,15 +72,14 @@ or using other neuroimaging toolboxes, like AFNI.
   however, the necessary changes should be minimal.
 
 Let's start by loading the necessary data.
+No matter which type of denoising you want to use, you will need to include this step.
+
+For this, you need the mixing matrix, the data you're denoising, a brain mask,
+and an index of "bad" components.
 
 .. code-block:: python
 
-  import numpy as np  # A library for working with numerical data
   import pandas as pd  # A library for working with tabular data
-  from nilearn import image, masking  # A library for processing/analyzing neuroimaging data
-
-  # For this, you need the mixing matrix, the data you're denoising,
-  # a brain mask, and an index of "bad" components.
 
   # Files from fMRIPrep
   data_file = "sub-01_task-rest_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz"
@@ -100,8 +99,10 @@ Let's start by loading the necessary data.
   rejected_comps_idx = metrics_df.loc[metrics_df["classification"] == "rejected"].index.values
   kept_comps_idx = metrics_df.loc[metrics_df["classification"] != "rejected"].index.values
 
-  # Load the confounds file and select external nuisance regressors we want to include
+  # Load the fMRIPrep confounds file
   confounds_df = pd.read_table(confounds_file)
+
+  # Select external nuisance regressors we want to use for denoising
   confounds = confounds_df[
       [
           "trans_x",
@@ -128,7 +129,8 @@ then retain the residuals for further analysis, you are doing aggressive denoisi
 
 .. code-block:: python
 
-  from nilearn.input_data import NiftiMasker  # A class for masking and denoising fMRI data
+  import numpy as np  # A library for working with numerical data
+  from nilearn.maskers import NiftiMasker  # A class for masking and denoising fMRI data
 
   # Combine the rejected components and the fMRIPrep confounds into a single array
   regressors = np.hstack((rejected_components, confounds))
@@ -149,7 +151,9 @@ then retain the residuals for further analysis, you are doing aggressive denoisi
   denoised_img = masker.fit_transform(data_file, confounds=regressors)
 
   # Save to file
-  denoised_img.to_filename("sub-01_task-rest_space-MNI152NLin2009cAsym_desc-aggrDenoised_bold.nii.gz")
+  denoised_img.to_filename(
+      "sub-01_task-rest_space-MNI152NLin2009cAsym_desc-aggrDenoised_bold.nii.gz"
+  )
 
 
 *********************************************************************************************************************************
@@ -164,8 +168,11 @@ objects, so we will end up using ``numpy`` directly for this approach.
 
 .. code-block:: python
 
+  import numpy as np  # A library for working with numerical data
+  from nilearn.masking import apply_mask, unmask  # Functions for (un)masking fMRI data
+
   # Apply the mask to the data image to get a 2d array
-  data = masking.apply_mask(data_file, mask_file)
+  data = apply_mask(data_file, mask_file)
   data = data.T  # Transpose to voxels-by-time
 
   # Fit GLM to all components and nuisance regressors (after adding a constant term)
@@ -176,13 +183,15 @@ objects, so we will end up using ``numpy`` directly for this approach.
   confounds_idx = np.concat(
       np.arange(confounds.shape[1]),
       rejected_comps_idx + confounds.shape[1],
-    )
+  )
   pred_data = np.dot(np.hstack(confounds, rejected_components), betas[confounds_idx, :])
   data_denoised = data - pred_data
 
   # Save to file
-  img_denoised = masking.unmask(data_denoised.T, mask_file)
-  img_denoised.to_filename("sub-01_task-rest_space-MNI152NLin2009cAsym_desc-nonaggrDenoised_bold.nii.gz")
+  denoised_img = unmask(data_denoised.T, mask_file)
+  denoised_img.to_filename(
+      "sub-01_task-rest_space-MNI152NLin2009cAsym_desc-nonaggrDenoised_bold.nii.gz"
+  )
 
 
 ************************************************************************************
@@ -202,12 +211,15 @@ This way, you can regress the rejected components out of the data in the form of
 
 .. code-block:: python
 
+  import numpy as np  # A library for working with numerical data
+  from nilearn.maskers import NiftiMasker  # A class for masking and denoising fMRI data
+
   # Separate the mixing matrix and confounds into "good" and "bad" time series
   rejected_components = mixing[:, rejected_comps_idx]
   kept_components = mixing[:, kept_comps_idx]
   bad_timeseries = np.hstack((rejected_components, confounds))
 
-  # Regress the good components out of the bad time series
+  # Regress the good components out of the bad time series to get "pure evil" components
   betas = np.linalg.lstsq(kept_components, bad_timeseries, rcond=None)[0]
   pred_bad_timeseries = np.dot(kept_components, betas)
   orth_bad_timeseries = bad_timeseries - pred_bad_timeseries
@@ -229,4 +241,6 @@ This way, you can regress the rejected components out of the data in the form of
   denoised_img = masker.fit_transform(data_file, confounds=orth_bad_timeseries)
 
   # Save to file
-  denoised_img.to_filename("sub-01_task-rest_space-MNI152NLin2009cAsym_desc-orthAggrDenoised_bold.nii.gz")
+  denoised_img.to_filename(
+      "sub-01_task-rest_space-MNI152NLin2009cAsym_desc-orthAggrDenoised_bold.nii.gz"
+  )
