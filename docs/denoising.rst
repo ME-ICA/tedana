@@ -46,7 +46,8 @@ This page has three purposes:
 
   As an alternative, users may want to try non-aggressive denoising or aggressive denoising combined with component orthogonalization.
 
-  The main difference between orthogonalizing and non-aggressive is that with orthogonalization,
+  The main difference between the orthogonalization+aggressive and non-aggressive approaches is that,
+  with orthogonalization,
   all the variance common across the accepted and rejected components is put in the accepted basket,
   and therefore it is not removed in the nuisance regression.
   In contrast, with the non-aggressive denoising,
@@ -125,7 +126,7 @@ Remove all noise-correlated fluctuations ("aggressive" denoising)
 *****************************************************************
 
 If you regress just nuisance regressors (i.e., rejected components) out of your data,
-then retain the residuals for further analysis, you are doing aggressive denoising.
+then retain the residuals for further analysis, you are doing "aggressive" denoising.
 
 .. code-block:: python
 
@@ -161,10 +162,10 @@ Remove noise-correlated fluctuations that aren't correlated with fluctuations in
 *********************************************************************************************************************************
 
 If you include both nuisance regressors and regressors of interest in your regression,
-you are doing nonaggressive denoising.
+you are doing "non-aggressive" denoising.
 
-Unfortunately, "non-aggressive" denoising is difficult to do with ``nilearn``'s Masker
-objects, so we will end up using ``numpy`` directly for this approach.
+Unfortunately, non-aggressive denoising is difficult to do with :mod:`nilearn`'s Masker
+objects, so we will end up using :mod:`numpy` directly for this approach.
 
 .. code-block:: python
 
