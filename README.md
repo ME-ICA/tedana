@@ -54,7 +54,7 @@ To set up a local environment, you will need Python >=3.6 and the following pack
 * [numpy](http://www.numpy.org/)
 * [scipy](https://www.scipy.org/)
 * [scikit-learn](http://scikit-learn.org/stable/)
-* [nilearn](https://nilearn.github.io/)
+* [nilearn](https://nilearn.github.io/stable/)
 * [nibabel](http://nipy.org/nibabel/)
 * [mapca](https://github.com/ME-ICA/mapca)
 

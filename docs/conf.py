@@ -50,7 +50,6 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx_copybutton",
-    "sphinx_inline_tabs",
     "sphinxarg.ext",
 ]
 
@@ -174,5 +173,5 @@ intersphinx_mapping = {
     "matplotlib": ("https://matplotlib.org/", None),
     "nibabel": ("https://nipy.org/nibabel/", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
-    "nilearn": ("https://nilearn.github.io/", None),
+    "nilearn": ("https://nilearn.github.io/stable/", None),
 }
