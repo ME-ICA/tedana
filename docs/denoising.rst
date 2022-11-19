@@ -16,18 +16,19 @@ However, users may wish to apply a different type of denoising,
 or to incorporate other regressors into their denoising step,
 and we will discuss these alternatives here.
 
-.. admonition:: Independence vs. Orthogonality
+``tedana`` uses independent component analysis (ICA) to decompose the data into components
+which each have a spatial map of weights and time series that are assumed to reflect meaningful underlying signals.
+It then classifies each component as "accepted" (BOLD-like) or "rejected" (non-BOLD-like).
+The data are denoised by taking the time series of the rejected components and regressing them from the data.
 
-  ``tedana`` uses independent component analysis (ICA) to decompose the data into time series that are
-  assumed to reflect meaningful underlying signals.
-  It then classifies each time series (a.k.a. component) as "accepted" (BOLD-like) or "rejected" (non-BOLD-like).
-
-  The components from an ICA are `statistically independent`, rather than orthogonal.
-  Orthogonal time series are uncorrected, so there is no shared variance.
-  With independent components, however, the time series may be correlated with one another, and thus share variance.
-  If a rejected component shares meaningful variance with an accepted component,
-  then regressing the rejected components from your data may also remove meaningful signal associated with the accepted component as well.
-  This conundrum is what motivates the different approaches used for decomposition-based denoising methods described here.
+``tedana`` uses a spatial ICA, which means the components are `statistically independent` across space, not time.
+That means the time series from accepted and rejected components can share variance.
+If a rejected component shares meaningful variance with an accepted component,
+then regressing the rejected components' time series from your data may also remove meaningful signal
+associated with the accepted component as well.
+Depending on the application,
+people may take different approaches on how to handle variance that is shared between accepted and rejected components.
+These different approaches towards decomposition-based denoising methods are described here.
 
 This page has three purposes:
 
