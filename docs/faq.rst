@@ -130,7 +130,7 @@ These techniques can be combined to reduce the TR in a multi-echo sequence.
 
 There are many different approaches to susceptibility distortion correction out there- far too many to discuss here.
 However, the good news is that distortion does not typically change across echoes in multi-echo fMRI.
-In most cases, the ``EffectiveEchoSpacing`` is the same across echoes,
+In most cases, the readout acquisition type and total readout time are the same for each echo,
 so distortion will remain relatively constant, even as dropout increases with echo time.
 
 What this means is that, in the vast majority of multi-echo datasets,

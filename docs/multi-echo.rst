@@ -465,7 +465,7 @@ time point.
 4. Apply susceptibility distortion correction consistently across echoes
 ========================================================================
 
-One key feature of susceptibility distortion is that it is primarily a factor of echo spacing, rather than echo time.
+One key feature of susceptibility distortion is that it is primarily a factor of readout pattern and total readout time, rather than echo time.
 This means that, for most multi-echo sequences, even though dropout will increase with echo time,
 distortion will not (at least not to a noticeable/meaningful extent).
 
