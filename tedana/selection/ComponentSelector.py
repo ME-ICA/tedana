@@ -47,35 +47,39 @@ def load_config(tree):
     -------
     tree : :obj:`dict`
         A validated decision tree for the component selection process.
-        The `dict` has several required fields to describe the entire tree
-        `tree_id`: :obj:`str` The name of the tree
-        `info`: :obj:`str` A brief description of the tree for info logging
-        `report`: :obj:`str`
-        A narrative description of the tree that could be used in report logging
-        `refs`: :obj:`str` Publications that should be referenced, when this tree is used
-        `necessary_metrics`: :obj:`list[str]`
-        The metrics in `component_table` that will be used by this tree
-        `intermediate_classifications`: :obj:`list[str]`
-        User specified component classification labels. 'accepted', 'rejected', and
-        'unclassified' are defaults that don't need to be included here
-        `classification_tags`: :obj:`list[str]`
-        Descriptive labels that can be used to explain why a component was accepted or rejected.
-        For example, ["Likely BOLD","Low variance"]
-        `nodes`: :obj:`list[dict]` Each dictionary includes the information
-        to run one node in the decision tree. Each node should either be able
-        to change component classifications (function names starting with dec_)
-        or calculate values using information from multiple components
-        (function names starting with calc_)
-        nodes includes:
-            `functionname`: :obj:`str` The name of the function to be called
-            `parameters`: :obj:`dict` Required parameters for the function
-            The only parameter that is used in all functions is `decidecomps`,
-            which are the component classifications the function should run on.
-            Most dec_ functions also include `ifTrue` and `ifFalse` which
-            define how to to change the classification of a component if the
-            criteria in the function is true or false.
-            `kwargs`: :obj:`dict` Optional parameters for the function
     """
+
+#      Formerly used text
+#      The `dict` has several required fields to describe the entire tree
+#      - `tree_id`: :obj:`str` The name of the tree
+#      - `info`: :obj:`str` A brief description of the tree for info logging
+#      - `report`: :obj:`str`
+#      - A narrative description of the tree that could be used in report logging
+#      - `refs`: :obj:`str` Publications that should be referenced, when this tree is used
+#      - `necessary_metrics`: :obj:`list[str]`
+#      - The metrics in `component_table` that will be used by this tree
+#      - `intermediate_classifications`: :obj:`list[str]`
+#      - User specified component classification labels. 'accepted', 'rejected', and
+#      - 'unclassified' are defaults that don't need to be included here
+#      - `classification_tags`: :obj:`list[str]`
+#      - Descriptive labels that can be used to explain why a component was accepted or rejected.
+#      - For example, ["Likely BOLD","Low variance"]
+#      - `nodes`: :obj:`list[dict]` Each dictionary includes the information
+#
+#        to run one node in the decision tree. Each node should either be able
+#        to change component classifications (function names starting with ``dec_``)
+#        or calculate values using information from multiple components
+#        (function names starting with ``calc_``)
+#        nodes includes:
+#        - `functionname`: :obj:`str` The name of the function to be called
+#        - `parameters`: :obj:`dict` Required parameters for the function
+#          The only parameter that is used in all functions is `decidecomps`,
+#          which are the component classifications the function should run on.
+#          Most ``dec_`` functions also include `ifTrue` and `ifFalse` which
+#          define how to to change the classification of a component if the
+#          criteria in the function is true or false.
+#
+#        - `kwargs`: :obj:`dict` Optional parameters for the function
 
     if tree in DEFAULT_TREES:
         fname = op.join(get_resource_path(), "decision_trees", tree + ".json")
@@ -273,8 +277,22 @@ class ComponentSelector:
         If None, then look for `tree` within ./selection/data
         in the tedana code directory. default=None
 
-    Additional Parameters
-    ---------------------
+    
+    Returns
+    -------
+    component_table : :obj:`pandas.DataFrame`
+        Updated component table with two extra columns.
+    cross_component_metrics : :obj:`Dict`
+        Metrics that are each a single value calculated across components.
+    component_status_table : :obj:`pandas.DataFrame`
+        A table tracking the status of each component at each step.
+    nodes : :obj:`list[dict]`
+        Nodes used in decision tree. 
+    current_node_idx : :obj:`int`
+        The index for the current node, which should be the last node in the decision tree.
+
+    Notes
+    -----
     Any parameter that is used by a decision tree node function can be passed
     as a parameter of ComponentSelector class initialization function or can be
     included in the json file that defines the decision tree. If a parameter
@@ -288,53 +306,6 @@ class ComponentSelector:
         Number of echos in multi-echo fMRI data
     n_vols: :obj:`int`
         Number of volumes (time points) in the fMRI data
-
-
-    Returns
-    -------
-    component_table : :obj:`pandas.DataFrame`
-        Updated component table with two extra columns:
-        classifications : :obj:`str` (i.e., accepted, rejected) for each component
-        classification_tags : :obj:`list[str]` descriptions explaining reasons for classification
-    cross_component_metrics : :obj:`Dict`
-        Metrics that are each a single value calculated across
-        components. For example, kappa and rho.
-    component_status_table : :obj:`pandas.DataFrame`
-        A dataframe where each column lists the classification status of
-        each component after each node was run
-    Information that was stored in the tree json file. This includes:
-        tree, classification_tags, intermediate_classifications, necessary_metrics
-    nodes : :obj:`list[dict]`
-        Nodes used in decision tree. This includes the decision tree dict
-        from the json file in the `tree` input. For every element in the list
-        there is an added dict key `outputs` which includes key information from
-        when the function was run. Some of this information is function-specific,
-        but there are common elements across most or all:
-        decison_node_idx : :obj:`int`
-            The decision tree functions are run as part of an ordered list.
-            This is the positional index for when this function was run
-            as part of this list.
-        used_metrics : :obj:`list[str]`
-            A list of the metrics used in a node of the decision tree
-        used_cross_component_metrics : :obj:`list[str]`
-            A list of cross component metrics used in the node of a decision tree
-        node_label : :obj:`str`
-            A brief label for what happens in this node that can be used in a decision
-            tree summary table or flow chart.
-        numTrue, numFalse : :obj:`int`
-            For decision (dec_) functions, the number of components that were classified
-            as true or false respectively in this decision tree step.
-        calc_cross_comp_metrics : :obj:`list[str]`
-            For calculation (calc_) functions, cross component metrics that were
-            calculated in this function. When this is included, each of those
-            metrics and the calculated values are also distinct keys in 'outputs'.
-            While cross_component_metrics does not include where each component
-            was calculated, that information is stored here.
-    current_node_idx : :obj:`int`
-        The index for the current node, which should be the last node in the decision tree
-
-    Notes
-    -----
     """
 
     def __init__(self, tree, component_table, cross_component_metrics={}, status_table=None):
@@ -348,22 +319,27 @@ class ComponentSelector:
         selector = ComponentSelector(tree, comptable, n_echos=n_echos,
         n_vols=n_vols)
 
-        Returns
-        -------
-        The class structure with the following fields loaded from tree:
-            nodes, necessary_metrics, intermediate_classificaitons,
-            classification_tags,
+        Notes
+        -----
+        The structure has the following fields loaded from tree:
+
+        - nodes
+        - necessary_metrics
+        - intermediate_classifications
+        - classification_tags
+
         Adds to the class structure:
-            component_status_table: empty dataframe
-            cross_component_metrics: empty dict
-            used_metrics: empty set
+
+        - component_status_table: empty dataframe
+        - cross_component_metrics: empty dict
+        - used_metrics: empty set
         """
         self.tree_name = tree
 
         self.__dict__.update(cross_component_metrics)
         self.cross_component_metrics = cross_component_metrics
 
-        """Construct an un-executed selector"""
+        # Construct an un-executed selector
         self.component_table = component_table.copy()
 
         # To run a decision tree, each component needs to have an initial classification
@@ -557,19 +533,23 @@ class ComponentSelector:
 
     @property
     def n_comps(self):
+        """The number of components in the component table."""
         return len(self.component_table)
 
     @property
     def n_bold_comps(self):
+        """The number of components that are considered bold-weighted."""
         ct = self.component_table
         return len(ct[ct.classification == "accepted"])
 
     @property
     def accepted_comps(self):
+        """The number of components that are accepted."""
         return self.component_table["classification"] == "accepted"
 
     @property
     def rejected_comps(self):
+        """The number of components that are rejected."""
         return self.component_table["classification"] == "rejected"
 
     @property
@@ -579,10 +559,12 @@ class ComponentSelector:
 
     @property
     def mixing(self):
+        """The mixing matrix used to generate the components being decided upon."""
         return self.mixing_matrix
 
     @property
     def oc_data(self):
+        """The optimally combined data being used for this tree."""
         return self.oc_data
 
     def to_files(self, io_generator):

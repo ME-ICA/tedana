@@ -42,6 +42,7 @@ add_module_names = False
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "sphinx.ext.napoleon",
     "matplotlib.sphinxext.plot_directive",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
@@ -49,7 +50,6 @@ extensions = [
     "sphinx.ext.ifconfig",
     "sphinx.ext.intersphinx",
     "sphinx.ext.linkcode",
-    "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinxarg.ext",
     "sphinxcontrib.bibtex",  # for foot-citations
