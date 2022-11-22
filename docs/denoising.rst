@@ -117,8 +117,8 @@ and an index of "bad" components.
   ].to_numpy()
 
   # Select "bad" components from the mixing matrix
-  rejected_components = mixing[rejected_columns].to_numpy()
-  accepted_components = mixing[accepted_columns].to_numpy()
+  rejected_components = mixing_df[rejected_columns].to_numpy()
+  accepted_components = mixing_df[accepted_columns].to_numpy()
 
 
 *****************************************************************
@@ -183,7 +183,7 @@ objects, so we will end up using :mod:`numpy` directly for this approach.
           confounds,
           rejected_components,
           accepted_components,
-          np.ones(mixing.shape[0], 1),
+          np.ones(mixing_df.shape[0], 1),
       ),
   )
   betas = np.linalg.lstsq(regressors, data, rcond=None)[0][:-1]
