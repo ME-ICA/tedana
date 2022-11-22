@@ -60,18 +60,6 @@ For this walkthrough, we will use Python and the Nilearn package to denoise data
 However, you can definitely accomplish all of these steps in other languages, like MATLAB,
 or using other neuroimaging toolboxes, like AFNI.
 
-.. important::
-
-  In this walkthrough, we show how to denoise outputs of the ``fMRIPrep`` preprocessing workflow.
-
-  As such, the filenames we use reflect the current standard for ``fMRIPrep`` outputs,
-  although you will need to adjust them based on your own data.
-  Additionally, these examples show how to incorporate external regressors
-  (in this case, nuisance regressors like motion parameters) into your denoising step.
-
-  If you do not want to include external regressors, you will need to adapt the code slightly;
-  however, the necessary changes should be minimal.
-
 Let's start by loading the necessary data.
 No matter which type of denoising you want to use, you will need to include this step.
 
