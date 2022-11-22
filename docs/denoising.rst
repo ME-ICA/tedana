@@ -33,7 +33,7 @@ These different approaches towards decomposition-based denoising methods are des
 This page has three purposes:
 
 1.  Describe different approaches to denoising using ICA components.
-2.  Provide sample code using common code to perform each type of denoising.
+2.  Provide sample code that performs each type of denoising.
 3.  Describe how to incorporate external regressors (e.g., motion parameters) into the denoising step.
 
 .. admonition:: Which should you use?
@@ -56,7 +56,7 @@ This page has three purposes:
 Now we can get started!
 This walkthrough will show you how to perform different kinds of denoising on example data.
 
-For this walkthrough, we will use Python and the Nilearn package to denoised data.
+For this walkthrough, we will use Python and the Nilearn package to denoise data that were preprocessed in fMRIPrep.
 However, you can definitely accomplish all of these steps in other languages, like MATLAB,
 or using other neuroimaging toolboxes, like AFNI.
 
