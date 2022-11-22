@@ -92,13 +92,12 @@ and an index of "bad" components.
   metrics_file = "sub-01_task-rest_desc-tedana_metrics.tsv"
 
   # Load the mixing matrix
-  mixing_df = pd.read_table(mixing_file, index_col="component")
-  mixing = mixing_df.data  # Shape is time-by-components
+  mixing_df = pd.read_table(mixing_file)  # Shape is time-by-components
 
   # Load the component table
   metrics_df = pd.read_table(metrics_file)
-  rejected_comps_idx = metrics_df.loc[metrics_df["classification"] == "rejected"].index.values
-  kept_comps_idx = metrics_df.loc[metrics_df["classification"] != "rejected"].index.values
+  rejected_columns = metrics_df.loc[metrics_df["classification"] == "rejected", "Component"]
+  accepted_columns = metrics_df.loc[metrics_df["classification"] == "accepted", "Component"]
 
   # Load the fMRIPrep confounds file
   confounds_df = pd.read_table(confounds_file)
@@ -118,7 +117,8 @@ and an index of "bad" components.
   ].to_numpy()
 
   # Select "bad" components from the mixing matrix
-  rejected_components = mixing[:, rejected_comps_idx]
+  rejected_components = mixing[rejected_columns].to_numpy()
+  accepted_components = mixing[accepted_columns].to_numpy()
 
 
 *****************************************************************
@@ -176,15 +176,23 @@ objects, so we will end up using :mod:`numpy` directly for this approach.
   data = apply_mask(data_file, mask_file)
   data = data.T  # Transpose to voxels-by-time
 
-  # Fit GLM to all components and nuisance regressors (after adding a constant term)
-  regressors = np.hstack((confounds, mixing, np.ones(mixing.shape[0], 1)))
+  # Fit GLM to accepted components, rejected components and nuisance regressors
+  # (after adding a constant term)
+  regressors = np.hstack(
+      (
+          confounds,
+          rejected_components,
+          accepted_components,
+          np.ones(mixing.shape[0], 1),
+      ),
+  )
   betas = np.linalg.lstsq(regressors, data, rcond=None)[0][:-1]
 
   # Denoise the data using the betas from just the bad components
-  confounds_idx = np.concat(
-      np.arange(confounds.shape[1]),
-      rejected_comps_idx + confounds.shape[1],
-  )
+  rejected_columns_idx = metrics_df.loc[
+      metrics_df["Component"].isin(rejected_columns)
+  ].index.values
+  confounds_idx = np.arange(confounds.shape[1] + rejected_components.shape[1])
   pred_data = np.dot(np.hstack(confounds, rejected_components), betas[confounds_idx, :])
   data_denoised = data - pred_data
 
@@ -215,14 +223,12 @@ This way, you can regress the rejected components out of the data in the form of
   import numpy as np  # A library for working with numerical data
   from nilearn.maskers import NiftiMasker  # A class for masking and denoising fMRI data
 
-  # Separate the mixing matrix and confounds into "good" and "bad" time series
-  rejected_components = mixing[:, rejected_comps_idx]
-  kept_components = mixing[:, kept_comps_idx]
+  # Combine the confounds and rejected components in a single array
   bad_timeseries = np.hstack((rejected_components, confounds))
 
-  # Regress the good components out of the bad time series to get "pure evil" components
-  betas = np.linalg.lstsq(kept_components, bad_timeseries, rcond=None)[0]
-  pred_bad_timeseries = np.dot(kept_components, betas)
+  # Regress the good components out of the bad time series to get "pure evil" regressors
+  betas = np.linalg.lstsq(accepted_components, bad_timeseries, rcond=None)[0]
+  pred_bad_timeseries = np.dot(accepted_components, betas)
   orth_bad_timeseries = bad_timeseries - pred_bad_timeseries
 
   # Once you have these "pure evil" components, you can denoise the data
