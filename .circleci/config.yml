@@ -152,6 +152,41 @@ jobs:
           paths:
               - src/coverage/.coverage.py39
 
+  unittest_310:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py310-v1-{{ checksum "setup.cfg" }}
+      - run:
+          name: Generate environment
+          command: |
+            apt-get update
+            apt-get install -yqq make
+            if [ ! -d /opt/conda/envs/tedana_py310 ]; then
+              conda create -yq -n tedana_py310 python=3.10
+              source activate tedana_py310
+              pip install .[tests]
+            fi
+      - run:
+          name: Running unit tests
+          command: |
+            source activate tedana_py310
+            make unittest
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py310
+      - save_cache:
+          key: conda-py310-v1-{{ checksum "setup.cfg" }}
+          paths:
+              - /opt/conda/envs/tedana_py310
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+              - src/coverage/.coverage.py310
+
+
   style_check:
     docker:
       - image: continuumio/miniconda3
@@ -318,12 +353,14 @@ workflows:
             - makeenv_37
       - unittest_38
       - unittest_39
+      - unittest_310
       - merge_coverage:
           requires:
             - unittest_36
             - unittest_37
             - unittest_38
             - unittest_39
+            - unittest_310
             - three-echo
             - four-echo
             - five-echo
