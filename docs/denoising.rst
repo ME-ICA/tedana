@@ -189,9 +189,6 @@ objects, so we will end up using :mod:`numpy` directly for this approach.
   betas = np.linalg.lstsq(regressors, data, rcond=None)[0][:-1]
 
   # Denoise the data using the betas from just the bad components
-  rejected_columns_idx = metrics_df.loc[
-      metrics_df["Component"].isin(rejected_columns)
-  ].index.values
   confounds_idx = np.arange(confounds.shape[1] + rejected_components.shape[1])
   pred_data = np.dot(np.hstack(confounds, rejected_components), betas[confounds_idx, :])
   data_denoised = data - pred_data
