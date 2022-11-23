@@ -28,40 +28,6 @@ jobs:
           paths:
               - /opt/conda/envs/tedana_py37
 
-  unittest_36:
-    docker:
-      - image: continuumio/miniconda3
-    working_directory: /tmp/src/tedana
-    steps:
-      - checkout
-      - restore_cache:
-          key: conda-py36-v2-{{ checksum "setup.cfg" }}
-      - run:
-          name: Generate environment
-          command: |
-            apt-get update
-            apt-get install -yqq make
-            if [ ! -d /opt/conda/envs/tedana_py36 ]; then
-              conda create -yq -n tedana_py36 python=3.6
-              source activate tedana_py36
-              pip install .[tests]
-            fi
-      - run:
-          name: Running unit tests
-          command: |
-            source activate tedana_py36
-            make unittest
-            mkdir /tmp/src/coverage
-            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py36
-      - save_cache:
-          key: conda-py36-v2-{{ checksum "setup.cfg" }}
-          paths:
-              - /opt/conda/envs/tedana_py36
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-              - src/coverage/.coverage.py36
-
   unittest_37:
     docker:
       - image: continuumio/miniconda3
@@ -332,7 +298,6 @@ workflows:
   build_test:
     jobs:
       - makeenv_37
-      - unittest_36
       - unittest_37:
           requires:
             - makeenv_37
@@ -356,7 +321,6 @@ workflows:
       - unittest_310
       - merge_coverage:
           requires:
-            - unittest_36
             - unittest_37
             - unittest_38
             - unittest_39
