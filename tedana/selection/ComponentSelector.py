@@ -49,37 +49,37 @@ def load_config(tree):
         A validated decision tree for the component selection process.
     """
 
-#      Formerly used text
-#      The `dict` has several required fields to describe the entire tree
-#      - `tree_id`: :obj:`str` The name of the tree
-#      - `info`: :obj:`str` A brief description of the tree for info logging
-#      - `report`: :obj:`str`
-#      - A narrative description of the tree that could be used in report logging
-#      - `refs`: :obj:`str` Publications that should be referenced, when this tree is used
-#      - `necessary_metrics`: :obj:`list[str]`
-#      - The metrics in `component_table` that will be used by this tree
-#      - `intermediate_classifications`: :obj:`list[str]`
-#      - User specified component classification labels. 'accepted', 'rejected', and
-#      - 'unclassified' are defaults that don't need to be included here
-#      - `classification_tags`: :obj:`list[str]`
-#      - Descriptive labels that can be used to explain why a component was accepted or rejected.
-#      - For example, ["Likely BOLD","Low variance"]
-#      - `nodes`: :obj:`list[dict]` Each dictionary includes the information
-#
-#        to run one node in the decision tree. Each node should either be able
-#        to change component classifications (function names starting with ``dec_``)
-#        or calculate values using information from multiple components
-#        (function names starting with ``calc_``)
-#        nodes includes:
-#        - `functionname`: :obj:`str` The name of the function to be called
-#        - `parameters`: :obj:`dict` Required parameters for the function
-#          The only parameter that is used in all functions is `decidecomps`,
-#          which are the component classifications the function should run on.
-#          Most ``dec_`` functions also include `ifTrue` and `ifFalse` which
-#          define how to to change the classification of a component if the
-#          criteria in the function is true or false.
-#
-#        - `kwargs`: :obj:`dict` Optional parameters for the function
+    #      Formerly used text
+    #      The `dict` has several required fields to describe the entire tree
+    #      - `tree_id`: :obj:`str` The name of the tree
+    #      - `info`: :obj:`str` A brief description of the tree for info logging
+    #      - `report`: :obj:`str`
+    #      - A narrative description of the tree that could be used in report logging
+    #      - `refs`: :obj:`str` Publications that should be referenced, when this tree is used
+    #      - `necessary_metrics`: :obj:`list[str]`
+    #      - The metrics in `component_table` that will be used by this tree
+    #      - `intermediate_classifications`: :obj:`list[str]`
+    #      - User specified component classification labels. 'accepted', 'rejected', and
+    #      - 'unclassified' are defaults that don't need to be included here
+    #      - `classification_tags`: :obj:`list[str]`
+    #      - Descriptive labels that can be used to explain why a component was accepted or rejected.
+    #      - For example, ["Likely BOLD","Low variance"]
+    #      - `nodes`: :obj:`list[dict]` Each dictionary includes the information
+    #
+    #        to run one node in the decision tree. Each node should either be able
+    #        to change component classifications (function names starting with ``dec_``)
+    #        or calculate values using information from multiple components
+    #        (function names starting with ``calc_``)
+    #        nodes includes:
+    #        - `functionname`: :obj:`str` The name of the function to be called
+    #        - `parameters`: :obj:`dict` Required parameters for the function
+    #          The only parameter that is used in all functions is `decidecomps`,
+    #          which are the component classifications the function should run on.
+    #          Most ``dec_`` functions also include `ifTrue` and `ifFalse` which
+    #          define how to to change the classification of a component if the
+    #          criteria in the function is true or false.
+    #
+    #        - `kwargs`: :obj:`dict` Optional parameters for the function
 
     if tree in DEFAULT_TREES:
         fname = op.join(get_resource_path(), "decision_trees", tree + ".json")
