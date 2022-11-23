@@ -374,15 +374,17 @@ def log_decision_tree_step(
     function_name_idx: :obj:`str`
         The name of the function that should be logged. By convention, this
         be "Step current_node_idx: function_name"
+
     comps2use: :obj:`list[int]` or -1
         A list of component indices that should be used by a function.
         Only used to report no components found if empty and report
         the number of components found if not empty.
-        Note: calc_ functions that don't use component metrics do not
+        Note: ``calc_`` functions that don't use component metrics do not
         need to use the component_table and may not require selecting
         components. For those functions, set comps2use==-1 to avoid
         logging a warning that no components were found. Currently,
         this is only used by calc_extend_factor
+
     decide_comps: :obj:`str` or :obj:`list[str]` or :obj:`list[int]`
         This is string or a list of strings describing what classifications
         of components to operate on. Only used in this function to report
@@ -392,6 +394,7 @@ def log_decision_tree_step(
     ifTrue, ifFalse: :obj:`str`
         If a component is true or false, the classification to assign that
         component
+
     calc_outputs: :obj:`dict`
         A dictionary with output information from the function. If it contains a key
         "calc_cross_comp_metrics" then the value for that key is a list of
@@ -646,23 +649,21 @@ def rho_elbow_kundu_liberal(
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
         Only the 'kappa' column is used in this function
+
     n_echos: :obj:`int`
         The number of echos in the multi-echo data
     rho_elbow_type: :obj:`str`
-        The algorithm used to calculate the rho elbow. Current options are:
-        kundu (default): Method used by Kundu in MEICA v2.7. It is the mean between
-            the rho elbow calculated on all components and a subset of unclassificated
-            components with some extra quirks
-        liberal: Same as kundu but is the maximum of the two elbows, which will minimize
-            the number of components rejected by having values greater than the rho elbow
+        The algorithm used to calculate the rho elbow. Current options are
+        'kundu' and 'liberal'.
+
     comps2use: :obj:`list[int]`
         A list of component indices used to calculate the elbow
         default=None which means use all components
+
     subset_comps2use: :obj:`list[int]`
         A list of component indices used to calculate the elbow
         If None then only calculate a threshold using all components
         default=-1 which means use only 'unclassified' components
-
 
     Returns
     -------
