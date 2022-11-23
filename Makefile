@@ -13,6 +13,7 @@ help:
 
 lint:
 	@flake8 tedana
+	@black --check --diff tedana
 
 unittest:
 	@py.test --skipintegration --cov-append --cov-report term-missing --cov=tedana tedana/
