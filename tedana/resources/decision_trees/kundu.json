@@ -53,7 +53,8 @@
                 "log_extra_info": "Reject if Kappa>Rho",
                 "log_extra_report": "",
                 "tag_ifTrue": "Unlikely BOLD"
-            }
+            },
+            "_comment": "Code I002 in premodularized tedana"
         },
         {
             "functionname": "dec_left_op_right",
@@ -72,7 +73,8 @@
                 "log_extra_info": "Reject if countsig_in S0clusters > T2clusters & countsig_in_T2clusters>0",
                 "log_extra_report": "",
                 "tag_ifTrue": "Unlikely BOLD"
-            }
+            },
+            "_comment": "Code I003 in premodularized tedana"
         },
         {
             "functionname": "calc_median",
@@ -99,7 +101,8 @@
                 "log_extra_info": "Reject if DICE S0>T2  & varex>median",
                 "log_extra_report": "",
                 "tag_ifTrue": "Unlikely BOLD"
-            }
+            },
+            "_comment": "Code I004 in premodularized tedana"
         },
         {
             "functionname": "dec_left_op_right",
@@ -118,7 +121,8 @@
                 "log_extra_info": "Reject if T2fitdiff_invsout_ICAmap_Tstat<0 & varex>median",
                 "log_extra_report": "",
                 "tag_ifTrue": "Unlikely BOLD"
-            }
+            },
+            "_comment": "Code I005 in premodularized tedana"
         },
         {
             "functionname": "calc_kappa_elbow",
@@ -190,7 +194,8 @@
                 "tag_ifTrue": "No provisional accept",
                 "log_extra_info": "If nothing is provisionally accepted by this point, be conservative and accept everything",
                 "log_extra_report": ""
-            }
+            },
+            "_comment": "Code I006 in premodularized tedana"
         },
         {
             "functionname": "calc_varex_thresh",
@@ -260,7 +265,7 @@
                 "right2": "varex_upper_thresh",
                 "log_extra_info": "If variance and d_table_scores are high, then reject"
             },
-            "_comment": "One of several steps that makes it more likely to reject high variance components"
+            "_comment": "Code I007 in premodularized tedana. One of several steps that makes it more likely to reject high variance components"
         },
         {
             "functionname": "dec_left_op_right",
@@ -284,7 +289,8 @@
                 "left3": "kappa",
                 "right3": "kappa_elbow_kundu",
                 "log_extra_info": "If low variance, accept even if bad kappa & d_table_scores"
-            }
+            },
+            "_comment": "Code I008 in premodularized tedana"
         },
         {
             "functionname": "dec_classification_doesnt_exist",
@@ -300,7 +306,8 @@
                 "tag_ifTrue": "Likely BOLD",
                 "log_extra_info": "If nothing left is unclassified, then accept all",
                 "log_extra_report": ""
-            }
+            },
+            "_comment": "No code in premodularized tedana"
         },
         {
             "functionname": "calc_revised_meanmetricrank_guesses",
@@ -338,7 +345,7 @@
                 "right3_scale": "extend_factor",
                 "log_extra_info": "Reject if a combination of kappa, variance, and other factors are ranked worse than others"
             },
-            "_comment": "Quirky combination 1 of a bunch of metrics that deal with rejecting some edge cases"
+            "_comment": "Code I009 in premodularized tedana. Quirky combination 1 of a bunch of metrics that deal with rejecting some edge cases"
         },
         {
             "functionname": "dec_left_op_right",
@@ -362,7 +369,7 @@
                 "right2_scale": "extend_factor",
                 "log_extra_info": "Reject if a combination of variance and ranks of other metrics are worse than others"
             },
-            "_comment": "Quirky combination 2 of a bunch of metrics that deal with rejecting some edge cases"
+            "_comment": "Code I010 in premodularized tedana. Quirky combination 2 of a bunch of metrics that deal with rejecting some edge cases"
         },
         {
             "functionname": "calc_varex_thresh",
@@ -399,7 +406,7 @@
                 "right2": "varex_new_lower_thresh",
                 "log_extra_info": "Accept components with a bad d_table_score, but are at the higher end of the remaining variance so more cautious to not remove"
             },
-            "_comment": "Yet another quirky criterion, but this one to keep components. In the original tree, varex_new_lower_thresh would be lower than it is here. If there are differences in results, might be worth adding a scaling factor"
+            "_comment": "Code I011 in premodularized tedana. Yet another quirky criterion, but this one to keep components. In the original tree, varex_new_lower_thresh would be lower than it is here. If there are differences in results, might be worth adding a scaling factor"
         },
         {
             "functionname": "dec_left_op_right",
@@ -421,7 +428,7 @@
                 "right2": "varex_new_lower_thresh",
                 "log_extra_info": "Accept components above the kappa elbow, but are at the higher end of the remaining variance so more cautious to not remove"
             },
-            "_comment": "Yet another quirky criterion, but this one to keep components. In the original tree, varex_new_lower_thresh would be lower than it is here. If there are differences in results, might be worth adding a scaling factor"
+            "_comment": "Code I012 in premodularized tedana. Yet another quirky criterion, but this one to keep components. In the original tree, varex_new_lower_thresh would be lower than it is here. If there are differences in results, might be worth adding a scaling factor"
         },
         {
             "functionname": "manual_classify",
@@ -436,7 +443,8 @@
                 "log_extra_info": "Anything still provisional (accepted or rejected) should be accepted",
                 "log_extra_report": "",
                 "tag": "Likely BOLD"
-            }
+            },
+            "_comment": "No code in the premodularized tedana"
         }
     ]
 }

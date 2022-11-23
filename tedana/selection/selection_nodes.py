@@ -1512,9 +1512,9 @@ def calc_varex_kappa_ratio(
     only_used_metrics=False,
 ):
     """
-    Calculates the variance explained / kappa ratio for the componentse in decide_comps
-    and add those values to a new column in the component_table titled "varex kappa ratio".
-    Also calculated kappa_rate which is a cross_component_metric
+    Calculates the cross_component_metric ``kappa_rate`` for the components in decide_comps
+    and then calculate the variance explained / kappa ratio for ALL components
+    and adds those values to a new column in the component_table titled "varex kappa ratio".
 
     Parameters
     ----------
@@ -1596,10 +1596,12 @@ def calc_varex_kappa_ratio(
         )
         outputs["kappa_rate"] = kappa_rate
         LGR.info(f"Kappa rate found to be {kappa_rate} from components " f"{comps2use}")
+        # NOTE: kappa_rate is calculated on a subset of components while
+        #     "varex kappa ratio" is calculated for all compnents
         selector.component_table["varex kappa ratio"] = (
             kappa_rate
-            * selector.component_table.loc[comps2use, "variance explained"]
-            / selector.component_table.loc[comps2use, "kappa"]
+            * selector.component_table["variance explained"]
+            / selector.component_table["kappa"]
         )
         # Unclear if necessary, but this may clean up a weird issue on passing
         # references in a data frame.

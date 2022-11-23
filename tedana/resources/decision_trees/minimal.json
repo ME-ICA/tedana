@@ -167,9 +167,9 @@
                 "right": "rho"
             },
             "kwargs": {
-                "log_extra_info": "If kappa>elbow and kappa>3*rho accept even if rho>elbow",
+                "log_extra_info": "If kappa>elbow and kappa>2*rho accept even if rho>elbow",
                 "log_extra_report": "",
-                "right_scale": 3,
+                "right_scale": 2,
                 "tag_ifTrue": "Likely BOLD"
             }
         },
