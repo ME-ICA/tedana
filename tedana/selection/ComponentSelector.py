@@ -277,7 +277,7 @@ class ComponentSelector:
         If None, then look for `tree` within ./selection/data
         in the tedana code directory. default=None
 
-    
+
     Returns
     -------
     component_table : :obj:`pandas.DataFrame`
@@ -287,7 +287,7 @@ class ComponentSelector:
     component_status_table : :obj:`pandas.DataFrame`
         A table tracking the status of each component at each step.
     nodes : :obj:`list[dict]`
-        Nodes used in decision tree. 
+        Nodes used in decision tree.
     current_node_idx : :obj:`int`
         The index for the current node, which should be the last node in the decision tree.
 
