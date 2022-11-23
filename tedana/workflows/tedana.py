@@ -771,9 +771,10 @@ def tedana_workflow(
         resid = rej_ts - pred_rej_ts
         mmix[:, rej_idx] = resid
         comp_names = [
-            io.add_decomp_prefix(comp, prefix="ica", max_value=comptable.index.max())
+            io.add_decomp_prefix(comp, prefix="ICA", max_value=comptable.index.max())
             for comp in comptable.index.values
         ]
+
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
         io_generator.save_file(mixing_df, "ICA orthogonalized mixing tsv")
         RepLGR.info(
