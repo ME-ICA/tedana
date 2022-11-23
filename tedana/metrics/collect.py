@@ -160,6 +160,16 @@ def generate_metrics(
         metric_maps["map predicted T2"] = p_m_T2
         metric_maps["map predicted S0"] = p_m_S0
 
+        if io_generator.verbose:
+            io_generator.save_file(
+                utils.unmask(metric_maps["map FT2"], mask),
+                label + " component F-T2 img",
+            )
+            io_generator.save_file(
+                utils.unmask(metric_maps["map FS0"], mask),
+                label + " component F-S0 img",
+            )
+
     if "map Z clusterized" in required_metrics:
         LGR.info("Thresholding z-statistic maps")
         z_thresh = 1.95
