@@ -28,6 +28,54 @@ RefLGR = logging.getLogger("REFERENCES")
 decision_docs = {
     "selector": """\
 selector: :obj:`tedana.selection.ComponentSelector`
+        The selector to perform decision tree-based component selection with.""",
+    "ifTrueFalse": """\
+ifTrue: :obj:`str`
+        If the condition in this step is True, give the component this label.
+        Use 'nochange' if no label changes are desired.
+
+    ifFalse: :obj`str`
+        If the condition in this step is False, give the component this label.
+        Use 'nochange' to indicate if no label changes are desired.
+""",
+    # FIXME: missing default
+    "decide_comps": """\
+decide_comps: :obj:`str` or :obj:`list[str]`
+        What classification(s) to operate on. Use 'all' to include all components.""",
+    "log_extra_report": """\
+log_extra_report: :obj:`str`
+        Additional text to place in the report log. Default "".""",
+    "log_extra_info": """\
+log_extra_info: :obj:`str`
+        Additional text to place in the information log. Default "".""",
+    "only_used_metrics": """\
+only_used_metrics: :obj:`bool`
+        Whether to only report what metrics will be used when this is run. Default False.""",
+    "custom_node_label": """\
+custom_node_label: :obj:`str`
+        A short label to use in the table for this step. One is automatically
+        assigned by default. Default "".""",
+    "tag_ifTrueFalse": """\
+tag_ifTrue: :obj:`str`
+        The classification tag to apply if a component is classified True. Default "".
+    tag_ifFalse: :obj`str`
+        The classification tag to apply if a component is classified False. Default "".""",
+    "basicreturns": """\
+:obj:`tedana.selection.ComponentSelector`: The updated selector.""",
+    "extend_factor": """\
+extend_factor: :obj:`float`
+        A scalar used to set the threshold for the mean rank metric.""",
+    "restrict_factor": """\
+restrict_factor: :obj:`float`
+        A scalar used to set the threshold for the mean rank metric.""",
+    "prev_X_steps": """\
+prev_X_steps: :obj:`int`
+        The number of previous steps to search for a label in.""",
+}
+
+_old_decision_docs = {
+    "selector": """\
+selector: :obj:`tedana.selection.ComponentSelector`
     This structure contains most of the information needed to execute each
     decision node function and to store the ouput of the function. The class
     description has full details. Key elements include: component_table:
@@ -148,7 +196,8 @@ def manual_classify(
         classifications. If this is True, that warning is suppressed.
         (Useful if manual_classify is used to reset all labels to unclassified).
         default=False
-    {log_extra}
+    {log_extra_info}
+    {log_extra_report}
     {custom_node_label}
     {only_used_metrics}
 
@@ -267,20 +316,17 @@ def dec_left_op_right(
     tag_ifFalse=None,
 ):
     """
-    Tests a relationship between (left_scale*)left and (right_scale*right)
-    using an operator, like >, defined with op
-    This can be used to directly compare any 2 metrics and use that info
-    to change component classification. If either metric is a number,
-    this can also compare a metric against a fixed threshold.
+    Performs a relational comparison.
 
     Parameters
     ----------
     {selector}
     {ifTrueFalse}
     {decide_comps}
-    op: :ojb:`str`
+    op: :obj:`str`
         Must be one of: ">", ">=", "==", "<=", "<"
         Applied the user defined operator to left op right
+
     left, right: :obj:`str` or :obj:`float`
         The labels for the two metrics to be used for comparision.
         for example: left='kappa', right='rho' and op='>' means this
@@ -295,7 +341,8 @@ def dec_left_op_right(
         cross_component_metrics, since those will resolve to a single value.
         This cannot be a label for a component_table column since that would
         output a different value for each component. default=1
-    op2: :ojb:`str`, optional
+
+    op2: :obj:`str`, optional
     left2, right2, left3, right3: :obj:`str` or :obj:`float`, optional
     left2_scale, right2_scale, left3_scale, right3_scale: :obj:`float`, optional
         This function can also be used to calculate the intersection of two or three
@@ -303,7 +350,9 @@ def dec_left_op_right(
         this function returns
         (left_scale*)left op (right_scale*right) AND (left2_scale*)left2 op2 (right2_scale*right2)
         if the "3" parameters are also defined then it's the intersection of all 3 statements
-    {log_extra}
+
+    {log_extra_info}
+    {log_extra_report}
     {custom_node_label}
     {only_used_metrics}
     {tag_ifTrueFalse}
@@ -595,7 +644,8 @@ def dec_variance_lessthan_thresholds(
     all_comp_threshold: :obj: `float`
         The threshold for which the sum of all components<single_comp_threshold
         needs to be under. default=1.0
-    {log_extra}
+    {log_extra_info}
+    {log_extra_report}
     {custom_node_label}
     {only_used_metrics}
     {tag_ifTrueFalse}
@@ -706,7 +756,8 @@ def calc_median(
         the values in this column will be calculated
     median_label: :obj:`str`
         The median will be saved in "median_(median_label)"
-    {log_extra}
+    {log_extra_info}
+    {log_extra_report}
     {custom_node_label}
     {only_used_metrics}
 
@@ -797,7 +848,8 @@ def calc_kappa_elbow(
     ----------
     {selector}
     {decide_comps}
-    {log_extra}
+    {log_extra_info}
+    {log_extra_report}
     {custom_node_label}
     {only_used_metrics}
 
@@ -905,15 +957,15 @@ def calc_rho_elbow(
     subset_decide_comps: :obj:`str`
         This is a string with a single component classification label. For the
         elbow calculation used by Kundu in MEICA v.27 thresholds are based
-        on all components and on unclassified components. default='unclassified'
+        on all components and on unclassified components. Default
+        'unclassified'.
+
     rho_elbow_type: :obj:`str`
         The algorithm used to calculate the rho elbow. Current options are:
-        kundu (default): Method used by Kundu in MEICA v2.7. It is the mean between
-            the rho elbow calculated on all components and a subset of unclassificated
-            components with some extra quirks
-        liberal: Same as kundu but is the maximum of the two elbows, which will minimize
-            the number of components rejected by having values greater than the rho elbow
-    {log_extra}
+        'kundu' and 'liberal'. Default 'kundu'.
+
+    {log_extra_info}
+    {log_extra_report}
     {custom_node_label}
     {only_used_metrics}
 
@@ -1054,15 +1106,17 @@ def dec_classification_doesnt_exist(
         in new_classification. Options are 'unclassified', 'accepted',
         'rejected', or intermediate_classification labels predefined in the
         decision tree
+
     {decide_comps}
     class_comp_exists: :obj:`str` or :obj:`list[str]` or :obj:`int` or :obj:`list[int]`
         This has the same structure options as decide_comps. This function tests
         whether any components have the classifications defined in this variable.
-    {log_extra}
+
+    {log_extra_info}
+    {log_extra_report}
     {custom_node_label}
     {only_used_metrics}
     {tag_ifTrueFalse}
-
 
     Returns
     -------
@@ -1193,7 +1247,8 @@ def calc_varex_thresh(
         lowest variance. Either input an integer directory or input a string that is
         a parameter stored in selector.cross_component_metrics ("num_acc_guess" in
         original decision tree). Default is None
-    {log_extra}
+    {log_extra_info}
+    {log_extra_report}
     {custom_node_label}
     {only_used_metrics}
 
@@ -1331,13 +1386,14 @@ def calc_extend_factor(
     extend_factor=None,
 ):
     """
-    Calculates the scaler used to set a threshold for d_table_score
+    Calculate the scalar used to set a threshold for d_table_score.
 
     Parameters
     ----------
     {selector}
     {decide_comps}
-    {log_extra}
+    {log_extra_info}
+    {log_extra_report}
     {custom_node_label}
     {only_used_metrics}
     extend_factor: :obj:`float`
@@ -1347,7 +1403,6 @@ def calc_extend_factor(
     Returns
     -------
     {basicreturns}
-
     """
 
     outputs = {
@@ -1416,7 +1471,8 @@ def calc_max_good_meanmetricrank(
         By default, this will output a value called "max_good_meanmetricrank"
         If this variable is not None or "" then it will output:
         "max_good_meanmetricrank_[metric_suffix]"
-    {log_extra}
+    {log_extra_info}
+    {log_extra_report}
     {custom_node_label}
     {only_used_metrics}
 
@@ -1520,7 +1576,8 @@ def calc_varex_kappa_ratio(
     ----------
     {selector}
     {decide_comps}
-    {log_extra}
+    {log_extra_info}
+    {log_extra_report}
     {custom_node_label}
     {only_used_metrics}
 
@@ -1630,22 +1687,18 @@ def calc_revised_meanmetricrank_guesses(
     only_used_metrics=False,
 ):
     """
-    Calculates a new d_table_score (meanmetricrank) on a subset of
-    components defined in decide_comps.
-    Also saves a bunch of cross_component_metrics that are used for various thresholds. These
-    are:
-    num_acc_guess: A guess of the final number of accepted components
-    restrict_factor: An inputted scaling value
-    conservative_guess: A conservative guess of the final number of accepted components
-        (num_acc_guess/restrict_factor)
+    Calculate a new d_table_score (meanmetricrank).
 
     Parameters
     ----------
     {selector}
     {decide_comps}
     restrict_factor: :obj:`int` or :obj:`float`
-        A scaling factor to scale between num_acc_guess and conservative_guess. default=2
-    {log_extra}
+        A scaling factor to scale between num_acc_guess and conservative_guess.
+        Default=2.
+
+    {log_extra_info}
+    {log_extra_report}
     {custom_node_label}
     {only_used_metrics}
 
@@ -1665,7 +1718,14 @@ def calc_revised_meanmetricrank_guesses(
     This also hard-codes for kappa_elbow_kundu and rho_elbow_kundu in
     the cross component metrics. If someone decides to keep using
     this function with other elbow thresholds, the code would need to
-    be altered to account for that
+    be altered to account for that.
+
+    This function also saves the following cross_component_metrics:
+      - ``num_acc_guess``, a guess on the final number of accepted components,
+      - ``restrict_factor``, an input to this function used for scaling,
+      - ``conservative_guess``, a conservative guess of the final number of
+        accepted components calculated as the ratio of ``num_acc_guess`` to
+        ``restrict_factor``.
     """
 
     function_name_idx = f"Step {selector.current_node_idx}: calc_revised_meanmetricrank_guesses"
@@ -1813,3 +1873,11 @@ def calc_revised_meanmetricrank_guesses(
 calc_revised_meanmetricrank_guesses.__doc__ = calc_revised_meanmetricrank_guesses.__doc__.format(
     **decision_docs
 )
+
+# NOTE: to debug any documentation rendering, I recommend the following hack:
+# python selection_nodes.py | nl
+# after uncommenting the below and placing the relevant function in the print
+# statement.
+#
+# if __name__ == '__main__':
+#     print(dec_left_op_right.__doc__)
