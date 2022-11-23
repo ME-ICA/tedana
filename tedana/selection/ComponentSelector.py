@@ -62,7 +62,7 @@ def load_config(tree):
     #      - User specified component classification labels. 'accepted', 'rejected', and
     #      - 'unclassified' are defaults that don't need to be included here
     #      - `classification_tags`: :obj:`list[str]`
-    #      - Descriptive labels that can be used to explain why a component was accepted or rejected.
+    #      - Descriptive labels to be used to explain why a component was accepted or rejected.
     #      - For example, ["Likely BOLD","Low variance"]
     #      - `nodes`: :obj:`list[dict]` Each dictionary includes the information
     #
