@@ -342,26 +342,26 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     )
     # Vertical line depicting the optimal number of components for 90% variance explained
     plt.vlines(
-        n_components[3],
+        n_components[5],
         ymin=np.min(criteria),
         ymax=np.max(criteria),
-        color="tab:red",
+        color="tab:brown",
         linestyles="dashed",
         label="90% varexp",
     )
     # Vertical line depicting the optimal number of components for 95% variance explained
     plt.vlines(
-        n_components[4],
+        n_components[6],
         ymin=np.min(criteria),
         ymax=np.max(criteria),
-        color="tab:purple",
+        color="tab:pink",
         linestyles="dashed",
         label="95% varexp",
     )
 
     plt.legend()
 
-    #  Save the plot
+    # Save the plot
     plot_name = "pca_criteria.png"
     pca_criteria_name = os.path.join(io_generator.out_dir, "figures", plot_name)
     plt.savefig(pca_criteria_name)
@@ -402,28 +402,46 @@ def pca_results(criteria, n_components, all_varex, io_generator):
         linestyles="dashed",
         label="MDL",
     )
-    # Vertical line depicting the optimal number of components for 90% variance explained
+    # Vertical line depicting the optimal number of components for Kundu
     plt.vlines(
         n_components[3],
         ymin=0,
         ymax=1,
         color="tab:red",
         linestyles="dashed",
-        label="90% varexp",
+        label="Kundu",
     )
-    # Vertical line depicting the optimal number of components for 95% variance explained
+    # Vertical line depicting the optimal number of components for Kundu stabilized
     plt.vlines(
         n_components[4],
         ymin=0,
         ymax=1,
         color="tab:purple",
         linestyles="dashed",
+        label="Kundu stabilized",
+    )
+    # Vertical line depicting the optimal number of components for 90% variance explained
+    plt.vlines(
+        n_components[5],
+        ymin=0,
+        ymax=1,
+        color="tab:brown",
+        linestyles="dashed",
+        label="90% varexp",
+    )
+    # Vertical line depicting the optimal number of components for 95% variance explained
+    plt.vlines(
+        n_components[6],
+        ymin=0,
+        ymax=1,
+        color="tab:pink",
+        linestyles="dashed",
         label="95% varexp",
     )
 
     plt.legend()
 
-    #  Save the plot
+    # Save the plot
     plot_name = "pca_variance_explained.png"
     pca_variance_explained_name = os.path.join(io_generator.out_dir, "figures", plot_name)
     plt.savefig(pca_variance_explained_name)

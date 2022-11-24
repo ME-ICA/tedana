@@ -623,6 +623,7 @@ def tedana_workflow(
 
     if mixm is None:
         # Identify and remove thermal noise from data
+        # TODO this is entrypoint for pca algorithm
         dd, n_components = decomposition.tedpca(
             catd,
             data_oc,

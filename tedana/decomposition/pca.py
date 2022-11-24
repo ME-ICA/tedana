@@ -186,6 +186,7 @@ def tedpca(
     :py:mod:`tedana.constants` : The module describing the filenames for
         various naming conventions
     """
+    # TODO refactor this to make it nice
     if algorithm == "kundu":
         alg_str = (
             "followed by the Kundu component selection decision tree \\citep{kundu2013integrated}"
@@ -268,21 +269,6 @@ def tedpca(
             f"AIC: {aic_varexp}% | KIC: {kic_varexp}% | MDL: {mdl_varexp}% | "
             f"90% varexp: {varex_90_varexp}% | 95% varexp: {varex_95_varexp}%"
         )
-
-        pca_optimization_curves = np.array([aic["value"], kic["value"], mdl["value"]])
-        pca_criteria_components = np.array(
-            [
-                n_aic,
-                n_kic,
-                n_mdl,
-                n_varex_90,
-                n_varex_95,
-            ]
-        )
-
-        # Plot maPCA optimization curves
-        LGR.info("Plotting maPCA optimization curves")
-        plot_pca_results(pca_optimization_curves, pca_criteria_components, all_varex, io_generator)
 
         # Save maPCA results into a dictionary
         mapca_results = {
@@ -368,7 +354,7 @@ def tedpca(
     io_generator.save_file(comp_maps, "z-scored PCA components img")
 
     # Select components using decision tree
-    if algorithm == "kundu":
+    if algorithm in ["mdl", "aic", "kic"]:
         comptable, metric_metadata = kundu_tedpca(
             comptable,
             n_echos,
@@ -376,13 +362,34 @@ def tedpca(
             rdaw,
             stabilize=False,
         )
-    elif algorithm == "kundu-stabilize":
+        n_kundu = np.sum(comptable["classification"] == "accepted")
+        values_kundu = np.array(comptable["variance explained"])
+
         comptable, metric_metadata = kundu_tedpca(
             comptable,
             n_echos,
             kdaw,
             rdaw,
             stabilize=True,
+        )
+        n_kundu_st = np.sum(comptable["classification"] == "accepted")
+        values_kundu_st = np.array(comptable["variance explained"])
+        if True:
+            # FIXME add a flexible ammount of nan components
+            values_kundu = np.concatenate([values_kundu, np.array([np.nan] * 5)])
+            values_kundu_st = np.concatenate([values_kundu_st, np.array([np.nan] * 5)])
+        pca_optimization_curves = np.array(
+            [aic["value"], kic["value"], mdl["value"], values_kundu, values_kundu_st])
+        pca_criteria_components = np.array(
+            [
+                n_aic,
+                n_kic,
+                n_mdl,
+                n_kundu,
+                n_kundu_st,
+                n_varex_90,
+                n_varex_95,
+            ]
         )
     else:
         if isinstance(algorithm, float):
@@ -397,6 +404,17 @@ def tedpca(
         )
         comptable["classification"] = "accepted"
         comptable["rationale"] = ""
+
+    if algorithm in ["kundu", "kundu-stabilize", "mdl", "aic", "kic"]:
+        # Plot maPCA optimization curves once all relevant mehtods have been
+        # computed
+        LGR.info("Plotting maPCA optimization curves")
+        plot_pca_results(
+            pca_optimization_curves,
+            pca_criteria_components,
+            all_varex,    # TODO find out what this is doing
+            io_generator  # TODO find out what this is doing
+        )
 
     # Save decomposition files
     comp_names = [
