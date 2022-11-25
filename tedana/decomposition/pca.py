@@ -22,12 +22,10 @@ RepLGR = logging.getLogger("REPORT")
 def low_mem_pca(data):
     """
     Run Singular Value Decomposition (SVD) on input data.
-
     Parameters
     ----------
     data : (S [*E] x T) array_like
         Optimally combined (S x T) or full multi-echo (S*E x T) data.
-
     Returns
     -------
     u : (S [*E] x C) array_like
@@ -270,6 +268,16 @@ def tedpca(
             f"90% varexp: {varex_90_varexp}% | 95% varexp: {varex_95_varexp}%"
         )
 
+        # # Plot maPCA optimization curves once all relevant mehtods have been
+        # # computed
+        # LGR.info("Plotting maPCA optimization curves")
+        # plot_pca_results(
+        #     pca_optimization_curves,
+        #     pca_criteria_components,
+        #     all_varex,  # TODO find out what this is doing
+        #     io_generator  # TODO find out what this is doing
+        # )
+
         # Save maPCA results into a dictionary
         mapca_results = {
             "aic": {
@@ -287,6 +295,7 @@ def tedpca(
                 "explained_variance_total": mdl_varexp,
                 "curve": mdl["value"],
             },
+            # TODO add the new values
             "varex_90": {
                 "n_components": n_varex_90,
                 "explained_variance_total": varex_90_varexp,
@@ -354,7 +363,23 @@ def tedpca(
     io_generator.save_file(comp_maps, "z-scored PCA components img")
 
     # Select components using decision tree
+    if isinstance(algorithm, float):
+        alg_str = "variance explained-based"
+    elif isinstance(algorithm, int):
+        alg_str = "a fixed number of components and no"
+    else:
+        alg_str = algorithm
+    LGR.info(
+        f"Selected {comptable.shape[0]} components with {round(100*varex_norm.sum(),2)}% "
+        f"normalized variance explained using {alg_str} dimensionality detection"
+    )
+    comptable["classification"] = "accepted"
+    comptable["rationale"] = ""
+
     if algorithm in ["mdl", "aic", "kic"]:
+        # Continue the standard branch oif the logic with Kundu
+        # TODO the logic here needs a big refactoring
+
         comptable, metric_metadata = kundu_tedpca(
             comptable,
             n_echos,
@@ -374,12 +399,27 @@ def tedpca(
         )
         n_kundu_st = np.sum(comptable["classification"] == "accepted")
         values_kundu_st = np.array(comptable["variance explained"])
-        if True:
-            # FIXME add a flexible ammount of nan components
-            values_kundu = np.concatenate([values_kundu, np.array([np.nan] * 5)])
-            values_kundu_st = np.concatenate([values_kundu_st, np.array([np.nan] * 5)])
-        pca_optimization_curves = np.array(
-            [aic["value"], kic["value"], mdl["value"], values_kundu, values_kundu_st])
+
+        n_val_kundu = values_kundu_st.shape[0]
+        n_val = aic["value"].shape[0]
+        if n_val > n_val_kundu :
+            values_kundu = np.concatenate(
+                [values_kundu, np.array([np.nan] * (n_val - n_val_kundu))])
+            values_kundu_st = np.concatenate(
+                [values_kundu_st, np.array([np.nan] * (n_val - n_val_kundu))])
+        else:
+            values_kundu = values_kundu[:n_val]
+            values_kundu_st = values_kundu_st[:n_val]
+
+        pca_optimization_curves = np.concatenate(
+            [
+                aic["value"].reshape(1, -1),
+                kic["value"].reshape(1, -1),
+                mdl["value"].reshape(1, -1),
+                values_kundu.reshape(1, -1),
+                values_kundu_st.reshape(1, -1)
+            ]
+        )
         pca_criteria_components = np.array(
             [
                 n_aic,
@@ -391,30 +431,12 @@ def tedpca(
                 n_varex_95,
             ]
         )
-    else:
-        if isinstance(algorithm, float):
-            alg_str = "variance explained-based"
-        elif isinstance(algorithm, int):
-            alg_str = "a fixed number of components and no"
-        else:
-            alg_str = algorithm
-        LGR.info(
-            f"Selected {comptable.shape[0]} components with {round(100*varex_norm.sum(),2)}% "
-            f"normalized variance explained using {alg_str} dimensionality detection"
-        )
-        comptable["classification"] = "accepted"
-        comptable["rationale"] = ""
+        # TODO ^^^^^ end ^^^^^
 
-    if algorithm in ["kundu", "kundu-stabilize", "mdl", "aic", "kic"]:
-        # Plot maPCA optimization curves once all relevant mehtods have been
-        # computed
+        # Plot maPCA optimization curves
         LGR.info("Plotting maPCA optimization curves")
-        plot_pca_results(
-            pca_optimization_curves,
-            pca_criteria_components,
-            all_varex,    # TODO find out what this is doing
-            io_generator  # TODO find out what this is doing
-        )
+        breakpoint()
+        plot_pca_results(pca_optimization_curves, pca_criteria_components, all_varex, io_generator)
 
     # Save decomposition files
     comp_names = [
