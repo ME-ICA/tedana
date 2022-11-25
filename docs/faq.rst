@@ -104,6 +104,19 @@ Anyone interested in using v3.2 may compile and install an earlier release (<=0.
 .. _afni_proc.py: https://afni.nimh.nih.gov/pub/dist/doc/program_help/afni_proc.py.html
 
 
+***********************************************************
+[tedana] How do I perform RICA (manual ICA classification)?
+***********************************************************
+
+RICA is a ``tedana`` tool for manual ICA classification. Once the .tsv file containing
+the result of manual component classification is obtained, it is necessary to `re-run the tedana workflow`_
+passing the manual_classification.tsv file with the --ctab option. To save the output correctly,
+make sure that the output directory does not coincide with the input directory.
+
+
+.. _re-run the tedana workflow: https://tedana.readthedocs.io/en/stable/usage.html#Arguments%20for%20Rerunning%20the%20Workflow
+
+
 *******************************************************************
 [ME-fMRI] Does multi-echo fMRI require more radio frequency pulses?
 *******************************************************************
@@ -123,3 +136,4 @@ Yes, these techniques are complementary.
 Multiband fMRI leads to collecting multiple slices within a volume  simultaneously, while multi-echo
 fMRI is instead related to collecting multiple unique volumes.
 These techniques can be combined to reduce the TR in a multi-echo sequence.
+

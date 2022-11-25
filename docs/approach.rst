@@ -347,6 +347,18 @@ yielding a denoised timeseries, which is saved as **desc-optcomDenoised_bold.nii
 .. image:: /_static/a15_denoised_data_timeseries.png
 
 
+RICA
+=====
+
+``RICA`` is a ``tedana`` tool for manual ICA classification. Once the .tsv file containing
+the result of manual component classification is obtained, it is necessary to `re-run the tedana workflow`_
+passing the manual_classification.tsv file with the --ctab option. To save the output correctly,
+make sure that the output directory does not coincide with the input directory.
+
+
+.. _re-run the tedana workflow: https://tedana.readthedocs.io/en/stable/usage.html#Arguments%20for%20Rerunning%20the%20Workflow
+
+
 *********************************************
 Removal of spatially diffuse noise (optional)
 *********************************************
