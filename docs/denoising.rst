@@ -8,6 +8,14 @@ The component classifications will indicate whether each component is "good" (ac
 To remove noise from your data, you can regress the "bad" components out of it,
 though there are multiple ways to accomplish this.
 
+.. important::
+
+  This page assumes that you have reviewed the component classifications produced by ``tedana`` already,
+  and that you agree with those classifications.
+  If you think some components were misclassified,
+  you can find instructions for reviewing and changing classifications in
+  [our FAQ](https://tedana.readthedocs.io/en/stable/faq.html#tedana-i-think-that-some-bold-ica-components-have-been-misclassified-as-noise).
+
 By default, ``tedana`` will perform a regression including both "good" and "bad" components,
 and then will selectively remove the "bad" components from the data.
 This is colloquially known as "non-aggressive denoising".
