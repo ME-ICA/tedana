@@ -75,6 +75,8 @@ If you are confident that your data have been preprocessed correctly prior to
 applying tedana, and you encounter this problem, please submit a question to `NeuroStars`_.
 
 
+.. _manual classification:
+
 ********************************************************************************
 [tedana] I think that some BOLD ICA components have been misclassified as noise.
 ********************************************************************************

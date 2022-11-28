@@ -14,7 +14,7 @@ though there are multiple ways to accomplish this.
   and that you agree with those classifications.
   If you think some components were misclassified,
   you can find instructions for reviewing and changing classifications in
-  [our FAQ](https://tedana.readthedocs.io/en/stable/faq.html#tedana-i-think-that-some-bold-ica-components-have-been-misclassified-as-noise).
+  :ref:`manual classification`.
 
 By default, ``tedana`` will perform a regression including both "good" and "bad" components,
 and then will selectively remove the "bad" components from the data.
