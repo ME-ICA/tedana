@@ -51,6 +51,7 @@ extensions = [
     "sphinx.ext.linkcode",
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
+    "sphinx_copybutton",
     "sphinxarg.ext",
     "sphinxcontrib.bibtex",  # for foot-citations
 ]
@@ -103,7 +104,7 @@ language = None
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = "sphinx"
+pygments_style = "tango"
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
@@ -180,5 +181,5 @@ intersphinx_mapping = {
     "matplotlib": ("https://matplotlib.org/", None),
     "nibabel": ("https://nipy.org/nibabel/", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
-    "nilearn": ("http://nilearn.github.io/", None),
+    "nilearn": ("https://nilearn.github.io/stable/", None),
 }
