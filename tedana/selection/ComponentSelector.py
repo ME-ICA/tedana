@@ -253,59 +253,8 @@ def validate_tree(tree):
 
 class ComponentSelector:
     """
-    Classifies components based on specified `tree` when the class is initialized
-    and then the `select` function is called.
-    The expected output of running a decision tree is that every component
-    will be classified as 'accepted', or 'rejected'.
-
-    The selection process uses previously calculated parameters listed in
-    `component_table` for each ICA component such as Kappa (a T2* weighting metric),
-    Rho (an S0 weighting metric), and variance explained. See tedana.metrics
-    for more detail on the calculated metrics
-
-    Parameters
-    ----------
-    tree : :obj:`str`
-        A json file name without the '.json' extension that contains the decision tree to use
-    component_table : (C x M) :obj:`pandas.DataFrame`
-        Component metric table. One row for each component, with a column for
-        each metric; the index should be the component number!
-    user_notes : :obj:`str, optional`
-        Additional user notes about decision tree
-    path : :obj:`str, optional`
-        The directory path where `tree` is located.
-        If None, then look for `tree` within ./selection/data
-        in the tedana code directory. default=None
-
-
-    Returns
-    -------
-    component_table : :obj:`pandas.DataFrame`
-        Updated component table with two extra columns.
-    cross_component_metrics : :obj:`Dict`
-        Metrics that are each a single value calculated across components.
-    component_status_table : :obj:`pandas.DataFrame`
-        A table tracking the status of each component at each step.
-    nodes : :obj:`list[dict]`
-        Nodes used in decision tree.
-    current_node_idx : :obj:`int`
-        The index for the current node, which should be the last node in the decision tree.
-
-    Notes
-    -----
-    Any parameter that is used by a decision tree node function can be passed
-    as a parameter of ComponentSelector class initialization function or can be
-    included in the json file that defines the decision tree. If a parameter
-    is set in the json file, that will take precedence. As a style rule, a
-    parameter that is the same regardless of the inputted data should be
-    defined in the decision tree json file. A parameter that is dataset specific
-    should be passed through the initialization function. Parameters that may need
-    to be passed through the class include:
-
-    n_echos : :obj:`int, optional`
-        Number of echos in multi-echo fMRI data
-    n_vols: :obj:`int`
-        Number of volumes (time points) in the fMRI data
+    Contains information and methods to load and classify components based on
+    a specificed `tree`
     """
 
     def __init__(self, tree, component_table, cross_component_metrics={}, status_table=None):
@@ -319,20 +268,50 @@ class ComponentSelector:
         selector = ComponentSelector(tree, comptable, n_echos=n_echos,
         n_vols=n_vols)
 
+        Parameters
+        ----------
+        tree : :obj:`str`
+            The named tree or path to a JSON file that defines one
+        component_table : (C x M) :obj:`pandas.DataFrame`
+            Component metric table. One row for each component, with a column for
+            each metric; the index should be the component number
+        cross_component_metrics : :obj:`Dict`
+            Metrics that are each a single value calculated across components.
+            Default is empty
+        status_table : :obj:`pandas.DataFrame`
+            A table tracking the status of each component at each step.
+            Pass a status table if running additional steps on a decision
+            tree that was already executed. Default=None. 
+
+
         Notes
         -----
-        The structure has the following fields loaded from tree:
+        Initializing the  `ComponentSelector` loads following fields from tree:
 
         - nodes
         - necessary_metrics
         - intermediate_classifications
         - classification_tags
 
-        Adds to the class structure:
+        Adds to the `ComponentSelector`:
 
-        - component_status_table: empty dataframe
-        - cross_component_metrics: empty dict
+        - component_status_table: empty dataframe or contents of inputted status_table
+        - cross_component_metrics: empty dict or contents of inputed values
         - used_metrics: empty set
+
+        Any parameter that is used by a decision tree node function can be passed
+        as a parameter to ComponentSelector class initialization function or can be
+        included in the json file that defines the decision tree. If a parameter
+        is set in the json file, that will take precedence. As a style rule, a
+        parameter that is the same regardless of the inputted data should be
+        defined in the decision tree json file. A parameter that is dataset specific
+        should be passed through the initialization function. Parameters that may need
+        to be passed during initialization include:
+
+        n_echos : :obj:`int, optional`
+            Number of echos in multi-echo fMRI data
+        n_vols: :obj:`int`
+            Number of volumes (time points) in the fMRI data
         """
         self.tree_name = tree
 
@@ -386,7 +365,18 @@ class ComponentSelector:
 
         Parameters all defined in class initialization
 
-        Returns
+        Classifies components based on specified `tree` when the class is initialized
+        and then the `select` function is called.
+        The expected output of running a decision tree is that every component
+        will be classified as 'accepted', or 'rejected'.
+
+        The selection process uses previously calculated parameters listed in
+        `component_table` for each ICA component such as Kappa (a T2* weighting metric),
+        Rho (an S0 weighting metric), and variance explained. See tedana.metrics
+        for more detail on the calculated metrics
+
+
+        Notes
         -------
         The following attributes are altered in this function are descibed in
         the ComponentSelector class description:
