@@ -30,6 +30,9 @@ DEFAULT_TREES = ["minimal", "kundu"]
 
 
 class TreeError(Exception):
+    """
+    Passes errors that are raised when `validate_tree` fails
+    """
     pass
 
 
