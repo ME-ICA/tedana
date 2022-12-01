@@ -33,44 +33,37 @@ selector: :obj:`tedana.selection.ComponentSelector`
 ifTrue: :obj:`str`
         If the condition in this step is True, give the component this label.
         Use 'nochange' if no label changes are desired.
-
-    ifFalse: :obj`str`
+    ifFalse: :obj:`str`
         If the condition in this step is False, give the component this label.
         Use 'nochange' to indicate if no label changes are desired.
 """,
-    # FIXME: missing default
     "decide_comps": """\
 decide_comps: :obj:`str` or :obj:`list[str]`
         What classification(s) to operate on. Use 'all' to include all components.""",
     "log_extra_report": """\
 log_extra_report: :obj:`str`
-        Additional text to place in the report log. Default "".""",
+        Additional text to the report log. Default "".""",
     "log_extra_info": """\
 log_extra_info: :obj:`str`
-        Additional text to place in the information log. Default "".""",
+        Additional text to the information log. Default "".""",
     "only_used_metrics": """\
 only_used_metrics: :obj:`bool`
         Whether to only report what metrics will be used when this is run. Default False.""",
     "custom_node_label": """\
 custom_node_label: :obj:`str`
-        A short label to use in the table for this step. One is automatically
-        assigned by default. Default "".""",
+        A short label to describe what happens in this step. If "" then a label is
+        automatically generated. Default "".""",
     "tag_ifTrueFalse": """\
 tag_ifTrue: :obj:`str`
         The classification tag to apply if a component is classified True. Default "".
     tag_ifFalse: :obj`str`
         The classification tag to apply if a component is classified False. Default "".""",
     "basicreturns": """\
-:obj:`tedana.selection.ComponentSelector`: The updated selector.""",
-    "extend_factor": """\
-extend_factor: :obj:`float`
-        A scalar used to set the threshold for the mean rank metric.""",
-    "restrict_factor": """\
-restrict_factor: :obj:`float`
-        A scalar used to set the threshold for the mean rank metric.""",
-    "prev_X_steps": """\
-prev_X_steps: :obj:`int`
-        The number of previous steps to search for a label in.""",
+"selector" :obj:`tedana.selection.ComponentSelector`
+        If only_used_metrics is False, the updated selector is returned
+    "used_metrics" :obj:`set(str)`: 
+        If only_used_metrics is True, the names of the metrics used in the
+        function are returned""",
 }
 
 _old_decision_docs = {
@@ -129,7 +122,7 @@ tag_ifTrue, tag_ifFalse: :obj:`str`
     classified as true or false. default=None
 """,
     "basicreturns": """\
-selector: :obj:`tedana.selection.ComponentSelector`
+"selector": :obj:`tedana.selection.ComponentSelector`
     The key fields that will be changed in selector are the component
     classifications and tags in component_table or a new metric that is
     added to cross_component_metrics. The output field for the current
@@ -145,12 +138,6 @@ extend_factor: :obj:`float`
     "restrict_factor": """\
 restrict_factor: :obj:`float`
     A scaler used to set the threshold for the mean rank metric
-        \
-        """,
-    "prev_X_steps": """\
-prev_X_steps: :obj:`int`
-    Search for components with a classification label in the current or the previous X steps in
-    the decision tree
         \
         """,
 }
@@ -329,22 +316,21 @@ def dec_left_op_right(
 
     left, right: :obj:`str` or :obj:`float`
         The labels for the two metrics to be used for comparision.
-        for example: left='kappa', right='rho' and op='>' means this
+        For example: left='kappa', right='rho' and op='>' means this
         function will test kappa>rho. One of the two can also be a number.
-        In that case a metric would be compared against a fixed threshold.
+        In that case, a metric would be compared against a fixed threshold.
         For example left='T2fitdiff_invsout_ICAmap_Tstat', right=0, and op='>'
         means this function will test T2fitdiff_invsout_ICAmap_Tstat>0
-    left_scale, right_scale: :obj:`float`, optional
+    left_scale, right_scale: :obj:`float` or :obj:`str`
         Multiply the left or right metrics value by a constant. For example
         if left='kappa', right='rho', right_scale=2, and op='>' this tests
-        kappa>(2*rho). These also be a string that labels a value in
+        kappa>(2*rho). These can also be a string that is a value in
         cross_component_metrics, since those will resolve to a single value.
         This cannot be a label for a component_table column since that would
         output a different value for each component. default=1
-
-    op2: :obj:`str`, optional
-    left2, right2, left3, right3: :obj:`str` or :obj:`float`, optional
-    left2_scale, right2_scale, left3_scale, right3_scale: :obj:`float`, optional
+    op2: :obj:`str`, Default=None
+    left2, right2, left3, right3: :obj:`str` or :obj:`float`, Default=None
+    left2_scale, right2_scale, left3_scale, right3_scale: :obj:`float` or :obj:`str`, Default=1
         This function can also be used to calculate the intersection of two or three
         boolean statements. If op2, left2, and right2 are defined then
         this function returns

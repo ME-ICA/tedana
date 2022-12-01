@@ -240,7 +240,7 @@ class ComponentSelector:
         component_table : (C x M) :obj:`pandas.DataFrame`
             Component metric table. One row for each component, with a column for
             each metric; the index should be the component number
-        cross_component_metrics : :obj:`Dict`
+        cross_component_metrics : :obj:`dict`
             Metrics that are each a single value calculated across components.
             Default is empty
         status_table : :obj:`pandas.DataFrame`
@@ -269,7 +269,7 @@ class ComponentSelector:
         should be passed through the initialization function. Dataset specific
         parameters that may need to be passed during initialization include:
 
-        n_echos : :obj:`int, optional`
+        n_echos : :obj:`int`
             Number of echos in multi-echo fMRI data.
             Required for kundu and minimal trees
         n_vols: :obj:`int`
