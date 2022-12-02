@@ -695,7 +695,7 @@ def rho_elbow_kundu_liberal(
     Also, in practice, one of these elbows is sometimes extremely low and the
     mean creates an overly agressive rho threshold (values >rho_elbow are more
     likely rejected). The liberal threshold option takes the max of the two
-    elbows based on rho values. The assumption is that the thrshold on
+    elbows based on rho values. The assumption is that the threshold on
     unclassified components is always lower and can likely be excluded. Both
     rho elbows are now logged so that it will be possible to confirm this with
     data & make additional adjustments to this threshold
