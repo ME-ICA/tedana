@@ -503,7 +503,7 @@ class ComponentSelector:
 
     @property
     def accepted_comps(self):
-        """The number of components that are accepted."""
+        """The indices of components that are accepted."""
         return self.component_table["classification"] == "accepted"
 
     @property
@@ -513,7 +513,7 @@ class ComponentSelector:
 
     @property
     def rejected_comps(self):
-        """The number of components that are rejected."""
+        """The indices of components that are rejected."""
         return self.component_table["classification"] == "rejected"
 
     @property
