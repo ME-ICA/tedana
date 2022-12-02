@@ -64,7 +64,7 @@ tag_ifTrue: :obj:`str`
     "basicreturns": """\
 selector: :obj:`tedana.selection.ComponentSelector`
         If only_used_metrics is False, the updated selector is returned
-    used_metrics: :obj:`set(str)` 
+    used_metrics: :obj:`set(str)`
         If only_used_metrics is True, the names of the metrics used in the
         function are returned""",
 }

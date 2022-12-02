@@ -175,9 +175,9 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
    multi-echo
    usage
    approach
-   building decision trees
    outputs
    faq
+   building decision trees
    support
    contributing
    roadmap

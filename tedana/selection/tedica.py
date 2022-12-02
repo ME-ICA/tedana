@@ -82,32 +82,30 @@ def manual_selection(comptable, acc=None, rej=None):
     return comptable, metric_metadata
 
 
-def automatic_selection(comptable, n_echos, n_vols, tree="minimal"):
-    """Classify components based on component table and tree type.
+def automatic_selection(component_table, n_echos, n_vols, tree="minimal"):
+    """Classify components based on component table and decision tree type.
 
     Parameters
     ----------
-    comptable: pd.DataFrame
+    component_table: :obj:`pd.DataFrame`
         The component table to classify
-    n_echos: int
+    n_echos: :obj:`int`
         The number of echoes in this dataset
-    tree: str
-        The type of tree to use for the ComponentSelector object
+    tree: :obj:`str`
+        The type of tree to use for the ComponentSelector object. Default="minimal"
 
     Returns
     -------
-    A dataframe of the component table, after classification and reorder
-    The metadata associated with the component table
 
-    See Also
-    --------
-    ComponentSelector, the class used to represent the classification process
+    selector: :obj:`tedana.selection.ComponentSelector`
+        Contains component classifications in a component_table and provenance
+        and metadata from the component selection process
+
     Notes
     -----
-    The selection algorithm used in this function was originated in ME-ICA
+    If tree=kundu, the selection algorithm used in this function was originated in ME-ICA
     by Prantik Kundu, and his original implementation is available at:
-    https://github.com/ME-ICA/me-ica/blob/\
-    b2781dd087ab9de99a2ec3925f04f02ce84f0adc/meica.libs/select_model.py
+    https://github.com/ME-ICA/me-ica/blob/b2781dd087ab9de99a2ec3925f04f02ce84f0adc/meica.libs/select_model.py
 
     The appropriate citation is :footcite:t:`kundu2013integrated`.
 
@@ -119,9 +117,14 @@ def automatic_selection(comptable, n_echos, n_vols, tree="minimal"):
     components, a hypercommented version of this attempt is available at:
     https://gist.github.com/emdupre/ca92d52d345d08ee85e104093b81482e
 
+    If tree==minimal, the selection algorithm based on the kundu tree with differences
+    described in the `FAQ`_
+
     References
     ----------
     .. footbibliography::
+
+    .. _FAQ: faq.html
     """
     LGR.info("Performing ICA component selection with Kundu decision tree v2.5")
     RepLGR.info(
@@ -131,12 +134,12 @@ def automatic_selection(comptable, n_echos, n_vols, tree="minimal"):
         "decision tree (v2.5) \\citep{kundu2013integrated}."
     )
 
-    comptable["classification_tags"] = ""
+    component_table["classification_tags"] = ""
     xcomp = {
         "n_echos": n_echos,
         "n_vols": n_vols,
     }
-    selector = ComponentSelector(tree, comptable, cross_component_metrics=xcomp)
+    selector = ComponentSelector(tree, component_table, cross_component_metrics=xcomp)
     selector.select()
     selector.metadata = collect.get_metadata(selector.component_table)
 
