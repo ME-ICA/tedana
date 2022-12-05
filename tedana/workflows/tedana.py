@@ -77,6 +77,17 @@ def _get_parser():
         help="Echo times (in ms). E.g., 15.0 39.0 63.0",
         required=True,
     )
+    required.add_argument(
+        "-t",
+        "--tree",
+        dest="tree",
+        help=(
+            "Decision tree to use. You may use a "
+            "packaged tree (kundu, minimal) or supply a JSON "
+            "file which matches the decision tree file "
+            "specification."
+        ),
+    )
     optional.add_argument(
         "--out-dir",
         dest="out_dir",
@@ -152,17 +163,6 @@ def _get_parser():
             "Default='aic'."
         ),
         default="aic",
-    )
-    optional.add_argument(
-        "--tree",
-        dest="tree",
-        help=(
-            "Decision tree to use. You may use a "
-            "packaged tree (kundu, minimal) or supply a JSON "
-            "file which matches the decision tree file "
-            "specification."
-        ),
-        default="minimal",
     )
     optional.add_argument(
         "--seed",
@@ -740,9 +740,10 @@ def tedana_workflow(
         resid = rej_ts - pred_rej_ts
         mmix[:, comps_rejected] = resid
         comp_names = [
-            io.add_decomp_prefix(comp, prefix="ica", max_value=comptable.index.max())
+            io.add_decomp_prefix(comp, prefix="ICA", max_value=comptable.index.max())
             for comp in range(ica_selection.n_comps)
         ]
+
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
         io_generator.save_file(mixing_df, "ICA orthogonalized mixing tsv")
         RepLGR.info(
