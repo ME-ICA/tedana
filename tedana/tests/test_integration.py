@@ -194,8 +194,6 @@ def test_integration_three_echo(skip_integration):
         "14.5",
         "38.5",
         "62.5",
-        "-t",
-        "minimal",
         "--out-dir",
         out_dir_manual,
         "--debug",
