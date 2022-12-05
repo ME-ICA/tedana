@@ -19,7 +19,7 @@ RefLGR = logging.getLogger("REFERENCES")
 
 def selectcomps2use(selector, decide_comps):
     """
-    Give a list of component numbers that fit the classification types in
+    Get a list of component numbers that fit the classification types in
     decide_comps.
 
     Parameters
@@ -37,7 +37,7 @@ def selectcomps2use(selector, decide_comps):
     Returns
     -------
     comps2use: :obj:`list[int]`
-        A list of component indices that should be used by a function
+        A list of component indices with classifications included in decide_comps
     """
 
     if "classification" not in selector.component_table:
@@ -99,8 +99,8 @@ def change_comptable_classifications(
     dont_warn_reclassify=False,
 ):
     """
-    Given information on whether a decision critereon is true or false for each component
-    change or don't change the component classification
+    Given information on whether a decision critereon is true or false for each
+    component, change or don't change the component classification
 
     Parameters
     ----------
@@ -223,6 +223,14 @@ def comptable_classification_changer(
         be separated by commas.
     If a classification is changed away from accepted or rejected and
     dont_warn_reclassify is False, then a warning is logged
+
+    Note
+    ----
+    This is designed to be run by
+    `tedana.selection.selection_utils.change_comptable_classifications`.
+    This function is run twice, ones for changes to make of a component is
+    True and again for components that are False.
+
     """
     if classify_if != "nochange":
         changeidx = decision_boolean.index[np.asarray(decision_boolean) == boolstate]
@@ -319,9 +327,10 @@ def confirm_metrics_exist(component_table, necessary_metrics, function_name=None
     Parameters
     ----------
     component_table : (C x M) :obj:`pandas.DataFrame`
-            Component metric table. One row for each component, with a column for
-            each metric. The index should be the component number.
-    necessary_metrics : :obj:`set` a set of strings of metrics
+        Component metric table. One row for each component, with a column for
+        each metric. The index should be the component number.
+    necessary_metrics : :obj:`set`
+        A set of strings of metric names
     function_name : :obj:`str`
         Text identifying the function name that called this function
 
@@ -335,8 +344,8 @@ def confirm_metrics_exist(component_table, necessary_metrics, function_name=None
     Note
     -----
     This doesn't check if there are data in each metric's column, just that
-    the columns exist. Also, this requires identical strings for the names
-    of the metrics in necessary_metrics and the column labels in component_table
+    the columns exist. Also, the string in `necessary_metrics` and the
+    column labels in component_table will only be matched if they're identical.
     """
 
     missing_metrics = necessary_metrics - set(component_table.columns)
@@ -367,7 +376,7 @@ def log_decision_tree_step(
     calc_outputs=None,
 ):
     """
-    Logging text to add for every decision tree calculation
+    Logging text to add after every decision tree calculation
 
     Parameters
     ----------
@@ -383,7 +392,7 @@ def log_decision_tree_step(
         need to use the component_table and may not require selecting
         components. For those functions, set comps2use==-1 to avoid
         logging a warning that no components were found. Currently,
-        this is only used by calc_extend_factor
+        this is only used by `calc_extend_factor`
 
     decide_comps: :obj:`str` or :obj:`list[str]` or :obj:`list[int]`
         This is string or a list of strings describing what classifications
@@ -404,9 +413,9 @@ def log_decision_tree_step(
 
     Returns
     -------
-    Information is added to the LGR.info logger. This either logs that
-    nothing was changed, the number of components classified as true or
-    false and what they changed to, or the cross component metrics that were
+    Information is added to the LGR.info logger. This either logs that \
+    nothing was changed, the number of components classified as true or \
+    false and what they changed to, or the cross component metrics that were \
     calculated
     """
 
@@ -450,7 +459,7 @@ def log_classification_counts(decision_node_idx, component_table):
 
     Returns
     -------
-    The info logger will add a line like:
+    The LGR.info logger will add a line like: \
     'Step 4: Total component classifications: 10 accepted, 5 provisionalreject, 8 rejected'
     """
 
@@ -695,7 +704,7 @@ def rho_elbow_kundu_liberal(
     Also, in practice, one of these elbows is sometimes extremely low and the
     mean creates an overly agressive rho threshold (values >rho_elbow are more
     likely rejected). The liberal threshold option takes the max of the two
-    elbows based on rho values. The assumption is that the thrshold on
+    elbows based on rho values. The assumption is that the threshold on
     unclassified components is always lower and can likely be excluded. Both
     rho elbows are now logged so that it will be possible to confirm this with
     data & make additional adjustments to this threshold
@@ -780,7 +789,8 @@ def rho_elbow_kundu_liberal(
 
 def get_extend_factor(n_vols=None, extend_factor=None):
     """
-    extend_factor is a scaler used to set a threshold for the d_table_score
+    extend_factor is a scaler used to set a threshold for the d_table_score in
+    the kundu decision tree.
     It is either defined by the number of volumes in the time series or directly
     defined by the user. If it is defined by the user, that takes precedence over
     using the number of volumes in a calculation

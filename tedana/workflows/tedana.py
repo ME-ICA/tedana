@@ -649,10 +649,10 @@ def tedana_workflow(
                 metrics=required_metrics,
             )
             ica_selection = selection.automatic_selection(comptable, n_echos, n_vols, tree=tree)
-            n_bold_comps = ica_selection.n_bold_comps
-            if (n_restarts < maxrestart) and (n_bold_comps == 0):
+            n_accepted_comps = ica_selection.n_accepted_comps
+            if (n_restarts < maxrestart) and (n_accepted_comps == 0):
                 LGR.warning("No BOLD components found. Re-attempting ICA.")
-            elif n_bold_comps == 0:
+            elif n_accepted_comps == 0:
                 LGR.warning("No BOLD components found, but maximum number of restarts reached.")
                 keep_restarting = False
             else:
@@ -723,7 +723,7 @@ def tedana_workflow(
         }
     io_generator.save_file(decomp_metadata, "ICA decomposition json")
 
-    if ica_selection.n_bold_comps == 0:
+    if ica_selection.n_accepted_comps == 0:
         LGR.warning("No BOLD components detected! Please check data and results!")
 
     # TODO: un-hack separate comptable

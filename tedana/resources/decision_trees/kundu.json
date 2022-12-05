@@ -191,7 +191,7 @@
                 "class_comp_exists": "provisionalaccept"
             },
             "kwargs": {
-                "tag_ifTrue": "No provisional accept",
+                "tag": "No provisional accept",
                 "log_extra_info": "If nothing is provisionally accepted by this point, be conservative and accept everything",
                 "log_extra_report": ""
             },
@@ -303,7 +303,7 @@
                 "class_comp_exists": "unclassified"
             },
             "kwargs": {
-                "tag_ifTrue": "Likely BOLD",
+                "tag": "Likely BOLD",
                 "log_extra_info": "If nothing left is unclassified, then accept all",
                 "log_extra_report": ""
             },

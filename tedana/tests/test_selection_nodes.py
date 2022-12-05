@@ -671,7 +671,7 @@ def test_dec_classification_doesnt_exist_smoke():
         log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
-        tag_ifTrue="test true tag",
+        tag="test true tag",
     )
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 0
     # Lists the number of components in decide_comps in numFalse
@@ -705,7 +705,7 @@ def test_dec_classification_doesnt_exist_smoke():
         "changed accepted",
         decide_comps,
         class_comp_exists="provisional reject",
-        tag_ifTrue="test true tag",
+        tag="test true tag",
     )
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 17
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numFalse"] == 0

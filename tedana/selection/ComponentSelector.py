@@ -30,6 +30,10 @@ DEFAULT_TREES = ["minimal", "kundu"]
 
 
 class TreeError(Exception):
+    """
+    Passes errors that are raised when `validate_tree` fails
+    """
+
     pass
 
 
@@ -48,38 +52,6 @@ def load_config(tree):
     tree : :obj:`dict`
         A validated decision tree for the component selection process.
     """
-
-    #      Formerly used text
-    #      The `dict` has several required fields to describe the entire tree
-    #      - `tree_id`: :obj:`str` The name of the tree
-    #      - `info`: :obj:`str` A brief description of the tree for info logging
-    #      - `report`: :obj:`str`
-    #      - A narrative description of the tree that could be used in report logging
-    #      - `refs`: :obj:`str` Publications that should be referenced, when this tree is used
-    #      - `necessary_metrics`: :obj:`list[str]`
-    #      - The metrics in `component_table` that will be used by this tree
-    #      - `intermediate_classifications`: :obj:`list[str]`
-    #      - User specified component classification labels. 'accepted', 'rejected', and
-    #      - 'unclassified' are defaults that don't need to be included here
-    #      - `classification_tags`: :obj:`list[str]`
-    #      - Descriptive labels to be used to explain why a component was accepted or rejected.
-    #      - For example, ["Likely BOLD","Low variance"]
-    #      - `nodes`: :obj:`list[dict]` Each dictionary includes the information
-    #
-    #        to run one node in the decision tree. Each node should either be able
-    #        to change component classifications (function names starting with ``dec_``)
-    #        or calculate values using information from multiple components
-    #        (function names starting with ``calc_``)
-    #        nodes includes:
-    #        - `functionname`: :obj:`str` The name of the function to be called
-    #        - `parameters`: :obj:`dict` Required parameters for the function
-    #          The only parameter that is used in all functions is `decidecomps`,
-    #          which are the component classifications the function should run on.
-    #          Most ``dec_`` functions also include `ifTrue` and `ifFalse` which
-    #          define how to to change the classification of a component if the
-    #          criteria in the function is true or false.
-    #
-    #        - `kwargs`: :obj:`dict` Optional parameters for the function
 
     if tree in DEFAULT_TREES:
         fname = op.join(get_resource_path(), "decision_trees", tree + ".json")
@@ -253,87 +225,61 @@ def validate_tree(tree):
 
 class ComponentSelector:
     """
-    Classifies components based on specified `tree` when the class is initialized
-    and then the `select` function is called.
-    The expected output of running a decision tree is that every component
-    will be classified as 'accepted', or 'rejected'.
-
-    The selection process uses previously calculated parameters listed in
-    `component_table` for each ICA component such as Kappa (a T2* weighting metric),
-    Rho (an S0 weighting metric), and variance explained. See tedana.metrics
-    for more detail on the calculated metrics
-
-    Parameters
-    ----------
-    tree : :obj:`str`
-        A json file name without the '.json' extension that contains the decision tree to use
-    component_table : (C x M) :obj:`pandas.DataFrame`
-        Component metric table. One row for each component, with a column for
-        each metric; the index should be the component number!
-    user_notes : :obj:`str, optional`
-        Additional user notes about decision tree
-    path : :obj:`str, optional`
-        The directory path where `tree` is located.
-        If None, then look for `tree` within ./selection/data
-        in the tedana code directory. default=None
-
-
-    Returns
-    -------
-    component_table : :obj:`pandas.DataFrame`
-        Updated component table with two extra columns.
-    cross_component_metrics : :obj:`Dict`
-        Metrics that are each a single value calculated across components.
-    component_status_table : :obj:`pandas.DataFrame`
-        A table tracking the status of each component at each step.
-    nodes : :obj:`list[dict]`
-        Nodes used in decision tree.
-    current_node_idx : :obj:`int`
-        The index for the current node, which should be the last node in the decision tree.
-
-    Notes
-    -----
-    Any parameter that is used by a decision tree node function can be passed
-    as a parameter of ComponentSelector class initialization function or can be
-    included in the json file that defines the decision tree. If a parameter
-    is set in the json file, that will take precedence. As a style rule, a
-    parameter that is the same regardless of the inputted data should be
-    defined in the decision tree json file. A parameter that is dataset specific
-    should be passed through the initialization function. Parameters that may need
-    to be passed through the class include:
-
-    n_echos : :obj:`int, optional`
-        Number of echos in multi-echo fMRI data
-    n_vols: :obj:`int`
-        Number of volumes (time points) in the fMRI data
+    Contains information and methods to load and classify components based on
+    a specified `tree`
     """
 
     def __init__(self, tree, component_table, cross_component_metrics={}, status_table=None):
         """
         Initialize the class using the info specified in the json file `tree`
 
-        Any optional variables defined in the function call will be added to
-        the class structure. Several trees expect n_echos to be defined.
-        The full kundu tree also require n_vols (number of volumes) to be
-        defined. An example initialization with these options would look like
-        selector = ComponentSelector(tree, comptable, n_echos=n_echos,
-        n_vols=n_vols)
+        Parameters
+        ----------
+        tree : :obj:`str`
+            The named tree or path to a JSON file that defines one
+        component_table : (C x M) :obj:`pandas.DataFrame`
+            Component metric table. One row for each component, with a column for
+            each metric; the index should be the component number
+        cross_component_metrics : :obj:`dict`
+            Metrics that are each a single value calculated across components.
+            Default is empty
+        status_table : :obj:`pandas.DataFrame`
+            A table tracking the status of each component at each step.
+            Pass a status table if running additional steps on a decision
+            tree that was already executed. Default=None.
+
 
         Notes
         -----
-        The structure has the following fields loaded from tree:
+        Initializing the  `ComponentSelector` confirms tree is valid and
+        loads all information in the tree json file into `ComponentSelector`
 
-        - nodes
-        - necessary_metrics
-        - intermediate_classifications
-        - classification_tags
+        Adds to the `ComponentSelector`:
 
-        Adds to the class structure:
-
-        - component_status_table: empty dataframe
-        - cross_component_metrics: empty dict
+        - component_status_table: empty dataframe or contents of inputted status_table
+        - cross_component_metrics: empty dict or contents of inputed values
         - used_metrics: empty set
+
+        Any parameter that is used by a decision tree node function can be passed
+        as a parameter in the `ComponentSelector` initialization or can be
+        included in the json file that defines the decision tree. If a parameter
+        is set in the json file, that will take precedence. As a style rule, a
+        parameter that is the same regardless of the inputted data should be
+        defined in the decision tree json file. A parameter that is dataset specific
+        should be passed through the initialization function. Dataset specific
+        parameters that may need to be passed during initialization include:
+
+        n_echos : :obj:`int`
+            Number of echos in multi-echo fMRI data.
+            Required for kundu and minimal trees
+        n_vols: :obj:`int`
+            Number of volumes (time points) in the fMRI data
+            Required for kundu tree
+
+        An example initialization with these options would look like
+        `selector = ComponentSelector(tree, comptable, n_echos=n_echos, n_vols=n_vols)`
         """
+
         self.tree_name = tree
 
         self.__dict__.update(cross_component_metrics)
@@ -381,22 +327,40 @@ class ComponentSelector:
 
     def select(self):
         """
-        Parse the parameters used to call each function in the component
-        selection decision tree and run the functions to classify components
+        Using the validated tree in `ComponentSelector` run the decision
+        tree functions to calculate cross_component metrics and classify
+        each component as accepted or rejected.
 
-        Parameters all defined in class initialization
-
-        Returns
+        Notes
         -------
-        The following attributes are altered in this function are descibed in
-        the ComponentSelector class description:
-            component_table, cross_component_metrics, component_status_table,
-            cross_component_metrics, used_metrics, nodes (outputs field),
-            current_node_idx
+        The selection process uses previously calculated parameters stored in
+        `component_table` for each ICA component such as Kappa (a T2* weighting metric),
+        Rho (an S0 weighting metric), and variance explained. If a necessary metric
+        is not calculated, this will not run. See `tedana.metrics` for more detail on
+        the calculated metrics
+
+        This can be used on a component_table with no component classifications or to alter
+        classifications and on a component_table that was already run (i.e. for manual
+        classificaiton changes after visual inspection)
+
+        When this is run, multiple elements in `ComponentSelector` will change including:
+
+        - component_table: `classification` column with `accepted` or `rejected labels`
+        and `classification_tags` column with can hold multiple labels explaining why
+        a classification happened
+        - cross_component_metrics: Any values that were calculated based on the metric
+        values across components or by direct user input
+        - component_status_table: Contains the classification statuses at each node
+        in the decision tree
+        - used_metrics: A list of metrics used in the selection process
+        - nodes: The original tree definition with an added `outputs` key
+        listing everything that changed in each node
+        - current_node_idx: The total number of nodes run in `ComponentSelector`
         """
-        # TODO: force-add classification tags
+
         if "classification_tags" not in self.component_table.columns:
             self.component_table["classification_tags"] = ""
+
         # this will crash the program with an error message if not all
         # necessary_metrics are in the comptable
         confirm_metrics_exist(
@@ -446,13 +410,14 @@ class ComponentSelector:
         self.are_all_components_accepted_or_rejected()
 
     def add_manual(self, indices, classification):
-        """Add nodes that will manually classify components
+        """
+        Add nodes that will manually classify components
 
         Parameters
         ----------
-        indices: list[int]
+        indices: :obj:`list[int]`
             The indices to manually classify
-        classification: str
+        classification: :obj:`str`
             The classification to set the nodes to
         """
         self.tree["nodes"].append(
@@ -475,8 +440,8 @@ class ComponentSelector:
 
         Returns
         -------
-        params
-            The values for the inputted parameters
+        params: :obj:`dict`
+            The keys and values for the inputted parameters
         """
 
         for key, val in params.items():
@@ -537,19 +502,18 @@ class ComponentSelector:
         return len(self.component_table)
 
     @property
-    def n_bold_comps(self):
-        """The number of components that are considered bold-weighted."""
-        ct = self.component_table
-        return len(ct[ct.classification == "accepted"])
-
-    @property
     def accepted_comps(self):
-        """The number of components that are accepted."""
+        """The indices of components that are accepted."""
         return self.component_table["classification"] == "accepted"
 
     @property
+    def n_accepted_comps(self):
+        """The number of components that are accepted."""
+        return self.accepted_comps.sum()
+
+    @property
     def rejected_comps(self):
-        """The number of components that are rejected."""
+        """The indices of components that are rejected."""
         return self.component_table["classification"] == "rejected"
 
     @property
@@ -572,7 +536,7 @@ class ComponentSelector:
 
         Parameters
         ----------
-        io_generator: tedana.io.OutputGenerator
+        io_generator: :obj:`tedana.io.OutputGenerator`
             The output generator to use for filename generation and saving.
         """
         io_generator.save_file(self.component_table, "ICA metrics tsv")

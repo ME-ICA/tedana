@@ -31,128 +31,42 @@ selector: :obj:`tedana.selection.ComponentSelector`
         The selector to perform decision tree-based component selection with.""",
     "ifTrueFalse": """\
 ifTrue: :obj:`str`
-        If the condition in this step is True, give the component this label.
-        Use 'nochange' if no label changes are desired.
-
-    ifFalse: :obj`str`
-        If the condition in this step is False, give the component this label.
-        Use 'nochange' to indicate if no label changes are desired.
+        If the condition in this step is True, give the component classification this
+        label. Use 'nochange' if no label changes are desired.
+    ifFalse: :obj:`str`
+        If the condition in this step is False, give the component classification this
+        label. Use 'nochange' to indicate if no label changes are desired.
 """,
-    # FIXME: missing default
     "decide_comps": """\
 decide_comps: :obj:`str` or :obj:`list[str]`
-        What classification(s) to operate on. Use 'all' to include all components.""",
+        What classification(s) to operate on. using default or
+        intermediate_classification labels. For example: decide_comps='unclassified'
+        means to operate only on unclassified components. Use 'all' to include all
+        components.""",
     "log_extra_report": """\
 log_extra_report: :obj:`str`
-        Additional text to place in the report log. Default "".""",
+        Additional text to the report log. Default="".""",
     "log_extra_info": """\
 log_extra_info: :obj:`str`
-        Additional text to place in the information log. Default "".""",
+        Additional text to the information log. Default="".""",
     "only_used_metrics": """\
 only_used_metrics: :obj:`bool`
-        Whether to only report what metrics will be used when this is run. Default False.""",
+        If True, only return the component_table metrics that would be used. Default=False.""",
     "custom_node_label": """\
 custom_node_label: :obj:`str`
-        A short label to use in the table for this step. One is automatically
-        assigned by default. Default "".""",
+        A short label to describe what happens in this step. If "" then a label is
+        automatically generated. Default="".""",
     "tag_ifTrueFalse": """\
 tag_ifTrue: :obj:`str`
-        The classification tag to apply if a component is classified True. Default "".
-    tag_ifFalse: :obj`str`
-        The classification tag to apply if a component is classified False. Default "".""",
-    "basicreturns": """\
-:obj:`tedana.selection.ComponentSelector`: The updated selector.""",
-    "extend_factor": """\
-extend_factor: :obj:`float`
-        A scalar used to set the threshold for the mean rank metric.""",
-    "restrict_factor": """\
-restrict_factor: :obj:`float`
-        A scalar used to set the threshold for the mean rank metric.""",
-    "prev_X_steps": """\
-prev_X_steps: :obj:`int`
-        The number of previous steps to search for a label in.""",
-}
-
-_old_decision_docs = {
-    "selector": """\
-selector: :obj:`tedana.selection.ComponentSelector`
-    This structure contains most of the information needed to execute each
-    decision node function and to store the ouput of the function. The class
-    description has full details. Key elements include: component_table:
-    The metrics for each component, and the classification
-    labels and tags; cross_component_metrics: Values like the kappa and rho
-    elbows that are used to create decision criteria; nodes: Information on
-    the function calls for each step in the decision tree; and
-    current_node_idx: which is the ordered index for when a function is
-    called in the decision tree\
-""",
-    "ifTrueFalse": """\
-ifTrue, ifFalse: :obj:`str`
-    If the condition in this step is true or false, give the component
-    the label in this string. Options are 'accepted', 'rejected',
-    'nochange', or intermediate_classification labels predefined in the
-    decision tree. If 'nochange' then don't change the current component
-    classification\
-""",
-    "decide_comps": """\
-decide_comps: :obj:`str` or :obj:`list[str]`
-    This is string or a list of strings describing what classifications
-    of components to operate on, using default or intermediate_classification
-    labels. For example: decide_comps='unclassified' means to operate only on
-    unclassified components. The label 'all' will operate on all components
-    regardess of classification.\
-""",
-    "log_extra": """\
-log_extra_report, log_extra_info: :obj:`str`
-    Text for each function call is automatically placed in the logger output
-    In addition to that text, the text in these these strings will also be
-    included in the logger with the report or info codes respectively.
-    These might be useful to give a narrative explanation of why a step was
-    parameterized a certain way. default="" (no extra logging)\
-""",
-    "only_used_metrics": """\
-only_used_metrics: :obj:`bool`
-    If true, this function will only return the names of the comptable metrics
-    that will be used when this function is fully run. default=False\
-""",
-    "custom_node_label": """\
-custom_node_label: :obj:`str`
-    A brief label for what happens in this node that can be used in a decision
-tree summary table or flow chart. If custom_node_label is not empty, then the
-text in this parameter is used instead of the text would be automatically
-assigned within the function call default=""\
-""",
-    "tag_ifTrueFalse": """\
-tag_ifTrue, tag_ifFalse: :obj:`str`
-    A string containing a label in classification_tags that will be added to
-    the classification_tags column in component_table if a component is
-    classified as true or false. default=None
-""",
+        The classification tag to apply if a component is classified True. Default="".
+    tag_ifFalse: :obj:`str`
+        The classification tag to apply if a component is classified False. Default="".""",
     "basicreturns": """\
 selector: :obj:`tedana.selection.ComponentSelector`
-    The key fields that will be changed in selector are the component
-    classifications and tags in component_table or a new metric that is
-    added to cross_component_metrics. The output field for the current
-    node will also be updated to include relevant information including
-    the use_metrics of the node, and the numTrue and numFalse components
-    the call to the node's function.\
-""",
-    "extend_factor": """\
-extend_factor: :obj:`float`
-    A scaler used to set the threshold for the mean rank metric
-        \
-        """,
-    "restrict_factor": """\
-restrict_factor: :obj:`float`
-    A scaler used to set the threshold for the mean rank metric
-        \
-        """,
-    "prev_X_steps": """\
-prev_X_steps: :obj:`int`
-    Search for components with a classification label in the current or the previous X steps in
-    the decision tree
-        \
-        """,
+        If only_used_metrics is False, the updated selector is returned
+    used_metrics: :obj:`set(str)`
+        If only_used_metrics is True, the names of the metrics used in the
+        function are returned""",
 }
 
 
@@ -169,24 +83,23 @@ def manual_classify(
     dont_warn_reclassify=False,
 ):
     """
-    Explicitly assign a classifictation, defined in new_classification,
+    Explicitly assign a classification, defined in new_classification,
     to all the components in decide_comps.
 
     Parameters
     ----------
     {selector}
     {decide_comps}
-    new_classification: :obj: `str`
+    new_classification: :obj:`str`
         Assign all components identified in decide_comps the classification
         in new_classification. Options are 'unclassified', 'accepted',
         'rejected', or intermediate_classification labels predefined in the
         decision tree
-    clear_classification_tags: :obj: `bool`
+    clear_classification_tags: :obj:`bool`
         If True, reset all values in the 'classification_tags' column to empty
         strings. This also can create the classification_tags column if it
-        does not already exist
-        If False, do nothing.
-    tag: :obj: `str`
+        does not already exist. If False, do nothing.
+    tag: :obj:`str`
         A classification tag to assign to all components being reclassified.
         This should be one of the tags defined by classification_tags in
         the decision tree specification
@@ -195,7 +108,7 @@ def manual_classify(
         rejected to something else, it gives a warning, since those should be terminal
         classifications. If this is True, that warning is suppressed.
         (Useful if manual_classify is used to reset all labels to unclassified).
-        default=False
+        Default=False
     {log_extra_info}
     {log_extra_report}
     {custom_node_label}
@@ -209,13 +122,11 @@ def manual_classify(
     Note
     ----
     This was designed with three use
-    cases in mind:
-    1. Set the classifications of all components to unclassified for the first
-    node of a decision tree. clear_classification_tags=True is recommended for
-    this use case
-    2. Shift all components between classifications, such as provisionalaccept
-    to accepted for the penultimate node in the decision tree.
-    3. Manually re-classify components by number based on user observations.
+    cases in mind: (1) Set the classifications of all components to unclassified
+    for the first node of a decision tree. clear_classification_tags=True is
+    recommended for this use case. (2) Shift all components between classifications,
+    such as provisionalaccept to accepted for the penultimate node in the decision tree.
+    (3) Manually re-classify components by number based on user observations.
 
     Unlike other decision node functions, ifTrue and ifFalse are not inputs
     since the same classification is assigned to all components listed in
@@ -329,22 +240,21 @@ def dec_left_op_right(
 
     left, right: :obj:`str` or :obj:`float`
         The labels for the two metrics to be used for comparision.
-        for example: left='kappa', right='rho' and op='>' means this
+        For example: left='kappa', right='rho' and op='>' means this
         function will test kappa>rho. One of the two can also be a number.
-        In that case a metric would be compared against a fixed threshold.
+        In that case, a metric would be compared against a fixed threshold.
         For example left='T2fitdiff_invsout_ICAmap_Tstat', right=0, and op='>'
         means this function will test T2fitdiff_invsout_ICAmap_Tstat>0
-    left_scale, right_scale: :obj:`float`, optional
+    left_scale, right_scale: :obj:`float` or :obj:`str`
         Multiply the left or right metrics value by a constant. For example
         if left='kappa', right='rho', right_scale=2, and op='>' this tests
-        kappa>(2*rho). These also be a string that labels a value in
+        kappa>(2*rho). These can also be a string that is a value in
         cross_component_metrics, since those will resolve to a single value.
         This cannot be a label for a component_table column since that would
-        output a different value for each component. default=1
-
-    op2: :obj:`str`, optional
-    left2, right2, left3, right3: :obj:`str` or :obj:`float`, optional
-    left2_scale, right2_scale, left3_scale, right3_scale: :obj:`float`, optional
+        output a different value for each component. Default=1
+    op2: :obj:`str`, Default=None
+    left2, right2, left3, right3: :obj:`str` or :obj:`float`, Default=None
+    left2_scale, right2_scale, left3_scale, right3_scale: :obj:`float` or :obj:`str`, Default=1
         This function can also be used to calculate the intersection of two or three
         boolean statements. If op2, left2, and right2 are defined then
         this function returns
@@ -366,13 +276,13 @@ def dec_left_op_right(
     This function is ideally run with one boolean statement at a time so that
     the result of each boolean is logged. For example, it's better to test
     kappa>kappa_elbow and rho>rho_elbow with two separate calls to this function
-    so that the results of each can be easily viewed. That said, particularly for
+    so that the results of each test can be easily viewed. That said, particularly for
     the original kundu decision tree, if you're making decisions on components with
     various classifications based on multiple boolean statements, the decision tree
     becomes really messy and the added functionality here is useful.
     Combinations of boolean statements only test with "and" and not "or". This is
-    an intentional decision because, if a classification changes if A or B are true
-    then the results of each should be logged separately
+    an intentional decision because, if a classification changes if A>B or C>D are true
+    then A>B and C>D should be logged separately
     """
 
     # predefine all outputs that should be logged
@@ -624,10 +534,11 @@ def dec_variance_lessthan_thresholds(
     tag_ifFalse=None,
 ):
     """
-    Finds components with variance<single_comp_threshold.
+    Change classifications for components with variance<single_comp_threshold.
     If the sum of the variance for all components that meet this criteria
-    is greater than all_comp_threshold then keep the lowest variance
-    components so that the sum of their variances is less than all_comp_threshold
+    is greater than all_comp_threshold then only change classifications for the
+    lowest variance components where the sum of their variances is less than
+    all_comp_threshold
 
     Parameters
     ----------
@@ -635,15 +546,15 @@ def dec_variance_lessthan_thresholds(
     {ifTrueFalse}
     {decide_comps}
     var_metric: :obj:`str`
-        The name of the metric in comptable for variance. default=varexp
-        This is an option so that it is possible to set this to normvarexp
-        or some other variance measure
+        The name of the metric in component_table for variance. Default="variance explained"
+        This is an option so that it is possible to use "normalized variance explained"
+        or another metric
     single_comp_threshold: :obj:`float`
         The threshold for which all components need to have lower variance.
-        default=0.1
+        Default=0.1
     all_comp_threshold: :obj: `float`
-        The threshold for which the sum of all components<single_comp_threshold
-        needs to be under. default=1.0
+        The number of the variance for all components less than single_comp_threshold
+        needs to be under this threshold. Default=1.0
     {log_extra_info}
     {log_extra_report}
     {custom_node_label}
@@ -713,8 +624,6 @@ def dec_variance_lessthan_thresholds(
             tag_ifTrue=tag_ifTrue,
             tag_ifFalse=tag_ifFalse,
         )
-        # outputs["numTrue"] = np.asarray(decision_boolean).sum()
-        # outputs["numFalse"] = np.logical_not(decision_boolean).sum()
 
         log_decision_tree_step(
             function_name_idx,
@@ -745,7 +654,7 @@ def calc_median(
     only_used_metrics=False,
 ):
     """
-    Calculates the median across comopnents for the metric defined by metric_name
+    Calculates the median across components for the metric defined by metric_name
 
     Parameters
     ----------
@@ -859,13 +768,11 @@ def calc_kappa_elbow(
 
     Note
     ----
-    This script is currently hard coded for a specific way to calculate the kappa elbow
+    This function is currently hard coded for a specific way to calculate the kappa elbow
     based on the method by Kundu in the MEICA v2.7 code. This uses the minimum of
-    a kappa elbow calculation on all components and on a subset of nonsignificant
-    components. To get the same funcationality in MEICA v2.7, decide_comps must be 'all'
-    Additional options could be added to this function or distinct functions
-    for some more flexible options
-
+    a kappa elbow calculation on all components and on a subset of kappa values below
+    a significance threshold. To get the same functionality as in MEICA v2.7,
+    decide_comps must be 'all'.
     """
 
     outputs = {
@@ -957,13 +864,11 @@ def calc_rho_elbow(
     subset_decide_comps: :obj:`str`
         This is a string with a single component classification label. For the
         elbow calculation used by Kundu in MEICA v.27 thresholds are based
-        on all components and on unclassified components. Default
-        'unclassified'.
-
+        on all components and on unclassified components.
+        Default='unclassified'.
     rho_elbow_type: :obj:`str`
         The algorithm used to calculate the rho elbow. Current options are:
-        'kundu' and 'liberal'. Default 'kundu'.
-
+        'kundu' and 'liberal'. Default='kundu'.
     {log_extra_info}
     {log_extra_report}
     {custom_node_label}
@@ -976,8 +881,11 @@ def calc_rho_elbow(
     Note
     ----
     This script is currently hard coded for a specific way to calculate the rho elbow
-    based on the method by Kundu in the MEICA v2.7 code. To get the same funcationality
-    in MEICA v2.7, decide_comps must be 'all' and subset_decide_comps must be 'unclassified'
+    based on the method by Kundu in the MEICA v2.7 code. To get the same functionality
+    in MEICA v2.7, decide_comps must be 'all' and subset_decide_comps must be
+    'unclassified' See :obj:`tedana.selection.selection_utils.rho_elbow_kundu_liberal`
+    for a more detailed explanation of the difference between the kundu and liberal
+    options.
 
     """
 
@@ -1092,7 +1000,7 @@ def dec_classification_doesnt_exist(
     log_extra_info="",
     custom_node_label="",
     only_used_metrics=False,
-    tag_ifTrue=None,
+    tag="",
 ):
     """
     If there are no components with a classification specified in class_comp_exists,
@@ -1101,22 +1009,22 @@ def dec_classification_doesnt_exist(
     Parameters
     ----------
     {selector}
-    new_classification: :obj: `str`
+    new_classification: :obj:`str`
         Assign all components identified in decide_comps the classification
-        in new_classification. Options are 'unclassified', 'accepted',
-        'rejected', or intermediate_classification labels predefined in the
-        decision tree
-
+        in new_classification.
     {decide_comps}
     class_comp_exists: :obj:`str` or :obj:`list[str]` or :obj:`int` or :obj:`list[int]`
         This has the same structure options as decide_comps. This function tests
-        whether any components have the classifications defined in this variable.
-
+        whether any components in decide_comps have the classifications defined in this
+        variable.
     {log_extra_info}
     {log_extra_report}
     {custom_node_label}
     {only_used_metrics}
-    {tag_ifTrueFalse}
+    tag: :obj:`str`
+        A classification tag to assign to all components being reclassified.
+        This should be one of the tags defined by classification_tags in
+        the decision tree specification. Default="".
 
     Returns
     -------
@@ -1133,7 +1041,6 @@ def dec_classification_doesnt_exist(
     classify any remaining provisional components. If none of the
     remaining components are "provisionalreject" then it skips those
     steps and accepts everything left.
-
     """
 
     # predefine all outputs that should be logged
@@ -1179,13 +1086,6 @@ def dec_classification_doesnt_exist(
             ifFalse=outputs["numFalse"],
         )
     else:  # do_comps_exist is None:
-        # should be True for all components in comps2use
-        # decision_boolean = pd.Series(
-        #   data=False,
-        #   index=np.arange(len(selector.component_table)),
-        #   dtype=bool
-        # )
-        # decision_boolean.iloc[comps2use] = True
         decision_boolean = pd.Series(True, index=comps2use)
 
         selector, outputs["numTrue"], outputs["numFalse"] = change_comptable_classifications(
@@ -1193,7 +1093,7 @@ def dec_classification_doesnt_exist(
             ifTrue,
             ifFalse,
             decision_boolean,
-            tag_ifTrue=tag_ifTrue,
+            tag_ifTrue=tag,
         )
 
         log_decision_tree_step(
@@ -1237,16 +1137,16 @@ def calc_varex_thresh(
     thresh_label: :obj:`str`
         The threshold will be saved in "varex_(thresh_label)_thresh"
         In the original kundu decision tree this was either "upper" or "lower"
-        If passed an empty string,t hen will be saved as "varex_thresh"
+        If passed an empty string, will be saved as "varex_thresh"
     percentile_thresh: :obj:`int`
         A percentile threshold to apply to components to set the variance threshold.
         In the original kundu decision tree this was 90 for varex_upper_thresh and
         25 for varex_lower_thresh
     num_lowest_var_comps: :obj:`str` :obj:`int`
         percentile can be calculated on the num_lowest_var_comps components with the
-        lowest variance. Either input an integer directory or input a string that is
+        lowest variance. Either input an integer directly or input a string that is
         a parameter stored in selector.cross_component_metrics ("num_acc_guess" in
-        original decision tree). Default is None
+        original decision tree). Default=None
     {log_extra_info}
     {log_extra_report}
     {custom_node_label}
@@ -1310,7 +1210,7 @@ def calc_varex_thresh(
                 num_lowest_var_comps = selector.cross_component_metrics[num_lowest_var_comps]
             elif not comps2use:
                 # Note: It is possible the comps2use requested for this function
-                #  is not empty, but the comps2use requested to calcualte
+                #  is not empty, but the comps2use requested to calculate
                 # {num_lowest_var_comps} was empty. Given the way this node is
                 # used, that's unlikely, but worth a comment.
                 LGR.info(
@@ -1387,6 +1287,8 @@ def calc_extend_factor(
 ):
     """
     Calculate the scalar used to set a threshold for d_table_score.
+    The explanation for the calculation is in
+    :obj:`tedana.selection.selection_utils.get_extend_factor`
 
     Parameters
     ----------
@@ -1459,8 +1361,8 @@ def calc_max_good_meanmetricrank(
     only_used_metrics=False,
 ):
     """
-    Calculates the max_good_meanmetricrank to use in the kundu decision tree
-    This is the number of components seleted with decide_comps * the extend_factor
+    Calculates the max_good_meanmetricrank to use in the kundu decision tree.
+    This is the number of components selected with decide_comps * the extend_factor
     calculated in calc_extend_factor
 
     Parameters
@@ -1470,7 +1372,7 @@ def calc_max_good_meanmetricrank(
     metric_suffix: :obj:`str`
         By default, this will output a value called "max_good_meanmetricrank"
         If this variable is not None or "" then it will output:
-        "max_good_meanmetricrank_[metric_suffix]"
+        "max_good_meanmetricrank_[metric_suffix]". Default=None
     {log_extra_info}
     {log_extra_report}
     {custom_node_label}
@@ -1483,12 +1385,11 @@ def calc_max_good_meanmetricrank(
     Note
     ----
     "meanmetricrank" is the same as "d_table_score" and is used to set a threshold for
-    the "d_table" values in the component table. This metric ranks
-    the components based on 5 metrics and then outputs the mean rank across the 5 metrics.
-    Thus "meanmetricrank" is a slightly better description but d_table was used in earlier
-    versions of this code. It might be worth consistently using the same term, but this
-    note will hopefully suffice for now.
-
+    the "d_table" values in the component table. This metric ranks the components based
+    on 5 metrics and then outputs the mean rank across the 5 metrics.
+    Thus "meanmetricrank" is a slightly more descriptive name but d_table was used in
+    earlier versions of this code. It might be worth consistently using the same term,
+    but this note will hopefully suffice for now.
     """
 
     function_name_idx = f"Step {selector.current_node_idx}: calc_max_good_meanmetricrank"
@@ -1568,7 +1469,7 @@ def calc_varex_kappa_ratio(
     only_used_metrics=False,
 ):
     """
-    Calculates the cross_component_metric ``kappa_rate`` for the components in decide_comps
+    Calculates the cross_component_metric kappa_rate for the components in decide_comps
     and then calculate the variance explained / kappa ratio for ALL components
     and adds those values to a new column in the component_table titled "varex kappa ratio".
 
@@ -1589,9 +1490,9 @@ def calc_varex_kappa_ratio(
     ----
     These measures are used in the original kundu decision tree.
     kappa_rate = (max-min kappa values of selected components)/(max-min variance explained)
-    varex_k
-    varex kappa ratio = kappa_rate * "variance explained"/"kappa" for each component
-    Components with larger variance and smaller kappa are more likely to be rejected
+    varex_k.
+    varex kappa ratio = kappa_rate * "variance explained"/"kappa" for each component.
+    Components with larger variance and smaller kappa are more likely to be rejected.
     This metric sometimes causes issues with high magnitude BOLD responses
     such as the V1 response to a block-design flashing checkerboard
     """

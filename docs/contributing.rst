@@ -125,7 +125,7 @@ this switch, but it also means that exactly reproducing previous MEICA analyses 
 
 The other reason is that the core developers have chosen to look forwards rather than maintaining
 an older code base.
-As described in the :ref:`governance` section, ``tedana`` is maintained by a small team of
+As described in the `governance`_ section, ``tedana`` is maintained by a small team of
 volunteers with limited development time.
 If you'd like to use MEICA as has been previously published the code is available on
 `bitbucket`_ and freely available under a LGPL2 license.
