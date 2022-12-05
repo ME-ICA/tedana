@@ -162,7 +162,7 @@ def _get_parser():
             "file which matches the decision tree file "
             "specification."
         ),
-        default="minimal",
+        default="kundu",
     )
     optional.add_argument(
         "--seed",
@@ -322,7 +322,7 @@ def tedana_workflow(
     prefix="",
     fittype="loglin",
     combmode="t2s",
-    tree="minimal",
+    tree="kundu",
     tedpca="aic",
     fixed_seed=42,
     maxit=500,
