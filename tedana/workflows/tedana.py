@@ -77,17 +77,6 @@ def _get_parser():
         help="Echo times (in ms). E.g., 15.0 39.0 63.0",
         required=True,
     )
-    required.add_argument(
-        "-t",
-        "--tree",
-        dest="tree",
-        help=(
-            "Decision tree to use. You may use a "
-            "packaged tree (kundu, minimal) or supply a JSON "
-            "file which matches the decision tree file "
-            "specification."
-        ),
-    )
     optional.add_argument(
         "--out-dir",
         dest="out_dir",
@@ -163,6 +152,17 @@ def _get_parser():
             "Default='aic'."
         ),
         default="aic",
+    )
+    optional.add_argument(
+        "--tree",
+        dest="tree",
+        help=(
+            "Decision tree to use. You may use a "
+            "packaged tree (kundu, minimal) or supply a JSON "
+            "file which matches the decision tree file "
+            "specification."
+        ),
+        default="kundu",
     )
     optional.add_argument(
         "--seed",
@@ -322,7 +322,7 @@ def tedana_workflow(
     prefix="",
     fittype="loglin",
     combmode="t2s",
-    tree="minimal",
+    tree="kundu",
     tedpca="aic",
     fixed_seed=42,
     maxit=500,
