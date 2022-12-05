@@ -12,8 +12,8 @@ help:
 	@echo "  all_tests		to run 'lint', 'unittest', and 'integration'"
 
 lint:
-	@black --check --diff tedana
 	@flake8 tedana
+	@black --check --diff tedana
 
 unittest:
 	@py.test --skipintegration --cov-append --cov-report term-missing --cov=tedana tedana/
