@@ -108,13 +108,11 @@ Anyone interested in using v3.2 may compile and install an earlier release (<=0.
 [tedana] How do I perform RICA (manual ICA classification)?
 ***********************************************************
 
-RICA is a ``tedana`` tool for manual ICA classification. Once the .tsv file containing
-the result of manual component classification is obtained, it is necessary to `re-run the tedana workflow`_
-passing the manual_classification.tsv file with the --ctab option. To save the output correctly,
-make sure that the output directory does not coincide with the input directory.
+RICA is a tool for manual ICA classification. Once the .tsv file containing
+the result of manual component classification is obtained, it is necessary to `re-run the tedana workflow`_ passing the manual_classification.tsv file with the --ctab option. To save the output correctly, make sure that the output directory does not coincide with the input directory. Watch `this video`_ for further information.
 
-
-.. _re-run the tedana workflow: https://tedana.readthedocs.io/en/stable/usage.html#Arguments%20for%20Rerunning%20the%20Workflow
+.. _re-run the tedana workflow: :ref:`<arguments-for-rerunning-the-workflow>`
+.. _this video: https://www.loom.com/share/ad37cf6f3c2d41e48721f62168a8284e
 
 
 *******************************************************************
