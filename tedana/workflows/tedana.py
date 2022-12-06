@@ -488,14 +488,6 @@ def tedana_workflow(
             "to correct your TR to the value it should be."
         )
 
-    # Save input data
-    for i in range(n_echos):
-        io_generator.save_file(
-            io.new_nii_like(ref_img, np.squeeze(catd[:, i, :])),
-            "input img",
-            echo=i + 1,
-        )
-
     if mixm is not None and op.isfile(mixm):
         mixm = op.abspath(mixm)
         # Allow users to re-run on same folder

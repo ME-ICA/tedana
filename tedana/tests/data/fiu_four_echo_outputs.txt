@@ -49,7 +49,6 @@ echo-1_desc-ICA_components.nii.gz
 echo-1_desc-PCAT2ModelPredictions_components.nii.gz
 echo-1_desc-PCAS0ModelPredictions_components.nii.gz
 echo-1_desc-PCA_components.nii.gz
-echo-1_desc-TedanaInput.nii.gz
 echo-1_desc-Rejected_bold.nii.gz
 echo-2_desc-Accepted_bold.nii.gz
 echo-2_desc-Denoised_bold.nii.gz
@@ -60,7 +59,6 @@ echo-2_desc-PCAT2ModelPredictions_components.nii.gz
 echo-2_desc-PCAS0ModelPredictions_components.nii.gz
 echo-2_desc-PCA_components.nii.gz
 echo-2_desc-Rejected_bold.nii.gz
-echo-2_desc-TedanaInput.nii.gz
 echo-3_desc-Accepted_bold.nii.gz
 echo-3_desc-Denoised_bold.nii.gz
 echo-3_desc-ICAT2ModelPredictions_components.nii.gz
@@ -70,7 +68,6 @@ echo-3_desc-PCAT2ModelPredictions_components.nii.gz
 echo-3_desc-PCAS0ModelPredictions_components.nii.gz
 echo-3_desc-PCA_components.nii.gz
 echo-3_desc-Rejected_bold.nii.gz
-echo-3_desc-TedanaInput.nii.gz
 echo-4_desc-Accepted_bold.nii.gz
 echo-4_desc-Denoised_bold.nii.gz
 echo-4_desc-ICAT2ModelPredictions_components.nii.gz
@@ -80,7 +77,6 @@ echo-4_desc-PCAT2ModelPredictions_components.nii.gz
 echo-4_desc-PCAS0ModelPredictions_components.nii.gz
 echo-4_desc-PCA_components.nii.gz
 echo-4_desc-Rejected_bold.nii.gz
-echo-4_desc-TedanaInput.nii.gz
 references.bib
 report.txt
 tedana_report.html

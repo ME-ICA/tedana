@@ -215,10 +215,6 @@
         "orig": "ica_orth_mixing",
         "bidsv1.5.0": "desc-ICAOrth_mixing"
     },
-    "input img": {
-        "orig": "raw_echo-{echo}",
-        "bidsv1.5.0": "echo-{echo}_desc-TedanaInput"
-    },
     "registry json": {
         "orig": "registry",
         "bidsv1.5.0": "desc-tedana_registry"
