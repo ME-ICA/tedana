@@ -24,6 +24,9 @@ desc-optcomAccepted_bold.nii.gz
 desc-optcomDenoised_bold.nii.gz
 desc-optcomRejected_bold.nii.gz
 desc-optcom_bold.nii.gz
+echo-1_desc-TedanaInput.nii.gz
+echo-2_desc-TedanaInput.nii.gz
+echo-3_desc-TedanaInput.nii.gz
 figures
 figures/carpet_optcom.svg
 figures/carpet_denoised.svg
