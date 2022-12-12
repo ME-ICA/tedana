@@ -168,6 +168,18 @@ class OutputGenerator:
 
         return extension
 
+    def register_input(self, names):
+        """Register input filenames.
+
+        Parameters
+        ----------
+        names : list[str]
+            The list of filenames being input as multi-echo volumes.
+        """
+        self.registry["input img"] = [
+            op.relpath(name, start=self.out_dir) for name in names
+        ]
+
     def get_name(self, description, **kwargs):
         """Generate a file full path to simplify file output.
 
