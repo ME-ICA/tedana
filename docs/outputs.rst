@@ -15,16 +15,16 @@ future processing. `descriptions of these output files are here`_.
 
 .. _descriptions of these output files are here: output_file_descriptions.html
 
-****************
-Component tables
-****************
+*******************************************
+Component tables and classification outputs
+*******************************************
 
 TEDPCA and TEDICA use component tables to track relevant metrics, component
 classifications, and rationales behind classifications.
-The component tables are stored as tsv files for BIDS-compatibility.
-`Full descriptions of these outputs are here`_.
+The component tables and additional information are stored as tsv and json files.
+`A full descriptions of these outputs are here`_.
 
-.. _Full descriptions of these outputs are here: component_table_descriptions.html
+.. _Full descriptions of these outputs are here: classification_output_descriptions.html
 
 
 *********************

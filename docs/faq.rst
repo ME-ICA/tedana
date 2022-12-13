@@ -47,6 +47,8 @@ Nevertheless, we have some code (thanks to Julio Peraza) that works for version 
 
     <script src="https://gist.github.com/tsalo/83828e0c1e9009f3cbd82caed888afba.js"></script>
 
+.. _fMRIPrep: https://fmriprep.readthedocs.io
+
 Warping scanner-space fMRIPrep outputs to standard space
 ========================================================
 
@@ -74,6 +76,7 @@ correction, rescaling, nuisance regression).
 If you are confident that your data have been preprocessed correctly prior to
 applying tedana, and you encounter this problem, please submit a question to `NeuroStars`_.
 
+.. _NeuroStars: https://neurostars.org
 
 .. _manual classification:
 
@@ -136,24 +139,32 @@ can include additional criteria.
 .. _make their own: building\ decision\ trees.html
 
 *************************************************************************************
-[tedana] Why isn't v3.2 of the component selection algorithm supported in ``tedana``?
+[tedana] What different versions of this method exist?
 *************************************************************************************
 
-There is a lot of solid logic behind the updated version of the TEDICA component
-selection algorithm, first added to the original ME-ICA codebase `here`_ by Dr. Prantik Kundu.
-However, we (the ``tedana`` developers) have encountered certain difficulties
-with this method (e.g., misclassified components) and the method itself has yet
-to be validated in any papers, posters, etc., which is why we have chosen to archive
-the v3.2 code, with the goal of revisiting it when ``tedana`` is more stable.
+Dr. Prantik Kundu developed a multi-echo ICA (ME-ICA) denoising method and
+`shared code on bitbucket`_ to allow others to use the method. A nearly identical
+version of this code is `distributed with AFNI as MEICA v2.5 beta 11`_. Most early
+publications that validated the MEICA method used variants of this code. That code
+runs only on the now defunct python 2.7 and is not under active development. 
+``tedana`` when run with `--tree kundu --tedpca kundu` (or `--tedpca kundu-stabilize`),
+uses the same core algorithm as in MEICA v2.5. Since ICA is a nondeterministic
+algorithm and ``tedana`` and MEICA use different PCA and ICA code, the algorithm will 
+mostly be the same, but the results will not be identical.
 
-Anyone interested in using v3.2 may compile and install an earlier release (<=0.0.4) of ``tedana``.
+Prantik Kundu also worked on `MEICA v3.2`_ (also for python v2.7). The underlying ICA
+step is very similar, but the component selection process was different. While this
+new approach has potentialy useful ideas, the early ``tedana`` developers experienced
+non-trivial component misclassifications and there were no publications that
+validated this method. That is why ``tedana`` replicated the established and valided
+MEICA v2.5 method and also includes options to ingrate additional component selection
+methods. Recently Prantik has started to work `MEICA v3.3`_ (for python >=v3.7) so
+that this version of the selection process would again be possible to run.
 
-
-.. _here: https://bitbucket.org/prantikk/me-ica/commits/906bd1f6db7041f88cd0efcac8a74074d673f4f5
-
-.. _NeuroStars: https://neurostars.org
-.. _fMRIPrep: https://fmriprep.readthedocs.io
-.. _afni_proc.py: https://afni.nimh.nih.gov/pub/dist/doc/program_help/afni_proc.py.html
+.. _shared code on bitbucket: https://bitbucket.org/prantikk/me-ica/src/experimental
+.. _distributed with AFNI as MEICA v 2.5 beta 11: https://github.com/afni/afni/tree/master/src/pkundu
+.. _MEICA v3.2: https://github.com/ME-ICA/me-ica/tree/53191a7e8838788acf837fdf7cb3026efadf49ac
+.. _MEICA v3.3: https://github.com/ME-ICA/me-ica/tree/ME-ICA_v3.3.0
 
 
 *******************************************************************

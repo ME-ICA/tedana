@@ -2,10 +2,19 @@
 Understanding and building a component selection process
 ########################################################
 
-``tedana`` involves transforming data into components via ICA, and then calculating metrics for each component.
-Each metric has one value per component that is stored in a comptable or component_table dataframe. This structure
-is then passed to a "decision tree" through which a series of binary choices categorize each component as **accepted** or
-**rejected**. The time series for the rejected components are regressed from the data in the final denoising step.
+This guide is designed for users who want to better understand the mechanics
+of the component selection process and people who are considering customizing
+their own decision tree or contributing to ``tedana`` code. We have tried to
+make this accessible with minimal jargon, but it is long. If you just want to
+better understand what's in the outputs from ``tedana`` start with
+`classification output descriptions`_.
+
+``tedana`` involves transforming data into components, currently via ICA, and then
+calculating metrics for each component. Each metric has one value per component that
+is stored in a component_table dataframe. This structure is then passed to a
+"decision tree" through which a series of binary choices categorize each component
+as **accepted** or **rejected**. The time series for the rejected components are
+regressed from the data in the final denoising step.
 
 There are several decision trees that are included by default in ``tedana`` but users can also build their own.
 This might be useful if one of the default decision trees needs to be slightly altered due to the nature
@@ -18,6 +27,7 @@ Instructions for how to classify components is called a "decision tree" since ea
 process branches components into different intermediate or final classifications
 
 .. contents:: :local:
+.. _classification output descriptions: classification output descriptions.html
 
 
 ******************************************
