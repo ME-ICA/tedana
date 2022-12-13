@@ -460,8 +460,13 @@ def tedana_workflow(
     # a float on [0, 1] or an int >= 1
     tedpca = check_tedpca_value(tedpca, is_parser=False)
 
+    # For z-catted files, make sure it's a list of size 1
+    if isinstance(data, str):
+        data = [data]
+
     LGR.info("Loading input data: {}".format([f for f in data]))
     catd, ref_img = io.load_data(data, n_echos=n_echos)
+
     io_generator = io.OutputGenerator(
         ref_img,
         convention=convention,
@@ -471,6 +476,10 @@ def tedana_workflow(
         force=force,
         verbose=verbose,
     )
+
+    # Record inputs to OutputGenerator
+    # TODO: turn this into an IOManager since this isn't really output
+    io_generator.register_input(data)
 
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug("Resulting data shape: {}".format(catd.shape))

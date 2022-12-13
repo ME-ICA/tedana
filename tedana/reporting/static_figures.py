@@ -196,14 +196,14 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
     for compnum in comptable.index.values:
         if comptable.loc[compnum, "classification"] == "accepted":
             line_color = "g"
-            expl_text = "accepted reason(s): " + comptable.loc[compnum, "classification_tags"]
+            expl_text = "accepted reason(s): " + str(comptable.loc[compnum, "classification_tags"])
         elif comptable.loc[compnum, "classification"] == "rejected":
             line_color = "r"
-            expl_text = "rejected reason(s): " + comptable.loc[compnum, "classification_tags"]
+            expl_text = "rejected reason(s): " + str(comptable.loc[compnum, "classification_tags"])
 
         elif comptable.loc[compnum, "classification"] == "ignored":
             line_color = "k"
-            expl_text = "ignored reason(s): " + comptable.loc[compnum, "classification_tags"]
+            expl_text = "ignored reason(s): " + str(comptable.loc[compnum, "classification_tags"])
         else:
             # Classification not added
             # If new, this will keep code running
