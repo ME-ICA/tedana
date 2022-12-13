@@ -99,7 +99,7 @@ class OutputGenerator:
         make_figures=True,
         force=False,
         verbose=False,
-        old_registry=None
+        old_registry=None,
     ):
 
         if config == "auto":
@@ -134,9 +134,7 @@ class OutputGenerator:
             del old_registry["root"]
             for k, v in old_registry.items():
                 if isinstance(v, list):
-                    self.registry[k] = [
-                        op.join(rel_root, vv) for vv in v
-                    ]
+                    self.registry[k] = [op.join(rel_root, vv) for vv in v]
                 else:
                     self.registry[k] = op.join(rel_root, v)
 

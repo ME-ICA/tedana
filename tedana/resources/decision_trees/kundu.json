@@ -12,7 +12,12 @@
         "dice_FT2",
         "signal-noise_t",
         "variance explained",
-        "d_table_score"
+        "d_table_score",
+        "countnoise"
+    ],
+    "generated_metrics": [
+        "d_table_score_node19",
+        "varex kappa ratio"
     ],
     "intermediate_classifications": [
         "provisionalaccept"
