@@ -76,7 +76,7 @@ def make_adaptive_mask(data, mask=None, getsum=False, threshold=1):
 
     # get 33rd %ile of `first_echo` and find corresponding index
     # NOTE: percentile is arbitrary
-    perc = np.percentile(first_echo, 33, interpolation="higher")
+    perc = np.percentile(first_echo, 33, method="higher")
     perc_val = echo_means[:, 0] == perc
 
     # extract values from all echos at relevant index

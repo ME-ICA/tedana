@@ -323,6 +323,7 @@ class ComponentSelector:
             # Since a status table exists, we need to skip nodes up to the
             # point where the last tree finished
             self.start_idx = len(tree_config["nodes"])
+            LGR.info(f"Start is {self.start_idx}")
             self.component_status_table = status_table
 
     def select(self):
@@ -368,7 +369,9 @@ class ComponentSelector:
         )
 
         # for each node in the decision tree
-        for self.current_node_idx, node in enumerate(self.tree["nodes"][self.start_idx :]):
+        for self.current_node_idx, node in enumerate(
+            self.tree["nodes"][self.start_idx :], start=self.start_idx
+        ):
             # parse the variables to use with the function
             fcn = getattr(selection_nodes, node["functionname"])
 
@@ -429,6 +432,7 @@ class ComponentSelector:
                 },
                 "kwargs": {
                     "dont_warn_reclassify": "true",
+                    "tag": "manual reclassify",
                 },
             }
         )
@@ -466,12 +470,16 @@ class ComponentSelector:
         used and if any used_metrics weren't explicitly declared necessary
         If either of these happen, a warning is added to the logger
         """
-        not_declared = self.tree["used_metrics"] - self.necessary_metrics
-        not_used = self.necessary_metrics - self.tree["used_metrics"]
+        if "generated_metrics" in self.tree.keys():
+            necessary_metrics = set(self.tree["generated_metrics"]) | self.necessary_metrics
+        else:
+            necessary_metrics = self.necessary_metrics
+        not_declared = self.tree["used_metrics"] - necessary_metrics
+        not_used = necessary_metrics - self.tree["used_metrics"]
         if len(not_declared) > 0:
             LGR.warning(
                 f"Decision tree {self.tree_name} used the following metrics that were "
-                "not declared as necessary: {not_declared}"
+                f"not declared as necessary: {not_declared}"
             )
         if len(not_used) > 0:
             LGR.warning(

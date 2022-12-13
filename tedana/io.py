@@ -99,6 +99,7 @@ class OutputGenerator:
         make_figures=True,
         force=False,
         verbose=False,
+        old_registry=None,
     ):
 
         if config == "auto":
@@ -127,6 +128,15 @@ class OutputGenerator:
         self.force = force
         self.verbose = verbose
         self.registry = {}
+        if old_registry:
+            root = old_registry["root"]
+            rel_root = op.relpath(root, start=self.out_dir)
+            del old_registry["root"]
+            for k, v in old_registry.items():
+                if isinstance(v, list):
+                    self.registry[k] = [op.join(rel_root, vv) for vv in v]
+                else:
+                    self.registry[k] = op.join(rel_root, v)
 
         if not op.isdir(self.out_dir):
             LGR.info(f"Generating output directory: {self.out_dir}")
@@ -319,7 +329,7 @@ class OutputGenerator:
             raise TypeError(f"data must be pd.Data, not type {data_type}.")
         # Replace blanks with numpy NaN
         deblanked = data.replace("", np.nan)
-        deblanked.to_csv(name, sep="\t", line_terminator="\n", na_rep="n/a", index=False)
+        deblanked.to_csv(name, sep="\t", lineterminator="\n", na_rep="n/a", index=False)
 
     def save_self(self):
         fname = self.save_file(self.registry, "registry json")
@@ -353,6 +363,13 @@ class InputHarvester:
         # Since we restrict to just these three types, this function should
         # always return. If more types are added, the loaders dict will
         # need to be updated with an appopriate loader
+
+    @property
+    def registry(self):
+        """The underlying file registry, including the root directory."""
+        d = self._registry
+        d["root"] = self._base_dir
+        return d
 
 
 def get_fields(name):
