@@ -412,7 +412,6 @@ class ComponentSelector:
 
         self.are_all_components_accepted_or_rejected()
 
-        LGR.info(f'Start idx is {self.start_idx}')
     def add_manual(self, indices, classification):
         """
         Add nodes that will manually classify components
@@ -476,7 +475,7 @@ class ComponentSelector:
         if len(not_declared) > 0:
             LGR.warning(
                 f"Decision tree {self.tree_name} used the following metrics that were "
-                "not declared as necessary: {not_declared}"
+                f"not declared as necessary: {not_declared}"
             )
         if len(not_used) > 0:
             LGR.warning(
