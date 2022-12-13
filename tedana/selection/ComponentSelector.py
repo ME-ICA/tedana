@@ -323,6 +323,7 @@ class ComponentSelector:
             # Since a status table exists, we need to skip nodes up to the
             # point where the last tree finished
             self.start_idx = len(tree_config["nodes"])
+            LGR.info(f'Start is {self.start_idx}')
             self.component_status_table = status_table
 
     def select(self):
@@ -368,7 +369,9 @@ class ComponentSelector:
         )
 
         # for each node in the decision tree
-        for self.current_node_idx, node in enumerate(self.tree["nodes"][self.start_idx :]):
+        for self.current_node_idx, node in enumerate(
+            self.tree["nodes"][self.start_idx :], start=self.start_idx
+        ):
             # parse the variables to use with the function
             fcn = getattr(selection_nodes, node["functionname"])
 
@@ -409,6 +412,7 @@ class ComponentSelector:
 
         self.are_all_components_accepted_or_rejected()
 
+        LGR.info(f'Start idx is {self.start_idx}')
     def add_manual(self, indices, classification):
         """
         Add nodes that will manually classify components
@@ -429,6 +433,7 @@ class ComponentSelector:
                 },
                 "kwargs": {
                     "dont_warn_reclassify": "true",
+                    "tag": "manual reclassify",
                 },
             }
         )

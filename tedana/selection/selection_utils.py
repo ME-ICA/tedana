@@ -149,7 +149,7 @@ def change_comptable_classifications(
         True,
         ifTrue,
         decision_boolean,
-        tag_ifTrue,
+        tag_if=tag_ifTrue,
         dont_warn_reclassify=dont_warn_reclassify,
     )
     selector = comptable_classification_changer(
@@ -157,7 +157,7 @@ def change_comptable_classifications(
         False,
         ifFalse,
         decision_boolean,
-        tag_ifFalse,
+        tag_if=tag_ifFalse,
         dont_warn_reclassify=dont_warn_reclassify,
     )
 
@@ -268,11 +268,11 @@ def comptable_classification_changer(
             if tag_if is not None:  # only run if a tag is provided
                 for idx in changeidx:
                     tmpstr = selector.component_table.loc[idx, "classification_tags"]
-                    if tmpstr != "":
+                    if tmpstr == "" or isinstance(tmpstr, float):
+                        tmpset = set([tag_if])
+                    else:
                         tmpset = set(tmpstr.split(","))
                         tmpset.update([tag_if])
-                    else:
-                        tmpset = set([tag_if])
                     selector.component_table.loc[idx, "classification_tags"] = ",".join(
                         str(s) for s in tmpset
                     )
