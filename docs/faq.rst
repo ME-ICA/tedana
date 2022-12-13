@@ -70,9 +70,9 @@ The standard space template in this example is "MNI152NLin2009cAsym", but will d
 The TEDICA step may fail to converge if TEDPCA is either too strict
 (i.e., there are too few components) or too lenient (there are too many).
 
-In our experience, this may happen when preprocessing has not been applied to
-the data, or when improper steps have been applied to the data (e.g., distortion
-correction, rescaling, nuisance regression).
+With updates to the ``tedana`` code, this issue is now rare, but it may happen
+when preprocessing has not been applied to the data, or when improper steps have
+been applied to the data (e.g. rescaling, nuisance regression).
 If you are confident that your data have been preprocessed correctly prior to
 applying tedana, and you encounter this problem, please submit a question to `NeuroStars`_.
 

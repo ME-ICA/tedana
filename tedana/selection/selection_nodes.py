@@ -769,9 +769,9 @@ def calc_kappa_elbow(
     Note
     ----
     This function is currently hard coded for a specific way to calculate the kappa elbow
-    based on the method by Kundu in the MEICA v2.7 code. This uses the minimum of
+    based on the method by Kundu in the MEICA v2.5 code. This uses the minimum of
     a kappa elbow calculation on all components and on a subset of kappa values below
-    a significance threshold. To get the same functionality as in MEICA v2.7,
+    a significance threshold. To get the same functionality as in MEICA v2.5,
     decide_comps must be 'all'.
     """
 
@@ -881,8 +881,8 @@ def calc_rho_elbow(
     Note
     ----
     This script is currently hard coded for a specific way to calculate the rho elbow
-    based on the method by Kundu in the MEICA v2.7 code. To get the same functionality
-    in MEICA v2.7, decide_comps must be 'all' and subset_decide_comps must be
+    based on the method by Kundu in the MEICA v2.5 code. To get the same functionality
+    in MEICA v2.5, decide_comps must be 'all' and subset_decide_comps must be
     'unclassified' See :obj:`tedana.selection.selection_utils.rho_elbow_kundu_liberal`
     for a more detailed explanation of the difference between the kundu and liberal
     options.

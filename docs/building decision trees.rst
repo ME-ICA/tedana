@@ -12,23 +12,26 @@ better understand what's in the outputs from ``tedana`` start with
 ``tedana`` involves transforming data into components, currently via ICA, and then
 calculating metrics for each component. Each metric has one value per component that
 is stored in a component_table dataframe. This structure is then passed to a
-"decision tree" through which a series of binary choices categorize each component
+"decision tree" through which a series of binary choices categorizes each component
 as **accepted** or **rejected**. The time series for the rejected components are
-regressed from the data in the final denoising step.
+regressed from the data in the `final denoising step`_.
 
-There are several decision trees that are included by default in ``tedana`` but users can also build their own.
-This might be useful if one of the default decision trees needs to be slightly altered due to the nature
-of a specific data set, if one has an idea for a new approach to multi-echo denoising, or if one wants to integrate
+There are a couple of decision trees that are included by default in ``tedana`` but
+users can also build their own. This might be useful if one of the default decision
+trees needs to be slightly altered due to the nature of a specific data set, if one has
+an idea for a new approach to multi-echo denoising, or if one wants to integrate
 non-multi-echo metrics into a single decision tree.
 
-Note: We use two terminologies interchangeably. The whole process is called "component selection"
-and much of the code uses variants of that phrase (i.e. the ComponentSelector class, selection_nodes for the functions used in selection).
-Instructions for how to classify components is called a "decision tree" since each step in the selection
-process branches components into different intermediate or final classifications
+Note: We use two terminologies interchangeably. The whole process is called "component
+selection" and much of the code uses variants of that phrase (i.e. the ComponentSelector
+class, selection_nodes for the functions used in selection). The steps for how to
+classify components is called a "decision tree" since each step in the selection
+process branches components into different intermediate or final classifications.
+
+.. _classification output descriptions: classification output descriptions.html
+.. _final denoising step: denoising.html
 
 .. contents:: :local:
-.. _classification output descriptions: classification output descriptions.html
-
 
 ******************************************
 Expected outputs after component selection
