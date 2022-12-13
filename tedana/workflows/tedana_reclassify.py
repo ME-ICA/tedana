@@ -278,6 +278,7 @@ def post_tedana(
         force=force,
         verbose=False,
         out_dir=out_dir,
+        old_registry=ioh.registry,
     )
 
     # Make a new selector with the added files

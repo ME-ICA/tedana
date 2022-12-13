@@ -99,6 +99,7 @@ class OutputGenerator:
         make_figures=True,
         force=False,
         verbose=False,
+        old_registry=None
     ):
 
         if config == "auto":
@@ -127,6 +128,17 @@ class OutputGenerator:
         self.force = force
         self.verbose = verbose
         self.registry = {}
+        if old_registry:
+            root = old_registry["root"]
+            rel_root = op.relpath(root, start=self.out_dir)
+            del old_registry["root"]
+            for k, v in old_registry.items():
+                if isinstance(v, list):
+                    self.registry[k] = [
+                        op.join(rel_root, vv) for vv in v
+                    ]
+                else:
+                    self.registry[k] = op.join(rel_root, v)
 
         if not op.isdir(self.out_dir):
             LGR.info(f"Generating output directory: {self.out_dir}")
@@ -353,6 +365,13 @@ class InputHarvester:
         # Since we restrict to just these three types, this function should
         # always return. If more types are added, the loaders dict will
         # need to be updated with an appopriate loader
+
+    @property
+    def registry(self):
+        """The underlying file registry, including the root directory."""
+        d = self._registry
+        d["root"] = self._base_dir
+        return d
 
 
 def get_fields(name):
