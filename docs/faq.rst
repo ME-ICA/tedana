@@ -162,7 +162,7 @@ methods. Recently Prantik has started to work `MEICA v3.3`_ (for python >=v3.7) 
 that this version of the selection process would again be possible to run.
 
 .. _shared code on bitbucket: https://bitbucket.org/prantikk/me-ica/src/experimental
-.. _distributed with AFNI as MEICA v 2.5 beta 11: https://github.com/afni/afni/tree/master/src/pkundu
+.. _distributed with AFNI as MEICA v2.5 beta 11: https://github.com/afni/afni/tree/master/src/pkundu
 .. _MEICA v3.2: https://github.com/ME-ICA/me-ica/tree/53191a7e8838788acf837fdf7cb3026efadf49ac
 .. _MEICA v3.3: https://github.com/ME-ICA/me-ica/tree/ME-ICA_v3.3.0
 

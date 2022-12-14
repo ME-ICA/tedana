@@ -24,9 +24,9 @@ non-multi-echo metrics into a single decision tree.
 
 Note: We use two terminologies interchangeably. The whole process is called "component
 selection" and much of the code uses variants of that phrase (i.e. the ComponentSelector
-class, selection_nodes for the functions used in selection). The steps for how to
-classify components is called a "decision tree" since each step in the selection
-process branches components into different intermediate or final classifications.
+class, selection_nodes for the functions used in selection). We call the steps for how
+to classify components a "decision tree" since each step in the selection process
+branches components into different intermediate or final classifications.
 
 .. _classification output descriptions: classification output descriptions.html
 .. _final denoising step: denoising.html
@@ -85,11 +85,12 @@ New columns in the ``component_table`` (sometimes a stand alone variable ``compt
 
 ``used_metrics``:
     Saved as a field in the  ``tree`` json file
-    A list of the metrics that were used in the decision tree. This should
-    match ``necessary_metrics`` which was a predefined list of metrics that
-    a tree uses. If these don't match, a warning should appear. These might
-    be useful for future work so that a user can input a tree and metrics
-    would be calculated based on what's needed to execute the tree.
+    A list of the metrics that were used in the decision tree. Everything in
+    ``used_metrics`` should be in either ``necessary_metrics`` or
+    ``generated_metrics`` If a used metric isn't in either, a warning message
+    will appear. These may have an additional use for future work so that a
+    user can input a tree and metrics would be calculated based on what's
+    needed to execute the tree.
 
 ``classification_tags``:
     Saved as a field in the ``tree`` json file

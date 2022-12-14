@@ -22,9 +22,9 @@ Component tables and classification outputs
 TEDPCA and TEDICA use component tables to track relevant metrics, component
 classifications, and rationales behind classifications.
 The component tables and additional information are stored as tsv and json files.
-`A full descriptions of these outputs are here`_.
+`A full description of these outputs are here`_.
 
-.. _Full descriptions of these outputs are here: classification_output_descriptions.html
+.. _A full description of these outputs are here: classification_output_descriptions.html
 
 
 *********************
