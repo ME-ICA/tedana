@@ -24,7 +24,7 @@ def selectcomps2use(selector, decide_comps):
 
     Parameters
     ----------
-    selector: :obj:`tedana.selection.ComponentSelector`
+    selector: :obj:`tedana.selection.component_selector.ComponentSelector`
         Only uses the component_table in this object
     decide_comps: :obj:`str` or :obj:`list[str]` or :obj:`list[int]`
         This is string or a list of strings describing what classifications
@@ -104,7 +104,7 @@ def change_comptable_classifications(
 
     Parameters
     ----------
-    selector: :obj:`tedana.selection.ComponentSelector`
+    selector: :obj:`tedana.selection.component_selector.ComponentSelector`
         The attributes used are component_table, component_status_table, and
         current_node_idx
     ifTrue, ifFalse: :obj:`str`
@@ -127,7 +127,7 @@ def change_comptable_classifications(
 
     Returns
     -------
-    selector: :obj:`tedana.selection.ComponentSelector`
+    selector: :obj:`tedana.selection.component_selector.ComponentSelector`
         component_table["classifications"] will reflect any new
         classifications.
         component_status_table will have a new column titled
@@ -184,7 +184,7 @@ def comptable_classification_changer(
 
     Parameters
     ----------
-    selector: :obj:`tedana.selection.ComponentSelector`
+    selector: :obj:`tedana.selection.component_selector.ComponentSelector`
         The attributes used are component_table, component_status_table, and
         current_node_idx
     boolstate : :obj:`bool`
@@ -211,7 +211,7 @@ def comptable_classification_changer(
         warning is suppressed. default=False
     Returns
     -------
-    selector: :obj:`tedana.selection.ComponentSelector`
+    selector: :obj:`tedana.selection.component_selector.ComponentSelector`
         Operates on the True OR False components depending on boolstate
         component_table["classifications"] will reflect any new
         classifications.
