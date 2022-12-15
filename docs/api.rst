@@ -122,11 +122,17 @@ API
    :toctree: generated/
    :template: module.rst
 
-   tedana.selection.ComponentSelector
+   tedana.selection.component_selector
    tedana.selection.selection_nodes
    tedana.selection.selection_utils
    tedana.selection.tedica
    tedana.selection.tedpca
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   tedana.selection.component_selector.ComponentSelector
 
 .. _api_gscontrol_ref:
 

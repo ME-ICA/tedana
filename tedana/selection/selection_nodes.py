@@ -27,7 +27,7 @@ RefLGR = logging.getLogger("REFERENCES")
 
 decision_docs = {
     "selector": """\
-selector: :obj:`tedana.selection.ComponentSelector`
+selector: :obj:`tedana.selection.component_selector.ComponentSelector`
         The selector to perform decision tree-based component selection with.""",
     "ifTrueFalse": """\
 ifTrue: :obj:`str`
@@ -62,7 +62,7 @@ tag_ifTrue: :obj:`str`
     tag_ifFalse: :obj:`str`
         The classification tag to apply if a component is classified False. Default="".""",
     "basicreturns": """\
-selector: :obj:`tedana.selection.ComponentSelector`
+selector: :obj:`tedana.selection.component_selector.ComponentSelector`
         If only_used_metrics is False, the updated selector is returned
     used_metrics: :obj:`set(str)`
         If only_used_metrics is True, the names of the metrics used in the

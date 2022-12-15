@@ -4,7 +4,7 @@ Functions to identify TE-dependent and TE-independent components.
 import logging
 
 from tedana.metrics import collect
-from tedana.selection.ComponentSelector import ComponentSelector
+from tedana.selection.component_selector import ComponentSelector
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -25,7 +25,7 @@ def automatic_selection(component_table, n_echos, n_vols, tree="kundu"):
     Returns
     -------
 
-    selector: :obj:`tedana.selection.ComponentSelector`
+    selector: :obj:`tedana.selection.component_selector.ComponentSelector`
         Contains component classifications in a component_table and provenance
         and metadata from the component selection process
 
