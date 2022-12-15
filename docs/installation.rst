@@ -13,9 +13,6 @@ packages will need to be installed:
 - scipy
 - mapca
 
-You can also install several optional dependencies, notably ``duecredit``.
-Please see the :doc:`FAQ <faq>` for more information on how tedana uses ``duecredit``.
-
 After installing relevant dependencies, you can then install ``tedana`` with:
 
 .. code-block:: bash

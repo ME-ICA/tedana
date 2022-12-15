@@ -112,9 +112,9 @@ When using tedana, please include the following citations:
       }
       </script>
       <p>
-      <span id="tedana_citation">tedana</span> 
-      This link is for the most recent version of the code and that page has links to DOIs 
-      for older versions. To support reproducibility, please cite the version you used: 
+      <span id="tedana_citation">tedana</span>
+      This link is for the most recent version of the code and that page has links to DOIs
+      for older versions. To support reproducibility, please cite the version you used:
       <a id="tedana_doi_url" href="https://doi.org/10.5281/zenodo.1250561">https://doi.org/10.5281/zenodo.1250561</a>
       <img src onerror='fillCitation()' alt=""/>
       </p>
@@ -143,19 +143,12 @@ When using tedana, please include the following citations:
       <i>Proceedings of the National Academy of Sciences</i>, <i>110</i>, 16187-16192.
       </p>
 
-Alternatively, you can automatically compile relevant citations by running your
-tedana code with `duecredit`_. For example, if you plan to run a script using
-tedana (in this case, ``tedana_script.py``):
-
-.. code-block:: bash
-
- python -m duecredit tedana_script.py
+Alternatively, you can use the text and citations produced by the tedana workflow.
 
 You can also learn more about `why citing software is important`_.
 
 .. _Differentiating BOLD and non-BOLD signals in fMRI time series using multi-echo EPI.: https://doi.org/10.1016/j.neuroimage.2011.12.028
 .. _Integrated strategy for improving functional connectivity mapping using multiecho fMRI.: https://doi.org/10.1073/pnas.1301725110
-.. _duecredit: https://github.com/duecredit/duecredit
 .. _`why citing software is important`: https://www.software.ac.uk/how-cite-software
 
 
@@ -188,6 +181,7 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
    contributing
    roadmap
    api
+   denoising
 
 .. toctree::
    :hidden:

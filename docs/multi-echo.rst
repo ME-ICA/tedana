@@ -574,19 +574,34 @@ This list is not necessarily up to date, so please check out OpenNeuro to potent
 * `Multi-echo fMRI replication sample of autobiographical memory, prospection and theory of mind reasoning tasks`_
 * `Multi-echo Cambridge`_
 * `Multiband multi-echo imaging of simultaneous oxygenation and flow timeseries for resting state connectivity`_
+* `Multiband multi-echo simultaneous ASL/BOLD for task-induced functional MRI`_
 * `Valence processing differs across stimulus modalities`_
 * `Cambridge Centre for Ageing Neuroscience (Cam-CAN)`_
 * `rt-me-fMRI - A task and resting state dataset for real-time, multi-echo fMRI methods development and validation`_
 * `EuskalIBUR`_
-* Nashiro-Dataset_ - Heart rate variability biofeedback training and emotion regulation
+* `Le Petit Prince`_
+* `Evidence supporting a time-limited hippocampal role in retrieving autobiographical memories`_
+* `Neurocognitive aging data release with behavioral, structural, and multi-echo functional MRI measures`_
+* `Heart rate variability biofeedback training and emotion regulation`_
+* `A mesial-to-lateral dissociation for orthographic processing in the visual cortex (dual-echo)`_
+* `Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice`_
+* `Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice (pilot data)`_
+
 .. _Multi-echo fMRI replication sample of autobiographical memory, prospection and theory of mind reasoning tasks: https://openneuro.org/datasets/ds000210/
 .. _Multi-echo Cambridge: https://openneuro.org/datasets/ds000258
-.. _Multiband multi-echo imaging of simultaneous oxygenation and flow timeseries for resting state connectivity: https://openneuro.org/datasets/ds000254
+.. _Multiband multi-echo imaging of simultaneous oxygenation and flow timeseries for resting state connectivity: https://openneuro.org/datasets/ds000216
+.. _Multiband multi-echo simultaneous ASL/BOLD for task-induced functional MRI: https://openneuro.org/datasets/ds000254
 .. _Valence processing differs across stimulus modalities: https://openneuro.org/datasets/ds001491
 .. _Cambridge Centre for Ageing Neuroscience (Cam-CAN): https://camcan-archive.mrc-cbu.cam.ac.uk/dataaccess/
 .. _rt-me-fMRI - A task and resting state dataset for real-time, multi-echo fMRI methods development and validation: https://doi.org/10.34894/R1TNL8
 .. _EuskalIBUR: https://openneuro.org/datasets/ds003192
-.. _Nashiro-Dataset: https://openneuro.org/datasets/ds003823/versions/1.2.3
+.. _Le Petit Prince: https://openneuro.org/datasets/ds003643
+.. _Evidence supporting a time-limited hippocampal role in retrieving autobiographical memories: https://openneuro.org/datasets/ds003511
+.. _Neurocognitive aging data release with behavioral, structural, and multi-echo functional MRI measures: https://openneuro.org/datasets/ds003592
+.. _Heart rate variability biofeedback training and emotion regulation: https://openneuro.org/datasets/ds003823/versions/1.2.3
+.. _A mesial-to-lateral dissociation for orthographic processing in the visual cortex (dual-echo): https://openneuro.org/datasets/ds002155
+.. _Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice: https://openneuro.org/datasets/ds001725
+.. _Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice (pilot data): https://openneuro.org/datasets/ds002154
 
 .. _spreadsheet of publications:
 

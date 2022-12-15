@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import os.path as op
+from copy import deepcopy
 from string import Formatter
 
 import nibabel as nib
@@ -21,7 +22,6 @@ from tedana.stats import computefeats2, get_coeffs
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 class OutputGenerator:
@@ -198,7 +198,8 @@ class OutputGenerator:
         if description.endswith("img"):
             self.save_img(data, name)
         elif description.endswith("json"):
-            self.save_json(data, name)
+            prepped = prep_data_for_json(data)
+            self.save_json(prepped, name)
         elif description.endswith("tsv"):
             self.save_tsv(data, name)
 
@@ -680,3 +681,49 @@ def split_ts(data, mmix, mask, comptable):
     resid = data - hikts
 
     return hikts, resid
+
+
+def prep_data_for_json(d) -> dict:
+    """Attempts to create a JSON serializable dictionary from a data dictionary
+
+    Parameters
+    ----------
+    d: dict
+        A dictionary that will be converted into something JSON serializable
+
+    Raises
+    ------
+    ValueError if it cannot force the dictionary to be serializable
+    TypeError if you do not supply a dict
+
+    Returns
+    -------
+    An attempt at JSON serializable data
+
+    Notes
+    -----
+    Use this to make something serializable when writing JSON to disk.
+    To speed things up since there are a small number of conversions, this
+    function does not check for serializability, but does use conversion
+    rules for cases encountered where things were not serializable.
+    Add more conversion rules to this function in cases where a
+    tedana-generated object does not serialize to JSON.
+    """
+    if not isinstance(d, dict):
+        raise TypeError(f"Dictionary required to force serialization; got type {type(d)} instead.")
+    # The input dictionary may want to retain types, so we copy
+    d = deepcopy(d)
+    for k, v in d.items():
+        if isinstance(v, dict):
+            # One of the values in the dict is the problem, need to recurse
+            v = prep_data_for_json(v)
+        elif isinstance(v, np.ndarray):
+            if v.dtype == np.int64 or v.dtype == np.uint64:
+                v = int(v)
+            v = v.tolist()
+        elif isinstance(v, np.int64) or isinstance(v, np.uint64):
+            v = int(v)
+        # NOTE: add more special cases for type conversions above this
+        # comment line as an elif block
+        d[k] = v
+    return d

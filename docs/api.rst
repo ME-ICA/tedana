@@ -198,6 +198,30 @@ API
    tedana.stats.getfbounds
 
 
+.. _api_bibtex_ref:
+
+*********************************************************
+:mod:`tedana.bibtex`: Tools for working with BibTeX files
+*********************************************************
+
+.. automodule:: tedana.bibtex
+   :no-members:
+   :no-inherited-members:
+
+.. currentmodule:: tedana.bibtex
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+
+   tedana.bibtex.find_braces
+   tedana.bibtex.reduce_idx
+   tedana.bibtex.index_bibtex_identifiers
+   tedana.bibtex.find_citations
+   tedana.bibtex.reduce_references
+   tedana.bibtex.get_description_references
+
+
 .. _api_utils_ref:
 
 **************************************

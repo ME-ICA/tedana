@@ -14,7 +14,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py37-v2-{{ checksum "tedana/info.py" }}
+          key: conda-py37-v2-{{ checksum "setup.cfg" }}
       - run:
           name: Generate environment
           command: |
@@ -24,7 +24,7 @@ jobs:
               pip install .[tests]
             fi
       - save_cache:
-          key: conda-py37-v2-{{ checksum "tedana/info.py" }}
+          key: conda-py37-v2-{{ checksum "setup.cfg" }}
           paths:
               - /opt/conda/envs/tedana_py37
 
@@ -35,7 +35,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py36-v2-{{ checksum "tedana/info.py" }}
+          key: conda-py36-v2-{{ checksum "setup.cfg" }}
       - run:
           name: Generate environment
           command: |
@@ -54,7 +54,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py36
       - save_cache:
-          key: conda-py36-v2-{{ checksum "tedana/info.py" }}
+          key: conda-py36-v2-{{ checksum "setup.cfg" }}
           paths:
               - /opt/conda/envs/tedana_py36
       - persist_to_workspace:
@@ -69,7 +69,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py37-v2-{{ checksum "tedana/info.py" }}
+          key: conda-py37-v2-{{ checksum "setup.cfg" }}
       - run:
           name: Running unit tests
           command: |
@@ -91,7 +91,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py38-v2-{{ checksum "tedana/info.py" }}
+          key: conda-py38-v2-{{ checksum "setup.cfg" }}
       - run:
           name: Generate environment
           command: |
@@ -110,7 +110,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py38
       - save_cache:
-          key: conda-py38-v2-{{ checksum "tedana/info.py" }}
+          key: conda-py38-v2-{{ checksum "setup.cfg" }}
           paths:
               - /opt/conda/envs/tedana_py38
       - persist_to_workspace:
@@ -125,7 +125,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py39-v2-{{ checksum "tedana/info.py" }}
+          key: conda-py39-v2-{{ checksum "setup.cfg" }}
       - run:
           name: Generate environment
           command: |
@@ -144,13 +144,48 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py39
       - save_cache:
-          key: conda-py39-v2-{{ checksum "tedana/info.py" }}
+          key: conda-py39-v2-{{ checksum "setup.cfg" }}
           paths:
               - /opt/conda/envs/tedana_py39
       - persist_to_workspace:
           root: /tmp
           paths:
               - src/coverage/.coverage.py39
+
+  unittest_310:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py310-v1-{{ checksum "setup.cfg" }}
+      - run:
+          name: Generate environment
+          command: |
+            apt-get update
+            apt-get install -yqq make
+            if [ ! -d /opt/conda/envs/tedana_py310 ]; then
+              conda create -yq -n tedana_py310 python=3.10
+              source activate tedana_py310
+              pip install .[tests]
+            fi
+      - run:
+          name: Running unit tests
+          command: |
+            source activate tedana_py310
+            make unittest
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py310
+      - save_cache:
+          key: conda-py310-v1-{{ checksum "setup.cfg" }}
+          paths:
+              - /opt/conda/envs/tedana_py310
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+              - src/coverage/.coverage.py310
+
 
   style_check:
     docker:
@@ -159,7 +194,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py37-v2-{{ checksum "tedana/info.py" }}
+          key: conda-py37-v2-{{ checksum "setup.cfg" }}
       - run:
           name: Style check
           command: |
@@ -175,7 +210,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py37-v2-{{ checksum "tedana/info.py" }}
+          key: conda-py37-v2-{{ checksum "setup.cfg" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -200,7 +235,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py37-v2-{{ checksum "tedana/info.py" }}
+          key: conda-py37-v2-{{ checksum "setup.cfg" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -225,7 +260,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py37-v2-{{ checksum "tedana/info.py" }}
+          key: conda-py37-v2-{{ checksum "setup.cfg" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -250,7 +285,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py37-v2-{{ checksum "tedana/info.py" }}
+          key: conda-py37-v2-{{ checksum "setup.cfg" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -277,7 +312,7 @@ jobs:
           at: /tmp
       - checkout
       - restore_cache:
-          key: conda-py37-v2-{{ checksum "tedana/info.py" }}
+          key: conda-py37-v2-{{ checksum "setup.cfg" }}
       - run:
           name: Merge coverage files
           command: |
@@ -318,12 +353,14 @@ workflows:
             - makeenv_37
       - unittest_38
       - unittest_39
+      - unittest_310
       - merge_coverage:
           requires:
             - unittest_36
             - unittest_37
             - unittest_38
             - unittest_39
+            - unittest_310
             - three-echo
             - four-echo
             - five-echo
