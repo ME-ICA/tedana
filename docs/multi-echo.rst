@@ -582,6 +582,7 @@ This list is not necessarily up to date, so please check out OpenNeuro to potent
 * `Le Petit Prince`_
 * `Evidence supporting a time-limited hippocampal role in retrieving autobiographical memories`_
 * `Neurocognitive aging data release with behavioral, structural, and multi-echo functional MRI measures`_
+* `Heart rate variability biofeedback training and emotion regulation`_
 * `A mesial-to-lateral dissociation for orthographic processing in the visual cortex (dual-echo)`_
 * `Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice`_
 * `Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice (pilot data)`_
@@ -597,6 +598,7 @@ This list is not necessarily up to date, so please check out OpenNeuro to potent
 .. _Le Petit Prince: https://openneuro.org/datasets/ds003643
 .. _Evidence supporting a time-limited hippocampal role in retrieving autobiographical memories: https://openneuro.org/datasets/ds003511
 .. _Neurocognitive aging data release with behavioral, structural, and multi-echo functional MRI measures: https://openneuro.org/datasets/ds003592
+.. _Heart rate variability biofeedback training and emotion regulation: https://openneuro.org/datasets/ds003823/versions/1.2.3
 .. _A mesial-to-lateral dissociation for orthographic processing in the visual cortex (dual-echo): https://openneuro.org/datasets/ds002155
 .. _Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice: https://openneuro.org/datasets/ds001725
 .. _Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice (pilot data): https://openneuro.org/datasets/ds002154
