@@ -190,7 +190,7 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
 
    dependence_metrics
    output_file_descriptions
-   component_table_descriptions
+   classification_output_descriptions
 
 
 ******************

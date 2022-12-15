@@ -577,7 +577,7 @@ def getelbow(arr, return_val=False):
 def kappa_elbow_kundu(component_table, n_echos, comps2use=None):
     """
     Calculate an elbow for kappa using the approach originally in
-    Prantik Kundu's MEICA v2.7 code
+    Prantik Kundu's MEICA v2.5 code
 
     Parameters
     ----------
@@ -649,7 +649,7 @@ def rho_elbow_kundu_liberal(
 ):
     """
     Calculate an elbow for rho using the approach originally in
-    Prantik Kundu's MEICA v2.7 code and with a slightly more
+    Prantik Kundu's MEICA v2.5 code and with a slightly more
     liberal threshold
 
     Parameters

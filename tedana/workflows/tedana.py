@@ -144,6 +144,8 @@ def _get_parser():
             "PCA decomposition with the mdl, kic and aic options "
             "is based on a Moving Average (stationary Gaussian) "
             "process and are ordered from most to least aggressive. "
+            "'kundu' or 'kundu-stabilize' are selection methods that "
+            "were distributed with MEICA. "
             "Users may also provide a float from 0 to 1, "
             "in which case components will be selected based on the "
             "cumulative variance explained or an integer greater than 1"

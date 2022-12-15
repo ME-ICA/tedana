@@ -2,23 +2,36 @@
 Understanding and building a component selection process
 ########################################################
 
-``tedana`` involves transforming data into components via ICA, and then calculating metrics for each component.
-Each metric has one value per component that is stored in a comptable or component_table dataframe. This structure
-is then passed to a "decision tree" through which a series of binary choices categorize each component as **accepted** or
-**rejected**. The time series for the rejected components are regressed from the data in the final denoising step.
+This guide is designed for users who want to better understand the mechanics
+of the component selection process and people who are considering customizing
+their own decision tree or contributing to ``tedana`` code. We have tried to
+make this accessible with minimal jargon, but it is long. If you just want to
+better understand what's in the outputs from ``tedana`` start with
+`classification output descriptions`_.
 
-There are several decision trees that are included by default in ``tedana`` but users can also build their own.
-This might be useful if one of the default decision trees needs to be slightly altered due to the nature
-of a specific data set, if one has an idea for a new approach to multi-echo denoising, or if one wants to integrate
+``tedana`` involves transforming data into components, currently via ICA, and then
+calculating metrics for each component. Each metric has one value per component that
+is stored in a component_table dataframe. This structure is then passed to a
+"decision tree" through which a series of binary choices categorizes each component
+as **accepted** or **rejected**. The time series for the rejected components are
+regressed from the data in the `final denoising step`_.
+
+There are a couple of decision trees that are included by default in ``tedana`` but
+users can also build their own. This might be useful if one of the default decision
+trees needs to be slightly altered due to the nature of a specific data set, if one has
+an idea for a new approach to multi-echo denoising, or if one wants to integrate
 non-multi-echo metrics into a single decision tree.
 
-Note: We use two terminologies interchangeably. The whole process is called "component selection"
-and much of the code uses variants of that phrase (i.e. the ComponentSelector class, selection_nodes for the functions used in selection).
-Instructions for how to classify components is called a "decision tree" since each step in the selection
-process branches components into different intermediate or final classifications
+Note: We use two terminologies interchangeably. The whole process is called "component
+selection" and much of the code uses variants of that phrase (i.e. the ComponentSelector
+class, selection_nodes for the functions used in selection). We call the steps for how
+to classify components a "decision tree" since each step in the selection process
+branches components into different intermediate or final classifications.
+
+.. _classification output descriptions: classification output descriptions.html
+.. _final denoising step: denoising.html
 
 .. contents:: :local:
-
 
 ******************************************
 Expected outputs after component selection
@@ -72,11 +85,12 @@ New columns in the ``component_table`` (sometimes a stand alone variable ``compt
 
 ``used_metrics``:
     Saved as a field in the  ``tree`` json file
-    A list of the metrics that were used in the decision tree. This should
-    match ``necessary_metrics`` which was a predefined list of metrics that
-    a tree uses. If these don't match, a warning should appear. These might
-    be useful for future work so that a user can input a tree and metrics
-    would be calculated based on what's needed to execute the tree.
+    A list of the metrics that were used in the decision tree. Everything in
+    ``used_metrics`` should be in either ``necessary_metrics`` or
+    ``generated_metrics`` If a used metric isn't in either, a warning message
+    will appear. These may have an additional use for future work so that a
+    user can input a tree and metrics would be calculated based on what's
+    needed to execute the tree.
 
 ``classification_tags``:
     Saved as a field in the ``tree`` json file
@@ -132,7 +146,7 @@ Defining a custom decision tree
 
 Decision trees are stored in json files. The default trees are stored as part of the tedana code repository in ./resources/decision_trees
 The minimal tree, minimal.json is a good example highlighting the structure and steps in a tree. It may be helpful
-to look at that tree while reading this section. kundu.json should replicate the decision tree used in meica version 2.7,
+to look at that tree while reading this section. kundu.json should replicate the decision tree used in MEICA version 2.5,
 the predecessor to tedana. It is a more complex, but also highlights additional possible functionality in decision trees.
 
 A user can specify another decision tree and link to the tree location when tedana is executed with the ``--tree`` option. The format is
@@ -142,9 +156,9 @@ if violated, but more will just give a warning. If you are designing or editing 
 
 A decision tree can include two types of nodes or functions. All functions are currently in selection_nodes.py
 
-- A decision function will use existing metrics and potentially change the classification of the components based on those metrics. By convention, all these functions should begin with "dec"
-- A calculation function will take existing metrics and calculate a value across components to be used for classification, for example the kappa and rho elbows. By convention, all these functions should begin with "calc"
-- Nothing prevents a function from both calculating new cross component values and applying those values in a decision step, but following this convention should hopefully make decision tree specifications easier to follow and interpret.
+- A decision function will use existing metrics and potentially change the classification of the components based on those metrics. By convention, all these functions begin with "dec"
+- A calculation function will take existing metrics and calculate a value across components to be used for classification, for example the kappa and rho elbows. By convention, all these functions begin with "calc"
+- Nothing prevents a function from both calculating new cross component values and applying those values in a decision step, but following this convention should hopefully make decision tree specifications easier to follow and results easier to interpret.
 
 **Key expectations**
 
@@ -174,12 +188,18 @@ A decision tree can include two types of nodes or functions. All functions are c
 
 **Decision node json structure**
 
-There are  6 initial fields, necessary_metrics, intermediate_classification, and classification_tags, as described in the above section:
+There are 7 initial fields, necessary_metrics, intermediate_classification, and classification_tags, as described in the above section and :
 
 - "tree_id": a descriptive name for the tree that will be logged.
 - "info": A brief description of the tree for info logging
 - "report": A narrative description of the tree that could be used in report logging
 - "refs" Publications that should be referenced when this tree is used
+
+"generated_metrics" is an optional initial field. It lists metrics that are calculated as part of the decision tree.
+This is used similarly to necessary_metrics except, since the decision tree starts before these metrics exist, it
+won't raise an error when these metrics are not found. One might want to calculate a new metric if the metric uses
+only a subset of the components based on previous classifications. This does make interpretation of results more
+confusing, but, since this functionaly was part of the kundu decision tree, it is included.
 
 The "nodes" field is a list of elements where each element defines a node in the decision tree. There are several key fields for each of these nodes:
 
