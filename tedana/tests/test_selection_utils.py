@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 
 from tedana.selection import selection_utils
-from tedana.selection.ComponentSelector import ComponentSelector
+from tedana.selection.component_selector import ComponentSelector
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 

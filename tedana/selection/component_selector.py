@@ -328,7 +328,7 @@ class ComponentSelector:
 
     def select(self):
         """
-        Using the validated tree in `ComponentSelector` run the decision
+        Using the validated tree in `ComponentSelector` to run the decision
         tree functions to calculate cross_component metrics and classify
         each component as accepted or rejected.
 
@@ -341,21 +341,21 @@ class ComponentSelector:
         the calculated metrics
 
         This can be used on a component_table with no component classifications or to alter
-        classifications and on a component_table that was already run (i.e. for manual
+        classifications on a component_table that was already run (i.e. for manual
         classificaiton changes after visual inspection)
 
         When this is run, multiple elements in `ComponentSelector` will change including:
 
         - component_table: `classification` column with `accepted` or `rejected labels`
-        and `classification_tags` column with can hold multiple labels explaining why
-        a classification happened
+          and `classification_tags` column with can hold multiple comma-separated labels
+          explaining why a classification happened
         - cross_component_metrics: Any values that were calculated based on the metric
-        values across components or by direct user input
-        - component_status_table: Contains the classification statuses at each node
-        in the decision tree
+          values across components or by direct user input
+        - component_status_table: Contains the classification statuses at each node in
+          the decision tree
         - used_metrics: A list of metrics used in the selection process
-        - nodes: The original tree definition with an added `outputs` key
-        listing everything that changed in each node
+        - nodes: The original tree definition with an added `outputs` key listing
+          everything that changed in each node
         - current_node_idx: The total number of nodes run in `ComponentSelector`
         """
 
@@ -421,7 +421,7 @@ class ComponentSelector:
         indices: :obj:`list[int]`
             The indices to manually classify
         classification: :obj:`str`
-            The classification to set the nodes to
+            The classification to set the nodes to (i.e. accepted or rejected)
         """
         self.tree["nodes"].append(
             {
@@ -467,7 +467,7 @@ class ComponentSelector:
     def are_only_necessary_metrics_used(self):
         """
         Check if all metrics that are declared as necessary are actually
-        used and if any used_metrics weren't explicitly declared necessary
+        used and if any used_metrics weren't explicitly declared necessary.
         If either of these happen, a warning is added to the logger
         """
         if "generated_metrics" in self.tree.keys():
@@ -490,7 +490,7 @@ class ComponentSelector:
     def are_all_components_accepted_or_rejected(self):
         """
         After the tree has finished executing, check if all component
-        classifications are either "accepted" or "rejected"
+        classifications are either "accepted" or "rejected".
         If any other component classifications remain, log a warning
         """
         component_classifications = set(self.component_table["classification"].to_list())

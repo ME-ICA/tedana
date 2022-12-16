@@ -7,7 +7,7 @@ import os.path as op
 import pandas as pd
 import pytest
 
-from tedana.selection import ComponentSelector
+from tedana.selection import component_selector
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -40,7 +40,7 @@ def dicts_to_test(treechoice):
 
     Returns
     -------
-    tree: :ojb:`dict` A dict that can be input into ComponentSelector.validate_tree
+    tree: :ojb:`dict` A dict that can be input into component_selector.validate_tree
     """
 
     # valid_dict is a simple valid dictionary to test
@@ -136,7 +136,7 @@ def dicts_to_test(treechoice):
 
 
 # ----------------------------------------------------------------------
-# ComponentSelector Tests
+# component_selector Tests
 # ----------------------------------------------------------------------
 
 # load_config
@@ -146,11 +146,11 @@ def test_load_config_fails():
 
     # We recast to ValueError in the file not found and directory cases
     with pytest.raises(ValueError):
-        ComponentSelector.load_config("THIS FILE DOES NOT EXIST.txt")
+        component_selector.load_config("THIS FILE DOES NOT EXIST.txt")
 
     # Raises IsADirectoryError for a directory
     with pytest.raises(ValueError):
-        ComponentSelector.load_config(".")
+        component_selector.load_config(".")
 
     # Note: we defer validation errors for validate_tree even though
     # load_config may raise them
@@ -160,7 +160,7 @@ def test_load_config_succeeds():
     """Tests to make sure load_config succeeds"""
 
     # The minimal tree should have an id of "minimal_decision_tree_test1"
-    tree = ComponentSelector.load_config("minimal")
+    tree = component_selector.load_config("minimal")
     assert tree["tree_id"] == "minimal_decision_tree_test1"
 
 
@@ -169,7 +169,7 @@ def test_minimal():
     xcomp = {
         "n_echos": 3,
     }
-    tree = ComponentSelector.ComponentSelector(
+    tree = component_selector.ComponentSelector(
         "minimal",
         sample_comptable(),
         cross_component_metrics=xcomp,
@@ -198,7 +198,7 @@ def test_validate_tree_succeeds():
     for tree_name in default_tree_names:
         f = open(tree_name)
         tree = json.load(f)
-        assert ComponentSelector.validate_tree(tree)
+        assert component_selector.validate_tree(tree)
 
         # Test a few extra possabilities just using the minimal.json tree
         if "/minimal.json" in tree_name:
@@ -206,7 +206,7 @@ def test_validate_tree_succeeds():
             tree["reconstruct_from"] = "testinput"
             # Need to test handling of the tag_ifFalse kwarg somewhere
             tree["nodes"][1]["kwargs"]["tag_ifFalse"] = "testing tag"
-            assert ComponentSelector.validate_tree(tree)
+            assert component_selector.validate_tree(tree)
 
 
 def test_validate_tree_warnings():
@@ -216,7 +216,7 @@ def test_validate_tree_warnings():
     """
 
     # A tree that raises all possible warnings in the validator should still be valid
-    assert ComponentSelector.validate_tree(dicts_to_test("valid"))
+    assert component_selector.validate_tree(dicts_to_test("valid"))
 
 
 def test_validate_tree_fails():
@@ -227,25 +227,25 @@ def test_validate_tree_fails():
     """
 
     # An empty dict should not be valid
-    with pytest.raises(ComponentSelector.TreeError):
-        ComponentSelector.validate_tree({})
+    with pytest.raises(component_selector.TreeError):
+        component_selector.validate_tree({})
 
     # A tree that is missing a required key should not be valid
-    with pytest.raises(ComponentSelector.TreeError):
-        ComponentSelector.validate_tree(dicts_to_test("missing_key"))
+    with pytest.raises(component_selector.TreeError):
+        component_selector.validate_tree(dicts_to_test("missing_key"))
 
     # Calling a selection node function that does not exist should not be valid
-    with pytest.raises(ComponentSelector.TreeError):
-        ComponentSelector.validate_tree(dicts_to_test("missing_function"))
+    with pytest.raises(component_selector.TreeError):
+        component_selector.validate_tree(dicts_to_test("missing_function"))
 
     # Calling a function with an non-existent required parameter should not be valid
-    with pytest.raises(ComponentSelector.TreeError):
-        ComponentSelector.validate_tree(dicts_to_test("extra_req_param"))
+    with pytest.raises(component_selector.TreeError):
+        component_selector.validate_tree(dicts_to_test("extra_req_param"))
 
     # Calling a function with an non-existent optional parameter should not be valid
-    with pytest.raises(ComponentSelector.TreeError):
-        ComponentSelector.validate_tree(dicts_to_test("extra_opt_param"))
+    with pytest.raises(component_selector.TreeError):
+        component_selector.validate_tree(dicts_to_test("extra_opt_param"))
 
     # Calling a function missing a required parameter should not be valid
-    with pytest.raises(ComponentSelector.TreeError):
-        ComponentSelector.validate_tree(dicts_to_test("missing_req_param"))
+    with pytest.raises(component_selector.TreeError):
+        component_selector.validate_tree(dicts_to_test("missing_req_param"))
