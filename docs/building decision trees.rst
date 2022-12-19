@@ -5,14 +5,14 @@ Understanding and building a component selection process
 This guide is designed for users who want to better understand the mechanics
 of the component selection process and people who are considering customizing
 their own decision tree or contributing to ``tedana`` code. We have tried to
-make this accessible with minimal jargon, but it is long. If you just want to
-better understand what's in the outputs from ``tedana`` start with
+make this accessible, but it is long. If you just want to better understand
+what's in the outputs from ``tedana`` start with
 `classification output descriptions`_.
 
 ``tedana`` involves transforming data into components, currently via ICA, and then
 calculating metrics for each component. Each metric has one value per component that
 is stored in a component_table dataframe. This structure is then passed to a
-"decision tree" through which a series of binary choices categorizes each component
+"decision tree" through which a series of binary choices categorize each component
 as **accepted** or **rejected**. The time series for the rejected components are
 regressed from the data in the `final denoising step`_.
 
@@ -98,6 +98,7 @@ New columns in the ``component_table`` (sometimes a stand alone variable ``compt
     Any reporting interface should use this field so that the tags that are possible are listed
     even if a given tag is not used by any component by the end of the selection process.
 
+.. _saved in multiple files: output_file_descriptions.html
 
 **Outputs of each decision tree step**
 

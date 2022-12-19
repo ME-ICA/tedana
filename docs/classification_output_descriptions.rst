@@ -1,11 +1,13 @@
-#############################
-Component table descriptions
-#############################
+##################################
+Classification output descriptions
+##################################
 
+In addition to the denoised time series, tedana outputs multiple files that
+can be used to subsequent analyses and to better understand one's denoising
+results. `In addition to the descriptions of file names`_ this page explains
+the contents of several of those files in more detail.
 
-In order to make sense of the rationale codes in the component tables,
-consult the tables below.
-TEDPCA rationale codes start with a "P", while TEDICA codes start with an "I".
+.. _In addition to the descriptions of file names: output_file_descriptions.html
 
 ===============    =============================================================
 Classification     Description
@@ -19,6 +21,20 @@ ignored            Low-variance components included in denoised, but excluded
 
 TEDPCA codes
 ============
+
+In ``tedana`` PCA is used to reduce the number of dimensions (components) in the
+dataset. Without this steps, the number of components would be one less than
+the number of volumes, many of those components would effectively be
+Gaussian noise and ICA would not reliably converge. Standard methods for data
+reduction use cost functions, like AIC, MDL, and KIC to estimate the variance
+that is just noise and remove the lowest variance components under that threshold.
+
+``Tedana`` includes an addition `kundu` approach that identifies and removes
+compnents that don't contain T2* or S0 signal and are more likely to be noise.
+If the `--tedpca kundu` option is used, the PCA_metrics tsv file will include
+an accepted vs rejected classification column and also a column of codes
+documenting why a PCA component removed. These are brief explanations of those
+codes.
 
 =====  ===============  ========================================================
 Code   Classification   Description
