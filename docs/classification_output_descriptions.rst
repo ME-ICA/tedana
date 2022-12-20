@@ -6,7 +6,10 @@ Tedana outputs multiple files that can be used to subsequent analyses and to
 better understand one's denoising results.
 In addition to the `descriptions of file names`_ this page explains the
 contents of several of those files in more detail.
+`Building decision trees`_ covers the full process, and not just the
+descriptions of outputted files, in more detail.
 
+.. _Building decision trees: building\ decision\ trees.html
 
 TEDPCA codes
 ============

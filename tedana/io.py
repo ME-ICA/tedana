@@ -25,7 +25,7 @@ RepLGR = logging.getLogger("REPORT")
 
 
 class CustomEncoder(json.JSONEncoder):
-    """Convert some types because of JSON serialization and numpy
+    """Class for converting some types because of JSON serialization and numpy
     incompatibilities
 
     See here: https://stackoverflow.com/q/50916422/2589328
@@ -337,7 +337,7 @@ class OutputGenerator:
 
 
 class InputHarvester:
-    """Turns a registry file into a lookup table to get previous data."""
+    """Class for turning a registry file into a lookup table to get previous data."""
 
     loaders = {
         "json": lambda f: load_json(f),
