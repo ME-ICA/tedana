@@ -120,19 +120,26 @@ API
 
 .. autosummary::
    :toctree: generated/
-   :template: module.rst
+   :template: class.rst
 
-   tedana.selection.component_selector
+   tedana.selection.component_selector.ComponentSelector
+   tedana.selection.component_selector.TreeError
+
+   :template: function.rst
+
+   tedana.selection.component_selector.load_config
+   tedana.selection.component_selector.validate_tree
+
+.. autosummary::
+   :toctree: generated/
+   :template: module.rst
+   
    tedana.selection.selection_nodes
    tedana.selection.selection_utils
    tedana.selection.tedica
    tedana.selection.tedpca
 
-.. autosummary::
-   :toctree: generated/
-   :template: class.rst
 
-   tedana.selection.component_selector.ComponentSelector
 
 .. _api_gscontrol_ref:
 
@@ -171,11 +178,16 @@ API
    :template: class.rst
 
    tedana.io.OutputGenerator
+   tedana.io.InputHarvester
+   tedana.io.CustomEncoder
 
    :template: function.rst
 
    tedana.io.load_data
+   tedana.io.load_json
+   tedana.io.get_fields
    tedana.io.new_nii_like
+   tedana.io.prep_data_for_json
    tedana.io.add_decomp_prefix
    tedana.io.denoise_ts
    tedana.io.split_ts
