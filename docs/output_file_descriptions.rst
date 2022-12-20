@@ -69,6 +69,17 @@ Key: Filename                                                                Con
                                                                              decomposition.
 "ICA metrics json": desc-tedana_metrics.json                                 Metadata about the metrics in
                                                                              ``desc-tedana_metrics.tsv``.
+"ICA cross component metrics json": desc-ICACrossComponent_metrics.tsv       Metric names and values that are each a single number
+                                                                             calculated across components. For example, kappa and
+                                                                             rho elbows.     
+"ICA decision tree json": desc-ICA_decision_tree                             A copy of the inputted decision tree specification with
+                                                                             an added "output" field for each node. The output field
+                                                                             contains information about what happened during
+                                                                             execution.
+"ICA status table tsv": desc-ICA_status_table.tsv                            A table where each column lists the classification
+                                                                             status of each component after each node was run.
+                                                                             Columns are only added for runs where component
+                                                                             statuses can change.
 "ICA accepted components img": desc-ICAAccepted_components.nii.gz            High-kappa ICA coefficient feature set
 "z-scored ICA accepted components img": desc-ICAAcceptedZ_components.nii.gz  Z-normalized spatial component maps
 report.txt                                                                   A summary report for the workflow with relevant

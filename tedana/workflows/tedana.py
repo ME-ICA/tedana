@@ -149,9 +149,8 @@ def _get_parser():
             "Users may also provide a float from 0 to 1, "
             "in which case components will be selected based on the "
             "cumulative variance explained or an integer greater than 1"
-            "in which case the specificed number of components will be"
-            "selected."
-            "Default='aic'."
+            "in which case the specificed number of components will be "
+            "selected. Default='aic'."
         ),
         default="aic",
     )
