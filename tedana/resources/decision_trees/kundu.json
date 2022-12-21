@@ -1,7 +1,7 @@
 {
     "tree_id": "kundu_MEICA27_decision_tree",
     "info": "Following the full decision tree designed by Prantik Kundu",
-    "report": "This is based on the criteria of the original MEICA decision tree",
+    "report": "This is based on the criteria of the MEICA v2.5 decision tree",
     "refs": "Kundu 2013",
     "necessary_metrics": [
         "kappa",

@@ -1000,7 +1000,7 @@ def dec_classification_doesnt_exist(
     log_extra_info="",
     custom_node_label="",
     only_used_metrics=False,
-    tag="",
+    tag=None,
 ):
     """
     If there are no components with a classification specified in class_comp_exists,

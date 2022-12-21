@@ -69,7 +69,7 @@ Key: Filename                                                                Con
                                                                              decomposition.
 "ICA metrics json": desc-tedana_metrics.json                                 Metadata about the metrics in
                                                                              ``desc-tedana_metrics.tsv``.
-"ICA cross component metrics json": desc-ICACrossComponent_metrics.tsv       Metric names and values that are each a single number
+"ICA cross component metrics json": desc-ICACrossComponent_metrics.json      Metric names and values that are each a single number
                                                                              calculated across components. For example, kappa and
                                                                              rho elbows.     
 "ICA decision tree json": desc-ICA_decision_tree                             A copy of the inputted decision tree specification with
@@ -91,58 +91,59 @@ tedana_report.html                                                           The
 
 If ``verbose`` is set to True:
 
-==============================================================  =====================================================
-Filename                                                        Content
-==============================================================  =====================================================
-desc-limited_T2starmap.nii.gz                                   Limited T2* map/time series.
-                                                                Values are in seconds.
-                                                                The difference between the limited and full maps
-                                                                is that, for voxels affected by dropout where
-                                                                only one echo contains good data, the full map uses
-                                                                the S0 estimate from the first two echoes, while the
-                                                                limited map has a NaN.
-desc-limited_S0map.nii.gz                                       Limited S0 map/time series.
-                                                                The difference between the limited and full maps
-                                                                is that, for voxels affected by dropout where
-                                                                only one echo contains good data, the full map uses
-                                                                the S0 estimate from the first two echoes, while the
-                                                                limited map has a NaN.
-echo-[echo]_desc-[PCA|ICA]_components.nii.gz                    Echo-wise PCA/ICA component weight maps.
-echo-[echo]_desc-[PCA|ICA]R2ModelPredictions_components.nii.gz  Component- and voxel-wise R2-model predictions,
-                                                                separated by echo.
-echo-[echo]_desc-[PCA|ICA]S0ModelPredictions_components.nii.gz  Component- and voxel-wise S0-model predictions,
-                                                                separated by echo.
-desc-[PCA|ICA]AveragingWeights_components.nii.gz                Component-wise averaging weights for metric
-                                                                calculation.
-desc-[PCA|ICA]S0_stat-F_statmap.nii.gz                          F-statistic map for each component, for the S0 model.
-desc-[PCA|ICA]T2_stat-F_statmap.nii.gz                          F-statistic map for each component, for the T2 model.
-desc-optcomPCAReduced_bold.nii.gz                               Optimally combined data after dimensionality
-                                                                reduction with PCA. This is the input to the ICA.
-echo-[echo]_desc-Accepted_bold.nii.gz                           High-Kappa time series for echo number ``echo``
-echo-[echo]_desc-Rejected_bold.nii.gz                           Low-Kappa time series for echo number ``echo``
-echo-[echo]_desc-Denoised_bold.nii.gz                           Denoised time series for echo number ``echo``
-==============================================================  =====================================================
+=============================================================================================  =====================================================
+Key: Filename                                                                                  Content
+=============================================================================================  =====================================================
+"limited t2star img": desc-limited_T2starmap.nii.gz                                            Limited T2* map/time series.
+                                                                                               Values are in seconds.
+                                                                                               The difference between the limited and full maps
+                                                                                               is that, for voxels affected by dropout where
+                                                                                               only one echo contains good data, the full map uses
+                                                                                               the S0 estimate from the first two echoes, while the
+                                                                                               limited map has a NaN.
+"limited s0 img": desc-limited_S0map.nii.gz                                                    Limited S0 map/time series.
+                                                                                               The difference between the limited and full maps
+                                                                                               is that, for voxels affected by dropout where
+                                                                                               only one echo contains good data, the full map uses
+                                                                                               the S0 estimate from the first two echoes, while the
+                                                                                               limited map has a NaN.
+"whitened img": desc-optcom_whitened_bold                                                      The optimally combined data after whitening
+"echo weight [PCA|ICA] maps split img": echo-[echo]_desc-[PCA|ICA]_components.nii.gz           Echo-wise PCA/ICA component weight maps.
+"echo T2 [PCA|ICA] split img": echo-[echo]_desc-[PCA|ICA]T2ModelPredictions_components.nii.gz  Component- and voxel-wise R2-model predictions,
+                                                                                               separated by echo.
+"echo S0 [PCA|ICA] split img": echo-[echo]_desc-[PCA|ICA]S0ModelPredictions_components.nii.gz  Component- and voxel-wise S0-model predictions,
+                                                                                               separated by echo.
+"[PCA|ICA] component weights img": desc-[PCA|ICA]AveragingWeights_components.nii.gz            Component-wise averaging weights for metric
+                                                                                               calculation.
+"[PCA|ICA] component F-S0 img": desc-[PCA|ICA]S0_stat-F_statmap.nii.gz                         F-statistic map for each component, for the S0 model.
+"[PCA|ICA] component F-T2 img": desc-[PCA|ICA]T2_stat-F_statmap.nii.gz                         F-statistic map for each component, for the T2 model.
+"PCA reduced img": desc-optcomPCAReduced_bold.nii.gz                                           Optimally combined data after dimensionality
+                                                                                               reduction with PCA. This is the input to the ICA.
+"high kappa ts split img": echo-[echo]_desc-Accepted_bold.nii.gz                               High-Kappa time series for echo number ``echo``
+"low kappa ts split img": echo-[echo]_desc-Rejected_bold.nii.gz                                Low-Kappa time series for echo number ``echo``
+"denoised ts split img": echo-[echo]_desc-Denoised_bold.nii.gz                                 Denoised time series for echo number ``echo``
+=============================================================================================  =====================================================
 
 If ``gscontrol`` includes 'gsr':
 
-================================================    =====================================================
-Filename                                            Content
-================================================    =====================================================
-desc-globalSignal_map.nii.gz                        Spatial global signal
-desc-globalSignal_timeseries.tsv                    Time series of global signal from optimally combined
-                                                    data.
-desc-optcomWithGlobalSignal_bold.nii.gz             Optimally combined time series with global signal
-                                                    retained.
-desc-optcomNoGlobalSignal_bold.nii.gz               Optimally combined time series with global signal
-                                                    removed.
-================================================    =====================================================
+=================================================================  =====================================================
+Filename                                                           Content
+=================================================================  =====================================================
+"gs img": desc-globalSignal_map.nii.gz                             Spatial global signal
+"global signal time series tsv": desc-globalSignal_timeseries.tsv  Time series of global signal from optimally combined
+                                                                   data.
+"has gs combined img": desc-optcomWithGlobalSignal_bold.nii.gz     Optimally combined time series with global signal
+                                                                   retained.
+"removed gs combined img": desc-optcomNoGlobalSignal_bold.nii.gz   Optimally combined time series with global signal
+                                                                   removed.
+=================================================================  =====================================================
 
 If ``gscontrol`` includes 't1c':
 
 ================================================    =====================================================
 Filename                                            Content
 ================================================    =====================================================
-desc-T1likeEffect_min.nii.gz                        T1-like effect
+"t1 like img": desc-T1likeEffect_min.nii.gz         T1-like effect
 desc-optcomAcceptedT1cDenoised_bold.nii.gz          T1-corrected high-kappa time series by regression
 desc-optcomT1cDenoised_bold.nii.gz                  T1-corrected denoised time series
 desc-TEDICAAcceptedT1cDenoised_components.nii.gz    T1-GS corrected high-kappa components
