@@ -129,6 +129,8 @@ def dicts_to_test(treechoice):
         tree["nodes"][0]["functionname"] = "not_a_function"
     elif treechoice == "missing_key":
         tree.pop("refs")
+    elif treechoice == "null_value":
+        tree["nodes"][0]["parameters"]["left"] = None
     else:
         raise Exception(f"{treechoice} is an invalid option for treechoice")
 
@@ -174,6 +176,15 @@ def test_minimal():
         sample_comptable(),
         cross_component_metrics=xcomp,
     )
+    tree.select()
+
+    # rerun without classification_tags column initialized
+    tree = component_selector.ComponentSelector(
+        "minimal",
+        sample_comptable(),
+        cross_component_metrics=xcomp,
+    )
+    tree.component_table = tree.component_table.drop(columns="classification_tags")
     tree.select()
 
 
@@ -249,3 +260,55 @@ def test_validate_tree_fails():
     # Calling a function missing a required parameter should not be valid
     with pytest.raises(component_selector.TreeError):
         component_selector.validate_tree(dicts_to_test("missing_req_param"))
+
+
+def test_check_null_fails():
+    """Tests to trigger check_null missing parameter error"""
+
+    selector = component_selector.ComponentSelector("minimal", sample_comptable())
+    selector.tree = dicts_to_test("null_value")
+
+    params = selector.tree["nodes"][0]["parameters"]
+    functionname = selector.tree["nodes"][0]["functionname"]
+    with pytest.raises(ValueError):
+        selector.check_null(params, functionname)
+
+
+def test_check_null_succeeds():
+    """Tests check_null finds empty parameter in self"""
+
+    # "left" is missing from the function definition in node
+    # but is found as an initialized cross component metric
+    xcomp = {
+        "left": 3,
+    }
+    selector = component_selector.ComponentSelector(
+        "minimal",
+        sample_comptable(),
+        cross_component_metrics=xcomp,
+    )
+    selector.tree = dicts_to_test("null_value")
+
+    params = selector.tree["nodes"][0]["parameters"]
+    functionname = selector.tree["nodes"][0]["functionname"]
+    selector.check_null(params, functionname)
+
+
+def test_are_only_necessary_metrics_used_warning():
+    """Tests a warning that wasn't triggred in other test workflows"""
+
+    selector = component_selector.ComponentSelector("minimal", sample_comptable())
+
+    # warning when an element of necessary_metrics was not in used_metrics
+    selector.tree["used_metrics"] = set(["A", "B", "C"])
+    selector.necessary_metrics = set(["B", "C", "D"])
+    selector.are_only_necessary_metrics_used()
+
+
+def test_are_all_components_accepted_or_rejected():
+    """Tests warnings are triggered in are_all_components_accepted_or_rejected"""
+
+    selector = component_selector.ComponentSelector("minimal", sample_comptable())
+    selector.component_table.loc[7, "classification"] = "intermediate1"
+    selector.component_table.loc[[1, 3, 5], "classification"] = "intermediate2"
+    selector.are_all_components_accepted_or_rejected()
