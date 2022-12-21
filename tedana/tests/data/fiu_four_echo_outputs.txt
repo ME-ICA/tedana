@@ -37,7 +37,7 @@ desc-optcomAccepted_bold.nii.gz
 desc-optcomDenoised_bold.nii.gz
 desc-optcomMIRDenoised_bold.nii.gz
 desc-optcomNoGlobalSignal_bold.nii.gz
-desc-optcomPCAReduced_bold.nii.gz
+desc-optcom_whitened_bold.nii.gz
 desc-optcomRejected_bold.nii.gz
 desc-optcomWithGlobalSignal_bold.nii.gz
 desc-optcom_bold.nii.gz
