@@ -14,30 +14,28 @@ file names.
 ===========================================================================  =====================================================
 Key: Filename                                                                Content
 ===========================================================================  =====================================================
+"registry json": desc-tedana_registry.json                                   Mapping of file name keys to filename locations
 "data description json": dataset_description.json                            Top-level metadata for the workflow.
-"t2star img": T2starmap.nii.gz                                               Full estimated T2* 3D map.
-                                                                             Values are in seconds.
-                                                                             The difference between the limited and full maps
-                                                                             is that, for voxels affected by dropout where
-                                                                             only one echo contains good data, the full map uses
-                                                                             the T2* estimate from the first two echoes, while the
-                                                                             limited map has a NaN.
-"s0 img": S0map.nii.gz                                                       Full S0 3D map.
-                                                                             The difference between the limited and full maps
-                                                                             is that, for voxels affected by dropout where
-                                                                             only one echo contains good data, the full map uses
-                                                                             the S0 estimate from the first two echoes, while the
-                                                                             limited map has a NaN.
+tedana_report.html                                                           The interactive HTML report.
 "combined img": desc-optcom_bold.nii.gz                                      Optimally combined time series.
 "denoised ts img": desc-optcomDenoised_bold.nii.gz                           Denoised optimally combined time series. Recommended
                                                                              dataset for analysis.
-"low kappa ts img": desc-optcomRejected_bold.nii.gz                          Combined time series from rejected components.
-"high kappa ts img": desc-optcomAccepted_bold.nii.gz                         High-kappa time series. This dataset does not
-                                                                             include thermal noise or low variance components.
-                                                                             Not the recommended dataset for analysis.
 "adaptive mask img": desc-adaptiveGoodSignal_mask.nii.gz                     Integer-valued mask used in the workflow, where
                                                                              each voxel's value corresponds to the number of good
-                                                                             echoes to be used for T2\*/S0 estimation.
+                                                                             echoes to be used for T2\*/S0 estimation. Will be
+                                                                             calculated whether original mask estimated within
+                                                                             tedana or user-provided. All voxels with 1 good
+                                                                             echo will be included in outputted time series
+                                                                             but only voxels with at least 3 good echoes will be
+                                                                             used in ICA and metric calculations
+"t2star img": T2starmap.nii.gz                                               Full estimated T2* 3D map.
+                                                                             Values are in seconds. If a voxel has at least 1 good
+                                                                             echo then the first two echoes will be used to estimate
+                                                                             a value (an impresise weighting for optimal combination
+                                                                             is better than fully excluding a voxel)
+"s0 img": S0map.nii.gz                                                       Full S0 3D map. If a voxel has at least 1 good
+                                                                             echo then the first two echoes will be used to estimate
+                                                                             a value
 "PCA mixing tsv": desc-PCA_mixing.tsv                                        Mixing matrix (component time series) from PCA
                                                                              decomposition in a tab-delimited file. Each column is
                                                                              a different component, and the column name is the
@@ -52,6 +50,13 @@ Key: Filename                                                                Con
                                                                              information for each component from the PCA
                                                                              decomposition.
 "PCA metrics json": desc-PCA_metrics.json                                    Metadata about the metrics in ``desc-PCA_metrics.tsv``.
+"PCA cross component metrics json": desc-PCACrossComponent_metrics.json      Measures calculated across PCA compononents including
+                                                                             values for the full cost function curves for all
+                                                                             AIC, KIC, and MDL cost functions and the number of
+                                                                             components and variance explained for multiple options
+                                                                             Figures for the cost functions and variance explained
+                                                                             are also in
+                                                                             ``./figures//pca_[criteria|variance_explained.png]``
 "ICA mixing tsv": desc-ICA_mixing.tsv                                        Mixing matrix (component time series) from ICA
                                                                              decomposition in a tab-delimited file. Each column is
                                                                              a different component, and the column name is the
@@ -84,9 +89,13 @@ Key: Filename                                                                Con
 "z-scored ICA accepted components img": desc-ICAAcceptedZ_components.nii.gz  Z-normalized spatial component maps
 report.txt                                                                   A summary report for the workflow with relevant
                                                                              citations.
+"low kappa ts img": desc-optcomRejected_bold.nii.gz                          Combined time series from rejected components.
+"high kappa ts img": desc-optcomAccepted_bold.nii.gz                         High-kappa time series. This dataset does not
+                                                                             include thermal noise or low variance components.
+                                                                             Not the recommended dataset for analysis.
 references.bib                                                               The BibTeX entries for references cited in
                                                                              report.txt.
-tedana_report.html                                                           The interactive HTML report.
+
 ===========================================================================  =====================================================
 
 If ``verbose`` is set to True:
@@ -96,17 +105,11 @@ Key: Filename                                                                   
 =============================================================================================  =====================================================
 "limited t2star img": desc-limited_T2starmap.nii.gz                                            Limited T2* map/time series.
                                                                                                Values are in seconds.
-                                                                                               The difference between the limited and full maps
-                                                                                               is that, for voxels affected by dropout where
-                                                                                               only one echo contains good data, the full map uses
-                                                                                               the S0 estimate from the first two echoes, while the
-                                                                                               limited map has a NaN.
+                                                                                               Unlike the full T2* maps, if only one 1 echo contains
+                                                                                               good data the limited map will have NaN
 "limited s0 img": desc-limited_S0map.nii.gz                                                    Limited S0 map/time series.
-                                                                                               The difference between the limited and full maps
-                                                                                               is that, for voxels affected by dropout where
-                                                                                               only one echo contains good data, the full map uses
-                                                                                               the S0 estimate from the first two echoes, while the
-                                                                                               limited map has a NaN.
+                                                                                               Unlike the full S0 maps, if only one 1 echo contains
+                                                                                               good data the limited map will have NaN
 "whitened img": desc-optcom_whitened_bold                                                      The optimally combined data after whitening
 "echo weight [PCA|ICA] maps split img": echo-[echo]_desc-[PCA|ICA]_components.nii.gz           Echo-wise PCA/ICA component weight maps.
 "echo T2 [PCA|ICA] split img": echo-[echo]_desc-[PCA|ICA]T2ModelPredictions_components.nii.gz  Component- and voxel-wise R2-model predictions,
@@ -124,10 +127,19 @@ Key: Filename                                                                   
 "denoised ts split img": echo-[echo]_desc-Denoised_bold.nii.gz                                 Denoised time series for echo number ``echo``
 =============================================================================================  =====================================================
 
+If ``tedort`` is True
+
+========================================================  =====================================================
+Key: Filename                                             Content
+========================================================  =====================================================
+"ICA orthogonalized mixing tsv": desc-ICAOrth_mixing.tsv  Mixing matrix with rejected components orthogonalized
+                                                          from accepted components
+========================================================  =====================================================
+
 If ``gscontrol`` includes 'gsr':
 
 =================================================================  =====================================================
-Filename                                                           Content
+Key: Filename                                                      Content
 =================================================================  =====================================================
 "gs img": desc-globalSignal_map.nii.gz                             Spatial global signal
 "global signal time series tsv": desc-globalSignal_timeseries.tsv  Time series of global signal from optimally combined
@@ -138,14 +150,15 @@ Filename                                                           Content
                                                                    removed.
 =================================================================  =====================================================
 
-If ``gscontrol`` includes 't1c':
+If ``gscontrol`` includes 'mir' (Minimal intensity regression, which may help remove some T1 noise and
+was an option in the MEICA v2.5 code, but never fully explained or evaluted in a publication):
 
-================================================    =====================================================
-Filename                                            Content
-================================================    =====================================================
-"t1 like img": desc-T1likeEffect_min.nii.gz         T1-like effect
-desc-optcomAcceptedT1cDenoised_bold.nii.gz          T1-corrected high-kappa time series by regression
-desc-optcomT1cDenoised_bold.nii.gz                  T1-corrected denoised time series
-desc-TEDICAAcceptedT1cDenoised_components.nii.gz    T1-GS corrected high-kappa components
-desc-TEDICAT1cDenoised_mixing.tsv                   T1-GS corrected mixing matrix
-================================================    =====================================================
+=======================================================================================  =====================================================
+Key: Filename                                                                            Content
+=======================================================================================  =====================================================
+"t1 like img": desc-T1likeEffect_min.nii.gz                                              T1-like effect
+"mir denoised img": desc-optcomMIRDenoised_bold.nii.gz                                   Denoised time series after MIR
+"ICA MIR mixing tsv": desc-ICAMIRDenoised_mixing.tsv                                     ICA mixing matrix after MIR
+"ICA accepted mir component weights img": desc-ICAAcceptedMIRDenoised_components.nii.gz  high-kappa components after MIR
+"ICA accepted mir denoised img": desc-optcomAcceptedMIRDenoised_bold.nii.gz              high-kappa time series after MIR
+=======================================================================================  =====================================================
