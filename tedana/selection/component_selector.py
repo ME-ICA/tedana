@@ -524,21 +524,6 @@ class ComponentSelector:
         """The indices of components that are rejected."""
         return self.component_table["classification"] == "rejected"
 
-    @property
-    def is_final(self):
-        """Whether the classifications are all acccepted/rejected"""
-        return (self.accepted_comps.sum() + self.rejected_comps.sum()) > self.n_comps
-
-    @property
-    def mixing(self):
-        """The mixing matrix used to generate the components being decided upon."""
-        return self.mixing_matrix
-
-    @property
-    def oc_data(self):
-        """The optimally combined data being used for this tree."""
-        return self.oc_data
-
     def to_files(self, io_generator):
         """Convert this selector into component files
 
