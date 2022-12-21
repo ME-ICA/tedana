@@ -311,7 +311,7 @@ def test_getelbow_smoke():
     """A smoke test for the getelbow function."""
     arr = np.random.random(100)
     idx = selection_utils.getelbow(arr)
-    assert isinstance(idx, np.int32) or isinstance(idx, np.int64)
+    assert isinstance(idx, np.integer)
 
     val = selection_utils.getelbow(arr, return_val=True)
     assert isinstance(val, float)
