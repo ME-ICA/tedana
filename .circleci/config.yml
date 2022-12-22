@@ -339,6 +339,9 @@ workflows:
       - five-echo:
           requires:
             - makeenv_37
+      - reclassify:
+          requires:
+            - makeenv_37
       - t2smap:
           requires:
             - makeenv_37
