@@ -21,7 +21,7 @@ jobs:
             if [ ! -d /opt/conda/envs/tedana_py37 ]; then
               conda create -yq -n tedana_py37 python=3.7
               source activate tedana_py37
-              pip install .[tests]
+              pip install -e .[tests]
             fi
       - save_cache:
           key: conda-py37-v2-{{ checksum "setup.cfg" }}
