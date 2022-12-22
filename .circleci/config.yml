@@ -357,4 +357,5 @@ workflows:
             - three-echo
             - four-echo
             - five-echo
+            - reclassify
             - t2smap
