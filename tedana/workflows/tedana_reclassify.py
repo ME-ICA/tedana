@@ -19,7 +19,7 @@ LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
-def main():
+def _main():
     from tedana import __version__
 
     verstr = "tedana_reclassify v{}".format(__version__)
@@ -441,4 +441,4 @@ def post_tedana(
 
 
 if __name__ == "__main__":
-    main()
+    _main()
