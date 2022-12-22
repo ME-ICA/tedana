@@ -13,5 +13,6 @@ __version__ = get_versions()["version"]
 
 # cmp is not used, so ignore nipype-generated warnings
 warnings.filterwarnings("ignore", r"cmp not installed")
+warnings.filterwarnings("ignore", r"Failed to import duecredit due to No module named 'duecredit'")
 
 del get_versions
