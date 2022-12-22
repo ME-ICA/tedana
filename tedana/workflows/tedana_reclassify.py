@@ -81,7 +81,7 @@ def main():
         help="Run minimum image regression.",
     )
     parser.add_argument(
-        "--noreports",
+        "--no-reports",
         dest="no_reports",
         action="store_true",
         help=(

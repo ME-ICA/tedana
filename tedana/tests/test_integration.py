@@ -315,7 +315,7 @@ def test_integration_reclassify_debug(skip_integration):
         "orig",
         "--tedort",
         "--mir",
-        "--noreports",
+        "--no-reports",
         "--out-dir",
         out_dir,
         "--debug",
