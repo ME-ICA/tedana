@@ -49,7 +49,6 @@ def main():
         default="auto",
     )
     parser.add_argument(
-        "-o",
         "--out-dir",
         dest="out_dir",
         type=str,

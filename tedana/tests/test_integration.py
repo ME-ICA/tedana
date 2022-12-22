@@ -283,7 +283,7 @@ def test_integration_reclassify_quiet(skip_integration):
         "4",
         "5",
         "6",
-        "-o",
+        "--out-dir",
         out_dir,
         os.path.join(reclassify_raw(), "desc-tedana_registry.json"),
     ]
@@ -316,7 +316,7 @@ def test_integration_reclassify_debug(skip_integration):
         "--tedort",
         "--mir",
         "--noreports",
-        "-o",
+        "--out-dir",
         out_dir,
         "--debug",
         os.path.join(reclassify_raw(), "desc-tedana_registry.json"),
