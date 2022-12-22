@@ -171,21 +171,21 @@ def test_minimal():
     xcomp = {
         "n_echos": 3,
     }
-    tree = component_selector.ComponentSelector(
+    selector = component_selector.ComponentSelector(
         "minimal",
         sample_comptable(),
         cross_component_metrics=xcomp,
     )
-    tree.select()
+    selector.select()
 
     # rerun without classification_tags column initialized
-    tree = component_selector.ComponentSelector(
+    selector = component_selector.ComponentSelector(
         "minimal",
         sample_comptable(),
         cross_component_metrics=xcomp,
     )
-    tree.component_table = tree.component_table.drop(columns="classification_tags")
-    tree.select()
+    selector.component_table = selector.component_table.drop(columns="classification_tags")
+    selector.select()
 
 
 # validate_tree
@@ -295,7 +295,7 @@ def test_check_null_succeeds():
 
 
 def test_are_only_necessary_metrics_used_warning():
-    """Tests a warning that wasn't triggred in other test workflows"""
+    """Tests a warning that wasn't triggered in other test workflows"""
 
     selector = component_selector.ComponentSelector("minimal", sample_comptable())
 

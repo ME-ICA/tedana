@@ -111,6 +111,10 @@ def test_selectcomps2use_fails():
         with pytest.raises(ValueError):
             selection_utils.selectcomps2use(selector, decide_comps)
 
+    selector.component_table = selector.component_table.drop(columns="classification")
+    with pytest.raises(ValueError):
+        selection_utils.selectcomps2use(selector, "all")
+
 
 def test_comptable_classification_changer_succeeds():
     """

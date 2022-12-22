@@ -469,6 +469,23 @@ def test_calc_kappa_elbow():
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["kappa_allcomps_elbow"] > 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["kappa_nonsig_elbow"] > 0
 
+    # No components with "NotALabel" classification so nothing selected
+    selector = sample_selector()
+    decide_comps = "NotALabel"
+
+    # Outputs just the metrics used in this function
+    selector = selection_nodes.calc_kappa_elbow(selector, decide_comps)
+    assert (
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["kappa_elbow_kundu"] is None
+    )
+    assert (
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["kappa_allcomps_elbow"]
+        is None
+    )
+    assert (
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["kappa_nonsig_elbow"] is None
+    )
+
 
 def test_calc_rho_elbow():
     """Smoke tests for calc_rho_elbow"""
@@ -567,6 +584,23 @@ def test_calc_rho_elbow():
 
     with pytest.raises(ValueError):
         selection_nodes.calc_rho_elbow(selector, decide_comps, rho_elbow_type="perfect")
+
+    # No components with "NotALabel" classification so nothing selected
+    selector = sample_selector()
+    decide_comps = "NotALabel"
+
+    # Outputs just the metrics used in this function
+    selector = selection_nodes.calc_rho_elbow(selector, decide_comps)
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_upper_p"] is None
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["rho_elbow_kundu"] is None
+    assert (
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["rho_allcomps_elbow"] is None
+    )
+    assert (
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["rho_unclassified_elbow"]
+        is None
+    )
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["elbow_f05"] is None
 
 
 def test_calc_median_smoke():
@@ -934,7 +968,7 @@ def test_calc_extend_factor_smoke():
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["extend_factor"] == 1.2
 
 
-def test_max_good_meanmetricrank_smoke():
+def test_calc_max_good_meanmetricrank_smoke():
     """Smoke tests for calc_max_good_meanmetricrank"""
 
     # Standard use of this function requires some components to be "provisional accept"
@@ -966,6 +1000,25 @@ def test_max_good_meanmetricrank_smoke():
         selector.tree["nodes"][selector.current_node_idx]["outputs"]["max_good_meanmetricrank"] > 0
     )
 
+    # Standard call to this function with a user defined metric_suffix
+    selector = sample_selector("provclass")
+    selector.cross_component_metrics["extend_factor"] = 2.0
+    selector = selection_nodes.calc_max_good_meanmetricrank(
+        selector, "provisional accept", metric_suffix="testsfx"
+    )
+    calc_cross_comp_metrics = {"max_good_meanmetricrank_testsfx"}
+    output_calc_cross_comp_metrics = set(
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["calc_cross_comp_metrics"]
+    )
+    # Confirming the intended metrics are added to outputs and they have non-zero values
+    assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
+    assert (
+        selector.tree["nodes"][selector.current_node_idx]["outputs"][
+            "max_good_meanmetricrank_testsfx"
+        ]
+        > 0
+    )
+
     # Run warning logging code for if any of the cross_component_metrics
     # already existed and would be over-written
     selector = sample_selector("provclass")
@@ -973,7 +1026,10 @@ def test_max_good_meanmetricrank_smoke():
     selector.cross_component_metrics["extend_factor"] = 2.0
 
     selector = selection_nodes.calc_max_good_meanmetricrank(selector, "provisional accept")
-
+    calc_cross_comp_metrics = {"max_good_meanmetricrank"}
+    output_calc_cross_comp_metrics = set(
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["calc_cross_comp_metrics"]
+    )
     assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
     assert (
         selector.tree["nodes"][selector.current_node_idx]["outputs"]["max_good_meanmetricrank"] > 0
