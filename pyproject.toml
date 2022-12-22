@@ -4,7 +4,7 @@ version = "0.0.12"
 
 [project.scripts]
 tedana = "tedana.workflows.tedana:_main"
-tedana_reclassify = "tedana.workflows.tedana_reclassify:main"
+tedana_reclassify = "tedana.workflows.tedana_reclassify:_main"
 
 [build-system]
 requires = ["setuptools>=64", "wheel"]
