@@ -331,8 +331,7 @@ def post_tedana(
         betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
         pred_rej_ts = np.dot(acc_ts, betas)
         resid = rej_ts - pred_rej_ts
-        rej_idx = comps_rejected[comps_rejected].index
-        mmix[:, rej_idx] = resid
+        mmix[:, comps_rejected] = resid
         comp_names = [
             io.add_decomp_prefix(comp, prefix="ica", max_value=comptable.index.max())
             for comp in range(selector.n_comps)
