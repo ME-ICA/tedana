@@ -6,7 +6,6 @@ import datetime
 import logging
 import os
 import os.path as op
-import sys
 from glob import glob
 
 import numpy as np
@@ -50,6 +49,7 @@ def main():
         default="auto",
     )
     parser.add_argument(
+        "-o",
         "--out-dir",
         dest="out_dir",
         type=str,
@@ -82,7 +82,7 @@ def main():
         help="Run minimum image regression.",
     )
     parser.add_argument(
-        "--no-reports",
+        "--noreports",
         dest="no_reports",
         action="store_true",
         help=(
@@ -128,6 +128,7 @@ def main():
         reject=args.manual_reject,
         out_dir=args.out_dir,
         config=args.config,
+        prefix=args.prefix,
         convention=args.convention,
         tedort=args.tedort,
         mir=args.mir,
@@ -219,6 +220,9 @@ def post_tedana(
         rej = ()
 
     if (not accept) and (not reject):
+        # TODO: remove
+        print(accept)
+        print(reject)
         raise ValueError("Must manually accept or reject at least one component")
 
     in_both = []
@@ -328,7 +332,7 @@ def post_tedana(
         betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
         pred_rej_ts = np.dot(acc_ts, betas)
         resid = rej_ts - pred_rej_ts
-        rej_idx = comps_accepted[comps_accepted].index
+        rej_idx = comps_rejected[comps_rejected].index
         mmix[:, rej_idx] = resid
         comp_names = [
             io.add_decomp_prefix(comp, prefix="ica", max_value=comptable.index.max())
@@ -429,15 +433,8 @@ def post_tedana(
             png_cmap=png_cmap,
         )
 
-        if sys.version_info.major == 3 and sys.version_info.minor < 6:
-            warn_msg = (
-                "Reports requested but Python version is less than "
-                "3.6.0. Dynamic reports will not be generated."
-            )
-            LGR.warn(warn_msg)
-        else:
-            LGR.info("Generating dynamic report")
-            reporting.generate_report(io_generator, tr=img_t_r)
+        LGR.info("Generating dynamic report")
+        reporting.generate_report(io_generator, tr=img_t_r)
 
     io_generator.save_self()
     LGR.info("Workflow completed")

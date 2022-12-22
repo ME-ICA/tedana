@@ -8,7 +8,6 @@ import logging
 import os
 import os.path as op
 import shutil
-import sys
 from glob import glob
 
 import numpy as np
@@ -849,15 +848,8 @@ def tedana_workflow(
             png_cmap=png_cmap,
         )
 
-        if sys.version_info.major == 3 and sys.version_info.minor < 6:
-            warn_msg = (
-                "Reports requested but Python version is less than "
-                "3.6.0. Dynamic reports will not be generated."
-            )
-            LGR.warn(warn_msg)
-        else:
-            LGR.info("Generating dynamic report")
-            reporting.generate_report(io_generator, tr=img_t_r)
+        LGR.info("Generating dynamic report")
+        reporting.generate_report(io_generator, tr=img_t_r)
 
     LGR.info("Workflow completed")
     utils.teardown_loggers()

@@ -7,6 +7,7 @@ import os
 import os.path as op
 import re
 import shutil
+import subprocess
 import tarfile
 from gzip import GzipFile
 from io import BytesIO
@@ -16,6 +17,7 @@ import pytest
 import requests
 from pkg_resources import resource_filename
 
+from tedana.io import InputHarvester
 from tedana.workflows import t2smap as t2smap_cli
 from tedana.workflows import tedana as tedana_cli
 from tedana.workflows.tedana_reclassify import post_tedana
@@ -71,6 +73,43 @@ def download_test_data(osf, outpath):
     t = tarfile.open(fileobj=GzipFile(fileobj=BytesIO(req.content)))
     os.makedirs(outpath, exist_ok=True)
     t.extractall(outpath)
+
+
+def reclassify_path() -> str:
+    """Get the path to the reclassify test data."""
+    return "/tmp/data/reclassify/"
+
+
+def reclassify_raw() -> str:
+    return os.path.join(reclassify_path(), "TED.three-echo-previous")
+
+
+def reclassify_raw_registry() -> str:
+    return os.path.join(reclassify_raw(), "desc-tedana_registry.json")
+
+
+def reclassify_url() -> str:
+    """Get the URL to reclassify test data."""
+    return "https://osf.io/mt59n/download"
+
+
+def guarantee_reclassify_data() -> None:
+    """Ensures that the reclassify data exists at the expected path."""
+    if not os.path.exists(reclassify_raw_registry()):
+        download_test_data(reclassify_url(), reclassify_path())
+    else:
+        # Path exists, be sure that everything in registry exists
+        ioh = InputHarvester(os.path.join(reclassify_raw(), "desc-tedana_registry.json"))
+        all_present = True
+        for _, v in ioh.registry.items():
+            if not isinstance(v, list):
+                if not os.path.exists(os.path.join(reclassify_raw(), v)):
+                    all_present = False
+                    break
+        if not all_present:
+            # Something was removed, need to re-download
+            shutil.rmtree(reclassify_raw())
+            guarantee_reclassify_data()
 
 
 def test_integration_five_echo(skip_integration):
@@ -206,6 +245,86 @@ def test_integration_three_echo(skip_integration):
 
     # compare the generated output files
     fn = resource_filename("tedana", "tests/data/cornell_three_echo_outputs.txt")
+    check_integration_outputs(fn, out_dir)
+
+
+def test_integration_reclassify_insufficient_args(skip_integration):
+    if skip_integration:
+        pytest.skip("Skipping reclassify insufficient args")
+
+    guarantee_reclassify_data()
+
+    args = [
+        "tedana_reclassify",
+        os.path.join(reclassify_raw(), "desc-tedana_registry.json"),
+    ]
+
+    result = subprocess.run(args, capture_output=True)
+    assert b"ValueError: Must manually accept or reject" in result.stderr
+    assert result.returncode != 0
+
+
+def test_integration_reclassify_quiet(skip_integration):
+    if skip_integration:
+        pytest.skip("Skip reclassify quiet")
+
+    guarantee_reclassify_data()
+    out_dir = os.path.join(reclassify_path(), "quiet")
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    args = [
+        "tedana_reclassify",
+        "--manacc",
+        "1",
+        "2",
+        "3",
+        "--manrej",
+        "4",
+        "5",
+        "6",
+        "-o",
+        out_dir,
+        os.path.join(reclassify_raw(), "desc-tedana_registry.json"),
+    ]
+
+    results = subprocess.run(args, capture_output=True)
+    assert results.returncode == 0
+    fn = resource_filename("tedana", "tests/data/reclassify_quiet_out.txt")
+    check_integration_outputs(fn, out_dir)
+
+
+def test_integration_reclassify_debug(skip_integration):
+    if skip_integration:
+        pytest.skip("Skip reclassify debug")
+
+    guarantee_reclassify_data()
+    out_dir = os.path.join(reclassify_path(), "debug")
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    args = [
+        "tedana_reclassify",
+        "--manacc",
+        "1",
+        "2",
+        "3",
+        "--prefix",
+        "sub-testymctestface",
+        "--convention",
+        "orig",
+        "--tedort",
+        "--mir",
+        "--noreports",
+        "-o",
+        out_dir,
+        "--debug",
+        os.path.join(reclassify_raw(), "desc-tedana_registry.json"),
+    ]
+
+    results = subprocess.run(args, capture_output=True)
+    assert results.returncode == 0
+    fn = resource_filename("tedana", "tests/data/reclassify_debug_out.txt")
     check_integration_outputs(fn, out_dir)
 
 
