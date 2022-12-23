@@ -559,7 +559,7 @@ def get_metadata(comptable):
             "LongName": "Rationale for component classification",
             "Description": (
                 "The reason for the original classification. "
-                "This column label was replaced with classification_tags in late 2021"
+                "This column label was replaced with classification_tags in late 2022"
             ),
         }
     if "kappa ratio" in comptable:
