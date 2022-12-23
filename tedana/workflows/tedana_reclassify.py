@@ -324,7 +324,6 @@ def post_tedana(
     mmix_orig = mmix.copy()
     # TODO: make this a function
     if tedort:
-        raise ValueError('CircleCI sanity check')
         comps_accepted = selector.accepted_comps
         comps_rejected = selector.rejected_comps
         acc_ts = mmix[:, comps_accepted]
