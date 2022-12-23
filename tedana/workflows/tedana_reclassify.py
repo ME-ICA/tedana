@@ -343,7 +343,7 @@ def post_tedana(
 
     n_vols = data_oc.shape[3]
     img_t_r = io_generator.reference_img.header.get_zooms()[-1]
-    mask_denoise = utils.reshape_niimg(mask_denoise).astype(bool)
+    mask_denoise = utils.reshape_niimg(mask_denoise).astype(int)
     data_oc = utils.reshape_niimg(data_oc)
 
     # TODO: make a better result-writing function
