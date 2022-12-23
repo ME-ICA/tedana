@@ -259,7 +259,7 @@ def post_tedana(
     status_table = ioh.get_file_contents("ICA status table tsv")
     previous_tree_fname = ioh.get_file_path("ICA decision tree json")
     mmix = np.asarray(ioh.get_file_contents("ICA mixing tsv"))
-    mask_denoise = ioh.get_file_contents("adaptive mask img")
+    adaptive_mask = ioh.get_file_contents("adaptive mask img")
     # If global signal was removed in the previous run, we can assume that
     # the user wants to use that file again. If not, use the default of
     # optimally combined data.
@@ -343,7 +343,8 @@ def post_tedana(
 
     n_vols = data_oc.shape[3]
     img_t_r = io_generator.reference_img.header.get_zooms()[-1]
-    mask_denoise = utils.reshape_niimg(mask_denoise).astype(bool)
+    adaptive_mask = utils.reshape_niimg(adaptive_mask)
+    mask_denoise = adaptive_mask >= 1
     data_oc = utils.reshape_niimg(data_oc)
 
     # TODO: make a better result-writing function
