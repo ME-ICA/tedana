@@ -228,9 +228,6 @@ def post_tedana(
     for a in acc:
         if a in rej:
             in_both.append(a)
-    for r in rej:
-        if r in acc and r not in rej:
-            in_both.append(r)
     if len(in_both) != 0:
         raise ValueError("The following components were both accepted and rejected: " f"{in_both}")
 

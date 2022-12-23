@@ -3,6 +3,7 @@ Integration tests for "real" data
 """
 
 import glob
+import logging
 import os
 import os.path as op
 import re
@@ -22,8 +23,11 @@ from tedana.workflows import t2smap as t2smap_cli
 from tedana.workflows import tedana as tedana_cli
 from tedana.workflows.tedana_reclassify import post_tedana
 
+# Need to see if a no BOLD warning occurred
+LOGGER = logging.getLogger(__name__)
 
-def check_integration_outputs(fname, outpath):
+
+def check_integration_outputs(fname, outpath, n_logs=1):
     """
     Checks outputs of integration tests
 
@@ -44,10 +48,11 @@ def check_integration_outputs(fname, outpath):
     # Checks for log file
     log_regex = "^tedana_[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}[0-9]{2}[0-9]{2}.tsv$"
     logfiles = [out for out in existing if re.match(log_regex, out)]
-    assert len(logfiles) == 1
+    assert len(logfiles) == n_logs
 
-    # Removes logfile from list of existing files
-    existing.remove(logfiles[0])
+    # Removes logfiles from list of existing files
+    for log in logfiles:
+        existing.remove(log)
 
     # Compares remaining files with those expected
     with open(fname, "r") as f:
@@ -325,6 +330,78 @@ def test_integration_reclassify_debug(skip_integration):
     results = subprocess.run(args, capture_output=True)
     assert results.returncode == 0
     fn = resource_filename("tedana", "tests/data/reclassify_debug_out.txt")
+    check_integration_outputs(fn, out_dir)
+
+
+def test_integration_reclassify_both_rej_acc(skip_integration):
+    if skip_integration:
+        pytest.skip("Skip reclassify both rejected and accepted")
+
+    guarantee_reclassify_data()
+    out_dir = os.path.join(reclassify_path(), "both_rej_acc")
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    with pytest.raises(
+        ValueError,
+        match=r"The following components were both accepted and",
+    ):
+        post_tedana(
+            reclassify_raw_registry(),
+            accept=[1, 2, 3],
+            reject=[1, 2, 3],
+            out_dir=out_dir,
+        )
+
+
+def test_integration_reclassify_run_twice(skip_integration):
+    if skip_integration:
+        pytest.skip("Skip reclassify both rejected and accepted")
+
+    guarantee_reclassify_data()
+    out_dir = os.path.join(reclassify_path(), "run_twice")
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    post_tedana(
+        reclassify_raw_registry(),
+        accept=[1, 2, 3],
+        out_dir=out_dir,
+        no_reports=True,
+    )
+    post_tedana(
+        reclassify_raw_registry(),
+        accept=[1, 2, 3],
+        out_dir=out_dir,
+        force=True,
+        no_reports=True,
+    )
+    fn = resource_filename("tedana", "tests/data/reclassify_run_twice.txt")
+    check_integration_outputs(fn, out_dir, n_logs=2)
+
+
+def test_integration_reclassify_no_bold(skip_integration, caplog):
+    if skip_integration:
+        pytest.skip("Skip reclassify both rejected and accepted")
+
+    guarantee_reclassify_data()
+    out_dir = os.path.join(reclassify_path(), "no_bold")
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    ioh = InputHarvester(reclassify_raw_registry())
+    comptable = ioh.get_file_contents("ICA metrics tsv")
+    to_accept = [i for i in range(len(comptable))]
+
+    post_tedana(
+        reclassify_raw_registry(),
+        reject=to_accept,
+        out_dir=out_dir,
+        no_reports=True,
+    )
+    assert "No BOLD components detected!" in caplog.text
+
+    fn = resource_filename("tedana", "tests/data/reclassify_no_bold.txt")
     check_integration_outputs(fn, out_dir)
 
 
