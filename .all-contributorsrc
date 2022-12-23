@@ -234,6 +234,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "giadaan",
+      "name": "giadaan",
+      "avatar_url": "https://avatars.githubusercontent.com/u/118978909?v=4",
+      "profile": "https://github.com/giadaan",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 5,
@@ -241,5 +250,6 @@
   "projectOwner": "ME-ICA",
   "repoType": "github",
   "repoHost": "https://github.com",
-  "skipCi": false
+  "skipCi": false,
+  "commitConvention": "angular"
 }
