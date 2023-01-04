@@ -249,6 +249,7 @@
                 "op2": ">",
                 "left2": "variance explained",
                 "right2": "varex_upper_thresh",
+                "right2_scale": "extend_factor",
                 "log_extra_info": "If variance and d_table_scores are high, then reject",
                 "tag_ifTrue": "Less likely BOLD"
             },
