@@ -69,9 +69,7 @@ def automatic_selection(component_table, n_echos, n_vols, tree="kundu", verbose=
         "n_echos": n_echos,
         "n_vols": n_vols,
     }
-    selector = ComponentSelector(
-        tree, component_table, verbose=verbose, cross_component_metrics=xcomp
-    )
+    selector = ComponentSelector(tree, component_table, cross_component_metrics=xcomp)
     selector.select()
     selector.metadata = collect.get_metadata(selector.component_table)
 
