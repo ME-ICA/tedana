@@ -229,7 +229,9 @@ class ComponentSelector:
     a specified `tree`
     """
 
-    def __init__(self, tree, component_table, cross_component_metrics={}, status_table=None):
+    def __init__(
+        self, tree, component_table, verbose=False, cross_component_metrics={}, status_table=None
+    ):
         """
         Initialize the class using the info specified in the json file `tree`
 
@@ -284,6 +286,7 @@ class ComponentSelector:
 
         self.__dict__.update(cross_component_metrics)
         self.cross_component_metrics = cross_component_metrics
+        self.verbose = verbose
 
         # Construct an un-executed selector
         self.component_table = component_table.copy()
@@ -386,12 +389,16 @@ class ComponentSelector:
             else:
                 kwargs = None
                 all_params = {**params}
-            # log the function name and parameters used
-            LGR.info(
-                "Step {}: Running function {} with parameters: {}".format(
-                    self.current_node_idx, node["functionname"], all_params
+
+            if self.verbose:
+                # If verbose outputs requested, log the function name and parameters used
+                # This info is already saved in the tree json output files, but adding
+                # to the screen log output is useful for debugging
+                LGR.info(
+                    "Step {}: Running function {} with parameters: {}".format(
+                        self.current_node_idx, node["functionname"], all_params
+                    )
                 )
-            )
             # run the decision node function
             if kwargs is not None:
                 self = fcn(self, **params, **kwargs)
@@ -510,8 +517,24 @@ class ComponentSelector:
         return len(self.component_table)
 
     @property
+    def LikelyBOLD_comps(self):
+        """A boolean pd.DataSeries of components that are tagged "Likely BOLD"."""
+        LikelyBOLD_comps = self.component_table["classification_tags"].copy()
+        for idx in range(len(LikelyBOLD_comps)):
+            if "Likely BOLD" in LikelyBOLD_comps.loc[idx]:
+                LikelyBOLD_comps.loc[idx] = True
+            else:
+                LikelyBOLD_comps.loc[idx] = False
+        return LikelyBOLD_comps
+
+    @property
+    def n_LikelyBOLD_comps(self):
+        """The number of components that are tagged "Likely BOLD"."""
+        return self.LikelyBOLD_comps.sum()
+
+    @property
     def accepted_comps(self):
-        """The indices of components that are accepted."""
+        """A boolean pd.DataSeries of components that are accepted."""
         return self.component_table["classification"] == "accepted"
 
     @property
@@ -521,7 +544,7 @@ class ComponentSelector:
 
     @property
     def rejected_comps(self):
-        """The indices of components that are rejected."""
+        """A boolean pd.DataSeries of components that are rejected."""
         return self.component_table["classification"] == "rejected"
 
     def to_files(self, io_generator):

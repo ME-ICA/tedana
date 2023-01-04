@@ -30,7 +30,6 @@
                 "decide_comps": "all"
             },
             "kwargs": {
-                "log_extra_info": "Initializing all classifications as unclassified and all classification tags as blank",
                 "log_extra_report": "",
                 "clear_classification_tags": true,
                 "dont_warn_reclassify": true
@@ -47,7 +46,6 @@
                 "right": "kappa"
             },
             "kwargs": {
-                "log_extra_info": "Reject if Kappa<Rho",
                 "log_extra_report": "",
                 "tag_ifTrue": "Unlikely BOLD"
             }
@@ -66,7 +64,6 @@
                 "left2": "countsigFT2",
                 "op2": ">",
                 "right2": 0,
-                "log_extra_info": "Reject if countsig_in S0clusters > T2clusters & countsig_in_T2clusters>0",
                 "log_extra_report": "",
                 "tag_ifTrue": "Unlikely BOLD"
             }
@@ -93,7 +90,6 @@
                 "left2": "variance explained",
                 "op2": ">",
                 "right2": "median_varex",
-                "log_extra_info": "Reject if DICE S0>T2  & varex>median",
                 "log_extra_report": "",
                 "tag_ifTrue": "Unlikely BOLD"
             }
@@ -112,7 +108,6 @@
                 "left2": "variance explained",
                 "op2": ">",
                 "right2": "median_varex",
-                "log_extra_info": "Reject if T2fitdiff_invsout_ICAmap_Tstat<0 & varex>median",
                 "log_extra_report": "",
                 "tag_ifTrue": "Unlikely BOLD"
             }
@@ -152,7 +147,6 @@
                 "right": "kappa_elbow_kundu"
             },
             "kwargs": {
-                "log_extra_info": "kappa>elbow",
                 "log_extra_report": ""
             }
         },
@@ -187,7 +181,6 @@
                 "right": "rho_elbow_liberal"
             },
             "kwargs": {
-                "log_extra_info": "rho>elbow",
                 "log_extra_report": ""
             }
         },

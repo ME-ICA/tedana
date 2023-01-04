@@ -312,3 +312,18 @@ def test_are_all_components_accepted_or_rejected():
     selector.component_table.loc[7, "classification"] = "intermediate1"
     selector.component_table.loc[[1, 3, 5], "classification"] = "intermediate2"
     selector.are_all_components_accepted_or_rejected()
+
+
+def test_selector_properties_smoke():
+    """Tests to confirm properties match expected results"""
+
+    selector = component_selector.ComponentSelector("minimal", sample_comptable())
+
+    assert selector.n_comps == 21
+
+    # Also runs selector.LikelyBOLD_comps and should need to deal with sets in each field
+    assert selector.n_LikelyBOLD_comps == 17
+
+    assert selector.n_accepted_comps == 17
+
+    assert selector.rejected_comps.sum() == 4

@@ -399,7 +399,7 @@ def test_integration_reclassify_no_bold(skip_integration, caplog):
         out_dir=out_dir,
         no_reports=True,
     )
-    assert "No BOLD components detected!" in caplog.text
+    assert "No accepted components remaining after manual classification!" in caplog.text
 
     fn = resource_filename("tedana", "tests/data/reclassify_no_bold.txt")
     check_integration_outputs(fn, out_dir)

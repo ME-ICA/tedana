@@ -221,7 +221,9 @@ that Are used to checks whether results are plausible & can help avoid mistakes
       A list of acceptable classification tags (i.e. "Likely BOLD", "Unlikely BOLD",
       "Low variance"). This will both be used to make sure only these tags are used in
       the tree and allow programs that interact with the results to see all potential
-      tags in one place.
+      tags in one place. Note: "Likely BOLD" is a required tag. If tedana is run and
+      none of the components include the "Likely BOLD" tag, then ICA will be repeated
+      with a different seed and then the selection process will repeat.
 
 **Nodes in the decision tree**
 

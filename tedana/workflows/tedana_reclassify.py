@@ -283,7 +283,11 @@ def post_tedana(
 
     # Make a new selector with the added files
     selector = selection.component_selector.ComponentSelector(
-        previous_tree_fname, comptable, cross_component_metrics=xcomp, status_table=status_table
+        previous_tree_fname,
+        comptable,
+        cross_component_metrics=xcomp,
+        status_table=status_table,
+        verbose=debug,
     )
 
     if accept:
@@ -316,7 +320,9 @@ def post_tedana(
     selector.to_files(io_generator)
 
     if selector.n_accepted_comps == 0:
-        LGR.warning("No BOLD components detected! Please check data and results!")
+        LGR.warning(
+            "No accepted components remaining after manual classification! Please check data and results!"
+        )
 
     mmix_orig = mmix.copy()
     # TODO: make this a function

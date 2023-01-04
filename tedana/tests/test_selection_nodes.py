@@ -701,6 +701,7 @@ def test_dec_classification_doesnt_exist_smoke():
         selector,
         "accepted",
         decide_comps,
+        at_least_num_exist=1,
         class_comp_exists="provisional accept",
         log_extra_report="report log",
         log_extra_info="info log",
@@ -742,6 +743,25 @@ def test_dec_classification_doesnt_exist_smoke():
         tag="test true tag",
     )
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 17
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numFalse"] == 0
+    assert f"Node {selector.current_node_idx}" in selector.component_status_table
+
+    # Standard execution with at_least_num_exist=5 which should trigger the
+    #   components don't exist output
+    selector = sample_selector(options="unclass")
+    selector = selection_nodes.dec_classification_doesnt_exist(
+        selector,
+        "accepted",
+        decide_comps=["unclassified", "provisional accept"],
+        at_least_num_exist=5,
+        class_comp_exists="provisional accept",
+        log_extra_report="report log",
+        log_extra_info="info log",
+        custom_node_label="custom label",
+        tag="test true tag",
+    )
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 17
+    # Lists the number of components in decide_comps in numFalse
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numFalse"] == 0
     assert f"Node {selector.current_node_idx}" in selector.component_status_table
 

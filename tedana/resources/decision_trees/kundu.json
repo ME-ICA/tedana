@@ -38,7 +38,6 @@
                 "decide_comps": "all"
             },
             "kwargs": {
-                "log_extra_info": "Initializing all classifications as unclassified and all classification tags as blank",
                 "log_extra_report": "",
                 "clear_classification_tags": true,
                 "dont_warn_reclassify": true
@@ -55,8 +54,6 @@
                 "right": "kappa"
             },
             "kwargs": {
-                "log_extra_info": "Reject if Kappa>Rho",
-                "log_extra_report": "",
                 "tag_ifTrue": "Unlikely BOLD"
             },
             "_comment": "Code I002 in premodularized tedana"
@@ -75,8 +72,6 @@
                 "left2": "countsigFT2",
                 "op2": ">",
                 "right2": 0,
-                "log_extra_info": "Reject if countsig_in S0clusters > T2clusters & countsig_in_T2clusters>0",
-                "log_extra_report": "",
                 "tag_ifTrue": "Unlikely BOLD"
             },
             "_comment": "Code I003 in premodularized tedana"
@@ -103,8 +98,6 @@
                 "left2": "variance explained",
                 "op2": ">",
                 "right2": "median_varex",
-                "log_extra_info": "Reject if DICE S0>T2  & varex>median",
-                "log_extra_report": "",
                 "tag_ifTrue": "Unlikely BOLD"
             },
             "_comment": "Code I004 in premodularized tedana"
@@ -123,8 +116,6 @@
                 "left2": "variance explained",
                 "op2": ">",
                 "right2": "median_varex",
-                "log_extra_info": "Reject if T2fitdiff_invsout_ICAmap_Tstat<0 & varex>median",
-                "log_extra_report": "",
                 "tag_ifTrue": "Unlikely BOLD"
             },
             "_comment": "Code I005 in premodularized tedana"
@@ -164,7 +155,6 @@
                 "right": "kappa_elbow_kundu"
             },
             "kwargs": {
-                "log_extra_info": "Provisionally accept if kappa>elbow",
                 "log_extra_report": ""
             }
         },
@@ -181,7 +171,6 @@
                 "right": "rho_elbow_kundu"
             },
             "kwargs": {
-                "log_extra_info": "Move any provisionally accepted components back to unclassified if rho>elbow",
                 "log_extra_report": ""
             }
         },
@@ -196,8 +185,9 @@
                 "class_comp_exists": "provisionalaccept"
             },
             "kwargs": {
+                "at_least_num_exist": 2,
                 "tag": "No provisional accept",
-                "log_extra_info": "If nothing is provisionally accepted by this point, be conservative and accept everything",
+                "log_extra_info": "If nothing is provisionally accepted by this point, then rerun ICA & selection. If max iterations of rerunning done, then accept everything not already rejected",
                 "log_extra_report": ""
             },
             "_comment": "Code I006 in premodularized tedana"
@@ -209,9 +199,7 @@
                 "thresh_label": "upper",
                 "percentile_thresh": 90
             },
-            "kwargs": {
-                "log_extra_info": "Calculuate a high variance threshold based on the 90th percentile variance component"
-            }
+            "kwargs": {}
         },
         {
             "functionname": "calc_varex_thresh",
@@ -220,35 +208,28 @@
                 "thresh_label": "lower",
                 "percentile_thresh": 25
             },
-            "kwargs": {
-                "log_extra_info": "Calculuate a low variance threshold based on the 25th percentile variance component"
-            }
+            "kwargs": {}
         },
         {
             "functionname": "calc_extend_factor",
             "parameters": {},
-            "kwargs": {
-                "log_extra_info": "2 if fewer than 90 fMRI volumes, 3 if more than 110 and linear in-between"
-            },
-            "_comment": "This is a scaling number that is used for a few thresholds"
+            "kwargs": {},
+            "_comment": "This is a scaling number that is used for a few thresholds. 2 if fewer than 90 fMRI volumes, 3 if more than 110 and linear in-between"
         },
         {
             "functionname": "calc_max_good_meanmetricrank",
             "parameters": {
                 "decide_comps": "provisionalaccept"
             },
-            "kwargs": {
-                "log_extra_info": "Number of provisionalaccept components * extend_factor"
-            }
+            "kwargs": {},
+            "_comment": "Number of provisionalaccept components * extend_factor"
         },
         {
             "functionname": "calc_varex_kappa_ratio",
             "parameters": {
                 "decide_comps": "provisionalaccept"
             },
-            "kwargs": {
-                "log_extra_info": "Scaled ratio of variance/kappa"
-            },
+            "kwargs": {},
             "_comment": "This is used to calculate the new 'varex kappa ratio' column in the component_table"
         },
         {
@@ -388,8 +369,7 @@
                 "percentile_thresh": 25
             },
             "kwargs": {
-                "num_lowest_var_comps": "num_acc_guess",
-                "log_extra_info": "Calculuate a low variance threshold based on the 25th percentile variance component"
+                "num_lowest_var_comps": "num_acc_guess"
             }
         },
         {
@@ -432,9 +412,9 @@
                 "op2": ">",
                 "left2": "variance explained",
                 "right2": "varex_new_lower_thresh",
-                "log_extra_info": "Accept components above the kappa elbow, but are at the higher end of the remaining variance so more cautious to not remove"
+                "log_extra_info": "For not already rejected components, accept ones below the kappa elbow, but at the higher end of the remaining variance so more cautious to not remove"
             },
-            "_comment": "Code I012 in premodularized tedana. Yet another quirky criterion, but this one to keep components. In the original tree, varex_new_lower_thresh would be lower than it is here. If there are differences in results, might be worth adding a scaling factor"
+            "_comment": "Code I012 in premodularized tedana. Yet another quirky criterion, but this one to keep components. In the original tree, varex_new_lower_thresh might be lower than it is here. If there are differences in results, might be worth adding a scaling factor"
         },
         {
             "functionname": "manual_classify",

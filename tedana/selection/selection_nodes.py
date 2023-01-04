@@ -154,8 +154,9 @@ def manual_classify(
     else:
         outputs["node_label"] = "Set " + str(decide_comps) + " to " + new_classification
 
+    LGR.info(f"{function_name_idx}: {outputs['node_label']} ")
     if log_extra_info:
-        LGR.info(log_extra_info)
+        LGR.info(f"{function_name_idx} {log_extra_info}")
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
@@ -442,8 +443,9 @@ def dec_left_op_right(
 
     # Might want to add additional default logging to functions here
     # The function input will be logged before the function call
+    LGR.info(f"{function_name_idx}: {ifTrue} if {outputs['node_label']}, else {ifFalse}")
     if log_extra_info:
-        LGR.info(log_extra_info)
+        LGR.info(f"{function_name_idx} {log_extra_info}")
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
@@ -581,12 +583,13 @@ def dec_variance_lessthan_thresholds(
     if custom_node_label:
         outputs["node_label"] = custom_node_label
     else:
-        outputs["node_label"] = ("{}<{}. All variance<{}").format(
-            outputs["used_metrics"], single_comp_threshold, all_comp_threshold
-        )
+        outputs[
+            "node_label"
+        ] = f"{var_metric}<{single_comp_threshold}. All variance<{all_comp_threshold}"
 
+    LGR.info(f"{function_name_idx}: {ifTrue} if {outputs['node_label']}, else {ifFalse}")
     if log_extra_info:
-        LGR.info(log_extra_info)
+        LGR.info(f"{function_name_idx} {log_extra_info}")
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
@@ -708,10 +711,11 @@ def calc_median(
     if custom_node_label:
         outputs["node_label"] = custom_node_label
     else:
-        outputs["node_label"] = f"Calc {label_name}"
+        outputs["node_label"] = f"Median({label_name})"
 
+    LGR.info(f"{function_name_idx}: {outputs['node_label']}")
     if log_extra_info:
-        LGR.info(log_extra_info)
+        LGR.info(f"{function_name_idx} {log_extra_info}")
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
@@ -808,8 +812,9 @@ def calc_kappa_elbow(
     else:
         outputs["node_label"] = "Calc Kappa Elbow"
 
+    LGR.info(f"{function_name_idx}: {outputs['node_label']}")
     if log_extra_info:
-        LGR.info(log_extra_info)
+        LGR.info(f"{function_name_idx} {log_extra_info}")
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
@@ -941,8 +946,9 @@ def calc_rho_elbow(
     else:
         outputs["node_label"] = "Calc Rho Elbow"
 
+    LGR.info(f"{function_name_idx}: {outputs['node_label']}")
     if log_extra_info:
-        LGR.info(log_extra_info)
+        LGR.info(f"{function_name_idx} {log_extra_info}")
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
@@ -996,6 +1002,7 @@ def dec_classification_doesnt_exist(
     new_classification,
     decide_comps,
     class_comp_exists,
+    at_least_num_exist=1,
     log_extra_report="",
     log_extra_info="",
     custom_node_label="",
@@ -1017,6 +1024,9 @@ def dec_classification_doesnt_exist(
         This has the same structure options as decide_comps. This function tests
         whether any components in decide_comps have the classifications defined in this
         variable.
+    at_least_num_exist: :obj:`int`
+        Instead of just testing whether a classification exists, test whether at least
+        this number of components have that classification. Default=1
     {log_extra_info}
     {log_extra_report}
     {custom_node_label}
@@ -1034,7 +1044,7 @@ def dec_classification_doesnt_exist(
     ----
     This function is useful to end the component selection process early
     even if there are additional nodes. For example, in the original
-    kundu tree, if no components are identified with kappa>elbow and
+    kundu tree, if 0 or 1 components are identified with kappa>elbow and
     rho>elbow then, instead of removing everything, it effectively says
     something's wrong and conservatively keeps everything. Similarly,
     later in the kundu tree, there are several steps deciding how to
@@ -1047,7 +1057,7 @@ def dec_classification_doesnt_exist(
     outputs = {
         "decision_node_idx": selector.current_node_idx,
         "used_metrics": set(),
-        "used_cross_component_metrics": set(),
+        "used_cross_comp_metrics": set(),
         "node_label": None,
         "numTrue": None,
         "numFalse": None,
@@ -1059,11 +1069,18 @@ def dec_classification_doesnt_exist(
     function_name_idx = "Step {}: classification_doesnt_exist".format((selector.current_node_idx))
     if custom_node_label:
         outputs["node_label"] = custom_node_label
+    elif at_least_num_exist == 1:
+        outputs[
+            "node_label"
+        ] = f"Change {decide_comps} to {new_classification} if {class_comp_exists} doesn't exist"
     else:
-        outputs["node_label"] = f"Change {decide_comps} if {class_comp_exists} doesn't exist"
+        outputs[
+            "node_label"
+        ] = f"Change {decide_comps} to {new_classification} if less than {at_least_num_exist} components with {class_comp_exists} exist"
 
+    LGR.info(f"{function_name_idx}: {outputs['node_label']}")
     if log_extra_info:
-        LGR.info(log_extra_info)
+        LGR.info(f"{function_name_idx} {log_extra_info}")
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
@@ -1074,7 +1091,7 @@ def dec_classification_doesnt_exist(
 
     do_comps_exist = selectcomps2use(selector, class_comp_exists)
 
-    if (not comps2use) or (do_comps_exist):
+    if (not comps2use) or (len(do_comps_exist) >= at_least_num_exist):
         outputs["numTrue"] = 0
         # If nothing chanages, then assign the number of components in comps2use to numFalse
         outputs["numFalse"] = len(comps2use)
@@ -1232,10 +1249,11 @@ def calc_varex_thresh(
     if custom_node_label:
         outputs["node_label"] = custom_node_label
     else:
-        outputs["node_label"] = f"Calc {varex_name}"
+        outputs["node_label"] = f"Calc {varex_name}, {percentile_thresh}th percentile threshold"
 
+    LGR.info(f"{function_name_idx}: {outputs['node_label']}")
     if log_extra_info:
-        LGR.info(log_extra_info)
+        LGR.info(f"{function_name_idx} {log_extra_info}")
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
@@ -1287,6 +1305,7 @@ def calc_extend_factor(
 ):
     """
     Calculate the scalar used to set a threshold for d_table_score.
+    2 if fewer than 90 fMRI volumes, 3 if more than 110 and linear in-between
     The explanation for the calculation is in
     :obj:`tedana.selection.selection_utils.get_extend_factor`
 
@@ -1331,7 +1350,7 @@ def calc_extend_factor(
         outputs["node_label"] = "Calc extend_factor"
 
     if log_extra_info:
-        LGR.info(log_extra_info)
+        LGR.info(f"{function_name_idx} {log_extra_info}")
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
@@ -1422,7 +1441,7 @@ def calc_max_good_meanmetricrank(
         outputs["node_label"] = f"Calc {metric_name}"
 
     if log_extra_info:
-        LGR.info(log_extra_info)
+        LGR.info(f"{function_name_idx} {log_extra_info}")
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
@@ -1529,7 +1548,7 @@ def calc_varex_kappa_ratio(
         outputs["node_label"] = "Calc varex kappa ratio"
 
     if log_extra_info:
-        LGR.info(log_extra_info)
+        LGR.info(f"{function_name_idx}: {log_extra_info}")
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
@@ -1553,7 +1572,12 @@ def calc_varex_kappa_ratio(
             - np.nanmin(selector.component_table.loc[comps2use, "variance explained"])
         )
         outputs["kappa_rate"] = kappa_rate
-        LGR.info(f"Kappa rate found to be {kappa_rate} from components " f"{comps2use}")
+        # TODO Was useful for debugging, but unnessary for typical outputs. Maybe add
+        #   back in when verbose tag is used
+        # LGR.info(
+        #     f"{function_name_idx} Kappa rate found to be {kappa_rate} from components "
+        #     f"{comps2use}"
+        # )
         # NOTE: kappa_rate is calculated on a subset of components while
         #     "varex kappa ratio" is calculated for all compnents
         selector.component_table["varex kappa ratio"] = (
@@ -1703,8 +1727,9 @@ def calc_revised_meanmetricrank_guesses(
     else:
         outputs["node_label"] = "Calc revised d_table_score & num accepted component guesses"
 
+    LGR.info(f"{function_name_idx}: {outputs['node_label']}")
     if log_extra_info:
-        LGR.info(log_extra_info)
+        LGR.info(f"{function_name_idx}: {log_extra_info}")
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
