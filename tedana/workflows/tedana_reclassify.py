@@ -287,7 +287,6 @@ def post_tedana(
         comptable,
         cross_component_metrics=xcomp,
         status_table=status_table,
-        verbose=debug,
     )
 
     if accept:

@@ -229,9 +229,7 @@ class ComponentSelector:
     a specified `tree`
     """
 
-    def __init__(
-        self, tree, component_table, verbose=False, cross_component_metrics={}, status_table=None
-    ):
+    def __init__(self, tree, component_table, cross_component_metrics={}, status_table=None):
         """
         Initialize the class using the info specified in the json file `tree`
 
@@ -286,7 +284,6 @@ class ComponentSelector:
 
         self.__dict__.update(cross_component_metrics)
         self.cross_component_metrics = cross_component_metrics
-        self.verbose = verbose
 
         # Construct an un-executed selector
         self.component_table = component_table.copy()
@@ -390,15 +387,9 @@ class ComponentSelector:
                 kwargs = None
                 all_params = {**params}
 
-            if self.verbose:
-                # If verbose outputs requested, log the function name and parameters used
-                # This info is already saved in the tree json output files, but adding
-                # to the screen log output is useful for debugging
-                LGR.info(
-                    "Step {}: Running function {} with parameters: {}".format(
-                        self.current_node_idx, node["functionname"], all_params
-                    )
-                )
+            LGR.debug(
+                f"Step {self.current_node_idx}: Running function {node['functionname']} with parameters: {all_params}"
+            )
             # run the decision node function
             if kwargs is not None:
                 self = fcn(self, **params, **kwargs)
@@ -410,7 +401,9 @@ class ComponentSelector:
 
             # log the current counts for all classification labels
             log_classification_counts(self.current_node_idx, self.component_table)
-
+            LGR.debug(
+                f"Step {self.current_node_idx} Full outputs: {self.tree['nodes'][self.current_node_idx]['outputs']}"
+            )
         # move decision columns to end
         self.component_table = clean_dataframe(self.component_table)
         # warning anything called a necessary metric wasn't used and if

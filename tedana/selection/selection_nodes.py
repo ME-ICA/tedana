@@ -1572,12 +1572,10 @@ def calc_varex_kappa_ratio(
             - np.nanmin(selector.component_table.loc[comps2use, "variance explained"])
         )
         outputs["kappa_rate"] = kappa_rate
-        # TODO Was useful for debugging, but unnessary for typical outputs. Maybe add
-        #   back in when verbose tag is used
-        # LGR.info(
-        #     f"{function_name_idx} Kappa rate found to be {kappa_rate} from components "
-        #     f"{comps2use}"
-        # )
+        LGR.debug(
+            f"{function_name_idx} Kappa rate found to be {kappa_rate} from components "
+            f"{comps2use}"
+        )
         # NOTE: kappa_rate is calculated on a subset of components while
         #     "varex kappa ratio" is calculated for all compnents
         selector.component_table["varex kappa ratio"] = (
