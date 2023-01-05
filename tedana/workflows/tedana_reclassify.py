@@ -320,7 +320,8 @@ def post_tedana(
 
     if selector.n_accepted_comps == 0:
         LGR.warning(
-            "No accepted components remaining after manual classification! Please check data and results!"
+            "No accepted components remaining after manual classification! "
+            "Please check data and results!"
         )
 
     mmix_orig = mmix.copy()

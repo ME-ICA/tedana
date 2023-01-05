@@ -672,7 +672,7 @@ def tedana_workflow(
                 io_generator.force = True
             RepLGR.disabled = True  # Disable the report to avoid duplicate text
         RepLGR.disabled = False  # Re-enable the report after the while loop is escaped
-        io_generator.force = force # Re-enable original overwrite behavior
+        io_generator.force = force  # Re-enable original overwrite behavior
     else:
         LGR.info("Using supplied mixing matrix from ICA")
         mixing_file = io_generator.get_name("ICA mixing tsv")

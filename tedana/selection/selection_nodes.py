@@ -1074,9 +1074,10 @@ def dec_classification_doesnt_exist(
             "node_label"
         ] = f"Change {decide_comps} to {new_classification} if {class_comp_exists} doesn't exist"
     else:
-        outputs[
-            "node_label"
-        ] = f"Change {decide_comps} to {new_classification} if less than {at_least_num_exist} components with {class_comp_exists} exist"
+        outputs["node_label"] = (
+            f"Change {decide_comps} to {new_classification} if less than "
+            f"{at_least_num_exist} components with {class_comp_exists} exist"
+        )
 
     LGR.info(f"{function_name_idx}: {outputs['node_label']}")
     if log_extra_info:
