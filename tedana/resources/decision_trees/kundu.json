@@ -370,7 +370,7 @@
                 "percentile_thresh": 25
             },
             "kwargs": {
-                "num_lowest_var_comps": "num_acc_guess"
+                "num_highest_var_comps": "num_acc_guess"
             }
         },
         {
