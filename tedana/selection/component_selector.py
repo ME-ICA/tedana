@@ -388,7 +388,8 @@ class ComponentSelector:
                 all_params = {**params}
 
             LGR.debug(
-                f"Step {self.current_node_idx}: Running function {node['functionname']} with parameters: {all_params}"
+                f"Step {self.current_node_idx}: Running function {node['functionname']} "
+                f"with parameters: {all_params}"
             )
             # run the decision node function
             if kwargs is not None:
@@ -402,7 +403,8 @@ class ComponentSelector:
             # log the current counts for all classification labels
             log_classification_counts(self.current_node_idx, self.component_table)
             LGR.debug(
-                f"Step {self.current_node_idx} Full outputs: {self.tree['nodes'][self.current_node_idx]['outputs']}"
+                f"Step {self.current_node_idx} Full outputs: "
+                f"{self.tree['nodes'][self.current_node_idx]['outputs']}"
             )
         # move decision columns to end
         self.component_table = clean_dataframe(self.component_table)
