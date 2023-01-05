@@ -86,7 +86,7 @@ def reclassify_path() -> str:
 
 
 def reclassify_raw() -> str:
-    return os.path.join(reclassify_path(), "TED.three-echo-previous")
+    return os.path.join(reclassify_path(), "TED.three-echo")
 
 
 def reclassify_raw_registry() -> str:
@@ -95,7 +95,7 @@ def reclassify_raw_registry() -> str:
 
 def reclassify_url() -> str:
     """Get the URL to reclassify test data."""
-    return "https://osf.io/mt59n/download"
+    return "https://osf.io/f6g45/download"
 
 
 def guarantee_reclassify_data() -> None:
