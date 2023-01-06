@@ -1,10 +1,7 @@
 """Tests for bibtex"""
 
-import logging
-
-import pytest
-
 from tedana import bibtex
+
 
 def test_warn_no_citation_found(caplog):
     citations = ["Nonexistent et al, 0 AD"]
