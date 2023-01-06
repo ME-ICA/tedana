@@ -2,6 +2,7 @@
 Tests for tedana.io
 """
 
+import json
 import os
 
 import nibabel as nib
@@ -267,3 +268,32 @@ def test_fname_to_component_list():
     result = me.fname_to_component_list(temp_txt_fname)
     os.remove(temp_txt_fname)
     assert result == [1, 1]
+
+
+def test_CustomEncoder():
+    """
+    Test the encoder we use for JSON incompatibilities
+    """
+    # np int64
+    test_data = {"data": np.int64(4)}
+    encoded = json.dumps(test_data, cls=me.CustomEncoder)
+    decoded = json.loads(encoded)
+    assert test_data == decoded
+
+    # np array
+    test_data = {"data": np.asarray([1, 2, 3])}
+    encoded = json.dumps(test_data, cls=me.CustomEncoder)
+    decoded = json.loads(encoded)
+    assert np.array_equal(test_data["data"], decoded["data"])
+
+    # set should become list
+    test_data = {"data": set(["cat", "dog", "fish"])}
+    encoded = json.dumps(test_data, cls=me.CustomEncoder)
+    decoded = json.loads(encoded)
+    assert list(test_data["data"]) == decoded["data"]
+
+    # no special cases should use standard encoder
+    test_data = {"pet": "dog"}
+    encoded = json.dumps(test_data, cls=me.CustomEncoder)
+    decoded = json.loads(encoded)
+    assert test_data == decoded
