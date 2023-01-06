@@ -119,10 +119,14 @@ def validate_tree(tree):
 
     # Warn if unused fields exist
     unused_keys = set(tree.keys()) - set(tree_expected_keys) - set(["used_metrics"])
-    # Make sure reconstruct_from doesn't trigger a warning; hacky, sorry
-    if "reconstruct_from" in unused_keys:
-        unused_keys.remove("reconstruct_from")
-
+    # Make sure some fields don't trigger a warning; hacky, sorry
+    ok_to_not_use = (
+        "reconstruct_from",
+        "generated_metrics",
+    )
+    for k in ok_to_not_use:
+        if k in unused_keys:
+            unused_keys.remove(k)
     if unused_keys:
         LGR.warning(f"Decision tree includes fields that are not used or logged {unused_keys}")
 
@@ -472,10 +476,7 @@ class ComponentSelector:
         used and if any used_metrics weren't explicitly declared necessary.
         If either of these happen, a warning is added to the logger
         """
-        if "generated_metrics" in self.tree.keys():
-            necessary_metrics = set(self.tree["generated_metrics"]) | self.necessary_metrics
-        else:
-            necessary_metrics = self.necessary_metrics
+        necessary_metrics = self.necessary_metrics
         not_declared = self.tree["used_metrics"] - necessary_metrics
         not_used = necessary_metrics - self.tree["used_metrics"]
         if len(not_declared) > 0:
