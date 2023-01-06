@@ -14,6 +14,11 @@ import pandas as pd
 import tedana.gscontrol as gsc
 from tedana import __version__, io, reporting, selection, utils
 from tedana.bibtex import get_description_references
+from tedana.io import (
+    ALLOWED_COMPONENT_DELIMITERS,
+    fname_to_component_list,
+    str_to_component_list,
+)
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -32,15 +37,23 @@ def _main():
         "--manacc",
         dest="manual_accept",
         nargs="+",
-        type=int,
-        help="Component indices to accept (zero-indexed).",
+        help=(
+            "Component indices to accept (zero-indexed)."
+            "Supply as a comma-delimited liist with no spaces, "
+            "as a csv file, or as a text file with an allowed "
+            f"delimiter {repr(ALLOWED_COMPONENT_DELIMITERS)}."
+        ),
     )
     parser.add_argument(
         "--manrej",
         dest="manual_reject",
         nargs="+",
-        type=int,
-        help="Component indices to reject (zero-indexed).",
+        help=(
+            "Component indices to accept (zero-indexed)."
+            "Supply as a comma-delimited liist with no spaces, "
+            "as a csv file, or as a text file with an allowed "
+            f"delimiter {repr(ALLOWED_COMPONENT_DELIMITERS)}."
+        ),
     )
     parser.add_argument(
         "--config",
@@ -120,11 +133,31 @@ def _main():
 
     args = parser.parse_args()
 
+    if not args.manual_accept:
+        manual_accept = []
+    elif len(args.manual_accept) > 1:
+        # We should assume that this is a list of integers
+        manual_accept = [int(x) for x in args.manual_accept]
+    elif op.exists(args.manual_accept):
+        manual_accept = fname_to_component_list(args.manual_accept)
+    else:
+        manual_accept = str_to_component_list(args.manual_accept)
+
+    if not args.manual_reject:
+        manual_reject = []
+    elif len(args.manual_reject) > 1:
+        # We should assume that this is a list of integers
+        manual_reject = [int(x) for x in args.manual_reject]
+    elif op.exists(args.manual_reject):
+        manual_reject = fname_to_component_list(args.manual_reject)
+    else:
+        manual_reject = str_to_component_list(args.manual_reject)
+
     # Run post-tedana
     post_tedana(
         args.registry,
-        accept=args.manual_accept,
-        reject=args.manual_reject,
+        accept=manual_accept,
+        reject=manual_reject,
         out_dir=args.out_dir,
         config=args.config,
         prefix=args.prefix,

@@ -10,6 +10,7 @@ import os
 import os.path as op
 from copy import deepcopy
 from string import Formatter
+from typing import List
 
 import nibabel as nib
 import numpy as np
@@ -22,6 +23,13 @@ from tedana.stats import computefeats2, get_coeffs
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
+
+ALLOWED_COMPONENT_DELIMITERS = (
+    "\t",
+    "\n",
+    " ",
+    ",",
+)
 
 
 class CustomEncoder(json.JSONEncoder):
@@ -830,3 +838,80 @@ def prep_data_for_json(d) -> dict:
         # comment line as an elif block
         d[k] = v
     return d
+
+
+def str_to_component_list(s: str) -> List[int]:
+    """Convert a string to a list of component indices.
+
+    Parameters
+    ----------
+    s: str
+        The string to convert into a list of component indices.
+
+    Returns
+    -------
+    List[int] of component indices.
+
+    Raises
+    ------
+    ValueError, if the string cannot be split by an allowed delimeter
+    """
+    # Strip off newline at end in case we've been given a one-line file
+    if s[-1] == "\n":
+        s = s[:-1]
+
+    # Search across all allowed delimiters for a match
+    for d in ALLOWED_COMPONENT_DELIMITERS:
+        possible_list = s.split(d)
+        if len(possible_list) > 1:
+            # We have a likely hit
+            # Check to see if extra delimeter at end and get rid of it
+            if possible_list[-1] == "":
+                possible_list = possible_list[:-1]
+            break
+        elif len(possible_list) == 1 and possible_list[0].isnumeric():
+            # We have a likely hit and there is just one component
+            break
+    # Make sure we can actually convert this split list into an integer
+    # Crash with a sensible error if not
+    for x in possible_list:
+        try:
+            int(x)
+        except ValueError:
+            raise ValueError(
+                "While parsing component list, failed to convert to int."
+                f' Offending element is "{x}", offending string is "{s}".'
+            )
+
+    return [int(x) for x in possible_list]
+
+
+def fname_to_component_list(fname: str) -> List[int]:
+    """Read a file of component indices.
+
+    Parameters
+    ----------
+    fname: str
+        The name of the file to read the list of component indices from.
+
+    Returns
+    -------
+    List[int] of component indices.
+
+    Raises
+    ------
+    ValueError, if the string cannot be split by an allowed delimeter or the
+    csv file cannot be interpreted.
+    """
+    if fname[-3:] == "csv":
+        contents = pd.read_csv(fname)
+        columns = contents.columns
+        if len(columns) == 2 and "0" in columns:
+            return contents["0"].tolist()
+        elif len(columns) >= 2 and "Components" in columns:
+            return contents["Components"].tolist()
+        else:
+            raise ValueError(f"Cannot determine a components column in file {fname}")
+    with open(fname, "r") as fp:
+        contents = fp.read()
+        return str_to_component_list(contents)
