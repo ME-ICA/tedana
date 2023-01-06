@@ -138,20 +138,24 @@ def _main():
     elif len(args.manual_accept) > 1:
         # We should assume that this is a list of integers
         manual_accept = [int(x) for x in args.manual_accept]
-    elif op.exists(args.manual_accept):
-        manual_accept = fname_to_component_list(args.manual_accept)
+    elif op.exists(args.manual_accept[0]):
+        # filename was given
+        manual_accept = fname_to_component_list(args.manual_accept[0])
     else:
-        manual_accept = str_to_component_list(args.manual_accept)
+        # arbitrary string was given, length of list is 1
+        manual_accept = str_to_component_list(args.manual_accept[0])
 
     if not args.manual_reject:
         manual_reject = []
     elif len(args.manual_reject) > 1:
         # We should assume that this is a list of integers
         manual_reject = [int(x) for x in args.manual_reject]
-    elif op.exists(args.manual_reject):
-        manual_reject = fname_to_component_list(args.manual_reject)
+    elif op.exists(args.manual_reject[0]):
+        # filename was given
+        manual_reject = fname_to_component_list(args.manual_reject[0])
     else:
-        manual_reject = str_to_component_list(args.manual_reject)
+        # arbitrary string
+        manual_reject = str_to_component_list(args.manual_reject[0])
 
     # Run post-tedana
     post_tedana(

@@ -269,9 +269,45 @@ def test_integration_reclassify_insufficient_args(skip_integration):
     assert result.returncode != 0
 
 
-def test_integration_reclassify_quiet(skip_integration):
+def test_integration_reclassify_quiet_csv(skip_integration):
     if skip_integration:
-        pytest.skip("Skip reclassify quiet")
+        pytest.skip("Skip reclassify quiet csv")
+
+    guarantee_reclassify_data()
+    out_dir = os.path.join(reclassify_path(), "quiet")
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    # Make some files that have components to manually accept and reject
+    to_accept = [i for i in range(3)]
+    to_reject = [i for i in range(7, 4)]
+    acc_df = pd.DataFrame(data=to_accept, columns=["Components"])
+    rej_df = pd.DataFrame(data=to_reject, columns=["Components"])
+    acc_csv_fname = os.path.join(reclassify_raw(), "accept.csv")
+    rej_csv_fname = os.path.join(reclassify_raw(), "reject.csv")
+    acc_df.to_csv(acc_csv_fname)
+    rej_df.to_csv(rej_csv_fname)
+
+    args = [
+        "tedana_reclassify",
+        "--manacc",
+        acc_csv_fname,
+        "--manrej",
+        rej_csv_fname,
+        "--out-dir",
+        out_dir,
+        os.path.join(reclassify_raw(), "desc-tedana_registry.json"),
+    ]
+
+    results = subprocess.run(args, capture_output=True)
+    assert results.returncode == 0
+    fn = resource_filename("tedana", "tests/data/reclassify_quiet_out.txt")
+    check_integration_outputs(fn, out_dir)
+
+
+def test_integration_reclassify_quiet_spaces(skip_integration):
+    if skip_integration:
+        pytest.skip("Skip reclassify quiet space-delimited integers")
 
     guarantee_reclassify_data()
     out_dir = os.path.join(reclassify_path(), "quiet")
@@ -288,6 +324,32 @@ def test_integration_reclassify_quiet(skip_integration):
         "4",
         "5",
         "6",
+        "--out-dir",
+        out_dir,
+        os.path.join(reclassify_raw(), "desc-tedana_registry.json"),
+    ]
+
+    results = subprocess.run(args, capture_output=True)
+    assert results.returncode == 0
+    fn = resource_filename("tedana", "tests/data/reclassify_quiet_out.txt")
+    check_integration_outputs(fn, out_dir)
+
+
+def test_integration_reclassify_quiet_string(skip_integration):
+    if skip_integration:
+        pytest.skip("Skip reclassify quiet string of integers")
+
+    guarantee_reclassify_data()
+    out_dir = os.path.join(reclassify_path(), "quiet")
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    args = [
+        "tedana_reclassify",
+        "--manacc",
+        "1,2,3",
+        "--manrej",
+        "4,5,6,",
         "--out-dir",
         out_dir,
         os.path.join(reclassify_raw(), "desc-tedana_registry.json"),
@@ -381,6 +443,31 @@ def test_integration_reclassify_run_twice(skip_integration):
 
 
 def test_integration_reclassify_no_bold(skip_integration, caplog):
+    if skip_integration:
+        pytest.skip("Skip reclassify both rejected and accepted")
+
+    guarantee_reclassify_data()
+    out_dir = os.path.join(reclassify_path(), "no_bold")
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    ioh = InputHarvester(reclassify_raw_registry())
+    comptable = ioh.get_file_contents("ICA metrics tsv")
+    to_accept = [i for i in range(len(comptable))]
+
+    post_tedana(
+        reclassify_raw_registry(),
+        reject=to_accept,
+        out_dir=out_dir,
+        no_reports=True,
+    )
+    assert "No accepted components remaining after manual classification!" in caplog.text
+
+    fn = resource_filename("tedana", "tests/data/reclassify_no_bold.txt")
+    check_integration_outputs(fn, out_dir)
+
+
+def test_integration_reclassify_accrej_files(skip_integration, caplog):
     if skip_integration:
         pytest.skip("Skip reclassify both rejected and accepted")
 
