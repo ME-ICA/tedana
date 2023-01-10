@@ -21,7 +21,7 @@ Gaussian noise and ICA would not reliably converge. Standard methods for data
 reduction use cost functions, like MDL, KIC, and AIC to estimate the variance
 that is just noise and remove the lowest variance components under that threshold.
 By default, ``tedana`` uses AIC. Of those three, AIC is the least agressive and
-will retain the most components. 
+will retain the most components.
 
 ``Tedana`` includes additional `kundu` and `kundu-stabilize` approaches that
 identify and remove components that don't contain T2* or S0 signal and are more
@@ -49,7 +49,7 @@ P007   rejected         Rho below fmin (only in stabilized PCA decision tree)
 ICA Classification Outputs
 ==========================
 
-The component table is stored in ``desc-tedana_metrics.tsv`` or 
+The component table is stored in ``desc-tedana_metrics.tsv`` or
 ``tedana_metrics.tsv``. Each row is a component number. Each column is a metric
 that is calculated for each component. Short descriptions of each column metric
 are in the output log, ``tedana_[date_time].tsv``, and the actual metric
@@ -93,7 +93,7 @@ in several places:
 
 - The information in the output log includes the name of each
   node and the count of components that changed classification during execution.
-- The same information is stored in the `ICA decision tree` json file (see 
+- The same information is stored in the `ICA decision tree` json file (see
   `descriptions of file names`_) in the "output" field for each node. That information
   is organized so that it can be used to generate a visual or text-based summary of
   what happened when the decision tree was run on a dataset.
@@ -101,5 +101,5 @@ in several places:
   each node was run. This is particularly useful to trying to understand how a
   specific component ended receiving its classification.
 
-.. _collect.py: https://github.com/ME-ICA/tedana/blob/main/tedana/metrics/collect.py 
+.. _collect.py: https://github.com/ME-ICA/tedana/blob/main/tedana/metrics/collect.py
 .. _descriptions of file names: output_file_descriptions.html
