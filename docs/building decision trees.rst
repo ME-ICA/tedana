@@ -45,13 +45,13 @@ The file key names are used below the full file names in the
 .. _ComponentSelector object: generated/tedana.selection.component_selector.ComponentSelector.html
 .. _output file descriptions: output_file_descriptions.html
 
-**General outputs from component selection** 
+**General outputs from component selection**
 
 New columns in ``selector.component_table`` and the "ICA metrics tsv" file:
 
     classification:
         While the decision table is running, there may also be intermediate
-        classification labels, but the final labels are expected to be 
+        classification labels, but the final labels are expected to be
         "accepted" or "rejected". There will be a warning if other labels remain.
 
     classification_tags:
@@ -61,7 +61,7 @@ New columns in ``selector.component_table`` and the "ICA metrics tsv" file:
         for visualizing and reviewing results
 
 ``selector.cross_component_metrics`` and "ICA cross component metrics json":
-    A dictionary of metrics that are each a single value calculated across components. 
+    A dictionary of metrics that are each a single value calculated across components.
     For example, kappa and rho elbows. User or pre-defined scaling factors are
     also be stored here. Any constant that is used in the component classification
     processes that isn't pre-defined in the decision tree file should be saved here.
@@ -109,7 +109,7 @@ decison_node_idx:
     The decision tree functions are run as part of an ordered list.
     This is the positional index the location of the function in
     the list, starting with index 0.
-    
+
 used_metrics:
     A list of the metrics used in a node of the decision tree
 
@@ -179,14 +179,14 @@ in `selection_nodes.py`_
 There are several fields with general information. Some of these store general
 information that's useful for reporting results and others store information
 that Are used to checks whether results are plausible & can help avoid mistakes
-  
+
   tree_id:
       A descriptive name for the tree that will be logged.
 
   info:
       A brief description of the tree for info logging
 
-  report: 
+  report:
       A narrative description of the tree that could be used in report logging
 
   refs:
@@ -290,7 +290,7 @@ There are several expectations for selection functions that are necessary for th
 properly execute. In `selection_nodes.py`_, ``manual_classify``, ``dec_left_op_right``,
 and ``calc_kappa_rho_elbows_kundu`` are good examples for how to meet these expectations.
 
-Create a dictionary called "outputs" that includes key fields that should be recorded. 
+Create a dictionary called "outputs" that includes key fields that should be recorded.
 The following line should be at the end of each function to retain the output info:
 ``selector.nodes[selector.current_node_idx]["outputs"] = outputs``
 
@@ -371,7 +371,7 @@ Every function should end with:
   selector.nodes[selector.current_node_idx]["outputs"] = outputs
   return selector
 
-  functionname.__doc__ = (functionname.__doc__.format(**decision_docs))
+  functionname.__doc__ = (functionname.__doc__.format(**DECISION_DOCS))
 
 This makes sure the outputs from the function are saved in the class structure and the
 class structure is returned. The following line should include the function's name and

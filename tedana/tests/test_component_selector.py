@@ -321,8 +321,8 @@ def test_selector_properties_smoke():
 
     assert selector.n_comps == 21
 
-    # Also runs selector.LikelyBOLD_comps and should need to deal with sets in each field
-    assert selector.n_LikelyBOLD_comps == 17
+    # Also runs selector.likely_bold_comps and should need to deal with sets in each field
+    assert selector.n_likely_bold_comps == 17
 
     assert selector.n_accepted_comps == 17
 

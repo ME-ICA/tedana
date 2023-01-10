@@ -18,15 +18,13 @@ RefLGR = logging.getLogger("REFERENCES")
 
 
 def selectcomps2use(selector, decide_comps):
-    """
-    Get a list of component numbers that fit the classification types in
-    decide_comps.
+    """Get a list of component numbers that fit the classification types in ``decide_comps``.
 
     Parameters
     ----------
-    selector: :obj:`tedana.selection.component_selector.ComponentSelector`
+    selector : :obj:`~tedana.selection.component_selector.ComponentSelector`
         Only uses the component_table in this object
-    decide_comps: :obj:`str` or :obj:`list[str]` or :obj:`list[int]`
+    decide_comps : :obj:`str` or :obj:`list[str]` or :obj:`list[int]`
         This is string or a list of strings describing what classifications
         of components to operate on, using default or intermediate_classification
         labels. For example: decide_comps='unclassified' means to operate only on
@@ -36,7 +34,7 @@ def selectcomps2use(selector, decide_comps):
 
     Returns
     -------
-    comps2use: :obj:`list[int]`
+    comps2use : :obj:`list[int]`
         A list of component indices with classifications included in decide_comps
     """
 
@@ -104,30 +102,30 @@ def change_comptable_classifications(
 
     Parameters
     ----------
-    selector: :obj:`tedana.selection.component_selector.ComponentSelector`
+    selector : :obj:`tedana.selection.component_selector.ComponentSelector`
         The attributes used are component_table, component_status_table, and
         current_node_idx
-    ifTrue, ifFalse: :obj:`str`
+    ifTrue, ifFalse : :obj:`str`
         If the condition in this step is true or false, give the component
         the label in this string. Options are 'accepted', 'rejected',
         'nochange', or intermediate_classification labels predefined in the
         decision tree. If 'nochange' then don't change the current component
         classification
-    decision_boolean: :obj:`pd.Series(bool)`
+    decision_boolean : :obj:`pd.Series(bool)`
         A dataframe column of equal length to component_table where each value
         is True or False.
-    tag_ifTrue, tag_ifFalse: :obj:`str`
+    tag_ifTrue, tag_ifFalse : :obj:`str`
         A string containing a label in classification_tags that will be added to
         the classification_tags column in component_table if a component is
         classified as true or false. default=None
-    dont_warn_reclassify: :obj:`bool`
+    dont_warn_reclassify : :obj:`bool`
         If this function changes a component classification from accepted or
         rejected to something else, it gives a warning. If this is True, that
         warning is suppressed. default=False
 
     Returns
     -------
-    selector: :obj:`tedana.selection.component_selector.ComponentSelector`
+    selector : :obj:`tedana.selection.component_selector.ComponentSelector`
         component_table["classifications"] will reflect any new
         classifications.
         component_status_table will have a new column titled
@@ -136,7 +134,7 @@ def change_comptable_classifications(
         component_table["classification_tags"] will be updated to include any
         new tags. Each tag should appear only once in the string and tags will
         be separated by commas.
-    numTrue, numFalse: :obj:`int`
+    numTrue, numFalse : :obj:`int`
         The number of True and False components in decision_boolean
 
     Note
@@ -178,40 +176,38 @@ def comptable_classification_changer(
     tag_if=None,
     dont_warn_reclassify=False,
 ):
-    """
-    Implement the component classification changes specified in
-    change_comptable_classifications.
+    """Implement the component classification changes from ``change_comptable_classifications``.
 
     Parameters
     ----------
-    selector: :obj:`tedana.selection.component_selector.ComponentSelector`
+    selector : :obj:`tedana.selection.component_selector.ComponentSelector`
         The attributes used are component_table, component_status_table, and
         current_node_idx
     boolstate : :obj:`bool`
         Change classifications only for True or False components in
         decision_boolean based on this variable
-    classify_if: :obj:`str`
+    classify_if : :obj:`str`
         This should be if_True or if_False to match boolstate.
         If the condition in this step is true or false, give the component
         the label in this string. Options are 'accepted', 'rejected',
         'nochange', or intermediate_classification labels predefined in the
         decision tree. If 'nochange' then don't change the current component
         classification
-    decision_boolean: :obj:`pd.Series(bool)`
+    decision_boolean : :obj:`pd.Series(bool)`
         A dataframe column of equal length to component_table where each value
         is True or False.
-    tag_if: :obj:`str`
+    tag_if : :obj:`str`
         This should be tag_ifTrue or tag_ifFalse to match boolstate
         A string containing a label in classification_tags that will be added to
         the classification_tags column in component_table if a component is
         classified as true or false. default=None
-    dont_warn_reclassify: :obj:`bool`
+    dont_warn_reclassify : :obj:`bool`
         If this function changes a component classification from accepted or
         rejected to something else, it gives a warning. If this is True, that
         warning is suppressed. default=False
     Returns
     -------
-    selector: :obj:`tedana.selection.component_selector.ComponentSelector`
+    selector : :obj:`tedana.selection.component_selector.ComponentSelector`
         Operates on the True OR False components depending on boolstate
         component_table["classifications"] will reflect any new
         classifications.
@@ -221,13 +217,17 @@ def comptable_classification_changer(
         component_table["classification_tags"] will be updated to include any
         new tags. Each tag should appear only once in the string and tags will
         be separated by commas.
-    If a classification is changed away from accepted or rejected and
-    dont_warn_reclassify is False, then a warning is logged
+
+    Warns
+    -----
+    UserWarning
+        If a classification is changed away from accepted or rejected and
+        dont_warn_reclassify is False, then a warning is logged
 
     Note
     ----
     This is designed to be run by
-    `tedana.selection.selection_utils.change_comptable_classifications`.
+    :func:`~tedana.selection.selection_utils.change_comptable_classifications`.
     This function is run twice, ones for changes to make of a component is
     True and again for components that are False.
 
@@ -380,11 +380,10 @@ def log_decision_tree_step(
 
     Parameters
     ----------
-    function_name_idx: :obj:`str`
+    function_name_idx : :obj:`str`
         The name of the function that should be logged. By convention, this
         be "Step current_node_idx: function_name"
-
-    comps2use: :obj:`list[int]` or -1
+    comps2use : :obj:`list[int]` or -1
         A list of component indices that should be used by a function.
         Only used to report no components found if empty and report
         the number of components found if not empty.
@@ -393,18 +392,17 @@ def log_decision_tree_step(
         components. For those functions, set comps2use==-1 to avoid
         logging a warning that no components were found. Currently,
         this is only used by `calc_extend_factor`
-
-    decide_comps: :obj:`str` or :obj:`list[str]` or :obj:`list[int]`
+    decide_comps : :obj:`str` or :obj:`list[str]` or :obj:`list[int]`
         This is string or a list of strings describing what classifications
         of components to operate on. Only used in this function to report
         its contents if no components with these classifications were found
-    numTrue, numFalse: :obj:`int`
+    numTrue, numFalse : :obj:`int`
         The number of components classified as True or False
-    ifTrue, ifFalse: :obj:`str`
+    ifTrue, ifFalse : :obj:`str`
         If a component is true or false, the classification to assign that
         component
 
-    calc_outputs: :obj:`dict`
+    calc_outputs : :obj:`dict`
         A dictionary with output information from the function. If it contains a key
         "calc_cross_comp_metrics" then the value for that key is a list of
         cross component metrics (i.e. kappa or rho elbows) that were calculated
@@ -445,8 +443,7 @@ def log_decision_tree_step(
 
 
 def log_classification_counts(decision_node_idx, component_table):
-    """
-    Log the total counts for each component classification in component_table
+    """Log the total counts for each component classification in component_table.
 
     Parameters
     ----------
@@ -478,8 +475,7 @@ def log_classification_counts(decision_node_idx, component_table):
 # Calculations that are used in decision tree functions
 #######################################################
 def getelbow_cons(arr, return_val=False):
-    """
-    Elbow using mean/variance method - conservative
+    """Elbow using mean/variance method - conservative
 
     Parameters
     ----------
@@ -585,21 +581,21 @@ def kappa_elbow_kundu(component_table, n_echos, comps2use=None):
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
         Only the 'kappa' column is used in this function
-    n_echos: :obj:`int`
+    n_echos : :obj:`int`
         The number of echos in the multi-echo data
-    comps2use: :obj:`list[int]`
+    comps2use : :obj:`list[int]`
         A list of component indices used to calculate the elbow
         default=None which means use all components
 
     Returns
     -------
-    kappa_elbow: :obj:`float`
+    kappa_elbow : :obj:`float`
         The 'elbow' value for kappa values, above which components are considered
         more likely to contain T2* weighted signals.
         minimum of kappa_allcomps_elbow and kappa_nonsig_elbow
-    kappa_allcomps_elbow: :obj:`float`
+    kappa_allcomps_elbow : :obj:`float`
         The elbow for kappa values using all components in comps2use
-    kappa_nonsig_elbow: :obj:`float`
+    kappa_nonsig_elbow : :obj:`float`
         The elbow for kappa values excluding kappa values above a threshold
         None if there are fewer than 6 values remaining after thresholding
 
@@ -658,37 +654,34 @@ def rho_elbow_kundu_liberal(
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
         Only the 'kappa' column is used in this function
-
-    n_echos: :obj:`int`
+    n_echos : :obj:`int`
         The number of echos in the multi-echo data
-    rho_elbow_type: :obj:`str`
+    rho_elbow_type : :obj:`str`
         The algorithm used to calculate the rho elbow. Current options are
         'kundu' and 'liberal'.
-
-    comps2use: :obj:`list[int]`
+    comps2use : :obj:`list[int]`
         A list of component indices used to calculate the elbow
         default=None which means use all components
-
-    subset_comps2use: :obj:`list[int]`
+    subset_comps2use : :obj:`list[int]`
         A list of component indices used to calculate the elbow
         If None then only calculate a threshold using all components
         default=-1 which means use only 'unclassified' components
 
     Returns
     -------
-    rho_elbow: :obj:`float`
+    rho_elbow : :obj:`float`
         The 'elbow' value for rho values, above which components are considered
         more likely to contain S0 weighted signals
-    varex_upper_p: :obj:`float`
+    varex_upper_p : :obj:`float`
         This is the median "variance explained" across components with kappa values
         greater than the kappa_elbow calculated using all components
         None if subset_comps2use is None
-    rho_allcomps_elbow: :obj:`float`
+    rho_allcomps_elbow : :obj:`float`
         rho elbow calculated using all components in comps2use
-    rho_unclassified_elbow: :obj:`float`
+    rho_unclassified_elbow : :obj:`float`
         rho elbow clculated using all components in subset_comps2use
         None if subset_comps2use is None
-    elbow_f05: :obj:`float`
+    elbow_f05 : :obj:`float`
         A significant threshold based on the number of echoes. Used
         as part of the mean for rho_elbow_type=='kundu'
 
@@ -797,18 +790,17 @@ def get_extend_factor(n_vols=None, extend_factor=None):
 
     Parameters
     ----------
-    n_vols: :obj:`int`
+    n_vols : :obj:`int`
         The number of volumes in an fMRI time series. default=None
         In the MEICA code, extend_factor was hard-coded to 2 for data with more
         than 100 volumes and 3 for data with less than 100 volumes.
         Now is linearly ramped from 2-3 for vols between 90 & 110
-
-    extend_factor: :obj:`float`
+    extend_factor : :obj:`float`
         The scaler used to set a threshold for d_table_score. default=None
 
     Returns
     -------
-    extend_factor: :obj:`float`
+    extend_factor : :obj:`float`
 
     Note
     ----

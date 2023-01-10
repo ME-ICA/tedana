@@ -18,53 +18,51 @@ from tedana.selection.selection_utils import (
     selectcomps2use,
 )
 
-# from scipy import stats
-
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 RefLGR = logging.getLogger("REFERENCES")
 
-decision_docs = {
+DECISION_DOCS = {
     "selector": """\
-selector: :obj:`tedana.selection.component_selector.ComponentSelector`
+selector : :obj:`tedana.selection.component_selector.ComponentSelector`
         The selector to perform decision tree-based component selection with.""",
     "ifTrueFalse": """\
-ifTrue: :obj:`str`
+ifTrue : :obj:`str`
         If the condition in this step is True, give the component classification this
         label. Use 'nochange' if no label changes are desired.
-    ifFalse: :obj:`str`
+    ifFalse : :obj:`str`
         If the condition in this step is False, give the component classification this
         label. Use 'nochange' to indicate if no label changes are desired.
 """,
     "decide_comps": """\
-decide_comps: :obj:`str` or :obj:`list[str]`
+decide_comps : :obj:`str` or :obj:`list[str]`
         What classification(s) to operate on. using default or
         intermediate_classification labels. For example: decide_comps='unclassified'
         means to operate only on unclassified components. Use 'all' to include all
         components.""",
     "log_extra_report": """\
-log_extra_report: :obj:`str`
+log_extra_report : :obj:`str`
         Additional text to the report log. Default="".""",
     "log_extra_info": """\
-log_extra_info: :obj:`str`
+log_extra_info : :obj:`str`
         Additional text to the information log. Default="".""",
     "only_used_metrics": """\
-only_used_metrics: :obj:`bool`
+only_used_metrics : :obj:`bool`
         If True, only return the component_table metrics that would be used. Default=False.""",
     "custom_node_label": """\
-custom_node_label: :obj:`str`
+custom_node_label : :obj:`str`
         A short label to describe what happens in this step. If "" then a label is
         automatically generated. Default="".""",
     "tag_ifTrueFalse": """\
-tag_ifTrue: :obj:`str`
+tag_ifTrue : :obj:`str`
         The classification tag to apply if a component is classified True. Default="".
-    tag_ifFalse: :obj:`str`
+    tag_ifFalse : :obj:`str`
         The classification tag to apply if a component is classified False. Default="".""",
     "basicreturns": """\
-selector: :obj:`tedana.selection.component_selector.ComponentSelector`
+selector : :obj:`tedana.selection.component_selector.ComponentSelector`
         If only_used_metrics is False, the updated selector is returned
-    used_metrics: :obj:`set(str)`
+    used_metrics : :obj:`set(str)`
         If only_used_metrics is True, the names of the metrics used in the
         function are returned""",
 }
@@ -82,28 +80,27 @@ def manual_classify(
     tag=None,
     dont_warn_reclassify=False,
 ):
-    """
-    Explicitly assign a classification, defined in new_classification,
-    to all the components in decide_comps.
+    """Assign a classification, defined in ``new_classification``, to the components in
+    ``decide_comps``.
 
     Parameters
     ----------
     {selector}
     {decide_comps}
-    new_classification: :obj:`str`
+    new_classification : :obj:`str`
         Assign all components identified in decide_comps the classification
         in new_classification. Options are 'unclassified', 'accepted',
         'rejected', or intermediate_classification labels predefined in the
         decision tree
-    clear_classification_tags: :obj:`bool`
+    clear_classification_tags : :obj:`bool`
         If True, reset all values in the 'classification_tags' column to empty
         strings. This also can create the classification_tags column if it
         does not already exist. If False, do nothing.
-    tag: :obj:`str`
+    tag : :obj:`str`
         A classification tag to assign to all components being reclassified.
         This should be one of the tags defined by classification_tags in
         the decision tree specification
-    dont_warn_reclassify: :obj:`bool`
+    dont_warn_reclassify : :obj:`bool`
         By default, if this function changes a component classification from accepted or
         rejected to something else, it gives a warning, since those should be terminal
         classifications. If this is True, that warning is suppressed.
@@ -114,23 +111,22 @@ def manual_classify(
     {custom_node_label}
     {only_used_metrics}
 
-
     Returns
     -------
     {basicreturns}
 
     Note
     ----
-    This was designed with three use
-    cases in mind: (1) Set the classifications of all components to unclassified
+    This was designed with three use cases in mind:
+    (1) Set the classifications of all components to unclassified
     for the first node of a decision tree. clear_classification_tags=True is
-    recommended for this use case. (2) Shift all components between classifications,
-    such as provisionalaccept to accepted for the penultimate node in the decision tree.
+    recommended for this use case.
+    (2) Shift all components between classifications, such as provisionalaccept to accepted for the
+    penultimate node in the decision tree.
     (3) Manually re-classify components by number based on user observations.
 
-    Unlike other decision node functions, ifTrue and ifFalse are not inputs
-    since the same classification is assigned to all components listed in
-    decide_comps
+    Unlike other decision node functions, ``ifTrue`` and ``ifFalse`` are not inputs
+    since the same classification is assigned to all components listed in ``decide_comps``.
     """
 
     # predefine all outputs that should be logged
@@ -176,8 +172,6 @@ def manual_classify(
             tag_ifTrue=tag,
             dont_warn_reclassify=dont_warn_reclassify,
         )
-        # outputs["numTrue"] = decision_boolean.sum()
-        # outputs["numFalse"] = np.logical_not(decision_boolean).sum()
 
         log_decision_tree_step(
             function_name_idx,
@@ -197,7 +191,7 @@ def manual_classify(
     return selector
 
 
-manual_classify.__doc__ = manual_classify.__doc__.format(**decision_docs)
+manual_classify.__doc__ = manual_classify.__doc__.format(**DECISION_DOCS)
 
 
 def dec_left_op_right(
@@ -227,8 +221,7 @@ def dec_left_op_right(
     tag_ifTrue=None,
     tag_ifFalse=None,
 ):
-    """
-    Performs a relational comparison.
+    """Perform a relational comparison.
 
     Parameters
     ----------
@@ -517,7 +510,7 @@ def dec_left_op_right(
     return selector
 
 
-dec_left_op_right.__doc__ = dec_left_op_right.__doc__.format(**decision_docs)
+dec_left_op_right.__doc__ = dec_left_op_right.__doc__.format(**DECISION_DOCS)
 
 
 def dec_variance_lessthan_thresholds(
@@ -642,7 +635,7 @@ def dec_variance_lessthan_thresholds(
 
 
 dec_variance_lessthan_thresholds.__doc__ = dec_variance_lessthan_thresholds.__doc__.format(
-    **decision_docs
+    **DECISION_DOCS
 )
 
 
@@ -743,7 +736,7 @@ def calc_median(
     return selector
 
 
-calc_median.__doc__ = calc_median.__doc__.format(**decision_docs)
+calc_median.__doc__ = calc_median.__doc__.format(**DECISION_DOCS)
 
 
 def calc_kappa_elbow(
@@ -846,7 +839,7 @@ def calc_kappa_elbow(
     return selector
 
 
-calc_kappa_elbow.__doc__ = calc_kappa_elbow.__doc__.format(**decision_docs)
+calc_kappa_elbow.__doc__ = calc_kappa_elbow.__doc__.format(**DECISION_DOCS)
 
 
 def calc_rho_elbow(
@@ -994,7 +987,7 @@ def calc_rho_elbow(
     return selector
 
 
-calc_rho_elbow.__doc__ = calc_rho_elbow.__doc__.format(**decision_docs)
+calc_rho_elbow.__doc__ = calc_rho_elbow.__doc__.format(**DECISION_DOCS)
 
 
 def dec_classification_doesnt_exist(
@@ -1129,7 +1122,7 @@ def dec_classification_doesnt_exist(
 
 
 dec_classification_doesnt_exist.__doc__ = dec_classification_doesnt_exist.__doc__.format(
-    **decision_docs
+    **DECISION_DOCS
 )
 
 
@@ -1295,7 +1288,7 @@ def calc_varex_thresh(
     return selector
 
 
-calc_varex_thresh.__doc__ = calc_varex_thresh.__doc__.format(**decision_docs)
+calc_varex_thresh.__doc__ = calc_varex_thresh.__doc__.format(**DECISION_DOCS)
 
 
 def calc_extend_factor(
@@ -1370,7 +1363,7 @@ def calc_extend_factor(
     return selector
 
 
-calc_extend_factor.__doc__ = calc_extend_factor.__doc__.format(**decision_docs)
+calc_extend_factor.__doc__ = calc_extend_factor.__doc__.format(**DECISION_DOCS)
 
 
 def calc_max_good_meanmetricrank(
@@ -1479,7 +1472,7 @@ def calc_max_good_meanmetricrank(
     return selector
 
 
-calc_max_good_meanmetricrank.__doc__ = calc_max_good_meanmetricrank.__doc__.format(**decision_docs)
+calc_max_good_meanmetricrank.__doc__ = calc_max_good_meanmetricrank.__doc__.format(**DECISION_DOCS)
 
 
 def calc_varex_kappa_ratio(
@@ -1600,7 +1593,7 @@ def calc_varex_kappa_ratio(
     return selector
 
 
-calc_varex_kappa_ratio.__doc__ = calc_varex_kappa_ratio.__doc__.format(**decision_docs)
+calc_varex_kappa_ratio.__doc__ = calc_varex_kappa_ratio.__doc__.format(**DECISION_DOCS)
 
 
 def calc_revised_meanmetricrank_guesses(
@@ -1798,7 +1791,7 @@ def calc_revised_meanmetricrank_guesses(
 
 
 calc_revised_meanmetricrank_guesses.__doc__ = calc_revised_meanmetricrank_guesses.__doc__.format(
-    **decision_docs
+    **DECISION_DOCS
 )
 
 # NOTE: to debug any documentation rendering, I recommend the following hack:

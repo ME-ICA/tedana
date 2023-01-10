@@ -15,19 +15,18 @@ def automatic_selection(component_table, n_echos, n_vols, tree="kundu", verbose=
 
     Parameters
     ----------
-    component_table: :obj:`pd.DataFrame`
+    component_table : :obj:`pd.DataFrame`
         The component table to classify
-    n_echos: :obj:`int`
+    n_echos : :obj:`int`
         The number of echoes in this dataset
-    tree: :obj:`str`
+    tree : :obj:`str`
         The type of tree to use for the ComponentSelector object. Default="kundu"
-    verbose: :obj:`bool`
+    verbose : :obj:`bool`
         More verbose logging output if True. Default=False
 
     Returns
     -------
-
-    selector: :obj:`tedana.selection.component_selector.ComponentSelector`
+    selector : :obj:`tedana.selection.component_selector.ComponentSelector`
         Contains component classifications in a component_table and provenance
         and metadata from the component selection process
 
@@ -35,7 +34,8 @@ def automatic_selection(component_table, n_echos, n_vols, tree="kundu", verbose=
     -----
     If tree=kundu, the selection algorithm used in this function was originated in ME-ICA
     by Prantik Kundu, and his original implementation is available at:
-    https://github.com/ME-ICA/me-ica/blob/b2781dd087ab9de99a2ec3925f04f02ce84f0adc/meica.libs/select_model.py
+    https://github.com/ME-ICA/me-ica/blob/\
+    b2781dd087ab9de99a2ec3925f04f02ce84f0adc/meica.libs/select_model.py
 
     The appropriate citation is :footcite:t:`kundu2013integrated`.
 
@@ -47,8 +47,8 @@ def automatic_selection(component_table, n_echos, n_vols, tree="kundu", verbose=
     components, a hypercommented version of this attempt is available at:
     https://gist.github.com/emdupre/ca92d52d345d08ee85e104093b81482e
 
-    If tree==minimal, the selection algorithm based on the kundu tree with differences
-    described in the `FAQ`_
+    If tree=="minimal", a selection algorithm based on the "kundu" tree will be used.
+    The differences between the "minimal" and "kundu" trees are described in the `FAQ`_.
 
     References
     ----------

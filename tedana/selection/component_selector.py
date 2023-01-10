@@ -38,9 +38,7 @@ class TreeError(Exception):
 
 
 def load_config(tree):
-    """
-    Loads the json file with the decision tree and validates that the
-    fields in the decision tree are appropriate.
+    """Load the json file with the decision tree and validate the fields in the decision tree.
 
     Parameters
     ----------
@@ -75,8 +73,7 @@ def load_config(tree):
 
 
 def validate_tree(tree):
-    """
-    Confirms that provided `tree` is a valid decision tree
+    """Confirm that provided `tree` is a valid decision tree.
 
     Parameters
     ----------
@@ -228,44 +225,39 @@ def validate_tree(tree):
 
 
 class ComponentSelector:
-    """
-    Contains information and methods to load and classify components based on
-    a specified `tree`
-    """
+    """Load and classify components based on a specified ``tree``."""
 
     def __init__(self, tree, component_table, cross_component_metrics={}, status_table=None):
-        """
-        Initialize the class using the info specified in the json file `tree`
+        """Initialize the class using the info specified in the json file ``tree``.
 
         Parameters
         ----------
         tree : :obj:`str`
-            The named tree or path to a JSON file that defines one
+            The named tree or path to a JSON file that defines one.
         component_table : (C x M) :obj:`pandas.DataFrame`
             Component metric table. One row for each component, with a column for
-            each metric; the index should be the component number
+            each metric; the index should be the component number.
         cross_component_metrics : :obj:`dict`
             Metrics that are each a single value calculated across components.
-            Default is empty
+            Default is empty dictionary.
         status_table : :obj:`pandas.DataFrame`
             A table tracking the status of each component at each step.
             Pass a status table if running additional steps on a decision
             tree that was already executed. Default=None.
 
-
         Notes
         -----
-        Initializing the  `ComponentSelector` confirms tree is valid and
-        loads all information in the tree json file into `ComponentSelector`
+        Initializing the  ``ComponentSelector`` confirms tree is valid and
+        loads all information in the tree json file into ``ComponentSelector``.
 
-        Adds to the `ComponentSelector`:
+        Adds to the ``ComponentSelector``:
 
         - component_status_table: empty dataframe or contents of inputted status_table
         - cross_component_metrics: empty dict or contents of inputed values
         - used_metrics: empty set
 
         Any parameter that is used by a decision tree node function can be passed
-        as a parameter in the `ComponentSelector` initialization or can be
+        as a parameter in the ``ComponentSelector`` initialization or can be
         included in the json file that defines the decision tree. If a parameter
         is set in the json file, that will take precedence. As a style rule, a
         parameter that is the same regardless of the inputted data should be
@@ -281,7 +273,7 @@ class ComponentSelector:
             Required for kundu tree
 
         An example initialization with these options would look like
-        `selector = ComponentSelector(tree, comptable, n_echos=n_echos, n_vols=n_vols)`
+        ``selector = ComponentSelector(tree, comptable, n_echos=n_echos, n_vols=n_vols)``
         """
 
         self.tree_name = tree
@@ -331,8 +323,9 @@ class ComponentSelector:
             self.component_status_table = status_table
 
     def select(self):
-        """
-        Using the validated tree in `ComponentSelector` to run the decision
+        """Apply the decision tree to data.
+
+        Using the validated tree in ``ComponentSelector`` to run the decision
         tree functions to calculate cross_component metrics and classify
         each component as accepted or rejected.
 
@@ -410,6 +403,7 @@ class ComponentSelector:
                 f"Step {self.current_node_idx} Full outputs: "
                 f"{self.tree['nodes'][self.current_node_idx]['outputs']}"
             )
+
         # move decision columns to end
         self.component_table = clean_dataframe(self.component_table)
         # warning anything called a necessary metric wasn't used and if
@@ -419,14 +413,13 @@ class ComponentSelector:
         self.are_all_components_accepted_or_rejected()
 
     def add_manual(self, indices, classification):
-        """
-        Add nodes that will manually classify components
+        """Add nodes that will manually classify components.
 
         Parameters
         ----------
-        indices: :obj:`list[int]`
+        indices : :obj:`list[int]`
             The indices to manually classify
-        classification: :obj:`str`
+        classification : :obj:`str`
             The classification to set the nodes to (i.e. accepted or rejected)
         """
         self.tree["nodes"].append(
@@ -487,7 +480,7 @@ class ComponentSelector:
         if len(not_used) > 0:
             LGR.warning(
                 f"Decision tree {self.tree_name} did not use the following metrics "
-                "that were declared as necessary: {not_used}"
+                f"that were declared as necessary: {not_used}"
             )
 
     def are_all_components_accepted_or_rejected(self):
@@ -513,24 +506,24 @@ class ComponentSelector:
         return len(self.component_table)
 
     @property
-    def LikelyBOLD_comps(self):
-        """A boolean pd.DataSeries of components that are tagged "Likely BOLD"."""
-        LikelyBOLD_comps = self.component_table["classification_tags"].copy()
-        for idx in range(len(LikelyBOLD_comps)):
-            if "Likely BOLD" in LikelyBOLD_comps.loc[idx]:
-                LikelyBOLD_comps.loc[idx] = True
+    def likely_bold_comps(self):
+        """A boolean :obj:`pandas.Series` of components that are tagged "Likely BOLD"."""
+        likely_bold_comps = self.component_table["classification_tags"].copy()
+        for idx in range(len(likely_bold_comps)):
+            if "Likely BOLD" in likely_bold_comps.loc[idx]:
+                likely_bold_comps.loc[idx] = True
             else:
-                LikelyBOLD_comps.loc[idx] = False
-        return LikelyBOLD_comps
+                likely_bold_comps.loc[idx] = False
+        return likely_bold_comps
 
     @property
-    def n_LikelyBOLD_comps(self):
+    def n_likely_bold_comps(self):
         """The number of components that are tagged "Likely BOLD"."""
-        return self.LikelyBOLD_comps.sum()
+        return self.likely_bold_comps.sum()
 
     @property
     def accepted_comps(self):
-        """A boolean pd.DataSeries of components that are accepted."""
+        """A boolean :obj:`pandas.Series` of components that are accepted."""
         return self.component_table["classification"] == "accepted"
 
     @property
@@ -540,15 +533,15 @@ class ComponentSelector:
 
     @property
     def rejected_comps(self):
-        """A boolean pd.DataSeries of components that are rejected."""
+        """A boolean :obj:`pandas.Series` of components that are rejected."""
         return self.component_table["classification"] == "rejected"
 
     def to_files(self, io_generator):
-        """Convert this selector into component files
+        """Convert this selector into component files.
 
         Parameters
         ----------
-        io_generator: :obj:`tedana.io.OutputGenerator`
+        io_generator : :obj:`tedana.io.OutputGenerator`
             The output generator to use for filename generation and saving.
         """
         io_generator.save_file(self.component_table, "ICA metrics tsv")
