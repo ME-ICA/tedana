@@ -267,7 +267,7 @@ class OutputGenerator:
         if not isinstance(data, pd.DataFrame):
             raise TypeError(f"data must be pd.Data, not type {data_type}.")
         if "rationale" in data.columns and "classification" in data.columns:
-            data.loc[data['classification'] == 'accepted', 'rationale'] = 'n/a'
+            data.loc[data["classification"] == "accepted", "rationale"] = "n/a"
         data.to_csv(path_or_buf=name, sep="\t", line_terminator="\n", na_rep="n/a", index=False)
 
 
