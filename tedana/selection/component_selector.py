@@ -258,17 +258,17 @@ class ComponentSelector:
 
         Any parameter that is used by a decision tree node function can be passed
         as a parameter in the ``ComponentSelector`` initialization or can be
-        included in the json file that defines the decision tree. If a parameter
-        is set in the json file, that will take precedence. As a style rule, a
-        parameter that is the same regardless of the inputted data should be
-        defined in the decision tree json file. A parameter that is dataset specific
-        should be passed through the initialization function. Dataset specific
-        parameters that may need to be passed during initialization include:
+        included in the json file that defines the decision tree.
+        If a parameter is set in the json file, that will take precedence.
+        As a style rule, a parameter that is the same regardless of the inputted data should be
+        defined in the decision tree json file.
+        A parameter that is dataset-specific should be passed through the initialization function.
+        Dataset-specific parameters that may need to be passed during initialization include:
 
         n_echos : :obj:`int`
             Number of echos in multi-echo fMRI data.
             Required for kundu and minimal trees
-        n_vols: :obj:`int`
+        n_vols : :obj:`int`
             Number of volumes (time points) in the fMRI data
             Required for kundu tree
 
@@ -343,17 +343,17 @@ class ComponentSelector:
 
         When this is run, multiple elements in `ComponentSelector` will change including:
 
-        - component_table: `classification` column with `accepted` or `rejected labels`
-          and `classification_tags` column with can hold multiple comma-separated labels
+        - component_table: ``classification`` column with ``accepted`` or ``rejected`` labels
+          and ``classification_tags`` column with can hold multiple comma-separated labels
           explaining why a classification happened
         - cross_component_metrics: Any values that were calculated based on the metric
           values across components or by direct user input
         - component_status_table: Contains the classification statuses at each node in
           the decision tree
         - used_metrics: A list of metrics used in the selection process
-        - nodes: The original tree definition with an added `outputs` key listing
+        - nodes: The original tree definition with an added ``outputs`` key listing
           everything that changed in each node
-        - current_node_idx: The total number of nodes run in `ComponentSelector`
+        - current_node_idx: The total number of nodes run in ``ComponentSelector``
         """
 
         if "classification_tags" not in self.component_table.columns:
@@ -393,6 +393,7 @@ class ComponentSelector:
                 self = fcn(self, **params, **kwargs)
             else:
                 self = fcn(self, **params)
+
             self.tree["used_metrics"].update(
                 self.tree["nodes"][self.current_node_idx]["outputs"]["used_metrics"]
             )

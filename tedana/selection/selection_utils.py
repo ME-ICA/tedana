@@ -205,6 +205,7 @@ def comptable_classification_changer(
         If this function changes a component classification from accepted or
         rejected to something else, it gives a warning. If this is True, that
         warning is suppressed. default=False
+
     Returns
     -------
     selector : :obj:`tedana.selection.component_selector.ComponentSelector`
@@ -230,7 +231,6 @@ def comptable_classification_changer(
     :func:`~tedana.selection.selection_utils.change_comptable_classifications`.
     This function is run twice, ones for changes to make of a component is
     True and again for components that are False.
-
     """
     if classify_if != "nochange":
         changeidx = decision_boolean.index[np.asarray(decision_boolean) == boolstate]
@@ -337,9 +337,12 @@ def confirm_metrics_exist(component_table, necessary_metrics, function_name=None
     Returns
     -------
     metrics_exist : :obj:`bool`
-            True if all metrics in necessary_metrics are in component_table
+        True if all metrics in necessary_metrics are in component_table
 
-    If metrics_exist is False then raise an error and end the program
+    Raises
+    ------
+    ValueError
+        If metrics_exist is False then raise an error and end the program
 
     Note
     -----
@@ -347,7 +350,6 @@ def confirm_metrics_exist(component_table, necessary_metrics, function_name=None
     the columns exist. Also, the string in `necessary_metrics` and the
     column labels in component_table will only be matched if they're identical.
     """
-
     missing_metrics = necessary_metrics - set(component_table.columns)
     metrics_exist = len(missing_metrics) > 0
     if metrics_exist is True:
@@ -375,8 +377,7 @@ def log_decision_tree_step(
     ifFalse=None,
     calc_outputs=None,
 ):
-    """
-    Logging text to add after every decision tree calculation
+    """Logging text to add after every decision tree calculation
 
     Parameters
     ----------
@@ -401,7 +402,6 @@ def log_decision_tree_step(
     ifTrue, ifFalse : :obj:`str`
         If a component is true or false, the classification to assign that
         component
-
     calc_outputs : :obj:`dict`
         A dictionary with output information from the function. If it contains a key
         "calc_cross_comp_metrics" then the value for that key is a list of
@@ -411,23 +411,24 @@ def log_decision_tree_step(
 
     Returns
     -------
-    Information is added to the LGR.info logger. This either logs that \
-    nothing was changed, the number of components classified as true or \
-    false and what they changed to, or the cross component metrics that were \
+    Information is added to the LGR.info logger. This either logs that
+    nothing was changed, the number of components classified as true or
+    false and what they changed to, or the cross component metrics that were
     calculated
     """
-
     if not (comps2use == -1) and not comps2use:
         LGR.info(
             f"{function_name_idx} not applied because no remaining components were "
             f"classified as {decide_comps}"
         )
+
     if ifTrue or ifFalse:
         LGR.info(
             f"{function_name_idx} applied to {len(comps2use)} components. "
             f"{numTrue} True -> {ifTrue}. "
             f"{numFalse} False -> {ifFalse}."
         )
+
     if calc_outputs:
         if "calc_cross_comp_metrics" in calc_outputs:
             calc_summaries = [
@@ -459,8 +460,7 @@ def log_classification_counts(decision_node_idx, component_table):
     The LGR.info logger will add a line like: \
     'Step 4: Total component classifications: 10 accepted, 5 provisionalreject, 8 rejected'
     """
-
-    (classification_labels, label_counts) = np.unique(
+    classification_labels, label_counts = np.unique(
         component_table["classification"].values, return_counts=True
     )
     label_summaries = [
@@ -515,6 +515,7 @@ def getelbow_cons(arr, return_val=False):
     for d_ in ds:
         c_ = (c_ + d_) * d_
         dsum.append(c_)
+
     e2 = np.argmax(np.array(dsum))
     elind = np.max([getelbow(arr), e2])
 
@@ -525,8 +526,7 @@ def getelbow_cons(arr, return_val=False):
 
 
 def getelbow(arr, return_val=False):
-    """
-    Elbow using linear projection method - moderate
+    """Get elbow using linear projection method - moderate.
 
     Parameters
     ----------
@@ -702,7 +702,6 @@ def rho_elbow_kundu_liberal(
     rho elbows are now logged so that it will be possible to confirm this with
     data & make additional adjustments to this threshold
     """
-
     if rho_elbow_type not in ["kundu", "liberal"]:
         raise ValueError(
             f"rho_elbow_kundu_liberal: rho_elbow_type must be 'kundu' or 'liberal'"
@@ -784,6 +783,7 @@ def get_extend_factor(n_vols=None, extend_factor=None):
     """
     extend_factor is a scaler used to set a threshold for the d_table_score in
     the kundu decision tree.
+
     It is either defined by the number of volumes in the time series or directly
     defined by the user. If it is defined by the user, that takes precedence over
     using the number of volumes in a calculation
@@ -806,7 +806,6 @@ def get_extend_factor(n_vols=None, extend_factor=None):
     ----
     Either n_vols OR extend_factor is a required input
     """
-
     if extend_factor:
         if isinstance(extend_factor, int):
             extend_factor = float(extend_factor)
@@ -823,4 +822,5 @@ def get_extend_factor(n_vols=None, extend_factor=None):
         error_msg = "get_extend_factor need n_vols or extend_factor as an input"
         LGR.error(error_msg)
         raise ValueError(error_msg)
+
     return extend_factor
