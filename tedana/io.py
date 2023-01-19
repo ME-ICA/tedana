@@ -519,9 +519,8 @@ def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
     varexpl : :obj:`float`
         Percent variance of data explained by extracted + retained components
 
-    Notes
-    -----
-    This function writes out several files:
+    Generated Files
+    ---------------
 
     ============================    ============================================
     Filename                        Content
@@ -580,9 +579,8 @@ def writeresults(ts, mask, comptable, mmix, n_vols, io_generator):
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
 
-    Notes
-    -----
-    This function writes out several files:
+    Generated Files
+    ---------------
 
     =========================================    =====================================
     Filename                                     Content
@@ -639,9 +637,8 @@ def writeresults_echoes(catd, mmix, mask, comptable, io_generator):
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
 
-    Notes
-    -----
-    This function writes out several files:
+    Generated Files
+    ---------------
 
     =====================================    ===================================
     Filename                                 Content

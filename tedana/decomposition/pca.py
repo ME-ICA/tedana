@@ -159,9 +159,8 @@ def tedpca(
             - Nonsignificant :math:`{\\kappa}` and :math:`{\\rho}`.
             - Nonsignificant variance explained.
 
-    Outputs:
-
-    This function writes out several files:
+    Generated Files
+    ---------------
 
     ===========================    =============================================
     Default Filename               Content

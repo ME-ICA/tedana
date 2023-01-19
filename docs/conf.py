@@ -124,6 +124,7 @@ napoleon_use_ivar = True
 napoleon_use_param = False
 napoleon_use_keyword = True
 napoleon_use_rtype = False
+napoleon_custom_sections = ["Generated Files"]
 
 # -- Options for HTML output ----------------------------------------------
 
