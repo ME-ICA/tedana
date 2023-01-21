@@ -68,7 +68,7 @@ def dicts_to_test(treechoice):
                 },
                 "kwargs": {
                     "log_extra_info": "random1 if Kappa<Rho",
-                    "tag_ifTrue": "random1",
+                    "tag_if_true": "random1",
                 },
             },
             {
@@ -85,7 +85,7 @@ def dicts_to_test(treechoice):
                     "log_extra_info": "random2 if Kappa>Rho",
                     "log_extra_report": "",
                     # Warning for an non-predefined classification assigned to a component
-                    "tag_ifTrue": "random2notpredefined",
+                    "tag_if_true": "random2notpredefined",
                 },
             },
             {
@@ -215,8 +215,8 @@ def test_validate_tree_succeeds():
         if "/minimal.json" in tree_name:
             # Should remove/ignore the "reconstruct_from" key during validation
             tree["reconstruct_from"] = "testinput"
-            # Need to test handling of the tag_ifFalse kwarg somewhere
-            tree["nodes"][1]["kwargs"]["tag_ifFalse"] = "testing tag"
+            # Need to test handling of the tag_if_false kwarg somewhere
+            tree["nodes"][1]["kwargs"]["tag_if_false"] = "testing tag"
             assert component_selector.validate_tree(tree)
 
 

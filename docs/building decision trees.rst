@@ -257,7 +257,7 @@ Most decision functions also include "if_true" and "if_false" which specify how 
 the classification of each component based on whether a the decision criterion is true
 or false. In addition to the default and intermediate classification options, this can
 also be "nochange" (i.e. For components where a>b is true, "reject". For components
-where a>b is false, "nochange"). The optional parameters "tag_ifTrue" and "tag_ifFalse"
+where a>b is false, "nochange"). The optional parameters "tag_if_true" and "tag_if_false"
 define the classification tags to be assigned to components. Currently, the only
 exceptions are "manual_classify" and "dec_classification_doesnt_exist" which use
 "new_classification" to designate the new component classification and "tag" (optional)

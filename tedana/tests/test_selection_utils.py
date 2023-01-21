@@ -198,8 +198,8 @@ def test_change_comptable_classifications_succeeds():
         "accepted",
         "nochange",
         decision_boolean,
-        tag_ifTrue="testing_tag1",
-        tag_ifFalse="testing_tag2",
+        tag_if_true="testing_tag1",
+        tag_if_false="testing_tag2",
     )
 
     assert n_true == 2

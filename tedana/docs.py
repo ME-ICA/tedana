@@ -51,13 +51,13 @@ custom_node_label : :obj:`str`
     automatically generated. Default="".
 """
 
-docdict["tag_ifTrue"] = """
-tag_ifTrue : :obj:`str`
+docdict["tag_if_true"] = """
+tag_if_true : :obj:`str`
     The classification tag to apply if a component is classified True. Default="".
 """
 
-docdict["tag_ifFalse"] = """
-tag_ifFalse : :obj:`str`
+docdict["tag_if_false"] = """
+tag_if_false : :obj:`str`
     The classification tag to apply if a component is classified False. Default="".
 """
 

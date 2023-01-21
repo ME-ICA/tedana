@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import scoreatpercentile
 
+from tedana.docs import fill_doc
 from tedana.metrics.dependence import generate_decision_table_score
 from tedana.selection.selection_utils import (
     change_comptable_classifications,
@@ -15,8 +16,6 @@ from tedana.selection.selection_utils import (
     rho_elbow_kundu_liberal,
     selectcomps2use,
 )
-from tedana.docs import fill_doc
-
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -84,7 +83,6 @@ def manual_classify(
     Unlike other decision node functions, ``if_true`` and ``if_false`` are not inputs
     since the same classification is assigned to all components listed in ``decide_comps``.
     """
-
     # predefine all outputs that should be logged
     outputs = {
         "decision_node_idx": selector.current_node_idx,
@@ -100,7 +98,7 @@ def manual_classify(
     if_true = new_classification
     if_false = "nochange"
 
-    function_name_idx = "Step {}: manual_classify".format((selector.current_node_idx))
+    function_name_idx = f"Step {selector.current_node_idx}: manual_classify"
     if custom_node_label:
         outputs["node_label"] = custom_node_label
     else:
@@ -125,7 +123,7 @@ def manual_classify(
             if_true,
             if_false,
             decision_boolean,
-            tag_ifTrue=tag,
+            tag_if_true=tag,
             dont_warn_reclassify=dont_warn_reclassify,
         )
 
@@ -172,21 +170,20 @@ def dec_left_op_right(
     log_extra_info="",
     custom_node_label="",
     only_used_metrics=False,
-    tag_ifTrue=None,
-    tag_ifFalse=None,
+    tag_if_true=None,
+    tag_if_false=None,
 ):
     """Perform a relational comparison.
 
     Parameters
     ----------
     %(selector)s
-    %(tag_ifTrue)s
-    %(tag_ifFalse)s
+    %(tag_if_true)s
+    %(tag_if_false)s
     %(decide_comps)s
     op: :obj:`str`
         Must be one of: ">", ">=", "==", "<=", "<"
         Applied the user defined operator to left op right
-
     left, right: :obj:`str` or :obj:`float`
         The labels for the two metrics to be used for comparision.
         For example: left='kappa', right='rho' and op='>' means this
@@ -209,13 +206,12 @@ def dec_left_op_right(
         this function returns
         (left_scale*)left op (right_scale*right) AND (left2_scale*)left2 op2 (right2_scale*right2)
         if the "3" parameters are also defined then it's the intersection of all 3 statements
-
     %(log_extra_info)s
     %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
-    %(tag_ifTrue)s
-    %(tag_ifFalse)s
+    %(tag_if_true)s
+    %(tag_if_false)s
 
     Returns
     -------
@@ -235,7 +231,6 @@ def dec_left_op_right(
     an intentional decision because, if a classification changes if A>B or C>D are true
     then A>B and C>D should be logged separately
     """
-
     # predefine all outputs that should be logged
     outputs = {
         "decision_node_idx": selector.current_node_idx,
@@ -447,8 +442,8 @@ def dec_left_op_right(
             if_true,
             if_false,
             decision_boolean,
-            tag_ifTrue=tag_ifTrue,
-            tag_ifFalse=tag_ifFalse,
+            tag_if_true=tag_if_true,
+            tag_if_false=tag_if_false,
         )
         # outputs["n_true"] = np.asarray(decision_boolean).sum()
         # outputs["n_false"] = np.logical_not(decision_boolean).sum()
@@ -480,8 +475,8 @@ def dec_variance_lessthan_thresholds(
     log_extra_info="",
     custom_node_label="",
     only_used_metrics=False,
-    tag_ifTrue=None,
-    tag_ifFalse=None,
+    tag_if_true=None,
+    tag_if_false=None,
 ):
     """Change classifications for components with variance<single_comp_threshold.
 
@@ -493,8 +488,8 @@ def dec_variance_lessthan_thresholds(
     Parameters
     ----------
     %(selector)s
-    %(tag_ifTrue)s
-    %(tag_ifFalse)s
+    %(tag_if_true)s
+    %(tag_if_false)s
     %(decide_comps)s
     var_metric: :obj:`str`
         The name of the metric in component_table for variance. Default="variance explained"
@@ -510,15 +505,14 @@ def dec_variance_lessthan_thresholds(
     %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
-    %(tag_ifTrue)s
-    %(tag_ifFalse)s
+    %(tag_if_true)s
+    %(tag_if_false)s
 
     Returns
     -------
     %(selector)s
     %(used_metrics)s
     """
-
     outputs = {
         "decision_node_idx": selector.current_node_idx,
         "used_metrics": set([var_metric]),
@@ -530,7 +524,7 @@ def dec_variance_lessthan_thresholds(
     if only_used_metrics:
         return outputs["used_metrics"]
 
-    function_name_idx = "Step {}: variance_lt_thresholds".format(selector.current_node_idx)
+    function_name_idx = f"Step {selector.current_node_idx}: variance_lt_thresholds"
     if custom_node_label:
         outputs["node_label"] = custom_node_label
     else:
@@ -575,8 +569,8 @@ def dec_variance_lessthan_thresholds(
             if_true,
             if_false,
             decision_boolean,
-            tag_ifTrue=tag_ifTrue,
-            tag_ifFalse=tag_ifFalse,
+            tag_if_true=tag_if_true,
+            tag_if_false=tag_if_false,
         )
 
         log_decision_tree_step(
@@ -623,9 +617,7 @@ def calc_median(
     -------
     %(selector)s
     %(used_metrics)s
-
     """
-
     function_name_idx = f"Step {selector.current_node_idx}: calc_median"
     if not isinstance(median_label, str):
         raise ValueError(
@@ -723,7 +715,6 @@ def calc_kappa_elbow(
     a significance threshold. To get the same functionality as in MEICA v2.5,
     decide_comps must be 'all'.
     """
-
     outputs = {
         "decision_node_idx": selector.current_node_idx,
         "node_label": None,
@@ -834,9 +825,7 @@ def calc_rho_elbow(
     'unclassified' See :obj:`tedana.selection.selection_utils.rho_elbow_kundu_liberal`
     for a more detailed explanation of the difference between the kundu and liberal
     options.
-
     """
-
     function_name_idx = f"Step {selector.current_node_idx}: calc_rho_elbow"
 
     if rho_elbow_type == "kundu".lower():
@@ -994,7 +983,6 @@ def dec_classification_doesnt_exist(
     remaining components are "provisionalreject" then it skips those
     steps and accepts everything left.
     """
-
     # predefine all outputs that should be logged
     outputs = {
         "decision_node_idx": selector.current_node_idx,
@@ -1008,7 +996,7 @@ def dec_classification_doesnt_exist(
     if only_used_metrics:
         return outputs["used_metrics"]
 
-    function_name_idx = "Step {}: classification_doesnt_exist".format((selector.current_node_idx))
+    function_name_idx = f"Step {selector.current_node_idx}: classification_doesnt_exist"
     if custom_node_label:
         outputs["node_label"] = custom_node_label
     elif at_least_num_exist == 1:
@@ -1053,7 +1041,7 @@ def dec_classification_doesnt_exist(
             if_true,
             if_false,
             decision_boolean,
-            tag_ifTrue=tag,
+            tag_if_true=tag,
         )
 
         log_decision_tree_step(
@@ -1112,9 +1100,7 @@ def calc_varex_thresh(
     -------
     %(selector)s
     %(used_metrics)s
-
     """
-
     function_name_idx = f"Step {selector.current_node_idx}: calc_varex_thresh"
     thresh_label = thresh_label.lower()
     if thresh_label is None or thresh_label == "":
@@ -1266,7 +1252,6 @@ def calc_extend_factor(
     %(selector)s
     %(used_metrics)s
     """
-
     outputs = {
         "used_metrics": set(),
         "decision_node_idx": selector.current_node_idx,
@@ -1351,7 +1336,6 @@ def calc_max_good_meanmetricrank(
     earlier versions of this code. It might be worth consistently using the same term,
     but this note will hopefully suffice for now.
     """
-
     function_name_idx = f"Step {selector.current_node_idx}: calc_max_good_meanmetricrank"
 
     if (metric_suffix is not None) and (metric_suffix != "") and isinstance(metric_suffix, str):
@@ -1456,7 +1440,6 @@ def calc_varex_kappa_ratio(
     This metric sometimes causes issues with high magnitude BOLD responses
     such as the V1 response to a block-design flashing checkerboard
     """
-
     function_name_idx = f"Step {selector.current_node_idx}: calc_varex_kappa_ratio"
 
     outputs = {
@@ -1589,7 +1572,6 @@ def calc_revised_meanmetricrank_guesses(
         accepted components calculated as the ratio of ``num_acc_guess`` to
         ``restrict_factor``.
     """
-
     function_name_idx = f"Step {selector.current_node_idx}: calc_revised_meanmetricrank_guesses"
 
     outputs = {

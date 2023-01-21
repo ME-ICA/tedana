@@ -92,8 +92,8 @@ def change_comptable_classifications(
     if_true,
     if_false,
     decision_boolean,
-    tag_ifTrue=None,
-    tag_ifFalse=None,
+    tag_if_true=None,
+    tag_if_false=None,
     dont_warn_reclassify=False,
 ):
     """
@@ -114,7 +114,7 @@ def change_comptable_classifications(
     decision_boolean : :obj:`pd.Series(bool)`
         A dataframe column of equal length to component_table where each value
         is True or False.
-    tag_ifTrue, tag_ifFalse : :obj:`str`
+    tag_if_true, tag_if_false : :obj:`str`
         A string containing a label in classification_tags that will be added to
         the classification_tags column in component_table if a component is
         classified as true or false. default=None
@@ -147,7 +147,7 @@ def change_comptable_classifications(
         True,
         if_true,
         decision_boolean,
-        tag_if=tag_ifTrue,
+        tag_if=tag_if_true,
         dont_warn_reclassify=dont_warn_reclassify,
     )
     selector = comptable_classification_changer(
@@ -155,7 +155,7 @@ def change_comptable_classifications(
         False,
         if_false,
         decision_boolean,
-        tag_if=tag_ifFalse,
+        tag_if=tag_if_false,
         dont_warn_reclassify=dont_warn_reclassify,
     )
 
@@ -197,7 +197,7 @@ def comptable_classification_changer(
         A dataframe column of equal length to component_table where each value
         is True or False.
     tag_if : :obj:`str`
-        This should be tag_ifTrue or tag_ifFalse to match boolstate
+        This should be tag_if_true or tag_if_false to match boolstate
         A string containing a label in classification_tags that will be added to
         the classification_tags column in component_table if a component is
         classified as true or false. default=None
@@ -491,7 +491,7 @@ def getelbow_cons(arr, return_val=False):
         elbow index (if return_val is False)
     """
     if arr.ndim != 1:
-        raise ValueError("Parameter arr should be 1d, not {0}d".format(arr.ndim))
+        raise ValueError(f"Parameter arr should be 1d, not {arr.ndim}d")
 
     if not arr.size:
         raise ValueError(
@@ -542,7 +542,7 @@ def getelbow(arr, return_val=False):
         elbow index (if return_val is False)
     """
     if arr.ndim != 1:
-        raise ValueError("Parameter arr should be 1d, not {0}d".format(arr.ndim))
+        raise ValueError(f"Parameter arr should be 1d, not {arr.ndim}d")
 
     if not arr.size:
         raise ValueError(
@@ -809,7 +809,7 @@ def get_extend_factor(n_vols=None, extend_factor=None):
     if extend_factor:
         if isinstance(extend_factor, int):
             extend_factor = float(extend_factor)
-        LGR.info("extend_factor={}, as defined by user".format(extend_factor))
+        LGR.info(f"extend_factor={extend_factor}, as defined by user")
     elif n_vols:
         if n_vols < 90:
             extend_factor = 3.0
@@ -817,7 +817,7 @@ def get_extend_factor(n_vols=None, extend_factor=None):
             extend_factor = 2.0 + (n_vols - 90) / 20.0
         else:
             extend_factor = 2.0
-        LGR.info("extend_factor={}, based on number of fMRI volumes".format(extend_factor))
+        LGR.info(f"extend_factor={extend_factor}, based on number of fMRI volumes")
     else:
         error_msg = "get_extend_factor need n_vols or extend_factor as an input"
         LGR.error(error_msg)

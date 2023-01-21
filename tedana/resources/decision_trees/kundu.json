@@ -54,7 +54,7 @@
                 "right": "kappa"
             },
             "kwargs": {
-                "tag_ifTrue": "Unlikely BOLD"
+                "tag_if_true": "Unlikely BOLD"
             },
             "_comment": "Code I002 in premodularized tedana"
         },
@@ -72,7 +72,7 @@
                 "left2": "countsigFT2",
                 "op2": ">",
                 "right2": 0,
-                "tag_ifTrue": "Unlikely BOLD"
+                "tag_if_true": "Unlikely BOLD"
             },
             "_comment": "Code I003 in premodularized tedana"
         },
@@ -98,7 +98,7 @@
                 "left2": "variance explained",
                 "op2": ">",
                 "right2": "median_varex",
-                "tag_ifTrue": "Unlikely BOLD"
+                "tag_if_true": "Unlikely BOLD"
             },
             "_comment": "Code I004 in premodularized tedana"
         },
@@ -116,7 +116,7 @@
                 "left2": "variance explained",
                 "op2": ">",
                 "right2": "median_varex",
-                "tag_ifTrue": "Unlikely BOLD"
+                "tag_if_true": "Unlikely BOLD"
             },
             "_comment": "Code I005 in premodularized tedana"
         },
@@ -251,7 +251,7 @@
                 "right2": "varex_upper_thresh",
                 "right2_scale": "extend_factor",
                 "log_extra_info": "If variance and d_table_scores are high, then reject",
-                "tag_ifTrue": "Less likely BOLD"
+                "tag_if_true": "Less likely BOLD"
             },
             "_comment": "Code I007 in premodularized tedana. One of several steps that makes it more likely to reject high variance components"
         },
@@ -269,7 +269,7 @@
                 "right": "max_good_meanmetricrank"
             },
             "kwargs": {
-                "tag_ifTrue": "Low variance",
+                "tag_if_true": "Low variance",
                 "op2": "<=",
                 "left2": "variance explained",
                 "right2": "varex_lower_thresh",
@@ -322,7 +322,7 @@
                 "right": "conservative_guess"
             },
             "kwargs": {
-                "tag_ifTrue": "Less likely BOLD",
+                "tag_if_true": "Less likely BOLD",
                 "op2": ">",
                 "left2": "varex kappa ratio",
                 "right2": "extend_factor",
@@ -349,7 +349,7 @@
                 "right": "num_acc_guess"
             },
             "kwargs": {
-                "tag_ifTrue": "Less likely BOLD",
+                "tag_if_true": "Less likely BOLD",
                 "right_scale": 0.9,
                 "op2": ">",
                 "left2": "variance explained",
@@ -387,7 +387,7 @@
                 "right": "num_acc_guess"
             },
             "kwargs": {
-                "tag_ifTrue": "Accept borderline",
+                "tag_if_true": "Accept borderline",
                 "op2": ">",
                 "left2": "variance explained",
                 "right2": "varex_new_lower_thresh",
@@ -409,7 +409,7 @@
                 "right": "kappa_elbow_kundu"
             },
             "kwargs": {
-                "tag_ifTrue": "Accept borderline",
+                "tag_if_true": "Accept borderline",
                 "op2": ">",
                 "left2": "variance explained",
                 "right2": "varex_new_lower_thresh",

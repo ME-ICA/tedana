@@ -93,8 +93,8 @@ def test_dec_left_op_right_succeeds():
         log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
-        tag_ifTrue="test true tag",
-        tag_ifFalse="test false tag",
+        tag_if_true="test true tag",
+        tag_if_false="test false tag",
     )
     # scales are set to make sure 3 components are true and 1 is false using
     # the sample component table
@@ -389,8 +389,8 @@ def test_dec_variance_lessthan_thresholds_smoke():
         log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
-        tag_ifTrue="test true tag",
-        tag_ifFalse="test false tag",
+        tag_if_true="test true tag",
+        tag_if_false="test false tag",
     )
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 1
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_false"] == 3

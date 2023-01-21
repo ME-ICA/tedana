@@ -138,9 +138,7 @@ def validate_tree(tree):
             fcn = getattr(selection_nodes, node.get("functionname"))
             sig = inspect.signature(fcn)
         except (AttributeError, TypeError):
-            err_msg += "Node {} has invalid functionname parameter: {}\n".format(
-                i, node.get("functionname")
-            )
+            err_msg += f"Node {i} has invalid functionname parameter: {node.get('functionname')}\n"
             continue
 
         # Get a functions parameters and compare to parameters defined in the tree
@@ -149,12 +147,12 @@ def validate_tree(tree):
 
         missing_pos = pos - set(node.get("parameters").keys()) - defaults
         if len(missing_pos) > 0:
-            err_msg += "Node {} is missing required parameter(s): {}\n".format(i, missing_pos)
+            err_msg += f"Node {i} is missing required parameter(s): {missing_pos}\n"
 
         invalid_params = set(node.get("parameters").keys()) - pos
         if len(invalid_params) > 0:
-            err_msg += "Node {} has additional, undefined required parameters: {}\n".format(
-                i, invalid_params
+            err_msg += (
+                f"Node {i} has additional, undefined required parameters: {invalid_params}\n"
             )
 
         # Only if kwargs are inputted, make sure they are all valid
@@ -162,9 +160,8 @@ def validate_tree(tree):
             invalid_kwargs = set(node.get("kwargs").keys()) - kwargs
             if len(invalid_kwargs) > 0:
                 err_msg += (
-                    "Node {} has additional, undefined optional parameters (kwargs): {}\n".format(
-                        i, invalid_kwargs
-                    )
+                    f"Node {i} has additional, undefined optional parameters (kwargs): "
+                    f"{invalid_kwargs}\n"
                 )
 
         # Gather all the classification labels used in each tree both for
@@ -205,10 +202,10 @@ def validate_tree(tree):
 
         if node.get("kwargs") is not None:
             tagset = set()
-            if "tag_ifTrue" in node.get("kwargs").keys():
-                tagset.update(set([node["kwargs"]["tag_ifTrue"]]))
-            if "tag_ifFalse" in node.get("kwargs").keys():
-                tagset.update(set([node["kwargs"]["tag_ifFalse"]]))
+            if "tag_if_true" in node.get("kwargs").keys():
+                tagset.update(set([node["kwargs"]["tag_if_true"]]))
+            if "tag_if_false" in node.get("kwargs").keys():
+                tagset.update(set([node["kwargs"]["tag_if_false"]]))
             if "tag" in node.get("kwargs").keys():
                 tagset.update(set([node["kwargs"]["tag"]]))
             undefined_classification_tags = tagset.difference(set(tree.get("classification_tags")))
@@ -454,9 +451,9 @@ class ComponentSelector:
                     params[key] = getattr(self, key)
                 except AttributeError:
                     raise ValueError(
-                        "Parameter {} is required in node {}, but not defined. ".format(key, fcn)
-                        + "If {} is dataset specific, it should be "
-                        "defined in the ".format(key) + " initialization of "
+                        f"Parameter {key} is required in node {fcn}, but not defined. "
+                        f"If {key} is dataset specific, it should be "
+                        "defined in the initialization of "
                         "ComponentSelector. If it is fixed regardless of dataset, it "
                         "should be defined in the json file that defines the "
                         "decision tree."
