@@ -134,7 +134,7 @@ def change_comptable_classifications(
         component_table["classification_tags"] will be updated to include any
         new tags. Each tag should appear only once in the string and tags will
         be separated by commas.
-    numTrue, numFalse : :obj:`int`
+    n_true, n_false : :obj:`int`
         The number of True and False components in decision_boolean
 
     Note
@@ -163,9 +163,9 @@ def change_comptable_classifications(
         f"Node {selector.current_node_idx}"
     ] = selector.component_table["classification"]
 
-    numTrue = decision_boolean.sum()
-    numFalse = np.logical_not(decision_boolean).sum()
-    return selector, numTrue, numFalse
+    n_true = decision_boolean.sum()
+    n_false = np.logical_not(decision_boolean).sum()
+    return selector, n_true, n_false
 
 
 def comptable_classification_changer(
@@ -371,8 +371,8 @@ def log_decision_tree_step(
     function_name_idx,
     comps2use,
     decide_comps=None,
-    numTrue=None,
-    numFalse=None,
+    n_true=None,
+    n_false=None,
     ifTrue=None,
     ifFalse=None,
     calc_outputs=None,
@@ -397,7 +397,7 @@ def log_decision_tree_step(
         This is string or a list of strings describing what classifications
         of components to operate on. Only used in this function to report
         its contents if no components with these classifications were found
-    numTrue, numFalse : :obj:`int`
+    n_true, n_false : :obj:`int`
         The number of components classified as True or False
     ifTrue, ifFalse : :obj:`str`
         If a component is true or false, the classification to assign that
@@ -425,8 +425,8 @@ def log_decision_tree_step(
     if ifTrue or ifFalse:
         LGR.info(
             f"{function_name_idx} applied to {len(comps2use)} components. "
-            f"{numTrue} True -> {ifTrue}. "
-            f"{numFalse} False -> {ifFalse}."
+            f"{n_true} True -> {ifTrue}. "
+            f"{n_false} False -> {ifFalse}."
         )
 
     if calc_outputs:

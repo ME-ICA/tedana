@@ -36,15 +36,15 @@ def test_manual_classify_smoke():
     )
     # There should be 4 selected components and component_status_table should
     # have a new column "Node 0"
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 4
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numFalse"] == 0
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 4
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_false"] == 0
     assert f"Node {selector.current_node_idx}" in selector.component_status_table
 
     # No components with "NotALabel" classification so nothing selected and no
     #   Node 1 column not created in component_status_table
     selector.current_node_idx = 1
     selector = selection_nodes.manual_classify(selector, "NotAClassification", new_classification)
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 0
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 0
     assert f"Node {selector.current_node_idx}" not in selector.component_status_table
 
     # Changing components from "rejected" to "accepted" and suppressing warning
@@ -59,7 +59,7 @@ def test_manual_classify_smoke():
         tag="test tag",
         dont_warn_reclassify=True,
     )
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 4
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 4
     assert f"Node {selector.current_node_idx}" in selector.component_status_table
 
 
@@ -98,8 +98,8 @@ def test_dec_left_op_right_succeeds():
     )
     # scales are set to make sure 3 components are true and 1 is false using
     # the sample component table
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 3
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numFalse"] == 1
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 3
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_false"] == 1
     assert f"Node {selector.current_node_idx}" in selector.component_status_table
 
     # No components with "NotALabel" classification so nothing selected and no
@@ -114,7 +114,7 @@ def test_dec_left_op_right_succeeds():
         "kappa",
         "rho",
     )
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 0
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 0
     assert f"Node {selector.current_node_idx}" not in selector.component_status_table
 
     # Re-initializing selector so that it has components classificated as
@@ -130,8 +130,8 @@ def test_dec_left_op_right_succeeds():
         "kappa",
         "test_elbow",
     )
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 3
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numFalse"] == 1
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 3
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_false"] == 1
     assert f"Node {selector.current_node_idx}" in selector.component_status_table
 
     # right is a component_table_metric, left is a cross_component_metric
@@ -148,8 +148,8 @@ def test_dec_left_op_right_succeeds():
         "kappa",
         left_scale="new_cc_metric",
     )
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 1
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numFalse"] == 3
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 1
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_false"] == 3
     assert f"Node {selector.current_node_idx}" in selector.component_status_table
 
     # left component_table_metric, right is a constant integer value
@@ -163,8 +163,8 @@ def test_dec_left_op_right_succeeds():
         "kappa",
         21,
     )
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 3
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numFalse"] == 1
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 3
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_false"] == 1
     assert f"Node {selector.current_node_idx}" in selector.component_status_table
 
     # right component_table_metric, left is a constant float value
@@ -178,8 +178,8 @@ def test_dec_left_op_right_succeeds():
         21.0,
         "kappa",
     )
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 1
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numFalse"] == 3
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 1
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_false"] == 3
     assert f"Node {selector.current_node_idx}" in selector.component_status_table
 
     # Testing combination of two statements. kappa>21 AND rho<14
@@ -196,8 +196,8 @@ def test_dec_left_op_right_succeeds():
         op2="<",
         right2=14,
     )
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 2
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numFalse"] == 2
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 2
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_false"] == 2
     assert f"Node {selector.current_node_idx}" in selector.component_status_table
 
     # Testing combination of three statements. kappa>21 AND rho<14 AND 'variance explained'<5
@@ -217,8 +217,8 @@ def test_dec_left_op_right_succeeds():
         op3="<",
         right3=5,
     )
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 1
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numFalse"] == 3
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 1
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_false"] == 3
     assert f"Node {selector.current_node_idx}" in selector.component_status_table
 
 
@@ -392,8 +392,8 @@ def test_dec_variance_lessthan_thresholds_smoke():
         tag_ifTrue="test true tag",
         tag_ifFalse="test false tag",
     )
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 1
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numFalse"] == 3
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 1
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_false"] == 3
     assert f"Node {selector.current_node_idx}" in selector.component_status_table
 
     # No components with "NotALabel" classification so nothing selected and no
@@ -402,7 +402,7 @@ def test_dec_variance_lessthan_thresholds_smoke():
     selector = selection_nodes.dec_variance_lessthan_thresholds(
         selector, "accepted", "rejected", "NotAClassification"
     )
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 0
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 0
     assert f"Node {selector.current_node_idx}" not in selector.component_status_table
 
     # Running without specifying logging text generates internal text
@@ -410,8 +410,8 @@ def test_dec_variance_lessthan_thresholds_smoke():
     selector = selection_nodes.dec_variance_lessthan_thresholds(
         selector, "accepted", "rejected", decide_comps
     )
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 0
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numFalse"] == 4
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 0
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_false"] == 4
     assert f"Node {selector.current_node_idx}" in selector.component_status_table
 
 
@@ -708,9 +708,9 @@ def test_dec_classification_doesnt_exist_smoke():
         custom_node_label="custom label",
         tag="test true tag",
     )
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 0
-    # Lists the number of components in decide_comps in numFalse
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numFalse"] == 17
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 0
+    # Lists the number of components in decide_comps in n_false
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_false"] == 17
     # During normal execution, it will find provionally accepted components
     #  and do nothing so another node isn't created
     assert f"Node {selector.current_node_idx}" not in selector.component_status_table
@@ -725,8 +725,8 @@ def test_dec_classification_doesnt_exist_smoke():
         "NotAClassification",
         class_comp_exists="provisional accept",
     )
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 0
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 0
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 0
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 0
     assert f"Node {selector.current_node_idx}" not in selector.component_status_table
 
     # Other normal state is to change classifications when there are
@@ -742,8 +742,8 @@ def test_dec_classification_doesnt_exist_smoke():
         class_comp_exists="provisional reject",
         tag="test true tag",
     )
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 17
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numFalse"] == 0
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 17
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_false"] == 0
     assert f"Node {selector.current_node_idx}" in selector.component_status_table
 
     # Standard execution with at_least_num_exist=5 which should trigger the
@@ -760,9 +760,9 @@ def test_dec_classification_doesnt_exist_smoke():
         custom_node_label="custom label",
         tag="test true tag",
     )
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numTrue"] == 17
-    # Lists the number of components in decide_comps in numFalse
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["numFalse"] == 0
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 17
+    # Lists the number of components in decide_comps in n_false
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_false"] == 0
     assert f"Node {selector.current_node_idx}" in selector.component_status_table
 
 

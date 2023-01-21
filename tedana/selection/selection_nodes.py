@@ -134,8 +134,8 @@ def manual_classify(
         "decision_node_idx": selector.current_node_idx,
         "used_metrics": set(),
         "node_label": None,
-        "numTrue": None,
-        "numFalse": None,
+        "n_true": None,
+        "n_false": None,
     }
 
     if only_used_metrics:
@@ -160,11 +160,11 @@ def manual_classify(
 
     if not comps2use:
         log_decision_tree_step(function_name_idx, comps2use, decide_comps=decide_comps)
-        outputs["numTrue"] = 0
-        outputs["numFalse"] = 0
+        outputs["n_true"] = 0
+        outputs["n_false"] = 0
     else:
         decision_boolean = pd.Series(True, index=comps2use)
-        selector, outputs["numTrue"], outputs["numFalse"] = change_comptable_classifications(
+        selector, outputs["n_true"], outputs["n_false"] = change_comptable_classifications(
             selector,
             ifTrue,
             ifFalse,
@@ -176,8 +176,8 @@ def manual_classify(
         log_decision_tree_step(
             function_name_idx,
             comps2use,
-            numTrue=outputs["numTrue"],
-            numFalse=outputs["numFalse"],
+            n_true=outputs["n_true"],
+            n_false=outputs["n_false"],
             ifTrue=ifTrue,
             ifFalse=ifFalse,
         )
@@ -285,8 +285,8 @@ def dec_left_op_right(
         "used_metrics": set(),
         "used_cross_component_metrics": set(),
         "node_label": None,
-        "numTrue": None,
-        "numFalse": None,
+        "n_true": None,
+        "n_false": None,
     }
 
     function_name_idx = f"Step {selector.current_node_idx}: left_op_right"
@@ -454,14 +454,14 @@ def dec_left_op_right(
             return val  # should be a fixed number
 
     if not comps2use:
-        outputs["numTrue"] = 0
-        outputs["numFalse"] = 0
+        outputs["n_true"] = 0
+        outputs["n_false"] = 0
         log_decision_tree_step(
             function_name_idx,
             comps2use,
             decide_comps=decide_comps,
-            ifTrue=outputs["numTrue"],
-            ifFalse=outputs["numFalse"],
+            ifTrue=outputs["n_true"],
+            ifFalse=outputs["n_false"],
         )
 
     else:
@@ -485,7 +485,7 @@ def dec_left_op_right(
             # logical dot product for compound statement
             decision_boolean = statement1 * statement2
 
-        (selector, outputs["numTrue"], outputs["numFalse"],) = change_comptable_classifications(
+        (selector, outputs["n_true"], outputs["n_false"],) = change_comptable_classifications(
             selector,
             ifTrue,
             ifFalse,
@@ -493,14 +493,14 @@ def dec_left_op_right(
             tag_ifTrue=tag_ifTrue,
             tag_ifFalse=tag_ifFalse,
         )
-        # outputs["numTrue"] = np.asarray(decision_boolean).sum()
-        # outputs["numFalse"] = np.logical_not(decision_boolean).sum()
+        # outputs["n_true"] = np.asarray(decision_boolean).sum()
+        # outputs["n_false"] = np.logical_not(decision_boolean).sum()
 
         log_decision_tree_step(
             function_name_idx,
             comps2use,
-            numTrue=outputs["numTrue"],
-            numFalse=outputs["numFalse"],
+            n_true=outputs["n_true"],
+            n_false=outputs["n_false"],
             ifTrue=ifTrue,
             ifFalse=ifFalse,
         )
@@ -565,8 +565,8 @@ def dec_variance_lessthan_thresholds(
         "decision_node_idx": selector.current_node_idx,
         "used_metrics": set([var_metric]),
         "node_label": None,
-        "numTrue": None,
-        "numFalse": None,
+        "n_true": None,
+        "n_false": None,
     }
 
     if only_used_metrics:
@@ -592,14 +592,14 @@ def dec_variance_lessthan_thresholds(
     )
 
     if not comps2use:
-        outputs["numTrue"] = 0
-        outputs["numFalse"] = 0
+        outputs["n_true"] = 0
+        outputs["n_false"] = 0
         log_decision_tree_step(
             function_name_idx,
             comps2use,
             decide_comps=decide_comps,
-            ifTrue=outputs["numTrue"],
-            ifFalse=outputs["numFalse"],
+            ifTrue=outputs["n_true"],
+            ifFalse=outputs["n_false"],
         )
     else:
         variance = selector.component_table.loc[comps2use, var_metric]
@@ -612,7 +612,7 @@ def dec_variance_lessthan_thresholds(
             while variance[decision_boolean].sum() > all_comp_threshold:
                 tmpmax = variance == variance[decision_boolean].max()
                 decision_boolean[tmpmax] = False
-        (selector, outputs["numTrue"], outputs["numFalse"],) = change_comptable_classifications(
+        (selector, outputs["n_true"], outputs["n_false"],) = change_comptable_classifications(
             selector,
             ifTrue,
             ifFalse,
@@ -624,8 +624,8 @@ def dec_variance_lessthan_thresholds(
         log_decision_tree_step(
             function_name_idx,
             comps2use,
-            numTrue=outputs["numTrue"],
-            numFalse=outputs["numFalse"],
+            n_true=outputs["n_true"],
+            n_false=outputs["n_false"],
             ifTrue=ifTrue,
             ifFalse=ifFalse,
         )
@@ -1052,8 +1052,8 @@ def dec_classification_doesnt_exist(
         "used_metrics": set(),
         "used_cross_comp_metrics": set(),
         "node_label": None,
-        "numTrue": None,
-        "numFalse": None,
+        "n_true": None,
+        "n_false": None,
     }
 
     if only_used_metrics:
@@ -1086,20 +1086,20 @@ def dec_classification_doesnt_exist(
     do_comps_exist = selectcomps2use(selector, class_comp_exists)
 
     if (not comps2use) or (len(do_comps_exist) >= at_least_num_exist):
-        outputs["numTrue"] = 0
-        # If nothing chanages, then assign the number of components in comps2use to numFalse
-        outputs["numFalse"] = len(comps2use)
+        outputs["n_true"] = 0
+        # If nothing chanages, then assign the number of components in comps2use to n_false
+        outputs["n_false"] = len(comps2use)
         log_decision_tree_step(
             function_name_idx,
             comps2use,
             decide_comps=decide_comps,
-            ifTrue=outputs["numTrue"],
-            ifFalse=outputs["numFalse"],
+            ifTrue=outputs["n_true"],
+            ifFalse=outputs["n_false"],
         )
     else:  # do_comps_exist is None:
         decision_boolean = pd.Series(True, index=comps2use)
 
-        selector, outputs["numTrue"], outputs["numFalse"] = change_comptable_classifications(
+        selector, outputs["n_true"], outputs["n_false"] = change_comptable_classifications(
             selector,
             ifTrue,
             ifFalse,
@@ -1110,8 +1110,8 @@ def dec_classification_doesnt_exist(
         log_decision_tree_step(
             function_name_idx,
             comps2use,
-            numTrue=outputs["numTrue"],
-            numFalse=outputs["numFalse"],
+            n_true=outputs["n_true"],
+            n_false=outputs["n_false"],
             ifTrue=ifTrue,
             ifFalse=ifFalse,
         )

@@ -193,7 +193,7 @@ def test_change_comptable_classifications_succeeds():
     rho = selector.component_table.loc[comps2use, "rho"]
     decision_boolean = rho < 13.5
 
-    selector, numTrue, numFalse = selection_utils.change_comptable_classifications(
+    selector, n_true, n_false = selection_utils.change_comptable_classifications(
         selector,
         "accepted",
         "nochange",
@@ -202,8 +202,8 @@ def test_change_comptable_classifications_succeeds():
         tag_ifFalse="testing_tag2",
     )
 
-    assert numTrue == 2
-    assert numFalse == 2
+    assert n_true == 2
+    assert n_false == 2
     # check every element that was supposed to change, did change
     changeidx = decision_boolean.index[np.asarray(decision_boolean) == True]  # noqa: E712
     new_vals = selector.component_table.loc[changeidx, "classification"]
@@ -257,8 +257,8 @@ def test_log_decision_tree_step_smoke():
         "Step 0: test_function_name",
         comps2use,
         decide_comps="reject",
-        numTrue=5,
-        numFalse=2,
+        n_true=5,
+        n_false=2,
         ifTrue="accept",
         ifFalse="reject",
     )
@@ -291,8 +291,8 @@ def test_log_decision_tree_step_smoke():
         "Step 0: test_function_name",
         comps2use,
         decide_comps="NotALabel",
-        numTrue=5,
-        numFalse=2,
+        n_true=5,
+        n_false=2,
         ifTrue="accept",
         ifFalse="reject",
     )

@@ -79,7 +79,7 @@ New columns in ``selector.component_table`` and the "ICA metrics tsv" file:
     what happened during execution. Of particular note, each output includes a list
     of the metrics used within the node, "node_label", which is a (hopefully) human
     readable brief description of the node's function and, for nodes where component
-    classifications can change, "numFalse" & "numTrue" list who many components
+    classifications can change, "n_false" & "n_true" list who many components
     changed classifications. The inputted parameters include "ifTrue" and "ifFalse"
     which specify what changes for each component. These fields can be used to
     construct a visual flow chart or text-based summary of how classifications
@@ -120,7 +120,7 @@ node_label:
     A brief label for what happens in this node that can be used in a decision
     tree summary table or flow chart.
 
-numTrue, numFalse:
+n_true, n_false:
     For decision tree (dec) functions, the number of components that were classified
     as true or false respectively in this decision tree step.
 
@@ -300,7 +300,7 @@ fields are common and may be used by other parts of the code:
 - "decision_node_idx" (required): the ordered index for the current function in the
   decision tree.
 - "node_label" (required): A decriptive label for what happens in the node.
-- "numTrue" & "numFalse" (required for decision functions): For decision functions,
+- "n_true" & "n_false" (required for decision functions): For decision functions,
   the number of components labeled true or false within the function call.
 - "used_metrics" (required if a function uses metrics): The list of metrics used in
   the function. This can be hard coded, defined by input parameters, or empty.
@@ -342,8 +342,8 @@ Nearly every function has a clause like:
 
   if comps2use is None:
       log_decision_tree_step(function_name_idx, comps2use, decide_comps=decide_comps)
-      outputs["numTrue"] = 0
-      outputs["numFalse"] = 0
+      outputs["n_true"] = 0
+      outputs["n_false"] = 0
   else:
 
 If there are no components with the classifications in ``decide_comps`` this logs that
@@ -356,7 +356,7 @@ which will update the component_table classifications, update the classification
 in component_status_table, and update the component classification_tags. Components not
 in ``decide_comps`` retain their existing classifications and tags.
 ``change_comptable_classifications`` also returns and should assign values to
-``outputs["numTrue"]`` and ``outputs["numFalse"]``. These log how many components were
+``outputs["n_true"]`` and ``outputs["n_false"]``. These log how many components were
 identified as true or false within each function.
 
 For calculation functions, the calculated values should be added as a value/key pair to
