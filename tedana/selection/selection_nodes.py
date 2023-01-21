@@ -1,6 +1,4 @@
-"""
-Functions that will be used as steps in a decision tree
-"""
+"""Functions that will be used as steps in a decision tree."""
 import logging
 
 import numpy as np
@@ -17,57 +15,15 @@ from tedana.selection.selection_utils import (
     rho_elbow_kundu_liberal,
     selectcomps2use,
 )
+from tedana.docs import fill_doc
 
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 RefLGR = logging.getLogger("REFERENCES")
 
-DECISION_DOCS = {
-    "selector": """\
-selector : :obj:`tedana.selection.component_selector.ComponentSelector`
-        The selector to perform decision tree-based component selection with.""",
-    "ifTrueFalse": """\
-if_true : :obj:`str`
-        If the condition in this step is True, give the component classification this
-        label. Use 'nochange' if no label changes are desired.
-    if_false : :obj:`str`
-        If the condition in this step is False, give the component classification this
-        label. Use 'nochange' to indicate if no label changes are desired.
-""",
-    "decide_comps": """\
-decide_comps : :obj:`str` or :obj:`list[str]`
-        What classification(s) to operate on. using default or
-        intermediate_classification labels. For example: decide_comps='unclassified'
-        means to operate only on unclassified components. Use 'all' to include all
-        components.""",
-    "log_extra_report": """\
-log_extra_report : :obj:`str`
-        Additional text to the report log. Default="".""",
-    "log_extra_info": """\
-log_extra_info : :obj:`str`
-        Additional text to the information log. Default="".""",
-    "only_used_metrics": """\
-only_used_metrics : :obj:`bool`
-        If True, only return the component_table metrics that would be used. Default=False.""",
-    "custom_node_label": """\
-custom_node_label : :obj:`str`
-        A short label to describe what happens in this step. If "" then a label is
-        automatically generated. Default="".""",
-    "tag_ifTrueFalse": """\
-tag_ifTrue : :obj:`str`
-        The classification tag to apply if a component is classified True. Default="".
-    tag_ifFalse : :obj:`str`
-        The classification tag to apply if a component is classified False. Default="".""",
-    "basicreturns": """\
-selector : :obj:`tedana.selection.component_selector.ComponentSelector`
-        If only_used_metrics is False, the updated selector is returned
-    used_metrics : :obj:`set(str)`
-        If only_used_metrics is True, the names of the metrics used in the
-        function are returned""",
-}
 
-
+@fill_doc
 def manual_classify(
     selector,
     decide_comps,
@@ -80,13 +36,12 @@ def manual_classify(
     tag=None,
     dont_warn_reclassify=False,
 ):
-    """Assign a classification, defined in ``new_classification``, to the components in
-    ``decide_comps``.
+    """Assign a classification defined in new_classification to the components in decide_comps.
 
     Parameters
     ----------
-    {selector}
-    {decide_comps}
+    %(selector)s
+    %(decide_comps)s
     new_classification : :obj:`str`
         Assign all components identified in decide_comps the classification
         in new_classification. Options are 'unclassified', 'accepted',
@@ -106,14 +61,15 @@ def manual_classify(
         classifications. If this is True, that warning is suppressed.
         (Useful if manual_classify is used to reset all labels to unclassified).
         Default=False
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
 
     Note
     ----
@@ -191,9 +147,7 @@ def manual_classify(
     return selector
 
 
-manual_classify.__doc__ = manual_classify.__doc__.format(**DECISION_DOCS)
-
-
+@fill_doc
 def dec_left_op_right(
     selector,
     if_true,
@@ -225,9 +179,10 @@ def dec_left_op_right(
 
     Parameters
     ----------
-    {selector}
-    {ifTrueFalse}
-    {decide_comps}
+    %(selector)s
+    %(tag_ifTrue)s
+    %(tag_ifFalse)s
+    %(decide_comps)s
     op: :obj:`str`
         Must be one of: ">", ">=", "==", "<=", "<"
         Applied the user defined operator to left op right
@@ -255,15 +210,17 @@ def dec_left_op_right(
         (left_scale*)left op (right_scale*right) AND (left2_scale*)left2 op2 (right2_scale*right2)
         if the "3" parameters are also defined then it's the intersection of all 3 statements
 
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
-    {tag_ifTrueFalse}
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
+    %(tag_ifTrue)s
+    %(tag_ifFalse)s
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
 
     Note
     ----
@@ -510,9 +467,7 @@ def dec_left_op_right(
     return selector
 
 
-dec_left_op_right.__doc__ = dec_left_op_right.__doc__.format(**DECISION_DOCS)
-
-
+@fill_doc
 def dec_variance_lessthan_thresholds(
     selector,
     if_true,
@@ -528,8 +483,8 @@ def dec_variance_lessthan_thresholds(
     tag_ifTrue=None,
     tag_ifFalse=None,
 ):
-    """
-    Change classifications for components with variance<single_comp_threshold.
+    """Change classifications for components with variance<single_comp_threshold.
+
     If the sum of the variance for all components that meet this criteria
     is greater than all_comp_threshold then only change classifications for the
     lowest variance components where the sum of their variances is less than
@@ -537,9 +492,10 @@ def dec_variance_lessthan_thresholds(
 
     Parameters
     ----------
-    {selector}
-    {ifTrueFalse}
-    {decide_comps}
+    %(selector)s
+    %(tag_ifTrue)s
+    %(tag_ifFalse)s
+    %(decide_comps)s
     var_metric: :obj:`str`
         The name of the metric in component_table for variance. Default="variance explained"
         This is an option so that it is possible to use "normalized variance explained"
@@ -550,15 +506,17 @@ def dec_variance_lessthan_thresholds(
     all_comp_threshold: :obj: `float`
         The number of the variance for all components less than single_comp_threshold
         needs to be under this threshold. Default=1.0
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
-    {tag_ifTrueFalse}
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
+    %(tag_ifTrue)s
+    %(tag_ifFalse)s
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
     """
 
     outputs = {
@@ -634,11 +592,7 @@ def dec_variance_lessthan_thresholds(
     return selector
 
 
-dec_variance_lessthan_thresholds.__doc__ = dec_variance_lessthan_thresholds.__doc__.format(
-    **DECISION_DOCS
-)
-
-
+@fill_doc
 def calc_median(
     selector,
     decide_comps,
@@ -649,26 +603,26 @@ def calc_median(
     custom_node_label="",
     only_used_metrics=False,
 ):
-    """
-    Calculates the median across components for the metric defined by metric_name
+    """Calculate the median across components for the metric defined by metric_name.
 
     Parameters
     ----------
-    {selector}
-    {decide_comps}
+    %(selector)s
+    %(decide_comps)s
     metric_name: :obj:`str`
         The name of a column in selector.component_table. The median of
         the values in this column will be calculated
     median_label: :obj:`str`
         The median will be saved in "median_(median_label)"
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
 
     """
 
@@ -736,9 +690,7 @@ def calc_median(
     return selector
 
 
-calc_median.__doc__ = calc_median.__doc__.format(**DECISION_DOCS)
-
-
+@fill_doc
 def calc_kappa_elbow(
     selector,
     decide_comps,
@@ -747,21 +699,21 @@ def calc_kappa_elbow(
     custom_node_label="",
     only_used_metrics=False,
 ):
-    """
-    Calculates elbow for kappa across components
+    """Calculate elbow for kappa across components.
 
     Parameters
     ----------
-    {selector}
-    {decide_comps}
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
+    %(selector)s
+    %(decide_comps)s
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
 
     Note
     ----
@@ -839,9 +791,7 @@ def calc_kappa_elbow(
     return selector
 
 
-calc_kappa_elbow.__doc__ = calc_kappa_elbow.__doc__.format(**DECISION_DOCS)
-
-
+@fill_doc
 def calc_rho_elbow(
     selector,
     decide_comps,
@@ -852,13 +802,12 @@ def calc_rho_elbow(
     custom_node_label="",
     only_used_metrics=False,
 ):
-    """
-    Calculates elbow for rho across components
+    """Calculate elbow for rho across components.
 
     Parameters
     ----------
-    {selector}
-    {decide_comps}
+    %(selector)s
+    %(decide_comps)s
     subset_decide_comps: :obj:`str`
         This is a string with a single component classification label. For the
         elbow calculation used by Kundu in MEICA v.27 thresholds are based
@@ -867,14 +816,15 @@ def calc_rho_elbow(
     rho_elbow_type: :obj:`str`
         The algorithm used to calculate the rho elbow. Current options are:
         'kundu' and 'liberal'. Default='kundu'.
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
 
     Note
     ----
@@ -987,9 +937,7 @@ def calc_rho_elbow(
     return selector
 
 
-calc_rho_elbow.__doc__ = calc_rho_elbow.__doc__.format(**DECISION_DOCS)
-
-
+@fill_doc
 def dec_classification_doesnt_exist(
     selector,
     new_classification,
@@ -1004,15 +952,15 @@ def dec_classification_doesnt_exist(
 ):
     """
     If there are no components with a classification specified in class_comp_exists,
-    change the classification of all components in decide_comps
+    change the classification of all components in decide_comps.
 
     Parameters
     ----------
-    {selector}
+    %(selector)s
     new_classification: :obj:`str`
         Assign all components identified in decide_comps the classification
         in new_classification.
-    {decide_comps}
+    %(decide_comps)s
     class_comp_exists: :obj:`str` or :obj:`list[str]` or :obj:`int` or :obj:`list[int]`
         This has the same structure options as decide_comps. This function tests
         whether any components in decide_comps have the classifications defined in this
@@ -1020,10 +968,10 @@ def dec_classification_doesnt_exist(
     at_least_num_exist: :obj:`int`
         Instead of just testing whether a classification exists, test whether at least
         this number of components have that classification. Default=1
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
     tag: :obj:`str`
         A classification tag to assign to all components being reclassified.
         This should be one of the tags defined by classification_tags in
@@ -1031,7 +979,8 @@ def dec_classification_doesnt_exist(
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
 
     Note
     ----
@@ -1121,11 +1070,7 @@ def dec_classification_doesnt_exist(
     return selector
 
 
-dec_classification_doesnt_exist.__doc__ = dec_classification_doesnt_exist.__doc__.format(
-    **DECISION_DOCS
-)
-
-
+@fill_doc
 def calc_varex_thresh(
     selector,
     decide_comps,
@@ -1137,14 +1082,14 @@ def calc_varex_thresh(
     custom_node_label="",
     only_used_metrics=False,
 ):
-    """
-    Calculates the variance explained threshold to use in the kundu decision tree.
+    """Calculate the variance explained threshold to use in the kundu decision tree.
+
     Will save a high or low percentile threshold depending on highlow_thresh
 
     Parameters
     ----------
-    {selector}
-    {decide_comps}
+    %(selector)s
+    %(decide_comps)s
     thresh_label: :obj:`str`
         The threshold will be saved in "varex_(thresh_label)_thresh"
         In the original kundu decision tree this was either "upper" or "lower"
@@ -1158,14 +1103,15 @@ def calc_varex_thresh(
         lowest variance. Either input an integer directly or input a string that is
         a parameter stored in selector.cross_component_metrics ("num_acc_guess" in
         original decision tree). Default=None
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
 
     """
 
@@ -1288,9 +1234,7 @@ def calc_varex_thresh(
     return selector
 
 
-calc_varex_thresh.__doc__ = calc_varex_thresh.__doc__.format(**DECISION_DOCS)
-
-
+@fill_doc
 def calc_extend_factor(
     selector,
     log_extra_report="",
@@ -1299,27 +1243,28 @@ def calc_extend_factor(
     only_used_metrics=False,
     extend_factor=None,
 ):
-    """
-    Calculate the scalar used to set a threshold for d_table_score.
+    """Calculate the scalar used to set a threshold for d_table_score.
+
     2 if fewer than 90 fMRI volumes, 3 if more than 110 and linear in-between
     The explanation for the calculation is in
     :obj:`tedana.selection.selection_utils.get_extend_factor`
 
     Parameters
     ----------
-    {selector}
-    {decide_comps}
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
+    %(selector)s
+    %(decide_comps)s
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
     extend_factor: :obj:`float`
         If a number, then use rather than calculating anything.
         If None than calculate. default=None
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
     """
 
     outputs = {
@@ -1363,9 +1308,7 @@ def calc_extend_factor(
     return selector
 
 
-calc_extend_factor.__doc__ = calc_extend_factor.__doc__.format(**DECISION_DOCS)
-
-
+@fill_doc
 def calc_max_good_meanmetricrank(
     selector,
     decide_comps,
@@ -1375,27 +1318,29 @@ def calc_max_good_meanmetricrank(
     custom_node_label="",
     only_used_metrics=False,
 ):
-    """
+    """Calculate the metric "max_good_meanmetricrank".
+
     Calculates the max_good_meanmetricrank to use in the kundu decision tree.
     This is the number of components selected with decide_comps * the extend_factor
     calculated in calc_extend_factor
 
     Parameters
     ----------
-    {selector}
-    {decide_comps}
+    %(selector)s
+    %(decide_comps)s
     metric_suffix: :obj:`str`
         By default, this will output a value called "max_good_meanmetricrank"
         If this variable is not None or "" then it will output:
         "max_good_meanmetricrank_[metric_suffix]". Default=None
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
 
     Note
     ----
@@ -1472,9 +1417,7 @@ def calc_max_good_meanmetricrank(
     return selector
 
 
-calc_max_good_meanmetricrank.__doc__ = calc_max_good_meanmetricrank.__doc__.format(**DECISION_DOCS)
-
-
+@fill_doc
 def calc_varex_kappa_ratio(
     selector,
     decide_comps,
@@ -1483,23 +1426,25 @@ def calc_varex_kappa_ratio(
     custom_node_label="",
     only_used_metrics=False,
 ):
-    """
+    """Calculate the cross-component metric "kappa_rate".
+
     Calculates the cross_component_metric kappa_rate for the components in decide_comps
     and then calculate the variance explained / kappa ratio for ALL components
     and adds those values to a new column in the component_table titled "varex kappa ratio".
 
     Parameters
     ----------
-    {selector}
-    {decide_comps}
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
+    %(selector)s
+    %(decide_comps)s
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
 
     Note
     ----
@@ -1593,9 +1538,7 @@ def calc_varex_kappa_ratio(
     return selector
 
 
-calc_varex_kappa_ratio.__doc__ = calc_varex_kappa_ratio.__doc__.format(**DECISION_DOCS)
-
-
+@fill_doc
 def calc_revised_meanmetricrank_guesses(
     selector,
     decide_comps,
@@ -1605,25 +1548,25 @@ def calc_revised_meanmetricrank_guesses(
     custom_node_label="",
     only_used_metrics=False,
 ):
-    """
-    Calculate a new d_table_score (meanmetricrank).
+    """Calculate a new d_table_score (meanmetricrank).
 
     Parameters
     ----------
-    {selector}
-    {decide_comps}
+    %(selector)s
+    %(decide_comps)s
     restrict_factor: :obj:`int` or :obj:`float`
         A scaling factor to scale between num_acc_guess and conservative_guess.
         Default=2.
 
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
 
     Note
     ----
@@ -1788,16 +1731,3 @@ def calc_revised_meanmetricrank_guesses(
     selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
 
     return selector
-
-
-calc_revised_meanmetricrank_guesses.__doc__ = calc_revised_meanmetricrank_guesses.__doc__.format(
-    **DECISION_DOCS
-)
-
-# NOTE: to debug any documentation rendering, I recommend the following hack:
-# python selection_nodes.py | nl
-# after uncommenting the below and placing the relevant function in the print
-# statement.
-#
-# if __name__ == '__main__':
-#     print(dec_left_op_right.__doc__)
