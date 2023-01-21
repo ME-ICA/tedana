@@ -59,8 +59,8 @@ def dicts_to_test(treechoice):
             {
                 "functionname": "dec_left_op_right",
                 "parameters": {
-                    "ifTrue": "rejected",
-                    "ifFalse": "nochange",
+                    "if_true": "rejected",
+                    "if_false": "nochange",
                     "decide_comps": "all",
                     "op": ">",
                     "left": "rho",
@@ -74,8 +74,8 @@ def dicts_to_test(treechoice):
             {
                 "functionname": "dec_left_op_right",
                 "parameters": {
-                    "ifTrue": "random2",
-                    "ifFalse": "nochange",
+                    "if_true": "random2",
+                    "if_false": "nochange",
                     "decide_comps": "all",
                     "op": ">",
                     "left": "kappa",

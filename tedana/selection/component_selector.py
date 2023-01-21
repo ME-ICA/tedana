@@ -178,13 +178,13 @@ def validate_tree(tree):
         # "provisionalaccepted" they won't be included and there might not
         # be any other warnings
         compclass = set()
-        if "ifTrue" in node.get("parameters").keys():
-            tmp_comp = node["parameters"]["ifTrue"]
+        if "if_true" in node.get("parameters").keys():
+            tmp_comp = node["parameters"]["if_true"]
             if isinstance(tmp_comp, str):
                 tmp_comp = [tmp_comp]
             compclass = compclass | set(tmp_comp)
-        if "ifFalse" in node.get("parameters").keys():
-            tmp_comp = node["parameters"]["ifFalse"]
+        if "if_false" in node.get("parameters").keys():
+            tmp_comp = node["parameters"]["if_false"]
             if isinstance(tmp_comp, str):
                 tmp_comp = [tmp_comp]
             compclass = compclass | set(tmp_comp)

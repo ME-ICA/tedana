@@ -89,8 +89,8 @@ def selectcomps2use(selector, decide_comps):
 
 def change_comptable_classifications(
     selector,
-    ifTrue,
-    ifFalse,
+    if_true,
+    if_false,
     decision_boolean,
     tag_ifTrue=None,
     tag_ifFalse=None,
@@ -105,7 +105,7 @@ def change_comptable_classifications(
     selector : :obj:`tedana.selection.component_selector.ComponentSelector`
         The attributes used are component_table, component_status_table, and
         current_node_idx
-    ifTrue, ifFalse : :obj:`str`
+    if_true, if_false : :obj:`str`
         If the condition in this step is true or false, give the component
         the label in this string. Options are 'accepted', 'rejected',
         'nochange', or intermediate_classification labels predefined in the
@@ -145,7 +145,7 @@ def change_comptable_classifications(
     selector = comptable_classification_changer(
         selector,
         True,
-        ifTrue,
+        if_true,
         decision_boolean,
         tag_if=tag_ifTrue,
         dont_warn_reclassify=dont_warn_reclassify,
@@ -153,7 +153,7 @@ def change_comptable_classifications(
     selector = comptable_classification_changer(
         selector,
         False,
-        ifFalse,
+        if_false,
         decision_boolean,
         tag_if=tag_ifFalse,
         dont_warn_reclassify=dont_warn_reclassify,
@@ -373,8 +373,8 @@ def log_decision_tree_step(
     decide_comps=None,
     n_true=None,
     n_false=None,
-    ifTrue=None,
-    ifFalse=None,
+    if_true=None,
+    if_false=None,
     calc_outputs=None,
 ):
     """Logging text to add after every decision tree calculation
@@ -399,7 +399,7 @@ def log_decision_tree_step(
         its contents if no components with these classifications were found
     n_true, n_false : :obj:`int`
         The number of components classified as True or False
-    ifTrue, ifFalse : :obj:`str`
+    if_true, if_false : :obj:`str`
         If a component is true or false, the classification to assign that
         component
     calc_outputs : :obj:`dict`
@@ -422,11 +422,11 @@ def log_decision_tree_step(
             f"classified as {decide_comps}"
         )
 
-    if ifTrue or ifFalse:
+    if if_true or if_false:
         LGR.info(
             f"{function_name_idx} applied to {len(comps2use)} components. "
-            f"{n_true} True -> {ifTrue}. "
-            f"{n_false} False -> {ifFalse}."
+            f"{n_true} True -> {if_true}. "
+            f"{n_false} False -> {if_false}."
         )
 
     if calc_outputs:

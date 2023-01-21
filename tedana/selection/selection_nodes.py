@@ -28,10 +28,10 @@ DECISION_DOCS = {
 selector : :obj:`tedana.selection.component_selector.ComponentSelector`
         The selector to perform decision tree-based component selection with.""",
     "ifTrueFalse": """\
-ifTrue : :obj:`str`
+if_true : :obj:`str`
         If the condition in this step is True, give the component classification this
         label. Use 'nochange' if no label changes are desired.
-    ifFalse : :obj:`str`
+    if_false : :obj:`str`
         If the condition in this step is False, give the component classification this
         label. Use 'nochange' to indicate if no label changes are desired.
 """,
@@ -125,7 +125,7 @@ def manual_classify(
     penultimate node in the decision tree.
     (3) Manually re-classify components by number based on user observations.
 
-    Unlike other decision node functions, ``ifTrue`` and ``ifFalse`` are not inputs
+    Unlike other decision node functions, ``if_true`` and ``if_false`` are not inputs
     since the same classification is assigned to all components listed in ``decide_comps``.
     """
 
@@ -141,8 +141,8 @@ def manual_classify(
     if only_used_metrics:
         return outputs["used_metrics"]
 
-    ifTrue = new_classification
-    ifFalse = "nochange"
+    if_true = new_classification
+    if_false = "nochange"
 
     function_name_idx = "Step {}: manual_classify".format((selector.current_node_idx))
     if custom_node_label:
@@ -166,8 +166,8 @@ def manual_classify(
         decision_boolean = pd.Series(True, index=comps2use)
         selector, outputs["n_true"], outputs["n_false"] = change_comptable_classifications(
             selector,
-            ifTrue,
-            ifFalse,
+            if_true,
+            if_false,
             decision_boolean,
             tag_ifTrue=tag,
             dont_warn_reclassify=dont_warn_reclassify,
@@ -178,8 +178,8 @@ def manual_classify(
             comps2use,
             n_true=outputs["n_true"],
             n_false=outputs["n_false"],
-            ifTrue=ifTrue,
-            ifFalse=ifFalse,
+            if_true=if_true,
+            if_false=if_false,
         )
 
     if clear_classification_tags:
@@ -196,8 +196,8 @@ manual_classify.__doc__ = manual_classify.__doc__.format(**DECISION_DOCS)
 
 def dec_left_op_right(
     selector,
-    ifTrue,
-    ifFalse,
+    if_true,
+    if_false,
     decide_comps,
     op,
     left,
@@ -436,7 +436,7 @@ def dec_left_op_right(
 
     # Might want to add additional default logging to functions here
     # The function input will be logged before the function call
-    LGR.info(f"{function_name_idx}: {ifTrue} if {outputs['node_label']}, else {ifFalse}")
+    LGR.info(f"{function_name_idx}: {if_true} if {outputs['node_label']}, else {if_false}")
     if log_extra_info:
         LGR.info(f"{function_name_idx} {log_extra_info}")
     if log_extra_report:
@@ -460,8 +460,8 @@ def dec_left_op_right(
             function_name_idx,
             comps2use,
             decide_comps=decide_comps,
-            ifTrue=outputs["n_true"],
-            ifFalse=outputs["n_false"],
+            if_true=outputs["n_true"],
+            if_false=outputs["n_false"],
         )
 
     else:
@@ -487,8 +487,8 @@ def dec_left_op_right(
 
         (selector, outputs["n_true"], outputs["n_false"],) = change_comptable_classifications(
             selector,
-            ifTrue,
-            ifFalse,
+            if_true,
+            if_false,
             decision_boolean,
             tag_ifTrue=tag_ifTrue,
             tag_ifFalse=tag_ifFalse,
@@ -501,8 +501,8 @@ def dec_left_op_right(
             comps2use,
             n_true=outputs["n_true"],
             n_false=outputs["n_false"],
-            ifTrue=ifTrue,
-            ifFalse=ifFalse,
+            if_true=if_true,
+            if_false=if_false,
         )
 
     selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
@@ -515,8 +515,8 @@ dec_left_op_right.__doc__ = dec_left_op_right.__doc__.format(**DECISION_DOCS)
 
 def dec_variance_lessthan_thresholds(
     selector,
-    ifTrue,
-    ifFalse,
+    if_true,
+    if_false,
     decide_comps,
     var_metric="variance explained",
     single_comp_threshold=0.1,
@@ -580,7 +580,7 @@ def dec_variance_lessthan_thresholds(
             "node_label"
         ] = f"{var_metric}<{single_comp_threshold}. All variance<{all_comp_threshold}"
 
-    LGR.info(f"{function_name_idx}: {ifTrue} if {outputs['node_label']}, else {ifFalse}")
+    LGR.info(f"{function_name_idx}: {if_true} if {outputs['node_label']}, else {if_false}")
     if log_extra_info:
         LGR.info(f"{function_name_idx} {log_extra_info}")
     if log_extra_report:
@@ -598,8 +598,8 @@ def dec_variance_lessthan_thresholds(
             function_name_idx,
             comps2use,
             decide_comps=decide_comps,
-            ifTrue=outputs["n_true"],
-            ifFalse=outputs["n_false"],
+            if_true=outputs["n_true"],
+            if_false=outputs["n_false"],
         )
     else:
         variance = selector.component_table.loc[comps2use, var_metric]
@@ -614,8 +614,8 @@ def dec_variance_lessthan_thresholds(
                 decision_boolean[tmpmax] = False
         (selector, outputs["n_true"], outputs["n_false"],) = change_comptable_classifications(
             selector,
-            ifTrue,
-            ifFalse,
+            if_true,
+            if_false,
             decision_boolean,
             tag_ifTrue=tag_ifTrue,
             tag_ifFalse=tag_ifFalse,
@@ -626,8 +626,8 @@ def dec_variance_lessthan_thresholds(
             comps2use,
             n_true=outputs["n_true"],
             n_false=outputs["n_false"],
-            ifTrue=ifTrue,
-            ifFalse=ifFalse,
+            if_true=if_true,
+            if_false=if_false,
         )
 
     selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
@@ -1078,8 +1078,8 @@ def dec_classification_doesnt_exist(
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
-    ifTrue = new_classification
-    ifFalse = "nochange"
+    if_true = new_classification
+    if_false = "nochange"
 
     comps2use = selectcomps2use(selector, decide_comps)
 
@@ -1093,16 +1093,16 @@ def dec_classification_doesnt_exist(
             function_name_idx,
             comps2use,
             decide_comps=decide_comps,
-            ifTrue=outputs["n_true"],
-            ifFalse=outputs["n_false"],
+            if_true=outputs["n_true"],
+            if_false=outputs["n_false"],
         )
     else:  # do_comps_exist is None:
         decision_boolean = pd.Series(True, index=comps2use)
 
         selector, outputs["n_true"], outputs["n_false"] = change_comptable_classifications(
             selector,
-            ifTrue,
-            ifFalse,
+            if_true,
+            if_false,
             decision_boolean,
             tag_ifTrue=tag,
         )
@@ -1112,8 +1112,8 @@ def dec_classification_doesnt_exist(
             comps2use,
             n_true=outputs["n_true"],
             n_false=outputs["n_false"],
-            ifTrue=ifTrue,
-            ifFalse=ifFalse,
+            if_true=if_true,
+            if_false=if_false,
         )
 
     selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs

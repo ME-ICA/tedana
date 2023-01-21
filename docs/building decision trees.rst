@@ -80,7 +80,7 @@ New columns in ``selector.component_table`` and the "ICA metrics tsv" file:
     of the metrics used within the node, "node_label", which is a (hopefully) human
     readable brief description of the node's function and, for nodes where component
     classifications can change, "n_false" & "n_true" list who many components
-    changed classifications. The inputted parameters include "ifTrue" and "ifFalse"
+    changed classifications. The inputted parameters include "if_true" and "if_false"
     which specify what changes for each component. These fields can be used to
     construct a visual flow chart or text-based summary of how classifications
     changed for each run.
@@ -253,7 +253,7 @@ In addition to the intermediate and default ("accepted" "rejected" "unclassified
 component classifications, this can be "all" for functions that should be applied to
 all components regardless of their classifications.
 
-Most decision functions also include "ifTrue" and "ifFalse" which specify how to change
+Most decision functions also include "if_true" and "if_false" which specify how to change
 the classification of each component based on whether a the decision criterion is true
 or false. In addition to the default and intermediate classification options, this can
 also be "nochange" (i.e. For components where a>b is true, "reject". For components

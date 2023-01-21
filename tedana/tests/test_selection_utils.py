@@ -259,8 +259,8 @@ def test_log_decision_tree_step_smoke():
         decide_comps="reject",
         n_true=5,
         n_false=2,
-        ifTrue="accept",
-        ifFalse="reject",
+        if_true="accept",
+        if_false="reject",
     )
 
     # Standard use for logging cross_component_metric calculation
@@ -293,8 +293,8 @@ def test_log_decision_tree_step_smoke():
         decide_comps="NotALabel",
         n_true=5,
         n_false=2,
-        ifTrue="accept",
-        ifFalse="reject",
+        if_true="accept",
+        if_false="reject",
     )
 
 

@@ -38,8 +38,8 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "ifTrue": "rejected",
-                "ifFalse": "nochange",
+                "if_true": "rejected",
+                "if_false": "nochange",
                 "decide_comps": "all",
                 "op": ">",
                 "left": "rho",
@@ -53,8 +53,8 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "ifTrue": "rejected",
-                "ifFalse": "nochange",
+                "if_true": "rejected",
+                "if_false": "nochange",
                 "decide_comps": "all",
                 "op": ">",
                 "left": "countsigFS0",
@@ -79,8 +79,8 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "ifTrue": "rejected",
-                "ifFalse": "nochange",
+                "if_true": "rejected",
+                "if_false": "nochange",
                 "decide_comps": "all",
                 "op": ">",
                 "left": "dice_FS0",
@@ -97,8 +97,8 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "ifTrue": "rejected",
-                "ifFalse": "nochange",
+                "if_true": "rejected",
+                "if_false": "nochange",
                 "decide_comps": "all",
                 "op": ">",
                 "left": 0,
@@ -139,8 +139,8 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "ifTrue": "provisionalaccept",
-                "ifFalse": "provisionalreject",
+                "if_true": "provisionalaccept",
+                "if_false": "provisionalreject",
                 "decide_comps": "unclassified",
                 "op": ">=",
                 "left": "kappa",
@@ -153,8 +153,8 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "ifTrue": "accepted",
-                "ifFalse": "nochange",
+                "if_true": "accepted",
+                "if_false": "nochange",
                 "decide_comps": "provisionalaccept",
                 "op": ">",
                 "left": "kappa",
@@ -170,8 +170,8 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "ifTrue": "provisionalreject",
-                "ifFalse": "nochange",
+                "if_true": "provisionalreject",
+                "if_false": "nochange",
                 "decide_comps": [
                     "provisionalreject",
                     "provisionalaccept"
@@ -187,8 +187,8 @@
         {
             "functionname": "dec_variance_lessthan_thresholds",
             "parameters": {
-                "ifTrue": "accepted",
-                "ifFalse": "nochange",
+                "if_true": "accepted",
+                "if_false": "nochange",
                 "decide_comps": "provisionalreject"
             },
             "kwargs": {
