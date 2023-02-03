@@ -387,7 +387,7 @@ def kundu_selection_v2(comptable, n_echos, n_vols):
 
         # Find components to ignore
         # Of the remaining components, ignore ones with higher variance even if their
-        # decision tree scores are poor
+        # decision tree scores are poor, instead of rejecting them
         sorted_varex = np.flip(np.sort(comptable.loc[unclf, "variance explained"].to_numpy()))
         new_varex_lower = stats.scoreatpercentile(sorted_varex[:num_acc_guess], LOW_PERC)
         candart = unclf[comptable.loc[unclf, "d_table_score_scrub"] > num_acc_guess]
