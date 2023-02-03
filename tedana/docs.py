@@ -5,24 +5,32 @@ import sys
 # Standard documentation entries
 docdict = dict()
 
-docdict["selector"] = """
+docdict[
+    "selector"
+] = """
 selector : :obj:`tedana.selection.component_selector.ComponentSelector`
     The selector to perform decision tree-based component selection with.
 """
 
-docdict["if_true"] = """
+docdict[
+    "if_true"
+] = """
 if_true : :obj:`str`
     If the condition in this step is True, give the component classification this
     label. Use 'nochange' if no label changes are desired.
 """
 
-docdict["if_false"] = """
+docdict[
+    "if_false"
+] = """
 if_false : :obj:`str`
     If the condition in this step is False, give the component classification this
     label. Use 'nochange' to indicate if no label changes are desired.
 """
 
-docdict["decide_comps"] = """
+docdict[
+    "decide_comps"
+] = """
 decide_comps : :obj:`str` or :obj:`list[str]`
     What classification(s) to operate on. using default or
     intermediate_classification labels. For example: decide_comps='unclassified'
@@ -30,43 +38,59 @@ decide_comps : :obj:`str` or :obj:`list[str]`
     components.
 """
 
-docdict["log_extra_report"] = """
+docdict[
+    "log_extra_report"
+] = """
 log_extra_report : :obj:`str`
     Additional text to the report log. Default="".
 """
 
-docdict["log_extra_info"] = """
+docdict[
+    "log_extra_info"
+] = """
 log_extra_info : :obj:`str`
     Additional text to the information log. Default="".
 """
 
-docdict["only_used_metrics"] = """
+docdict[
+    "only_used_metrics"
+] = """
 only_used_metrics : :obj:`bool`
     If True, only return the component_table metrics that would be used. Default=False.
 """
 
-docdict["custom_node_label"] = """
+docdict[
+    "custom_node_label"
+] = """
 custom_node_label : :obj:`str`
     A short label to describe what happens in this step. If "" then a label is
     automatically generated. Default="".
 """
 
-docdict["tag_if_true"] = """
+docdict[
+    "tag_if_true"
+] = """
 tag_if_true : :obj:`str`
     The classification tag to apply if a component is classified True. Default="".
 """
 
-docdict["tag_if_false"] = """
+docdict[
+    "tag_if_false"
+] = """
 tag_if_false : :obj:`str`
     The classification tag to apply if a component is classified False. Default="".
 """
 
-docdict["selector"] = """
+docdict[
+    "selector"
+] = """
 selector : :obj:`~tedana.selection.component_selector.ComponentSelector`
     If only_used_metrics is False, the updated selector is returned.
 """
 
-docdict["used_metrics"] = """
+docdict[
+    "used_metrics"
+] = """
 used_metrics : :obj:`set(str)`
     If only_used_metrics is True, the names of the metrics used in the
     function are returned.

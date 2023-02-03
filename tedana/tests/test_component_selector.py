@@ -141,6 +141,7 @@ def dicts_to_test(treechoice):
 # component_selector Tests
 # ----------------------------------------------------------------------
 
+
 # load_config
 # -----------
 def test_load_config_fails():

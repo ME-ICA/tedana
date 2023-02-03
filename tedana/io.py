@@ -108,7 +108,6 @@ class OutputGenerator:
         verbose=False,
         old_registry=None,
     ):
-
         if config == "auto":
             config = op.join(utils.get_resource_path(), "config", "outputs.json")
 

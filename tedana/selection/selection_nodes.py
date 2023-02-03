@@ -437,7 +437,11 @@ def dec_left_op_right(
             # logical dot product for compound statement
             decision_boolean = statement1 * statement2
 
-        (selector, outputs["n_true"], outputs["n_false"],) = change_comptable_classifications(
+        (
+            selector,
+            outputs["n_true"],
+            outputs["n_false"],
+        ) = change_comptable_classifications(
             selector,
             if_true,
             if_false,
@@ -564,7 +568,11 @@ def dec_variance_lessthan_thresholds(
             while variance[decision_boolean].sum() > all_comp_threshold:
                 tmpmax = variance == variance[decision_boolean].max()
                 decision_boolean[tmpmax] = False
-        (selector, outputs["n_true"], outputs["n_false"],) = change_comptable_classifications(
+        (
+            selector,
+            outputs["n_true"],
+            outputs["n_false"],
+        ) = change_comptable_classifications(
             selector,
             if_true,
             if_false,
@@ -670,7 +678,6 @@ def calc_median(
             decide_comps=decide_comps,
         )
     else:
-
         outputs[label_name] = np.median(selector.component_table.loc[comps2use, metric_name])
 
         selector.cross_component_metrics[label_name] = outputs[label_name]
@@ -1382,7 +1389,6 @@ def calc_max_good_meanmetricrank(
             decide_comps=decide_comps,
         )
     else:
-
         num_prov_accept = len(comps2use)
         if "extend_factor" in selector.cross_component_metrics:
             extend_factor = selector.cross_component_metrics["extend_factor"]
