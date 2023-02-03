@@ -1,12 +1,11 @@
-"""
-Functions that will be used as steps in a decision tree
-"""
+"""Functions that will be used as steps in a decision tree."""
 import logging
 
 import numpy as np
 import pandas as pd
 from scipy.stats import scoreatpercentile
 
+from tedana.docs import fill_doc
 from tedana.metrics.dependence import generate_decision_table_score
 from tedana.selection.selection_utils import (
     change_comptable_classifications,
@@ -18,58 +17,12 @@ from tedana.selection.selection_utils import (
     selectcomps2use,
 )
 
-# from scipy import stats
-
-
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 RefLGR = logging.getLogger("REFERENCES")
 
-decision_docs = {
-    "selector": """\
-selector: :obj:`tedana.selection.component_selector.ComponentSelector`
-        The selector to perform decision tree-based component selection with.""",
-    "ifTrueFalse": """\
-ifTrue: :obj:`str`
-        If the condition in this step is True, give the component classification this
-        label. Use 'nochange' if no label changes are desired.
-    ifFalse: :obj:`str`
-        If the condition in this step is False, give the component classification this
-        label. Use 'nochange' to indicate if no label changes are desired.
-""",
-    "decide_comps": """\
-decide_comps: :obj:`str` or :obj:`list[str]`
-        What classification(s) to operate on. using default or
-        intermediate_classification labels. For example: decide_comps='unclassified'
-        means to operate only on unclassified components. Use 'all' to include all
-        components.""",
-    "log_extra_report": """\
-log_extra_report: :obj:`str`
-        Additional text to the report log. Default="".""",
-    "log_extra_info": """\
-log_extra_info: :obj:`str`
-        Additional text to the information log. Default="".""",
-    "only_used_metrics": """\
-only_used_metrics: :obj:`bool`
-        If True, only return the component_table metrics that would be used. Default=False.""",
-    "custom_node_label": """\
-custom_node_label: :obj:`str`
-        A short label to describe what happens in this step. If "" then a label is
-        automatically generated. Default="".""",
-    "tag_ifTrueFalse": """\
-tag_ifTrue: :obj:`str`
-        The classification tag to apply if a component is classified True. Default="".
-    tag_ifFalse: :obj:`str`
-        The classification tag to apply if a component is classified False. Default="".""",
-    "basicreturns": """\
-selector: :obj:`tedana.selection.component_selector.ComponentSelector`
-        If only_used_metrics is False, the updated selector is returned
-    used_metrics: :obj:`set(str)`
-        If only_used_metrics is True, the names of the metrics used in the
-        function are returned""",
-}
 
-
+@fill_doc
 def manual_classify(
     selector,
     decide_comps,
@@ -82,73 +35,70 @@ def manual_classify(
     tag=None,
     dont_warn_reclassify=False,
 ):
-    """
-    Explicitly assign a classification, defined in new_classification,
-    to all the components in decide_comps.
+    """Assign a classification defined in new_classification to the components in decide_comps.
 
     Parameters
     ----------
-    {selector}
-    {decide_comps}
-    new_classification: :obj:`str`
+    %(selector)s
+    %(decide_comps)s
+    new_classification : :obj:`str`
         Assign all components identified in decide_comps the classification
         in new_classification. Options are 'unclassified', 'accepted',
         'rejected', or intermediate_classification labels predefined in the
         decision tree
-    clear_classification_tags: :obj:`bool`
+    clear_classification_tags : :obj:`bool`
         If True, reset all values in the 'classification_tags' column to empty
         strings. This also can create the classification_tags column if it
         does not already exist. If False, do nothing.
-    tag: :obj:`str`
+    tag : :obj:`str`
         A classification tag to assign to all components being reclassified.
         This should be one of the tags defined by classification_tags in
         the decision tree specification
-    dont_warn_reclassify: :obj:`bool`
+    dont_warn_reclassify : :obj:`bool`
         By default, if this function changes a component classification from accepted or
         rejected to something else, it gives a warning, since those should be terminal
         classifications. If this is True, that warning is suppressed.
         (Useful if manual_classify is used to reset all labels to unclassified).
         Default=False
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
-
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
 
     Note
     ----
-    This was designed with three use
-    cases in mind: (1) Set the classifications of all components to unclassified
+    This was designed with three use cases in mind:
+    (1) Set the classifications of all components to unclassified
     for the first node of a decision tree. clear_classification_tags=True is
-    recommended for this use case. (2) Shift all components between classifications,
-    such as provisionalaccept to accepted for the penultimate node in the decision tree.
+    recommended for this use case.
+    (2) Shift all components between classifications, such as provisionalaccept to accepted for the
+    penultimate node in the decision tree.
     (3) Manually re-classify components by number based on user observations.
 
-    Unlike other decision node functions, ifTrue and ifFalse are not inputs
-    since the same classification is assigned to all components listed in
-    decide_comps
+    Unlike other decision node functions, ``if_true`` and ``if_false`` are not inputs
+    since the same classification is assigned to all components listed in ``decide_comps``.
     """
-
     # predefine all outputs that should be logged
     outputs = {
         "decision_node_idx": selector.current_node_idx,
         "used_metrics": set(),
         "node_label": None,
-        "numTrue": None,
-        "numFalse": None,
+        "n_true": None,
+        "n_false": None,
     }
 
     if only_used_metrics:
         return outputs["used_metrics"]
 
-    ifTrue = new_classification
-    ifFalse = "nochange"
+    if_true = new_classification
+    if_false = "nochange"
 
-    function_name_idx = "Step {}: manual_classify".format((selector.current_node_idx))
+    function_name_idx = f"Step {selector.current_node_idx}: manual_classify"
     if custom_node_label:
         outputs["node_label"] = custom_node_label
     else:
@@ -164,28 +114,26 @@ def manual_classify(
 
     if not comps2use:
         log_decision_tree_step(function_name_idx, comps2use, decide_comps=decide_comps)
-        outputs["numTrue"] = 0
-        outputs["numFalse"] = 0
+        outputs["n_true"] = 0
+        outputs["n_false"] = 0
     else:
         decision_boolean = pd.Series(True, index=comps2use)
-        selector, outputs["numTrue"], outputs["numFalse"] = change_comptable_classifications(
+        selector, outputs["n_true"], outputs["n_false"] = change_comptable_classifications(
             selector,
-            ifTrue,
-            ifFalse,
+            if_true,
+            if_false,
             decision_boolean,
-            tag_ifTrue=tag,
+            tag_if_true=tag,
             dont_warn_reclassify=dont_warn_reclassify,
         )
-        # outputs["numTrue"] = decision_boolean.sum()
-        # outputs["numFalse"] = np.logical_not(decision_boolean).sum()
 
         log_decision_tree_step(
             function_name_idx,
             comps2use,
-            numTrue=outputs["numTrue"],
-            numFalse=outputs["numFalse"],
-            ifTrue=ifTrue,
-            ifFalse=ifFalse,
+            n_true=outputs["n_true"],
+            n_false=outputs["n_false"],
+            if_true=if_true,
+            if_false=if_false,
         )
 
     if clear_classification_tags:
@@ -197,13 +145,11 @@ def manual_classify(
     return selector
 
 
-manual_classify.__doc__ = manual_classify.__doc__.format(**decision_docs)
-
-
+@fill_doc
 def dec_left_op_right(
     selector,
-    ifTrue,
-    ifFalse,
+    if_true,
+    if_false,
     decide_comps,
     op,
     left,
@@ -224,21 +170,20 @@ def dec_left_op_right(
     log_extra_info="",
     custom_node_label="",
     only_used_metrics=False,
-    tag_ifTrue=None,
-    tag_ifFalse=None,
+    tag_if_true=None,
+    tag_if_false=None,
 ):
-    """
-    Performs a relational comparison.
+    """Perform a relational comparison.
 
     Parameters
     ----------
-    {selector}
-    {ifTrueFalse}
-    {decide_comps}
+    %(selector)s
+    %(tag_if_true)s
+    %(tag_if_false)s
+    %(decide_comps)s
     op: :obj:`str`
         Must be one of: ">", ">=", "==", "<=", "<"
         Applied the user defined operator to left op right
-
     left, right: :obj:`str` or :obj:`float`
         The labels for the two metrics to be used for comparision.
         For example: left='kappa', right='rho' and op='>' means this
@@ -261,16 +206,17 @@ def dec_left_op_right(
         this function returns
         (left_scale*)left op (right_scale*right) AND (left2_scale*)left2 op2 (right2_scale*right2)
         if the "3" parameters are also defined then it's the intersection of all 3 statements
-
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
-    {tag_ifTrueFalse}
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
+    %(tag_if_true)s
+    %(tag_if_false)s
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
 
     Note
     ----
@@ -285,15 +231,14 @@ def dec_left_op_right(
     an intentional decision because, if a classification changes if A>B or C>D are true
     then A>B and C>D should be logged separately
     """
-
     # predefine all outputs that should be logged
     outputs = {
         "decision_node_idx": selector.current_node_idx,
         "used_metrics": set(),
         "used_cross_component_metrics": set(),
         "node_label": None,
-        "numTrue": None,
-        "numFalse": None,
+        "n_true": None,
+        "n_false": None,
     }
 
     function_name_idx = f"Step {selector.current_node_idx}: left_op_right"
@@ -443,7 +388,7 @@ def dec_left_op_right(
 
     # Might want to add additional default logging to functions here
     # The function input will be logged before the function call
-    LGR.info(f"{function_name_idx}: {ifTrue} if {outputs['node_label']}, else {ifFalse}")
+    LGR.info(f"{function_name_idx}: {if_true} if {outputs['node_label']}, else {if_false}")
     if log_extra_info:
         LGR.info(f"{function_name_idx} {log_extra_info}")
     if log_extra_report:
@@ -461,14 +406,14 @@ def dec_left_op_right(
             return val  # should be a fixed number
 
     if not comps2use:
-        outputs["numTrue"] = 0
-        outputs["numFalse"] = 0
+        outputs["n_true"] = 0
+        outputs["n_false"] = 0
         log_decision_tree_step(
             function_name_idx,
             comps2use,
             decide_comps=decide_comps,
-            ifTrue=outputs["numTrue"],
-            ifFalse=outputs["numFalse"],
+            if_true=outputs["n_true"],
+            if_false=outputs["n_false"],
         )
 
     else:
@@ -492,24 +437,24 @@ def dec_left_op_right(
             # logical dot product for compound statement
             decision_boolean = statement1 * statement2
 
-        (selector, outputs["numTrue"], outputs["numFalse"],) = change_comptable_classifications(
+        (selector, outputs["n_true"], outputs["n_false"],) = change_comptable_classifications(
             selector,
-            ifTrue,
-            ifFalse,
+            if_true,
+            if_false,
             decision_boolean,
-            tag_ifTrue=tag_ifTrue,
-            tag_ifFalse=tag_ifFalse,
+            tag_if_true=tag_if_true,
+            tag_if_false=tag_if_false,
         )
-        # outputs["numTrue"] = np.asarray(decision_boolean).sum()
-        # outputs["numFalse"] = np.logical_not(decision_boolean).sum()
+        # outputs["n_true"] = np.asarray(decision_boolean).sum()
+        # outputs["n_false"] = np.logical_not(decision_boolean).sum()
 
         log_decision_tree_step(
             function_name_idx,
             comps2use,
-            numTrue=outputs["numTrue"],
-            numFalse=outputs["numFalse"],
-            ifTrue=ifTrue,
-            ifFalse=ifFalse,
+            n_true=outputs["n_true"],
+            n_false=outputs["n_false"],
+            if_true=if_true,
+            if_false=if_false,
         )
 
     selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
@@ -517,13 +462,11 @@ def dec_left_op_right(
     return selector
 
 
-dec_left_op_right.__doc__ = dec_left_op_right.__doc__.format(**decision_docs)
-
-
+@fill_doc
 def dec_variance_lessthan_thresholds(
     selector,
-    ifTrue,
-    ifFalse,
+    if_true,
+    if_false,
     decide_comps,
     var_metric="variance explained",
     single_comp_threshold=0.1,
@@ -532,11 +475,11 @@ def dec_variance_lessthan_thresholds(
     log_extra_info="",
     custom_node_label="",
     only_used_metrics=False,
-    tag_ifTrue=None,
-    tag_ifFalse=None,
+    tag_if_true=None,
+    tag_if_false=None,
 ):
-    """
-    Change classifications for components with variance<single_comp_threshold.
+    """Change classifications for components with variance<single_comp_threshold.
+
     If the sum of the variance for all components that meet this criteria
     is greater than all_comp_threshold then only change classifications for the
     lowest variance components where the sum of their variances is less than
@@ -544,9 +487,10 @@ def dec_variance_lessthan_thresholds(
 
     Parameters
     ----------
-    {selector}
-    {ifTrueFalse}
-    {decide_comps}
+    %(selector)s
+    %(tag_if_true)s
+    %(tag_if_false)s
+    %(decide_comps)s
     var_metric: :obj:`str`
         The name of the metric in component_table for variance. Default="variance explained"
         This is an option so that it is possible to use "normalized variance explained"
@@ -557,29 +501,30 @@ def dec_variance_lessthan_thresholds(
     all_comp_threshold: :obj: `float`
         The number of the variance for all components less than single_comp_threshold
         needs to be under this threshold. Default=1.0
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
-    {tag_ifTrueFalse}
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
+    %(tag_if_true)s
+    %(tag_if_false)s
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
     """
-
     outputs = {
         "decision_node_idx": selector.current_node_idx,
         "used_metrics": set([var_metric]),
         "node_label": None,
-        "numTrue": None,
-        "numFalse": None,
+        "n_true": None,
+        "n_false": None,
     }
 
     if only_used_metrics:
         return outputs["used_metrics"]
 
-    function_name_idx = "Step {}: variance_lt_thresholds".format(selector.current_node_idx)
+    function_name_idx = f"Step {selector.current_node_idx}: variance_lt_thresholds"
     if custom_node_label:
         outputs["node_label"] = custom_node_label
     else:
@@ -587,7 +532,7 @@ def dec_variance_lessthan_thresholds(
             "node_label"
         ] = f"{var_metric}<{single_comp_threshold}. All variance<{all_comp_threshold}"
 
-    LGR.info(f"{function_name_idx}: {ifTrue} if {outputs['node_label']}, else {ifFalse}")
+    LGR.info(f"{function_name_idx}: {if_true} if {outputs['node_label']}, else {if_false}")
     if log_extra_info:
         LGR.info(f"{function_name_idx} {log_extra_info}")
     if log_extra_report:
@@ -599,14 +544,14 @@ def dec_variance_lessthan_thresholds(
     )
 
     if not comps2use:
-        outputs["numTrue"] = 0
-        outputs["numFalse"] = 0
+        outputs["n_true"] = 0
+        outputs["n_false"] = 0
         log_decision_tree_step(
             function_name_idx,
             comps2use,
             decide_comps=decide_comps,
-            ifTrue=outputs["numTrue"],
-            ifFalse=outputs["numFalse"],
+            if_true=outputs["n_true"],
+            if_false=outputs["n_false"],
         )
     else:
         variance = selector.component_table.loc[comps2use, var_metric]
@@ -619,33 +564,29 @@ def dec_variance_lessthan_thresholds(
             while variance[decision_boolean].sum() > all_comp_threshold:
                 tmpmax = variance == variance[decision_boolean].max()
                 decision_boolean[tmpmax] = False
-        (selector, outputs["numTrue"], outputs["numFalse"],) = change_comptable_classifications(
+        (selector, outputs["n_true"], outputs["n_false"],) = change_comptable_classifications(
             selector,
-            ifTrue,
-            ifFalse,
+            if_true,
+            if_false,
             decision_boolean,
-            tag_ifTrue=tag_ifTrue,
-            tag_ifFalse=tag_ifFalse,
+            tag_if_true=tag_if_true,
+            tag_if_false=tag_if_false,
         )
 
         log_decision_tree_step(
             function_name_idx,
             comps2use,
-            numTrue=outputs["numTrue"],
-            numFalse=outputs["numFalse"],
-            ifTrue=ifTrue,
-            ifFalse=ifFalse,
+            n_true=outputs["n_true"],
+            n_false=outputs["n_false"],
+            if_true=if_true,
+            if_false=if_false,
         )
 
     selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
     return selector
 
 
-dec_variance_lessthan_thresholds.__doc__ = dec_variance_lessthan_thresholds.__doc__.format(
-    **decision_docs
-)
-
-
+@fill_doc
 def calc_median(
     selector,
     decide_comps,
@@ -656,29 +597,27 @@ def calc_median(
     custom_node_label="",
     only_used_metrics=False,
 ):
-    """
-    Calculates the median across components for the metric defined by metric_name
+    """Calculate the median across components for the metric defined by metric_name.
 
     Parameters
     ----------
-    {selector}
-    {decide_comps}
+    %(selector)s
+    %(decide_comps)s
     metric_name: :obj:`str`
         The name of a column in selector.component_table. The median of
         the values in this column will be calculated
     median_label: :obj:`str`
         The median will be saved in "median_(median_label)"
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
 
     Returns
     -------
-    {basicreturns}
-
+    %(selector)s
+    %(used_metrics)s
     """
-
     function_name_idx = f"Step {selector.current_node_idx}: calc_median"
     if not isinstance(median_label, str):
         raise ValueError(
@@ -743,9 +682,7 @@ def calc_median(
     return selector
 
 
-calc_median.__doc__ = calc_median.__doc__.format(**decision_docs)
-
-
+@fill_doc
 def calc_kappa_elbow(
     selector,
     decide_comps,
@@ -754,21 +691,21 @@ def calc_kappa_elbow(
     custom_node_label="",
     only_used_metrics=False,
 ):
-    """
-    Calculates elbow for kappa across components
+    """Calculate elbow for kappa across components.
 
     Parameters
     ----------
-    {selector}
-    {decide_comps}
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
+    %(selector)s
+    %(decide_comps)s
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
 
     Note
     ----
@@ -778,7 +715,6 @@ def calc_kappa_elbow(
     a significance threshold. To get the same functionality as in MEICA v2.5,
     decide_comps must be 'all'.
     """
-
     outputs = {
         "decision_node_idx": selector.current_node_idx,
         "node_label": None,
@@ -846,9 +782,7 @@ def calc_kappa_elbow(
     return selector
 
 
-calc_kappa_elbow.__doc__ = calc_kappa_elbow.__doc__.format(**decision_docs)
-
-
+@fill_doc
 def calc_rho_elbow(
     selector,
     decide_comps,
@@ -859,13 +793,12 @@ def calc_rho_elbow(
     custom_node_label="",
     only_used_metrics=False,
 ):
-    """
-    Calculates elbow for rho across components
+    """Calculate elbow for rho across components.
 
     Parameters
     ----------
-    {selector}
-    {decide_comps}
+    %(selector)s
+    %(decide_comps)s
     subset_decide_comps: :obj:`str`
         This is a string with a single component classification label. For the
         elbow calculation used by Kundu in MEICA v.27 thresholds are based
@@ -874,14 +807,15 @@ def calc_rho_elbow(
     rho_elbow_type: :obj:`str`
         The algorithm used to calculate the rho elbow. Current options are:
         'kundu' and 'liberal'. Default='kundu'.
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
 
     Note
     ----
@@ -891,9 +825,7 @@ def calc_rho_elbow(
     'unclassified' See :obj:`tedana.selection.selection_utils.rho_elbow_kundu_liberal`
     for a more detailed explanation of the difference between the kundu and liberal
     options.
-
     """
-
     function_name_idx = f"Step {selector.current_node_idx}: calc_rho_elbow"
 
     if rho_elbow_type == "kundu".lower():
@@ -994,9 +926,7 @@ def calc_rho_elbow(
     return selector
 
 
-calc_rho_elbow.__doc__ = calc_rho_elbow.__doc__.format(**decision_docs)
-
-
+@fill_doc
 def dec_classification_doesnt_exist(
     selector,
     new_classification,
@@ -1011,15 +941,15 @@ def dec_classification_doesnt_exist(
 ):
     """
     If there are no components with a classification specified in class_comp_exists,
-    change the classification of all components in decide_comps
+    change the classification of all components in decide_comps.
 
     Parameters
     ----------
-    {selector}
+    %(selector)s
     new_classification: :obj:`str`
         Assign all components identified in decide_comps the classification
         in new_classification.
-    {decide_comps}
+    %(decide_comps)s
     class_comp_exists: :obj:`str` or :obj:`list[str]` or :obj:`int` or :obj:`list[int]`
         This has the same structure options as decide_comps. This function tests
         whether any components in decide_comps have the classifications defined in this
@@ -1027,10 +957,10 @@ def dec_classification_doesnt_exist(
     at_least_num_exist: :obj:`int`
         Instead of just testing whether a classification exists, test whether at least
         this number of components have that classification. Default=1
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
     tag: :obj:`str`
         A classification tag to assign to all components being reclassified.
         This should be one of the tags defined by classification_tags in
@@ -1038,7 +968,8 @@ def dec_classification_doesnt_exist(
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
 
     Note
     ----
@@ -1052,21 +983,20 @@ def dec_classification_doesnt_exist(
     remaining components are "provisionalreject" then it skips those
     steps and accepts everything left.
     """
-
     # predefine all outputs that should be logged
     outputs = {
         "decision_node_idx": selector.current_node_idx,
         "used_metrics": set(),
         "used_cross_comp_metrics": set(),
         "node_label": None,
-        "numTrue": None,
-        "numFalse": None,
+        "n_true": None,
+        "n_false": None,
     }
 
     if only_used_metrics:
         return outputs["used_metrics"]
 
-    function_name_idx = "Step {}: classification_doesnt_exist".format((selector.current_node_idx))
+    function_name_idx = f"Step {selector.current_node_idx}: classification_doesnt_exist"
     if custom_node_label:
         outputs["node_label"] = custom_node_label
     elif at_least_num_exist == 1:
@@ -1085,42 +1015,42 @@ def dec_classification_doesnt_exist(
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
-    ifTrue = new_classification
-    ifFalse = "nochange"
+    if_true = new_classification
+    if_false = "nochange"
 
     comps2use = selectcomps2use(selector, decide_comps)
 
     do_comps_exist = selectcomps2use(selector, class_comp_exists)
 
     if (not comps2use) or (len(do_comps_exist) >= at_least_num_exist):
-        outputs["numTrue"] = 0
-        # If nothing chanages, then assign the number of components in comps2use to numFalse
-        outputs["numFalse"] = len(comps2use)
+        outputs["n_true"] = 0
+        # If nothing chanages, then assign the number of components in comps2use to n_false
+        outputs["n_false"] = len(comps2use)
         log_decision_tree_step(
             function_name_idx,
             comps2use,
             decide_comps=decide_comps,
-            ifTrue=outputs["numTrue"],
-            ifFalse=outputs["numFalse"],
+            if_true=outputs["n_true"],
+            if_false=outputs["n_false"],
         )
     else:  # do_comps_exist is None:
         decision_boolean = pd.Series(True, index=comps2use)
 
-        selector, outputs["numTrue"], outputs["numFalse"] = change_comptable_classifications(
+        selector, outputs["n_true"], outputs["n_false"] = change_comptable_classifications(
             selector,
-            ifTrue,
-            ifFalse,
+            if_true,
+            if_false,
             decision_boolean,
-            tag_ifTrue=tag,
+            tag_if_true=tag,
         )
 
         log_decision_tree_step(
             function_name_idx,
             comps2use,
-            numTrue=outputs["numTrue"],
-            numFalse=outputs["numFalse"],
-            ifTrue=ifTrue,
-            ifFalse=ifFalse,
+            n_true=outputs["n_true"],
+            n_false=outputs["n_false"],
+            if_true=if_true,
+            if_false=if_false,
         )
 
     selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
@@ -1128,11 +1058,7 @@ def dec_classification_doesnt_exist(
     return selector
 
 
-dec_classification_doesnt_exist.__doc__ = dec_classification_doesnt_exist.__doc__.format(
-    **decision_docs
-)
-
-
+@fill_doc
 def calc_varex_thresh(
     selector,
     decide_comps,
@@ -1144,14 +1070,14 @@ def calc_varex_thresh(
     custom_node_label="",
     only_used_metrics=False,
 ):
-    """
-    Calculates the variance explained threshold to use in the kundu decision tree.
+    """Calculate the variance explained threshold to use in the kundu decision tree.
+
     Will save a high or low percentile threshold depending on highlow_thresh
 
     Parameters
     ----------
-    {selector}
-    {decide_comps}
+    %(selector)s
+    %(decide_comps)s
     thresh_label: :obj:`str`
         The threshold will be saved in "varex_(thresh_label)_thresh"
         In the original kundu decision tree this was either "upper" or "lower"
@@ -1165,17 +1091,16 @@ def calc_varex_thresh(
         lowest variance. Either input an integer directly or input a string that is
         a parameter stored in selector.cross_component_metrics ("num_acc_guess" in
         original decision tree). Default=None
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
 
     Returns
     -------
-    {basicreturns}
-
+    %(selector)s
+    %(used_metrics)s
     """
-
     function_name_idx = f"Step {selector.current_node_idx}: calc_varex_thresh"
     thresh_label = thresh_label.lower()
     if thresh_label is None or thresh_label == "":
@@ -1295,9 +1220,7 @@ def calc_varex_thresh(
     return selector
 
 
-calc_varex_thresh.__doc__ = calc_varex_thresh.__doc__.format(**decision_docs)
-
-
+@fill_doc
 def calc_extend_factor(
     selector,
     log_extra_report="",
@@ -1306,29 +1229,29 @@ def calc_extend_factor(
     only_used_metrics=False,
     extend_factor=None,
 ):
-    """
-    Calculate the scalar used to set a threshold for d_table_score.
+    """Calculate the scalar used to set a threshold for d_table_score.
+
     2 if fewer than 90 fMRI volumes, 3 if more than 110 and linear in-between
     The explanation for the calculation is in
     :obj:`tedana.selection.selection_utils.get_extend_factor`
 
     Parameters
     ----------
-    {selector}
-    {decide_comps}
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
+    %(selector)s
+    %(decide_comps)s
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
     extend_factor: :obj:`float`
         If a number, then use rather than calculating anything.
         If None than calculate. default=None
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
     """
-
     outputs = {
         "used_metrics": set(),
         "decision_node_idx": selector.current_node_idx,
@@ -1370,9 +1293,7 @@ def calc_extend_factor(
     return selector
 
 
-calc_extend_factor.__doc__ = calc_extend_factor.__doc__.format(**decision_docs)
-
-
+@fill_doc
 def calc_max_good_meanmetricrank(
     selector,
     decide_comps,
@@ -1382,27 +1303,29 @@ def calc_max_good_meanmetricrank(
     custom_node_label="",
     only_used_metrics=False,
 ):
-    """
+    """Calculate the metric "max_good_meanmetricrank".
+
     Calculates the max_good_meanmetricrank to use in the kundu decision tree.
     This is the number of components selected with decide_comps * the extend_factor
     calculated in calc_extend_factor
 
     Parameters
     ----------
-    {selector}
-    {decide_comps}
+    %(selector)s
+    %(decide_comps)s
     metric_suffix: :obj:`str`
         By default, this will output a value called "max_good_meanmetricrank"
         If this variable is not None or "" then it will output:
         "max_good_meanmetricrank_[metric_suffix]". Default=None
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
 
     Note
     ----
@@ -1413,7 +1336,6 @@ def calc_max_good_meanmetricrank(
     earlier versions of this code. It might be worth consistently using the same term,
     but this note will hopefully suffice for now.
     """
-
     function_name_idx = f"Step {selector.current_node_idx}: calc_max_good_meanmetricrank"
 
     if (metric_suffix is not None) and (metric_suffix != "") and isinstance(metric_suffix, str):
@@ -1479,9 +1401,7 @@ def calc_max_good_meanmetricrank(
     return selector
 
 
-calc_max_good_meanmetricrank.__doc__ = calc_max_good_meanmetricrank.__doc__.format(**decision_docs)
-
-
+@fill_doc
 def calc_varex_kappa_ratio(
     selector,
     decide_comps,
@@ -1490,23 +1410,25 @@ def calc_varex_kappa_ratio(
     custom_node_label="",
     only_used_metrics=False,
 ):
-    """
+    """Calculate the cross-component metric "kappa_rate".
+
     Calculates the cross_component_metric kappa_rate for the components in decide_comps
     and then calculate the variance explained / kappa ratio for ALL components
     and adds those values to a new column in the component_table titled "varex kappa ratio".
 
     Parameters
     ----------
-    {selector}
-    {decide_comps}
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
+    %(selector)s
+    %(decide_comps)s
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
 
     Note
     ----
@@ -1518,7 +1440,6 @@ def calc_varex_kappa_ratio(
     This metric sometimes causes issues with high magnitude BOLD responses
     such as the V1 response to a block-design flashing checkerboard
     """
-
     function_name_idx = f"Step {selector.current_node_idx}: calc_varex_kappa_ratio"
 
     outputs = {
@@ -1600,9 +1521,7 @@ def calc_varex_kappa_ratio(
     return selector
 
 
-calc_varex_kappa_ratio.__doc__ = calc_varex_kappa_ratio.__doc__.format(**decision_docs)
-
-
+@fill_doc
 def calc_revised_meanmetricrank_guesses(
     selector,
     decide_comps,
@@ -1612,25 +1531,25 @@ def calc_revised_meanmetricrank_guesses(
     custom_node_label="",
     only_used_metrics=False,
 ):
-    """
-    Calculate a new d_table_score (meanmetricrank).
+    """Calculate a new d_table_score (meanmetricrank).
 
     Parameters
     ----------
-    {selector}
-    {decide_comps}
+    %(selector)s
+    %(decide_comps)s
     restrict_factor: :obj:`int` or :obj:`float`
         A scaling factor to scale between num_acc_guess and conservative_guess.
         Default=2.
 
-    {log_extra_info}
-    {log_extra_report}
-    {custom_node_label}
-    {only_used_metrics}
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
 
     Returns
     -------
-    {basicreturns}
+    %(selector)s
+    %(used_metrics)s
 
     Note
     ----
@@ -1653,7 +1572,6 @@ def calc_revised_meanmetricrank_guesses(
         accepted components calculated as the ratio of ``num_acc_guess`` to
         ``restrict_factor``.
     """
-
     function_name_idx = f"Step {selector.current_node_idx}: calc_revised_meanmetricrank_guesses"
 
     outputs = {
@@ -1795,16 +1713,3 @@ def calc_revised_meanmetricrank_guesses(
     selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
 
     return selector
-
-
-calc_revised_meanmetricrank_guesses.__doc__ = calc_revised_meanmetricrank_guesses.__doc__.format(
-    **decision_docs
-)
-
-# NOTE: to debug any documentation rendering, I recommend the following hack:
-# python selection_nodes.py | nl
-# after uncommenting the below and placing the relevant function in the print
-# statement.
-#
-# if __name__ == '__main__':
-#     print(dec_left_op_right.__doc__)

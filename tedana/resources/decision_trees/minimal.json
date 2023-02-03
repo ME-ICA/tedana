@@ -1,7 +1,7 @@
 {
     "tree_id": "minimal_decision_tree_test1",
     "info": "Proposed minimal decision tree",
-    "report": "This is based on the minimal criteria of the original MEICA decision tree without the more agressive noise removal steps",
+    "report": "This is based on the minimal criteria of the original MEICA decision tree without the more aggressive noise removal steps",
     "refs": "Kundu 2013; DuPre, Salo, 2021",
     "necessary_metrics": [
         "kappa",
@@ -38,8 +38,8 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "ifTrue": "rejected",
-                "ifFalse": "nochange",
+                "if_true": "rejected",
+                "if_false": "nochange",
                 "decide_comps": "all",
                 "op": ">",
                 "left": "rho",
@@ -47,14 +47,14 @@
             },
             "kwargs": {
                 "log_extra_report": "",
-                "tag_ifTrue": "Unlikely BOLD"
+                "tag_if_true": "Unlikely BOLD"
             }
         },
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "ifTrue": "rejected",
-                "ifFalse": "nochange",
+                "if_true": "rejected",
+                "if_false": "nochange",
                 "decide_comps": "all",
                 "op": ">",
                 "left": "countsigFS0",
@@ -65,7 +65,7 @@
                 "op2": ">",
                 "right2": 0,
                 "log_extra_report": "",
-                "tag_ifTrue": "Unlikely BOLD"
+                "tag_if_true": "Unlikely BOLD"
             }
         },
         {
@@ -79,8 +79,8 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "ifTrue": "rejected",
-                "ifFalse": "nochange",
+                "if_true": "rejected",
+                "if_false": "nochange",
                 "decide_comps": "all",
                 "op": ">",
                 "left": "dice_FS0",
@@ -91,14 +91,14 @@
                 "op2": ">",
                 "right2": "median_varex",
                 "log_extra_report": "",
-                "tag_ifTrue": "Unlikely BOLD"
+                "tag_if_true": "Unlikely BOLD"
             }
         },
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "ifTrue": "rejected",
-                "ifFalse": "nochange",
+                "if_true": "rejected",
+                "if_false": "nochange",
                 "decide_comps": "all",
                 "op": ">",
                 "left": 0,
@@ -109,7 +109,7 @@
                 "op2": ">",
                 "right2": "median_varex",
                 "log_extra_report": "",
-                "tag_ifTrue": "Unlikely BOLD"
+                "tag_if_true": "Unlikely BOLD"
             }
         },
         {
@@ -139,8 +139,8 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "ifTrue": "provisionalaccept",
-                "ifFalse": "provisionalreject",
+                "if_true": "provisionalaccept",
+                "if_false": "provisionalreject",
                 "decide_comps": "unclassified",
                 "op": ">=",
                 "left": "kappa",
@@ -153,8 +153,8 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "ifTrue": "accepted",
-                "ifFalse": "nochange",
+                "if_true": "accepted",
+                "if_false": "nochange",
                 "decide_comps": "provisionalaccept",
                 "op": ">",
                 "left": "kappa",
@@ -164,14 +164,14 @@
                 "log_extra_info": "If kappa>elbow and kappa>2*rho accept even if rho>elbow",
                 "log_extra_report": "",
                 "right_scale": 2,
-                "tag_ifTrue": "Likely BOLD"
+                "tag_if_true": "Likely BOLD"
             }
         },
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "ifTrue": "provisionalreject",
-                "ifFalse": "nochange",
+                "if_true": "provisionalreject",
+                "if_false": "nochange",
                 "decide_comps": [
                     "provisionalreject",
                     "provisionalaccept"
@@ -187,8 +187,8 @@
         {
             "functionname": "dec_variance_lessthan_thresholds",
             "parameters": {
-                "ifTrue": "accepted",
-                "ifFalse": "nochange",
+                "if_true": "accepted",
+                "if_false": "nochange",
                 "decide_comps": "provisionalreject"
             },
             "kwargs": {
@@ -197,7 +197,7 @@
                 "log_extra_report": "",
                 "single_comp_threshold": 0.1,
                 "all_comp_threshold": 1.0,
-                "tag_ifTrue": "Low variance"
+                "tag_if_true": "Low variance"
             }
         },
         {

@@ -38,9 +38,7 @@ class TreeError(Exception):
 
 
 def load_config(tree):
-    """
-    Loads the json file with the decision tree and validates that the
-    fields in the decision tree are appropriate.
+    """Load the json file with the decision tree and validate the fields in the decision tree.
 
     Parameters
     ----------
@@ -75,8 +73,7 @@ def load_config(tree):
 
 
 def validate_tree(tree):
-    """
-    Confirms that provided `tree` is a valid decision tree
+    """Confirm that provided `tree` is a valid decision tree.
 
     Parameters
     ----------
@@ -141,9 +138,7 @@ def validate_tree(tree):
             fcn = getattr(selection_nodes, node.get("functionname"))
             sig = inspect.signature(fcn)
         except (AttributeError, TypeError):
-            err_msg += "Node {} has invalid functionname parameter: {}\n".format(
-                i, node.get("functionname")
-            )
+            err_msg += f"Node {i} has invalid functionname parameter: {node.get('functionname')}\n"
             continue
 
         # Get a functions parameters and compare to parameters defined in the tree
@@ -152,12 +147,12 @@ def validate_tree(tree):
 
         missing_pos = pos - set(node.get("parameters").keys()) - defaults
         if len(missing_pos) > 0:
-            err_msg += "Node {} is missing required parameter(s): {}\n".format(i, missing_pos)
+            err_msg += f"Node {i} is missing required parameter(s): {missing_pos}\n"
 
         invalid_params = set(node.get("parameters").keys()) - pos
         if len(invalid_params) > 0:
-            err_msg += "Node {} has additional, undefined required parameters: {}\n".format(
-                i, invalid_params
+            err_msg += (
+                f"Node {i} has additional, undefined required parameters: {invalid_params}\n"
             )
 
         # Only if kwargs are inputted, make sure they are all valid
@@ -165,9 +160,8 @@ def validate_tree(tree):
             invalid_kwargs = set(node.get("kwargs").keys()) - kwargs
             if len(invalid_kwargs) > 0:
                 err_msg += (
-                    "Node {} has additional, undefined optional parameters (kwargs): {}\n".format(
-                        i, invalid_kwargs
-                    )
+                    f"Node {i} has additional, undefined optional parameters (kwargs): "
+                    f"{invalid_kwargs}\n"
                 )
 
         # Gather all the classification labels used in each tree both for
@@ -181,13 +175,13 @@ def validate_tree(tree):
         # "provisionalaccepted" they won't be included and there might not
         # be any other warnings
         compclass = set()
-        if "ifTrue" in node.get("parameters").keys():
-            tmp_comp = node["parameters"]["ifTrue"]
+        if "if_true" in node.get("parameters").keys():
+            tmp_comp = node["parameters"]["if_true"]
             if isinstance(tmp_comp, str):
                 tmp_comp = [tmp_comp]
             compclass = compclass | set(tmp_comp)
-        if "ifFalse" in node.get("parameters").keys():
-            tmp_comp = node["parameters"]["ifFalse"]
+        if "if_false" in node.get("parameters").keys():
+            tmp_comp = node["parameters"]["if_false"]
             if isinstance(tmp_comp, str):
                 tmp_comp = [tmp_comp]
             compclass = compclass | set(tmp_comp)
@@ -208,10 +202,10 @@ def validate_tree(tree):
 
         if node.get("kwargs") is not None:
             tagset = set()
-            if "tag_ifTrue" in node.get("kwargs").keys():
-                tagset.update(set([node["kwargs"]["tag_ifTrue"]]))
-            if "tag_ifFalse" in node.get("kwargs").keys():
-                tagset.update(set([node["kwargs"]["tag_ifFalse"]]))
+            if "tag_if_true" in node.get("kwargs").keys():
+                tagset.update(set([node["kwargs"]["tag_if_true"]]))
+            if "tag_if_false" in node.get("kwargs").keys():
+                tagset.update(set([node["kwargs"]["tag_if_false"]]))
             if "tag" in node.get("kwargs").keys():
                 tagset.update(set([node["kwargs"]["tag"]]))
             undefined_classification_tags = tagset.difference(set(tree.get("classification_tags")))
@@ -228,60 +222,55 @@ def validate_tree(tree):
 
 
 class ComponentSelector:
-    """
-    Contains information and methods to load and classify components based on
-    a specified `tree`
-    """
+    """Load and classify components based on a specified ``tree``."""
 
     def __init__(self, tree, component_table, cross_component_metrics={}, status_table=None):
-        """
-        Initialize the class using the info specified in the json file `tree`
+        """Initialize the class using the info specified in the json file ``tree``.
 
         Parameters
         ----------
         tree : :obj:`str`
-            The named tree or path to a JSON file that defines one
+            The named tree or path to a JSON file that defines one.
         component_table : (C x M) :obj:`pandas.DataFrame`
             Component metric table. One row for each component, with a column for
-            each metric; the index should be the component number
+            each metric; the index should be the component number.
         cross_component_metrics : :obj:`dict`
             Metrics that are each a single value calculated across components.
-            Default is empty
+            Default is empty dictionary.
         status_table : :obj:`pandas.DataFrame`
             A table tracking the status of each component at each step.
             Pass a status table if running additional steps on a decision
             tree that was already executed. Default=None.
 
-
         Notes
         -----
-        Initializing the  `ComponentSelector` confirms tree is valid and
-        loads all information in the tree json file into `ComponentSelector`
+        Initializing the  ``ComponentSelector`` confirms tree is valid and
+        loads all information in the tree json file into ``ComponentSelector``.
 
-        Adds to the `ComponentSelector`:
+        Adds to the ``ComponentSelector``:
 
         - component_status_table: empty dataframe or contents of inputted status_table
         - cross_component_metrics: empty dict or contents of inputed values
         - used_metrics: empty set
 
         Any parameter that is used by a decision tree node function can be passed
-        as a parameter in the `ComponentSelector` initialization or can be
-        included in the json file that defines the decision tree. If a parameter
-        is set in the json file, that will take precedence. As a style rule, a
-        parameter that is the same regardless of the inputted data should be
-        defined in the decision tree json file. A parameter that is dataset specific
-        should be passed through the initialization function. Dataset specific
-        parameters that may need to be passed during initialization include:
+        as a parameter in the ``ComponentSelector`` initialization or can be
+        included in the json file that defines the decision tree.
+        If a parameter is set in the json file, that will take precedence.
+        As a style rule, a parameter that is the same regardless of the inputted data should be
+        defined in the decision tree json file.
+        A parameter that is dataset-specific should be passed through the initialization function.
+        Dataset-specific parameters that may need to be passed during initialization include:
 
         n_echos : :obj:`int`
             Number of echos in multi-echo fMRI data.
             Required for kundu and minimal trees
-        n_vols: :obj:`int`
+        n_vols : :obj:`int`
             Number of volumes (time points) in the fMRI data
             Required for kundu tree
 
         An example initialization with these options would look like
-        `selector = ComponentSelector(tree, comptable, n_echos=n_echos, n_vols=n_vols)`
+        ``selector = ComponentSelector(tree, comptable, n_echos=n_echos, n_vols=n_vols)``
         """
 
         self.tree_name = tree
@@ -331,8 +320,9 @@ class ComponentSelector:
             self.component_status_table = status_table
 
     def select(self):
-        """
-        Using the validated tree in `ComponentSelector` to run the decision
+        """Apply the decision tree to data.
+
+        Using the validated tree in ``ComponentSelector`` to run the decision
         tree functions to calculate cross_component metrics and classify
         each component as accepted or rejected.
 
@@ -350,17 +340,17 @@ class ComponentSelector:
 
         When this is run, multiple elements in `ComponentSelector` will change including:
 
-        - component_table: `classification` column with `accepted` or `rejected labels`
-          and `classification_tags` column with can hold multiple comma-separated labels
+        - component_table: ``classification`` column with ``accepted`` or ``rejected`` labels
+          and ``classification_tags`` column with can hold multiple comma-separated labels
           explaining why a classification happened
         - cross_component_metrics: Any values that were calculated based on the metric
           values across components or by direct user input
         - component_status_table: Contains the classification statuses at each node in
           the decision tree
         - used_metrics: A list of metrics used in the selection process
-        - nodes: The original tree definition with an added `outputs` key listing
+        - nodes: The original tree definition with an added ``outputs`` key listing
           everything that changed in each node
-        - current_node_idx: The total number of nodes run in `ComponentSelector`
+        - current_node_idx: The total number of nodes run in ``ComponentSelector``
         """
 
         if "classification_tags" not in self.component_table.columns:
@@ -400,6 +390,7 @@ class ComponentSelector:
                 self = fcn(self, **params, **kwargs)
             else:
                 self = fcn(self, **params)
+
             self.tree["used_metrics"].update(
                 self.tree["nodes"][self.current_node_idx]["outputs"]["used_metrics"]
             )
@@ -410,6 +401,7 @@ class ComponentSelector:
                 f"Step {self.current_node_idx} Full outputs: "
                 f"{self.tree['nodes'][self.current_node_idx]['outputs']}"
             )
+
         # move decision columns to end
         self.component_table = clean_dataframe(self.component_table)
         # warning anything called a necessary metric wasn't used and if
@@ -419,14 +411,13 @@ class ComponentSelector:
         self.are_all_components_accepted_or_rejected()
 
     def add_manual(self, indices, classification):
-        """
-        Add nodes that will manually classify components
+        """Add nodes that will manually classify components.
 
         Parameters
         ----------
-        indices: :obj:`list[int]`
+        indices : :obj:`list[int]`
             The indices to manually classify
-        classification: :obj:`str`
+        classification : :obj:`str`
             The classification to set the nodes to (i.e. accepted or rejected)
         """
         self.tree["nodes"].append(
@@ -460,9 +451,9 @@ class ComponentSelector:
                     params[key] = getattr(self, key)
                 except AttributeError:
                     raise ValueError(
-                        "Parameter {} is required in node {}, but not defined. ".format(key, fcn)
-                        + "If {} is dataset specific, it should be "
-                        "defined in the ".format(key) + " initialization of "
+                        f"Parameter {key} is required in node {fcn}, but not defined. "
+                        f"If {key} is dataset specific, it should be "
+                        "defined in the initialization of "
                         "ComponentSelector. If it is fixed regardless of dataset, it "
                         "should be defined in the json file that defines the "
                         "decision tree."
@@ -487,7 +478,7 @@ class ComponentSelector:
         if len(not_used) > 0:
             LGR.warning(
                 f"Decision tree {self.tree_name} did not use the following metrics "
-                "that were declared as necessary: {not_used}"
+                f"that were declared as necessary: {not_used}"
             )
 
     def are_all_components_accepted_or_rejected(self):
@@ -513,24 +504,24 @@ class ComponentSelector:
         return len(self.component_table)
 
     @property
-    def LikelyBOLD_comps(self):
-        """A boolean pd.DataSeries of components that are tagged "Likely BOLD"."""
-        LikelyBOLD_comps = self.component_table["classification_tags"].copy()
-        for idx in range(len(LikelyBOLD_comps)):
-            if "Likely BOLD" in LikelyBOLD_comps.loc[idx]:
-                LikelyBOLD_comps.loc[idx] = True
+    def likely_bold_comps(self):
+        """A boolean :obj:`pandas.Series` of components that are tagged "Likely BOLD"."""
+        likely_bold_comps = self.component_table["classification_tags"].copy()
+        for idx in range(len(likely_bold_comps)):
+            if "Likely BOLD" in likely_bold_comps.loc[idx]:
+                likely_bold_comps.loc[idx] = True
             else:
-                LikelyBOLD_comps.loc[idx] = False
-        return LikelyBOLD_comps
+                likely_bold_comps.loc[idx] = False
+        return likely_bold_comps
 
     @property
-    def n_LikelyBOLD_comps(self):
+    def n_likely_bold_comps(self):
         """The number of components that are tagged "Likely BOLD"."""
-        return self.LikelyBOLD_comps.sum()
+        return self.likely_bold_comps.sum()
 
     @property
     def accepted_comps(self):
-        """A boolean pd.DataSeries of components that are accepted."""
+        """A boolean :obj:`pandas.Series` of components that are accepted."""
         return self.component_table["classification"] == "accepted"
 
     @property
@@ -540,15 +531,15 @@ class ComponentSelector:
 
     @property
     def rejected_comps(self):
-        """A boolean pd.DataSeries of components that are rejected."""
+        """A boolean :obj:`pandas.Series` of components that are rejected."""
         return self.component_table["classification"] == "rejected"
 
     def to_files(self, io_generator):
-        """Convert this selector into component files
+        """Convert this selector into component files.
 
         Parameters
         ----------
-        io_generator: :obj:`tedana.io.OutputGenerator`
+        io_generator : :obj:`tedana.io.OutputGenerator`
             The output generator to use for filename generation and saving.
         """
         io_generator.save_file(self.component_table, "ICA metrics tsv")

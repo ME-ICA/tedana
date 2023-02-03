@@ -17,8 +17,7 @@ F_MAX = 500
 
 
 def kundu_tedpca(comptable, n_echos, kdaw=10.0, rdaw=1.0, stabilize=False):
-    """
-    Select PCA components using Kundu's decision tree approach.
+    """Select PCA components using Kundu's decision tree approach.
 
     Parameters
     ----------

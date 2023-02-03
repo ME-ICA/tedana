@@ -657,11 +657,11 @@ def tedana_workflow(
                 "ICA",
                 metrics=required_metrics,
             )
-            ica_selection = selection.automatic_selection(comptable, n_echos, n_vols, tree=tree)
-            n_LikelyBOLD_comps = ica_selection.n_LikelyBOLD_comps
-            if (n_restarts < maxrestart) and (n_LikelyBOLD_comps == 0):
+            ica_selector = selection.automatic_selection(comptable, n_echos, n_vols, tree=tree)
+            n_likely_bold_comps = ica_selector.n_likely_bold_comps
+            if (n_restarts < maxrestart) and (n_likely_bold_comps == 0):
                 LGR.warning("No BOLD components found. Re-attempting ICA.")
-            elif n_LikelyBOLD_comps == 0:
+            elif n_likely_bold_comps == 0:
                 LGR.warning("No BOLD components found, but maximum number of restarts reached.")
                 keep_restarting = False
             else:
@@ -701,7 +701,7 @@ def tedana_workflow(
             "ICA",
             metrics=required_metrics,
         )
-        ica_selection = selection.automatic_selection(
+        ica_selector = selection.automatic_selection(
             comptable,
             n_echos,
             n_vols,
@@ -719,7 +719,7 @@ def tedana_workflow(
     io_generator.save_file(betas_oc, "z-scored ICA components img")
 
     # Save component selector and tree
-    ica_selection.to_files(io_generator)
+    ica_selector.to_files(io_generator)
     # Save metrics and metadata
     metric_metadata = metrics.collect.get_metadata(comptable)
     io_generator.save_file(metric_metadata, "ICA metrics json")
@@ -736,16 +736,16 @@ def tedana_workflow(
         }
     io_generator.save_file(decomp_metadata, "ICA decomposition json")
 
-    if ica_selection.n_LikelyBOLD_comps == 0:
+    if ica_selector.n_likely_bold_comps == 0:
         LGR.warning("No BOLD components detected! Please check data and results!")
 
     # TODO: un-hack separate comptable
-    comptable = ica_selection.component_table
+    comptable = ica_selector.component_table
 
     mmix_orig = mmix.copy()
     if tedort:
-        comps_accepted = ica_selection.accepted_comps
-        comps_rejected = ica_selection.rejected_comps
+        comps_accepted = ica_selector.accepted_comps
+        comps_rejected = ica_selector.rejected_comps
         acc_ts = mmix[:, comps_accepted]
         rej_ts = mmix[:, comps_rejected]
         betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
@@ -754,7 +754,7 @@ def tedana_workflow(
         mmix[:, comps_rejected] = resid
         comp_names = [
             io.add_decomp_prefix(comp, prefix="ICA", max_value=comptable.index.max())
-            for comp in range(ica_selection.n_comps)
+            for comp in range(ica_selector.n_comps)
         ]
 
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)

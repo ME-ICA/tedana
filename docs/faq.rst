@@ -119,7 +119,7 @@ is also accepted under the assumption that, even if a component contains noise, 
 is sufficient T2*-weighted signal to retain. Similarly to the kundu tree, components
 with very low variance are retained so that degrees of freedom aren't wasted by
 removing them, but `minimal` makes sure that no more than 1% of total variance is
-removed this way. 
+removed this way.
 
 ``tedana`` developers still want to examine how the minimal tree performs on a wide
 range of datasets, but primary benefit is that it is possible to describe what it does
@@ -146,10 +146,10 @@ Dr. Prantik Kundu developed a multi-echo ICA (ME-ICA) denoising method and
 `shared code on bitbucket`_ to allow others to use the method. A nearly identical
 version of this code is `distributed with AFNI as MEICA v2.5 beta 11`_. Most early
 publications that validated the MEICA method used variants of this code. That code
-runs only on the now defunct python 2.7 and is not under active development. 
+runs only on the now defunct python 2.7 and is not under active development.
 ``tedana`` when run with `--tree kundu --tedpca kundu` (or `--tedpca kundu-stabilize`),
 uses the same core algorithm as in MEICA v2.5. Since ICA is a nondeterministic
-algorithm and ``tedana`` and MEICA use different PCA and ICA code, the algorithm will 
+algorithm and ``tedana`` and MEICA use different PCA and ICA code, the algorithm will
 mostly be the same, but the results will not be identical.
 
 Prantik Kundu also worked on `MEICA v3.2`_ (also for python v2.7). The underlying ICA

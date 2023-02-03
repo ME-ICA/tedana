@@ -4,7 +4,7 @@ Output file name descriptions
 
 tedana allows for multiple file naming conventions. The key labels and naming options for
 each convention that can be set using the `--convention` option are in `outputs.json`_.
-The output of `tedana` also includes a file called `registry.json` or 
+The output of `tedana` also includes a file called `registry.json` or
 `desc-tedana_registry.json` that includes the keys and the matching file names for the
 output. The table below lists both these keys and the default "BIDS Derivatives"
 file names.
@@ -76,7 +76,7 @@ tedana_report.html                                                           The
                                                                              ``desc-tedana_metrics.tsv``.
 "ICA cross component metrics json": desc-ICACrossComponent_metrics.json      Metric names and values that are each a single number
                                                                              calculated across components. For example, kappa and
-                                                                             rho elbows.     
+                                                                             rho elbows.
 "ICA decision tree json": desc-ICA_decision_tree                             A copy of the inputted decision tree specification with
                                                                              an added "output" field for each node. The output field
                                                                              contains information about what happened during

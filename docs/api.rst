@@ -133,7 +133,7 @@ API
 .. autosummary::
    :toctree: generated/
    :template: module.rst
-   
+
    tedana.selection.selection_nodes
    tedana.selection.selection_utils
    tedana.selection.tedica

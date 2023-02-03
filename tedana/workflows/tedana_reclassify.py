@@ -265,6 +265,7 @@ def post_tedana(
     for a in acc:
         if a in rej:
             in_both.append(a)
+
     if len(in_both) != 0:
         raise ValueError("The following components were both accepted and rejected: " f"{in_both}")
 
@@ -307,6 +308,7 @@ def post_tedana(
     else:
         data_oc = ioh.get_file_contents("combined img")
         used_gs = False
+
     io_generator = io.OutputGenerator(
         data_oc,
         convention=convention,
@@ -328,8 +330,10 @@ def post_tedana(
 
     if accept:
         selector.add_manual(accept, "accepted")
+
     if reject:
         selector.add_manual(reject, "rejected")
+
     selector.select()
     comptable = selector.component_table
 

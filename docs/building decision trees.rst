@@ -45,13 +45,13 @@ The file key names are used below the full file names in the
 .. _ComponentSelector object: generated/tedana.selection.component_selector.ComponentSelector.html
 .. _output file descriptions: output_file_descriptions.html
 
-**General outputs from component selection** 
+**General outputs from component selection**
 
 New columns in ``selector.component_table`` and the "ICA metrics tsv" file:
 
     classification:
         While the decision table is running, there may also be intermediate
-        classification labels, but the final labels are expected to be 
+        classification labels, but the final labels are expected to be
         "accepted" or "rejected". There will be a warning if other labels remain.
 
     classification_tags:
@@ -61,7 +61,7 @@ New columns in ``selector.component_table`` and the "ICA metrics tsv" file:
         for visualizing and reviewing results
 
 ``selector.cross_component_metrics`` and "ICA cross component metrics json":
-    A dictionary of metrics that are each a single value calculated across components. 
+    A dictionary of metrics that are each a single value calculated across components.
     For example, kappa and rho elbows. User or pre-defined scaling factors are
     also be stored here. Any constant that is used in the component classification
     processes that isn't pre-defined in the decision tree file should be saved here.
@@ -79,8 +79,8 @@ New columns in ``selector.component_table`` and the "ICA metrics tsv" file:
     what happened during execution. Of particular note, each output includes a list
     of the metrics used within the node, "node_label", which is a (hopefully) human
     readable brief description of the node's function and, for nodes where component
-    classifications can change, "numFalse" & "numTrue" list who many components
-    changed classifications. The inputted parameters include "ifTrue" and "ifFalse"
+    classifications can change, "n_false" & "n_true" list who many components
+    changed classifications. The inputted parameters include "if_true" and "if_false"
     which specify what changes for each component. These fields can be used to
     construct a visual flow chart or text-based summary of how classifications
     changed for each run.
@@ -109,7 +109,7 @@ decison_node_idx:
     The decision tree functions are run as part of an ordered list.
     This is the positional index the location of the function in
     the list, starting with index 0.
-    
+
 used_metrics:
     A list of the metrics used in a node of the decision tree
 
@@ -120,7 +120,7 @@ node_label:
     A brief label for what happens in this node that can be used in a decision
     tree summary table or flow chart.
 
-numTrue, numFalse:
+n_true, n_false:
     For decision tree (dec) functions, the number of components that were classified
     as true or false respectively in this decision tree step.
 
@@ -179,14 +179,14 @@ in `selection_nodes.py`_
 There are several fields with general information. Some of these store general
 information that's useful for reporting results and others store information
 that Are used to checks whether results are plausible & can help avoid mistakes
-  
+
   tree_id:
       A descriptive name for the tree that will be logged.
 
   info:
       A brief description of the tree for info logging
 
-  report: 
+  report:
       A narrative description of the tree that could be used in report logging
 
   refs:
@@ -253,11 +253,11 @@ In addition to the intermediate and default ("accepted" "rejected" "unclassified
 component classifications, this can be "all" for functions that should be applied to
 all components regardless of their classifications.
 
-Most decision functions also include "ifTrue" and "ifFalse" which specify how to change
+Most decision functions also include "if_true" and "if_false" which specify how to change
 the classification of each component based on whether a the decision criterion is true
 or false. In addition to the default and intermediate classification options, this can
 also be "nochange" (i.e. For components where a>b is true, "reject". For components
-where a>b is false, "nochange"). The optional parameters "tag_ifTrue" and "tag_ifFalse"
+where a>b is false, "nochange"). The optional parameters "tag_if_true" and "tag_if_false"
 define the classification tags to be assigned to components. Currently, the only
 exceptions are "manual_classify" and "dec_classification_doesnt_exist" which use
 "new_classification" to designate the new component classification and "tag" (optional)
@@ -290,7 +290,7 @@ There are several expectations for selection functions that are necessary for th
 properly execute. In `selection_nodes.py`_, ``manual_classify``, ``dec_left_op_right``,
 and ``calc_kappa_rho_elbows_kundu`` are good examples for how to meet these expectations.
 
-Create a dictionary called "outputs" that includes key fields that should be recorded. 
+Create a dictionary called "outputs" that includes key fields that should be recorded.
 The following line should be at the end of each function to retain the output info:
 ``selector.nodes[selector.current_node_idx]["outputs"] = outputs``
 
@@ -300,7 +300,7 @@ fields are common and may be used by other parts of the code:
 - "decision_node_idx" (required): the ordered index for the current function in the
   decision tree.
 - "node_label" (required): A decriptive label for what happens in the node.
-- "numTrue" & "numFalse" (required for decision functions): For decision functions,
+- "n_true" & "n_false" (required for decision functions): For decision functions,
   the number of components labeled true or false within the function call.
 - "used_metrics" (required if a function uses metrics): The list of metrics used in
   the function. This can be hard coded, defined by input parameters, or empty.
@@ -342,8 +342,8 @@ Nearly every function has a clause like:
 
   if comps2use is None:
       log_decision_tree_step(function_name_idx, comps2use, decide_comps=decide_comps)
-      outputs["numTrue"] = 0
-      outputs["numFalse"] = 0
+      outputs["n_true"] = 0
+      outputs["n_false"] = 0
   else:
 
 If there are no components with the classifications in ``decide_comps`` this logs that
@@ -356,7 +356,7 @@ which will update the component_table classifications, update the classification
 in component_status_table, and update the component classification_tags. Components not
 in ``decide_comps`` retain their existing classifications and tags.
 ``change_comptable_classifications`` also returns and should assign values to
-``outputs["numTrue"]`` and ``outputs["numFalse"]``. These log how many components were
+``outputs["n_true"]`` and ``outputs["n_false"]``. These log how many components were
 identified as true or false within each function.
 
 For calculation functions, the calculated values should be added as a value/key pair to
@@ -371,7 +371,7 @@ Every function should end with:
   selector.nodes[selector.current_node_idx]["outputs"] = outputs
   return selector
 
-  functionname.__doc__ = (functionname.__doc__.format(**decision_docs))
+  functionname.__doc__ = (functionname.__doc__.format(**DECISION_DOCS))
 
 This makes sure the outputs from the function are saved in the class structure and the
 class structure is returned. The following line should include the function's name and

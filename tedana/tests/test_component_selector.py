@@ -59,8 +59,8 @@ def dicts_to_test(treechoice):
             {
                 "functionname": "dec_left_op_right",
                 "parameters": {
-                    "ifTrue": "rejected",
-                    "ifFalse": "nochange",
+                    "if_true": "rejected",
+                    "if_false": "nochange",
                     "decide_comps": "all",
                     "op": ">",
                     "left": "rho",
@@ -68,14 +68,14 @@ def dicts_to_test(treechoice):
                 },
                 "kwargs": {
                     "log_extra_info": "random1 if Kappa<Rho",
-                    "tag_ifTrue": "random1",
+                    "tag_if_true": "random1",
                 },
             },
             {
                 "functionname": "dec_left_op_right",
                 "parameters": {
-                    "ifTrue": "random2",
-                    "ifFalse": "nochange",
+                    "if_true": "random2",
+                    "if_false": "nochange",
                     "decide_comps": "all",
                     "op": ">",
                     "left": "kappa",
@@ -85,7 +85,7 @@ def dicts_to_test(treechoice):
                     "log_extra_info": "random2 if Kappa>Rho",
                     "log_extra_report": "",
                     # Warning for an non-predefined classification assigned to a component
-                    "tag_ifTrue": "random2notpredefined",
+                    "tag_if_true": "random2notpredefined",
                 },
             },
             {
@@ -215,8 +215,8 @@ def test_validate_tree_succeeds():
         if "/minimal.json" in tree_name:
             # Should remove/ignore the "reconstruct_from" key during validation
             tree["reconstruct_from"] = "testinput"
-            # Need to test handling of the tag_ifFalse kwarg somewhere
-            tree["nodes"][1]["kwargs"]["tag_ifFalse"] = "testing tag"
+            # Need to test handling of the tag_if_false kwarg somewhere
+            tree["nodes"][1]["kwargs"]["tag_if_false"] = "testing tag"
             assert component_selector.validate_tree(tree)
 
 
@@ -321,8 +321,8 @@ def test_selector_properties_smoke():
 
     assert selector.n_comps == 21
 
-    # Also runs selector.LikelyBOLD_comps and should need to deal with sets in each field
-    assert selector.n_LikelyBOLD_comps == 17
+    # Also runs selector.likely_bold_comps and should need to deal with sets in each field
+    assert selector.n_likely_bold_comps == 17
 
     assert selector.n_accepted_comps == 17
 

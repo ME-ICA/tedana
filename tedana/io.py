@@ -33,8 +33,7 @@ ALLOWED_COMPONENT_DELIMITERS = (
 
 
 class CustomEncoder(json.JSONEncoder):
-    """Class for converting some types because of JSON serialization and numpy
-    incompatibilities
+    """Class for converting some types because of JSON serialization and numpy incompatibilities.
 
     See here: https://stackoverflow.com/q/50916422/2589328
     """
@@ -89,11 +88,11 @@ class OutputGenerator:
         This will correspond to a "figures" subfolder of ``out_dir``.
     prefix : str
         Prefix to prepend to output filenames.
-    force: bool
+    force : bool
         Whether to force file overwrites.
     verbose : bool
         Whether or not to generate verbose output.
-    registry: dict
+    registry : dict
         A registry of all files saved
     """
 
@@ -127,6 +126,7 @@ class OutputGenerator:
                     f"({', '.join(v.keys())})"
                 )
             cfg[k] = v[convention]
+
         self.config = cfg
         self.reference_img = check_niimg(reference_img)
         self.convention = convention
@@ -259,6 +259,7 @@ class OutputGenerator:
                 "please use the --force option in the command line or the "
                 "force parameter in the Python API."
             )
+
         if description.endswith("img"):
             self.save_img(data, name)
         elif description.endswith("json"):
@@ -266,6 +267,8 @@ class OutputGenerator:
             self.save_json(prepped, name)
         elif description.endswith("tsv"):
             self.save_tsv(data, name)
+        else:
+            raise ValueError(f"Unsupported file {description}")
 
         self.registry[description] = op.basename(name)
 
@@ -291,6 +294,7 @@ class OutputGenerator:
             return
         elif not isinstance(data, np.ndarray):
             raise TypeError(f"Data supplied must of type np.ndarray, not {data_type}.")
+
         if data.ndim not in (1, 2):
             raise TypeError(f"Data must have number of dimensions in (1, 2), not {data.ndim}")
 
@@ -319,6 +323,7 @@ class OutputGenerator:
         data_type = type(data)
         if not isinstance(data, dict):
             raise TypeError(f"data must be a dict, not type {data_type}.")
+
         with open(name, "w") as fo:
             json.dump(data, fo, indent=4, sort_keys=True, cls=CustomEncoder)
 
@@ -335,6 +340,7 @@ class OutputGenerator:
         data_type = type(data)
         if not isinstance(data, pd.DataFrame):
             raise TypeError(f"data must be pd.Data, not type {data_type}.")
+
         # Replace blanks with numpy NaN
         deblanked = data.replace("", np.nan)
         deblanked.to_csv(name, sep="\t", line_terminator="\n", na_rep="n/a", index=False)
@@ -365,12 +371,17 @@ class InputHarvester:
             return None
 
     def get_file_contents(self, description):
+        """Get file contents.
+
+        Notes
+        -----
+        Since we restrict to just these three types, this function should always return.
+        If more types are added, the loaders dict will need to be updated with an appropriate
+        loader.
+        """
         for ftype, loader in InputHarvester.loaders.items():
             if ftype in description:
                 return loader(self.get_file_path(description))
-        # Since we restrict to just these three types, this function should
-        # always return. If more types are added, the loaders dict will
-        # need to be updated with an appopriate loader
 
     @property
     def registry(self):
@@ -422,8 +433,7 @@ def load_json(path: str) -> dict:
 
 
 def add_decomp_prefix(comp_num, prefix, max_value):
-    """
-    Create component name with leading zeros matching number of components
+    """Create component name with leading zeros matching number of components.
 
     Parameters
     ----------
@@ -494,8 +504,7 @@ def denoise_ts(data, mmix, mask, comptable):
 
 # File Writing Functions
 def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
-    """
-    Splits `data` into denoised / noise / ignored time series and saves to disk
+    """Split `data` into denoised / noise / ignored time series and save to disk.
 
     Parameters
     ----------
@@ -558,8 +567,7 @@ def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
 
 
 def writeresults(ts, mask, comptable, mmix, n_vols, io_generator):
-    """
-    Denoises `ts` and saves all resulting files to disk
+    """Denoise `ts` and save all resulting files to disk.
 
     Parameters
     ----------
@@ -619,8 +627,7 @@ def writeresults(ts, mask, comptable, mmix, n_vols, io_generator):
 
 
 def writeresults_echoes(catd, mmix, mask, comptable, io_generator):
-    """
-    Saves individually denoised echos to disk
+    """Save individually denoised echos to disk.
 
     Parameters
     ----------
@@ -655,7 +662,6 @@ def writeresults_echoes(catd, mmix, mask, comptable, io_generator):
     --------
     tedana.io.write_split_ts: Writes out the files.
     """
-
     for i_echo in range(catd.shape[1]):
         LGR.info("Writing Kappa-filtered echo #{:01d} timeseries".format(i_echo + 1))
         write_split_ts(catd[:, i_echo, :], mmix, mask, comptable, io_generator, echo=(i_echo + 1))
@@ -719,8 +725,7 @@ def load_data(data, n_echos=None):
 
 # Helper Functions
 def new_nii_like(ref_img, data, affine=None, copy_header=True):
-    """
-    Coerces `data` into NiftiImage format like `ref_img`
+    """Coerce `data` into NiftiImage format like `ref_img`.
 
     Parameters
     ----------
@@ -738,7 +743,6 @@ def new_nii_like(ref_img, data, affine=None, copy_header=True):
     nii : :obj:`nibabel.nifti1.Nifti1Image`
         NiftiImage
     """
-
     ref_img = check_niimg(ref_img)
     newdata = data.reshape(ref_img.shape[:3] + data.shape[1:])
     if ".nii" not in ref_img.valid_exts:
@@ -753,8 +757,7 @@ def new_nii_like(ref_img, data, affine=None, copy_header=True):
 
 
 def split_ts(data, mmix, mask, comptable):
-    """
-    Splits `data` time series into accepted component time series and remainder
+    """Split `data` time series into accepted component time series and remainder.
 
     Parameters
     ----------
@@ -792,11 +795,11 @@ def split_ts(data, mmix, mask, comptable):
 
 
 def prep_data_for_json(d) -> dict:
-    """Attempts to create a JSON serializable dictionary from a data dictionary
+    """Attempt to create a JSON serializable dictionary from a data dictionary.
 
     Parameters
     ----------
-    d: dict
+    d : dict
         A dictionary that will be converted into something JSON serializable
 
     Raises
@@ -831,6 +834,7 @@ def prep_data_for_json(d) -> dict:
             v = v.tolist()
         elif isinstance(v, np.int64) or isinstance(v, np.uint64):
             v = int(v)
+
         # NOTE: add more special cases for type conversions above this
         # comment line as an elif block
         d[k] = v
@@ -869,6 +873,7 @@ def str_to_component_list(s: str) -> List[int]:
         elif len(possible_list) == 1 and possible_list[0].isnumeric():
             # We have a likely hit and there is just one component
             break
+
     # Make sure we can actually convert this split list into an integer
     # Crash with a sensible error if not
     for x in possible_list:
@@ -909,6 +914,7 @@ def fname_to_component_list(fname: str) -> List[int]:
             return contents["Components"].tolist()
         else:
             raise ValueError(f"Cannot determine a components column in file {fname}")
+
     with open(fname, "r") as fp:
         contents = fp.read()
         return str_to_component_list(contents)
