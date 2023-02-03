@@ -72,7 +72,6 @@ class OutputGenerator:
         make_figures=True,
         verbose=False,
     ):
-
         if config == "auto":
             config = op.join(utils.get_resource_path(), "config", "outputs.json")
 
