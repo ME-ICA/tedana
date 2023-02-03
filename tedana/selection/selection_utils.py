@@ -509,7 +509,7 @@ def getelbow_cons(arr, return_val=False):
         (arr[nk - 5 - ii - 1] > arr[nk - 5 - ii : nk].mean() + 2 * arr[nk - 5 - ii : nk].std())
         for ii in range(nk - 5)
     ]
-    ds = np.array(temp1[::-1], dtype=np.integer)
+    ds = np.array(temp1[::-1], dtype=np.int32)
     dsum = []
     c_ = 0
     for d_ in ds:

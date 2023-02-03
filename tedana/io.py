@@ -40,7 +40,7 @@ class CustomEncoder(json.JSONEncoder):
 
     def default(self, obj):
         # int64 non-serializable but is a numpy output
-        if isinstance(obj, np.integer):
+        if isinstance(obj, np.int32):
             return int(obj)
 
         # containers that are not serializable
