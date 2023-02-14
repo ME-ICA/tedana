@@ -138,17 +138,20 @@ then retain the residuals for further analysis, you are doing "aggressive" denoi
       standardize=False,
       smoothing_fwhm=None,
       detrend=False,
-      low_pass=False,
-      high_pass=False,
+      low_pass=None,
+      high_pass=None,
       t_r=None,  # This shouldn't be necessary since we aren't bandpass filtering
       reports=False,
   )
 
   # Denoise the data by fitting and transforming the data file using the masker
-  denoised_img = masker.fit_transform(data_file, confounds=regressors)
+  denoised_img_2d = masker.fit_transform(data_file, confounds=regressors)
+
+  # Transform denoised data back into 4D space
+  denoised_img_4d = masker.inverse_transform(denoised_img_2d)
 
   # Save to file
-  denoised_img.to_filename(
+  denoised_img_4d.to_filename(
       "sub-01_task-rest_space-MNI152NLin2009cAsym_desc-aggrDenoised_bold.nii.gz"
   )
 
@@ -170,7 +173,6 @@ objects, so we will end up using :mod:`numpy` directly for this approach.
 
   # Apply the mask to the data image to get a 2d array
   data = apply_mask(data_file, mask_file)
-  data = data.T  # Transpose to voxels-by-time
 
   # Fit GLM to accepted components, rejected components and nuisance regressors
   # (after adding a constant term)
@@ -179,18 +181,18 @@ objects, so we will end up using :mod:`numpy` directly for this approach.
           confounds,
           rejected_components,
           accepted_components,
-          np.ones(mixing_df.shape[0], 1),
+          np.ones((mixing_df.shape[0], 1)),
       ),
   )
   betas = np.linalg.lstsq(regressors, data, rcond=None)[0][:-1]
 
   # Denoise the data using the betas from just the bad components
   confounds_idx = np.arange(confounds.shape[1] + rejected_components.shape[1])
-  pred_data = np.dot(np.hstack(confounds, rejected_components), betas[confounds_idx, :])
+  pred_data = np.dot(np.hstack((confounds, rejected_components)), betas[confounds_idx, :])
   data_denoised = data - pred_data
 
   # Save to file
-  denoised_img = unmask(data_denoised.T, mask_file)
+  denoised_img = unmask(data_denoised, mask_file)
   denoised_img.to_filename(
       "sub-01_task-rest_space-MNI152NLin2009cAsym_desc-nonaggrDenoised_bold.nii.gz"
   )
@@ -231,16 +233,19 @@ This way, you can regress the rejected components out of the data in the form of
       standardize=False,
       smoothing_fwhm=None,
       detrend=False,
-      low_pass=False,
-      high_pass=False,
+      low_pass=None,
+      high_pass=None,
       t_r=None,  # This shouldn't be necessary since we aren't bandpass filtering
       reports=False,
   )
 
   # Denoise the data by fitting and transforming the data file using the masker
-  denoised_img = masker.fit_transform(data_file, confounds=orth_bad_timeseries)
+  denoised_img_2d = masker.fit_transform(data_file, confounds=orth_bad_timeseries)
+
+  # Transform denoised data back into 4D space
+  denoised_img_4d = masker.inverse_transform(denoised_img_2d)
 
   # Save to file
-  denoised_img.to_filename(
+  denoised_img_4d.to_filename(
       "sub-01_task-rest_space-MNI152NLin2009cAsym_desc-orthAggrDenoised_bold.nii.gz"
   )
