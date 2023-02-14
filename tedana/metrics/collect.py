@@ -6,10 +6,9 @@ import numpy as np
 import pandas as pd
 
 from tedana import io, utils
-from tedana.stats import getfbounds
-
 from tedana.metrics import dependence
 from tedana.metrics._utils import dependency_resolver, determine_signs, flip_components
+from tedana.stats import getfbounds
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
