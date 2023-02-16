@@ -30,7 +30,7 @@ def test_unmask():
         (rs.randint(10, size=(n_data, 3, 3)), int),  # 3D int
     ]
 
-    for (input, dtype) in inputs:
+    for input, dtype in inputs:
         out = utils.unmask(input, mask)
         assert out.shape == (100,) + input.shape[1:]
         assert out.dtype == dtype
