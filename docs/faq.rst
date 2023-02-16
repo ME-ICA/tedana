@@ -84,7 +84,7 @@ applying tedana, and you encounter this problem, please submit a question to `Ne
 [tedana] Can I manually reclassify components?
 ********************************************************************************
 
-``tedana_reclassify`` allows users to manually alter component classifications.
+``ica_reclassify`` allows users to manually alter component classifications.
 This can both be used as a command line tool or as part of other interactive
 programs, such as `RICA`_. RICA creates a graphical interface that is similar to
 the build-in tedana reports that lets users interactively change component

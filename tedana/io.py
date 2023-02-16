@@ -70,7 +70,7 @@ class OutputGenerator:
         descriptions. Default is "auto", which uses tedana's default configuration file.
     make_figures : bool, optional
         Whether or not to actually make a figures directory
-    force : bool, optional
+    overwrite : bool, optional
         Whether to force overwrites of data. Default False.
 
     Attributes
@@ -88,7 +88,7 @@ class OutputGenerator:
         This will correspond to a "figures" subfolder of ``out_dir``.
     prefix : str
         Prefix to prepend to output filenames.
-    force : bool
+    overwrite : bool
         Whether to force file overwrites.
     verbose : bool
         Whether or not to generate verbose output.
@@ -104,7 +104,7 @@ class OutputGenerator:
         prefix="",
         config="auto",
         make_figures=True,
-        force=False,
+        overwrite=False,
         verbose=False,
         old_registry=None,
     ):
@@ -132,7 +132,7 @@ class OutputGenerator:
         self.out_dir = op.abspath(out_dir)
         self.figures_dir = op.join(out_dir, "figures")
         self.prefix = prefix + "_" if prefix != "" else ""
-        self.force = force
+        self.overwrite = overwrite
         self.verbose = verbose
         self.registry = {}
         if old_registry:
@@ -252,11 +252,11 @@ class OutputGenerator:
             The full file path of the saved file.
         """
         name = self.get_name(description, **kwargs)
-        if op.exists(name) and not self.force:
+        if op.exists(name) and not self.overwrite:
             raise RuntimeError(
                 f"File {name} already exists. In order to allow overwrite "
-                "please use the --force option in the command line or the "
-                "force parameter in the Python API."
+                "please use the --overwrite option in the command line or the "
+                "overwrite parameter in the Python API."
             )
 
         if description.endswith("img"):

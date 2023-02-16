@@ -27,8 +27,8 @@ RepLGR = logging.getLogger("REPORT")
 def _main():
     from tedana import __version__
 
-    verstr = "tedana_reclassify v{}".format(__version__)
-    parser = argparse.ArgumentParser()
+    verstr = "ica_reclassify v{}".format(__version__)
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         "registry",
         help="File registry from a previous tedana run",
@@ -58,7 +58,7 @@ def _main():
     parser.add_argument(
         "--config",
         dest="config",
-        help="File naming configuration. Default auto (prepackaged).",
+        help="File naming configuration.",
         default="auto",
     )
     parser.add_argument(
@@ -120,11 +120,11 @@ def _main():
         default=False,
     )
     parser.add_argument(
-        "--force",
+        "--overwrite",
         "-f",
-        dest="force",
+        dest="overwrite",
         action="store_true",
-        help="Force overwriting of files. Default False.",
+        help="Force overwriting of files.",
     )
     parser.add_argument(
         "--quiet", dest="quiet", help=argparse.SUPPRESS, action="store_true", default=False
@@ -170,7 +170,7 @@ def _main():
         mir=args.mir,
         no_reports=args.no_reports,
         png_cmap=args.png_cmap,
-        force=args.force,
+        overwrite=args.overwrite,
         debug=args.debug,
         quiet=args.quiet,
     )
@@ -188,7 +188,7 @@ def post_tedana(
     mir=False,
     no_reports=False,
     png_cmap="coolwarm",
-    force=False,
+    overwrite=False,
     debug=False,
     quiet=False,
 ):
@@ -220,7 +220,7 @@ def post_tedana(
         Cannot be used with --no-png. Default is 'coolwarm'.
     debug : :obj:`bool`, optional
         Whether to run in debugging mode or not. Default is False.
-    force : :obj:`bool`, optional
+    overwrite : :obj:`bool`, optional
         Whether to force file overwrites. Default is False.
     quiet : :obj:`bool`, optional
         If True, suppresses logging/printing of messages. Default is False.
@@ -314,7 +314,7 @@ def post_tedana(
         convention=convention,
         prefix=prefix,
         config=config,
-        force=force,
+        overwrite=overwrite,
         verbose=False,
         out_dir=out_dir,
         old_registry=ioh.registry,
@@ -410,9 +410,9 @@ def post_tedana(
     )
 
     if mir:
-        io_generator.force = True
+        io_generator.overwrite = True
         gsc.minimum_image_regression(data_oc, mmix, mask_denoise, comptable, io_generator)
-        io_generator.force = False
+        io_generator.overwrite = False
 
     # Write out BIDS-compatible description file
     derivative_metadata = {
@@ -421,7 +421,7 @@ def post_tedana(
         "DatasetType": "derivative",
         "GeneratedBy": [
             {
-                "Name": "tedana_reclassify",
+                "Name": "ica_reclassify",
                 "Version": __version__,
                 "Description": (
                     "A denoising pipeline for the identification and removal "

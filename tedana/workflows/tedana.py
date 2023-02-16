@@ -47,7 +47,7 @@ def _get_parser():
     from tedana import __version__
 
     verstr = "tedana v{}".format(__version__)
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # Argument parser follow templtate provided by RalphyZ
     # https://stackoverflow.com/a/43456577
     optional = parser._action_groups.pop()
@@ -300,11 +300,12 @@ def _get_parser():
         "--quiet", dest="quiet", help=argparse.SUPPRESS, action="store_true", default=False
     )
     parser.add_argument(
-        "--force",
+        "--overwrite",
         "-f",
-        dest="force",
+        dest="overwrite",
         action="store_true",
-        help="Force overwriting of files.", default=False,
+        help="Force overwriting of files.",
+        default=False,
     )
     optional.add_argument("-v", "--version", action="version", version=verstr)
     parser._action_groups.append(optional)
@@ -334,7 +335,7 @@ def tedana_workflow(
     low_mem=False,
     debug=False,
     quiet=False,
-    force=False,
+    overwrite=False,
     t2smap=None,
     mixm=None,
 ):
@@ -472,7 +473,7 @@ def tedana_workflow(
         out_dir=out_dir,
         prefix=prefix,
         config="auto",
-        force=force,
+        overwrite=overwrite,
         verbose=verbose,
     )
 
@@ -668,10 +669,10 @@ def tedana_workflow(
 
             # If we're going to restart, temporarily allow force overwrite
             if keep_restarting:
-                io_generator.force = True
+                io_generator.overwrite = True
             RepLGR.disabled = True  # Disable the report to avoid duplicate text
         RepLGR.disabled = False  # Re-enable the report after the while loop is escaped
-        io_generator.force = force  # Re-enable original overwrite behavior
+        io_generator.overwrite = overwrite  # Re-enable original overwrite behavior
     else:
         LGR.info("Using supplied mixing matrix from ICA")
         mixing_file = io_generator.get_name("ICA mixing tsv")

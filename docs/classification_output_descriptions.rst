@@ -59,7 +59,7 @@ and `classification_tags`. `classification` should include `accepted` or
 through denoising. `classification_tags` provide more information on why
 components received a specific classification. Each component can receive
 more than one tag. The following tags are included depending if ``--tree``
-is minimal, kundu, or if ``tedana_reclassify`` is run.
+is minimal, kundu, or if ``ica_reclassify`` is run.
 
 ===================== ================  ========================================
 Tag                   Included in Tree  Explanation

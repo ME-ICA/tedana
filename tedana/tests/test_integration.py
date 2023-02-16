@@ -21,7 +21,7 @@ from pkg_resources import resource_filename
 from tedana.io import InputHarvester
 from tedana.workflows import t2smap as t2smap_cli
 from tedana.workflows import tedana as tedana_cli
-from tedana.workflows.tedana_reclassify import post_tedana
+from tedana.workflows.ica_reclassify import post_tedana
 
 # Need to see if a no BOLD warning occurred
 LOGGER = logging.getLogger(__name__)
@@ -260,7 +260,7 @@ def test_integration_reclassify_insufficient_args(skip_integration):
     guarantee_reclassify_data()
 
     args = [
-        "tedana_reclassify",
+        "ica_reclassify",
         os.path.join(reclassify_raw(), "desc-tedana_registry.json"),
     ]
 
@@ -289,7 +289,7 @@ def test_integration_reclassify_quiet_csv(skip_integration):
     rej_df.to_csv(rej_csv_fname)
 
     args = [
-        "tedana_reclassify",
+        "ica_reclassify",
         "--manacc",
         acc_csv_fname,
         "--manrej",
@@ -315,7 +315,7 @@ def test_integration_reclassify_quiet_spaces(skip_integration):
         shutil.rmtree(out_dir)
 
     args = [
-        "tedana_reclassify",
+        "ica_reclassify",
         "--manacc",
         "1",
         "2",
@@ -345,7 +345,7 @@ def test_integration_reclassify_quiet_string(skip_integration):
         shutil.rmtree(out_dir)
 
     args = [
-        "tedana_reclassify",
+        "ica_reclassify",
         "--manacc",
         "1,2,3",
         "--manrej",
@@ -371,7 +371,7 @@ def test_integration_reclassify_debug(skip_integration):
         shutil.rmtree(out_dir)
 
     args = [
-        "tedana_reclassify",
+        "ica_reclassify",
         "--manacc",
         "1",
         "2",
@@ -435,7 +435,7 @@ def test_integration_reclassify_run_twice(skip_integration):
         reclassify_raw_registry(),
         accept=[1, 2, 3],
         out_dir=out_dir,
-        force=True,
+        overwrite=True,
         no_reports=True,
     )
     fn = resource_filename("tedana", "tests/data/reclassify_run_twice.txt")

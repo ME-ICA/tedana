@@ -25,7 +25,7 @@ def _get_parser():
     -------
     parser.parse_args() : argparse dict
     """
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # Argument parser follow templtate provided by RalphyZ
     # https://stackoverflow.com/a/43456577
     optional = parser._action_groups.pop()
@@ -119,7 +119,7 @@ def _get_parser():
         dest="combmode",
         action="store",
         choices=["t2s", "paid"],
-        help=("Combination scheme for TEs: t2s (Posse 1999, default), paid (Poser)"),
+        help=("Combination scheme for TEs: t2s (Posse 1999), paid (Poser)"),
         default="t2s",
     )
     optional.add_argument(
