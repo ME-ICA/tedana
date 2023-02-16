@@ -122,7 +122,6 @@ def _get_parser():
             '"curvefit" means that a more computationally '
             "demanding monoexponential model is fit "
             "to the raw data. "
-            'Default is "loglin".'
         ),
         default="loglin",
     )
@@ -131,7 +130,7 @@ def _get_parser():
         dest="combmode",
         action="store",
         choices=["t2s"],
-        help=("Combination scheme for TEs: t2s (Posse 1999, default)"),
+        help=("Combination scheme for TEs: t2s (Posse 1999)"),
         default="t2s",
     )
     optional.add_argument(
@@ -149,8 +148,9 @@ def _get_parser():
             "in which case components will be selected based on the "
             "cumulative variance explained or an integer greater than 1"
             "in which case the specificed number of components will be "
-            "selected. Default='aic'."
+            "selected."
         ),
+        choices=["mdl", "kic", "aic"],
         default="aic",
     )
     optional.add_argument(
@@ -174,7 +174,6 @@ def _get_parser():
             "algorithm. Set to an integer value for "
             "reproducible ICA results. Set to -1 for "
             "varying results across ICA calls. "
-            "Default=42."
         ),
         default=42,
     )
@@ -215,12 +214,12 @@ def _get_parser():
         nargs="+",
         help=(
             "Perform additional denoising to remove "
-            "spatially diffuse noise. Default is None. "
+            "spatially diffuse noise. "
             "This argument can be single value or a space "
             "delimited list"
         ),
         choices=["mir", "gsr"],
-        default=None,
+        default="",
     )
     optional.add_argument(
         "--no-reports",
@@ -265,7 +264,7 @@ def _get_parser():
             "threadpoolctl to set the parameter outside "
             "of the workflow function. Higher numbers of "
             "threads tend to slow down performance on "
-            "typical datasets. Default is 1."
+            "typical datasets."
         ),
         default=1,
     )
@@ -305,7 +304,7 @@ def _get_parser():
         "-f",
         dest="force",
         action="store_true",
-        help="Force overwriting of files. Default False.",
+        help="Force overwriting of files.", default=False,
     )
     optional.add_argument("-v", "--version", action="version", version=verstr)
     parser._action_groups.append(optional)

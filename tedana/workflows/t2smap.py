@@ -90,12 +90,14 @@ def _get_parser():
         dest="fittype",
         action="store",
         choices=["loglin", "curvefit"],
-        help="Desired Fitting Method"
-        '"loglin" means that a linear model is fit'
-        " to the log of the data, default"
-        '"curvefit" means that a more computationally'
-        "demanding monoexponential model is fit"
-        "to the raw data",
+        help=(
+            "Desired T2*/S0 fitting method. "
+            '"loglin" means that a linear model is fit '
+            "to the log of the data. "
+            '"curvefit" means that a more computationally '
+            "demanding monoexponential model is fit "
+            "to the raw data. "
+        ),
         default="loglin",
     )
     optional.add_argument(
@@ -130,7 +132,7 @@ def _get_parser():
             "threadpoolctl to set the parameter outside "
             "of the workflow function. Higher numbers of "
             "threads tend to slow down performance on "
-            "typical datasets. Default is 1."
+            "typical datasets."
         ),
         default=1,
     )

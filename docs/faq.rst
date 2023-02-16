@@ -99,21 +99,21 @@ make sure to output the denoised time series into a separate directory.
 *************************************************************************************
 
 The decision tree is the series of conditions through which each component is
-classified as accepted or rejected. The kundu tree (`--tree kundu`)
-was used in Prantik Kundu's MEICA v2.7 is the classification process that has long
+classified as accepted or rejected. The kundu tree (`--tree kundu`), used in Prantik
+Kundu's MEICA v2.5, is the classification process that has long
 been used by ``tedana`` and users have been generally content with the results. The
-kundu tree used multiple intersecting metrics and rankings classify components.
+kundu tree used multiple intersecting metrics and rankings to classify components.
 How these steps may interact on specific datasets is opaque. While there is a kappa
 (T2*-weighted) elbow threshold and a rho (S0-weighted) elbow threshold, as discussed
 in publications, no component is accepted or rejected because of those thresholds.
-Users sometimes notice rejected components that clearly should been accepted. For
+Users sometimes notice rejected components that clearly should have been accepted. For
 example, a component that included a clear T2*-weighted V1 response to a block design
 flashing checkerboard was sometimes rejected because the relatively large variance of
 that component interacted with a rejection criterion.
 
 The minimal tree (`--tree minimal`) is designed to be easier to understand and less
-likely to reject T2* weighted components. There are a few other critiera, but components
-with `kappa>kappa elbow` and `rho<rho eblow` should all be accepted and the rho elbow
+likely to reject T2* weighted components. There are a few other criteria, but components
+with `kappa>kappa elbow` and `rho<rho elbow` should all be accepted, and the rho elbow
 threshold is less stringent. If kappa is above threshold and more than 2X rho then it
 is also accepted under the assumption that, even if a component contains noise, there
 is sufficient T2*-weighted signal to retain. Similarly to the kundu tree, components
@@ -122,17 +122,17 @@ removing them, but `minimal` makes sure that no more than 1% of total variance i
 removed this way.
 
 ``tedana`` developers still want to examine how the minimal tree performs on a wide
-range of datasets, but primary benefit is that it is possible to describe what it does
+range of datasets, but the primary benefit is that it is possible to describe what it does
 in a short paragraph. The minimal tree will retain some components that kundu
 appropriately classifies as noise, and it will reject some components that kundu
 accepts. On balance, we expect it to be a more conservative option that should not
-remove noise as agressively as kundu, but will be less likely to reject components that
+remove noise as aggressively as kundu, but will be less likely to reject components that
 clearly contain signal-of-interest.
 
 It is also possible for users to view both decision trees and `make their own`_.
 This might be useful for general methods development and also for using ``tedana``
-on multi-echo datasets with properties that differs from those these trees have been
-tested on (i.e. human whole-brain acqusitions). It is also possible, but a bit more
+on multi-echo datasets with properties different from those of the datasets these trees have been
+tested on (i.e. human whole-brain acquisitions). It is also possible, but a bit more
 challenging, to add additional metrics for each component so that the selection process
 can include additional criteria.
 
@@ -154,11 +154,11 @@ mostly be the same, but the results will not be identical.
 
 Prantik Kundu also worked on `MEICA v3.2`_ (also for python v2.7). The underlying ICA
 step is very similar, but the component selection process was different. While this
-new approach has potentialy useful ideas, the early ``tedana`` developers experienced
+new approach has potentially useful ideas, the early ``tedana`` developers experienced
 non-trivial component misclassifications and there were no publications that
-validated this method. That is why ``tedana`` replicated the established and valided
-MEICA v2.5 method and also includes options to ingrate additional component selection
-methods. Recently Prantik has started to work `MEICA v3.3`_ (for python >=v3.7) so
+validated this method. That is why ``tedana`` replicated the established and validated
+MEICA v2.5 method and also includes options to integrate additional component selection
+methods. Recently Prantik has started to work on `MEICA v3.3`_ (for python >=v3.7) so
 that this version of the selection process would again be possible to run.
 
 .. _shared code on bitbucket: https://bitbucket.org/prantikk/me-ica/src/experimental

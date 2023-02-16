@@ -61,9 +61,9 @@ New columns in ``selector.component_table`` and the "ICA metrics tsv" file:
         for visualizing and reviewing results
 
 ``selector.cross_component_metrics`` and "ICA cross component metrics json":
-    A dictionary of metrics that are each a single value calculated across components.
-    For example, kappa and rho elbows. User or pre-defined scaling factors are
-    also be stored here. Any constant that is used in the component classification
+    A dictionary of metrics that are each a single value calculated across components,
+    for example, kappa and rho elbows. User or pre-defined scaling factors are
+    also stored here. Any constant that is used in the component classification
     processes that isn't pre-defined in the decision tree file should be saved here.
 
 ``selector.component_status_table`` and "ICA status table tsv":
@@ -105,10 +105,10 @@ New columns in ``selector.component_table`` and the "ICA metrics tsv" file:
 for each "node" or function call. For each node, there is an "outputs" subfield with
 information from when the tree was executed. Each outputs field includes:
 
-decison_node_idx:
+decision_node_idx:
     The decision tree functions are run as part of an ordered list.
-    This is the positional index the location of the function in
-    the list, starting with index 0.
+    This is the positional index (the location of the function in
+    the list), starting with index 0.
 
 used_metrics:
     A list of the metrics used in a node of the decision tree
@@ -122,7 +122,7 @@ node_label:
 
 n_true, n_false:
     For decision tree (dec) functions, the number of components that were classified
-    as true or false respectively in this decision tree step.
+    as true or false, respectively, in this decision tree step.
 
 calc_cross_comp_metrics:
     For calculation (calc) functions, cross component metrics that were
@@ -144,10 +144,10 @@ Defining a custom decision tree
 *******************************
 
 Decision trees are stored in json files. The default trees are stored as part of
-the tedana code repository in `resources/decision_trees`_ The minimal tree,
-minimal.json is a good example highlighting the structure and steps in a tree. It
+the tedana code repository in `resources/decision_trees`_. The minimal tree,
+minimal.json, is a good example highlighting the structure and steps in a tree. It
 may be helpful to look at that tree while reading this section. kundu.json replicates
-the decision tree used in MEICA version 2.5, the predecessor to tedana. It is a more
+the decision tree used in MEICA version 2.5, the predecessor to tedana. It is more
 complex, but also highlights additional possible functionality in decision trees.
 
 A user can specify another decision tree and link to the tree location when tedana is
@@ -178,7 +178,7 @@ in `selection_nodes.py`_
 
 There are several fields with general information. Some of these store general
 information that's useful for reporting results and others store information
-that Are used to checks whether results are plausible & can help avoid mistakes
+that is used to check whether results are plausible & can help avoid mistakes.
 
   tree_id:
       A descriptive name for the tree that will be logged.
@@ -193,15 +193,15 @@ that Are used to checks whether results are plausible & can help avoid mistakes
       Publications that should be referenced when this tree is used
 
   necessary_metrics:
-      Is a list of the necessary metrics in the component table that will be used
+      A list of the necessary metrics in the component table that will be used
       by the tree. If a metric doesn't exist then this will raise an error instead
       of executing a tree. (Depending on future code development, this could
       potentially be used to run ``tedana`` by specifying a decision tree and
-      metrics are calculated base on the contents of this field.) If a necessary
+      metrics are calculated based on the contents of this field.) If a necessary
       metric isn't used, there will be a warning.
 
   generated_metrics:
-    Is an optional initial field. It lists metrics that are to be calculated as
+    An optional initial field. It lists metrics that are to be calculated as
     part of the decision tree's execution. This is used similarly to necessary_metrics
     except, since the decision tree starts before these metrics exist, it won't raise
     an error when these metrics are not found. One might want to calculate a new metric
@@ -246,15 +246,15 @@ There are several key fields for each node:
 - "parameters": Specifications of all required parameters for the function in functionname
 - "kwargs": Specifications for optional parameters for the function in functionname
 
-The only parameter that is used in all functions is "decidecomps" which is used to
+The only parameter that is used in all functions is "decidecomps", which is used to
 identify, based on their classifications, the components a function should be applied
 to. It can be a single classification, or a comma separated string of classifications.
 In addition to the intermediate and default ("accepted" "rejected" "unclassified")
 component classifications, this can be "all" for functions that should be applied to
 all components regardless of their classifications.
 
-Most decision functions also include "if_true" and "if_false" which specify how to change
-the classification of each component based on whether a the decision criterion is true
+Most decision functions also include "if_true" and "if_false", which specify how to change
+the classification of each component based on whether a decision criterion is true
 or false. In addition to the default and intermediate classification options, this can
 also be "nochange" (i.e. For components where a>b is true, "reject". For components
 where a>b is false, "nochange"). The optional parameters "tag_if_true" and "tag_if_false"
@@ -316,7 +316,7 @@ Before any data are touched in the function, there should be an
 call. This will be useful to gather all metrics a tree will use without requiring a
 specific dataset.
 
-Existing functions define ``function_name_idx = f"Step {selector.current_node_idx}: [text of function_name]``
+Existing functions define ``function_name_idx = f"Step {selector.current_node_idx}: [text of function_name]``.
 This is used in logging and is cleaner to initialize near the top of each function.
 
 
@@ -331,9 +331,9 @@ and output a warning if the function overwrites an existing value
 Code that adds the text ``log_extra_info`` and ``log_extra_report`` into the appropriate
 logs (if they are provided by the user)
 
-After the above information is included, all functions will call ``selectcomps2use``
+After the above information is included, all functions will call ``selectcomps2use``,
 which returns the components with classifications included in ``decide_comps``
-and then runs ``confirm_metrics_exist`` which is an added check to make sure the metrics
+and then runs ``confirm_metrics_exist``, which is an added check to make sure the metrics
 used by this function exist in the component table.
 
 Nearly every function has a clause like:
@@ -346,12 +346,12 @@ Nearly every function has a clause like:
       outputs["n_false"] = 0
   else:
 
-If there are no components with the classifications in ``decide_comps`` this logs that
+If there are no components with the classifications in ``decide_comps``, this logs that
 there's nothing for the function to be run on, else continue.
 
-For decision functions the key variable is ``decision_boolean`` which should be a pandas
-dataframe column which is True or False for the components in ``decide_comps`` based on
-the function's criteria. That column is an input to ``change_comptable_classifications``
+For decision functions, the key variable is ``decision_boolean``, which should be a pandas
+dataframe column that is True or False for the components in ``decide_comps`` based on
+the function's criteria. That column is an input to ``change_comptable_classifications``,
 which will update the component_table classifications, update the classification history
 in component_status_table, and update the component classification_tags. Components not
 in ``decide_comps`` retain their existing classifications and tags.
