@@ -23,6 +23,7 @@ exclude = '''
     | \.github
     | \.hg
     | \.pytest_cache
+    | \.testing_data_cache
     | _build
     | build
     | dist
