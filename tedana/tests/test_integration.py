@@ -170,12 +170,12 @@ def download_test_data(osfID, test_data_path):
         local_data_exists = False
     if local_data_exists:
         if local_filedate_str == osf_filedate:
-            TestLGR.INFO(
+            TestLGR.info(
                 f"Downloaded and up-to-date data already in {test_data_path}. Not redownloading"
             )
             return
         else:
-            TestLGR.INFO(
+            TestLGR.info(
                 f"Downloaded data in {test_data_path} was last modified on "
                 f"{local_filedate_str}. Data on https://osf.io/{osfID} "
                 f" was last updated on {osf_filedate}. Deleting and redownloading"
