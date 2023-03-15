@@ -125,9 +125,13 @@ removed this way.
 range of datasets, but the primary benefit is that it is possible to describe what it does
 in a short paragraph. The minimal tree will retain some components that kundu
 appropriately classifies as noise, and it will reject some components that kundu
-accepts. On balance, we expect it to be a more conservative option that should not
-remove noise as aggressively as kundu, but will be less likely to reject components that
-clearly contain signal-of-interest.
+accepts. The goal for the minimal tree is to be a more conservative option that
+will be less likely to reject components that clearly contain signal-of-interest, but
+this has not yet been validated. The precise thresholds and steps in the minimal
+tree may change as the results from running it are examined on a wider range of data.
+The developers are looking for more people to compare results between the kundu and
+minimal trees, but if someone values stability when processing a large dataset,
+the minimal tree might not be the best option until it is tested and validated more.
 
 It is also possible for users to view both decision trees and `make their own`_.
 This might be useful for general methods development and also for using ``tedana``

@@ -361,10 +361,12 @@ def test_kappa_elbow_kundu_smoke():
         kappa_elbow_kundu,
         kappa_allcomps_elbow,
         kappa_nonsig_elbow,
+        varex_upper_p,
     ) = selection_utils.kappa_elbow_kundu(component_table, n_echos=5)
     assert isinstance(kappa_elbow_kundu, float)
     assert isinstance(kappa_allcomps_elbow, float)
     assert isinstance(kappa_nonsig_elbow, float)
+    assert isinstance(varex_upper_p, float)
 
     # For the sample component_table, when n_echos=6, there are fewer than 5 components
     #  that are greater than an f01 threshold and a different condition in kappa_elbow_kundu is run
@@ -372,16 +374,19 @@ def test_kappa_elbow_kundu_smoke():
         kappa_elbow_kundu,
         kappa_allcomps_elbow,
         kappa_nonsig_elbow,
+        varex_upper_p,
     ) = selection_utils.kappa_elbow_kundu(component_table, n_echos=6)
     assert isinstance(kappa_elbow_kundu, float)
     assert isinstance(kappa_allcomps_elbow, float)
     assert isinstance(kappa_nonsig_elbow, type(None))
+    assert isinstance(varex_upper_p, float)
 
     # Run using only a subset of components
     (
         kappa_elbow_kundu,
         kappa_allcomps_elbow,
         kappa_nonsig_elbow,
+        varex_upper_p,
     ) = selection_utils.kappa_elbow_kundu(
         component_table,
         n_echos=5,
@@ -390,6 +395,7 @@ def test_kappa_elbow_kundu_smoke():
     assert isinstance(kappa_elbow_kundu, float)
     assert isinstance(kappa_allcomps_elbow, float)
     assert isinstance(kappa_nonsig_elbow, float)
+    assert isinstance(varex_upper_p, float)
 
 
 def test_rho_elbow_kundu_liberal_smoke():
@@ -399,13 +405,11 @@ def test_rho_elbow_kundu_liberal_smoke():
     # Normal execution with default kundu threshold
     (
         rho_elbow_kundu,
-        varex_upper_p,
         rho_allcomps_elbow,
         rho_unclassified_elbow,
         elbow_f05,
     ) = selection_utils.rho_elbow_kundu_liberal(component_table, n_echos=3)
     assert isinstance(rho_elbow_kundu, float)
-    assert isinstance(varex_upper_p, float)
     assert isinstance(rho_allcomps_elbow, float)
     assert isinstance(rho_unclassified_elbow, float)
     assert isinstance(elbow_f05, float)
@@ -413,7 +417,6 @@ def test_rho_elbow_kundu_liberal_smoke():
     # Normal execution with liberal threshold
     (
         rho_elbow_kundu,
-        varex_upper_p,
         rho_allcomps_elbow,
         rho_unclassified_elbow,
         elbow_f05,
@@ -421,7 +424,6 @@ def test_rho_elbow_kundu_liberal_smoke():
         component_table, n_echos=3, rho_elbow_type="liberal"
     )
     assert isinstance(rho_elbow_kundu, float)
-    assert isinstance(varex_upper_p, float)
     assert isinstance(rho_allcomps_elbow, float)
     assert isinstance(rho_unclassified_elbow, float)
     assert isinstance(elbow_f05, float)
@@ -429,7 +431,6 @@ def test_rho_elbow_kundu_liberal_smoke():
     # Run using only a subset of components
     (
         rho_elbow_kundu,
-        varex_upper_p,
         rho_allcomps_elbow,
         rho_unclassified_elbow,
         elbow_f05,
@@ -441,7 +442,6 @@ def test_rho_elbow_kundu_liberal_smoke():
         subset_comps2use=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 18, 20],
     )
     assert isinstance(rho_elbow_kundu, float)
-    assert isinstance(varex_upper_p, float)
     assert isinstance(rho_allcomps_elbow, float)
     assert isinstance(rho_unclassified_elbow, float)
     assert isinstance(elbow_f05, float)
@@ -450,13 +450,11 @@ def test_rho_elbow_kundu_liberal_smoke():
     component_table = sample_component_table()
     (
         rho_elbow_kundu,
-        varex_upper_p,
         rho_allcomps_elbow,
         rho_unclassified_elbow,
         elbow_f05,
     ) = selection_utils.rho_elbow_kundu_liberal(component_table, n_echos=3)
     assert isinstance(rho_elbow_kundu, float)
-    assert isinstance(varex_upper_p, type(None))
     assert isinstance(rho_allcomps_elbow, float)
     assert isinstance(rho_unclassified_elbow, type(None))
     assert isinstance(elbow_f05, float)

@@ -160,7 +160,8 @@ def _get_parser():
             "Decision tree to use. You may use a "
             "packaged tree (kundu, minimal) or supply a JSON "
             "file which matches the decision tree file "
-            "specification."
+            "specification. Minimal still being tested with more"
+            "details in docs"
         ),
         default="kundu",
     )
@@ -351,6 +352,9 @@ def tedana_workflow(
         list of echo-specific files, in ascending order.
     tes : :obj:`list`
         List of echo times associated with data in milliseconds.
+
+    Other Parameters
+    ----------------
     out_dir : :obj:`str`, optional
         Output directory.
     mask : :obj:`str` or None, optional
@@ -358,6 +362,12 @@ def tedana_workflow(
         spatially aligned with `data`. If an explicit mask is not provided,
         then Nilearn's compute_epi_mask function will be used to derive a mask
         from the first echo's data.
+    convention : {'bids', 'orig'}, optional
+        Filenaming convention. bids uses the latest BIDS derivatives version (1.5.0).
+        Default is 'bids'.
+    prefix : :obj:`str` or None, optional
+        Prefix for filenames generated.
+        Default is ""
     fittype : {'loglin', 'curvefit'}, optional
         Monoexponential fitting method. 'loglin' uses the the default linear
         fit to the log of the data. 'curvefit' uses a monoexponential fit to
@@ -365,34 +375,19 @@ def tedana_workflow(
         Default is 'loglin'.
     combmode : {'t2s'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default).
+    tree : {'kundu', 'minimal', 'json file'}, optional
+        Decision tree to use for component selection. Can be a
+        packaged tree (kundu, minimal) or a user-supplied JSON file that
+        matches the decision tree file specification. Minimal is intented
+        to be a simpler process that is a bit more conservative, but it
+        accepts and rejects some distinct components compared to kundu.
+        Testing to better understand the effects of the differences is ongoing.
+        Default is 'kundu'.
     tedpca : {'mdl', 'aic', 'kic', 'kundu', 'kundu-stabilize', float}, optional
         Method with which to select components in TEDPCA.
         If a float is provided, then it is assumed to represent percentage of variance
         explained (0-1) to retain from PCA.
         Default is 'aic'.
-    tedort : :obj:`bool`, optional
-        Orthogonalize rejected components w.r.t. accepted ones prior to
-        denoising. Default is False.
-    gscontrol : {None, 'mir', 'gsr'} or :obj:`list`, optional
-        Perform additional denoising to remove spatially diffuse noise. Default
-        is None.
-    verbose : :obj:`bool`, optional
-        Generate intermediate and additional files. Default is False.
-    no_reports : obj:'bool', optional
-        Do not generate .html reports and .png plots. Default is false such
-        that reports are generated.
-    png_cmap : obj:'str', optional
-        Name of a matplotlib colormap to be used when generating figures.
-        Cannot be used with --no-png. Default is 'coolwarm'.
-    t2smap : :obj:`str`, optional
-        Precalculated T2* map in the same space as the input data. Values in
-        the map must be in seconds.
-    mixm : :obj:`str` or None, optional
-        File containing mixing matrix, to be used when re-running the workflow.
-        If not provided, ME-PCA and ME-ICA are done. Default is None.
-
-    Other Parameters
-    ----------------
     fixed_seed : :obj:`int`, optional
         Value passed to ``mdp.numx_rand.seed()``.
         Set to a positive integer value for reproducible ICA results;
@@ -404,13 +399,35 @@ def tedana_workflow(
         fixed seed will be updated and ICA will be run again. If convergence
         is achieved before maxrestart attempts, ICA will finish early.
         Default is 10.
+    tedort : :obj:`bool`, optional
+        Orthogonalize rejected components w.r.t. accepted ones prior to
+        denoising. Default is False.
+    gscontrol : {None, 'mir', 'gsr'} or :obj:`list`, optional
+        Perform additional denoising to remove spatially diffuse noise. Default
+        is None.
+    no_reports : obj:'bool', optional
+        Do not generate .html reports and .png plots. Default is false such
+        that reports are generated.
+    png_cmap : obj:'str', optional
+        Name of a matplotlib colormap to be used when generating figures.
+        Cannot be used with --no-png. Default is 'coolwarm'.
+    verbose : :obj:`bool`, optional
+        Generate intermediate and additional files. Default is False.
     low_mem : :obj:`bool`, optional
         Enables low-memory processing, including the use of IncrementalPCA.
         May increase workflow duration. Default is False.
     debug : :obj:`bool`, optional
         Whether to run in debugging mode or not. Default is False.
+    t2smap : :obj:`str`, optional
+        Precalculated T2* map in the same space as the input data. Values in
+        the map must be in seconds.
+    mixm : :obj:`str` or None, optional
+        File containing mixing matrix, to be used when re-running the workflow.
+        If not provided, ME-PCA and ME-ICA are done. Default is None.
     quiet : :obj:`bool`, optional
         If True, suppresses logging/printing of messages. Default is False.
+    overwrite : :obj:`bool`, optional
+        If True, force overwriting of files. Default is False.
 
     Notes
     -----

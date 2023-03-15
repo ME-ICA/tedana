@@ -598,6 +598,9 @@ def kappa_elbow_kundu(component_table, n_echos, comps2use=None):
     kappa_nonsig_elbow : :obj:`float`
         The elbow for kappa values excluding kappa values above a threshold
         None if there are fewer than 6 values remaining after thresholding
+    varex_upper_p : :obj:`float`
+        This is the median "variance explained" across components with kappa values
+        greater than the kappa_elbow calculated using all components
 
     Note
     ----
@@ -608,6 +611,10 @@ def kappa_elbow_kundu(component_table, n_echos, comps2use=None):
     includes all component numbers. If comps2use includes indices for only a
     subset of components then the kappa values from just those components
     will be used for both elbow calculations.
+
+    varex_upper_p isn't used for anything in this function, but it is calculated
+    on kappa values and is used in rho_elbow_kundu_liberal. For several reasons
+    it made more sense to calculate here.
     """
 
     # If comps2use is None then set to a list of all component numbers
@@ -637,7 +644,19 @@ def kappa_elbow_kundu(component_table, n_echos, comps2use=None):
         kappa_nonsig_elbow = None
         LGR.info(("Calculating kappa elbow based on all components."))
 
-    return kappa_elbow, kappa_allcomps_elbow, kappa_nonsig_elbow
+    # Calculating varex_upper_p
+    # Upper limit for variance explained is median across components with high
+    # Kappa values. High Kappa is defined as Kappa above Kappa elbow.
+    high_kappa_idx = np.squeeze(np.argwhere(kappas2use > kappa_allcomps_elbow))
+    # list(kappa_comps2use.index[kappas2use > kappa_allcomps_elbow])
+    varex_upper_p = np.median(
+        component_table.loc[
+            high_kappa_idx,
+            "variance explained",
+        ]
+    )
+
+    return kappa_elbow, kappa_allcomps_elbow, kappa_nonsig_elbow, varex_upper_p
 
 
 def rho_elbow_kundu_liberal(
@@ -672,10 +691,6 @@ def rho_elbow_kundu_liberal(
     rho_elbow : :obj:`float`
         The 'elbow' value for rho values, above which components are considered
         more likely to contain S0 weighted signals
-    varex_upper_p : :obj:`float`
-        This is the median "variance explained" across components with kappa values
-        greater than the kappa_elbow calculated using all components
-        None if subset_comps2use is None
     rho_allcomps_elbow : :obj:`float`
         rho elbow calculated using all components in comps2use
     rho_unclassified_elbow : :obj:`float`
@@ -689,7 +704,7 @@ def rho_elbow_kundu_liberal(
     ----
     The rho elbow calculation in Kundu's original meica code calculates
     one elbow using all components' rho values, one elbow using only
-    unclassified components (plus some quirky stuff with high variance components),
+    unclassified components (excluding 2-3 remaining high variance componetns),
     on threshold based on the number of echos, and takes the mean of those 3 values
     To replicate the original code, comps2use should include indices for all components
     and subset_comps2use should includes indices for unclassified components
@@ -700,7 +715,15 @@ def rho_elbow_kundu_liberal(
     elbows based on rho values. The assumption is that the threshold on
     unclassified components is always lower and can likely be excluded. Both
     rho elbows are now logged so that it will be possible to confirm this with
-    data & make additional adjustments to this threshold
+    data & make additional adjustments to this threshold.
+
+    Additionally, the liberal threshold does not exclude 2-3 high variance components
+    from the unclassified threshold. This was done as a practical matter because
+    those components are now removed in a separate node, dec_reclassify_high_var_comps,
+    and adding that separate node to the minimal tree would make it less minimal, but
+    it also seems reasonable since there was no clear reason why they elbow with them
+    removed was reliably better than the elbow containing them. More direct comparisons
+    between these two arbitrary thresholds might be useful at some point.
     """
     if rho_elbow_type not in ["kundu", "liberal"]:
         raise ValueError(
@@ -735,38 +758,10 @@ def rho_elbow_kundu_liberal(
             "No unclassified components for rho elbow calculation only elbow based "
             "on all components is used"
         )
-        varex_upper_p = None
         rho_unclassified_elbow = None
         rho_elbow = rho_allcomps_elbow
 
     else:
-        # Calculating varex_upper_p
-        # Upper limit for variance explained is median across components with high
-        # Kappa values. High Kappa is defined as Kappa above Kappa elbow.
-        kappa_comps2use = component_table.loc[comps2use, "kappa"]
-        high_kappa_idx = list(
-            kappa_comps2use.index[
-                kappa_comps2use
-                > getelbow(component_table.loc[comps2use, "kappa"], return_val=True)
-            ]
-        )
-        varex_upper_p = np.median(
-            component_table.loc[
-                high_kappa_idx,
-                "variance explained",
-            ]
-        )
-
-        # Removing large gaps in variance in the subset_comps2use before
-        # calculating this subset elbow threshold
-        for i_loop in range(3):
-            temp_comptable = component_table.loc[subset_comps2use].sort_values(
-                by=["variance explained"], ascending=False
-            )
-            diff_vals = temp_comptable["variance explained"].diff(-1)
-            diff_vals = diff_vals.fillna(0)
-            subset_comps2use = temp_comptable.loc[diff_vals < varex_upper_p].index.values
-
         rho_unclassified_elbow = getelbow(
             component_table.loc[subset_comps2use, "rho"], return_val=True
         )
@@ -776,7 +771,7 @@ def rho_elbow_kundu_liberal(
         else:  # rho_elbow_type == 'liberal'
             rho_elbow = np.maximum(rho_allcomps_elbow, rho_unclassified_elbow)
 
-    return rho_elbow, varex_upper_p, rho_allcomps_elbow, rho_unclassified_elbow, elbow_f05
+    return rho_elbow, rho_allcomps_elbow, rho_unclassified_elbow, elbow_f05
 
 
 def get_extend_factor(n_vols=None, extend_factor=None):

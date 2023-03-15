@@ -721,6 +721,12 @@ def calc_kappa_elbow(
     a kappa elbow calculation on all components and on a subset of kappa values below
     a significance threshold. To get the same functionality as in MEICA v2.5,
     decide_comps must be 'all'.
+
+    varex_upper_p isn't used for anything in this function, but it is calculated
+    on kappa values and is used in rho_elbow_kundu_liberal and
+    dec_reclassify_high_var_comps. For several reasons it made more sense to calculate here.
+    This also means the kappa elbow should be calculated before those two other functions
+    are called
     """
     outputs = {
         "decision_node_idx": selector.current_node_idx,
@@ -731,10 +737,12 @@ def calc_kappa_elbow(
             "kappa_elbow_kundu",
             "kappa_allcomps_elbow",
             "kappa_nonsig_elbow",
+            "varex_upper_p",
         ],
         "kappa_elbow_kundu": None,
         "kappa_allcomps_elbow": None,
         "kappa_nonsig_elbow": None,
+        "varex_upper_p": None,
     }
 
     if only_used_metrics:
@@ -748,6 +756,11 @@ def calc_kappa_elbow(
         LGR.warning(
             "kappa_elbow_kundu already calculated."
             f"Overwriting previous value in {function_name_idx}"
+        )
+
+    if "varex_upper_p" in selector.cross_component_metrics:
+        LGR.warning(
+            f"varex_upper_p already calculated. Overwriting previous value in {function_name_idx}"
         )
 
     if custom_node_label:
@@ -777,10 +790,12 @@ def calc_kappa_elbow(
             outputs["kappa_elbow_kundu"],
             outputs["kappa_allcomps_elbow"],
             outputs["kappa_nonsig_elbow"],
+            outputs["varex_upper_p"],
         ) = kappa_elbow_kundu(selector.component_table, selector.n_echos, comps2use=comps2use)
         selector.cross_component_metrics["kappa_elbow_kundu"] = outputs["kappa_elbow_kundu"]
         selector.cross_component_metrics["kappa_allcomps_elbow"] = outputs["kappa_allcomps_elbow"]
         selector.cross_component_metrics["kappa_nonsig_elbow"] = outputs["kappa_nonsig_elbow"]
+        selector.cross_component_metrics["varex_upper_p"] = outputs["varex_upper_p"]
 
         log_decision_tree_step(function_name_idx, comps2use, calc_outputs=outputs)
 
@@ -851,14 +866,12 @@ def calc_rho_elbow(
         "n_echos": selector.n_echos,
         "calc_cross_comp_metrics": [
             elbow_name,
-            "varex_upper_p",
             "rho_allcomps_elbow",
             "rho_unclassified_elbow",
             "elbow_f05",
         ],
         "used_metrics": set(["kappa", "rho", "variance explained"]),
         elbow_name: None,
-        "varex_upper_p": None,
         "rho_allcomps_elbow": None,
         "rho_unclassified_elbow": None,
         "elbow_f05": None,
@@ -873,11 +886,6 @@ def calc_rho_elbow(
         LGR.warning(
             f"{elbow_name} already calculated."
             f"Overwriting previous value in {function_name_idx}"
-        )
-
-    if "varex_upper_p" in selector.cross_component_metrics:
-        LGR.warning(
-            f"varex_upper_p already calculated. Overwriting previous value in {function_name_idx}"
         )
 
     if custom_node_label:
@@ -907,7 +915,6 @@ def calc_rho_elbow(
     else:
         (
             outputs[elbow_name],
-            outputs["varex_upper_p"],
             outputs["rho_allcomps_elbow"],
             outputs["rho_unclassified_elbow"],
             outputs["elbow_f05"],
@@ -919,7 +926,6 @@ def calc_rho_elbow(
             subset_comps2use=subset_comps2use,
         )
         selector.cross_component_metrics[elbow_name] = outputs[elbow_name]
-        selector.cross_component_metrics["varex_upper_p"] = outputs["varex_upper_p"]
         selector.cross_component_metrics["rho_allcomps_elbow"] = outputs["rho_allcomps_elbow"]
         selector.cross_component_metrics["rho_unclassified_elbow"] = outputs[
             "rho_unclassified_elbow"
@@ -1042,6 +1048,145 @@ def dec_classification_doesnt_exist(
         )
     else:  # do_comps_exist is None:
         decision_boolean = pd.Series(True, index=comps2use)
+
+        selector, outputs["n_true"], outputs["n_false"] = change_comptable_classifications(
+            selector,
+            if_true,
+            if_false,
+            decision_boolean,
+            tag_if_true=tag,
+        )
+
+        log_decision_tree_step(
+            function_name_idx,
+            comps2use,
+            n_true=outputs["n_true"],
+            n_false=outputs["n_false"],
+            if_true=if_true,
+            if_false=if_false,
+        )
+
+    selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
+
+    return selector
+
+
+@fill_doc
+def dec_reclassify_high_var_comps(
+    selector,
+    new_classification,
+    decide_comps,
+    log_extra_report="",
+    log_extra_info="",
+    custom_node_label="",
+    only_used_metrics=False,
+    tag=None,
+):
+    """
+    Identifies and reclassifies a couple components with the largest gaps in variance
+
+    Parameters
+    ----------
+    %(selector)s
+    new_classification: :obj:`str`
+        Assign all components identified in decide_comps the classification
+        in new_classification.
+    %(decide_comps)s
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
+    tag: :obj:`str`
+        A classification tag to assign to all components being reclassified.
+        This should be one of the tags defined by classification_tags in
+        the decision tree specification. Default="".
+
+    Returns
+    -------
+    %(selector)s
+    %(used_metrics)s
+
+    Note
+    ----
+    This function should not exist, but with the goal of maintaining the results of
+    the original MEICA decision tree it is necessary, so here it is.
+    It is a quirky and brittle step that is used to remove a few higher variance
+    components from the calculation of the rho elbow. In the kundu decision tree,
+    these components are also excluded from being provisionally accepted if
+    kappa>kappa_elbow and rho<rho_elbow.
+    """
+    # predefine all outputs that should be logged
+    outputs = {
+        "decision_node_idx": selector.current_node_idx,
+        "used_metrics": set(["variance explained"]),
+        "used_cross_comp_metrics": set(["varex_upper_p"]),
+        "node_label": None,
+        "n_true": None,
+        "n_false": None,
+    }
+
+    if only_used_metrics:
+        return outputs["used_metrics"]
+
+    function_name_idx = f"Step {selector.current_node_idx}: reclassify_high_var_comps"
+    if custom_node_label:
+        outputs["node_label"] = custom_node_label
+    else:
+        outputs["node_label"] = (
+            f"Change {decide_comps} to {new_classification} for the top couple "
+            f"of components with the highest jumps in variance"
+        )
+
+    LGR.info(f"{function_name_idx}: {outputs['node_label']}")
+    if log_extra_info:
+        LGR.info(f"{function_name_idx} {log_extra_info}")
+    if log_extra_report:
+        RepLGR.info(log_extra_report)
+
+    if_true = new_classification
+    if_false = "nochange"
+
+    comps2use = selectcomps2use(selector, decide_comps)
+
+    if "varex_upper_p" not in selector.cross_component_metrics:
+        if not comps2use:
+            LGR.info(
+                f"{function_name_idx}: varex_upper_p is not in "
+                "selector.cross_component_metrics, but no components with "
+                f"{decide_comps} remain by this node so nothing happens"
+            )
+        else:
+            raise ValueError(
+                f"varex_upper_p not in cross_component_metrics. "
+                f"It needs to be calculated before {function_name_idx}"
+            )
+
+    if not comps2use:
+        outputs["n_true"] = 0
+        # If nothing changes, then assign the number of components in comps2use to n_false
+        outputs["n_false"] = len(comps2use)
+        log_decision_tree_step(
+            function_name_idx,
+            comps2use,
+            decide_comps=decide_comps,
+            if_true=outputs["n_true"],
+            if_false=outputs["n_false"],
+        )
+    else:
+        keep_comps2use = comps2use.copy()
+        for i_loop in range(3):
+            temp_comptable = selector.component_table.loc[keep_comps2use].sort_values(
+                by=["variance explained"], ascending=False
+            )
+            diff_vals = temp_comptable["variance explained"].diff(-1)
+            diff_vals = diff_vals.fillna(0)
+            keep_comps2use = temp_comptable.loc[
+                diff_vals < selector.cross_component_metrics["varex_upper_p"]
+            ].index.values
+        # Everything that should be kept as unclassified is False while the few
+        #   that are not in keep_comps2use should be True
+        decision_boolean = pd.Series(True, index=comps2use)
+        decision_boolean.loc[keep_comps2use] = False
 
         selector, outputs["n_true"], outputs["n_false"] = change_comptable_classifications(
             selector,
@@ -1204,20 +1349,26 @@ def calc_varex_thresh(
         else:
             # Using only the first num_highest_var_comps components sorted to include
             # lowest variance
-            if num_highest_var_comps <= len(comps2use):
-                sorted_varex = np.flip(
-                    np.sort(
-                        (selector.component_table.loc[comps2use, "variance explained"]).to_numpy()
-                    )
+            if num_highest_var_comps > len(comps2use):
+                # NOTE: This was originally an error, but the original tedana code has no check
+                #       at all and it looks like sorted_varex[:num_highest_var_comps] does not
+                #       crash and always maxes out at the length of sorted_varex. Since this is
+                #       an edge case, decided to print an info message and change the value even
+                #       if this won't affect functionality
+                LGR.info(
+                    f"{function_name_idx}: num_highest_var_comps ({num_highest_var_comps}) > "
+                    f"len(comps2use) ({len(comps2use)}). Setting to equal len(comps2use) since "
+                    "selection should not use more components than exist"
                 )
-                outputs[varex_name] = scoreatpercentile(
-                    sorted_varex[:num_highest_var_comps], percentile_thresh
-                )
-            else:
-                raise ValueError(
-                    f"{function_name_idx}: num_highest_var_comps ({num_highest_var_comps})"
-                    f"needs to be <= len(comps2use) ({len(comps2use)})"
-                )
+                num_highest_var_comps = len(comps2use)
+
+            sorted_varex = np.flip(
+                np.sort((selector.component_table.loc[comps2use, "variance explained"]).to_numpy())
+            )
+            outputs[varex_name] = scoreatpercentile(
+                sorted_varex[:num_highest_var_comps], percentile_thresh
+            )
+
         selector.cross_component_metrics[varex_name] = outputs[varex_name]
 
         log_decision_tree_step(function_name_idx, comps2use, calc_outputs=outputs)

@@ -175,7 +175,7 @@ def test_minimal():
     selector = component_selector.ComponentSelector(
         "minimal",
         sample_comptable(),
-        cross_component_metrics=xcomp,
+        cross_component_metrics=xcomp.copy(),
     )
     selector.select()
 
@@ -183,7 +183,7 @@ def test_minimal():
     selector = component_selector.ComponentSelector(
         "minimal",
         sample_comptable(),
-        cross_component_metrics=xcomp,
+        cross_component_metrics=xcomp.copy(),
     )
     selector.component_table = selector.component_table.drop(columns="classification_tags")
     selector.select()

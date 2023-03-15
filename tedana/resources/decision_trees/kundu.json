@@ -16,11 +16,12 @@
         "countnoise"
     ],
     "generated_metrics": [
-        "d_table_score_node19",
+        "d_table_score_node20",
         "varex kappa ratio"
     ],
     "intermediate_classifications": [
-        "provisionalaccept"
+        "provisionalaccept",
+        "unclass_highvar"
     ],
     "classification_tags": [
         "Likely BOLD",
@@ -132,6 +133,18 @@
             "_comment": ""
         },
         {
+            "functionname": "dec_reclassify_high_var_comps",
+            "parameters": {
+                "decide_comps": "unclassified",
+                "new_classification": "unclass_highvar"
+            },
+            "kwargs": {
+                "log_extra_info": "",
+                "log_extra_report": ""
+            },
+            "_comment": ""
+        },
+        {
             "functionname": "calc_rho_elbow",
             "parameters": {
                 "decide_comps": "all"
@@ -180,7 +193,8 @@
                 "new_classification": "accepted",
                 "decide_comps": [
                     "provisionalaccept",
-                    "unclassified"
+                    "unclassified",
+                    "unclass_highvar"
                 ],
                 "class_comp_exists": "provisionalaccept"
             },
@@ -239,7 +253,8 @@
                 "if_false": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
-                    "unclassified"
+                    "unclassified",
+                    "unclass_highvar"
                 ],
                 "op": ">",
                 "left": "d_table_score",
@@ -262,7 +277,8 @@
                 "if_false": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
-                    "unclassified"
+                    "unclassified",
+                    "unclass_highvar"
                 ],
                 "op": ">",
                 "left": "d_table_score",
@@ -286,9 +302,13 @@
                 "new_classification": "accepted",
                 "decide_comps": [
                     "provisionalaccept",
-                    "unclassified"
+                    "unclassified",
+                    "unclass_highvar"
                 ],
-                "class_comp_exists": "unclassified"
+                "class_comp_exists": [
+                    "unclassified",
+                    "unclass_highvar"
+                ]
             },
             "kwargs": {
                 "tag": "Likely BOLD",
@@ -302,7 +322,8 @@
             "parameters": {
                 "decide_comps": [
                     "provisionalaccept",
-                    "unclassified"
+                    "unclassified",
+                    "unclass_highvar"
                 ]
             },
             "kwargs": {},
@@ -315,10 +336,11 @@
                 "if_false": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
-                    "unclassified"
+                    "unclassified",
+                    "unclass_highvar"
                 ],
                 "op": ">",
-                "left": "d_table_score_node19",
+                "left": "d_table_score_node20",
                 "right": "conservative_guess"
             },
             "kwargs": {
@@ -342,10 +364,11 @@
                 "if_false": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
-                    "unclassified"
+                    "unclassified",
+                    "unclass_highvar"
                 ],
                 "op": ">",
-                "left": "d_table_score_node19",
+                "left": "d_table_score_node20",
                 "right": "num_acc_guess"
             },
             "kwargs": {
@@ -364,7 +387,8 @@
             "parameters": {
                 "decide_comps": [
                     "provisionalaccept",
-                    "unclassified"
+                    "unclassified",
+                    "unclass_highvar"
                 ],
                 "thresh_label": "new_lower",
                 "percentile_thresh": 25
@@ -380,10 +404,11 @@
                 "if_false": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
-                    "unclassified"
+                    "unclassified",
+                    "unclass_highvar"
                 ],
                 "op": ">",
-                "left": "d_table_score_node19",
+                "left": "d_table_score_node20",
                 "right": "num_acc_guess"
             },
             "kwargs": {
@@ -402,7 +427,8 @@
                 "if_false": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
-                    "unclassified"
+                    "unclassified",
+                    "unclass_highvar"
                 ],
                 "op": "<=",
                 "left": "kappa",
@@ -423,7 +449,8 @@
                 "new_classification": "accepted",
                 "decide_comps": [
                     "provisionalaccept",
-                    "unclassified"
+                    "unclassified",
+                    "unclass_highvar"
                 ]
             },
             "kwargs": {

@@ -437,6 +437,7 @@ def test_calc_kappa_elbow():
         "kappa_elbow_kundu",
         "kappa_allcomps_elbow",
         "kappa_nonsig_elbow",
+        "varex_upper_p",
     }
     output_calc_cross_comp_metrics = set(
         selector.tree["nodes"][selector.current_node_idx]["outputs"]["calc_cross_comp_metrics"]
@@ -446,6 +447,7 @@ def test_calc_kappa_elbow():
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["kappa_elbow_kundu"] > 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["kappa_allcomps_elbow"] > 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["kappa_nonsig_elbow"] > 0
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_upper_p"] > 0
 
     # Using a subset of components for decide_comps.
     selector = selection_nodes.calc_kappa_elbow(
@@ -459,6 +461,7 @@ def test_calc_kappa_elbow():
         "kappa_elbow_kundu",
         "kappa_allcomps_elbow",
         "kappa_nonsig_elbow",
+        "varex_upper_p",
     }
     output_calc_cross_comp_metrics = set(
         selector.tree["nodes"][selector.current_node_idx]["outputs"]["calc_cross_comp_metrics"]
@@ -468,6 +471,7 @@ def test_calc_kappa_elbow():
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["kappa_elbow_kundu"] > 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["kappa_allcomps_elbow"] > 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["kappa_nonsig_elbow"] > 0
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_upper_p"] > 0
 
     # No components with "NotALabel" classification so nothing selected
     selector = sample_selector()
@@ -485,6 +489,7 @@ def test_calc_kappa_elbow():
     assert (
         selector.tree["nodes"][selector.current_node_idx]["outputs"]["kappa_nonsig_elbow"] is None
     )
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_upper_p"] is None
 
 
 def test_calc_rho_elbow():
@@ -507,7 +512,6 @@ def test_calc_rho_elbow():
     )
     calc_cross_comp_metrics = {
         "rho_elbow_kundu",
-        "varex_upper_p",
         "rho_allcomps_elbow",
         "rho_unclassified_elbow",
         "elbow_f05",
@@ -517,7 +521,6 @@ def test_calc_rho_elbow():
     )
     # Confirming the intended metrics are added to outputs and they have non-zero values
     assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_upper_p"] > 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["rho_elbow_kundu"] > 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["rho_allcomps_elbow"] > 0
     assert (
@@ -536,7 +539,6 @@ def test_calc_rho_elbow():
     )
     calc_cross_comp_metrics = {
         "rho_elbow_liberal",
-        "varex_upper_p",
         "rho_allcomps_elbow",
         "rho_unclassified_elbow",
         "elbow_f05",
@@ -546,7 +548,6 @@ def test_calc_rho_elbow():
     )
     # Confirming the intended metrics are added to outputs and they have non-zero values
     assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_upper_p"] > 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["rho_elbow_liberal"] > 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["rho_allcomps_elbow"] > 0
     assert (
@@ -564,7 +565,6 @@ def test_calc_rho_elbow():
     )
     calc_cross_comp_metrics = {
         "rho_elbow_kundu",
-        "varex_upper_p",
         "rho_allcomps_elbow",
         "rho_unclassified_elbow",
         "elbow_f05",
@@ -574,7 +574,6 @@ def test_calc_rho_elbow():
     )
     # Confirming the intended metrics are added to outputs and they have non-zero values
     assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_upper_p"] > 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["rho_elbow_kundu"] > 0
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["rho_allcomps_elbow"] > 0
     assert (
@@ -591,7 +590,6 @@ def test_calc_rho_elbow():
 
     # Outputs just the metrics used in this function
     selector = selection_nodes.calc_rho_elbow(selector, decide_comps)
-    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_upper_p"] is None
     assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["rho_elbow_kundu"] is None
     assert (
         selector.tree["nodes"][selector.current_node_idx]["outputs"]["rho_allcomps_elbow"] is None
@@ -766,6 +764,69 @@ def test_dec_classification_doesnt_exist_smoke():
     assert f"Node {selector.current_node_idx}" in selector.component_status_table
 
 
+def test_dec_reclassify_high_var_comps():
+    """tests for dec_reclassify_high_var_comps"""
+
+    selector = sample_selector(options="unclass")
+    decide_comps = "unclassified"
+
+    # Outputs just the metrics used in this function {"variance explained"}
+    used_metrics = selection_nodes.dec_reclassify_high_var_comps(
+        selector,
+        "unclass_highvar",
+        decide_comps,
+        only_used_metrics=True,
+    )
+    assert len(used_metrics - set(["variance explained"])) == 0
+
+    # Raises an error since varex_upper_p not in cross_component_metrics
+    #   & there are components in decide_comps
+    with pytest.raises(ValueError):
+        selection_nodes.dec_reclassify_high_var_comps(
+            selector,
+            "unclass_highvar",
+            decide_comps,
+        )
+
+    # varex_upper_p not in cross_component_metrics,
+    #   but doesn't raise an error because no components in decide_comps
+    selection_nodes.dec_reclassify_high_var_comps(
+        selector,
+        "unclass_highvar",
+        "NotAClassification",
+    )
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 0
+    assert f"Node {selector.current_node_idx}" not in selector.component_status_table
+
+    # Add varex_upper_p to cross component_metrics to run normal test
+    selector = sample_selector(options="unclass")
+    selector.cross_component_metrics["varex_upper_p"] = 0.97
+
+    # Standard execution where with all extra logging code and options changed from defaults
+    selection_nodes.dec_reclassify_high_var_comps(
+        selector,
+        "unclass_highvar",
+        decide_comps,
+        log_extra_report="report log",
+        log_extra_info="info log",
+        custom_node_label="custom label",
+        tag="test true tag",
+    )
+    # Lists the number of components in decide_comps in n_true or n_false
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 3
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_false"] == 10
+    assert f"Node {selector.current_node_idx}" in selector.component_status_table
+
+    # No components with "NotALabel" classification so nothing selected and no
+    #   Node 1 column is created in component_status_table
+    selector.current_node_idx = 1
+    selector = selection_nodes.dec_reclassify_high_var_comps(
+        selector, "unclass_highvar", "NotAClassification"
+    )
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["n_true"] == 0
+    assert f"Node {selector.current_node_idx}" not in selector.component_status_table
+
+
 def test_calc_varex_thresh_smoke():
     """Smoke tests for calc_varex_thresh"""
 
@@ -892,15 +953,27 @@ def test_calc_varex_thresh_smoke():
             num_highest_var_comps=9.5,
         )
 
-    # Raise error if num_highest_var_comps is larger than the number of selected components
-    with pytest.raises(ValueError):
-        selector = selection_nodes.calc_varex_thresh(
-            selector,
-            decide_comps,
-            thresh_label="new_lower",
-            percentile_thresh=25,
-            num_highest_var_comps=55,
-        )
+    # Still run num_highest_var_comps is larger than the number of selected components
+    #  NOTE: To match original functionaly this will run but add an info message
+    #   and set num_highest_var_comps to the number of selected components
+    #
+    selector = selection_nodes.calc_varex_thresh(
+        selector,
+        decide_comps,
+        thresh_label="new_lower",
+        percentile_thresh=25,
+        num_highest_var_comps=55,
+    )
+    calc_cross_comp_metrics = {"varex_new_lower_thresh", "new_lower_perc"}
+    output_calc_cross_comp_metrics = set(
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["calc_cross_comp_metrics"]
+    )
+    # Confirming the intended metrics are added to outputs and they have non-zero values
+    assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
+    assert (
+        selector.tree["nodes"][selector.current_node_idx]["outputs"]["varex_new_lower_thresh"] > 0
+    )
+    assert selector.tree["nodes"][selector.current_node_idx]["outputs"]["new_lower_perc"] == 25
 
     # Run warning logging code to see if any of the cross_component_metrics
     # already exists and would be over-written
