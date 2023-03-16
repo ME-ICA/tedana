@@ -1,3 +1,6 @@
+# setuptools-scm
+tedana/_version.py
+
 .DS_Store
 docs/generated/
 .pytest_cache/

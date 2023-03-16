@@ -1,14 +1,98 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
 [project]
 name = "tedana"
-version = "0.0.12"
+description = "TE-Dependent Analysis (tedana) of multi-echo functional magnetic resonance imaging (fMRI) data."
+readme = "README.md"
+authors = [{name = "tedana developers"}]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+license = {file = "LICENSE"}
+requires-python = ">=3.7"
+dependencies = [
+    "bokeh<2.3.0",
+    "mapca>=0.0.3",
+    "matplotlib",
+    "nibabel>=2.5.1",
+    "nilearn>=0.7",
+    "numpy>=1.16",
+    "pandas>=0.24",
+    "scikit-learn>=0.21",
+    "scipy>=1.2.0",
+    "threadpoolctl",
+    "jinja2==3.0.1",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/ME-ICA/tedana"
+Documentation = "https://www.tedana.readthedocs.io"
+Paper = "https://joss.theoj.org/papers/10.21105/joss.03669"
+
+[project.optional-dependencies]
+doc = [
+    "sphinx>=1.5.3",
+    "sphinx_copybutton",
+    "sphinx_rtd_theme",
+    "sphinx-argparse",
+    "sphinxcontrib-bibtex",
+]
+tests = [
+    "codecov",
+    "coverage<5.0",
+    "flake8>=3.7",
+    "flake8-black",
+    "flake8-isort",
+    "pytest",
+    "pytest-cov",
+    "requests",
+]
+
+# Aliases
+all = ["tedana[doc,tests]"]
 
 [project.scripts]
-tedana = "tedana.workflows.tedana:_main"
 ica_reclassify = "tedana.workflows.ica_reclassify:_main"
 t2smap = "tedana.workflows.t2smap:_main"
+tedana = "tedana.workflows.tedana:_main"
 
-[build-system]
-requires = ["setuptools>=64", "wheel"]
+#
+# Hatch configurations
+#
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.sdist]
+exclude = [".git_archival.txt"]  # No longer needed in sdist
+
+[tool.hatch.build.targets.wheel]
+packages = ["tedana"]
+exclude = [
+    "tedana/tests/data",  # Large test data directory
+]
+
+##  The following two sections configure setuptools_scm in the hatch way
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "tedana/_version.py"
+
+#
+# Developer tool configurations
+#
 
 [tool.black]
 line-length = 99
@@ -28,8 +112,7 @@ exclude = '''
     | build
     | dist
   )/
-  | get_version.py
-  | versioneer.py
+  | tedana/_version.py
 )
 '''
 
@@ -37,4 +120,33 @@ exclude = '''
 profile = "black"
 multi_line_output = 3
 
+[tool.flake8]
+max-line-length = 99
+exclude = [
+    "*build/",
+    "tedana/_version.py",
+]
+ignore = ["E203", "E402", "W503"]
+per-file-ignores = [
+    "*/__init__.py: F401",
+]
+docstring-convention = "numpy"
 
+[tool.coverage.run]
+branch = true
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+    "*/conftest.py",
+    "tedana/_version.py",
+]
+
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_lines = [
+    'raise NotImplementedError',
+    'warnings\.warn',
+]
+
+[tool.pytest]
+log_cli = true
