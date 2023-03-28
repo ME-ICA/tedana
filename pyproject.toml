@@ -53,6 +53,7 @@ tests = [
     "flake8>=3.7",
     "flake8-black",
     "flake8-isort",
+    "flake8-pyproject",
     "pytest",
     "pytest-cov>=4.0.0",
     "requests",
