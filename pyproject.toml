@@ -49,13 +49,13 @@ doc = [
 ]
 tests = [
     "codecov",
-    "coverage<5.0",
+    "coverage",
     "flake8>=3.7",
     "flake8-black",
     "flake8-isort",
     "flake8-pyproject",
     "pytest",
-    "pytest-cov",
+    "pytest-cov>=4.0.0",
     "requests",
 ]
 
