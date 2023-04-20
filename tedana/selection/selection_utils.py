@@ -815,7 +815,6 @@ def get_extend_factor(n_vols=None, extend_factor=None):
         LGR.info(f"extend_factor={extend_factor}, based on number of fMRI volumes")
     else:
         error_msg = "get_extend_factor need n_vols or extend_factor as an input"
-        LGR.error(error_msg)
         raise ValueError(error_msg)
 
     return extend_factor

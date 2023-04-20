@@ -24,16 +24,29 @@ LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
-def _main():
+def _get_parser():
+    """
+    Parses command line inputs for tedana
+
+    Returns
+    -------
+    parser.parse_args() : argparse dict
+    """
+
     from tedana import __version__
 
     verstr = "ica_reclassify v{}".format(__version__)
+
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument(
+    # Argument parser follow template provided by RalphyZ
+    # https://stackoverflow.com/a/43456577
+    optional = parser._action_groups.pop()
+    required = parser.add_argument_group("Required Arguments")
+    required.add_argument(
         "registry",
         help="File registry from a previous tedana run",
     )
-    parser.add_argument(
+    optional.add_argument(
         "--manacc",
         dest="manual_accept",
         nargs="+",
@@ -43,8 +56,9 @@ def _main():
             "as a csv file, or as a text file with an allowed "
             f"delimiter {repr(ALLOWED_COMPONENT_DELIMITERS)}."
         ),
+        default=[],
     )
-    parser.add_argument(
+    optional.add_argument(
         "--manrej",
         dest="manual_reject",
         nargs="+",
@@ -54,14 +68,15 @@ def _main():
             "as a csv file, or as a text file with an allowed "
             f"delimiter {repr(ALLOWED_COMPONENT_DELIMITERS)}."
         ),
+        default=[],
     )
-    parser.add_argument(
+    optional.add_argument(
         "--config",
         dest="config",
         help="File naming configuration.",
         default="auto",
     )
-    parser.add_argument(
+    optional.add_argument(
         "--out-dir",
         dest="out_dir",
         type=str,
@@ -69,10 +84,10 @@ def _main():
         help="Output directory.",
         default=".",
     )
-    parser.add_argument(
+    optional.add_argument(
         "--prefix", dest="prefix", type=str, help="Prefix for filenames generated.", default=""
     )
-    parser.add_argument(
+    optional.add_argument(
         "--convention",
         dest="convention",
         action="store",
@@ -80,20 +95,21 @@ def _main():
         help=("Filenaming convention. bids will use the latest BIDS derivatives version."),
         default="bids",
     )
-    parser.add_argument(
+    optional.add_argument(
         "--tedort",
         dest="tedort",
         action="store_true",
         help=("Orthogonalize rejected components w.r.t. accepted components prior to denoising."),
         default=False,
     )
-    parser.add_argument(
+    optional.add_argument(
         "--mir",
         dest="mir",
         action="store_true",
         help="Run minimum image regression.",
+        default=False,
     )
-    parser.add_argument(
+    optional.add_argument(
         "--no-reports",
         dest="no_reports",
         action="store_true",
@@ -105,10 +121,10 @@ def _main():
         ),
         default=False,
     )
-    parser.add_argument(
+    optional.add_argument(
         "--png-cmap", dest="png_cmap", type=str, help="Colormap for figures", default="coolwarm"
     )
-    parser.add_argument(
+    optional.add_argument(
         "--debug",
         dest="debug",
         action="store_true",
@@ -119,49 +135,32 @@ def _main():
         ),
         default=False,
     )
-    parser.add_argument(
+    optional.add_argument(
         "--overwrite",
         "-f",
         dest="overwrite",
         action="store_true",
         help="Force overwriting of files.",
     )
-    parser.add_argument(
+    optional.add_argument(
         "--quiet", dest="quiet", help=argparse.SUPPRESS, action="store_true", default=False
     )
-    parser.add_argument("-v", "--version", action="version", version=verstr)
+    optional.add_argument("-v", "--version", action="version", version=verstr)
 
-    args = parser.parse_args()
+    parser._action_groups.append(optional)
+    return parser
 
-    if not args.manual_accept:
-        manual_accept = []
-    elif len(args.manual_accept) > 1:
-        # We should assume that this is a list of integers
-        manual_accept = [int(x) for x in args.manual_accept]
-    elif op.exists(args.manual_accept[0]):
-        # filename was given
-        manual_accept = fname_to_component_list(args.manual_accept[0])
-    else:
-        # arbitrary string was given, length of list is 1
-        manual_accept = str_to_component_list(args.manual_accept[0])
 
-    if not args.manual_reject:
-        manual_reject = []
-    elif len(args.manual_reject) > 1:
-        # We should assume that this is a list of integers
-        manual_reject = [int(x) for x in args.manual_reject]
-    elif op.exists(args.manual_reject[0]):
-        # filename was given
-        manual_reject = fname_to_component_list(args.manual_reject[0])
-    else:
-        # arbitrary string
-        manual_reject = str_to_component_list(args.manual_reject[0])
+def _main(argv=None):
+    """ica_reclassify entry point"""
 
-    # Run post-tedana
-    post_tedana(
+    args = _get_parser().parse_args(argv)
+
+    # Run ica_reclassify_workflow
+    ica_reclassify_workflow(
         args.registry,
-        accept=manual_accept,
-        reject=manual_reject,
+        accept=args.manual_accept,
+        reject=args.manual_reject,
         out_dir=args.out_dir,
         config=args.config,
         prefix=args.prefix,
@@ -176,7 +175,58 @@ def _main():
     )
 
 
-def post_tedana(
+def _parse_manual_list(manual_list):
+    """
+    Parse the list of components to accept or reject into a list of integers
+
+    Parameters
+    ----------
+    manual_list: :obj:`str` :obj:`list[str]` or [] or None
+        String of integers separated by spaces, commas, or tabs
+        A file name for a file that contains integers
+
+    Returns
+    -------
+    manual_nums: :obj:`list[int]`
+        A list of integers or an empty list.
+
+    Note
+    ----
+    Do not need to check if integers are less than 0 or greater than the total
+    number of components here, because it is later checked in selectcomps2use
+    and a descriptive error message will appear there
+    """
+    if not manual_list:
+        manual_nums = []
+    elif len(manual_list) > 1:
+        # We should assume that this is a list of integers
+        manual_nums = []
+        for x in manual_list:
+            if float(x) == int(x):
+                manual_nums.append(int(x))
+            else:
+                raise ValueError(
+                    "_parse_manual_list expected a list of integers, "
+                    f"but the input is {manual_list}"
+                )
+    elif op.exists(str(manual_list[0])):
+        # filename was given
+        manual_nums = fname_to_component_list(manual_list[0])
+    elif type(manual_list[0]) == str:
+        # arbitrary string was given, length of list is 1
+        manual_nums = str_to_component_list(manual_list[0])
+    elif type(manual_list[0]) == int:
+        # Is a single integer and should remain a list with a single integer
+        manual_nums = manual_list
+    else:
+        raise ValueError(
+            f"_parse_manual_list expected integers or a filename, but the input is {manual_list}"
+        )
+
+    return manual_nums
+
+
+def ica_reclassify_workflow(
     registry,
     accept=[],
     reject=[],
@@ -244,6 +294,12 @@ def post_tedana(
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
+
+    # If accept and reject are a list of integers, they stay the same
+    # If they are a filename, load numbers of from
+    # If they are a string of values, convert to a list of ints
+    accept = _parse_manual_list(accept)
+    reject = _parse_manual_list(reject)
 
     # Check that there is no overlap in accepted/rejected components
     if accept:

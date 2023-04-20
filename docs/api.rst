@@ -24,6 +24,7 @@ API
    :toctree: generated/
 
    tedana.workflows.tedana_workflow
+   tedana.workflows.ica_reclassify_workflow
    tedana.workflows.t2smap_workflow
 
 

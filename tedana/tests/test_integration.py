@@ -23,7 +23,7 @@ from pkg_resources import resource_filename
 from tedana.io import InputHarvester
 from tedana.workflows import t2smap as t2smap_cli
 from tedana.workflows import tedana as tedana_cli
-from tedana.workflows.ica_reclassify import post_tedana
+from tedana.workflows.ica_reclassify import ica_reclassify_workflow
 
 # Need to see if a no BOLD warning occurred
 LOGGER = logging.getLogger(__name__)
@@ -296,7 +296,7 @@ def test_integration_four_echo(skip_integration):
         verbose=True,
     )
 
-    post_tedana(
+    ica_reclassify_workflow(
         op.join(out_dir, "desc-tedana_registry.json"),
         accept=[1, 2, 3],
         reject=[4, 5, 6],
@@ -515,7 +515,7 @@ def test_integration_reclassify_both_rej_acc(skip_integration):
         ValueError,
         match=r"The following components were both accepted and",
     ):
-        post_tedana(
+        ica_reclassify_workflow(
             reclassify_raw_registry(),
             accept=[1, 2, 3],
             reject=[1, 2, 3],
@@ -532,13 +532,13 @@ def test_integration_reclassify_run_twice(skip_integration):
     if os.path.exists(out_dir):
         shutil.rmtree(out_dir)
 
-    post_tedana(
+    ica_reclassify_workflow(
         reclassify_raw_registry(),
         accept=[1, 2, 3],
         out_dir=out_dir,
         no_reports=True,
     )
-    post_tedana(
+    ica_reclassify_workflow(
         reclassify_raw_registry(),
         accept=[1, 2, 3],
         out_dir=out_dir,
@@ -562,7 +562,7 @@ def test_integration_reclassify_no_bold(skip_integration, caplog):
     comptable = ioh.get_file_contents("ICA metrics tsv")
     to_accept = [i for i in range(len(comptable))]
 
-    post_tedana(
+    ica_reclassify_workflow(
         reclassify_raw_registry(),
         reject=to_accept,
         out_dir=out_dir,
@@ -587,7 +587,7 @@ def test_integration_reclassify_accrej_files(skip_integration, caplog):
     comptable = ioh.get_file_contents("ICA metrics tsv")
     to_accept = [i for i in range(len(comptable))]
 
-    post_tedana(
+    ica_reclassify_workflow(
         reclassify_raw_registry(),
         reject=to_accept,
         out_dir=out_dir,
@@ -597,6 +597,38 @@ def test_integration_reclassify_accrej_files(skip_integration, caplog):
 
     fn = resource_filename("tedana", "tests/data/reclassify_no_bold.txt")
     check_integration_outputs(fn, out_dir)
+
+
+def test_integration_reclassify_index_failures(skip_integration, caplog):
+    if skip_integration:
+        pytest.skip("Skip reclassify index failures")
+
+    test_data_path = guarantee_reclassify_data()
+    out_dir = os.path.abspath(os.path.join(test_data_path, "../outputs/reclassify/index_failures"))
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    with pytest.raises(
+        ValueError,
+        match=r"_parse_manual_list expected a list of integers, but the input is",
+    ):
+        ica_reclassify_workflow(
+            reclassify_raw_registry(),
+            accept=[1, 2.5, 3],
+            out_dir=out_dir,
+            no_reports=True,
+        )
+
+    with pytest.raises(
+        ValueError,
+        match=r"_parse_manual_list expected integers or a filename, but the input is",
+    ):
+        ica_reclassify_workflow(
+            reclassify_raw_registry(),
+            accept=[2.5],
+            out_dir=out_dir,
+            no_reports=True,
+        )
 
 
 def test_integration_t2smap(skip_integration):

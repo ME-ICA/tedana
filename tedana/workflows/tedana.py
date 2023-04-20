@@ -48,7 +48,7 @@ def _get_parser():
 
     verstr = "tedana v{}".format(__version__)
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    # Argument parser follow templtate provided by RalphyZ
+    # Argument parser follow template provided by RalphyZ
     # https://stackoverflow.com/a/43456577
     optional = parser._action_groups.pop()
     required = parser.add_argument_group("Required Arguments")
