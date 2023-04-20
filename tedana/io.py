@@ -265,7 +265,14 @@ class OutputGenerator:
         data_type = type(data)
         if not isinstance(data, pd.DataFrame):
             raise TypeError(f"data must be pd.Data, not type {data_type}.")
-        data.to_csv(name, sep="\t", line_terminator="\n", na_rep="n/a", index=False)
+        if versiontuple(pd.__version__) >= versiontuple("1.5.2"):
+            data.to_csv(name, sep="\t", lineterminator="\n", na_rep="n/a", index=False)
+        else:
+            data.to_csv(name, sep="\t", line_terminator="\n", na_rep="n/a", index=False)
+
+
+def versiontuple(v):
+    return tuple(map(int, (v.split("."))))
 
 
 def get_fields(name):
