@@ -12,13 +12,12 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Information Analysis",
     "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
 ]
 license = {file = "LICENSE"}
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 dependencies = [
     "bokeh<2.3.0",
     "mapca>=0.0.3",
@@ -26,7 +25,7 @@ dependencies = [
     "nibabel>=2.5.1",
     "nilearn>=0.7",
     "numpy>=1.16",
-    "pandas>=0.24",
+    "pandas>=2.0",
     "scikit-learn>=0.21",
     "scipy>=1.2.0",
     "threadpoolctl",

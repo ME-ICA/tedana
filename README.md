@@ -49,7 +49,7 @@ If you use `tedana`, please cite the following papers, as well as our [most rece
 ### Use `tedana` with your local Python environment
 
 You'll need to set up a working development environment to use `tedana`.
-To set up a local environment, you will need Python >=3.6 and the following packages will need to be installed:
+To set up a local environment, you will need Python >=3.8 and the following packages will need to be installed:
 
 * [numpy](http://www.numpy.org/)
 * [scipy](https://www.scipy.org/)
