@@ -339,10 +339,10 @@ class OutputGenerator:
         data_type = type(data)
         if not isinstance(data, pd.DataFrame):
             raise TypeError(f"data must be pd.Data, not type {data_type}.")
-
-        # Replace blanks with numpy NaN
-        deblanked = data.replace("", np.nan)
-        deblanked.to_csv(name, sep="\t", line_terminator="\n", na_rep="n/a", index=False)
+        if versiontuple(pd.__version__) >= versiontuple("1.5.2"):
+            data.to_csv(name, sep="\t", lineterminator="\n", na_rep="n/a", index=False)
+        else:
+            data.to_csv(name, sep="\t", line_terminator="\n", na_rep="n/a", index=False)
 
     def save_self(self):
         fname = self.save_file(self.registry, "registry json")
@@ -359,9 +359,9 @@ class InputHarvester:
     }
 
     def __init__(self, path):
-        self._full_path = path
-        self._base_dir = op.dirname(path)
-        self._registry = load_json(path)
+        self._full_path = op.abspath(path)
+        self._base_dir = op.dirname(self._full_path)
+        self._registry = load_json(self._full_path)
 
     def get_file_path(self, description):
         if description in self._registry.keys():
@@ -371,7 +371,6 @@ class InputHarvester:
 
     def get_file_contents(self, description):
         """Get file contents.
-
         Notes
         -----
         Since we restrict to just these three types, this function should always return.
@@ -388,6 +387,10 @@ class InputHarvester:
         d = self._registry
         d["root"] = self._base_dir
         return d
+
+
+def versiontuple(v):
+    return tuple(map(int, (v.split("."))))
 
 
 def get_fields(name):

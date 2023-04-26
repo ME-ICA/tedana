@@ -732,6 +732,10 @@ def tedana_workflow(
     mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
     if not op.exists(io_generator.get_name("ICA mixing tsv")):
         io_generator.save_file(mixing_df, "ICA mixing tsv")
+    else:  # Make sure the relative path to the supplied mixing matrix is saved in the registry
+        io_generator.registry["ICA mixing tsv"] = op.basename(
+            io_generator.get_name("ICA mixing tsv")
+        )
     betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask_denoise), mask_denoise)
     io_generator.save_file(betas_oc, "z-scored ICA components img")
 

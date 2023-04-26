@@ -199,7 +199,7 @@ def _parse_manual_list(manual_list):
     if not manual_list:
         manual_nums = []
     elif len(manual_list) > 1:
-        # We should assume that this is a list of integers
+        # Assume that this is a list of integers, but raise error if not
         manual_nums = []
         for x in manual_list:
             if float(x) == int(x):
@@ -209,9 +209,9 @@ def _parse_manual_list(manual_list):
                     "_parse_manual_list expected a list of integers, "
                     f"but the input is {manual_list}"
                 )
-    elif op.exists(str(manual_list[0])):
+    elif op.exists(op.expanduser(str(manual_list[0]).strip(" "))):
         # filename was given
-        manual_nums = fname_to_component_list(manual_list[0])
+        manual_nums = fname_to_component_list(op.expanduser(str(manual_list[0]).strip(" ")))
     elif type(manual_list[0]) == str:
         # arbitrary string was given, length of list is 1
         manual_nums = str_to_component_list(manual_list[0])
