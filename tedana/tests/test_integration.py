@@ -287,6 +287,7 @@ def test_integration_four_echo(skip_integration):
     datalist = [prepend + str(i + 1) + suffix for i in range(4)]
     tedana_cli.tedana_workflow(
         data=datalist,
+        mixm=op.join(op.dirname(datalist[0]), "desc-ICA_mixing_static.tsv"),
         tes=[11.8, 28.04, 44.28, 60.52],
         out_dir=out_dir,
         tedpca="kundu-stabilize",
