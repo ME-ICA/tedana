@@ -177,7 +177,7 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
    approach
    outputs
    faq
-   building decision trees
+   building_decision_trees
    support
    contributing
    roadmap
@@ -191,6 +191,7 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
    dependence_metrics
    output_file_descriptions
    classification_output_descriptions
+   included_decision_trees
 
 
 ******************

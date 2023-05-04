@@ -139,6 +139,19 @@ added_component_table_metrics:
     meica it is possible.
 
 
+
+**************************************
+Decision trees distributed with tedana
+**************************************
+
+Two decision trees are distributed with ``tedana``. 
+`Flow charts detailing these trees are here`_. It might be useful to
+look at these trees while reading how to develop a custom decision tree.
+
+
+.. _Flow charts detailing these trees are here: included_decision_trees.html
+
+
 *******************************
 Defining a custom decision tree
 *******************************

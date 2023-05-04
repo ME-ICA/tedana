@@ -9,7 +9,7 @@ contents of several of those files in more detail.
 `Building decision trees`_ covers the full process, and not just the
 descriptions of outputted files, in more detail.
 
-.. _Building decision trees: building\ decision\ trees.html
+.. _Building decision trees: building_decision_trees.html
 
 TEDPCA codes
 ============
