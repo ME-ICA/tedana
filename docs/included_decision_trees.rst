@@ -3,31 +3,33 @@ Included Decision Trees
 #######################
 
 Two decision trees are currently distributed with ``tedana``.
+
 ``kundu`` is the decision tree that is based on MEICA version 2.5
 and has been included with ``tedana`` since the start of this project.
 While multiple publications have used and benefits from this decision,
 tree, but it includes many steps with arbitrary thresholds and, when
 components seem misclassified, it's often hard to understand why.
+
 ``minimal`` is a simplified version of that decision tree with fewer
 steps and arbitrary thresholds. Minimal is designed to be more stable
 and comprehensible, but it has not yet be extensively validated and
 parts of the tree may change in response to additional tests on a
-wider range of data sets. 
+wider range of data sets.
 
 Flowcharts describing the steps in both trees are below.
-As documented more in `Building Decision Trees`_, the input to each tree
+As documented more in :doc:`building_decision_trees`, the input to each tree
 is a table with metrics, like :math:`\kappa` or :math:`\rho`, for each
 component. Each step or node in the decision tree either calculates
 new values or changes component classifications based on these metrics.
-When a component classification changes to `accept` or `reject`, a
-`classification_tag` is also assigned which may help understand why
+When a component classification changes to ``accept`` or ``reject``, a
+``classification_tag`` is also assigned which may help understand why
 a component was given a specific classification.
 
 Each step in the flow chart is labeled with a ``node`` number.
 If ``tedana`` is run using one of these trees, those node
 numbers will match the numbers in the ``ICA status table`` and the
-``ICA decision tree`` that are `saved with the outputs`_. These node
-numbers can be used to see when in the process a component's
+``ICA decision tree`` that are :doc:`output_file_descriptions`.
+These node numbers can be used to see when in the process a component's
 classifiation changed.
 
 .. image:: _static/decision_tree_legend.png
@@ -40,8 +42,6 @@ classifiation changed.
 
         <img src = "_static/decision_tree_legend.svg" alt="Legend for Decision Tree Flow Charts"/>
 
-.. _saved with the outputs: output_file_descriptions.html
-.. _Building Decision Trees: building_decision_trees.html
 
 *******************
 Kundu decision tree
@@ -54,8 +54,8 @@ elbow are classified as `provisional accept`. A non-obvious aspect
 of this decision tree is that no decision node below this point distinguishes
 components that are `provisional accept` from components that are still
 `unclassified` and nothing that does not cross the :math:`\kappa` and
-:math:`\rho` elbow thresholds is inherantly rejected. The number of 
-`provisional accept` components is used to see if the process should 
+:math:`\rho` elbow thresholds is inherantly rejected. The number of
+`provisional accept` components is used to see if the process should
 be restarted (node 11) and calculate other thresholds (nodes 12-16 & 20),
 but nothing is directly accepted or rejected based on the elbow thresholds.
 Several additional criteria are used to reject components (nodes 17, 21, & 22).
@@ -87,7 +87,7 @@ The only expection to this is if :math:`\kappa` > :math:`\kappa` elbow and
 the component should not be rejected even if it also contains noise (node 9).
 If `provisional reject` components have very low variance they are accepted rather
 than losing degrees of freedom, but no more than 1% of the total variance can be
-accepted this way (node 11). After that point, everything that is 
+accepted this way (node 11). After that point, everything that is
 `provisional accept` is accepted (node 12) and everything that is `provisional reject`
 is rejected (node 13)
 

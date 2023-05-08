@@ -3,11 +3,11 @@ Output file name descriptions
 #############################
 
 tedana allows for multiple file naming conventions. The key labels and naming options for
-each convention that can be set using the `--convention` option are in `outputs.json`_.
-The output of `tedana` also includes a file called `registry.json` or
-`desc-tedana_registry.json` that includes the keys and the matching file names for the
-output. The table below lists both these keys and the default "BIDS Derivatives"
-file names.
+each convention that can be set using the ``--convention`` option are in `outputs.json`_.
+The output of ``tedana`` also includes a file called ``registry.json`` or
+``desc-tedana_registry.json`` that includes the keys and the matching file names for the
+output.
+The table below lists both these keys and the default "BIDS Derivatives" file names.
 
 .. _outputs.json: https://github.com/ME-ICA/tedana/blob/main/tedana/resources/config/outputs.json
 
