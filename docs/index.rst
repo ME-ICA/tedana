@@ -189,8 +189,6 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
    :name: hiddentoc
 
    dependence_metrics
-   output_file_descriptions
-   classification_output_descriptions
    included_decision_trees
 
 

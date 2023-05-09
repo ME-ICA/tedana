@@ -7,7 +7,7 @@ of the component selection process and people who are considering customizing
 their own decision tree or contributing to ``tedana`` code. We have tried to
 make this accessible, but it is long. If you just want to better understand
 what's in the outputs from ``tedana`` start with
-:doc:`classification_output_descriptions`.
+:ref:`classification-output-descriptions`.
 
 ``tedana`` involves transforming data into components, currently via ICA, and then
 calculating metrics for each component. Each metric has one value per component that
@@ -45,7 +45,7 @@ During processing, everything is stored in a
 :class:`~tedana.selection.component_selector.ComponentSelector` called ``selector``.
 The elements of that object are then saved to multiple files.
 The file key names are used below the full file names in the
-:doc:`output_file_descriptions`.
+:ref:`output-filename-descriptions`.
 
 
 General outputs from component selection

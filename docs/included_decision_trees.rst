@@ -28,9 +28,9 @@ a component was given a specific classification.
 Each step in the flow chart is labeled with a ``node`` number.
 If ``tedana`` is run using one of these trees, those node
 numbers will match the numbers in the ``ICA status table`` and the
-``ICA decision tree`` that are :doc:`output_file_descriptions`.
-These node numbers can be used to see when in the process a component's
-classifiation changed.
+``ICA decision tree`` that are described in 
+:ref:`output-filename-descriptions`. These node numbers can be used
+to see when in the process a component's classifiation changed.
 
 .. image:: _static/decision_tree_legend.png
     :width: 300
