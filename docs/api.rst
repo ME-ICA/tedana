@@ -24,6 +24,7 @@ API
    :toctree: generated/
 
    tedana.workflows.tedana_workflow
+   tedana.workflows.ica_reclassify_workflow
    tedana.workflows.t2smap_workflow
 
 
@@ -120,11 +121,25 @@ API
 
 .. autosummary::
    :toctree: generated/
+   :template: class.rst
+
+   tedana.selection.component_selector.ComponentSelector
+   tedana.selection.component_selector.TreeError
+
    :template: function.rst
 
-   tedana.selection.manual_selection
-   tedana.selection.kundu_selection_v2
-   tedana.selection.kundu_tedpca
+   tedana.selection.component_selector.load_config
+   tedana.selection.component_selector.validate_tree
+
+.. autosummary::
+   :toctree: generated/
+   :template: module.rst
+
+   tedana.selection.selection_nodes
+   tedana.selection.selection_utils
+   tedana.selection.tedica
+   tedana.selection.tedpca
+
 
 
 .. _api_gscontrol_ref:
@@ -164,11 +179,16 @@ API
    :template: class.rst
 
    tedana.io.OutputGenerator
+   tedana.io.InputHarvester
+   tedana.io.CustomEncoder
 
    :template: function.rst
 
    tedana.io.load_data
+   tedana.io.load_json
+   tedana.io.get_fields
    tedana.io.new_nii_like
+   tedana.io.prep_data_for_json
    tedana.io.add_decomp_prefix
    tedana.io.denoise_ts
    tedana.io.split_ts

@@ -25,8 +25,8 @@ def _get_parser():
     -------
     parser.parse_args() : argparse dict
     """
-    parser = argparse.ArgumentParser()
-    # Argument parser follow templtate provided by RalphyZ
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    # Argument parser follow template provided by RalphyZ
     # https://stackoverflow.com/a/43456577
     optional = parser._action_groups.pop()
     required = parser.add_argument_group("Required Arguments")
@@ -90,12 +90,14 @@ def _get_parser():
         dest="fittype",
         action="store",
         choices=["loglin", "curvefit"],
-        help="Desired Fitting Method"
-        '"loglin" means that a linear model is fit'
-        " to the log of the data, default"
-        '"curvefit" means that a more computationally'
-        "demanding monoexponential model is fit"
-        "to the raw data",
+        help=(
+            "Desired T2*/S0 fitting method. "
+            '"loglin" means that a linear model is fit '
+            "to the log of the data. "
+            '"curvefit" means that a more computationally '
+            "demanding monoexponential model is fit "
+            "to the raw data. "
+        ),
         default="loglin",
     )
     optional.add_argument(
@@ -117,7 +119,7 @@ def _get_parser():
         dest="combmode",
         action="store",
         choices=["t2s", "paid"],
-        help=("Combination scheme for TEs: t2s (Posse 1999, default), paid (Poser)"),
+        help=("Combination scheme for TEs: t2s (Posse 1999), paid (Poser)"),
         default="t2s",
     )
     optional.add_argument(
@@ -130,7 +132,7 @@ def _get_parser():
             "threadpoolctl to set the parameter outside "
             "of the workflow function. Higher numbers of "
             "threads tend to slow down performance on "
-            "typical datasets. Default is 1."
+            "typical datasets."
         ),
         default=1,
     )
@@ -321,6 +323,7 @@ def t2smap_workflow(
         ],
     }
     io_generator.save_file(derivative_metadata, "data description json")
+    io_generator.save_self()
 
     LGR.info("Workflow completed")
     utils.teardown_loggers()

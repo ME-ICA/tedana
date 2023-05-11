@@ -6,10 +6,9 @@ import numpy as np
 import pandas as pd
 
 from tedana import io, utils
+from tedana.metrics import dependence
+from tedana.metrics._utils import dependency_resolver, determine_signs, flip_components
 from tedana.stats import getfbounds
-
-from . import dependence
-from ._utils import dependency_resolver, determine_signs, flip_components
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -532,15 +531,7 @@ def get_metadata(comptable):
                 ),
             },
         }
-    if "original_rationale" in comptable:
-        metric_metadata["original_rationale"] = {
-            "LongName": "Original rationale",
-            "Description": (
-                "The reason for the original classification. "
-                "Please see tedana's documentation for information about "
-                "possible rationales."
-            ),
-        }
+
     if "classification" in comptable:
         metric_metadata["classification"] = {
             "LongName": "Component classification",
@@ -554,13 +545,20 @@ def get_metadata(comptable):
                 ),
             },
         }
+    if "classification_tags" in comptable:
+        metric_metadata["classification_tags"] = {
+            "LongName": "Component classification tags",
+            "Description": (
+                "A single tag or a comma separated list of tags to describe why a component"
+                " received its classification"
+            ),
+        }
     if "rationale" in comptable:
         metric_metadata["rationale"] = {
             "LongName": "Rationale for component classification",
             "Description": (
                 "The reason for the original classification. "
-                "Please see tedana's documentation for information about "
-                "possible rationales."
+                "This column label was replaced with classification_tags in late 2022"
             ),
         }
     if "kappa ratio" in comptable:
