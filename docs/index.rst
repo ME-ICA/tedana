@@ -177,16 +177,19 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
    approach
    outputs
    faq
+   building_decision_trees
    support
    contributing
    roadmap
    api
+   denoising
 
 .. toctree::
    :hidden:
    :name: hiddentoc
 
    dependence_metrics
+   included_decision_trees
 
 
 ******************

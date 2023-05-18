@@ -2,6 +2,7 @@
 Tests for tedana.io
 """
 
+import json
 import os
 
 import nibabel as nib
@@ -218,3 +219,81 @@ def test_prep_data_for_json():
     }
     new_d = me.prep_data_for_json(d)
     assert isinstance(new_d["dictionary"]["array"], list)
+
+
+def test_str_to_component_list():
+    """
+    Tests for converting a string to a component list
+    """
+    int_list_1 = [1]
+    int_list_2 = [1, 4, 5]
+    test_list_1 = [str(x) for x in int_list_1]
+    test_list_2 = [str(x) for x in int_list_2]
+    delims_to_test = (
+        "\t",
+        "\n",
+        " ",
+        ",",
+    )
+    for d in delims_to_test:
+        test_data = d.join(test_list_1)
+        assert me.str_to_component_list(test_data) == int_list_1
+        test_data = d.join(test_list_2)
+        assert me.str_to_component_list(test_data) == int_list_2
+
+    # Test that one-line, one-element works
+    assert me.str_to_component_list("1\n") == [1]
+    # Test that one-line, multi-element works
+    assert me.str_to_component_list("1,1\n") == [1, 1]
+    # Test that extra delimeter is ignored
+    assert me.str_to_component_list("1,1,") == [1, 1]
+
+    with pytest.raises(ValueError, match=r"While parsing component"):
+        me.str_to_component_list("1,2\t")
+
+
+def test_fname_to_component_list():
+    test_data = [1, 2, 3]
+    temp_csv_fname = os.path.join(data_dir, "test.csv")
+    df = pd.DataFrame(data=test_data)
+    df.to_csv(path_or_buf=temp_csv_fname)
+    result = me.fname_to_component_list(temp_csv_fname)
+    os.remove(temp_csv_fname)
+    assert result == test_data
+
+    temp_txt_fname = os.path.join(data_dir, "test.txt")
+    with open(temp_txt_fname, "w") as fp:
+        fp.write("1,1,")
+
+    result = me.fname_to_component_list(temp_txt_fname)
+    os.remove(temp_txt_fname)
+    assert result == [1, 1]
+
+
+def test_CustomEncoder():
+    """
+    Test the encoder we use for JSON incompatibilities
+    """
+    # np int64
+    test_data = {"data": np.int64(4)}
+    encoded = json.dumps(test_data, cls=me.CustomEncoder)
+    decoded = json.loads(encoded)
+    assert test_data == decoded
+
+    # np array
+    test_data = {"data": np.asarray([1, 2, 3])}
+    encoded = json.dumps(test_data, cls=me.CustomEncoder)
+    decoded = json.loads(encoded)
+    assert np.array_equal(test_data["data"], decoded["data"])
+
+    # set should become list
+    test_data = {"data": set(["cat", "dog", "fish"])}
+    encoded = json.dumps(test_data, cls=me.CustomEncoder)
+    decoded = json.loads(encoded)
+    assert list(test_data["data"]) == decoded["data"]
+
+    # no special cases should use standard encoder
+    test_data = {"pet": "dog"}
+    encoded = json.dumps(test_data, cls=me.CustomEncoder)
+    decoded = json.loads(encoded)
+    assert test_data == decoded

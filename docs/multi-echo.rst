@@ -514,13 +514,16 @@ Videos
 * A `series of lectures from the OHBM 2017 multi-echo session`_ on multiple facets of multi-echo data analysis
 * | Multi-echo fMRI lecture from the `2018 NIH FMRI Summer Course`_ by Javier Gonzalez-Castillo
   | `Slides from 2018 NIH FMRI Summer Course`_
-* An `NIMH Center for Multimodal Neuroimaging video`_ by the Section on Functional Imaging Methods
+* NIMH Center for Multimodal Neuroimaging `Advantages of multi-echo fMRI`_ (2019) by Dan Handwerker, Javier Gonzalez-Castillo, and Vinai Roopchansingh
+* | MRI Together 2022 Conference Presentations by Eneko Uruñuela
+  | Tedana: Analysis of echo-time dependent fMRI data (`recording <https://youtu.be/4wsEodepyI8?t=96>`_, `slides  <https://eurunuela.github.io/tedana_MRITogether_2022>`_)
+  | A tour of tedana (`tour recording <https://youtu.be/P4cV-sGeltk?t=10>`_, `tour slides <https://eurunuela.github.io/tedana_tutorial_MRITogether_2022/>`_)
 
 .. _educational session from OHBM 2017: https://www.pathlms.com/ohbm/courses/5158/sections/7788/video_presentations/75977
 .. _series of lectures from the OHBM 2017 multi-echo session: https://www.pathlms.com/ohbm/courses/5158/sections/7822
 .. _2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/course/fmrif_course/2018/14_Javier_20180713
 .. _Slides from 2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/COURSE/fmrif_course/2018/content/14_Javier_20180713.pdf
-.. _NIMH Center for Multimodal Neuroimaging video: https://youtu.be/G1Ftd2IwF14
+.. _Advantages of multi-echo fMRI: https://youtu.be/G1Ftd2IwF14
 
 
 Multi-echo preprocessing software
@@ -595,6 +598,7 @@ This list is not necessarily up to date, so please check out OpenNeuro to potent
 * `Le Petit Prince`_
 * `Evidence supporting a time-limited hippocampal role in retrieving autobiographical memories`_
 * `Neurocognitive aging data release with behavioral, structural, and multi-echo functional MRI measures`_
+* `Heart rate variability biofeedback training and emotion regulation`_
 * `A mesial-to-lateral dissociation for orthographic processing in the visual cortex (dual-echo)`_
 * `Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice`_
 * `Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice (pilot data)`_
@@ -610,6 +614,7 @@ This list is not necessarily up to date, so please check out OpenNeuro to potent
 .. _Le Petit Prince: https://openneuro.org/datasets/ds003643
 .. _Evidence supporting a time-limited hippocampal role in retrieving autobiographical memories: https://openneuro.org/datasets/ds003511
 .. _Neurocognitive aging data release with behavioral, structural, and multi-echo functional MRI measures: https://openneuro.org/datasets/ds003592
+.. _Heart rate variability biofeedback training and emotion regulation: https://openneuro.org/datasets/ds003823/versions/1.2.3
 .. _A mesial-to-lateral dissociation for orthographic processing in the visual cortex (dual-echo): https://openneuro.org/datasets/ds002155
 .. _Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice: https://openneuro.org/datasets/ds001725
 .. _Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice (pilot data): https://openneuro.org/datasets/ds002154

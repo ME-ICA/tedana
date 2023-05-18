@@ -125,7 +125,7 @@ this switch, but it also means that exactly reproducing previous MEICA analyses 
 
 The other reason is that the core developers have chosen to look forwards rather than maintaining
 an older code base.
-As described in the :ref:`governance` section, ``tedana`` is maintained by a small team of
+As described in the `governance`_ section, ``tedana`` is maintained by a small team of
 volunteers with limited development time.
 If you'd like to use MEICA as has been previously published the code is available on
 `bitbucket`_ and freely available under a LGPL2 license.
@@ -543,8 +543,6 @@ Maintainer
   +-------------------------------------------+
   | `Taylor Salo`_ (@tsalo)                   |
   +-------------------------------------------+
-  | `Joshua Teves`_ (@jbteves)                |
-  +-------------------------------------------+
   | `Eneko Uruñuela`_ (@eurunuela)            |
   +-------------------------------------------+
 
@@ -562,8 +560,6 @@ Steering committee
   | `Dan Handwerker`_ (@handwerkerd)     |
   +--------------------------------------+
   | `Taylor Salo`_ (@tsalo)              |
-  +--------------------------------------+
-  | `Joshua Teves`_ (@jbteves)           |
   +--------------------------------------+
   | `Eneko Uruñuela`_ (@eurunuela)       |
   +--------------------------------------+
@@ -597,12 +593,9 @@ Focused Leadership Roles
         implementation is good)
     |   Someone who can either answer processing algorithm questions or
         direct people to where they can find answers
-  - | Collaborative programming leaders: `Elizabeth DuPre`_ & `Joshua Teves`_
+  - | Collaborative programming leaders: `Elizabeth DuPre`_
     |   Helps make sure tedana is following best practices for Python code
         design, testing, and communication for issues/pull requests etc.
-  - | Communications leader: `Joshua Teves`_
-    |   Mailing list manager & other outward-facing communication about
-        the project
   - | New contributors leader: `Taylor Salo`_
     |   Leads efforts to make contributor documentation more welcoming
     |   Is a point of contact for potential contributors to make them feel

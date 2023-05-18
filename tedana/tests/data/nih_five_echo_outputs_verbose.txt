@@ -9,6 +9,10 @@ desc-ICA_components.nii.gz
 desc-ICA_decomposition.json
 desc-tedana_metrics.json
 desc-tedana_metrics.tsv
+desc-tedana_registry.json
+desc-ICACrossComponent_metrics.json
+desc-ICA_status_table.tsv
+desc-ICA_decision_tree.json
 desc-ICAS0_stat-F_statmap.nii.gz
 desc-ICAT2_stat-F_statmap.nii.gz
 desc-ICA_mixing.tsv
@@ -26,7 +30,7 @@ desc-limited_S0map.nii.gz
 desc-limited_T2starmap.nii.gz
 desc-optcomAccepted_bold.nii.gz
 desc-optcomDenoised_bold.nii.gz
-desc-optcomPCAReduced_bold.nii.gz
+desc-optcom_whitened_bold.nii.gz
 desc-optcomRejected_bold.nii.gz
 desc-optcom_bold.nii.gz
 echo-1_desc-Accepted_bold.nii.gz

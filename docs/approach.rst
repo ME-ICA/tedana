@@ -338,13 +338,28 @@ classify ICA components as TE-dependent (BOLD signal), TE-independent
 (non-BOLD noise), or neither (to be ignored).
 These classifications are saved in **desc-tedana_metrics.tsv**.
 The actual decision tree is dependent on the component selection algorithm employed.
-``tedana`` includes the option `kundu` (which uses hardcoded thresholds
-applied to each of the metrics).
+``tedana`` includes two options `kundu` and `minimal` (which uses hardcoded thresholds
+applied to each of the metrics). `These decision trees are detailed here`_.
 
 Components that are classified as noise are projected out of the optimally combined data,
 yielding a denoised timeseries, which is saved as **desc-optcomDenoised_bold.nii.gz**.
 
 .. image:: /_static/a15_denoised_data_timeseries.png
+
+.. _These decision trees are detailed here: included_decision_trees.html
+
+*******************************
+Manual classification with RICA
+*******************************
+
+``RICA`` is a tool for manual ICA classification. Once the .tsv file containing the result of
+manual component classification is obtained, it is necessary to `re-run the tedana workflow`_
+passing the manual_classification.tsv file with the --ctab option. To save the output correctly,
+make sure that the output directory does not coincide with the input directory. See `this example`_
+presented at MRITogether 2022 for a hands-on tutorial.
+
+.. _re-run the tedana workflow: https://tedana.readthedocs.io/en/stable/usage.html#Arguments%20for%20Rerunning%20the%20Workflow
+.. _this example: https://www.youtube.com/live/P4cV-sGeltk?feature=share&t=1347
 
 
 *********************************************

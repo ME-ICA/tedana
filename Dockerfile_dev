@@ -41,14 +41,14 @@ ENV LANG="C.UTF-8" \
 
 RUN git clone https://github.com/me-ica/tedana.git /tedana
 
-RUN bash -c "conda create -yq --name tedana_py36 python=3.6 pip \
-    && source activate tedana_py36 \
+RUN bash -c "conda create -yq --name tedana_env python=3.8 pip \
+    && source activate tedana_env \
     && pip install /tedana[all] \
     && pip install ipython \
     && rm -rf ~/.cache/pip/* \
     && conda clean --all"
 
-RUN /opt/conda/envs/tedana_py36/bin/ipython profile create \
+RUN /opt/conda/envs/tedana_env/bin/ipython profile create \
     && sed -i 's/#c.InteractiveShellApp.extensions = \[\]/ \
                  c.InteractiveShellApp.extensions = \['\''autoreload'\''\]/g' \
                /root/.ipython/profile_default/ipython_config.py
@@ -57,7 +57,7 @@ RUN mkdir -p /tedana/dev_tools
 
 COPY ["./dev_tools", "/tedana/dev_tools"]
 
-RUN sed -i '$isource activate tedana_py36' $ND_ENTRYPOINT
+RUN sed -i '$isource activate tedana_env' $ND_ENTRYPOINT
 
 RUN sed -i '$isource /tedana/dev_tools/run_tests.sh' $ND_ENTRYPOINT
 
