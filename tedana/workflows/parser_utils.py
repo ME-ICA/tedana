@@ -10,7 +10,7 @@ def check_tedpca_value(string, is_parser=True):
     Check if argument is a float in range (0,1),
     an int greater than 1 or one of a list of strings.
     """
-    valid_options = ("mdl", "aic", "kic", "kundu", "kundu-stabilize", "no-reduction")
+    valid_options = ("mdl", "aic", "kic", "kundu", "kundu-stabilize")
     if string in valid_options:
         return string
 

@@ -322,7 +322,7 @@ def tedpca(
         varex_norm = ppca.explained_variance_ratio_
     elif low_mem:
         voxel_comp_weights, varex, varex_norm, comp_ts = low_mem_pca(data_z)
-    elif algorithm in ["kundu", "kundu-stabilize", "no-reduction"]:
+    else:
         # If algorithm is kundu or kundu-stablize component metrics
         # are calculated without dimensionality estimation and
         # reduction and then kundu identifies components that are
@@ -392,8 +392,6 @@ def tedpca(
             alg_str = "variance explained-based"
         elif isinstance(algorithm, int):
             alg_str = "a fixed number of components and no"
-        elif algorithm == "no-reduction":
-            alg_str = "no"
         else:
             alg_str = algorithm
         LGR.info(
