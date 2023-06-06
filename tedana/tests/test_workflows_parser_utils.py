@@ -26,4 +26,5 @@ def test_check_tedpca_value():
     assert check_tedpca_value(0.95) == 0.95
     assert check_tedpca_value("0.95") == 0.95
     assert check_tedpca_value("mdl") == "mdl"
+    assert check_tedpca_value("no-reduction") == "no-reduction"
     assert check_tedpca_value(52) == 52

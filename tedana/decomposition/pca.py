@@ -322,7 +322,11 @@ def tedpca(
         varex_norm = ppca.explained_variance_ratio_
     elif low_mem:
         voxel_comp_weights, varex, varex_norm, comp_ts = low_mem_pca(data_z)
-    else:
+    elif algorithm in ["kundu", "kundu-stabilize", "no-reduction"]:
+        # If algorithm is kundu or kundu-stablize component metrics
+        # are calculated without dimensionality estimation and
+        # reduction and then kundu identifies components that are
+        # to be accepted or rejected
         ppca = PCA(copy=False, n_components=(n_vols - 1))
         ppca.fit(data_z)
         comp_ts = ppca.components_.T
@@ -388,11 +392,13 @@ def tedpca(
             alg_str = "variance explained-based"
         elif isinstance(algorithm, int):
             alg_str = "a fixed number of components and no"
+        elif algorithm == "no-reduction":
+            alg_str = "no"
         else:
             alg_str = algorithm
         LGR.info(
             f"Selected {comptable.shape[0]} components with {round(100*varex_norm.sum(),2)}% "
-            f"normalized variance explained using {alg_str} dimensionality detection"
+            f"normalized variance explained using {alg_str} dimensionality estimate"
         )
         comptable["classification"] = "accepted"
         comptable["rationale"] = ""
