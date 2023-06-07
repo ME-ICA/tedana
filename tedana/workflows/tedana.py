@@ -150,7 +150,6 @@ def _get_parser():
             "in which case the specificed number of components will be "
             "selected."
         ),
-        choices=["mdl", "kic", "aic"],
         default="aic",
     )
     optional.add_argument(
@@ -383,10 +382,12 @@ def tedana_workflow(
         accepts and rejects some distinct components compared to kundu.
         Testing to better understand the effects of the differences is ongoing.
         Default is 'kundu'.
-    tedpca : {'mdl', 'aic', 'kic', 'kundu', 'kundu-stabilize', float}, optional
+    tedpca : {'mdl', 'aic', 'kic', 'kundu', 'kundu-stabilize', float, int}, optional
         Method with which to select components in TEDPCA.
         If a float is provided, then it is assumed to represent percentage of variance
-        explained (0-1) to retain from PCA.
+        explained (0-1) to retain from PCA. If an int is provided, it will output
+        a fixed number of components defined by the integer between 1 and the
+        number of time points.
         Default is 'aic'.
     fixed_seed : :obj:`int`, optional
         Value passed to ``mdp.numx_rand.seed()``.
