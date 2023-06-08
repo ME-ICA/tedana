@@ -451,6 +451,18 @@
         {
             "functionname": "manual_classify",
             "parameters": {
+                "new_classification": "rejected",
+                "decide_comps": "provisionalreject"
+            },
+            "kwargs": {
+                "log_extra_info": "Reject anything that is provisionalreject",
+                "log_extra_report": ""
+            },
+            "_comment": "Rejecting components that used to be midK. These were already assigned tags when given the provisionalreject label"
+        },
+        {
+            "functionname": "manual_classify",
+            "parameters": {
                 "new_classification": "accepted",
                 "decide_comps": [
                     "provisionalaccept",
@@ -459,7 +471,7 @@
                 ]
             },
             "kwargs": {
-                "log_extra_info": "Anything still provisional (accepted or rejected) should be accepted",
+                "log_extra_info": "Anything still provisional (accepted or unclassified) should be accepted",
                 "log_extra_report": "",
                 "tag": "Likely BOLD"
             },
