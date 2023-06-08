@@ -99,7 +99,7 @@ minimum width= 1cm, minimum height=0.5cm, text centered, draw=black, fill=cbgree
 \node(22)[decision, below of=21,label={180:$node\ 22$}, yshift=-5cm]{new mean metric rank $>$ 0.9*\textit{n} accepted guess \& varex $>$  (lower varex * extend factor)};
 \node(rej11)[reject, right of=22, xshift=4cm, align=center]{Less likely BOLD\\$\rightarrow$ Reject};
 % ----- node: 23
-\node(23)[process, below of=22,label={180:$node\ 23$}, label={[align=center] 315: $25^{th}$ percentile variance explained\\ from remaining non-rejected components},yshift=-2cm]{Calculate new lower varex};
+\node(23)[process, below of=22,label={180:$node\ 23$}, label={[align=center] 220: $25^{th}$ percentile variance\\explained from remaining\\non-rejected components},yshift=-2cm]{Calculate new lower varex};
 % ----- node: 24
 \node(24)[decision, below of=23,label={180:$node\ 24$}, yshift=-2.5cm]{new mean metric rank $>$ \textit{n} accepted guess \& varex $>$ new lower varex};
 \node(rej12)[accept, right of= 24, xshift=4cm, align=center]{Accept borderline\\$\rightarrow$Accept};
@@ -130,11 +130,14 @@ minimum width= 1cm, minimum height=0.5cm, text centered, draw=black, fill=cbgree
 \draw[arrow](16)--(17);
 \draw[arrow](17)--(18);
 \draw[arrow](18)--(19);
-\draw[arrow](19)--(20);a
+\draw[arrow](19)--(20);
 \draw[arrow](20)--(21);
 \draw[arrow](21)--(22);
 \draw[arrow](22)--(23);
+\draw[arrow](rej10)--(22);
 \draw[arrow](23)--(24);
+\draw[arrow](rej11)--(23);
+\draw[arrow](rej11)--(24);
 \draw[arrow](24)--(25);
 \draw[arrow](25)--(26);
 \draw[arrow](1)--node[anchor=south] {yes} (rej0);

@@ -21,6 +21,7 @@
     ],
     "intermediate_classifications": [
         "provisionalaccept",
+        "provisionalreject",
         "unclass_highvar"
     ],
     "classification_tags": [
@@ -332,7 +333,7 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "if_true": "rejected",
+                "if_true": "provisionalreject",
                 "if_false": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
@@ -360,10 +361,11 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "if_true": "rejected",
+                "if_true": "provisionalreject",
                 "if_false": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
+                    "provisionalreject",
                     "unclassified",
                     "unclass_highvar"
                 ],
@@ -387,6 +389,7 @@
             "parameters": {
                 "decide_comps": [
                     "provisionalaccept",
+                    "provisionalreject",
                     "unclassified",
                     "unclass_highvar"
                 ],
@@ -404,6 +407,7 @@
                 "if_false": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
+                    "provisionalreject",
                     "unclassified",
                     "unclass_highvar"
                 ],
@@ -427,6 +431,7 @@
                 "if_false": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
+                    "provisionalreject",
                     "unclassified",
                     "unclass_highvar"
                 ],
