@@ -103,11 +103,11 @@ def tedpca(
         to select
         Default is 'aic'.
     kdaw : :obj:`float`, optional
-        Dimensionality augmentation weight for Kappa calculations. Must be a
-        non-negative float, or -1 (a special value). Default is 10.
+        Dimensionality augmentation weight for Kappa calculations when `algorithm` is
+        'kundu'. Must be a non-negative float, or -1 (a special value). Default is 10.
     rdaw : :obj:`float`, optional
-        Dimensionality augmentation weight for Rho calculations. Must be a
-        non-negative float, or -1 (a special value). Default is 1.
+        Dimensionality augmentation weight for Rho calculations when `algorithm` is
+        'kundu'. Must be a non-negative float, or -1 (a special value). Default is 1.
     verbose : :obj:`bool`, optional
         Whether to output files from fitmodels_direct or not. Default: False
     low_mem : :obj:`bool`, optional
@@ -309,6 +309,22 @@ def tedpca(
                 "explained_variance_total": varex_95_varexp,
             },
         }
+        if "subsampling_" in dir(ma_pca):
+            # Since older version of MAPCA did not log these values
+            # Check before trying to access the values. This will be
+            # unnecessary and removal once logging these values gets
+            # a new version number in MAPCA and tedana updates its
+            # minimum MAPCA version
+            mapca_results["MAPCA_subsampling"] = {
+                "calculated_IID_subsample_depth": ma_pca.subsampling_[
+                    "calculated_IID_subsample_depth"
+                ],
+                "calculated_IID_subsample_mean": ma_pca.subsampling_[
+                    "calculated_IID_subsample_mean"
+                ],
+                "effective_num_IID_samples": ma_pca.subsampling_["effective_num_IID_samples"],
+                "total_num_samples": ma_pca.subsampling_["total_num_samples"],
+            }
 
         # Save dictionary
         io_generator.save_file(mapca_results, "PCA cross component metrics json")
