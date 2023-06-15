@@ -6,17 +6,17 @@ from numbers import Number
 
 import numpy as np
 import pandas as pd
-from mapca import ma_pca
+from mapca import MovingAveragePCA
 from scipy import stats
 from sklearn.decomposition import PCA
 
 from tedana import io, metrics, utils
+from tedana.reporting import pca_results as plot_pca_results
 from tedana.selection import kundu_tedpca
 from tedana.stats import computefeats2
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 def low_mem_pca(data):
@@ -34,6 +34,8 @@ def low_mem_pca(data):
         Component weight map for each component.
     s : (C,) array_like
         Variance explained for each component.
+    varex_norm : array-like, shape (n_components,)
+        Explained variance ratio.
     v : (C x T) array_like
         Component timeseries.
     """
@@ -44,7 +46,8 @@ def low_mem_pca(data):
     v = ppca.components_.T
     s = ppca.explained_variance_
     u = np.dot(np.dot(data, v), np.diag(1.0 / s))
-    return u, s, v
+    varex_norm = ppca.explained_variance_ratio_
+    return u, s, varex_norm, v
 
 
 def tedpca(
@@ -56,7 +59,7 @@ def tedpca(
     t2sG,
     io_generator,
     tes,
-    algorithm="mdl",
+    algorithm="aic",
     kdaw=10.0,
     rdaw=1.0,
     verbose=False,
@@ -93,16 +96,18 @@ def tedpca(
         Method with which to select components in TEDPCA. PCA
         decomposition with the mdl, kic and aic options are based on a Moving Average
         (stationary Gaussian) process and are ordered from most to least aggressive
-        (see Li et al., 2007).
+        (see :footcite:p:`li2007estimating`).
         If a float is provided, then it is assumed to represent percentage of variance
         explained (0-1) to retain from PCA.
-        Default is 'mdl'.
+        If an int is provided, then it is assumed to be the number of components
+        to select
+        Default is 'aic'.
     kdaw : :obj:`float`, optional
-        Dimensionality augmentation weight for Kappa calculations. Must be a
-        non-negative float, or -1 (a special value). Default is 10.
+        Dimensionality augmentation weight for Kappa calculations when `algorithm` is
+        'kundu'. Must be a non-negative float, or -1 (a special value). Default is 10.
     rdaw : :obj:`float`, optional
-        Dimensionality augmentation weight for Rho calculations. Must be a
-        non-negative float, or -1 (a special value). Default is 1.
+        Dimensionality augmentation weight for Rho calculations when `algorithm` is
+        'kundu'. Must be a non-negative float, or -1 (a special value). Default is 1.
     verbose : :obj:`bool`, optional
         Whether to output files from fitmodels_direct or not. Default: False
     low_mem : :obj:`bool`, optional
@@ -150,7 +155,8 @@ def tedpca(
             - Nonsignificant :math:`{\\kappa}` and :math:`{\\rho}`.
             - Nonsignificant variance explained.
 
-    This function writes out several files:
+    Generated Files
+    ---------------
 
     ===========================    ======================================================
     Default Filename               Content
@@ -162,59 +168,51 @@ def tedpca(
     desc-PCA_decomposition.json    Metadata sidecar file describing the PCA decomposition
     ===========================    ======================================================
 
+    References
+    ----------
+    .. footbibliography::
+
     See Also
     --------
-    :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``.
+    :func:`tedana.utils.make_adaptive_mask` : The function used to create
+        the ``adaptive_mask`` parameter.
+    :py:mod:`tedana.constants` : The module describing the filenames for
+        various naming conventions
     """
     if algorithm == "kundu":
-        alg_str = "followed by the Kundu component selection decision tree (Kundu et al., 2013)"
-        RefLGR.info(
-            "Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
-            "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
-            "(2013). Integrated strategy for improving functional "
-            "connectivity mapping using multiecho fMRI. Proceedings "
-            "of the National Academy of Sciences, 110(40), "
-            "16187-16192."
+        alg_str = (
+            "followed by the Kundu component selection decision tree \\citep{kundu2013integrated}"
         )
     elif algorithm == "kundu-stabilize":
         alg_str = (
             "followed by the 'stabilized' Kundu component "
-            "selection decision tree (Kundu et al., 2013)"
-        )
-        RefLGR.info(
-            "Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., "
-            "Vértes, P. E., Inati, S. J., ... & Bullmore, E. T. "
-            "(2013). Integrated strategy for improving functional "
-            "connectivity mapping using multiecho fMRI. Proceedings "
-            "of the National Academy of Sciences, 110(40), "
-            "16187-16192."
+            "selection decision tree \\citep{kundu2013integrated}"
         )
     elif isinstance(algorithm, Number):
-        alg_str = (
-            "in which the number of components was determined based on a "
-            "variance explained threshold"
-        )
+        if isinstance(algorithm, float):
+            alg_str = (
+                "in which the number of components was determined based on a "
+                "variance explained threshold"
+            )
+        else:
+            alg_str = "in which the number of components is pre-defined"
     else:
         alg_str = (
             "based on the PCA component estimation with a Moving Average"
-            "(stationary Gaussian) process (Li et al., 2007)"
-        )
-        RefLGR.info(
-            "Li, Y.O., Adalı, T. and Calhoun, V.D., (2007). "
-            "Estimating the number of independent components for "
-            "functional magnetic resonance imaging data. "
-            "Human brain mapping, 28(11), pp.1251-1266."
+            "(stationary Gaussian) process \\citep{li2007estimating}"
         )
 
     RepLGR.info(
-        "Principal component analysis {0} was applied to "
+        f"Principal component analysis {alg_str} was applied to "
         "the optimally combined data for dimensionality "
-        "reduction.".format(alg_str)
+        "reduction."
     )
 
     n_samp, n_echos, n_vols = data_cat.shape
 
-    LGR.info("Computing PCA of optimally combined multi-echo data")
+    LGR.info(
+        f"Computing PCA of optimally combined multi-echo data with selection criteria: {algorithm}"
+    )
     data = data_oc[mask, :]
 
     data_z = ((data.T - data.T.mean(axis=0)) / data.T.std(axis=0)).T  # var normalize ts
@@ -223,26 +221,128 @@ def tedpca(
     if algorithm in ["mdl", "aic", "kic"]:
         data_img = io.new_nii_like(io_generator.reference_img, utils.unmask(data, mask))
         mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
-        voxel_comp_weights, varex, varex_norm, comp_ts = ma_pca(
-            data_img, mask_img, algorithm, normalize=True
+        ma_pca = MovingAveragePCA(criterion=algorithm, normalize=True)
+        _ = ma_pca.fit_transform(data_img, mask_img)
+
+        # Extract results from maPCA
+        voxel_comp_weights = ma_pca.u_
+        varex = ma_pca.explained_variance_
+        varex_norm = ma_pca.explained_variance_ratio_
+        comp_ts = ma_pca.components_.T
+        aic = ma_pca.aic_
+        kic = ma_pca.kic_
+        mdl = ma_pca.mdl_
+        varex_90 = ma_pca.varexp_90_
+        varex_95 = ma_pca.varexp_95_
+        all_comps = ma_pca.all_
+
+        # Extract number of components and variance explained for logging and plotting
+        n_aic = aic["n_components"]
+        aic_varexp = np.round(aic["explained_variance_total"], 3)
+        n_kic = kic["n_components"]
+        kic_varexp = np.round(kic["explained_variance_total"], 3)
+        n_mdl = mdl["n_components"]
+        mdl_varexp = np.round(mdl["explained_variance_total"], 3)
+        n_varex_90 = varex_90["n_components"]
+        varex_90_varexp = np.round(varex_90["explained_variance_total"], 3)
+        n_varex_95 = varex_95["n_components"]
+        varex_95_varexp = np.round(varex_95["explained_variance_total"], 3)
+        all_varex = np.round(all_comps["explained_variance_total"], 3)
+
+        # Print out the results
+        LGR.info("Optimal number of components based on different criteria:")
+        LGR.info(
+            f"AIC: {n_aic} | KIC: {n_kic} | MDL: {n_mdl} | 90% varexp: {n_varex_90} "
+            f"| 95% varexp: {n_varex_95}"
         )
+
+        LGR.info("Explained variance based on different criteria:")
+        LGR.info(
+            f"AIC: {aic_varexp}% | KIC: {kic_varexp}% | MDL: {mdl_varexp}% | "
+            f"90% varexp: {varex_90_varexp}% | 95% varexp: {varex_95_varexp}%"
+        )
+
+        pca_optimization_curves = np.array([aic["value"], kic["value"], mdl["value"]])
+        pca_criteria_components = np.array(
+            [
+                n_aic,
+                n_kic,
+                n_mdl,
+                n_varex_90,
+                n_varex_95,
+            ]
+        )
+
+        # Plot maPCA optimization curves
+        LGR.info("Plotting maPCA optimization curves")
+        plot_pca_results(pca_optimization_curves, pca_criteria_components, all_varex, io_generator)
+
+        # Save maPCA results into a dictionary
+        mapca_results = {
+            "aic": {
+                "n_components": n_aic,
+                "explained_variance_total": aic_varexp,
+                "curve": aic["value"],
+            },
+            "kic": {
+                "n_components": n_kic,
+                "explained_variance_total": kic_varexp,
+                "curve": kic["value"],
+            },
+            "mdl": {
+                "n_components": n_mdl,
+                "explained_variance_total": mdl_varexp,
+                "curve": mdl["value"],
+            },
+            "varex_90": {
+                "n_components": n_varex_90,
+                "explained_variance_total": varex_90_varexp,
+            },
+            "varex_95": {
+                "n_components": n_varex_95,
+                "explained_variance_total": varex_95_varexp,
+            },
+        }
+        if "subsampling_" in dir(ma_pca):
+            # Since older version of MAPCA did not log these values
+            # Check before trying to access the values. This will be
+            # unnecessary and removal once logging these values gets
+            # a new version number in MAPCA and tedana updates its
+            # minimum MAPCA version
+            mapca_results["MAPCA_subsampling"] = {
+                "calculated_IID_subsample_depth": ma_pca.subsampling_[
+                    "calculated_IID_subsample_depth"
+                ],
+                "calculated_IID_subsample_mean": ma_pca.subsampling_[
+                    "calculated_IID_subsample_mean"
+                ],
+                "effective_num_IID_samples": ma_pca.subsampling_["effective_num_IID_samples"],
+                "total_num_samples": ma_pca.subsampling_["total_num_samples"],
+            }
+
+        # Save dictionary
+        io_generator.save_file(mapca_results, "PCA cross component metrics json")
+
     elif isinstance(algorithm, Number):
         ppca = PCA(copy=False, n_components=algorithm, svd_solver="full")
         ppca.fit(data_z)
         comp_ts = ppca.components_.T
         varex = ppca.explained_variance_
         voxel_comp_weights = np.dot(np.dot(data_z, comp_ts), np.diag(1.0 / varex))
-        varex_norm = varex / varex.sum()
+        varex_norm = ppca.explained_variance_ratio_
     elif low_mem:
-        voxel_comp_weights, varex, comp_ts = low_mem_pca(data_z)
-        varex_norm = varex / varex.sum()
+        voxel_comp_weights, varex, varex_norm, comp_ts = low_mem_pca(data_z)
     else:
+        # If algorithm is kundu or kundu-stablize component metrics
+        # are calculated without dimensionality estimation and
+        # reduction and then kundu identifies components that are
+        # to be accepted or rejected
         ppca = PCA(copy=False, n_components=(n_vols - 1))
         ppca.fit(data_z)
         comp_ts = ppca.components_.T
         varex = ppca.explained_variance_
         voxel_comp_weights = np.dot(np.dot(data_z, comp_ts), np.diag(1.0 / varex))
-        varex_norm = varex / varex.sum()
+        varex_norm = ppca.explained_variance_ratio_
 
     # Compute Kappa and Rho for PCA comps
     required_metrics = [
@@ -298,10 +398,15 @@ def tedpca(
             stabilize=True,
         )
     else:
-        alg_str = "variance explained-based" if isinstance(algorithm, Number) else algorithm
+        if isinstance(algorithm, float):
+            alg_str = "variance explained-based"
+        elif isinstance(algorithm, int):
+            alg_str = "a fixed number of components and no"
+        else:
+            alg_str = algorithm
         LGR.info(
-            "Selected {0} components with {1} dimensionality "
-            "detection".format(comptable.shape[0], alg_str)
+            f"Selected {comptable.shape[0]} components with {round(100*varex_norm.sum(),2)}% "
+            f"normalized variance explained using {alg_str} dimensionality estimate"
         )
         comptable["classification"] = "accepted"
         comptable["rationale"] = ""

@@ -3,7 +3,7 @@ Installation
 ############
 
 You'll need to set up a working development environment to use ``tedana``.
-To set up a local environment, you will need Python >=3.6 and the following
+To set up a local environment, you will need Python >=3.8 and the following
 packages will need to be installed:
 
 - nilearn
@@ -12,9 +12,6 @@ packages will need to be installed:
 - scikit-learn
 - scipy
 - mapca
-
-You can also install several optional dependencies, notably ``duecredit``.
-Please see the :doc:`FAQ <faq>` for more information on how tedana uses ``duecredit``.
 
 After installing relevant dependencies, you can then install ``tedana`` with:
 

@@ -1,6 +1,6 @@
 .PHONY: all lint
 
-all_tests: lint unittest three-echo four-echo five-echo t2smap
+all_tests: lint unittest three-echo four-echo five-echo reclassify t2smap
 
 help:
 	@echo "Please use 'make <target>' where <target> is one of:"
@@ -12,6 +12,7 @@ help:
 	@echo "  all_tests		to run 'lint', 'unittest', and 'integration'"
 
 lint:
+	@black --check --diff tedana
 	@flake8 tedana
 
 unittest:
@@ -23,11 +24,11 @@ three-echo:
 four-echo:
 	@py.test --log-cli-level=INFO --cov-append --cov-report term-missing --cov=tedana -k test_integration_four_echo tedana/tests/test_integration.py
 
-four-echo:
-	@py.test --cov-append --cov-report term-missing --cov=tedana -k test_integration_four_echo tedana/tests/test_integration.py
-
 five-echo:
 	@py.test --log-cli-level=INFO --cov-append --cov-report term-missing --cov=tedana -k test_integration_five_echo tedana/tests/test_integration.py
+
+reclassify:
+	@py.test --log-cli-level=INFO --cov-append --cov-report term-missing --cov=tedana -k test_integration_reclassify tedana/tests/test_integration.py
 
 t2smap:
 	@py.test --log-cli-level=INFO --cov-append --cov-report term-missing --cov=tedana -k test_integration_t2smap tedana/tests/test_integration.py

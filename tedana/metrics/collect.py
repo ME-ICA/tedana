@@ -6,14 +6,12 @@ import numpy as np
 import pandas as pd
 
 from tedana import io, utils
+from tedana.metrics import dependence
+from tedana.metrics._utils import dependency_resolver, determine_signs, flip_components
 from tedana.stats import getfbounds
-
-from . import dependence
-from ._utils import dependency_resolver, determine_signs, flip_components
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 def generate_metrics(
@@ -160,6 +158,16 @@ def generate_metrics(
         metric_maps["map FS0"] = m_S0
         metric_maps["map predicted T2"] = p_m_T2
         metric_maps["map predicted S0"] = p_m_S0
+
+        if io_generator.verbose:
+            io_generator.save_file(
+                utils.unmask(metric_maps["map FT2"], mask),
+                label + " component F-T2 img",
+            )
+            io_generator.save_file(
+                utils.unmask(metric_maps["map FS0"], mask),
+                label + " component F-S0 img",
+            )
 
     if "map Z clusterized" in required_metrics:
         LGR.info("Thresholding z-statistic maps")
@@ -523,15 +531,7 @@ def get_metadata(comptable):
                 ),
             },
         }
-    if "original_rationale" in comptable:
-        metric_metadata["original_rationale"] = {
-            "LongName": "Original rationale",
-            "Description": (
-                "The reason for the original classification. "
-                "Please see tedana's documentation for information about "
-                "possible rationales."
-            ),
-        }
+
     if "classification" in comptable:
         metric_metadata["classification"] = {
             "LongName": "Component classification",
@@ -545,13 +545,20 @@ def get_metadata(comptable):
                 ),
             },
         }
+    if "classification_tags" in comptable:
+        metric_metadata["classification_tags"] = {
+            "LongName": "Component classification tags",
+            "Description": (
+                "A single tag or a comma separated list of tags to describe why a component"
+                " received its classification"
+            ),
+        }
     if "rationale" in comptable:
         metric_metadata["rationale"] = {
             "LongName": "Rationale for component classification",
             "Description": (
                 "The reason for the original classification. "
-                "Please see tedana's documentation for information about "
-                "possible rationales."
+                "This column label was replaced with classification_tags in late 2022"
             ),
         }
     if "kappa ratio" in comptable:

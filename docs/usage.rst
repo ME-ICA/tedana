@@ -7,8 +7,8 @@ Using tedana from the command line
   #. Acquired echo times (in milliseconds)
   #. Functional datasets equal to the number of acquired echoes
 
-But you can supply many other options, viewable with ``tedana -h`` or
-``t2smap -h``.
+But you can supply many other options, viewable with ``tedana -h``,
+``ica_reclassify -h``, or ``t2smap -h``.
 
 For most use cases, we recommend that users call tedana from within existing
 fMRI preprocessing pipelines such as `fMRIPrep`_ or `afni_proc.py`_.
@@ -51,6 +51,22 @@ https://tedana.readthedocs.io/en/latest/outputs.html
     To examine regions-of-interest with multi-echo data, apply masks after TE
     Dependent ANAlysis.
 
+.. _ica_reclassify cli:
+
+***********************************
+Running the ica_reclassify workflow
+***********************************
+
+``ica_reclassify`` takes the output of ``tedana`` and can be used to manually
+reclassify components, re-save denoised classifications following the new
+classifications, and log the changes in all relevant output files. The
+output files are the same as for ``tedana``:
+https://tedana.readthedocs.io/en/latest/outputs.html
+
+.. argparse::
+   :ref: tedana.workflows.ica_reclassify._get_parser
+   :prog: ica_reclassify
+   :func: _get_parser
 
 .. _t2smap cli:
 

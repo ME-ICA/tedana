@@ -17,11 +17,8 @@ tap_callback_jscode = """
         // -----------------------------
         var components = data['component']
         var selected = components[selected_idx]
-        var selected_padded = '' + selected;
-        while (selected_padded.length < 2) {
-            selected_padded = '0' + selected_padded;
-        }
-        var selected_padded_forIMG = '0' + selected_padded
+        var selected_padded = String(selected).padStart(3,0)
+        var selected_padded_forIMG = selected_padded
         var selected_padded_C = 'ica_' + selected_padded
 
         // Find color for selected component
@@ -127,6 +124,7 @@ def _create_data_struct(comptable_path, color_mapping=color_mapping):
             color=df["color"],
             size=df["var_exp_size"],
             classif=df["classification"],
+            classtag=df["classification_tags"],
             angle=df["angle"],
         )
     )
@@ -134,7 +132,7 @@ def _create_data_struct(comptable_path, color_mapping=color_mapping):
     return cds
 
 
-def _create_kr_plt(comptable_cds):
+def _create_kr_plt(comptable_cds, kappa_elbow=None, rho_elbow=None):
     """
     Create Dymamic Kappa/Rho Scatter Plot
 
@@ -142,6 +140,10 @@ def _create_kr_plt(comptable_cds):
     ----------
     comptable_cds: bokeh.models.ColumnDataSource
         Data structure containing a limited set of columns from the comp_table
+
+    kappa_elbow, rho_elbow: :obj:`float` :obj:`int`
+        The elbow thresholds for kappa and rho to display on the plots
+        Defaults=None
 
     Returns
     -------
@@ -155,6 +157,7 @@ def _create_kr_plt(comptable_cds):
             ("Kappa", "@kappa{0.00}"),
             ("Rho", "@rho{0.00}"),
             ("Var. Expl.", "@varexp{0.00}%"),
+            ("Tags", "@classtag"),
         ]
     )
     fig = plotting.figure(
@@ -174,6 +177,50 @@ def _create_kr_plt(comptable_cds):
         source=comptable_cds,
         legend_group="classif",
     )
+
+    if rho_elbow:
+        rho_elbow_line = models.Span(
+            location=rho_elbow,
+            dimension="width",
+            line_color="#000033",
+            line_width=1,
+            line_alpha=0.75,
+            line_dash="dashed",
+            name="rho elbow",
+        )
+        rho_elbow_label = models.Label(
+            x=300,
+            y=rho_elbow * 1.02,
+            x_units="screen",
+            text="rho elbow",
+            text_color="#000033",
+            text_alpha=0.75,
+            text_font_size="10px",
+        )
+        fig.add_layout(rho_elbow_line)
+        fig.add_layout(rho_elbow_label)
+    if kappa_elbow:
+        kappa_elbow_line = models.Span(
+            location=kappa_elbow,
+            dimension="height",
+            line_color="#000033",
+            line_width=1,
+            line_alpha=0.75,
+            line_dash="dashed",
+            name="kappa elbow",
+        )
+        kappa_elbow_label = models.Label(
+            x=kappa_elbow * 1.02,
+            y=300,
+            y_units="screen",
+            text="kappa elbow",
+            text_color="#000033",
+            text_alpha=0.75,
+            text_font_size="10px",
+        )
+        fig.add_layout(kappa_elbow_line)
+        fig.add_layout(kappa_elbow_label)
+
     fig.xaxis.axis_label = "Kappa"
     fig.yaxis.axis_label = "Rho"
     fig.toolbar.logo = None
@@ -184,7 +231,7 @@ def _create_kr_plt(comptable_cds):
 
 
 def _create_sorted_plt(
-    comptable_cds, n_comps, x_var, y_var, title=None, x_label=None, y_label=None
+    comptable_cds, n_comps, x_var, y_var, title=None, x_label=None, y_label=None, elbow=None
 ):
     """
     Create dynamic sorted plots
@@ -209,6 +256,10 @@ def _create_sorted_plt(
     y_label: str
         Y-axis label
 
+    elbow: :obj:`float` :obj:`int`
+        The elbow threshold for kappa or rho to display on the plot
+        Default=None
+
     Returns
     -------
     fig: bokeh.plotting.figure.Figure
@@ -220,6 +271,7 @@ def _create_sorted_plt(
             ("Kappa", "@kappa{0.00}"),
             ("Rho", "@rho{0.00}"),
             ("Var. Expl.", "@varexp{0.00}%"),
+            ("Tags", "@classtag"),
         ]
     )
     fig = plotting.figure(
@@ -239,6 +291,28 @@ def _create_sorted_plt(
     fig.x_range = models.Range1d(-1, n_comps + 1)
     fig.toolbar.logo = None
 
+    if elbow:
+        elbow_line = models.Span(
+            location=elbow,
+            dimension="width",
+            line_color="#000033",
+            line_width=1,
+            line_alpha=0.75,
+            line_dash="dashed",
+            name="elbow",
+        )
+        elbow_label = models.Label(
+            x=20,
+            y=elbow * 1.02,
+            x_units="screen",
+            text="elbow",
+            text_color="#000033",
+            text_alpha=0.75,
+            text_font_size="10px",
+        )
+        fig.add_layout(elbow_line)
+        fig.add_layout(elbow_label)
+
     return fig
 
 
@@ -253,6 +327,7 @@ def _create_varexp_pie_plt(comptable_cds, n_comps):
             ("Kappa", "@kappa{0.00}"),
             ("Rho", "@rho{0.00}"),
             ("Var. Exp.", "@varexp{0.00}%"),
+            ("Tags", "@classtag"),
         ],
     )
     fig.wedge(

@@ -5,8 +5,13 @@ desc-ICA_components.nii.gz
 desc-ICA_decomposition.json
 desc-tedana_metrics.json
 desc-tedana_metrics.tsv
+desc-tedana_registry.json
+desc-ICACrossComponent_metrics.json
+desc-ICA_status_table.tsv
+desc-ICA_decision_tree.json
 desc-ICA_mixing.tsv
 desc-ICA_stat-z_components.nii.gz
+desc-PCACrossComponent_metrics.json
 desc-PCA_decomposition.json
 desc-PCA_metrics.json
 desc-PCA_metrics.tsv
@@ -15,8 +20,6 @@ desc-PCA_stat-z_components.nii.gz
 desc-adaptiveGoodSignal_mask.nii.gz
 desc-denoised_bold.nii.gz
 desc-optcom_bold.nii.gz
-report.txt
-tedana_report.html
 figures
 figures/carpet_optcom.svg
 figures/carpet_denoised.svg
@@ -87,3 +90,12 @@ figures/comp_061.png
 figures/comp_062.png
 figures/comp_063.png
 figures/comp_064.png
+figures/comp_065.png
+figures/comp_066.png
+figures/comp_067.png
+figures/comp_068.png
+figures/pca_criteria.png
+figures/pca_variance_explained.png
+references.bib
+report.txt
+tedana_report.html

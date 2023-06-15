@@ -7,9 +7,17 @@ desc-ICA_components.nii.gz
 desc-ICA_decomposition.json
 desc-tedana_metrics.json
 desc-tedana_metrics.tsv
+desc-tedana_registry.json
+desc-ICACrossComponent_metrics.json
+desc-ICA_status_table.tsv
+desc-ICA_decision_tree.json
+desc-ICAS0_stat-F_statmap.nii.gz
+desc-ICAT2_stat-F_statmap.nii.gz
 desc-ICA_mixing.tsv
 desc-ICA_stat-z_components.nii.gz
 desc-PCAAveragingWeights_components.nii.gz
+desc-PCAS0_stat-F_statmap.nii.gz
+desc-PCAT2_stat-F_statmap.nii.gz
 desc-PCA_decomposition.json
 desc-PCA_metrics.json
 desc-PCA_metrics.tsv
@@ -56,6 +64,7 @@ echo-5_desc-ICA_components.nii.gz
 echo-5_desc-PCAT2ModelPredictions_components.nii.gz
 echo-5_desc-PCAS0ModelPredictions_components.nii.gz
 echo-5_desc-PCA_components.nii.gz
+references.bib
 report.txt
 tedana_report.html
 figures

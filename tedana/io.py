@@ -8,7 +8,9 @@ import json
 import logging
 import os
 import os.path as op
+from copy import deepcopy
 from string import Formatter
+from typing import List
 
 import nibabel as nib
 import numpy as np
@@ -21,7 +23,33 @@ from tedana.stats import get_coeffs
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
+
+ALLOWED_COMPONENT_DELIMITERS = (
+    "\t",
+    "\n",
+    " ",
+    ",",
+)
+
+
+class CustomEncoder(json.JSONEncoder):
+    """Class for converting some types because of JSON serialization and numpy incompatibilities.
+
+    See here: https://stackoverflow.com/q/50916422/2589328
+    """
+
+    def default(self, obj):
+        # int64 non-serializable but is a numpy output
+        if isinstance(obj, np.int32) or isinstance(obj, np.int64):
+            return int(obj)
+
+        # containers that are not serializable
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, set):
+            return list(obj)
+
+        return super(CustomEncoder, self).default(obj)
 
 
 class OutputGenerator:
@@ -46,6 +74,8 @@ class OutputGenerator:
         descriptions. Default is "auto", which uses tedana's default configuration file.
     make_figures : bool, optional
         Whether or not to actually make a figures directory
+    overwrite : bool, optional
+        Whether to force overwrites of data. Default False.
 
     Attributes
     ----------
@@ -62,8 +92,12 @@ class OutputGenerator:
         This will correspond to a "figures" subfolder of ``out_dir``.
     prefix : str
         Prefix to prepend to output filenames.
+    overwrite : bool
+        Whether to force file overwrites.
     verbose : bool
-        Whether or not to generate verbose output
+        Whether or not to generate verbose output.
+    registry : dict
+        A registry of all files saved
     """
 
     def __init__(
@@ -74,9 +108,10 @@ class OutputGenerator:
         prefix="",
         config="auto",
         make_figures=True,
+        overwrite=False,
         verbose=False,
+        old_registry=None,
     ):
-
         if config == "auto":
             config = op.join(utils.get_resource_path(), "config", "outputs.json")
 
@@ -94,13 +129,25 @@ class OutputGenerator:
                     f"({', '.join(v.keys())})"
                 )
             cfg[k] = v[convention]
+
         self.config = cfg
         self.reference_img = check_niimg(reference_img)
         self.convention = convention
         self.out_dir = op.abspath(out_dir)
         self.figures_dir = op.join(out_dir, "figures")
         self.prefix = prefix + "_" if prefix != "" else ""
+        self.overwrite = overwrite
         self.verbose = verbose
+        self.registry = {}
+        if old_registry:
+            root = old_registry["root"]
+            rel_root = op.relpath(root, start=self.out_dir)
+            del old_registry["root"]
+            for k, v in old_registry.items():
+                if isinstance(v, list):
+                    self.registry[k] = [op.join(rel_root, vv) for vv in v]
+                else:
+                    self.registry[k] = op.join(rel_root, v)
 
         if not op.isdir(self.out_dir):
             LGR.info(f"Generating output directory: {self.out_dir}")
@@ -141,6 +188,16 @@ class OutputGenerator:
             extension = ""
 
         return extension
+
+    def register_input(self, names):
+        """Register input filenames.
+
+        Parameters
+        ----------
+        names : list[str]
+            The list of filenames being input as multi-echo volumes.
+        """
+        self.registry["input img"] = [op.relpath(name, start=self.out_dir) for name in names]
 
     def get_name(self, description, **kwargs):
         """Generate a file full path to simplify file output.
@@ -199,12 +256,24 @@ class OutputGenerator:
             The full file path of the saved file.
         """
         name = self.get_name(description, **kwargs)
+        if op.exists(name) and not self.overwrite:
+            raise RuntimeError(
+                f"File {name} already exists. In order to allow overwrite "
+                "please use the --overwrite option in the command line or the "
+                "overwrite parameter in the Python API."
+            )
+
         if description.endswith("img"):
             self.save_img(data, name)
         elif description.endswith("json"):
-            self.save_json(data, name)
+            prepped = prep_data_for_json(data)
+            self.save_json(prepped, name)
         elif description.endswith("tsv"):
             self.save_tsv(data, name)
+        else:
+            raise ValueError(f"Unsupported file {description}")
+
+        self.registry[description] = op.basename(name)
 
         return name
 
@@ -223,8 +292,12 @@ class OutputGenerator:
         Will coerce 64-bit float and int arrays into 32-bit arrays.
         """
         data_type = type(data)
-        if not isinstance(data, np.ndarray):
+        if isinstance(data, nib.nifti1.Nifti1Image):
+            data.to_filename(name)
+            return
+        elif not isinstance(data, np.ndarray):
             raise TypeError(f"Data supplied must of type np.ndarray, not {data_type}.")
+
         if data.ndim not in (1, 2):
             raise TypeError(f"Data must have number of dimensions in (1, 2), not {data.ndim}")
 
@@ -253,8 +326,9 @@ class OutputGenerator:
         data_type = type(data)
         if not isinstance(data, dict):
             raise TypeError(f"data must be a dict, not type {data_type}.")
+
         with open(name, "w") as fo:
-            json.dump(data, fo, indent=4, sort_keys=True)
+            json.dump(data, fo, indent=4, sort_keys=True, cls=CustomEncoder)
 
     def save_tsv(self, data, name):
         """Save DataFrame to a tsv file.
@@ -269,7 +343,58 @@ class OutputGenerator:
         data_type = type(data)
         if not isinstance(data, pd.DataFrame):
             raise TypeError(f"data must be pd.Data, not type {data_type}.")
-        data.to_csv(name, sep="\t", line_terminator="\n", na_rep="n/a", index=False)
+
+        # Replace blanks with numpy NaN
+        deblanked = data.replace("", np.nan)
+        deblanked.to_csv(name, sep="\t", lineterminator="\n", na_rep="n/a", index=False)
+
+    def save_self(self):
+        fname = self.save_file(self.registry, "registry json")
+        return fname
+
+
+class InputHarvester:
+    """Class for turning a registry file into a lookup table to get previous data."""
+
+    loaders = {
+        "json": lambda f: load_json(f),
+        "tsv": lambda f: pd.read_csv(f, delimiter="\t"),
+        "img": lambda f: nib.load(f),
+    }
+
+    def __init__(self, path):
+        self._full_path = op.abspath(path)
+        self._base_dir = op.dirname(self._full_path)
+        self._registry = load_json(self._full_path)
+
+    def get_file_path(self, description):
+        if description in self._registry.keys():
+            return op.join(self._base_dir, self._registry[description])
+        else:
+            return None
+
+    def get_file_contents(self, description):
+        """Get file contents.
+        Notes
+        -----
+        Since we restrict to just these three types, this function should always return.
+        If more types are added, the loaders dict will need to be updated with an appropriate
+        loader.
+        """
+        for ftype, loader in InputHarvester.loaders.items():
+            if ftype in description:
+                return loader(self.get_file_path(description))
+
+    @property
+    def registry(self):
+        """The underlying file registry, including the root directory."""
+        d = self._registry
+        d["root"] = self._base_dir
+        return d
+
+
+def versiontuple(v):
+    return tuple(map(int, (v.split("."))))
 
 
 def get_fields(name):
@@ -314,8 +439,7 @@ def load_json(path: str) -> dict:
 
 
 def add_decomp_prefix(comp_num, prefix, max_value):
-    """
-    Create component name with leading zeros matching number of components
+    """Create component name with leading zeros matching number of components.
 
     Parameters
     ----------
@@ -410,9 +534,8 @@ def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
     varexpl : :obj:`float`
         Percent variance of data explained by extracted + retained components
 
-    Notes
-    -----
-    This function writes out several files:
+    Generated Files
+    ---------------
 
     =======================================    ===============================================
     Filename                                   Content
@@ -450,9 +573,8 @@ def writeresults(ts, mask, comptable, mmix, io_generator):
     io_generator : :obj:`tedana.io.OutputGenerator`
         Reference image to dictate how outputs are saved to disk
 
-    Notes
-    -----
-    This function writes out several files:
+    Generated Files
+    ---------------
 
     =========================================    =====================================
     Filename                                     Content
@@ -491,9 +613,8 @@ def writeresults_echoes(catd, mmix, mask, comptable, io_generator):
     io_generator : :obj:`tedana.io.OutputGenerator`
         Reference image to dictate how outputs are saved to disk
 
-    Notes
-    -----
-    This function writes out several files:
+    Generated Files
+    ---------------
 
     =====================================    =============================================
     Filename                                 Content
@@ -505,7 +626,6 @@ def writeresults_echoes(catd, mmix, mask, comptable, io_generator):
     --------
     tedana.io.write_split_ts: Writes out the files.
     """
-
     for i_echo in range(catd.shape[1]):
         LGR.info("Writing Kappa-filtered echo #{:01d} timeseries".format(i_echo + 1))
         write_split_ts(catd[:, i_echo, :], mmix, mask, comptable, io_generator, echo=(i_echo + 1))
@@ -569,8 +689,7 @@ def load_data(data, n_echos=None):
 
 # Helper Functions
 def new_nii_like(ref_img, data, affine=None, copy_header=True):
-    """
-    Coerces `data` into NiftiImage format like `ref_img`
+    """Coerce `data` into NiftiImage format like `ref_img`.
 
     Parameters
     ----------
@@ -588,7 +707,6 @@ def new_nii_like(ref_img, data, affine=None, copy_header=True):
     nii : :obj:`nibabel.nifti1.Nifti1Image`
         NiftiImage
     """
-
     ref_img = check_niimg(ref_img)
     newdata = data.reshape(ref_img.shape[:3] + data.shape[1:])
     if ".nii" not in ref_img.valid_exts:
@@ -603,8 +721,7 @@ def new_nii_like(ref_img, data, affine=None, copy_header=True):
 
 
 def split_ts(data, mmix, mask, comptable):
-    """
-    Splits `data` time series into accepted component time series and remainder
+    """Split `data` time series into accepted component time series and remainder.
 
     Parameters
     ----------
@@ -639,3 +756,129 @@ def split_ts(data, mmix, mask, comptable):
     resid = data - hikts
 
     return hikts, resid
+
+
+def prep_data_for_json(d) -> dict:
+    """Attempt to create a JSON serializable dictionary from a data dictionary.
+
+    Parameters
+    ----------
+    d : dict
+        A dictionary that will be converted into something JSON serializable
+
+    Raises
+    ------
+    ValueError if it cannot force the dictionary to be serializable
+    TypeError if you do not supply a dict
+
+    Returns
+    -------
+    An attempt at JSON serializable data
+
+    Notes
+    -----
+    Use this to make something serializable when writing JSON to disk.
+    To speed things up since there are a small number of conversions, this
+    function does not check for serializability, but does use conversion
+    rules for cases encountered where things were not serializable.
+    Add more conversion rules to this function in cases where a
+    tedana-generated object does not serialize to JSON.
+    """
+    if not isinstance(d, dict):
+        raise TypeError(f"Dictionary required to force serialization; got type {type(d)} instead.")
+    # The input dictionary may want to retain types, so we copy
+    d = deepcopy(d)
+    for k, v in d.items():
+        if isinstance(v, dict):
+            # One of the values in the dict is the problem, need to recurse
+            v = prep_data_for_json(v)
+        elif isinstance(v, np.ndarray):
+            if v.dtype == np.int64 or v.dtype == np.uint64:
+                v = int(v)
+            v = v.tolist()
+        elif isinstance(v, np.int64) or isinstance(v, np.uint64):
+            v = int(v)
+
+        # NOTE: add more special cases for type conversions above this
+        # comment line as an elif block
+        d[k] = v
+    return d
+
+
+def str_to_component_list(s: str) -> List[int]:
+    """Convert a string to a list of component indices.
+
+    Parameters
+    ----------
+    s: str
+        The string to convert into a list of component indices.
+
+    Returns
+    -------
+    List[int] of component indices.
+
+    Raises
+    ------
+    ValueError, if the string cannot be split by an allowed delimeter
+    """
+    # Strip off newline at end in case we've been given a one-line file
+    if s[-1] == "\n":
+        s = s[:-1]
+
+    # Search across all allowed delimiters for a match
+    for d in ALLOWED_COMPONENT_DELIMITERS:
+        possible_list = s.split(d)
+        if len(possible_list) > 1:
+            # We have a likely hit
+            # Check to see if extra delimeter at end and get rid of it
+            if possible_list[-1] == "":
+                possible_list = possible_list[:-1]
+            break
+        elif len(possible_list) == 1 and possible_list[0].isnumeric():
+            # We have a likely hit and there is just one component
+            break
+
+    # Make sure we can actually convert this split list into an integer
+    # Crash with a sensible error if not
+    for x in possible_list:
+        try:
+            int(x)
+        except ValueError:
+            raise ValueError(
+                "While parsing component list, failed to convert to int."
+                f' Offending element is "{x}", offending string is "{s}".'
+            )
+
+    return [int(x) for x in possible_list]
+
+
+def fname_to_component_list(fname: str) -> List[int]:
+    """Read a file of component indices.
+
+    Parameters
+    ----------
+    fname: str
+        The name of the file to read the list of component indices from.
+
+    Returns
+    -------
+    List[int] of component indices.
+
+    Raises
+    ------
+    ValueError, if the string cannot be split by an allowed delimeter or the
+    csv file cannot be interpreted.
+    """
+    if fname[-3:] == "csv":
+        contents = pd.read_csv(fname)
+        columns = contents.columns
+        if len(columns) == 2 and "0" in columns:
+            return contents["0"].tolist()
+        elif len(columns) >= 2 and "Components" in columns:
+            return contents["Components"].tolist()
+        else:
+            raise ValueError(f"Cannot determine a components column in file {fname}")
+
+    with open(fname, "r") as fp:
+        contents = fp.read()
+        return str_to_component_list(contents)
