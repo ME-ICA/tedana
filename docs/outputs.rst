@@ -107,14 +107,8 @@ tedana_report.html                                                           The
                                                                              status of each component after each node was run.
                                                                              Columns are only added for runs where component
                                                                              statuses can change.
-"ICA accepted components img": desc-ICAAccepted_components.nii.gz            High-kappa ICA coefficient feature set
-"z-scored ICA accepted components img": desc-ICAAcceptedZ_components.nii.gz  Z-normalized spatial component maps
 report.txt                                                                   A summary report for the workflow with relevant
                                                                              citations.
-"low kappa ts img": desc-optcomRejected_bold.nii.gz                          Combined time series from rejected components.
-"high kappa ts img": desc-optcomAccepted_bold.nii.gz                         High-kappa time series. This dataset does not
-                                                                             include thermal noise or low variance components.
-                                                                             Not the recommended dataset for analysis.
 references.bib                                                               The BibTeX entries for references cited in
                                                                              report.txt.
 
@@ -133,7 +127,7 @@ Key: Filename                                                                   
 "limited s0 img": desc-limited_S0map.nii.gz                                                    Limited S0 map/time series.
                                                                                                Unlike the full S0 maps, if only one 1 echo contains
                                                                                                good data the limited map will have NaN
-"whitened img": desc-optcom_whitened_bold                                                      The optimally combined data after whitening
+"whitened img": desc-optcomWhitened_bold                                                       The optimally combined data after whitening
 "echo weight [PCA|ICA] maps split img": echo-[echo]_desc-[PCA|ICA]_components.nii.gz           Echo-wise PCA/ICA component weight maps.
 "echo T2 [PCA|ICA] split img": echo-[echo]_desc-[PCA|ICA]T2ModelPredictions_components.nii.gz  Component- and voxel-wise R2-model predictions,
                                                                                                separated by echo.
@@ -145,8 +139,6 @@ Key: Filename                                                                   
 "[PCA|ICA] component F-T2 img": desc-[PCA|ICA]T2_stat-F_statmap.nii.gz                         F-statistic map for each component, for the T2 model.
 "PCA reduced img": desc-optcomPCAReduced_bold.nii.gz                                           Optimally combined data after dimensionality
                                                                                                reduction with PCA. This is the input to the ICA.
-"high kappa ts split img": echo-[echo]_desc-Accepted_bold.nii.gz                               High-Kappa time series for echo number ``echo``
-"low kappa ts split img": echo-[echo]_desc-Rejected_bold.nii.gz                                Low-Kappa time series for echo number ``echo``
 "denoised ts split img": echo-[echo]_desc-Denoised_bold.nii.gz                                 Denoised time series for echo number ``echo``
 =============================================================================================  =====================================================
 
@@ -187,8 +179,6 @@ Key: Filename                                                                   
 "t1 like img": desc-T1likeEffect_min.nii.gz                                              T1-like effect
 "mir denoised img": desc-optcomMIRDenoised_bold.nii.gz                                   Denoised time series after MIR
 "ICA MIR mixing tsv": desc-ICAMIRDenoised_mixing.tsv                                     ICA mixing matrix after MIR
-"ICA accepted mir component weights img": desc-ICAAcceptedMIRDenoised_components.nii.gz  high-kappa components after MIR
-"ICA accepted mir denoised img": desc-optcomAcceptedMIRDenoised_bold.nii.gz              high-kappa time series after MIR
 =======================================================================================  =====================================================
 
 .. _classification-output-descriptions:

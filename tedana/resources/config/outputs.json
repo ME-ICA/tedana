@@ -51,8 +51,8 @@
     },
     "whitened img": {
         "orig": "ts_OC_whitened",
-        "bidsv1.5.0": "desc-optcomPCAReduced_bold",
-        "bidsv1.6.0": "desc-optcomPCAReduced_bold"
+        "bidsv1.5.0": "desc-optcomWhitened_bold",
+        "bidsv1.6.0": "desc-optcomWhitened_bold"
     },
     "echo weight PCA map split img": {
         "orig": "e{echo}_PCA_comp",
