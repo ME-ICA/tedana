@@ -4,15 +4,18 @@ ICA and related signal decomposition methods for tedana
 import logging
 import warnings
 
+import sys
+
 import numpy as np
 from scipy import stats
 from sklearn.decomposition import FastICA
+from robustica import RobustICA ####BTBTBT
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
-def tedica(data, n_components, fixed_seed, maxit=500, maxrestart=10):
+def tedica(data, n_components, fixed_seed, ica_method="robustica", n_robust_runs=30, maxit=500, maxrestart=10): ####BTBTBTB
     """
     Perform ICA on `data` and returns mixing matrix
 
@@ -50,6 +53,51 @@ def tedica(data, n_components, fixed_seed, maxit=500, maxrestart=10):
         "decompose the dimensionally reduced dataset."
     )
 
+    if ica_method=='robustica':
+        mmix, Iq = r_ica(data, n_components, n_robust_runs, maxit)
+        fixed_seed=-99999
+    elif ica_method=='fastica':
+        mmix, fixed_seed=f_ica(data, n_components, fixed_seed, maxit=500, maxrestart=10)
+        Iq = 0
+    else:
+        LGR.warning("The selected ICA method is invalid!")
+        sys.exit()
+
+
+
+
+    return mmix, fixed_seed
+
+
+def r_ica(data, n_components, n_robust_runs, max_it): ####BTBTBTB:
+
+    if n_robust_runs>100:
+        LGR.warning("The selected n_robust_runs is a very big number!")
+
+
+    RepLGR.info(
+        "RobustICA package was used for ICA decomposition \\citep{Anglada2022}."
+    )
+    rica0 = RobustICA(n_components=n_components, robust_runs=n_robust_runs, whiten='arbitrary-variance',max_iter= max_it,
+                      robust_dimreduce=False, fun='logcosh')
+    S0, mmix = rica0.fit_transform(data)
+
+    q0 = rica0.evaluate_clustering(rica0.S_all, rica0.clustering.labels_, rica0.signs_, rica0.orientation_)
+
+    
+    Iq0 = np.array(np.mean(q0.iq))
+        
+
+    mmix = stats.zscore(mmix, axis=0)
+
+    LGR.info(
+        "RobustICA with {0} robust runs was used \n"
+        "The mean index quality is {1}".format(n_robust_runs, Iq0)
+    )
+    return mmix, Iq0
+
+
+def f_ica(data, n_components, fixed_seed, maxit, maxrestart):
     if fixed_seed == -1:
         fixed_seed = np.random.randint(low=1, high=1000)
 
