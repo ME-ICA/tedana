@@ -1,7 +1,5 @@
 """
-Functions to identify TE-dependent and TE-independent components. 
-updated
-"""
+Functions to identify TE-dependent and TE-independent components. not updated"""
 import logging
 
 from tedana.metrics import collect
