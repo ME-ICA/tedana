@@ -1,5 +1,6 @@
 """
-Functions to identify TE-dependent and TE-independent components.
+Functions to identify TE-dependent and TE-independent components. 
+updated
 """
 import logging
 
