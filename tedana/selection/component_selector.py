@@ -292,7 +292,7 @@ class ComponentSelector:
 
         LGR.info("Performing component selection with " + tree_config["tree_id"])
         LGR.info(tree_config.get("info", ""))
-        RepLGR.info(tree_config.get("report", ""))
+        RepLGR.info("\n\n" + tree_config.get("report", ""))
         RefLGR.info(tree_config.get("refs", ""))
 
         self.tree["nodes"] = tree_config["nodes"]

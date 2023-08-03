@@ -826,7 +826,7 @@ def tedana_workflow(
         json.dump(derivative_metadata, fo, sort_keys=True, indent=4)
 
     RepLGR.info(
-        "This workflow used numpy \\citep{van2011numpy}, scipy \\citep{virtanen2020scipy}, "
+        "\n\nThis workflow used numpy \\citep{van2011numpy}, scipy \\citep{virtanen2020scipy}, "
         "pandas \\citep{mckinney2010data,reback2020pandas}, "
         "scikit-learn \\citep{pedregosa2011scikit}, "
         "nilearn, bokeh \\citep{bokehmanual}, matplotlib \\citep{Hunter:2007}, "
