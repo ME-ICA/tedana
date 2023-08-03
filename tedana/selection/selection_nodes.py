@@ -850,9 +850,9 @@ def calc_rho_elbow(
     """
     function_name_idx = f"Step {selector.current_node_idx}: calc_rho_elbow"
 
-    if rho_elbow_type == "kundu".lower():
+    if rho_elbow_type == "kundu":
         elbow_name = "rho_elbow_kundu"
-    elif rho_elbow_type == "liberal".lower():
+    elif rho_elbow_type == "liberal":
         elbow_name = "rho_elbow_liberal"
     else:
         raise ValueError(
