@@ -30,11 +30,12 @@
                 "decide_comps": "all"
             },
             "kwargs": {
-                "log_extra_report": "",
+                "log_extra_info": "",
+                "log_extra_report": "All components are initially labeled as 'unclassified'.",
                 "clear_classification_tags": true,
                 "dont_warn_reclassify": true
             },
-            "_comment": "Label all components as 'unclassified'."
+            "_comment": ""
         },
         {
             "functionname": "dec_left_op_right",
@@ -47,10 +48,11 @@
                 "right": "kappa"
             },
             "kwargs": {
-                "log_extra_report": "",
+                "log_extra_info": "",
+                "log_extra_report": "Any components with rho greater than kappa are rejected.",
                 "tag_if_true": "Unlikely BOLD"
             },
-            "_comment": "Reject any components with rho greater than kappa."
+            "_comment": ""
         },
         {
             "functionname": "dec_left_op_right",
@@ -66,10 +68,11 @@
                 "left2": "countsigFT2",
                 "op2": ">",
                 "right2": 0,
-                "log_extra_report": "",
+                "log_extra_info": "",
+                "log_extra_report": "Any components with higher S0 model beta map-F-statistic map Dice similarity index than T2 model beta map-F-statistic map Dice similarity index and greater than median variance explained are rejected.",
                 "tag_if_true": "Unlikely BOLD"
             },
-            "_comment": "Reject any components with higher S0 model F-statistic map significant voxel count than T2 model F-statistic map significant voxel count."
+            "_comment": ""
         },
         {
             "functionname": "calc_median",
@@ -78,7 +81,11 @@
                 "metric_name": "variance explained",
                 "median_label": "varex"
             },
-            "_comment": "Calculate the median variance explained across all components for later steps."
+            "kwargs": {
+                "log_extra_info": "",
+                "log_extra_report": "The median variance explained is calculated across all components, for later steps."
+            },
+            "_comment": ""
         },
         {
             "functionname": "dec_left_op_right",
@@ -94,10 +101,11 @@
                 "left2": "variance explained",
                 "op2": ">",
                 "right2": "median_varex",
-                "log_extra_report": "",
+                "log_extra_info": "",
+                "log_extra_report": "Any components with higher S0 model beta map-F-statistic map Dice similarity index than T2 model beta map-F-statistic map Dice similarity index and greater than median variance explained are rejected.",
                 "tag_if_true": "Unlikely BOLD"
             },
-            "_comment": "Reject any components with higher S0 model beta map-F-statistic map Dice similarity index than T2 model beta map-F-statistic map Dice similarity index and greater than median variance explained."
+            "_comment": ""
         },
         {
             "functionname": "dec_left_op_right",
@@ -113,10 +121,11 @@
                 "left2": "variance explained",
                 "op2": ">",
                 "right2": "median_varex",
-                "log_extra_report": "",
+                "log_extra_info": "",
+                "log_extra_report": "Any components with negative t-statistic comparing distribution of T2* model F-statistics from voxels in clusters to those of voxels not in clusters and variance explained greater than median are rejected.",
                 "tag_if_true": "Unlikely BOLD"
             },
-            "_comment": "Reject any components with negative t-statistic comparing distribution of T2* model F-statistics from voxels in clusters to those of voxels not in clusters and variance explained greater than median. This essentially rejects any components with high variance explained and exhibiting more 'speckled' T2*-associated voxels than 'clustered' ones."
+            "_comment": "This essentially rejects any components with high variance explained and exhibiting more 'speckled' T2*-associated voxels than 'clustered' ones."
         },
         {
             "functionname": "calc_kappa_elbow",
@@ -125,9 +134,9 @@
             },
             "kwargs": {
                 "log_extra_info": "",
-                "log_extra_report": ""
+                "log_extra_report": "The kappa elbow is calculated from all components, for later steps."
             },
-            "_comment": "Calculate the kappa elbow from all components, for later steps."
+            "_comment": ""
         },
         {
             "functionname": "calc_rho_elbow",
@@ -138,9 +147,9 @@
                 "subset_decide_comps": "unclassified",
                 "rho_elbow_type": "liberal",
                 "log_extra_info": "",
-                "log_extra_report": ""
+                "log_extra_report": "The 'liberal' rho elbow is calculated from all (unclassified?) components, for later steps."
             },
-            "_comment": "Calculate the liberal rho elbow from all (unclassified?) components, for later steps."
+            "_comment": ""
         },
         {
             "functionname": "dec_left_op_right",
@@ -153,9 +162,10 @@
                 "right": "kappa_elbow_kundu"
             },
             "kwargs": {
-                "log_extra_report": ""
+                "log_extra_info": "",
+                "log_extra_report": "Any unclassified components with kappa greater than or equal to the kappa elbow are provisionally accepted. Any remaining unclassified components are provisionally rejected."
             },
-            "_comment": "Provisionally accept any unclassified components with kappa greater than or equal to the kappa elbow, and provisionally reject any remaining unclassified components."
+            "_comment": "This step provisionally classifies all 'unclassified' components."
         },
         {
             "functionname": "dec_left_op_right",
@@ -168,12 +178,12 @@
                 "right": "rho"
             },
             "kwargs": {
-                "log_extra_info": "If kappa>elbow and kappa>2*rho accept even if rho>elbow",
-                "log_extra_report": "",
+                "log_extra_info": "",
+                "log_extra_report": "Any provisionally accepted components with kappa greater than two times rho are accepted.",
                 "right_scale": 2,
                 "tag_if_true": "Likely BOLD"
             },
-            "_comment": "Accept any provisionally accepted components with kappa greater than 2 times rho."
+            "_comment": ""
         },
         {
             "functionname": "dec_left_op_right",
@@ -189,9 +199,10 @@
                 "right": "rho_elbow_liberal"
             },
             "kwargs": {
-                "log_extra_report": ""
+                "log_extra_info": "",
+                "log_extra_report": "Any provisionally accepted and provisionally rejected components with rho values greater than the liberal rho elbow are provisionally rejected."
             },
-            "_comment": "Provisionally reject any provisionally accepted and provisionally rejected components with rho values greater than the liberal rho elbow."
+            "_comment": ""
         },
         {
             "functionname": "dec_variance_lessthan_thresholds",
@@ -203,12 +214,12 @@
             "kwargs": {
                 "var_metric": "variance explained",
                 "log_extra_info": "",
-                "log_extra_report": "",
+                "log_extra_report": "Any provisionally rejected components with variance explained less than ? are accepted.",
                 "single_comp_threshold": 0.1,
                 "all_comp_threshold": 1.0,
                 "tag_if_true": "Low variance"
             },
-            "_comment": "Accept any provisionally rejected components with variance explained less than X."
+            "_comment": ""
         },
         {
             "functionname": "manual_classify",
@@ -218,10 +229,10 @@
             },
             "kwargs": {
                 "log_extra_info": "",
-                "log_extra_report": "",
+                "log_extra_report": "All remaining provisionally accepted components are accepted.",
                 "tag": "Likely BOLD"
             },
-            "_comment": "Accept all remaining provisionally accepted components."
+            "_comment": ""
         },
         {
             "functionname": "manual_classify",
@@ -234,10 +245,10 @@
             },
             "kwargs": {
                 "log_extra_info": "",
-                "log_extra_report": "",
+                "log_extra_report": "All remaining unclassified or provisionally rejected components are rejected.",
                 "tag": "Unlikely BOLD"
             },
-            "_comment": "Reject all remaining unclassified or provisionally rejected components. Are unclassified components even possible at this point?"
+            "_comment": "Are unclassified components even possible at this point?"
         }
     ]
 }
