@@ -33,7 +33,8 @@
                 "log_extra_report": "",
                 "clear_classification_tags": true,
                 "dont_warn_reclassify": true
-            }
+            },
+            "_comment": "Label all components as 'unclassified'."
         },
         {
             "functionname": "dec_left_op_right",
@@ -49,7 +50,7 @@
                 "log_extra_report": "",
                 "tag_if_true": "Unlikely BOLD"
             },
-            "_comment": "Components with rho > kappa are rejected."
+            "_comment": "Reject any components with rho greater than kappa."
         },
         {
             "functionname": "dec_left_op_right",
@@ -68,7 +69,7 @@
                 "log_extra_report": "",
                 "tag_if_true": "Unlikely BOLD"
             },
-            "_comment": "Components with more significant TE-independence model F-statistic voxels than TE-dependence model F-stats are rejected."
+            "_comment": "Reject any components with higher S0 model F-statistic map significant voxel count than T2 model F-statistic map significant voxel count."
         },
         {
             "functionname": "calc_median",
@@ -77,7 +78,7 @@
                 "metric_name": "variance explained",
                 "median_label": "varex"
             },
-            "_comment": "The median variance explained across all components is necessary for other steps."
+            "_comment": "Calculate the median variance explained across all components for later steps."
         },
         {
             "functionname": "dec_left_op_right",
@@ -96,7 +97,7 @@
                 "log_extra_report": "",
                 "tag_if_true": "Unlikely BOLD"
             },
-            "_comment": "Any components with greater than median variance explained and higher DSI between the binarized map of significant F-stats and significant S0 voxels than between the F-stats map and significant T2* voxels are rejected."
+            "_comment": "Reject any components with higher S0 model beta map-F-statistic map Dice similarity index than T2 model beta map-F-statistic map Dice similarity index and greater than median variance explained."
         },
         {
             "functionname": "dec_left_op_right",
@@ -115,7 +116,7 @@
                 "log_extra_report": "",
                 "tag_if_true": "Unlikely BOLD"
             },
-            "_comment": "Any components with noise > signal t-statistic and vairnace explained > median are rejected."
+            "_comment": "Reject any components with negative t-statistic comparing distribution of T2* model F-statistics from voxels in clusters to those of voxels not in clusters and variance explained greater than median. This essentially rejects any components with high variance explained and exhibiting more 'speckled' T2*-associated voxels than 'clustered' ones."
         },
         {
             "functionname": "calc_kappa_elbow",
@@ -126,7 +127,7 @@
                 "log_extra_info": "",
                 "log_extra_report": ""
             },
-            "_comment": "The kappa elbow is calculated for later steps."
+            "_comment": "Calculate the kappa elbow from all components, for later steps."
         },
         {
             "functionname": "calc_rho_elbow",
@@ -139,7 +140,7 @@
                 "log_extra_info": "",
                 "log_extra_report": ""
             },
-            "_comment": "The liberal rho elbow is calculated for later steps."
+            "_comment": "Calculate the liberal rho elbow from all (unclassified?) components, for later steps."
         },
         {
             "functionname": "dec_left_op_right",
@@ -154,7 +155,7 @@
             "kwargs": {
                 "log_extra_report": ""
             },
-            "_comment": "Unclassified components with kappa greater than or equal to the kappa elbow are provisionally accepted, with all other unclassified components being provisionally rejected."
+            "_comment": "Provisionally accept any unclassified components with kappa greater than or equal to the kappa elbow, and provisionally reject any remaining unclassified components."
         },
         {
             "functionname": "dec_left_op_right",
@@ -172,7 +173,7 @@
                 "right_scale": 2,
                 "tag_if_true": "Likely BOLD"
             },
-            "_comment": "Provisionally accepted components with kappa greater than rho are accepted."
+            "_comment": "Accept any provisionally accepted components with kappa greater than 2 times rho."
         },
         {
             "functionname": "dec_left_op_right",
@@ -190,7 +191,7 @@
             "kwargs": {
                 "log_extra_report": ""
             },
-            "_comment": "Provisionally accepted and provisionally rejected components with rho values greater than the liberal rho elbow are provisionally rejected."
+            "_comment": "Provisionally reject any provisionally accepted and provisionally rejected components with rho values greater than the liberal rho elbow."
         },
         {
             "functionname": "dec_variance_lessthan_thresholds",
@@ -207,7 +208,7 @@
                 "all_comp_threshold": 1.0,
                 "tag_if_true": "Low variance"
             },
-            "_comment": "Provisionally rejected components with variance explained less than X are flagged as 'low variance' and are accepted."
+            "_comment": "Accept any provisionally rejected components with variance explained less than X."
         },
         {
             "functionname": "manual_classify",
@@ -220,7 +221,7 @@
                 "log_extra_report": "",
                 "tag": "Likely BOLD"
             },
-            "_comment": "All remaining provisionally accepted components are rejected."
+            "_comment": "Accept all remaining provisionally accepted components."
         },
         {
             "functionname": "manual_classify",
@@ -236,7 +237,7 @@
                 "log_extra_report": "",
                 "tag": "Unlikely BOLD"
             },
-            "_comment": "All remaining unclassified or provisionally rejected components are rejected."
+            "_comment": "Reject all remaining unclassified or provisionally rejected components. Are unclassified components even possible at this point?"
         }
     ]
 }
