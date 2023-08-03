@@ -217,7 +217,7 @@
                 "all_comp_threshold": 1.0,
                 "tag_if_true": "Low variance",
                 "log_extra_info": "",
-                "log_extra_report": "Any provisionally rejected components with variance explained less than ? are accepted."
+                "log_extra_report": "Any provisionally rejected components with variance explained less than 0.1% and cumulative variance less than 1% are accepted."
             },
             "_comment": "This step flags remaining low-variance components to accept because they don't explain enough variance to be worth further reducing the degrees of freedom of the denoised data."
         },
