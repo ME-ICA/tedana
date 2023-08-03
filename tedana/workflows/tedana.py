@@ -838,12 +838,12 @@ def tedana_workflow(
         "\\citep{dice1945measures,sorensen1948method}."
     )
 
-    with open(repname, "r") as fo:
+    """with open(repname, "r") as fo:
         report = [line.rstrip() for line in fo.readlines()]
         report = " ".join(report)
 
     with open(repname, "w") as fo:
-        fo.write(report)
+        fo.write(report)"""
 
     # Collect BibTeX entries for cited papers
     references = get_description_references(report)
