@@ -841,9 +841,11 @@ def tedana_workflow(
     with open(repname, "r") as fo:
         report = [line.rstrip() for line in fo.readlines()]
         report = " ".join(report)
+        # Double-spaces reflect new paragraphs
+        report = report.replace("  ", "\n\n")
 
-    """with open(repname, "w") as fo:
-        fo.write(report)"""
+    with open(repname, "w") as fo:
+        fo.write(report)
 
     # Collect BibTeX entries for cited papers
     references = get_description_references(report)
