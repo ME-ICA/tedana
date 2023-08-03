@@ -48,7 +48,8 @@
             "kwargs": {
                 "log_extra_report": "",
                 "tag_if_true": "Unlikely BOLD"
-            }
+            },
+            "_comment": "Components with rho > kappa are rejected."
         },
         {
             "functionname": "dec_left_op_right",
@@ -66,7 +67,8 @@
                 "right2": 0,
                 "log_extra_report": "",
                 "tag_if_true": "Unlikely BOLD"
-            }
+            },
+            "_comment": "Components with more significant TE-independence model F-statistic voxels than TE-dependence model F-stats are rejected."
         },
         {
             "functionname": "calc_median",
@@ -74,7 +76,8 @@
                 "decide_comps": "all",
                 "metric_name": "variance explained",
                 "median_label": "varex"
-            }
+            },
+            "_comment": "The median variance explained across all components is necessary for other steps."
         },
         {
             "functionname": "dec_left_op_right",
@@ -92,7 +95,8 @@
                 "right2": "median_varex",
                 "log_extra_report": "",
                 "tag_if_true": "Unlikely BOLD"
-            }
+            },
+            "_comment": "Any components with greater than median variance explained and higher DSI between the binarized map of significant F-stats and significant S0 voxels than between the F-stats map and significant T2* voxels are rejected."
         },
         {
             "functionname": "dec_left_op_right",
@@ -110,7 +114,8 @@
                 "right2": "median_varex",
                 "log_extra_report": "",
                 "tag_if_true": "Unlikely BOLD"
-            }
+            },
+            "_comment": "Any components with noise > signal t-statistic and vairnace explained > median are rejected."
         },
         {
             "functionname": "calc_kappa_elbow",
@@ -121,7 +126,7 @@
                 "log_extra_info": "",
                 "log_extra_report": ""
             },
-            "_comment": ""
+            "_comment": "The kappa elbow is calculated for later steps."
         },
         {
             "functionname": "calc_rho_elbow",
@@ -134,7 +139,7 @@
                 "log_extra_info": "",
                 "log_extra_report": ""
             },
-            "_comment": ""
+            "_comment": "The liberal rho elbow is calculated for later steps."
         },
         {
             "functionname": "dec_left_op_right",
@@ -148,7 +153,8 @@
             },
             "kwargs": {
                 "log_extra_report": ""
-            }
+            },
+            "_comment": "Unclassified components with kappa greater than or equal to the kappa elbow are provisionally accepted, with all other unclassified components being provisionally rejected."
         },
         {
             "functionname": "dec_left_op_right",
@@ -165,7 +171,8 @@
                 "log_extra_report": "",
                 "right_scale": 2,
                 "tag_if_true": "Likely BOLD"
-            }
+            },
+            "_comment": "Provisionally accepted components with kappa greater than rho are accepted."
         },
         {
             "functionname": "dec_left_op_right",
@@ -182,7 +189,8 @@
             },
             "kwargs": {
                 "log_extra_report": ""
-            }
+            },
+            "_comment": "Provisionally accepted and provisionally rejected components with rho values greater than the liberal rho elbow are provisionally rejected."
         },
         {
             "functionname": "dec_variance_lessthan_thresholds",
@@ -198,7 +206,8 @@
                 "single_comp_threshold": 0.1,
                 "all_comp_threshold": 1.0,
                 "tag_if_true": "Low variance"
-            }
+            },
+            "_comment": "Provisionally rejected components with variance explained less than X are flagged as 'low variance' and are accepted."
         },
         {
             "functionname": "manual_classify",
@@ -210,7 +219,8 @@
                 "log_extra_info": "",
                 "log_extra_report": "",
                 "tag": "Likely BOLD"
-            }
+            },
+            "_comment": "All remaining provisionally accepted components are rejected."
         },
         {
             "functionname": "manual_classify",
@@ -225,7 +235,8 @@
                 "log_extra_info": "",
                 "log_extra_report": "",
                 "tag": "Unlikely BOLD"
-            }
+            },
+            "_comment": "All remaining unclassified or provisionally rejected components are rejected."
         }
     ]
 }
