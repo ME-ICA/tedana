@@ -153,7 +153,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.three-echo
       - store_artifacts:
-          path: /tmp/src/tedana
+          path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:
@@ -178,7 +178,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.four-echo
       - store_artifacts:
-          path: /tmp/src/tedana
+          path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:
@@ -203,7 +203,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.five-echo
       - store_artifacts:
-          path: /tmp/src/tedana
+          path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:
@@ -228,7 +228,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.reclassify
       - store_artifacts:
-          path: /tmp/src/tedana
+          path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:
@@ -254,7 +254,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.t2smap
       - store_artifacts:
-          path: /tmp/src/tedana
+          path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:

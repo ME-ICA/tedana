@@ -147,9 +147,9 @@
                 "subset_decide_comps": "unclassified",
                 "rho_elbow_type": "liberal",
                 "log_extra_info": "",
-                "log_extra_report": "The 'liberal' rho elbow is calculated from all (unclassified?) components, for later steps."
+                "log_extra_report": "The 'liberal' rho elbow is calculated from all and unclassified components, for later steps."
             },
-            "_comment": ""
+            "_comment": "This step determines the 'rho elbow' based on the rho values for all of the components, as well as just the unclassified components. It calculates the elbow for each set of components and then takes the maximum of the two."
         },
         {
             "functionname": "dec_left_op_right",
