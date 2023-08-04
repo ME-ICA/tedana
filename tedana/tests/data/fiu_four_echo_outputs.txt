@@ -1,3 +1,5 @@
+desc-ICA_mixing_static.tsv
+references.bib
 sub-01_S0map.nii.gz
 sub-01_T2starmap.nii.gz
 sub-01_dataset_description.json
@@ -17,7 +19,6 @@ sub-01_desc-ICA_decision_tree.json
 sub-01_desc-ICAS0_stat-F_statmap.nii.gz
 sub-01_desc-ICAT2_stat-F_statmap.nii.gz
 sub-01_desc-ICA_mixing.tsv
-sub-01_desc-ICA_mixing_static.tsv
 sub-01_desc-ICA_stat-z_components.nii.gz
 sub-01_desc-T1likeEffect_min.nii.gz
 sub-01_desc-adaptiveGoodSignal_mask.nii.gz
@@ -57,7 +58,6 @@ sub-01_echo-4_desc-ICAT2ModelPredictions_components.nii.gz
 sub-01_echo-4_desc-ICAS0ModelPredictions_components.nii.gz
 sub-01_echo-4_desc-ICA_components.nii.gz
 sub-01_echo-4_desc-Rejected_bold.nii.gz
-sub-01_references.bib
 sub-01_report.txt
 sub-01_tedana_report.html
 figures
