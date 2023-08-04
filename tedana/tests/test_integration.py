@@ -85,10 +85,10 @@ def data_for_testing_info(test_dataset=str):
     -------
     test_data_path : str
        The path to the local directory where the data will be downloaded
-    osfID : str
+    osf_id : str
        The ID for the OSF file.
-       Data download link would be https://osf.io/osfID/download
-       Metadata download link would be https://osf.io/osfID/metadata/?format=datacite-json
+       Data download link would be https://osf.io/osf_id/download
+       Metadata download link would be https://osf.io/osf_id/metadata/?format=datacite-json
     """
 
     tedana_path = os.path.dirname(tedana_cli.__file__)
@@ -97,53 +97,53 @@ def data_for_testing_info(test_dataset=str):
     os.makedirs(os.path.join(base_data_path, "outputs"), exist_ok=True)
     if test_dataset == "three-echo":
         test_data_path = os.path.join(base_data_path, "three-echo/TED.three-echo")
-        osfID = "rqhfc"
+        osf_id = "rqhfc"
         os.makedirs(os.path.join(base_data_path, "three-echo"), exist_ok=True)
         os.makedirs(os.path.join(base_data_path, "outputs/three-echo"), exist_ok=True)
     elif test_dataset == "three-echo-reclassify":
         test_data_path = os.path.join(base_data_path, "reclassify")
-        osfID = "f6g45"
+        osf_id = "f6g45"
         os.makedirs(os.path.join(base_data_path, "outputs/reclassify"), exist_ok=True)
     elif test_dataset == "four-echo":
         test_data_path = os.path.join(base_data_path, "four-echo/TED.four-echo")
-        osfID = "gnj73"
+        osf_id = "gnj73"
         os.makedirs(os.path.join(base_data_path, "four-echo"), exist_ok=True)
         os.makedirs(os.path.join(base_data_path, "outputs/four-echo"), exist_ok=True)
     elif test_dataset == "five-echo":
         test_data_path = os.path.join(base_data_path, "five-echo/TED.five-echo")
-        osfID = "9c42e"
+        osf_id = "9c42e"
         os.makedirs(os.path.join(base_data_path, "five-echo"), exist_ok=True)
         os.makedirs(os.path.join(base_data_path, "outputs/five-echo"), exist_ok=True)
     else:
         raise ValueError(f"{test_dataset} is not a valid dataset string for data_for_testing_info")
 
-    return test_data_path, osfID
+    return test_data_path, osf_id
 
 
-def download_test_data(osfID, test_data_path):
+def download_test_data(osf_id, test_data_path):
     """
     If current data is not already available, downloads tar.gz data
-    stored at `https://osf.io/osfID/download`
+    stored at `https://osf.io/osf_id/download`
     and unpacks into `out_path`
 
     Parameters
     ----------
-    osfID : str
+    osf_id : str
        The ID for the OSF file.
     out_path : str
         Path to directory where OSF data should be extracted
     """
 
     try:
-        datainfo = requests.get(f"https://osf.io/{osfID}/metadata/?format=datacite-json")
+        datainfo = requests.get(f"https://osf.io/{osf_id}/metadata/?format=datacite-json")
     except Exception:
         if len(os.listdir(test_data_path)) == 0:
             raise ConnectionError(
-                f"Cannot access https://osf.io/{osfID} and testing data " "are not yet downloaded"
+                f"Cannot access https://osf.io/{osf_id} and testing data " "are not yet downloaded"
             )
         else:
             TestLGR.warning(
-                f"Cannot access https://osf.io/{osfID}. "
+                f"Cannot access https://osf.io/{osf_id}. "
                 f"Using local copy of testing data in {test_data_path} "
                 "but cannot validate that local copy is up-to-date"
             )
@@ -177,11 +177,11 @@ def download_test_data(osfID, test_data_path):
         else:
             TestLGR.info(
                 f"Downloaded data in {test_data_path} was last modified on "
-                f"{local_filedate_str}. Data on https://osf.io/{osfID} "
+                f"{local_filedate_str}. Data on https://osf.io/{osf_id} "
                 f" was last updated on {osf_filedate}. Deleting and redownloading"
             )
             shutil.rmtree(test_data_path)
-    req = requests.get(f"https://osf.io/{osfID}/download")
+    req = requests.get(f"https://osf.io/{osf_id}/download")
     req.raise_for_status()
     t = tarfile.open(fileobj=GzipFile(fileobj=BytesIO(req.content)))
     os.makedirs(test_data_path, exist_ok=True)
@@ -200,11 +200,11 @@ def reclassify_raw_registry() -> str:
 def guarantee_reclassify_data() -> None:
     """Ensures that the reclassify data exists at the expected path and return path."""
 
-    test_data_path, osfID = data_for_testing_info("three-echo-reclassify")
+    test_data_path, osf_id = data_for_testing_info("three-echo-reclassify")
 
     # Should now be checking and not downloading for each test so don't see if statement here
     # if not os.path.exists(reclassify_raw_registry()):
-    download_test_data(osfID, test_data_path)
+    download_test_data(osf_id, test_data_path)
     # else:
     # Path exists, be sure that everything in registry exists
     ioh = InputHarvester(reclassify_raw_registry())
@@ -227,7 +227,7 @@ def test_integration_five_echo(skip_integration):
     if skip_integration:
         pytest.skip("Skipping five-echo integration test")
 
-    test_data_path, osfID = data_for_testing_info("five-echo")
+    test_data_path, osf_id = data_for_testing_info("five-echo")
     out_dir = os.path.abspath(os.path.join(test_data_path, "../../outputs/five-echo"))
     # out_dir_manual = f"{out_dir}-manual"
 
@@ -238,7 +238,7 @@ def test_integration_five_echo(skip_integration):
     #     shutil.rmtree(out_dir_manual)
 
     # download data and run the test
-    download_test_data(osfID, test_data_path)
+    download_test_data(osf_id, test_data_path)
     prepend = f"{test_data_path}/p06.SBJ01_S09_Task11_e"
     suffix = ".sm.nii.gz"
     datalist = [prepend + str(i + 1) + suffix for i in range(5)]
@@ -270,7 +270,7 @@ def test_integration_four_echo(skip_integration):
     if skip_integration:
         pytest.skip("Skipping four-echo integration test")
 
-    test_data_path, osfID = data_for_testing_info("four-echo")
+    test_data_path, osf_id = data_for_testing_info("four-echo")
     out_dir = os.path.abspath(os.path.join(test_data_path, "../../outputs/four-echo"))
     out_dir_manual = f"{out_dir}-manual"
 
@@ -281,7 +281,7 @@ def test_integration_four_echo(skip_integration):
         shutil.rmtree(out_dir_manual)
 
     # download data and run the test
-    download_test_data(osfID, test_data_path)
+    download_test_data(osf_id, test_data_path)
     prepend = f"{test_data_path}/sub-PILOT_ses-01_task-localizerDetection_run-01_echo-"
     suffix = "_space-sbref_desc-preproc_bold+orig.HEAD"
     datalist = [prepend + str(i + 1) + suffix for i in range(4)]
@@ -293,6 +293,7 @@ def test_integration_four_echo(skip_integration):
         tedpca="kundu-stabilize",
         gscontrol=["gsr", "mir"],
         png_cmap="bone",
+        prefix="sub-01",
         debug=True,
         verbose=True,
     )
@@ -317,7 +318,7 @@ def test_integration_three_echo(skip_integration):
     if skip_integration:
         pytest.skip("Skipping three-echo integration test")
 
-    test_data_path, osfID = data_for_testing_info("three-echo")
+    test_data_path, osf_id = data_for_testing_info("three-echo")
     out_dir = os.path.abspath(os.path.join(test_data_path, "../../outputs/three-echo"))
     out_dir_manual = f"{out_dir}-rerun"
 
@@ -328,7 +329,7 @@ def test_integration_three_echo(skip_integration):
         shutil.rmtree(out_dir_manual)
 
     # download data and run the test
-    download_test_data(osfID, test_data_path)
+    download_test_data(osf_id, test_data_path)
     tedana_cli.tedana_workflow(
         data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
         tes=[14.5, 38.5, 62.5],
@@ -600,7 +601,7 @@ def test_integration_reclassify_accrej_files(skip_integration, caplog):
     check_integration_outputs(fn, out_dir)
 
 
-def test_integration_reclassify_index_failures(skip_integration, caplog):
+def test_integration_reclassify_index_failures(skip_integration):
     if skip_integration:
         pytest.skip("Skip reclassify index failures")
 
@@ -636,13 +637,13 @@ def test_integration_t2smap(skip_integration):
     """Integration test of the full t2smap workflow using five-echo test data"""
     if skip_integration:
         pytest.skip("Skipping t2smap integration test")
-    test_data_path, osfID = data_for_testing_info("five-echo")
+    test_data_path, osf_id = data_for_testing_info("five-echo")
     out_dir = os.path.abspath(os.path.join(test_data_path, "../../outputs/t2smap_five-echo"))
     if os.path.exists(out_dir):
         shutil.rmtree(out_dir)
 
     # download data and run the test
-    download_test_data(osfID, test_data_path)
+    download_test_data(osf_id, test_data_path)
     prepend = f"{test_data_path}/p06.SBJ01_S09_Task11_e"
     suffix = ".sm.nii.gz"
     datalist = [prepend + str(i + 1) + suffix for i in range(5)]
