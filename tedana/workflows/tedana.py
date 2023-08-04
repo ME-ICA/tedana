@@ -445,7 +445,7 @@ def tedana_workflow(
         os.mkdir(out_dir)
 
     # boilerplate
-    basename = "report"
+    basename = f"{prefix + '_' if (prefix != '' or not prefix.endswith('_')) else prefix}report"
     extension = "txt"
     repname = op.join(out_dir, (basename + "." + extension))
     bibtex_file = op.join(out_dir, "references.bib")
