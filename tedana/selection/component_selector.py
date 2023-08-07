@@ -236,31 +236,6 @@ class ComponentSelector:
         -----
         Initializing the  ``ComponentSelector`` confirms tree is valid and
         loads all information in the tree json file into ``ComponentSelector``.
-
-        Adds to the ``ComponentSelector``:
-
-        - component_status_table: empty dataframe or contents of inputted status_table
-        - cross_component_metrics: empty dict or contents of inputed values
-        - used_metrics: empty set
-
-        Any parameter that is used by a decision tree node function can be passed
-        as a parameter in the ``ComponentSelector`` initialization or can be
-        included in the json file that defines the decision tree.
-        If a parameter is set in the json file, that will take precedence.
-        As a style rule, a parameter that is the same regardless of the inputted data should be
-        defined in the decision tree json file.
-        A parameter that is dataset-specific should be passed through the initialization function.
-        Dataset-specific parameters that may need to be passed during initialization include:
-
-        n_echos : :obj:`int`
-            Number of echos in multi-echo fMRI data.
-            Required for kundu and minimal trees
-        n_vols : :obj:`int`
-            Number of volumes (time points) in the fMRI data
-            Required for kundu tree
-
-        An example initialization with these options would look like
-        ``selector = ComponentSelector(tree, comptable, n_echos=n_echos, n_vols=n_vols)``
         """
 
         self.tree_name = tree
@@ -297,6 +272,31 @@ class ComponentSelector:
 
         Notes
         -------
+        Adds to the ``ComponentSelector``:
+
+        - component_status_table: empty dataframe or contents of inputted status_table
+        - cross_component_metrics: empty dict or contents of inputed values
+        - used_metrics: empty set
+
+        Any parameter that is used by a decision tree node function can be passed
+        as a parameter in the ``ComponentSelector`` initialization or can be
+        included in the json file that defines the decision tree.
+        If a parameter is set in the json file, that will take precedence.
+        As a style rule, a parameter that is the same regardless of the inputted data should be
+        defined in the decision tree json file.
+        A parameter that is dataset-specific should be passed through the initialization function.
+        Dataset-specific parameters that may need to be passed during initialization include:
+
+        n_echos : :obj:`int`
+            Number of echos in multi-echo fMRI data.
+            Required for kundu and minimal trees
+        n_vols : :obj:`int`
+            Number of volumes (time points) in the fMRI data
+            Required for kundu tree
+
+        An example initialization with these options would look like
+        ``selector = selector.select(comptable, n_echos=n_echos, n_vols=n_vols)``
+
         The selection process uses previously calculated parameters stored in
         `component_table` for each ICA component such as Kappa (a T2* weighting metric),
         Rho (an S0 weighting metric), and variance explained. If a necessary metric
@@ -323,44 +323,44 @@ class ComponentSelector:
         """
 
         self.__dict__.update(cross_component_metrics)
-        self.cross_component_metrics = cross_component_metrics
+        self.cross_component_metrics_ = cross_component_metrics
 
         # Construct an un-executed selector
-        self.component_table = component_table.copy()
+        self.component_table_ = component_table.copy()
 
         # To run a decision tree, each component needs to have an initial classification
         # If the classification column doesn't exist, create it and label all components
         # as unclassified
-        if "classification" not in self.component_table:
-            self.component_table["classification"] = "unclassified"
+        if "classification" not in self.component_table_:
+            self.component_table_["classification"] = "unclassified"
 
         if status_table is None:
-            self.component_status_table = self.component_table[
+            self.component_status_table_ = self.component_table_[
                 ["Component", "classification"]
             ].copy()
-            self.component_status_table = self.component_status_table.rename(
+            self.component_status_table_ = self.component_status_table_.rename(
                 columns={"classification": "initialized classification"}
             )
-            self.start_idx = 0
+            self.start_idx_ = 0
         else:
             # Since a status table exists, we need to skip nodes up to the
             # point where the last tree finished
-            self.start_idx = len(self.tree["nodes"])
-            LGR.info(f"Start is {self.start_idx}")
-            self.component_status_table = status_table
+            self.start_idx_ = len(self.tree["nodes"])
+            LGR.info(f"Start is {self.start_idx_}")
+            self.component_status_table_ = status_table
 
-        if "classification_tags" not in self.component_table.columns:
-            self.component_table["classification_tags"] = ""
+        if "classification_tags" not in self.component_table_.columns:
+            self.component_table_["classification_tags"] = ""
 
         # this will crash the program with an error message if not all
         # necessary_metrics are in the comptable
         confirm_metrics_exist(
-            self.component_table, self.necessary_metrics, function_name=self.tree_name
+            self.component_table_, self.necessary_metrics, function_name=self.tree_name
         )
 
         # for each node in the decision tree
         for self.current_node_idx, node in enumerate(
-            self.tree["nodes"][self.start_idx :], start=self.start_idx
+            self.tree["nodes"][self.start_idx_ :], start=self.start_idx_
         ):
             # parse the variables to use with the function
             fcn = getattr(selection_nodes, node["functionname"])
@@ -392,14 +392,14 @@ class ComponentSelector:
             )
 
             # log the current counts for all classification labels
-            log_classification_counts(self.current_node_idx, self.component_table)
+            log_classification_counts(self.current_node_idx, self.component_table_)
             LGR.debug(
                 f"Step {self.current_node_idx} Full outputs: "
                 f"{self.tree['nodes'][self.current_node_idx]['outputs']}"
             )
 
         # move decision columns to end
-        self.component_table = clean_dataframe(self.component_table)
+        self.component_table_ = clean_dataframe(self.component_table_)
         # warning anything called a necessary metric wasn't used and if
         # anything not called a necessary metric was used
         self.are_only_necessary_metrics_used()
@@ -483,11 +483,11 @@ class ComponentSelector:
         classifications are either "accepted" or "rejected".
         If any other component classifications remain, log a warning
         """
-        component_classifications = set(self.component_table["classification"].to_list())
+        component_classifications = set(self.component_table_["classification"].to_list())
         nonfinal_classifications = component_classifications.difference({"accepted", "rejected"})
         if nonfinal_classifications:
             for nonfinal_class in nonfinal_classifications:
-                numcomp = asarray(self.component_table["classification"] == nonfinal_class).sum()
+                numcomp = asarray(self.component_table_["classification"] == nonfinal_class).sum()
                 LGR.warning(
                     f"{numcomp} components have a final classification of {nonfinal_class}. "
                     "At the end of the selection process, all components are expected "
@@ -495,14 +495,14 @@ class ComponentSelector:
                 )
 
     @property
-    def n_comps(self):
+    def n_comps_(self):
         """The number of components in the component table."""
-        return len(self.component_table)
+        return len(self.component_table_)
 
     @property
-    def likely_bold_comps(self):
+    def likely_bold_comps_(self):
         """A boolean :obj:`pandas.Series` of components that are tagged "Likely BOLD"."""
-        likely_bold_comps = self.component_table["classification_tags"].copy()
+        likely_bold_comps = self.component_table_["classification_tags"].copy()
         for idx in range(len(likely_bold_comps)):
             if "Likely BOLD" in likely_bold_comps.loc[idx]:
                 likely_bold_comps.loc[idx] = True
@@ -511,24 +511,24 @@ class ComponentSelector:
         return likely_bold_comps
 
     @property
-    def n_likely_bold_comps(self):
+    def n_likely_bold_comps_(self):
         """The number of components that are tagged "Likely BOLD"."""
-        return self.likely_bold_comps.sum()
+        return self.likely_bold_comps_.sum()
 
     @property
-    def accepted_comps(self):
+    def accepted_comps_(self):
         """A boolean :obj:`pandas.Series` of components that are accepted."""
-        return self.component_table["classification"] == "accepted"
+        return self.component_table_["classification"] == "accepted"
 
     @property
     def n_accepted_comps(self):
         """The number of components that are accepted."""
-        return self.accepted_comps.sum()
+        return self.accepted_comps_.sum()
 
     @property
     def rejected_comps(self):
         """A boolean :obj:`pandas.Series` of components that are rejected."""
-        return self.component_table["classification"] == "rejected"
+        return self.component_table_["classification"] == "rejected"
 
     def to_files(self, io_generator):
         """Convert this selector into component files.
@@ -538,10 +538,10 @@ class ComponentSelector:
         io_generator : :obj:`tedana.io.OutputGenerator`
             The output generator to use for filename generation and saving.
         """
-        io_generator.save_file(self.component_table, "ICA metrics tsv")
+        io_generator.save_file(self.component_table_, "ICA metrics tsv")
         io_generator.save_file(
-            self.cross_component_metrics,
+            self.cross_component_metrics_,
             "ICA cross component metrics json",
         )
-        io_generator.save_file(self.component_status_table, "ICA status table tsv")
+        io_generator.save_file(self.component_status_table_, "ICA status table tsv")
         io_generator.save_file(self.tree, "ICA decision tree json")

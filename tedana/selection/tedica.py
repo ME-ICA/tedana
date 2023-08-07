@@ -9,7 +9,7 @@ LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
-def automatic_selection(component_table, n_echos, n_vols, selector):
+def automatic_selection(component_table, selector, **kwargs):
     """Classify components based on component table and decision tree type.
 
     Parameters
@@ -62,11 +62,7 @@ def automatic_selection(component_table, n_echos, n_vols, selector):
     )
 
     component_table["classification_tags"] = ""
-    xcomp = {
-        "n_echos": n_echos,
-        "n_vols": n_vols,
-    }
-    selector.select(component_table, cross_component_metrics=xcomp)
-    selector.metadata = collect.get_metadata(selector.component_table)
+    selector.select(component_table, cross_component_metrics=kwargs)
+    selector.metadata_ = collect.get_metadata(selector.component_table)
 
     return selector
