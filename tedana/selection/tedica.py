@@ -4,13 +4,12 @@ Functions to identify TE-dependent and TE-independent components.
 import logging
 
 from tedana.metrics import collect
-from tedana.selection.component_selector import ComponentSelector
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
-def automatic_selection(component_table, n_echos, n_vols, tree="kundu", verbose=False):
+def automatic_selection(component_table, n_echos, n_vols, selector):
     """Classify components based on component table and decision tree type.
 
     Parameters
@@ -21,8 +20,6 @@ def automatic_selection(component_table, n_echos, n_vols, tree="kundu", verbose=
         The number of echoes in this dataset
     tree : :obj:`str`
         The type of tree to use for the ComponentSelector object. Default="kundu"
-    verbose : :obj:`bool`
-        More verbose logging output if True. Default=False
 
     Returns
     -------
@@ -69,8 +66,7 @@ def automatic_selection(component_table, n_echos, n_vols, tree="kundu", verbose=
         "n_echos": n_echos,
         "n_vols": n_vols,
     }
-    selector = ComponentSelector(tree, component_table, cross_component_metrics=xcomp)
-    selector.select()
+    selector.select(component_table, cross_component_metrics=xcomp)
     selector.metadata = collect.get_metadata(selector.component_table)
 
     return selector

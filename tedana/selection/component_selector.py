@@ -224,23 +224,13 @@ def validate_tree(tree):
 class ComponentSelector:
     """Load and classify components based on a specified ``tree``."""
 
-    def __init__(self, tree, component_table, cross_component_metrics={}, status_table=None):
+    def __init__(self, tree):
         """Initialize the class using the info specified in the json file ``tree``.
 
         Parameters
         ----------
         tree : :obj:`str`
             The named tree or path to a JSON file that defines one.
-        component_table : (C x M) :obj:`pandas.DataFrame`
-            Component metric table. One row for each component, with a column for
-            each metric; the index should be the component number.
-        cross_component_metrics : :obj:`dict`
-            Metrics that are each a single value calculated across components.
-            Default is empty dictionary.
-        status_table : :obj:`pandas.DataFrame`
-            A table tracking the status of each component at each step.
-            Pass a status table if running additional steps on a decision
-            tree that was already executed. Default=None.
 
         Notes
         -----
@@ -274,57 +264,36 @@ class ComponentSelector:
         """
 
         self.tree_name = tree
-
-        self.__dict__.update(cross_component_metrics)
-        self.cross_component_metrics = cross_component_metrics
-
-        # Construct an un-executed selector
-        self.component_table = component_table.copy()
-
-        # To run a decision tree, each component needs to have an initial classification
-        # If the classification column doesn't exist, create it and label all components
-        # as unclassified
-        if "classification" not in self.component_table:
-            self.component_table["classification"] = "unclassified"
-
         self.tree = load_config(self.tree_name)
-        tree_config = self.tree
 
-        LGR.info("Performing component selection with " + tree_config["tree_id"])
-        LGR.info(tree_config.get("info", ""))
-        RepLGR.info(tree_config.get("report", ""))
-        RefLGR.info(tree_config.get("refs", ""))
+        LGR.info("Performing component selection with " + self.tree["tree_id"])
+        LGR.info(self.tree.get("info", ""))
+        RepLGR.info(self.tree.get("report", ""))
+        RefLGR.info(self.tree.get("refs", ""))
 
-        self.tree["nodes"] = tree_config["nodes"]
-        self.necessary_metrics = set(tree_config["necessary_metrics"])
-        self.intermediate_classifications = tree_config["intermediate_classifications"]
-        self.classification_tags = set(tree_config["classification_tags"])
-        if "used_metrics" not in self.tree.keys():
-            self.tree["used_metrics"] = set()
-        else:
-            self.tree["used_metrics"] = set(self.tree["used_metrics"])
+        self.necessary_metrics = set(self.tree["necessary_metrics"])
+        self.classification_tags = set(self.tree["classification_tags"])
+        self.tree["used_metrics"] = set(self.tree.get("used_metrics", []))
 
-        if status_table is None:
-            self.component_status_table = self.component_table[
-                ["Component", "classification"]
-            ].copy()
-            self.component_status_table = self.component_status_table.rename(
-                columns={"classification": "initialized classification"}
-            )
-            self.start_idx = 0
-        else:
-            # Since a status table exists, we need to skip nodes up to the
-            # point where the last tree finished
-            self.start_idx = len(tree_config["nodes"])
-            LGR.info(f"Start is {self.start_idx}")
-            self.component_status_table = status_table
-
-    def select(self):
+    def select(self, component_table, cross_component_metrics={}, status_table=None):
         """Apply the decision tree to data.
 
         Using the validated tree in ``ComponentSelector`` to run the decision
         tree functions to calculate cross_component metrics and classify
         each component as accepted or rejected.
+
+        Parameters
+        ----------
+        component_table : (C x M) :obj:`pandas.DataFrame`
+            Component metric table. One row for each component, with a column for
+            each metric; the index should be the component number.
+        cross_component_metrics : :obj:`dict`
+            Metrics that are each a single value calculated across components.
+            Default is empty dictionary.
+        status_table : :obj:`pandas.DataFrame`
+            A table tracking the status of each component at each step.
+            Pass a status table if running additional steps on a decision
+            tree that was already executed. Default=None.
 
         Notes
         -------
@@ -352,6 +321,33 @@ class ComponentSelector:
           everything that changed in each node
         - current_node_idx: The total number of nodes run in ``ComponentSelector``
         """
+
+        self.__dict__.update(cross_component_metrics)
+        self.cross_component_metrics = cross_component_metrics
+
+        # Construct an un-executed selector
+        self.component_table = component_table.copy()
+
+        # To run a decision tree, each component needs to have an initial classification
+        # If the classification column doesn't exist, create it and label all components
+        # as unclassified
+        if "classification" not in self.component_table:
+            self.component_table["classification"] = "unclassified"
+
+        if status_table is None:
+            self.component_status_table = self.component_table[
+                ["Component", "classification"]
+            ].copy()
+            self.component_status_table = self.component_status_table.rename(
+                columns={"classification": "initialized classification"}
+            )
+            self.start_idx = 0
+        else:
+            # Since a status table exists, we need to skip nodes up to the
+            # point where the last tree finished
+            self.start_idx = len(self.tree["nodes"])
+            LGR.info(f"Start is {self.start_idx}")
+            self.component_status_table = status_table
 
         if "classification_tags" not in self.component_table.columns:
             self.component_table["classification_tags"] = ""

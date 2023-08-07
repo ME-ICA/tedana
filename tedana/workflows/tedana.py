@@ -29,6 +29,7 @@ from tedana import (
     utils,
 )
 from tedana.bibtex import get_description_references
+from tedana.selection.component_selector import ComponentSelector
 from tedana.stats import computefeats2
 from tedana.workflows.parser_utils import check_tedpca_value, is_valid_file
 
@@ -652,19 +653,8 @@ def tedana_workflow(
             # generated from dimensionally reduced data using full data (i.e., data
             # with thermal noise)
             LGR.info("Making second component selection guess from ICA results")
-            required_metrics = [
-                "kappa",
-                "rho",
-                "countnoise",
-                "countsigFT2",
-                "countsigFS0",
-                "dice_FT2",
-                "dice_FS0",
-                "signal-noise_t",
-                "variance explained",
-                "normalized variance explained",
-                "d_table_score",
-            ]
+            ica_selector = ComponentSelector(tree)
+            necessary_metrics = ica_selector.necessary_metrics
             comptable = metrics.collect.generate_metrics(
                 catd,
                 data_oc,
@@ -673,9 +663,9 @@ def tedana_workflow(
                 tes,
                 io_generator,
                 "ICA",
-                metrics=required_metrics,
+                metrics=necessary_metrics,
             )
-            ica_selector = selection.automatic_selection(comptable, n_echos, n_vols, tree=tree)
+            ica_selector = selection.automatic_selection(comptable, n_echos, n_vols, ica_selector)
             n_likely_bold_comps = ica_selector.n_likely_bold_comps
             if (n_restarts < maxrestart) and (n_likely_bold_comps == 0):
                 LGR.warning("No BOLD components found. Re-attempting ICA.")
@@ -696,7 +686,7 @@ def tedana_workflow(
         mixing_file = io_generator.get_name("ICA mixing tsv")
         mmix = pd.read_table(mixing_file).values
 
-        required_metrics = [
+        necessary_metrics = [
             "kappa",
             "rho",
             "countnoise",
@@ -717,7 +707,7 @@ def tedana_workflow(
             tes,
             io_generator,
             "ICA",
-            metrics=required_metrics,
+            metrics=necessary_metrics,
         )
         ica_selector = selection.automatic_selection(
             comptable,
