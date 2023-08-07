@@ -54,7 +54,7 @@ def _generate_buttons(out_dir, io_generator):
     return buttons_html
 
 
-def _update_template_bokeh(bokeh_id, about, references, bokeh_js, buttons):
+def _update_template_bokeh(bokeh_id, about, prefix, references, bokeh_js, buttons):
     """
     Populate a report with content.
 
@@ -64,6 +64,8 @@ def _update_template_bokeh(bokeh_id, about, references, bokeh_js, buttons):
         HTML div created by bokeh.embed.components
     about : str
         Reporting information for a given run
+    prefix : str
+        Prefix for the outputted figures
     references : str
         BibTeX references associated with the reporting information
     bokeh_js : str
@@ -74,12 +76,15 @@ def _update_template_bokeh(bokeh_id, about, references, bokeh_js, buttons):
     """
     resource_path = Path(__file__).resolve().parent.joinpath("data", "html")
 
+    # Initial carpet plot (default one)
+    initial_carpet = f"./figures/{prefix}carpet_optcom.svg"
+
     body_template_name = "report_body_template.html"
     body_template_path = resource_path.joinpath(body_template_name)
     with open(str(body_template_path), "r") as body_file:
         body_tpl = Template(body_file.read())
     body = body_tpl.substitute(
-        content=bokeh_id, about=about, references=references, javascript=bokeh_js, buttons=buttons
+        content=bokeh_id, about=about, prefix=prefix, initialCarpet=initial_carpet, references=references, javascript=bokeh_js, buttons=buttons
     )
     return body
 
@@ -231,6 +236,7 @@ def generate_report(io_generator, tr):
         bokeh_id=kr_div,
         about=about,
         references=references,
+        prefix=io_generator.prefix,
         bokeh_js=kr_script,
         buttons=buttons_html,
     )

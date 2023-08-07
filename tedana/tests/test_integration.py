@@ -265,6 +265,7 @@ def test_integration_five_echo(skip_integration):
         fixed_seed=49,
         tedort=True,
         verbose=True,
+        prefix="sub-01",
     )
 
     # Just a check on the component table pending a unit test of load_comptable
