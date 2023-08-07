@@ -10,7 +10,6 @@ from tedana.stats import getfbounds
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 ##############################################################
 # Functions that are used for interacting with component_table
@@ -309,10 +308,6 @@ def clean_dataframe(component_table):
 
     return component_table
 
-
-LGR = logging.getLogger("GENERAL")
-RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 #################################################
 # Functions to validate inputs or log information
