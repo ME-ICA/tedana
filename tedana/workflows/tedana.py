@@ -686,19 +686,8 @@ def tedana_workflow(
         mixing_file = io_generator.get_name("ICA mixing tsv")
         mmix = pd.read_table(mixing_file).values
 
-        necessary_metrics = [
-            "kappa",
-            "rho",
-            "countnoise",
-            "countsigFT2",
-            "countsigFS0",
-            "dice_FT2",
-            "dice_FS0",
-            "signal-noise_t",
-            "variance explained",
-            "normalized variance explained",
-            "d_table_score",
-        ]
+        ica_selector = ComponentSelector(tree)
+        necessary_metrics = ica_selector.necessary_metrics
         comptable = metrics.collect.generate_metrics(
             catd,
             data_oc,
@@ -709,12 +698,7 @@ def tedana_workflow(
             "ICA",
             metrics=necessary_metrics,
         )
-        ica_selector = selection.automatic_selection(
-            comptable,
-            n_echos,
-            n_vols,
-            tree=tree,
-        )
+        ica_selector = selection.automatic_selection(comptable, n_echos, n_vols, ica_selector)
 
     # TODO The ICA mixing matrix should be written out after it is created
     #     It is currently being writen after component selection is done
