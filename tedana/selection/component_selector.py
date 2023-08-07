@@ -95,7 +95,6 @@ def validate_tree(tree):
         "tree_id",
         "info",
         "report",
-        "refs",
         "necessary_metrics",
         "intermediate_classifications",
         "classification_tags",

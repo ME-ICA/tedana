@@ -202,10 +202,9 @@ that is used to check whether results are plausible & can help avoid mistakes.
     A brief description of the tree for info logging
 
 - report
-    A narrative description of the tree that could be used in report logging
-
-- refs
-    Publications that should be referenced when this tree is used
+    A narrative description of the tree that could be used in report logging.
+    This should include any citations, which must be included in the references
+    BibTeX file.
 
 - necessary_metrics
     A list of the necessary metrics in the component table that will be used
