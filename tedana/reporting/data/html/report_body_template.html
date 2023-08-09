@@ -1,4 +1,9 @@
 <style type="text/css">
+  .report {
+    display: flex;
+    flex-direction: column;
+  }
+
   .content {
     margin-left: 5%;
     margin-right: 5%;
@@ -40,6 +45,14 @@
 
   .carpet-image {
     margin-top: 20px;
+  }
+
+  .info {
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-bottom: 150px;
+    height: auto;
+    float: left;
   }
 
   button {
@@ -153,29 +166,31 @@
     }
   }
 </script>
-<div class="content">
-  <h1>ICA components</h1>
-  $content
-</div>
-<div class="carpet-plots">
-  <h1>Carpet plots</h1>
-  <div class="carpet-wrapper">
-    <div class="carpet-buttons">$buttons</div>
-    <div class="carpet-plots-image">
-      <img id="imgCarpetPlot" src="./figures/carpet_optcom.svg" />
+<div class="report">
+  <div class="content">
+    <h1>ICA components</h1>
+    $content
+  </div>
+  <div class="carpet-plots">
+    <h1>Carpet plots</h1>
+    <div class="carpet-wrapper">
+      <div class="carpet-buttons">$buttons</div>
+      <div class="carpet-plots-image">
+        <img id="imgCarpetPlot" src="./figures/carpet_optcom.svg" />
+      </div>
     </div>
   </div>
-</div>
-<div class="info">
-  <h1>Info</h1>
-  $info
-</div>
-<div class="about">
-  <h1>About tedana</h1>
-  $about
+  <div class="info">
+    <h1>Info</h1>
+    $info
+  </div>
+  <div class="about">
+    <h1>About tedana</h1>
+    $about
 
-  <h1>References</h1>
-  $references
+    <h1>References</h1>
+    $references
+  </div>
 </div>
 
 $javascript

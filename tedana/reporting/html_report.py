@@ -54,7 +54,7 @@ def _generate_buttons(out_dir):
     return buttons_html
 
 
-def _update_template_bokeh(bokeh_id, about, references, bokeh_js, buttons):
+def _update_template_bokeh(bokeh_id, info_table, about, references, bokeh_js, buttons):
     """
     Populate a report with content.
 
@@ -70,6 +70,8 @@ def _update_template_bokeh(bokeh_id, about, references, bokeh_js, buttons):
         BibTeX references associated with the reporting information
     bokeh_js : str
         Javascript created by bokeh.embed.components
+    buttons : str
+        HTML div created by _generate_buttons()
     Returns
     -------
     HTMLReport : an instance of a populated HTML report
@@ -81,7 +83,7 @@ def _update_template_bokeh(bokeh_id, about, references, bokeh_js, buttons):
     with open(str(body_template_path), "r") as body_file:
         body_tpl = Template(body_file.read())
     body = body_tpl.substitute(
-        content=bokeh_id, about=about, references=references, javascript=bokeh_js, buttons=buttons
+        content=bokeh_id, info=info_table, about=about, references=references, javascript=bokeh_js, buttons=buttons
     )
     return body
 
@@ -257,8 +259,16 @@ def generate_report(io_generator, tr):
     with open(opj(io_generator.out_dir, "references.bib"), "r") as f:
         references = f.read()
 
+    # Read info table
+    data_descr_path = io_generator.get_name("data description json")
+    data_descr_dict = load_json(data_descr_path)
+
+    # Create info table
+    info_table = _generate_info_table(data_descr_dict)
+
     body = _update_template_bokeh(
         bokeh_id=kr_div,
+        info_table=info_table,
         about=about,
         references=references,
         bokeh_js=kr_script,

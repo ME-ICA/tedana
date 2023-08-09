@@ -3,6 +3,7 @@ Utilities for tedana package
 """
 import logging
 import os.path as op
+import platform
 import warnings
 
 import nibabel as nib
@@ -440,7 +441,7 @@ def get_system_info():
     """
     system_info = platform.uname()
 
-    system_dict = {
+    return {
         "System": system_info.system,
         "Node": system_info.node,
         "Release": system_info.release,
@@ -448,34 +449,3 @@ def get_system_info():
         "Machine": system_info.machine,
         "Processor": system_info.processor,
     }
-
-    return system_dict
-
-
-def write_tedana_command(arg_vals):
-    """Write a CLI-style command with the arguments given to run tedana.
-
-    Parameters
-    ----------
-    arg_vals : dict
-        Dictionary with arguments and values of passed to the tedana function.
-
-    Returns
-    -------
-    str
-        Arguments given to tedana and their values formatted in CLI-style.
-    """
-    # Deleta frame from dictionary
-    del arg_vals["frame"]
-
-    command = "tedana"
-
-    for key, val in arg_vals.items():
-        # Data and TE are lists
-        if type(val) is list:
-            values = " ".join(str(x) for x in val)
-        else:
-            values = val
-        command += f" <b>--{key}</b> {values}"
-
-    return command
