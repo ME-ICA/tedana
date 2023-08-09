@@ -446,8 +446,12 @@ def tedana_workflow(
     ----------
     .. footbibliography::
     """
-    frame = inspect.currentframe()
-    _, _, _, arg_values = inspect.getargvalues(frame)
+    # Get variables passed to function if the tedana command is None
+    if tedana_command is None:
+        variables = ", ".join(f"{name}={value}" for name, value in locals().items())
+        # From variables, remove everything after ", tedana_command"
+        variables = variables.split(", tedana_command")[0]
+        tedana_command = f"tedana_workflow({variables})"
 
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
@@ -913,6 +917,7 @@ def tedana_workflow(
 
 def _main(argv=None):
     """Tedana entry point"""
+    breakpoint()
     tedana_command = "tedana " + " ".join(sys.argv[1:])
     options = _get_parser().parse_args(argv)
     kwargs = vars(options)
