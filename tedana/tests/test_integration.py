@@ -269,7 +269,7 @@ def test_integration_five_echo(skip_integration):
     )
 
     # Just a check on the component table pending a unit test of load_comptable
-    comptable = os.path.join(out_dir, "desc-tedana_metrics.tsv")
+    comptable = os.path.join(out_dir, "sub-01_desc-tedana_metrics.tsv")
     df = pd.read_table(comptable)
     assert isinstance(df, pd.DataFrame)
 
