@@ -446,12 +446,6 @@ def tedana_workflow(
     ----------
     .. footbibliography::
     """
-    # Get variables passed to function if the tedana command is None
-    if tedana_command is None:
-        variables = ", ".join(f"{name}={value}" for name, value in locals().items())
-        # From variables, remove everything after ", tedana_command"
-        variables = variables.split(", tedana_command")[0]
-        tedana_command = f"tedana_workflow({variables})"
 
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
@@ -514,6 +508,13 @@ def tedana_workflow(
         command_file = open(os.path.join(out_dir, "call.sh"), "w")
         command_file.write(tedana_command)
         command_file.close()
+    else:
+        # Get variables passed to function if the tedana command is None
+        variables = ", ".join(f"{name}={value}" for name, value in locals().items())
+        # From variables, remove everything after ", tedana_command"
+        variables = variables.split(", tedana_command")[0]
+        tedana_command = f"tedana_workflow({variables})"
+
 
     # Record inputs to OutputGenerator
     # TODO: turn this into an IOManager since this isn't really output
