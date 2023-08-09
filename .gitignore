@@ -1,5 +1,10 @@
+# setuptools-scm
+tedana/_version.py
+
+.DS_Store
 docs/generated/
 .pytest_cache/
+.testing_data_cache/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -108,7 +113,6 @@ ENV/
 
 # jupyter notebooks
 .ipynb_checkpoints/
-*.ipynb
 
 # vim swap files
 *.swp

@@ -4,11 +4,11 @@
         "bidsv1.5.0": "desc-adaptiveGoodSignal_mask"
     },
     "t2star img": {
-        "orig": "t2sv",
+        "orig": "t2svG",
         "bidsv1.5.0": "T2starmap"
     },
     "s0 img": {
-        "orig": "s0v",
+        "orig": "s0vG",
         "bidsv1.5.0": "S0map"
     },
     "combined img": {
@@ -47,17 +47,17 @@
         "orig": "lowk_ts_OC",
         "bidsv1.5.0": "desc-optcomRejected_bold"
     },
-    "full t2star img": {
-        "orig": "t2svG",
-        "bidsv1.5.0": "desc-full_T2starmap"
+    "limited t2star img": {
+        "orig": "t2sv",
+        "bidsv1.5.0": "desc-limited_T2starmap"
     },
-    "full s0 img": {
-        "orig": "s0vG",
-        "bidsv1.5.0": "desc-full_S0map"
+    "limited s0 img": {
+        "orig": "s0v",
+        "bidsv1.5.0": "desc-limited_S0map"
     },
     "whitened img": {
         "orig": "ts_OC_whitened",
-        "bidsv1.5.0": "desc-optcomPCAReduced_bold"
+        "bidsv1.5.0": "desc-optcom_whitened_bold"
     },
     "echo weight PCA map split img": {
         "orig": "e{echo}_PCA_comp",
@@ -74,6 +74,14 @@
     "PCA component weights img": {
         "orig": "pca_weights",
         "bidsv1.5.0": "desc-PCAAveragingWeights_components"
+    },
+    "PCA component F-T2 img": {
+        "orig": "pca_FT2",
+        "bidsv1.5.0": "desc-PCAT2_stat-F_statmap"
+    },
+    "PCA component F-S0 img": {
+        "orig": "pca_FS0",
+        "bidsv1.5.0": "desc-PCAS0_stat-F_statmap"
     },
     "PCA reduced img": {
         "orig": "oc_reduced",
@@ -94,6 +102,14 @@
     "ICA component weights img": {
         "orig": "ica_weights",
         "bidsv1.5.0": "desc-ICAAveragingWeights_components"
+    },
+    "ICA component F-T2 img": {
+        "orig": "ica_FT2",
+        "bidsv1.5.0": "desc-ICAT2_stat-F_statmap"
+    },
+    "ICA component F-S0 img": {
+        "orig": "ica_FS0",
+        "bidsv1.5.0": "desc-ICAS0_stat-F_statmap"
     },
     "high kappa ts split img": {
         "orig": "hik_ts_e{echo}",
@@ -147,6 +163,10 @@
         "orig": "pca_metrics",
         "bidsv1.5.0": "desc-PCA_metrics"
     },
+    "PCA cross component metrics json": {
+        "orig": "pca_cross_component_metrics",
+        "bidsv1.5.0": "desc-PCACrossComponent_metrics"
+    },
     "ICA decomposition json": {
         "orig": "ica_decomposition",
         "bidsv1.5.0": "desc-ICA_decomposition"
@@ -171,6 +191,18 @@
         "orig": "ica_metrics",
         "bidsv1.5.0": "desc-tedana_metrics"
     },
+    "ICA cross component metrics json": {
+        "orig": "ica_cross_component_metrics",
+        "bidsv1.5.0": "desc-ICACrossComponent_metrics"
+    },
+    "ICA status table tsv": {
+        "orig": "ica_status_table",
+        "bidsv1.5.0": "desc-ICA_status_table"
+    },
+    "ICA decision tree json": {
+        "orig": "ica_decision_tree",
+        "bidsv1.5.0": "desc-ICA_decision_tree"
+    },
     "global signal time series tsv": {
         "orig": "global_signal_ts",
         "bidsv1.5.0": "desc-globalSignal_timeseries"
@@ -182,5 +214,9 @@
     "ICA orthogonalized mixing tsv": {
         "orig": "ica_orth_mixing",
         "bidsv1.5.0": "desc-ICAOrth_mixing"
+    },
+    "registry json": {
+        "orig": "registry",
+        "bidsv1.5.0": "desc-tedana_registry"
     }
 }

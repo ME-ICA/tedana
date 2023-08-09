@@ -9,11 +9,9 @@ from scipy import stats
 from scipy.special import lpmv
 
 from tedana import utils
-from tedana.due import due, Doi
 
-LGR = logging.getLogger(__name__)
+LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 def gscontrol_raw(catd, optcom, n_echos, io_generator, dtrank=4):
@@ -47,19 +45,27 @@ def gscontrol_raw(catd, optcom, n_echos, io_generator, dtrank=4):
     dm_optcom : (S x T) array_like
         Input `optcom` with global signal removed from time series
     """
-    LGR.info('Applying amplitude-based T1 equilibration correction')
-    RepLGR.info("Global signal regression was applied to the multi-echo "
-                "and optimally combined datasets.")
+    LGR.info("Applying amplitude-based T1 equilibration correction")
+    RepLGR.info(
+        "Global signal regression was applied to the multi-echo "
+        "and optimally combined datasets."
+    )
     if catd.shape[0] != optcom.shape[0]:
-        raise ValueError('First dimensions of catd ({0}) and optcom ({1}) do not '
-                         'match'.format(catd.shape[0], optcom.shape[0]))
+        raise ValueError(
+            "First dimensions of catd ({0}) and optcom ({1}) do not "
+            "match".format(catd.shape[0], optcom.shape[0])
+        )
     elif catd.shape[1] != n_echos:
-        raise ValueError('Second dimension of catd ({0}) does not match '
-                         'n_echos ({1})'.format(catd.shape[1], n_echos))
+        raise ValueError(
+            "Second dimension of catd ({0}) does not match "
+            "n_echos ({1})".format(catd.shape[1], n_echos)
+        )
     elif catd.shape[2] != optcom.shape[1]:
-        raise ValueError('Third dimension of catd ({0}) does not match '
-                         'second dimension of optcom '
-                         '({1})'.format(catd.shape[2], optcom.shape[1]))
+        raise ValueError(
+            "Third dimension of catd ({0}) does not match "
+            "second dimension of optcom "
+            "({1})".format(catd.shape[2], optcom.shape[1])
+        )
 
     # Legendre polynomial basis for denoising
     bounds = np.linspace(-1, 1, optcom.shape[-1])
@@ -83,14 +89,17 @@ def gscontrol_raw(catd, optcom, n_echos, io_generator, dtrank=4):
     glsig = np.linalg.lstsq(np.atleast_2d(sphis).T, dat, rcond=None)[0]
     glsig = stats.zscore(glsig, axis=None)
 
-    glsig_df = pd.DataFrame(data=glsig.T, columns=['global_signal'])
+    glsig_df = pd.DataFrame(data=glsig.T, columns=["global_signal"])
     io_generator.save_file(glsig_df, "global signal time series tsv")
     glbase = np.hstack([Lmix, glsig.T])
 
     # Project global signal out of optimally combined data
     sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T, rcond=None)[0]
-    tsoc_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T,
-                             np.atleast_2d(glbase.T[dtrank])) + Gmu[Gmask][:, np.newaxis]
+    tsoc_nogs = (
+        dat
+        - np.dot(np.atleast_2d(sol[dtrank]).T, np.atleast_2d(glbase.T[dtrank]))
+        + Gmu[Gmask][:, np.newaxis]
+    )
 
     io_generator.save_file(optcom, "has gs combined img")
     dm_optcom = utils.unmask(tsoc_nogs, Gmask)
@@ -101,23 +110,19 @@ def gscontrol_raw(catd, optcom, n_echos, io_generator, dtrank=4):
     for echo in range(n_echos):
         dat = dm_catd[:, echo, :][Gmask]
         sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T, rcond=None)[0]
-        e_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T,
-                              np.atleast_2d(glbase.T[dtrank]))
+        e_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T, np.atleast_2d(glbase.T[dtrank]))
         dm_catd[:, echo, :] = utils.unmask(e_nogs, Gmask)
 
     return dm_catd, dm_optcom
 
 
-@due.dcite(Doi("10.1073/pnas.1301725110"),
-           description="Minimum image regression to remove T1-like effects "
-                       "from the denoised data.")
 def minimum_image_regression(optcom_ts, mmix, mask, comptable, io_generator):
     """
     Perform minimum image regression (MIR) to remove T1-like effects from
     BOLD-like components.
 
     While this method has not yet been described in detail in any publications,
-    we recommend that users cite [1]_.
+    we recommend that users cite :footcite:t:`kundu2013integrated`.
 
     Parameters
     ----------
@@ -163,23 +168,12 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, io_generator):
 
     References
     ----------
-    .. [1] Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E.,
-           Inati, S. J., ... & Bullmore, E. T. (2013).
-           Integrated strategy for improving functional connectivity mapping
-           using multiecho fMRI.
-           Proceedings of the National Academy of Sciences, 110(40), 16187-16192.
+    .. footbibliography::
     """
     LGR.info("Performing minimum image regression to remove spatially-diffuse noise")
     RepLGR.info(
         "Minimum image regression was then applied to the "
-        "data in order to remove spatially diffuse noise (Kundu et al., 2013)."
-    )
-    RefLGR.info(
-        "Kundu, P., Brenowitz, N. D., Voon, V., Worbe, Y., Vértes, P. E., "
-        "Inati, S. J., ... & Bullmore, E. T. (2013). "
-        "Integrated strategy for improving functional connectivity mapping "
-        "using multiecho fMRI. "
-        "Proceedings of the National Academy of Sciences, 110(40), 16187-16192."
+        "data in order to remove spatially diffuse noise \\citep{kundu2013integrated}."
     )
 
     all_comps = comptable.index.values
@@ -218,9 +212,7 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, io_generator):
     io_generator.save_file(utils.unmask(medn_ts, mask), "mir denoised img")
 
     # Orthogonalize mixing matrix w.r.t. T1-GS
-    mmix_noT1gs = mmix.T - np.dot(
-        np.linalg.lstsq(glob_sig.T, mmix, rcond=None)[0].T, glob_sig
-    )
+    mmix_noT1gs = mmix.T - np.dot(np.linalg.lstsq(glob_sig.T, mmix, rcond=None)[0].T, glob_sig)
     mmix_noT1gs_z = stats.zscore(mmix_noT1gs, axis=-1)
     mmix_noT1gs_z = np.vstack(
         (np.atleast_2d(np.ones(max(glob_sig.shape))), glob_sig, mmix_noT1gs_z)
