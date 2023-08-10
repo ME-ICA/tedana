@@ -1,6 +1,5 @@
 S0map.nii.gz
 T2starmap.nii.gz
-tedana_call.sh
 dataset_description.json
 desc-ICAAccepted_components.nii.gz
 desc-ICAAccepted_stat-z_components.nii.gz
