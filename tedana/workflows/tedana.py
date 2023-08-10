@@ -503,7 +503,7 @@ def tedana_workflow(
     )
 
     # Save command into sh file, if the command-line interface was used
-    #TODO: use io_generator to save command
+    # TODO: use io_generator to save command
     if tedana_command is not None:
         command_file = open(os.path.join(out_dir, "call.sh"), "w")
         command_file.write(tedana_command)
@@ -515,7 +515,6 @@ def tedana_workflow(
         variables = variables.split(", tedana_command")[0]
         tedana_command = f"tedana_workflow({variables})"
 
-
     # Record inputs to OutputGenerator
     # TODO: turn this into an IOManager since this isn't really output
     io_generator.register_input(data)
@@ -523,6 +522,7 @@ def tedana_workflow(
     # Save system info to json
     info_dict = utils.get_system_info()
     info_dict["Python"] = sys.version
+    info_dict["Command"] = tedana_command
 
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug("Resulting data shape: {}".format(catd.shape))
@@ -850,10 +850,10 @@ def tedana_workflow(
                     "Machine": info_dict["Machine"],
                     "Processor": info_dict["Processor"],
                     "Release": info_dict["Release"],
-                    "Version": info_dict["Version"]
+                    "Version": info_dict["Version"],
                 },
                 "Python": info_dict["Python"],
-                "Command": tedana_command
+                "Command": info_dict["Command"],
             }
         ],
     }
