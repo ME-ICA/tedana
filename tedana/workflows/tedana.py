@@ -505,7 +505,7 @@ def tedana_workflow(
     # Save command into sh file, if the command-line interface was used
     # TODO: use io_generator to save command
     if tedana_command is not None:
-        command_file = open(os.path.join(out_dir, "call.sh"), "w")
+        command_file = open(os.path.join(out_dir, "tedana_call.sh"), "w")
         command_file.write(tedana_command)
         command_file.close()
     else:
@@ -918,7 +918,6 @@ def tedana_workflow(
 
 def _main(argv=None):
     """Tedana entry point"""
-    breakpoint()
     tedana_command = "tedana " + " ".join(sys.argv[1:])
     options = _get_parser().parse_args(argv)
     kwargs = vars(options)
