@@ -212,10 +212,10 @@ def _parse_manual_list(manual_list):
     elif op.exists(op.expanduser(str(manual_list[0]).strip(" "))):
         # filename was given
         manual_nums = fname_to_component_list(op.expanduser(str(manual_list[0]).strip(" ")))
-    elif type(manual_list[0]) == str:
+    elif type(manual_list[0]) is str:
         # arbitrary string was given, length of list is 1
         manual_nums = str_to_component_list(manual_list[0])
-    elif type(manual_list[0]) == int:
+    elif type(manual_list[0]) is int:
         # Is a single integer and should remain a list with a single integer
         manual_nums = manual_list
     else:
