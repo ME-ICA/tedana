@@ -185,7 +185,7 @@ def test_minimal():
         sample_comptable(),
         cross_component_metrics=xcomp.copy(),
     )
-    selector.component_table = selector.component_table.drop(columns="classification_tags")
+    selector.component_table_ = selector.component_table_.drop(columns="classification_tags")
     selector.select()
 
 
@@ -310,8 +310,8 @@ def test_are_all_components_accepted_or_rejected():
     """Tests warnings are triggered in are_all_components_accepted_or_rejected"""
 
     selector = component_selector.ComponentSelector("minimal", sample_comptable())
-    selector.component_table.loc[7, "classification"] = "intermediate1"
-    selector.component_table.loc[[1, 3, 5], "classification"] = "intermediate2"
+    selector.component_table_.loc[7, "classification"] = "intermediate1"
+    selector.component_table_.loc[[1, 3, 5], "classification"] = "intermediate2"
     selector.are_all_components_accepted_or_rejected()
 
 

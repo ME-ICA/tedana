@@ -85,7 +85,7 @@ def manual_classify(
     """
     # predefine all outputs that should be logged
     outputs = {
-        "decision_node_idx": selector.current_node_idx,
+        "decision_node_idx": selector.current_node_idx_,
         "used_metrics": set(),
         "node_label": None,
         "n_true": None,
@@ -98,7 +98,7 @@ def manual_classify(
     if_true = new_classification
     if_false = "nochange"
 
-    function_name_idx = f"Step {selector.current_node_idx}: manual_classify"
+    function_name_idx = f"Step {selector.current_node_idx_}: manual_classify"
     if custom_node_label:
         outputs["node_label"] = custom_node_label
     else:
@@ -140,7 +140,7 @@ def manual_classify(
         selector.component_table_["classification_tags"] = ""
         LGR.info(function_name_idx + " component classification tags are cleared")
 
-    selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
+    selector.tree["nodes"][selector.current_node_idx_]["outputs"] = outputs
 
     return selector
 
@@ -233,7 +233,7 @@ def dec_left_op_right(
     """
     # predefine all outputs that should be logged
     outputs = {
-        "decision_node_idx": selector.current_node_idx,
+        "decision_node_idx": selector.current_node_idx_,
         "used_metrics": set(),
         "used_cross_component_metrics": set(),
         "node_label": None,
@@ -241,7 +241,7 @@ def dec_left_op_right(
         "n_false": None,
     }
 
-    function_name_idx = f"Step {selector.current_node_idx}: left_op_right"
+    function_name_idx = f"Step {selector.current_node_idx_}: left_op_right"
     # Only select components if the decision tree is being run
     if not only_used_metrics:
         comps2use = selectcomps2use(selector, decide_comps)
@@ -461,7 +461,7 @@ def dec_left_op_right(
             if_false=if_false,
         )
 
-    selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
+    selector.tree["nodes"][selector.current_node_idx_]["outputs"] = outputs
 
     return selector
 
@@ -518,7 +518,7 @@ def dec_variance_lessthan_thresholds(
     %(used_metrics)s
     """
     outputs = {
-        "decision_node_idx": selector.current_node_idx,
+        "decision_node_idx": selector.current_node_idx_,
         "used_metrics": set([var_metric]),
         "node_label": None,
         "n_true": None,
@@ -528,7 +528,7 @@ def dec_variance_lessthan_thresholds(
     if only_used_metrics:
         return outputs["used_metrics"]
 
-    function_name_idx = f"Step {selector.current_node_idx}: variance_lt_thresholds"
+    function_name_idx = f"Step {selector.current_node_idx_}: variance_lt_thresholds"
     if custom_node_label:
         outputs["node_label"] = custom_node_label
     else:
@@ -590,7 +590,7 @@ def dec_variance_lessthan_thresholds(
             if_false=if_false,
         )
 
-    selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
+    selector.tree["nodes"][selector.current_node_idx_]["outputs"] = outputs
     return selector
 
 
@@ -626,7 +626,7 @@ def calc_median(
     %(selector)s
     %(used_metrics)s
     """
-    function_name_idx = f"Step {selector.current_node_idx}: calc_median"
+    function_name_idx = f"Step {selector.current_node_idx_}: calc_median"
     if not isinstance(median_label, str):
         raise ValueError(
             f"{function_name_idx}: median_label must be a string. It is: {median_label}"
@@ -640,7 +640,7 @@ def calc_median(
         )
 
     outputs = {
-        "decision_node_idx": selector.current_node_idx,
+        "decision_node_idx": selector.current_node_idx_,
         "node_label": None,
         label_name: None,
         "used_metrics": set([metric_name]),
@@ -684,7 +684,7 @@ def calc_median(
 
         log_decision_tree_step(function_name_idx, comps2use, calc_outputs=outputs)
 
-    selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
+    selector.tree["nodes"][selector.current_node_idx_]["outputs"] = outputs
 
     return selector
 
@@ -729,7 +729,7 @@ def calc_kappa_elbow(
     are called
     """
     outputs = {
-        "decision_node_idx": selector.current_node_idx,
+        "decision_node_idx": selector.current_node_idx_,
         "node_label": None,
         "n_echos": selector.n_echos,
         "used_metrics": set(["kappa"]),
@@ -748,7 +748,7 @@ def calc_kappa_elbow(
     if only_used_metrics:
         return outputs["used_metrics"]
 
-    function_name_idx = f"Step {selector.current_node_idx}: calc_kappa_elbow"
+    function_name_idx = f"Step {selector.current_node_idx_}: calc_kappa_elbow"
 
     if ("kappa_elbow_kundu" in selector.cross_component_metrics_) and (
         "kappa_elbow_kundu" in outputs["calc_cross_comp_metrics"]
@@ -799,7 +799,7 @@ def calc_kappa_elbow(
 
         log_decision_tree_step(function_name_idx, comps2use, calc_outputs=outputs)
 
-    selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
+    selector.tree["nodes"][selector.current_node_idx_]["outputs"] = outputs
 
     return selector
 
@@ -848,7 +848,7 @@ def calc_rho_elbow(
     for a more detailed explanation of the difference between the kundu and liberal
     options.
     """
-    function_name_idx = f"Step {selector.current_node_idx}: calc_rho_elbow"
+    function_name_idx = f"Step {selector.current_node_idx_}: calc_rho_elbow"
 
     if rho_elbow_type == "kundu".lower():
         elbow_name = "rho_elbow_kundu"
@@ -861,7 +861,7 @@ def calc_rho_elbow(
         )
 
     outputs = {
-        "decision_node_idx": selector.current_node_idx,
+        "decision_node_idx": selector.current_node_idx_,
         "node_label": None,
         "n_echos": selector.n_echos,
         "calc_cross_comp_metrics": [
@@ -934,7 +934,7 @@ def calc_rho_elbow(
 
         log_decision_tree_step(function_name_idx, comps2use, calc_outputs=outputs)
 
-    selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
+    selector.tree["nodes"][selector.current_node_idx_]["outputs"] = outputs
 
     return selector
 
@@ -998,7 +998,7 @@ def dec_classification_doesnt_exist(
     """
     # predefine all outputs that should be logged
     outputs = {
-        "decision_node_idx": selector.current_node_idx,
+        "decision_node_idx": selector.current_node_idx_,
         "used_metrics": set(),
         "used_cross_comp_metrics": set(),
         "node_label": None,
@@ -1009,7 +1009,7 @@ def dec_classification_doesnt_exist(
     if only_used_metrics:
         return outputs["used_metrics"]
 
-    function_name_idx = f"Step {selector.current_node_idx}: classification_doesnt_exist"
+    function_name_idx = f"Step {selector.current_node_idx_}: classification_doesnt_exist"
     if custom_node_label:
         outputs["node_label"] = custom_node_label
     elif at_least_num_exist == 1:
@@ -1066,7 +1066,7 @@ def dec_classification_doesnt_exist(
             if_false=if_false,
         )
 
-    selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
+    selector.tree["nodes"][selector.current_node_idx_]["outputs"] = outputs
 
     return selector
 
@@ -1117,7 +1117,7 @@ def dec_reclassify_high_var_comps(
     """
     # predefine all outputs that should be logged
     outputs = {
-        "decision_node_idx": selector.current_node_idx,
+        "decision_node_idx": selector.current_node_idx_,
         "used_metrics": set(["variance explained"]),
         "used_cross_comp_metrics": set(["varex_upper_p"]),
         "node_label": None,
@@ -1128,7 +1128,7 @@ def dec_reclassify_high_var_comps(
     if only_used_metrics:
         return outputs["used_metrics"]
 
-    function_name_idx = f"Step {selector.current_node_idx}: reclassify_high_var_comps"
+    function_name_idx = f"Step {selector.current_node_idx_}: reclassify_high_var_comps"
     if custom_node_label:
         outputs["node_label"] = custom_node_label
     else:
@@ -1205,7 +1205,7 @@ def dec_reclassify_high_var_comps(
             if_false=if_false,
         )
 
-    selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
+    selector.tree["nodes"][selector.current_node_idx_]["outputs"] = outputs
 
     return selector
 
@@ -1253,7 +1253,7 @@ def calc_varex_thresh(
     %(selector)s
     %(used_metrics)s
     """
-    function_name_idx = f"Step {selector.current_node_idx}: calc_varex_thresh"
+    function_name_idx = f"Step {selector.current_node_idx_}: calc_varex_thresh"
     thresh_label = thresh_label.lower()
     if thresh_label is None or thresh_label == "":
         varex_name = "varex_thresh"
@@ -1263,7 +1263,7 @@ def calc_varex_thresh(
         perc_name = f"{thresh_label}_perc"
 
     outputs = {
-        "decision_node_idx": selector.current_node_idx,
+        "decision_node_idx": selector.current_node_idx_,
         "node_label": None,
         varex_name: None,
         "num_highest_var_comps": num_highest_var_comps,
@@ -1373,7 +1373,7 @@ def calc_varex_thresh(
 
         log_decision_tree_step(function_name_idx, comps2use, calc_outputs=outputs)
 
-    selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
+    selector.tree["nodes"][selector.current_node_idx_]["outputs"] = outputs
 
     return selector
 
@@ -1412,7 +1412,7 @@ def calc_extend_factor(
     """
     outputs = {
         "used_metrics": set(),
-        "decision_node_idx": selector.current_node_idx,
+        "decision_node_idx": selector.current_node_idx_,
         "node_label": None,
         "extend_factor": None,
         "calc_cross_comp_metrics": ["extend_factor"],
@@ -1421,7 +1421,7 @@ def calc_extend_factor(
     if only_used_metrics:
         return outputs["used_metrics"]
 
-    function_name_idx = f"Step {selector.current_node_idx}: calc_extend_factor"
+    function_name_idx = f"Step {selector.current_node_idx_}: calc_extend_factor"
 
     if "extend_factor" in selector.cross_component_metrics_:
         LGR.warning(
@@ -1446,7 +1446,7 @@ def calc_extend_factor(
 
     log_decision_tree_step(function_name_idx, -1, calc_outputs=outputs)
 
-    selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
+    selector.tree["nodes"][selector.current_node_idx_]["outputs"] = outputs
 
     return selector
 
@@ -1494,7 +1494,7 @@ def calc_max_good_meanmetricrank(
     earlier versions of this code. It might be worth consistently using the same term,
     but this note will hopefully suffice for now.
     """
-    function_name_idx = f"Step {selector.current_node_idx}: calc_max_good_meanmetricrank"
+    function_name_idx = f"Step {selector.current_node_idx_}: calc_max_good_meanmetricrank"
 
     if (metric_suffix is not None) and (metric_suffix != "") and isinstance(metric_suffix, str):
         metric_name = f"max_good_meanmetricrank_{metric_suffix}"
@@ -1502,7 +1502,7 @@ def calc_max_good_meanmetricrank(
         metric_name = "max_good_meanmetricrank"
 
     outputs = {
-        "decision_node_idx": selector.current_node_idx,
+        "decision_node_idx": selector.current_node_idx_,
         "node_label": None,
         metric_name: None,
         "used_metrics": set(),
@@ -1553,7 +1553,7 @@ def calc_max_good_meanmetricrank(
 
         log_decision_tree_step(function_name_idx, comps2use, calc_outputs=outputs)
 
-    selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
+    selector.tree["nodes"][selector.current_node_idx_]["outputs"] = outputs
 
     return selector
 
@@ -1597,10 +1597,10 @@ def calc_varex_kappa_ratio(
     This metric sometimes causes issues with high magnitude BOLD responses
     such as the V1 response to a block-design flashing checkerboard
     """
-    function_name_idx = f"Step {selector.current_node_idx}: calc_varex_kappa_ratio"
+    function_name_idx = f"Step {selector.current_node_idx_}: calc_varex_kappa_ratio"
 
     outputs = {
-        "decision_node_idx": selector.current_node_idx,
+        "decision_node_idx": selector.current_node_idx_,
         "node_label": None,
         "kappa_rate": None,
         "used_metrics": {"kappa", "variance explained"},
@@ -1673,7 +1673,7 @@ def calc_varex_kappa_ratio(
 
         log_decision_tree_step(function_name_idx, comps2use, calc_outputs=outputs)
 
-    selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
+    selector.tree["nodes"][selector.current_node_idx_]["outputs"] = outputs
 
     return selector
 
@@ -1729,10 +1729,10 @@ def calc_revised_meanmetricrank_guesses(
         accepted components calculated as the ratio of ``num_acc_guess`` to
         ``restrict_factor``.
     """
-    function_name_idx = f"Step {selector.current_node_idx}: calc_revised_meanmetricrank_guesses"
+    function_name_idx = f"Step {selector.current_node_idx_}: calc_revised_meanmetricrank_guesses"
 
     outputs = {
-        "decision_node_idx": selector.current_node_idx,
+        "decision_node_idx": selector.current_node_idx_,
         "node_label": None,
         "num_acc_guess": None,
         "conservative_guess": None,
@@ -1747,7 +1747,7 @@ def calc_revised_meanmetricrank_guesses(
         },
         "used_cross_component_metrics": {"kappa_elbow_kundu", "rho_elbow_kundu"},
         "calc_cross_comp_metrics": ["num_acc_guess", "conservative_guess", "restrict_factor"],
-        "added_component_table_metrics": [f"d_table_score_node{selector.current_node_idx}"],
+        "added_component_table_metrics": [f"d_table_score_node{selector.current_node_idx_}"],
     }
 
     if only_used_metrics:
@@ -1772,9 +1772,9 @@ def calc_revised_meanmetricrank_guesses(
     if not isinstance(restrict_factor, (int, float)):
         raise ValueError(f"restrict_factor needs to be a number. It is: {restrict_factor}")
 
-    if f"d_table_score_node{selector.current_node_idx}" in selector.component_table_:
+    if f"d_table_score_node{selector.current_node_idx_}" in selector.component_table_:
         raise ValueError(
-            f"d_table_score_node{selector.current_node_idx} is already a column"
+            f"d_table_score_node{selector.current_node_idx_} is already a column"
             f"in the component_table. Recalculating in {function_name_idx} can "
             "cause problems since these are only calculated on a subset of components"
         )
@@ -1852,9 +1852,9 @@ def calc_revised_meanmetricrank_guesses(
         tmp_d_table_score = generate_decision_table_score(
             tmp_kappa, tmp_dice_FT2, tmp_signal_m_noise_t, tmp_countnoise, tmp_countsigFT2
         )
-        selector.component_table_[f"d_table_score_node{selector.current_node_idx}"] = np.NaN
+        selector.component_table_[f"d_table_score_node{selector.current_node_idx_}"] = np.NaN
         selector.component_table_.loc[
-            comps2use, f"d_table_score_node{selector.current_node_idx}"
+            comps2use, f"d_table_score_node{selector.current_node_idx_}"
         ] = tmp_d_table_score
         # Unclear if necessary, but this may clean up a weird issue on passing
         # references in a data frame.
@@ -1867,6 +1867,6 @@ def calc_revised_meanmetricrank_guesses(
 
         log_decision_tree_step(function_name_idx, comps2use, calc_outputs=outputs)
 
-    selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
+    selector.tree["nodes"][selector.current_node_idx_]["outputs"] = outputs
 
     return selector

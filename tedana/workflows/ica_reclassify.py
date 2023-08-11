@@ -391,7 +391,7 @@ def ica_reclassify_workflow(
         selector.add_manual(reject, "rejected")
 
     selector.select()
-    comptable = selector.component_table
+    comptable = selector.component_table_
 
     # NOTE: most of these will be identical to previous, but this makes
     # things easier for programs which will view the data after running.

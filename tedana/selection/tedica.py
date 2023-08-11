@@ -63,6 +63,6 @@ def automatic_selection(component_table, selector, **kwargs):
 
     component_table["classification_tags"] = ""
     selector.select(component_table, cross_component_metrics=kwargs)
-    selector.metadata_ = collect.get_metadata(selector.component_table)
+    selector.metadata_ = collect.get_metadata(selector.component_table_)
 
     return selector

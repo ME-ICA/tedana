@@ -51,7 +51,7 @@ The file key names are used below the full file names in the
 General outputs from component selection
 ========================================
 
-New columns in ``selector.component_table`` and the "ICA metrics tsv" file:
+New columns in ``selector.component_table_`` and the "ICA metrics tsv" file:
 
   - classification:
     While the decision table is running, there may also be intermediate
@@ -63,13 +63,13 @@ New columns in ``selector.component_table`` and the "ICA metrics tsv" file:
     or a comma separated list of tags. These tags may be useful parameters
     for visualizing and reviewing results
 
-``selector.cross_component_metrics`` and "ICA cross component metrics json":
+``selector.cross_component_metrics_`` and "ICA cross component metrics json":
   A dictionary of metrics that are each a single value calculated across components,
   for example, kappa and rho elbows. User or pre-defined scaling factors are
   also stored here. Any constant that is used in the component classification
   processes that isn't pre-defined in the decision tree file should be saved here.
 
-``selector.component_status_table`` and "ICA status table tsv":
+``selector.component_status_table_`` and "ICA status table tsv":
   A table where each column lists the classification status of
   each component after each node was run. Columns are only added
   for runs where component statuses can change.
@@ -315,7 +315,7 @@ are good examples for how to meet these expectations.
 
 Create a dictionary called "outputs" that includes key fields that should be recorded.
 The following line should be at the end of each function to retain the output info:
-``selector.nodes[selector.current_node_idx]["outputs"] = outputs``
+``selector.nodes[selector.current_node_idx_]["outputs"] = outputs``
 
 Additional fields can be used to log function-specific information, but the following
 fields are common and may be used by other parts of the code:
@@ -339,7 +339,7 @@ Before any data are touched in the function, there should be an
 call. This will be useful to gather all metrics a tree will use without requiring a
 specific dataset.
 
-Existing functions define ``function_name_idx = f"Step {selector.current_node_idx}: [text of function_name]``.
+Existing functions define ``function_name_idx = f"Step {selector.current_node_idx_}: [text of function_name]``.
 This is used in logging and is cleaner to initialize near the top of each function.
 
 Each function has code that creates a default node label in ``outputs["node_label"]``.
@@ -386,7 +386,7 @@ also returns and should assign values to
 identified as true or false within each function.
 
 For calculation functions, the calculated values should be added as a value/key pair to
-both ``selector.cross_component_metrics`` and ``outputs``.
+both ``selector.cross_component_metrics_`` and ``outputs``.
 
 :func:`~tedana.selection.selection_utils.log_decision_tree_step`
 puts the relevant info from the function call into the program's output log.
@@ -395,7 +395,7 @@ Every function should end with:
 
 .. code-block:: python
 
-  selector.nodes[selector.current_node_idx]["outputs"] = outputs
+  selector.nodes[selector.current_node_idx_]["outputs"] = outputs
   return selector
 
   functionname.__doc__ = (functionname.__doc__.format(**DECISION_DOCS))

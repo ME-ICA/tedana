@@ -274,8 +274,8 @@ class ComponentSelector:
         -------
         Adds to the ``ComponentSelector``:
 
-        - component_status_table: empty dataframe or contents of inputted status_table
-        - cross_component_metrics: empty dict or contents of inputed values
+        - component_status_table_: empty dataframe or contents of inputted status_table
+        - cross_component_metrics_: empty dict or contents of inputed values
         - used_metrics: empty set
 
         Any parameter that is used by a decision tree node function can be passed
@@ -309,17 +309,17 @@ class ComponentSelector:
 
         When this is run, multiple elements in `ComponentSelector` will change including:
 
-        - component_table: ``classification`` column with ``accepted`` or ``rejected`` labels
+        - component_table_: ``classification`` column with ``accepted`` or ``rejected`` labels
           and ``classification_tags`` column with can hold multiple comma-separated labels
           explaining why a classification happened
-        - cross_component_metrics: Any values that were calculated based on the metric
+        - cross_component_metrics_: Any values that were calculated based on the metric
           values across components or by direct user input
         - component_status_table: Contains the classification statuses at each node in
           the decision tree
         - used_metrics: A list of metrics used in the selection process
         - nodes: The original tree definition with an added ``outputs`` key listing
           everything that changed in each node
-        - current_node_idx: The total number of nodes run in ``ComponentSelector``
+        - current_node_idx_: The total number of nodes run in ``ComponentSelector``
         """
 
         self.__dict__.update(cross_component_metrics)
@@ -361,7 +361,7 @@ class ComponentSelector:
         )
 
         # for each node in the decision tree
-        for self.current_node_idx, node in enumerate(
+        for self.current_node_idx_, node in enumerate(
             self.tree["nodes"][self.start_idx_ :], start=self.start_idx_
         ):
             # parse the variables to use with the function
@@ -380,7 +380,7 @@ class ComponentSelector:
                 all_params = {**params}
 
             LGR.debug(
-                f"Step {self.current_node_idx}: Running function {node['functionname']} "
+                f"Step {self.current_node_idx_}: Running function {node['functionname']} "
                 f"with parameters: {all_params}"
             )
             # run the decision node function
@@ -390,14 +390,14 @@ class ComponentSelector:
                 self = fcn(self, **params)
 
             self.tree["used_metrics"].update(
-                self.tree["nodes"][self.current_node_idx]["outputs"]["used_metrics"]
+                self.tree["nodes"][self.current_node_idx_]["outputs"]["used_metrics"]
             )
 
             # log the current counts for all classification labels
-            log_classification_counts(self.current_node_idx, self.component_table_)
+            log_classification_counts(self.current_node_idx_, self.component_table_)
             LGR.debug(
-                f"Step {self.current_node_idx} Full outputs: "
-                f"{self.tree['nodes'][self.current_node_idx]['outputs']}"
+                f"Step {self.current_node_idx_} Full outputs: "
+                f"{self.tree['nodes'][self.current_node_idx_]['outputs']}"
             )
 
         # move decision columns to end
