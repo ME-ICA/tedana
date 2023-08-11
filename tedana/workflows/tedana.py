@@ -654,7 +654,6 @@ def tedana_workflow(
             # with thermal noise)
             LGR.info("Making second component selection guess from ICA results")
             ica_selector = ComponentSelector(tree)
-            necessary_metrics = ica_selector.necessary_metrics
             comptable = metrics.collect.generate_metrics(
                 catd,
                 data_oc,
@@ -663,7 +662,7 @@ def tedana_workflow(
                 tes,
                 io_generator,
                 "ICA",
-                metrics=necessary_metrics,
+                metrics=ica_selector.necessary_metrics,
             )
             ica_selector = selection.automatic_selection(
                 comptable,
@@ -692,7 +691,6 @@ def tedana_workflow(
         mmix = pd.read_table(mixing_file).values
 
         ica_selector = ComponentSelector(tree)
-        necessary_metrics = ica_selector.necessary_metrics
         comptable = metrics.collect.generate_metrics(
             catd,
             data_oc,
@@ -701,7 +699,7 @@ def tedana_workflow(
             tes,
             io_generator,
             "ICA",
-            metrics=necessary_metrics,
+            metrics=ica_selector.necessary_metrics,
         )
         ica_selector = selection.automatic_selection(
             comptable,

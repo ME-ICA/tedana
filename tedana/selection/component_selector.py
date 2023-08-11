@@ -246,7 +246,7 @@ class ComponentSelector:
         RepLGR.info(self.tree.get("report", ""))
         RefLGR.info(self.tree.get("refs", ""))
 
-        self.necessary_metrics = set(self.tree["necessary_metrics"])
+        self.necessary_metrics = self.tree["necessary_metrics"]
         self.classification_tags = set(self.tree["classification_tags"])
         self.tree["used_metrics"] = set(self.tree.get("used_metrics", []))
 
@@ -355,7 +355,9 @@ class ComponentSelector:
         # this will crash the program with an error message if not all
         # necessary_metrics are in the comptable
         confirm_metrics_exist(
-            self.component_table_, self.necessary_metrics, function_name=self.tree_name
+            self.component_table_,
+            self.necessary_metrics,
+            function_name=self.tree_name,
         )
 
         # for each node in the decision tree
@@ -463,9 +465,8 @@ class ComponentSelector:
         used and if any used_metrics weren't explicitly declared necessary.
         If either of these happen, a warning is added to the logger
         """
-        necessary_metrics = self.necessary_metrics
-        not_declared = self.tree["used_metrics"] - necessary_metrics
-        not_used = necessary_metrics - self.tree["used_metrics"]
+        not_declared = self.tree["used_metrics"] - set(self.necessary_metrics)
+        not_used = set(self.necessary_metrics) - self.tree["used_metrics"]
         if len(not_declared) > 0:
             LGR.warning(
                 f"Decision tree {self.tree_name} used the following metrics that were "

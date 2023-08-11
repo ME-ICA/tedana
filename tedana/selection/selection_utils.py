@@ -320,51 +320,37 @@ RefLGR = logging.getLogger("REFERENCES")
 
 
 def confirm_metrics_exist(component_table, necessary_metrics, function_name=None):
-    """
-    Confirm that all metrics declared in necessary_metrics are
-    already included in comptable.
+    """Confirm that all metrics declared in necessary_metrics are already included in comptable.
 
     Parameters
     ----------
     component_table : (C x M) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
-    necessary_metrics : :obj:`set`
-        A set of strings of metric names
+    necessary_metrics : :obj:`list`
+        A list of strings of metric names.
     function_name : :obj:`str`
-        Text identifying the function name that called this function
-
-    Returns
-    -------
-    metrics_exist : :obj:`bool`
-        True if all metrics in necessary_metrics are in component_table
+        Text identifying the function name that called this function.
 
     Raises
     ------
     ValueError
-        If metrics_exist is False then raise an error and end the program
+        If ``metrics_exist`` is False then raise an error and end the program.
 
     Note
     -----
-    This doesn't check if there are data in each metric's column, just that
-    the columns exist. Also, the string in `necessary_metrics` and the
-    column labels in component_table will only be matched if they're identical.
+    This doesn't check if there are data in each metric's column, just that the columns exist.
+    Also, the string in ``necessary_metrics`` and the column labels in ``component_table`` will
+    only be matched if they're identical.
     """
-    missing_metrics = necessary_metrics - set(component_table.columns)
-    metrics_exist = len(missing_metrics) > 0
-    if metrics_exist is True:
-        if function_name is None:
-            function_name = "unknown function"
-
-        error_msg = (
-            f"Necessary metrics for {function_name}: "
-            f"{necessary_metrics}. "
+    missing_metrics = set(necessary_metrics) - set(component_table.columns)
+    if missing_metrics:
+        function_name = function_name or "unknown function"
+        raise ValueError(
+            f"Necessary metrics for {function_name}: {necessary_metrics}. "
             f"Comptable metrics: {set(component_table.columns)}. "
             f"MISSING METRICS: {missing_metrics}."
         )
-        raise ValueError(error_msg)
-
-    return metrics_exist
 
 
 def log_decision_tree_step(
