@@ -522,12 +522,12 @@ class ComponentSelector:
         return self.component_table_["classification"] == "accepted"
 
     @property
-    def n_accepted_comps(self):
+    def n_accepted_comps_(self):
         """The number of components that are accepted."""
         return self.accepted_comps_.sum()
 
     @property
-    def rejected_comps(self):
+    def rejected_comps_(self):
         """A boolean :obj:`pandas.Series` of components that are rejected."""
         return self.component_table_["classification"] == "rejected"
 

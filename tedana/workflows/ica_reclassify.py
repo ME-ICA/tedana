@@ -415,7 +415,7 @@ def ica_reclassify_workflow(
     # Save component selector and tree
     selector.to_files(io_generator)
 
-    if selector.n_accepted_comps == 0:
+    if selector.n_accepted_comps_ == 0:
         LGR.warning(
             "No accepted components remaining after manual classification! "
             "Please check data and results!"
@@ -424,8 +424,8 @@ def ica_reclassify_workflow(
     mmix_orig = mmix.copy()
     # TODO: make this a function
     if tedort:
-        comps_accepted = selector.accepted_comps
-        comps_rejected = selector.rejected_comps
+        comps_accepted = selector.accepted_comps_
+        comps_rejected = selector.rejected_comps_
         acc_ts = mmix[:, comps_accepted]
         rej_ts = mmix[:, comps_rejected]
         betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
@@ -434,7 +434,7 @@ def ica_reclassify_workflow(
         mmix[:, comps_rejected] = resid
         comp_names = [
             io.add_decomp_prefix(comp, prefix="ica", max_value=comptable.index.max())
-            for comp in range(selector.n_comps)
+            for comp in range(selector.n_comps_)
         ]
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
         io_generator.save_file(mixing_df, "ICA orthogonalized mixing tsv")

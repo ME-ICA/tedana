@@ -320,11 +320,11 @@ def test_selector_properties_smoke():
 
     selector = component_selector.ComponentSelector("minimal", sample_comptable())
 
-    assert selector.n_comps == 21
+    assert selector.n_comps_ == 21
 
-    # Also runs selector.likely_bold_comps and should need to deal with sets in each field
-    assert selector.n_likely_bold_comps == 17
+    # Also runs selector.likely_bold_comps_ and should need to deal with sets in each field
+    assert selector.n_likely_bold_comps_ == 17
 
-    assert selector.n_accepted_comps == 17
+    assert selector.n_accepted_comps_ == 17
 
-    assert selector.rejected_comps.sum() == 4
+    assert selector.rejected_comps_.sum() == 4
