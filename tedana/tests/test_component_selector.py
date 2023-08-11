@@ -36,6 +36,7 @@ def dicts_to_test(treechoice):
         "extra_opt_param": A tree with an undefined optional parameter for a decision node function
         "missing_req_param": A missing required param in a decision node function
         "missing_function": An undefined decision node function
+        "missing_key": A dict missing one of the required keys (report)
 
     Returns
     -------
@@ -125,6 +126,8 @@ def dicts_to_test(treechoice):
         tree["nodes"][0]["parameters"].pop("op")
     elif treechoice == "missing_function":
         tree["nodes"][0]["functionname"] = "not_a_function"
+    elif treechoice == "missing_key":
+        tree.pop("report")
     elif treechoice == "null_value":
         tree["nodes"][0]["parameters"]["left"] = None
     else:
@@ -237,7 +240,9 @@ def test_validate_tree_fails():
     # An empty dict should not be valid
     with pytest.raises(component_selector.TreeError):
         component_selector.validate_tree({})
-
+    # A tree that is missing a required key should not be valid
+    with pytest.raises(component_selector.TreeError):
+        component_selector.validate_tree(dicts_to_test("missing_key"))
     # Calling a selection node function that does not exist should not be valid
     with pytest.raises(component_selector.TreeError):
         component_selector.validate_tree(dicts_to_test("missing_function"))
