@@ -137,7 +137,7 @@ def manual_classify(
         )
 
     if clear_classification_tags:
-        selector.component_table["classification_tags"] = ""
+        selector.component_table_["classification_tags"] = ""
         LGR.info(function_name_idx + " component classification tags are cleared")
 
     selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
@@ -259,11 +259,11 @@ def dec_left_op_right(
         """
         orig_val = val
         if isinstance(val, str):
-            if val in selector.component_table.columns:
+            if val in selector.component_table_.columns:
                 outputs["used_metrics"].update([val])
-            elif val in selector.cross_component_metrics:
+            elif val in selector.cross_component_metrics_:
                 outputs["used_cross_component_metrics"].update([val])
-                val = selector.cross_component_metrics[val]
+                val = selector.cross_component_metrics_[val]
             # If decision tree is being run, then throw errors or messages
             #  if a component doesn't exist. If this is just getting a list
             #  of metrics to be used, then don't bring up warnings
@@ -271,14 +271,14 @@ def dec_left_op_right(
                 if not comps2use:
                     LGR.info(
                         f"{function_name_idx}: {val} is neither a metric in "
-                        "selector.component_table nor selector.cross_component_metrics, "
+                        "selector.component_table_ nor selector.cross_component_metrics_, "
                         f"but no components with {decide_comps} remain by this node "
                         "so nothing happens"
                     )
                 else:
                     raise ValueError(
-                        f"{val} is neither a metric in selector.component_table "
-                        "nor selector.cross_component_metrics"
+                        f"{val} is neither a metric in selector.component_table_ "
+                        "nor selector.cross_component_metrics_"
                     )
         if isnum:
             if not isinstance(val, (int, float)):
@@ -395,13 +395,13 @@ def dec_left_op_right(
         RepLGR.info(log_extra_report)
 
     confirm_metrics_exist(
-        selector.component_table, outputs["used_metrics"], function_name=function_name_idx
+        selector.component_table_, outputs["used_metrics"], function_name=function_name_idx
     )
 
     def parse_vals(val):
         """Get the metric values for the selected components or relevant constant"""
         if isinstance(val, str):
-            return selector.component_table.loc[comps2use, val].copy()
+            return selector.component_table_.loc[comps2use, val].copy()
         else:
             return val  # should be a fixed number
 
@@ -544,7 +544,7 @@ def dec_variance_lessthan_thresholds(
 
     comps2use = selectcomps2use(selector, decide_comps)
     confirm_metrics_exist(
-        selector.component_table, outputs["used_metrics"], function_name=function_name_idx
+        selector.component_table_, outputs["used_metrics"], function_name=function_name_idx
     )
 
     if not comps2use:
@@ -558,7 +558,7 @@ def dec_variance_lessthan_thresholds(
             if_false=outputs["n_false"],
         )
     else:
-        variance = selector.component_table.loc[comps2use, var_metric]
+        variance = selector.component_table_.loc[comps2use, var_metric]
         decision_boolean = variance < single_comp_threshold
         # if all the low variance components sum above all_comp_threshold
         # keep removing the highest remaining variance component until
@@ -612,7 +612,7 @@ def calc_median(
     %(selector)s
     %(decide_comps)s
     metric_name: :obj:`str`
-        The name of a column in selector.component_table. The median of
+        The name of a column in selector.component_table_. The median of
         the values in this column will be calculated
     median_label: :obj:`str`
         The median will be saved in "median_(median_label)"
@@ -650,7 +650,7 @@ def calc_median(
     if only_used_metrics:
         return outputs["used_metrics"]
 
-    if label_name in selector.cross_component_metrics:
+    if label_name in selector.cross_component_metrics_:
         LGR.warning(
             f"{label_name} already calculated. Overwriting previous value in {function_name_idx}"
         )
@@ -668,7 +668,7 @@ def calc_median(
 
     comps2use = selectcomps2use(selector, decide_comps)
     confirm_metrics_exist(
-        selector.component_table, outputs["used_metrics"], function_name=function_name_idx
+        selector.component_table_, outputs["used_metrics"], function_name=function_name_idx
     )
 
     if not comps2use:
@@ -678,9 +678,9 @@ def calc_median(
             decide_comps=decide_comps,
         )
     else:
-        outputs[label_name] = np.median(selector.component_table.loc[comps2use, metric_name])
+        outputs[label_name] = np.median(selector.component_table_.loc[comps2use, metric_name])
 
-        selector.cross_component_metrics[label_name] = outputs[label_name]
+        selector.cross_component_metrics_[label_name] = outputs[label_name]
 
         log_decision_tree_step(function_name_idx, comps2use, calc_outputs=outputs)
 
@@ -750,7 +750,7 @@ def calc_kappa_elbow(
 
     function_name_idx = f"Step {selector.current_node_idx}: calc_kappa_elbow"
 
-    if ("kappa_elbow_kundu" in selector.cross_component_metrics) and (
+    if ("kappa_elbow_kundu" in selector.cross_component_metrics_) and (
         "kappa_elbow_kundu" in outputs["calc_cross_comp_metrics"]
     ):
         LGR.warning(
@@ -758,7 +758,7 @@ def calc_kappa_elbow(
             f"Overwriting previous value in {function_name_idx}"
         )
 
-    if "varex_upper_p" in selector.cross_component_metrics:
+    if "varex_upper_p" in selector.cross_component_metrics_:
         LGR.warning(
             f"varex_upper_p already calculated. Overwriting previous value in {function_name_idx}"
         )
@@ -776,7 +776,7 @@ def calc_kappa_elbow(
 
     comps2use = selectcomps2use(selector, decide_comps)
     confirm_metrics_exist(
-        selector.component_table, outputs["used_metrics"], function_name=function_name_idx
+        selector.component_table_, outputs["used_metrics"], function_name=function_name_idx
     )
 
     if not comps2use:
@@ -791,11 +791,11 @@ def calc_kappa_elbow(
             outputs["kappa_allcomps_elbow"],
             outputs["kappa_nonsig_elbow"],
             outputs["varex_upper_p"],
-        ) = kappa_elbow_kundu(selector.component_table, selector.n_echos, comps2use=comps2use)
-        selector.cross_component_metrics["kappa_elbow_kundu"] = outputs["kappa_elbow_kundu"]
-        selector.cross_component_metrics["kappa_allcomps_elbow"] = outputs["kappa_allcomps_elbow"]
-        selector.cross_component_metrics["kappa_nonsig_elbow"] = outputs["kappa_nonsig_elbow"]
-        selector.cross_component_metrics["varex_upper_p"] = outputs["varex_upper_p"]
+        ) = kappa_elbow_kundu(selector.component_table_, selector.n_echos, comps2use=comps2use)
+        selector.cross_component_metrics_["kappa_elbow_kundu"] = outputs["kappa_elbow_kundu"]
+        selector.cross_component_metrics_["kappa_allcomps_elbow"] = outputs["kappa_allcomps_elbow"]
+        selector.cross_component_metrics_["kappa_nonsig_elbow"] = outputs["kappa_nonsig_elbow"]
+        selector.cross_component_metrics_["varex_upper_p"] = outputs["varex_upper_p"]
 
         log_decision_tree_step(function_name_idx, comps2use, calc_outputs=outputs)
 
@@ -880,7 +880,7 @@ def calc_rho_elbow(
     if only_used_metrics:
         return outputs["used_metrics"]
 
-    if (elbow_name in selector.cross_component_metrics) and (
+    if (elbow_name in selector.cross_component_metrics_) and (
         elbow_name in outputs["calc_cross_comp_metrics"]
     ):
         LGR.warning(
@@ -901,7 +901,7 @@ def calc_rho_elbow(
 
     comps2use = selectcomps2use(selector, decide_comps)
     confirm_metrics_exist(
-        selector.component_table, outputs["used_metrics"], function_name=function_name_idx
+        selector.component_table_, outputs["used_metrics"], function_name=function_name_idx
     )
 
     subset_comps2use = selectcomps2use(selector, subset_decide_comps)
@@ -919,18 +919,18 @@ def calc_rho_elbow(
             outputs["rho_unclassified_elbow"],
             outputs["elbow_f05"],
         ) = rho_elbow_kundu_liberal(
-            selector.component_table,
+            selector.component_table_,
             selector.n_echos,
             rho_elbow_type=rho_elbow_type,
             comps2use=comps2use,
             subset_comps2use=subset_comps2use,
         )
-        selector.cross_component_metrics[elbow_name] = outputs[elbow_name]
-        selector.cross_component_metrics["rho_allcomps_elbow"] = outputs["rho_allcomps_elbow"]
-        selector.cross_component_metrics["rho_unclassified_elbow"] = outputs[
+        selector.cross_component_metrics_[elbow_name] = outputs[elbow_name]
+        selector.cross_component_metrics_["rho_allcomps_elbow"] = outputs["rho_allcomps_elbow"]
+        selector.cross_component_metrics_["rho_unclassified_elbow"] = outputs[
             "rho_unclassified_elbow"
         ]
-        selector.cross_component_metrics["elbow_f05"] = outputs["elbow_f05"]
+        selector.cross_component_metrics_["elbow_f05"] = outputs["elbow_f05"]
 
         log_decision_tree_step(function_name_idx, comps2use, calc_outputs=outputs)
 
@@ -1148,11 +1148,11 @@ def dec_reclassify_high_var_comps(
 
     comps2use = selectcomps2use(selector, decide_comps)
 
-    if "varex_upper_p" not in selector.cross_component_metrics:
+    if "varex_upper_p" not in selector.cross_component_metrics_:
         if not comps2use:
             LGR.info(
                 f"{function_name_idx}: varex_upper_p is not in "
-                "selector.cross_component_metrics, but no components with "
+                "selector.cross_component_metrics_, but no components with "
                 f"{decide_comps} remain by this node so nothing happens"
             )
         else:
@@ -1175,13 +1175,13 @@ def dec_reclassify_high_var_comps(
     else:
         keep_comps2use = comps2use.copy()
         for i_loop in range(3):
-            temp_comptable = selector.component_table.loc[keep_comps2use].sort_values(
+            temp_comptable = selector.component_table_.loc[keep_comps2use].sort_values(
                 by=["variance explained"], ascending=False
             )
             diff_vals = temp_comptable["variance explained"].diff(-1)
             diff_vals = diff_vals.fillna(0)
             keep_comps2use = temp_comptable.loc[
-                diff_vals < selector.cross_component_metrics["varex_upper_p"]
+                diff_vals < selector.cross_component_metrics_["varex_upper_p"]
             ].index.values
         # Everything that should be kept as unclassified is False while the few
         #   that are not in keep_comps2use should be True
@@ -1241,7 +1241,7 @@ def calc_varex_thresh(
     num_highest_var_comps: :obj:`str` :obj:`int`
         percentile can be calculated on the num_highest_var_comps components with the
         lowest variance. Either input an integer directly or input a string that is
-        a parameter stored in selector.cross_component_metrics ("num_acc_guess" in
+        a parameter stored in selector.cross_component_metrics_ ("num_acc_guess" in
         original decision tree). Default=None
     %(log_extra_info)s
     %(log_extra_report)s
@@ -1284,25 +1284,25 @@ def calc_varex_thresh(
     if only_used_metrics:
         return outputs["used_metrics"]
 
-    if varex_name in selector.cross_component_metrics:
+    if varex_name in selector.cross_component_metrics_:
         LGR.warning(
             f"{varex_name} already calculated. Overwriting previous value in {function_name_idx}"
         )
 
-    if perc_name in selector.cross_component_metrics:
+    if perc_name in selector.cross_component_metrics_:
         LGR.warning(
             f"{perc_name} already calculated. Overwriting previous value in {function_name_idx}"
         )
 
     comps2use = selectcomps2use(selector, decide_comps)
     confirm_metrics_exist(
-        selector.component_table, outputs["used_metrics"], function_name=function_name_idx
+        selector.component_table_, outputs["used_metrics"], function_name=function_name_idx
     )
 
     if num_highest_var_comps is not None:
         if isinstance(num_highest_var_comps, str):
-            if num_highest_var_comps in selector.cross_component_metrics:
-                num_highest_var_comps = selector.cross_component_metrics[num_highest_var_comps]
+            if num_highest_var_comps in selector.cross_component_metrics_:
+                num_highest_var_comps = selector.cross_component_metrics_[num_highest_var_comps]
             elif not comps2use:
                 # Note: It is possible the comps2use requested for this function
                 #  is not empty, but the comps2use requested to calculate
@@ -1310,13 +1310,13 @@ def calc_varex_thresh(
                 # used, that's unlikely, but worth a comment.
                 LGR.info(
                     f"{function_name_idx}:  num_highest_var_comps ( {num_highest_var_comps}) "
-                    "is not in selector.cross_component_metrics, but no components with "
+                    "is not in selector.cross_component_metrics_, but no components with "
                     f"{decide_comps} remain by this node so nothing happens"
                 )
             else:
                 raise ValueError(
                     f"{function_name_idx}: num_highest_var_comps ( {num_highest_var_comps}) "
-                    "is not in selector.cross_component_metrics"
+                    "is not in selector.cross_component_metrics_"
                 )
         if not isinstance(num_highest_var_comps, int) and comps2use:
             raise ValueError(
@@ -1344,7 +1344,7 @@ def calc_varex_thresh(
     else:
         if num_highest_var_comps is None:
             outputs[varex_name] = scoreatpercentile(
-                selector.component_table.loc[comps2use, "variance explained"], percentile_thresh
+                selector.component_table_.loc[comps2use, "variance explained"], percentile_thresh
             )
         else:
             # Using only the first num_highest_var_comps components sorted to include
@@ -1363,13 +1363,13 @@ def calc_varex_thresh(
                 num_highest_var_comps = len(comps2use)
 
             sorted_varex = np.flip(
-                np.sort((selector.component_table.loc[comps2use, "variance explained"]).to_numpy())
+                np.sort((selector.component_table_.loc[comps2use, "variance explained"]).to_numpy())
             )
             outputs[varex_name] = scoreatpercentile(
                 sorted_varex[:num_highest_var_comps], percentile_thresh
             )
 
-        selector.cross_component_metrics[varex_name] = outputs[varex_name]
+        selector.cross_component_metrics_[varex_name] = outputs[varex_name]
 
         log_decision_tree_step(function_name_idx, comps2use, calc_outputs=outputs)
 
@@ -1423,7 +1423,7 @@ def calc_extend_factor(
 
     function_name_idx = f"Step {selector.current_node_idx}: calc_extend_factor"
 
-    if "extend_factor" in selector.cross_component_metrics:
+    if "extend_factor" in selector.cross_component_metrics_:
         LGR.warning(
             f"extend_factor already calculated. Overwriting previous value in {function_name_idx}"
         )
@@ -1439,10 +1439,10 @@ def calc_extend_factor(
         RepLGR.info(log_extra_report)
 
     outputs["extend_factor"] = get_extend_factor(
-        n_vols=selector.cross_component_metrics["n_vols"], extend_factor=extend_factor
+        n_vols=selector.cross_component_metrics_["n_vols"], extend_factor=extend_factor
     )
 
-    selector.cross_component_metrics["extend_factor"] = outputs["extend_factor"]
+    selector.cross_component_metrics_["extend_factor"] = outputs["extend_factor"]
 
     log_decision_tree_step(function_name_idx, -1, calc_outputs=outputs)
 
@@ -1512,7 +1512,7 @@ def calc_max_good_meanmetricrank(
     if only_used_metrics:
         return outputs["used_metrics"]
 
-    if metric_name in selector.cross_component_metrics:
+    if metric_name in selector.cross_component_metrics_:
         LGR.warning(
             "max_good_meanmetricrank already calculated."
             f"Overwriting previous value in {function_name_idx}"
@@ -1530,7 +1530,7 @@ def calc_max_good_meanmetricrank(
 
     comps2use = selectcomps2use(selector, decide_comps)
     confirm_metrics_exist(
-        selector.component_table, outputs["used_metrics"], function_name=function_name_idx
+        selector.component_table_, outputs["used_metrics"], function_name=function_name_idx
     )
 
     if not comps2use:
@@ -1541,15 +1541,15 @@ def calc_max_good_meanmetricrank(
         )
     else:
         num_prov_accept = len(comps2use)
-        if "extend_factor" in selector.cross_component_metrics:
-            extend_factor = selector.cross_component_metrics["extend_factor"]
+        if "extend_factor" in selector.cross_component_metrics_:
+            extend_factor = selector.cross_component_metrics_["extend_factor"]
             outputs[metric_name] = extend_factor * num_prov_accept
         else:
             raise ValueError(
                 f"extend_factor needs to be in cross_component_metrics for {function_name_idx}"
             )
 
-        selector.cross_component_metrics[metric_name] = outputs[metric_name]
+        selector.cross_component_metrics_[metric_name] = outputs[metric_name]
 
         log_decision_tree_step(function_name_idx, comps2use, calc_outputs=outputs)
 
@@ -1611,12 +1611,12 @@ def calc_varex_kappa_ratio(
     if only_used_metrics:
         return outputs["used_metrics"]
 
-    if "kappa_rate" in selector.cross_component_metrics:
+    if "kappa_rate" in selector.cross_component_metrics_:
         LGR.warning(
             f"kappa_rate already calculated. Overwriting previous value in {function_name_idx}"
         )
 
-    if "varex kappa ratio" in selector.component_table:
+    if "varex kappa ratio" in selector.component_table_:
         raise ValueError(
             "'varex kappa ratio' is already a column in the component_table."
             f"Recalculating in {function_name_idx} can cause problems since these "
@@ -1635,7 +1635,7 @@ def calc_varex_kappa_ratio(
 
     comps2use = selectcomps2use(selector, decide_comps)
     confirm_metrics_exist(
-        selector.component_table, outputs["used_metrics"], function_name=function_name_idx
+        selector.component_table_, outputs["used_metrics"], function_name=function_name_idx
     )
 
     if not comps2use:
@@ -1646,11 +1646,11 @@ def calc_varex_kappa_ratio(
         )
     else:
         kappa_rate = (
-            np.nanmax(selector.component_table.loc[comps2use, "kappa"])
-            - np.nanmin(selector.component_table.loc[comps2use, "kappa"])
+            np.nanmax(selector.component_table_.loc[comps2use, "kappa"])
+            - np.nanmin(selector.component_table_.loc[comps2use, "kappa"])
         ) / (
-            np.nanmax(selector.component_table.loc[comps2use, "variance explained"])
-            - np.nanmin(selector.component_table.loc[comps2use, "variance explained"])
+            np.nanmax(selector.component_table_.loc[comps2use, "variance explained"])
+            - np.nanmin(selector.component_table_.loc[comps2use, "variance explained"])
         )
         outputs["kappa_rate"] = kappa_rate
         LGR.debug(
@@ -1659,17 +1659,17 @@ def calc_varex_kappa_ratio(
         )
         # NOTE: kappa_rate is calculated on a subset of components while
         #     "varex kappa ratio" is calculated for all compnents
-        selector.component_table["varex kappa ratio"] = (
+        selector.component_table_["varex kappa ratio"] = (
             kappa_rate
-            * selector.component_table["variance explained"]
-            / selector.component_table["kappa"]
+            * selector.component_table_["variance explained"]
+            / selector.component_table_["kappa"]
         )
         # Unclear if necessary, but this may clean up a weird issue on passing
         # references in a data frame.
         # See longer comment in selection_utils.comptable_classification_changer
-        selector.component_table = selector.component_table.copy()
+        selector.component_table_ = selector.component_table_.copy()
 
-        selector.cross_component_metrics["kappa_rate"] = outputs["kappa_rate"]
+        selector.cross_component_metrics_["kappa_rate"] = outputs["kappa_rate"]
 
         log_decision_tree_step(function_name_idx, comps2use, calc_outputs=outputs)
 
@@ -1753,18 +1753,18 @@ def calc_revised_meanmetricrank_guesses(
     if only_used_metrics:
         return outputs["used_metrics"]
 
-    if "num_acc_guess" in selector.cross_component_metrics:
+    if "num_acc_guess" in selector.cross_component_metrics_:
         LGR.warning(
             f"num_acc_guess already calculated. Overwriting previous value in {function_name_idx}"
         )
 
-    if "conservative_guess" in selector.cross_component_metrics:
+    if "conservative_guess" in selector.cross_component_metrics_:
         LGR.warning(
             "conservative_guess already calculated. "
             f"Overwriting previous value in {function_name_idx}"
         )
 
-    if "restrict_factor" in selector.cross_component_metrics:
+    if "restrict_factor" in selector.cross_component_metrics_:
         LGR.warning(
             "restrict_factor already calculated. "
             f"Overwriting previous value in {function_name_idx}"
@@ -1772,7 +1772,7 @@ def calc_revised_meanmetricrank_guesses(
     if not isinstance(restrict_factor, (int, float)):
         raise ValueError(f"restrict_factor needs to be a number. It is: {restrict_factor}")
 
-    if f"d_table_score_node{selector.current_node_idx}" in selector.component_table:
+    if f"d_table_score_node{selector.current_node_idx}" in selector.component_table_:
         raise ValueError(
             f"d_table_score_node{selector.current_node_idx} is already a column"
             f"in the component_table. Recalculating in {function_name_idx} can "
@@ -1781,15 +1781,15 @@ def calc_revised_meanmetricrank_guesses(
 
     comps2use = selectcomps2use(selector, decide_comps)
     confirm_metrics_exist(
-        selector.component_table, outputs["used_metrics"], function_name=function_name_idx
+        selector.component_table_, outputs["used_metrics"], function_name=function_name_idx
     )
 
     for xcompmetric in outputs["used_cross_component_metrics"]:
-        if xcompmetric not in selector.cross_component_metrics:
+        if xcompmetric not in selector.cross_component_metrics_:
             if not comps2use:
                 LGR.info(
                     f"{function_name_idx}: {xcompmetric} is not in "
-                    "selector.cross_component_metrics, but no components with "
+                    "selector.cross_component_metrics_, but no components with "
                     f"{decide_comps} remain by this node so nothing happens"
                 )
             else:
@@ -1811,7 +1811,7 @@ def calc_revised_meanmetricrank_guesses(
 
     comps2use = selectcomps2use(selector, decide_comps)
     confirm_metrics_exist(
-        selector.component_table, outputs["used_metrics"], function_name=function_name_idx
+        selector.component_table_, outputs["used_metrics"], function_name=function_name_idx
     )
 
     if not comps2use:
@@ -1827,43 +1827,43 @@ def calc_revised_meanmetricrank_guesses(
                 [
                     np.sum(
                         (
-                            selector.component_table.loc[comps2use, "kappa"]
-                            > selector.cross_component_metrics["kappa_elbow_kundu"]
+                            selector.component_table_.loc[comps2use, "kappa"]
+                            > selector.cross_component_metrics_["kappa_elbow_kundu"]
                         )
                         & (
-                            selector.component_table.loc[comps2use, "rho"]
-                            < selector.cross_component_metrics["rho_elbow_kundu"]
+                            selector.component_table_.loc[comps2use, "rho"]
+                            < selector.cross_component_metrics_["rho_elbow_kundu"]
                         )
                     ),
                     np.sum(
-                        selector.component_table.loc[comps2use, "kappa"]
-                        > selector.cross_component_metrics["kappa_elbow_kundu"]
+                        selector.component_table_.loc[comps2use, "kappa"]
+                        > selector.cross_component_metrics_["kappa_elbow_kundu"]
                     ),
                 ]
             )
         )
         outputs["conservative_guess"] = outputs["num_acc_guess"] / outputs["restrict_factor"]
 
-        tmp_kappa = selector.component_table.loc[comps2use, "kappa"].to_numpy()
-        tmp_dice_FT2 = selector.component_table.loc[comps2use, "dice_FT2"].to_numpy()
-        tmp_signal_m_noise_t = selector.component_table.loc[comps2use, "signal-noise_t"].to_numpy()
-        tmp_countnoise = selector.component_table.loc[comps2use, "countnoise"].to_numpy()
-        tmp_countsigFT2 = selector.component_table.loc[comps2use, "countsigFT2"].to_numpy()
+        tmp_kappa = selector.component_table_.loc[comps2use, "kappa"].to_numpy()
+        tmp_dice_FT2 = selector.component_table_.loc[comps2use, "dice_FT2"].to_numpy()
+        tmp_signal_m_noise_t = selector.component_table_.loc[comps2use, "signal-noise_t"].to_numpy()
+        tmp_countnoise = selector.component_table_.loc[comps2use, "countnoise"].to_numpy()
+        tmp_countsigFT2 = selector.component_table_.loc[comps2use, "countsigFT2"].to_numpy()
         tmp_d_table_score = generate_decision_table_score(
             tmp_kappa, tmp_dice_FT2, tmp_signal_m_noise_t, tmp_countnoise, tmp_countsigFT2
         )
-        selector.component_table[f"d_table_score_node{selector.current_node_idx}"] = np.NaN
-        selector.component_table.loc[
+        selector.component_table_[f"d_table_score_node{selector.current_node_idx}"] = np.NaN
+        selector.component_table_.loc[
             comps2use, f"d_table_score_node{selector.current_node_idx}"
         ] = tmp_d_table_score
         # Unclear if necessary, but this may clean up a weird issue on passing
         # references in a data frame.
         # See longer comment in selection_utils.comptable_classification_changer
-        selector.component_table = selector.component_table.copy()
+        selector.component_table_ = selector.component_table_.copy()
 
-        selector.cross_component_metrics["conservative_guess"] = outputs["conservative_guess"]
-        selector.cross_component_metrics["num_acc_guess"] = outputs["num_acc_guess"]
-        selector.cross_component_metrics["restrict_factor"] = outputs["restrict_factor"]
+        selector.cross_component_metrics_["conservative_guess"] = outputs["conservative_guess"]
+        selector.cross_component_metrics_["num_acc_guess"] = outputs["num_acc_guess"]
+        selector.cross_component_metrics_["restrict_factor"] = outputs["restrict_factor"]
 
         log_decision_tree_step(function_name_idx, comps2use, calc_outputs=outputs)
 
