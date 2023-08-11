@@ -38,9 +38,9 @@ def selectcomps2use(selector, decide_comps):
         A list of component indices with classifications included in decide_comps
     """
 
-    if "classification" not in selector.component_table:
+    if "classification" not in selector.component_table_:
         raise ValueError(
-            "selector.component_table needs a 'classification' column to run selectcomp2suse"
+            "selector.component_table_ needs a 'classification' column to run selectcomp2suse"
         )
 
     if type(decide_comps) in [str, int]:
@@ -48,22 +48,22 @@ def selectcomps2use(selector, decide_comps):
     if (type(decide_comps) is list) and (decide_comps[0] == "all"):
         # All components with any string in the classification field
         # are set to True
-        comps2use = list(range(selector.component_table.shape[0]))
+        comps2use = list(range(selector.component_table_.shape[0]))
 
     elif (type(decide_comps) is list) and all(isinstance(elem, str) for elem in decide_comps):
         comps2use = []
         for didx in range(len(decide_comps)):
-            newcomps2use = selector.component_table.index[
-                selector.component_table["classification"] == decide_comps[didx]
+            newcomps2use = selector.component_table_.index[
+                selector.component_table_["classification"] == decide_comps[didx]
             ].tolist()
             comps2use = list(set(comps2use + newcomps2use))
     elif (type(decide_comps) is list) and all(type(elem) is int for elem in decide_comps):
         # decide_comps is already a string of indices
-        if len(selector.component_table) <= max(decide_comps):
+        if len(selector.component_table_) <= max(decide_comps):
             raise ValueError(
                 "decide_comps for selectcomps2use is selecting for a component with index"
                 f"{max(decide_comps)} (0 indexing) which is greater than the number "
-                f"of components: {len(selector.component_table)}"
+                f"of components: {len(selector.component_table_)}"
             )
         elif min(decide_comps) < 0:
             raise ValueError(
@@ -159,9 +159,9 @@ def change_comptable_classifications(
         dont_warn_reclassify=dont_warn_reclassify,
     )
 
-    selector.component_status_table[
+    selector.component_status_table_[
         f"Node {selector.current_node_idx}"
-    ] = selector.component_table["classification"]
+    ] = selector.component_table_["classification"]
 
     n_true = decision_boolean.sum()
     n_false = np.logical_not(decision_boolean).sum()
@@ -236,7 +236,7 @@ def comptable_classification_changer(
         changeidx = decision_boolean.index[np.asarray(decision_boolean) == boolstate]
         if not changeidx.empty:
             current_classifications = set(
-                selector.component_table.loc[changeidx, "classification"].tolist()
+                selector.component_table_.loc[changeidx, "classification"].tolist()
             )
             if current_classifications.intersection({"accepted", "rejected"}):
                 if not dont_warn_reclassify:
@@ -250,7 +250,7 @@ def comptable_classification_changer(
                             " changing away from accepted or rejected. Once a component is "
                             "accepted or rejected, it shouldn't be reclassified"
                         )
-            selector.component_table.loc[changeidx, "classification"] = classify_if
+            selector.component_table_.loc[changeidx, "classification"] = classify_if
             # NOTE: CAUTION: extremely bizarre pandas behavior violates guarantee
             # that df['COLUMN'] matches the df as a a whole in this case.
             # We cannot replicate this consistently, but it seems to happen in some
@@ -263,17 +263,17 @@ def comptable_classification_changer(
             #   Comment line below to re-introduce original bug. For the kundu decision
             #   tree it happens on node 6 which is the first time decide_comps is for
             #   a subset of components
-            selector.component_table = selector.component_table.copy()
+            selector.component_table_ = selector.component_table_.copy()
 
             if tag_if is not None:  # only run if a tag is provided
                 for idx in changeidx:
-                    tmpstr = selector.component_table.loc[idx, "classification_tags"]
+                    tmpstr = selector.component_table_.loc[idx, "classification_tags"]
                     if tmpstr == "" or isinstance(tmpstr, float):
                         tmpset = set([tag_if])
                     else:
                         tmpset = set(tmpstr.split(","))
                         tmpset.update([tag_if])
-                    selector.component_table.loc[idx, "classification_tags"] = ",".join(
+                    selector.component_table_.loc[idx, "classification_tags"] = ",".join(
                         str(s) for s in tmpset
                     )
         else:
