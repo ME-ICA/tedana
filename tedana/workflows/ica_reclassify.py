@@ -35,7 +35,7 @@ def _get_parser():
 
     from tedana import __version__
 
-    verstr = "ica_reclassify v{}".format(__version__)
+    verstr = f"ica_reclassify v{__version__}"
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # Argument parser follow template provided by RalphyZ
@@ -212,10 +212,10 @@ def _parse_manual_list(manual_list):
     elif op.exists(op.expanduser(str(manual_list[0]).strip(" "))):
         # filename was given
         manual_nums = fname_to_component_list(op.expanduser(str(manual_list[0]).strip(" ")))
-    elif type(manual_list[0]) == str:
+    elif isinstance(manual_list[0], str):
         # arbitrary string was given, length of list is 1
         manual_nums = str_to_component_list(manual_list[0])
-    elif type(manual_list[0]) == int:
+    elif isinstance(manual_list[0], int):
         # Is a single integer and should remain a list with a single integer
         manual_nums = manual_list
     else:
@@ -345,7 +345,7 @@ def ica_reclassify_workflow(
     logname = op.join(out_dir, (basename + start_time + "." + extension))
     utils.setup_loggers(logname=logname, repname=repname, quiet=quiet, debug=debug)
 
-    LGR.info("Using output directory: {}".format(out_dir))
+    LGR.info(f"Using output directory: {out_dir}")
 
     ioh = io.InputHarvester(registry)
     comptable = ioh.get_file_contents("ICA metrics tsv")
