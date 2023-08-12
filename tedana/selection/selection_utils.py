@@ -10,7 +10,6 @@ from tedana.stats import getfbounds
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 ##############################################################
 # Functions that are used for interacting with component_table
@@ -43,22 +42,23 @@ def selectcomps2use(selector, decide_comps):
             "selector.component_table_ needs a 'classification' column to run selectcomp2suse"
         )
 
-    if type(decide_comps) in [str, int]:
+    if isinstance(decide_comps, (str, int)):
         decide_comps = [decide_comps]
-    if (type(decide_comps) is list) and (decide_comps[0] == "all"):
+
+    if isinstance(decide_comps, list) and (decide_comps[0] == "all"):
         # All components with any string in the classification field
         # are set to True
         comps2use = list(range(selector.component_table_.shape[0]))
 
-    elif (type(decide_comps) is list) and all(isinstance(elem, str) for elem in decide_comps):
+    elif isinstance(decide_comps, list) and all(isinstance(elem, str) for elem in decide_comps):
         comps2use = []
         for didx in range(len(decide_comps)):
             newcomps2use = selector.component_table_.index[
                 selector.component_table_["classification"] == decide_comps[didx]
             ].tolist()
             comps2use = list(set(comps2use + newcomps2use))
-    elif (type(decide_comps) is list) and all(type(elem) is int for elem in decide_comps):
-        # decide_comps is already a string of indices
+    elif isinstance(decide_comps, list) and all(isinstance(elem, int) for elem in decide_comps):
+        # decide_comps is already a list of indices
         if len(selector.component_table_) <= max(decide_comps):
             raise ValueError(
                 "decide_comps for selectcomps2use is selecting for a component with index"
@@ -309,10 +309,6 @@ def clean_dataframe(component_table):
 
     return component_table
 
-
-LGR = logging.getLogger("GENERAL")
-RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 #################################################
 # Functions to validate inputs or log information

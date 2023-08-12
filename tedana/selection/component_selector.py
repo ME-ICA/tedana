@@ -19,7 +19,6 @@ from tedana.utils import get_resource_path
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 # These are the names of the json files containing decision
 # trees that are stored in the ./resouces/decision_trees/ directory
@@ -96,7 +95,6 @@ def validate_tree(tree):
         "tree_id",
         "info",
         "report",
-        "refs",
         "necessary_metrics",
         "intermediate_classifications",
         "classification_tags",
@@ -244,7 +242,6 @@ class ComponentSelector:
         LGR.info("Performing component selection with " + self.tree["tree_id"])
         LGR.info(self.tree.get("info", ""))
         RepLGR.info(self.tree.get("report", ""))
-        RefLGR.info(self.tree.get("refs", ""))
 
         self.necessary_metrics = self.tree["necessary_metrics"]
         self.classification_tags = set(self.tree["classification_tags"])
