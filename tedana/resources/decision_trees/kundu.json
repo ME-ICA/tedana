@@ -92,7 +92,8 @@
             "kwargs": {
                 "log_extra_info": "",
                 "log_extra_report": "The median variance explained is calculated across all components, for later steps."
-            }
+            },
+            "_comment": ""
         },
         {
             "functionname": "dec_left_op_right",
@@ -201,7 +202,8 @@
             "kwargs": {
                 "log_extra_info": "",
                 "log_extra_report": "Any provisionally accepted components with rho greater than the rho elbow are reset to 'unclassified'."
-            }
+            },
+            "_comment": ""
         },
         {
             "functionname": "dec_classification_doesnt_exist",
@@ -232,7 +234,8 @@
             "kwargs": {
                 "log_extra_info": "",
                 "log_extra_report": "The variance explained upper threshold is calculated as the 90th percentile of variance explained from provisionally accepted components."
-            }
+            },
+            "_comment": ""
         },
         {
             "functionname": "calc_varex_thresh",
@@ -244,7 +247,8 @@
             "kwargs": {
                 "log_extra_info": "",
                 "log_extra_report": "The variance explained lower threshold is calculated as the 25th percentile of variance explained from provisionally accepted components."
-            }
+            },
+            "_comment": ""
         },
         {
             "functionname": "calc_extend_factor",
@@ -298,7 +302,7 @@
                 "right2_scale": "extend_factor",
                 "tag_if_true": "Less likely BOLD",
                 "log_extra_info": "If variance and d_table_scores are high, then reject",
-                "log_extra_report": ""
+                "log_extra_report": "Any provisionally accepted, unclassified, or unclassified high-variance components with a decision table score greater than 'max_good_meanmetricrank' and variance explained greater than the variance explained upper threshold multiplied by the extend factor are rejected."
             },
             "_comment": "Code I007 in premodularized tedana. One of several steps that makes it more likely to reject high variance components"
         },
@@ -325,7 +329,7 @@
                 "left3": "kappa",
                 "right3": "kappa_elbow_kundu",
                 "log_extra_info": "If low variance, accept even if bad kappa & d_table_scores",
-                "log_extra_report": ""
+                "log_extra_report": "Any provisionally accepted, unclassified, or unclassified high-variance components with a decision table score greater than 'max_good_meanmetricrank', variance explained less than or equal to the variance explained lower threshold, and kappa less than or equal to the kappa elbow will be accepted and labeled as 'low variance'."
             },
             "_comment": "Code I008 in premodularized tedana"
         },
@@ -346,7 +350,7 @@
             "kwargs": {
                 "tag": "Likely BOLD",
                 "log_extra_info": "If nothing left is unclassified, then accept all",
-                "log_extra_report": ""
+                "log_extra_report": "If no components are still labeled as unclassified or unclassified high-variance, then all remaining provisionally accepted components are accepted."
             },
             "_comment": "No code in premodularized tedana"
         },
@@ -361,9 +365,9 @@
             },
             "kwargs": {
                 "log_extra_info": "",
-                "log_extra_report": ""
+                "log_extra_report": "If any components are still labeled as unclassified or unclassified high-variance, then a revised decision table score is calculated from the provisionally accepted, unclassified, and unclassified high-variance components."
             },
-            "_comment": "Add more here"
+            "_comment": "Calculate a new d_table_score. Why can't we use the original d_table_score function? Because it's a metric function?"
         },
         {
             "functionname": "dec_left_op_right",
@@ -390,7 +394,7 @@
                 "right3": "varex_upper_thresh",
                 "right3_scale": "extend_factor",
                 "log_extra_info": "Reject if a combination of kappa, variance, and other factors are ranked worse than others",
-                "log_extra_report": ""
+                "log_extra_report": "Any provisionally accepted, unclassified, or unclassified high-variance components with a revised decision tree score greater than the 'conservative_guess', variance explained-kappa ratio greater than the extend factor times two, and variance explained greater than the variance explained upper threshold times the extend factor are rejected."
             },
             "_comment": "Code I009 in premodularized tedana. Quirky combination 1 of a bunch of metrics that deal with rejecting some edge cases"
         },
@@ -416,7 +420,7 @@
                 "right2": "varex_lower_thresh",
                 "right2_scale": "extend_factor",
                 "log_extra_info": "Reject if a combination of variance and ranks of other metrics are worse than others",
-                "log_extra_report": ""
+                "log_extra_report": "Any provisionally accepted, unclassified, or unclassified high-variance components with a revised decision table score greater than 'num_acc_guess' times 0.9 and variance explained greater than variance explained lower threshold times the extend factor are rejected."
             },
             "_comment": "Code I010 in premodularized tedana. Quirky combination 2 of a bunch of metrics that deal with rejecting some edge cases"
         },
@@ -434,8 +438,9 @@
             "kwargs": {
                 "num_highest_var_comps": "num_acc_guess",
                 "log_extra_info": "",
-                "log_extra_report": ""
-            }
+                "log_extra_report": "An updated variance explained lower threshold (25th percentile) is calculated from the 'num_acc_guess' highest variance explained components among the remaining provisionally accepted, unclassified, and unclassified high-variance components."
+            },
+            "_comment": ""
         },
         {
             "functionname": "dec_left_op_right",
@@ -457,7 +462,7 @@
                 "left2": "variance explained",
                 "right2": "varex_new_lower_thresh",
                 "log_extra_info": "Accept components with a bad d_table_score, but are at the higher end of the remaining variance so more cautious to not remove",
-                "log_extra_report": ""
+                "log_extra_report": "Any provisionally accepted, unclassified, or unclassified high-variance components with a revised decision table score greater than 'num_acc_guess' and variance explained greater than the new variance explained lower threshold are accepted and labeled as 'borderline'."
             },
             "_comment": "Code I011 in premodularized tedana. Yet another quirky criterion, but this one to keep components. In the original tree, varex_new_lower_thresh would be lower than it is here. If there are differences in results, might be worth adding a scaling factor"
         },
@@ -481,7 +486,7 @@
                 "left2": "variance explained",
                 "right2": "varex_new_lower_thresh",
                 "log_extra_info": "For not already rejected components, accept ones below the kappa elbow, but at the higher end of the remaining variance so more cautious to not remove",
-                "log_extra_report": ""
+                "log_extra_report": "Any provisionally accepted, unclassified, or unclassified high-variance components with kappa less than or equal to the kappa elbow and variance explained greater than the new variance explained lower threshold are accepted and labeled as 'borderline'."
             },
             "_comment": "Code I012 in premodularized tedana. Yet another quirky criterion, but this one to keep components. In the original tree, varex_new_lower_thresh might be lower than it is here. If there are differences in results, might be worth adding a scaling factor"
         },
