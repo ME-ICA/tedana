@@ -3,7 +3,6 @@ Run the "canonical" TE-Dependent ANAlysis workflow.
 """
 import argparse
 import datetime
-import inspect
 import json
 import logging
 import os
