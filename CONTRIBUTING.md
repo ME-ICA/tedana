@@ -10,17 +10,27 @@ Here are some [instructions][link_signupinstructions].
 
 Already know what you're looking for in this guide? Jump to the following sections:
 
-* [Joining the conversation](#joining-the-conversation)
-* [Contributing small documentation changes](#contributing-small-documentation-changes)
-* [Contributing through Github](#contributing-through-github)
-* [Understanding issues, milestones, and project boards](#understanding-issues-milestones-and-project-boards)
-* [Installing in editable mode](#3-Run-the-developer-setup)
-* [Making a change](#making-a-change)
-* [Testing your change](#5-Test-your-changes)
-* [Viewing Documentation Locally](#Changes-to-documentation)
-* [Structuring contributions](#style-guide)
-* [Recognizing contributors](#Recognizing-contributors)
-* [Monthly calls and testing guidelines][link_developing_rtd]
+- [Contributing to `tedana`](#contributing-to-tedana)
+  - [Joining the conversation](#joining-the-conversation)
+  - [Contributing small documentation changes](#contributing-small-documentation-changes)
+  - [Contributing through GitHub](#contributing-through-github)
+  - [Understanding issues, milestones and project boards](#understanding-issues-milestones-and-project-boards)
+    - [Issue labels](#issue-labels)
+  - [Making a change](#making-a-change)
+    - [1. Comment on an existing issue or open a new issue referencing your addition](#1-comment-on-an-existing-issue-or-open-a-new-issue-referencing-your-addition)
+    - [2. Fork the tedana repository to your GitHub profile](#2-fork-the-tedana-repository-to-your-github-profile)
+    - [3. Run the developer setup](#3-run-the-developer-setup)
+    - [4. Make the changes you've discussed](#4-make-the-changes-youve-discussed)
+    - [5. Test your changes](#5-test-your-changes)
+      - [Changes to documentation](#changes-to-documentation)
+    - [6. Submit a pull request](#6-submit-a-pull-request)
+    - [Pull Requests](#pull-requests)
+    - [Pull Request Checklist (For Fastest Review):](#pull-request-checklist-for-fastest-review)
+    - [Comprehensive Developer Guide](#comprehensive-developer-guide)
+  - [Style Guide](#style-guide)
+    - [Writing in ReStructuredText](#writing-in-restructuredtext)
+  - [Recognizing contributors](#recognizing-contributors)
+  - [Thank you!](#thank-you)
 
 Don't know where to get started?
 Read [Joining the conversation](#joining-the-conversation) and pop into
@@ -293,6 +303,7 @@ The Python code itself should follow [PEP8][link_pep8] convention,
 with at most about 500 lines of code (not including docstrings) per script.
 We use [black][link_black] and [isort][link_isort] to enforce this code style,
 and we strongly recommend running both tools on your fork before opening a pull request.
+To make sure all commits are formatted correctly, we use [pre-commit][link_precommit].
 
 Additionally, we have adopted a primarily functional approach in `tedana`,
 so we avoid defining our own classes within the library unless absolutely necessary.
@@ -376,6 +387,7 @@ You're awesome. :wave::smiley:
 [link_pep8]: https://www.python.org/dev/peps/pep-0008/
 [link_black]: https://black.readthedocs.io/en/stable/
 [link_isort]: https://pycqa.github.io/isort/
+[link_precommit]: https://pre-commit.com/
 [link_rst_guide]: http://docs.sphinxdocs.com/en/latest/step-1.html
 
 [link_contributors]: https://github.com/ME-ICA/tedana/graphs/contributors
