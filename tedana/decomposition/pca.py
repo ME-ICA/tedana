@@ -396,7 +396,7 @@ def tedpca(
     comptable["rationale"] = ""
 
     if algorithm in ["mdl", "aic", "kic"]:
-        # Continue the standard branch oif the logic with Kundu
+        # Continue the standard branch of the logic with Kundu
         # TODO the logic here needs a big refactoring
 
         comptable, metric_metadata = kundu_tedpca(
@@ -452,11 +452,9 @@ def tedpca(
                 n_varex_95,
             ]
         )
-        # TODO ^^^^^ end ^^^^^
 
-        # Plot maPCA optimization curves
-        LGR.info("Plotting maPCA optimization curves")
-        breakpoint()
+        # Plot PCA selection curves
+        LGR.info("Plotting PCA selection curves")
         plot_pca_results(pca_optimization_curves, pca_criteria_components, all_varex, io_generator)
 
     # Save decomposition files
