@@ -101,11 +101,11 @@ def tedpca(
         to select
         Default is 'aic'.
     kdaw : :obj:`float`, optional
-        Dimensionality augmentation weight for Kappa calculations. Must be a
-        non-negative float, or -1 (a special value). Default is 10.
+        Dimensionality augmentation weight for Kappa calculations when `algorithm` is
+        'kundu'. Must be a non-negative float, or -1 (a special value). Default is 10.
     rdaw : :obj:`float`, optional
-        Dimensionality augmentation weight for Rho calculations. Must be a
-        non-negative float, or -1 (a special value). Default is 1.
+        Dimensionality augmentation weight for Rho calculations when `algorithm` is
+        'kundu'. Must be a non-negative float, or -1 (a special value). Default is 1.
     verbose : :obj:`bool`, optional
         Whether to output files from fitmodels_direct or not. Default: False
     low_mem : :obj:`bool`, optional
@@ -157,9 +157,8 @@ def tedpca(
             - Nonsignificant :math:`{\\kappa}` and :math:`{\\rho}`.
             - Nonsignificant variance explained.
 
-    Outputs:
-
-    This function writes out several files:
+    Generated Files
+    ---------------
 
     ===========================    =============================================
     Default Filename               Content
@@ -305,6 +304,22 @@ def tedpca(
                 "explained_variance_total": varex_95_varexp,
             },
         }
+        if "subsampling_" in dir(ma_pca):
+            # Since older version of MAPCA did not log these values
+            # Check before trying to access the values. This will be
+            # unnecessary and removal once logging these values gets
+            # a new version number in MAPCA and tedana updates its
+            # minimum MAPCA version
+            mapca_results["MAPCA_subsampling"] = {
+                "calculated_IID_subsample_depth": ma_pca.subsampling_[
+                    "calculated_IID_subsample_depth"
+                ],
+                "calculated_IID_subsample_mean": ma_pca.subsampling_[
+                    "calculated_IID_subsample_mean"
+                ],
+                "effective_num_IID_samples": ma_pca.subsampling_["effective_num_IID_samples"],
+                "total_num_samples": ma_pca.subsampling_["total_num_samples"],
+            }
 
         # Save dictionary
         io_generator.save_file(mapca_results, "PCA cross component metrics json")
@@ -319,6 +334,10 @@ def tedpca(
     elif low_mem:
         voxel_comp_weights, varex, varex_norm, comp_ts = low_mem_pca(data_z)
     else:
+        # If algorithm is kundu or kundu-stablize component metrics
+        # are calculated without dimensionality estimation and
+        # reduction and then kundu identifies components that are
+        # to be accepted or rejected
         ppca = PCA(copy=False, n_components=(n_vols - 1))
         ppca.fit(data_z)
         comp_ts = ppca.components_.T
@@ -402,11 +421,13 @@ def tedpca(
 
         n_val_kundu = values_kundu_st.shape[0]
         n_val = aic["value"].shape[0]
-        if n_val > n_val_kundu :
+        if n_val > n_val_kundu:
             values_kundu = np.concatenate(
-                [values_kundu, np.array([np.nan] * (n_val - n_val_kundu))])
+                [values_kundu, np.array([np.nan] * (n_val - n_val_kundu))]
+            )
             values_kundu_st = np.concatenate(
-                [values_kundu_st, np.array([np.nan] * (n_val - n_val_kundu))])
+                [values_kundu_st, np.array([np.nan] * (n_val - n_val_kundu))]
+            )
         else:
             values_kundu = values_kundu[:n_val]
             values_kundu_st = values_kundu_st[:n_val]
@@ -417,7 +438,7 @@ def tedpca(
                 kic["value"].reshape(1, -1),
                 mdl["value"].reshape(1, -1),
                 values_kundu.reshape(1, -1),
-                values_kundu_st.reshape(1, -1)
+                values_kundu_st.reshape(1, -1),
             ]
         )
         pca_criteria_components = np.array(

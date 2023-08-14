@@ -35,6 +35,16 @@
       ]
     },
     {
+      "login": "marco7877",
+      "name": "Marco Flores-Coronado",
+      "avatar_url": "https://avatars.githubusercontent.com/u/56403434?v=4",
+      "profile": "https://github.com/marco7877",
+      "contributions": [
+        "ideas",
+        "doc"
+      ]
+    },
+    {
       "login": "javiergcas",
       "name": "Javier Gonzalez-Castillo",
       "avatar_url": "https://avatars1.githubusercontent.com/u/7314358?v=4",
@@ -54,7 +64,8 @@
         "design",
         "doc",
         "example",
-        "review"
+        "review",
+        "code"
       ]
     },
     {
@@ -76,6 +87,28 @@
         "code",
         "infra",
         "question"
+      ]
+    },
+    {
+      "login": "pmolfese",
+      "name": "Pete Molfese",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3665743?v=4",
+      "profile": "https://github.com/pmolfese",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "n-reddy",
+      "name": "Neha Reddy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/58482773?v=4",
+      "profile": "https://github.com/n-reddy",
+      "contributions": [
+        "bug",
+        "doc",
+        "ideas",
+        "question",
+        "review"
       ]
     },
     {
@@ -234,6 +267,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "giadaan",
+      "name": "giadaan",
+      "avatar_url": "https://avatars.githubusercontent.com/u/118978909?v=4",
+      "profile": "https://github.com/giadaan",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 5,
@@ -241,5 +283,7 @@
   "projectOwner": "ME-ICA",
   "repoType": "github",
   "repoHost": "https://github.com",
-  "skipCi": false
+  "skipCi": false,
+  "commitConvention": "angular",
+  "commitType": "docs"
 }

@@ -1,3 +1,4 @@
+import logging
 import os
 from os.path import join as opj
 from pathlib import Path
@@ -8,7 +9,10 @@ from bokeh import __version__ as bokehversion
 from bokeh import embed, layouts, models
 
 from tedana import __version__
+from tedana.io import load_json
 from tedana.reporting import dynamic_figures as df
+
+LGR = logging.getLogger("GENERAL")
 
 
 def _generate_buttons(out_dir):
@@ -124,15 +128,65 @@ def generate_report(io_generator, tr):
     comptable_path = io_generator.get_name("ICA metrics tsv")
     comptable_cds = df._create_data_struct(comptable_path)
 
+    # Load the cross component metrics, including the kappa & rho elbows
+    cross_component_metrics_path = io_generator.get_name("ICA cross component metrics json")
+    cross_comp_metrics_dict = load_json(cross_component_metrics_path)
+
+    def get_elbow_val(elbow_prefix):
+        """
+        Find cross component metrics that begin with elbow_prefix and output the value
+        Current prefixes are kappa_elbow_kundu and rho_elbow_kundu. This flexability
+        means anything that begins [kappa/rho]_elbow will be found and used regardless
+        of the suffix. If more than one metric has the prefix then the alphabetically
+        first one will be used and a warning will be logged
+        """
+
+        elbow_keys = [k for k in cross_comp_metrics_dict.keys() if elbow_prefix in k]
+        elbow_keys.sort()
+        if len(elbow_keys) == 0:
+            LGR.warning(
+                f"No {elbow_prefix} saved in cross_component_metrics so not displaying in report"
+            )
+            return None
+        elif len(elbow_keys) == 1:
+            return cross_comp_metrics_dict[elbow_keys[0]]
+        else:
+            printed_key = elbow_keys[0]
+            unprinted_keys = elbow_keys[1:]
+
+            LGR.warning(
+                "More than one key saved in cross_component_metrics begins with "
+                f"{elbow_prefix}. The lines on the plots will be for {printed_key} "
+                f"NOT {unprinted_keys}"
+            )
+            return cross_comp_metrics_dict[printed_key]
+
+    kappa_elbow = get_elbow_val("kappa_elbow")
+    rho_elbow = get_elbow_val("rho_elbow")
+
     # Create kappa rho plot
-    kappa_rho_plot = df._create_kr_plt(comptable_cds)
+    kappa_rho_plot = df._create_kr_plt(comptable_cds, kappa_elbow=kappa_elbow, rho_elbow=rho_elbow)
 
     # Create sorted plots
     kappa_sorted_plot = df._create_sorted_plt(
-        comptable_cds, n_comps, "kappa_rank", "kappa", "Kappa Rank", "Kappa"
+        comptable_cds,
+        n_comps,
+        "kappa_rank",
+        "kappa",
+        title="Kappa Rank",
+        x_label="Components sorted by Kappa",
+        y_label="Kappa",
+        elbow=kappa_elbow,
     )
     rho_sorted_plot = df._create_sorted_plt(
-        comptable_cds, n_comps, "rho_rank", "rho", "Rho Rank", "Rho"
+        comptable_cds,
+        n_comps,
+        "rho_rank",
+        "rho",
+        title="Rho Rank",
+        x_label="Components sorted by Rho",
+        y_label="Rho",
+        elbow=rho_elbow,
     )
     varexp_pie_plot = df._create_varexp_pie_plt(comptable_cds, n_comps)
 
