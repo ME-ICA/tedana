@@ -83,7 +83,12 @@ def _update_template_bokeh(bokeh_id, info_table, about, references, bokeh_js, bu
     with open(str(body_template_path), "r") as body_file:
         body_tpl = Template(body_file.read())
     body = body_tpl.substitute(
-        content=bokeh_id, info=info_table, about=about, references=references, javascript=bokeh_js, buttons=buttons
+        content=bokeh_id,
+        info=info_table,
+        about=about,
+        references=references,
+        javascript=bokeh_js,
+        buttons=buttons,
     )
     return body
 
@@ -111,11 +116,11 @@ def _generate_info_table(info_dict):
     """Generate a table with relevant information about the
     system and tedana.
     """
-    resource_path = Path(__file__).resolve().parent.joinpath('data', 'html')
+    resource_path = Path(__file__).resolve().parent.joinpath("data", "html")
 
-    info_template_name = 'report_info_table_template.html'
+    info_template_name = "report_info_table_template.html"
     info_template_path = resource_path.joinpath(info_template_name)
-    with open(str(info_template_path), 'r') as info_file:
+    with open(str(info_template_path), "r") as info_file:
         info_tpl = Template(info_file.read())
 
     info_dict = info_dict["GeneratedBy"][0]
@@ -123,15 +128,17 @@ def _generate_info_table(info_dict):
     version_python = info_dict["Python"]
     info_dict = info_dict["Node"]
 
-    info_html = info_tpl.substitute(command=command,
-                                    system=info_dict["System"],
-                                    node=info_dict["Name"],
-                                    release=info_dict["Release"],
-                                    sysversion=info_dict["Version"],
-                                    machine=info_dict["Machine"],
-                                    processor=info_dict["Processor"],
-                                    python=version_python,
-                                    tedana=__version__)
+    info_html = info_tpl.substitute(
+        command=command,
+        system=info_dict["System"],
+        node=info_dict["Name"],
+        release=info_dict["Release"],
+        sysversion=info_dict["Version"],
+        machine=info_dict["Machine"],
+        processor=info_dict["Processor"],
+        python=version_python,
+        tedana=__version__,
+    )
     return info_html
 
 
