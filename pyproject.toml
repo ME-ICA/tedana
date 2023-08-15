@@ -57,7 +57,6 @@ tests = [
     "flake8-pyproject",
     "flake8-unused-arguments",
     "flake8-use-fstring",
-    "flake8-warnings",
     "pep8-naming",
     "pytest",
     "pytest-cov>=4.0.0",
