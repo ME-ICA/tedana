@@ -323,7 +323,7 @@ def ica_reclassify_workflow(
             in_both.append(a)
 
     if len(in_both) != 0:
-        raise ValueError("The following components were both accepted and rejected: " f"{in_both}")
+        raise ValueError(f"The following components were both accepted and rejected: {in_both}")
 
     # boilerplate
     basename = "report"
@@ -377,12 +377,7 @@ def ica_reclassify_workflow(
     )
 
     # Make a new selector with the added files
-    selector = selection.component_selector.ComponentSelector(
-        previous_tree_fname,
-        comptable,
-        cross_component_metrics=xcomp,
-        status_table=status_table,
-    )
+    selector = selection.component_selector.ComponentSelector(previous_tree_fname)
 
     if accept:
         selector.add_manual(accept, "accepted")
@@ -390,7 +385,11 @@ def ica_reclassify_workflow(
     if reject:
         selector.add_manual(reject, "rejected")
 
-    selector.select()
+    selector.select(
+        comptable,
+        cross_component_metrics=xcomp,
+        status_table=status_table,
+    )
     comptable = selector.component_table_
 
     # NOTE: most of these will be identical to previous, but this makes
