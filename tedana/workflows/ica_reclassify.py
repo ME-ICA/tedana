@@ -63,7 +63,7 @@ def _get_parser():
         dest="manual_reject",
         nargs="+",
         help=(
-            "Component indices to accept (zero-indexed)."
+            "Component indices to reject (zero-indexed)."
             "Supply as a comma-delimited liist with no spaces, "
             "as a csv file, or as a text file with an allowed "
             f"delimiter {repr(ALLOWED_COMPONENT_DELIMITERS)}."
