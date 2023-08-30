@@ -470,6 +470,19 @@ def tedana_workflow(
     logname = op.join(out_dir, (basename + start_time + "." + extension))
     utils.setup_loggers(logname, repname, quiet=quiet, debug=debug)
 
+    # Save command into sh file, if the command-line interface was used
+    # TODO: use io_generator to save command
+    if tedana_command is not None:
+        command_file = open(os.path.join(out_dir, "tedana_call.sh"), "w")
+        command_file.write(tedana_command)
+        command_file.close()
+    else:
+        # Get variables passed to function if the tedana command is None
+        variables = ", ".join(f"{name}={value}" for name, value in locals().items())
+        # From variables, remove everything after ", tedana_command"
+        variables = variables.split(", tedana_command")[0]
+        tedana_command = f"tedana_workflow({variables})"
+
     LGR.info("Using output directory: {}".format(out_dir))
 
     # ensure tes are in appropriate format
@@ -500,19 +513,6 @@ def tedana_workflow(
         overwrite=overwrite,
         verbose=verbose,
     )
-
-    # Save command into sh file, if the command-line interface was used
-    # TODO: use io_generator to save command
-    if tedana_command is not None:
-        command_file = open(os.path.join(out_dir, "tedana_call.sh"), "w")
-        command_file.write(tedana_command)
-        command_file.close()
-    else:
-        # Get variables passed to function if the tedana command is None
-        variables = ", ".join(f"{name}={value}" for name, value in locals().items())
-        # From variables, remove everything after ", tedana_command"
-        variables = variables.split(", tedana_command")[0]
-        tedana_command = f"tedana_workflow({variables})"
 
     # Record inputs to OutputGenerator
     # TODO: turn this into an IOManager since this isn't really output
