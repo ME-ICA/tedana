@@ -401,7 +401,10 @@ component (selected in the summary view, see below). It includes three different
   Finally, the color of the trace informs us about the component classification status.
   Plausibly BOLD-weighted components might have reponses the follow the a task design, 
   while components that are less likely to be BOLD-weighted might have large signal
-  spikes or slow drifts.
+  spikes or slow drifts. If a high variance component time series initially has a few
+  very high magnitude volumes, that is a sign non-steady state volumes were not removed
+  before running ``tedana``. Keeping these volumes might results in a suboptimal ICA
+  results. ``tedana`` should be run without any initial non-steady state volumes.
 
 .. image:: /_static/rep01_tsPlot.png
   :align: center

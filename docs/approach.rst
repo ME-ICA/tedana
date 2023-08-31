@@ -36,6 +36,11 @@ manner.
 
 .. image:: /_static/a02_echo_value_distributions.png
 
+.. note::
+    In this example, the non-steady state volumes at the beginning of the run are
+    excluded. Some pulse sequences save these initial volumes and some do not. If
+    they are saved, then the first few volume in a run will have much larger relative
+    magnitudes. These initial volumes should be removed before running ``tedana``
 
 ************************
 Adaptive mask generation
@@ -49,8 +54,8 @@ have good signal for some echoes.
 In order to avoid using bad signal from affected echoes in calculating
 :math:`T_{2}^*` and :math:`S_{0}` for a given voxel, ``tedana`` generates an
 adaptive mask, where the value for each voxel is the number of echoes with
-"good" signal. The voxel in the shortest echo with the 33rd percentile signal
-is identified. The threshold for each echo is the signal in the same voxel
+"good" signal. The voxel in the shortest echo with the 33rd percentile mean signal
+across time is identified. The threshold for each echo is the signal in the same voxel
 divided by 3. This is an arbitrary, but conservative threshold in that it only
 excludes voxels where the signal is much lower than other measured signals in
 each echo. When :math:`T_{2}^*` and :math:`S_{0}` are calculated below, each
