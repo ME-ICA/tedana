@@ -49,10 +49,16 @@ have good signal for some echoes.
 In order to avoid using bad signal from affected echoes in calculating
 :math:`T_{2}^*` and :math:`S_{0}` for a given voxel, ``tedana`` generates an
 adaptive mask, where the value for each voxel is the number of echoes with
-"good" signal.
-When :math:`T_{2}^*` and :math:`S_{0}` are calculated below, each voxel's values
-are only calculated from the first :math:`n` echoes, where :math:`n` is the
-value for that voxel in the adaptive mask.
+"good" signal. The voxel in the shortest echo with the 33rd percentile signal
+is identified. The threshold for each echo is the signal in the same voxel
+divided by 3. This is an arbitrary, but conservative threshold in that it only
+excludes voxels where the signal is much lower than other measured signals in
+each echo. When :math:`T_{2}^*` and :math:`S_{0}` are calculated below, each
+voxel's valusesare only calculated from the first :math:`n` echoes, where
+:math:`n` is the value for that voxel in the adaptive mask. By default, the
+optimally combined and denoised time series will include voxels where there
+is at least one good echo, but ICA and the fit maps require at least three
+good echoes.
 
 .. note::
     ``tedana`` allows users to provide their own mask.
@@ -60,9 +66,8 @@ value for that voxel in the adaptive mask.
     it further based on the data.
     If a mask is not provided, ``tedana`` runs :func:`nilearn.masking.compute_epi_mask`
     on the first echo's data to derive a mask prior to adaptive masking.
-    The workflow does this because the adaptive mask generation function
-    sometimes identifies almost the entire bounding box as "brain", and
-    ``compute_epi_mask`` restricts analysis to a more reasonable area.
+    Some brain masking is required because the percile-based thresholding
+    in the adaptive mask will be flawed if it includes all out-of-brain voxels.
 
 .. image:: /_static/a03_adaptive_mask.png
   :width: 600 px
