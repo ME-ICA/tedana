@@ -19,7 +19,6 @@ from tedana.selection.selection_utils import (
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 @fill_doc

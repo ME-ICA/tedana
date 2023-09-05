@@ -1,8 +1,7 @@
 {
     "tree_id": "minimal_decision_tree_test1",
     "info": "Proposed minimal decision tree",
-    "report": "This is based on the minimal criteria of the original MEICA decision tree without the more aggressive noise removal steps",
-    "refs": "Kundu 2013; DuPre, Salo, 2021",
+    "report": "This is based on the minimal criteria of the original MEICA decision tree \\citep{kundu2013integrated} without the more aggressive noise removal steps \\citep{dupre2021te}.",
     "necessary_metrics": [
         "kappa",
         "rho",

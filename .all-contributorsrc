@@ -64,7 +64,8 @@
         "design",
         "doc",
         "example",
-        "review"
+        "review",
+        "code"
       ]
     },
     {
@@ -283,5 +284,6 @@
   "repoType": "github",
   "repoHost": "https://github.com",
   "skipCi": false,
-  "commitConvention": "angular"
+  "commitConvention": "angular",
+  "commitType": "docs"
 }
