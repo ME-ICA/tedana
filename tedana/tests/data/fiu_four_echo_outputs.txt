@@ -1,5 +1,5 @@
 desc-ICA_mixing_static.tsv
-references.bib
+sub-01_references.bib
 sub-01_S0map.nii.gz
 sub-01_T2starmap.nii.gz
 sub-01_dataset_description.json

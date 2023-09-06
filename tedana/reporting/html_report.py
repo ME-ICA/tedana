@@ -235,7 +235,7 @@ def generate_report(io_generator, tr):
     with open(opj(io_generator.out_dir, f"{io_generator.prefix}report.txt"), "r+") as f:
         about = f.read()
 
-    with open(opj(io_generator.out_dir, "references.bib"), "r") as f:
+    with open(opj(io_generator.out_dir, f"{io_generator.prefix}references.bib"), "r") as f:
         references = f.read()
 
     body = _update_template_bokeh(

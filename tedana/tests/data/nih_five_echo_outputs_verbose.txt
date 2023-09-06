@@ -78,7 +78,7 @@ sub-01_echo-5_desc-PCAT2ModelPredictions_components.nii.gz
 sub-01_echo-5_desc-PCAS0ModelPredictions_components.nii.gz
 sub-01_echo-5_desc-PCA_components.nii.gz
 sub-01_echo-5_desc-Rejected_bold.nii.gz
-references.bib
+sub-01_references.bib
 sub-01_report.txt
 sub-01_tedana_report.html
 figures
