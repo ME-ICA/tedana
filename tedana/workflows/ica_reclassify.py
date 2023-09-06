@@ -326,7 +326,7 @@ def ica_reclassify_workflow(
         raise ValueError("The following components were both accepted and rejected: " f"{in_both}")
 
     # boilerplate
-    prefix = prefix + "_" if (prefix != "" and not prefix.endswith("_")) else prefix
+    prefix = io._infer_prefix(prefix)
     basename = f"{prefix}report"
     extension = "txt"
     repname = op.join(out_dir, (basename + "." + extension))

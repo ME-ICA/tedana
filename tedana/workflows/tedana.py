@@ -445,7 +445,7 @@ def tedana_workflow(
         os.mkdir(out_dir)
 
     # boilerplate
-    prefix = prefix + "_" if (prefix != "" and not prefix.endswith("_")) else prefix
+    prefix = io._infer_prefix(prefix)
     basename = f"{prefix}report"
     extension = "txt"
     repname = op.join(out_dir, (basename + "." + extension))

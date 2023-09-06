@@ -131,7 +131,7 @@ class OutputGenerator:
         self.convention = convention
         self.out_dir = op.abspath(out_dir)
         self.figures_dir = op.join(out_dir, "figures")
-        self.prefix = prefix + "_" if prefix != "" else ""
+        self.prefix = _infer_prefix(prefix)
         self.overwrite = overwrite
         self.verbose = verbose
         self.registry = {}
@@ -920,3 +920,8 @@ def fname_to_component_list(fname: str) -> List[int]:
     with open(fname, "r") as fp:
         contents = fp.read()
         return str_to_component_list(contents)
+
+
+def _infer_prefix(prefix):
+    """Determine the appropriate prefix for output files."""
+    prefix = prefix + "_" if (prefix != "" and not prefix.endswith("_")) else prefix
