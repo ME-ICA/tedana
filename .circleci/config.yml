@@ -21,7 +21,7 @@ jobs:
             if [ ! -d /opt/conda/envs/tedana_py38 ]; then
               conda create -yq -n tedana_py38 python=3.8
               source activate tedana_py38
-              pip install -e .[tests]
+              pip install -e .[reports,tests]
             fi
       - save_cache:
           key: conda-py38-v2-{{ checksum "pyproject.toml" }}
@@ -66,7 +66,7 @@ jobs:
             if [ ! -d /opt/conda/envs/tedana_py39 ]; then
               conda create -yq -n tedana_py39 python=3.9
               source activate tedana_py39
-              pip install .[tests]
+              pip install .[reports,tests]
             fi
       - run:
           name: Running unit tests
@@ -100,7 +100,7 @@ jobs:
             if [ ! -d /opt/conda/envs/tedana_py310 ]; then
               conda create -yq -n tedana_py310 python=3.10
               source activate tedana_py310
-              pip install .[tests]
+              pip install .[reports,tests]
             fi
       - run:
           name: Running unit tests
