@@ -39,7 +39,6 @@ Documentation = "https://www.tedana.readthedocs.io"
 Paper = "https://joss.theoj.org/papers/10.21105/joss.03669"
 
 [project.optional-dependencies]
-dev = ["pre-commit"]
 doc = [
     "sphinx>=6.2.1",
     "sphinx_copybutton",
@@ -60,7 +59,7 @@ tests = [
 ]
 
 # Aliases
-all = ["tedana[dev,doc,tests]"]
+all = ["tedana[doc,tests]"]
 
 [project.scripts]
 ica_reclassify = "tedana.workflows.ica_reclassify:_main"
