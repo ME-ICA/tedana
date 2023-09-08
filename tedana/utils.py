@@ -428,3 +428,16 @@ def get_resource_path():
     Based on function by Yaroslav Halchenko used in Neurosynth Python package.
     """
     return op.abspath(op.join(op.dirname(__file__), "resources") + op.sep)
+
+
+def _check_report_dependencies():
+    """Check if dependencies required for reports are installed."""
+    try:
+        import bokeh  # noqa F401
+        import jinja2  # noqa F401
+    except ImportError:
+        raise ImportError(
+            "Running tedana/ica_reclassify without the --no-reports flag requires extra "
+            "dependencies. "
+            "Please install tedana with the [reports] dependency group "
+            "(e.g., 'pip install tedana[reports]').")

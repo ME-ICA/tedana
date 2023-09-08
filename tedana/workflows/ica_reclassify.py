@@ -242,8 +242,7 @@ def ica_reclassify_workflow(
     debug=False,
     quiet=False,
 ):
-    """
-    Run the post-tedana manual classification workflow.
+    """Run the post-tedana manual classification workflow.
 
     Please remember to cite [1]_.
 
@@ -251,9 +250,9 @@ def ica_reclassify_workflow(
     ----------
     registry: :obj:`str`
         The previously run registry as a JSON file.
-    accept: :obj: `list`
+    accept: :obj:`list`
         A list of integer values of components to accept in this workflow.
-    reject: :obj: `list`
+    reject: :obj:`list`
         A list of integer values of components to reject in this workflow.
     out_dir : :obj:`str`, optional
         Output directory.
@@ -262,10 +261,10 @@ def ica_reclassify_workflow(
         denoising. Default is False.
     mir : :obj:`bool`, optional
         Run minimum image regression after denoising. Default is False.
-    no_reports : obj:'bool', optional
+    no_reports : obj:`bool`, optional
         Do not generate .html reports and .png plots. Default is false such
         that reports are generated.
-    png_cmap : obj:'str', optional
+    png_cmap : obj:`str`, optional
         Name of a matplotlib colormap to be used when generating figures.
         Cannot be used with --no-png. Default is 'coolwarm'.
     debug : :obj:`bool`, optional
@@ -291,6 +290,9 @@ def ica_reclassify_workflow(
            TE-dependent analysis of multi-echo fMRI with tedana.
            Journal of Open Source Software, 6(66), 3669. doi:10.21105/joss.03669.
     """
+    if not no_reports:
+        utils._check_report_dependencies()
+
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
         os.mkdir(out_dir)

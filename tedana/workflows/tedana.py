@@ -440,6 +440,9 @@ def tedana_workflow(
     ----------
     .. footbibliography::
     """
+    if not no_reports:
+        utils._check_report_dependencies()
+
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
