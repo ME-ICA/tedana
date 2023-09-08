@@ -925,3 +925,4 @@ def fname_to_component_list(fname: str) -> List[int]:
 def _infer_prefix(prefix):
     """Determine the appropriate prefix for output files."""
     prefix = prefix + "_" if (prefix != "" and not prefix.endswith("_")) else prefix
+    return prefix
