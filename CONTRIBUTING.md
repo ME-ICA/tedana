@@ -290,9 +290,10 @@ Docstrings should follow [numpydoc][link_numpydoc] convention.
 We encourage extensive documentation.
 
 The Python code itself should follow [PEP8][link_pep8] convention, with at most about 500 lines of
-code (not including docstrings) per script. We use [black][link_black] and [isort][link_isort] to
-enforce this code style, and we strongly recommend running both tools on your fork before opening a
-pull request. We use [pre-commit][link_precommit] to automatically fix style issues when commit is
+code (not including docstrings) per script.
+We use [black][link_black] and [isort][link_isort] to enforce this code style,
+and we strongly recommend running both tools on your fork before opening a pull request.
+We use [pre-commit][link_precommit] to automatically fix style issues when commit is
 pushed rather than making contributors try to figure out why a contribution is out of compliance
 with the style guides.
 
