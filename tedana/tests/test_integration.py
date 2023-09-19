@@ -336,7 +336,8 @@ def test_integration_three_echo(skip_integration):
         low_mem=True,
         tedpca="aic",
     )
-
+    # TODO push changes to my branch
+    # TODO script downloading data...
     # Test re-running, but use the CLI
     args = [
         "-d",
@@ -353,7 +354,7 @@ def test_integration_three_echo(skip_integration):
         "--mix",
         os.path.join(out_dir, "desc-ICA_mixing.tsv"),
     ]
-    tedana_cli._main(args)
+    tedana_cli._main(args)  # FIXME ficheros no coinciden
 
     # compare the generated output files
     fn = resource_filename("tedana", "tests/data/cornell_three_echo_outputs.txt")
