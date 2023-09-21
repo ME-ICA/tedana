@@ -72,12 +72,13 @@ provided data are not already masked, ``tedana`` runs
 :func:`nilearn.masking.compute_epi_mask` to create a mask. This often works, but
 it is a fairly simple method and there are better masking tools in most fMRI
 processing pipelines, such as `AFNI`_. If your full preprocessing pipeline already
-generates a mask for fMRI data, we recommend inputting that mask to ``tedana`` using
+generates a mask for fMRI data, we recommend inputting that mask to ``tedana`` and using
 the ``--mask`` option. ``tedana`` additionally creates an adaptive mask that will
 exclude voxels from some steps that have large dropout in later echoes. The adaptive
 mask will flag some voxels in common dropout regions, but should not radically alter
-the inputted mask. Here is more information on the
-`creation and use of the adaptive mask`_.
+the inputted mask. The outputted optimally combined and denoised datasets will include
+all voxels in the inputted mask unless the adaptive mask identifies a voxel has having
+zero good echoes. Here is more information on the `creation and use of the adaptive mask`_.
 
 .. _AFNI: http://afni.nimh.nih.gov
 .. _creation and use of the adaptive mask: approach.html#adaptive-mask-generation

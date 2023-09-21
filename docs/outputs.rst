@@ -339,7 +339,7 @@ selection results. It includes four different plots.
 
 * **Kappa/Rho Scatter:** This is a scatter plot of `Kappa` vs. `Rho` features for all components.
   In the plot, each dot represents a different component. The x-axis represents the kappa feature, and the
-  y-axis represents the rho feature. `Kappa` is a summary metric on for how much
+  y-axis represents the rho feature. `Kappa` is a summary metric for how much
   BOLD information might be in a component and `rho` is a summary metric for how
   much non-BOLD information is in a component. Thus a component with a higher `kappa`
   and lower `rho` value is more likely to be retained. The solid gray line is
@@ -399,7 +399,7 @@ component (selected in the summary view, see below). It includes three different
   (selected in the summary view). The x-axis represents time (in units of TR and seconds),
   and the y-axis represents signal levels (in arbitrary units).
   Finally, the color of the trace informs us about the component classification status.
-  Plausibly BOLD-weighted components might have reponses the follow the a task design, 
+  Plausibly BOLD-weighted components might have responses that follow the task design, 
   while components that are less likely to be BOLD-weighted might have large signal
   spikes or slow drifts. If a high variance component time series initially has a few
   very high magnitude volumes, that is a sign non-steady state volumes were not removed

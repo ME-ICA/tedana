@@ -454,7 +454,7 @@ be preferable. In any case, you should calculate the spatial transform from just
 apply it across all of them.
 
 Similarly, if spatial normalization to a template is done, the spatial transform should be calculated
-once and the same transformation (ideally on transformation for motion correction, distortion correction,
+once and the same transformation (ideally one transformation for motion correction, distortion correction,
 and spatial normalization) should be applied to all echoes.
 
 
