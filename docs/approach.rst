@@ -59,7 +59,7 @@ across time is identified. The threshold for each echo is the signal in the same
 divided by 3. This is an arbitrary, but conservative threshold in that it only
 excludes voxels where the signal is much lower than other measured signals in
 each echo. When :math:`T_{2}^*` and :math:`S_{0}` are calculated below, each
-voxel's valuses are only calculated from the first :math:`n` echoes, where
+voxel's values are only calculated from the first :math:`n` echoes, where
 :math:`n` is the value for that voxel in the adaptive mask. By default, the
 optimally combined and denoised time series will include voxels where there
 is at least one good echo, but ICA and the fit maps require at least three
