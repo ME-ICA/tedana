@@ -1,5 +1,5 @@
 {
-    "tree_id": "kundu_MEICA27_decision_tree",
+    "tree_id": "MEICA25_decision_tree",
     "info": "Following the full decision tree designed by Prantik Kundu",
     "report": "This is based on the criteria of the MEICA v2.5 decision tree \\citep{kundu2013integrated}.",
     "necessary_metrics": [
@@ -20,7 +20,6 @@
     ],
     "intermediate_classifications": [
         "provisionalaccept",
-        "provisionalreject",
         "unclass_highvar"
     ],
     "classification_tags": [
@@ -332,7 +331,7 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "if_true": "provisionalreject",
+                "if_true": "rejected",
                 "if_false": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
@@ -360,11 +359,10 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "if_true": "provisionalreject",
+                "if_true": "rejected",
                 "if_false": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
-                    "provisionalreject",
                     "unclassified",
                     "unclass_highvar"
                 ],
@@ -388,7 +386,6 @@
             "parameters": {
                 "decide_comps": [
                     "provisionalaccept",
-                    "provisionalreject",
                     "unclassified",
                     "unclass_highvar"
                 ],
@@ -406,7 +403,6 @@
                 "if_false": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
-                    "provisionalreject",
                     "unclassified",
                     "unclass_highvar"
                 ],
@@ -430,7 +426,6 @@
                 "if_false": "nochange",
                 "decide_comps": [
                     "provisionalaccept",
-                    "provisionalreject",
                     "unclassified",
                     "unclass_highvar"
                 ],
@@ -450,18 +445,6 @@
         {
             "functionname": "manual_classify",
             "parameters": {
-                "new_classification": "rejected",
-                "decide_comps": "provisionalreject"
-            },
-            "kwargs": {
-                "log_extra_info": "Reject anything that is provisionalreject",
-                "log_extra_report": ""
-            },
-            "_comment": "Rejecting components that used to be midK. These were already assigned tags when given the provisionalreject label"
-        },
-        {
-            "functionname": "manual_classify",
-            "parameters": {
                 "new_classification": "accepted",
                 "decide_comps": [
                     "provisionalaccept",
@@ -470,7 +453,7 @@
                 ]
             },
             "kwargs": {
-                "log_extra_info": "Anything still provisional (accepted or unclassified) should be accepted",
+                "log_extra_info": "Anything still provisional (accepted or rejected) should be accepted",
                 "log_extra_report": "",
                 "tag": "Likely BOLD"
             },

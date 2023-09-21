@@ -94,18 +94,30 @@ make sure to output the denoised time series into a separate directory.
 
 .. _RICA: https://github.com/ME-ICA/rica
 
-*************************************************************************************
-[tedana] What is the difference between the kundu and minimal decision trees?
-*************************************************************************************
+.. _tree differences:
+
+********************************************************************************************
+[tedana] What is the difference between the tedana_v0.013 meica and minimal decision trees?
+********************************************************************************************
 
 The decision tree is the series of conditions through which each component is
-classified as accepted or rejected. The kundu tree (`--tree kundu`), used in Prantik
-Kundu's MEICA v2.5, is the classification process that has long
-been used by ``tedana`` and users have been generally content with the results. The
-kundu tree used multiple intersecting metrics and rankings to classify components.
-How these steps may interact on specific datasets is opaque. While there is a kappa
-(T2*-weighted) elbow threshold and a rho (S0-weighted) elbow threshold, as discussed
-in publications, no component is accepted or rejected because of those thresholds.
+classified as accepted or rejected. The meica tree (`--tree meica`) was created by Prantik
+Kundu for ``MEICA v2.5``, the predecessor to ``tedana``. Tedana's decision tree was based
+on this method, but we noticed a different that affected edge-case components. There were
+components that were re-evalued multiple times late in the decision tree in ``MEICA``,
+but, once ``tedana`` rejected them, they were excluded from additional steps. This means
+that ``meica`` might have accepted components that ``tedana`` was rejecting. When examining
+the effects of this divergance, we saw that ``meica`` sometimes accepted high variance
+components. While those additionally accepted components often looked like noise, we wanted
+to make sure users could made the decision processed published with the original ``meica``
+so we have included both the ``meica`` tree and the ``tedana_v0.013`` tree which has been
+successfully used for years. ``tedana_v0.013`` will always remove the same or more
+components.
+
+Both of the above trees use multiple intersecting metrics and rankings to classify
+components. How these steps may interact on specific datasets is opaque. While there is
+a kappa (T2*-weighted) elbow threshold and a rho (S0-weighted) elbow threshold, as
+discussed in publications, no component is accepted or rejected because of those thresholds.
 Users sometimes notice rejected components that clearly should have been accepted. For
 example, a component that included a clear T2*-weighted V1 response to a block design
 flashing checkerboard was sometimes rejected because the relatively large variance of
@@ -116,21 +128,19 @@ likely to reject T2* weighted components. There are a few other criteria, but co
 with `kappa>kappa elbow` and `rho<rho elbow` should all be accepted, and the rho elbow
 threshold is less stringent. If kappa is above threshold and more than 2X rho then it
 is also accepted under the assumption that, even if a component contains noise, there
-is sufficient T2*-weighted signal to retain. Similarly to the kundu tree, components
-with very low variance are retained so that degrees of freedom aren't wasted by
-removing them, but `minimal` makes sure that no more than 1% of total variance is
-removed this way.
+is sufficient T2*-weighted signal to retain. Similarly to the tedana_v0.013 and meica
+trees, components with very low variance are retained so that degrees of freedom aren't
+wasted by removing them, but `minimal` makes sure that no more than 1% of total variance
+is removed this way.
 
 ``tedana`` developers still want to examine how the minimal tree performs on a wide
 range of datasets, but the primary benefit is that it is possible to describe what it does
-in a short paragraph. The minimal tree will retain some components that kundu
-appropriately classifies as noise, and it will reject some components that kundu
-accepts. The goal for the minimal tree is to be a more conservative option that
-will be less likely to reject components that clearly contain signal-of-interest, but
-this has not yet been validated. The precise thresholds and steps in the minimal
-tree may change as the results from running it are examined on a wider range of data.
-The developers are looking for more people to compare results between the kundu and
-minimal trees, but if someone values stability when processing a large dataset,
+in a short paragraph. The minimal tree will retain some components that the other trees
+appropriately classifies as noise, and it will reject some components that the other trees
+accept. More work is needed to validate the results of the minimal tree. The precise
+thresholds and steps in the minimal tree may change as the results from running it are
+examined on a wider range of data. The developers are looking for more people to compare
+results between the trees, but if someone values stability when processing a large dataset,
 the minimal tree might not be the best option until it is tested and validated more.
 
 It is also possible for users to view both decision trees and `make their own`_.
@@ -154,7 +164,7 @@ Dr. Prantik Kundu developed a multi-echo ICA (ME-ICA) denoising method and
 version of this code is `distributed with AFNI as MEICA v2.5 beta 11`_. Most early
 publications that validated the MEICA method used variants of this code. That code
 runs only on the now defunct python 2.7 and is not under active development.
-``tedana`` when run with `--tree kundu --tedpca kundu` (or `--tedpca kundu-stabilize`),
+``tedana`` when run with `--tree meica --tedpca kundu` (or `--tedpca kundu-stabilize`),
 uses the same core algorithm as in MEICA v2.5. Since ICA is a nondeterministic
 algorithm and ``tedana`` and MEICA use different PCA and ICA code, the algorithm will
 mostly be the same, but the results will not be identical.

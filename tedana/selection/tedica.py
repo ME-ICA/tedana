@@ -10,7 +10,7 @@ LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
-def automatic_selection(component_table, n_echos, n_vols, tree="kundu", verbose=False):
+def automatic_selection(component_table, n_echos, n_vols, tree="tedana_v0.013", verbose=False):
     """Classify components based on component table and decision tree type.
 
     Parameters
@@ -20,7 +20,7 @@ def automatic_selection(component_table, n_echos, n_vols, tree="kundu", verbose=
     n_echos : :obj:`int`
         The number of echoes in this dataset
     tree : :obj:`str`
-        The type of tree to use for the ComponentSelector object. Default="kundu"
+        The type of tree to use for the ComponentSelector object. Default="tedana_v0.013"
     verbose : :obj:`bool`
         More verbose logging output if True. Default=False
 
@@ -32,10 +32,12 @@ def automatic_selection(component_table, n_echos, n_vols, tree="kundu", verbose=
 
     Notes
     -----
-    If tree=kundu, the selection algorithm used in this function was originated in ME-ICA
+    If tree=meica, the selection algorithm used in this function was originated in ME-ICA
     by Prantik Kundu, and his original implementation is available at:
     https://github.com/ME-ICA/me-ica/blob/\
     b2781dd087ab9de99a2ec3925f04f02ce84f0adc/meica.libs/select_model.py
+    The tedana_v0.013 tree is very similar to meica, but might accept fewer
+    edge-case components.
 
     The appropriate citation is :footcite:t:`kundu2013integrated`.
 
@@ -47,8 +49,8 @@ def automatic_selection(component_table, n_echos, n_vols, tree="kundu", verbose=
     components, a hypercommented version of this attempt is available at:
     https://gist.github.com/emdupre/ca92d52d345d08ee85e104093b81482e
 
-    If tree=="minimal", a selection algorithm based on the "kundu" tree will be used.
-    The differences between the "minimal" and "kundu" trees are described in the `FAQ`_.
+    If tree=="minimal", a selection algorithm based on the "meica" tree will be used.
+    The differences between the "minimal" and "meica" trees are described in the `FAQ`_.
 
     References
     ----------
@@ -56,12 +58,13 @@ def automatic_selection(component_table, n_echos, n_vols, tree="kundu", verbose=
 
     .. _FAQ: faq.html
     """
-    LGR.info("Performing ICA component selection with Kundu decision tree v2.5")
+    LGR.info("Performing ICA component selection")
+
+    # TODO Dynamically update citations
     RepLGR.info(
         "Next, component selection was performed to identify "
         "BOLD (TE-dependent), non-BOLD (TE-independent), and "
-        "uncertain (low-variance) components using the Kundu "
-        "decision tree (v2.5) \\citep{kundu2013integrated}."
+        "uncertain (low-variance) components \\citep{kundu2013integrated}."
     )
 
     component_table["classification_tags"] = ""
