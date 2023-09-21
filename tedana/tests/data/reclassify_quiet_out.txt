@@ -15,6 +15,7 @@ desc-tedana_metrics.json
 desc-tedana_metrics.tsv
 desc-tedana_registry.json
 figures
+ica_reclassify_call.sh
 references.bib
 report.txt
 tedana_report.html
