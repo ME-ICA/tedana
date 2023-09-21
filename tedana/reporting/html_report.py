@@ -54,7 +54,7 @@ def _generate_buttons(out_dir):
     return buttons_html
 
 
-def _update_template_bokeh(bokeh_id, about, references, bokeh_js, buttons):
+def _update_template_bokeh(bokeh_id, info_table, about, references, bokeh_js, buttons):
     """
     Populate a report with content.
 
@@ -62,12 +62,16 @@ def _update_template_bokeh(bokeh_id, about, references, bokeh_js, buttons):
     ----------
     bokeh_id : str
         HTML div created by bokeh.embed.components
+    info_table : str
+        HTML div created by _generate_info_table()
     about : str
         Reporting information for a given run
     references : str
         BibTeX references associated with the reporting information
     bokeh_js : str
         Javascript created by bokeh.embed.components
+    buttons : str
+        HTML div created by _generate_buttons()
     Returns
     -------
     HTMLReport : an instance of a populated HTML report
@@ -79,7 +83,12 @@ def _update_template_bokeh(bokeh_id, about, references, bokeh_js, buttons):
     with open(str(body_template_path), "r") as body_file:
         body_tpl = Template(body_file.read())
     body = body_tpl.substitute(
-        content=bokeh_id, about=about, references=references, javascript=bokeh_js, buttons=buttons
+        content=bokeh_id,
+        info=info_table,
+        about=about,
+        references=references,
+        javascript=bokeh_js,
+        buttons=buttons,
     )
     return body
 
@@ -101,6 +110,36 @@ def _save_as_html(body):
 
     html = head_tpl.substitute(version=__version__, bokehversion=bokehversion, body=body)
     return html
+
+
+def _generate_info_table(info_dict):
+    """Generate a table with relevant information about the
+    system and tedana.
+    """
+    resource_path = Path(__file__).resolve().parent.joinpath("data", "html")
+
+    info_template_name = "report_info_table_template.html"
+    info_template_path = resource_path.joinpath(info_template_name)
+    with open(str(info_template_path), "r") as info_file:
+        info_tpl = Template(info_file.read())
+
+    info_dict = info_dict["GeneratedBy"][0]
+    command = info_dict["Command"]
+    version_python = info_dict["Python"]
+    info_dict = info_dict["Node"]
+
+    info_html = info_tpl.substitute(
+        command=command,
+        system=info_dict["System"],
+        node=info_dict["Name"],
+        release=info_dict["Release"],
+        sysversion=info_dict["Version"],
+        machine=info_dict["Machine"],
+        processor=info_dict["Processor"],
+        python=version_python,
+        tedana=__version__,
+    )
+    return info_html
 
 
 def generate_report(io_generator, tr):
@@ -227,8 +266,16 @@ def generate_report(io_generator, tr):
     with open(opj(io_generator.out_dir, "references.bib"), "r") as f:
         references = f.read()
 
+    # Read info table
+    data_descr_path = io_generator.get_name("data description json")
+    data_descr_dict = load_json(data_descr_path)
+
+    # Create info table
+    info_table = _generate_info_table(data_descr_dict)
+
     body = _update_template_bokeh(
         bokeh_id=kr_div,
+        info_table=info_table,
         about=about,
         references=references,
         bokeh_js=kr_script,
