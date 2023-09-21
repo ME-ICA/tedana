@@ -71,7 +71,7 @@ good echoes.
     it further based on the data.
     If a mask is not provided, ``tedana`` runs :func:`nilearn.masking.compute_epi_mask`
     on the first echo's data to derive a mask prior to adaptive masking.
-    Some brain masking is required because the percile-based thresholding
+    Some brain masking is required because the percentile-based thresholding
     in the adaptive mask will be flawed if it includes all out-of-brain voxels.
 
 .. image:: /_static/a03_adaptive_mask.png
