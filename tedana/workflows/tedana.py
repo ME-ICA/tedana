@@ -8,6 +8,7 @@ import logging
 import os
 import os.path as op
 import shutil
+import sys
 from glob import glob
 
 import numpy as np
@@ -338,6 +339,7 @@ def tedana_workflow(
     overwrite=False,
     t2smap=None,
     mixm=None,
+    tedana_command=None,
 ):
     """
     Run the "canonical" TE-Dependent ANAlysis workflow.
@@ -429,6 +431,9 @@ def tedana_workflow(
         If True, suppresses logging/printing of messages. Default is False.
     overwrite : :obj:`bool`, optional
         If True, force overwriting of files. Default is False.
+    tedana_command : :obj:`str`, optional
+        If the command-line interface was used, this is the command that was
+        run. Default is None.
 
     Notes
     -----
@@ -440,6 +445,7 @@ def tedana_workflow(
     ----------
     .. footbibliography::
     """
+
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
@@ -464,6 +470,19 @@ def tedana_workflow(
     start_time = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
     logname = op.join(out_dir, (basename + start_time + "." + extension))
     utils.setup_loggers(logname, repname, quiet=quiet, debug=debug)
+
+    # Save command into sh file, if the command-line interface was used
+    # TODO: use io_generator to save command
+    if tedana_command is not None:
+        command_file = open(os.path.join(out_dir, "tedana_call.sh"), "w")
+        command_file.write(tedana_command)
+        command_file.close()
+    else:
+        # Get variables passed to function if the tedana command is None
+        variables = ", ".join(f"{name}={value}" for name, value in locals().items())
+        # From variables, remove everything after ", tedana_command"
+        variables = variables.split(", tedana_command")[0]
+        tedana_command = f"tedana_workflow({variables})"
 
     LGR.info("Using output directory: {}".format(out_dir))
 
@@ -499,6 +518,11 @@ def tedana_workflow(
     # Record inputs to OutputGenerator
     # TODO: turn this into an IOManager since this isn't really output
     io_generator.register_input(data)
+
+    # Save system info to json
+    info_dict = utils.get_system_info()
+    info_dict["Python"] = sys.version
+    info_dict["Command"] = tedana_command
 
     n_samp, n_echos, n_vols = catd.shape
     LGR.debug("Resulting data shape: {}".format(catd.shape))
@@ -820,6 +844,16 @@ def tedana_workflow(
                     "of non-BOLD noise from multi-echo fMRI data."
                 ),
                 "CodeURL": "https://github.com/ME-ICA/tedana",
+                "Node": {
+                    "Name": info_dict["Node"],
+                    "System": info_dict["System"],
+                    "Machine": info_dict["Machine"],
+                    "Processor": info_dict["Processor"],
+                    "Release": info_dict["Release"],
+                    "Version": info_dict["Version"],
+                },
+                "Python": info_dict["Python"],
+                "Command": info_dict["Command"],
             }
         ],
     }
@@ -884,12 +918,13 @@ def tedana_workflow(
 
 def _main(argv=None):
     """Tedana entry point"""
+    tedana_command = "tedana " + " ".join(sys.argv[1:])
     options = _get_parser().parse_args(argv)
     kwargs = vars(options)
     n_threads = kwargs.pop("n_threads")
     n_threads = None if n_threads == -1 else n_threads
     with threadpool_limits(limits=n_threads, user_api=None):
-        tedana_workflow(**kwargs)
+        tedana_workflow(**kwargs, tedana_command=tedana_command)
 
 
 if __name__ == "__main__":

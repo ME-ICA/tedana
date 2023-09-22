@@ -6,6 +6,7 @@ import datetime
 import logging
 import os
 import os.path as op
+import sys
 from glob import glob
 
 import numpy as np
@@ -153,6 +154,7 @@ def _get_parser():
 
 def _main(argv=None):
     """ica_reclassify entry point"""
+    reclassify_command = "ica_reclassify " + " ".join(sys.argv[1:])
 
     args = _get_parser().parse_args(argv)
 
@@ -172,6 +174,7 @@ def _main(argv=None):
         overwrite=args.overwrite,
         debug=args.debug,
         quiet=args.quiet,
+        reclassify_command=reclassify_command,
     )
 
 
@@ -241,6 +244,7 @@ def ica_reclassify_workflow(
     overwrite=False,
     debug=False,
     quiet=False,
+    reclassify_command=None,
 ):
     """
     Run the post-tedana manual classification workflow.
@@ -274,6 +278,8 @@ def ica_reclassify_workflow(
         Whether to force file overwrites. Default is False.
     quiet : :obj:`bool`, optional
         If True, suppresses logging/printing of messages. Default is False.
+    reclassify_command : :obj:`str`, optional
+        The command used to run ica_reclassify. Default is None.
 
     Notes
     -----
@@ -345,6 +351,24 @@ def ica_reclassify_workflow(
     start_time = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
     logname = op.join(out_dir, (basename + start_time + "." + extension))
     utils.setup_loggers(logname=logname, repname=repname, quiet=quiet, debug=debug)
+
+    # Save command into sh file, if the command-line interface was used
+    # TODO: use io_generator to save command
+    if reclassify_command is not None:
+        command_file = open(os.path.join(out_dir, "ica_reclassify_call.sh"), "w")
+        command_file.write(reclassify_command)
+        command_file.close()
+    else:
+        # Get variables passed to function if the tedana command is None
+        variables = ", ".join(f"{name}={value}" for name, value in locals().items())
+        # From variables, remove everything after ", tedana_command"
+        variables = variables.split(", reclassify_command")[0]
+        reclassify_command = f"ica_reclassify_workflow({variables})"
+
+    # Save system info to json
+    info_dict = utils.get_system_info()
+    info_dict["Python"] = sys.version
+    info_dict["Command"] = reclassify_command
 
     LGR.info(f"Using output directory: {out_dir}")
 
@@ -485,6 +509,16 @@ def ica_reclassify_workflow(
                     "of non-BOLD noise from multi-echo fMRI data."
                 ),
                 "CodeURL": "https://github.com/ME-ICA/tedana",
+                "Node": {
+                    "Name": info_dict["Node"],
+                    "System": info_dict["System"],
+                    "Machine": info_dict["Machine"],
+                    "Processor": info_dict["Processor"],
+                    "Release": info_dict["Release"],
+                    "Version": info_dict["Version"],
+                },
+                "Python": info_dict["Python"],
+                "Command": info_dict["Command"],
             }
         ],
     }

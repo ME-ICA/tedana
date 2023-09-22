@@ -1,38 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <title>tedana report</title>
+    <meta
+      name="viewport"
+      content="width = device-width, initial-scale = 1"
+      charset="UTF-8"
+    />
+    <script
+      src="https://cdn.bokeh.org/bokeh/release/bokeh-$bokehversion.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-$bokehversion.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-$bokehversion.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/purecss@1.0.1/build/pure-min.css"
+      integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47"
+      crossorigin="anonymous"
+    />
 
-<head>
-<title>tedana report</title>
-<meta name="viewport" content="width = device-width, initial-scale = 1" charset="UTF-8">
-<script src="https://cdn.bokeh.org/bokeh/release/bokeh-$bokehversion.min.js"
-        crossorigin="anonymous"></script>
-<script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-$bokehversion.min.js"
-        crossorigin="anonymous"></script>
-<script src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-$bokehversion.min.js"
-        crossorigin="anonymous"></script>
-<link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css"
-    integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
-<!-- CSS for the report -->
-<style type="text/css">
-    body {
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/tokyo-night-dark.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+
+    <!-- and it's easy to individually load additional languages -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/go.min.js"></script>
+
+    <script>
+      hljs.highlightAll();
+    </script>
+
+    <!-- CSS for the report -->
+    <style type="text/css">
+      body {
         padding: 10px 20px 10px 20px;
-    }
-</style>
+      }
+    </style>
+  </head>
 
-</head>
-
-<nav>
-  <div class="pure-menu pure-menu-horizontal">
-    <a href="https://github.com/ME-ICA/tedana" class="pure-menu-heading pure-menu-link">tedana $version</a>
-    <ul class="pure-menu-list">
+  <nav>
+    <div class="pure-menu pure-menu-horizontal">
+      <a
+        href="https://github.com/ME-ICA/tedana"
+        class="pure-menu-heading pure-menu-link"
+        >tedana $version</a
+      >
+      <ul class="pure-menu-list">
         <li class="pure-menu-item">
-            <a href="https://tedana.readthedocs.io" class="pure-menu-link">Reporting documentation</a>
+          <a href="https://tedana.readthedocs.io" class="pure-menu-link"
+            >Reporting documentation</a
+          >
         </li>
-    </ul>
-  </div>
-</nav>
+      </ul>
+    </div>
+  </nav>
 
-<body>
+  <body>
     $body
-</body>
+  </body>
 </html>

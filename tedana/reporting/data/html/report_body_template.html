@@ -1,4 +1,9 @@
 <style type="text/css">
+  .report {
+    display: flex;
+    flex-direction: column;
+  }
+
   .content {
     margin-left: 5%;
     margin-right: 5%;
@@ -40,6 +45,14 @@
 
   .carpet-image {
     margin-top: 20px;
+  }
+
+  .info {
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-bottom: 150px;
+    height: auto;
+    float: left;
   }
 
   button {
@@ -126,6 +139,24 @@
     border-left: #c5a13e 1px solid;
     border-right: #c5a13e 1px solid;
   }
+
+  td {
+    padding: 0.3rem 1.5rem;
+  }
+
+  pre {
+    width: 60%;
+    white-space: pre-wrap; /* Since CSS 2.1 */
+    white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+    white-space: -pre-wrap; /* Opera 4-6 */
+    white-space: -o-pre-wrap; /* Opera 7 */
+    word-wrap: break-word; /* Internet Explorer 5.5+ */
+  }
+
+  .code_block {
+    padding: 2em !important;
+    border-radius: 5px;
+  }
 </style>
 <div class="content">
   <h1>ICA components</h1>
@@ -139,13 +170,17 @@
       <img id="imgCarpetPlot" src="$initialCarpet" />
     </div>
   </div>
-</div>
-<div class="about">
-  <h1>About tedana</h1>
-  $about
+  <div class="info">
+    <h1>Info</h1>
+    $info
+  </div>
+  <div class="about">
+    <h1>About tedana</h1>
+    $about
 
-  <h1>References</h1>
-  $references
+    <h1>References</h1>
+    $references
+  </div>
 </div>
 
 <script type="text/javascript">
