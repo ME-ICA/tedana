@@ -289,10 +289,13 @@ For additional, in-depth information on contributing to `tedana`, please see our
 Docstrings should follow [numpydoc][link_numpydoc] convention.
 We encourage extensive documentation.
 
-The Python code itself should follow [PEP8][link_pep8] convention,
-with at most about 500 lines of code (not including docstrings) per script.
+The Python code itself should follow [PEP8][link_pep8] convention, with at most about 500 lines of
+code (not including docstrings) per script.
 We use [black][link_black] and [isort][link_isort] to enforce this code style,
 and we strongly recommend running both tools on your fork before opening a pull request.
+We use [pre-commit][link_precommit] to automatically fix style issues when commit is
+pushed rather than making contributors try to figure out why a contribution is out of compliance
+with the style guides.
 
 Additionally, we have adopted a primarily functional approach in `tedana`,
 so we avoid defining our own classes within the library unless absolutely necessary.
@@ -376,6 +379,7 @@ You're awesome. :wave::smiley:
 [link_pep8]: https://www.python.org/dev/peps/pep-0008/
 [link_black]: https://black.readthedocs.io/en/stable/
 [link_isort]: https://pycqa.github.io/isort/
+[link_precommit]: https://pre-commit.com/
 [link_rst_guide]: http://docs.sphinxdocs.com/en/latest/step-1.html
 
 [link_contributors]: https://github.com/ME-ICA/tedana/graphs/contributors

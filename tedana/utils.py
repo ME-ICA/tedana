@@ -3,6 +3,7 @@ Utilities for tedana package
 """
 import logging
 import os.path as op
+import platform
 import warnings
 
 import nibabel as nib
@@ -428,3 +429,23 @@ def get_resource_path():
     Based on function by Yaroslav Halchenko used in Neurosynth Python package.
     """
     return op.abspath(op.join(op.dirname(__file__), "resources") + op.sep)
+
+
+def get_system_info():
+    """Return information about the system tedana is being run on.
+
+    Returns
+    -------
+    dict
+        Info about system where tedana is run on.
+    """
+    system_info = platform.uname()
+
+    return {
+        "System": system_info.system,
+        "Node": system_info.node,
+        "Release": system_info.release,
+        "Version": system_info.version,
+        "Machine": system_info.machine,
+        "Processor": system_info.processor,
+    }
