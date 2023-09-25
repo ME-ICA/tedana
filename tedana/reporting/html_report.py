@@ -54,7 +54,7 @@ def _generate_buttons(out_dir, io_generator):
     return buttons_html
 
 
-def _update_template_bokeh(bokeh_id, about, prefix, references, bokeh_js, buttons):
+def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, bokeh_js, buttons):
     """
     Populate a report with content.
 
@@ -89,6 +89,7 @@ def _update_template_bokeh(bokeh_id, about, prefix, references, bokeh_js, button
         body_tpl = Template(body_file.read())
     body = body_tpl.substitute(
         content=bokeh_id,
+        info=info_table,
         about=about,
         prefix=prefix,
         initialCarpet=initial_carpet,
