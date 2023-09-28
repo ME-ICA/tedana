@@ -41,7 +41,15 @@ def _trim_edge_zeros(arr):
     return arr[bounding_box]
 
 
-def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscontrol=None):
+def carpet_plot(
+    optcom_ts,
+    denoised_ts,
+    hikts,
+    lowkts,
+    mask,
+    io_generator,
+    gscontrol=None,
+):
     """Generate a set of carpet plots for the combined and denoised data.
 
     Parameters
@@ -74,7 +82,9 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
         title="Optimally Combined Data",
     )
     fig.tight_layout()
-    fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_optcom.svg"))
+    fig.savefig(
+        os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_optcom.svg")
+    )
 
     fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
@@ -85,7 +95,9 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
         title="Denoised Data",
     )
     fig.tight_layout()
-    fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_denoised.svg"))
+    fig.savefig(
+        os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_denoised.svg")
+    )
 
     fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
@@ -96,7 +108,9 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
         title="High-Kappa Data",
     )
     fig.tight_layout()
-    fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_accepted.svg"))
+    fig.savefig(
+        os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_accepted.svg")
+    )
 
     fig, ax = plt.subplots(figsize=(14, 7))
     plotting.plot_carpet(
@@ -107,7 +121,9 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
         title="Low-Kappa Data",
     )
     fig.tight_layout()
-    fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_rejected.svg"))
+    fig.savefig(
+        os.path.join(io_generator.out_dir, "figures", f"{io_generator.prefix}carpet_rejected.svg")
+    )
 
     if (gscontrol is not None) and ("gsr" in gscontrol):
         optcom_with_gs_img = io_generator.get_name("has gs combined img")
@@ -120,7 +136,13 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
             title="Optimally Combined Data (Pre-GSR)",
         )
         fig.tight_layout()
-        fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_optcom_nogsr.svg"))
+        fig.savefig(
+            os.path.join(
+                io_generator.out_dir,
+                "figures",
+                f"{io_generator.prefix}carpet_optcom_nogsr.svg",
+            )
+        )
 
     if (gscontrol is not None) and ("mir" in gscontrol):
         mir_denoised_img = io_generator.get_name("mir denoised img")
@@ -133,7 +155,13 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
             title="Denoised Data (Post-MIR)",
         )
         fig.tight_layout()
-        fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_denoised_mir.svg"))
+        fig.savefig(
+            os.path.join(
+                io_generator.out_dir,
+                "figures",
+                f"{io_generator.prefix}carpet_denoised_mir.svg",
+            )
+        )
 
         mir_denoised_img = io_generator.get_name("ICA accepted mir denoised img")
         fig, ax = plt.subplots(figsize=(14, 7))
@@ -145,7 +173,13 @@ def carpet_plot(optcom_ts, denoised_ts, hikts, lowkts, mask, io_generator, gscon
             title="High-Kappa Data (Post-MIR)",
         )
         fig.tight_layout()
-        fig.savefig(os.path.join(io_generator.out_dir, "figures", "carpet_accepted_mir.svg"))
+        fig.savefig(
+            os.path.join(
+                io_generator.out_dir,
+                "figures",
+                f"{io_generator.prefix}carpet_accepted_mir.svg",
+            )
+        )
 
 
 def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
@@ -284,7 +318,7 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
 
         # Fix spacing so TR label does overlap with other plots
         allplot.subplots_adjust(hspace=0.4)
-        plot_name = "comp_{}.png".format(str(compnum).zfill(3))
+        plot_name = f"{io_generator.prefix}comp_{str(compnum).zfill(3)}.png"
         compplot_name = os.path.join(io_generator.out_dir, "figures", plot_name)
         plt.savefig(compplot_name)
         plt.close()
@@ -363,7 +397,7 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     plt.legend()
 
     #  Save the plot
-    plot_name = "pca_criteria.png"
+    plot_name = f"{io_generator.prefix}pca_criteria.png"
     pca_criteria_name = os.path.join(io_generator.out_dir, "figures", plot_name)
     plt.savefig(pca_criteria_name)
     plt.close()
@@ -425,7 +459,7 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     plt.legend()
 
     #  Save the plot
-    plot_name = "pca_variance_explained.png"
+    plot_name = f"{io_generator.prefix}pca_variance_explained.png"
     pca_variance_explained_name = os.path.join(io_generator.out_dir, "figures", plot_name)
     plt.savefig(pca_variance_explained_name)
     plt.close()
