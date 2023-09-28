@@ -912,7 +912,7 @@ def tedana_workflow(
 
 
 def _main(argv=None):
-    """"Run the tedana workflow."""
+    """Run the tedana workflow."""
     tedana_command = "tedana " + " ".join(sys.argv[1:])
     options = _get_parser().parse_args(argv)
     kwargs = vars(options)

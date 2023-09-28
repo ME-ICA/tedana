@@ -149,7 +149,7 @@ def _get_parser():
 
 
 def _main(argv=None):
-    """"Run the ica_reclassify workflow."""
+    """Run the ica_reclassify workflow."""
     reclassify_command = "ica_reclassify " + " ".join(sys.argv[1:])
 
     args = _get_parser().parse_args(argv)
