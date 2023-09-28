@@ -15,25 +15,25 @@ from tedana.reporting import dynamic_figures as df
 LGR = logging.getLogger("GENERAL")
 
 
-def _generate_buttons(out_dir):
+def _generate_buttons(out_dir, io_generator):
     resource_path = Path(__file__).resolve().parent.joinpath("data", "html")
 
     images_list = [img for img in os.listdir(out_dir) if ".svg" in img]
     optcom_nogsr_disp = "none"
     optcom_name = ""
-    if "carpet_optcom_nogsr.svg" in images_list:
+    if f"{io_generator.prefix}carpet_optcom_nogsr.svg" in images_list:
         optcom_nogsr_disp = "block"
         optcom_name = "before MIR"
 
     denoised_mir_disp = "none"
     denoised_name = ""
-    if "carpet_denoised_mir.svg" in images_list:
+    if f"{io_generator.prefix}carpet_denoised_mir.svg" in images_list:
         denoised_mir_disp = "block"
         denoised_name = "before MIR"
 
     accepted_mir_disp = "none"
     accepted_name = ""
-    if "carpet_accepted_mir.svg" in images_list:
+    if f"{io_generator.prefix}carpet_accepted_mir.svg" in images_list:
         accepted_mir_disp = "block"
         accepted_name = "before MIR"
 
@@ -54,7 +54,7 @@ def _generate_buttons(out_dir):
     return buttons_html
 
 
-def _update_template_bokeh(bokeh_id, info_table, about, references, bokeh_js, buttons):
+def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, bokeh_js, buttons):
     """
     Populate a report with content.
 
@@ -66,6 +66,8 @@ def _update_template_bokeh(bokeh_id, info_table, about, references, bokeh_js, bu
         HTML div created by _generate_info_table()
     about : str
         Reporting information for a given run
+    prefix : str
+        Prefix for the outputted figures
     references : str
         BibTeX references associated with the reporting information
     bokeh_js : str
@@ -78,6 +80,9 @@ def _update_template_bokeh(bokeh_id, info_table, about, references, bokeh_js, bu
     """
     resource_path = Path(__file__).resolve().parent.joinpath("data", "html")
 
+    # Initial carpet plot (default one)
+    initial_carpet = f"./figures/{prefix}carpet_optcom.svg"
+
     body_template_name = "report_body_template.html"
     body_template_path = resource_path.joinpath(body_template_name)
     with open(str(body_template_path), "r") as body_file:
@@ -86,6 +91,8 @@ def _update_template_bokeh(bokeh_id, info_table, about, references, bokeh_js, bu
         content=bokeh_id,
         info=info_table,
         about=about,
+        prefix=prefix,
+        initialCarpet=initial_carpet,
         references=references,
         javascript=bokeh_js,
         buttons=buttons,
@@ -257,13 +264,13 @@ def generate_report(io_generator, tr):
     kr_script, kr_div = embed.components(app)
 
     # Generate html of buttons (only for images that were generated)
-    buttons_html = _generate_buttons(opj(io_generator.out_dir, "figures"))
+    buttons_html = _generate_buttons(opj(io_generator.out_dir, "figures"), io_generator)
 
     # Read in relevant methods
-    with open(opj(io_generator.out_dir, "report.txt"), "r+") as f:
+    with open(opj(io_generator.out_dir, f"{io_generator.prefix}report.txt"), "r+") as f:
         about = f.read()
 
-    with open(opj(io_generator.out_dir, "references.bib"), "r") as f:
+    with open(opj(io_generator.out_dir, f"{io_generator.prefix}references.bib"), "r") as f:
         references = f.read()
 
     # Read info table
@@ -278,9 +285,10 @@ def generate_report(io_generator, tr):
         info_table=info_table,
         about=about,
         references=references,
+        prefix=io_generator.prefix,
         bokeh_js=kr_script,
         buttons=buttons_html,
     )
     html = _save_as_html(body)
-    with open(opj(io_generator.out_dir, "tedana_report.html"), "wb") as f:
+    with open(opj(io_generator.out_dir, f"{io_generator.prefix}tedana_report.html"), "wb") as f:
         f.write(html.encode("utf-8"))
