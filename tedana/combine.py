@@ -1,6 +1,4 @@
-"""
-Functions to optimally combine data across echoes.
-"""
+"""Functions to optimally combine data across echoes."""
 import logging
 
 import numpy as np
@@ -10,9 +8,9 @@ RepLGR = logging.getLogger("REPORT")
 
 
 def _combine_t2s(data, tes, ft2s, report=True):
-    """
-    Combine data across echoes using weighted averaging according to voxel-
-    (and sometimes volume-) wise estimates of T2*.
+    """Combine data across echoes using weighted averaging according to estimates of T2*.
+
+    The T2* estimates may be voxel- or voxel- and volume-wise.
 
     This method was proposed in :footcite:t:`posse1999enhancement`.
 
@@ -61,12 +59,10 @@ def _combine_t2s(data, tes, ft2s, report=True):
 
 
 def _combine_paid(data, tes, report=True):
-    """
-    Combine data across echoes using SNR/signal and TE via the
-    parallel-acquired inhomogeneity desensitized (PAID) ME-fMRI combination
-    method.
+    """Combine data across echoes using the PAID combination method.
 
-    This method was first proposed in :footcite:t:`poser2006bold`.
+    This method uses SNR/signal and TE via the parallel-acquired inhomogeneity desensitized (PAID)
+    ME-fMRI combination method :footcite:t:`poser2006bold`.
 
     Parameters
     ----------
@@ -102,7 +98,8 @@ def _combine_paid(data, tes, report=True):
 
 
 def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s"):
-    """
+    r"""Optimally combine BOLD data across TEs.
+
     Optimally combine BOLD data across TEs, using only those echos with reliable signal
     across at least three echos. If the number of echos providing reliable signal is greater
     than three but less than the total number of collected echos, we assume that later

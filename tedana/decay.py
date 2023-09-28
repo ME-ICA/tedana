@@ -1,6 +1,4 @@
-"""
-Functions to estimate S0 and T2* from multi-echo data.
-"""
+"""Functions to estimate S0 and T2* from multi-echo data."""
 import logging
 
 import numpy as np
@@ -14,9 +12,7 @@ RepLGR = logging.getLogger("REPORT")
 
 
 def _apply_t2s_floor(t2s, echo_times):
-    """
-    Apply a floor to T2* values to prevent zero division errors during
-    optimal combination.
+    """Apply a floor to T2* values to prevent zero division errors during optimal combination.
 
     Parameters
     ----------
@@ -55,8 +51,7 @@ def _apply_t2s_floor(t2s, echo_times):
 
 
 def monoexponential(tes, s0, t2star):
-    """
-    Specifies a monoexponential model for use with scipy curve fitting
+    """Specify a monoexponential model for use with scipy curve fitting.
 
     Parameters
     ----------
@@ -76,8 +71,7 @@ def monoexponential(tes, s0, t2star):
 
 
 def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True):
-    """
-    Fit monoexponential decay model with nonlinear curve-fitting.
+    """Fit monoexponential decay model with nonlinear curve-fitting.
 
     Parameters
     ----------
@@ -297,8 +291,7 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
 
 
 def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True):
-    """
-    Fit voxel-wise monoexponential decay models to `data`
+    """Fit voxel-wise monoexponential decay models to ``data``.
 
     Parameters
     ----------
@@ -405,8 +398,7 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True):
 
 
 def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
-    """
-    Fit voxel- and timepoint-wise monoexponential decay models to `data`
+    """Fit voxel- and timepoint-wise monoexponential decay models to ``data``.
 
     Parameters
     ----------
