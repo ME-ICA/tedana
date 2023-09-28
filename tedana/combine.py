@@ -101,7 +101,7 @@ def _combine_paid(data, tes, report=True):
     return combined
 
 
-def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s", verbose=True):
+def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s"):
     """
     Optimally combine BOLD data across TEs, using only those echos with reliable signal
     across at least three echos. If the number of echos providing reliable signal is greater
@@ -125,8 +125,6 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s", verbose=True
     combmode : {'t2s', 'paid'}, optional
         How to combine data. Either 'paid' or 't2s'. If 'paid', argument 't2s'
         is not required. Default is 't2s'.
-    verbose : :obj:`bool`, optional
-        Whether to print status updates. Default is True.
 
     Returns
     -------
@@ -162,8 +160,7 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s", verbose=True
     if len(tes) != data.shape[1]:
         raise ValueError(
             "Number of echos provided does not match second "
-            "dimension of input data: {0} != "
-            "{1}".format(len(tes), data.shape[1])
+            f"dimension of input data: {len(tes)} != {data.shape[1]}"
         )
 
     if adaptive_mask.ndim != 1:
@@ -171,7 +168,7 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s", verbose=True
     elif adaptive_mask.shape[0] != data.shape[0]:
         raise ValueError(
             "Mask and data do not have same number of "
-            "voxels/samples: {0} != {1}".format(adaptive_mask.shape[0], data.shape[0])
+            f"voxels/samples: {adaptive_mask.shape[0]} != {data.shape[0]}"
         )
 
     if combmode not in ["t2s", "paid"]:

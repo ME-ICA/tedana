@@ -18,7 +18,7 @@ def check_tedpca_value(string, is_parser=True):
     try:
         floatarg = float(string)
     except ValueError:
-        msg = "Argument to tedpca must be a number or one of: {}".format(", ".join(valid_options))
+        msg = f"Argument to tedpca must be a number or one of: {', '.join(valid_options)}"
         raise error(msg)
 
     if floatarg != int(floatarg):
@@ -37,6 +37,6 @@ def is_valid_file(parser, arg):
     Check if argument is existing file.
     """
     if not op.isfile(arg) and arg is not None:
-        parser.error("The file {0} does not exist!".format(arg))
+        parser.error(f"The file {arg} does not exist!")
 
     return arg

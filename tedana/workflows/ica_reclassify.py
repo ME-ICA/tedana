@@ -1,6 +1,4 @@
-"""
-Run the reclassification workflow for a previous tedana run
-"""
+"""Run the reclassification workflow for a previous tedana run."""
 import argparse
 import datetime
 import logging
@@ -26,14 +24,12 @@ RepLGR = logging.getLogger("REPORT")
 
 
 def _get_parser():
-    """
-    Parses command line inputs for tedana
+    """Parses command line inputs for ica_reclassify.
 
     Returns
     -------
     parser.parse_args() : argparse dict
     """
-
     from tedana import __version__
 
     verstr = f"ica_reclassify v{__version__}"
@@ -153,7 +149,7 @@ def _get_parser():
 
 
 def _main(argv=None):
-    """ica_reclassify entry point"""
+    """"Run the ica_reclassify workflow."""
     reclassify_command = "ica_reclassify " + " ".join(sys.argv[1:])
 
     args = _get_parser().parse_args(argv)
