@@ -1,6 +1,4 @@
-"""
-Utility functions for tedana decomposition
-"""
+"""Utility functions for tedana decomposition."""
 import logging
 
 import numpy as np
@@ -11,8 +9,9 @@ RepLGR = logging.getLogger("REPORT")
 
 
 def eimask(dd, ees=None):
-    """
-    Returns mask for data between [0.001, 5] * 98th percentile of dd
+    """Return mask for data between [0.001, 5] * 98th percentile of dd.
+
+    TODO: Remove this function.
 
     Parameters
     ----------
@@ -26,18 +25,19 @@ def eimask(dd, ees=None):
     imask : (S x N) :obj:`numpy.ndarray`
         Boolean array denoting
     """
-
     if ees is None:
         ees = range(dd.shape[1])
+
     imask = np.zeros((dd.shape[0], len(ees)), dtype=bool)
     for ee in ees:
         if len(ees) == 1:
             LGR.debug("Creating eimask for optimal combination")
         else:
-            LGR.debug("Creating eimask for echo {}".format(ee))
+            LGR.debug(f"Creating eimask for echo {ee}")
+
         perc98 = stats.scoreatpercentile(dd[:, ee, :].flatten(), 98, interpolation_method="lower")
         lthr, hthr = 0.001 * perc98, 5 * perc98
-        LGR.debug("Eimask threshold boundaries: {:.03f} {:.03f}".format(lthr, hthr))
+        LGR.debug(f"Eimask threshold boundaries: {lthr:.03f} {hthr:.03f}")
         m = dd[:, ee, :].mean(axis=1)
         imask[np.logical_and(m > lthr, m < hthr), ee] = True
 

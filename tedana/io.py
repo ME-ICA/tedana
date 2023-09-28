@@ -455,8 +455,8 @@ def add_decomp_prefix(comp_num, prefix, max_value):
         Component name in the form <prefix>_<zeros><comp_num>
     """
     n_digits = int(np.log10(max_value)) + 1
-    comp_name = "{0:08d}".format(int(comp_num))
-    comp_name = "{0}_{1}".format(prefix, comp_name[8 - n_digits :])
+    comp_name = f"{int(comp_num):08d}"
+    comp_name = f"{prefix}_{comp_name[8 - n_digits :]}"
     return comp_name
 
 
@@ -495,7 +495,7 @@ def denoise_ts(data, mmix, mask, comptable):
     # get variance explained by retained components
     betas = get_coeffs(dmdata.T, mmix, mask=None)
     varexpl = (1 - ((dmdata.T - betas.dot(mmix.T)) ** 2.0).sum() / (dmdata**2.0).sum()) * 100
-    LGR.info("Variance explained by decomposition: {:.02f}%".format(varexpl))
+    LGR.info(f"Variance explained by decomposition: {varexpl:.02f}%")
 
     # create component-based data
     hikts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
@@ -551,24 +551,24 @@ def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
             fout = io_generator.save_file(hikts, "high kappa ts split img", echo=echo)
         else:
             fout = io_generator.save_file(hikts, "high kappa ts img")
-        LGR.info("Writing high-Kappa time series: {}".format(fout))
+        LGR.info(f"Writing high-Kappa time series: {fout}")
 
     if len(rej) != 0:
         if echo != 0:
             fout = io_generator.save_file(lowkts, "low kappa ts split img", echo=echo)
         else:
             fout = io_generator.save_file(lowkts, "low kappa ts img")
-        LGR.info("Writing low-Kappa time series: {}".format(fout))
+        LGR.info(f"Writing low-Kappa time series: {fout}")
 
     if echo != 0:
         fout = io_generator.save_file(dnts, "denoised ts split img", echo=echo)
     else:
         fout = io_generator.save_file(dnts, "denoised ts img")
 
-    LGR.info("Writing denoised time series: {}".format(fout))
+    LGR.info(f"Writing denoised time series: {fout}")
 
 
-def writeresults(ts, mask, comptable, mmix, n_vols, io_generator):
+def writeresults(ts, mask, comptable, mmix, io_generator):
     """Denoise `ts` and save all resulting files to disk.
 
     Parameters
@@ -584,8 +584,6 @@ def writeresults(ts, mask, comptable, mmix, n_vols, io_generator):
     mmix : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    n_vols : :obj:`int`
-        Number of volumes in original time series
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
 
@@ -613,19 +611,19 @@ def writeresults(ts, mask, comptable, mmix, n_vols, io_generator):
     acc = comptable[comptable.classification == "accepted"].index.values
     write_split_ts(ts, mmix, mask, comptable, io_generator)
 
-    ts_B = get_coeffs(ts, mmix, mask)
-    fout = io_generator.save_file(ts_B, "ICA components img")
-    LGR.info("Writing full ICA coefficient feature set: {}".format(fout))
+    ts_pes = get_coeffs(ts, mmix, mask)
+    fout = io_generator.save_file(ts_pes, "ICA components img")
+    LGR.info(f"Writing full ICA coefficient feature set: {fout}")
 
     if len(acc) != 0:
-        fout = io_generator.save_file(ts_B[:, acc], "ICA accepted components img")
-        LGR.info("Writing denoised ICA coefficient feature set: {}".format(fout))
+        fout = io_generator.save_file(ts_pes[:, acc], "ICA accepted components img")
+        LGR.info(f"Writing denoised ICA coefficient feature set: {fout}")
 
         # write feature versions of components
         feats = computefeats2(split_ts(ts, mmix, mask, comptable)[0], mmix[:, acc], mask)
         feats = utils.unmask(feats, mask)
         fname = io_generator.save_file(feats, "z-scored ICA accepted components img")
-        LGR.info("Writing Z-normalized spatial component maps: {}".format(fname))
+        LGR.info(f"Writing Z-normalized spatial component maps: {fname}")
 
 
 def writeresults_echoes(catd, mmix, mask, comptable, io_generator):
@@ -665,7 +663,7 @@ def writeresults_echoes(catd, mmix, mask, comptable, io_generator):
     tedana.io.write_split_ts: Writes out the files.
     """
     for i_echo in range(catd.shape[1]):
-        LGR.info("Writing Kappa-filtered echo #{:01d} timeseries".format(i_echo + 1))
+        LGR.info(f"Writing Kappa-filtered echo #{i_echo + 1:01d} timeseries")
         write_split_ts(catd[:, i_echo, :], mmix, mask, comptable, io_generator, echo=(i_echo + 1))
 
 
@@ -848,7 +846,7 @@ def str_to_component_list(s: str) -> List[int]:
 
     Parameters
     ----------
-    s: str
+    s : str
         The string to convert into a list of component indices.
 
     Returns
@@ -895,7 +893,7 @@ def fname_to_component_list(fname: str) -> List[int]:
 
     Parameters
     ----------
-    fname: str
+    fname : str
         The name of the file to read the list of component indices from.
 
     Returns

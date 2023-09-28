@@ -1,6 +1,4 @@
-"""
-Global signal control methods
-"""
+"""Global signal control methods."""
 import logging
 
 import numpy as np
@@ -15,8 +13,7 @@ RepLGR = logging.getLogger("REPORT")
 
 
 def gscontrol_raw(catd, optcom, n_echos, io_generator, dtrank=4):
-    """
-    Removes global signal from individual echo `catd` and `optcom` time series
+    """Remove global signal from individual echo ``catd`` and ``optcom`` time series.
 
     This function uses the spatial global signal estimation approach to
     to removal global signal out of individual echo time series datasets. The
@@ -52,37 +49,35 @@ def gscontrol_raw(catd, optcom, n_echos, io_generator, dtrank=4):
     )
     if catd.shape[0] != optcom.shape[0]:
         raise ValueError(
-            "First dimensions of catd ({0}) and optcom ({1}) do not "
-            "match".format(catd.shape[0], optcom.shape[0])
+            f"First dimensions of catd ({catd.shape[0]}) and optcom ({optcom.shape[0]}) do not "
+            "match"
         )
     elif catd.shape[1] != n_echos:
         raise ValueError(
-            "Second dimension of catd ({0}) does not match "
-            "n_echos ({1})".format(catd.shape[1], n_echos)
+            f"Second dimension of catd ({catd.shape[1]}) does not match n_echos ({n_echos})"
         )
     elif catd.shape[2] != optcom.shape[1]:
         raise ValueError(
-            "Third dimension of catd ({0}) does not match "
-            "second dimension of optcom "
-            "({1})".format(catd.shape[2], optcom.shape[1])
+            f"Third dimension of catd ({catd.shape[2]}) does not match second dimension of optcom "
+            f"({optcom.shape[1]})"
         )
 
     # Legendre polynomial basis for denoising
     bounds = np.linspace(-1, 1, optcom.shape[-1])
-    Lmix = np.column_stack([lpmv(0, vv, bounds) for vv in range(dtrank)])
+    legendre_arr = np.column_stack([lpmv(0, vv, bounds) for vv in range(dtrank)])
 
     # compute mean, std, mask local to this function
     # inefficient, but makes this function a bit more modular
-    Gmu = optcom.mean(axis=-1)  # temporal mean
-    Gmask = Gmu != 0
+    temporal_mean = optcom.mean(axis=-1)  # temporal mean
+    temporal_mean_mask = temporal_mean != 0
 
     # find spatial global signal
-    dat = optcom[Gmask] - Gmu[Gmask][:, np.newaxis]
-    sol = np.linalg.lstsq(Lmix, dat.T, rcond=None)[0]  # Legendre basis for detrending
-    detr = dat - np.dot(sol.T, Lmix.T)[0]
+    dat = optcom[temporal_mean_mask] - temporal_mean[temporal_mean_mask][:, np.newaxis]
+    sol = np.linalg.lstsq(legendre_arr, dat.T, rcond=None)[0]  # Legendre basis for detrending
+    detr = dat - np.dot(sol.T, legendre_arr.T)[0]
     sphis = (detr).min(axis=1)
     sphis -= sphis.mean()
-    io_generator.save_file(utils.unmask(sphis, Gmask), "gs img")
+    io_generator.save_file(utils.unmask(sphis, temporal_mean_mask), "gs img")
 
     # find time course ofc the spatial global signal
     # make basis with the Legendre basis
@@ -91,35 +86,33 @@ def gscontrol_raw(catd, optcom, n_echos, io_generator, dtrank=4):
 
     glsig_df = pd.DataFrame(data=glsig.T, columns=["global_signal"])
     io_generator.save_file(glsig_df, "global signal time series tsv")
-    glbase = np.hstack([Lmix, glsig.T])
+    glbase = np.hstack([legendre_arr, glsig.T])
 
     # Project global signal out of optimally combined data
     sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T, rcond=None)[0]
     tsoc_nogs = (
         dat
         - np.dot(np.atleast_2d(sol[dtrank]).T, np.atleast_2d(glbase.T[dtrank]))
-        + Gmu[Gmask][:, np.newaxis]
+        + temporal_mean[temporal_mean_mask][:, np.newaxis]
     )
 
     io_generator.save_file(optcom, "has gs combined img")
-    dm_optcom = utils.unmask(tsoc_nogs, Gmask)
+    dm_optcom = utils.unmask(tsoc_nogs, temporal_mean_mask)
     io_generator.save_file(dm_optcom, "removed gs combined img")
 
     # Project glbase out of each echo
     dm_catd = catd.copy()  # don't overwrite catd
     for echo in range(n_echos):
-        dat = dm_catd[:, echo, :][Gmask]
+        dat = dm_catd[:, echo, :][temporal_mean_mask]
         sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T, rcond=None)[0]
         e_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T, np.atleast_2d(glbase.T[dtrank]))
-        dm_catd[:, echo, :] = utils.unmask(e_nogs, Gmask)
+        dm_catd[:, echo, :] = utils.unmask(e_nogs, temporal_mean_mask)
 
     return dm_catd, dm_optcom
 
 
 def minimum_image_regression(optcom_ts, mmix, mask, comptable, io_generator):
-    """
-    Perform minimum image regression (MIR) to remove T1-like effects from
-    BOLD-like components.
+    """Perform minimum image regression (MIR) to remove T1-like effects from BOLD-like components.
 
     While this method has not yet been described in detail in any publications,
     we recommend that users cite :footcite:t:`kundu2013integrated`.
@@ -201,28 +194,28 @@ def minimum_image_regression(optcom_ts, mmix, mask, comptable, io_generator):
     glob_sig = np.linalg.lstsq(t1_map, optcom_z, rcond=None)[0]
 
     # Remove T1-like global signal from MEHK time series
-    mehk_noT1gs = mehk_ts - np.dot(
+    mehk_no_t1_gs = mehk_ts - np.dot(
         np.linalg.lstsq(glob_sig.T, mehk_ts.T, rcond=None)[0].T, glob_sig
     )
-    hik_ts = mehk_noT1gs * optcom_std  # rescale
+    hik_ts = mehk_no_t1_gs * optcom_std  # rescale
     io_generator.save_file(utils.unmask(hik_ts, mask), "ICA accepted mir denoised img")
 
     # Make denoised version of T1-corrected time series
-    medn_ts = optcom_mean + ((mehk_noT1gs + resid) * optcom_std)
+    medn_ts = optcom_mean + ((mehk_no_t1_gs + resid) * optcom_std)
     io_generator.save_file(utils.unmask(medn_ts, mask), "mir denoised img")
 
     # Orthogonalize mixing matrix w.r.t. T1-GS
-    mmix_noT1gs = mmix.T - np.dot(np.linalg.lstsq(glob_sig.T, mmix, rcond=None)[0].T, glob_sig)
-    mmix_noT1gs_z = stats.zscore(mmix_noT1gs, axis=-1)
-    mmix_noT1gs_z = np.vstack(
-        (np.atleast_2d(np.ones(max(glob_sig.shape))), glob_sig, mmix_noT1gs_z)
+    mmix_no_t1_gs = mmix.T - np.dot(np.linalg.lstsq(glob_sig.T, mmix, rcond=None)[0].T, glob_sig)
+    mmix_no_t1_gs_z = stats.zscore(mmix_no_t1_gs, axis=-1)
+    mmix_no_t1_gs_z = np.vstack(
+        (np.atleast_2d(np.ones(max(glob_sig.shape))), glob_sig, mmix_no_t1_gs_z)
     )
 
     # Write T1-corrected components and mixing matrix
-    comp_pes_norm = np.linalg.lstsq(mmix_noT1gs_z.T, optcom_z.T, rcond=None)[0].T
+    comp_pes_norm = np.linalg.lstsq(mmix_no_t1_gs_z.T, optcom_z.T, rcond=None)[0].T
     io_generator.save_file(
         utils.unmask(comp_pes_norm[:, 2:], mask),
         "ICA accepted mir component weights img",
     )
-    mixing_df = pd.DataFrame(data=mmix_noT1gs.T, columns=comptable["Component"].values)
+    mixing_df = pd.DataFrame(data=mmix_no_t1_gs.T, columns=comptable["Component"].values)
     io_generator.save_file(mixing_df, "ICA MIR mixing tsv")

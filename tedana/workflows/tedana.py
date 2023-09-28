@@ -641,16 +641,13 @@ def tedana_workflow(
         dd, n_components = decomposition.tedpca(
             catd,
             data_oc,
-            combmode,
             mask_clf,
             masksum_clf,
-            t2s_full,
             io_generator,
             tes=tes,
             algorithm=tedpca,
             kdaw=10.0,
             rdaw=1.0,
-            verbose=verbose,
             low_mem=low_mem,
         )
         if verbose:
@@ -812,7 +809,6 @@ def tedana_workflow(
         mask=mask_denoise,
         comptable=comptable,
         mmix=mmix,
-        n_vols=n_vols,
         io_generator=io_generator,
     )
 

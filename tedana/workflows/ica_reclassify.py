@@ -465,7 +465,6 @@ def ica_reclassify_workflow(
             "series."
         )
 
-    n_vols = data_oc.shape[3]
     img_t_r = io_generator.reference_img.header.get_zooms()[-1]
     adaptive_mask = utils.reshape_niimg(adaptive_mask)
     mask_denoise = adaptive_mask >= 1
@@ -482,7 +481,6 @@ def ica_reclassify_workflow(
         mask=mask_denoise,
         comptable=comptable,
         mmix=mmix,
-        n_vols=n_vols,
         io_generator=io_generator,
     )
 
