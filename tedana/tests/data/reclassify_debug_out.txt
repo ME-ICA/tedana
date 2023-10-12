@@ -1,6 +1,7 @@
 figures
-references.bib
-report.txt
+ica_reclassify_call.sh
+sub-testymctestface_references.bib
+sub-testymctestface_report.txt
 sub-testymctestface_betas_OC.nii.gz
 sub-testymctestface_betas_hik_OC.nii.gz
 sub-testymctestface_betas_hik_OC_MIR.nii.gz

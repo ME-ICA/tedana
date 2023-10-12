@@ -27,7 +27,7 @@ tap_callback_jscode = """
 
         // Image Below Plots
         div.text = ""
-        var line = "<span><img src='./figures/comp_"+selected_padded_forIMG+".png'" +
+        var line = "<span><img src='./figures/"+prefix+"comp_"+selected_padded_forIMG+".png'" +
             " alt='Component Map'><span>\\n";
         console.log('Linea: ' + line)
         var text = div.text.concat(line);
@@ -375,6 +375,7 @@ def _tap_callback(comptable_cds, div_content, io_generator):
             source_comp_table=comptable_cds,
             div=div_content,
             outdir=io_generator.out_dir,
+            prefix=io_generator.prefix,
         ),
         code=tap_callback_jscode,
     )
