@@ -138,6 +138,5 @@ def check_mask(data, mask):
         n_bad_voxels = len(zero_idx[0])
         if n_bad_voxels > 0:
             raise ValueError(
-                "{0} voxels in masked data have zero variance. "
-                "Mask is too liberal.".format(n_bad_voxels)
+                f"{n_bad_voxels} voxels in masked data have zero variance. " "Mask is too liberal."
             )

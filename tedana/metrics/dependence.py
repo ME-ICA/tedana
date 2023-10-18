@@ -101,23 +101,23 @@ def calculate_z_maps(weights, z_max=8):
 
     Returns
     -------
-    Z_maps : (M x C) array_like
+    z_maps : (M x C) array_like
         Z-statistic maps for components, reflecting voxel-wise component loadings.
     """
-    Z_maps = stats.zscore(weights, axis=0)
-    extreme_idx = np.abs(Z_maps) > z_max
-    Z_maps[extreme_idx] = z_max * np.sign(Z_maps[extreme_idx])
-    return Z_maps
+    z_maps = stats.zscore(weights, axis=0)
+    extreme_idx = np.abs(z_maps) > z_max
+    z_maps[extreme_idx] = z_max * np.sign(z_maps[extreme_idx])
+    return z_maps
 
 
-def calculate_f_maps(data_cat, Z_maps, mixing, adaptive_mask, tes, f_max=500):
+def calculate_f_maps(data_cat, z_maps, mixing, adaptive_mask, tes, f_max=500):
     """Calculate pseudo-F-statistic maps for TE-dependence and -independence models.
 
     Parameters
     ----------
     data_cat : (M x E x T) array_like
         Multi-echo data, already masked.
-    Z_maps : (M x C) array_like
+    z_maps : (M x C) array_like
         Z-statistic maps for components, reflecting voxel-wise component loadings.
     mixing : (T x C) array_like
         Mixing matrix
@@ -132,14 +132,14 @@ def calculate_f_maps(data_cat, Z_maps, mixing, adaptive_mask, tes, f_max=500):
 
     Returns
     -------
-    F_T2_maps, F_S0_maps, pred_T2_maps, pred_S0_maps : (M x C) array_like
+    f_t2_maps, f_s0_maps, pred_t2_maps, pred_s0_maps : (M x C) array_like
         Pseudo-F-statistic maps for TE-dependence and -independence models,
         respectively.
     """
-    assert data_cat.shape[0] == Z_maps.shape[0] == adaptive_mask.shape[0]
+    assert data_cat.shape[0] == z_maps.shape[0] == adaptive_mask.shape[0]
     assert data_cat.shape[1] == tes.shape[0]
     assert data_cat.shape[2] == mixing.shape[0]
-    assert Z_maps.shape[1] == mixing.shape[1]
+    assert z_maps.shape[1] == mixing.shape[1]
 
     # TODO: Remove mask arg from get_coeffs
     me_betas = get_coeffs(data_cat, mixing, mask=np.ones(data_cat.shape[:2], bool), add_const=True)
@@ -148,13 +148,13 @@ def calculate_f_maps(data_cat, Z_maps, mixing, adaptive_mask, tes, f_max=500):
     tes = np.reshape(tes, (n_echos, 1))
 
     # set up Xmats
-    X1 = mu.T  # Model 1
-    X2 = np.tile(tes, (1, n_voxels)) * mu.T  # Model 2
+    x1 = mu.T  # Model 1
+    x2 = np.tile(tes, (1, n_voxels)) * mu.T  # Model 2
 
-    F_T2_maps = np.zeros([n_voxels, n_components])
-    F_S0_maps = np.zeros([n_voxels, n_components])
-    pred_T2_maps = np.zeros([n_voxels, len(tes), n_components])
-    pred_S0_maps = np.zeros([n_voxels, len(tes), n_components])
+    f_t2_maps = np.zeros([n_voxels, n_components])
+    f_s0_maps = np.zeros([n_voxels, n_components])
+    pred_t2_maps = np.zeros([n_voxels, len(tes), n_components])
+    pred_s0_maps = np.zeros([n_voxels, len(tes), n_components])
 
     for i_comp in range(n_components):
         # size of comp_betas is (n_echoes, n_samples)
@@ -168,31 +168,31 @@ def calculate_f_maps(data_cat, Z_maps, mixing, adaptive_mask, tes, f_max=500):
 
             # S0 Model
             # (S,) model coefficient map
-            coeffs_S0 = (comp_betas[:j_echo] * X1[:j_echo, :]).sum(axis=0) / (
-                X1[:j_echo, :] ** 2
+            coeffs_s0 = (comp_betas[:j_echo] * x1[:j_echo, :]).sum(axis=0) / (
+                x1[:j_echo, :] ** 2
             ).sum(axis=0)
-            pred_S0 = X1[:j_echo, :] * np.tile(coeffs_S0, (j_echo, 1))
-            SSE_S0 = (comp_betas[:j_echo] - pred_S0) ** 2
-            SSE_S0 = SSE_S0.sum(axis=0)  # (S,) prediction error map
-            F_S0 = (alpha - SSE_S0) * (j_echo - 1) / (SSE_S0)
-            F_S0[F_S0 > f_max] = f_max
-            F_S0_maps[mask_idx, i_comp] = F_S0[mask_idx]
+            pred_s0 = x1[:j_echo, :] * np.tile(coeffs_s0, (j_echo, 1))
+            sse_s0 = (comp_betas[:j_echo] - pred_s0) ** 2
+            sse_s0 = sse_s0.sum(axis=0)  # (S,) prediction error map
+            f_s0 = (alpha - sse_s0) * (j_echo - 1) / (sse_s0)
+            f_s0[f_s0 > f_max] = f_max
+            f_s0_maps[mask_idx, i_comp] = f_s0[mask_idx]
 
             # T2 Model
-            coeffs_T2 = (comp_betas[:j_echo] * X2[:j_echo, :]).sum(axis=0) / (
-                X2[:j_echo, :] ** 2
+            coeffs_t2 = (comp_betas[:j_echo] * x2[:j_echo, :]).sum(axis=0) / (
+                x2[:j_echo, :] ** 2
             ).sum(axis=0)
-            pred_T2 = X2[:j_echo] * np.tile(coeffs_T2, (j_echo, 1))
-            SSE_T2 = (comp_betas[:j_echo] - pred_T2) ** 2
-            SSE_T2 = SSE_T2.sum(axis=0)
-            F_T2 = (alpha - SSE_T2) * (j_echo - 1) / (SSE_T2)
-            F_T2[F_T2 > f_max] = f_max
-            F_T2_maps[mask_idx, i_comp] = F_T2[mask_idx]
+            pred_t2 = x2[:j_echo] * np.tile(coeffs_t2, (j_echo, 1))
+            sse_t2 = (comp_betas[:j_echo] - pred_t2) ** 2
+            sse_t2 = sse_t2.sum(axis=0)
+            f_t2 = (alpha - sse_t2) * (j_echo - 1) / (sse_t2)
+            f_t2[f_t2 > f_max] = f_max
+            f_t2_maps[mask_idx, i_comp] = f_t2[mask_idx]
 
-            pred_S0_maps[mask_idx, :j_echo, i_comp] = pred_S0.T[mask_idx, :]
-            pred_T2_maps[mask_idx, :j_echo, i_comp] = pred_T2.T[mask_idx, :]
+            pred_s0_maps[mask_idx, :j_echo, i_comp] = pred_s0.T[mask_idx, :]
+            pred_t2_maps[mask_idx, :j_echo, i_comp] = pred_t2.T[mask_idx, :]
 
-    return F_T2_maps, F_S0_maps, pred_T2_maps, pred_S0_maps
+    return f_t2_maps, f_s0_maps, pred_t2_maps, pred_s0_maps
 
 
 def threshold_map(maps, mask, ref_img, threshold, csize=None):
@@ -305,17 +305,17 @@ def threshold_to_match(maps, n_sig_voxels, mask, ref_img, csize=None):
     return clmaps
 
 
-def calculate_dependence_metrics(F_T2_maps, F_S0_maps, Z_maps):
+def calculate_dependence_metrics(f_t2_maps, f_s0_maps, z_maps):
     """Calculate Kappa and Rho metrics from F-statistic maps.
 
     Just a weighted average over voxels.
 
     Parameters
     ----------
-    F_T2_maps, F_S0_maps : (S x C) array_like
+    f_t2_maps, f_s0_maps : (S x C) array_like
         Pseudo-F-statistic maps for TE-dependence and -independence models,
         respectively.
-    Z_maps : (S x C) array_like
+    z_maps : (S x C) array_like
         Z-statistic maps for components, reflecting voxel-wise component loadings.
 
     Returns
@@ -324,19 +324,19 @@ def calculate_dependence_metrics(F_T2_maps, F_S0_maps, Z_maps):
         Averaged pseudo-F-statistics for TE-dependence and -independence
         models, respectively.
     """
-    assert F_T2_maps.shape == F_S0_maps.shape == Z_maps.shape
+    assert f_t2_maps.shape == f_s0_maps.shape == z_maps.shape
 
     RepLGR.info(
         "Kappa (kappa) and Rho (rho) were calculated as measures of "
         "TE-dependence and TE-independence, respectively."
     )
 
-    weight_maps = Z_maps**2.0
-    n_components = Z_maps.shape[1]
+    weight_maps = z_maps**2.0
+    n_components = z_maps.shape[1]
     kappas, rhos = np.zeros(n_components), np.zeros(n_components)
     for i_comp in range(n_components):
-        kappas[i_comp] = np.average(F_T2_maps[:, i_comp], weights=weight_maps[:, i_comp])
-        rhos[i_comp] = np.average(F_S0_maps[:, i_comp], weights=weight_maps[:, i_comp])
+        kappas[i_comp] = np.average(f_t2_maps[:, i_comp], weights=weight_maps[:, i_comp])
+        rhos[i_comp] = np.average(f_s0_maps[:, i_comp], weights=weight_maps[:, i_comp])
     return kappas, rhos
 
 
@@ -401,7 +401,7 @@ def compute_dice(clmaps1, clmaps2, axis=0):
     return dice_values
 
 
-def compute_signal_minus_noise_z(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95):
+def compute_signal_minus_noise_z(z_maps, Z_clmaps, f_t2_maps, z_thresh=1.95):
     """Compare signal and noise z-statistic distributions with a two-sample t-test.
 
     Divide voxel-level thresholded F-statistic maps into distributions of
@@ -412,11 +412,11 @@ def compute_signal_minus_noise_z(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95):
 
     Parameters
     ----------
-    Z_maps : (S x C) array_like
+    z_maps : (S x C) array_like
         Z-statistic maps for components, reflecting voxel-wise component loadings.
     Z_clmaps : (S x C) array_like
         Cluster-extent thresholded Z-statistic maps for components.
-    F_T2_maps : (S x C) array_like
+    f_t2_maps : (S x C) array_like
         Pseudo-F-statistic maps for components from TE-dependence models.
         Each voxel reflects the model fit for the component weights to the
         TE-dependence model across echoes.
@@ -430,33 +430,31 @@ def compute_signal_minus_noise_z(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95):
     signal_minus_noise_p : (C) array_like
         P-values from component-wise signal > noise paired t-tests.
     """
-    assert Z_maps.shape == Z_clmaps.shape == F_T2_maps.shape
+    assert z_maps.shape == Z_clmaps.shape == f_t2_maps.shape
 
-    n_components = Z_maps.shape[1]
+    n_components = z_maps.shape[1]
     signal_minus_noise_z = np.zeros(n_components)
     signal_minus_noise_p = np.zeros(n_components)
-    noise_idx = (np.abs(Z_maps) > z_thresh) & (Z_clmaps == 0)
+    noise_idx = (np.abs(z_maps) > z_thresh) & (Z_clmaps == 0)
     countnoise = noise_idx.sum(axis=0)
     countsignal = Z_clmaps.sum(axis=0)
     for i_comp in range(n_components):
-        noise_FT2_Z = 0.5 * np.log(F_T2_maps[noise_idx[:, i_comp], i_comp])
-        signal_FT2_Z = 0.5 * np.log(F_T2_maps[Z_clmaps[:, i_comp] == 1, i_comp])
-        n_noise_dupls = noise_FT2_Z.size - np.unique(noise_FT2_Z).size
+        noise_ft2_z = 0.5 * np.log(f_t2_maps[noise_idx[:, i_comp], i_comp])
+        signal_ft2_z = 0.5 * np.log(f_t2_maps[Z_clmaps[:, i_comp] == 1, i_comp])
+        n_noise_dupls = noise_ft2_z.size - np.unique(noise_ft2_z).size
         if n_noise_dupls:
             LGR.debug(
-                "For component {}, {} duplicate noise F-values "
-                "detected.".format(i_comp, n_noise_dupls)
+                f"For component {i_comp}, {n_noise_dupls} duplicate noise F-values detected."
             )
-        n_signal_dupls = signal_FT2_Z.size - np.unique(signal_FT2_Z).size
+        n_signal_dupls = signal_ft2_z.size - np.unique(signal_ft2_z).size
         if n_signal_dupls:
             LGR.debug(
-                "For component {}, {} duplicate signal F-values "
-                "detected.".format(i_comp, n_signal_dupls)
+                f"For component {i_comp}, {n_signal_dupls} duplicate signal F-values detected."
             )
         dof = countnoise[i_comp] + countsignal[i_comp] - 2
 
         t_value, signal_minus_noise_p[i_comp] = stats.ttest_ind(
-            signal_FT2_Z, noise_FT2_Z, equal_var=False
+            signal_ft2_z, noise_ft2_z, equal_var=False
         )
         signal_minus_noise_z[i_comp] = t_to_z(t_value, dof)
 
@@ -465,7 +463,7 @@ def compute_signal_minus_noise_z(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95):
     return signal_minus_noise_z, signal_minus_noise_p
 
 
-def compute_signal_minus_noise_t(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95):
+def compute_signal_minus_noise_t(z_maps, Z_clmaps, f_t2_maps, z_thresh=1.95):
     """Compare signal and noise t-statistic distributions with a two-sample t-test.
 
     Divide voxel-level thresholded F-statistic maps into distributions of
@@ -475,11 +473,11 @@ def compute_signal_minus_noise_t(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95):
 
     Parameters
     ----------
-    Z_maps : (S x C) array_like
+    z_maps : (S x C) array_like
         Z-statistic maps for components, reflecting voxel-wise component loadings.
     Z_clmaps : (S x C) array_like
         Cluster-extent thresholded Z-statistic maps for components.
-    F_T2_maps : (S x C) array_like
+    f_t2_maps : (S x C) array_like
         Pseudo-F-statistic maps for components from TE-dependence models.
         Each voxel reflects the model fit for the component weights to the
         TE-dependence model across echoes.
@@ -493,18 +491,18 @@ def compute_signal_minus_noise_t(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95):
     signal_minus_noise_p : (C) array_like
         P-values from component-wise signal > noise paired t-tests.
     """
-    assert Z_maps.shape == Z_clmaps.shape == F_T2_maps.shape
+    assert z_maps.shape == Z_clmaps.shape == f_t2_maps.shape
 
-    n_components = Z_maps.shape[1]
+    n_components = z_maps.shape[1]
     signal_minus_noise_t = np.zeros(n_components)
     signal_minus_noise_p = np.zeros(n_components)
-    noise_idx = (np.abs(Z_maps) > z_thresh) & (Z_clmaps == 0)
+    noise_idx = (np.abs(z_maps) > z_thresh) & (Z_clmaps == 0)
     for i_comp in range(n_components):
         # NOTE: Why only compare distributions of *unique* F-statistics?
-        noise_FT2_Z = np.log10(np.unique(F_T2_maps[noise_idx[:, i_comp], i_comp]))
-        signal_FT2_Z = np.log10(np.unique(F_T2_maps[Z_clmaps[:, i_comp] == 1, i_comp]))
+        noise_ft2_z = np.log10(np.unique(f_t2_maps[noise_idx[:, i_comp], i_comp]))
+        signal_ft2_z = np.log10(np.unique(f_t2_maps[Z_clmaps[:, i_comp] == 1, i_comp]))
         (signal_minus_noise_t[i_comp], signal_minus_noise_p[i_comp]) = stats.ttest_ind(
-            signal_FT2_Z, noise_FT2_Z, equal_var=False
+            signal_ft2_z, noise_ft2_z, equal_var=False
         )
 
     signal_minus_noise_t = np.nan_to_num(signal_minus_noise_t, 0)
@@ -557,7 +555,7 @@ def compute_countnoise(stat_maps, stat_cl_maps, stat_thresh=1.95):
     return countnoise
 
 
-def generate_decision_table_score(kappa, dice_FT2, signal_minus_noise_t, countnoise, countsigFT2):
+def generate_decision_table_score(kappa, dice_ft2, signal_minus_noise_t, countnoise, countsigFT2):
     """Generate a five-metric decision table.
 
     Metrics are ranked in either descending or ascending order if they measure TE-dependence or
@@ -567,7 +565,7 @@ def generate_decision_table_score(kappa, dice_FT2, signal_minus_noise_t, countno
     ----------
     kappa : (C) array_like
         Pseudo-F-statistics for TE-dependence model.
-    dice_FT2 : (C) array_like
+    dice_ft2 : (C) array_like
         Dice similarity index for cluster-extent thresholded beta maps and
         cluster-extent thresholded TE-dependence F-statistic maps.
     signal_minus_noise_t : (C) array_like
@@ -586,7 +584,7 @@ def generate_decision_table_score(kappa, dice_FT2, signal_minus_noise_t, countno
     """
     assert (
         kappa.shape
-        == dice_FT2.shape
+        == dice_ft2.shape
         == signal_minus_noise_t.shape
         == countnoise.shape
         == countsigFT2.shape
@@ -595,7 +593,7 @@ def generate_decision_table_score(kappa, dice_FT2, signal_minus_noise_t, countno
     d_table_rank = np.vstack(
         [
             len(kappa) - stats.rankdata(kappa),
-            len(kappa) - stats.rankdata(dice_FT2),
+            len(kappa) - stats.rankdata(dice_ft2),
             len(kappa) - stats.rankdata(signal_minus_noise_t),
             stats.rankdata(countnoise),
             len(kappa) - stats.rankdata(countsigFT2),

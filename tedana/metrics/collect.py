@@ -66,8 +66,8 @@ def generate_metrics(
     if not (data_cat.shape[0] == data_optcom.shape[0] == adaptive_mask.shape[0]):
         raise ValueError(
             f"First dimensions (number of samples) of data_cat ({data_cat.shape[0]}), "
-            f"data_optcom ({data_optcom.shape[0]}), and adaptive_mask ({adaptive_mask.shape[0]}) do not "
-            "match"
+            f"data_optcom ({data_optcom.shape[0]}), and adaptive_mask "
+            f"({adaptive_mask.shape[0]}) do not match"
         )
     elif data_cat.shape[1] != len(tes):
         raise ValueError(
@@ -150,13 +150,13 @@ def generate_metrics(
 
     if ("map FT2" in required_metrics) or ("map FS0" in required_metrics):
         LGR.info("Calculating F-statistic maps")
-        m_T2, m_S0, p_m_T2, p_m_S0 = dependence.calculate_f_maps(
+        m_t2, m_s0, p_m_t2, p_m_s0 = dependence.calculate_f_maps(
             data_cat, metric_maps["map Z"], mixing, adaptive_mask, tes
         )
-        metric_maps["map FT2"] = m_T2
-        metric_maps["map FS0"] = m_S0
-        metric_maps["map predicted T2"] = p_m_T2
-        metric_maps["map predicted S0"] = p_m_S0
+        metric_maps["map FT2"] = m_t2
+        metric_maps["map FS0"] = m_s0
+        metric_maps["map predicted T2"] = p_m_t2
+        metric_maps["map predicted S0"] = p_m_s0
 
         if io_generator.verbose:
             io_generator.save_file(
@@ -322,12 +322,12 @@ def generate_metrics(
     # Write verbose metrics if needed
     if io_generator.verbose:
         write_betas = "map echo betas" in metric_maps
-        write_T2S0 = "map predicted T2" in metric_maps
+        write_t2s0 = "map predicted T2" in metric_maps
         if write_betas:
             betas = metric_maps["map echo betas"]
-        if write_T2S0:
-            pred_T2_maps = metric_maps["map predicted T2"]
-            pred_S0_maps = metric_maps["map predicted S0"]
+        if write_t2s0:
+            pred_t2_maps = metric_maps["map predicted T2"]
+            pred_s0_maps = metric_maps["map predicted S0"]
 
         for i_echo in range(len(tes)):
             if write_betas:
@@ -338,17 +338,17 @@ def generate_metrics(
                     echo=(i_echo + 1),
                 )
 
-            if write_T2S0:
-                echo_pred_T2_maps = pred_T2_maps[:, i_echo, :]
+            if write_t2s0:
+                echo_pred_t2_maps = pred_t2_maps[:, i_echo, :]
                 io_generator.save_file(
-                    utils.unmask(echo_pred_T2_maps, mask),
+                    utils.unmask(echo_pred_t2_maps, mask),
                     "echo T2 " + label + " split img",
                     echo=(i_echo + 1),
                 )
 
-                echo_pred_S0_maps = pred_S0_maps[:, i_echo, :]
+                echo_pred_s0_maps = pred_s0_maps[:, i_echo, :]
                 io_generator.save_file(
-                    utils.unmask(echo_pred_S0_maps, mask),
+                    utils.unmask(echo_pred_s0_maps, mask),
                     "echo S0 " + label + " split img",
                     echo=(i_echo + 1),
                 )
@@ -384,7 +384,7 @@ def generate_metrics(
 
 
 def get_metadata(comptable):
-    """Fills in metric metadata for a given comptable
+    """Fill in metric metadata for a given comptable.
 
     Parameters
     ----------
@@ -397,7 +397,6 @@ def get_metadata(comptable):
     which we have a metadata description, plus the "Component" metadata
     description (always).
     """
-
     metric_metadata = {}
     if "kappa" in comptable:
         metric_metadata["kappa"] = {
