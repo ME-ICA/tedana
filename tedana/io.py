@@ -39,6 +39,7 @@ class CustomEncoder(json.JSONEncoder):
     """
 
     def default(self, obj):
+        """Default encoder for CustomEncoder."""
         # int64 non-serializable but is a numpy output
         if isinstance(obj, np.int32) or isinstance(obj, np.int64):
             return int(obj)
@@ -345,6 +346,13 @@ class OutputGenerator:
         deblanked.to_csv(name, sep="\t", lineterminator="\n", na_rep="n/a", index=False)
 
     def save_self(self):
+        """Save the registry to a json file.
+
+        Returns
+        -------
+        fname
+            Full file path for output file.
+        """
         fname = self.save_file(self.registry, "registry json")
         return fname
 
@@ -364,6 +372,13 @@ class InputHarvester:
         self._registry = load_json(self._full_path)
 
     def get_file_path(self, description):
+        """Get file path.
+
+        Parameters
+        ----------
+        description : str
+            Description of the file to get the path for.
+        """
         if description in self._registry.keys():
             return op.join(self._base_dir, self._registry[description])
         else:
@@ -390,6 +405,18 @@ class InputHarvester:
 
 
 def versiontuple(v):
+    """Convert a version string into a tuple of ints.
+
+    Parameters
+    ----------
+    v : str
+        Version string to convert.
+
+    Returns
+    -------
+    tuple
+        Tuple of ints corresponding to the version string.
+    """
     return tuple(map(int, (v.split("."))))
 
 

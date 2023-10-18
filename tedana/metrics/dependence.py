@@ -555,7 +555,7 @@ def compute_countnoise(stat_maps, stat_cl_maps, stat_thresh=1.95):
     return countnoise
 
 
-def generate_decision_table_score(kappa, dice_ft2, signal_minus_noise_t, countnoise, countsigFT2):
+def generate_decision_table_score(kappa, dice_ft2, signal_minus_noise_t, countnoise, countsig_ft2):
     """Generate a five-metric decision table.
 
     Metrics are ranked in either descending or ascending order if they measure TE-dependence or
@@ -573,7 +573,7 @@ def generate_decision_table_score(kappa, dice_ft2, signal_minus_noise_t, countno
     countnoise : (C) array_like
         Numbers of significant non-cluster voxels from the thresholded beta
         maps.
-    countsigFT2 : (C) array_like
+    countsig_ft2 : (C) array_like
         Numbers of significant voxels from clusters from the thresholded
         TE-dependence F-statistic maps.
 
@@ -587,7 +587,7 @@ def generate_decision_table_score(kappa, dice_ft2, signal_minus_noise_t, countno
         == dice_ft2.shape
         == signal_minus_noise_t.shape
         == countnoise.shape
-        == countsigFT2.shape
+        == countsig_ft2.shape
     )
 
     d_table_rank = np.vstack(
@@ -596,7 +596,7 @@ def generate_decision_table_score(kappa, dice_ft2, signal_minus_noise_t, countno
             len(kappa) - stats.rankdata(dice_ft2),
             len(kappa) - stats.rankdata(signal_minus_noise_t),
             stats.rankdata(countnoise),
-            len(kappa) - stats.rankdata(countsigFT2),
+            len(kappa) - stats.rankdata(countsig_ft2),
         ]
     ).T
     d_table_score = d_table_rank.mean(axis=1)
