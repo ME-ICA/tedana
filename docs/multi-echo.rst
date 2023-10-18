@@ -546,7 +546,7 @@ For more details, see the `fmriprep workflows page`_ and :ref:`collecting fMRIPr
 
 .. _fmriprep workflows page: https://fmriprep.readthedocs.io/en/stable/workflows.html
 
-`fmrwhy`_ runs BIDS-compatible fMRI analysis with SPM12 and supports multi-echo data, 
+`fmrwhy`_ runs BIDS-compatible fMRI analysis with SPM12 and supports multi-echo data,
 but it is no longer being actively maintained.
 
 .. _fmrwhy: https://fmrwhy.readthedocs.io
