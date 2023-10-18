@@ -20,3 +20,4 @@ repos:
     rev: "1.0.1"
     hooks:
       - id: flynt
+        files: ^tedana/

@@ -65,21 +65,20 @@ def generate_metrics(
 
     if not (data_cat.shape[0] == data_optcom.shape[0] == adaptive_mask.shape[0]):
         raise ValueError(
-            "First dimensions (number of samples) of data_cat ({0}), "
-            "data_optcom ({1}), and adaptive_mask ({2}) do not "
-            "match".format(data_cat.shape[0], data_optcom.shape[0], adaptive_mask.shape[0])
+            f"First dimensions (number of samples) of data_cat ({data_cat.shape[0]}), "
+            f"data_optcom ({data_optcom.shape[0]}), and adaptive_mask ({adaptive_mask.shape[0]}) do not "
+            "match"
         )
     elif data_cat.shape[1] != len(tes):
         raise ValueError(
-            "Second dimension of data_cat ({0}) does not match "
-            "number of echoes provided (tes; "
-            "{1})".format(data_cat.shape[1], len(tes))
+            f"Second dimension of data_cat ({data_cat.shape[1]}) does not match "
+            f"number of echoes provided (tes; {len(tes)})"
         )
     elif not (data_cat.shape[2] == data_optcom.shape[1] == mixing.shape[0]):
         raise ValueError(
-            "Number of volumes in data_cat ({0}), "
-            "data_optcom ({1}), and mixing ({2}) do not "
-            "match.".format(data_cat.shape[2], data_optcom.shape[1], mixing.shape[0])
+            f"Number of volumes in data_cat ({data_cat.shape[2]}), "
+            f"data_optcom ({data_optcom.shape[1]}), and mixing ({mixing.shape[0]}) do not "
+            "match."
         )
 
     # Derive mask from thresholded adaptive mask
