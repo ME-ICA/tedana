@@ -451,10 +451,11 @@ def tedana_workflow(
         os.mkdir(out_dir)
 
     # boilerplate
-    basename = "report"
+    prefix = io._infer_prefix(prefix)
+    basename = f"{prefix}report"
     extension = "txt"
     repname = op.join(out_dir, (basename + "." + extension))
-    bibtex_file = op.join(out_dir, "references.bib")
+    bibtex_file = op.join(out_dir, f"{prefix}references.bib")
     repex = op.join(out_dir, (basename + "*"))
     previousreps = glob(repex)
     previousreps.sort(reverse=True)
