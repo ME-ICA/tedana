@@ -14,7 +14,7 @@ from tedana.tests.utils import get_test_data_path
 def testdata1():
     """Data used for tests of the metrics module."""
     tes = np.array([14.5, 38.5, 62.5])
-    in_files = [op.join(get_test_data_path(), "echo{0}.nii.gz".format(i + 1)) for i in range(3)]
+    in_files = [op.join(get_test_data_path(), f"echo{i + 1}.nii.gz") for i in range(3)]
     data_cat, ref_img = io.load_data(in_files, n_echos=len(tes))
     _, adaptive_mask = utils.make_adaptive_mask(data_cat, getsum=True)
     data_optcom = np.mean(data_cat, axis=1)

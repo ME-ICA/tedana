@@ -55,11 +55,11 @@ def computefeats2(data, mmix, mask=None, normalize=True):
         Data in component space
     """
     if data.ndim != 2:
-        raise ValueError("Parameter data should be 2d, not {0}d".format(data.ndim))
+        raise ValueError(f"Parameter data should be 2d, not {data.ndim}d")
     elif mmix.ndim not in [2]:
-        raise ValueError("Parameter mmix should be 2d, not {0}d".format(mmix.ndim))
+        raise ValueError(f"Parameter mmix should be 2d, not {mmix.ndim}d")
     elif (mask is not None) and (mask.ndim != 1):
-        raise ValueError("Parameter mask should be 1d, not {0}d".format(mask.ndim))
+        raise ValueError(f"Parameter mask should be 1d, not {mask.ndim}d")
     elif (mask is not None) and (data.shape[0] != mask.shape[0]):
         raise ValueError(
             "First dimensions (number of samples) of data ({0}) "
@@ -121,9 +121,9 @@ def get_coeffs(data, X, mask=None, add_const=False):
         Array of `S` sample betas for `C` predictors
     """
     if data.ndim not in [2, 3]:
-        raise ValueError("Parameter data should be 2d or 3d, not {0}d".format(data.ndim))
+        raise ValueError(f"Parameter data should be 2d or 3d, not {data.ndim}d")
     elif X.ndim not in [2]:
-        raise ValueError("Parameter X should be 2d, not {0}d".format(X.ndim))
+        raise ValueError(f"Parameter X should be 2d, not {X.ndim}d")
     elif data.shape[-1] != X.shape[0]:
         raise ValueError(
             "Last dimension (dimension {0}) of data ({1}) does not "
@@ -134,7 +134,7 @@ def get_coeffs(data, X, mask=None, add_const=False):
     # mask data and flip (time x samples)
     if mask is not None:
         if mask.ndim not in [1, 2]:
-            raise ValueError("Parameter data should be 1d or 2d, not {0}d".format(mask.ndim))
+            raise ValueError(f"Parameter data should be 1d or 2d, not {mask.ndim}d")
         elif data.shape[0] != mask.shape[0]:
             raise ValueError(
                 "First dimensions of data ({0}) and mask ({1}) do not "

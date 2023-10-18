@@ -41,8 +41,7 @@ def test_break_gscontrol_raw():
             catd=catd, optcom=optcom, n_echos=n_echos, io_generator=io_generator, dtrank=4
         )
     assert str(e_info.value) == (
-        "Second dimension of catd ({0}) does not match "
-        "n_echos ({1})".format(catd.shape[1], n_echos)
+        f"Second dimension of catd ({catd.shape[1]}) does not match n_echos ({n_echos})"
     )
 
     catd = np.empty((n_samples, n_echos, n_vols))

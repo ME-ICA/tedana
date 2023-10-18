@@ -61,7 +61,7 @@ def generate_metrics(
 
     if metrics is None:
         metrics = ["map weight"]
-    RepLGR.info("The following metrics were calculated: {}.".format(", ".join(metrics)))
+    RepLGR.info(f"The following metrics were calculated: {', '.join(metrics)}.")
 
     if not (data_cat.shape[0] == data_optcom.shape[0] == adaptive_mask.shape[0]):
         raise ValueError(

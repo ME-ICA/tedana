@@ -14,7 +14,7 @@ from tedana import io, utils
 
 rs = np.random.RandomState(1234)
 datadir = pjoin(dirname(__file__), "data")
-fnames = [pjoin(datadir, "echo{}.nii.gz".format(n)) for n in range(1, 4)]
+fnames = [pjoin(datadir, f"echo{n}.nii.gz") for n in range(1, 4)]
 tes = ["14.5", "38.5", "62.5"]
 
 

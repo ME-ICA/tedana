@@ -183,7 +183,7 @@ def dice(arr1, arr2, axis=None):
         raise ValueError("Shape mismatch: arr1 and arr2 must have the same shape.")
 
     if axis is not None and axis > (arr1.ndim - 1):
-        raise ValueError("Axis provided {} not supported by the input arrays.".format(axis))
+        raise ValueError(f"Axis provided {axis} not supported by the input arrays.")
 
     arr_sum = arr1.sum(axis=axis) + arr2.sum(axis=axis)
     intersection = np.logical_and(arr1, arr2)

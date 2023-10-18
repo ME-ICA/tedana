@@ -33,7 +33,7 @@ def dependency_resolver(dict_, requested_metrics, base_inputs):
     """
     not_found = [k for k in requested_metrics if k not in dict_.keys()]
     if not_found:
-        raise ValueError("Unknown metric(s): {}".format(", ".join(not_found)))
+        raise ValueError(f"Unknown metric(s): {', '.join(not_found)}")
 
     required_metrics = requested_metrics
     escape_counter = 0
@@ -43,7 +43,7 @@ def dependency_resolver(dict_, requested_metrics, base_inputs):
             if k in dict_.keys():
                 new_metrics = dict_[k]
             elif k not in base_inputs:
-                print("Warning: {} not found".format(k))
+                print(f"Warning: {k} not found")
             required_metrics_new += new_metrics
         if set(required_metrics) == set(required_metrics_new):
             # There are no more parent metrics to calculate

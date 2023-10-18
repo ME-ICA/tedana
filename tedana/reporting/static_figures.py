@@ -271,9 +271,9 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
         ax_ts.plot(mmix[:, compnum], color=line_color)
 
         # Title will include variance from comptable
-        comp_var = "{0:.2f}".format(comptable.loc[compnum, "variance explained"])
-        comp_kappa = "{0:.2f}".format(comptable.loc[compnum, "kappa"])
-        comp_rho = "{0:.2f}".format(comptable.loc[compnum, "rho"])
+        comp_var = f"{comptable.loc[compnum, 'variance explained']:.2f}"
+        comp_kappa = f"{comptable.loc[compnum, 'kappa']:.2f}"
+        comp_rho = f"{comptable.loc[compnum, 'rho']:.2f}"
         plt_title = "Comp. {}: variance: {}%, kappa: {}, rho: {}, {}".format(
             compnum, comp_var, comp_kappa, comp_rho, expl_text
         )
