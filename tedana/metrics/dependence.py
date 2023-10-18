@@ -401,7 +401,7 @@ def compute_dice(clmaps1, clmaps2, axis=0):
     return dice_values
 
 
-def compute_signal_minus_noise_z(z_maps, Z_clmaps, f_t2_maps, z_thresh=1.95):
+def compute_signal_minus_noise_z(z_maps, z_clmaps, f_t2_maps, z_thresh=1.95):
     """Compare signal and noise z-statistic distributions with a two-sample t-test.
 
     Divide voxel-level thresholded F-statistic maps into distributions of
@@ -414,7 +414,7 @@ def compute_signal_minus_noise_z(z_maps, Z_clmaps, f_t2_maps, z_thresh=1.95):
     ----------
     z_maps : (S x C) array_like
         Z-statistic maps for components, reflecting voxel-wise component loadings.
-    Z_clmaps : (S x C) array_like
+    z_clmaps : (S x C) array_like
         Cluster-extent thresholded Z-statistic maps for components.
     f_t2_maps : (S x C) array_like
         Pseudo-F-statistic maps for components from TE-dependence models.
@@ -430,17 +430,17 @@ def compute_signal_minus_noise_z(z_maps, Z_clmaps, f_t2_maps, z_thresh=1.95):
     signal_minus_noise_p : (C) array_like
         P-values from component-wise signal > noise paired t-tests.
     """
-    assert z_maps.shape == Z_clmaps.shape == f_t2_maps.shape
+    assert z_maps.shape == z_clmaps.shape == f_t2_maps.shape
 
     n_components = z_maps.shape[1]
     signal_minus_noise_z = np.zeros(n_components)
     signal_minus_noise_p = np.zeros(n_components)
-    noise_idx = (np.abs(z_maps) > z_thresh) & (Z_clmaps == 0)
+    noise_idx = (np.abs(z_maps) > z_thresh) & (z_clmaps == 0)
     countnoise = noise_idx.sum(axis=0)
-    countsignal = Z_clmaps.sum(axis=0)
+    countsignal = z_clmaps.sum(axis=0)
     for i_comp in range(n_components):
         noise_ft2_z = 0.5 * np.log(f_t2_maps[noise_idx[:, i_comp], i_comp])
-        signal_ft2_z = 0.5 * np.log(f_t2_maps[Z_clmaps[:, i_comp] == 1, i_comp])
+        signal_ft2_z = 0.5 * np.log(f_t2_maps[z_clmaps[:, i_comp] == 1, i_comp])
         n_noise_dupls = noise_ft2_z.size - np.unique(noise_ft2_z).size
         if n_noise_dupls:
             LGR.debug(
@@ -463,7 +463,7 @@ def compute_signal_minus_noise_z(z_maps, Z_clmaps, f_t2_maps, z_thresh=1.95):
     return signal_minus_noise_z, signal_minus_noise_p
 
 
-def compute_signal_minus_noise_t(z_maps, Z_clmaps, f_t2_maps, z_thresh=1.95):
+def compute_signal_minus_noise_t(z_maps, z_clmaps, f_t2_maps, z_thresh=1.95):
     """Compare signal and noise t-statistic distributions with a two-sample t-test.
 
     Divide voxel-level thresholded F-statistic maps into distributions of
@@ -475,7 +475,7 @@ def compute_signal_minus_noise_t(z_maps, Z_clmaps, f_t2_maps, z_thresh=1.95):
     ----------
     z_maps : (S x C) array_like
         Z-statistic maps for components, reflecting voxel-wise component loadings.
-    Z_clmaps : (S x C) array_like
+    z_clmaps : (S x C) array_like
         Cluster-extent thresholded Z-statistic maps for components.
     f_t2_maps : (S x C) array_like
         Pseudo-F-statistic maps for components from TE-dependence models.
@@ -491,16 +491,16 @@ def compute_signal_minus_noise_t(z_maps, Z_clmaps, f_t2_maps, z_thresh=1.95):
     signal_minus_noise_p : (C) array_like
         P-values from component-wise signal > noise paired t-tests.
     """
-    assert z_maps.shape == Z_clmaps.shape == f_t2_maps.shape
+    assert z_maps.shape == z_clmaps.shape == f_t2_maps.shape
 
     n_components = z_maps.shape[1]
     signal_minus_noise_t = np.zeros(n_components)
     signal_minus_noise_p = np.zeros(n_components)
-    noise_idx = (np.abs(z_maps) > z_thresh) & (Z_clmaps == 0)
+    noise_idx = (np.abs(z_maps) > z_thresh) & (z_clmaps == 0)
     for i_comp in range(n_components):
         # NOTE: Why only compare distributions of *unique* F-statistics?
         noise_ft2_z = np.log10(np.unique(f_t2_maps[noise_idx[:, i_comp], i_comp]))
-        signal_ft2_z = np.log10(np.unique(f_t2_maps[Z_clmaps[:, i_comp] == 1, i_comp]))
+        signal_ft2_z = np.log10(np.unique(f_t2_maps[z_clmaps[:, i_comp] == 1, i_comp]))
         (signal_minus_noise_t[i_comp], signal_minus_noise_p[i_comp]) = stats.ttest_ind(
             signal_ft2_z, noise_ft2_z, equal_var=False
         )

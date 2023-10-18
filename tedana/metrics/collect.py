@@ -219,9 +219,9 @@ def generate_metrics(
     if ("kappa" in required_metrics) or ("rho" in required_metrics):
         LGR.info("Calculating kappa and rho")
         comptable["kappa"], comptable["rho"] = dependence.calculate_dependence_metrics(
-            F_T2_maps=metric_maps["map FT2"],
-            F_S0_maps=metric_maps["map FS0"],
-            Z_maps=metric_maps["map Z"],
+            f_t2_maps=metric_maps["map FT2"],
+            f_s0_maps=metric_maps["map FS0"],
+            z_maps=metric_maps["map Z"],
         )
 
     # Generic metrics
@@ -274,9 +274,9 @@ def generate_metrics(
             comptable["signal-noise_t"],
             comptable["signal-noise_p"],
         ) = dependence.compute_signal_minus_noise_t(
-            Z_maps=metric_maps["map Z"],
-            Z_clmaps=metric_maps["map Z clusterized"],
-            F_T2_maps=metric_maps["map FT2"],
+            z_maps=metric_maps["map Z"],
+            z_clmaps=metric_maps["map Z clusterized"],
+            f_t2_maps=metric_maps["map FT2"],
         )
 
     if "signal-noise_z" in required_metrics:
