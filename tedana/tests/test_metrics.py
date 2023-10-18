@@ -37,10 +37,10 @@ def test_smoke_generate_metrics(testdata1):
         "kappa",
         "rho",
         "countnoise",
-        "countsigFT2",
-        "countsigFS0",
-        "dice_FT2",
-        "dice_FS0",
+        "countsigft2",
+        "countsigfs0",
+        "dice_ft2",
+        "dice_fs0",
         "signal-noise_t",
         "variance explained",
         "normalized variance explained",
@@ -98,14 +98,14 @@ def test_smoke_calculate_f_maps():
     """Smoke test for tedana.metrics.dependence.calculate_f_maps."""
     n_voxels, n_echos, n_volumes, n_components = 1000, 5, 100, 50
     data_cat = np.random.random((n_voxels, n_echos, n_volumes))
-    Z_maps = np.random.normal(size=(n_voxels, n_components))
+    z_maps = np.random.normal(size=(n_voxels, n_components))
     mixing = np.random.random((n_volumes, n_components))
     adaptive_mask = np.random.randint(1, n_echos + 1, size=n_voxels)
     tes = np.array([15, 25, 35, 45, 55])
-    F_T2_maps, F_S0_maps, _, _ = dependence.calculate_f_maps(
-        data_cat, Z_maps, mixing, adaptive_mask, tes, f_max=500
+    f_t2_maps, f_s0_maps, _, _ = dependence.calculate_f_maps(
+        data_cat, z_maps, mixing, adaptive_mask, tes, f_max=500
     )
-    assert F_T2_maps.shape == F_S0_maps.shape == (n_voxels, n_components)
+    assert f_t2_maps.shape == f_s0_maps.shape == (n_voxels, n_components)
 
 
 def test_smoke_calculate_varex():
@@ -138,26 +138,26 @@ def test_smoke_compute_dice():
 def test_smoke_compute_signal_minus_noise_z():
     """Smoke test for tedana.metrics.dependence.compute_signal_minus_noise_z."""
     n_voxels, n_components = 1000, 50
-    Z_maps = np.random.normal(size=(n_voxels, n_components))
-    Z_clmaps = np.random.randint(0, 2, size=(n_voxels, n_components))
-    F_T2_maps = np.random.random((n_voxels, n_components))
+    z_maps = np.random.normal(size=(n_voxels, n_components))
+    z_clmaps = np.random.randint(0, 2, size=(n_voxels, n_components))
+    f_t2_maps = np.random.random((n_voxels, n_components))
     (
         signal_minus_noise_z,
         signal_minus_noise_p,
-    ) = dependence.compute_signal_minus_noise_z(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95)
+    ) = dependence.compute_signal_minus_noise_z(z_maps, z_clmaps, f_t2_maps, z_thresh=1.95)
     assert signal_minus_noise_z.shape == signal_minus_noise_p.shape == (n_components,)
 
 
 def test_smoke_compute_signal_minus_noise_t():
     """Smoke test for tedana.metrics.dependence.compute_signal_minus_noise_t."""
     n_voxels, n_components = 1000, 50
-    Z_maps = np.random.normal(size=(n_voxels, n_components))
-    Z_clmaps = np.random.randint(0, 2, size=(n_voxels, n_components))
-    F_T2_maps = np.random.random((n_voxels, n_components))
+    z_maps = np.random.normal(size=(n_voxels, n_components))
+    z_clmaps = np.random.randint(0, 2, size=(n_voxels, n_components))
+    f_t2_maps = np.random.random((n_voxels, n_components))
     (
         signal_minus_noise_t,
         signal_minus_noise_p,
-    ) = dependence.compute_signal_minus_noise_t(Z_maps, Z_clmaps, F_T2_maps, z_thresh=1.95)
+    ) = dependence.compute_signal_minus_noise_t(z_maps, z_clmaps, f_t2_maps, z_thresh=1.95)
     assert signal_minus_noise_t.shape == signal_minus_noise_p.shape == (n_components,)
 
 
@@ -182,12 +182,12 @@ def test_smoke_generate_decision_table_score():
     """Smoke test for tedana.metrics.dependence.generate_decision_table_score."""
     n_voxels, n_components = 1000, 50
     kappa = np.random.random(n_components)
-    dice_FT2 = np.random.random(n_components)
+    dice_ft2 = np.random.random(n_components)
     signal_minus_noise_t = np.random.normal(size=n_components)
     countnoise = np.random.randint(0, n_voxels, size=n_components)
-    countsigFT2 = np.random.randint(0, n_voxels, size=n_components)
+    countsigft2 = np.random.randint(0, n_voxels, size=n_components)
     decision_table_score = dependence.generate_decision_table_score(
-        kappa, dice_FT2, signal_minus_noise_t, countnoise, countsigFT2
+        kappa, dice_ft2, signal_minus_noise_t, countnoise, countsigft2
     )
     assert decision_table_score.shape == (n_components,)
 
@@ -195,8 +195,8 @@ def test_smoke_generate_decision_table_score():
 def test_smoke_calculate_dependence_metrics():
     """Smoke test for tedana.metrics.dependence.calculate_dependence_metrics."""
     n_voxels, n_components = 1000, 50
-    F_T2_maps = np.random.random((n_voxels, n_components))
-    F_S0_maps = np.random.random((n_voxels, n_components))
-    Z_maps = np.random.random((n_voxels, n_components))
-    kappas, rhos = dependence.calculate_dependence_metrics(F_T2_maps, F_S0_maps, Z_maps)
+    f_t2_maps = np.random.random((n_voxels, n_components))
+    f_s0_maps = np.random.random((n_voxels, n_components))
+    z_maps = np.random.random((n_voxels, n_components))
+    kappas, rhos = dependence.calculate_dependence_metrics(f_t2_maps, f_s0_maps, z_maps)
     assert kappas.shape == rhos.shape == (n_components,)
