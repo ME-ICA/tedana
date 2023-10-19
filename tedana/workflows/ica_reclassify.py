@@ -24,7 +24,7 @@ RepLGR = logging.getLogger("REPORT")
 
 
 def _get_parser():
-    """Parses command line inputs for ica_reclassify.
+    """Parse command line inputs for ica_reclassify.
 
     Returns
     -------
@@ -465,7 +465,7 @@ def ica_reclassify_workflow(
             "series."
         )
 
-    img_t_r = io_generator.reference_img.header.get_zooms()[-1]
+    # img_t_r = io_generator.reference_img.header.get_zooms()[-1]
     adaptive_mask = utils.reshape_niimg(adaptive_mask)
     mask_denoise = adaptive_mask >= 1
     data_oc = utils.reshape_niimg(data_oc)
