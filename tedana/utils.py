@@ -39,7 +39,7 @@ def reshape_niimg(data):
 
 def make_adaptive_mask(data, mask=None, getsum=False, threshold=1):
     """
-    Makes map of `data` specifying longest echo a voxel can be sampled with.
+    Make map of `data` specifying longest echo a voxel can be sampled with.
 
     Parameters
     ----------
@@ -109,8 +109,8 @@ def make_adaptive_mask(data, mask=None, getsum=False, threshold=1):
         if np.any(masksum[mask] < threshold):
             n_bad_voxels = np.sum(masksum[mask] < threshold)
             LGR.warning(
-                "{0} voxels in user-defined mask do not have good "
-                "signal. Removing voxels from mask.".format(n_bad_voxels)
+                f"{n_bad_voxels} voxels in user-defined mask do not have good "
+                "signal. Removing voxels from mask."
             )
             masksum[masksum < threshold] = 0
             mask = masksum.astype(bool)
@@ -208,7 +208,7 @@ def dice(arr1, arr2, axis=None):
 
 def andb(arrs):
     """
-    Sums arrays in `arrs`.
+    Sum arrays in `arrs`.
 
     Parameters
     ----------
@@ -220,7 +220,6 @@ def andb(arrs):
     result : :obj:`numpy.ndarray`
         Integer array of summed `arrs`
     """
-
     # coerce to integer and ensure all arrays are the same shape
     arrs = [check_array(arr, dtype=int, ensure_2d=False, allow_nd=True) for arr in arrs]
     if not np.all([arr1.shape == arr2.shape for arr1 in arrs for arr2 in arrs]):
@@ -234,8 +233,9 @@ def andb(arrs):
 
 def get_spectrum(data: np.array, tr: float = 1.0):
     """
-    Returns the power spectrum and corresponding frequencies when provided
-    with a component time course and repitition time.
+    Return the power spectrum and corresponding frequencies.
+
+    Done when provided with a component time course and repitition time.
 
     Parameters
     ----------
@@ -244,7 +244,6 @@ def get_spectrum(data: np.array, tr: float = 1.0):
     tr : :obj:`float`
             Reptition time (TR) of the data
     """
-
     # adapted from @dangom
     power_spectrum = np.abs(np.fft.rfft(data)) ** 2
     freqs = np.fft.rfftfreq(power_spectrum.size * 2 - 1, tr)
@@ -380,6 +379,19 @@ def millisec2sec(arr):
 
 
 def setup_loggers(logname=None, repname=None, quiet=False, debug=False):
+    """Set up loggers for tedana.
+
+    Parameters
+    ----------
+    logname : str, optional
+        Name of log file, by default None
+    repname : str, optional
+        Name of report file, by default None
+    quiet : bool, optional
+        Whether to suppress logging to console, by default False
+    debug : bool, optional
+        Whether to set logging level to debug, by default False
+    """
     # Set up the general logger
     log_formatter = logging.Formatter(
         "%(asctime)s\t%(module)s.%(funcName)-12s\t%(levelname)-8s\t%(message)s",
@@ -416,6 +428,7 @@ def setup_loggers(logname=None, repname=None, quiet=False, debug=False):
 
 
 def teardown_loggers():
+    """Close loggers."""
     for local_logger in (RepLGR, LGR):
         for handler in local_logger.handlers[:]:
             handler.close()
