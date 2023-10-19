@@ -33,7 +33,6 @@ def _trim_edge_zeros(arr):
         an array with reduced dimensions, such that the array contains only
         non_zero values from edge to edge.
     """
-
     mask = arr != 0
     bounding_box = tuple(slice(np.min(indexes), np.max(indexes) + 1) for indexes in np.where(mask))
     return arr[bounding_box]
@@ -182,9 +181,9 @@ def carpet_plot(
 
 def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
     """
-    Creates static figures that highlight certain aspects of tedana processing
-    This includes a figure for each component showing the component time course,.
+    Create static figures that highlight certain aspects of tedana processing.
 
+    This includes a figure for each component showing the component time course,
     the spatial weight map and a fast Fourier transform of the time course.
 
     Parameters
@@ -193,7 +192,7 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
         Time series from which to derive ICA betas
     mask : (S,) array_like
         Boolean mask array
-    comptable : (C x X) :obj:`pandas.DataFrame`
+    comptable : (C x x) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
     mmix : (C x T) array_like
@@ -209,19 +208,19 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
     mmix = mmix * comptable["optimal sign"].values
 
     # regenerate the beta images
-    ts_B = stats.get_coeffs(ts, mmix, mask)
-    ts_B = ts_B.reshape(io_generator.reference_img.shape[:3] + ts_B.shape[1:])
-    # trim edges from ts_B array
-    ts_B = _trim_edge_zeros(ts_B)
+    ts_b = stats.get_coeffs(ts, mmix, mask)
+    ts_b = ts_b.reshape(io_generator.reference_img.shape[:3] + ts_b.shape[1:])
+    # trim edges from ts_b array
+    ts_b = _trim_edge_zeros(ts_b)
 
     # Mask out remaining zeros
-    ts_B = np.ma.masked_where(ts_B == 0, ts_B)
+    ts_b = np.ma.masked_where(ts_b == 0, ts_b)
 
     # Get repetition time from reference image
     tr = io_generator.reference_img.header.get_zooms()[-1]
 
     # Create indices for 6 cuts, based on dimensions
-    cuts = [ts_B.shape[dim] // 6 for dim in range(3)]
+    cuts = [ts_b.shape[dim] // 6 for dim in range(3)]
     expl_text = ""
 
     # Remove trailing ';' from rationale column
@@ -255,16 +254,16 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
         ax_ts.xaxis.set_major_locator(xloc)
 
         ax_ts2 = ax_ts.twiny()
-        ax1Xs = ax_ts.get_xticks()
+        ax1_xs = ax_ts.get_xticks()
 
-        ax2Xs = []
-        for X in ax1Xs:
+        ax2_xs = []
+        for x in ax1_xs:
             # Limit to 2 decimal places
-            seconds_val = round(X * tr, 2)
-            ax2Xs.append(seconds_val)
-        ax_ts2.set_xticks(ax1Xs)
+            seconds_val = round(x * tr, 2)
+            ax2_xs.append(seconds_val)
+        ax_ts2.set_xticks(ax1_xs)
         ax_ts2.set_xlim(ax_ts.get_xbound())
-        ax_ts2.set_xticklabels(ax2Xs)
+        ax_ts2.set_xticklabels(ax2_xs)
         ax_ts2.set_xlabel("seconds")
 
         ax_ts.plot(mmix[:, compnum], color=line_color)
@@ -273,14 +272,16 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
         comp_var = f"{comptable.loc[compnum, 'variance explained']:.2f}"
         comp_kappa = f"{comptable.loc[compnum, 'kappa']:.2f}"
         comp_rho = f"{comptable.loc[compnum, 'rho']:.2f}"
-        plt_title = "Comp. {}: variance: {}%, kappa: {}, rho: {}, {}".format(
-            compnum, comp_var, comp_kappa, comp_rho, expl_text
+        plt_title = (
+            f"Comp. {compnum}: variance: {comp_var}%, kappa: {comp_kappa}, "
+            f"rho: {comp_rho}, {expl_text}"
         )
+
         title = ax_ts.set_title(plt_title)
         title.set_y(1.5)
 
         # Set range to ~1/10th of max positive or negative beta
-        imgmax = 0.1 * np.abs(ts_B[:, :, :, compnum]).max()
+        imgmax = 0.1 * np.abs(ts_b[:, :, :, compnum]).max()
         imgmin = imgmax * -1
 
         for idx, _ in enumerate(cuts):
@@ -289,11 +290,11 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
                 ax.axis("off")
 
                 if idx == 0:
-                    to_plot = np.rot90(ts_B[imgslice * cuts[idx], :, :, compnum])
+                    to_plot = np.rot90(ts_b[imgslice * cuts[idx], :, :, compnum])
                 if idx == 1:
-                    to_plot = np.rot90(ts_B[:, imgslice * cuts[idx], :, compnum])
+                    to_plot = np.rot90(ts_b[:, imgslice * cuts[idx], :, compnum])
                 if idx == 2:
-                    to_plot = ts_B[:, :, imgslice * cuts[idx], compnum]
+                    to_plot = ts_b[:, :, imgslice * cuts[idx], compnum]
 
                 ax_im = ax.imshow(to_plot, vmin=imgmin, vmax=imgmax, aspect="equal", cmap=png_cmap)
 
@@ -336,7 +337,6 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     io_generator : object
         An object containing all the information needed to generate the output.
     """
-
     # Plot the PCA optimization curve for each criteria
     plt.figure(figsize=(10, 9))
     plt.title("PCA Criteria")

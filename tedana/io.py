@@ -1,4 +1,4 @@
-"""The io module handles most file input and output in the `tedana` workflow.
+"""Handle most file input and output in the `tedana` workflow.
 
 Other functions in the module help write outputs which require multiple
 data sources, assist in writing per-echo verbose outputs, or act as helper

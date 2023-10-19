@@ -1,3 +1,4 @@
+"""Build HTML reports for tedana."""
 import logging
 import os
 from os.path import join as opj
@@ -121,9 +122,7 @@ def _save_as_html(body):
 
 
 def _generate_info_table(info_dict):
-    """Generate a table with relevant information about the
-    system and tedana.
-    """
+    """Generate a table with relevant information about the system and tedana."""
     resource_path = Path(__file__).resolve().parent.joinpath("data", "html")
 
     info_template_name = "report_info_table_template.html"
@@ -150,16 +149,13 @@ def _generate_info_table(info_dict):
     return info_html
 
 
-def generate_report(io_generator, tr):
+def generate_report(io_generator):
     """Generate an HTML report.
 
     Parameters
     ----------
     io_generator : tedana.io.OutputGenerator
         io_generator object for this workflow's output
-    tr : float
-        The repetition time (TR) for the collected multi-echo
-        sequence
 
     Returns
     -------
@@ -184,12 +180,15 @@ def generate_report(io_generator, tr):
         Find cross component metrics that begin with elbow_prefix and output the value
         Current prefixes are kappa_elbow_kundu and rho_elbow_kundu.
 
-        This flexability
-        means anything that begins [kappa/rho]_elbow will be found and used regardless
-        of the suffix. If more than one metric has the prefix then the alphabetically
-        first one will be used and a warning will be logged.
-        """
+        This flexibility means anything that begins [kappa/rho]_elbow will be found and
+        used regardless of the suffix. If more than one metric has the prefix then the
+        alphabetically first one will be used and a warning will be logged.
 
+        Parameters
+        ----------
+        elbow_prefix : str
+            The prefix to look for in the cross component metrics
+        """
         elbow_keys = [k for k in cross_comp_metrics_dict.keys() if elbow_prefix in k]
         elbow_keys.sort()
         if len(elbow_keys) == 0:
@@ -237,7 +236,7 @@ def generate_report(io_generator, tr):
         y_label="Rho",
         elbow=rho_elbow,
     )
-    varexp_pie_plot = df._create_varexp_pie_plt(comptable_cds, n_comps)
+    varexp_pie_plot = df._create_varexp_pie_plt(comptable_cds)
 
     # link all dynamic figures
     figs = [kappa_rho_plot, kappa_sorted_plot, rho_sorted_plot, varexp_pie_plot]

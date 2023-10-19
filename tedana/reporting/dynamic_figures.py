@@ -1,3 +1,4 @@
+"""Dynamic figures for tedana report."""
 from math import pi
 
 import numpy as np
@@ -316,7 +317,7 @@ def _create_sorted_plt(
     return fig
 
 
-def _create_varexp_pie_plt(comptable_cds, n_comps):
+def _create_varexp_pie_plt(comptable_cds):
     fig = plotting.figure(
         plot_width=400,
         plot_height=400,

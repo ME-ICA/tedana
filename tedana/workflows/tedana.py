@@ -901,7 +901,7 @@ def tedana_workflow(
         )
 
         LGR.info("Generating dynamic report")
-        reporting.generate_report(io_generator, tr=img_t_r)
+        reporting.generate_report(io_generator)
 
     LGR.info("Workflow completed")
     utils.teardown_loggers()

@@ -562,7 +562,7 @@ def ica_reclassify_workflow(
         )
 
         LGR.info("Generating dynamic report")
-        reporting.generate_report(io_generator, tr=img_t_r)
+        reporting.generate_report(io_generator)
 
     io_generator.save_self()
     LGR.info("Workflow completed")
