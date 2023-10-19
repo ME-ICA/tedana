@@ -15,18 +15,18 @@ RepLGR = logging.getLogger("REPORT")
 def find_braces(string):
     """Search a string for matched braces.
 
-    This is used to identify pairs of braces in BibTeX files.
-    The outside-most pairs should correspond to BibTeX entries.
+       This is used to identify pairs of braces in BibTeX files.
+       The outside-most pairs should correspond to BibTeX entries.
 
-    Parameters
-    ----------
-    string : :obj:`str`
-        A long string to search for paired braces.
+       Parameters
+       ----------
+       string : :obj:`str`
+           A long string to search for paired braces.
 
-    Returns
-    -------
-    :obj:`list` of :obj:`tuple` of :obj:`int`
-        A list of two-element tuples of indices of matched braces.
+       Returns
+       -------
+    : obj:`list` of :obj:`tuple` of :obj:`int`
+           A list of two-element tuples of indices of matched braces.
     """
     toret = {}
     pstack = []

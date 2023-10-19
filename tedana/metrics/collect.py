@@ -388,7 +388,7 @@ def get_metadata(comptable):
 
     Parameters
     ----------
-    comptable: pandas.DataFrame
+    comptable : pandas.DataFrame
         The component table for this workflow
 
     Returns

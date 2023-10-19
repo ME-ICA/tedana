@@ -27,7 +27,7 @@ def dependency_resolver(dict_, requested_metrics, base_inputs):
 
     Returns
     -------
-    required_metrics :obj:`list`
+    required_metrics : obj:`list`
         A comprehensive list of all metrics and inputs required to generate all
         of the requested inputs.
     """

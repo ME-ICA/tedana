@@ -180,26 +180,26 @@ def dec_left_op_right(
     %(tag_if_true)s
     %(tag_if_false)s
     %(decide_comps)s
-    op: :obj:`str`
+    op : :obj:`str`
         Must be one of: ">", ">=", "==", "<=", "<"
         Applied the user defined operator to left op right
-    left, right: :obj:`str` or :obj:`float`
+    left, right : :obj:`str` or :obj:`float`
         The labels for the two metrics to be used for comparision.
         For example: left='kappa', right='rho' and op='>' means this
         function will test kappa>rho. One of the two can also be a number.
         In that case, a metric would be compared against a fixed threshold.
         For example left='T2fitdiff_invsout_ICAmap_Tstat', right=0, and op='>'
         means this function will test T2fitdiff_invsout_ICAmap_Tstat>0
-    left_scale, right_scale: :obj:`float` or :obj:`str`
+    left_scale, right_scale : :obj:`float` or :obj:`str`
         Multiply the left or right metrics value by a constant. For example
         if left='kappa', right='rho', right_scale=2, and op='>' this tests
         kappa>(2*rho). These can also be a string that is a value in
         cross_component_metrics, since those will resolve to a single value.
         This cannot be a label for a component_table column since that would
         output a different value for each component. Default=1
-    op2: :obj:`str`, Default=None
-    left2, right2, left3, right3: :obj:`str` or :obj:`float`, Default=None
-    left2_scale, right2_scale, left3_scale, right3_scale: :obj:`float` or :obj:`str`, Default=1
+    op2 : :obj:`str`, Default=None
+    left2, right2, left3, right3 : :obj:`str` or :obj:`float`, Default=None
+    left2_scale, right2_scale, left3_scale, right3_scale : :obj:`float` or :obj:`str`, Default=1
         This function can also be used to calculate the intersection of two or three
         boolean statements. If op2, left2, and right2 are defined then
         this function returns
@@ -496,14 +496,14 @@ def dec_variance_lessthan_thresholds(
     %(tag_if_true)s
     %(tag_if_false)s
     %(decide_comps)s
-    var_metric: :obj:`str`
+    var_metric : :obj:`str`
         The name of the metric in component_table for variance. Default="variance explained"
         This is an option so that it is possible to use "normalized variance explained"
         or another metric
-    single_comp_threshold: :obj:`float`
+    single_comp_threshold : :obj:`float`
         The threshold for which all components need to have lower variance.
         Default=0.1
-    all_comp_threshold: :obj: `float`
+    all_comp_threshold : :obj: `float`
         The number of the variance for all components less than single_comp_threshold
         needs to be under this threshold. Default=1.0
     %(log_extra_info)s
@@ -612,10 +612,10 @@ def calc_median(
     ----------
     %(selector)s
     %(decide_comps)s
-    metric_name: :obj:`str`
+    metric_name : :obj:`str`
         The name of a column in selector.component_table. The median of
         the values in this column will be calculated
-    median_label: :obj:`str`
+    median_label : :obj:`str`
         The median will be saved in "median_(median_label)"
     %(log_extra_info)s
     %(log_extra_report)s
@@ -822,12 +822,12 @@ def calc_rho_elbow(
     ----------
     %(selector)s
     %(decide_comps)s
-    subset_decide_comps: :obj:`str`
+    subset_decide_comps : :obj:`str`
         This is a string with a single component classification label. For the
         elbow calculation used by Kundu in MEICA v.27 thresholds are based
         on all components and on unclassified components.
         Default='unclassified'.
-    rho_elbow_type: :obj:`str`
+    rho_elbow_type : :obj:`str`
         The algorithm used to calculate the rho elbow. Current options are:
         'kundu' and 'liberal'. Default='kundu'.
     %(log_extra_info)s
@@ -960,22 +960,22 @@ def dec_classification_doesnt_exist(
     Parameters
     ----------
     %(selector)s
-    new_classification: :obj:`str`
+    new_classification : :obj:`str`
         Assign all components identified in decide_comps the classification
         in new_classification.
     %(decide_comps)s
-    class_comp_exists: :obj:`str` or :obj:`list[str]` or :obj:`int` or :obj:`list[int]`
+    class_comp_exists : :obj:`str` or :obj:`list[str]` or :obj:`int` or :obj:`list[int]`
         This has the same structure options as decide_comps. This function tests
         whether any components in decide_comps have the classifications defined in this
         variable.
-    at_least_num_exist: :obj:`int`
+    at_least_num_exist : :obj:`int`
         Instead of just testing whether a classification exists, test whether at least
         this number of components have that classification. Default=1
     %(log_extra_info)s
     %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
-    tag: :obj:`str`
+    tag : :obj:`str`
         A classification tag to assign to all components being reclassified.
         This should be one of the tags defined by classification_tags in
         the decision tree specification. Default="".
@@ -1089,7 +1089,7 @@ def dec_reclassify_high_var_comps(
     Parameters
     ----------
     %(selector)s
-    new_classification: :obj:`str`
+    new_classification : :obj:`str`
         Assign all components identified in decide_comps the classification
         in new_classification.
     %(decide_comps)s
@@ -1097,7 +1097,7 @@ def dec_reclassify_high_var_comps(
     %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
-    tag: :obj:`str`
+    tag : :obj:`str`
         A classification tag to assign to all components being reclassified.
         This should be one of the tags defined by classification_tags in
         the decision tree specification. Default="".
@@ -1231,15 +1231,15 @@ def calc_varex_thresh(
     ----------
     %(selector)s
     %(decide_comps)s
-    thresh_label: :obj:`str`
+    thresh_label : :obj:`str`
         The threshold will be saved in "varex_(thresh_label)_thresh"
         In the original kundu decision tree this was either "upper" or "lower"
         If passed an empty string, will be saved as "varex_thresh"
-    percentile_thresh: :obj:`int`
+    percentile_thresh : :obj:`int`
         A percentile threshold to apply to components to set the variance threshold.
         In the original kundu decision tree this was 90 for varex_upper_thresh and
         25 for varex_lower_thresh
-    num_highest_var_comps: :obj:`str` :obj:`int`
+    num_highest_var_comps : :obj:`str` :obj:`int`
         percentile can be calculated on the num_highest_var_comps components with the
         lowest variance. Either input an integer directly or input a string that is
         a parameter stored in selector.cross_component_metrics ("num_acc_guess" in
@@ -1402,7 +1402,7 @@ def calc_extend_factor(
     %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
-    extend_factor: :obj:`float`
+    extend_factor : :obj:`float`
         If a number, then use rather than calculating anything.
         If None than calculate. default=None
 
@@ -1472,7 +1472,7 @@ def calc_max_good_meanmetricrank(
     ----------
     %(selector)s
     %(decide_comps)s
-    metric_suffix: :obj:`str`
+    metric_suffix : :obj:`str`
         By default, this will output a value called "max_good_meanmetricrank"
         If this variable is not None or "" then it will output:
         "max_good_meanmetricrank_[metric_suffix]". Default=None
@@ -1695,7 +1695,7 @@ def calc_revised_meanmetricrank_guesses(
     ----------
     %(selector)s
     %(decide_comps)s
-    restrict_factor: :obj:`int` or :obj:`float`
+    restrict_factor : :obj:`int` or :obj:`float`
         A scaling factor to scale between num_acc_guess and conservative_guess.
         Default=2.
 

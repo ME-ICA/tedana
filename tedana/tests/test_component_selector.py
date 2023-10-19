@@ -29,7 +29,7 @@ def dicts_to_test(treechoice):
 
     Parameters
     ----------
-    treechoice: :obj:`str` One of several labels to select which dict to output
+    treechoice : :obj:`str` One of several labels to select which dict to output
         Options are:
         "valid": A tree that would trigger all warnings, but pass validation
         "extra_req_param": A tree with an undefined required parameter for a decision node function
@@ -40,7 +40,7 @@ def dicts_to_test(treechoice):
 
     Returns
     -------
-    tree: :ojb:`dict` A dict that can be input into component_selector.validate_tree
+    tree : :ojb:`dict` A dict that can be input into component_selector.validate_tree
     """
 
     # valid_dict is a simple valid dictionary to test

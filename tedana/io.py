@@ -441,7 +441,7 @@ def load_json(path: str) -> dict:
 
     Parameters
     ----------
-    path: str
+    path : str
         The path to the json file to load
 
     Returns
@@ -549,7 +549,7 @@ def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
         Reference image to dictate how outputs are saved to disk
     out_dir : :obj:`str`, optional
         Output directory.
-    echo: :obj: `int`, optional
+    echo : :obj: `int`, optional
         Echo number to generate filenames, used by some verbose
         functions. Default 0.
 
@@ -615,6 +615,10 @@ def writeresults(ts, mask, comptable, mmix, io_generator):
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
 
+    See Also
+    --------
+    tedana.io.write_split_ts : Writes out time series files
+
     Generated Files
     ---------------
 
@@ -631,10 +635,6 @@ def writeresults(ts, mask, comptable, mmix, io_generator):
     desc-ICAAccepted_stat-z_components.nii.gz    Z-normalized spatial component maps
                                                  for accepted components.
     =========================================    =====================================
-
-    See Also
-    --------
-    tedana.io.write_split_ts: Writes out time series files
     """
     acc = comptable[comptable.classification == "accepted"].index.values
     write_split_ts(ts, mmix, mask, comptable, io_generator)
@@ -672,6 +672,10 @@ def writeresults_echoes(catd, mmix, mask, comptable, io_generator):
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
 
+    See Also
+    --------
+    tedana.io.write_split_ts : Writes out the files.
+
     Generated Files
     ---------------
 
@@ -685,10 +689,6 @@ def writeresults_echoes(catd, mmix, mask, comptable, io_generator):
     echo-[echo]_desc-Denoised_bold.nii.gz    Denoised timeseries for echo
                                              number ``echo``.
     =====================================    ===================================
-
-    See Also
-    --------
-    tedana.io.write_split_ts: Writes out the files.
     """
     for i_echo in range(catd.shape[1]):
         LGR.info(f"Writing Kappa-filtered echo #{i_echo + 1:01d} timeseries")
@@ -830,14 +830,14 @@ def prep_data_for_json(d) -> dict:
     d : dict
         A dictionary that will be converted into something JSON serializable
 
+    Returns
+    -------
+    An attempt at JSON serializable data
+
     Raises
     ------
     ValueError if it cannot force the dictionary to be serializable
     TypeError if you do not supply a dict
-
-    Returns
-    -------
-    An attempt at JSON serializable data
 
     Notes
     -----

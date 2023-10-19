@@ -57,12 +57,12 @@ def _create_data_struct(comptable_path, color_mapping=color_mapping):
 
     Parameters
     ----------
-    comptable: str
+    comptable : str
         file path to component table, JSON format
 
     Returns
     -------
-    cds: bokeh.models.ColumnDataSource
+    cds : bokeh.models.ColumnDataSource
         Data structure with all the fields to plot or hover over
     """
     unused_cols = [
@@ -138,16 +138,16 @@ def _create_kr_plt(comptable_cds, kappa_elbow=None, rho_elbow=None):
 
     Parameters
     ----------
-    comptable_cds: bokeh.models.ColumnDataSource
+    comptable_cds : bokeh.models.ColumnDataSource
         Data structure containing a limited set of columns from the comp_table
 
-    kappa_elbow, rho_elbow: :obj:`float` :obj:`int`
+    kappa_elbow, rho_elbow : :obj:`float` :obj:`int`
         The elbow thresholds for kappa and rho to display on the plots
         Defaults=None
 
     Returns
     -------
-    fig: bokeh.plotting.figure.Figure
+    fig : bokeh.plotting.figure.Figure
         Bokeh scatter plot of kappa vs. rho
     """
     # Create Panel for the Kappa - Rho Scatter
@@ -238,31 +238,31 @@ def _create_sorted_plt(
 
     Parameters
     ----------
-    comptable_ds: bokeh.models.ColumnDataSource
+    comptable_ds : bokeh.models.ColumnDataSource
         Data structure containing a limited set of columns from the comp_table
 
-    x_var: str
+    x_var : str
         Name of variable for the x-axis
 
-    y_var: str
+    y_var : str
         Name of variable for the y-axis
 
-    title: str
+    title : str
         Plot title
 
-    x_label: str
+    x_label : str
         X-axis label
 
-    y_label: str
+    y_label : str
         Y-axis label
 
-    elbow: :obj:`float` :obj:`int`
+    elbow : :obj:`float` :obj:`int`
         The elbow threshold for kappa or rho to display on the plot
         Default=None
 
     Returns
     -------
-    fig: bokeh.plotting.figure.Figure
+    fig : bokeh.plotting.figure.Figure
         Bokeh plot of components ranked by a given feature
     """
     hovertool = models.HoverTool(
@@ -357,17 +357,17 @@ def _tap_callback(comptable_cds, div_content, io_generator):
 
     Parameters
     ----------
-    CDS: bokeh.models.ColumnDataSource
+    CDS : bokeh.models.ColumnDataSource
         Data structure containing a limited set of columns from the comp_table
-    div: bokeh.models.Div
+    div : bokeh.models.Div
         Target Div element where component images will be loaded
 
-    io_generator: tedana.io.OutputGenerator
+    io_generator : tedana.io.OutputGenerator
         Output generating object for this workflow
 
     Returns
     -------
-    CustomJS: bokeh.models.CustomJS
+    CustomJS : bokeh.models.CustomJS
         Javascript function that adds the tapping functionality
     """
     return models.CustomJS(
@@ -397,7 +397,7 @@ def _link_figures(fig, comptable_ds, div_content, io_generator):
     div_content : bokeh.models.Div
         Div element for additional HTML content.
 
-    io_generator: `tedana.io.OutputGenerator`
+    io_generator : `tedana.io.OutputGenerator`
         Output generating object for this workflow
 
     Returns

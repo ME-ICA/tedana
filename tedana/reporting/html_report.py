@@ -74,6 +74,7 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
         Javascript created by bokeh.embed.components
     buttons : str
         HTML div created by _generate_buttons()
+
     Returns
     -------
     HTMLReport : an instance of a populated HTML report

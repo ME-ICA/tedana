@@ -322,7 +322,7 @@ class ComponentSelector:
         each component as accepted or rejected.
 
         Notes
-        -------
+        -----
         The selection process uses previously calculated parameters stored in
         `component_table` for each ICA component such as Kappa (a T2* weighting metric),
         Rho (an S0 weighting metric), and variance explained. If a necessary metric
@@ -438,7 +438,7 @@ class ComponentSelector:
 
         Returns
         -------
-        params: :obj:`dict`
+        params : :obj:`dict`
             The keys and values for the inputted parameters
         """
 

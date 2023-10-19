@@ -180,13 +180,13 @@ def _parse_manual_list(manual_list):
 
     Parameters
     ----------
-    manual_list: :obj:`str` :obj:`list[str]` or [] or None
+    manual_list : :obj:`str` :obj:`list[str]` or [] or None
         String of integers separated by spaces, commas, or tabs
         A file name for a file that contains integers
 
     Returns
     -------
-    manual_nums: :obj:`list[int]`
+    manual_nums : :obj:`list[int]`
         A list of integers or an empty list.
 
     Note
@@ -249,11 +249,11 @@ def ica_reclassify_workflow(
 
     Parameters
     ----------
-    registry: :obj:`str`
+    registry : :obj:`str`
         The previously run registry as a JSON file.
-    accept: :obj: `list`
+    accept : :obj: `list`
         A list of integer values of components to accept in this workflow.
-    reject: :obj: `list`
+    reject : :obj: `list`
         A list of integer values of components to reject in this workflow.
     out_dir : :obj:`str`, optional
         Output directory.

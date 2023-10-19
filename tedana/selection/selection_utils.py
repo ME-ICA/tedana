@@ -339,7 +339,7 @@ def confirm_metrics_exist(component_table, necessary_metrics, function_name=None
         If metrics_exist is False then raise an error and end the program
 
     Note
-    -----
+    ----
     This doesn't check if there are data in each metric's column, just that
     the columns exist. Also, the string in `necessary_metrics` and the
     column labels in component_table will only be matched if they're identical.
@@ -451,8 +451,8 @@ def log_classification_counts(decision_node_idx, component_table):
 
     Returns
     -------
-    The LGR.info logger will add a line like: \
-    'Step 4: Total component classifications: 10 accepted, 5 provisionalreject, 8 rejected'
+    The LGR.info logger will add a line like : \
+    'Step 4 : Total component classifications: 10 accepted, 5 provisionalreject, 8 rejected'
     """
     classification_labels, label_counts = np.unique(
         component_table["classification"].values, return_counts=True
@@ -471,18 +471,18 @@ def log_classification_counts(decision_node_idx, component_table):
 def getelbow_cons(arr, return_val=False):
     """Elbow using mean/variance method - conservative.
 
-    Parameters
-    ----------
-    arr : (C,) array_like
-        Metric (e.g., Kappa or Rho) values.
-    return_val : :obj:`bool`, optional
-        Return the value of the elbow instead of the index. Default: False
+       Parameters
+       ----------
+       arr : (C,) array_like
+           Metric (e.g., Kappa or Rho) values.
+       return_val : :obj:`bool`, optional
+           Return the value of the elbow instead of the index. Default: False
 
-    Returns
-    -------
-    :obj:`int` or :obj:`float`
-        Either the elbow index (if return_val is True) or the values at the
-        elbow index (if return_val is False)
+       Returns
+       -------
+    : obj:`int` or :obj:`float`
+           Either the elbow index (if return_val is True) or the values at the
+           elbow index (if return_val is False)
     """
     if arr.ndim != 1:
         raise ValueError(f"Parameter arr should be 1d, not {arr.ndim}d")
@@ -522,18 +522,18 @@ def getelbow_cons(arr, return_val=False):
 def getelbow(arr, return_val=False):
     """Get elbow using linear projection method - moderate.
 
-    Parameters
-    ----------
-    arr : (C,) array_like
-        Metric (e.g., Kappa or Rho) values.
-    return_val : :obj:`bool`, optional
-        Return the value of the elbow instead of the index. Default: False
+       Parameters
+       ----------
+       arr : (C,) array_like
+           Metric (e.g., Kappa or Rho) values.
+       return_val : :obj:`bool`, optional
+           Return the value of the elbow instead of the index. Default: False
 
-    Returns
-    -------
-    :obj:`int` or :obj:`float`
-        Either the elbow index (if return_val is True) or the values at the
-        elbow index (if return_val is False)
+       Returns
+       -------
+    : obj:`int` or :obj:`float`
+           Either the elbow index (if return_val is True) or the values at the
+           elbow index (if return_val is False)
     """
     if arr.ndim != 1:
         raise ValueError(f"Parameter arr should be 1d, not {arr.ndim}d")
