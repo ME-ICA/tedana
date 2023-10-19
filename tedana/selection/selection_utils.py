@@ -658,7 +658,8 @@ def rho_elbow_kundu_liberal(
 ):
     """
     Calculate an elbow for rho using the approach originally in
-    Prantik Kundu's MEICA v2.5 code and with a slightly more
+    Prantik Kundu's MEICA v2.5 code and with a slightly more.
+
     liberal threshold.
 
     Parameters

@@ -183,7 +183,8 @@ def carpet_plot(
 def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
     """
     Creates static figures that highlight certain aspects of tedana processing
-    This includes a figure for each component showing the component time course,
+    This includes a figure for each component showing the component time course,.
+
     the spatial weight map and a fast Fourier transform of the time course.
 
     Parameters

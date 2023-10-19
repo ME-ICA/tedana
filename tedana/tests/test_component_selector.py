@@ -195,7 +195,8 @@ def test_minimal():
 def test_validate_tree_succeeds():
     """
     Tests to make sure validate_tree suceeds for all default
-    decision trees in  decision trees
+    decision trees in  decision trees.
+
     Tested on all default trees in ./tedana/resources/decision_trees
     Note: If there is a tree in the default trees directory that
     is being developed and not yet valid, it's file name should
@@ -233,7 +234,8 @@ def test_validate_tree_warnings():
 def test_validate_tree_fails():
     """
     Tests to make sure validate_tree fails for invalid trees
-    Tests ../resources/decision_trees/invalid*.json and
+    Tests ../resources/decision_trees/invalid*.json and.
+
     ./data/ComponentSelection/invalid*.json trees.
     """
 

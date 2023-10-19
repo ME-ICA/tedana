@@ -89,6 +89,7 @@ def test_smoke_fit_decay():
     """
     Test_smoke_fit_decay tests that the function fit_decay returns reasonable
     objects with semi-random inputs in the correct format.
+
     A mask with at least some "good" voxels and an adaptive mask where all
     good voxels have at least two good echoes are generated to ensure that
     the decay-fitting function has valid voxels on which to run.
@@ -114,7 +115,8 @@ def test_smoke_fit_decay():
 def test_smoke_fit_decay_curvefit():
     """
     Test_smoke_fit_decay tests that the function fit_decay returns reasonable
-    objects with random inputs in the correct format when using the direct
+    objects with random inputs in the correct format when using the direct.
+
     monoexponetial approach.
     """
     n_samples = 100
@@ -161,7 +163,8 @@ def test_smoke_fit_decay_ts():
 def test_smoke_fit_decay_curvefit_ts():
     """
     Test_smoke_fit_decay_ts tests that the function fit_decay_ts returns reasonable
-    objects with random inputs in the correct format when using the direct
+    objects with random inputs in the correct format when using the direct.
+
     monoexponetial approach.
     """
     n_samples = 100

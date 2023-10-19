@@ -67,6 +67,7 @@ def sample_selector(options=None):
 def test_selectcomps2use_succeeds():
     """
     Tests to make sure selectcomps2use runs with full range of inputs.
+
     Include tests to make sure the correct number of components are selected
     from the pre-defined sample_comptable.tsv component table.
     """
@@ -118,7 +119,8 @@ def test_selectcomps2use_fails():
 def test_comptable_classification_changer_succeeds():
     """
     All conditions where comptable_classification_changer should run
-    Note: This confirms the function runs, but not that outputs are accurate
+    Note: This confirms the function runs, but not that outputs are accurate.
+
     Also tests conditions where the warning logger is used, but doesn't
     check the logger.
     """

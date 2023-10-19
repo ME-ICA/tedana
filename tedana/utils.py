@@ -146,7 +146,9 @@ def unmask(data, mask):
 
 def dice(arr1, arr2, axis=None):
     """
-    Compute Dice's similarity index between two numpy arrays. Arrays will be
+    Compute Dice's similarity index between two numpy arrays.
+
+    Arrays will be
     binarized before comparison.
 
     This method was first proposed in :footcite:t:`dice1945measures` and

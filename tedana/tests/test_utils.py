@@ -105,7 +105,8 @@ def test_make_adaptive_mask():
 def test_smoke_reshape_niimg():
     """
     Ensure that reshape_niimg returns reasonable objects with random inputs
-    in the correct format
+    in the correct format.
+
     Note: reshape_niimg could take in 3D or 4D array.
     """
     data_3d = np.random.random((100, 5, 20))
@@ -124,7 +125,8 @@ def test_smoke_reshape_niimg():
 def test_smoke_make_adaptive_mask():
     """
     Ensure that make_adaptive_mask returns reasonable objects with random inputs
-    in the correct format
+    in the correct format.
+
     Note: make_adaptive_mask has optional paramters - mask and getsum.
     """
     n_samples = 100
@@ -141,7 +143,8 @@ def test_smoke_make_adaptive_mask():
 def test_smoke_unmask():
     """
     Ensure that unmask returns reasonable objects with random inputs
-    in the correct format
+    in the correct format.
+
     Note: unmask could take in 1D or 2D or 3D arrays.
     """
     data_1d = np.random.random((100))
@@ -157,7 +160,8 @@ def test_smoke_unmask():
 def test_smoke_dice():
     """
     Ensure that dice returns reasonable objects with random inputs
-    in the correct format
+    in the correct format.
+
     Note: two arrays must be in the same length.
     """
     arr1 = np.random.random((100))
@@ -192,7 +196,8 @@ def test_smoke_get_spectrum():
 def test_smoke_threshold_map():
     """
     Ensure that threshold_map returns reasonable objects with random inputs
-    in the correct format
+    in the correct format.
+
     Note: using 3D array as img, some parameters are optional and are all tested.
     """
     img = np.random.random((10, 10, 10))  # 3D array must of of size S

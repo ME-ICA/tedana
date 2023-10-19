@@ -248,7 +248,8 @@ def dec_left_op_right(
     def identify_used_metric(val, isnum=False):
         """
         Parse the left or right values or scalers to see if they are an
-        existing used_metric or cross_component_metric
+        existing used_metric or cross_component_metric.
+
         If the value already a number, no parse would be needed.
 
         This is also used on left_scale and right_scale to convert
@@ -304,7 +305,8 @@ def dec_left_op_right(
     def operator_scale_descript(val_scale, val):
         """
         Return a string with one element from the mathematical expression
-        If val_scale is not 1, include scaling factor (rounded to 2 decimals)
+        If val_scale is not 1, include scaling factor (rounded to 2 decimals).
+
         If val is a column in the component_table output the column label
         If val is a number (either an inputted number or from cross_component_metrics
         include the number (rounded to 2 decimals)

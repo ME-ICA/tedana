@@ -134,7 +134,8 @@ def data_for_testing_info(test_dataset=str):
 def download_test_data(osf_id, test_data_path):
     """
     If current data is not already available, downloads tar.gz data
-    stored at `https://osf.io/osf_id/download`
+    stored at `https://osf.io/osf_id/download`.
+
     and unpacks into `out_path`.
 
     Parameters

@@ -386,6 +386,7 @@ class InputHarvester:
 
     def get_file_contents(self, description):
         """Get file contents.
+
         Notes
         -----
         Since we restrict to just these three types, this function should always return.

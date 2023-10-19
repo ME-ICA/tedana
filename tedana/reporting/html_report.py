@@ -181,7 +181,9 @@ def generate_report(io_generator, tr):
     def get_elbow_val(elbow_prefix):
         """
         Find cross component metrics that begin with elbow_prefix and output the value
-        Current prefixes are kappa_elbow_kundu and rho_elbow_kundu. This flexability
+        Current prefixes are kappa_elbow_kundu and rho_elbow_kundu.
+
+        This flexability
         means anything that begins [kappa/rho]_elbow will be found and used regardless
         of the suffix. If more than one metric has the prefix then the alphabetically
         first one will be used and a warning will be logged.
