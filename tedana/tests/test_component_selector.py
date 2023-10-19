@@ -1,4 +1,4 @@
-"""Tests for the decision tree modularization"""
+"""Tests for the decision tree modularization."""
 import glob
 import json
 import os
@@ -17,7 +17,7 @@ THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def sample_comptable():
-    """Retrieves a sample component table"""
+    """Retrieves a sample component table."""
     sample_fname = op.join(THIS_DIR, "data", "sample_comptable.tsv")
 
     return pd.read_csv(sample_fname, delimiter="\t")
@@ -25,7 +25,7 @@ def sample_comptable():
 
 def dicts_to_test(treechoice):
     """
-    Outputs decision tree dictionaries to use to test tree validation
+    Outputs decision tree dictionaries to use to test tree validation.
 
     Parameters
     ----------
@@ -144,7 +144,7 @@ def dicts_to_test(treechoice):
 # load_config
 # -----------
 def test_load_config_fails():
-    """Tests for load_config failure modes"""
+    """Tests for load_config failure modes."""
 
     # We recast to ValueError in the file not found and directory cases
     with pytest.raises(ValueError):
@@ -159,7 +159,7 @@ def test_load_config_fails():
 
 
 def test_load_config_succeeds():
-    """Tests to make sure load_config succeeds"""
+    """Tests to make sure load_config succeeds."""
 
     # The minimal tree should have an id of "minimal_decision_tree_test1"
     tree = component_selector.load_config("minimal")
@@ -167,7 +167,7 @@ def test_load_config_succeeds():
 
 
 def test_minimal():
-    """Smoke test for constructor for ComponentSelector using minimal tree"""
+    """Smoke test for constructor for ComponentSelector using minimal tree."""
     xcomp = {
         "n_echos": 3,
     }
@@ -199,7 +199,7 @@ def test_validate_tree_succeeds():
     Tested on all default trees in ./tedana/resources/decision_trees
     Note: If there is a tree in the default trees directory that
     is being developed and not yet valid, it's file name should
-    include 'invalid' as a prefix
+    include 'invalid' as a prefix.
     """
 
     default_tree_names = glob.glob(
@@ -223,7 +223,7 @@ def test_validate_tree_succeeds():
 def test_validate_tree_warnings():
     """
     Tests to make sure validate_tree triggers all warning conditions
-    but still succeeds
+    but still succeeds.
     """
 
     # A tree that raises all possible warnings in the validator should still be valid
@@ -234,7 +234,7 @@ def test_validate_tree_fails():
     """
     Tests to make sure validate_tree fails for invalid trees
     Tests ../resources/decision_trees/invalid*.json and
-    ./data/ComponentSelection/invalid*.json trees
+    ./data/ComponentSelection/invalid*.json trees.
     """
 
     # An empty dict should not be valid
@@ -261,7 +261,7 @@ def test_validate_tree_fails():
 
 
 def test_check_null_fails():
-    """Tests to trigger check_null missing parameter error"""
+    """Tests to trigger check_null missing parameter error."""
 
     selector = component_selector.ComponentSelector("minimal", sample_comptable())
     selector.tree = dicts_to_test("null_value")
@@ -273,7 +273,7 @@ def test_check_null_fails():
 
 
 def test_check_null_succeeds():
-    """Tests check_null finds empty parameter in self"""
+    """Tests check_null finds empty parameter in self."""
 
     # "left" is missing from the function definition in node
     # but is found as an initialized cross component metric
@@ -293,7 +293,7 @@ def test_check_null_succeeds():
 
 
 def test_are_only_necessary_metrics_used_warning():
-    """Tests a warning that wasn't triggered in other test workflows"""
+    """Tests a warning that wasn't triggered in other test workflows."""
 
     selector = component_selector.ComponentSelector("minimal", sample_comptable())
 
@@ -304,7 +304,7 @@ def test_are_only_necessary_metrics_used_warning():
 
 
 def test_are_all_components_accepted_or_rejected():
-    """Tests warnings are triggered in are_all_components_accepted_or_rejected"""
+    """Tests warnings are triggered in are_all_components_accepted_or_rejected."""
 
     selector = component_selector.ComponentSelector("minimal", sample_comptable())
     selector.component_table.loc[7, "classification"] = "intermediate1"
@@ -313,7 +313,7 @@ def test_are_all_components_accepted_or_rejected():
 
 
 def test_selector_properties_smoke():
-    """Tests to confirm properties match expected results"""
+    """Tests to confirm properties match expected results."""
 
     selector = component_selector.ComponentSelector("minimal", sample_comptable())
 

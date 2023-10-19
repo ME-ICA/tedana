@@ -1,6 +1,4 @@
-"""
-Functions to creating figures to inspect tedana output
-"""
+"""Functions to creating figures to inspect tedana output."""
 import logging
 import os
 
@@ -21,7 +19,7 @@ RepLGR = logging.getLogger("REPORT")
 
 def _trim_edge_zeros(arr):
     """
-    Trims away the zero-filled slices that surround many 3/4D arrays
+    Trims away the zero-filled slices that surround many 3/4D arrays.
 
     Parameters
     ----------
@@ -186,7 +184,7 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
     """
     Creates static figures that highlight certain aspects of tedana processing
     This includes a figure for each component showing the component time course,
-    the spatial weight map and a fast Fourier transform of the time course
+    the spatial weight map and a fast Fourier transform of the time course.
 
     Parameters
     ----------

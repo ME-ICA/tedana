@@ -1,6 +1,4 @@
-"""
-Tests for tedana.model.fit
-"""
+"""Tests for tedana.model.fit."""
 
 import os
 

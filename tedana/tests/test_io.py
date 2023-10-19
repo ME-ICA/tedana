@@ -1,6 +1,4 @@
-"""
-Tests for tedana.io
-"""
+"""Tests for tedana.io."""
 
 import json
 import os
@@ -99,7 +97,7 @@ def test_load_data():
 def test_smoke_split_ts():
     """
     Ensures that split_ts returns output when fed in with random inputs
-    Note: classification is ["accepted", "rejected", "ignored"]
+    Note: classification is ["accepted", "rejected", "ignored"].
     """
     np.random.seed(0)  # seeded because comptable MUST have accepted components
     n_samples = 100
@@ -124,9 +122,7 @@ def test_smoke_split_ts():
 
 
 def test_smoke_write_split_ts():
-    """
-    Ensures that write_split_ts writes out the expected files with random input and tear them down
-    """
+    """Ensures that write_split_ts writes out the expected files with random input and tear them down."""
     np.random.seed(0)  # at least one accepted and one rejected, thus all files are generated
     n_samples, n_times, n_components = 64350, 10, 6
     data = np.random.random((n_samples, n_times))
@@ -157,7 +153,7 @@ def test_smoke_write_split_ts():
 def test_smoke_filewrite():
     """
     Ensures that filewrite fails for no known image type, write a known key
-    in both bids and orig formats
+    in both bids and orig formats.
     """
     n_samples, _, _ = 64350, 10, 6
     data_1d = np.random.random((n_samples))
@@ -178,9 +174,7 @@ def test_smoke_filewrite():
 
 
 def test_smoke_load_data():
-    """
-    Ensures that data is loaded when given a random neuroimage
-    """
+    """Ensures that data is loaded when given a random neuroimage."""
     data = os.path.join(data_dir, "mask.nii.gz")
     n_echos = 1
 
@@ -193,9 +187,7 @@ def test_smoke_load_data():
 
 
 def test_prep_data_for_json():
-    """
-    Tests for prep_data_for_json
-    """
+    """Tests for prep_data_for_json."""
     # Should reject non-dict entities since that is required for saver
     with pytest.raises(TypeError):
         me.prep_data_for_json(1)
@@ -222,9 +214,7 @@ def test_prep_data_for_json():
 
 
 def test_str_to_component_list():
-    """
-    Tests for converting a string to a component list
-    """
+    """Tests for converting a string to a component list."""
     int_list_1 = [1]
     int_list_2 = [1, 4, 5]
     test_list_1 = [str(x) for x in int_list_1]
@@ -271,9 +261,7 @@ def test_fname_to_component_list():
 
 
 def test_CustomEncoder():
-    """
-    Test the encoder we use for JSON incompatibilities
-    """
+    """Test the encoder we use for JSON incompatibilities."""
     # np int64
     test_data = {"data": np.int64(4)}
     encoded = json.dumps(test_data, cls=me.CustomEncoder)

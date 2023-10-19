@@ -1,6 +1,4 @@
-"""
-Functions for parsers.
-"""
+"""Functions for parsers."""
 import argparse
 import os.path as op
 
@@ -33,9 +31,7 @@ def check_tedpca_value(string, is_parser=True):
 
 
 def is_valid_file(parser, arg):
-    """
-    Check if argument is existing file.
-    """
+    """Check if argument is existing file."""
     if not op.isfile(arg) and arg is not None:
         parser.error(f"The file {arg} does not exist!")
 

@@ -1,6 +1,4 @@
-"""
-Tests for the tedana stats module
-"""
+"""Tests for the tedana stats module."""
 import random
 
 import numpy as np
@@ -44,9 +42,7 @@ def test_break_computefeats2():
 
 
 def test_smoke_computefeats2():
-    """
-    Ensures that computefeats2 works with random inputs and different optional parameters
-    """
+    """Ensures that computefeats2 works with random inputs and different optional parameters."""
     n_samples, n_times, n_components = 100, 20, 6
     data = np.random.random((n_samples, n_times))
     mmix = np.random.random((n_times, n_components))
@@ -58,9 +54,7 @@ def test_smoke_computefeats2():
 
 
 def test_get_coeffs():
-    """
-    Check least squares coefficients.
-    """
+    """Check least squares coefficients."""
     # Simulate one voxel with 40 TRs
     data = np.empty((2, 40))
     data[0, :] = np.arange(0, 200, 5)
@@ -120,9 +114,7 @@ def test_break_get_coeffs():
 
 
 def test_smoke_get_coeffs():
-    """
-    Ensure that get_coeffs returns outputs with different inputs and optional paramters
-    """
+    """Ensure that get_coeffs returns outputs with different inputs and optional paramters."""
     n_samples, _, n_times, n_components = 100, 5, 20, 6
     data_2d = np.random.random((n_samples, n_times))
     x = np.random.random((n_times, n_components))
@@ -142,9 +134,7 @@ def test_getfbounds():
 
 
 def test_smoke_getfbounds():
-    """
-    Ensures that getfbounds returns outputs when fed in a random number of echo
-    """
+    """Ensures that getfbounds returns outputs when fed in a random number of echo."""
     n_echos = random.randint(3, 10)  # At least two echos!
     f05, f025, f01 = getfbounds(n_echos)
 

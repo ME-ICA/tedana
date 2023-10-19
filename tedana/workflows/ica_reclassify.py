@@ -176,7 +176,7 @@ def _main(argv=None):
 
 def _parse_manual_list(manual_list):
     """
-    Parse the list of components to accept or reject into a list of integers
+    Parse the list of components to accept or reject into a list of integers.
 
     Parameters
     ----------

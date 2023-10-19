@@ -138,6 +138,12 @@ per-file-ignores = [
 ]
 docstring-convention = "numpy"
 
+[tool.pydocstringformatter]
+write = true
+strip-whitespaces = true
+split-summary-body = false
+numpydoc-section-hyphen-length = false
+
 [tool.coverage.run]
 branch = true
 omit = [

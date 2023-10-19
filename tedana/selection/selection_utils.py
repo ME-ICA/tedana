@@ -1,6 +1,4 @@
-"""
-Utility functions for tedana.selection
-"""
+"""Utility functions for tedana.selection."""
 
 import logging
 
@@ -98,7 +96,7 @@ def change_comptable_classifications(
 ):
     """
     Given information on whether a decision critereon is true or false for each
-    component, change or don't change the component classification
+    component, change or don't change the component classification.
 
     Parameters
     ----------
@@ -373,7 +371,7 @@ def log_decision_tree_step(
     if_false=None,
     calc_outputs=None,
 ):
-    """Logging text to add after every decision tree calculation
+    """Logging text to add after every decision tree calculation.
 
     Parameters
     ----------
@@ -471,7 +469,7 @@ def log_classification_counts(decision_node_idx, component_table):
 # Calculations that are used in decision tree functions
 #######################################################
 def getelbow_cons(arr, return_val=False):
-    """Elbow using mean/variance method - conservative
+    """Elbow using mean/variance method - conservative.
 
     Parameters
     ----------
@@ -569,7 +567,7 @@ def getelbow(arr, return_val=False):
 def kappa_elbow_kundu(component_table, n_echos, comps2use=None):
     """
     Calculate an elbow for kappa using the approach originally in
-    Prantik Kundu's MEICA v2.5 code
+    Prantik Kundu's MEICA v2.5 code.
 
     Parameters
     ----------
@@ -661,7 +659,7 @@ def rho_elbow_kundu_liberal(
     """
     Calculate an elbow for rho using the approach originally in
     Prantik Kundu's MEICA v2.5 code and with a slightly more
-    liberal threshold
+    liberal threshold.
 
     Parameters
     ----------
@@ -772,7 +770,7 @@ def rho_elbow_kundu_liberal(
 
 def get_extend_factor(n_vols=None, extend_factor=None):
     """
-    extend_factor is a scaler used to set a threshold for the d_table_score in
+    Extend_factor is a scaler used to set a threshold for the d_table_score in
     the kundu decision tree.
 
     It is either defined by the number of volumes in the time series or directly

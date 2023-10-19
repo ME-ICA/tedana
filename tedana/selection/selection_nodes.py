@@ -249,7 +249,7 @@ def dec_left_op_right(
         """
         Parse the left or right values or scalers to see if they are an
         existing used_metric or cross_component_metric
-        If the value already a number, no parse would be needed
+        If the value already a number, no parse would be needed.
 
         This is also used on left_scale and right_scale to convert
         a value in cross_component_metrics to a number. Set the isnum
@@ -289,7 +289,7 @@ def dec_left_op_right(
     def confirm_valid_conditional(left_scale, left_val, right_scale, right_val, op_val):
         """
         Makes sure the left_scale, left_val, right_scale, right_val, and
-        operator variables combine into a valid conditional statement
+        operator variables combine into a valid conditional statement.
         """
 
         left_val = identify_used_metric(left_val)
@@ -309,7 +309,7 @@ def dec_left_op_right(
         If val is a number (either an inputted number or from cross_component_metrics
         include the number (rounded to 2 decimals)
         This output is used to great a descriptor for visualizing the decision tree
-        Unrounded values are saved and rounding here will not affect results
+        Unrounded values are saved and rounding here will not affect results.
         """
         if not isinstance(val, str):
             val = str(round(val, 2))
@@ -398,7 +398,7 @@ def dec_left_op_right(
     )
 
     def parse_vals(val):
-        """Get the metric values for the selected components or relevant constant"""
+        """Get the metric values for the selected components or relevant constant."""
         if isinstance(val, str):
             return selector.component_table.loc[comps2use, val].copy()
         else:
@@ -1082,7 +1082,7 @@ def dec_reclassify_high_var_comps(
     tag=None,
 ):
     """
-    Identifies and reclassifies a couple components with the largest gaps in variance
+    Identifies and reclassifies a couple components with the largest gaps in variance.
 
     Parameters
     ----------

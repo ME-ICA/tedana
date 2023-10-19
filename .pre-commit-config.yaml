@@ -17,7 +17,12 @@ repos:
       - id: isort
         files: ^tedana/
   - repo: https://github.com/ikamensh/flynt/
-    rev: "1.0.1"
+    rev: 1.0.1
     hooks:
       - id: flynt
+        files: ^tedana/
+  - repo: https://github.com/DanielNoord/pydocstringformatter
+    rev: v0.7.3
+    hooks:
+      - id: pydocstringformatter
         files: ^tedana/

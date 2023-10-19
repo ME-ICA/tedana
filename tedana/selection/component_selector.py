@@ -29,9 +29,7 @@ DEFAULT_TREES = ["minimal", "kundu"]
 
 
 class TreeError(Exception):
-    """
-    Passes errors that are raised when `validate_tree` fails
-    """
+    """Passes errors that are raised when `validate_tree` fails."""
 
     pass
 
@@ -434,7 +432,7 @@ class ComponentSelector:
     def check_null(self, params, fcn):
         """
         Checks that all required parameters for selection node functions are
-        attributes in the class. Error if any are undefined
+        attributes in the class. Error if any are undefined.
 
         Returns
         -------
@@ -462,7 +460,7 @@ class ComponentSelector:
         """
         Check if all metrics that are declared as necessary are actually
         used and if any used_metrics weren't explicitly declared necessary.
-        If either of these happen, a warning is added to the logger
+        If either of these happen, a warning is added to the logger.
         """
         necessary_metrics = self.necessary_metrics
         not_declared = self.tree["used_metrics"] - necessary_metrics
@@ -482,7 +480,7 @@ class ComponentSelector:
         """
         After the tree has finished executing, check if all component
         classifications are either "accepted" or "rejected".
-        If any other component classifications remain, log a warning
+        If any other component classifications remain, log a warning.
         """
         component_classifications = set(self.component_table["classification"].to_list())
         nonfinal_classifications = component_classifications.difference({"accepted", "rejected"})

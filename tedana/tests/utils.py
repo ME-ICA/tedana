@@ -1,6 +1,4 @@
-"""
-Utility functions for testing tedana.
-"""
+"""Utility functions for testing tedana."""
 
 from os.path import abspath, dirname, join, sep
 

@@ -53,7 +53,7 @@ tap_callback_jscode = """
 
 def _create_data_struct(comptable_path, color_mapping=color_mapping):
     """
-    Create Bokeh ColumnDataSource with all info dynamic plots need
+    Create Bokeh ColumnDataSource with all info dynamic plots need.
 
     Parameters
     ----------
@@ -134,7 +134,7 @@ def _create_data_struct(comptable_path, color_mapping=color_mapping):
 
 def _create_kr_plt(comptable_cds, kappa_elbow=None, rho_elbow=None):
     """
-    Create Dymamic Kappa/Rho Scatter Plot
+    Create Dymamic Kappa/Rho Scatter Plot.
 
     Parameters
     ----------
@@ -234,7 +234,7 @@ def _create_sorted_plt(
     comptable_cds, n_comps, x_var, y_var, title=None, x_label=None, y_label=None, elbow=None
 ):
     """
-    Create dynamic sorted plots
+    Create dynamic sorted plots.
 
     Parameters
     ----------
@@ -353,7 +353,7 @@ def _create_varexp_pie_plt(comptable_cds, n_comps):
 
 def _tap_callback(comptable_cds, div_content, io_generator):
     """
-    Javacript function to animate tap events and show component info on the right
+    Javacript function to animate tap events and show component info on the right.
 
     Parameters
     ----------
@@ -405,7 +405,6 @@ def _link_figures(fig, comptable_ds, div_content, io_generator):
     fig : bokeh.plotting.figure
         Same as input figure, but with a linked method to
         its Tap event.
-
     """
     fig.js_on_event(events.Tap, _tap_callback(comptable_ds, div_content, io_generator))
     return fig

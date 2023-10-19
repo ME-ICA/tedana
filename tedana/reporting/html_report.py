@@ -184,7 +184,7 @@ def generate_report(io_generator, tr):
         Current prefixes are kappa_elbow_kundu and rho_elbow_kundu. This flexability
         means anything that begins [kappa/rho]_elbow will be found and used regardless
         of the suffix. If more than one metric has the prefix then the alphabetically
-        first one will be used and a warning will be logged
+        first one will be used and a warning will be logged.
         """
 
         elbow_keys = [k for k in cross_comp_metrics_dict.keys() if elbow_prefix in k]

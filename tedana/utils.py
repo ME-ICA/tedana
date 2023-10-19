@@ -1,6 +1,4 @@
-"""
-Utilities for tedana package
-"""
+"""Utilities for tedana package."""
 import logging
 import os.path as op
 import platform
@@ -41,7 +39,7 @@ def reshape_niimg(data):
 
 def make_adaptive_mask(data, mask=None, getsum=False, threshold=1):
     """
-    Makes map of `data` specifying longest echo a voxel can be sampled with
+    Makes map of `data` specifying longest echo a voxel can be sampled with.
 
     Parameters
     ----------
@@ -125,7 +123,7 @@ def make_adaptive_mask(data, mask=None, getsum=False, threshold=1):
 
 def unmask(data, mask):
     """
-    Unmasks `data` using non-zero entries of `mask`
+    Unmasks `data` using non-zero entries of `mask`.
 
     Parameters
     ----------
@@ -208,7 +206,7 @@ def dice(arr1, arr2, axis=None):
 
 def andb(arrs):
     """
-    Sums arrays in `arrs`
+    Sums arrays in `arrs`.
 
     Parameters
     ----------

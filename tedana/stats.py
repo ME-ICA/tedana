@@ -1,6 +1,4 @@
-"""
-Statistical functions
-"""
+"""Statistical functions."""
 import logging
 
 import numpy as np
@@ -14,7 +12,7 @@ RepLGR = logging.getLogger("REPORT")
 
 def getfbounds(n_echos):
     """
-    Gets F-statistic boundaries based on number of echos
+    Gets F-statistic boundaries based on number of echos.
 
     Parameters
     ----------
@@ -35,7 +33,7 @@ def getfbounds(n_echos):
 
 def computefeats2(data, mmix, mask=None, normalize=True):
     """
-    Converts `data` to component space using `mmix`
+    Converts `data` to component space using `mmix`.
 
     Parameters
     ----------
@@ -102,7 +100,7 @@ def computefeats2(data, mmix, mask=None, normalize=True):
 
 def get_coeffs(data, X, mask=None, add_const=False):
     """
-    Performs least-squares fit of `X` against `data`
+    Performs least-squares fit of `X` against `data`.
 
     Parameters
     ----------

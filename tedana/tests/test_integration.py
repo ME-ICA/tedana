@@ -1,6 +1,4 @@
-"""
-Integration tests for "real" data
-"""
+"""Integration tests for "real" data."""
 
 import glob
 import json
@@ -33,7 +31,7 @@ TestLGR = logging.getLogger("TESTING")
 
 def check_integration_outputs(fname, outpath, n_logs=1):
     """
-    Checks outputs of integration tests
+    Checks outputs of integration tests.
 
     Parameters
     ----------
@@ -80,7 +78,7 @@ def check_integration_outputs(fname, outpath, n_logs=1):
 
 def data_for_testing_info(test_dataset=str):
     """
-    Get the path and download link for each dataset used for testing
+    Get the path and download link for each dataset used for testing.
 
     Also creates the base directories into which the data and output
     directories are written
@@ -137,7 +135,7 @@ def download_test_data(osf_id, test_data_path):
     """
     If current data is not already available, downloads tar.gz data
     stored at `https://osf.io/osf_id/download`
-    and unpacks into `out_path`
+    and unpacks into `out_path`.
 
     Parameters
     ----------
@@ -279,7 +277,7 @@ def test_integration_five_echo(skip_integration):
 
 
 def test_integration_four_echo(skip_integration):
-    """Integration test of the full tedana workflow using four-echo test data"""
+    """Integration test of the full tedana workflow using four-echo test data."""
 
     if skip_integration:
         pytest.skip("Skipping four-echo integration test")
@@ -327,7 +325,7 @@ def test_integration_four_echo(skip_integration):
 
 
 def test_integration_three_echo(skip_integration):
-    """Integration test of the full tedana workflow using three-echo test data"""
+    """Integration test of the full tedana workflow using three-echo test data."""
 
     if skip_integration:
         pytest.skip("Skipping three-echo integration test")
@@ -648,7 +646,7 @@ def test_integration_reclassify_index_failures(skip_integration):
 
 
 def test_integration_t2smap(skip_integration):
-    """Integration test of the full t2smap workflow using five-echo test data"""
+    """Integration test of the full t2smap workflow using five-echo test data."""
     if skip_integration:
         pytest.skip("Skipping t2smap integration test")
     test_data_path, osf_id = data_for_testing_info("five-echo")

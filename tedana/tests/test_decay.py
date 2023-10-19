@@ -1,6 +1,4 @@
-"""
-Tests for tedana.decay
-"""
+"""Tests for tedana.decay."""
 
 import os.path as op
 
@@ -31,9 +29,7 @@ def testdata1():
 
 
 def test_fit_decay(testdata1):
-    """
-    fit_decay should return data in (samples,) shape.
-    """
+    """Fit_decay should return data in (samples,) shape."""
     t2sv, s0v, t2svG, s0vG = me.fit_decay(
         testdata1["data"],
         testdata1["tes"],
@@ -48,9 +44,7 @@ def test_fit_decay(testdata1):
 
 
 def test_fit_decay_ts(testdata1):
-    """
-    fit_decay_ts should return data in samples x time shape.
-    """
+    """Fit_decay_ts should return data in samples x time shape."""
     t2sv, s0v, t2svG, s0vG = me.fit_decay_ts(
         testdata1["data"],
         testdata1["tes"],
@@ -93,7 +87,7 @@ def test__apply_t2s_floor():
 
 def test_smoke_fit_decay():
     """
-    test_smoke_fit_decay tests that the function fit_decay returns reasonable
+    Test_smoke_fit_decay tests that the function fit_decay returns reasonable
     objects with semi-random inputs in the correct format.
     A mask with at least some "good" voxels and an adaptive mask where all
     good voxels have at least two good echoes are generated to ensure that
@@ -119,9 +113,9 @@ def test_smoke_fit_decay():
 
 def test_smoke_fit_decay_curvefit():
     """
-    test_smoke_fit_decay tests that the function fit_decay returns reasonable
+    Test_smoke_fit_decay tests that the function fit_decay returns reasonable
     objects with random inputs in the correct format when using the direct
-    monoexponetial approach
+    monoexponetial approach.
     """
     n_samples = 100
     n_echos = 5
@@ -143,8 +137,8 @@ def test_smoke_fit_decay_curvefit():
 
 def test_smoke_fit_decay_ts():
     """
-    test_smoke_fit_decay_ts tests that the function fit_decay_ts returns reasonable
-    objects with random inputs in the correct format
+    Test_smoke_fit_decay_ts tests that the function fit_decay_ts returns reasonable
+    objects with random inputs in the correct format.
     """
     n_samples = 100
     n_echos = 5
@@ -166,9 +160,9 @@ def test_smoke_fit_decay_ts():
 
 def test_smoke_fit_decay_curvefit_ts():
     """
-    test_smoke_fit_decay_ts tests that the function fit_decay_ts returns reasonable
+    Test_smoke_fit_decay_ts tests that the function fit_decay_ts returns reasonable
     objects with random inputs in the correct format when using the direct
-    monoexponetial approach
+    monoexponetial approach.
     """
     n_samples = 100
     n_echos = 5
