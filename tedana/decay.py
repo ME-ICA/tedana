@@ -53,19 +53,19 @@ def _apply_t2s_floor(t2s, echo_times):
 def monoexponential(tes, s0, t2star):
     """Specify a monoexponential model for use with scipy curve fitting.
 
-       Parameters
-       ----------
-       tes : (E,) :obj:`list`
-           Echo times
-       s0 : :obj:`float`
-           Initial signal parameter
-       t2star : :obj:`float`
-           T2* parameter
+    Parameters
+    ----------
+    tes : (E,) :obj:`list`
+        Echo times
+    s0 : :obj:`float`
+        Initial signal parameter
+    t2star : :obj:`float`
+        T2* parameter
 
-       Returns
-       -------
+    Returns
+    -------
     : obj:`float`
-           Predicted signal
+        Predicted signal
     """
     return s0 * np.exp(-tes / t2star)
 
@@ -73,33 +73,33 @@ def monoexponential(tes, s0, t2star):
 def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True):
     """Fit monoexponential decay model with nonlinear curve-fitting.
 
-       Parameters
-       ----------
-       data_cat : (S x E x T) :obj:`numpy.ndarray`
-           Multi-echo data.
-       echo_times : (E,) array_like
-           Echo times in milliseconds.
-       adaptive_mask : (S,) :obj:`numpy.ndarray`
-           Array where each value indicates the number of echoes with good signal
-           for that voxel. This mask may be thresholded; for example, with values
-           less than 3 set to 0.
-           For more information on thresholding, see `make_adaptive_mask`.
-       report : bool, optional
-           Whether to log a description of this step or not. Default is True.
+    Parameters
+    ----------
+    data_cat : (S x E x T) :obj:`numpy.ndarray`
+        Multi-echo data.
+    echo_times : (E,) array_like
+        Echo times in milliseconds.
+    adaptive_mask : (S,) :obj:`numpy.ndarray`
+        Array where each value indicates the number of echoes with good signal
+        for that voxel. This mask may be thresholded; for example, with values
+        less than 3 set to 0.
+        For more information on thresholding, see `make_adaptive_mask`.
+    report : bool, optional
+        Whether to log a description of this step or not. Default is True.
 
-       Returns
-       -------
-       t2s_limited, s0_limited, t2s_full, s0_full : (S,) :obj:`numpy.ndarray`
-           T2* and S0 estimate maps.
+    Returns
+    -------
+    t2s_limited, s0_limited, t2s_full, s0_full : (S,) :obj:`numpy.ndarray`
+        T2* and S0 estimate maps.
 
-       See Also
-       --------
+    See Also
+    --------
     : func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
-                                                 parameter.
+        parameter.
 
-       Notes
-       -----
-       This method is slower, but more accurate, than the log-linear approach.
+    Notes
+    -----
+    This method is slower, but more accurate, than the log-linear approach.
     """
     if report:
         RepLGR.info(
@@ -293,55 +293,55 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
 def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True):
     """Fit voxel-wise monoexponential decay models to ``data``.
 
-       Parameters
-       ----------
-       data : (S x E [x T]) array_like
-           Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
-           time
-       tes : (E,) :obj:`list`
-           Echo times
-       mask : (S,) array_like
-           Boolean array indicating samples that are consistently (i.e., across
-           time AND echoes) non-zero
-       adaptive_mask : (S,) array_like
-           Array where each value indicates the number of echoes with good signal
-           for that voxel. This mask may be thresholded; for example, with values
-           less than 3 set to 0.
-           For more information on thresholding, see `make_adaptive_mask`.
-       fittype : {loglin, curvefit}
-           The type of model fit to use
-       report : bool, optional
-           Whether to log a description of this step or not. Default is True.
+    Parameters
+    ----------
+    data : (S x E [x T]) array_like
+        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
+        time
+    tes : (E,) :obj:`list`
+        Echo times
+    mask : (S,) array_like
+        Boolean array indicating samples that are consistently (i.e., across
+        time AND echoes) non-zero
+    adaptive_mask : (S,) array_like
+        Array where each value indicates the number of echoes with good signal
+        for that voxel. This mask may be thresholded; for example, with values
+        less than 3 set to 0.
+        For more information on thresholding, see `make_adaptive_mask`.
+    fittype : {loglin, curvefit}
+        The type of model fit to use
+    report : bool, optional
+        Whether to log a description of this step or not. Default is True.
 
-       Returns
-       -------
-       t2s_limited : (S,) :obj:`numpy.ndarray`
-           Limited T2* map. The limited map only keeps the T2* values for data
-           where there are at least two echos with good signal.
-       s0_limited : (S,) :obj:`numpy.ndarray`
-           Limited S0 map.  The limited map only keeps the S0 values for data
-           where there are at least two echos with good signal.
-       t2s_full : (S,) :obj:`numpy.ndarray`
-           Full T2* map. For voxels affected by dropout, with good signal from
-           only one echo, the full map uses the T2* estimate from the first two
-           echoes.
-       s0_full : (S,) :obj:`numpy.ndarray`
-           Full S0 map. For voxels affected by dropout, with good signal from
-           only one echo, the full map uses the S0 estimate from the first two
-           echoes.
+    Returns
+    -------
+    t2s_limited : (S,) :obj:`numpy.ndarray`
+        Limited T2* map. The limited map only keeps the T2* values for data
+        where there are at least two echos with good signal.
+    s0_limited : (S,) :obj:`numpy.ndarray`
+        Limited S0 map.  The limited map only keeps the S0 values for data
+        where there are at least two echos with good signal.
+    t2s_full : (S,) :obj:`numpy.ndarray`
+        Full T2* map. For voxels affected by dropout, with good signal from
+        only one echo, the full map uses the T2* estimate from the first two
+        echoes.
+    s0_full : (S,) :obj:`numpy.ndarray`
+        Full S0 map. For voxels affected by dropout, with good signal from
+        only one echo, the full map uses the S0 estimate from the first two
+        echoes.
 
-       See Also
-       --------
+    See Also
+    --------
     : func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
-                                                 parameter.
+                                                       parameter.
 
-       Notes
-       -----
-       This function replaces infinite values in the :math:`T_2^*` map with 500 and
-       :math:`T_2^*` values less than or equal to zero with 1.
-       Additionally, very small :math:`T_2^*` values above zero are replaced with a floor
-       value to prevent zero-division errors later on in the workflow.
-       It also replaces NaN values in the :math:`S_0` map with 0.
+    Notes
+    -----
+    This function replaces infinite values in the :math:`T_2^*` map with 500 and
+    :math:`T_2^*` values less than or equal to zero with 1.
+    Additionally, very small :math:`T_2^*` values above zero are replaced with a floor
+    value to prevent zero-division errors later on in the workflow.
+    It also replaces NaN values in the :math:`S_0` map with 0.
     """
     if data.shape[1] != len(tes):
         raise ValueError(
@@ -400,45 +400,45 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True):
 def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
     """Fit voxel- and timepoint-wise monoexponential decay models to ``data``.
 
-       Parameters
-       ----------
-       data : (S x E x T) array_like
-           Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
-           time
-       tes : (E,) :obj:`list`
-           Echo times
-       mask : (S,) array_like
-           Boolean array indicating samples that are consistently (i.e., across
-           time AND echoes) non-zero
-       adaptive_mask : (S,) array_like
-           Array where each value indicates the number of echoes with good signal
-           for that voxel. This mask may be thresholded; for example, with values
-           less than 3 set to 0.
-           For more information on thresholding, see `make_adaptive_mask`.
-       fittype : :obj: `str`
-           The type of model fit to use
+    Parameters
+    ----------
+    data : (S x E x T) array_like
+        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
+        time
+    tes : (E,) :obj:`list`
+        Echo times
+    mask : (S,) array_like
+        Boolean array indicating samples that are consistently (i.e., across
+        time AND echoes) non-zero
+    adaptive_mask : (S,) array_like
+        Array where each value indicates the number of echoes with good signal
+        for that voxel. This mask may be thresholded; for example, with values
+        less than 3 set to 0.
+        For more information on thresholding, see `make_adaptive_mask`.
+    fittype : :obj: `str`
+        The type of model fit to use
 
-       Returns
-       -------
-       t2s_limited_ts : (S x T) :obj:`numpy.ndarray`
-           Limited T2* map. The limited map only keeps the T2* values for data
-           where there are at least two echos with good signal.
-       s0_limited_ts : (S x T) :obj:`numpy.ndarray`
-           Limited S0 map.  The limited map only keeps the S0 values for data
-           where there are at least two echos with good signal.
-       t2s_full_ts : (S x T) :obj:`numpy.ndarray`
-           Full T2* timeseries.  For voxels affected by dropout, with good signal
-           from only one echo, the full timeseries uses the single echo's value
-           at that voxel/volume.
-       s0_full_ts : (S x T) :obj:`numpy.ndarray`
-           Full S0 timeseries. For voxels affected by dropout, with good signal
-           from only one echo, the full timeseries uses the single echo's value
-           at that voxel/volume.
+    Returns
+    -------
+    t2s_limited_ts : (S x T) :obj:`numpy.ndarray`
+        Limited T2* map. The limited map only keeps the T2* values for data
+        where there are at least two echos with good signal.
+    s0_limited_ts : (S x T) :obj:`numpy.ndarray`
+        Limited S0 map.  The limited map only keeps the S0 values for data
+        where there are at least two echos with good signal.
+    t2s_full_ts : (S x T) :obj:`numpy.ndarray`
+        Full T2* timeseries.  For voxels affected by dropout, with good signal
+        from only one echo, the full timeseries uses the single echo's value
+        at that voxel/volume.
+    s0_full_ts : (S x T) :obj:`numpy.ndarray`
+        Full S0 timeseries. For voxels affected by dropout, with good signal
+        from only one echo, the full timeseries uses the single echo's value
+        at that voxel/volume.
 
-       See Also
-       --------
+    See Also
+    --------
     : func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
-                                                 parameter.
+                                                          parameter.
     """
     n_samples, _, n_vols = data.shape
     tes = np.array(tes)
