@@ -161,9 +161,9 @@ def test_load_config_fails():
 def test_load_config_succeeds():
     """Tests to make sure load_config succeeds"""
 
-    # The minimal tree should have an id of "minimal_decision_tree_test1"
+    # The minimal tree should have an id of "minimal_decision_tree"
     tree = component_selector.load_config("minimal")
-    assert tree["tree_id"] == "minimal_decision_tree_test1"
+    assert tree["tree_id"] == "minimal_decision_tree"
 
 
 def test_minimal():
