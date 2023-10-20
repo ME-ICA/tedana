@@ -39,7 +39,7 @@ class CustomEncoder(json.JSONEncoder):
     """
 
     def default(self, obj):
-        """Default encoder for CustomEncoder."""
+        """Return the default encoder for CustomEncoder."""
         # int64 non-serializable but is a numpy output
         if isinstance(obj, np.int32) or isinstance(obj, np.int64):
             return int(obj)

@@ -138,7 +138,6 @@ def unmask(data, mask):
     out : (S [x E [x T]]) :obj:`numpy.ndarray`
         Unmasked `data` array
     """
-
     out = np.zeros(mask.shape + data.shape[1:], dtype=data.dtype)
     out[mask] = data
     return out

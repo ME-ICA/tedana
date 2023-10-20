@@ -177,7 +177,8 @@ def generate_report(io_generator):
 
     def get_elbow_val(elbow_prefix):
         """
-        Find cross component metrics that begin with elbow_prefix and output the value
+        Find cross component metrics that begin with elbow_prefix and output the value.
+
         Current prefixes are kappa_elbow_kundu and rho_elbow_kundu.
 
         This flexibility means anything that begins [kappa/rho]_elbow will be found and

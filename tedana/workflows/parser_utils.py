@@ -5,6 +5,8 @@ import os.path as op
 
 def check_tedpca_value(string, is_parser=True):
     """
+    Check tedpca argument.
+
     Check if argument is a float in range (0,1), an int greater than 1 or one of a
     list of strings.
     """

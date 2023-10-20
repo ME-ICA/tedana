@@ -1,7 +1,4 @@
-"""
-Functions that include workflows to identify and label
-TE-dependent and TE-independent components.
-"""
+"""Identify and label TE-dependent and TE-independent components."""
 import inspect
 import logging
 import os.path as op
@@ -47,7 +44,6 @@ def load_config(tree):
     tree : :obj:`dict`
         A validated decision tree for the component selection process.
     """
-
     if tree in DEFAULT_TREES:
         fname = op.join(get_resource_path(), "decision_trees", tree + ".json")
     else:
@@ -86,7 +82,6 @@ def validate_tree(tree):
     ------
     TreeError
     """
-
     # Set the fields that should always be present
     err_msg = ""
     tree_expected_keys = [
@@ -268,7 +263,6 @@ class ComponentSelector:
         An example initialization with these options would look like
         ``selector = ComponentSelector(tree, comptable, n_echos=n_echos, n_vols=n_vols)``
         """
-
         self.tree_name = tree
 
         self.__dict__.update(cross_component_metrics)
@@ -347,7 +341,6 @@ class ComponentSelector:
           everything that changed in each node
         - current_node_idx: The total number of nodes run in ``ComponentSelector``
         """
-
         if "classification_tags" not in self.component_table.columns:
             self.component_table["classification_tags"] = ""
 
@@ -431,8 +424,7 @@ class ComponentSelector:
 
     def check_null(self, params, fcn):
         """
-        Checks that all required parameters for selection node functions are
-        attributes in the class.
+        Check that all required parameters for selection node functions are attributes in the class.
 
         Error if any are undefined.
 
@@ -441,7 +433,6 @@ class ComponentSelector:
         params : :obj:`dict`
             The keys and values for the inputted parameters
         """
-
         for key, val in params.items():
             if val is None:
                 try:
