@@ -290,11 +290,11 @@ def dec_left_op_right(
 
     def confirm_valid_conditional(left_scale, left_val, right_scale, right_val, op_val):
         """
-        Makes sure the left_scale, left_val, right_scale, right_val, and.
+        Confirm that the conditional statement is valid.
 
+        Makes sure the left_scale, left_val, right_scale, right_val, and
         operator variables combine into a valid conditional statement.
         """
-
         left_val = identify_used_metric(left_val)
         right_val = identify_used_metric(right_val)
         left_scale = identify_used_metric(left_scale, isnum=True)

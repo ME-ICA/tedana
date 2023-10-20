@@ -612,7 +612,6 @@ def kappa_elbow_kundu(component_table, n_echos, comps2use=None):
     on kappa values and is used in rho_elbow_kundu_liberal. For several reasons
     it made more sense to calculate here.
     """
-
     # If comps2use is None then set to a list of all component numbers
     if not comps2use:
         comps2use = list(range(component_table.shape[0]))
