@@ -8,11 +8,7 @@ from tedana.stats import computefeats2, get_coeffs, getfbounds
 
 
 def test_break_computefeats2():
-    """
-    Ensure that computefeats2 fails when input data do not have the right.
-
-    shapes.
-    """
+    """Ensure that computefeats2 fails when input data do not have the right shapes."""
     n_samples, n_vols, n_comps = 10000, 100, 50
     data = np.empty((n_samples, n_vols))
     mmix = np.empty((n_vols, n_comps))
@@ -96,12 +92,12 @@ def test_break_get_coeffs():
         get_coeffs(data, x, mask, add_const=False)
 
     data = np.empty((n_samples, n_vols))
-    X = np.empty((n_vols))
+    x = np.empty((n_vols))
     with pytest.raises(ValueError):
         get_coeffs(data, x, mask, add_const=False)
 
     data = np.empty((n_samples, n_echos, n_vols + 1))
-    X = np.empty((n_vols, n_comps))
+    x = np.empty((n_vols, n_comps))
     with pytest.raises(ValueError):
         get_coeffs(data, x, mask, add_const=False)
 
