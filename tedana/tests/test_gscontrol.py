@@ -15,7 +15,8 @@ ref_img = os.path.join(data_dir, "mask.nii.gz")
 
 def test_break_gscontrol_raw():
     """
-    Ensure that gscontrol_raw fails when input data do not have the right
+    Ensure that gscontrol_raw fails when input data do not have the right.
+
     shapes.
     """
     n_samples, n_echos, n_vols = 10000, 4, 100
@@ -29,8 +30,7 @@ def test_break_gscontrol_raw():
             catd=catd, optcom=optcom, n_echos=n_echos, io_generator=io_generator, dtrank=4
         )
     assert str(e_info.value) == (
-        "First dimensions of catd ({0}) and optcom ({1}) do not "
-        "match".format(catd.shape[0], optcom.shape[0])
+        f"First dimensions of catd ({catd.shape[0]}) and optcom ({optcom.shape[0]}) do not match"
     )
 
     catd = np.empty((n_samples, n_echos + 1, n_vols))
@@ -49,7 +49,6 @@ def test_break_gscontrol_raw():
             catd=catd, optcom=optcom, n_echos=n_echos, io_generator=io_generator, dtrank=4
         )
     assert str(e_info.value) == (
-        "Third dimension of catd ({0}) does not match "
-        "second dimension of optcom "
-        "({1})".format(catd.shape[2], optcom.shape[1])
+        f"Third dimension of catd ({catd.shape[2]}) does not match "
+        f"second dimension of optcom ({optcom.shape[1]})"
     )

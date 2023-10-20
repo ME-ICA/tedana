@@ -96,7 +96,8 @@ def test_load_data():
 
 def test_smoke_split_ts():
     """
-    Ensures that split_ts returns output when fed in with random inputs
+    Ensures that split_ts returns output when fed in with random inputs.
+
     Note: classification is ["accepted", "rejected", "ignored"].
     """
     np.random.seed(0)  # seeded because comptable MUST have accepted components
@@ -122,7 +123,10 @@ def test_smoke_split_ts():
 
 
 def test_smoke_write_split_ts():
-    """Ensures that write_split_ts writes out the expected files with random input and tear them down."""
+    """Ensures that write_split_ts writes out the expected files with.
+
+    random input and tear them down.
+    """
     np.random.seed(0)  # at least one accepted and one rejected, thus all files are generated
     n_samples, n_times, n_components = 64350, 10, 6
     data = np.random.random((n_samples, n_times))
@@ -152,7 +156,8 @@ def test_smoke_write_split_ts():
 
 def test_smoke_filewrite():
     """
-    Ensures that filewrite fails for no known image type, write a known key
+    Ensures that filewrite fails for no known image type, write a known key.
+
     in both bids and orig formats.
     """
     n_samples, _, _ = 64350, 10, 6
@@ -260,7 +265,7 @@ def test_fname_to_component_list():
     assert result == [1, 1]
 
 
-def test_CustomEncoder():
+def test_custom_encoder():
     """Test the encoder we use for JSON incompatibilities."""
     # np int64
     test_data = {"data": np.int64(4)}

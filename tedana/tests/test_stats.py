@@ -9,7 +9,8 @@ from tedana.stats import computefeats2, get_coeffs, getfbounds
 
 def test_break_computefeats2():
     """
-    Ensure that computefeats2 fails when input data do not have the right
+    Ensure that computefeats2 fails when input data do not have the right.
+
     shapes.
     """
     n_samples, n_vols, n_comps = 10000, 100, 50
@@ -59,58 +60,59 @@ def test_get_coeffs():
     data = np.empty((2, 40))
     data[0, :] = np.arange(0, 200, 5)
     data[1, :] = np.arange(0, 200, 5)
-    X = np.arange(0, 40)[:, np.newaxis]
+    x = np.arange(0, 40)[:, np.newaxis]
     mask = np.array([True, False])
 
-    betas = get_coeffs(data, X, mask=None, add_const=False)
+    betas = get_coeffs(data, x, mask=None, add_const=False)
     betas = np.squeeze(betas)
     assert np.allclose(betas, np.array([5.0, 5.0]))
 
-    betas = get_coeffs(data, X, mask=None, add_const=True)
+    betas = get_coeffs(data, x, mask=None, add_const=True)
     betas = np.squeeze(betas)
     assert np.allclose(betas, np.array([5.0, 5.0]))
 
-    betas = get_coeffs(data, X, mask=mask, add_const=False)
+    betas = get_coeffs(data, x, mask=mask, add_const=False)
     betas = np.squeeze(betas)
     assert np.allclose(betas, np.array([5, 0]))
 
-    betas = get_coeffs(data, X, mask=mask, add_const=True)
+    betas = get_coeffs(data, x, mask=mask, add_const=True)
     betas = np.squeeze(betas)
     assert np.allclose(betas, np.array([5, 0]))
 
 
 def test_break_get_coeffs():
     """
-    Ensure that get_coeffs fails when input data do not have the right
+    Ensure that get_coeffs fails when input data do not have the right.
+
     shapes.
     """
     n_samples, n_echos, n_vols, n_comps = 10000, 5, 100, 50
     data = np.empty((n_samples, n_vols))
-    X = np.empty((n_vols, n_comps))
+    x = np.empty((n_vols, n_comps))
     mask = np.empty((n_samples))
 
     data = np.empty((n_samples))
     with pytest.raises(ValueError):
-        get_coeffs(data, X, mask, add_const=False)
+        get_coeffs(data, x, mask, add_const=False)
 
     data = np.empty((n_samples, n_vols))
     X = np.empty((n_vols))
     with pytest.raises(ValueError):
-        get_coeffs(data, X, mask, add_const=False)
+        get_coeffs(data, x, mask, add_const=False)
 
     data = np.empty((n_samples, n_echos, n_vols + 1))
     X = np.empty((n_vols, n_comps))
     with pytest.raises(ValueError):
-        get_coeffs(data, X, mask, add_const=False)
+        get_coeffs(data, x, mask, add_const=False)
 
     data = np.empty((n_samples, n_echos, n_vols))
     mask = np.empty((n_samples, n_echos, n_vols))
     with pytest.raises(ValueError):
-        get_coeffs(data, X, mask, add_const=False)
+        get_coeffs(data, x, mask, add_const=False)
 
     mask = np.empty((n_samples + 1, n_echos))
     with pytest.raises(ValueError):
-        get_coeffs(data, X, mask, add_const=False)
+        get_coeffs(data, x, mask, add_const=False)
 
 
 def test_smoke_get_coeffs():
