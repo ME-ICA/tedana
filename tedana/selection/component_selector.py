@@ -424,7 +424,7 @@ class ComponentSelector:
 
     def check_null(self, params, fcn):
         """
-        Check that all required parameters for selection node functions are attributes in the class.
+        Check that required parameters for selection node functions are attributes in the class.
 
         Error if any are undefined.
 
@@ -451,8 +451,9 @@ class ComponentSelector:
 
     def are_only_necessary_metrics_used(self):
         """
-        Check if all metrics that are declared as necessary are actually
-        used and if any used_metrics weren't explicitly declared necessary.
+        Check if all metrics that are declared as necessary are actually used.
+
+        Also check if any used_metrics weren't explicitly declared necessary.
 
         If either of these happen, a warning is added to the logger.
         """
@@ -472,8 +473,9 @@ class ComponentSelector:
 
     def are_all_components_accepted_or_rejected(self):
         """
-        After the tree has finished executing, check if all component
-        classifications are either "accepted" or "rejected".
+        Check if all component classifications are either "accepted" or "rejected".
+
+        This is done after the tree has finished executing,
 
         If any other component classifications remain, log a warning.
         """

@@ -34,7 +34,6 @@ def selectcomps2use(selector, decide_comps):
     comps2use : :obj:`list[int]`
         A list of component indices with classifications included in decide_comps
     """
-
     if "classification" not in selector.component_table:
         raise ValueError(
             "selector.component_table needs a 'classification' column to run selectcomp2suse"
@@ -95,8 +94,10 @@ def change_comptable_classifications(
     dont_warn_reclassify=False,
 ):
     """
-    Given information on whether a decision critereon is true or false for each
-    component, change or don't change the component classification.
+    Change or don't change the component classification.
+
+    This happens based on the information on whether a decision critereon is true or
+    false for each component.
 
     Parameters
     ----------
@@ -284,8 +285,9 @@ def comptable_classification_changer(
 
 def clean_dataframe(component_table):
     """
-    Reorder columns in component table so that "classification"
-    and "classification_tags" are last.
+    Reorder columns in component table.
+
+    The reordering is done so that "classification" and "classification_tags" are last.
 
     Parameters
     ----------
@@ -315,8 +317,7 @@ def clean_dataframe(component_table):
 
 def confirm_metrics_exist(component_table, necessary_metrics, function_name=None):
     """
-    Confirm that all metrics declared in necessary_metrics are
-    already included in comptable.
+    Confirm that all metrics declared in necessary_metrics are included in comptable.
 
     Parameters
     ----------
@@ -371,7 +372,7 @@ def log_decision_tree_step(
     if_false=None,
     calc_outputs=None,
 ):
-    """Logging text to add after every decision tree calculation.
+    """Log text to add after every decision tree calculation.
 
     Parameters
     ----------
@@ -471,18 +472,18 @@ def log_classification_counts(decision_node_idx, component_table):
 def getelbow_cons(arr, return_val=False):
     """Elbow using mean/variance method - conservative.
 
-       Parameters
-       ----------
-       arr : (C,) array_like
-           Metric (e.g., Kappa or Rho) values.
-       return_val : :obj:`bool`, optional
-           Return the value of the elbow instead of the index. Default: False
+    Parameters
+    ----------
+    arr : (C,) array_like
+        Metric (e.g., Kappa or Rho) values.
+    return_val : :obj:`bool`, optional
+        Return the value of the elbow instead of the index. Default: False
 
-       Returns
-       -------
+    Returns
+    -------
     : obj:`int` or :obj:`float`
-           Either the elbow index (if return_val is True) or the values at the
-           elbow index (if return_val is False)
+        Either the elbow index (if return_val is True) or the values at the
+        elbow index (if return_val is False)
     """
     if arr.ndim != 1:
         raise ValueError(f"Parameter arr should be 1d, not {arr.ndim}d")
@@ -522,18 +523,18 @@ def getelbow_cons(arr, return_val=False):
 def getelbow(arr, return_val=False):
     """Get elbow using linear projection method - moderate.
 
-       Parameters
-       ----------
-       arr : (C,) array_like
-           Metric (e.g., Kappa or Rho) values.
-       return_val : :obj:`bool`, optional
-           Return the value of the elbow instead of the index. Default: False
+    Parameters
+    ----------
+    arr : (C,) array_like
+        Metric (e.g., Kappa or Rho) values.
+    return_val : :obj:`bool`, optional
+        Return the value of the elbow instead of the index. Default: False
 
-       Returns
-       -------
+    Returns
+    -------
     : obj:`int` or :obj:`float`
-           Either the elbow index (if return_val is True) or the values at the
-           elbow index (if return_val is False)
+        Either the elbow index (if return_val is True) or the values at the
+        elbow index (if return_val is False)
     """
     if arr.ndim != 1:
         raise ValueError(f"Parameter arr should be 1d, not {arr.ndim}d")
@@ -566,8 +567,9 @@ def getelbow(arr, return_val=False):
 
 def kappa_elbow_kundu(component_table, n_echos, comps2use=None):
     """
-    Calculate an elbow for kappa using the approach originally in
-    Prantik Kundu's MEICA v2.5 code.
+    Calculate an elbow for kappa.
+
+    Uses the approach originally in Prantik Kundu's MEICA v2.5 code.
 
     Parameters
     ----------
@@ -657,10 +659,10 @@ def rho_elbow_kundu_liberal(
     component_table, n_echos, rho_elbow_type="kundu", comps2use=None, subset_comps2use=-1
 ):
     """
-    Calculate an elbow for rho using the approach originally in
-    Prantik Kundu's MEICA v2.5 code and with a slightly more.
+    Calculate an elbow for rho.
 
-    liberal threshold.
+    Uses the approach originally in Prantik Kundu's MEICA v2.5 code
+    and with a slightly more liberal threshold.
 
     Parameters
     ----------
@@ -771,6 +773,8 @@ def rho_elbow_kundu_liberal(
 
 def get_extend_factor(n_vols=None, extend_factor=None):
     """
+    Get the extend_factor for the kundu decision tree.
+
     Extend_factor is a scaler used to set a threshold for the d_table_score in
     the kundu decision tree.
 

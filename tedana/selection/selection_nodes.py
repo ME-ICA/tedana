@@ -247,8 +247,9 @@ def dec_left_op_right(
 
     def identify_used_metric(val, isnum=False):
         """
-        Parse the left or right values or scalers to see if they are an
-        existing used_metric or cross_component_metric.
+        Parse the left or right values or scalers.
+
+        This is done to see if they are an existing used_metric or cross_component_metric.
 
         If the value already a number, no parse would be needed.
 
@@ -289,7 +290,8 @@ def dec_left_op_right(
 
     def confirm_valid_conditional(left_scale, left_val, right_scale, right_val, op_val):
         """
-        Makes sure the left_scale, left_val, right_scale, right_val, and
+        Makes sure the left_scale, left_val, right_scale, right_val, and.
+
         operator variables combine into a valid conditional statement.
         """
 
@@ -304,7 +306,8 @@ def dec_left_op_right(
 
     def operator_scale_descript(val_scale, val):
         """
-        Return a string with one element from the mathematical expression
+        Return a string with one element from the mathematical expression.
+
         If val_scale is not 1, include scaling factor (rounded to 2 decimals).
 
         If val is a column in the component_table output the column label
@@ -954,8 +957,10 @@ def dec_classification_doesnt_exist(
     tag=None,
 ):
     """
-    If there are no components with a classification specified in class_comp_exists,
-    change the classification of all components in decide_comps.
+    Change the classification of all components in decide_comps.
+
+    This is done if there are no components with a classification specified in
+    class_comp_exists.
 
     Parameters
     ----------
@@ -1084,7 +1089,7 @@ def dec_reclassify_high_var_comps(
     tag=None,
 ):
     """
-    Identifies and reclassifies a couple components with the largest gaps in variance.
+    Identify and reclassify a couple components with the largest gaps in variance.
 
     Parameters
     ----------
@@ -1846,12 +1851,12 @@ def calc_revised_meanmetricrank_guesses(
         outputs["conservative_guess"] = outputs["num_acc_guess"] / outputs["restrict_factor"]
 
         tmp_kappa = selector.component_table.loc[comps2use, "kappa"].to_numpy()
-        tmp_dice_FT2 = selector.component_table.loc[comps2use, "dice_FT2"].to_numpy()
+        tmp_dice_ft2 = selector.component_table.loc[comps2use, "dice_FT2"].to_numpy()
         tmp_signal_m_noise_t = selector.component_table.loc[comps2use, "signal-noise_t"].to_numpy()
         tmp_countnoise = selector.component_table.loc[comps2use, "countnoise"].to_numpy()
-        tmp_countsigFT2 = selector.component_table.loc[comps2use, "countsigFT2"].to_numpy()
+        tmp_countsig_ft2 = selector.component_table.loc[comps2use, "countsigFT2"].to_numpy()
         tmp_d_table_score = generate_decision_table_score(
-            tmp_kappa, tmp_dice_FT2, tmp_signal_m_noise_t, tmp_countnoise, tmp_countsigFT2
+            tmp_kappa, tmp_dice_ft2, tmp_signal_m_noise_t, tmp_countnoise, tmp_countsig_ft2
         )
         selector.component_table[f"d_table_score_node{selector.current_node_idx}"] = np.NaN
         selector.component_table.loc[
