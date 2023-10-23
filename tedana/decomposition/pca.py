@@ -59,7 +59,7 @@ def tedpca(
     rdaw=1.0,
     low_mem=False,
 ):
-    r"""Use principal components analysis (PCA) to identify and remove thermal noise from data.
+    """Use principal components analysis (PCA) to identify and remove thermal noise from data.
 
     Parameters
     ----------
@@ -131,10 +131,10 @@ def tedpca(
 
             .. math::
                 {\\kappa}_c = \\frac{\\sum_{v}^V {\\zeta}_{c,v}^p * \
-                      F_{c,v,R_2^*}}{\\sum {\\zeta}_{c,v}^p}
+                    F_{c,v,R_2^*}}{\\sum {\\zeta}_{c,v}^p}
 
                 {\\rho}_c = \\frac{\\sum_{v}^V {\\zeta}_{c,v}^p * \
-                      F_{c,v,S_0}}{\\sum {\\zeta}_{c,v}^p}
+                    F_{c,v,S_0}}{\\sum {\\zeta}_{c,v}^p}
 
     4.  Some other stuff. Something about elbows.
     5.  Classify components as thermal noise if they meet both of the
