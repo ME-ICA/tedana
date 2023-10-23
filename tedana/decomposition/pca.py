@@ -59,7 +59,7 @@ def tedpca(
     rdaw=1.0,
     low_mem=False,
 ):
-    """Use principal components analysis (PCA) to identify and remove thermal noise from data.
+    r"""Use principal components analysis (PCA) to identify and remove thermal noise from data.
 
     Parameters
     ----------
@@ -111,13 +111,13 @@ def tedpca(
     ======================    =================================================
     Notation                  Meaning
     ======================    =================================================
-    :math:`\\kappa`            Component pseudo-F statistic for TE-dependent
+    :math:`\kappa`            Component pseudo-F statistic for TE-dependent
                               (BOLD) model.
-    :math:`\\rho`              Component pseudo-F statistic for TE-independent
+    :math:`\rho`              Component pseudo-F statistic for TE-independent
                               (artifact) model.
     :math:`v`                 Voxel
     :math:`V`                 Total number of voxels in mask
-    :math:`\\zeta`             Something
+    :math:`\zeta`             Something
     :math:`c`                 Component
     :math:`p`                 Something else
     ======================    =================================================
@@ -127,22 +127,21 @@ def tedpca(
     1.  Variance normalize either multi-echo or optimally combined data,
         depending on settings.
     2.  Decompose normalized data using PCA or SVD.
-    3.  Compute :math:`{\\kappa}` and :math:`{\\rho}`:
+    3.  Compute :math:`{\kappa}` and :math:`{\rho}`:
 
             .. math::
-                {\\kappa}_c = \\frac{\\sum_{v}^V {\\zeta}_{c,v}^p * \
-                    F_{c,v,R_2^*}}{\\sum {\\zeta}_{c,v}^p}
+                {\kappa}_c = \frac{\sum_{v}^V {\zeta}_{c,v}^p * \
+                    F_{c,v,R_2^*}}{\sum {\zeta}_{c,v}^p}
 
-                {\\rho}_c = \\frac{\\sum_{v}^V {\\zeta}_{c,v}^p * \
-                    F_{c,v,S_0}}{\\sum {\\zeta}_{c,v}^p}
+                {\rho}_c = \frac{\sum_{v}^V {\zeta}_{c,v}^p * \
+                    F_{c,v,S_0}}{\sum {\zeta}_{c,v}^p}
 
     4.  Some other stuff. Something about elbows.
     5.  Classify components as thermal noise if they meet both of the
         following criteria:
 
-            - Nonsignificant :math:`{\\kappa}` and :math:`{\\rho}`.
+            - Nonsignificant :math:`{\kappa}` and :math:`{\rho}`.
             - Nonsignificant variance explained.
-
     Generated Files
     ---------------
 
