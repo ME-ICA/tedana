@@ -1,0 +1,26 @@
+name: Add issues to project boards
+
+on:
+  issues:
+    types:
+      - opened
+
+jobs:
+  add-doc-issues-to-project:
+    name: Add documentation issue to project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/add-to-project@RELEASE_VERSION
+        with:
+          project-url: https://github.com/orgs/ME-ICA/projects/7
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
+          labeled: documentation
+  add-data-issues-to-project:
+    name: Add dataset issue to project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/add-to-project@RELEASE_VERSION
+        with:
+          project-url: https://github.com/orgs/ME-ICA/projects/5
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
+          labeled: datasets
