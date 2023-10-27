@@ -192,7 +192,7 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
         Time series from which to derive ICA betas
     mask : (S,) array_like
         Boolean mask array
-    comptable : (C x x) :obj:`pandas.DataFrame`
+    comptable : (C x M) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
     mmix : (C x T) array_like
