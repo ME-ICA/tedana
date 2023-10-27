@@ -1,6 +1,4 @@
-"""
-Utilities for tedana package
-"""
+"""Utilities for managing the tedana bibliography."""
 import logging
 import os.path as op
 import re
@@ -27,7 +25,7 @@ def find_braces(string):
 
     Returns
     -------
-    :obj:`list` of :obj:`tuple` of :obj:`int`
+    : obj:`list` of :obj:`tuple` of :obj:`int`
         A list of two-element tuples of indices of matched braces.
     """
     toret = {}

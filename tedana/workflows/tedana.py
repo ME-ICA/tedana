@@ -1,6 +1,4 @@
-"""
-Run the "canonical" TE-Dependent ANAlysis workflow.
-"""
+"""Run the "canonical" TE-Dependent ANAlysis workflow."""
 import argparse
 import datetime
 import json
@@ -38,8 +36,7 @@ RepLGR = logging.getLogger("REPORT")
 
 
 def _get_parser():
-    """
-    Parses command line inputs for tedana
+    """Parse command line inputs for tedana.
 
     Returns
     -------
@@ -47,7 +44,7 @@ def _get_parser():
     """
     from tedana import __version__
 
-    verstr = "tedana v{}".format(__version__)
+    verstr = f"tedana v{__version__}"
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # Argument parser follow template provided by RalphyZ
     # https://stackoverflow.com/a/43456577
@@ -341,8 +338,7 @@ def tedana_workflow(
     mixm=None,
     tedana_command=None,
 ):
-    """
-    Run the "canonical" TE-Dependent ANAlysis workflow.
+    """Run the "canonical" TE-Dependent ANAlysis workflow.
 
     Please remember to cite :footcite:t:`dupre2021te`.
 
@@ -445,7 +441,6 @@ def tedana_workflow(
     ----------
     .. footbibliography::
     """
-
     out_dir = op.abspath(out_dir)
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
@@ -484,7 +479,7 @@ def tedana_workflow(
         variables = variables.split(", tedana_command")[0]
         tedana_command = f"tedana_workflow({variables})"
 
-    LGR.info("Using output directory: {}".format(out_dir))
+    LGR.info(f"Using output directory: {out_dir}")
 
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
@@ -502,7 +497,7 @@ def tedana_workflow(
     if isinstance(data, str):
         data = [data]
 
-    LGR.info("Loading input data: {}".format([f for f in data]))
+    LGR.info(f"Loading input data: {[f for f in data]}")
     catd, ref_img = io.load_data(data, n_echos=n_echos)
 
     io_generator = io.OutputGenerator(
@@ -525,7 +520,7 @@ def tedana_workflow(
     info_dict["Command"] = tedana_command
 
     n_samp, n_echos, n_vols = catd.shape
-    LGR.debug("Resulting data shape: {}".format(catd.shape))
+    LGR.debug(f"Resulting data shape: {catd.shape}")
 
     # check if TR is 0
     img_t_r = io_generator.reference_img.header.get_zooms()[-1]
@@ -597,7 +592,7 @@ def tedana_workflow(
         getsum=True,
         threshold=1,
     )
-    LGR.debug("Retaining {}/{} samples for denoising".format(mask_denoise.sum(), n_samp))
+    LGR.debug(f"Retaining {mask_denoise.sum()}/{n_samp} samples for denoising")
     io_generator.save_file(masksum_denoise, "adaptive mask img")
 
     # Create an adaptive mask with at least 3 good echoes, for classification
@@ -611,7 +606,7 @@ def tedana_workflow(
         "(restricted to voxels with good data in at least the first three echoes) was used for "
         "the component classification procedure."
     )
-    LGR.debug("Retaining {}/{} samples for classification".format(mask_clf.sum(), n_samp))
+    LGR.debug(f"Retaining {mask_clf.sum()}/{n_samp} samples for classification")
 
     if t2smap is None:
         LGR.info("Computing T2* map")
@@ -622,7 +617,7 @@ def tedana_workflow(
         # set a hard cap for the T2* map
         # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
         cap_t2s = stats.scoreatpercentile(t2s_full.flatten(), 99.5, interpolation_method="lower")
-        LGR.debug("Setting cap on T2* map at {:.5f}s".format(utils.millisec2sec(cap_t2s)))
+        LGR.debug(f"Setting cap on T2* map at {utils.millisec2sec(cap_t2s):.5f}s")
         t2s_full[t2s_full > cap_t2s * 10] = cap_t2s
         io_generator.save_file(utils.millisec2sec(t2s_full), "t2star img")
         io_generator.save_file(s0_full, "s0 img")
@@ -639,23 +634,20 @@ def tedana_workflow(
         catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, io_generator)
 
     fout = io_generator.save_file(data_oc, "combined img")
-    LGR.info("Writing optimally combined data set: {}".format(fout))
+    LGR.info(f"Writing optimally combined data set: {fout}")
 
     if mixm is None:
         # Identify and remove thermal noise from data
         dd, n_components = decomposition.tedpca(
             catd,
             data_oc,
-            combmode,
             mask_clf,
             masksum_clf,
-            t2s_full,
             io_generator,
             tes=tes,
             algorithm=tedpca,
             kdaw=10.0,
             rdaw=1.0,
-            verbose=verbose,
             low_mem=low_mem,
         )
         if verbose:
@@ -817,7 +809,6 @@ def tedana_workflow(
         mask=mask_denoise,
         comptable=comptable,
         mmix=mmix,
-        n_vols=n_vols,
         io_generator=io_generator,
     )
 
@@ -910,14 +901,14 @@ def tedana_workflow(
         )
 
         LGR.info("Generating dynamic report")
-        reporting.generate_report(io_generator, tr=img_t_r)
+        reporting.generate_report(io_generator)
 
     LGR.info("Workflow completed")
     utils.teardown_loggers()
 
 
 def _main(argv=None):
-    """Tedana entry point"""
+    """Run the tedana workflow."""
     tedana_command = "tedana " + " ".join(sys.argv[1:])
     options = _get_parser().parse_args(argv)
     kwargs = vars(options)
