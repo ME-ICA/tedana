@@ -51,9 +51,14 @@ tests = [
     "codecov",
     "coverage",
     "flake8>=3.7",
+    "flake8-absolute-import",
     "flake8-black",
+    "flake8-docstrings",
     "flake8-isort",
     "flake8-pyproject",
+    "flake8-unused-arguments",
+    "flake8-use-fstring",
+    "pep8-naming",
     "pytest",
     "pytest-cov>=4.0.0",
     "requests",
@@ -130,8 +135,14 @@ exclude = [
 ignore = ["E203", "E402", "W503"]
 per-file-ignores = [
     "*/__init__.py: F401",
+    "tedana/tests/*: D",
 ]
 docstring-convention = "numpy"
+
+[tool.pydocstringformatter]
+write = true
+strip-whitespaces = true
+max-summary-lines = 1
 
 [tool.coverage.run]
 branch = true

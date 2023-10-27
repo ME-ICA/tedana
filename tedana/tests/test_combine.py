@@ -1,6 +1,4 @@
-"""
-Tests for tedana.combine
-"""
+"""Tests for tedana.combine."""
 
 import numpy as np
 
@@ -8,9 +6,7 @@ from tedana import combine
 
 
 def test__combine_t2s():
-    """
-    Test tedana.combine._combine_t2s
-    """
+    """Test tedana.combine._combine_t2s."""
     np.random.seed(0)
     n_voxels, n_echos, n_trs = 20, 3, 10
     data = np.random.random((n_voxels, n_echos, n_trs))
@@ -28,9 +24,7 @@ def test__combine_t2s():
 
 
 def test__combine_paid():
-    """
-    Test tedana.combine._combine_paid
-    """
+    """Test tedana.combine._combine_paid."""
     np.random.seed(0)
     n_voxels, n_echos, n_trs = 20, 3, 10
     data = np.random.random((n_voxels, n_echos, n_trs))
@@ -40,9 +34,7 @@ def test__combine_paid():
 
 
 def test_make_optcom():
-    """
-    Test tedana.combine.make_optcom
-    """
+    """Test tedana.combine.make_optcom."""
     np.random.seed(0)
     n_voxels, n_echos, n_trs = 20, 3, 10
     n_mask = 5

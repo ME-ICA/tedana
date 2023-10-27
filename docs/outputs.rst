@@ -23,7 +23,7 @@ future processing. ``tedana`` allows for multiple file naming conventions. The k
 and naming options for each convention that can be set using the ``--convention`` option
 are in `outputs.json`_. The output of ``tedana`` also includes a file called
 ``registry.json`` or ``desc-tedana_registry.json`` that includes the keys and the matching
-file names for the output. The table below lists both these keys and the default 
+file names for the output. The table below lists both these keys and the default
 "BIDS Derivatives" file names.
 
 .. _outputs.json: https://github.com/ME-ICA/tedana/blob/main/tedana/resources/config/outputs.json
@@ -399,7 +399,7 @@ component (selected in the summary view, see below). It includes three different
   (selected in the summary view). The x-axis represents time (in units of TR and seconds),
   and the y-axis represents signal levels (in arbitrary units).
   Finally, the color of the trace informs us about the component classification status.
-  Plausibly BOLD-weighted components might have responses that follow the task design, 
+  Plausibly BOLD-weighted components might have responses that follow the task design,
   while components that are less likely to be BOLD-weighted might have large signal
   spikes or slow drifts. If a high variance component time series initially has a few
   very high magnitude volumes, that is a sign non-steady state volumes were not removed

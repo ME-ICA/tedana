@@ -1,6 +1,4 @@
-"""
-Run the reclassification workflow for a previous tedana run
-"""
+"""Run the reclassification workflow for a previous tedana run."""
 import argparse
 import datetime
 import logging
@@ -26,14 +24,12 @@ RepLGR = logging.getLogger("REPORT")
 
 
 def _get_parser():
-    """
-    Parses command line inputs for tedana
+    """Parse command line inputs for ica_reclassify.
 
     Returns
     -------
     parser.parse_args() : argparse dict
     """
-
     from tedana import __version__
 
     verstr = f"ica_reclassify v{__version__}"
@@ -153,7 +149,7 @@ def _get_parser():
 
 
 def _main(argv=None):
-    """ica_reclassify entry point"""
+    """Run the ica_reclassify workflow."""
     reclassify_command = "ica_reclassify " + " ".join(sys.argv[1:])
 
     args = _get_parser().parse_args(argv)
@@ -180,17 +176,17 @@ def _main(argv=None):
 
 def _parse_manual_list(manual_list):
     """
-    Parse the list of components to accept or reject into a list of integers
+    Parse the list of components to accept or reject into a list of integers.
 
     Parameters
     ----------
-    manual_list: :obj:`str` :obj:`list[str]` or [] or None
+    manual_list : :obj:`str` :obj:`list[str]` or [] or None
         String of integers separated by spaces, commas, or tabs
         A file name for a file that contains integers
 
     Returns
     -------
-    manual_nums: :obj:`list[int]`
+    manual_nums : :obj:`list[int]`
         A list of integers or an empty list.
 
     Note
@@ -253,11 +249,11 @@ def ica_reclassify_workflow(
 
     Parameters
     ----------
-    registry: :obj:`str`
+    registry : :obj:`str`
         The previously run registry as a JSON file.
-    accept: :obj: `list`
+    accept : :obj: `list`
         A list of integer values of components to accept in this workflow.
-    reject: :obj: `list`
+    reject : :obj: `list`
         A list of integer values of components to reject in this workflow.
     out_dir : :obj:`str`, optional
         Output directory.
@@ -469,8 +465,7 @@ def ica_reclassify_workflow(
             "series."
         )
 
-    n_vols = data_oc.shape[3]
-    img_t_r = io_generator.reference_img.header.get_zooms()[-1]
+    # img_t_r = io_generator.reference_img.header.get_zooms()[-1]
     adaptive_mask = utils.reshape_niimg(adaptive_mask)
     mask_denoise = adaptive_mask >= 1
     data_oc = utils.reshape_niimg(data_oc)
@@ -486,7 +481,6 @@ def ica_reclassify_workflow(
         mask=mask_denoise,
         comptable=comptable,
         mmix=mmix,
-        n_vols=n_vols,
         io_generator=io_generator,
     )
 
@@ -568,7 +562,7 @@ def ica_reclassify_workflow(
         )
 
         LGR.info("Generating dynamic report")
-        reporting.generate_report(io_generator, tr=img_t_r)
+        reporting.generate_report(io_generator)
 
     io_generator.save_self()
     LGR.info("Workflow completed")

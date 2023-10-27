@@ -1,6 +1,4 @@
-"""
-Estimate T2 and S0, and optimally combine data across TEs.
-"""
+"""Estimate T2 and S0, and optimally combine data across TEs."""
 import argparse
 import logging
 import os
@@ -18,8 +16,7 @@ RepLGR = logging.getLogger("REPORT")
 
 
 def _get_parser():
-    """
-    Parses command line inputs for tedana
+    """Parse command line inputs for t2smap.
 
     Returns
     -------
@@ -233,7 +230,7 @@ def t2smap_workflow(
 
     utils.setup_loggers(quiet=quiet, debug=debug)
 
-    LGR.info("Using output directory: {}".format(out_dir))
+    LGR.info(f"Using output directory: {out_dir}")
 
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
@@ -243,7 +240,7 @@ def t2smap_workflow(
     if isinstance(data, str):
         data = [data]
 
-    LGR.info("Loading input data: {}".format([f for f in data]))
+    LGR.info(f"Loading input data: {[f for f in data]}")
     catd, ref_img = io.load_data(data, n_echos=n_echos)
     io_generator = io.OutputGenerator(
         ref_img,
@@ -254,7 +251,7 @@ def t2smap_workflow(
         make_figures=False,
     )
     n_samp, n_echos, n_vols = catd.shape
-    LGR.debug("Resulting data shape: {}".format(catd.shape))
+    LGR.debug(f"Resulting data shape: {catd.shape}")
 
     if mask is None:
         LGR.info("Computing adaptive mask")
@@ -276,15 +273,15 @@ def t2smap_workflow(
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
     cap_t2s = stats.scoreatpercentile(t2s_full.flatten(), 99.5, interpolation_method="lower")
     cap_t2s_sec = utils.millisec2sec(cap_t2s * 10.0)
-    LGR.debug("Setting cap on T2* map at {:.5f}s".format(cap_t2s_sec))
+    LGR.debug(f"Setting cap on T2* map at {cap_t2s_sec:.5f}s")
     t2s_full[t2s_full > cap_t2s * 10] = cap_t2s
 
     LGR.info("Computing optimal combination")
     # optimally combine data
-    OCcatd = combine.make_optcom(catd, tes, masksum, t2s=t2s_full, combmode=combmode)
+    data_oc = combine.make_optcom(catd, tes, masksum, t2s=t2s_full, combmode=combmode)
 
     # clean up numerical errors
-    for arr in (OCcatd, s0_full, t2s_full):
+    for arr in (data_oc, s0_full, t2s_full):
         np.nan_to_num(arr, copy=False)
 
     s0_full[s0_full < 0] = 0
@@ -303,7 +300,7 @@ def t2smap_workflow(
         s0_limited,
         "limited s0 img",
     )
-    io_generator.save_file(OCcatd, "combined img")
+    io_generator.save_file(data_oc, "combined img")
 
     # Write out BIDS-compatible description file
     derivative_metadata = {
@@ -330,7 +327,7 @@ def t2smap_workflow(
 
 
 def _main(argv=None):
-    """T2smap entry point"""
+    """Run the t2smap workflow."""
     options = _get_parser().parse_args(argv)
     kwargs = vars(options)
     n_threads = kwargs.pop("n_threads")

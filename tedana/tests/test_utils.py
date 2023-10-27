@@ -1,6 +1,4 @@
-"""
-Tests for tedana.utils
-"""
+"""Tests for tedana.utils."""
 
 import random
 from os.path import dirname
@@ -14,7 +12,7 @@ from tedana import io, utils
 
 rs = np.random.RandomState(1234)
 datadir = pjoin(dirname(__file__), "data")
-fnames = [pjoin(datadir, "echo{}.nii.gz".format(n)) for n in range(1, 4)]
+fnames = [pjoin(datadir, f"echo{n}.nii.gz") for n in range(1, 4)]
 tes = ["14.5", "38.5", "62.5"]
 
 
@@ -106,9 +104,11 @@ def test_make_adaptive_mask():
 
 def test_smoke_reshape_niimg():
     """
-    ensure that reshape_niimg returns reasonable objects with random inputs
-    in the correct format
-    Note: reshape_niimg could take in 3D or 4D array
+    Ensure that reshape_niimg returns reasonable objects with random inputs.
+
+    in the correct format.
+
+    Note: reshape_niimg could take in 3D or 4D array.
     """
     data_3d = np.random.random((100, 5, 20))
     data_4d = np.random.random((100, 5, 20, 50))
@@ -125,9 +125,11 @@ def test_smoke_reshape_niimg():
 
 def test_smoke_make_adaptive_mask():
     """
-    ensure that make_adaptive_mask returns reasonable objects with random inputs
-    in the correct format
-    Note: make_adaptive_mask has optional paramters - mask and getsum
+    Ensure that make_adaptive_mask returns reasonable objects with random inputs.
+
+    in the correct format.
+
+    Note: make_adaptive_mask has optional paramters - mask and getsum.
     """
     n_samples = 100
     n_echos = 5
@@ -142,9 +144,11 @@ def test_smoke_make_adaptive_mask():
 
 def test_smoke_unmask():
     """
-    ensure that unmask returns reasonable objects with random inputs
-    in the correct format
-    Note: unmask could take in 1D or 2D or 3D arrays
+    Ensure that unmask returns reasonable objects with random inputs.
+
+    in the correct format.
+
+    Note: unmask could take in 1D or 2D or 3D arrays.
     """
     data_1d = np.random.random((100))
     data_2d = np.random.random((100, 5))
@@ -158,9 +162,11 @@ def test_smoke_unmask():
 
 def test_smoke_dice():
     """
-    ensure that dice returns reasonable objects with random inputs
-    in the correct format
-    Note: two arrays must be in the same length
+    Ensure that dice returns reasonable objects with random inputs.
+
+    in the correct format.
+
+    Note: two arrays must be in the same length.
     """
     arr1 = np.random.random((100))
     arr2 = np.random.random((100))
@@ -170,8 +176,9 @@ def test_smoke_dice():
 
 def test_smoke_andb():
     """
-    ensure that andb returns reasonable objects with random inputs
-    in the correct format
+    Ensure that andb returns reasonable objects with random inputs.
+
+    in the correct format.
     """
     arr = np.random.random((100, 10)).tolist()  # 2D list of "arrays"
 
@@ -180,8 +187,9 @@ def test_smoke_andb():
 
 def test_smoke_get_spectrum():
     """
-    ensure that get_spectrum returns reasonable objects with random inputs
-    in the correct format
+    Ensure that get_spectrum returns reasonable objects with random inputs.
+
+    in the correct format.
     """
     data = np.random.random((100))
     tr = random.random()
@@ -193,9 +201,11 @@ def test_smoke_get_spectrum():
 
 def test_smoke_threshold_map():
     """
-    ensure that threshold_map returns reasonable objects with random inputs
-    in the correct format
-    Note: using 3D array as img, some parameters are optional and are all tested
+    Ensure that threshold_map returns reasonable objects with random inputs.
+
+    in the correct format.
+
+    Note: using 3D array as img, some parameters are optional and are all tested.
     """
     img = np.random.random((10, 10, 10))  # 3D array must of of size S
     min_cluster_size = random.randint(1, 100)
@@ -214,17 +224,13 @@ def test_smoke_threshold_map():
 
 
 def test_sec2millisec():
-    """
-    Ensure that sec2millisec returns 1000x the input values.
-    """
+    """Ensure that sec2millisec returns 1000x the input values."""
     assert utils.sec2millisec(5) == 5000
     assert utils.sec2millisec(np.array([5])) == np.array([5000])
 
 
 def test_millisec2sec():
-    """
-    Ensure that millisec2sec returns 1/1000x the input values.
-    """
+    """Ensure that millisec2sec returns 1/1000x the input values."""
     assert utils.millisec2sec(5000) == 5
     assert utils.millisec2sec(np.array([5000])) == np.array([5])
 

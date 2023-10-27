@@ -1,6 +1,4 @@
-"""
-Tests for t2smap.
-"""
+"""Tests for t2smap."""
 
 import os.path as op
 from shutil import rmtree
@@ -14,7 +12,8 @@ from tedana.tests.utils import get_test_data_path
 class TestT2smap:
     def test_basic_t2smap1(self):
         """
-        A very simple test, to confirm that t2smap creates output
+        A very simple test, to confirm that t2smap creates output.
+
         files.
         """
         data_dir = get_test_data_path()
@@ -43,7 +42,8 @@ class TestT2smap:
 
     def test_basic_t2smap2(self):
         """
-        A very simple test, to confirm that t2smap creates output
+        A very simple test, to confirm that t2smap creates output.
+
         files when fitmode is set to ts.
         """
         data_dir = get_test_data_path()
@@ -72,7 +72,8 @@ class TestT2smap:
 
     def test_basic_t2smap3(self):
         """
-        A very simple test, to confirm that t2smap creates output
+        A very simple test, to confirm that t2smap creates output.
+
         files when combmode is set to 'paid'.
         """
         data_dir = get_test_data_path()
@@ -101,7 +102,8 @@ class TestT2smap:
 
     def test_basic_t2smap4(self):
         """
-        A very simple test, to confirm that t2smap creates output
+        A very simple test, to confirm that t2smap creates output.
+
         files when combmode is set to 'paid' and fitmode is set to 'ts'.
         """
         data_dir = get_test_data_path()
@@ -129,9 +131,7 @@ class TestT2smap:
         assert len(img.shape) == 4
 
     def test_t2smap_cli(self):
-        """
-        Run test_basic_t2smap1, but use the CLI method.
-        """
+        """Run test_basic_t2smap1, but use the CLI method."""
         data_dir = get_test_data_path()
         data = [
             op.join(data_dir, "echo1.nii.gz"),
