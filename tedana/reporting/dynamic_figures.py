@@ -1,3 +1,4 @@
+"""Dynamic figures for tedana report."""
 from math import pi
 
 import numpy as np
@@ -27,7 +28,7 @@ tap_callback_jscode = """
 
         // Image Below Plots
         div.text = ""
-        var line = "<span><img src='./figures/comp_"+selected_padded_forIMG+".png'" +
+        var line = "<span><img src='./figures/"+prefix+"comp_"+selected_padded_forIMG+".png'" +
             " alt='Component Map'><span>\\n";
         console.log('Linea: ' + line)
         var text = div.text.concat(line);
@@ -53,16 +54,16 @@ tap_callback_jscode = """
 
 def _create_data_struct(comptable_path, color_mapping=color_mapping):
     """
-    Create Bokeh ColumnDataSource with all info dynamic plots need
+    Create Bokeh ColumnDataSource with all info dynamic plots need.
 
     Parameters
     ----------
-    comptable: str
+    comptable : str
         file path to component table, JSON format
 
     Returns
     -------
-    cds: bokeh.models.ColumnDataSource
+    cds : bokeh.models.ColumnDataSource
         Data structure with all the fields to plot or hover over
     """
     unused_cols = [
@@ -134,20 +135,20 @@ def _create_data_struct(comptable_path, color_mapping=color_mapping):
 
 def _create_kr_plt(comptable_cds, kappa_elbow=None, rho_elbow=None):
     """
-    Create Dymamic Kappa/Rho Scatter Plot
+    Create Dymamic Kappa/Rho Scatter Plot.
 
     Parameters
     ----------
-    comptable_cds: bokeh.models.ColumnDataSource
+    comptable_cds : bokeh.models.ColumnDataSource
         Data structure containing a limited set of columns from the comp_table
 
-    kappa_elbow, rho_elbow: :obj:`float` :obj:`int`
+    kappa_elbow, rho_elbow : :obj:`float` :obj:`int`
         The elbow thresholds for kappa and rho to display on the plots
         Defaults=None
 
     Returns
     -------
-    fig: bokeh.plotting.figure.Figure
+    fig : bokeh.plotting.figure.Figure
         Bokeh scatter plot of kappa vs. rho
     """
     # Create Panel for the Kappa - Rho Scatter
@@ -234,35 +235,35 @@ def _create_sorted_plt(
     comptable_cds, n_comps, x_var, y_var, title=None, x_label=None, y_label=None, elbow=None
 ):
     """
-    Create dynamic sorted plots
+    Create dynamic sorted plots.
 
     Parameters
     ----------
-    comptable_ds: bokeh.models.ColumnDataSource
+    comptable_ds : bokeh.models.ColumnDataSource
         Data structure containing a limited set of columns from the comp_table
 
-    x_var: str
+    x_var : str
         Name of variable for the x-axis
 
-    y_var: str
+    y_var : str
         Name of variable for the y-axis
 
-    title: str
+    title : str
         Plot title
 
-    x_label: str
+    x_label : str
         X-axis label
 
-    y_label: str
+    y_label : str
         Y-axis label
 
-    elbow: :obj:`float` :obj:`int`
+    elbow : :obj:`float` :obj:`int`
         The elbow threshold for kappa or rho to display on the plot
         Default=None
 
     Returns
     -------
-    fig: bokeh.plotting.figure.Figure
+    fig : bokeh.plotting.figure.Figure
         Bokeh plot of components ranked by a given feature
     """
     hovertool = models.HoverTool(
@@ -316,7 +317,7 @@ def _create_sorted_plt(
     return fig
 
 
-def _create_varexp_pie_plt(comptable_cds, n_comps):
+def _create_varexp_pie_plt(comptable_cds):
     fig = plotting.figure(
         plot_width=400,
         plot_height=400,
@@ -353,21 +354,21 @@ def _create_varexp_pie_plt(comptable_cds, n_comps):
 
 def _tap_callback(comptable_cds, div_content, io_generator):
     """
-    Javacript function to animate tap events and show component info on the right
+    Javacript function to animate tap events and show component info on the right.
 
     Parameters
     ----------
-    CDS: bokeh.models.ColumnDataSource
+    CDS : bokeh.models.ColumnDataSource
         Data structure containing a limited set of columns from the comp_table
-    div: bokeh.models.Div
+    div : bokeh.models.Div
         Target Div element where component images will be loaded
 
-    io_generator: tedana.io.OutputGenerator
+    io_generator : tedana.io.OutputGenerator
         Output generating object for this workflow
 
     Returns
     -------
-    CustomJS: bokeh.models.CustomJS
+    CustomJS : bokeh.models.CustomJS
         Javascript function that adds the tapping functionality
     """
     return models.CustomJS(
@@ -375,6 +376,7 @@ def _tap_callback(comptable_cds, div_content, io_generator):
             source_comp_table=comptable_cds,
             div=div_content,
             outdir=io_generator.out_dir,
+            prefix=io_generator.prefix,
         ),
         code=tap_callback_jscode,
     )
@@ -396,7 +398,7 @@ def _link_figures(fig, comptable_ds, div_content, io_generator):
     div_content : bokeh.models.Div
         Div element for additional HTML content.
 
-    io_generator: `tedana.io.OutputGenerator`
+    io_generator : `tedana.io.OutputGenerator`
         Output generating object for this workflow
 
     Returns
@@ -404,7 +406,6 @@ def _link_figures(fig, comptable_ds, div_content, io_generator):
     fig : bokeh.plotting.figure
         Same as input figure, but with a linked method to
         its Tap event.
-
     """
     fig.js_on_event(events.Tap, _tap_callback(comptable_ds, div_content, io_generator))
     return fig

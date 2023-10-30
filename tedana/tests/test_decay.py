@@ -1,6 +1,4 @@
-"""
-Tests for tedana.decay
-"""
+"""Tests for tedana.decay."""
 
 import os.path as op
 
@@ -16,7 +14,7 @@ from tedana.tests.utils import get_test_data_path
 @pytest.fixture(scope="module")
 def testdata1():
     tes = np.array([14.5, 38.5, 62.5])
-    in_files = [op.join(get_test_data_path(), "echo{0}.nii.gz".format(i + 1)) for i in range(3)]
+    in_files = [op.join(get_test_data_path(), f"echo{i + 1}.nii.gz") for i in range(3)]
     data, _ = io.load_data(in_files, n_echos=len(tes))
     mask, adaptive_mask = utils.make_adaptive_mask(data, getsum=True)
     fittype = "loglin"
@@ -31,10 +29,8 @@ def testdata1():
 
 
 def test_fit_decay(testdata1):
-    """
-    fit_decay should return data in (samples,) shape.
-    """
-    t2sv, s0v, t2svG, s0vG = me.fit_decay(
+    """Fit_decay should return data in (samples,) shape."""
+    t2sv, s0v, t2svg, s0vg = me.fit_decay(
         testdata1["data"],
         testdata1["tes"],
         testdata1["mask"],
@@ -43,15 +39,13 @@ def test_fit_decay(testdata1):
     )
     assert t2sv.ndim == 1
     assert s0v.ndim == 1
-    assert t2svG.ndim == 1
-    assert s0vG.ndim == 1
+    assert t2svg.ndim == 1
+    assert s0vg.ndim == 1
 
 
 def test_fit_decay_ts(testdata1):
-    """
-    fit_decay_ts should return data in samples x time shape.
-    """
-    t2sv, s0v, t2svG, s0vG = me.fit_decay_ts(
+    """Fit_decay_ts should return data in samples x time shape."""
+    t2sv, s0v, t2svg, s0vg = me.fit_decay_ts(
         testdata1["data"],
         testdata1["tes"],
         testdata1["mask"],
@@ -60,13 +54,14 @@ def test_fit_decay_ts(testdata1):
     )
     assert t2sv.ndim == 2
     assert s0v.ndim == 2
-    assert t2svG.ndim == 2
-    assert s0vG.ndim == 2
+    assert t2svg.ndim == 2
+    assert s0vg.ndim == 2
 
 
 def test__apply_t2s_floor():
     """
-    _apply_t2s_floor applies a floor to T2* values to prevent a ZeroDivisionError during
+    _apply_t2s_floor applies a floor to T2* values to prevent a ZeroDivisionError during.
+
     optimal combination.
     """
     n_voxels, n_echos, n_trs = 100, 5, 25
@@ -93,8 +88,10 @@ def test__apply_t2s_floor():
 
 def test_smoke_fit_decay():
     """
-    test_smoke_fit_decay tests that the function fit_decay returns reasonable
+    Test_smoke_fit_decay tests that the function fit_decay returns reasonable.
+
     objects with semi-random inputs in the correct format.
+
     A mask with at least some "good" voxels and an adaptive mask where all
     good voxels have at least two good echoes are generated to ensure that
     the decay-fitting function has valid voxels on which to run.
@@ -119,9 +116,11 @@ def test_smoke_fit_decay():
 
 def test_smoke_fit_decay_curvefit():
     """
-    test_smoke_fit_decay tests that the function fit_decay returns reasonable
-    objects with random inputs in the correct format when using the direct
-    monoexponetial approach
+    Test_smoke_fit_decay tests that the function fit_decay returns reasonable.
+
+    objects with random inputs in the correct format when using the direct.
+
+    monoexponetial approach.
     """
     n_samples = 100
     n_echos = 5
@@ -143,8 +142,9 @@ def test_smoke_fit_decay_curvefit():
 
 def test_smoke_fit_decay_ts():
     """
-    test_smoke_fit_decay_ts tests that the function fit_decay_ts returns reasonable
-    objects with random inputs in the correct format
+    Test_smoke_fit_decay_ts tests that the function fit_decay_ts returns reasonable.
+
+    objects with random inputs in the correct format.
     """
     n_samples = 100
     n_echos = 5
@@ -166,9 +166,11 @@ def test_smoke_fit_decay_ts():
 
 def test_smoke_fit_decay_curvefit_ts():
     """
-    test_smoke_fit_decay_ts tests that the function fit_decay_ts returns reasonable
-    objects with random inputs in the correct format when using the direct
-    monoexponetial approach
+    Test_smoke_fit_decay_ts tests that the function fit_decay_ts returns reasonable.
+
+    objects with random inputs in the correct format when using the direct.
+
+    monoexponetial approach.
     """
     n_samples = 100
     n_echos = 5
