@@ -237,8 +237,7 @@ def test_validate_tree_fails():
     """
     Tests to make sure validate_tree fails for invalid trees.
 
-    Tests ../resources/decision_trees/invalid*.json and.
-
+    Tests ../resources/decision_trees/invalid*.json and
     ./data/ComponentSelection/invalid*.json trees.
     """
 
