@@ -50,7 +50,7 @@ class CustomEncoder(json.JSONEncoder):
         if isinstance(obj, set):
             return list(obj)
 
-        return super(CustomEncoder, self).default(obj)
+        return super().default(obj)
 
 
 class OutputGenerator:
@@ -454,7 +454,7 @@ def load_json(path: str) -> dict:
     FileNotFoundError if the file does not exist
     IsADirectoryError if the path is a directory instead of a file
     """
-    with open(path, "r") as f:
+    with open(path) as f:
         try:
             data = json.load(f)
         except json.decoder.JSONDecodeError:
@@ -943,7 +943,7 @@ def fname_to_component_list(fname: str) -> List[int]:
         else:
             raise ValueError(f"Cannot determine a components column in file {fname}")
 
-    with open(fname, "r") as fp:
+    with open(fname) as fp:
         contents = fp.read()
         return str_to_component_list(contents)
 

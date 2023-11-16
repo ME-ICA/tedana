@@ -300,8 +300,8 @@ def test_are_only_necessary_metrics_used_warning():
     selector = component_selector.ComponentSelector("minimal", sample_comptable())
 
     # warning when an element of necessary_metrics was not in used_metrics
-    selector.tree["used_metrics"] = set(["A", "B", "C"])
-    selector.necessary_metrics = set(["B", "C", "D"])
+    selector.tree["used_metrics"] = {"A", "B", "C"}
+    selector.necessary_metrics = {"B", "C", "D"}
     selector.are_only_necessary_metrics_used()
 
 

@@ -523,7 +523,7 @@ def dec_variance_lessthan_thresholds(
     """
     outputs = {
         "decision_node_idx": selector.current_node_idx,
-        "used_metrics": set([var_metric]),
+        "used_metrics": {var_metric},
         "node_label": None,
         "n_true": None,
         "n_false": None,
@@ -647,7 +647,7 @@ def calc_median(
         "decision_node_idx": selector.current_node_idx,
         "node_label": None,
         label_name: None,
-        "used_metrics": set([metric_name]),
+        "used_metrics": {metric_name},
         "calc_cross_comp_metrics": [label_name],
     }
 
@@ -736,7 +736,7 @@ def calc_kappa_elbow(
         "decision_node_idx": selector.current_node_idx,
         "node_label": None,
         "n_echos": selector.n_echos,
-        "used_metrics": set(["kappa"]),
+        "used_metrics": {"kappa"},
         "calc_cross_comp_metrics": [
             "kappa_elbow_kundu",
             "kappa_allcomps_elbow",
@@ -874,7 +874,7 @@ def calc_rho_elbow(
             "rho_unclassified_elbow",
             "elbow_f05",
         ],
-        "used_metrics": set(["kappa", "rho", "variance explained"]),
+        "used_metrics": {"kappa", "rho", "variance explained"},
         elbow_name: None,
         "rho_allcomps_elbow": None,
         "rho_unclassified_elbow": None,
@@ -1124,8 +1124,8 @@ def dec_reclassify_high_var_comps(
     # predefine all outputs that should be logged
     outputs = {
         "decision_node_idx": selector.current_node_idx,
-        "used_metrics": set(["variance explained"]),
-        "used_cross_comp_metrics": set(["varex_upper_p"]),
+        "used_metrics": {"variance explained"},
+        "used_cross_comp_metrics": {"varex_upper_p"},
         "node_label": None,
         "n_true": None,
         "n_false": None,
@@ -1273,7 +1273,7 @@ def calc_varex_thresh(
         "node_label": None,
         varex_name: None,
         "num_highest_var_comps": num_highest_var_comps,
-        "used_metrics": set(["variance explained"]),
+        "used_metrics": {"variance explained"},
     }
     if (
         isinstance(percentile_thresh, (int, float))

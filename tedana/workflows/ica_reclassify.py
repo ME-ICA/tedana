@@ -518,7 +518,7 @@ def ica_reclassify_workflow(
     }
     io_generator.save_file(derivative_metadata, "data description json")
 
-    with open(repname, "r") as fo:
+    with open(repname) as fo:
         report = [line.rstrip() for line in fo.readlines()]
         report = " ".join(report)
     with open(repname, "w") as fo:

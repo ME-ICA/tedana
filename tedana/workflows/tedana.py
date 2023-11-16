@@ -525,7 +525,7 @@ def tedana_workflow(
     # check if TR is 0
     img_t_r = io_generator.reference_img.header.get_zooms()[-1]
     if img_t_r == 0:
-        raise IOError(
+        raise OSError(
             "Dataset has a TR of 0. This indicates incorrect"
             " header information. To correct this, we recommend"
             " using this snippet:"
@@ -543,7 +543,7 @@ def tedana_workflow(
             shutil.copyfile(mixm, mixing_name)
             shutil.copyfile(mixm, op.join(io_generator.out_dir, op.basename(mixm)))
     elif mixm is not None:
-        raise IOError("Argument 'mixm' must be an existing file.")
+        raise OSError("Argument 'mixm' must be an existing file.")
 
     if t2smap is not None and op.isfile(t2smap):
         t2smap_file = io_generator.get_name("t2star img")
@@ -552,7 +552,7 @@ def tedana_workflow(
         if t2smap != t2smap_file:
             shutil.copyfile(t2smap, t2smap_file)
     elif t2smap is not None:
-        raise IOError("Argument 't2smap' must be an existing file.")
+        raise OSError("Argument 't2smap' must be an existing file.")
 
     RepLGR.info(
         "TE-dependence analysis was performed on input data using the tedana workflow "
@@ -864,7 +864,7 @@ def tedana_workflow(
         "\\citep{dice1945measures,sorensen1948method}."
     )
 
-    with open(repname, "r") as fo:
+    with open(repname) as fo:
         report = [line.rstrip() for line in fo.readlines()]
         report = " ".join(report)
 

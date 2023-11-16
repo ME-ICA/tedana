@@ -67,7 +67,7 @@ def test__apply_t2s_floor():
     n_voxels, n_echos, n_trs = 100, 5, 25
     echo_times = np.array([2, 23, 54, 75, 96])
     me_data = np.random.random((n_voxels, n_echos, n_trs))
-    t2s = np.random.random((n_voxels)) * 1000
+    t2s = np.random.random(n_voxels) * 1000
     t2s[t2s < 1] = 1  # Crop at 1 ms to be safe
     t2s[0] = 0.001
 
@@ -100,7 +100,7 @@ def test_smoke_fit_decay():
     n_echos = 5
     n_times = 20
     data = np.random.random((n_samples, n_echos, n_times))
-    tes = np.random.random((n_echos)).tolist()
+    tes = np.random.random(n_echos).tolist()
     mask = np.ones(n_samples, dtype=int)
     mask[n_samples // 2 :] = 0
     adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
@@ -126,7 +126,7 @@ def test_smoke_fit_decay_curvefit():
     n_echos = 5
     n_times = 20
     data = np.random.random((n_samples, n_echos, n_times))
-    tes = np.random.random((n_echos)).tolist()
+    tes = np.random.random(n_echos).tolist()
     mask = np.ones(n_samples, dtype=int)
     mask[n_samples // 2 :] = 0
     adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
@@ -150,7 +150,7 @@ def test_smoke_fit_decay_ts():
     n_echos = 5
     n_times = 20
     data = np.random.random((n_samples, n_echos, n_times))
-    tes = np.random.random((n_echos)).tolist()
+    tes = np.random.random(n_echos).tolist()
     mask = np.ones(n_samples, dtype=int)
     mask[n_samples // 2 :] = 0
     adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
@@ -176,7 +176,7 @@ def test_smoke_fit_decay_curvefit_ts():
     n_echos = 5
     n_times = 20
     data = np.random.random((n_samples, n_echos, n_times))
-    tes = np.random.random((n_echos)).tolist()
+    tes = np.random.random(n_echos).tolist()
     mask = np.ones(n_samples, dtype=int)
     mask[n_samples // 2 :] = 0
     adaptive_mask = np.random.randint(2, n_echos, size=(n_samples)) * mask
