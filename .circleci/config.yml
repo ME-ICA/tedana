@@ -117,6 +117,74 @@ jobs:
           paths:
             - src/coverage/.coverage.py310
 
+  unittest_311:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py311-v1-{{ checksum "pyproject.toml" }}
+      - run:
+          name: Generate environment
+          command: |
+            apt-get update
+            apt-get install -yqq make
+            if [ ! -d /opt/conda/envs/tedana_py311 ]; then
+              conda create -yq -n tedana_py311 python=3.11
+              source activate tedana_py311
+              pip install .[tests]
+            fi
+      - run:
+          name: Running unit tests
+          command: |
+            source activate tedana_py311
+            make unittest
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py311
+      - save_cache:
+          key: conda-py311-v1-{{ checksum "pyproject.toml" }}
+          paths:
+            - /opt/conda/envs/tedana_py311
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - src/coverage/.coverage.py311
+
+  unittest_312:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py312-v1-{{ checksum "pyproject.toml" }}
+      - run:
+          name: Generate environment
+          command: |
+            apt-get update
+            apt-get install -yqq make
+            if [ ! -d /opt/conda/envs/tedana_py312 ]; then
+              conda create -yq -n tedana_py312 python=3.12
+              source activate tedana_py312
+              pip install .[tests]
+            fi
+      - run:
+          name: Running unit tests
+          command: |
+            source activate tedana_py312
+            make unittest
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py312
+      - save_cache:
+          key: conda-py312-v1-{{ checksum "pyproject.toml" }}
+          paths:
+            - /opt/conda/envs/tedana_py312
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - src/coverage/.coverage.py312
+
   style_check:
     docker:
       - image: continuumio/miniconda3
@@ -310,11 +378,15 @@ workflows:
             - makeenv_38
       - unittest_39
       - unittest_310
+      - unittest_311
+      - unittest_312
       - merge_coverage:
           requires:
             - unittest_38
             - unittest_39
             - unittest_310
+            - unittest_311
+            - unittest_312
             - three-echo
             - four-echo
             - five-echo
