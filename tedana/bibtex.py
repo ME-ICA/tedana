@@ -177,7 +177,7 @@ def get_description_references(description):
         A string containing BibTeX entries, limited only to the citations in the description.
     """
     bibtex_file = op.join(get_resource_path(), "references.bib")
-    with open(bibtex_file, "r") as fo:
+    with open(bibtex_file) as fo:
         bibtex_string = fo.read()
 
     braces_idx = find_braces(bibtex_string)

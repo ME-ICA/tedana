@@ -39,7 +39,7 @@ def test_make_optcom():
     n_voxels, n_echos, n_trs = 20, 3, 10
     n_mask = 5
     data = np.random.random((n_voxels, n_echos, n_trs))
-    mask = np.zeros((n_voxels)).astype(bool)
+    mask = np.zeros(n_voxels).astype(bool)
     mask[:n_mask] = True
     tes = np.array([10, 20, 30])  # E
 
@@ -49,7 +49,7 @@ def test_make_optcom():
     assert comb.shape == (n_voxels, n_trs)
 
     # Voxel-wise T2* estimates
-    t2s = np.random.random((n_voxels))
+    t2s = np.random.random(n_voxels)
     comb = combine.make_optcom(data, tes, mask, t2s=t2s, combmode="t2s")
     assert comb.shape == (n_voxels, n_trs)
 

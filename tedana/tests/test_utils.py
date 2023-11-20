@@ -147,7 +147,7 @@ def test_smoke_unmask():
 
     Note: unmask could take in 1D or 2D or 3D arrays.
     """
-    data_1d = np.random.random((100))
+    data_1d = np.random.random(100)
     data_2d = np.random.random((100, 5))
     data_3d = np.random.random((100, 5, 20))
     mask = np.random.randint(2, size=100)
@@ -164,8 +164,8 @@ def test_smoke_dice():
 
     Note: two arrays must be in the same length.
     """
-    arr1 = np.random.random((100))
-    arr2 = np.random.random((100))
+    arr1 = np.random.random(100)
+    arr2 = np.random.random(100)
 
     assert utils.dice(arr1, arr2) is not None
 
@@ -185,7 +185,7 @@ def test_smoke_get_spectrum():
     Ensure that get_spectrum returns reasonable objects with random inputs
     in the correct format.
     """
-    data = np.random.random((100))
+    data = np.random.random(100)
     tr = random.random()
 
     spectrum, freqs = utils.get_spectrum(data, tr)
