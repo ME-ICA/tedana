@@ -103,7 +103,7 @@ version-file = "tedana/_version.py"
 
 [tool.black]
 line-length = 99
-target-version = ['py37']
+target-version = ['py38']
 include = '\.pyi?$'
 exclude = '''
 
