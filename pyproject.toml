@@ -21,12 +21,14 @@ classifiers = [
 license = {file = "LICENSE"}
 requires-python = ">=3.8"
 dependencies = [
+    "bokeh",
     "mapca>=0.0.3",
     "matplotlib",
     "nibabel>=2.5.1",
     "nilearn>=0.7",
     "numpy>=1.16",
     "pandas>=2.0",
+    "pybtex-apa-style",
     "scikit-learn>=0.21",
     "scipy>=1.2.0",
     "threadpoolctl",
@@ -47,10 +49,6 @@ doc = [
     "sphinx-argparse",
     "sphinxcontrib-bibtex",
 ]
-reports = [
-    "bokeh",
-    "pybtex-apa-style",
-]
 
 tests = [
     "codecov",
@@ -70,7 +68,7 @@ tests = [
 ]
 
 # Aliases
-all = ["tedana[dev,doc,reports,tests]"]
+all = ["tedana[dev,doc,tests]"]
 
 [project.scripts]
 ica_reclassify = "tedana.workflows.ica_reclassify:_main"
