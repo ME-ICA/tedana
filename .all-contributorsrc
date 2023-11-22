@@ -276,6 +276,15 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "bpinsard",
+      "name": "Basile",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1155388?v=4",
+      "profile": "https://github.com/bpinsard",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 5,
