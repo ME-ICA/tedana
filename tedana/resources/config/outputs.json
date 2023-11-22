@@ -37,15 +37,7 @@
     },
     "denoised ts img": {
         "orig": "dn_ts_OC",
-        "bidsv1.5.0": "desc-optcomDenoised_bold"
-    },
-    "high kappa ts img": {
-        "orig": "hik_ts_OC",
-        "bidsv1.5.0": "desc-optcomAccepted_bold"
-    },
-    "low kappa ts img": {
-        "orig": "lowk_ts_OC",
-        "bidsv1.5.0": "desc-optcomRejected_bold"
+        "bidsv1.5.0": "desc-denoised_bold"
     },
     "limited t2star img": {
         "orig": "t2sv",
