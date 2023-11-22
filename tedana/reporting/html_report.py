@@ -15,7 +15,6 @@ from tedana.reporting import dynamic_figures as df
 
 LGR = logging.getLogger("GENERAL")
 
-from pybtex.database import parse_string
 from pybtex.plugin import find_plugin
 
 APA = find_plugin("pybtex.style.formatting", "apa")()
