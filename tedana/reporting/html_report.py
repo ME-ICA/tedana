@@ -8,7 +8,6 @@ from string import Template
 import pandas as pd
 from bokeh import __version__ as bokehversion
 from bokeh import embed, layouts, models
-from pybtex.database.input import bibtex
 
 from tedana import __version__
 from tedana.io import load_json
@@ -26,8 +25,8 @@ HTML = find_plugin("pybtex.backends", "html")()
 def _bib2html(bibliography):
     parser = bibtex.Parser()
     bibliography = parser.parse_file(bibliography)
-    formattedBib = APA.format_bibliography(bibliography)
-    return "<br>".join(entry.text.render(HTML) for entry in formattedBib)
+    formatted_bib = APA.format_bibliography(bibliography)
+    return "<br>".join(entry.text.render(HTML) for entry in formatted_bib)
 
 
 def _generate_buttons(out_dir, io_generator):
