@@ -8,12 +8,26 @@ from string import Template
 import pandas as pd
 from bokeh import __version__ as bokehversion
 from bokeh import embed, layouts, models
+from pybtex.database.input import bibtex
 
 from tedana import __version__
 from tedana.io import load_json
 from tedana.reporting import dynamic_figures as df
 
 LGR = logging.getLogger("GENERAL")
+
+from pybtex.database import parse_string
+from pybtex.plugin import find_plugin
+
+APA = find_plugin("pybtex.style.formatting", "apa")()
+HTML = find_plugin("pybtex.backends", "html")()
+
+
+def _bib2html(bibliography):
+    parser = bibtex.Parser()
+    bibliography = parser.parse_file(bibliography)
+    formattedBib = APA.format_bibliography(bibliography)
+    return "<br>".join(entry.text.render(HTML) for entry in formattedBib)
 
 
 def _generate_buttons(out_dir, io_generator):
@@ -84,6 +98,9 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
 
     # Initial carpet plot (default one)
     initial_carpet = f"./figures/{prefix}carpet_optcom.svg"
+
+    # Convert bibtex to html
+    references = _bib2html(references)
 
     body_template_name = "report_body_template.html"
     body_template_path = resource_path.joinpath(body_template_name)
@@ -273,8 +290,7 @@ def generate_report(io_generator):
     with open(opj(io_generator.out_dir, f"{io_generator.prefix}report.txt"), "r+") as f:
         about = f.read()
 
-    with open(opj(io_generator.out_dir, f"{io_generator.prefix}references.bib")) as f:
-        references = f.read()
+    references = opj(io_generator.out_dir, f"{io_generator.prefix}references.bib")
 
     # Read info table
     data_descr_path = io_generator.get_name("data description json")
