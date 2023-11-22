@@ -577,16 +577,18 @@ def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
     if len(acc) != 0:
         if echo != 0:
             fout = io_generator.save_file(hikts, "high kappa ts split img", echo=echo)
+            LGR.info(f"Writing high-Kappa time series: {fout}")
         elif io_generator.verbose:
             fout = io_generator.save_file(hikts, "high kappa ts img")
-        LGR.info(f"Writing high-Kappa time series: {fout}")
+            LGR.info(f"Writing high-Kappa time series: {fout}")
 
     if len(rej) != 0:
         if echo != 0:
             fout = io_generator.save_file(lowkts, "low kappa ts split img", echo=echo)
+            LGR.info(f"Writing low-Kappa time series: {fout}")
         elif io_generator.verbose:
             fout = io_generator.save_file(lowkts, "low kappa ts img")
-        LGR.info(f"Writing low-Kappa time series: {fout}")
+            LGR.info(f"Writing low-Kappa time series: {fout}")
 
     if echo != 0:
         fout = io_generator.save_file(dnts, "denoised ts split img", echo=echo)
