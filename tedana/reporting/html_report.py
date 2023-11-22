@@ -8,6 +8,7 @@ from string import Template
 import pandas as pd
 from bokeh import __version__ as bokehversion
 from bokeh import embed, layouts, models
+from pybtex.database.input import bibtex
 
 from tedana import __version__
 from tedana.io import load_json
