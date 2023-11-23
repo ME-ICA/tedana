@@ -239,7 +239,7 @@ def generate_report(io_generator):
         y_label="Rho",
         elbow=rho_elbow,
     )
-    varexp_pie_plot = df._create_varexp_pie_plt(comptable_cds)
+    varexp_pie_plot = df._create_varexp_pie_plt(comptable_cds, n_comps)
 
     # link all dynamic figures
     figs = [kappa_rho_plot, kappa_sorted_plot, rho_sorted_plot, varexp_pie_plot]
