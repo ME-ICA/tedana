@@ -887,9 +887,7 @@ def str_to_component_list(s: str) -> List[int]:
     """
 
     if not s:
-        LGR.warning(
-            "No components in manual reject! "
-        )
+        LGR.warning("No components in manual reject! ")
         return []
     
 
