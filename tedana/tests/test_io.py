@@ -155,7 +155,7 @@ def test_smoke_write_split_ts():
         os.remove(filename)
 
     io_generator.verbose = False
-    
+
     me.write_split_ts(data, mmix, mask, comptable, io_generator)
 
     # TODO: midk_ts.nii is never generated?
