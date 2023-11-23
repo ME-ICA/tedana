@@ -1,6 +1,4 @@
-"""
-Tests for t2smap.
-"""
+"""Tests for t2smap."""
 
 import os.path as op
 from shutil import rmtree
@@ -129,9 +127,7 @@ class TestT2smap:
         assert len(img.shape) == 4
 
     def test_t2smap_cli(self):
-        """
-        Run test_basic_t2smap1, but use the CLI method.
-        """
+        """Run test_basic_t2smap1, but use the CLI method."""
         data_dir = get_test_data_path()
         data = [
             op.join(data_dir, "echo1.nii.gz"),

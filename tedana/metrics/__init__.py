@@ -2,6 +2,6 @@
 # ex: set sts=4 ts=4 sw=4 et:
 """TE-dependence and TE-independence metrics."""
 
-from .collect import generate_metrics
+from tedana.metrics.collect import generate_metrics
 
 __all__ = ["generate_metrics"]

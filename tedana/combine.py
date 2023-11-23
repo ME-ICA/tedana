@@ -1,6 +1,4 @@
-"""
-Functions to optimally combine data across echoes.
-"""
+"""Functions to optimally combine data across echoes."""
 import logging
 
 import numpy as np
@@ -10,9 +8,9 @@ RepLGR = logging.getLogger("REPORT")
 
 
 def _combine_t2s(data, tes, ft2s, report=True):
-    """
-    Combine data across echoes using weighted averaging according to voxel-
-    (and sometimes volume-) wise estimates of T2*.
+    """Combine data across echoes using weighted averaging according to estimates of T2*.
+
+    The T2* estimates may be voxel- or voxel- and volume-wise.
 
     This method was proposed in :footcite:t:`posse1999enhancement`.
 
@@ -61,12 +59,10 @@ def _combine_t2s(data, tes, ft2s, report=True):
 
 
 def _combine_paid(data, tes, report=True):
-    """
-    Combine data across echoes using SNR/signal and TE via the
-    parallel-acquired inhomogeneity desensitized (PAID) ME-fMRI combination
-    method.
+    """Combine data across echoes using the PAID combination method.
 
-    This method was first proposed in :footcite:t:`poser2006bold`.
+    This method uses SNR/signal and TE via the parallel-acquired inhomogeneity desensitized (PAID)
+    ME-fMRI combination method :footcite:t:`poser2006bold`.
 
     Parameters
     ----------
@@ -101,8 +97,9 @@ def _combine_paid(data, tes, report=True):
     return combined
 
 
-def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s", verbose=True):
-    """
+def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s"):
+    r"""Optimally combine BOLD data across TEs.
+
     Optimally combine BOLD data across TEs, using only those echos with reliable signal
     across at least three echos. If the number of echos providing reliable signal is greater
     than three but less than the total number of collected echos, we assume that later
@@ -125,8 +122,6 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s", verbose=True
     combmode : {'t2s', 'paid'}, optional
         How to combine data. Either 'paid' or 't2s'. If 'paid', argument 't2s'
         is not required. Default is 't2s'.
-    verbose : :obj:`bool`, optional
-        Whether to print status updates. Default is True.
 
     Returns
     -------
@@ -142,8 +137,8 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s", verbose=True
     1.  Estimate voxel- and TE-specific weights based on estimated :math:`T_2^*`:
 
             .. math::
-                w(T_2^*)_n = \\frac{TE_n * exp(\\frac{-TE}\
-                {T_{2(est)}^*})}{\\sum TE_n * exp(\\frac{-TE}{T_{2(est)}^*})}
+                w(T_2^*)_n = \frac{TE_n * exp(\frac{-TE}\
+                {T_{2(est)}^*})}{\sum TE_n * exp(\frac{-TE}{T_{2(est)}^*})}
     2.  Perform weighted average per voxel and TR across TEs based on weights
         estimated in the previous step.
 
@@ -162,8 +157,7 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s", verbose=True
     if len(tes) != data.shape[1]:
         raise ValueError(
             "Number of echos provided does not match second "
-            "dimension of input data: {0} != "
-            "{1}".format(len(tes), data.shape[1])
+            f"dimension of input data: {len(tes)} != {data.shape[1]}"
         )
 
     if adaptive_mask.ndim != 1:
@@ -171,7 +165,7 @@ def make_optcom(data, tes, adaptive_mask, t2s=None, combmode="t2s", verbose=True
     elif adaptive_mask.shape[0] != data.shape[0]:
         raise ValueError(
             "Mask and data do not have same number of "
-            "voxels/samples: {0} != {1}".format(adaptive_mask.shape[0], data.shape[0])
+            f"voxels/samples: {adaptive_mask.shape[0]} != {data.shape[0]}"
         )
 
     if combmode not in ["t2s", "paid"]:

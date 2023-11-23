@@ -440,8 +440,25 @@ For single-echo EPI data, that excitation time would be the same regardless of t
 and the same is true when one is collecting multiple echoes after a single excitation pulse.
 Therefore, we suggest using the same slice timing for all echoes in an ME-EPI series.
 
+3. Apply spatial normalization and susceptibility distortion correction consistently across echoes
+==================================================================================================
 
-3. Perform distortion correction, spatial normalization, smoothing, and any rescaling or filtering **after** denoising
+One key feature of susceptibility distortion is that it is primarily a factor of readout pattern and
+total readout time, rather than echo time. This means that, for most multi-echo sequences, even though
+dropout will increase with echo time, distortion will not (at least not to a noticeable/meaningful extent).
+
+For this reason, if you are applying TOPUP-style (blip-up/blip-down) "field maps",
+we recommend using your first echo time, as this will exhibit the least dropout.
+If your first echo time is very short, and exhibits poor gray/white contrast, then a later echo time may
+be preferable. In any case, you should calculate the spatial transform from just one of your echoes and
+apply it across all of them.
+
+Similarly, if spatial normalization to a template is done, the spatial transform should be calculated
+once and the same transformation (ideally one transformation for motion correction, distortion correction,
+and spatial normalization) should be applied to all echoes.
+
+
+4. Perform smoothing, and any rescaling or filtering **after** denoising
 ======================================================================================================================
 
 Any step that will alter the relationship of signal magnitudes between echoes should occur after denoising and combining
@@ -452,31 +469,18 @@ and the subsequent calculation of voxelwise T2* values will be distorted or inco
 time point.
 
 .. note::
-    We are assuming that spatial normalization and distortion correction, particularly non-linear normalization methods
-    with higher order interpolation functions, are likely to distort the relationship between echoes while rigid body
-    motion correction would linearly alter each echo in a similar manner. This assumption has not yet been empirically
-    tested and an affine normalzation with bilinear interpolation may not distort the relationship between echoes.
-    Additionally, there are benefits to applying only one spatial transform to data rather than applying one spatial
-    transform for motion correction and a later transform for normalization and distortion correction. Our advice
-    against doing normalization and distortion correction is a conservative choice and we encourage additional
-    research to better understand how these steps can be applied before denoising.
-
-
-4. Apply susceptibility distortion correction consistently across echoes
-========================================================================
-
-One key feature of susceptibility distortion is that it is primarily a factor of readout pattern and total readout time, rather than echo time.
-This means that, for most multi-echo sequences, even though dropout will increase with echo time,
-distortion will not (at least not to a noticeable/meaningful extent).
-
-For this reason, if you are applying TOPUP-style (blip-up/blip-down) "field maps",
-we recommend using your first echo time, as this will exhibit the least dropout.
-If your first echo time is very short, and exhibits poor gray/white contrast, then a later echo time may be preferable.
-In any case, you should calculate the spatial transform from just one of your echoes and apply it across all of them.
-
+    Spatial normalization and distortion correction, particularly non-linear normalization methods
+    with higher order interpolation functions to regrid voxels in a new space, may distort the relationship between
+    echoes more than bilinear interpolation. This has the potential to distort the relationship between echoes and
+    there have been anecdotal cases where this might be an issue. Still, since serial spatial transforms spatially
+    smooth the data and most modern pipeline combine all spatial transforms into a single step, we recommend doing
+    these steps before running denoising. Particularly for data with high intensity heterogeneity between the surface
+    and center of the brain, we recommend checking if distoration correction and normalization adversely affect the
+    relationship between echoes.
 
 .. _fMRIPrep: https://fmriprep.readthedocs.io
 .. _afni_proc.py: https://afni.nimh.nih.gov/pub/dist/doc/program_help/afni_proc.py.html
+
 
 *****************
 General Resources
@@ -541,6 +545,11 @@ timeseries.
 For more details, see the `fmriprep workflows page`_ and :ref:`collecting fMRIPrepped data`.
 
 .. _fmriprep workflows page: https://fmriprep.readthedocs.io/en/stable/workflows.html
+
+`fmrwhy`_ runs BIDS-compatible fMRI analysis with SPM12 and supports multi-echo data,
+but it is no longer being actively maintained.
+
+.. _fmrwhy: https://fmrwhy.readthedocs.io
 
 Currently SPM and FSL do not natively support multi-echo fmri data processing.
 

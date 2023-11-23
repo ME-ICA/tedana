@@ -6,7 +6,6 @@ version: 2.1
 orbs:
   codecov: codecov/codecov@1.0.5
 jobs:
-
   makeenv_38:
     docker:
       - image: continuumio/miniconda3
@@ -26,7 +25,7 @@ jobs:
       - save_cache:
           key: conda-py38-v3-{{ checksum "pyproject.toml" }}
           paths:
-              - /opt/conda/envs/tedana_py38
+            - /opt/conda/envs/tedana_py38
 
   unittest_38:
     docker:
@@ -48,7 +47,7 @@ jobs:
       - persist_to_workspace:
           root: /tmp
           paths:
-              - src/coverage/.coverage.py38
+            - src/coverage/.coverage.py38
 
   unittest_39:
     docker:
@@ -78,11 +77,11 @@ jobs:
       - save_cache:
           key: conda-py39-v3-{{ checksum "pyproject.toml" }}
           paths:
-              - /opt/conda/envs/tedana_py39
+            - /opt/conda/envs/tedana_py39
       - persist_to_workspace:
           root: /tmp
           paths:
-              - src/coverage/.coverage.py39
+            - src/coverage/.coverage.py39
 
   unittest_310:
     docker:
@@ -112,11 +111,79 @@ jobs:
       - save_cache:
           key: conda-py310-v1-{{ checksum "pyproject.toml" }}
           paths:
-              - /opt/conda/envs/tedana_py310
+            - /opt/conda/envs/tedana_py310
       - persist_to_workspace:
           root: /tmp
           paths:
-              - src/coverage/.coverage.py310
+            - src/coverage/.coverage.py310
+
+  unittest_311:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py311-v1-{{ checksum "pyproject.toml" }}
+      - run:
+          name: Generate environment
+          command: |
+            apt-get update
+            apt-get install -yqq make
+            if [ ! -d /opt/conda/envs/tedana_py311 ]; then
+              conda create -yq -n tedana_py311 python=3.11
+              source activate tedana_py311
+              pip install .[tests]
+            fi
+      - run:
+          name: Running unit tests
+          command: |
+            source activate tedana_py311
+            make unittest
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py311
+      - save_cache:
+          key: conda-py311-v1-{{ checksum "pyproject.toml" }}
+          paths:
+            - /opt/conda/envs/tedana_py311
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - src/coverage/.coverage.py311
+
+  unittest_312:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py312-v1-{{ checksum "pyproject.toml" }}
+      - run:
+          name: Generate environment
+          command: |
+            apt-get update
+            apt-get install -yqq make
+            if [ ! -d /opt/conda/envs/tedana_py312 ]; then
+              conda create -yq -n tedana_py312 python=3.12
+              source activate tedana_py312
+              pip install .[tests]
+            fi
+      - run:
+          name: Running unit tests
+          command: |
+            source activate tedana_py312
+            make unittest
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py312
+      - save_cache:
+          key: conda-py312-v1-{{ checksum "pyproject.toml" }}
+          paths:
+            - /opt/conda/envs/tedana_py312
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - src/coverage/.coverage.py312
 
   style_check:
     docker:
@@ -153,11 +220,11 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.three-echo
       - store_artifacts:
-          path: /tmp/data
+          path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:
-              - src/coverage/.coverage.three-echo
+            - src/coverage/.coverage.three-echo
 
   four-echo:
     docker:
@@ -178,11 +245,11 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.four-echo
       - store_artifacts:
-          path: /tmp/data
+          path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:
-              - src/coverage/.coverage.four-echo
+            - src/coverage/.coverage.four-echo
 
   five-echo:
     docker:
@@ -203,11 +270,11 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.five-echo
       - store_artifacts:
-          path: /tmp/data
+          path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:
-              - src/coverage/.coverage.five-echo
+            - src/coverage/.coverage.five-echo
 
   reclassify:
     docker:
@@ -228,12 +295,11 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.reclassify
       - store_artifacts:
-          path: /tmp/data
+          path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:
-              - src/coverage/.coverage.reclassify
-
+            - src/coverage/.coverage.reclassify
 
   t2smap:
     docker:
@@ -254,11 +320,11 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.t2smap
       - store_artifacts:
-          path: /tmp/data
+          path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:
-              - src/coverage/.coverage.t2smap
+            - src/coverage/.coverage.t2smap
 
   merge_coverage:
     working_directory: /tmp/src/tedana
@@ -312,11 +378,15 @@ workflows:
             - makeenv_38
       - unittest_39
       - unittest_310
+      - unittest_311
+      - unittest_312
       - merge_coverage:
           requires:
             - unittest_38
             - unittest_39
             - unittest_310
+            - unittest_311
+            - unittest_312
             - three-echo
             - four-echo
             - five-echo
