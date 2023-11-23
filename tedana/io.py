@@ -890,7 +890,6 @@ def str_to_component_list(s: str) -> List[int]:
         LGR.warning("No components in manual reject! ")
         return []
     
-
     # Strip off newline at end in case we've been given a one-line file
     if s[-1] == "\n":
         s = s[:-1]
