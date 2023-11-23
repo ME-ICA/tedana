@@ -322,7 +322,7 @@ def _create_sorted_plt(
     return fig
 
 
-def _create_varexp_pie_plt(comptable_cds, n_comps):
+def _create_varexp_pie_plt(comptable_cds):
     from bokeh import models, plotting, transform
 
     fig = plotting.figure(
