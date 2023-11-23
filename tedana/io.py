@@ -11,6 +11,7 @@ import os.path as op
 from copy import deepcopy
 from string import Formatter
 from typing import List
+import warnings
 
 import nibabel as nib
 import numpy as np
@@ -887,7 +888,7 @@ def str_to_component_list(s: str) -> List[int]:
     """
 
     if not s:
-        LGR.warning("No components in manual reject! ")
+        LGR.warning("Component string is empty ")
         return []
     
     # Strip off newline at end in case we've been given a one-line file
@@ -939,7 +940,13 @@ def fname_to_component_list(fname: str) -> List[int]:
     csv file cannot be interpreted.
     """
     if fname[-3:] == "csv":
-        contents = pd.read_csv(fname)
+        try:
+            contents = pd.read_csv(fname)
+        except:
+            LGR.warning(f"{fname} is empty ")
+            breakpoint()
+            return []
+
         columns = contents.columns
         if len(columns) == 2 and "0" in columns:
             return contents["0"].tolist()
