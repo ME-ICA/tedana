@@ -953,10 +953,10 @@ def fname_to_component_list(fname: str) -> List[int]:
             return contents["Components"].tolist()
         else:
             raise ValueError(f"Cannot determine a components column in file {fname}")
-    
+
     with open(fname) as fp:
         contents = fp.read()
-        if len(contents)==0:
+        if len(contents) == 0:
             LGR.warning(f"{fname} is empty ")
         return str_to_component_list(contents)
 
