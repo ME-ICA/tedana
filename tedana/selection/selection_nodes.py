@@ -614,6 +614,42 @@ def dec_correlation_higherthan_thresholds(
     tag_if_true=None,
     tag_if_false=None,
 ):
+    """Change classifications for components with correlation>threshold.
+
+    Parameters
+    ----------
+    %(selector)s
+    %(tag_if_true)s
+    %(tag_if_false)s
+    %(decide_comps)s
+    regressors : :obj:`str`
+        The path to a tab separated file with the regressors to be used for
+        correlation. The number of columns in this file must match the number
+        of metrics in the metrics input
+    metrics : :obj:`list`
+        A list of strings that are the names that will appear in component_table
+        columns for the correlation with each regressor. The number of metrics
+        must match the number of columns in the regressors file
+    threshold : :obj:`float`
+        The threshold for which all components need to have higher correlation.
+        It can be a list of thresholds, one for each metric. Default=0.5
+    %(log_extra_info)s
+    %(log_extra_report)s
+    %(custom_node_label)s
+    %(only_used_metrics)s
+    %(tag_if_true)s
+    %(tag_if_false)s
+
+    Returns
+    -------
+    %(selector)s
+    %(used_metrics)s
+
+    Raises
+    ------
+    ValueError
+        _description_
+    """
     outputs = {
         "decision_node_idx": selector.current_node_idx,
         "used_metrics": metrics,
