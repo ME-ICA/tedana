@@ -940,7 +940,7 @@ def fname_to_component_list(fname: str) -> List[int]:
     if fname[-3:] == "csv":
         try:
             contents = pd.read_csv(fname)
-        except:
+        except Exception:
             LGR.warning(f"{fname} is empty ")
             return []
 
