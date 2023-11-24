@@ -263,6 +263,7 @@ def test_fname_to_component_list():
     os.remove(temp_txt_fname)
     assert result == [1, 1]
 
+
 def test_fname_to_component_list_empty_file():
     temp_csv_fname = os.path.join(data_dir, "test.csv")
     with open(temp_csv_fname, "w") as fp:
@@ -275,7 +276,7 @@ def test_fname_to_component_list_empty_file():
         pass
     result = me.fname_to_component_list(temp_txt_fname)
     os.remove(temp_txt_fname)
-    
+
     assert result == []
 
 

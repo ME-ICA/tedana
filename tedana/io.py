@@ -890,7 +890,7 @@ def str_to_component_list(s: str) -> List[int]:
     if not s:
         LGR.warning("Component string is empty ")
         return []
-    
+
     # Strip off newline at end in case we've been given a one-line file
     if s[-1] == "\n":
         s = s[:-1]
