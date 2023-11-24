@@ -674,6 +674,10 @@ def dec_correlation_higherthan_thresholds(
                 index=selector.component_table.loc[comps2use].index, dtype=float
             )
 
+            # take corresponding threshold if it is a list
+            if isinstance(threshold, list):
+                threshold = threshold[i]
+
             # loop through the comps2use and calculate the correlation
             for comp in comps2use:
                 comp_vals = selector.mmix[:, comp]
