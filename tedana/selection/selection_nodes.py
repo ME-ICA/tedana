@@ -599,6 +599,103 @@ def dec_variance_lessthan_thresholds(
 
 
 @fill_doc
+def dec_correlation_higherthan_thresholds(
+    selector,
+    if_true,
+    if_false,
+    decide_comps,
+    regressors,
+    var_metric="variance explained",
+    threshold=0.5,
+    log_extra_report="",
+    log_extra_info="",
+    custom_node_label="",
+    only_used_metrics=False,
+    tag_if_true=None,
+    tag_if_false=None,
+):
+    outputs = {
+        "decision_node_idx": selector.current_node_idx,
+        "used_metrics": {var_metric},
+        "node_label": None,
+        "n_true": None,
+        "n_false": None,
+    }
+
+    if only_used_metrics:
+        return outputs["used_metrics"]
+
+    function_name_idx = f"Step {selector.current_node_idx}: correlation_ht_thresholds"
+    if custom_node_label:
+        outputs["node_label"] = custom_node_label
+    else:
+        outputs[
+            "node_label"
+        ]  # = f"{var_metric}<{single_comp_threshold}. All variance<{all_comp_threshold}"
+
+    LGR.info(f"{function_name_idx}: {if_true} if {outputs['node_label']}, else {if_false}")
+    if log_extra_info:
+        LGR.info(f"{function_name_idx} {log_extra_info}")
+    if log_extra_report:
+        RepLGR.info(log_extra_report)
+
+    comps2use = selectcomps2use(selector, decide_comps)
+    confirm_metrics_exist(
+        selector.component_table, outputs["used_metrics"], function_name=function_name_idx
+    )
+
+    if not comps2use:
+        outputs["n_true"] = 0
+        outputs["n_false"] = 0
+        log_decision_tree_step(
+            function_name_idx,
+            comps2use,
+            decide_comps=decide_comps,
+            if_true=outputs["n_true"],
+            if_false=outputs["n_false"],
+        )
+    else:
+        # load the regressors
+        regressors_df = pd.read_csv(regressors, sep="\t", index_col=None, header=None)
+
+        decision_boolean = np.zeros(len(comps2use), dtype=bool)
+
+        # for every regressor (column in df), calculate the correlation with the components
+        for col in regressors_df.columns:
+            regressor = regressors_df[col].astype(float)
+
+            # loop through the comps2use and calculate the correlation
+            for comp in comps2use:
+                comp_vals = selector.mmix[:, comp]
+                decision_boolean[comp] = np.corrcoef(regressor, comp_vals)[0, 1] > threshold
+
+        (
+            selector,
+            outputs["n_true"],
+            outputs["n_false"],
+        ) = change_comptable_classifications(
+            selector,
+            if_true,
+            if_false,
+            decision_boolean,
+            tag_if_true=tag_if_true,
+            tag_if_false=tag_if_false,
+        )
+
+        log_decision_tree_step(
+            function_name_idx,
+            comps2use,
+            n_true=outputs["n_true"],
+            n_false=outputs["n_false"],
+            if_true=if_true,
+            if_false=if_false,
+        )
+
+    selector.tree["nodes"][selector.current_node_idx]["outputs"] = outputs
+    return selector
+
+
+@fill_doc
 def calc_median(
     selector,
     decide_comps,

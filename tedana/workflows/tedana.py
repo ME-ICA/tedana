@@ -692,7 +692,9 @@ def tedana_workflow(
                 "ICA",
                 metrics=required_metrics,
             )
-            ica_selector = selection.automatic_selection(comptable, n_echos, n_vols, tree=tree)
+            ica_selector = selection.automatic_selection(
+                comptable, n_echos, n_vols, tree=tree, mmix=mmix
+            )
             n_likely_bold_comps = ica_selector.n_likely_bold_comps
             if (n_restarts < maxrestart) and (n_likely_bold_comps == 0):
                 LGR.warning("No BOLD components found. Re-attempting ICA.")
@@ -741,6 +743,7 @@ def tedana_workflow(
             n_echos,
             n_vols,
             tree=tree,
+            mmix=mmix,
         )
 
     # TODO The ICA mixing matrix should be written out after it is created

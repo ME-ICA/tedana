@@ -8,7 +8,7 @@ LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
-def automatic_selection(component_table, n_echos, n_vols, tree="kundu"):
+def automatic_selection(component_table, n_echos, n_vols, tree="kundu", mmix=None):
     """Classify components based on component table and decision tree type.
 
     Parameters
@@ -17,10 +17,12 @@ def automatic_selection(component_table, n_echos, n_vols, tree="kundu"):
         The component table to classify
     n_echos : :obj:`int`
         The number of echoes in this dataset
+    n_vols : :obj:`int`
+        The number of volumes in this dataset
     tree : :obj:`str`
         The type of tree to use for the ComponentSelector object. Default="kundu"
-    verbose : :obj:`bool`
-        More verbose logging output if True. Default=False
+    mmix : :obj:`np.ndarray`
+        The mixing matrix of the ICA decomposition. Default=None
 
     Returns
     -------
@@ -67,7 +69,7 @@ def automatic_selection(component_table, n_echos, n_vols, tree="kundu"):
         "n_echos": n_echos,
         "n_vols": n_vols,
     }
-    selector = ComponentSelector(tree, component_table, cross_component_metrics=xcomp)
+    selector = ComponentSelector(tree, component_table, mmix=mmix, cross_component_metrics=xcomp)
     selector.select()
     selector.metadata = collect.get_metadata(selector.component_table)
 

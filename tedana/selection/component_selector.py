@@ -215,7 +215,9 @@ def validate_tree(tree):
 class ComponentSelector:
     """Load and classify components based on a specified ``tree``."""
 
-    def __init__(self, tree, component_table, cross_component_metrics={}, status_table=None):
+    def __init__(
+        self, tree, component_table, mmix=None, cross_component_metrics={}, status_table=None
+    ):
         """Initialize the class using the info specified in the json file ``tree``.
 
         Parameters
@@ -225,6 +227,8 @@ class ComponentSelector:
         component_table : (C x M) :obj:`pandas.DataFrame`
             Component metric table. One row for each component, with a column for
             each metric; the index should be the component number.
+        mmix : (M x M) :obj:`numpy.ndarray`
+            Mixing matrix of the ICA decomposition. Default=None.
         cross_component_metrics : :obj:`dict`
             Metrics that are each a single value calculated across components.
             Default is empty dictionary.
@@ -264,6 +268,7 @@ class ComponentSelector:
         ``selector = ComponentSelector(tree, comptable, n_echos=n_echos, n_vols=n_vols)``
         """
         self.tree_name = tree
+        self.mmix = mmix
 
         self.__dict__.update(cross_component_metrics)
         self.cross_component_metrics = cross_component_metrics
