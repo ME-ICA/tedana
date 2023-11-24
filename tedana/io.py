@@ -885,7 +885,6 @@ def str_to_component_list(s: str) -> List[int]:
     ------
     ValueError, if the string cannot be split by an allowed delimeter
     """
-
     if not s:
         LGR.warning("Component string is empty ")
         return []
