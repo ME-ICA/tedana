@@ -133,7 +133,8 @@ def data_for_testing_info(test_dataset=str):
 
 def download_test_data(osf_id, test_data_path):
     """
-    If current data is not already available, downloads tar.gz data
+    If current data is not already available, downloads tar.gz data.
+
     stored at `https://osf.io/osf_id/download`.
 
     and unpacks into `out_path`.
@@ -251,6 +252,14 @@ def test_integration_five_echo(skip_integration):
 
     # download data and run the test
     download_test_data(osf_id, test_data_path)
+
+    # copy regressors.tsv and minimal_regressor.json from the test data directory
+    # to the test_data_path directory
+    tedana_path = os.path.dirname(tedana_cli.__file__)
+    data_path = os.path.abspath(os.path.join(tedana_path, "../tests/data"))
+    shutil.copy(os.path.join(data_path, "regressors.tsv"), os.getcwd())
+    shutil.copy(os.path.join(data_path, "minimal_regressor.json"), test_data_path)
+
     prepend = f"{test_data_path}/p06.SBJ01_S09_Task11_e"
     suffix = ".sm.nii.gz"
     datalist = [prepend + str(i + 1) + suffix for i in range(5)]
@@ -263,6 +272,7 @@ def test_integration_five_echo(skip_integration):
         fittype="curvefit",
         fixed_seed=49,
         tedort=True,
+        tree=op.join(test_data_path, "minimal_regressor.json"),
         verbose=True,
         prefix="sub-01",
     )
@@ -275,6 +285,10 @@ def test_integration_five_echo(skip_integration):
     # compare the generated output files
     fn = resource_filename("tedana", "tests/data/nih_five_echo_outputs_verbose.txt")
     check_integration_outputs(fn, out_dir)
+
+    # remove regressors.tsv and minimal_regressor.json from the test_data_path directory
+    os.remove(os.path.join(os.getcwd(), "regressors.tsv"))
+    os.remove(os.path.join(test_data_path, "minimal_regressor.json"))
 
 
 def test_integration_four_echo(skip_integration):
