@@ -605,7 +605,7 @@ def dec_correlation_higherthan_thresholds(
     if_false,
     decide_comps,
     regressors,
-    var_metric="variance explained",
+    metrics,
     threshold=0.5,
     log_extra_report="",
     log_extra_info="",
@@ -616,10 +616,11 @@ def dec_correlation_higherthan_thresholds(
 ):
     outputs = {
         "decision_node_idx": selector.current_node_idx,
-        "used_metrics": {var_metric},
+        "used_metrics": metrics,
         "node_label": None,
         "n_true": None,
         "n_false": None,
+        "added_component_table_metrics": metrics,
     }
 
     if only_used_metrics:
@@ -629,9 +630,7 @@ def dec_correlation_higherthan_thresholds(
     if custom_node_label:
         outputs["node_label"] = custom_node_label
     else:
-        outputs[
-            "node_label"
-        ]  # = f"{var_metric}<{single_comp_threshold}. All variance<{all_comp_threshold}"
+        outputs["node_label"] = f"Correlation with regressors > {threshold}"
 
     LGR.info(f"{function_name_idx}: {if_true} if {outputs['node_label']}, else {if_false}")
     if log_extra_info:
@@ -640,9 +639,6 @@ def dec_correlation_higherthan_thresholds(
         RepLGR.info(log_extra_report)
 
     comps2use = selectcomps2use(selector, decide_comps)
-    confirm_metrics_exist(
-        selector.component_table, outputs["used_metrics"], function_name=function_name_idx
-    )
 
     if not comps2use:
         outputs["n_true"] = 0
@@ -658,16 +654,35 @@ def dec_correlation_higherthan_thresholds(
         # load the regressors
         regressors_df = pd.read_csv(regressors, sep="\t", index_col=None, header=None)
 
-        decision_boolean = np.zeros(len(comps2use), dtype=bool)
+        # create a boolean series of False to store the decision
+        decision_boolean = selector.component_table.loc[comps2use, "Component"] == "ICA"
+
+        # check that the number of metrics and the number of columns in the regressors
+        # df match. Raise an error if they don't
+        if len(metrics) != regressors_df.shape[1]:
+            raise ValueError(
+                f"{function_name_idx}: the number of metrics ({len(metrics)}) "
+                f"and the number of columns in the regressors file ({regressors_df.shape[1]}) "
+                "must match"
+            )
 
         # for every regressor (column in df), calculate the correlation with the components
-        for col in regressors_df.columns:
+        for i, col in enumerate(regressors_df.columns):
             regressor = regressors_df[col].astype(float)
+
+            corr_values = pd.Series(
+                index=selector.component_table.loc[comps2use].index, dtype=float
+            )
 
             # loop through the comps2use and calculate the correlation
             for comp in comps2use:
                 comp_vals = selector.mmix[:, comp]
-                decision_boolean[comp] = np.corrcoef(regressor, comp_vals)[0, 1] > threshold
+                corr_values[comp] = np.corrcoef(regressor, comp_vals)[0, 1]
+
+            decision_boolean = corr_values > threshold
+
+            metric_name = f"correlation with {metrics[i]}"
+            selector.component_table[metric_name] = corr_values
 
         (
             selector,
