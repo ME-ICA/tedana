@@ -11,7 +11,6 @@ import os.path as op
 from copy import deepcopy
 from string import Formatter
 from typing import List
-import warnings
 
 import nibabel as nib
 import numpy as np
