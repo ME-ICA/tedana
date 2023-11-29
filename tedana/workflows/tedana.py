@@ -33,6 +33,7 @@ from tedana.config import (
     DEFAULT_N_MAX_ITER,
     DEFAULT_N_MAX_RESTART,
     DEFAULT_N_ROBUST_RUNS,
+    DEFAULT_SEED
 )
 from tedana.stats import computefeats2
 from tedana.workflows.parser_utils import check_tedpca_value, is_valid_file
@@ -190,10 +191,11 @@ def _get_parser():
         help=(
             "Value used for random initialization of ICA "
             "algorithm. Set to an integer value for "
-            "reproducible ICA results (fastica/robustica). Set to -1 for "
-            "varying results across ICA (fastica/robustica) calls. "
+            "reproducible ICA results. Set to -1 for "
+            "varying results across ICA calls. This"
+            "applies to both fastica and robustica methods."
         ),
-        default=42,
+        default=DEFAULT_SEED,
     )
     optional.add_argument(
         "--n_robust_runs",
@@ -356,7 +358,7 @@ def tedana_workflow(
     ica_method=DEFAULT_ICA_METHOD,
     n_robust_runs=DEFAULT_N_ROBUST_RUNS,
     tedpca="aic",
-    fixed_seed=42,
+    fixed_seed=DEFAULT_SEED,
     maxit=DEFAULT_N_MAX_ITER,
     maxrestart=DEFAULT_N_MAX_RESTART,
     tedort=False,
