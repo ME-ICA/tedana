@@ -551,7 +551,8 @@ def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
         Output directory.
     echo : :obj: `int`, optional
         Echo number to generate filenames, used by some verbose
-        functions. Default 0.
+        functions. Currently this is only not 0 when
+        io_generator.verbose==True. Default 0.
 
     Returns
     -------
@@ -561,13 +562,23 @@ def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
     Generated Files
     ---------------
 
-    ============================    ============================================
-    Filename                        Content
-    ============================    ============================================
-    [prefix]Accepted_bold.nii.gz    High-Kappa time series.
-    [prefix]Rejected_bold.nii.gz    Low-Kappa time series.
-    [prefix]Denoised_bold.nii.gz    Denoised time series.
-    ============================    ============================================
+    =====================================    ============================================
+    Filename                                 Content
+    =====================================    ============================================
+    desc-optcomDenoised_bold.nii.gz          Denoised time series.
+
+    if io_generator.verbose==True
+    desc-optcomAccepted_bold.nii.gz          High-Kappa time series.
+    desc-optcomRejected_bold.nii.gz          Low-Kappa time series.
+
+    if echo>0
+    echo-[echo]_desc-Accepted_bold.nii.gz    High-Kappa timeseries for echo
+                                             number ``echo``.
+    echo-[echo]_desc-Rejected_bold.nii.gz    Low-Kappa timeseries for echo
+                                             number ``echo``.
+    echo-[echo]_desc-Denoised_bold.nii.gz    Denoised timeseries for echo
+                                             number ``echo``.
+    =====================================    ============================================
     """
     acc = comptable[comptable.classification == "accepted"].index.values
     rej = comptable[comptable.classification == "rejected"].index.values
@@ -624,19 +635,20 @@ def writeresults(ts, mask, comptable, mmix, io_generator):
     Generated Files
     ---------------
 
-    =========================================    =====================================
+    =========================================    ===========================================
     Filename                                     Content
-    =========================================    =====================================
-    desc-optcomAccepted_bold.nii.gz              High-Kappa time series.
-    desc-optcomRejected_bold.nii.gz              Low-Kappa time series.
+    =========================================    ===========================================
     desc-optcomDenoised_bold.nii.gz              Denoised time series.
+
+    desc-optcomAccepted_bold.nii.gz              High-Kappa time series. (only with verbose)
+    desc-optcomRejected_bold.nii.gz              Low-Kappa time series. (only with verbose)
     desc-ICA_components.nii.gz                   Spatial component maps for all
                                                  components.
     desc-ICAAccepted_components.nii.gz           Spatial component maps for accepted
                                                  components.
     desc-ICAAccepted_stat-z_components.nii.gz    Z-normalized spatial component maps
                                                  for accepted components.
-    =========================================    =====================================
+    =========================================    ===========================================
     """
     acc = comptable[comptable.classification == "accepted"].index.values
     write_split_ts(ts, mmix, mask, comptable, io_generator)
