@@ -170,6 +170,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="20%"><a href="https://github.com/manfredg"><img src="https://avatars.githubusercontent.com/u/1173430?v=4?s=100" width="100px;" alt="Manfred G Kitzbichler"/><br /><sub><b>Manfred G Kitzbichler</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=manfredg" title="Code">💻</a></td>
       <td align="center" valign="top" width="20%"><a href="https://github.com/giadaan"><img src="https://avatars.githubusercontent.com/u/118978909?v=4?s=100" width="100px;" alt="giadaan"/><br /><sub><b>giadaan</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=giadaan" title="Documentation">📖</a></td>
     </tr>
+    <tr>
+      <td align="center" valign="top" width="20%"><a href="https://github.com/effigies"><img src="https://avatars.githubusercontent.com/u/83442?v=4?s=100" width="100px;" alt="Chris Markiewicz"/><br /><sub><b>Chris Markiewicz</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=effigies" title="Code">💻</a></td>
+    </tr>
   </tbody>
 </table>
 
