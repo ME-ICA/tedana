@@ -1,6 +1,4 @@
-"""
-Run the "canonical" TE-Dependent ANAlysis workflow.
-"""
+"""Run the "canonical" TE-Dependent ANAlysis workflow."""
 import argparse
 import datetime
 import json
@@ -8,6 +6,7 @@ import logging
 import os
 import os.path as op
 import shutil
+import sys
 from glob import glob
 
 import numpy as np
@@ -29,6 +28,12 @@ from tedana import (
     utils,
 )
 from tedana.bibtex import get_description_references
+from tedana.config import (
+    DEFAULT_ICA_METHOD,
+    DEFAULT_N_MAX_ITER,
+    DEFAULT_N_MAX_RESTART,
+    DEFAULT_N_ROBUST_RUNS,
+)
 from tedana.stats import computefeats2
 from tedana.workflows.parser_utils import check_tedpca_value, is_valid_file
 
@@ -37,8 +42,7 @@ RepLGR = logging.getLogger("REPORT")
 
 
 def _get_parser():
-    """
-    Parses command line inputs for tedana
+    """Parse command line inputs for tedana.
 
     Returns
     -------
@@ -46,7 +50,7 @@ def _get_parser():
     """
     from tedana import __version__
 
-    verstr = "tedana v{}".format(__version__)
+    verstr = f"tedana v{__version__}"
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # Argument parser follow template provided by RalphyZ
     # https://stackoverflow.com/a/43456577
@@ -150,7 +154,6 @@ def _get_parser():
             "in which case the specificed number of components will be "
             "selected."
         ),
-        choices=["mdl", "kic", "aic"],
         default="aic",
     )
     optional.add_argument(
@@ -165,45 +168,44 @@ def _get_parser():
         ),
         default="kundu",
     )
-    optional.add_argument(#####BTBTBT
+    optional.add_argument(
         "--ica_method",
         dest="ica_method",
         help=(
             "The applied ICA method. If set to fastica the FastICA "
             "from sklearn library will be run once with the seed value. "
-            "robustica will run FastICA n_robust_runs times and and uses "
+            "robustica will run FastICA n_robust_runs times and uses "
             "clustering methods to overcome the randomness of the FastICA "
-            "algorithm. If set to robustica the seed value will be ignored."
-            "If set to fastica n_robust_runs will not be effective."
+            "algorithm. When set to fastica n_robust_runs will not be effective."
         ),
         choices=["robustica", "fastica"],
-        default="robustica",
+        type=str.lower,
+        default=DEFAULT_ICA_METHOD,
     )
     optional.add_argument(
         "--seed",
         dest="fixed_seed",
         metavar="INT",
         type=int,
-        help=( ##BTBTBT
+        help=(
             "Value used for random initialization of ICA "
-            "algorithm when ica_mthods is set to fastica. Set to an integer value for "
-            "reproducible ICA results with fastica. Set to -1 for "
-            "varying results across ICA calls. "
+            "algorithm. Set to an integer value for "
+            "reproducible ICA results (fastica/robustica). Set to -1 for "
+            "varying results across ICA (fastica/robustica) calls. "
         ),
         default=42,
     )
-    optional.add_argument(#####BTBTBT
+    optional.add_argument(
         "--n_robust_runs",
         dest="n_robust_runs",
         type=int,
         help=(
             "The number of times robustica will run."
-            "This is only effective when ica_mthods is "
+            "This is only effective when ica_method is "
             "set to robustica."
-
         ),
-        ##choices=range(2,100),
-        default=30,
+        choices=range(5, 500),
+        default=DEFAULT_N_ROBUST_RUNS,
     )
     optional.add_argument(
         "--maxit",
@@ -211,7 +213,7 @@ def _get_parser():
         metavar="INT",
         type=int,
         help=("Maximum number of iterations for ICA."),
-        default=500,
+        default=DEFAULT_N_MAX_ITER,
     )
     optional.add_argument(
         "--maxrestart",
@@ -225,7 +227,7 @@ def _get_parser():
             "convergence is achieved before maxrestart "
             "attempts, ICA will finish early."
         ),
-        default=10,
+        default=DEFAULT_N_MAX_RESTART,
     )
     optional.add_argument(
         "--tedort",
@@ -351,12 +353,12 @@ def tedana_workflow(
     fittype="loglin",
     combmode="t2s",
     tree="kundu",
-    ica_method="robustica",  ########BTBTAdded
-    n_robust_runs=30,
+    ica_method=DEFAULT_ICA_METHOD,
+    n_robust_runs=DEFAULT_N_ROBUST_RUNS,
     tedpca="aic",
     fixed_seed=42,
-    maxit=500,
-    maxrestart=10,
+    maxit=DEFAULT_N_MAX_ITER,
+    maxrestart=DEFAULT_N_MAX_RESTART,
     tedort=False,
     gscontrol=None,
     no_reports=False,
@@ -368,9 +370,9 @@ def tedana_workflow(
     overwrite=False,
     t2smap=None,
     mixm=None,
+    tedana_command=None,
 ):
-    """
-    Run the "canonical" TE-Dependent ANAlysis workflow.
+    """Run the "canonical" TE-Dependent ANAlysis workflow.
 
     Please remember to cite :footcite:t:`dupre2021te`.
 
@@ -412,15 +414,27 @@ def tedana_workflow(
         accepts and rejects some distinct components compared to kundu.
         Testing to better understand the effects of the differences is ongoing.
         Default is 'kundu'.
+    ica_method : {'robustica', 'fastica'}, optional
+        The applied ICA method. If set to fastica the FastICA from sklearn
+        library will be run once with the seed value. 'robustica' will run
+        'FastICA' n_robust_runs times and uses clustering methods to overcome
+        the randomness of the FastICA algorithm. When set to fastica n_robust_runs
+        will not be effective.
+        Default is 'robustica'
+    n_robust_runs : :obj:`int`, optional
+        The number of times robustica will run. This is only effective when 'ica_method' is
+        set to 'robustica'.
     tedpca : {'mdl', 'aic', 'kic', 'kundu', 'kundu-stabilize', float, int}, optional
         Method with which to select components in TEDPCA.
         If a float is provided, then it is assumed to represent percentage of variance
-        explained (0-1) to retain from PCA.
+        explained (0-1) to retain from PCA. If an int is provided, it will output
+        a fixed number of components defined by the integer between 1 and the
+        number of time points.
         Default is 'aic'.
     fixed_seed : :obj:`int`, optional
         Value passed to ``mdp.numx_rand.seed()``.
-        Set to a positive integer value for reproducible ICA results;
-        otherwise, set to -1 for varying results across calls.
+        Set to a positive integer value for reproducible ICA results (fastica/robustica);
+        otherwise, set to -1 for varying results across ICA (fastica/robustica) calls.
     maxit : :obj:`int`, optional
         Maximum number of iterations for ICA. Default is 500.
     maxrestart : :obj:`int`, optional
@@ -457,6 +471,9 @@ def tedana_workflow(
         If True, suppresses logging/printing of messages. Default is False.
     overwrite : :obj:`bool`, optional
         If True, force overwriting of files. Default is False.
+    tedana_command : :obj:`str`, optional
+        If the command-line interface was used, this is the command that was
+        run. Default is None.
 
     Notes
     -----
@@ -473,10 +490,11 @@ def tedana_workflow(
         os.mkdir(out_dir)
 
     # boilerplate
-    basename = "report"
+    prefix = io._infer_prefix(prefix)
+    basename = f"{prefix}report"
     extension = "txt"
     repname = op.join(out_dir, (basename + "." + extension))
-    bibtex_file = op.join(out_dir, "references.bib")
+    bibtex_file = op.join(out_dir, f"{prefix}references.bib")
     repex = op.join(out_dir, (basename + "*"))
     previousreps = glob(repex)
     previousreps.sort(reverse=True)
@@ -492,7 +510,20 @@ def tedana_workflow(
     logname = op.join(out_dir, (basename + start_time + "." + extension))
     utils.setup_loggers(logname, repname, quiet=quiet, debug=debug)
 
-    LGR.info("Using output directory: {}".format(out_dir))
+    # Save command into sh file, if the command-line interface was used
+    # TODO: use io_generator to save command
+    if tedana_command is not None:
+        command_file = open(os.path.join(out_dir, "tedana_call.sh"), "w")
+        command_file.write(tedana_command)
+        command_file.close()
+    else:
+        # Get variables passed to function if the tedana command is None
+        variables = ", ".join(f"{name}={value}" for name, value in locals().items())
+        # From variables, remove everything after ", tedana_command"
+        variables = variables.split(", tedana_command")[0]
+        tedana_command = f"tedana_workflow({variables})"
+
+    LGR.info(f"Using output directory: {out_dir}")
 
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
@@ -510,7 +541,7 @@ def tedana_workflow(
     if isinstance(data, str):
         data = [data]
 
-    LGR.info("Loading input data: {}".format([f for f in data]))
+    LGR.info(f"Loading input data: {[f for f in data]}")
     catd, ref_img = io.load_data(data, n_echos=n_echos)
 
     io_generator = io.OutputGenerator(
@@ -527,8 +558,13 @@ def tedana_workflow(
     # TODO: turn this into an IOManager since this isn't really output
     io_generator.register_input(data)
 
+    # Save system info to json
+    info_dict = utils.get_system_info()
+    info_dict["Python"] = sys.version
+    info_dict["Command"] = tedana_command
+
     n_samp, n_echos, n_vols = catd.shape
-    LGR.debug("Resulting data shape: {}".format(catd.shape))
+    LGR.debug(f"Resulting data shape: {catd.shape}")
 
     # check if TR is 0
     img_t_r = io_generator.reference_img.header.get_zooms()[-1]
@@ -600,7 +636,7 @@ def tedana_workflow(
         getsum=True,
         threshold=1,
     )
-    LGR.debug("Retaining {}/{} samples for denoising".format(mask_denoise.sum(), n_samp))
+    LGR.debug(f"Retaining {mask_denoise.sum()}/{n_samp} samples for denoising")
     io_generator.save_file(masksum_denoise, "adaptive mask img")
 
     # Create an adaptive mask with at least 3 good echoes, for classification
@@ -614,7 +650,7 @@ def tedana_workflow(
         "(restricted to voxels with good data in at least the first three echoes) was used for "
         "the component classification procedure."
     )
-    LGR.debug("Retaining {}/{} samples for classification".format(mask_clf.sum(), n_samp))
+    LGR.debug(f"Retaining {mask_clf.sum()}/{n_samp} samples for classification")
 
     if t2smap is None:
         LGR.info("Computing T2* map")
@@ -625,7 +661,7 @@ def tedana_workflow(
         # set a hard cap for the T2* map
         # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
         cap_t2s = stats.scoreatpercentile(t2s_full.flatten(), 99.5, interpolation_method="lower")
-        LGR.debug("Setting cap on T2* map at {:.5f}s".format(utils.millisec2sec(cap_t2s)))
+        LGR.debug(f"Setting cap on T2* map at {utils.millisec2sec(cap_t2s):.5f}s")
         t2s_full[t2s_full > cap_t2s * 10] = cap_t2s
         io_generator.save_file(utils.millisec2sec(t2s_full), "t2star img")
         io_generator.save_file(s0_full, "s0 img")
@@ -642,23 +678,20 @@ def tedana_workflow(
         catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, io_generator)
 
     fout = io_generator.save_file(data_oc, "combined img")
-    LGR.info("Writing optimally combined data set: {}".format(fout))
+    LGR.info(f"Writing optimally combined data set: {fout}")
 
     if mixm is None:
         # Identify and remove thermal noise from data
         dd, n_components = decomposition.tedpca(
             catd,
             data_oc,
-            combmode,
             mask_clf,
             masksum_clf,
-            t2s_full,
             io_generator,
             tes=tes,
             algorithm=tedpca,
             kdaw=10.0,
             rdaw=1.0,
-            verbose=verbose,
             low_mem=low_mem,
         )
         if verbose:
@@ -667,12 +700,17 @@ def tedana_workflow(
         # Perform ICA, calculate metrics, and apply decision tree
         # Restart when ICA fails to converge or too few BOLD components found
         keep_restarting = True
-
         n_restarts = 0
         seed = fixed_seed
         while keep_restarting:
             mmix, seed = decomposition.tedica(
-                dd, n_components, seed, ica_method, n_robust_runs, maxit, maxrestart=(maxrestart - n_restarts)
+                dd,
+                n_components,
+                seed,
+                ica_method,
+                n_robust_runs,
+                maxit,
+                maxrestart=(maxrestart - n_restarts),
             )
             seed += 1
             n_restarts = seed - fixed_seed
@@ -706,17 +744,13 @@ def tedana_workflow(
             )
             ica_selector = selection.automatic_selection(comptable, n_echos, n_vols, tree=tree)
             n_likely_bold_comps = ica_selector.n_likely_bold_comps
-
-            if ica_method=='robustica':  #########BTBTBT
+            if (n_restarts < maxrestart) and (n_likely_bold_comps == 0):
+                LGR.warning("No BOLD components found. Re-attempting ICA.")
+            elif n_likely_bold_comps == 0:
+                LGR.warning("No BOLD components found, but maximum number of restarts reached.")
                 keep_restarting = False
-            else:               
-                if (n_restarts < maxrestart) and (n_likely_bold_comps == 0):
-                    LGR.warning("No BOLD components found. Re-attempting ICA.")
-                elif n_likely_bold_comps == 0:
-                    LGR.warning("No BOLD components found, but maximum number of restarts reached.")
-                    keep_restarting = False
-                else:
-                    keep_restarting = False
+            else:
+                keep_restarting = False
 
             # If we're going to restart, temporarily allow force overwrite
             if keep_restarting:
@@ -825,7 +859,6 @@ def tedana_workflow(
         mask=mask_denoise,
         comptable=comptable,
         mmix=mmix,
-        n_vols=n_vols,
         io_generator=io_generator,
     )
 
@@ -852,6 +885,16 @@ def tedana_workflow(
                     "of non-BOLD noise from multi-echo fMRI data."
                 ),
                 "CodeURL": "https://github.com/ME-ICA/tedana",
+                "Node": {
+                    "Name": info_dict["Node"],
+                    "System": info_dict["System"],
+                    "Machine": info_dict["Machine"],
+                    "Processor": info_dict["Processor"],
+                    "Release": info_dict["Release"],
+                    "Version": info_dict["Version"],
+                },
+                "Python": info_dict["Python"],
+                "Command": info_dict["Command"],
             }
         ],
     }
@@ -908,22 +951,22 @@ def tedana_workflow(
         )
 
         LGR.info("Generating dynamic report")
-        reporting.generate_report(io_generator, tr=img_t_r)
+        reporting.generate_report(io_generator)
 
     LGR.info("Workflow completed")
     utils.teardown_loggers()
 
 
 def _main(argv=None):
-    """Tedana entry point"""
+    """Run the tedana workflow."""
+    tedana_command = "tedana " + " ".join(sys.argv[1:])
     options = _get_parser().parse_args(argv)
     kwargs = vars(options)
     n_threads = kwargs.pop("n_threads")
     n_threads = None if n_threads == -1 else n_threads
     with threadpool_limits(limits=n_threads, user_api=None):
-        tedana_workflow(**kwargs)
+        tedana_workflow(**kwargs, tedana_command=tedana_command)
 
 
 if __name__ == "__main__":
     _main()
-
