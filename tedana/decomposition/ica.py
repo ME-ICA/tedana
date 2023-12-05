@@ -139,7 +139,7 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
             robust_method="DBSCAN",
         )
 
-        S, mmix = rica.fit_transform(data)
+        s, mmix = rica.fit_transform(data)
         q = rica.evaluate_clustering(
             rica.S_all, rica.clustering.labels_, rica.signs_, rica.orientation_
         )
@@ -156,7 +156,7 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
             robust_method="AgglomerativeClustering",
         )
 
-        S, mmix = rica.fit_transform(data)
+        s, mmix = rica.fit_transform(data)
         q = rica.evaluate_clustering(
             rica.S_all, rica.clustering.labels_, rica.signs_, rica.orientation_
         )
