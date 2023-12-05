@@ -176,7 +176,7 @@ def _get_parser():
             "from sklearn library will be run once with the seed value. "
             "robustica will run FastICA n_robust_runs times and uses "
             "clustering methods to overcome the randomness of the FastICA "
-            "algorithm. When set to fastica n_robust_runs will not be effective."
+            "algorithm. When set to fastica, --n_robust_runs option will have no effect."
         ),
         choices=["robustica", "fastica"],
         type=str.lower,

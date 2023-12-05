@@ -76,7 +76,7 @@ def check_integration_outputs(fname, outpath, n_logs=1):
         raise ValueError(msg)
 
 
-def data_for_testing_info(test_dataset=str):
+def data_for_testing_info(test_dataset: str):
     """
     Get the path and download link for each dataset used for testing.
 
@@ -209,7 +209,7 @@ def reclassify_raw_registry() -> str:
     return os.path.join(reclassify_raw(), "desc-tedana_registry.json")
 
 
-def guarantee_reclassify_data() -> None:
+def guarantee_reclassify_data() -> str:
     """Ensures that the reclassify data exists at the expected path and return path."""
 
     test_data_path, osf_id = data_for_testing_info("three-echo-reclassify")

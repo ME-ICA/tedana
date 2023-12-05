@@ -91,7 +91,7 @@ def tedica(
 
 def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
     """
-    Perform robustica on `data` by running FastICA multiple times (n_robust runes)
+    Perform robustica on `data` by running FastICA multiple times (n_robust_runs)
     and returns mixing matrix
 
     Parameters
@@ -165,8 +165,8 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
 
     if iq < 0.6:
         LGR.warning(
-            "The resultant mean Index Quality is low. It  is recommended to rerun the "
-            "process with a different seed."
+            "The resultant mean Index Quality is low ({0}). It is recommended to rerun the "
+            "process with a different seed.".format(iq)
         )
 
     mmix = mmix[:, q["cluster_id"] >= 0]
