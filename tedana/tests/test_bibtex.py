@@ -1,4 +1,4 @@
-"""Tests for bibtex"""
+"""Tests for bibtex."""
 
 from tedana import bibtex
 

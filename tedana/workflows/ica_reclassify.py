@@ -1,11 +1,10 @@
-"""
-Run the reclassification workflow for a previous tedana run
-"""
+"""Run the reclassification workflow for a previous tedana run."""
 import argparse
 import datetime
 import logging
 import os
 import os.path as op
+import sys
 from glob import glob
 
 import numpy as np
@@ -25,17 +24,15 @@ RepLGR = logging.getLogger("REPORT")
 
 
 def _get_parser():
-    """
-    Parses command line inputs for tedana
+    """Parse command line inputs for ica_reclassify.
 
     Returns
     -------
     parser.parse_args() : argparse dict
     """
-
     from tedana import __version__
 
-    verstr = "ica_reclassify v{}".format(__version__)
+    verstr = f"ica_reclassify v{__version__}"
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # Argument parser follow template provided by RalphyZ
@@ -52,7 +49,7 @@ def _get_parser():
         nargs="+",
         help=(
             "Component indices to accept (zero-indexed)."
-            "Supply as a comma-delimited liist with no spaces, "
+            "Supply as a comma-delimited list with no spaces, "
             "as a csv file, or as a text file with an allowed "
             f"delimiter {repr(ALLOWED_COMPONENT_DELIMITERS)}."
         ),
@@ -63,8 +60,8 @@ def _get_parser():
         dest="manual_reject",
         nargs="+",
         help=(
-            "Component indices to accept (zero-indexed)."
-            "Supply as a comma-delimited liist with no spaces, "
+            "Component indices to reject (zero-indexed)."
+            "Supply as a comma-delimited list with no spaces, "
             "as a csv file, or as a text file with an allowed "
             f"delimiter {repr(ALLOWED_COMPONENT_DELIMITERS)}."
         ),
@@ -152,7 +149,8 @@ def _get_parser():
 
 
 def _main(argv=None):
-    """ica_reclassify entry point"""
+    """Run the ica_reclassify workflow."""
+    reclassify_command = "ica_reclassify " + " ".join(sys.argv[1:])
 
     args = _get_parser().parse_args(argv)
 
@@ -172,22 +170,23 @@ def _main(argv=None):
         overwrite=args.overwrite,
         debug=args.debug,
         quiet=args.quiet,
+        reclassify_command=reclassify_command,
     )
 
 
 def _parse_manual_list(manual_list):
     """
-    Parse the list of components to accept or reject into a list of integers
+    Parse the list of components to accept or reject into a list of integers.
 
     Parameters
     ----------
-    manual_list: :obj:`str` :obj:`list[str]` or [] or None
+    manual_list : :obj:`str` :obj:`list[str]` or [] or None
         String of integers separated by spaces, commas, or tabs
         A file name for a file that contains integers
 
     Returns
     -------
-    manual_nums: :obj:`list[int]`
+    manual_nums : :obj:`list[int]`
         A list of integers or an empty list.
 
     Note
@@ -212,10 +211,10 @@ def _parse_manual_list(manual_list):
     elif op.exists(op.expanduser(str(manual_list[0]).strip(" "))):
         # filename was given
         manual_nums = fname_to_component_list(op.expanduser(str(manual_list[0]).strip(" ")))
-    elif type(manual_list[0]) == str:
+    elif isinstance(manual_list[0], str):
         # arbitrary string was given, length of list is 1
         manual_nums = str_to_component_list(manual_list[0])
-    elif type(manual_list[0]) == int:
+    elif isinstance(manual_list[0], int):
         # Is a single integer and should remain a list with a single integer
         manual_nums = manual_list
     else:
@@ -241,6 +240,7 @@ def ica_reclassify_workflow(
     overwrite=False,
     debug=False,
     quiet=False,
+    reclassify_command=None,
 ):
     """
     Run the post-tedana manual classification workflow.
@@ -249,11 +249,11 @@ def ica_reclassify_workflow(
 
     Parameters
     ----------
-    registry: :obj:`str`
+    registry : :obj:`str`
         The previously run registry as a JSON file.
-    accept: :obj: `list`
+    accept : :obj: `list`
         A list of integer values of components to accept in this workflow.
-    reject: :obj: `list`
+    reject : :obj: `list`
         A list of integer values of components to reject in this workflow.
     out_dir : :obj:`str`, optional
         Output directory.
@@ -274,6 +274,8 @@ def ica_reclassify_workflow(
         Whether to force file overwrites. Default is False.
     quiet : :obj:`bool`, optional
         If True, suppresses logging/printing of messages. Default is False.
+    reclassify_command : :obj:`str`, optional
+        The command used to run ica_reclassify. Default is None.
 
     Notes
     -----
@@ -326,10 +328,11 @@ def ica_reclassify_workflow(
         raise ValueError("The following components were both accepted and rejected: " f"{in_both}")
 
     # boilerplate
-    basename = "report"
+    prefix = io._infer_prefix(prefix)
+    basename = f"{prefix}report"
     extension = "txt"
     repname = op.join(out_dir, (basename + "." + extension))
-    bibtex_file = op.join(out_dir, "references.bib")
+    bibtex_file = op.join(out_dir, f"{prefix}references.bib")
     repex = op.join(out_dir, (basename + "*"))
     previousreps = glob(repex)
     previousreps.sort(reverse=True)
@@ -345,7 +348,25 @@ def ica_reclassify_workflow(
     logname = op.join(out_dir, (basename + start_time + "." + extension))
     utils.setup_loggers(logname=logname, repname=repname, quiet=quiet, debug=debug)
 
-    LGR.info("Using output directory: {}".format(out_dir))
+    # Save command into sh file, if the command-line interface was used
+    # TODO: use io_generator to save command
+    if reclassify_command is not None:
+        command_file = open(os.path.join(out_dir, "ica_reclassify_call.sh"), "w")
+        command_file.write(reclassify_command)
+        command_file.close()
+    else:
+        # Get variables passed to function if the tedana command is None
+        variables = ", ".join(f"{name}={value}" for name, value in locals().items())
+        # From variables, remove everything after ", tedana_command"
+        variables = variables.split(", reclassify_command")[0]
+        reclassify_command = f"ica_reclassify_workflow({variables})"
+
+    # Save system info to json
+    info_dict = utils.get_system_info()
+    info_dict["Python"] = sys.version
+    info_dict["Command"] = reclassify_command
+
+    LGR.info(f"Using output directory: {out_dir}")
 
     ioh = io.InputHarvester(registry)
     comptable = ioh.get_file_contents("ICA metrics tsv")
@@ -444,8 +465,7 @@ def ica_reclassify_workflow(
             "series."
         )
 
-    n_vols = data_oc.shape[3]
-    img_t_r = io_generator.reference_img.header.get_zooms()[-1]
+    # img_t_r = io_generator.reference_img.header.get_zooms()[-1]
     adaptive_mask = utils.reshape_niimg(adaptive_mask)
     mask_denoise = adaptive_mask >= 1
     data_oc = utils.reshape_niimg(data_oc)
@@ -461,7 +481,6 @@ def ica_reclassify_workflow(
         mask=mask_denoise,
         comptable=comptable,
         mmix=mmix,
-        n_vols=n_vols,
         io_generator=io_generator,
     )
 
@@ -484,12 +503,22 @@ def ica_reclassify_workflow(
                     "of non-BOLD noise from multi-echo fMRI data."
                 ),
                 "CodeURL": "https://github.com/ME-ICA/tedana",
+                "Node": {
+                    "Name": info_dict["Node"],
+                    "System": info_dict["System"],
+                    "Machine": info_dict["Machine"],
+                    "Processor": info_dict["Processor"],
+                    "Release": info_dict["Release"],
+                    "Version": info_dict["Version"],
+                },
+                "Python": info_dict["Python"],
+                "Command": info_dict["Command"],
             }
         ],
     }
     io_generator.save_file(derivative_metadata, "data description json")
 
-    with open(repname, "r") as fo:
+    with open(repname) as fo:
         report = [line.rstrip() for line in fo.readlines()]
         report = " ".join(report)
     with open(repname, "w") as fo:
@@ -533,7 +562,7 @@ def ica_reclassify_workflow(
         )
 
         LGR.info("Generating dynamic report")
-        reporting.generate_report(io_generator, tr=img_t_r)
+        reporting.generate_report(io_generator)
 
     io_generator.save_self()
     LGR.info("Workflow completed")

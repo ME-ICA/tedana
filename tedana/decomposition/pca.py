@@ -1,6 +1,4 @@
-"""
-PCA and related signal decomposition methods for tedana
-"""
+"""PCA and related signal decomposition methods for tedana."""
 import logging
 from numbers import Number
 
@@ -20,8 +18,7 @@ RepLGR = logging.getLogger("REPORT")
 
 
 def low_mem_pca(data):
-    """
-    Run Singular Value Decomposition (SVD) on input data.
+    """Run Singular Value Decomposition (SVD) on input data.
 
     Parameters
     ----------
@@ -53,21 +50,16 @@ def low_mem_pca(data):
 def tedpca(
     data_cat,
     data_oc,
-    combmode,
     mask,
     adaptive_mask,
-    t2sG,
     io_generator,
     tes,
     algorithm="aic",
     kdaw=10.0,
     rdaw=1.0,
-    verbose=False,
     low_mem=False,
 ):
-    """
-    Use principal components analysis (PCA) to identify and remove thermal
-    noise from multi-echo data.
+    r"""Use principal components analysis (PCA) to identify and remove thermal noise from data.
 
     Parameters
     ----------
@@ -75,10 +67,6 @@ def tedpca(
         Input functional data
     data_oc : (S x T) array_like
         Optimally combined time series data
-    combmode : {'t2s', 'paid'} str
-        How optimal combination of echos should be made, where 't2s' indicates
-        using the method of Posse 1999 and 'paid' indicates using the method of
-        Poser 2006
     mask : (S,) array_like
         Boolean mask array
     adaptive_mask : (S,) array_like
@@ -86,8 +74,6 @@ def tedpca(
         for that voxel. This mask may be thresholded; for example, with values
         less than 3 set to 0.
         For more information on thresholding, see `make_adaptive_mask`.
-    t2sG : (S,) array_like
-        Map of voxel-wise T2* estimates.
     io_generator : :obj:`tedana.io.OutputGenerator`
         The output generation object for this workflow
     tes : :obj:`list`
@@ -108,8 +94,6 @@ def tedpca(
     rdaw : :obj:`float`, optional
         Dimensionality augmentation weight for Rho calculations when `algorithm` is
         'kundu'. Must be a non-negative float, or -1 (a special value). Default is 1.
-    verbose : :obj:`bool`, optional
-        Whether to output files from fitmodels_direct or not. Default: False
     low_mem : :obj:`bool`, optional
         Whether to use incremental PCA (for low-memory systems) or not.
         This is only compatible with the "kundu" or "kundu-stabilize" algorithms.
@@ -127,13 +111,13 @@ def tedpca(
     ======================    =================================================
     Notation                  Meaning
     ======================    =================================================
-    :math:`\\kappa`            Component pseudo-F statistic for TE-dependent
+    :math:`\kappa`            Component pseudo-F statistic for TE-dependent
                               (BOLD) model.
-    :math:`\\rho`              Component pseudo-F statistic for TE-independent
+    :math:`\rho`              Component pseudo-F statistic for TE-independent
                               (artifact) model.
     :math:`v`                 Voxel
     :math:`V`                 Total number of voxels in mask
-    :math:`\\zeta`             Something
+    :math:`\zeta`             Something
     :math:`c`                 Component
     :math:`p`                 Something else
     ======================    =================================================
@@ -143,22 +127,21 @@ def tedpca(
     1.  Variance normalize either multi-echo or optimally combined data,
         depending on settings.
     2.  Decompose normalized data using PCA or SVD.
-    3.  Compute :math:`{\\kappa}` and :math:`{\\rho}`:
+    3.  Compute :math:`{\kappa}` and :math:`{\rho}`:
 
             .. math::
-                {\\kappa}_c = \\frac{\\sum_{v}^V {\\zeta}_{c,v}^p * \
-                      F_{c,v,R_2^*}}{\\sum {\\zeta}_{c,v}^p}
+                {\kappa}_c = \frac{\sum_{v}^V {\zeta}_{c,v}^p * \
+                    F_{c,v,R_2^*}}{\sum {\zeta}_{c,v}^p}
 
-                {\\rho}_c = \\frac{\\sum_{v}^V {\\zeta}_{c,v}^p * \
-                      F_{c,v,S_0}}{\\sum {\\zeta}_{c,v}^p}
+                {\rho}_c = \frac{\sum_{v}^V {\zeta}_{c,v}^p * \
+                    F_{c,v,S_0}}{\sum {\zeta}_{c,v}^p}
 
     4.  Some other stuff. Something about elbows.
     5.  Classify components as thermal noise if they meet both of the
         following criteria:
 
-            - Nonsignificant :math:`{\\kappa}` and :math:`{\\rho}`.
+            - Nonsignificant :math:`{\kappa}` and :math:`{\rho}`.
             - Nonsignificant variance explained.
-
     Generated Files
     ---------------
 

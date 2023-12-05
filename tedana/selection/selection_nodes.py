@@ -19,7 +19,6 @@ from tedana.selection.selection_utils import (
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
-RefLGR = logging.getLogger("REFERENCES")
 
 
 @fill_doc
@@ -181,26 +180,26 @@ def dec_left_op_right(
     %(tag_if_true)s
     %(tag_if_false)s
     %(decide_comps)s
-    op: :obj:`str`
+    op : :obj:`str`
         Must be one of: ">", ">=", "==", "<=", "<"
         Applied the user defined operator to left op right
-    left, right: :obj:`str` or :obj:`float`
+    left, right : :obj:`str` or :obj:`float`
         The labels for the two metrics to be used for comparision.
         For example: left='kappa', right='rho' and op='>' means this
         function will test kappa>rho. One of the two can also be a number.
         In that case, a metric would be compared against a fixed threshold.
         For example left='T2fitdiff_invsout_ICAmap_Tstat', right=0, and op='>'
         means this function will test T2fitdiff_invsout_ICAmap_Tstat>0
-    left_scale, right_scale: :obj:`float` or :obj:`str`
+    left_scale, right_scale : :obj:`float` or :obj:`str`
         Multiply the left or right metrics value by a constant. For example
         if left='kappa', right='rho', right_scale=2, and op='>' this tests
         kappa>(2*rho). These can also be a string that is a value in
         cross_component_metrics, since those will resolve to a single value.
         This cannot be a label for a component_table column since that would
         output a different value for each component. Default=1
-    op2: :obj:`str`, Default=None
-    left2, right2, left3, right3: :obj:`str` or :obj:`float`, Default=None
-    left2_scale, right2_scale, left3_scale, right3_scale: :obj:`float` or :obj:`str`, Default=1
+    op2 : :obj:`str`, Default=None
+    left2, right2, left3, right3 : :obj:`str` or :obj:`float`, Default=None
+    left2_scale, right2_scale, left3_scale, right3_scale : :obj:`float` or :obj:`str`, Default=1
         This function can also be used to calculate the intersection of two or three
         boolean statements. If op2, left2, and right2 are defined then
         this function returns
@@ -248,9 +247,11 @@ def dec_left_op_right(
 
     def identify_used_metric(val, isnum=False):
         """
-        Parse the left or right values or scalers to see if they are an
-        existing used_metric or cross_component_metric
-        If the value already a number, no parse would be needed
+        Parse the left or right values or scalers.
+
+        This is done to see if they are an existing used_metric or cross_component_metric.
+
+        If the value already a number, no parse would be needed.
 
         This is also used on left_scale and right_scale to convert
         a value in cross_component_metrics to a number. Set the isnum
@@ -289,10 +290,11 @@ def dec_left_op_right(
 
     def confirm_valid_conditional(left_scale, left_val, right_scale, right_val, op_val):
         """
-        Makes sure the left_scale, left_val, right_scale, right_val, and
-        operator variables combine into a valid conditional statement
-        """
+        Confirm that the conditional statement is valid.
 
+        Makes sure the left_scale, left_val, right_scale, right_val, and
+        operator variables combine into a valid conditional statement.
+        """
         left_val = identify_used_metric(left_val)
         right_val = identify_used_metric(right_val)
         left_scale = identify_used_metric(left_scale, isnum=True)
@@ -304,13 +306,15 @@ def dec_left_op_right(
 
     def operator_scale_descript(val_scale, val):
         """
-        Return a string with one element from the mathematical expression
-        If val_scale is not 1, include scaling factor (rounded to 2 decimals)
+        Return a string with one element from the mathematical expression.
+
+        If val_scale is not 1, include scaling factor (rounded to 2 decimals).
+
         If val is a column in the component_table output the column label
         If val is a number (either an inputted number or from cross_component_metrics
         include the number (rounded to 2 decimals)
         This output is used to great a descriptor for visualizing the decision tree
-        Unrounded values are saved and rounding here will not affect results
+        Unrounded values are saved and rounding here will not affect results.
         """
         if not isinstance(val, str):
             val = str(round(val, 2))
@@ -399,7 +403,7 @@ def dec_left_op_right(
     )
 
     def parse_vals(val):
-        """Get the metric values for the selected components or relevant constant"""
+        """Get the metric values for the selected components or relevant constant."""
         if isinstance(val, str):
             return selector.component_table.loc[comps2use, val].copy()
         else:
@@ -495,14 +499,14 @@ def dec_variance_lessthan_thresholds(
     %(tag_if_true)s
     %(tag_if_false)s
     %(decide_comps)s
-    var_metric: :obj:`str`
+    var_metric : :obj:`str`
         The name of the metric in component_table for variance. Default="variance explained"
         This is an option so that it is possible to use "normalized variance explained"
         or another metric
-    single_comp_threshold: :obj:`float`
+    single_comp_threshold : :obj:`float`
         The threshold for which all components need to have lower variance.
         Default=0.1
-    all_comp_threshold: :obj: `float`
+    all_comp_threshold : :obj: `float`
         The number of the variance for all components less than single_comp_threshold
         needs to be under this threshold. Default=1.0
     %(log_extra_info)s
@@ -519,7 +523,7 @@ def dec_variance_lessthan_thresholds(
     """
     outputs = {
         "decision_node_idx": selector.current_node_idx,
-        "used_metrics": set([var_metric]),
+        "used_metrics": {var_metric},
         "node_label": None,
         "n_true": None,
         "n_false": None,
@@ -611,10 +615,10 @@ def calc_median(
     ----------
     %(selector)s
     %(decide_comps)s
-    metric_name: :obj:`str`
+    metric_name : :obj:`str`
         The name of a column in selector.component_table. The median of
         the values in this column will be calculated
-    median_label: :obj:`str`
+    median_label : :obj:`str`
         The median will be saved in "median_(median_label)"
     %(log_extra_info)s
     %(log_extra_report)s
@@ -643,7 +647,7 @@ def calc_median(
         "decision_node_idx": selector.current_node_idx,
         "node_label": None,
         label_name: None,
-        "used_metrics": set([metric_name]),
+        "used_metrics": {metric_name},
         "calc_cross_comp_metrics": [label_name],
     }
 
@@ -732,7 +736,7 @@ def calc_kappa_elbow(
         "decision_node_idx": selector.current_node_idx,
         "node_label": None,
         "n_echos": selector.n_echos,
-        "used_metrics": set(["kappa"]),
+        "used_metrics": {"kappa"},
         "calc_cross_comp_metrics": [
             "kappa_elbow_kundu",
             "kappa_allcomps_elbow",
@@ -821,12 +825,12 @@ def calc_rho_elbow(
     ----------
     %(selector)s
     %(decide_comps)s
-    subset_decide_comps: :obj:`str`
+    subset_decide_comps : :obj:`str`
         This is a string with a single component classification label. For the
         elbow calculation used by Kundu in MEICA v.27 thresholds are based
         on all components and on unclassified components.
         Default='unclassified'.
-    rho_elbow_type: :obj:`str`
+    rho_elbow_type : :obj:`str`
         The algorithm used to calculate the rho elbow. Current options are:
         'kundu' and 'liberal'. Default='kundu'.
     %(log_extra_info)s
@@ -870,7 +874,7 @@ def calc_rho_elbow(
             "rho_unclassified_elbow",
             "elbow_f05",
         ],
-        "used_metrics": set(["kappa", "rho", "variance explained"]),
+        "used_metrics": {"kappa", "rho", "variance explained"},
         elbow_name: None,
         "rho_allcomps_elbow": None,
         "rho_unclassified_elbow": None,
@@ -953,28 +957,30 @@ def dec_classification_doesnt_exist(
     tag=None,
 ):
     """
-    If there are no components with a classification specified in class_comp_exists,
-    change the classification of all components in decide_comps.
+    Change the classification of all components in decide_comps.
+
+    This is done if there are no components with a classification specified in
+    class_comp_exists.
 
     Parameters
     ----------
     %(selector)s
-    new_classification: :obj:`str`
+    new_classification : :obj:`str`
         Assign all components identified in decide_comps the classification
         in new_classification.
     %(decide_comps)s
-    class_comp_exists: :obj:`str` or :obj:`list[str]` or :obj:`int` or :obj:`list[int]`
+    class_comp_exists : :obj:`str` or :obj:`list[str]` or :obj:`int` or :obj:`list[int]`
         This has the same structure options as decide_comps. This function tests
         whether any components in decide_comps have the classifications defined in this
         variable.
-    at_least_num_exist: :obj:`int`
+    at_least_num_exist : :obj:`int`
         Instead of just testing whether a classification exists, test whether at least
         this number of components have that classification. Default=1
     %(log_extra_info)s
     %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
-    tag: :obj:`str`
+    tag : :obj:`str`
         A classification tag to assign to all components being reclassified.
         This should be one of the tags defined by classification_tags in
         the decision tree specification. Default="".
@@ -1083,12 +1089,12 @@ def dec_reclassify_high_var_comps(
     tag=None,
 ):
     """
-    Identifies and reclassifies a couple components with the largest gaps in variance
+    Identify and reclassify a couple components with the largest gaps in variance.
 
     Parameters
     ----------
     %(selector)s
-    new_classification: :obj:`str`
+    new_classification : :obj:`str`
         Assign all components identified in decide_comps the classification
         in new_classification.
     %(decide_comps)s
@@ -1096,7 +1102,7 @@ def dec_reclassify_high_var_comps(
     %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
-    tag: :obj:`str`
+    tag : :obj:`str`
         A classification tag to assign to all components being reclassified.
         This should be one of the tags defined by classification_tags in
         the decision tree specification. Default="".
@@ -1118,8 +1124,8 @@ def dec_reclassify_high_var_comps(
     # predefine all outputs that should be logged
     outputs = {
         "decision_node_idx": selector.current_node_idx,
-        "used_metrics": set(["variance explained"]),
-        "used_cross_comp_metrics": set(["varex_upper_p"]),
+        "used_metrics": {"variance explained"},
+        "used_cross_comp_metrics": {"varex_upper_p"},
         "node_label": None,
         "n_true": None,
         "n_false": None,
@@ -1230,15 +1236,15 @@ def calc_varex_thresh(
     ----------
     %(selector)s
     %(decide_comps)s
-    thresh_label: :obj:`str`
+    thresh_label : :obj:`str`
         The threshold will be saved in "varex_(thresh_label)_thresh"
         In the original kundu decision tree this was either "upper" or "lower"
         If passed an empty string, will be saved as "varex_thresh"
-    percentile_thresh: :obj:`int`
+    percentile_thresh : :obj:`int`
         A percentile threshold to apply to components to set the variance threshold.
         In the original kundu decision tree this was 90 for varex_upper_thresh and
         25 for varex_lower_thresh
-    num_highest_var_comps: :obj:`str` :obj:`int`
+    num_highest_var_comps : :obj:`str` :obj:`int`
         percentile can be calculated on the num_highest_var_comps components with the
         lowest variance. Either input an integer directly or input a string that is
         a parameter stored in selector.cross_component_metrics ("num_acc_guess" in
@@ -1267,7 +1273,7 @@ def calc_varex_thresh(
         "node_label": None,
         varex_name: None,
         "num_highest_var_comps": num_highest_var_comps,
-        "used_metrics": set(["variance explained"]),
+        "used_metrics": {"variance explained"},
     }
     if (
         isinstance(percentile_thresh, (int, float))
@@ -1401,7 +1407,7 @@ def calc_extend_factor(
     %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
-    extend_factor: :obj:`float`
+    extend_factor : :obj:`float`
         If a number, then use rather than calculating anything.
         If None than calculate. default=None
 
@@ -1471,7 +1477,7 @@ def calc_max_good_meanmetricrank(
     ----------
     %(selector)s
     %(decide_comps)s
-    metric_suffix: :obj:`str`
+    metric_suffix : :obj:`str`
         By default, this will output a value called "max_good_meanmetricrank"
         If this variable is not None or "" then it will output:
         "max_good_meanmetricrank_[metric_suffix]". Default=None
@@ -1694,7 +1700,7 @@ def calc_revised_meanmetricrank_guesses(
     ----------
     %(selector)s
     %(decide_comps)s
-    restrict_factor: :obj:`int` or :obj:`float`
+    restrict_factor : :obj:`int` or :obj:`float`
         A scaling factor to scale between num_acc_guess and conservative_guess.
         Default=2.
 
@@ -1845,12 +1851,12 @@ def calc_revised_meanmetricrank_guesses(
         outputs["conservative_guess"] = outputs["num_acc_guess"] / outputs["restrict_factor"]
 
         tmp_kappa = selector.component_table.loc[comps2use, "kappa"].to_numpy()
-        tmp_dice_FT2 = selector.component_table.loc[comps2use, "dice_FT2"].to_numpy()
+        tmp_dice_ft2 = selector.component_table.loc[comps2use, "dice_FT2"].to_numpy()
         tmp_signal_m_noise_t = selector.component_table.loc[comps2use, "signal-noise_t"].to_numpy()
         tmp_countnoise = selector.component_table.loc[comps2use, "countnoise"].to_numpy()
-        tmp_countsigFT2 = selector.component_table.loc[comps2use, "countsigFT2"].to_numpy()
+        tmp_countsig_ft2 = selector.component_table.loc[comps2use, "countsigFT2"].to_numpy()
         tmp_d_table_score = generate_decision_table_score(
-            tmp_kappa, tmp_dice_FT2, tmp_signal_m_noise_t, tmp_countnoise, tmp_countsigFT2
+            tmp_kappa, tmp_dice_ft2, tmp_signal_m_noise_t, tmp_countnoise, tmp_countsig_ft2
         )
         selector.component_table[f"d_table_score_node{selector.current_node_idx}"] = np.NaN
         selector.component_table.loc[

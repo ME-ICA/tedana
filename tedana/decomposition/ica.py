@@ -1,4 +1,4 @@
-"""ICA and related signal decomposition methods for tedana"""
+"""ICA and related signal decomposition methods for tedana."""
 import logging
 import warnings
 
@@ -233,16 +233,15 @@ def f_ica(data, n_components, fixed_seed, maxit, maxrestart):
             w = list(filter(lambda i: issubclass(i.category, UserWarning), w))
             if len(w):
                 LGR.warning(
-                    "ICA with random seed {0} failed to converge after {1} "
-                    "iterations".format(fixed_seed, ica.n_iter_)
+                    f"ICA with random seed {fixed_seed} failed to converge after {ica.n_iter_} "
+                    "iterations"
                 )
                 if i_attempt < maxrestart - 1:
                     fixed_seed += 1
-                    LGR.warning("Random seed updated to {0}".format(fixed_seed))
+                    LGR.warning(f"Random seed updated to {fixed_seed}")
             else:
                 LGR.info(
-                    "ICA with random seed {0} converged in {1} "
-                    "iterations".format(fixed_seed, ica.n_iter_)
+                    f"ICA with random seed {fixed_seed} converged in {ica.n_iter_} iterations"
                 )
                 break
 

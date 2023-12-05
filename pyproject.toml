@@ -15,11 +15,13 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 license = {file = "LICENSE"}
 requires-python = ">=3.8"
 dependencies = [
-    "bokeh<2.3.0",
+    "bokeh",
     "mapca>=0.0.3",
     "matplotlib",
     "nibabel>=2.5.1",
@@ -30,7 +32,6 @@ dependencies = [
     "scikit-learn>=0.21",
     "scipy>=1.2.0",
     "threadpoolctl",
-    "jinja2==3.0.1",
 ]
 dynamic = ["version"]
 
@@ -40,10 +41,11 @@ Documentation = "https://www.tedana.readthedocs.io"
 Paper = "https://joss.theoj.org/papers/10.21105/joss.03669"
 
 [project.optional-dependencies]
+dev = ["pre-commit"]
 doc = [
-    "sphinx>=1.5.3",
+    "sphinx>=6.2.1",
     "sphinx_copybutton",
-    "sphinx_rtd_theme",
+    "sphinx_rtd_theme>=1.2.2",
     "sphinx-argparse",
     "sphinxcontrib-bibtex",
 ]
@@ -51,16 +53,21 @@ tests = [
     "codecov",
     "coverage",
     "flake8>=3.7",
+    "flake8-absolute-import",
     "flake8-black",
+    "flake8-docstrings",
     "flake8-isort",
     "flake8-pyproject",
+    "flake8-unused-arguments",
+    "flake8-use-fstring",
+    "pep8-naming",
     "pytest",
     "pytest-cov>=4.0.0",
     "requests",
 ]
 
 # Aliases
-all = ["tedana[doc,tests]"]
+all = ["tedana[dev,doc,tests]"]
 
 [project.scripts]
 ica_reclassify = "tedana.workflows.ica_reclassify:_main"
@@ -97,7 +104,7 @@ version-file = "tedana/_version.py"
 
 [tool.black]
 line-length = 99
-target-version = ['py37']
+target-version = ['py38']
 include = '\.pyi?$'
 exclude = '''
 
@@ -130,8 +137,14 @@ exclude = [
 ignore = ["E203", "E402", "W503"]
 per-file-ignores = [
     "*/__init__.py: F401",
+    "tedana/tests/*: D",
 ]
 docstring-convention = "numpy"
+
+[tool.pydocstringformatter]
+write = true
+strip-whitespaces = true
+max-summary-lines = 1
 
 [tool.coverage.run]
 branch = true
