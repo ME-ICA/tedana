@@ -33,7 +33,7 @@ from tedana.config import (
     DEFAULT_N_MAX_ITER,
     DEFAULT_N_MAX_RESTART,
     DEFAULT_N_ROBUST_RUNS,
-    DEFAULT_SEED
+    DEFAULT_SEED,
 )
 from tedana.stats import computefeats2
 from tedana.workflows.parser_utils import check_tedpca_value, is_valid_file
