@@ -541,7 +541,7 @@ def ica_reclassify_workflow(
             gscontrol.append("gsr")
         if mir:
             gscontrol.append("mir")
-        gscontrol = None if gscontrol is [] else gscontrol
+        gscontrol = None if gscontrol == [] else gscontrol
 
         reporting.static_figures.carpet_plot(
             optcom_ts=data_oc,
