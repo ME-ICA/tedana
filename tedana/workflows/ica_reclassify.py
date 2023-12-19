@@ -297,6 +297,27 @@ def ica_reclassify_workflow(
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
 
+    # boilerplate
+    prefix = io._infer_prefix(prefix)
+    basename = f"{prefix}report"
+    extension = "txt"
+    repname = op.join(out_dir, (basename + "." + extension))
+    bibtex_file = op.join(out_dir, f"{prefix}references.bib")
+    repex = op.join(out_dir, (basename + "*"))
+    previousreps = glob(repex)
+    previousreps.sort(reverse=True)
+    for f in previousreps:
+        previousparts = op.splitext(f)
+        newname = previousparts[0] + "_old" + previousparts[1]
+        os.rename(f, newname)
+
+    # create logfile name
+    basename = "tedana_"
+    extension = "tsv"
+    start_time = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
+    logname = op.join(out_dir, (basename + start_time + "." + extension))
+    utils.setup_loggers(logname=logname, repname=repname, quiet=quiet, debug=debug)
+
     # If accept and reject are a list of integers, they stay the same
     # If they are a filename, load numbers of from
     # If they are a string of values, convert to a list of ints
@@ -326,27 +347,6 @@ def ica_reclassify_workflow(
 
     if len(in_both) != 0:
         raise ValueError("The following components were both accepted and rejected: " f"{in_both}")
-
-    # boilerplate
-    prefix = io._infer_prefix(prefix)
-    basename = f"{prefix}report"
-    extension = "txt"
-    repname = op.join(out_dir, (basename + "." + extension))
-    bibtex_file = op.join(out_dir, f"{prefix}references.bib")
-    repex = op.join(out_dir, (basename + "*"))
-    previousreps = glob(repex)
-    previousreps.sort(reverse=True)
-    for f in previousreps:
-        previousparts = op.splitext(f)
-        newname = previousparts[0] + "_old" + previousparts[1]
-        os.rename(f, newname)
-
-    # create logfile name
-    basename = "tedana_"
-    extension = "tsv"
-    start_time = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
-    logname = op.join(out_dir, (basename + start_time + "." + extension))
-    utils.setup_loggers(logname=logname, repname=repname, quiet=quiet, debug=debug)
 
     # Save command into sh file, if the command-line interface was used
     # TODO: use io_generator to save command
