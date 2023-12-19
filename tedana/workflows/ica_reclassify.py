@@ -49,7 +49,7 @@ def _get_parser():
         nargs="+",
         help=(
             "Component indices to accept (zero-indexed)."
-            "Supply as a comma-delimited liist with no spaces, "
+            "Supply as a comma-delimited list with no spaces, "
             "as a csv file, or as a text file with an allowed "
             f"delimiter {repr(ALLOWED_COMPONENT_DELIMITERS)}."
         ),
@@ -60,8 +60,8 @@ def _get_parser():
         dest="manual_reject",
         nargs="+",
         help=(
-            "Component indices to accept (zero-indexed)."
-            "Supply as a comma-delimited liist with no spaces, "
+            "Component indices to reject (zero-indexed)."
+            "Supply as a comma-delimited list with no spaces, "
             "as a csv file, or as a text file with an allowed "
             f"delimiter {repr(ALLOWED_COMPONENT_DELIMITERS)}."
         ),
@@ -541,7 +541,7 @@ def ica_reclassify_workflow(
             gscontrol.append("gsr")
         if mir:
             gscontrol.append("mir")
-        gscontrol = None if gscontrol is [] else gscontrol
+        gscontrol = None if gscontrol == [] else gscontrol
 
         reporting.static_figures.carpet_plot(
             optcom_ts=data_oc,
