@@ -285,14 +285,10 @@ def test_integration_robustica_five_echo(skip_integration):
         pytest.skip("Skipping five-echo integration test")
 
     test_data_path, osf_id = data_for_testing_info("five-echo")
-    out_dir = os.path.abspath(os.path.join(test_data_path, "../../outputs/five-echo"))
-    # out_dir_manual = f"{out_dir}-manual"
+    out_dir = os.path.abspath(os.path.join(test_data_path, "../../outputs/five-echo_robustica"))
 
     if os.path.exists(out_dir):
         shutil.rmtree(out_dir)
-
-    # if os.path.exists(out_dir_manual):
-    #     shutil.rmtree(out_dir_manual)
 
     # download data and run the test
     download_test_data(osf_id, test_data_path)
@@ -376,7 +372,7 @@ def test_integration_robustica_four_echo(skip_integration):
         pytest.skip("Skipping four-echo integration test")
 
     test_data_path, osf_id = data_for_testing_info("four-echo")
-    out_dir = os.path.abspath(os.path.join(test_data_path, "../../outputs/four-echo"))
+    out_dir = os.path.abspath(os.path.join(test_data_path, "../../outputs/four-echo_robustica"))
     out_dir_manual = f"{out_dir}-manual"
 
     if os.path.exists(out_dir):
@@ -394,6 +390,8 @@ def test_integration_robustica_four_echo(skip_integration):
         data=datalist,
         mixm=op.join(op.dirname(datalist[0]), "desc-ICA_mixing_static.tsv"),
         tes=[11.8, 28.04, 44.28, 60.52],
+        ica_method="robustica",
+        n_robust_runs=8,
         out_dir=out_dir,
         tedpca="kundu-stabilize",
         gscontrol=["gsr", "mir"],
@@ -469,7 +467,7 @@ def test_integration_robustica_three_echo(skip_integration):
         pytest.skip("Skipping three-echo integration test")
 
     test_data_path, osf_id = data_for_testing_info("three-echo")
-    out_dir = os.path.abspath(os.path.join(test_data_path, "../../outputs/three-echo"))
+    out_dir = os.path.abspath(os.path.join(test_data_path, "../../outputs/three-echo_robustica"))
     out_dir_manual = f"{out_dir}-rerun"
 
     if os.path.exists(out_dir):

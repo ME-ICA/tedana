@@ -27,8 +27,7 @@ def tedica(
     maxit=DEFAULT_N_MAX_ITER,
     maxrestart=DEFAULT_N_MAX_RESTART,
 ):
-    """
-    Perform ICA on `data` with the user selected ica method and returns mixing matrix
+    """Perform ICA on `data` with the user selected ica method and returns mixing matrix.
 
     Parameters
     ----------
@@ -90,9 +89,7 @@ def tedica(
 
 
 def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
-    """
-    Perform robustica on `data` by running FastICA multiple times (n_robust_runs)
-    and returns mixing matrix
+    """Perform robustica on `data` and returns mixing matrix.
 
     Parameters
     ----------
@@ -115,7 +112,6 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
         where `C` is components and `T` is the same as in `data`
     fixed_seed : :obj:`int`
         Random seed from final decomposition.
-
     """
     if n_robust_runs > 200:
         LGR.warning(
@@ -161,27 +157,40 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
             rica.S_all, rica.clustering.labels_, rica.signs_, rica.orientation_
         )
 
-    iq = np.array(np.mean(q[q["cluster_id"] >= 0].iq))  # The cluster labeled -1 is noise
+    iq = np.array(
+        np.mean(q[q["cluster_id"] >= 0].iq)
+    )  # Excluding outliers (cluster -1) from the index quality calculation
 
     if iq < 0.6:
         LGR.warning(
-            "The resultant mean Index Quality is low ({0}). It is recommended to rerun the "
-            "process with a different seed.".format(iq)
+            f"The resultant mean Index Quality is low ({iq}). It is recommended to rerun the "
+            "process with a different seed."
         )
 
-    mmix = mmix[:, q["cluster_id"] >= 0]
+    mmix = mmix[
+        :, q["cluster_id"] >= 0
+    ]  # Excluding outliers (cluster -1) when calculating the mixing matrix
     mmix = stats.zscore(mmix, axis=0)
 
     LGR.info(
-        "RobustICA with {0} robust runs and seed {1} was used. "
-        "The mean Index Quality is {2}".format(n_robust_runs, fixed_seed, iq)
+        f"RobustICA with {n_robust_runs} robust runs and seed {fixed_seed} was used. "
+        f"The mean Index Quality is {iq}."
     )
+
+    no_outliers = np.count_nonzero(rica.clustering.labels_ == -1)
+    if no_outliers:
+        LGR.info(
+            "The DBSCAN clustering algorithm detected outliers when clustering "
+            "components for different runs. These outliers are excluded when calculating "
+            "the index quality and the mixing matrix to maximise the robustness of the "
+            "decomposition."
+        )
+
     return mmix, fixed_seed
 
 
 def f_ica(data, n_components, fixed_seed, maxit, maxrestart):
-    """
-    Perform FastICA on `data` and returns mixing matrix
+    """Perform FastICA on `data` and returns mixing matrix.
 
     Parameters
     ----------
