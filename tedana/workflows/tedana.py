@@ -28,6 +28,13 @@ from tedana import (
     utils,
 )
 from tedana.bibtex import get_description_references
+from tedana.config import (
+    DEFAULT_ICA_METHOD,
+    DEFAULT_N_MAX_ITER,
+    DEFAULT_N_MAX_RESTART,
+    DEFAULT_N_ROBUST_RUNS,
+    DEFAULT_SEED,
+)
 from tedana.stats import computefeats2
 from tedana.workflows.parser_utils import check_tedpca_value, is_valid_file
 
@@ -163,6 +170,20 @@ def _get_parser():
         default="kundu",
     )
     optional.add_argument(
+        "--ica_method",
+        dest="ica_method",
+        help=(
+            "The applied ICA method. If set to fastica the FastICA "
+            "from sklearn library will be run once with the seed value. "
+            "robustica will run FastICA n_robust_runs times and uses "
+            "clustering methods to overcome the randomness of the FastICA "
+            "algorithm. When set to fastica, --n_robust_runs option will have no effect."
+        ),
+        choices=["robustica", "fastica"],
+        type=str.lower,
+        default=DEFAULT_ICA_METHOD,
+    )
+    optional.add_argument(
         "--seed",
         dest="fixed_seed",
         metavar="INT",
@@ -171,9 +192,22 @@ def _get_parser():
             "Value used for random initialization of ICA "
             "algorithm. Set to an integer value for "
             "reproducible ICA results. Set to -1 for "
-            "varying results across ICA calls. "
+            "varying results across ICA calls. This"
+            "applies to both fastica and robustica methods."
         ),
-        default=42,
+        default=DEFAULT_SEED,
+    )
+    optional.add_argument(
+        "--n_robust_runs",
+        dest="n_robust_runs",
+        type=int,
+        help=(
+            "The number of times robustica will run."
+            "This is only effective when ica_method is "
+            "set to robustica."
+        ),
+        choices=range(5, 500),
+        default=DEFAULT_N_ROBUST_RUNS,
     )
     optional.add_argument(
         "--maxit",
@@ -181,7 +215,7 @@ def _get_parser():
         metavar="INT",
         type=int,
         help=("Maximum number of iterations for ICA."),
-        default=500,
+        default=DEFAULT_N_MAX_ITER,
     )
     optional.add_argument(
         "--maxrestart",
@@ -195,7 +229,7 @@ def _get_parser():
             "convergence is achieved before maxrestart "
             "attempts, ICA will finish early."
         ),
-        default=10,
+        default=DEFAULT_N_MAX_RESTART,
     )
     optional.add_argument(
         "--tedort",
@@ -321,10 +355,12 @@ def tedana_workflow(
     fittype="loglin",
     combmode="t2s",
     tree="kundu",
+    ica_method=DEFAULT_ICA_METHOD,
+    n_robust_runs=DEFAULT_N_ROBUST_RUNS,
     tedpca="aic",
-    fixed_seed=42,
-    maxit=500,
-    maxrestart=10,
+    fixed_seed=DEFAULT_SEED,
+    maxit=DEFAULT_N_MAX_ITER,
+    maxrestart=DEFAULT_N_MAX_RESTART,
     tedort=False,
     gscontrol=None,
     no_reports=False,
@@ -380,6 +416,16 @@ def tedana_workflow(
         accepts and rejects some distinct components compared to kundu.
         Testing to better understand the effects of the differences is ongoing.
         Default is 'kundu'.
+    ica_method : {'robustica', 'fastica'}, optional
+        The applied ICA method. If set to fastica the FastICA from sklearn
+        library will be run once with the seed value. 'robustica' will run
+        'FastICA' n_robust_runs times and uses clustering methods to overcome
+        the randomness of the FastICA algorithm. When set to fastica n_robust_runs
+        will not be effective.
+        Default is 'robustica'
+    n_robust_runs : :obj:`int`, optional
+        The number of times robustica will run. This is only effective when 'ica_method' is
+        set to 'robustica'.
     tedpca : {'mdl', 'aic', 'kic', 'kundu', 'kundu-stabilize', float, int}, optional
         Method with which to select components in TEDPCA.
         If a float is provided, then it is assumed to represent percentage of variance
@@ -389,8 +435,8 @@ def tedana_workflow(
         Default is 'aic'.
     fixed_seed : :obj:`int`, optional
         Value passed to ``mdp.numx_rand.seed()``.
-        Set to a positive integer value for reproducible ICA results;
-        otherwise, set to -1 for varying results across calls.
+        Set to a positive integer value for reproducible ICA results (fastica/robustica);
+        otherwise, set to -1 for varying results across ICA (fastica/robustica) calls.
     maxit : :obj:`int`, optional
         Maximum number of iterations for ICA. Default is 500.
     maxrestart : :obj:`int`, optional
@@ -660,7 +706,13 @@ def tedana_workflow(
         seed = fixed_seed
         while keep_restarting:
             mmix, seed = decomposition.tedica(
-                dd, n_components, seed, maxit, maxrestart=(maxrestart - n_restarts)
+                dd,
+                n_components,
+                seed,
+                ica_method,
+                n_robust_runs,
+                maxit,
+                maxrestart=(maxrestart - n_restarts),
             )
             seed += 1
             n_restarts = seed - fixed_seed

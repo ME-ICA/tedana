@@ -258,6 +258,7 @@ def test_integration_five_echo(skip_integration):
     tedana_cli.tedana_workflow(
         data=datalist,
         tes=echo_times,
+        ica_method="fastica",
         out_dir=out_dir,
         tedpca=0.95,
         fittype="curvefit",
@@ -275,6 +276,44 @@ def test_integration_five_echo(skip_integration):
     # compare the generated output files
     fn = resource_filename("tedana", "tests/data/nih_five_echo_outputs_verbose.txt")
     check_integration_outputs(fn, out_dir)
+
+
+def test_integration_robustica_five_echo(skip_integration):
+    """Integration test of the full tedana workflow with robustica using five-echo test data."""
+
+    if skip_integration:
+        pytest.skip("Skipping five-echo integration test")
+
+    test_data_path, osf_id = data_for_testing_info("five-echo")
+    out_dir = os.path.abspath(os.path.join(test_data_path, "../../outputs/five-echo_robustica"))
+
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    # download data and run the test
+    download_test_data(osf_id, test_data_path)
+    prepend = f"{test_data_path}/p06.SBJ01_S09_Task11_e"
+    suffix = ".sm.nii.gz"
+    datalist = [prepend + str(i + 1) + suffix for i in range(5)]
+    echo_times = [15.4, 29.7, 44.0, 58.3, 72.6]
+    tedana_cli.tedana_workflow(
+        data=datalist,
+        tes=echo_times,
+        ica_method="robustica",
+        n_robust_runs=10,
+        out_dir=out_dir,
+        tedpca=0.95,
+        fittype="curvefit",
+        fixed_seed=49,
+        tedort=True,
+        verbose=True,
+        prefix="sub-01",
+    )
+
+    # Just a check on the component table pending a unit test of load_comptable
+    comptable = os.path.join(out_dir, "sub-01_desc-tedana_metrics.tsv")
+    df = pd.read_table(comptable)
+    assert isinstance(df, pd.DataFrame)
 
 
 def test_integration_four_echo(skip_integration):
@@ -302,6 +341,7 @@ def test_integration_four_echo(skip_integration):
         data=datalist,
         mixm=op.join(op.dirname(datalist[0]), "desc-ICA_mixing_static.tsv"),
         tes=[11.8, 28.04, 44.28, 60.52],
+        ica_method="fastica",
         out_dir=out_dir,
         tedpca="kundu-stabilize",
         gscontrol=["gsr", "mir"],
@@ -325,6 +365,51 @@ def test_integration_four_echo(skip_integration):
     check_integration_outputs(fn, out_dir)
 
 
+def test_integration_robustica_four_echo(skip_integration):
+    """Integration test of the full tedana workflow with robustica using four-echo test data."""
+
+    if skip_integration:
+        pytest.skip("Skipping four-echo integration test")
+
+    test_data_path, osf_id = data_for_testing_info("four-echo")
+    out_dir = os.path.abspath(os.path.join(test_data_path, "../../outputs/four-echo_robustica"))
+    out_dir_manual = f"{out_dir}-manual"
+
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    if os.path.exists(out_dir_manual):
+        shutil.rmtree(out_dir_manual)
+
+    # download data and run the test
+    download_test_data(osf_id, test_data_path)
+    prepend = f"{test_data_path}/sub-PILOT_ses-01_task-localizerDetection_run-01_echo-"
+    suffix = "_space-sbref_desc-preproc_bold+orig.HEAD"
+    datalist = [prepend + str(i + 1) + suffix for i in range(4)]
+    tedana_cli.tedana_workflow(
+        data=datalist,
+        mixm=op.join(op.dirname(datalist[0]), "desc-ICA_mixing_static.tsv"),
+        tes=[11.8, 28.04, 44.28, 60.52],
+        ica_method="robustica",
+        n_robust_runs=8,
+        out_dir=out_dir,
+        tedpca="kundu-stabilize",
+        gscontrol=["gsr", "mir"],
+        png_cmap="bone",
+        prefix="sub-01",
+        debug=True,
+        verbose=True,
+    )
+
+    ica_reclassify_workflow(
+        op.join(out_dir, "sub-01_desc-tedana_registry.json"),
+        accept=[1, 2, 3],
+        reject=[4, 5, 6],
+        out_dir=out_dir_manual,
+        mir=True,
+    )
+
+
 def test_integration_three_echo(skip_integration):
     """Integration test of the full tedana workflow using three-echo test data."""
 
@@ -346,6 +431,7 @@ def test_integration_three_echo(skip_integration):
     tedana_cli.tedana_workflow(
         data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
         tes=[14.5, 38.5, 62.5],
+        ica_method="fastica",
         out_dir=out_dir,
         low_mem=True,
         tedpca="aic",
@@ -372,6 +458,54 @@ def test_integration_three_echo(skip_integration):
     # compare the generated output files
     fn = resource_filename("tedana", "tests/data/cornell_three_echo_outputs.txt")
     check_integration_outputs(fn, out_dir)
+
+
+def test_integration_robustica_three_echo(skip_integration):
+    """Integration test of the full tedana workflow with robustica using three-echo test data."""
+
+    if skip_integration:
+        pytest.skip("Skipping three-echo integration test")
+
+    test_data_path, osf_id = data_for_testing_info("three-echo")
+    out_dir = os.path.abspath(os.path.join(test_data_path, "../../outputs/three-echo_robustica"))
+    out_dir_manual = f"{out_dir}-rerun"
+
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    if os.path.exists(out_dir_manual):
+        shutil.rmtree(out_dir_manual)
+
+    # download data and run the test
+    download_test_data(osf_id, test_data_path)
+    tedana_cli.tedana_workflow(
+        data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
+        tes=[14.5, 38.5, 62.5],
+        ica_method="robustica",
+        out_dir=out_dir,
+        low_mem=True,
+        tedpca="aic",
+    )
+
+    # Test re-running, but use the CLI
+    args = [
+        "-d",
+        f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
+        "-e",
+        "14.5",
+        "38.5",
+        "62.5",
+        "--ica_method",
+        "robustica",
+        "--out-dir",
+        out_dir_manual,
+        "--debug",
+        "--verbose",
+        "-f",
+        "--mix",
+        os.path.join(out_dir, "desc-ICA_mixing.tsv"),
+    ]
+    tedana_cli._main(args)
 
 
 def test_integration_reclassify_insufficient_args(skip_integration):
