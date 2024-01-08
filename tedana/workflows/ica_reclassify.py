@@ -150,7 +150,11 @@ def _get_parser():
 
 def _main(argv=None):
     """Run the ica_reclassify workflow."""
-    reclassify_command = "ica_reclassify " + " ".join(sys.argv[1:])
+    if argv:
+        # relevant for tests or if CLI called using ica_reclassify_cli._main(args)
+        reclassify_command = "ica_reclassify " + " ".join(argv)
+    else:
+        reclassify_command = "ica_reclassify " + " ".join(sys.argv[1:])
 
     args = _get_parser().parse_args(argv)
 
@@ -362,8 +366,7 @@ def ica_reclassify_workflow(
         reclassify_command = f"ica_reclassify_workflow({variables})"
 
     # Save system info to json
-    info_dict = utils.get_system_info()
-    info_dict["Python"] = sys.version
+    info_dict = utils.get_system_version_info()
     info_dict["Command"] = reclassify_command
 
     LGR.info(f"Using output directory: {out_dir}")
@@ -512,6 +515,7 @@ def ica_reclassify_workflow(
                     "Version": info_dict["Version"],
                 },
                 "Python": info_dict["Python"],
+                "Python_Libraries": info_dict["Python_Libraries"],
                 "Command": info_dict["Command"],
             }
         ],
