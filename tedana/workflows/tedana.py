@@ -515,8 +515,7 @@ def tedana_workflow(
     io_generator.register_input(data)
 
     # Save system info to json
-    info_dict = utils.get_system_info()
-    info_dict["Python"] = sys.version
+    info_dict = utils.get_system_version_info()
     info_dict["Command"] = tedana_command
 
     n_samp, n_echos, n_vols = catd.shape
@@ -844,6 +843,7 @@ def tedana_workflow(
                     "Version": info_dict["Version"],
                 },
                 "Python": info_dict["Python"],
+                "Python_Libraries": info_dict["Python_Libraries"],
                 "Command": info_dict["Command"],
             }
         ],
@@ -909,7 +909,11 @@ def tedana_workflow(
 
 def _main(argv=None):
     """Run the tedana workflow."""
-    tedana_command = "tedana " + " ".join(sys.argv[1:])
+    if argv:
+        # relevant for tests when CLI called with tedana_cli._main(args)
+        tedana_command = "tedana " + " ".join(argv)
+    else:
+        tedana_command = "tedana " + " ".join(sys.argv[1:])
     options = _get_parser().parse_args(argv)
     kwargs = vars(options)
     n_threads = kwargs.pop("n_threads")
