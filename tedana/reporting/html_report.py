@@ -131,20 +131,19 @@ def _generate_info_table(info_dict):
         info_tpl = Template(info_file.read())
 
     info_dict = info_dict["GeneratedBy"][0]
-    command = info_dict["Command"]
-    version_python = info_dict["Python"]
-    info_dict = info_dict["Node"]
+    node_dict = info_dict["Node"]
 
     info_html = info_tpl.substitute(
-        command=command,
-        system=info_dict["System"],
-        node=info_dict["Name"],
-        release=info_dict["Release"],
-        sysversion=info_dict["Version"],
-        machine=info_dict["Machine"],
-        processor=info_dict["Processor"],
-        python=version_python,
-        tedana=__version__,
+        command=info_dict["Command"],
+        system=node_dict["System"],
+        node=node_dict["Name"],
+        release=node_dict["Release"],
+        sysversion=node_dict["Version"],
+        machine=node_dict["Machine"],
+        processor=node_dict["Processor"],
+        python=info_dict["Python"],
+        python_libraries=info_dict["Python_Libraries"],
+        tedana=info_dict["Version"],
     )
     return info_html
 
