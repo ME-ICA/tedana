@@ -49,8 +49,8 @@ tedana: TE Dependent ANAlysis
    :alt: Join the chat
 
 .. image:: https://img.shields.io/badge/receive-our%20newsletter%20❤%EF%B8%8F-blueviolet.svg
-   :target: https://tinyletter.com/tedana-devs
-   :alt: Join our tinyletter mailing list
+   :target: https://groups.google.com/g/tedana-newsletter
+   :alt: Join our google group mailing list
 
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
    :target: https://github.com/psf/black
