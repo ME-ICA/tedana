@@ -50,7 +50,7 @@ tedana: TE Dependent ANAlysis
 
 .. image:: https://img.shields.io/badge/receive-our%20newsletter%20❤%EF%B8%8F-blueviolet.svg
    :target: https://groups.google.com/g/tedana-newsletter
-   :alt: Join our google group mailing list
+   :alt: Join our Google Group mailing list
 
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
    :target: https://github.com/psf/black
