@@ -121,8 +121,8 @@ Open or comment on one of [our issues](https://github.com/ME-ICA/tedana/issues)!
 If you're not sure where to begin, feel free to pop into [Mattermost](https://mattermost.brainhack.org/brainhack/channels/tedana) and introduce yourself!
 We will be happy to help you find somewhere to get started.
 
-If you don't want to get lots of notifications, we send out newsletters approximately once per month though our TinyLetter mailing list.
-You can view the [previous newsletters](https://tinyletter.com/tedana-devs/archive) and/or sign up to receive future ones at [https://tinyletter.com/tedana-devs](https://tinyletter.com/tedana-devs).
+If you don't want to get lots of notifications, we send out newsletters approximately once per month though our Google Group mailing list.
+You can view the [previous newsletters](https://groups.google.com/g/tedana-newsletter) and/or sign up to receive future ones by joining at [https://groups.google.com/g/tedana-newsletter](https://groups.google.com/g/tedana-newsletter).
 
 We ask that all contributors to ``tedana`` across all project-related spaces (including but not limited to: GitHub, Mattermost, and project emails), adhere to our [code of conduct](https://github.com/ME-ICA/tedana/blob/main/CODE_OF_CONDUCT.md).
 
