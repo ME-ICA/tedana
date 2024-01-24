@@ -11,7 +11,7 @@
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/ME-ICA/tedana.svg)](http://isitmaintained.com/project/ME-ICA/tedana "Average time to resolve an issue")
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/ME-ICA/tedana.svg)](http://isitmaintained.com/project/ME-ICA/tedana "Percentage of issues still open")
 [![Join the chat on Mattermost](https://img.shields.io/badge/Chat%20on-Mattermost-purple.svg)](https://mattermost.brainhack.org/brainhack/channels/tedana)
-[![Join our tinyletter mailing list](https://img.shields.io/badge/receive-our%20newsletter%20❤%EF%B8%8F-blueviolet.svg)](https://tinyletter.com/tedana-devs)
+[![Join our Google Group mailing list](https://img.shields.io/badge/receive-our%20newsletter%20❤%EF%B8%8F-blueviolet.svg)](https://groups.google.com/g/tedana-newsletter)
 [![All Contributors](https://img.shields.io/badge/all_contributors-20-orange.svg?style=flat-square)](#contributors)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
@@ -121,8 +121,8 @@ Open or comment on one of [our issues](https://github.com/ME-ICA/tedana/issues)!
 If you're not sure where to begin, feel free to pop into [Mattermost](https://mattermost.brainhack.org/brainhack/channels/tedana) and introduce yourself!
 We will be happy to help you find somewhere to get started.
 
-If you don't want to get lots of notifications, we send out newsletters approximately once per month though our TinyLetter mailing list.
-You can view the [previous newsletters](https://tinyletter.com/tedana-devs/archive) and/or sign up to receive future ones at [https://tinyletter.com/tedana-devs](https://tinyletter.com/tedana-devs).
+If you don't want to get lots of notifications, we send out newsletters approximately once per month though our Google Group mailing list.
+You can view the [previous newsletters](https://groups.google.com/g/tedana-newsletter) and/or sign up to receive future ones by joining at [https://groups.google.com/g/tedana-newsletter](https://groups.google.com/g/tedana-newsletter).
 
 We ask that all contributors to ``tedana`` across all project-related spaces (including but not limited to: GitHub, Mattermost, and project emails), adhere to our [code of conduct](https://github.com/ME-ICA/tedana/blob/main/CODE_OF_CONDUCT.md).
 
