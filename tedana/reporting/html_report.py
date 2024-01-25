@@ -1,6 +1,7 @@
 """Build HTML reports for tedana."""
 import logging
 import os
+import re
 from os.path import join as opj
 from pathlib import Path
 from string import Template
@@ -9,6 +10,7 @@ import pandas as pd
 from bokeh import __version__ as bokehversion
 from bokeh import embed, layouts, models
 from pybtex.database.input import bibtex
+from pybtex.plugin import find_plugin
 
 from tedana import __version__
 from tedana.io import load_json
@@ -16,7 +18,6 @@ from tedana.reporting import dynamic_figures as df
 
 LGR = logging.getLogger("GENERAL")
 
-from pybtex.plugin import find_plugin
 
 APA = find_plugin("pybtex.style.formatting", "apa")()
 HTML = find_plugin("pybtex.backends", "html")()
@@ -26,7 +27,52 @@ def _bib2html(bibliography):
     parser = bibtex.Parser()
     bibliography = parser.parse_file(bibliography)
     formatted_bib = APA.format_bibliography(bibliography)
-    return "<br>".join(entry.text.render(HTML) for entry in formatted_bib)
+    bibliography_str = "<br>".join(entry.text.render(HTML) for entry in formatted_bib)
+    return bibliography_str, bibliography
+
+
+def _cite2html(bibliography, citekey):
+    # Make a list of citekeys and separete double citations
+    citekey_list = citekey.split(",") if "," in citekey else [citekey]
+
+    for idx, key in enumerate(citekey_list):
+        # Get first author
+        first_author = bibliography.entries[key].persons["author"][0]
+
+        # Keep surname only (whatever is before the comma)
+        first_author = str(first_author).split(",")[0]
+
+        # Get publication year
+        pub_year = bibliography.entries[key].fields["year"]
+
+        # Return complete citation
+        if idx == 0:
+            citation = f"{first_author} et al. {pub_year}"
+        else:
+            citation += f", {first_author} et al. {pub_year}"
+
+    return citation
+
+
+def _inline_citations(text, bibliography):
+    # Find all \citep
+    matches = re.finditer(r"\\citep{(.*?)}", text)
+    citations = [(match.start(), match.group(1)) for match in matches]
+
+    updated_text = text
+
+    for citation in citations:
+        start_idx = citation[0]
+        citekey = citation[1]
+        latex_cite_length = len("\\citep{") + len(citekey) + 1
+        end_idx = start_idx + latex_cite_length
+
+        # Convert citation form latex to html
+        html_citation = f"({_cite2html(bibliography, citekey)})"
+
+        updated_text = updated_text[:start_idx] + html_citation + updated_text[end_idx:]
+
+    return updated_text
 
 
 def _generate_buttons(out_dir, io_generator):
@@ -99,7 +145,12 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
     initial_carpet = f"./figures/{prefix}carpet_optcom.svg"
 
     # Convert bibtex to html
-    references = _bib2html(references)
+    references, bibliography = _bib2html(references)
+
+    # Update inline citations
+    about = _inline_citations(about, bibliography)
+
+    breakpoint()
 
     body_template_name = "report_body_template.html"
     body_template_path = resource_path.joinpath(body_template_name)
