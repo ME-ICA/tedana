@@ -294,6 +294,17 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "goodalse2019",
+      "name": "Sarah Goodale",
+      "avatar_url": "https://avatars.githubusercontent.com/u/60117796?v=4",
+      "profile": "https://github.com/goodalse2019",
+      "contributions": [
+        "doc",
+        "ideas",
+        "question"
+      ]
     }
   ],
   "contributorsPerLine": 5,

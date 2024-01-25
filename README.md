@@ -173,6 +173,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <tr>
       <td align="center" valign="top" width="20%"><a href="https://github.com/bpinsard"><img src="https://avatars.githubusercontent.com/u/1155388?v=4?s=100" width="100px;" alt="Basile"/><br /><sub><b>Basile</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=bpinsard" title="Code">💻</a></td>
       <td align="center" valign="top" width="20%"><a href="https://github.com/effigies"><img src="https://avatars.githubusercontent.com/u/83442?v=4?s=100" width="100px;" alt="Chris Markiewicz"/><br /><sub><b>Chris Markiewicz</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=effigies" title="Code">💻</a></td>
+      <td align="center" valign="top" width="20%"><a href="https://github.com/goodalse2019"><img src="https://avatars.githubusercontent.com/u/60117796?v=4?s=100" width="100px;" alt="Sarah Goodale"/><br /><sub><b>Sarah Goodale</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=goodalse2019" title="Documentation">📖</a> <a href="#ideas-goodalse2019" title="Ideas, Planning, & Feedback">🤔</a> <a href="#question-goodalse2019" title="Answering Questions">💬</a></td>
     </tr>
   </tbody>
 </table>
