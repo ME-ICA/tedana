@@ -62,15 +62,12 @@ def _inline_citations(text, bibliography):
     updated_text = text
 
     for citation in citations:
-        start_idx = citation[0]
         citekey = citation[1]
-        latex_cite_length = len("\\citep{") + len(citekey) + 1
-        end_idx = start_idx + latex_cite_length
+        matched_string = "\\citep{" + citekey + "}"
 
         # Convert citation form latex to html
         html_citation = f"({_cite2html(bibliography, citekey)})"
-
-        updated_text = updated_text[:start_idx] + html_citation + updated_text[end_idx:]
+        updated_text = updated_text.replace(matched_string, html_citation, 1)
 
     return updated_text
 
