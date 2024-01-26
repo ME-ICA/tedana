@@ -39,8 +39,9 @@ def _cite2html(bibliography, citekey):
         # Get first author
         first_author = bibliography.entries[key].persons["author"][0]
 
-        # Keep surname only (whatever is before the comma)
-        first_author = str(first_author).split(",")[0]
+        # Keep surname only (whatever is before the comma, if there is a comma)
+        if "," in str(first_author):
+            first_author = str(first_author).split(",")[0]
 
         # Get publication year
         pub_year = bibliography.entries[key].fields["year"]
