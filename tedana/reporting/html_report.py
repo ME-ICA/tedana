@@ -150,8 +150,6 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
     # Update inline citations
     about = _inline_citations(about, bibliography)
 
-    breakpoint()
-
     body_template_name = "report_body_template.html"
     body_template_path = resource_path.joinpath(body_template_name)
     with open(str(body_template_path)) as body_file:
