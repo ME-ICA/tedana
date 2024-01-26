@@ -27,7 +27,7 @@ def _bib2html(bibliography):
     parser = bibtex.Parser()
     bibliography = parser.parse_file(bibliography)
     formatted_bib = APA.format_bibliography(bibliography)
-    bibliography_str = "<br>".join(entry.text.render(HTML) for entry in formatted_bib)
+    bibliography_str = "".join(f"<li>{entry.text.render(HTML)}</li>" for entry in formatted_bib)
     return bibliography_str, bibliography
 
 
