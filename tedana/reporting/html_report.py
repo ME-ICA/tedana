@@ -27,7 +27,7 @@ def _bib2html(bibliography):
     parser = bibtex.Parser()
     bibliography = parser.parse_file(bibliography)
     formatted_bib = APA.format_bibliography(bibliography)
-    bibliography_str = "<br>".join(entry.text.render(HTML) for entry in formatted_bib)
+    bibliography_str = "".join(f"<li>{entry.text.render(HTML)}</li>" for entry in formatted_bib)
     return bibliography_str, bibliography
 
 
@@ -39,8 +39,9 @@ def _cite2html(bibliography, citekey):
         # Get first author
         first_author = bibliography.entries[key].persons["author"][0]
 
-        # Keep surname only (whatever is before the comma)
-        first_author = str(first_author).split(",")[0]
+        # Keep surname only (whatever is before the comma, if there is a comma)
+        if "," in str(first_author):
+            first_author = str(first_author).split(",")[0]
 
         # Get publication year
         pub_year = bibliography.entries[key].fields["year"]
@@ -62,15 +63,12 @@ def _inline_citations(text, bibliography):
     updated_text = text
 
     for citation in citations:
-        start_idx = citation[0]
         citekey = citation[1]
-        latex_cite_length = len("\\citep{") + len(citekey) + 1
-        end_idx = start_idx + latex_cite_length
+        matched_string = "\\citep{" + citekey + "}"
 
         # Convert citation form latex to html
         html_citation = f"({_cite2html(bibliography, citekey)})"
-
-        updated_text = updated_text[:start_idx] + html_citation + updated_text[end_idx:]
+        updated_text = updated_text.replace(matched_string, html_citation, 1)
 
     return updated_text
 
@@ -149,8 +147,6 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
 
     # Update inline citations
     about = _inline_citations(about, bibliography)
-
-    breakpoint()
 
     body_template_name = "report_body_template.html"
     body_template_path = resource_path.joinpath(body_template_name)
