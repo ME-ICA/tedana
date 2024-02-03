@@ -1,4 +1,5 @@
 """Utilities for managing the tedana bibliography."""
+
 import logging
 import os.path as op
 import re

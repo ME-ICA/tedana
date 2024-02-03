@@ -2,6 +2,7 @@
 This script comes from scikit-learn:
 https://github.com/scikit-learn/scikit-learn/blob/main/doc/sphinxext/github_link.py
 """
+
 from operator import attrgetter
 import inspect
 import subprocess
