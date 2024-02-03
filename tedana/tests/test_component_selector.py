@@ -193,10 +193,7 @@ def test_minimal():
 
 
 def test_validate_tree_succeeds():
-    """
-    Tests to make sure validate_tree suceeds for all default.
-
-    decision trees in  decision trees.
+    """Test to make sure validate_tree suceeds for all default trees.
 
     Tested on all default trees in ./tedana/resources/decision_trees
     Note: If there is a tree in the default trees directory that
@@ -223,19 +220,14 @@ def test_validate_tree_succeeds():
 
 
 def test_validate_tree_warnings():
-    """
-    Tests to make sure validate_tree triggers all warning conditions.
-
-    but still succeeds.
-    """
+    """Test to make sure validate_tree triggers all warning conditions."""
 
     # A tree that raises all possible warnings in the validator should still be valid
     assert component_selector.validate_tree(dicts_to_test("valid"))
 
 
 def test_validate_tree_fails():
-    """
-    Tests to make sure validate_tree fails for invalid trees.
+    """Test to make sure validate_tree fails for invalid trees.
 
     Tests ../resources/decision_trees/invalid*.json and
     ./data/ComponentSelection/invalid*.json trees.

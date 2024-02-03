@@ -103,8 +103,7 @@ def test_make_adaptive_mask():
 
 
 def test_smoke_reshape_niimg():
-    """
-    Ensure that reshape_niimg returns reasonable objects with random inputs.
+    """Ensure that reshape_niimg returns reasonable objects with random inputs.
 
     in the correct format.
 
@@ -124,8 +123,7 @@ def test_smoke_reshape_niimg():
 
 
 def test_smoke_make_adaptive_mask():
-    """
-    Ensure that make_adaptive_mask returns reasonable objects with random inputs.
+    """Ensure that make_adaptive_mask returns reasonable objects with random inputs.
 
     in the correct format.
 
@@ -143,8 +141,7 @@ def test_smoke_make_adaptive_mask():
 
 
 def test_smoke_unmask():
-    """
-    Ensure that unmask returns reasonable objects with random inputs.
+    """Ensure that unmask returns reasonable objects with random inputs.
 
     in the correct format.
 
@@ -161,8 +158,7 @@ def test_smoke_unmask():
 
 
 def test_smoke_dice():
-    """
-    Ensure that dice returns reasonable objects with random inputs.
+    """Ensure that dice returns reasonable objects with random inputs.
 
     in the correct format.
 
@@ -175,8 +171,7 @@ def test_smoke_dice():
 
 
 def test_smoke_andb():
-    """
-    Ensure that andb returns reasonable objects with random inputs.
+    """Ensure that andb returns reasonable objects with random inputs.
 
     in the correct format.
     """
@@ -186,8 +181,7 @@ def test_smoke_andb():
 
 
 def test_smoke_get_spectrum():
-    """
-    Ensure that get_spectrum returns reasonable objects with random inputs.
+    """Ensure that get_spectrum returns reasonable objects with random inputs.
 
     in the correct format.
     """
@@ -200,8 +194,7 @@ def test_smoke_get_spectrum():
 
 
 def test_smoke_threshold_map():
-    """
-    Ensure that threshold_map returns reasonable objects with random inputs.
+    """Ensure that threshold_map returns reasonable objects with random inputs.
 
     in the correct format.
 

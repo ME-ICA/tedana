@@ -35,10 +35,9 @@ def sample_component_table(options=None):
 
 
 def sample_selector(options=None):
-    """
-    Retrieves a sample component table and initializes.
+    """Retrieve a sample component table and initializes a selector.
 
-    a selector using that component table and the minimal tree.
+    The selector uses that component table and the minimal tree.
 
     options: Different strings will alter the selector
        'provclass': Change the classifications to "provisional accept" for 4 components
@@ -118,8 +117,7 @@ def test_selectcomps2use_fails():
 
 
 def test_comptable_classification_changer_succeeds():
-    """
-    All conditions where comptable_classification_changer should run.
+    """All conditions where comptable_classification_changer should run.
 
     Note: This confirms the function runs, but not that outputs are accurate.
 
