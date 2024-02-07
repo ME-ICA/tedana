@@ -1,4 +1,5 @@
 """Dynamic figures for tedana report."""
+
 from math import pi
 
 import numpy as np

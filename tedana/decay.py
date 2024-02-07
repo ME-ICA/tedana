@@ -1,4 +1,5 @@
 """Functions to estimate S0 and T2* from multi-echo data."""
+
 import logging
 
 import numpy as np

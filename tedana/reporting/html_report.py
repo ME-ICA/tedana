@@ -1,4 +1,5 @@
 """Build HTML reports for tedana."""
+
 import logging
 import os
 import re

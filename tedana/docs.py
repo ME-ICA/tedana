@@ -1,4 +1,5 @@
 """Documentation to be injected into docstrings."""
+
 import sys
 
 ###################################

@@ -1,4 +1,5 @@
 """Tests for tedana.reporting."""
+
 import numpy as np
 
 from tedana import reporting
