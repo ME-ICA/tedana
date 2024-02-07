@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from tedana import io, utils
-from tedana.metrics import dependence
+from tedana.metrics import dependence, external
 from tedana.metrics._utils import dependency_resolver, determine_signs, flip_components
 from tedana.stats import getfbounds
 
@@ -16,6 +16,7 @@ RepLGR = logging.getLogger("REPORT")
 
 
 def generate_metrics(
+    *,
     data_cat,
     data_optcom,
     mixing,
@@ -23,6 +24,7 @@ def generate_metrics(
     tes,
     io_generator,
     label,
+    external_regressors=None,
     metrics=None,
 ):
     """Fit TE-dependence and -independence models to components.
@@ -47,6 +49,9 @@ def generate_metrics(
         The output generator object for this workflow
     label : str in ['ICA', 'PCA']
         The label for this metric generation type
+    external_regressors : None or :obj:`pandas.DataFrame`, optional
+        External regressors (e.g., motion parameters, physiological noise) to correlate with
+        ICA components. If None, no external regressor metrics will be calculated.
     metrics : list
         List of metrics to return
 
@@ -320,6 +325,15 @@ def generate_metrics(
             comptable["countsigFT2"],
         )
 
+    # External regressor-based metrics
+    if "external correlation" in required_metrics:
+        external_regressor_names = external_regressors.columns.tolist()
+        LGR.info("Calculating external regressor correlations")
+        for col in external_regressor_names:
+            external_regressor_arr = external_regressors[col].values
+            corrs = external.correlate_regressor(external_regressor_arr, mixing)
+            comptable.loc[f"{col}_correlation", :] = corrs
+
     # Write verbose metrics if needed
     if io_generator.verbose:
         write_betas = "map echo betas" in metric_maps
@@ -374,6 +388,7 @@ def generate_metrics(
         "d_table_score",
         "kappa ratio",
         "d_table_score_scrub",
+        "external correlation",
         "classification",
         "rationale",
     )
@@ -593,6 +608,19 @@ def get_metadata(comptable):
                 -1: "Component is flipped prior to metric calculation.",
             },
         }
+
+    if any(col.endswith("_correlation") for col in comptable.columns):
+        external_correlations = [col for col in comptable.columns if col.endswith("_correlation")]
+        for col in external_correlations:
+            original_col = col.replace("_correlation", "")
+            metric_metadata[col] = {
+                "LongName": f"{original_col}-component correlation",
+                "Description": (
+                    "Correlation between the component time series and the external regressor "
+                    f"{original_col}."
+                ),
+                "Units": "Pearson correlation coefficient",
+            }
 
     # There are always components in the comptable, definitionally
     metric_metadata["Component"] = {

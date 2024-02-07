@@ -48,13 +48,14 @@ def test_smoke_generate_metrics(testdata1):
         "d_table_score",
     ]
     comptable = collect.generate_metrics(
-        testdata1["data_cat"],
-        testdata1["data_optcom"],
-        testdata1["mixing"],
-        testdata1["adaptive_mask"],
-        testdata1["tes"],
-        testdata1["generator"],
-        "ICA",
+        data_cat=testdata1["data_cat"],
+        data_optcom=testdata1["data_optcom"],
+        mixing=testdata1["mixing"],
+        adaptive_mask=testdata1["adaptive_mask"],
+        tes=testdata1["tes"],
+        io_generator=testdata1["generator"],
+        label="ICA",
+        external_regressors=None,
         metrics=metrics,
     )
     assert isinstance(comptable, pd.DataFrame)

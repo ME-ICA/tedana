@@ -6,7 +6,8 @@
         "adaptive_mask",
         "mask",
         "tes",
-        "ref_img"
+        "ref_img",
+        "external_regressors"
     ],
     "dependencies": {
         "kappa": [
@@ -115,6 +116,10 @@
             "mask",
             "ref_img",
             "tes"
+        ],
+        "external correlation": [
+            "mixing",
+            "external_regressors"
         ]
     }
 }

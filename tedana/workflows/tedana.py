@@ -164,6 +164,19 @@ def _get_parser():
         default="kundu",
     )
     optional.add_argument(
+        "--external",
+        dest="external_regressors",
+        type=lambda x: is_valid_file(parser, x),
+        help=(
+            "File containing external regressors to be used in the decision tree. "
+            "The file must be a TSV file with the same number of rows as the number of volumes in "
+            "the input data. Each column in the file will be treated as a separate regressor. "
+            "The decision tree must contain a node for each of the columns in this file, "
+            "with the metric '<column>_correlation'."
+        ),
+        default=None,
+    )
+    optional.add_argument(
         "--seed",
         dest="fixed_seed",
         metavar="INT",
@@ -322,6 +335,7 @@ def tedana_workflow(
     fittype="loglin",
     combmode="t2s",
     tree="kundu",
+    external_regressors=None,
     tedpca="aic",
     fixed_seed=42,
     maxit=500,
@@ -381,6 +395,11 @@ def tedana_workflow(
         accepts and rejects some distinct components compared to kundu.
         Testing to better understand the effects of the differences is ongoing.
         Default is 'kundu'.
+    external_regressors : :obj:`str` or None, optional
+        File containing external regressors to be used in the decision tree.
+        The file must be a TSV file with the same number of rows as the number of volumes in
+        the input data. Each column in the file will be treated as a separate regressor.
+        Default is None.
     tedpca : {'mdl', 'aic', 'kic', 'kundu', 'kundu-stabilize', float, int}, optional
         Method with which to select components in TEDPCA.
         If a float is provided, then it is assumed to represent percentage of variance
@@ -493,6 +512,10 @@ def tedana_workflow(
     # Check value of tedpca *if* it is a predefined string,
     # a float on [0, 1] or an int >= 1
     tedpca = check_tedpca_value(tedpca, is_parser=False)
+
+    # Load external regressors if provided
+    if external_regressors:
+        external_regressors = pd.read_table(external_regressors)
 
     # For z-catted files, make sure it's a list of size 1
     if isinstance(data, str):
@@ -683,13 +706,14 @@ def tedana_workflow(
                 "d_table_score",
             ]
             comptable = metrics.collect.generate_metrics(
-                catd,
-                data_oc,
-                mmix,
-                masksum_clf,
-                tes,
-                io_generator,
-                "ICA",
+                data_cat=catd,
+                data_optcom=data_oc,
+                mixing=mmix,
+                adaptive_mask=masksum_clf,
+                tes=tes,
+                io_generator=io_generator,
+                label="ICA",
+                external_regressors=external_regressors,
                 metrics=required_metrics,
             )
             ica_selector = selection.automatic_selection(comptable, n_echos, n_vols, tree=tree)
@@ -727,13 +751,14 @@ def tedana_workflow(
             "d_table_score",
         ]
         comptable = metrics.collect.generate_metrics(
-            catd,
-            data_oc,
-            mmix,
-            masksum_clf,
-            tes,
-            io_generator,
-            "ICA",
+            data_cat=catd,
+            data_optcom=data_oc,
+            mixing=mmix,
+            adaptive_mask=masksum_clf,
+            tes=tes,
+            io_generator=io_generator,
+            label="ICA",
+            external_regressors=external_regressors,
             metrics=required_metrics,
         )
         ica_selector = selection.automatic_selection(
