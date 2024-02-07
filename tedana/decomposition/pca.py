@@ -350,7 +350,7 @@ def tedpca(
     ]
     comptable = metrics.collect.generate_metrics(
         data_cat=data_cat,
-        data_oc=data_oc,
+        data_optcom=data_oc,
         mixing=comp_ts,
         adaptive_mask=adaptive_mask,
         tes=tes,
