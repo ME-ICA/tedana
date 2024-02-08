@@ -350,8 +350,9 @@ def expand_dict(node, field, metrics):
                 raise ValueError(f"No metrics matching regex '{v}' found.")
 
             for replacement in replacements:
+                LGR.warning(f"Replacing {v} with {replacement}")
                 mod_node = copy.deepcopy(node)
-                mod_node[k] = replacement
+                mod_node[field][k] = replacement
                 out_nodes.append(mod_node)
 
     return regex_found, out_nodes
@@ -381,7 +382,9 @@ def expand_node(node, metrics):
         regex_found, out_nodes = expand_dict(node, "kwargs", metrics)
 
     if not regex_found:
+        # Stop early and just return the node if no regular expressions were found
         out_nodes = [copy.deepcopy(node)]
+        return out_nodes
 
     real_out_nodes = []
     for out_node in out_nodes:
@@ -405,7 +408,7 @@ def expand_nodes(tree, metrics):
     """
     expanded_tree = copy.deepcopy(tree)
     expanded_tree["nodes"] = []
-    for i_node, node in enumerate(tree["nodes"]):
+    for node in tree["nodes"]:
         nodes = expand_node(node, metrics)
         expanded_tree["nodes"] += nodes
 
