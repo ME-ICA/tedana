@@ -11,6 +11,7 @@ from tedana.selection import selection_nodes
 from tedana.selection.selection_utils import (
     clean_dataframe,
     confirm_metrics_exist,
+    expand_nodes,
     log_classification_counts,
 )
 from tedana.utils import get_resource_path
@@ -278,8 +279,9 @@ class ComponentSelector:
         if "classification" not in self.component_table:
             self.component_table["classification"] = "unclassified"
 
-        self.tree = load_config(self.tree_name)
-        tree_config = self.tree
+        tree_config = load_config(self.tree_name)
+        tree_config = expand_nodes(tree_config, component_table.columns.tolist())
+        self.tree = tree_config
 
         LGR.info("Performing component selection with " + tree_config["tree_id"])
         LGR.info(tree_config.get("info", ""))

@@ -1,5 +1,6 @@
 """Utility functions for tedana.selection."""
 
+import copy
 import logging
 import re
 
@@ -314,6 +315,79 @@ def clean_dataframe(component_table):
 #################################################
 # Functions to validate inputs or log information
 #################################################
+
+
+def expand_dict(d, node, metrics):
+    regex_found = False
+    out_nodes = []
+    for k, v in d.items():
+        if isinstance(v, str) and v.startswith("^"):
+            regex_found = True
+            replacements = [metric for metric in metrics if re.match(v, metric)]
+            if not replacements:
+                raise ValueError(f"No metrics matching regex '{v}' found.")
+
+            for replacement in replacements:
+                mod_node = copy.deepcopy(node)
+                mod_node[k] = replacement
+                out_nodes.append(mod_node)
+
+    return regex_found, out_nodes
+
+
+def expand_node(node, metrics):
+    """Expand node definitions with regular expressions.
+
+    Recursively expand a node so that any regular expressions are replaced with
+    any matching values in the 'metrics' list.
+    Regular expressions may be present as the value of any key in the
+    subdictionaries "parameters" or "kwargs".
+
+    Parameters
+    ----------
+    node : dict
+        A dictionary containing nested dictionaries called "parameters" and,
+        optionally, "kwargs".
+        Any of the values in the "parameters" or "kwargs" dictionaries may be
+        a regular expression, denoted by starting with "^".
+    metrics : list of str
+        List of metric names.
+    """
+
+    regex_found, out_nodes = expand_dict(node.get("parameters", {}), node, metrics)
+    if not regex_found:
+        regex_found, out_nodes = expand_dict(node.get("kwargs", {}), node, metrics)
+
+    if not regex_found:
+        out_nodes = [copy.deepcopy(node)]
+
+    real_out_nodes = []
+    for out_node in out_nodes:
+        real_out_nodes += expand_node(out_node, metrics)
+
+    return real_out_nodes
+
+
+def expand_nodes(tree, metrics):
+    """Expand all nodes in a decision tree.
+
+    Parameters
+    ----------
+    tree : dict
+        A dictionary containing nested dictionaries called "parameters" and,
+        optionally, "kwargs".
+        Any of the values in the "parameters" or "kwargs" dictionaries may be
+        a regular expression, denoted by starting with "^".
+    metrics : list of str
+        List of metric names.
+    """
+    expanded_tree = copy.deepcopy(tree)
+    expanded_tree["nodes"] = []
+    for node in expanded_tree["nodes"]:
+        nodes = expand_node(node, metrics)
+        expanded_tree["nodes"] += nodes
+
+    return expanded_tree
 
 
 def confirm_metrics_exist(component_table, necessary_metrics, function_name=None):
