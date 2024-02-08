@@ -317,10 +317,32 @@ def clean_dataframe(component_table):
 #################################################
 
 
-def expand_dict(d, node, metrics):
+def expand_dict(node, field, metrics):
+    """Expand a dictionary with regular expressions.
+
+    Parameters
+    ----------
+    node : dict
+        A dictionary containing nested dictionaries called "parameters" and,
+        optionally, "kwargs".
+        Any of the values in the "parameters" or "kwargs" dictionaries may be
+        a regular expression, denoted by starting with "^".
+    field : :obj:`str`
+        The key in the ``node`` dictionary that should be expanded.
+    metrics : list of str
+        List of metric names to compare regular expressions against.
+
+    Returns
+    -------
+    regex_found : :obj:`bool`
+        True if any regular expressions were found in the input dictionary
+    out_nodes : :obj:`list[dict]`
+        A list of dictionaries with regular expressions replaced by all
+        matching values in the 'metrics' list.
+    """
     regex_found = False
     out_nodes = []
-    for k, v in d.items():
+    for k, v in node.get(field, {}).items():
         if isinstance(v, str) and v.startswith("^"):
             regex_found = True
             replacements = [metric for metric in metrics if re.match(v, metric)]
@@ -354,9 +376,9 @@ def expand_node(node, metrics):
         List of metric names.
     """
 
-    regex_found, out_nodes = expand_dict(node.get("parameters", {}), node, metrics)
+    regex_found, out_nodes = expand_dict(node, "parameters", metrics)
     if not regex_found:
-        regex_found, out_nodes = expand_dict(node.get("kwargs", {}), node, metrics)
+        regex_found, out_nodes = expand_dict(node, "kwargs", metrics)
 
     if not regex_found:
         out_nodes = [copy.deepcopy(node)]
@@ -383,7 +405,7 @@ def expand_nodes(tree, metrics):
     """
     expanded_tree = copy.deepcopy(tree)
     expanded_tree["nodes"] = []
-    for node in expanded_tree["nodes"]:
+    for i_node, node in enumerate(tree["nodes"]):
         nodes = expand_node(node, metrics)
         expanded_tree["nodes"] += nodes
 

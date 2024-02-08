@@ -213,7 +213,7 @@
                 "right": 0.8
             },
             "kwargs": {
-                "log_extra_info": "If translational motion in the X direction is correlated with the components > 0.2, then reject.",
+                "log_extra_info": "If translational motion in the X direction is correlated with the components > 0.8, then reject.",
                 "log_extra_report": "",
                 "tag_if_true": "Unlikely BOLD"
             }
@@ -229,7 +229,7 @@
                 "right": 0.8
             },
             "kwargs": {
-                "log_extra_info": "If translational motion in the Y direction is correlated with the components > 0.3, then reject.",
+                "log_extra_info": "If translational motion in the Y direction is correlated with the components > 0.8, then reject.",
                 "log_extra_report": "",
                 "tag_if_true": "Unlikely BOLD"
             }
@@ -245,7 +245,7 @@
                 "right": 0.8
             },
             "kwargs": {
-                "log_extra_info": "If translational motion in the Z direction is correlated with the components > 0.4, then reject.",
+                "log_extra_info": "If translational motion in the Z direction is correlated with the components > 0.8, then reject.",
                 "log_extra_report": "",
                 "tag_if_true": "Unlikely BOLD"
             }

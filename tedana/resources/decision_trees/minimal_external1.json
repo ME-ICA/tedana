@@ -207,11 +207,11 @@
                 "if_false": "nochange",
                 "decide_comps": "all",
                 "op": ">",
-                "left": "^.*_correlation$",
-                "right": 0.2
+                "left": "^trans_[x|y|z]_correlation$",
+                "right": 0.8
             },
             "kwargs": {
-                "log_extra_info": "If any external regressor is correlated with the components > 0.2, then reject.",
+                "log_extra_info": "If translational motion in any direction is correlated with the components > 0.8, then reject.",
                 "log_extra_report": "",
                 "tag_if_true": "Unlikely BOLD"
             }
