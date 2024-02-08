@@ -376,7 +376,6 @@ def expand_node(node, metrics):
     metrics : list of str
         List of metric names.
     """
-
     regex_found, out_nodes = expand_dict(node, "parameters", metrics)
     if not regex_found:
         regex_found, out_nodes = expand_dict(node, "kwargs", metrics)
