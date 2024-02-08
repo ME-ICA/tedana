@@ -705,6 +705,9 @@ def tedana_workflow(
                 "normalized variance explained",
                 "d_table_score",
             ]
+            if external_regressors is not None:
+                required_metrics.append("external correlation")
+
             comptable = metrics.collect.generate_metrics(
                 data_cat=catd,
                 data_optcom=data_oc,

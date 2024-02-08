@@ -1,6 +1,7 @@
 """Utility functions for tedana.selection."""
 
 import logging
+import re
 
 import numpy as np
 
@@ -345,9 +346,18 @@ def confirm_metrics_exist(component_table, necessary_metrics, function_name=None
     the columns exist. Also, the string in `necessary_metrics` and the
     column labels in component_table will only be matched if they're identical.
     """
-    missing_metrics = necessary_metrics - set(component_table.columns)
-    metrics_exist = len(missing_metrics) > 0
-    if metrics_exist is True:
+    hardcoded_metrics = [metric for metric in necessary_metrics if not metric.startswith("^")]
+    regex_metrics = [metric for metric in necessary_metrics if metric.startswith("^")]
+    # Check that all hardcoded (literal string) metrics are accounted for.
+    missing_metrics = sorted(list(set(hardcoded_metrics) - set(component_table.columns)))
+    # Check that the regular expression-based metrics are accounted for.
+    found_metrics = component_table.columns.tolist()
+    for regex_metric in regex_metrics:
+        if not any(re.match(regex_metric, metric) for metric in found_metrics):
+            missing_metrics.append(regex_metric)
+
+    metrics_are_missing = len(missing_metrics) > 0
+    if metrics_are_missing:
         if function_name is None:
             function_name = "unknown function"
 
@@ -359,7 +369,7 @@ def confirm_metrics_exist(component_table, necessary_metrics, function_name=None
         )
         raise ValueError(error_msg)
 
-    return metrics_exist
+    return metrics_are_missing
 
 
 def log_decision_tree_step(

@@ -332,7 +332,7 @@ def generate_metrics(
         for col in external_regressor_names:
             external_regressor_arr = external_regressors[col].values
             corrs = external.correlate_regressor(external_regressor_arr, mixing)
-            comptable.loc[f"{col}_correlation", :] = corrs
+            comptable[f"{col}_correlation"] = corrs
 
     # Write verbose metrics if needed
     if io_generator.verbose:

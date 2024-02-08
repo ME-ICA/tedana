@@ -16,9 +16,9 @@ def correlate_regressor(external_regressor, mixing):
     Returns
     -------
     corrs : array, shape (n_components)
-        Correlations between external regressor and mixing components.
+        Absolute correlations between external regressor and mixing components.
     """
     assert external_regressor.ndim == 1
     assert external_regressor.shape[0] == mixing.shape[0]
-    corrs = np.corrcoef(external_regressor, mixing.T)[0, 1:]
+    corrs = np.abs(np.corrcoef(external_regressor, mixing.T)[0, 1:])
     return corrs

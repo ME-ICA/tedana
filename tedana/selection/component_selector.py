@@ -348,12 +348,15 @@ class ComponentSelector:
         # this will crash the program with an error message if not all
         # necessary_metrics are in the comptable
         confirm_metrics_exist(
-            self.component_table, self.necessary_metrics, function_name=self.tree_name
+            self.component_table,
+            self.necessary_metrics,
+            function_name=self.tree_name,
         )
 
         # for each node in the decision tree
         for self.current_node_idx, node in enumerate(
-            self.tree["nodes"][self.start_idx :], start=self.start_idx
+            self.tree["nodes"][self.start_idx :],
+            start=self.start_idx,
         ):
             # parse the variables to use with the function
             fcn = getattr(selection_nodes, node["functionname"])

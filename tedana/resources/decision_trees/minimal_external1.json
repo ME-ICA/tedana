@@ -11,7 +11,7 @@
         "dice_FT2",
         "signal-noise_t",
         "variance explained",
-        "*_correlation"
+        "^.*_correlation$"
     ],
     "intermediate_classifications": [
         "provisionalaccept",
@@ -207,7 +207,7 @@
                 "if_false": "nochange",
                 "decide_comps": "all",
                 "op": ">",
-                "left": "*_correlation",
+                "left": "^.*_correlation$",
                 "right": 0.2
             },
             "kwargs": {
