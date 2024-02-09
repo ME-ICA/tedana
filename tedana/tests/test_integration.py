@@ -396,18 +396,21 @@ def test_integration_three_echo_external_regressors(skip_integration):
 
     # download data and run the test
     # external_regress_3echo.tsv has 6 rows. Based on a local run on the 3 echo data:
-    #  Col 1 is the time series for component 43 + similar stdev Gaussian Noise
-    #  Col 2 is 0.4*comp46+0.5+comp13+Gaussian Noise
-    #  Col 4-6 are Gaussian Noise
-    # While this integration test is not currently checking outputs, there should be
-    # three more rejected components compared to what was see in the 3 echo integration
-    # test without external regressors
+    #  Col 1 (trans_x_correlation) is the TS for ICA comp 59 + similar stdev Gaussian Noise
+    #  Col 2 (trans_y_correlation) is 0.4*comp29+0.5+comp20+Gaussian Noise
+    #  Col 3 (trans_z_correlation) is comp20+Gaussian Noise
+    # With the currently set up decision tree minimal_exteral 2, one component (my 59)
+    # should be rejected, but 20 and 29 aren't rejected because neither crosses the
+    # r>0.8 threshold. If trans_y and trans_Z were included in a single model then
+    # component 20 would have been rejected
+    # Note that the above is in comparision to the minimal decision tree
+    # but the integration test for 3 echoes uses the kundu tree
     download_test_data(osf_id, test_data_path)
     tedana_cli.tedana_workflow(
         data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
         tes=[14.5, 38.5, 62.5],
         out_dir=out_dir,
-        tree=resource_filename("tedana", "resources/decision_trees/minimal_external1.json"),
+        tree=resource_filename("tedana", "resources/decision_trees/minimal_external2.json"),
         external_regressors=resource_filename("tedana", "tests/data/external_regress_3echo.tsv"),
         low_mem=True,
         tedpca="aic",
