@@ -174,11 +174,12 @@ def _get_parser():
         "--ica_method",
         dest="ica_method",
         help=(
-            "The applied ICA method. If set to fastica the FastICA "
-            "from sklearn library will be run once with the seed value. "
+            "The applied ICA method. fastica runs FastICA from "
+            "sklearn once with the seed value. "
             "robustica will run FastICA n_robust_runs times and uses "
             "clustering methods to overcome the randomness of the FastICA "
-            "algorithm. When set to fastica, --n_robust_runs option will have no effect."
+            "algorithm. FastICA was the default in tedana version 23 and earlier. "
+            "robustica will be slower."
         ),
         choices=["robustica", "fastica"],
         type=str.lower,
