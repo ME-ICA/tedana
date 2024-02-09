@@ -204,7 +204,7 @@ def _get_parser():
         dest="n_robust_runs",
         type=int,
         help=(
-            "The number of times robustica will run."
+            "The number of times robustica will run. "
             "This is only effective when ica_method is "
             "set to robustica."
         ),
