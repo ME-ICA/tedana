@@ -1,4 +1,5 @@
 """Metrics evaluating component TE-dependence or -independence."""
+
 import logging
 
 import numpy as np

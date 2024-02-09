@@ -1,4 +1,5 @@
 """Run the "canonical" TE-Dependent ANAlysis workflow."""
+
 import argparse
 import datetime
 import json
@@ -561,8 +562,7 @@ def tedana_workflow(
     io_generator.register_input(data)
 
     # Save system info to json
-    info_dict = utils.get_system_info()
-    info_dict["Python"] = sys.version
+    info_dict = utils.get_system_version_info()
     info_dict["Command"] = tedana_command
 
     n_samp, n_echos, n_vols = catd.shape
@@ -896,6 +896,7 @@ def tedana_workflow(
                     "Version": info_dict["Version"],
                 },
                 "Python": info_dict["Python"],
+                "Python_Libraries": info_dict["Python_Libraries"],
                 "Command": info_dict["Command"],
             }
         ],
@@ -907,7 +908,7 @@ def tedana_workflow(
         "This workflow used numpy \\citep{van2011numpy}, scipy \\citep{virtanen2020scipy}, "
         "pandas \\citep{mckinney2010data,reback2020pandas}, "
         "scikit-learn \\citep{pedregosa2011scikit}, "
-        "nilearn, bokeh \\citep{bokehmanual}, matplotlib \\citep{Hunter:2007}, "
+        "nilearn, bokeh \\citep{bokehmanual}, matplotlib \\citep{Hunter2007}, "
         "and nibabel \\citep{brett_matthew_2019_3233118}."
     )
 
@@ -961,7 +962,11 @@ def tedana_workflow(
 
 def _main(argv=None):
     """Run the tedana workflow."""
-    tedana_command = "tedana " + " ".join(sys.argv[1:])
+    if argv:
+        # relevant for tests when CLI called with tedana_cli._main(args)
+        tedana_command = "tedana " + " ".join(argv)
+    else:
+        tedana_command = "tedana " + " ".join(sys.argv[1:])
     options = _get_parser().parse_args(argv)
     kwargs = vars(options)
     n_threads = kwargs.pop("n_threads")

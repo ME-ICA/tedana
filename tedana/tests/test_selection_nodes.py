@@ -1,4 +1,5 @@
 """Tests for the tedana.selection.selection_nodes module."""
+
 import os
 
 import pytest

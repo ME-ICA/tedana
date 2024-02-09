@@ -31,5 +31,5 @@ Here we attempt to clarify when and how each communication pathway should be use
 - NeuroStars: The NeuroStars forum is to be used by tedana users to ask questions about how to use tedana. tedana's developers may answer usage questions on NeuroStars, but development-related discussions should happen in GitHub Issues and PRs.
 - Mattermost: There is a `tedana channel in the BrainHack Mattermost`_. This is primarily used for online discussions during BrainHack-related hackathons (for example, the annual OHBM hackathon), if and when there is a tedana-related project. We also use this channel to redirect to **existing** Issues and PRs, whether open or closed.
 
-.. _monthly newsletter: https://github.com/ME-ICA/newsletters
+.. _monthly newsletter: https://groups.google.com/g/tedana-newsletter
 .. _tedana channel in the BrainHack Mattermost: https://mattermost.brainhack.org/brainhack/channels/tedana
