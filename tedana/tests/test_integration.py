@@ -133,7 +133,8 @@ def data_for_testing_info(test_dataset=str):
 
 def download_test_data(osf_id, test_data_path):
     """
-    If current data is not already available, downloads tar.gz data
+    If current data is not already available, downloads tar.gz data.
+
     stored at `https://osf.io/osf_id/download`.
 
     and unpacks into `out_path`.
@@ -368,6 +369,49 @@ def test_integration_three_echo(skip_integration):
         os.path.join(out_dir, "desc-ICA_mixing.tsv"),
     ]
     tedana_cli._main(args)
+
+    # compare the generated output files
+    fn = resource_filename("tedana", "tests/data/cornell_three_echo_outputs.txt")
+    check_integration_outputs(fn, out_dir)
+
+
+def test_integration_three_echo_external_regressors(skip_integration):
+    """Integration test of tedana workflow.
+
+    Three-echo test data & external regressors.
+    """
+
+    if skip_integration:
+        pytest.skip("Skipping three-echo with external regressors integration test")
+
+    test_data_path, osf_id = data_for_testing_info("three-echo")
+    out_dir = os.path.abspath(os.path.join(test_data_path, "../../outputs/three-echo-externalreg"))
+    out_dir_manual = f"{out_dir}-rerun"
+
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    if os.path.exists(out_dir_manual):
+        shutil.rmtree(out_dir_manual)
+
+    # download data and run the test
+    # external_regress_3echo.tsv has 6 rows. Based on a local run on the 3 echo data:
+    #  Col 1 is the time series for component 43 + similar stdev Gaussian Noise
+    #  Col 2 is 0.4*comp46+0.5+comp13+Gaussian Noise
+    #  Col 4-6 are Gaussian Noise
+    # While this integration test is not currently checking outputs, there should be
+    # three more rejected components compared to what was see in the 3 echo integration
+    # test without external regressors
+    download_test_data(osf_id, test_data_path)
+    tedana_cli.tedana_workflow(
+        data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
+        tes=[14.5, 38.5, 62.5],
+        out_dir=out_dir,
+        tree=resource_filename("tedana", "resources/decision_trees/minimal_external1.json"),
+        external_regressors=resource_filename("tedana", "tests/data/external_regress_3echo.tsv"),
+        low_mem=True,
+        tedpca="aic",
+    )
 
     # compare the generated output files
     fn = resource_filename("tedana", "tests/data/cornell_three_echo_outputs.txt")
