@@ -124,39 +124,27 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
     if fixed_seed == -1:
         fixed_seed = np.random.randint(low=1, high=1000)
 
-    try:
-        rica = RobustICA(
-            n_components=n_components,
-            robust_runs=n_robust_runs,
-            whiten="arbitrary-variance",
-            max_iter=max_it,
-            random_state=fixed_seed,
-            robust_dimreduce=False,
-            fun="logcosh",
-            robust_method="DBSCAN",
-        )
+    for robust_method in ("DBSCAN", "AgglomerativeClustering"):
 
-        s, mmix = rica.fit_transform(data)
-        q = rica.evaluate_clustering(
-            rica.S_all, rica.clustering.labels_, rica.signs_, rica.orientation_
-        )
+        try:
+            rica = RobustICA(
+                n_components=n_components,
+                robust_runs=n_robust_runs,
+                whiten="arbitrary-variance",
+                max_iter=max_it,
+                random_state=fixed_seed,
+                robust_dimreduce=False,
+                fun="logcosh",
+                robust_method=robust_method,
+            )
 
-    except:
-        rica = RobustICA(
-            n_components=n_components,
-            robust_runs=n_robust_runs,
-            whiten="arbitrary-variance",
-            max_iter=max_it,
-            random_state=fixed_seed,
-            robust_dimreduce=False,
-            fun="logcosh",
-            robust_method="AgglomerativeClustering",
-        )
+            s, mmix = rica.fit_transform(data)
+            q = rica.evaluate_clustering(
+                rica.S_all, rica.clustering.labels_, rica.signs_, rica.orientation_
+            )
 
-        s, mmix = rica.fit_transform(data)
-        q = rica.evaluate_clustering(
-            rica.S_all, rica.clustering.labels_, rica.signs_, rica.orientation_
-        )
+        except Exception:
+            continue
 
     iq = np.array(
         np.mean(q[q["cluster_id"] >= 0].iq)
@@ -181,10 +169,10 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
     no_outliers = np.count_nonzero(rica.clustering.labels_ == -1)
     if no_outliers:
         LGR.info(
-            "The DBSCAN clustering algorithm detected outliers when clustering "
-            "components for different runs. These outliers are excluded when calculating "
-            "the index quality and the mixing matrix to maximise the robustness of the "
-            "decomposition."
+            f"The {robust_method} clustering algorithm detected outliers when clustering "
+            f"components for different runs. These outliers are excluded when calculating "
+            f"the index quality and the mixing matrix to maximise the robustness of the "
+            f"decomposition."
         )
 
     return mmix, fixed_seed
