@@ -213,7 +213,7 @@
             "kwargs": {
                 "log_extra_info": "If translational motion in any direction is correlated with the components > 0.8, then reject.",
                 "log_extra_report": "",
-                "tag_if_true": "Unlikely BOLD"
+                "tag_if_true": "corr to translational motion"
             }
         },
         {
