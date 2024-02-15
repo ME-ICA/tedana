@@ -1,0 +1,6 @@
+{
+    "regess_ID": "corr_detrend",
+    "info": "Separately correlates every regressor after detrending regressors and fMRI data.",
+    "detrend": false,
+    "calc_stats": "corr"
+}
