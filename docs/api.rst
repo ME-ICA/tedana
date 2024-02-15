@@ -105,6 +105,7 @@ API
 
    tedana.metrics.collect
    tedana.metrics.dependence
+   tedana.metrics.external_regressor_fits
 
 
 .. _api_selection_ref:

@@ -537,9 +537,9 @@ def dec_variance_lessthan_thresholds(
     if custom_node_label:
         outputs["node_label"] = custom_node_label
     else:
-        outputs["node_label"] = (
-            f"{var_metric}<{single_comp_threshold}. All variance<{all_comp_threshold}"
-        )
+        outputs[
+            "node_label"
+        ] = f"{var_metric}<{single_comp_threshold}. All variance<{all_comp_threshold}"
 
     LGR.info(f"{function_name_idx}: {if_true} if {outputs['node_label']}, else {if_false}")
     if log_extra_info:
@@ -1020,9 +1020,9 @@ def dec_classification_doesnt_exist(
     if custom_node_label:
         outputs["node_label"] = custom_node_label
     elif at_least_num_exist == 1:
-        outputs["node_label"] = (
-            f"Change {decide_comps} to {new_classification} if {class_comp_exists} doesn't exist"
-        )
+        outputs[
+            "node_label"
+        ] = f"Change {decide_comps} to {new_classification} if {class_comp_exists} doesn't exist"
     else:
         outputs["node_label"] = (
             f"Change {decide_comps} to {new_classification} if less than "

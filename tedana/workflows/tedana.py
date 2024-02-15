@@ -168,11 +168,19 @@ def _get_parser():
         dest="external_regressors",
         type=lambda x: is_valid_file(parser, x),
         help=(
-            "File containing external regressors to be used in the decision tree. "
+            "File containing external regressors to compare to ICA component be used in the "
+            "decision tree. For example, to identify components fit head motion time series."
             "The file must be a TSV file with the same number of rows as the number of volumes in "
-            "the input data. Each column in the file will be treated as a separate regressor. "
-            "The decision tree must contain a node for each of the columns in this file, "
-            "with the metric '<column>_correlation'."
+            "the input data. Column labels and statistical tests are defined with external_labels."
+        ),
+        default=None,
+    )
+    optional.add_argument(
+        "--external_labels",
+        dest="external_regressor_dict",
+        help=(
+            "Column labels for external regressors & statistical tests to compare be used in the "
+            "decision tree. Either the path and name of a json file or a packaged tree (Mot12_CSF)"
         ),
         default=None,
     )
@@ -336,6 +344,7 @@ def tedana_workflow(
     combmode="t2s",
     tree="kundu",
     external_regressors=None,
+    external_regressor_dict=None,
     tedpca="aic",
     fixed_seed=42,
     maxit=500,
@@ -513,16 +522,29 @@ def tedana_workflow(
     # a float on [0, 1] or an int >= 1
     tedpca = check_tedpca_value(tedpca, is_parser=False)
 
-    # Load external regressors if provided
-    if external_regressors:
-        external_regressors = pd.read_table(external_regressors)
-
     # For z-catted files, make sure it's a list of size 1
     if isinstance(data, str):
         data = [data]
 
     LGR.info(f"Loading input data: {[f for f in data]}")
     catd, ref_img = io.load_data(data, n_echos=n_echos)
+
+    # Load external regressors if provided
+    # Decided to do the validation here so that, if there are issues, an error
+    #  will be raised before PCA/ICA
+    if external_regressors:
+        if external_regressor_dict:
+            (
+                external_regressors,
+                external_regressor_dict,
+            ) = metrics.external_regressor_fits.load_validate_external_regressors(
+                external_regressors, external_regressor_dict, catd.shape[2]
+            )
+        else:
+            raise ValueError(
+                "If external_regressors is an input, then "
+                "external_regressor_dict also needs to be used."
+            )
 
     io_generator = io.OutputGenerator(
         ref_img,
@@ -705,8 +727,6 @@ def tedana_workflow(
                 "normalized variance explained",
                 "d_table_score",
             ]
-            if external_regressors is not None:
-                required_metrics.append("external correlation")
 
             comptable = metrics.collect.generate_metrics(
                 data_cat=catd,
@@ -717,6 +737,7 @@ def tedana_workflow(
                 io_generator=io_generator,
                 label="ICA",
                 external_regressors=external_regressors,
+                external_regressor_dict=external_regressor_dict,
                 metrics=required_metrics,
             )
             ica_selector = selection.automatic_selection(comptable, n_echos, n_vols, tree=tree)

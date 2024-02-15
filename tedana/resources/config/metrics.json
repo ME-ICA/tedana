@@ -117,9 +117,10 @@
             "ref_img",
             "tes"
         ],
-        "external correlation": [
+        "external fit": [
             "mixing",
-            "external_regressors"
+            "external_regressors",
+            "external_regressor_dict"
         ]
     }
 }

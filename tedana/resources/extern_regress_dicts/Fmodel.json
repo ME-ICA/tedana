@@ -1,0 +1,6 @@
+{
+    "regess_ID": "Fmodel",
+    "info": "Fits all external regressors to a single model using an F statistic",
+    "detrend": true,
+    "calc_stats": "F"
+}

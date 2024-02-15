@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from tedana import io, utils
-from tedana.metrics import dependence, external
+from tedana.metrics import dependence, external_regressor_fits
 from tedana.metrics._utils import dependency_resolver, determine_signs, flip_components
 from tedana.stats import getfbounds
 
@@ -25,6 +25,7 @@ def generate_metrics(
     io_generator,
     label,
     external_regressors=None,
+    external_regressor_dict=None,
     metrics=None,
 ):
     """Fit TE-dependence and -independence models to components.
@@ -52,6 +53,8 @@ def generate_metrics(
     external_regressors : None or :obj:`pandas.DataFrame`, optional
         External regressors (e.g., motion parameters, physiological noise) to correlate with
         ICA components. If None, no external regressor metrics will be calculated.
+    external_regressor_dict : :obj:`dict`
+        A dictionary for defining how to fit external regressors to component time series
     metrics : list
         List of metrics to return
 
@@ -67,6 +70,15 @@ def generate_metrics(
 
     if metrics is None:
         metrics = ["map weight"]
+
+    if external_regressors is not None:
+        if external_regressor_dict is None:
+            raise ValueError(
+                "If external_regressors is defined, then "
+                "external_regressor_dict also needs to be defined."
+            )
+        metrics.append("external fit")
+
     RepLGR.info(f"The following metrics were calculated: {', '.join(metrics)}.")
 
     if not (data_cat.shape[0] == data_optcom.shape[0] == adaptive_mask.shape[0]):
@@ -326,13 +338,16 @@ def generate_metrics(
         )
 
     # External regressor-based metrics
-    if "external correlation" in required_metrics:
-        external_regressor_names = external_regressors.columns.tolist()
-        LGR.info("Calculating external regressor correlations")
-        for col in external_regressor_names:
-            external_regressor_arr = external_regressors[col].values
-            corrs = external.correlate_regressor(external_regressor_arr, mixing)
-            comptable[f"{col}_correlation"] = corrs
+    if "external fit" in required_metrics:
+        # external_regressor_names = external_regressors.columns.tolist()
+        LGR.info("Calculating external regressor fits")
+        comptable = external_regressor_fits.fit_regressors(
+            comptable, external_regressors, external_regressor_dict, mixing
+        )
+        # for col in external_regressor_names:
+        #     external_regressor_arr = external_regressors[col].values
+        #     corrs = external_regressors.correlate_regressor(external_regressor_arr, mixing)
+        #     comptable[f"{col}_correlation"] = corrs
 
     # Write verbose metrics if needed
     if io_generator.verbose:
@@ -388,7 +403,7 @@ def generate_metrics(
         "d_table_score",
         "kappa ratio",
         "d_table_score_scrub",
-        "external correlation",
+        "external fit",
         "classification",
         "rationale",
     )

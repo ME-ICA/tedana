@@ -348,6 +348,7 @@ def tedpca(
         "normalized variance explained",
         "d_table_score",
     ]
+    # Even if user inputted, don't fit external_regressors to PCA components
     comptable = metrics.collect.generate_metrics(
         data_cat=data_cat,
         data_optcom=data_oc,

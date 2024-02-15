@@ -55,12 +55,11 @@ def automatic_selection(component_table, n_echos, n_vols, tree="kundu"):
 
     .. _FAQ: faq.html
     """
-    LGR.info("Performing ICA component selection with Kundu decision tree v2.5")
+    LGR.info(f"Performing ICA component selection with tree: {tree}")
     RepLGR.info(
         "Next, component selection was performed to identify "
         "BOLD (TE-dependent), non-BOLD (TE-independent), and "
-        "uncertain (low-variance) components using the Kundu "
-        "decision tree (v2.5) \\citep{kundu2013integrated}."
+        "uncertain (low-variance) components."
     )
 
     component_table["classification_tags"] = ""

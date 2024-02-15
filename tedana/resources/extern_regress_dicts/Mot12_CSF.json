@@ -1,0 +1,27 @@
+{
+    "regess_ID": "Motion12_CSF",
+    "info": "Contains 6 columns for motion, 6 for first derivatives of motion, and 1 for a CSF ROI time series.",
+    "detrend": true,
+    "calc_stats": "F",
+    "f_stats_partial_models": [
+        "Motion",
+        "CSF"
+    ],
+    "Motion": [
+        "Mot_X",
+        "Mot_Y",
+        "Mot_Z",
+        "Mot_Pitch",
+        "Mot_Roll",
+        "Mot_Yaw",
+        "Mot_d1_X",
+        "Mot_d1_Y",
+        "Mot_d1_Z",
+        "Mot_d1_Pitch",
+        "Mot_d1_Roll",
+        "Mot_d1_Yaw"
+    ],
+    "CSF": [
+        "CSF"
+    ]
+}
