@@ -159,9 +159,9 @@ def change_comptable_classifications(
         dont_warn_reclassify=dont_warn_reclassify,
     )
 
-    selector.component_status_table_[
-        f"Node {selector.current_node_idx_}"
-    ] = selector.component_table_["classification"]
+    selector.component_status_table_[f"Node {selector.current_node_idx_}"] = (
+        selector.component_table_["classification"]
+    )
 
     n_true = decision_boolean.sum()
     n_false = np.logical_not(decision_boolean).sum()

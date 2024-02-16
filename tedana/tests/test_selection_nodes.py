@@ -446,7 +446,9 @@ def test_calc_kappa_elbow():
     # Confirming the intended metrics are added to outputs and they have non-zero values
     assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
     assert selector.tree["nodes"][selector.current_node_idx_]["outputs"]["kappa_elbow_kundu"] > 0
-    assert selector.tree["nodes"][selector.current_node_idx_]["outputs"]["kappa_allcomps_elbow"] > 0
+    assert (
+        selector.tree["nodes"][selector.current_node_idx_]["outputs"]["kappa_allcomps_elbow"] > 0
+    )
     assert selector.tree["nodes"][selector.current_node_idx_]["outputs"]["kappa_nonsig_elbow"] > 0
     assert selector.tree["nodes"][selector.current_node_idx_]["outputs"]["varex_upper_p"] > 0
 
@@ -470,7 +472,9 @@ def test_calc_kappa_elbow():
     # Confirming the intended metrics are added to outputs and they have non-zero values
     assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
     assert selector.tree["nodes"][selector.current_node_idx_]["outputs"]["kappa_elbow_kundu"] > 0
-    assert selector.tree["nodes"][selector.current_node_idx_]["outputs"]["kappa_allcomps_elbow"] > 0
+    assert (
+        selector.tree["nodes"][selector.current_node_idx_]["outputs"]["kappa_allcomps_elbow"] > 0
+    )
     assert selector.tree["nodes"][selector.current_node_idx_]["outputs"]["kappa_nonsig_elbow"] > 0
     assert selector.tree["nodes"][selector.current_node_idx_]["outputs"]["varex_upper_p"] > 0
 
@@ -1091,7 +1095,8 @@ def test_calc_max_good_meanmetricrank_smoke():
     # Confirming the intended metrics are added to outputs and they have non-zero values
     assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
     assert (
-        selector.tree["nodes"][selector.current_node_idx_]["outputs"]["max_good_meanmetricrank"] > 0
+        selector.tree["nodes"][selector.current_node_idx_]["outputs"]["max_good_meanmetricrank"]
+        > 0
     )
 
     # Standard call to this function with a user defined metric_suffix
@@ -1126,7 +1131,8 @@ def test_calc_max_good_meanmetricrank_smoke():
     )
     assert len(output_calc_cross_comp_metrics - calc_cross_comp_metrics) == 0
     assert (
-        selector.tree["nodes"][selector.current_node_idx_]["outputs"]["max_good_meanmetricrank"] > 0
+        selector.tree["nodes"][selector.current_node_idx_]["outputs"]["max_good_meanmetricrank"]
+        > 0
     )
 
     # Raise an error if "extend_factor" isn't pre-defined

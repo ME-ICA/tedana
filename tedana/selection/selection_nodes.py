@@ -1370,7 +1370,9 @@ def calc_varex_thresh(
                 num_highest_var_comps = len(comps2use)
 
             sorted_varex = np.flip(
-                np.sort((selector.component_table_.loc[comps2use, "variance explained"]).to_numpy())
+                np.sort(
+                    (selector.component_table_.loc[comps2use, "variance explained"]).to_numpy()
+                )
             )
             outputs[varex_name] = scoreatpercentile(
                 sorted_varex[:num_highest_var_comps], percentile_thresh
@@ -1853,7 +1855,9 @@ def calc_revised_meanmetricrank_guesses(
 
         tmp_kappa = selector.component_table_.loc[comps2use, "kappa"].to_numpy()
         tmp_dice_FT2 = selector.component_table_.loc[comps2use, "dice_FT2"].to_numpy()
-        tmp_signal_m_noise_t = selector.component_table_.loc[comps2use, "signal-noise_t"].to_numpy()
+        tmp_signal_m_noise_t = selector.component_table_.loc[
+            comps2use, "signal-noise_t"
+        ].to_numpy()
         tmp_countnoise = selector.component_table_.loc[comps2use, "countnoise"].to_numpy()
         tmp_countsigFT2 = selector.component_table_.loc[comps2use, "countsigFT2"].to_numpy()
         tmp_d_table_score = generate_decision_table_score(
