@@ -217,7 +217,14 @@ def validate_tree(tree):
 class ComponentSelector:
     """Load and classify components based on a specified ``tree``."""
 
-    def __init__(self, tree, component_table, cross_component_metrics={}, status_table=None):
+    def __init__(
+        self,
+        tree,
+        component_table,
+        cross_component_metrics={},
+        status_table=None,
+        external_regressor_dict=None,
+    ):
         """Initialize the class using the info specified in the json file ``tree``.
 
         Parameters
@@ -234,6 +241,9 @@ class ComponentSelector:
             A table tracking the status of each component at each step.
             Pass a status table if running additional steps on a decision
             tree that was already executed. Default=None.
+        external_regressor_dict : :obj:`dict`
+            Information describing the external regressors and
+            method to use for fitting and statistical tests
 
         Notes
         -----
@@ -286,6 +296,8 @@ class ComponentSelector:
         LGR.info("Performing component selection with " + tree_config["tree_id"])
         LGR.info(tree_config.get("info", ""))
         RepLGR.info(tree_config.get("report", ""))
+        if external_regressor_dict is not None:
+            RepLGR.info(external_regressor_dict["report"])
 
         self.tree["nodes"] = tree_config["nodes"]
         self.necessary_metrics = set(tree_config["necessary_metrics"])

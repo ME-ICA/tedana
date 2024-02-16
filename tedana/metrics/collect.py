@@ -63,6 +63,9 @@ def generate_metrics(
     comptable : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index is the component number.
+    external_regressor_dict : :obj:`dict`
+        Information describing the external regressors and
+        method used for fitting and statistical tests (or None if none were inputed)
     """
     # Load metric dependency tree from json file
     dependency_config = op.join(utils.get_resource_path(), "config", "metrics.json")
@@ -411,7 +414,7 @@ def generate_metrics(
     other_columns = [col for col in comptable.columns if col not in preferred_order]
     comptable = comptable[first_columns + other_columns]
 
-    return comptable
+    return comptable, external_regressor_dict
 
 
 def get_metadata(comptable):

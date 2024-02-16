@@ -1,6 +1,7 @@
 {
     "regess_ID": "corr_detrend",
     "info": "Separately correlates every regressor after detrending regressors and fMRI data.",
+    "report": "Unspecified external nuissance regressors were detrended and correlated to components and rejected if any individual regressor had a high correlation.",
     "detrend": true,
     "calc_stats": "corr"
 }

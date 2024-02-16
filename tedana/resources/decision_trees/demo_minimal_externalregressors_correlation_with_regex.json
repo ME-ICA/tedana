@@ -1,6 +1,6 @@
 {
-    "tree_id": "minimal_decision_tree_test1",
-    "info": "Proposed minimal decision tree with a separate threshold for each external regressor correlation metric.",
+    "tree_id": "demo_minimal_externalregressors_correlation_with_regex",
+    "info": "Demonstration based on the minimal decision tree that calculates a correlation for each external regressors and sets a threshold for a single node for all of them using regex syntax.",
     "report": "This is based on the minimal criteria of the original MEICA decision tree \\citep{kundu2013integrated} without the more aggressive noise removal steps \\citep{dupre2021te}.",
     "necessary_metrics": [
         "kappa",
@@ -11,9 +11,7 @@
         "dice_FT2",
         "signal-noise_t",
         "variance explained",
-        "trans_x_correlation",
-        "trans_y_correlation",
-        "trans_z_correlation"
+        "^.*_correlation$"
     ],
     "intermediate_classifications": [
         "provisionalaccept",
@@ -209,45 +207,13 @@
                 "if_false": "nochange",
                 "decide_comps": "all",
                 "op": ">",
-                "left": "trans_x_correlation",
+                "left": "^trans_[x|y|z]_correlation$",
                 "right": 0.8
             },
             "kwargs": {
-                "log_extra_info": "If translational motion in the X direction is correlated with the components > 0.8, then reject.",
+                "log_extra_info": "If translational motion in any direction is correlated with the components > 0.8, then reject.",
                 "log_extra_report": "",
-                "tag_if_true": "corr to X translational motion"
-            }
-        },
-        {
-            "functionname": "dec_left_op_right",
-            "parameters": {
-                "if_true": "rejected",
-                "if_false": "nochange",
-                "decide_comps": "all",
-                "op": ">",
-                "left": "trans_y_correlation",
-                "right": 0.8
-            },
-            "kwargs": {
-                "log_extra_info": "If translational motion in the Y direction is correlated with the components > 0.8, then reject.",
-                "log_extra_report": "",
-                "tag_if_true": "corr to Y translational motion"
-            }
-        },
-        {
-            "functionname": "dec_left_op_right",
-            "parameters": {
-                "if_true": "rejected",
-                "if_false": "nochange",
-                "decide_comps": "all",
-                "op": ">",
-                "left": "trans_z_correlation",
-                "right": 0.8
-            },
-            "kwargs": {
-                "log_extra_info": "If translational motion in the Z direction is correlated with the components > 0.8, then reject.",
-                "log_extra_report": "",
-                "tag_if_true": "corr to Z translational motion"
+                "tag_if_true": "corr to translational motion"
             }
         },
         {

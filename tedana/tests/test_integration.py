@@ -405,11 +405,12 @@ def test_integration_three_echo_external_regressors_corr(skip_integration):
     # Note that the above is in comparision to the minimal decision tree
     # but the integration test for 3 echoes uses the kundu tree
     download_test_data(osf_id, test_data_path)
+    tree_name = "resources/decision_trees/demo_minimal_externalregressors_correlation.json"
     tedana_cli.tedana_workflow(
         data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
         tes=[14.5, 38.5, 62.5],
         out_dir=out_dir,
-        tree=resource_filename("tedana", "resources/decision_trees/minimal_external2.json"),
+        tree=resource_filename("tedana", tree_name),
         external_regressors=resource_filename(
             "tedana", "tests/data/external_regress_corr_3echo.tsv"
         ),
@@ -456,11 +457,12 @@ def test_integration_three_echo_external_regressors_fstat(skip_integration):
     # Note that the above is in comparision to the minimal decision tree
     # but the integration test for 3 echoes uses the kundu tree
     download_test_data(osf_id, test_data_path)
+    tree_name = "resources/decision_trees/demo_minimal_externalregressors_Fstat.json"
     tedana_cli.tedana_workflow(
         data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
         tes=[14.5, 38.5, 62.5],
         out_dir=out_dir,
-        tree=resource_filename("tedana", "resources/decision_trees/minimal_external3.json"),
+        tree=resource_filename("tedana", tree_name),
         external_regressors=resource_filename(
             "tedana", "tests/data/external_regress_Ftest_3echo.tsv"
         ),

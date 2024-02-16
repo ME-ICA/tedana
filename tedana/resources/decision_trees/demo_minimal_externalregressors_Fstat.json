@@ -1,6 +1,6 @@
 {
-    "tree_id": "minimal_decision_tree_test1",
-    "info": "Proposed minimal decision tree with a single threshold for all external regressor correlation metrics.",
+    "tree_id": "demo_minimal_externalregressors_Fstat",
+    "info": "Demonstration based on the minimal decision tree that uses an F stat on a model with multiple external regressors.",
     "report": "This is based on the minimal criteria of the original MEICA decision tree \\citep{kundu2013integrated} without the more aggressive noise removal steps \\citep{dupre2021te}.",
     "necessary_metrics": [
         "kappa",
@@ -11,7 +11,8 @@
         "dice_FT2",
         "signal-noise_t",
         "variance explained",
-        "^.*_correlation$"
+        "pval Full Model",
+        "R2stat Full Model"
     ],
     "intermediate_classifications": [
         "provisionalaccept",
@@ -206,14 +207,17 @@
                 "if_true": "rejected",
                 "if_false": "nochange",
                 "decide_comps": "all",
-                "op": ">",
-                "left": "^trans_[x|y|z]_correlation$",
-                "right": 0.8
+                "op": "<",
+                "left": "pval Full Model",
+                "right": 0.05
             },
             "kwargs": {
-                "log_extra_info": "If translational motion in any direction is correlated with the components > 0.8, then reject.",
+                "op2": ">",
+                "left2": "R2stat Full Model",
+                "right2": 0.5,
+                "log_extra_info": "If external regressors fit with p<0.05 and model R2>0.5 of the variance, then reject.",
                 "log_extra_report": "",
-                "tag_if_true": "corr to translational motion"
+                "tag_if_true": "external regressors"
             }
         },
         {

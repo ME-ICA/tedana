@@ -47,7 +47,7 @@ def test_smoke_generate_metrics(testdata1):
         "normalized variance explained",
         "d_table_score",
     ]
-    comptable = collect.generate_metrics(
+    comptable, _ = collect.generate_metrics(
         data_cat=testdata1["data_cat"],
         data_optcom=testdata1["data_optcom"],
         mixing=testdata1["mixing"],

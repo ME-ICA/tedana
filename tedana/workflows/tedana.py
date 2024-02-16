@@ -728,7 +728,7 @@ def tedana_workflow(
                 "d_table_score",
             ]
 
-            comptable = metrics.collect.generate_metrics(
+            comptable, external_regressor_dict = metrics.collect.generate_metrics(
                 data_cat=catd,
                 data_optcom=data_oc,
                 mixing=mmix,
@@ -740,7 +740,13 @@ def tedana_workflow(
                 external_regressor_dict=external_regressor_dict,
                 metrics=required_metrics,
             )
-            ica_selector = selection.automatic_selection(comptable, n_echos, n_vols, tree=tree)
+            ica_selector = selection.automatic_selection(
+                comptable,
+                n_echos,
+                n_vols,
+                tree=tree,
+                external_regressor_dict=external_regressor_dict,
+            )
             n_likely_bold_comps = ica_selector.n_likely_bold_comps
             if (n_restarts < maxrestart) and (n_likely_bold_comps == 0):
                 LGR.warning("No BOLD components found. Re-attempting ICA.")
@@ -774,7 +780,7 @@ def tedana_workflow(
             "normalized variance explained",
             "d_table_score",
         ]
-        comptable = metrics.collect.generate_metrics(
+        comptable, external_regressor_dict = metrics.collect.generate_metrics(
             data_cat=catd,
             data_optcom=data_oc,
             mixing=mmix,
@@ -783,6 +789,7 @@ def tedana_workflow(
             io_generator=io_generator,
             label="ICA",
             external_regressors=external_regressors,
+            external_regressor_dict=external_regressor_dict,
             metrics=required_metrics,
         )
         ica_selector = selection.automatic_selection(
