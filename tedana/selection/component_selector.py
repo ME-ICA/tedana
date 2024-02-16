@@ -311,6 +311,14 @@ class ComponentSelector:
           everything that changed in each node
         - current_node_idx_: The total number of nodes run in ``ComponentSelector``
         """
+        # this will crash the program with an error message if not all
+        # necessary_metrics are in the comptable
+        confirm_metrics_exist(
+            self.component_table_,
+            self.necessary_metrics,
+            function_name=self.tree_name,
+        )
+
         self.__dict__.update(cross_component_metrics)
         self.cross_component_metrics_ = cross_component_metrics
 
@@ -341,14 +349,6 @@ class ComponentSelector:
         if "classification_tags" not in self.component_table_.columns:
             self.component_table_["classification_tags"] = ""
 
-        # this will crash the program with an error message if not all
-        # necessary_metrics are in the comptable
-        confirm_metrics_exist(
-            self.component_table_,
-            self.necessary_metrics,
-            function_name=self.tree_name,
-        )
-
         # for each node in the decision tree
         for self.current_node_idx_, node in enumerate(
             self.tree["nodes"][self.start_idx_ :], start=self.start_idx_
@@ -365,7 +365,7 @@ class ComponentSelector:
                 kwargs = self.check_null(kwargs, node["functionname"])
                 all_params = {**params, **kwargs}
             else:
-                kwargs = None
+                kwargs = {}
                 all_params = {**params}
 
             LGR.debug(
@@ -373,10 +373,7 @@ class ComponentSelector:
                 f"with parameters: {all_params}"
             )
             # run the decision node function
-            if kwargs is not None:
-                self = fcn(self, **params, **kwargs)
-            else:
-                self = fcn(self, **params)
+            self = fcn(self, **params, **kwargs)
 
             self.tree["used_metrics"].update(
                 self.tree["nodes"][self.current_node_idx_]["outputs"]["used_metrics"]
