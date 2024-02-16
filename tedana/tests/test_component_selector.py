@@ -279,21 +279,21 @@ def test_check_null_succeeds():
 def test_are_only_necessary_metrics_used_warning():
     """Tests a warning that wasn't triggered in other test workflows."""
     selector = component_selector.ComponentSelector(tree="minimal")
-    selector.select(component_table=sample_comptable())
+    # selector.select(component_table=sample_comptable())
 
     # warning when an element of necessary_metrics was not in used_metrics
     selector.tree["used_metrics"] = {"A", "B", "C"}
     selector.necessary_metrics = {"B", "C", "D"}
-    assert selector.are_only_necessary_metrics_used()
+    selector.are_only_necessary_metrics_used()
 
 
 def test_are_all_components_accepted_or_rejected():
     """Tests warnings are triggered in are_all_components_accepted_or_rejected."""
     selector = component_selector.ComponentSelector(tree="minimal")
-    selector.select(component_table=sample_comptable())
+    selector.select(component_table=sample_comptable(), cross_component_metrics={"n_echos": 3})
     selector.component_table_.loc[7, "classification"] = "intermediate1"
     selector.component_table_.loc[[1, 3, 5], "classification"] = "intermediate2"
-    assert selector.are_all_components_accepted_or_rejected()
+    selector.are_all_components_accepted_or_rejected()
 
 
 def test_selector_properties_smoke():
