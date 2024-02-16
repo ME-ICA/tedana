@@ -54,7 +54,8 @@ def sample_selector(options=None):
         "n_vols": 201,
         "test_elbow": 21,
     }
-    selector = ComponentSelector(tree, component_table, cross_component_metrics=xcomp)
+    selector = ComponentSelector(tree=tree)
+    selector.select(component_table=component_table, cross_component_metrics=xcomp)
     selector.current_node_idx_ = 0
 
     return selector

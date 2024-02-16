@@ -43,7 +43,6 @@ def dicts_to_test(treechoice):
     -------
     tree : :ojb:`dict` A dict that can be input into component_selector.validate_tree
     """
-
     # valid_dict is a simple valid dictionary to test
     # It includes a few things that should trigger warnings, but not errors.
     valid_dict = {
@@ -172,21 +171,13 @@ def test_minimal():
     xcomp = {
         "n_echos": 3,
     }
-    selector = component_selector.ComponentSelector(
-        "minimal",
-        sample_comptable(),
-        cross_component_metrics=xcomp.copy(),
-    )
-    selector.select()
+    selector = component_selector.ComponentSelector(tree="minimal")
+    selector.select(component_table=sample_comptable(), cross_component_metrics=xcomp.copy())
 
     # rerun without classification_tags column initialized
-    selector = component_selector.ComponentSelector(
-        "minimal",
-        sample_comptable(),
-        cross_component_metrics=xcomp.copy(),
-    )
-    selector.component_table_ = selector.component_table_.drop(columns="classification_tags")
-    selector.select()
+    selector = component_selector.ComponentSelector(tree="minimal")
+    temp_comptable = sample_comptable().drop(columns="classification_tags")
+    selector.select(component_table=temp_comptable, cross_component_metrics=xcomp.copy())
 
 
 # validate_tree
@@ -266,7 +257,7 @@ def test_validate_tree_fails():
 def test_check_null_fails():
     """Tests to trigger check_null missing parameter error."""
 
-    selector = component_selector.ComponentSelector("minimal", sample_comptable())
+    selector = component_selector.ComponentSelector(tree="minimal")
     selector.tree = dicts_to_test("null_value")
 
     params = selector.tree["nodes"][0]["parameters"]
@@ -277,17 +268,7 @@ def test_check_null_fails():
 
 def test_check_null_succeeds():
     """Tests check_null finds empty parameter in self."""
-
-    # "left" is missing from the function definition in node
-    # but is found as an initialized cross component metric
-    xcomp = {
-        "left": 3,
-    }
-    selector = component_selector.ComponentSelector(
-        "minimal",
-        sample_comptable(),
-        cross_component_metrics=xcomp,
-    )
+    selector = component_selector.ComponentSelector(tree="minimal")
     selector.tree = dicts_to_test("null_value")
 
     params = selector.tree["nodes"][0]["parameters"]
@@ -297,28 +278,29 @@ def test_check_null_succeeds():
 
 def test_are_only_necessary_metrics_used_warning():
     """Tests a warning that wasn't triggered in other test workflows."""
-
-    selector = component_selector.ComponentSelector("minimal", sample_comptable())
+    selector = component_selector.ComponentSelector(tree="minimal")
+    selector.select(component_table=sample_comptable())
 
     # warning when an element of necessary_metrics was not in used_metrics
     selector.tree["used_metrics"] = {"A", "B", "C"}
     selector.necessary_metrics = {"B", "C", "D"}
-    selector.are_only_necessary_metrics_used()
+    assert selector.are_only_necessary_metrics_used()
 
 
 def test_are_all_components_accepted_or_rejected():
     """Tests warnings are triggered in are_all_components_accepted_or_rejected."""
-
-    selector = component_selector.ComponentSelector("minimal", sample_comptable())
+    selector = component_selector.ComponentSelector(tree="minimal")
+    selector.select(component_table=sample_comptable())
     selector.component_table_.loc[7, "classification"] = "intermediate1"
     selector.component_table_.loc[[1, 3, 5], "classification"] = "intermediate2"
-    selector.are_all_components_accepted_or_rejected()
+    assert selector.are_all_components_accepted_or_rejected()
 
 
 def test_selector_properties_smoke():
     """Tests to confirm properties match expected results."""
 
-    selector = component_selector.ComponentSelector("minimal", sample_comptable())
+    selector = component_selector.ComponentSelector(tree="minimal")
+    selector.select(component_table=sample_comptable())
 
     assert selector.n_comps_ == 21
 

@@ -523,7 +523,7 @@ def dec_variance_lessthan_thresholds(
     %(used_metrics)s
     """
     outputs = {
-        "decision_node_idx": selector.current_node_idx,
+        "decision_node_idx": selector.current_node_idx_,
         "used_metrics": {var_metric},
         "node_label": None,
         "n_true": None,
@@ -1124,7 +1124,7 @@ def dec_reclassify_high_var_comps(
     """
     # predefine all outputs that should be logged
     outputs = {
-        "decision_node_idx": selector.current_node_idx,
+        "decision_node_idx": selector.current_node_idx_,
         "used_metrics": {"variance explained"},
         "used_cross_comp_metrics": {"varex_upper_p"},
         "node_label": None,
