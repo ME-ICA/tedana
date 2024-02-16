@@ -1,4 +1,5 @@
 """Functions to creating figures to inspect tedana output."""
+
 import logging
 import os
 

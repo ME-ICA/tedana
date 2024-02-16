@@ -26,7 +26,6 @@ sys.path.insert(0, os.path.abspath(os.path.pardir))
 
 from github_link import make_linkcode_resolve
 
-
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -55,8 +54,9 @@ extensions = [
     "sphinxcontrib.bibtex",  # for foot-citations
 ]
 
-import sphinx
 from distutils.version import LooseVersion
+
+import sphinx
 
 if LooseVersion(sphinx.__version__) < LooseVersion("1.4"):
     extensions.append("sphinx.ext.pngmath")

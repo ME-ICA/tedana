@@ -1,6 +1,8 @@
 """Build HTML reports for tedana."""
+
 import logging
 import os
+import re
 from os.path import join as opj
 from pathlib import Path
 from string import Template
@@ -8,12 +10,68 @@ from string import Template
 import pandas as pd
 from bokeh import __version__ as bokehversion
 from bokeh import embed, layouts, models
+from pybtex.database.input import bibtex
+from pybtex.plugin import find_plugin
 
 from tedana import __version__
 from tedana.io import load_json
 from tedana.reporting import dynamic_figures as df
 
 LGR = logging.getLogger("GENERAL")
+
+
+APA = find_plugin("pybtex.style.formatting", "apa")()
+HTML = find_plugin("pybtex.backends", "html")()
+
+
+def _bib2html(bibliography):
+    parser = bibtex.Parser()
+    bibliography = parser.parse_file(bibliography)
+    formatted_bib = APA.format_bibliography(bibliography)
+    bibliography_str = "".join(f"<li>{entry.text.render(HTML)}</li>" for entry in formatted_bib)
+    return bibliography_str, bibliography
+
+
+def _cite2html(bibliography, citekey):
+    # Make a list of citekeys and separete double citations
+    citekey_list = citekey.split(",") if "," in citekey else [citekey]
+
+    for idx, key in enumerate(citekey_list):
+        # Get first author
+        first_author = bibliography.entries[key].persons["author"][0]
+
+        # Keep surname only (whatever is before the comma, if there is a comma)
+        if "," in str(first_author):
+            first_author = str(first_author).split(",")[0]
+
+        # Get publication year
+        pub_year = bibliography.entries[key].fields["year"]
+
+        # Return complete citation
+        if idx == 0:
+            citation = f"{first_author} et al. {pub_year}"
+        else:
+            citation += f", {first_author} et al. {pub_year}"
+
+    return citation
+
+
+def _inline_citations(text, bibliography):
+    # Find all \citep
+    matches = re.finditer(r"\\citep{(.*?)}", text)
+    citations = [(match.start(), match.group(1)) for match in matches]
+
+    updated_text = text
+
+    for citation in citations:
+        citekey = citation[1]
+        matched_string = "\\citep{" + citekey + "}"
+
+        # Convert citation form latex to html
+        html_citation = f"({_cite2html(bibliography, citekey)})"
+        updated_text = updated_text.replace(matched_string, html_citation, 1)
+
+    return updated_text
 
 
 def _generate_buttons(out_dir, io_generator):
@@ -85,6 +143,12 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
     # Initial carpet plot (default one)
     initial_carpet = f"./figures/{prefix}carpet_optcom.svg"
 
+    # Convert bibtex to html
+    references, bibliography = _bib2html(references)
+
+    # Update inline citations
+    about = _inline_citations(about, bibliography)
+
     body_template_name = "report_body_template.html"
     body_template_path = resource_path.joinpath(body_template_name)
     with open(str(body_template_path)) as body_file:
@@ -131,20 +195,19 @@ def _generate_info_table(info_dict):
         info_tpl = Template(info_file.read())
 
     info_dict = info_dict["GeneratedBy"][0]
-    command = info_dict["Command"]
-    version_python = info_dict["Python"]
-    info_dict = info_dict["Node"]
+    node_dict = info_dict["Node"]
 
     info_html = info_tpl.substitute(
-        command=command,
-        system=info_dict["System"],
-        node=info_dict["Name"],
-        release=info_dict["Release"],
-        sysversion=info_dict["Version"],
-        machine=info_dict["Machine"],
-        processor=info_dict["Processor"],
-        python=version_python,
-        tedana=__version__,
+        command=info_dict["Command"],
+        system=node_dict["System"],
+        node=node_dict["Name"],
+        release=node_dict["Release"],
+        sysversion=node_dict["Version"],
+        machine=node_dict["Machine"],
+        processor=node_dict["Processor"],
+        python=info_dict["Python"],
+        python_libraries=info_dict["Python_Libraries"],
+        tedana=info_dict["Version"],
     )
     return info_html
 
@@ -273,8 +336,7 @@ def generate_report(io_generator):
     with open(opj(io_generator.out_dir, f"{io_generator.prefix}report.txt"), "r+") as f:
         about = f.read()
 
-    with open(opj(io_generator.out_dir, f"{io_generator.prefix}references.bib")) as f:
-        references = f.read()
+    references = opj(io_generator.out_dir, f"{io_generator.prefix}references.bib")
 
     # Read info table
     data_descr_path = io_generator.get_name("data description json")

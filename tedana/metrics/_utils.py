@@ -1,4 +1,5 @@
 """Miscellaneous utility functions for metric calculation."""
+
 import logging
 
 import numpy as np

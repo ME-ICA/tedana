@@ -1,4 +1,5 @@
 """PCA and related signal decomposition methods for tedana."""
+
 import logging
 from numbers import Number
 

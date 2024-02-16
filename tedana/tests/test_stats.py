@@ -1,4 +1,5 @@
 """Tests for the tedana stats module."""
+
 import random
 
 import numpy as np

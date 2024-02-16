@@ -4,6 +4,7 @@ Other functions in the module help write outputs which require multiple
 data sources, assist in writing per-echo verbose outputs, or act as helper
 functions for any of the above.
 """
+
 import json
 import logging
 import os

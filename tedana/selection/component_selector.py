@@ -1,4 +1,5 @@
 """Identify and label TE-dependent and TE-independent components."""
+
 import inspect
 import logging
 import os.path as op

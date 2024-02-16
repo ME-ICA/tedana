@@ -1,4 +1,5 @@
 """Run the reclassification workflow for a previous tedana run."""
+
 import argparse
 import datetime
 import logging
@@ -49,7 +50,7 @@ def _get_parser():
         nargs="+",
         help=(
             "Component indices to accept (zero-indexed)."
-            "Supply as a comma-delimited liist with no spaces, "
+            "Supply as a comma-delimited list with no spaces, "
             "as a csv file, or as a text file with an allowed "
             f"delimiter {repr(ALLOWED_COMPONENT_DELIMITERS)}."
         ),
@@ -60,8 +61,8 @@ def _get_parser():
         dest="manual_reject",
         nargs="+",
         help=(
-            "Component indices to accept (zero-indexed)."
-            "Supply as a comma-delimited liist with no spaces, "
+            "Component indices to reject (zero-indexed)."
+            "Supply as a comma-delimited list with no spaces, "
             "as a csv file, or as a text file with an allowed "
             f"delimiter {repr(ALLOWED_COMPONENT_DELIMITERS)}."
         ),
@@ -150,7 +151,11 @@ def _get_parser():
 
 def _main(argv=None):
     """Run the ica_reclassify workflow."""
-    reclassify_command = "ica_reclassify " + " ".join(sys.argv[1:])
+    if argv:
+        # relevant for tests or if CLI called using ica_reclassify_cli._main(args)
+        reclassify_command = "ica_reclassify " + " ".join(argv)
+    else:
+        reclassify_command = "ica_reclassify " + " ".join(sys.argv[1:])
 
     args = _get_parser().parse_args(argv)
 
@@ -362,8 +367,7 @@ def ica_reclassify_workflow(
         reclassify_command = f"ica_reclassify_workflow({variables})"
 
     # Save system info to json
-    info_dict = utils.get_system_info()
-    info_dict["Python"] = sys.version
+    info_dict = utils.get_system_version_info()
     info_dict["Command"] = reclassify_command
 
     LGR.info(f"Using output directory: {out_dir}")
@@ -512,6 +516,7 @@ def ica_reclassify_workflow(
                     "Version": info_dict["Version"],
                 },
                 "Python": info_dict["Python"],
+                "Python_Libraries": info_dict["Python_Libraries"],
                 "Command": info_dict["Command"],
             }
         ],
@@ -541,7 +546,7 @@ def ica_reclassify_workflow(
             gscontrol.append("gsr")
         if mir:
             gscontrol.append("mir")
-        gscontrol = None if gscontrol is [] else gscontrol
+        gscontrol = None if gscontrol == [] else gscontrol
 
         reporting.static_figures.carpet_plot(
             optcom_ts=data_oc,

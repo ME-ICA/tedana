@@ -1,4 +1,5 @@
 """Global signal control methods."""
+
 import logging
 
 import numpy as np
