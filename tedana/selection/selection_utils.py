@@ -34,7 +34,6 @@ def selectcomps2use(selector, decide_comps):
     comps2use : :obj:`list[int]`
         A list of component indices with classifications included in decide_comps
     """
-
     if "classification" not in selector.component_table_:
         raise ValueError(
             "selector.component_table_ needs a 'classification' column to run selectcomp2suse"

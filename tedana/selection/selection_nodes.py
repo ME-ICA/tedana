@@ -1854,12 +1854,12 @@ def calc_revised_meanmetricrank_guesses(
         outputs["conservative_guess"] = outputs["num_acc_guess"] / outputs["restrict_factor"]
 
         tmp_kappa = selector.component_table_.loc[comps2use, "kappa"].to_numpy()
-        tmp_dice_FT2 = selector.component_table_.loc[comps2use, "dice_FT2"].to_numpy()
+        tmp_dice_ft2 = selector.component_table_.loc[comps2use, "dice_FT2"].to_numpy()
         tmp_signal_m_noise_t = selector.component_table_.loc[
             comps2use, "signal-noise_t"
         ].to_numpy()
         tmp_countnoise = selector.component_table_.loc[comps2use, "countnoise"].to_numpy()
-        tmp_countsigFT2 = selector.component_table_.loc[comps2use, "countsigFT2"].to_numpy()
+        tmp_countsig_ft2 = selector.component_table_.loc[comps2use, "countsigFT2"].to_numpy()
         tmp_d_table_score = generate_decision_table_score(
             tmp_kappa, tmp_dice_ft2, tmp_signal_m_noise_t, tmp_countnoise, tmp_countsig_ft2
         )

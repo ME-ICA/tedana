@@ -229,7 +229,6 @@ class ComponentSelector:
         Initializing the  ``ComponentSelector`` confirms tree is valid and
         loads all information in the tree json file into ``ComponentSelector``.
         """
-
         self.tree_name = tree
         self.tree = load_config(self.tree_name)
 
@@ -262,7 +261,7 @@ class ComponentSelector:
             tree that was already executed. Default=None.
 
         Notes
-        -------
+        -----
         Adds to the ``ComponentSelector``:
 
         - component_status_table_: empty dataframe or contents of inputted status_table
@@ -312,7 +311,6 @@ class ComponentSelector:
           everything that changed in each node
         - current_node_idx_: The total number of nodes run in ``ComponentSelector``
         """
-
         self.__dict__.update(cross_component_metrics)
         self.cross_component_metrics_ = cross_component_metrics
 
