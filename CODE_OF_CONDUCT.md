@@ -56,7 +56,7 @@ reported by contacting our
 and [Stefano Moia](https://github.com/smoia).
 Confidentiality will be respected in reporting.
 The Code of Conduct Enforcement Team any take any action they deem
-necessary for the safety of the `tedana` community, including but not 
+necessary for the safety of the `tedana` community, including but not
 limited to:
 
 * facilitating a conversation between the two parties involved in the violation of the code of conduct

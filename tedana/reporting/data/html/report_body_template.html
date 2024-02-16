@@ -1,4 +1,9 @@
 <style type="text/css">
+  .report {
+    display: flex;
+    flex-direction: column;
+  }
+
   .content {
     margin-left: 5%;
     margin-right: 5%;
@@ -17,6 +22,10 @@
     font-size: larger;
     float: left;
     width: 80%;
+  }
+
+  .references ul {
+    line-height: 150%;
   }
 
   .carpet-wrapper {
@@ -40,6 +49,14 @@
 
   .carpet-image {
     margin-top: 20px;
+  }
+
+  .info {
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-bottom: 150px;
+    height: auto;
+    float: left;
   }
 
   button {
@@ -126,33 +143,25 @@
     border-left: #c5a13e 1px solid;
     border-right: #c5a13e 1px solid;
   }
-</style>
-<script language="javascript">
-  function updateCarpetPlot(name) {
-    if (name == "optcom") {
-      document.getElementById("imgCarpetPlot").src =
-        "./figures/carpet_optcom.svg";
-    } else if (name == "denoised") {
-      document.getElementById("imgCarpetPlot").src =
-        "./figures/carpet_denoised.svg";
-    } else if (name == "accepted") {
-      document.getElementById("imgCarpetPlot").src =
-        "./figures/carpet_accepted.svg";
-    } else if (name == "rejected") {
-      document.getElementById("imgCarpetPlot").src =
-        "./figures/carpet_rejected.svg";
-    } else if (name == "denoised_mir") {
-      document.getElementById("imgCarpetPlot").src =
-        "./figures/carpet_denoised_mir.svg";
-    } else if (name == "accepted_mir") {
-      document.getElementById("imgCarpetPlot").src =
-        "./figures/carpet_accepted_mir.svg";
-    } else if (name == "optcom_nogsr") {
-      document.getElementById("imgCarpetPlot").src =
-        "./figures/carpet_optcom_nogsr.svg";
-    }
+
+  td {
+    padding: 0.3rem 1.5rem;
   }
-</script>
+
+  pre {
+    width: 60%;
+    white-space: pre-wrap; /* Since CSS 2.1 */
+    white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+    white-space: -pre-wrap; /* Opera 4-6 */
+    white-space: -o-pre-wrap; /* Opera 7 */
+    word-wrap: break-word; /* Internet Explorer 5.5+ */
+  }
+
+  .code_block {
+    padding: 2em !important;
+    border-radius: 5px;
+  }
+</style>
 <div class="content">
   <h1>ICA components</h1>
   $content
@@ -160,20 +169,51 @@
 <div class="carpet-plots">
   <h1>Carpet plots</h1>
   <div class="carpet-wrapper">
-    <div class="carpet-buttons">
-      $buttons
-    </div>
+    <div class="carpet-buttons">$buttons</div>
     <div class="carpet-plots-image">
-      <img id="imgCarpetPlot" src="./figures/carpet_optcom.svg" />
+      <img id="imgCarpetPlot" src="$initialCarpet" />
     </div>
   </div>
+  <div class="info">
+    <h1>Info</h1>
+    $info
+  </div>
+  <div class="about">
+    <h1>About tedana</h1>
+    $about
+  </div>
+  <div class="content references">
+    <h1>References</h1>
+    <ul>
+      $references
+    </ul>
+  </div>
 </div>
-<div class="about">
-  <h1>About tedana</h1>
-  $about
 
-  <h1>References</h1>
-  $references
-</div>
+<script type="text/javascript">
+  function updateCarpetPlot(name) {
+    // Create variable to hold the image source
+    let carpetPlot = "./figures/$prefix";
+
+    if (name == "optcom") {
+      carpetPlot += "carpet_optcom.svg";
+    } else if (name == "denoised") {
+      carpetPlot += "carpet_denoised.svg";
+    } else if (name == "accepted") {
+      carpetPlot += "carpet_accepted.svg";
+    } else if (name == "rejected") {
+      carpetPlot += "carpet_rejected.svg";
+    } else if (name == "denoised_mir") {
+      carpetPlot += "carpet_denoised_mir.svg";
+    } else if (name == "accepted_mir") {
+      carpetPlot += "carpet_accepted_mir.svg";
+    } else if (name == "optcom_nogsr") {
+      carpetPlot += "carpet_optcom_nogsr.svg";
+    }
+
+    // Update the image source
+    document.getElementById("imgCarpetPlot").src = carpetPlot;
+  }
+</script>
 
 $javascript

@@ -1,6 +1,4 @@
-"""
-Utility functions for tedana.selection
-"""
+"""Utility functions for tedana.selection."""
 
 import logging
 
@@ -97,8 +95,10 @@ def change_comptable_classifications(
     dont_warn_reclassify=False,
 ):
     """
-    Given information on whether a decision critereon is true or false for each
-    component, change or don't change the component classification
+    Change or don't change the component classification.
+
+    This happens based on the information on whether a decision critereon is true or
+    false for each component.
 
     Parameters
     ----------
@@ -269,7 +269,7 @@ def comptable_classification_changer(
                 for idx in changeidx:
                     tmpstr = selector.component_table_.loc[idx, "classification_tags"]
                     if tmpstr == "" or isinstance(tmpstr, float):
-                        tmpset = set([tag_if])
+                        tmpset = {tag_if}
                     else:
                         tmpset = set(tmpstr.split(","))
                         tmpset.update([tag_if])
@@ -286,8 +286,9 @@ def comptable_classification_changer(
 
 def clean_dataframe(component_table):
     """
-    Reorder columns in component table so that "classification"
-    and "classification_tags" are last.
+    Reorder columns in component table.
+
+    The reordering is done so that "classification" and "classification_tags" are last.
 
     Parameters
     ----------
@@ -359,7 +360,7 @@ def log_decision_tree_step(
     if_false=None,
     calc_outputs=None,
 ):
-    """Logging text to add after every decision tree calculation
+    """Log text to add after every decision tree calculation.
 
     Parameters
     ----------
@@ -439,8 +440,8 @@ def log_classification_counts(decision_node_idx, component_table):
 
     Returns
     -------
-    The LGR.info logger will add a line like: \
-    'Step 4: Total component classifications: 10 accepted, 5 provisionalreject, 8 rejected'
+    The LGR.info logger will add a line like : \
+    'Step 4 : Total component classifications: 10 accepted, 5 provisionalreject, 8 rejected'
     """
     classification_labels, label_counts = np.unique(
         component_table["classification"].values, return_counts=True
@@ -457,7 +458,7 @@ def log_classification_counts(decision_node_idx, component_table):
 # Calculations that are used in decision tree functions
 #######################################################
 def getelbow_cons(arr, return_val=False):
-    """Elbow using mean/variance method - conservative
+    """Elbow using mean/variance method - conservative.
 
     Parameters
     ----------
@@ -468,7 +469,7 @@ def getelbow_cons(arr, return_val=False):
 
     Returns
     -------
-    :obj:`int` or :obj:`float`
+    : obj:`int` or :obj:`float`
         Either the elbow index (if return_val is True) or the values at the
         elbow index (if return_val is False)
     """
@@ -519,7 +520,7 @@ def getelbow(arr, return_val=False):
 
     Returns
     -------
-    :obj:`int` or :obj:`float`
+    : obj:`int` or :obj:`float`
         Either the elbow index (if return_val is True) or the values at the
         elbow index (if return_val is False)
     """
@@ -554,8 +555,9 @@ def getelbow(arr, return_val=False):
 
 def kappa_elbow_kundu(component_table, n_echos, comps2use=None):
     """
-    Calculate an elbow for kappa using the approach originally in
-    Prantik Kundu's MEICA v2.5 code
+    Calculate an elbow for kappa.
+
+    Uses the approach originally in Prantik Kundu's MEICA v2.5 code.
 
     Parameters
     ----------
@@ -598,7 +600,6 @@ def kappa_elbow_kundu(component_table, n_echos, comps2use=None):
     on kappa values and is used in rho_elbow_kundu_liberal. For several reasons
     it made more sense to calculate here.
     """
-
     # If comps2use is None then set to a list of all component numbers
     if not comps2use:
         comps2use = list(range(component_table.shape[0]))
@@ -620,11 +621,11 @@ def kappa_elbow_kundu(component_table, n_echos, comps2use=None):
         kappa_nonsig_elbow = getelbow(kappas_nonsig, return_val=True)
 
         kappa_elbow = np.min((kappa_nonsig_elbow, kappa_allcomps_elbow))
-        LGR.info(("Calculating kappa elbow based on min of all and nonsig components."))
+        LGR.info("Calculating kappa elbow based on min of all and nonsig components.")
     else:
         kappa_elbow = kappa_allcomps_elbow
         kappa_nonsig_elbow = None
-        LGR.info(("Calculating kappa elbow based on all components."))
+        LGR.info("Calculating kappa elbow based on all components.")
 
     # Calculating varex_upper_p
     # Upper limit for variance explained is median across components with high
@@ -645,9 +646,10 @@ def rho_elbow_kundu_liberal(
     component_table, n_echos, rho_elbow_type="kundu", comps2use=None, subset_comps2use=-1
 ):
     """
-    Calculate an elbow for rho using the approach originally in
-    Prantik Kundu's MEICA v2.5 code and with a slightly more
-    liberal threshold
+    Calculate an elbow for rho.
+
+    Uses the approach originally in Prantik Kundu's MEICA v2.5 code
+    and with a slightly more liberal threshold.
 
     Parameters
     ----------
@@ -758,7 +760,9 @@ def rho_elbow_kundu_liberal(
 
 def get_extend_factor(n_vols=None, extend_factor=None):
     """
-    extend_factor is a scaler used to set a threshold for the d_table_score in
+    Get the extend_factor for the kundu decision tree.
+
+    Extend_factor is a scaler used to set a threshold for the d_table_score in
     the kundu decision tree.
 
     It is either defined by the number of volumes in the time series or directly

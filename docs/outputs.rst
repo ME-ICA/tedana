@@ -23,7 +23,7 @@ future processing. ``tedana`` allows for multiple file naming conventions. The k
 and naming options for each convention that can be set using the ``--convention`` option
 are in `outputs.json`_. The output of ``tedana`` also includes a file called
 ``registry.json`` or ``desc-tedana_registry.json`` that includes the keys and the matching
-file names for the output. The table below lists both these keys and the default 
+file names for the output. The table below lists both these keys and the default
 "BIDS Derivatives" file names.
 
 .. _outputs.json: https://github.com/ME-ICA/tedana/blob/main/tedana/resources/config/outputs.json
@@ -314,21 +314,21 @@ analyses. This page describes the plots forming the reports and well as
 information on how to take advantage of the interactive functionalities.
 You can also play around with `our demo`_.
 
-.. _our demo: https://me-ica.github.io/tedana-ohbm-2020/
+.. _our demo: https://me-ica.github.io/ohbm-2023-multiecho/tedana/tedana_results_minimal_five-echo/tedana_report.html
 
 
 Report Structure
 ----------------
 
-The image below shows a representative report, which has two sections: a) the summary view,
-and b) the individual component view.
+The image below shows a representative report. The left is a summary view
+which contains information on all components and the right presents additional
+information for an individual component. One can hover over any pie chart wedge
+or data point in the summary view to see additional information about a
+component. Clicking on a component will select the component and the additional
+information will appear to the right.
 
 .. image:: /_static/rep01_overallview.png
   :align: center
-
-.. note::
-  When a report is initially loaded, as no component is selected on the
-  summary view, the individual component view appears empty.
 
 
 Summary View
@@ -339,13 +339,19 @@ selection results. It includes four different plots.
 
 * **Kappa/Rho Scatter:** This is a scatter plot of `Kappa` vs. `Rho` features for all components.
   In the plot, each dot represents a different component. The x-axis represents the kappa feature, and the
-  y-axis represents the rho feature. These are two of the most
-  informative features describing the likelihood of the component
-  being BOLD or non-BOLD. Additional information is provided via color
-  and size. In particular, color informs about its classification
-  status (e.g., accepted, rejected); while size relates to
-  the amount of variance explained by the component (larger dot,
-  larger variance).
+  y-axis represents the rho feature. `Kappa` is a summary metric for how much
+  BOLD information might be in a component and `rho` is a summary metric for how
+  much non-BOLD information is in a component. Thus a component with a higher `kappa`
+  and lower `rho` value is more likely to be retained. The solid gray line is
+  :math:`\kappa=\rho`.  Color is used to label accepted (green) or rejected (red)
+  components. The size of the circle is the amount of variance explained by the
+  component so larger circle (higher variance) that seems misclassified is worth
+  closer inspection. The component classification process uses kappa and rho elbow
+  thresholds (black dashed lines) along with other criteria. Most accepted
+  components should be greater than the kappa elbow and less than the rho elbow.
+  Accepted or rejected components that don't cross those thresholds might be
+  worth additional inspection. Hovering over a component also shows a `Tag`
+  that explains why a component received its classification.
 
 .. image:: /_static/rep01_kapparhoScatter.png
   :align: center
@@ -353,7 +359,9 @@ selection results. It includes four different plots.
 
 * **Kappa Scree Plot:** This scree plot provides a view of the components ranked by `Kappa`.
   As in the previous plot, each dot represents a component. The color of the dot informs us
-  about classification status. In this plot, size is not related to variance explained.
+  about classification status. The dashed line is the kappa elbow threshold.
+  In this plot, size is not related to variance explained, but you can see the variance
+  explained by hovering over any dot.
 
 .. image:: /_static/rep01_kappaScree.png
   :align: center
@@ -361,15 +369,16 @@ selection results. It includes four different plots.
 
 * **Rho Scree Plot:** This scree plot provides a view of the components ranked by `Rho`.
   As in the previous plot, each dot represents a component. The color of the dot informs us
-  about classification status. In this plot, size is not related to variance explained.
+  about classification status. The dashed line is the rho elbow threshold.
+  Size is not related to variance explained.
 
 .. image:: /_static/rep01_rhoScree.png
   :align: center
   :height: 400px
 
 * **Variance Explained Plot:** This pie plot provides a summary of how much variance is explained
-  by each individual component, as well as the total variance explained by each of the three
-  classification categories (i.e., accepted, rejected, ignored). In this plot, each component is
+  by each individual component, as well as the total variance explained by each of the two
+  classification categories (i.e., accepted, rejected). In this plot, each component is
   represented as a wedge, whose size is directly related to the amount of variance explained. The
   color of the wedge inform us about the classification status of the component. For this view,
   components are sorted by classification first, and inside each classification group by variance
@@ -387,9 +396,15 @@ This view provides detailed information about an individual
 component (selected in the summary view, see below). It includes three different plots.
 
 * **Time series:** This plot shows the time series associated with a given component
-  (selected in the summary view). The x-axis represents time (in units of TR), and the
-  y-axis represents signal levels (in arbitrary units). Finally, the color of the trace
-  informs us about the component classification status.
+  (selected in the summary view). The x-axis represents time (in units of TR and seconds),
+  and the y-axis represents signal levels (in arbitrary units).
+  Finally, the color of the trace informs us about the component classification status.
+  Plausibly BOLD-weighted components might have responses that follow the task design,
+  while components that are less likely to be BOLD-weighted might have large signal
+  spikes or slow drifts. If a high variance component time series initially has a few
+  very high magnitude volumes, that is a sign non-steady state volumes were not removed
+  before running ``tedana``. Keeping these volumes might results in a suboptimal ICA
+  results. ``tedana`` should be run without any initial non-steady state volumes.
 
 .. image:: /_static/rep01_tsPlot.png
   :align: center
@@ -397,7 +412,11 @@ component (selected in the summary view, see below). It includes three different
 
 * **Component beta map:** This plot shows the map of the beta coefficients associated with
   a given component (selected in the summary view). The colorbar represents the amplitude
-  of the beta coefficients.
+  of the beta coefficients. The same weights could be flipped postive/negative so relative
+  values are more relevant that what is very positive vs negative.
+  Plausibly BOLD-weighted components should have larger hotspots in area that follow
+  cortical or cerebellar brain structure. Hotspots in ventricles, on the edges of the
+  brain or slice-specific or slice-alternating effects are signs of artifacts.
 
 .. image:: /_static/rep01_betaMap.png
   :align: center
@@ -405,7 +424,13 @@ component (selected in the summary view, see below). It includes three different
 
 * **Spectrum:** This plot shows the spectrogram associated with a given component
   (selected in the summary view). The x-axis represents frequency (in Hz), and the
-  y-axis represents spectral amplitude.
+  y-axis represents spectral amplitude. BOLD-weighted signals will likely have most
+  power below 0.1Hz. Peaks at higher frequencies are signs of non-BOLD signals. A
+  respiration artifact might be around 0.25-0.33Hz and a cardiac artifact might be
+  around 1Hz. This plot shows the maximum resolvable frequency given the TR, so
+  those higher frequencies might fold over to different peaks that are still above
+  0.1Hz. Respirator and cardiac fluctuation artifacts are also sometimes visible
+  in the time series.
 
 .. image:: /_static/rep01_fftPlot.png
   :align: center
@@ -423,6 +448,7 @@ figures.
 .. image:: /_static/rep01_tools.png
   :align: center
   :height: 25px
+
 
 The table below includes information about all available interactions
 
@@ -490,9 +516,11 @@ Carpet plots
 ************
 
 In additional to the elements described above, ``tedana``'s interactive reports include carpet plots for the main outputs of the workflow:
-the optimally combined data, the denoised data, the high-Kappa (accepted) data, and the low-Kappa (rejected) data.
-
-These plots may be useful for visual quality control of the overall denoising run.
+the optimally combined data, the denoised data, the high-Kappa (accepted) data, and the low-Kappa (rejected) data. Each row is a voxel
+and the grayscale is the relative signal changes across time. After denoising, voxels that look very different from others across time
+or time points that are uniformly high or low across voxels are concerning. These carpet plots can be help as a quick quality check for
+data, but since some neural signals really are more global than others and there are voxelwise differences in responses, quality checks
+should not overly focus on carpet plots and should examine these results in context with other quality measures.
 
 .. image:: /_static/carpet_overview.png
   :align: center
@@ -518,7 +546,7 @@ An example report
   A two-stage masking procedure was applied, in which a liberal mask (including voxels with good data in at least the first echo) was used for optimal combination, T2*/S0 estimation, and denoising, while a more conservative mask (restricted to voxels with good data in at least the first three echoes) was used for the component classification procedure.
   Multi-echo data were then optimally combined using the T2* combination method \\citep{posse1999enhancement}.
   Next, components were manually classified as BOLD (TE-dependent), non-BOLD (TE-independent), or uncertain (low-variance).
-  This workflow used numpy \\citep{van2011numpy}, scipy \\citep{virtanen2020scipy}, pandas \\citep{mckinney2010data,reback2020pandas}, scikit-learn \\citep{pedregosa2011scikit}, nilearn, bokeh \\citep{bokehmanual}, matplotlib \\citep{Hunter:2007}, and nibabel \\citep{brett_matthew_2019_3233118}.
+  This workflow used numpy \\citep{van2011numpy}, scipy \\citep{virtanen2020scipy}, pandas \\citep{mckinney2010data,reback2020pandas}, scikit-learn \\citep{pedregosa2011scikit}, nilearn, bokeh \\citep{bokehmanual}, matplotlib \\citep{Hunter2007}, and nibabel \\citep{brett_matthew_2019_3233118}.
   This workflow also used the Dice similarity index \\citep{dice1945measures,sorensen1948method}.
 
   References

@@ -1,6 +1,4 @@
-"""
-Tests for tedana.io
-"""
+"""Tests for tedana.io."""
 
 import json
 import os
@@ -98,8 +96,9 @@ def test_load_data():
 
 def test_smoke_split_ts():
     """
-    Ensures that split_ts returns output when fed in with random inputs
-    Note: classification is ["accepted", "rejected", "ignored"]
+    Ensures that split_ts returns output when fed in with random inputs.
+
+    Note: classification is ["accepted", "rejected", "ignored"].
     """
     np.random.seed(0)  # seeded because comptable MUST have accepted components
     n_samples = 100
@@ -111,8 +110,8 @@ def test_smoke_split_ts():
 
     # creating the component table with component as random floats,
     # a "metric," and random classification
-    component = np.random.random((n_components))
-    metric = np.random.random((n_components))
+    component = np.random.random(n_components)
+    metric = np.random.random(n_components)
     classification = np.random.choice(["accepted", "rejected", "ignored"], n_components)
     df_data = np.column_stack((component, metric, classification))
     comptable = pd.DataFrame(df_data, columns=["component", "metric", "classification"])
@@ -124,8 +123,9 @@ def test_smoke_split_ts():
 
 
 def test_smoke_write_split_ts():
-    """
-    Ensures that write_split_ts writes out the expected files with random input and tear them down
+    """Ensures that write_split_ts writes out the expected files with.
+
+    random input and tear them down.
     """
     np.random.seed(0)  # at least one accepted and one rejected, thus all files are generated
     n_samples, n_times, n_components = 64350, 10, 6
@@ -137,8 +137,8 @@ def test_smoke_write_split_ts():
     # creating the component table with component as random floats,
     # a "metric," and random classification
     io_generator = me.OutputGenerator(ref_img)
-    component = np.random.random((n_components))
-    metric = np.random.random((n_components))
+    component = np.random.random(n_components)
+    metric = np.random.random(n_components)
     classification = np.random.choice(["accepted", "rejected", "ignored"], n_components)
     df_data = np.column_stack((component, metric, classification))
     comptable = pd.DataFrame(df_data, columns=["component", "metric", "classification"])
@@ -156,11 +156,12 @@ def test_smoke_write_split_ts():
 
 def test_smoke_filewrite():
     """
-    Ensures that filewrite fails for no known image type, write a known key
-    in both bids and orig formats
+    Ensures that filewrite fails for no known image type, write a known key.
+
+    in both bids and orig formats.
     """
     n_samples, _, _ = 64350, 10, 6
-    data_1d = np.random.random((n_samples))
+    data_1d = np.random.random(n_samples)
     ref_img = os.path.join(data_dir, "mask.nii.gz")
     io_generator = me.OutputGenerator(ref_img)
 
@@ -178,9 +179,7 @@ def test_smoke_filewrite():
 
 
 def test_smoke_load_data():
-    """
-    Ensures that data is loaded when given a random neuroimage
-    """
+    """Ensures that data is loaded when given a random neuroimage."""
     data = os.path.join(data_dir, "mask.nii.gz")
     n_echos = 1
 
@@ -193,9 +192,7 @@ def test_smoke_load_data():
 
 
 def test_prep_data_for_json():
-    """
-    Tests for prep_data_for_json
-    """
+    """Tests for prep_data_for_json."""
     # Should reject non-dict entities since that is required for saver
     with pytest.raises(TypeError):
         me.prep_data_for_json(1)
@@ -222,9 +219,7 @@ def test_prep_data_for_json():
 
 
 def test_str_to_component_list():
-    """
-    Tests for converting a string to a component list
-    """
+    """Tests for converting a string to a component list."""
     int_list_1 = [1]
     int_list_2 = [1, 4, 5]
     test_list_1 = [str(x) for x in int_list_1]
@@ -270,10 +265,8 @@ def test_fname_to_component_list():
     assert result == [1, 1]
 
 
-def test_CustomEncoder():
-    """
-    Test the encoder we use for JSON incompatibilities
-    """
+def test_custom_encoder():
+    """Test the encoder we use for JSON incompatibilities."""
     # np int64
     test_data = {"data": np.int64(4)}
     encoded = json.dumps(test_data, cls=me.CustomEncoder)
@@ -287,7 +280,7 @@ def test_CustomEncoder():
     assert np.array_equal(test_data["data"], decoded["data"])
 
     # set should become list
-    test_data = {"data": set(["cat", "dog", "fish"])}
+    test_data = {"data": {"cat", "dog", "fish"}}
     encoded = json.dumps(test_data, cls=me.CustomEncoder)
     decoded = json.loads(encoded)
     assert list(test_data["data"]) == decoded["data"]

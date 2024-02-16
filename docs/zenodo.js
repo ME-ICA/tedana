@@ -23,7 +23,7 @@ String.prototype.endsWith = function(suffix) {
 };
 
 function getZenodoIDFromTag(conceptRecID, tagName, callback) {
-    getContent('https://zenodo.org/api/records/?q=conceptrecid:' + conceptRecID + '%20AND%20related.identifier:*github*' + tagName + '&all_versions&sort=-version', 
+    getContent('https://zenodo.org/api/records/?q=conceptrecid:' + conceptRecID + '%20AND%20related.identifier:*github*' + tagName + '&all_versions&sort=-version',
                'application/json',
                 function(err, data) {
                 if (err !== null) {
@@ -42,7 +42,7 @@ function getZenodoIDFromTag(conceptRecID, tagName, callback) {
 }
 
 function getLatestIDFromconceptID(conceptRecID, callback) {
-    getContent('https://zenodo.org/api/records/' + conceptRecID, 
+    getContent('https://zenodo.org/api/records/' + conceptRecID,
                'application/json',
                 function(err, data) {
                 if (err !== null) {

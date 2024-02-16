@@ -1,9 +1,10 @@
-"""The io module handles most file input and output in the `tedana` workflow.
+"""Handle most file input and output in the `tedana` workflow.
 
 Other functions in the module help write outputs which require multiple
 data sources, assist in writing per-echo verbose outputs, or act as helper
 functions for any of the above.
 """
+
 import json
 import logging
 import os
@@ -39,6 +40,7 @@ class CustomEncoder(json.JSONEncoder):
     """
 
     def default(self, obj):
+        """Return the default encoder for CustomEncoder."""
         # int64 non-serializable but is a numpy output
         if isinstance(obj, np.int32) or isinstance(obj, np.int64):
             return int(obj)
@@ -49,7 +51,7 @@ class CustomEncoder(json.JSONEncoder):
         if isinstance(obj, set):
             return list(obj)
 
-        return super(CustomEncoder, self).default(obj)
+        return super().default(obj)
 
 
 class OutputGenerator:
@@ -131,7 +133,7 @@ class OutputGenerator:
         self.convention = convention
         self.out_dir = op.abspath(out_dir)
         self.figures_dir = op.join(out_dir, "figures")
-        self.prefix = prefix + "_" if prefix != "" else ""
+        self.prefix = _infer_prefix(prefix)
         self.overwrite = overwrite
         self.verbose = verbose
         self.registry = {}
@@ -345,6 +347,13 @@ class OutputGenerator:
         deblanked.to_csv(name, sep="\t", lineterminator="\n", na_rep="n/a", index=False)
 
     def save_self(self):
+        """Save the registry to a json file.
+
+        Returns
+        -------
+        fname
+            Full file path for output file.
+        """
         fname = self.save_file(self.registry, "registry json")
         return fname
 
@@ -364,6 +373,13 @@ class InputHarvester:
         self._registry = load_json(self._full_path)
 
     def get_file_path(self, description):
+        """Get file path.
+
+        Parameters
+        ----------
+        description : str
+            Description of the file to get the path for.
+        """
         if description in self._registry.keys():
             return op.join(self._base_dir, self._registry[description])
         else:
@@ -371,6 +387,7 @@ class InputHarvester:
 
     def get_file_contents(self, description):
         """Get file contents.
+
         Notes
         -----
         Since we restrict to just these three types, this function should always return.
@@ -390,6 +407,18 @@ class InputHarvester:
 
 
 def versiontuple(v):
+    """Convert a version string into a tuple of ints.
+
+    Parameters
+    ----------
+    v : str
+        Version string to convert.
+
+    Returns
+    -------
+    tuple
+        Tuple of ints corresponding to the version string.
+    """
     return tuple(map(int, (v.split("."))))
 
 
@@ -413,7 +442,7 @@ def load_json(path: str) -> dict:
 
     Parameters
     ----------
-    path: str
+    path : str
         The path to the json file to load
 
     Returns
@@ -426,7 +455,7 @@ def load_json(path: str) -> dict:
     FileNotFoundError if the file does not exist
     IsADirectoryError if the path is a directory instead of a file
     """
-    with open(path, "r") as f:
+    with open(path) as f:
         try:
             data = json.load(f)
         except json.decoder.JSONDecodeError:
@@ -455,8 +484,8 @@ def add_decomp_prefix(comp_num, prefix, max_value):
         Component name in the form <prefix>_<zeros><comp_num>
     """
     n_digits = int(np.log10(max_value)) + 1
-    comp_name = "{0:08d}".format(int(comp_num))
-    comp_name = "{0}_{1}".format(prefix, comp_name[8 - n_digits :])
+    comp_name = f"{int(comp_num):08d}"
+    comp_name = f"{prefix}_{comp_name[8 - n_digits :]}"
     return comp_name
 
 
@@ -495,7 +524,7 @@ def denoise_ts(data, mmix, mask, comptable):
     # get variance explained by retained components
     betas = get_coeffs(dmdata.T, mmix, mask=None)
     varexpl = (1 - ((dmdata.T - betas.dot(mmix.T)) ** 2.0).sum() / (dmdata**2.0).sum()) * 100
-    LGR.info("Variance explained by decomposition: {:.02f}%".format(varexpl))
+    LGR.info(f"Variance explained by decomposition: {varexpl:.02f}%")
 
     # create component-based data
     hikts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
@@ -521,7 +550,7 @@ def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
         Reference image to dictate how outputs are saved to disk
     out_dir : :obj:`str`, optional
         Output directory.
-    echo: :obj: `int`, optional
+    echo : :obj: `int`, optional
         Echo number to generate filenames, used by some verbose
         functions. Default 0.
 
@@ -551,24 +580,24 @@ def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
             fout = io_generator.save_file(hikts, "high kappa ts split img", echo=echo)
         else:
             fout = io_generator.save_file(hikts, "high kappa ts img")
-        LGR.info("Writing high-Kappa time series: {}".format(fout))
+        LGR.info(f"Writing high-Kappa time series: {fout}")
 
     if len(rej) != 0:
         if echo != 0:
             fout = io_generator.save_file(lowkts, "low kappa ts split img", echo=echo)
         else:
             fout = io_generator.save_file(lowkts, "low kappa ts img")
-        LGR.info("Writing low-Kappa time series: {}".format(fout))
+        LGR.info(f"Writing low-Kappa time series: {fout}")
 
     if echo != 0:
         fout = io_generator.save_file(dnts, "denoised ts split img", echo=echo)
     else:
         fout = io_generator.save_file(dnts, "denoised ts img")
 
-    LGR.info("Writing denoised time series: {}".format(fout))
+    LGR.info(f"Writing denoised time series: {fout}")
 
 
-def writeresults(ts, mask, comptable, mmix, n_vols, io_generator):
+def writeresults(ts, mask, comptable, mmix, io_generator):
     """Denoise `ts` and save all resulting files to disk.
 
     Parameters
@@ -584,10 +613,12 @@ def writeresults(ts, mask, comptable, mmix, n_vols, io_generator):
     mmix : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
-    n_vols : :obj:`int`
-        Number of volumes in original time series
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
+
+    See Also
+    --------
+    tedana.io.write_split_ts : Writes out time series files
 
     Generated Files
     ---------------
@@ -605,27 +636,23 @@ def writeresults(ts, mask, comptable, mmix, n_vols, io_generator):
     desc-ICAAccepted_stat-z_components.nii.gz    Z-normalized spatial component maps
                                                  for accepted components.
     =========================================    =====================================
-
-    See Also
-    --------
-    tedana.io.write_split_ts: Writes out time series files
     """
     acc = comptable[comptable.classification == "accepted"].index.values
     write_split_ts(ts, mmix, mask, comptable, io_generator)
 
-    ts_B = get_coeffs(ts, mmix, mask)
-    fout = io_generator.save_file(ts_B, "ICA components img")
-    LGR.info("Writing full ICA coefficient feature set: {}".format(fout))
+    ts_pes = get_coeffs(ts, mmix, mask)
+    fout = io_generator.save_file(ts_pes, "ICA components img")
+    LGR.info(f"Writing full ICA coefficient feature set: {fout}")
 
     if len(acc) != 0:
-        fout = io_generator.save_file(ts_B[:, acc], "ICA accepted components img")
-        LGR.info("Writing denoised ICA coefficient feature set: {}".format(fout))
+        fout = io_generator.save_file(ts_pes[:, acc], "ICA accepted components img")
+        LGR.info(f"Writing denoised ICA coefficient feature set: {fout}")
 
         # write feature versions of components
         feats = computefeats2(split_ts(ts, mmix, mask, comptable)[0], mmix[:, acc], mask)
         feats = utils.unmask(feats, mask)
         fname = io_generator.save_file(feats, "z-scored ICA accepted components img")
-        LGR.info("Writing Z-normalized spatial component maps: {}".format(fname))
+        LGR.info(f"Writing Z-normalized spatial component maps: {fname}")
 
 
 def writeresults_echoes(catd, mmix, mask, comptable, io_generator):
@@ -646,6 +673,10 @@ def writeresults_echoes(catd, mmix, mask, comptable, io_generator):
     ref_img : :obj:`str` or img_like
         Reference image to dictate how outputs are saved to disk
 
+    See Also
+    --------
+    tedana.io.write_split_ts : Writes out the files.
+
     Generated Files
     ---------------
 
@@ -659,13 +690,9 @@ def writeresults_echoes(catd, mmix, mask, comptable, io_generator):
     echo-[echo]_desc-Denoised_bold.nii.gz    Denoised timeseries for echo
                                              number ``echo``.
     =====================================    ===================================
-
-    See Also
-    --------
-    tedana.io.write_split_ts: Writes out the files.
     """
     for i_echo in range(catd.shape[1]):
-        LGR.info("Writing Kappa-filtered echo #{:01d} timeseries".format(i_echo + 1))
+        LGR.info(f"Writing Kappa-filtered echo #{i_echo + 1:01d} timeseries")
         write_split_ts(catd[:, i_echo, :], mmix, mask, comptable, io_generator, echo=(i_echo + 1))
 
 
@@ -804,14 +831,14 @@ def prep_data_for_json(d) -> dict:
     d : dict
         A dictionary that will be converted into something JSON serializable
 
+    Returns
+    -------
+    An attempt at JSON serializable data
+
     Raises
     ------
     ValueError if it cannot force the dictionary to be serializable
     TypeError if you do not supply a dict
-
-    Returns
-    -------
-    An attempt at JSON serializable data
 
     Notes
     -----
@@ -848,7 +875,7 @@ def str_to_component_list(s: str) -> List[int]:
 
     Parameters
     ----------
-    s: str
+    s : str
         The string to convert into a list of component indices.
 
     Returns
@@ -895,7 +922,7 @@ def fname_to_component_list(fname: str) -> List[int]:
 
     Parameters
     ----------
-    fname: str
+    fname : str
         The name of the file to read the list of component indices from.
 
     Returns
@@ -917,6 +944,12 @@ def fname_to_component_list(fname: str) -> List[int]:
         else:
             raise ValueError(f"Cannot determine a components column in file {fname}")
 
-    with open(fname, "r") as fp:
+    with open(fname) as fp:
         contents = fp.read()
         return str_to_component_list(contents)
+
+
+def _infer_prefix(prefix):
+    """Determine the appropriate prefix for output files."""
+    prefix = prefix + "_" if (prefix != "" and not prefix.endswith("_")) else prefix
+    return prefix
