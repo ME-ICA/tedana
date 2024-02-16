@@ -1,8 +1,10 @@
 """Estimate T2 and S0, and optimally combine data across TEs."""
+
 import argparse
 import logging
 import os
 import os.path as op
+import sys
 
 import numpy as np
 from scipy import stats
@@ -155,6 +157,7 @@ def t2smap_workflow(
     combmode="t2s",
     debug=False,
     quiet=False,
+    t2smap_command=None,
 ):
     """
     Estimate T2 and S0, and optimally combine data across TEs.
@@ -186,6 +189,8 @@ def t2smap_workflow(
         Default is 'all'.
     combmode : {'t2s', 'paid'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'paid' (Poser).
+    t2smap_command : :obj:`str`, optional
+        The command used to run t2smap. Default is None.
 
     Other Parameters
     ----------------
@@ -231,6 +236,22 @@ def t2smap_workflow(
     utils.setup_loggers(quiet=quiet, debug=debug)
 
     LGR.info(f"Using output directory: {out_dir}")
+
+    # Save command into sh file, if the command-line interface was used
+    if t2smap_command is not None:
+        command_file = open(os.path.join(out_dir, "t2smap_call.sh"), "w")
+        command_file.write(t2smap_command)
+        command_file.close()
+    else:
+        # Get variables passed to function if the tedana command is None
+        variables = ", ".join(f"{name}={value}" for name, value in locals().items())
+        # From variables, remove everything after ", tedana_command"
+        variables = variables.split(", t2smap_command")[0]
+        t2smap_command = f"t2smap_workflow({variables})"
+
+    # Save system info to json
+    info_dict = utils.get_system_version_info()
+    info_dict["Command"] = t2smap_command
 
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
@@ -309,16 +330,28 @@ def t2smap_workflow(
         "DatasetType": "derivative",
         "GeneratedBy": [
             {
-                "Name": "tedana",
+                "Name": "t2smap",
                 "Version": __version__,
                 "Description": (
                     "A pipeline estimating T2* from multi-echo fMRI data and "
                     "combining data across echoes."
                 ),
                 "CodeURL": "https://github.com/ME-ICA/tedana",
+                "Node": {
+                    "Name": info_dict["Node"],
+                    "System": info_dict["System"],
+                    "Machine": info_dict["Machine"],
+                    "Processor": info_dict["Processor"],
+                    "Release": info_dict["Release"],
+                    "Version": info_dict["Version"],
+                },
+                "Python": info_dict["Python"],
+                "Python_Libraries": info_dict["Python_Libraries"],
+                "Command": info_dict["Command"],
             }
         ],
     }
+
     io_generator.save_file(derivative_metadata, "data description json")
     io_generator.save_self()
 
@@ -328,12 +361,17 @@ def t2smap_workflow(
 
 def _main(argv=None):
     """Run the t2smap workflow."""
+    if argv:
+        # relevant for tests when CLI called with t2smap_cli._main(args)
+        t2smap_command = "t2smap " + " ".join(argv)
+    else:
+        t2smap_command = "t2smap " + " ".join(sys.argv[1:])
     options = _get_parser().parse_args(argv)
     kwargs = vars(options)
     n_threads = kwargs.pop("n_threads")
     n_threads = None if n_threads == -1 else n_threads
     with threadpool_limits(limits=n_threads, user_api=None):
-        t2smap_workflow(**kwargs)
+        t2smap_workflow(**kwargs, t2smap_command=t2smap_command)
 
 
 if __name__ == "__main__":

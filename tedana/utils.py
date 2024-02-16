@@ -1,14 +1,26 @@
 """Utilities for tedana package."""
+
 import logging
 import os.path as op
 import platform
+import sys
 import warnings
 
 import nibabel as nib
 import numpy as np
+from bokeh import __version__ as bokeh_version
+from mapca import __version__ as mapca_version
+from matplotlib import __version__ as matplotlib_version
+from nibabel import __version__ as nibabel_version
+from nilearn import __version__ as nilearn_version
 from nilearn._utils import check_niimg
+from numpy import __version__ as numpy_version
+from pandas import __version__ as pandas_version
+from scipy import __version__ as scipy_version
 from scipy import ndimage
+from sklearn import __version__ as sklearn_version
 from sklearn.utils import check_array
+from threadpoolctl import __version__ as threadpoolctl_version
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -443,15 +455,31 @@ def get_resource_path():
     return op.abspath(op.join(op.dirname(__file__), "resources") + op.sep)
 
 
-def get_system_info():
-    """Return information about the system tedana is being run on.
+def get_system_version_info():
+    """
+    Return information about the system tedana is being run on.
 
     Returns
     -------
     dict
-        Info about system where tedana is run on.
+        Info about system where tedana is run on and
+        and python and python library versioning info for key
+        modules used by tedana.
     """
     system_info = platform.uname()
+
+    python_libraries = {
+        "bokeh": bokeh_version,
+        "matplotlib": matplotlib_version,
+        "mapca": mapca_version,
+        "nibabel": nibabel_version,
+        "nilearn": nilearn_version,
+        "numpy": numpy_version,
+        "pandas": pandas_version,
+        "scikit-learn": sklearn_version,
+        "scipy": scipy_version,
+        "threadpoolctl": threadpoolctl_version,
+    }
 
     return {
         "System": system_info.system,
@@ -460,4 +488,6 @@ def get_system_info():
         "Version": system_info.version,
         "Machine": system_info.machine,
         "Processor": system_info.processor,
+        "Python": sys.version,
+        "Python_Libraries": python_libraries,
     }
