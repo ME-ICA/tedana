@@ -90,7 +90,7 @@ def test_selectcomps2use_succeeds():
     decide_comps_lengths = [4, 17, 21, 21, 1, 3, 0]
 
     for idx, decide_comps in enumerate(decide_comps_options):
-        comps2use = selection_utils.selectcomps2use(selector, decide_comps)
+        comps2use = selection_utils.selectcomps2use(selector.component_table_, decide_comps)
         assert len(comps2use) == decide_comps_lengths[idx], (
             f"selectcomps2use test should select {decide_comps_lengths[idx]} with "
             f"decide_comps={decide_comps}, but it selected {len(comps2use)}"
@@ -111,11 +111,11 @@ def test_selectcomps2use_fails():
     ]
     for decide_comps in decide_comps_options:
         with pytest.raises(ValueError):
-            selection_utils.selectcomps2use(selector, decide_comps)
+            selection_utils.selectcomps2use(selector.component_table_, decide_comps)
 
     selector.component_table_ = selector.component_table_.drop(columns="classification")
     with pytest.raises(ValueError):
-        selection_utils.selectcomps2use(selector, "all")
+        selection_utils.selectcomps2use(selector.component_table_, "all")
 
 
 def test_comptable_classification_changer_succeeds():
@@ -192,7 +192,7 @@ def test_change_comptable_classifications_succeeds():
 
     # Given the rho values in the sample table, decision_boolean should have
     # 2 True and 2 False values
-    comps2use = selection_utils.selectcomps2use(selector, "provisional accept")
+    comps2use = selection_utils.selectcomps2use(selector.component_table_, "provisional accept")
     rho = selector.component_table_.loc[comps2use, "rho"]
     decision_boolean = rho < 13.5
 
@@ -255,7 +255,7 @@ def test_log_decision_tree_step_smoke():
     selector = sample_selector()
 
     # Standard run for logging classification changes
-    comps2use = selection_utils.selectcomps2use(selector, "reject")
+    comps2use = selection_utils.selectcomps2use(selector.component_table_, "reject")
     selection_utils.log_decision_tree_step(
         "Step 0: test_function_name",
         comps2use,
@@ -289,7 +289,7 @@ def test_log_decision_tree_step_smoke():
     )
 
     # Logging no components found with a specified classification
-    comps2use = selection_utils.selectcomps2use(selector, "NotALabel")
+    comps2use = selection_utils.selectcomps2use(selector.component_table_, "NotALabel")
     selection_utils.log_decision_tree_step(
         "Step 0: test_function_name",
         comps2use,

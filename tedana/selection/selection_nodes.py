@@ -110,7 +110,7 @@ def manual_classify(
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
-    comps2use = selectcomps2use(selector, decide_comps)
+    comps2use = selectcomps2use(selector.component_table_, decide_comps)
 
     if not comps2use:
         log_decision_tree_step(function_name_idx, comps2use, decide_comps=decide_comps)
@@ -244,7 +244,7 @@ def dec_left_op_right(
     function_name_idx = f"Step {selector.current_node_idx_}: left_op_right"
     # Only select components if the decision tree is being run
     if not only_used_metrics:
-        comps2use = selectcomps2use(selector, decide_comps)
+        comps2use = selectcomps2use(selector.component_table_, decide_comps)
 
     def identify_used_metric(val, isnum=False):
         """
@@ -547,7 +547,7 @@ def dec_variance_lessthan_thresholds(
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
-    comps2use = selectcomps2use(selector, decide_comps)
+    comps2use = selectcomps2use(selector.component_table_, decide_comps)
     confirm_metrics_exist(
         selector.component_table_, outputs["used_metrics"], function_name=function_name_idx
     )
@@ -671,7 +671,7 @@ def calc_median(
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
-    comps2use = selectcomps2use(selector, decide_comps)
+    comps2use = selectcomps2use(selector.component_table_, decide_comps)
     confirm_metrics_exist(
         selector.component_table_, outputs["used_metrics"], function_name=function_name_idx
     )
@@ -779,7 +779,7 @@ def calc_kappa_elbow(
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
-    comps2use = selectcomps2use(selector, decide_comps)
+    comps2use = selectcomps2use(selector.component_table_, decide_comps)
     confirm_metrics_exist(
         selector.component_table_, outputs["used_metrics"], function_name=function_name_idx
     )
@@ -904,12 +904,12 @@ def calc_rho_elbow(
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
-    comps2use = selectcomps2use(selector, decide_comps)
+    comps2use = selectcomps2use(selector.component_table_, decide_comps)
     confirm_metrics_exist(
         selector.component_table_, outputs["used_metrics"], function_name=function_name_idx
     )
 
-    subset_comps2use = selectcomps2use(selector, subset_decide_comps)
+    subset_comps2use = selectcomps2use(selector.component_table_, subset_decide_comps)
 
     if not comps2use:
         log_decision_tree_step(
@@ -1038,9 +1038,9 @@ def dec_classification_doesnt_exist(
     if_true = new_classification
     if_false = "nochange"
 
-    comps2use = selectcomps2use(selector, decide_comps)
+    comps2use = selectcomps2use(selector.component_table_, decide_comps)
 
-    do_comps_exist = selectcomps2use(selector, class_comp_exists)
+    do_comps_exist = selectcomps2use(selector.component_table_, class_comp_exists)
 
     if (not comps2use) or (len(do_comps_exist) >= at_least_num_exist):
         outputs["n_true"] = 0
@@ -1153,7 +1153,7 @@ def dec_reclassify_high_var_comps(
     if_true = new_classification
     if_false = "nochange"
 
-    comps2use = selectcomps2use(selector, decide_comps)
+    comps2use = selectcomps2use(selector.component_table_, decide_comps)
 
     if "varex_upper_p" not in selector.cross_component_metrics_:
         if not comps2use:
@@ -1301,7 +1301,7 @@ def calc_varex_thresh(
             f"{perc_name} already calculated. Overwriting previous value in {function_name_idx}"
         )
 
-    comps2use = selectcomps2use(selector, decide_comps)
+    comps2use = selectcomps2use(selector.component_table_, decide_comps)
     confirm_metrics_exist(
         selector.component_table_, outputs["used_metrics"], function_name=function_name_idx
     )
@@ -1537,7 +1537,7 @@ def calc_max_good_meanmetricrank(
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
-    comps2use = selectcomps2use(selector, decide_comps)
+    comps2use = selectcomps2use(selector.component_table_, decide_comps)
     confirm_metrics_exist(
         selector.component_table_, outputs["used_metrics"], function_name=function_name_idx
     )
@@ -1642,7 +1642,7 @@ def calc_varex_kappa_ratio(
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
-    comps2use = selectcomps2use(selector, decide_comps)
+    comps2use = selectcomps2use(selector.component_table_, decide_comps)
     confirm_metrics_exist(
         selector.component_table_, outputs["used_metrics"], function_name=function_name_idx
     )
@@ -1788,7 +1788,7 @@ def calc_revised_meanmetricrank_guesses(
             "cause problems since these are only calculated on a subset of components"
         )
 
-    comps2use = selectcomps2use(selector, decide_comps)
+    comps2use = selectcomps2use(selector.component_table_, decide_comps)
     confirm_metrics_exist(
         selector.component_table_, outputs["used_metrics"], function_name=function_name_idx
     )
@@ -1818,7 +1818,7 @@ def calc_revised_meanmetricrank_guesses(
     if log_extra_report:
         RepLGR.info(log_extra_report)
 
-    comps2use = selectcomps2use(selector, decide_comps)
+    comps2use = selectcomps2use(selector.component_table_, decide_comps)
     confirm_metrics_exist(
         selector.component_table_, outputs["used_metrics"], function_name=function_name_idx
     )
