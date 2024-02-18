@@ -900,6 +900,10 @@ def str_to_component_list(s: str) -> List[int]:
     ------
     ValueError, if the string cannot be split by an allowed delimeter
     """
+    if not s:
+        LGR.warning("Component string is empty ")
+        return []
+
     # Strip off newline at end in case we've been given a one-line file
     if s[-1] == "\n":
         s = s[:-1]
@@ -949,7 +953,12 @@ def fname_to_component_list(fname: str) -> List[int]:
     csv file cannot be interpreted.
     """
     if fname[-3:] == "csv":
-        contents = pd.read_csv(fname)
+        try:
+            contents = pd.read_csv(fname)
+        except Exception:
+            LGR.warning(f"{fname} is empty ")
+            return []
+
         columns = contents.columns
         if len(columns) == 2 and "0" in columns:
             return contents["0"].tolist()
@@ -960,6 +969,8 @@ def fname_to_component_list(fname: str) -> List[int]:
 
     with open(fname) as fp:
         contents = fp.read()
+        if len(contents) == 0:
+            LGR.warning(f"{fname} is empty ")
         return str_to_component_list(contents)
 
 

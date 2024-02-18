@@ -271,10 +271,26 @@ def test_fname_to_component_list():
     temp_txt_fname = os.path.join(data_dir, "test.txt")
     with open(temp_txt_fname, "w") as fp:
         fp.write("1,1,")
-
     result = me.fname_to_component_list(temp_txt_fname)
     os.remove(temp_txt_fname)
     assert result == [1, 1]
+
+
+def test_fname_to_component_list_empty_file():
+    """Test for testing empty files in fname_to_component_list function"""
+    temp_csv_fname = os.path.join(data_dir, "test.csv")
+    with open(temp_csv_fname, "w"):
+        pass
+    result = me.fname_to_component_list(temp_csv_fname)
+    os.remove(temp_csv_fname)
+
+    temp_txt_fname = os.path.join(data_dir, "test.txt")
+    with open(temp_txt_fname, "w"):
+        pass
+    result = me.fname_to_component_list(temp_txt_fname)
+    os.remove(temp_txt_fname)
+
+    assert result == []
 
 
 def test_custom_encoder():
