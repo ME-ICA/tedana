@@ -639,7 +639,7 @@ def writeresults(ts, mask, comptable, mmix, io_generator):
     =========================================    ===========================================
     Filename                                     Content
     =========================================    ===========================================
-    desc-optcomDenoised_bold.nii.gz              Denoised time series.
+    desc-denoised_bold.nii.gz              Denoised time series.
 
     desc-optcomAccepted_bold.nii.gz              High-Kappa time series. (only with verbose)
     desc-optcomRejected_bold.nii.gz              Low-Kappa time series. (only with verbose)
