@@ -15,11 +15,13 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 license = {file = "LICENSE"}
 requires-python = ">=3.8"
 dependencies = [
-    "bokeh<2.3.0",
+    "bokeh",
     "mapca>=0.0.3",
     "matplotlib",
     "nibabel>=2.5.1",
@@ -29,7 +31,6 @@ dependencies = [
     "scikit-learn>=0.21",
     "scipy>=1.2.0",
     "threadpoolctl",
-    "jinja2==3.0.1",
 ]
 dynamic = ["version"]
 
@@ -102,7 +103,7 @@ version-file = "tedana/_version.py"
 
 [tool.black]
 line-length = 99
-target-version = ['py37']
+target-version = ['py38']
 include = '\.pyi?$'
 exclude = '''
 

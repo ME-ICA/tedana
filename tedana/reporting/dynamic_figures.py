@@ -162,8 +162,8 @@ def _create_kr_plt(comptable_cds, kappa_elbow=None, rho_elbow=None):
         ]
     )
     fig = plotting.figure(
-        plot_width=400,
-        plot_height=400,
+        width=400,
+        height=400,
         tools=["tap,wheel_zoom,reset,pan,crosshair,save", kr_hovertool],
         title="Kappa / Rho Plot",
     )
@@ -276,8 +276,8 @@ def _create_sorted_plt(
         ]
     )
     fig = plotting.figure(
-        plot_width=400,
-        plot_height=400,
+        width=400,
+        height=400,
         tools=["tap,wheel_zoom,reset,pan,crosshair,save", hovertool],
         title=title,
     )
@@ -319,8 +319,8 @@ def _create_sorted_plt(
 
 def _create_varexp_pie_plt(comptable_cds):
     fig = plotting.figure(
-        plot_width=400,
-        plot_height=400,
+        width=400,
+        height=400,
         title="Variance Explained View",
         tools=["hover,tap,save"],
         tooltips=[

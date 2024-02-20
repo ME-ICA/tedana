@@ -11,7 +11,7 @@
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/ME-ICA/tedana.svg)](http://isitmaintained.com/project/ME-ICA/tedana "Average time to resolve an issue")
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/ME-ICA/tedana.svg)](http://isitmaintained.com/project/ME-ICA/tedana "Percentage of issues still open")
 [![Join the chat on Mattermost](https://img.shields.io/badge/Chat%20on-Mattermost-purple.svg)](https://mattermost.brainhack.org/brainhack/channels/tedana)
-[![Join our tinyletter mailing list](https://img.shields.io/badge/receive-our%20newsletter%20❤%EF%B8%8F-blueviolet.svg)](https://tinyletter.com/tedana-devs)
+[![Join our Google Group mailing list](https://img.shields.io/badge/receive-our%20newsletter%20❤%EF%B8%8F-blueviolet.svg)](https://groups.google.com/g/tedana-newsletter)
 [![All Contributors](https://img.shields.io/badge/all_contributors-20-orange.svg?style=flat-square)](#contributors)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
@@ -121,8 +121,8 @@ Open or comment on one of [our issues](https://github.com/ME-ICA/tedana/issues)!
 If you're not sure where to begin, feel free to pop into [Mattermost](https://mattermost.brainhack.org/brainhack/channels/tedana) and introduce yourself!
 We will be happy to help you find somewhere to get started.
 
-If you don't want to get lots of notifications, we send out newsletters approximately once per month though our TinyLetter mailing list.
-You can view the [previous newsletters](https://tinyletter.com/tedana-devs/archive) and/or sign up to receive future ones at [https://tinyletter.com/tedana-devs](https://tinyletter.com/tedana-devs).
+If you don't want to get lots of notifications, we send out newsletters approximately once per month though our Google Group mailing list.
+You can view the [previous newsletters](https://groups.google.com/g/tedana-newsletter) and/or sign up to receive future ones by joining at [https://groups.google.com/g/tedana-newsletter](https://groups.google.com/g/tedana-newsletter).
 
 We ask that all contributors to ``tedana`` across all project-related spaces (including but not limited to: GitHub, Mattermost, and project emails), adhere to our [code of conduct](https://github.com/ME-ICA/tedana/blob/main/CODE_OF_CONDUCT.md).
 
@@ -169,6 +169,11 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="20%"><a href="https://www.notzaki.com/"><img src="https://avatars1.githubusercontent.com/u/9019681?v=4?s=100" width="100px;" alt="Zaki A."/><br /><sub><b>Zaki A.</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/issues?q=author%3AnotZaki" title="Bug reports">🐛</a> <a href="https://github.com/ME-ICA/tedana/commits?author=notZaki" title="Code">💻</a> <a href="https://github.com/ME-ICA/tedana/commits?author=notZaki" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="20%"><a href="https://github.com/manfredg"><img src="https://avatars.githubusercontent.com/u/1173430?v=4?s=100" width="100px;" alt="Manfred G Kitzbichler"/><br /><sub><b>Manfred G Kitzbichler</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=manfredg" title="Code">💻</a></td>
       <td align="center" valign="top" width="20%"><a href="https://github.com/giadaan"><img src="https://avatars.githubusercontent.com/u/118978909?v=4?s=100" width="100px;" alt="giadaan"/><br /><sub><b>giadaan</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=giadaan" title="Documentation">📖</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="20%"><a href="https://github.com/bpinsard"><img src="https://avatars.githubusercontent.com/u/1155388?v=4?s=100" width="100px;" alt="Basile"/><br /><sub><b>Basile</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=bpinsard" title="Code">💻</a></td>
+      <td align="center" valign="top" width="20%"><a href="https://github.com/effigies"><img src="https://avatars.githubusercontent.com/u/83442?v=4?s=100" width="100px;" alt="Chris Markiewicz"/><br /><sub><b>Chris Markiewicz</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=effigies" title="Code">💻</a></td>
+      <td align="center" valign="top" width="20%"><a href="https://github.com/goodalse2019"><img src="https://avatars.githubusercontent.com/u/60117796?v=4?s=100" width="100px;" alt="Sarah Goodale"/><br /><sub><b>Sarah Goodale</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=goodalse2019" title="Documentation">📖</a> <a href="#ideas-goodalse2019" title="Ideas, Planning, & Feedback">🤔</a> <a href="#question-goodalse2019" title="Answering Questions">💬</a></td>
     </tr>
   </tbody>
 </table>

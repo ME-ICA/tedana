@@ -615,7 +615,7 @@ def test_calc_median_smoke():
         median_label="varex",
         only_used_metrics=True,
     )
-    assert len(used_metrics - set(["variance explained"])) == 0
+    assert len(used_metrics - {"variance explained"}) == 0
 
     # Standard call to this function.
     selector = selection_nodes.calc_median(
@@ -777,7 +777,7 @@ def test_dec_reclassify_high_var_comps():
         decide_comps,
         only_used_metrics=True,
     )
-    assert len(used_metrics - set(["variance explained"])) == 0
+    assert len(used_metrics - {"variance explained"}) == 0
 
     # Raises an error since varex_upper_p not in cross_component_metrics
     #   & there are components in decide_comps
@@ -838,7 +838,7 @@ def test_calc_varex_thresh_smoke():
     used_metrics = selection_nodes.calc_varex_thresh(
         selector, decide_comps, thresh_label="upper", percentile_thresh=90, only_used_metrics=True
     )
-    assert len(used_metrics - set(["variance explained"])) == 0
+    assert len(used_metrics - {"variance explained"}) == 0
 
     # Standard call to this function.
     selector = selection_nodes.calc_varex_thresh(

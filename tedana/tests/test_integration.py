@@ -57,7 +57,7 @@ def check_integration_outputs(fname, outpath, n_logs=1):
         found_files.remove(log)
 
     # Compares remaining files with those expected
-    with open(fname, "r") as f:
+    with open(fname) as f:
         expected_files = f.read().splitlines()
     expected_files = [os.path.normpath(path) for path in expected_files]
 
@@ -679,6 +679,6 @@ def test_integration_t2smap(skip_integration):
     ]
 
     # Compares remaining files with those expected
-    with open(fname, "r") as f:
+    with open(fname) as f:
         expected_files = f.read().splitlines()
     assert sorted(expected_files) == sorted(found_files)
