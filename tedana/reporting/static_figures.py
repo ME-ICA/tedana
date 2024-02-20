@@ -8,7 +8,8 @@ import numpy as np
 
 matplotlib.use("AGG")
 import matplotlib.pyplot as plt
-from nilearn import plotting
+import seaborn as sns
+from nilearn import masking, plotting
 
 from tedana import io, stats, utils
 
@@ -463,3 +464,44 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     pca_variance_explained_name = os.path.join(io_generator.out_dir, "figures", plot_name)
     plt.savefig(pca_variance_explained_name)
     plt.close()
+
+
+def plot_t2star_and_s0(*, io_generator, mask):
+    """Create T2* and S0 maps and histograms."""
+    # Plot T2* and S0 maps
+    t2star_img = io_generator.get_name("t2star img")
+    t2star_plot = f"{io_generator.prefix}t2star_brain.svg"
+    plotting.plot_stat_map(
+        t2star_img,
+        bg_img=None,
+        title="T2*",
+        display_mode="mosaic",
+        cut_coords=5,
+        symmetric_cbar=False,
+        output_file=os.path.join(io_generator.out_dir, "figures", t2star_plot),
+    )
+
+    s0_img = io_generator.get_name("s0 img")
+    s0_plot = f"{io_generator.prefix}s0_brain.svg"
+    plotting.plot_stat_map(
+        s0_img,
+        bg_img=None,
+        title="S0",
+        display_mode="mosaic",
+        cut_coords=5,
+        symmetric_cbar=False,
+        output_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
+    )
+
+    # Plot histograms
+    t2star_data = masking.apply_mask(t2star_img, mask)
+    t2star_histogram = f"{io_generator.prefix}t2star_histogram.svg"
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.histplot(data=t2star_data, bins=100, kde=True, ax=ax)
+    fig.savefig(os.path.join(io_generator.out_dir, "figures", t2star_histogram))
+
+    s0_data = masking.apply_mask(s0_img, mask)
+    s0_histogram = f"{io_generator.prefix}s0_histogram.svg"
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.histplot(data=s0_data, bins=100, kde=True, ax=ax)
+    fig.savefig(os.path.join(io_generator.out_dir, "figures", s0_histogram))
