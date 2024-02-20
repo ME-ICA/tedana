@@ -467,12 +467,20 @@ def pca_results(criteria, n_components, all_varex, io_generator):
 
 
 def plot_t2star_and_s0(*, io_generator, mask):
-    """Create T2* and S0 maps and histograms."""
+    """Create T2* and S0 maps and histograms.
+
+    Parameters
+    ----------
+    io_generator : :obj:`tedana.io.OutputGenerator`
+        The output generator for this workflow
+    mask : (S,) array-like
+        Binary mask used to apply to the data.
+    """
     t2star_img = io_generator.get_name("t2star img")
     s0_img = io_generator.get_name("s0 img")
+    mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
     assert os.path.isfile(t2star_img), f"File {t2star_img} does not exist"
     assert os.path.isfile(s0_img), f"File {s0_img} does not exist"
-    assert os.path.isfile(mask), f"File {mask} does not exist"
 
     # Plot T2* and S0 maps
     t2star_plot = f"{io_generator.prefix}t2star_brain.svg"
@@ -498,13 +506,13 @@ def plot_t2star_and_s0(*, io_generator, mask):
     )
 
     # Plot histograms
-    t2star_data = masking.apply_mask(t2star_img, mask)
+    t2star_data = masking.apply_mask(t2star_img, mask_img)
     t2star_histogram = f"{io_generator.prefix}t2star_histogram.svg"
     fig, ax = plt.subplots(figsize=(10, 6))
     sns.histplot(data=t2star_data, bins=100, kde=True, ax=ax)
     fig.savefig(os.path.join(io_generator.out_dir, "figures", t2star_histogram))
 
-    s0_data = masking.apply_mask(s0_img, mask)
+    s0_data = masking.apply_mask(s0_img, mask_img)
     s0_histogram = f"{io_generator.prefix}s0_histogram.svg"
     fig, ax = plt.subplots(figsize=(10, 6))
     sns.histplot(data=s0_data, bins=100, kde=True, ax=ax)
