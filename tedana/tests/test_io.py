@@ -142,6 +142,7 @@ def test_smoke_write_split_ts():
     classification = np.random.choice(["accepted", "rejected", "ignored"], n_components)
     df_data = np.column_stack((component, metric, classification))
     comptable = pd.DataFrame(df_data, columns=["component", "metric", "classification"])
+    io_generator.verbose = True
 
     me.write_split_ts(data, mmix, mask, comptable, io_generator)
 
@@ -152,6 +153,17 @@ def test_smoke_write_split_ts():
     for filename in fnames:
         # remove all files generated
         os.remove(filename)
+
+    io_generator.verbose = False
+
+    me.write_split_ts(data, mmix, mask, comptable, io_generator)
+
+    # TODO: midk_ts.nii is never generated?
+    fn = io_generator.get_name
+    split = "denoised ts img"
+    fname = fn(split)
+    # remove all files generated
+    os.remove(fname)
 
 
 def test_smoke_filewrite():
@@ -259,10 +271,26 @@ def test_fname_to_component_list():
     temp_txt_fname = os.path.join(data_dir, "test.txt")
     with open(temp_txt_fname, "w") as fp:
         fp.write("1,1,")
-
     result = me.fname_to_component_list(temp_txt_fname)
     os.remove(temp_txt_fname)
     assert result == [1, 1]
+
+
+def test_fname_to_component_list_empty_file():
+    """Test for testing empty files in fname_to_component_list function"""
+    temp_csv_fname = os.path.join(data_dir, "test.csv")
+    with open(temp_csv_fname, "w"):
+        pass
+    result = me.fname_to_component_list(temp_csv_fname)
+    os.remove(temp_csv_fname)
+
+    temp_txt_fname = os.path.join(data_dir, "test.txt")
+    with open(temp_txt_fname, "w"):
+        pass
+    result = me.fname_to_component_list(temp_txt_fname)
+    os.remove(temp_txt_fname)
+
+    assert result == []
 
 
 def test_custom_encoder():

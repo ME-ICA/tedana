@@ -1,4 +1,5 @@
 """Tests for the tedana.selection.selection_utils module."""
+
 import os
 
 import numpy as np

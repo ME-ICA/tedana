@@ -1,4 +1,5 @@
 """PCA and related signal decomposition methods for tedana."""
+
 import logging
 from numbers import Number
 
@@ -394,7 +395,7 @@ def tedpca(
         else:
             alg_str = algorithm
         LGR.info(
-            f"Selected {comptable.shape[0]} components with {round(100*varex_norm.sum(),2)}% "
+            f"Selected {comptable.shape[0]} components with {round(100 * varex_norm.sum(), 2)}% "
             f"normalized variance explained using {alg_str} dimensionality estimate"
         )
         comptable["classification"] = "accepted"

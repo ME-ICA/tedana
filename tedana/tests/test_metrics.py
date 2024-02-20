@@ -1,4 +1,5 @@
 """Tests for tedana.metrics."""
+
 import os.path as op
 
 import numpy as np

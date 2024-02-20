@@ -1,4 +1,5 @@
 """Functions to identify TE-dependent and TE-independent components."""
+
 import logging
 
 from tedana.metrics import collect

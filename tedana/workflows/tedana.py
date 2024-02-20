@@ -1,4 +1,5 @@
 """Run the "canonical" TE-Dependent ANAlysis workflow."""
+
 import argparse
 import datetime
 import json
@@ -855,7 +856,7 @@ def tedana_workflow(
         "\n\nThis workflow used numpy \\citep{van2011numpy}, scipy \\citep{virtanen2020scipy}, "
         "pandas \\citep{mckinney2010data,reback2020pandas}, "
         "scikit-learn \\citep{pedregosa2011scikit}, "
-        "nilearn, bokeh \\citep{bokehmanual}, matplotlib \\citep{Hunter:2007}, "
+        "nilearn, bokeh \\citep{bokehmanual}, matplotlib \\citep{Hunter2007}, "
         "and nibabel \\citep{brett_matthew_2019_3233118}."
     )
 

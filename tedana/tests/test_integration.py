@@ -380,10 +380,12 @@ def test_integration_reclassify_insufficient_args(skip_integration):
 
     guarantee_reclassify_data()
 
-    args = [
-        "ica_reclassify",
-        reclassify_raw_registry(),
-    ]
+    test_data_path, osf_id = data_for_testing_info("three-echo")
+    out_dir = os.path.abspath(
+        os.path.join(test_data_path, "../../outputs/reclassify/insufficient")
+    )
+
+    args = ["ica_reclassify", reclassify_raw_registry(), "--out-dir", out_dir]
 
     result = subprocess.run(args, capture_output=True)
     assert b"ValueError: Must manually accept or reject" in result.stderr

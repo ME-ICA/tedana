@@ -20,9 +20,7 @@ desc-PCA_metrics.tsv
 desc-PCA_mixing.tsv
 desc-PCA_stat-z_components.nii.gz
 desc-adaptiveGoodSignal_mask.nii.gz
-desc-optcomAccepted_bold.nii.gz
-desc-optcomDenoised_bold.nii.gz
-desc-optcomRejected_bold.nii.gz
+desc-denoised_bold.nii.gz
 desc-optcom_bold.nii.gz
 figures
 figures/carpet_optcom.svg
