@@ -28,7 +28,7 @@ sub-01_desc-limited_S0map.nii.gz
 sub-01_desc-limited_T2starmap.nii.gz
 sub-01_desc-optcomAcceptedMIRDenoised_bold.nii.gz
 sub-01_desc-optcomAccepted_bold.nii.gz
-sub-01_desc-optcomDenoised_bold.nii.gz
+sub-01_desc-denoised_bold.nii.gz
 sub-01_desc-optcomMIRDenoised_bold.nii.gz
 sub-01_desc-optcomNoGlobalSignal_bold.nii.gz
 sub-01_desc-optcomRejected_bold.nii.gz
