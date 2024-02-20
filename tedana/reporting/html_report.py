@@ -14,7 +14,7 @@ from pybtex.database.input import bibtex
 from pybtex.plugin import find_plugin
 
 from tedana import __version__
-from tedana.io import load_json, OutputGenerator
+from tedana.io import OutputGenerator, load_json
 from tedana.reporting import dynamic_figures as df
 
 LGR = logging.getLogger("GENERAL")
