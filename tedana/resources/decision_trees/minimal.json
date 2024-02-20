@@ -207,7 +207,7 @@
                 "tag_if_true": "Low variance",
                 "log_extra_info": ""
             },
-            "_comment": "This step flags remaining low-variance components (less than 0.1%) and accepts up to 1% cumulative variance across these components. This is done beacuse these components don't explain enough variance to be worth further reducing the degrees of freedom of the denoised data."
+            "_comment": "This step flags remaining low-variance components (less than 0.1%) and accepts up to 1% cumulative variance across these components. This is done because these components don't explain enough variance to be worth further reducing the degrees of freedom of the denoised data."
         },
         {
             "functionname": "manual_classify",

@@ -83,7 +83,6 @@ def dicts_to_test(treechoice):
                 },
                 "kwargs": {
                     "log_extra_info": "random2 if Kappa>Rho",
-                    "log_extra_report": "",
                     # Warning for an non-predefined classification assigned to a component
                     "tag_if_true": "random2notpredefined",
                 },
@@ -98,7 +97,6 @@ def dicts_to_test(treechoice):
                 },
                 "kwargs": {
                     "log_extra_info": "",
-                    "log_extra_report": "",
                     # Warning for a tag that wasn't predefined
                     "tag": "Random2_NotPredefined",
                 },
