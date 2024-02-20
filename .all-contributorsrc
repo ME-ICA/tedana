@@ -305,6 +305,15 @@
         "ideas",
         "question"
       ]
+    },
+    {
+      "login": "martinezeguiluz",
+      "name": "Maitane Martinez Eguiluz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/129765987?v=4",
+      "profile": "https://github.com/martinezeguiluz",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 5,

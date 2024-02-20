@@ -202,6 +202,9 @@ def _parse_manual_list(manual_list):
     """
     if not manual_list:
         manual_nums = []
+    elif op.exists(op.expanduser(str(manual_list[0]).strip(" "))):
+        # filename was given
+        manual_nums = fname_to_component_list(op.expanduser(str(manual_list[0]).strip(" ")))
     elif len(manual_list) > 1:
         # Assume that this is a list of integers, but raise error if not
         manual_nums = []
@@ -213,9 +216,6 @@ def _parse_manual_list(manual_list):
                     "_parse_manual_list expected a list of integers, "
                     f"but the input is {manual_list}"
                 )
-    elif op.exists(op.expanduser(str(manual_list[0]).strip(" "))):
-        # filename was given
-        manual_nums = fname_to_component_list(op.expanduser(str(manual_list[0]).strip(" ")))
     elif isinstance(manual_list[0], str):
         # arbitrary string was given, length of list is 1
         manual_nums = str_to_component_list(manual_list[0])
@@ -302,6 +302,27 @@ def ica_reclassify_workflow(
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
 
+    # boilerplate
+    prefix = io._infer_prefix(prefix)
+    basename = f"{prefix}report"
+    extension = "txt"
+    repname = op.join(out_dir, (basename + "." + extension))
+    bibtex_file = op.join(out_dir, f"{prefix}references.bib")
+    repex = op.join(out_dir, (basename + "*"))
+    previousreps = glob(repex)
+    previousreps.sort(reverse=True)
+    for f in previousreps:
+        previousparts = op.splitext(f)
+        newname = previousparts[0] + "_old" + previousparts[1]
+        os.rename(f, newname)
+
+    # create logfile name
+    basename = "tedana_"
+    extension = "tsv"
+    start_time = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
+    logname = op.join(out_dir, (basename + start_time + "." + extension))
+    utils.setup_loggers(logname=logname, repname=repname, quiet=quiet, debug=debug)
+
     # If accept and reject are a list of integers, they stay the same
     # If they are a filename, load numbers of from
     # If they are a string of values, convert to a list of ints
@@ -331,27 +352,6 @@ def ica_reclassify_workflow(
 
     if len(in_both) != 0:
         raise ValueError(f"The following components were both accepted and rejected: {in_both}")
-
-    # boilerplate
-    prefix = io._infer_prefix(prefix)
-    basename = f"{prefix}report"
-    extension = "txt"
-    repname = op.join(out_dir, (basename + "." + extension))
-    bibtex_file = op.join(out_dir, f"{prefix}references.bib")
-    repex = op.join(out_dir, (basename + "*"))
-    previousreps = glob(repex)
-    previousreps.sort(reverse=True)
-    for f in previousreps:
-        previousparts = op.splitext(f)
-        newname = previousparts[0] + "_old" + previousparts[1]
-        os.rename(f, newname)
-
-    # create logfile name
-    basename = "tedana_"
-    extension = "tsv"
-    start_time = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
-    logname = op.join(out_dir, (basename + start_time + "." + extension))
-    utils.setup_loggers(logname=logname, repname=repname, quiet=quiet, debug=debug)
 
     # Save command into sh file, if the command-line interface was used
     # TODO: use io_generator to save command
