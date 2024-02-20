@@ -14,7 +14,7 @@ from pybtex.database.input import bibtex
 from pybtex.plugin import find_plugin
 
 from tedana import __version__
-from tedana.io import load_json
+from tedana.io import load_json, OutputGenerator
 from tedana.reporting import dynamic_figures as df
 
 LGR = logging.getLogger("GENERAL")
@@ -222,18 +222,17 @@ def _generate_info_table(info_dict):
     return info_html
 
 
-def generate_report(io_generator):
+def generate_report(io_generator: OutputGenerator) -> None:
     """Generate an HTML report.
 
     Parameters
     ----------
-    io_generator : tedana.io.OutputGenerator
+    io_generator : :obj:`tedana.io.OutputGenerator`
         io_generator object for this workflow's output
 
-    Returns
-    -------
-    HTML : file
-        A generated HTML report
+    Notes
+    -----
+    This writes out an HTML report to a file.
     """
     # Load the component time series
     comp_ts_path = io_generator.get_name("ICA mixing tsv")

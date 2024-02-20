@@ -466,15 +466,22 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     plt.close()
 
 
-def plot_t2star_and_s0(*, io_generator, mask, png_cmap):
+def plot_t2star_and_s0(
+    *,
+    io_generator: io.OutputGenerator,
+    mask: np.ndarray,
+    png_cmap: str,
+) -> None:
     """Create T2* and S0 maps and histograms.
 
     Parameters
     ----------
     io_generator : :obj:`tedana.io.OutputGenerator`
         The output generator for this workflow
-    mask : (S,) array-like
+    mask : (S,) :obj:`numpy.ndarray`
         Binary mask used to apply to the data.
+    png_cmap : :obj:`str`
+        Name of the colormap to use for the T2* and S0 maps.
     """
     t2star_img = io_generator.get_name("t2star img")
     s0_img = io_generator.get_name("s0 img")
