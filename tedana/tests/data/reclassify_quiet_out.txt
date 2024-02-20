@@ -90,3 +90,7 @@ figures/comp_065.png
 figures/comp_066.png
 figures/comp_067.png
 figures/comp_068.png
+figures/s0_brain.svg
+figures/s0_histogram.svg
+figures/t2star_brain.svg
+figures/t2star_histogram.svg
