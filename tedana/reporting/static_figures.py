@@ -468,8 +468,13 @@ def pca_results(criteria, n_components, all_varex, io_generator):
 
 def plot_t2star_and_s0(*, io_generator, mask):
     """Create T2* and S0 maps and histograms."""
-    # Plot T2* and S0 maps
     t2star_img = io_generator.get_name("t2star img")
+    s0_img = io_generator.get_name("s0 img")
+    assert os.path.isfile(t2star_img), f"File {t2star_img} does not exist"
+    assert os.path.isfile(s0_img), f"File {s0_img} does not exist"
+    assert os.path.isfile(mask), f"File {mask} does not exist"
+
+    # Plot T2* and S0 maps
     t2star_plot = f"{io_generator.prefix}t2star_brain.svg"
     plotting.plot_stat_map(
         t2star_img,
@@ -481,7 +486,6 @@ def plot_t2star_and_s0(*, io_generator, mask):
         output_file=os.path.join(io_generator.out_dir, "figures", t2star_plot),
     )
 
-    s0_img = io_generator.get_name("s0 img")
     s0_plot = f"{io_generator.prefix}s0_brain.svg"
     plotting.plot_stat_map(
         s0_img,
