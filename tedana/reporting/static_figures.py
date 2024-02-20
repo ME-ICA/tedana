@@ -466,7 +466,7 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     plt.close()
 
 
-def plot_t2star_and_s0(*, io_generator, mask):
+def plot_t2star_and_s0(*, io_generator, mask, png_cmap):
     """Create T2* and S0 maps and histograms.
 
     Parameters
@@ -491,6 +491,7 @@ def plot_t2star_and_s0(*, io_generator, mask):
         display_mode="mosaic",
         cut_coords=5,
         symmetric_cbar=False,
+        cmap=png_cmap,
         output_file=os.path.join(io_generator.out_dir, "figures", t2star_plot),
     )
 
@@ -502,6 +503,7 @@ def plot_t2star_and_s0(*, io_generator, mask):
         display_mode="mosaic",
         cut_coords=5,
         symmetric_cbar=False,
+        cmap=png_cmap,
         output_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
     )
 
