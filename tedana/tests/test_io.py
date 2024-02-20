@@ -110,8 +110,8 @@ def test_smoke_split_ts():
 
     # creating the component table with component as random floats,
     # a "metric," and random classification
-    component = np.random.random((n_components))
-    metric = np.random.random((n_components))
+    component = np.random.random(n_components)
+    metric = np.random.random(n_components)
     classification = np.random.choice(["accepted", "rejected", "ignored"], n_components)
     df_data = np.column_stack((component, metric, classification))
     comptable = pd.DataFrame(df_data, columns=["component", "metric", "classification"])
@@ -137,8 +137,8 @@ def test_smoke_write_split_ts():
     # creating the component table with component as random floats,
     # a "metric," and random classification
     io_generator = me.OutputGenerator(ref_img)
-    component = np.random.random((n_components))
-    metric = np.random.random((n_components))
+    component = np.random.random(n_components)
+    metric = np.random.random(n_components)
     classification = np.random.choice(["accepted", "rejected", "ignored"], n_components)
     df_data = np.column_stack((component, metric, classification))
     comptable = pd.DataFrame(df_data, columns=["component", "metric", "classification"])
@@ -161,7 +161,7 @@ def test_smoke_filewrite():
     in both bids and orig formats.
     """
     n_samples, _, _ = 64350, 10, 6
-    data_1d = np.random.random((n_samples))
+    data_1d = np.random.random(n_samples)
     ref_img = os.path.join(data_dir, "mask.nii.gz")
     io_generator = me.OutputGenerator(ref_img)
 
@@ -280,7 +280,7 @@ def test_custom_encoder():
     assert np.array_equal(test_data["data"], decoded["data"])
 
     # set should become list
-    test_data = {"data": set(["cat", "dog", "fish"])}
+    test_data = {"data": {"cat", "dog", "fish"}}
     encoded = json.dumps(test_data, cls=me.CustomEncoder)
     decoded = json.loads(encoded)
     assert list(test_data["data"]) == decoded["data"]

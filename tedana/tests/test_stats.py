@@ -12,14 +12,14 @@ def test_break_computefeats2():
     n_samples, n_vols, n_comps = 10000, 100, 50
     data = np.empty((n_samples, n_vols))
     mmix = np.empty((n_vols, n_comps))
-    mask = np.empty((n_samples))
+    mask = np.empty(n_samples)
 
-    data = np.empty((n_samples))
+    data = np.empty(n_samples)
     with pytest.raises(ValueError):
         computefeats2(data, mmix, mask, normalize=True)
 
     data = np.empty((n_samples, n_vols))
-    mmix = np.empty((n_vols))
+    mmix = np.empty(n_vols)
     with pytest.raises(ValueError):
         computefeats2(data, mmix, mask, normalize=True)
 
@@ -28,11 +28,11 @@ def test_break_computefeats2():
     with pytest.raises(ValueError):
         computefeats2(data, mmix, mask, normalize=True)
 
-    mask = np.empty((n_samples + 1))
+    mask = np.empty(n_samples + 1)
     with pytest.raises(ValueError):
         computefeats2(data, mmix, mask, normalize=True)
     data.shape[1] != mmix.shape[0]
-    mask = np.empty((n_samples))
+    mask = np.empty(n_samples)
     mmix = np.empty((n_vols + 1, n_comps))
     with pytest.raises(ValueError):
         computefeats2(data, mmix, mask, normalize=True)
@@ -85,14 +85,14 @@ def test_break_get_coeffs():
     n_samples, n_echos, n_vols, n_comps = 10000, 5, 100, 50
     data = np.empty((n_samples, n_vols))
     x = np.empty((n_vols, n_comps))
-    mask = np.empty((n_samples))
+    mask = np.empty(n_samples)
 
-    data = np.empty((n_samples))
+    data = np.empty(n_samples)
     with pytest.raises(ValueError):
         get_coeffs(data, x, mask, add_const=False)
 
     data = np.empty((n_samples, n_vols))
-    x = np.empty((n_vols))
+    x = np.empty(n_vols)
     with pytest.raises(ValueError):
         get_coeffs(data, x, mask, add_const=False)
 

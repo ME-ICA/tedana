@@ -354,7 +354,6 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True):
             f"mask ({mask.shape[0]}), and adaptive_mask ({adaptive_mask.shape[0]}) do not match"
         )
 
-    data = data.copy()
     if data.ndim == 2:
         data = data[:, :, None]
 

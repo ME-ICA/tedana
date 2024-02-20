@@ -268,7 +268,7 @@ def comptable_classification_changer(
                 for idx in changeidx:
                     tmpstr = selector.component_table.loc[idx, "classification_tags"]
                     if tmpstr == "" or isinstance(tmpstr, float):
-                        tmpset = set([tag_if])
+                        tmpset = {tag_if}
                     else:
                         tmpset = set(tmpstr.split(","))
                         tmpset.update([tag_if])
@@ -633,11 +633,11 @@ def kappa_elbow_kundu(component_table, n_echos, comps2use=None):
         kappa_nonsig_elbow = getelbow(kappas_nonsig, return_val=True)
 
         kappa_elbow = np.min((kappa_nonsig_elbow, kappa_allcomps_elbow))
-        LGR.info(("Calculating kappa elbow based on min of all and nonsig components."))
+        LGR.info("Calculating kappa elbow based on min of all and nonsig components.")
     else:
         kappa_elbow = kappa_allcomps_elbow
         kappa_nonsig_elbow = None
-        LGR.info(("Calculating kappa elbow based on all components."))
+        LGR.info("Calculating kappa elbow based on all components.")
 
     # Calculating varex_upper_p
     # Upper limit for variance explained is median across components with high

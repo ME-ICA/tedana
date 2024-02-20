@@ -106,7 +106,7 @@ def validate_tree(tree):
         raise TreeError("\n" + f"Decision tree missing required fields: {missing_keys}")
 
     # Warn if unused fields exist
-    unused_keys = set(tree.keys()) - set(tree_expected_keys) - set(["used_metrics"])
+    unused_keys = set(tree.keys()) - set(tree_expected_keys) - {"used_metrics"}
     # Make sure some fields don't trigger a warning; hacky, sorry
     ok_to_not_use = (
         "reconstruct_from",
@@ -133,7 +133,7 @@ def validate_tree(tree):
             continue
 
         # Get a functions parameters and compare to parameters defined in the tree
-        pos = set([p for p, i in sig.parameters.items() if i.default is inspect.Parameter.empty])
+        pos = {p for p, i in sig.parameters.items() if i.default is inspect.Parameter.empty}
         kwargs = set(sig.parameters.keys()) - pos
 
         missing_pos = pos - set(node.get("parameters").keys()) - defaults
@@ -194,11 +194,11 @@ def validate_tree(tree):
         if node.get("kwargs") is not None:
             tagset = set()
             if "tag_if_true" in node.get("kwargs").keys():
-                tagset.update(set([node["kwargs"]["tag_if_true"]]))
+                tagset.update({node["kwargs"]["tag_if_true"]})
             if "tag_if_false" in node.get("kwargs").keys():
-                tagset.update(set([node["kwargs"]["tag_if_false"]]))
+                tagset.update({node["kwargs"]["tag_if_false"]})
             if "tag" in node.get("kwargs").keys():
-                tagset.update(set([node["kwargs"]["tag"]]))
+                tagset.update({node["kwargs"]["tag"]})
             undefined_classification_tags = tagset.difference(set(tree.get("classification_tags")))
             if undefined_classification_tags:
                 LGR.warning(
