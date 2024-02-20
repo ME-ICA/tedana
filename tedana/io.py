@@ -566,7 +566,7 @@ def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
     =====================================    ============================================
     Filename                                 Content
     =====================================    ============================================
-    desc-optcomDenoised_bold.nii.gz          Denoised time series.
+    desc-denoised_bold.nii.gz                Denoised time series.
 
     if io_generator.verbose==True
     desc-optcomAccepted_bold.nii.gz          High-Kappa time series.
@@ -588,6 +588,10 @@ def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
 
     if len(acc) != 0:
         if echo != 0:
+            # This outputs time series for a single echo
+            # In practice this only happens when verbose is true
+            # in io.writeresults_echoes. Neither this or the elif below
+            # are written out if verbose is not true
             fout = io_generator.save_file(hikts, "high kappa ts split img", echo=echo)
             LGR.info(f"Writing high-Kappa time series: {fout}")
         elif io_generator.verbose:
