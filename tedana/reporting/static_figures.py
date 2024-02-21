@@ -280,6 +280,7 @@ def plot_component(
     ax_ts.set_position([pos_ts.x0, pos_ts.y0 - 0.05, pos_ts.width, pos_ts.height])
     ax_freq.set_position([pos_freq.x0, pos_freq.y0 - 0.1, pos_freq.width, pos_freq.height])
 
+    fig.tight_layout()
     fig.savefig(out_file)
     plt.close(fig)
 
