@@ -257,29 +257,28 @@ def plot_component(
     # Create three subplots
     ax_map = fig.add_subplot(gs[0])
     ax_map.axis("off")
+    ax_map.imshow(img)
+    title_ = ax_map.set_title(title)
+    title_.set_y(1.5)
 
     ax_ts = fig.add_subplot(gs[1])
+    ax_ts.plot(component_timeseries, color=classification_color)
     ax_ts.set_xlabel("TRs")
     ax_ts.set_xlim(0, component_timeseries.shape[0] - 1)
     ax_ts.set_yticks([])
-    title_ = ax_ts.set_title(title)
-    title_.set_y(1.5)
 
     ax_freq = fig.add_subplot(gs[2])
+    ax_freq.plot(frequencies, y=power_spectrum, color=classification_color)
     ax_freq.set_xlim(0, frequencies.max())
+    ax_freq.set_yticks([])
 
-    # Load the image and display it in the middle subplot
-    ax_map.imshow(img)
-    ax_ts.plot(component_timeseries, color=classification_color)
-    ax_freq.plot(power_spectrum, color=classification_color)
-
-    # Get the current positions of the first and last subplots
-    # pos_ts = ax_ts.get_position()
+    # Get the current positions of the second and last subplots
+    pos_ts = ax_ts.get_position()
     pos_freq = ax_freq.get_position()
 
-    # Adjust the positions of the first and last subplots
-    # ax_ts.set_position([pos_ts.x0, pos_ts.y0 - 0.05, pos_ts.width, pos_ts.height])
-    ax_freq.set_position([pos_freq.x0, pos_freq.y0 - 0.05, pos_freq.width, pos_freq.height])
+    # Adjust the positions of the second and last subplots
+    ax_ts.set_position([pos_ts.x0, pos_ts.y0 - 0.05, pos_ts.width, pos_ts.height])
+    ax_freq.set_position([pos_freq.x0, pos_freq.y0 - 0.1, pos_freq.width, pos_freq.height])
 
     fig.savefig(out_file)
     plt.close(fig)
