@@ -1,7 +1,7 @@
 {
     "tree_id": "minimal_decision_tree",
     "info": "first version of minimal decision tree",
-    "report": "The minimal decision tree \\citep{tedana_decision_trees_Oct2023} is a simplified version of the MEICA decision tree \\citep{kundu2013integrated, dupre2021te} without many criteria that do not rely on kappa and rho thresholds. ",
+    "report": "The minimal decision tree \\citep{tedana_decision_trees_2023} is a simplified version of the MEICA decision tree \\citep{kundu2013integrated, dupre2021te} without many criteria that do not rely on kappa and rho thresholds. ",
     "necessary_metrics": [
         "kappa",
         "rho",
