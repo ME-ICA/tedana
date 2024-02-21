@@ -1,7 +1,7 @@
 {
     "tree_id": "kundu_MEICA27_decision_tree",
     "info": "Following the decision tree close to one designed by Prantik Kundu",
-    "report": "This is the kundu tree \\citep{tedana_decision_trees} based on the criteria of the MEICA v2.5 decision tree \\citep{kundu2013integrated}. For a description of the decision tree steps, with the rationale for each step, see \\citet{olafsson2015enhanced}.",
+    "report": "This is the kundu tree \\citep{tedana_decision_trees} based on the criteria of the MEICA v2.5 decision tree \\citep{kundu2013integrated}. For a description of the decision tree steps, with the rationale for each step, see \\citep{olafsson2015enhanced}.",
     "necessary_metrics": [
         "kappa",
         "rho",
