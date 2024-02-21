@@ -462,7 +462,7 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
     return t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts
 
 
-def model_fit_decay_ts(data, tes, adaptive_mask, fit_t2star, fit_s0):
+def model_fit_decay_ts(*, data, tes, adaptive_mask, t2s, s0, fitmode):
     """Estimate model fit of voxel- and timepoint-wise monoexponential decay models to ``data``.
 
     Parameters
@@ -475,15 +475,23 @@ def model_fit_decay_ts(data, tes, adaptive_mask, fit_t2star, fit_s0):
         Array where each value indicates the number of echoes with good signal for that voxel.
         This mask may be thresholded; for example, with values less than 3 set to 0.
         For more information on thresholding, see :func:`~tedana.utils.make_adaptive_mask`.
-    fit_t2star : (S x T) array_like
-        Volume- and voxel-wise T2* estimates from :func:`~tedana.decay.fit_decay_ts`.
-    fit_s0 : (S x T) array_like
-        Volume- and voxel-wise S0 estimates from :func:`~tedana.decay.fit_decay_ts`.
+    t2s : (S [x T]) array_like
+        Voxel-wise (and possibly volume-wise) T2* estimates from
+        :func:`~tedana.decay.fit_decay_ts`.
+    s0 : (S [x T]) array_like
+        Voxel-wise (and possibly volume-wise) S0 estimates from :func:`~tedana.decay.fit_decay_ts`.
+    fitmode : {"fit", "all"}
+        Whether the T2* and S0 estimates are volume-wise ("fit") or not ("all").
 
     Returns
     -------
-    rmse : (S x T) :obj:`numpy.ndarray`
-        Root mean squared error of the model fit at each voxel and timepoint.
+    rmse_map : (S,) :obj:`numpy.ndarray`
+        Mean root mean squared error of the model fit across all volumes at each voxel.
+    rmse_timeseries : (T,) :obj:`numpy.ndarray`
+        Mean root mean squared error of the model fit across all voxels at each timepoint.
+    rmse_sd_timeseries : (T,) :obj:`numpy.ndarray`
+        Standard deviation of root mean squared error of the model fit across all voxels at each
+        timepoint.
     """
     n_samples, _, n_vols = data.shape
     tes = np.array(tes)
@@ -492,12 +500,22 @@ def model_fit_decay_ts(data, tes, adaptive_mask, fit_t2star, fit_s0):
     for i_voxel in range(n_samples):
         n_good_echoes = adaptive_mask[i_voxel]
         for j_vol in range(n_vols):
+            if fitmode == "all":
+                s0_vol = s0
+                t2s_vol = t2s
+            else:
+                s0_vol = s0[:, j_vol]
+                t2s_vol = t2s[:, j_vol]
+
             good_data = data[i_voxel, :n_good_echoes, j_vol]
             predicted_data = monoexponential(
                 tes=tes,
-                s0=fit_s0[i_voxel, j_vol],
-                t2star=fit_t2star[i_voxel, j_vol],
+                s0=s0_vol,
+                t2star=t2s_vol,
             )
             rmse[i_voxel, j_vol] = np.sqrt(np.mean((good_data - predicted_data) ** 2))
 
-    return rmse
+    rmse_map = np.mean(rmse, axis=1)
+    rmse_timeseries = np.mean(rmse, axis=0)
+    rmse_sd_timeseries = np.std(rmse, axis=0)
+    return rmse_map, rmse_timeseries, rmse_sd_timeseries
