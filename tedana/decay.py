@@ -482,13 +482,13 @@ def model_fit_decay_ts(data, tes, adaptive_mask, fit_t2star, fit_s0):
 
     Returns
     -------
-    mse : (S x T) :obj:`numpy.ndarray`
-        Mean squared error of the model fit at each voxel and timepoint.
+    rmse : (S x T) :obj:`numpy.ndarray`
+        Root mean squared error of the model fit at each voxel and timepoint.
     """
     n_samples, _, n_vols = data.shape
     tes = np.array(tes)
 
-    mse = np.zeros([n_samples, n_vols])
+    rmse = np.zeros([n_samples, n_vols])
     for i_voxel in range(n_samples):
         n_good_echoes = adaptive_mask[i_voxel]
         for j_vol in range(n_vols):
@@ -498,6 +498,6 @@ def model_fit_decay_ts(data, tes, adaptive_mask, fit_t2star, fit_s0):
                 s0=fit_s0[i_voxel, j_vol],
                 t2star=fit_t2star[i_voxel, j_vol],
             )
-            mse[i_voxel, j_vol] = np.mean((good_data - predicted_data) ** 2)
+            rmse[i_voxel, j_vol] = np.sqrt(np.mean((good_data - predicted_data) ** 2))
 
-    return mse
+    return rmse
