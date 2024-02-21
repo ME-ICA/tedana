@@ -453,7 +453,7 @@ class ComponentSelector:
 
         If either of these happen, a warning is added to the logger.
         """
-        necessary_metrics = self.necessary_metrics.union(self.tree["generated_metrics"])
+        necessary_metrics = set(self.necessary_metrics).union(set(self.tree["generated_metrics"]))
         not_declared = self.tree["used_metrics"] - set(necessary_metrics)
         not_used = set(necessary_metrics) - self.tree["used_metrics"]
         if len(not_declared) > 0:
