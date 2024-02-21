@@ -494,9 +494,7 @@ def plot_t2star_and_s0(
     plotting.plot_stat_map(
         t2star_img,
         bg_img=None,
-        title="T2*",
         display_mode="mosaic",
-        cut_coords=5,
         symmetric_cbar=False,
         cmap=png_cmap,
         output_file=os.path.join(io_generator.out_dir, "figures", t2star_plot),
@@ -506,9 +504,7 @@ def plot_t2star_and_s0(
     plotting.plot_stat_map(
         s0_img,
         bg_img=None,
-        title="S0",
         display_mode="mosaic",
-        cut_coords=5,
         symmetric_cbar=False,
         cmap=png_cmap,
         output_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
@@ -522,7 +518,7 @@ def plot_t2star_and_s0(
 
     fig, ax = plt.subplots(figsize=(10, 6))
     sns.histplot(data=t2star_data, bins=100, kde=True, ax=ax)
-    ax.set_title("T2*")
+    ax.set_title("T2*", fontsize=20)
     ax.set_xlabel("Seconds")
     fig.savefig(os.path.join(io_generator.out_dir, "figures", t2star_histogram))
 
@@ -531,6 +527,6 @@ def plot_t2star_and_s0(
 
     fig, ax = plt.subplots(figsize=(10, 6))
     sns.histplot(data=s0_data, bins=100, kde=True, ax=ax)
-    ax.set_title("S0")
+    ax.set_title("S0", fontsize=20)
     ax.set_xlabel("Arbitrary Units")
     fig.savefig(os.path.join(io_generator.out_dir, "figures", s0_histogram))
