@@ -2,6 +2,7 @@
 
 import logging
 import os
+from io import BytesIO
 
 import matplotlib
 import numpy as np
@@ -210,7 +211,7 @@ def plot_component(
     example_ax = list(display.axes.values())[0]
     nilearn_fig = example_ax.ax.figure
 
-    with io.BytesIO() as buf:
+    with BytesIO() as buf:
         nilearn_fig.savefig(buf, format="png")
         buf.seek(0)
 
@@ -323,7 +324,7 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
             f"Comp. {compnum}: variance: {comp_var}%, kappa: {comp_kappa}, "
             f"rho: {comp_rho}, {expl_text}"
         )
-        component_img = utils.new_nii_like(
+        component_img = io.new_nii_like(
             io_generator.reference_img,
             component_maps_arr[:, :, :, compnum],
         )
