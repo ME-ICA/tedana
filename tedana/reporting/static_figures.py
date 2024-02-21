@@ -268,7 +268,7 @@ def plot_component(
     ax_ts.set_yticks([])
 
     ax_freq = fig.add_subplot(gs[2])
-    ax_freq.plot(frequencies, y=power_spectrum, color=classification_color)
+    ax_freq.plot(frequencies, power_spectrum, color=classification_color)
     ax_freq.set_xlim(0, frequencies.max())
     ax_freq.set_yticks([])
 
