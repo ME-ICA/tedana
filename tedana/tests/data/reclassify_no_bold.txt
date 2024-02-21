@@ -6,8 +6,7 @@ desc-ICA_decomposition.json
 desc-ICA_mixing.tsv
 desc-ICA_stat-z_components.nii.gz
 desc-ICA_status_table.tsv
-desc-optcomDenoised_bold.nii.gz
-desc-optcomRejected_bold.nii.gz
+desc-denoised_bold.nii.gz
 desc-tedana_metrics.json
 desc-tedana_metrics.tsv
 desc-tedana_registry.json

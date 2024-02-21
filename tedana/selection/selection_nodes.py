@@ -322,7 +322,7 @@ def dec_left_op_right(
         if val_scale == 1:
             return val
         else:
-            return f"{round(val_scale,2)}*{val}"
+            return f"{round(val_scale, 2)}*{val}"
 
     left_scale, left, right_scale, right = confirm_valid_conditional(
         left_scale, left, right_scale, right, op
