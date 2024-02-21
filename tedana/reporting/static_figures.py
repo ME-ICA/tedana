@@ -345,7 +345,7 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
             frequencies=freqs,
             classification_color=line_color,
             title=plt_title,
-            out_file=compplot_name
+            out_file=compplot_name,
         )
 
 
