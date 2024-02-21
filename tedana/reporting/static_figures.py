@@ -5,6 +5,7 @@ import os
 from io import BytesIO
 
 import matplotlib
+import nibabel as nb
 import numpy as np
 
 matplotlib.use("AGG")
@@ -188,9 +189,31 @@ def plot_component(
     power_spectrum,
     frequencies,
     classification_color,
+    png_cmap,
     title,
     out_file,
 ):
+    """Create a figure with a component's spatial map, time series, and power spectrum.
+
+    Parameters
+    ----------
+    stat_img : :obj:`nibabel.Nifti1Image`
+        Image of the component's spatial map
+    component_timeseries : (T,) array_like
+        Time series of the component
+    power_spectrum : (T,) array_like
+        Power spectrum of the component's time series
+    frequencies : (T,) array_like
+        Frequencies for the power spectrum
+    classification_color : str
+        Color to use for the time series and power spectrum
+    png_cmap : str
+        Colormap to use for the spatial map
+    title : str
+        Title for the figure
+    out_file : str
+        Path to save the figure
+    """
     import matplotlib.image as mpimg
     from matplotlib import gridspec
 
@@ -204,6 +227,7 @@ def plot_component(
         display_mode="mosaic",
         cut_coords=5,
         vmax=imgmax,
+        cmap=png_cmap,
         symmetric_cbar=True,
         draw_cross=False,
         annotate=False,
@@ -290,7 +314,6 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
     component_maps_arr = component_maps_arr.reshape(
         io_generator.reference_img.shape[:3] + component_maps_arr.shape[1:],
     )
-    raise Exception(component_maps_arr.shape)
 
     # Get repetition time from reference image
     tr = io_generator.reference_img.header.get_zooms()[-1]
@@ -325,9 +348,10 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
             f"Comp. {compnum}: variance: {comp_var}%, kappa: {comp_kappa}, "
             f"rho: {comp_rho}, {expl_text}"
         )
-        component_img = io.new_nii_like(
-            io_generator.reference_img,
+        component_img = nb.Nifti1Image(
             component_maps_arr[:, :, :, compnum],
+            affine=io_generator.reference_img.affine,
+            header=io_generator.reference_img.header,
         )
 
         component_timeseries = mmix[:, compnum]
@@ -345,6 +369,7 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
             power_spectrum=spectrum,
             frequencies=freqs,
             classification_color=line_color,
+            png_cmap=png_cmap,
             title=plt_title,
             out_file=compplot_name,
         )
