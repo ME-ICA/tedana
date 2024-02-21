@@ -460,3 +460,44 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
         report = False
 
     return t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts
+
+
+def model_fit_decay_ts(data, tes, adaptive_mask, fit_t2star, fit_s0):
+    """Estimate model fit of voxel- and timepoint-wise monoexponential decay models to ``data``.
+
+    Parameters
+    ----------
+    data : (S x E x T) array_like
+        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is time.
+    tes : (E,) :obj:`list`
+        Echo times.
+    adaptive_mask : (S,) array_like
+        Array where each value indicates the number of echoes with good signal for that voxel.
+        This mask may be thresholded; for example, with values less than 3 set to 0.
+        For more information on thresholding, see :func:`~tedana.utils.make_adaptive_mask`.
+    fit_t2star : (S x T) array_like
+        Volume- and voxel-wise T2* estimates from :func:`~tedana.decay.fit_decay_ts`.
+    fit_s0 : (S x T) array_like
+        Volume- and voxel-wise S0 estimates from :func:`~tedana.decay.fit_decay_ts`.
+
+    Returns
+    -------
+    mse : (S x T) :obj:`numpy.ndarray`
+        Mean squared error of the model fit at each voxel and timepoint.
+    """
+    n_samples, _, n_vols = data.shape
+    tes = np.array(tes)
+
+    mse = np.zeros([n_samples, n_vols])
+    for i_voxel in range(n_samples):
+        n_good_echoes = adaptive_mask[i_voxel]
+        for j_vol in range(n_vols):
+            good_data = data[i_voxel, :n_good_echoes, j_vol]
+            predicted_data = monoexponential(
+                tes=tes,
+                s0=fit_s0[i_voxel, j_vol],
+                t2star=fit_t2star[i_voxel, j_vol],
+            )
+            mse[i_voxel, j_vol] = np.mean((good_data - predicted_data) ** 2)
+
+    return mse
