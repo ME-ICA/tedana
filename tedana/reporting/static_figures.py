@@ -290,6 +290,7 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
     component_maps_arr = component_maps_arr.reshape(
         io_generator.reference_img.shape[:3] + component_maps_arr.shape[1:],
     )
+    raise Exception(component_maps_arr.shape)
 
     # Get repetition time from reference image
     tr = io_generator.reference_img.header.get_zooms()[-1]
