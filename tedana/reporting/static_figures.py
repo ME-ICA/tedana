@@ -8,7 +8,6 @@ import numpy as np
 
 matplotlib.use("AGG")
 import matplotlib.pyplot as plt
-import seaborn as sns
 from nilearn import masking, plotting
 
 from tedana import io, stats, utils
@@ -511,22 +510,22 @@ def plot_t2star_and_s0(
     )
 
     # Plot histograms
-    sns.set_style("whitegrid")
-
     t2star_data = masking.apply_mask(t2star_img, mask_img)
     t2star_histogram = f"{io_generator.prefix}t2star_histogram.svg"
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    sns.histplot(data=t2star_data, bins=100, kde=True, ax=ax)
+    ax.hist(t2star_data, bins=100)
     ax.set_title("T2*", fontsize=20)
-    ax.set_xlabel("Seconds")
+    ax.set_ylabel("Count", fontsize=16)
+    ax.set_xlabel("Seconds", fontsize=16)
     fig.savefig(os.path.join(io_generator.out_dir, "figures", t2star_histogram))
 
     s0_data = masking.apply_mask(s0_img, mask_img)
     s0_histogram = f"{io_generator.prefix}s0_histogram.svg"
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    sns.histplot(data=s0_data, bins=100, kde=True, ax=ax)
+    ax.hist(s0_data, bins=100)
     ax.set_title("S0", fontsize=20)
-    ax.set_xlabel("Arbitrary Units")
+    ax.set_ylabel("Count", fontsize=16)
+    ax.set_xlabel("Arbitrary Units", fontsize=16)
     fig.savefig(os.path.join(io_generator.out_dir, "figures", s0_histogram))
