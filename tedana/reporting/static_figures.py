@@ -229,6 +229,7 @@ def plot_component(
         vmax=imgmax,
         cmap=png_cmap,
         symmetric_cbar=True,
+        colorbar=False,
         draw_cross=False,
         annotate=False,
     )
@@ -277,10 +278,9 @@ def plot_component(
     pos_freq = ax_freq.get_position()
 
     # Adjust the positions of the second and last subplots
-    ax_ts.set_position([pos_ts.x0, pos_ts.y0 - 0.05, pos_ts.width, pos_ts.height])
-    ax_freq.set_position([pos_freq.x0, pos_freq.y0 - 0.1, pos_freq.width, pos_freq.height])
+    ax_ts.set_position([pos_ts.x0, pos_ts.y0 - 0.1, pos_ts.width, pos_ts.height])
+    ax_freq.set_position([pos_freq.x0, pos_freq.y0 - 0.2, pos_freq.width, pos_freq.height])
 
-    fig.tight_layout()
     fig.savefig(out_file)
     plt.close(fig)
 
