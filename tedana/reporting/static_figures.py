@@ -488,6 +488,31 @@ def plot_t2star_and_s0(
     assert os.path.isfile(t2star_img), f"File {t2star_img} does not exist"
     assert os.path.isfile(s0_img), f"File {s0_img} does not exist"
 
+    # Plot histograms
+    t2star_data = masking.apply_mask(t2star_img, mask_img)
+    t2s_p02, t2s_p98 = np.percentile(t2star_data, [2, 98])
+    t2star_histogram = f"{io_generator.prefix}t2star_histogram.svg"
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.hist(t2star_data, bins=100)
+    ax.set_xlim(0, t2s_p98)
+    ax.set_title("T2*", fontsize=20)
+    ax.set_ylabel("Count", fontsize=16)
+    ax.set_xlabel("Seconds", fontsize=16)
+    fig.savefig(os.path.join(io_generator.out_dir, "figures", t2star_histogram))
+
+    s0_data = masking.apply_mask(s0_img, mask_img)
+    s0_p02, s0_p98 = np.percentile(s0_data, [2, 98])
+    s0_histogram = f"{io_generator.prefix}s0_histogram.svg"
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.hist(s0_data, bins=100)
+    ax.set_xlim(0, s0_p98)
+    ax.set_title("S0", fontsize=20)
+    ax.set_ylabel("Count", fontsize=16)
+    ax.set_xlabel("Arbitrary Units", fontsize=16)
+    fig.savefig(os.path.join(io_generator.out_dir, "figures", s0_histogram))
+
     # Plot T2* and S0 maps
     t2star_plot = f"{io_generator.prefix}t2star_brain.svg"
     plotting.plot_stat_map(
@@ -496,6 +521,8 @@ def plot_t2star_and_s0(
         display_mode="mosaic",
         symmetric_cbar=False,
         cmap=png_cmap,
+        vmin=t2s_p02,
+        vmax=t2s_p98,
         output_file=os.path.join(io_generator.out_dir, "figures", t2star_plot),
     )
 
@@ -506,26 +533,7 @@ def plot_t2star_and_s0(
         display_mode="mosaic",
         symmetric_cbar=False,
         cmap=png_cmap,
+        vmin=s0_p02,
+        vmax=s0_p98,
         output_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
     )
-
-    # Plot histograms
-    t2star_data = masking.apply_mask(t2star_img, mask_img)
-    t2star_histogram = f"{io_generator.prefix}t2star_histogram.svg"
-
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.hist(t2star_data, bins=100)
-    ax.set_title("T2*", fontsize=20)
-    ax.set_ylabel("Count", fontsize=16)
-    ax.set_xlabel("Seconds", fontsize=16)
-    fig.savefig(os.path.join(io_generator.out_dir, "figures", t2star_histogram))
-
-    s0_data = masking.apply_mask(s0_img, mask_img)
-    s0_histogram = f"{io_generator.prefix}s0_histogram.svg"
-
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.hist(s0_data, bins=100)
-    ax.set_title("S0", fontsize=20)
-    ax.set_ylabel("Count", fontsize=16)
-    ax.set_xlabel("Arbitrary Units", fontsize=16)
-    fig.savefig(os.path.join(io_generator.out_dir, "figures", s0_histogram))
