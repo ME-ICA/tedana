@@ -61,9 +61,8 @@ def automatic_selection(component_table, n_echos, n_vols, tree="tedana_v0.013"):
 
     # TODO Dynamically update citations
     RepLGR.info(
-        "Next, component selection was performed to identify "
-        "BOLD (TE-dependent), non-BOLD (TE-independent), and "
-        "uncertain (low-variance) components \\citep{kundu2013integrated}."
+        "\n\nNext, component selection was performed to identify BOLD (TE-dependent) and "
+        "non-BOLD (TE-independent) components using a decision tree."
     )
 
     component_table["classification_tags"] = ""
