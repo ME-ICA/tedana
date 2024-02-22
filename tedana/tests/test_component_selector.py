@@ -109,6 +109,10 @@ def dicts_to_test(treechoice):
                 },
                 "kwargs": {
                     "tag": "Random1",
+                    # log_extra_report was removed from the code.
+                    # If someone runs a tree that uses this field, rather than crash
+                    # it will log a warning
+                    "log_extra_report": "This should not be logged",
                 },
             },
         ],
