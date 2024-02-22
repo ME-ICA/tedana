@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 #
 # tedana documentation build configuration file, created by
 # sphinx-quickstart
@@ -26,7 +25,6 @@ sys.path.insert(0, os.path.abspath("sphinxext"))
 sys.path.insert(0, os.path.abspath(os.path.pardir))
 
 from github_link import make_linkcode_resolve
-
 
 # -- General configuration ------------------------------------------------
 
@@ -56,8 +54,9 @@ extensions = [
     "sphinxcontrib.bibtex",  # for foot-citations
 ]
 
-import sphinx
 from distutils.version import LooseVersion
+
+import sphinx
 
 if LooseVersion(sphinx.__version__) < LooseVersion("1.4"):
     extensions.append("sphinx.ext.pngmath")

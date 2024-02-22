@@ -1,6 +1,5 @@
-"""
-Statistical functions
-"""
+"""Statistical functions."""
+
 import logging
 
 import numpy as np
@@ -14,7 +13,7 @@ RepLGR = logging.getLogger("REPORT")
 
 def getfbounds(n_echos):
     """
-    Gets F-statistic boundaries based on number of echos
+    Get F-statistic boundaries based on number of echos.
 
     Parameters
     ----------
@@ -35,7 +34,7 @@ def getfbounds(n_echos):
 
 def computefeats2(data, mmix, mask=None, normalize=True):
     """
-    Converts `data` to component space using `mmix`
+    Convert `data` to component space using `mmix`.
 
     Parameters
     ----------
@@ -51,69 +50,69 @@ def computefeats2(data, mmix, mask=None, normalize=True):
 
     Returns
     -------
-    data_Z : (S x C) :obj:`numpy.ndarray`
+    data_z : (S x C) :obj:`numpy.ndarray`
         Data in component space
     """
     if data.ndim != 2:
-        raise ValueError("Parameter data should be 2d, not {0}d".format(data.ndim))
+        raise ValueError(f"Parameter data should be 2d, not {data.ndim}d")
     elif mmix.ndim not in [2]:
-        raise ValueError("Parameter mmix should be 2d, not {0}d".format(mmix.ndim))
+        raise ValueError(f"Parameter mmix should be 2d, not {mmix.ndim}d")
     elif (mask is not None) and (mask.ndim != 1):
-        raise ValueError("Parameter mask should be 1d, not {0}d".format(mask.ndim))
+        raise ValueError(f"Parameter mask should be 1d, not {mask.ndim}d")
     elif (mask is not None) and (data.shape[0] != mask.shape[0]):
         raise ValueError(
-            "First dimensions (number of samples) of data ({0}) "
-            "and mask ({1}) do not match.".format(data.shape[0], mask.shape[0])
+            f"First dimensions (number of samples) of data ({data.shape[0]}) "
+            f"and mask ({mask.shape[0]}) do not match."
         )
     elif data.shape[1] != mmix.shape[0]:
         raise ValueError(
-            "Second dimensions (number of volumes) of data ({0}) "
-            "and mmix ({1}) do not match.".format(data.shape[0], mmix.shape[0])
+            f"Second dimensions (number of volumes) of data ({data.shape[0]}) "
+            f"and mmix ({mmix.shape[0]}) do not match."
         )
 
     # demean masked data
     if mask is not None:
         data = data[mask, ...]
     # normalize data (subtract mean and divide by standard deviation) in the last dimension
-    # so that least-squares estimates represent "approximate" correlation values (data_R)
+    # so that least-squares estimates represent "approximate" correlation values (data_r)
     # assuming mixing matrix (mmix) values are also normalized
     data_vn = stats.zscore(data, axis=-1)
 
     # get betas of `data`~`mmix` and limit to range [-0.999, 0.999]
-    data_R = get_coeffs(data_vn, mmix, mask=None)
-    # Avoid abs(data_R) => 1, otherwise Fisher's transform will return Inf or -Inf
-    data_R[data_R < -0.999] = -0.999
-    data_R[data_R > 0.999] = 0.999
+    data_r = get_coeffs(data_vn, mmix, mask=None)
+    # Avoid abs(data_r) => 1, otherwise Fisher's transform will return Inf or -Inf
+    data_r[data_r < -0.999] = -0.999
+    data_r[data_r > 0.999] = 0.999
 
     # R-to-Z transform
-    data_Z = np.arctanh(data_R)
-    if data_Z.ndim == 1:
-        data_Z = np.atleast_2d(data_Z).T
+    data_z = np.arctanh(data_r)
+    if data_z.ndim == 1:
+        data_z = np.atleast_2d(data_z).T
 
     # normalize data (only division by std)
     if normalize:
         # subtract mean and dividing by standard deviation
-        data_Zm = stats.zscore(data_Z, axis=0)
+        data_zm = stats.zscore(data_z, axis=0)
         # adding back the mean
-        data_Z = data_Zm + (data_Z.mean(axis=0, keepdims=True) / data_Z.std(axis=0, keepdims=True))
+        data_z = data_zm + (data_z.mean(axis=0, keepdims=True) / data_z.std(axis=0, keepdims=True))
 
-    return data_Z
+    return data_z
 
 
-def get_coeffs(data, X, mask=None, add_const=False):
+def get_coeffs(data, x, mask=None, add_const=False):
     """
-    Performs least-squares fit of `X` against `data`
+    Perform least-squares fit of `x` against `data`.
 
     Parameters
     ----------
     data : (S [x E] x T) array_like
         Array where `S` is samples, `E` is echoes, and `T` is time
-    X : (T [x C]) array_like
+    x : (T [x C]) array_like
         Array where `T` is time and `C` is predictor variables
     mask : (S [x E]) array_like
         Boolean mask array
     add_const : bool, optional
-        Add intercept column to `X` before fitting. Default: False
+        Add intercept column to `x` before fitting. Default: False
 
     Returns
     -------
@@ -121,39 +120,38 @@ def get_coeffs(data, X, mask=None, add_const=False):
         Array of `S` sample betas for `C` predictors
     """
     if data.ndim not in [2, 3]:
-        raise ValueError("Parameter data should be 2d or 3d, not {0}d".format(data.ndim))
-    elif X.ndim not in [2]:
-        raise ValueError("Parameter X should be 2d, not {0}d".format(X.ndim))
-    elif data.shape[-1] != X.shape[0]:
+        raise ValueError(f"Parameter data should be 2d or 3d, not {data.ndim}d")
+    elif x.ndim not in [2]:
+        raise ValueError(f"Parameter x should be 2d, not {x.ndim}d")
+    elif data.shape[-1] != x.shape[0]:
         raise ValueError(
-            "Last dimension (dimension {0}) of data ({1}) does not "
-            "match first dimension of "
-            "X ({2})".format(data.ndim, data.shape[-1], X.shape[0])
+            f"Last dimension (dimension {data.ndim}) of data ({data.shape[-1]}) does not "
+            f"match first dimension of x ({x.shape[0]})"
         )
 
     # mask data and flip (time x samples)
     if mask is not None:
         if mask.ndim not in [1, 2]:
-            raise ValueError("Parameter data should be 1d or 2d, not {0}d".format(mask.ndim))
+            raise ValueError(f"Parameter data should be 1d or 2d, not {mask.ndim}d")
         elif data.shape[0] != mask.shape[0]:
             raise ValueError(
-                "First dimensions of data ({0}) and mask ({1}) do not "
-                "match".format(data.shape[0], mask.shape[0])
+                f"First dimensions of data ({data.shape[0]}) and "
+                f"mask ({mask.shape[0]}) do not match"
             )
         mdata = data[mask, :].T
     else:
         mdata = data.T
 
-    # coerce X to >=2d
-    X = np.atleast_2d(X)
+    # coerce x to >=2d
+    x = np.atleast_2d(x)
 
-    if len(X) == 1:
-        X = X.T
+    if len(x) == 1:
+        x = x.T
 
     if add_const:  # add intercept, if specified
-        X = np.column_stack([X, np.ones((len(X), 1))])
+        x = np.column_stack([x, np.ones((len(x), 1))])
 
-    betas = np.linalg.lstsq(X, mdata, rcond=None)[0].T
+    betas = np.linalg.lstsq(x, mdata, rcond=None)[0].T
     if add_const:  # drop beta for intercept, if specified
         betas = betas[:, :-1]
 

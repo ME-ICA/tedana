@@ -1,16 +1,26 @@
-"""
-Utilities for tedana package
-"""
+"""Utilities for tedana package."""
+
 import logging
 import os.path as op
 import platform
+import sys
 import warnings
 
 import nibabel as nib
 import numpy as np
+from bokeh import __version__ as bokeh_version
+from mapca import __version__ as mapca_version
+from matplotlib import __version__ as matplotlib_version
+from nibabel import __version__ as nibabel_version
+from nilearn import __version__ as nilearn_version
 from nilearn._utils import check_niimg
+from numpy import __version__ as numpy_version
+from pandas import __version__ as pandas_version
+from scipy import __version__ as scipy_version
 from scipy import ndimage
+from sklearn import __version__ as sklearn_version
 from sklearn.utils import check_array
+from threadpoolctl import __version__ as threadpoolctl_version
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -41,7 +51,7 @@ def reshape_niimg(data):
 
 def make_adaptive_mask(data, mask=None, getsum=False, threshold=1):
     """
-    Makes map of `data` specifying longest echo a voxel can be sampled with
+    Make map of `data` specifying longest echo a voxel can be sampled with.
 
     Parameters
     ----------
@@ -111,8 +121,8 @@ def make_adaptive_mask(data, mask=None, getsum=False, threshold=1):
         if np.any(masksum[mask] < threshold):
             n_bad_voxels = np.sum(masksum[mask] < threshold)
             LGR.warning(
-                "{0} voxels in user-defined mask do not have good "
-                "signal. Removing voxels from mask.".format(n_bad_voxels)
+                f"{n_bad_voxels} voxels in user-defined mask do not have good "
+                "signal. Removing voxels from mask."
             )
             masksum[masksum < threshold] = 0
             mask = masksum.astype(bool)
@@ -125,7 +135,7 @@ def make_adaptive_mask(data, mask=None, getsum=False, threshold=1):
 
 def unmask(data, mask):
     """
-    Unmasks `data` using non-zero entries of `mask`
+    Unmasks `data` using non-zero entries of `mask`.
 
     Parameters
     ----------
@@ -140,7 +150,6 @@ def unmask(data, mask):
     out : (S [x E [x T]]) :obj:`numpy.ndarray`
         Unmasked `data` array
     """
-
     out = np.zeros(mask.shape + data.shape[1:], dtype=data.dtype)
     out[mask] = data
     return out
@@ -148,7 +157,9 @@ def unmask(data, mask):
 
 def dice(arr1, arr2, axis=None):
     """
-    Compute Dice's similarity index between two numpy arrays. Arrays will be
+    Compute Dice's similarity index between two numpy arrays.
+
+    Arrays will be
     binarized before comparison.
 
     This method was first proposed in :footcite:t:`dice1945measures` and
@@ -183,7 +194,7 @@ def dice(arr1, arr2, axis=None):
         raise ValueError("Shape mismatch: arr1 and arr2 must have the same shape.")
 
     if axis is not None and axis > (arr1.ndim - 1):
-        raise ValueError("Axis provided {} not supported by the input arrays.".format(axis))
+        raise ValueError(f"Axis provided {axis} not supported by the input arrays.")
 
     arr_sum = arr1.sum(axis=axis) + arr2.sum(axis=axis)
     intersection = np.logical_and(arr1, arr2)
@@ -208,7 +219,7 @@ def dice(arr1, arr2, axis=None):
 
 def andb(arrs):
     """
-    Sums arrays in `arrs`
+    Sum arrays in `arrs`.
 
     Parameters
     ----------
@@ -220,7 +231,6 @@ def andb(arrs):
     result : :obj:`numpy.ndarray`
         Integer array of summed `arrs`
     """
-
     # coerce to integer and ensure all arrays are the same shape
     arrs = [check_array(arr, dtype=int, ensure_2d=False, allow_nd=True) for arr in arrs]
     if not np.all([arr1.shape == arr2.shape for arr1 in arrs for arr2 in arrs]):
@@ -234,8 +244,9 @@ def andb(arrs):
 
 def get_spectrum(data: np.array, tr: float = 1.0):
     """
-    Returns the power spectrum and corresponding frequencies when provided
-    with a component time course and repitition time.
+    Return the power spectrum and corresponding frequencies.
+
+    Done when provided with a component time course and repitition time.
 
     Parameters
     ----------
@@ -244,7 +255,6 @@ def get_spectrum(data: np.array, tr: float = 1.0):
     tr : :obj:`float`
             Reptition time (TR) of the data
     """
-
     # adapted from @dangom
     power_spectrum = np.abs(np.fft.rfft(data)) ** 2
     freqs = np.fft.rfftfreq(power_spectrum.size * 2 - 1, tr)
@@ -380,6 +390,19 @@ def millisec2sec(arr):
 
 
 def setup_loggers(logname=None, repname=None, quiet=False, debug=False):
+    """Set up loggers for tedana.
+
+    Parameters
+    ----------
+    logname : str, optional
+        Name of log file, by default None
+    repname : str, optional
+        Name of report file, by default None
+    quiet : bool, optional
+        Whether to suppress logging to console, by default False
+    debug : bool, optional
+        Whether to set logging level to debug, by default False
+    """
     # Set up the general logger
     log_formatter = logging.Formatter(
         "%(asctime)s\t%(module)s.%(funcName)-12s\t%(levelname)-8s\t%(message)s",
@@ -416,6 +439,7 @@ def setup_loggers(logname=None, repname=None, quiet=False, debug=False):
 
 
 def teardown_loggers():
+    """Close loggers."""
     for local_logger in (RepLGR, LGR):
         for handler in local_logger.handlers[:]:
             handler.close()
@@ -431,15 +455,31 @@ def get_resource_path():
     return op.abspath(op.join(op.dirname(__file__), "resources") + op.sep)
 
 
-def get_system_info():
-    """Return information about the system tedana is being run on.
+def get_system_version_info():
+    """
+    Return information about the system tedana is being run on.
 
     Returns
     -------
     dict
-        Info about system where tedana is run on.
+        Info about system where tedana is run on and
+        and python and python library versioning info for key
+        modules used by tedana.
     """
     system_info = platform.uname()
+
+    python_libraries = {
+        "bokeh": bokeh_version,
+        "matplotlib": matplotlib_version,
+        "mapca": mapca_version,
+        "nibabel": nibabel_version,
+        "nilearn": nilearn_version,
+        "numpy": numpy_version,
+        "pandas": pandas_version,
+        "scikit-learn": sklearn_version,
+        "scipy": scipy_version,
+        "threadpoolctl": threadpoolctl_version,
+    }
 
     return {
         "System": system_info.system,
@@ -448,4 +488,6 @@ def get_system_info():
         "Version": system_info.version,
         "Machine": system_info.machine,
         "Processor": system_info.processor,
+        "Python": sys.version,
+        "Python_Libraries": python_libraries,
     }

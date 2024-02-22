@@ -30,7 +30,7 @@ a component was given a specific classification.
 Each step in the flow chart is labeled with a ``node`` number.
 If ``tedana`` is run using one of these trees, those node
 numbers will match the numbers in the ``ICA status table`` and the
-``ICA decision tree`` that are described in 
+``ICA decision tree`` that are described in
 :ref:`output-filename-descriptions`. These node numbers can be used
 to see when in the process a component's classifiation changed.
 
@@ -80,7 +80,7 @@ are now classified as `accepted` but with classification tags `low variance`
 tedana_v0.013 decision tree
 ***************************
 
-Identical to the meica decision tree until node 21. In the tedana tree, 
+Identical to the meica decision tree until node 21. In the tedana tree,
 components that cross the threshold criteria in nodes 21 and 22 are
 rejected and not included in a calculate for a new variance explained
 threshold in node 23. In the meica tree, those components are provisionally

@@ -1,6 +1,5 @@
-"""
-Functions to identify TE-dependent and TE-independent components.
-"""
+"""Functions to identify TE-dependent and TE-independent components."""
+
 import logging
 
 from tedana.metrics import collect
@@ -10,7 +9,7 @@ LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
-def automatic_selection(component_table, n_echos, n_vols, tree="tedana_v0.013", verbose=False):
+def automatic_selection(component_table, n_echos, n_vols, tree="tedana_v0.013"):
     """Classify components based on component table and decision tree type.
 
     Parameters

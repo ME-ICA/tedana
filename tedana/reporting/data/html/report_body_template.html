@@ -24,6 +24,10 @@
     width: 80%;
   }
 
+  .references ul {
+    line-height: 150%;
+  }
+
   .carpet-wrapper {
     margin-top: 30px;
   }
@@ -158,44 +162,16 @@
     border-radius: 5px;
   }
 </style>
-<script language="javascript">
-  function updateCarpetPlot(name) {
-    if (name == "optcom") {
-      document.getElementById("imgCarpetPlot").src =
-        "./figures/carpet_optcom.svg";
-    } else if (name == "denoised") {
-      document.getElementById("imgCarpetPlot").src =
-        "./figures/carpet_denoised.svg";
-    } else if (name == "accepted") {
-      document.getElementById("imgCarpetPlot").src =
-        "./figures/carpet_accepted.svg";
-    } else if (name == "rejected") {
-      document.getElementById("imgCarpetPlot").src =
-        "./figures/carpet_rejected.svg";
-    } else if (name == "denoised_mir") {
-      document.getElementById("imgCarpetPlot").src =
-        "./figures/carpet_denoised_mir.svg";
-    } else if (name == "accepted_mir") {
-      document.getElementById("imgCarpetPlot").src =
-        "./figures/carpet_accepted_mir.svg";
-    } else if (name == "optcom_nogsr") {
-      document.getElementById("imgCarpetPlot").src =
-        "./figures/carpet_optcom_nogsr.svg";
-    }
-  }
-</script>
-<div class="report">
-  <div class="content">
-    <h1>ICA components</h1>
-    $content
-  </div>
-  <div class="carpet-plots">
-    <h1>Carpet plots</h1>
-    <div class="carpet-wrapper">
-      <div class="carpet-buttons">$buttons</div>
-      <div class="carpet-plots-image">
-        <img id="imgCarpetPlot" src="./figures/carpet_optcom.svg" />
-      </div>
+<div class="content">
+  <h1>ICA components</h1>
+  $content
+</div>
+<div class="carpet-plots">
+  <h1>Carpet plots</h1>
+  <div class="carpet-wrapper">
+    <div class="carpet-buttons">$buttons</div>
+    <div class="carpet-plots-image">
+      <img id="imgCarpetPlot" src="$initialCarpet" />
     </div>
   </div>
   <div class="info">
@@ -205,10 +181,39 @@
   <div class="about">
     <h1>About tedana</h1>
     $about
-
+  </div>
+  <div class="content references">
     <h1>References</h1>
-    $references
+    <ul>
+      $references
+    </ul>
   </div>
 </div>
+
+<script type="text/javascript">
+  function updateCarpetPlot(name) {
+    // Create variable to hold the image source
+    let carpetPlot = "./figures/$prefix";
+
+    if (name == "optcom") {
+      carpetPlot += "carpet_optcom.svg";
+    } else if (name == "denoised") {
+      carpetPlot += "carpet_denoised.svg";
+    } else if (name == "accepted") {
+      carpetPlot += "carpet_accepted.svg";
+    } else if (name == "rejected") {
+      carpetPlot += "carpet_rejected.svg";
+    } else if (name == "denoised_mir") {
+      carpetPlot += "carpet_denoised_mir.svg";
+    } else if (name == "accepted_mir") {
+      carpetPlot += "carpet_accepted_mir.svg";
+    } else if (name == "optcom_nogsr") {
+      carpetPlot += "carpet_optcom_nogsr.svg";
+    }
+
+    // Update the image source
+    document.getElementById("imgCarpetPlot").src = carpetPlot;
+  }
+</script>
 
 $javascript

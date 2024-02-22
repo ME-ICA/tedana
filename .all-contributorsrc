@@ -276,6 +276,53 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "bpinsard",
+      "name": "Basile",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1155388?v=4",
+      "profile": "https://github.com/bpinsard",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "effigies",
+      "name": "Chris Markiewicz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/83442?v=4",
+      "profile": "https://github.com/effigies",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "goodalse2019",
+      "name": "Sarah Goodale",
+      "avatar_url": "https://avatars.githubusercontent.com/u/60117796?v=4",
+      "profile": "https://github.com/goodalse2019",
+      "contributions": [
+        "doc",
+        "ideas",
+        "question"
+      ]
+    },
+    {
+      "login": "martinezeguiluz",
+      "name": "Maitane Martinez Eguiluz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/129765987?v=4",
+      "profile": "https://github.com/martinezeguiluz",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "martaarbizu",
+      "name": "Marta Arbizu Gómez",
+      "avatar_url": "https://avatars.githubusercontent.com/u/127724722?v=4",
+      "profile": "https://github.com/martaarbizu",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 5,

@@ -1,6 +1,5 @@
-"""
-Utilities for tedana package
-"""
+"""Utilities for managing the tedana bibliography."""
+
 import logging
 import os.path as op
 import re
@@ -27,7 +26,7 @@ def find_braces(string):
 
     Returns
     -------
-    :obj:`list` of :obj:`tuple` of :obj:`int`
+    : obj:`list` of :obj:`tuple` of :obj:`int`
         A list of two-element tuples of indices of matched braces.
     """
     toret = {}
@@ -125,9 +124,9 @@ def find_citations(description):
     all_citations : :obj:`list` of :obj:`str`
         A list of all identifiers for citations.
     """
-    paren_citations = re.findall(r"\\citep{([a-zA-Z0-9,/\.]+)}", description)
-    intext_citations = re.findall(r"\\cite{([a-zA-Z0-9,/\.]+)}", description)
-    inparen_citations = re.findall(r"\\citealt{([a-zA-Z0-9,/\.]+)}", description)
+    paren_citations = re.findall(r"\\citep{([a-zA-Z0-9,_/\.]+)}", description)
+    intext_citations = re.findall(r"\\cite{([a-zA-Z0-9,_/\.]+)}", description)
+    inparen_citations = re.findall(r"\\citealt{([a-zA-Z0-9,_/\.]+)}", description)
     all_citations = ",".join(paren_citations + intext_citations + inparen_citations)
     all_citations = all_citations.split(",")
     all_citations = sorted(list(set(all_citations)))
@@ -179,7 +178,7 @@ def get_description_references(description):
         A string containing BibTeX entries, limited only to the citations in the description.
     """
     bibtex_file = op.join(get_resource_path(), "references.bib")
-    with open(bibtex_file, "r") as fo:
+    with open(bibtex_file) as fo:
         bibtex_string = fo.read()
 
     braces_idx = find_braces(bibtex_string)

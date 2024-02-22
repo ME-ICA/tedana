@@ -1,4 +1,5 @@
 """Tests for the tedana.selection.selection_utils module."""
+
 import os
 
 import numpy as np
@@ -13,7 +14,7 @@ THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def sample_component_table(options=None):
     """
-    Retrieves a sample component table
+    Retrieves a sample component table.
 
     Options: Different strings will also the contents of the component table
         'provclass': Change the classifications to "provisional accept" for 4 components
@@ -37,12 +38,11 @@ def sample_component_table(options=None):
 def sample_selector(options=None):
     """
     Retrieves a sample component table and initializes
-    a selector using that component table and the minimal tree
+    a selector using that component table and the minimal tree.
 
     options: Different strings will alter the selector
        'provclass': Change the classifications to "provisional accept" for 4 components
         'unclass': Change 4 classifications to "provisional accept" and the rest to "unclassified"
-
     """
 
     tree = "minimal"
@@ -68,8 +68,9 @@ def sample_selector(options=None):
 def test_selectcomps2use_succeeds():
     """
     Tests to make sure selectcomps2use runs with full range of inputs.
+
     Include tests to make sure the correct number of components are selected
-    from the pre-defined sample_comptable.tsv component table
+    from the pre-defined sample_comptable.tsv component table.
     """
     selector = sample_selector()
 
@@ -96,7 +97,7 @@ def test_selectcomps2use_succeeds():
 
 
 def test_selectcomps2use_fails():
-    """Tests for selectcomps2use failure modes"""
+    """Tests for selectcomps2use failure modes."""
     selector = sample_selector()
 
     decide_comps_options = [
@@ -119,9 +120,10 @@ def test_selectcomps2use_fails():
 def test_comptable_classification_changer_succeeds():
     """
     All conditions where comptable_classification_changer should run
-    Note: This confirms the function runs, but not that outputs are accurate
+    Note: This confirms the function runs, but not that outputs are accurate.
+
     Also tests conditions where the warning logger is used, but doesn't
-    check the logger
+    check the logger.
     """
 
     def validate_changes(expected_classification):
@@ -183,7 +185,7 @@ def test_comptable_classification_changer_succeeds():
 
 
 def test_change_comptable_classifications_succeeds():
-    """All conditions where change_comptable_classifications should run"""
+    """All conditions where change_comptable_classifications should run."""
 
     selector = sample_selector(options="provclass")
 
@@ -212,7 +214,7 @@ def test_change_comptable_classifications_succeeds():
 
 
 def test_clean_dataframe_smoke():
-    """A smoke test for the clean_dataframe function"""
+    """A smoke test for the clean_dataframe function."""
     component_table = sample_component_table(options="comptable")
     selection_utils.clean_dataframe(component_table)
 
@@ -223,7 +225,7 @@ def test_clean_dataframe_smoke():
 
 
 def test_confirm_metrics_exist_succeeds():
-    """tests confirm_metrics_exist run with correct inputs"""
+    """Tests confirm_metrics_exist run with correct inputs."""
     component_table = sample_component_table(options="comptable")
 
     # Testing for metrics that exist with 1 or 2 necessary metrics in a set
@@ -233,7 +235,7 @@ def test_confirm_metrics_exist_succeeds():
 
 
 def test_confirm_metrics_exist_fails():
-    """tests confirm_metrics_exist for failure conditions"""
+    """Tests confirm_metrics_exist for failure conditions."""
 
     component_table = sample_component_table(options="comptable")
 
@@ -247,7 +249,7 @@ def test_confirm_metrics_exist_fails():
 
 
 def test_log_decision_tree_step_smoke():
-    """A smoke test for log_decision_tree_step"""
+    """A smoke test for log_decision_tree_step."""
 
     selector = sample_selector()
 
@@ -299,7 +301,7 @@ def test_log_decision_tree_step_smoke():
 
 
 def test_log_classification_counts_smoke():
-    """A smoke test for log_classification_counts"""
+    """A smoke test for log_classification_counts."""
 
     component_table = sample_component_table(options="comptable")
 
@@ -352,7 +354,7 @@ def test_getelbow_cons_smoke():
 
 
 def test_kappa_elbow_kundu_smoke():
-    """A smoke test for the kappa_elbow_kundu function"""
+    """A smoke test for the kappa_elbow_kundu function."""
 
     component_table = sample_component_table()
 
@@ -399,7 +401,7 @@ def test_kappa_elbow_kundu_smoke():
 
 
 def test_rho_elbow_kundu_liberal_smoke():
-    """A smoke test for the rho_elbow_kundu_liberal function"""
+    """A smoke test for the rho_elbow_kundu_liberal function."""
 
     component_table = sample_component_table(options="unclass")
     # Normal execution with default kundu threshold
@@ -466,7 +468,7 @@ def test_rho_elbow_kundu_liberal_smoke():
 
 
 def test_get_extend_factor_smoke():
-    """A smoke test for get_extend_factor"""
+    """A smoke test for get_extend_factor."""
 
     val = selection_utils.get_extend_factor(extend_factor=int(10))
     assert isinstance(val, float)

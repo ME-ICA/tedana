@@ -1,7 +1,7 @@
 figures
 ica_reclassify_call.sh
-references.bib
-report.txt
+sub-testymctestface_references.bib
+sub-testymctestface_report.txt
 sub-testymctestface_betas_OC.nii.gz
 sub-testymctestface_betas_hik_OC.nii.gz
 sub-testymctestface_betas_hik_OC_MIR.nii.gz
@@ -9,7 +9,6 @@ sub-testymctestface_dataset_description.json
 sub-testymctestface_dn_ts_OC.nii.gz
 sub-testymctestface_dn_ts_OC_MIR.nii.gz
 sub-testymctestface_feats_OC2.nii.gz
-sub-testymctestface_hik_ts_OC.nii.gz
 sub-testymctestface_hik_ts_OC_MIR.nii.gz
 sub-testymctestface_ica_components.nii.gz
 sub-testymctestface_ica_cross_component_metrics.json
@@ -21,6 +20,5 @@ sub-testymctestface_ica_mir_mixing.tsv
 sub-testymctestface_ica_mixing.tsv
 sub-testymctestface_ica_orth_mixing.tsv
 sub-testymctestface_ica_status_table.tsv
-sub-testymctestface_lowk_ts_OC.nii.gz
 sub-testymctestface_registry.json
 sub-testymctestface_sphis_hik.nii.gz

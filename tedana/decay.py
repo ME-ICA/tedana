@@ -1,6 +1,5 @@
-"""
-Functions to estimate S0 and T2* from multi-echo data.
-"""
+"""Functions to estimate S0 and T2* from multi-echo data."""
+
 import logging
 
 import numpy as np
@@ -14,9 +13,7 @@ RepLGR = logging.getLogger("REPORT")
 
 
 def _apply_t2s_floor(t2s, echo_times):
-    """
-    Apply a floor to T2* values to prevent zero division errors during
-    optimal combination.
+    """Apply a floor to T2* values to prevent zero division errors during optimal combination.
 
     Parameters
     ----------
@@ -47,17 +44,15 @@ def _apply_t2s_floor(t2s, echo_times):
         n_voxels = temp_arr.size
         floor_percent = 100 * n_bad_voxels / n_voxels
         LGR.debug(
-            "T2* values for {0}/{1} voxels ({2:.2f}%) have been "
-            "identified as close to zero and have been "
-            "adjusted".format(n_bad_voxels, n_voxels, floor_percent)
+            f"T2* values for {n_bad_voxels}/{n_voxels} voxels ({floor_percent:.2f}%) have been "
+            "identified as close to zero and have been adjusted"
         )
     t2s_corrected[bad_voxel_idx] = np.min(-echo_times) / np.log(eps)
     return t2s_corrected
 
 
 def monoexponential(tes, s0, t2star):
-    """
-    Specifies a monoexponential model for use with scipy curve fitting
+    """Specify a monoexponential model for use with scipy curve fitting.
 
     Parameters
     ----------
@@ -70,15 +65,14 @@ def monoexponential(tes, s0, t2star):
 
     Returns
     -------
-    :obj:`float`
+    : obj:`float`
         Predicted signal
     """
     return s0 * np.exp(-tes / t2star)
 
 
 def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True):
-    """
-    Fit monoexponential decay model with nonlinear curve-fitting.
+    """Fit monoexponential decay model with nonlinear curve-fitting.
 
     Parameters
     ----------
@@ -99,14 +93,14 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True):
     t2s_limited, s0_limited, t2s_full, s0_full : (S,) :obj:`numpy.ndarray`
         T2* and S0 estimate maps.
 
+    See Also
+    --------
+    : func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
+        parameter.
+
     Notes
     -----
     This method is slower, but more accurate, than the log-linear approach.
-
-    See Also
-    --------
-    :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
-                                              parameter.
     """
     if report:
         RepLGR.info(
@@ -175,9 +169,9 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True):
         if fail_count:
             fail_percent = 100 * fail_count / len(voxel_idx)
             LGR.debug(
-                "With {0} echoes, monoexponential fit failed on {1}/{2} "
-                "({3:.2f}%) voxel(s), used log linear estimate "
-                "instead".format(echo_num, fail_count, len(voxel_idx), fail_percent)
+                f"With {echo_num} echoes, monoexponential fit failed on "
+                f"{fail_count}/{len(voxel_idx)} ({fail_percent:.2f}%) voxel(s), "
+                "used log linear estimate instead"
             )
 
         t2s_asc_maps[:, i_echo] = t2s_full
@@ -221,7 +215,7 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
 
     Returns
     -------
-    t2s_limited, s0_limited, t2s_full, s0_full: (S,) :obj:`numpy.ndarray`
+    t2s_limited, s0_limited, t2s_full, s0_full : (S,) :obj:`numpy.ndarray`
         T2* and S0 estimate maps.
 
     Notes
@@ -275,10 +269,10 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
 
         # make IV matrix: intercept/TEs x (time series * echos)
         x = np.column_stack([np.ones(echo_num), [-te for te in echo_times[:echo_num]]])
-        X = np.repeat(x, n_vols, axis=0)
+        iv_arr = np.repeat(x, n_vols, axis=0)
 
         # Log-linear fit
-        betas = np.linalg.lstsq(X, log_data, rcond=None)[0]
+        betas = np.linalg.lstsq(iv_arr, log_data, rcond=None)[0]
         t2s = 1.0 / betas[1, :].T
         s0 = np.exp(betas[0, :]).T
 
@@ -298,8 +292,7 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
 
 
 def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True):
-    """
-    Fit voxel-wise monoexponential decay models to `data`
+    """Fit voxel-wise monoexponential decay models to ``data``.
 
     Parameters
     ----------
@@ -338,6 +331,11 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True):
         only one echo, the full map uses the S0 estimate from the first two
         echoes.
 
+    See Also
+    --------
+    : func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
+                                                       parameter.
+
     Notes
     -----
     This function replaces infinite values in the :math:`T_2^*` map with 500 and
@@ -345,25 +343,18 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True):
     Additionally, very small :math:`T_2^*` values above zero are replaced with a floor
     value to prevent zero-division errors later on in the workflow.
     It also replaces NaN values in the :math:`S_0` map with 0.
-
-    See Also
-    --------
-    :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
-                                              parameter.
     """
     if data.shape[1] != len(tes):
         raise ValueError(
-            "Second dimension of data ({0}) does not match number "
-            "of echoes provided (tes; {1})".format(data.shape[1], len(tes))
+            f"Second dimension of data ({data.shape[1]}) does not match number "
+            f"of echoes provided (tes; {len(tes)})"
         )
     elif not (data.shape[0] == mask.shape[0] == adaptive_mask.shape[0]):
         raise ValueError(
-            "First dimensions (number of samples) of data ({0}), "
-            "mask ({1}), and adaptive_mask ({2}) do not "
-            "match".format(data.shape[0], mask.shape[0], adaptive_mask.shape[0])
+            f"First dimensions (number of samples) of data ({data.shape[0]}), "
+            f"mask ({mask.shape[0]}), and adaptive_mask ({adaptive_mask.shape[0]}) do not match"
         )
 
-    data = data.copy()
     if data.ndim == 2:
         data = data[:, :, None]
 
@@ -380,7 +371,7 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True):
             data_masked, tes, adaptive_mask_masked, report=report
         )
     else:
-        raise ValueError("Unknown fittype option: {}".format(fittype))
+        raise ValueError(f"Unknown fittype option: {fittype}")
 
     t2s_limited[np.isinf(t2s_limited)] = 500.0  # why 500?
     # let's get rid of negative values, but keep zeros where limited != full
@@ -400,15 +391,14 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True):
     # set a hard cap for the T2* map
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
     cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5, interpolation_method="lower")
-    LGR.debug("Setting cap on T2* map at {:.5f}".format(cap_t2s * 10))
+    LGR.debug(f"Setting cap on T2* map at {cap_t2s * 10:.5f}")
     t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
 
     return t2s_limited, s0_limited, t2s_full, s0_full
 
 
 def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
-    """
-    Fit voxel- and timepoint-wise monoexponential decay models to `data`
+    """Fit voxel- and timepoint-wise monoexponential decay models to ``data``.
 
     Parameters
     ----------
@@ -447,8 +437,8 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
 
     See Also
     --------
-    :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
-                                              parameter.
+    : func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
+                                                          parameter.
     """
     n_samples, _, n_vols = data.shape
     tes = np.array(tes)

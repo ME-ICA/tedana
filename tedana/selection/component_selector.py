@@ -1,7 +1,5 @@
-"""
-Functions that include workflows to identify and label
-TE-dependent and TE-independent components.
-"""
+"""Identify and label TE-dependent and TE-independent components."""
+
 import inspect
 import logging
 import os.path as op
@@ -29,9 +27,7 @@ DEFAULT_TREES = ["minimal", "meica", "tedana_v0.013"]
 
 
 class TreeError(Exception):
-    """
-    Passes errors that are raised when `validate_tree` fails
-    """
+    """Passes errors that are raised when `validate_tree` fails."""
 
     pass
 
@@ -49,7 +45,6 @@ def load_config(tree):
     tree : :obj:`dict`
         A validated decision tree for the component selection process.
     """
-
     if tree in DEFAULT_TREES:
         fname = op.join(get_resource_path(), "decision_trees", tree + ".json")
     elif tree == "kundu":
@@ -92,7 +87,6 @@ def validate_tree(tree):
     ------
     TreeError
     """
-
     # Set the fields that should always be present
     err_msg = ""
     tree_expected_keys = [
@@ -117,7 +111,7 @@ def validate_tree(tree):
         raise TreeError("\n" + f"Decision tree missing required fields: {missing_keys}")
 
     # Warn if unused fields exist
-    unused_keys = set(tree.keys()) - set(tree_expected_keys) - set(["used_metrics"])
+    unused_keys = set(tree.keys()) - set(tree_expected_keys) - {"used_metrics"}
     # Make sure some fields don't trigger a warning; hacky, sorry
     ok_to_not_use = (
         "reconstruct_from",
@@ -144,7 +138,7 @@ def validate_tree(tree):
             continue
 
         # Get a functions parameters and compare to parameters defined in the tree
-        pos = set([p for p, i in sig.parameters.items() if i.default is inspect.Parameter.empty])
+        pos = {p for p, i in sig.parameters.items() if i.default is inspect.Parameter.empty}
         kwargs = set(sig.parameters.keys()) - pos
 
         missing_pos = pos - set(node.get("parameters").keys()) - defaults
@@ -205,11 +199,11 @@ def validate_tree(tree):
         if node.get("kwargs") is not None:
             tagset = set()
             if "tag_if_true" in node.get("kwargs").keys():
-                tagset.update(set([node["kwargs"]["tag_if_true"]]))
+                tagset.update({node["kwargs"]["tag_if_true"]})
             if "tag_if_false" in node.get("kwargs").keys():
-                tagset.update(set([node["kwargs"]["tag_if_false"]]))
+                tagset.update({node["kwargs"]["tag_if_false"]})
             if "tag" in node.get("kwargs").keys():
-                tagset.update(set([node["kwargs"]["tag"]]))
+                tagset.update({node["kwargs"]["tag"]})
             undefined_classification_tags = tagset.difference(set(tree.get("classification_tags")))
             if undefined_classification_tags:
                 LGR.warning(
@@ -274,7 +268,6 @@ class ComponentSelector:
         An example initialization with these options would look like
         ``selector = ComponentSelector(tree, comptable, n_echos=n_echos, n_vols=n_vols)``
         """
-
         self.tree_name = tree
 
         self.__dict__.update(cross_component_metrics)
@@ -328,7 +321,7 @@ class ComponentSelector:
         each component as accepted or rejected.
 
         Notes
-        -------
+        -----
         The selection process uses previously calculated parameters stored in
         `component_table` for each ICA component such as Kappa (a T2* weighting metric),
         Rho (an S0 weighting metric), and variance explained. If a necessary metric
@@ -353,7 +346,6 @@ class ComponentSelector:
           everything that changed in each node
         - current_node_idx: The total number of nodes run in ``ComponentSelector``
         """
-
         if "classification_tags" not in self.component_table.columns:
             self.component_table["classification_tags"] = ""
 
@@ -437,15 +429,15 @@ class ComponentSelector:
 
     def check_null(self, params, fcn):
         """
-        Checks that all required parameters for selection node functions are
-        attributes in the class. Error if any are undefined
+        Check that required parameters for selection node functions are attributes in the class.
+
+        Error if any are undefined.
 
         Returns
         -------
-        params: :obj:`dict`
+        params : :obj:`dict`
             The keys and values for the inputted parameters
         """
-
         for key, val in params.items():
             if val is None:
                 try:
@@ -464,9 +456,11 @@ class ComponentSelector:
 
     def are_only_necessary_metrics_used(self):
         """
-        Check if all metrics that are declared as necessary are actually
-        used and if any used_metrics weren't explicitly declared necessary.
-        If either of these happen, a warning is added to the logger
+        Check if all metrics that are declared as necessary are actually used.
+
+        Also check if any used_metrics weren't explicitly declared necessary.
+
+        If either of these happen, a warning is added to the logger.
         """
         necessary_metrics = self.necessary_metrics
         not_declared = self.tree["used_metrics"] - necessary_metrics
@@ -484,9 +478,11 @@ class ComponentSelector:
 
     def are_all_components_accepted_or_rejected(self):
         """
-        After the tree has finished executing, check if all component
-        classifications are either "accepted" or "rejected".
-        If any other component classifications remain, log a warning
+        Check if all component classifications are either "accepted" or "rejected".
+
+        This is done after the tree has finished executing,
+
+        If any other component classifications remain, log a warning.
         """
         component_classifications = set(self.component_table["classification"].to_list())
         nonfinal_classifications = component_classifications.difference({"accepted", "rejected"})

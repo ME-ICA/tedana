@@ -1,4 +1,5 @@
 """Tests for the tedana.selection.selection_nodes module."""
+
 import os
 
 import pytest
@@ -10,7 +11,7 @@ THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def test_manual_classify_smoke():
-    """Smoke tests for all options in manual_classify"""
+    """Smoke tests for all options in manual_classify."""
 
     selector = sample_selector(options="provclass")
 
@@ -64,7 +65,7 @@ def test_manual_classify_smoke():
 
 
 def test_dec_left_op_right_succeeds():
-    """tests for successful calls to dec_left_op_right"""
+    """Tests for successful calls to dec_left_op_right."""
 
     selector = sample_selector(options="provclass")
 
@@ -223,7 +224,7 @@ def test_dec_left_op_right_succeeds():
 
 
 def test_dec_left_op_right_fails():
-    """tests for calls to dec_left_op_right that raise errors"""
+    """Tests for calls to dec_left_op_right that raise errors."""
 
     selector = sample_selector(options="provclass")
     decide_comps = "provisional accept"
@@ -366,7 +367,7 @@ def test_dec_left_op_right_fails():
 
 
 def test_dec_variance_lessthan_thresholds_smoke():
-    """Smoke tests for dec_variance_lessthan_thresholds"""
+    """Smoke tests for dec_variance_lessthan_thresholds."""
 
     selector = sample_selector(options="provclass")
     decide_comps = "provisional accept"
@@ -416,7 +417,7 @@ def test_dec_variance_lessthan_thresholds_smoke():
 
 
 def test_calc_kappa_elbow():
-    """Smoke tests for calc_kappa_elbow"""
+    """Smoke tests for calc_kappa_elbow."""
 
     selector = sample_selector()
     decide_comps = "all"
@@ -493,7 +494,7 @@ def test_calc_kappa_elbow():
 
 
 def test_calc_rho_elbow():
-    """Smoke tests for calc_rho_elbow"""
+    """Smoke tests for calc_rho_elbow."""
 
     selector = sample_selector(options="unclass")
     decide_comps = "all"
@@ -602,7 +603,7 @@ def test_calc_rho_elbow():
 
 
 def test_calc_median_smoke():
-    """Smoke tests for calc_median"""
+    """Smoke tests for calc_median."""
 
     selector = sample_selector()
     decide_comps = "all"
@@ -615,7 +616,7 @@ def test_calc_median_smoke():
         median_label="varex",
         only_used_metrics=True,
     )
-    assert len(used_metrics - set(["variance explained"])) == 0
+    assert len(used_metrics - {"variance explained"}) == 0
 
     # Standard call to this function.
     selector = selection_nodes.calc_median(
@@ -679,7 +680,7 @@ def test_calc_median_smoke():
 
 
 def test_dec_classification_doesnt_exist_smoke():
-    """Smoke tests for dec_classification_doesnt_exist"""
+    """Smoke tests for dec_classification_doesnt_exist."""
 
     selector = sample_selector(options="unclass")
     decide_comps = ["unclassified", "provisional accept"]
@@ -765,7 +766,7 @@ def test_dec_classification_doesnt_exist_smoke():
 
 
 def test_dec_reclassify_high_var_comps():
-    """tests for dec_reclassify_high_var_comps"""
+    """Tests for dec_reclassify_high_var_comps."""
 
     selector = sample_selector(options="unclass")
     decide_comps = "unclassified"
@@ -777,7 +778,7 @@ def test_dec_reclassify_high_var_comps():
         decide_comps,
         only_used_metrics=True,
     )
-    assert len(used_metrics - set(["variance explained"])) == 0
+    assert len(used_metrics - {"variance explained"}) == 0
 
     # Raises an error since varex_upper_p not in cross_component_metrics
     #   & there are components in decide_comps
@@ -828,7 +829,7 @@ def test_dec_reclassify_high_var_comps():
 
 
 def test_calc_varex_thresh_smoke():
-    """Smoke tests for calc_varex_thresh"""
+    """Smoke tests for calc_varex_thresh."""
 
     # Standard use of this function requires some components to be "provisional accept"
     selector = sample_selector()
@@ -838,7 +839,7 @@ def test_calc_varex_thresh_smoke():
     used_metrics = selection_nodes.calc_varex_thresh(
         selector, decide_comps, thresh_label="upper", percentile_thresh=90, only_used_metrics=True
     )
-    assert len(used_metrics - set(["variance explained"])) == 0
+    assert len(used_metrics - {"variance explained"}) == 0
 
     # Standard call to this function.
     selector = selection_nodes.calc_varex_thresh(
@@ -1021,7 +1022,7 @@ def test_calc_varex_thresh_smoke():
 
 
 def test_calc_extend_factor_smoke():
-    """Smoke tests for calc_extend_factor"""
+    """Smoke tests for calc_extend_factor."""
 
     selector = sample_selector()
 
@@ -1062,7 +1063,7 @@ def test_calc_extend_factor_smoke():
 
 
 def test_calc_max_good_meanmetricrank_smoke():
-    """Smoke tests for calc_max_good_meanmetricrank"""
+    """Smoke tests for calc_max_good_meanmetricrank."""
 
     # Standard use of this function requires some components to be "provisional accept"
     selector = sample_selector("provclass")
@@ -1145,7 +1146,7 @@ def test_calc_max_good_meanmetricrank_smoke():
 
 
 def test_calc_varex_kappa_ratio_smoke():
-    """Smoke tests for calc_varex_kappa_ratio"""
+    """Smoke tests for calc_varex_kappa_ratio."""
 
     # Standard use of this function requires some components to be "provisional accept"
     selector = sample_selector("provclass")
@@ -1194,7 +1195,7 @@ def test_calc_varex_kappa_ratio_smoke():
 
 
 def test_calc_revised_meanmetricrank_guesses_smoke():
-    """Smoke tests for calc_revised_meanmetricrank_guesses"""
+    """Smoke tests for calc_revised_meanmetricrank_guesses."""
 
     # Standard use of this function requires some components to be "provisional accept"
     selector = sample_selector("provclass")

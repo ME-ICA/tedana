@@ -15,21 +15,24 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 license = {file = "LICENSE"}
 requires-python = ">=3.8"
 dependencies = [
-    "bokeh<2.3.0",
-    "mapca>=0.0.3",
+    "bokeh",
+    "mapca>=0.0.4,<=0.0.5",
     "matplotlib",
-    "nibabel>=2.5.1",
-    "nilearn>=0.7",
-    "numpy>=1.16",
-    "pandas>=2.0",
-    "scikit-learn>=0.21",
-    "scipy>=1.2.0",
+    "nibabel>=2.5.1,<=5.2.0",
+    "nilearn>=0.7,<=0.10.3",
+    "numpy>=1.16,<=1.26.4",
+    "pandas>=2.0,<=2.2.0",
+    "pybtex",
+    "pybtex-apa-style",
+    "scikit-learn>=0.21, <=1.4.1.post1",
+    "scipy>=1.2.0, <=1.12.0",
     "threadpoolctl",
-    "jinja2==3.0.1",
 ]
 dynamic = ["version"]
 
@@ -47,13 +50,19 @@ doc = [
     "sphinx-argparse",
     "sphinxcontrib-bibtex",
 ]
+
 tests = [
     "codecov",
     "coverage",
     "flake8>=3.7",
+    "flake8-absolute-import",
     "flake8-black",
+    "flake8-docstrings",
     "flake8-isort",
     "flake8-pyproject",
+    "flake8-unused-arguments",
+    "flake8-use-fstring",
+    "pep8-naming",
     "pytest",
     "pytest-cov>=4.0.0",
     "requests",
@@ -97,7 +106,7 @@ version-file = "tedana/_version.py"
 
 [tool.black]
 line-length = 99
-target-version = ['py37']
+target-version = ['py38']
 include = '\.pyi?$'
 exclude = '''
 
@@ -130,8 +139,14 @@ exclude = [
 ignore = ["E203", "E402", "W503"]
 per-file-ignores = [
     "*/__init__.py: F401",
+    "tedana/tests/*: D",
 ]
 docstring-convention = "numpy"
+
+[tool.pydocstringformatter]
+write = true
+strip-whitespaces = true
+max-summary-lines = 1
 
 [tool.coverage.run]
 branch = true
