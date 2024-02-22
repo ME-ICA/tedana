@@ -523,6 +523,7 @@ def plot_t2star_and_s0(
         cmap=png_cmap,
         vmin=t2s_p02,
         vmax=t2s_p98,
+        annotate=False,
         output_file=os.path.join(io_generator.out_dir, "figures", t2star_plot),
     )
 
@@ -535,5 +536,6 @@ def plot_t2star_and_s0(
         cmap=png_cmap,
         vmin=s0_p02,
         vmax=s0_p98,
+        annotate=False,
         output_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
     )
