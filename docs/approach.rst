@@ -348,7 +348,7 @@ classify ICA components as TE-dependent (BOLD signal), TE-independent
 (non-BOLD noise), or neither (to be ignored).
 These classifications are saved in **desc-tedana_metrics.tsv**.
 The actual decision tree is dependent on the component selection algorithm employed.
-``tedana`` includes three options `tedana_v0.013`, `meica` and `minimal` (which uses hardcoded
+``tedana`` includes three options `tedana_orig`, `meica` and `minimal` (which uses hardcoded
 thresholds applied to each of the metrics). `These decision trees are detailed here`_.
 
 Components that are classified as noise are projected out of the optimally combined data,

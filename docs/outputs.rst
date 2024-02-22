@@ -259,8 +259,8 @@ component and **rejected** components are be removed through denoising.
 components received a specific classification.
 Each component can receive more than one tag.
 The following tags are included depending if ``--tree`` is "minimal", "meica",
-"tedana_v0.013" or if ``ica_reclassify`` is run. The same tags are included
-for "meica" and "tedana_v0.013"
+"tedana_orig" or if ``ica_reclassify`` is run. The same tags are included
+for "meica" and "tedana_orig"
 
 ===================== ================  ========================================
 Tag                   Included in Tree  Explanation

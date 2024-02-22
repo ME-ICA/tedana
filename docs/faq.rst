@@ -117,7 +117,7 @@ make sure to output the denoised time series into a separate directory.
 .. _tree differences:
 
 ********************************************************************************************
-[tedana] What is the difference between the tedana_v0.013 meica and minimal decision trees?
+[tedana] What is the difference between the tedana_orig meica and minimal decision trees?
 ********************************************************************************************
 
 The decision tree is the series of conditions through which each component is
@@ -130,8 +130,8 @@ that ``meica`` might have accepted components that ``tedana`` was rejecting. Whe
 the effects of this divergance, we saw that ``meica`` sometimes accepted high variance
 components. While those additionally accepted components often looked like noise, we wanted
 to make sure users could made the decision processed published with the original ``meica``
-so we have included both the ``meica`` tree and the ``tedana_v0.013`` tree which has been
-successfully used for years. ``tedana_v0.013`` will always remove the same or more
+so we have included both the ``meica`` tree and the ``tedana_orig`` tree which has been
+successfully used for years. ``tedana_orig`` will always remove the same or more
 components.
 
 Both of the above trees use multiple intersecting metrics and rankings to classify
@@ -148,7 +148,7 @@ likely to reject T2* weighted components. There are a few other criteria, but co
 with `kappa>kappa elbow` and `rho<rho elbow` should all be accepted, and the rho elbow
 threshold is less stringent. If kappa is above threshold and more than 2X rho then it
 is also accepted under the assumption that, even if a component contains noise, there
-is sufficient T2*-weighted signal to retain. Similarly to the tedana_v0.013 and meica
+is sufficient T2*-weighted signal to retain. Similarly to the tedana_orig and meica
 trees, components with very low variance are retained so that degrees of freedom aren't
 wasted by removing them, but `minimal` makes sure that no more than 1% of total variance
 is removed this way.

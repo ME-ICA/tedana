@@ -5,7 +5,7 @@ Included Decision Trees
 Three decision trees are currently distributed with ``tedana``.
 
 ``meica`` is the decision tree that is based on MEICA version 2.5 and
-``tedana_v0.013`` is very similar and has been included with ``tedana``
+``tedana_orig`` is very similar and has been included with ``tedana``
 since the start of this project. An explanation of why these both exist
 is `in the FAQ`_
 While multiple publications have used and benefited from this decision,
@@ -77,7 +77,7 @@ are now classified as `accepted` but with classification tags `low variance`
 .. _LaTeX file to generate the meica decision tree flow chart: _static/decision_tree_meica.tex
 
 ***************************
-tedana_v0.013 decision tree
+tedana_orig decision tree
 ***************************
 
 Identical to the meica decision tree until node 21. In the tedana tree,
@@ -89,13 +89,13 @@ can be potentially accepted in nodes 24 and 25. This means tedana will give
 the same results at meica or reject additional components base on those two
 final decision criteria.
 
-.. image:: _static/decision_tree_tedana_v0.013.png
+.. image:: _static/decision_tree_tedana_orig.png
     :width: 400
-    :alt: tedana_v0.013 Decision Tree Flow Chart
+    :alt: tedana_orig Decision Tree Flow Chart
 
-`LaTeX file to generate the tedana_v0.013 decision tree flow chart`_
+`LaTeX file to generate the tedana_orig decision tree flow chart`_
 
-.. _LaTeX file to generate the tedana_v0.013 decision tree flow chart: _static/decision_tree_tedana_v0.013.tex
+.. _LaTeX file to generate the tedana_orig decision tree flow chart: _static/decision_tree_tedana_orig.tex
 
 *********************
 Minimal decision tree

@@ -1,5 +1,5 @@
 {
-    "tree_id": "tedana_v0.013_decision_tree",
+    "tree_id": "tedana_orig_decision_tree",
     "info": "Very similar to the decision tree designed by Prantik Kundu",
     "report": "This is based on the criteria of the MEICA v2.5 decision tree \\citep{kundu2013integrated}.",
     "necessary_metrics": [

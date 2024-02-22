@@ -9,7 +9,7 @@ LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
-def automatic_selection(component_table, n_echos, n_vols, tree="tedana_v0.013"):
+def automatic_selection(component_table, n_echos, n_vols, tree="tedana_orig"):
     """Classify components based on component table and decision tree type.
 
     Parameters
@@ -19,7 +19,7 @@ def automatic_selection(component_table, n_echos, n_vols, tree="tedana_v0.013"):
     n_echos : :obj:`int`
         The number of echoes in this dataset
     tree : :obj:`str`
-        The type of tree to use for the ComponentSelector object. Default="tedana_v0.013"
+        The type of tree to use for the ComponentSelector object. Default="tedana_orig"
     verbose : :obj:`bool`
         More verbose logging output if True. Default=False
 
@@ -35,7 +35,7 @@ def automatic_selection(component_table, n_echos, n_vols, tree="tedana_v0.013"):
     by Prantik Kundu, and his original implementation is available at:
     https://github.com/ME-ICA/me-ica/blob/\
     b2781dd087ab9de99a2ec3925f04f02ce84f0adc/meica.libs/select_model.py
-    The tedana_v0.013 tree is very similar to meica, but might accept fewer
+    The tedana_orig tree is very similar to meica, but might accept fewer
     edge-case components.
 
     The appropriate citation is :footcite:t:`kundu2013integrated`.

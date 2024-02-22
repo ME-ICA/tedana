@@ -140,7 +140,7 @@ Each outputs field includes:
     This is useful if a metric is to be calculated on a subset of components based on what
     happened during previous steps in the selection process. This is **not** recommended,
     but, since it was done as part of the original decision tree process used in the
-    meica and tedana_v0.013, it is possible.
+    meica and tedana_orig, it is possible.
 
 
 **************************************
@@ -223,7 +223,7 @@ that is used to check whether results are plausible & can help avoid mistakes.
     an error when these metrics are not found. One might want to calculate a new metric
     if the metric uses only a subset of the components based on previous
     classifications. This does make interpretation of results more confusing, but, since
-    this functionality is part of the tedana_v0.013 and meica decision trees, it is included.
+    this functionality is part of the tedana_orig and meica decision trees, it is included.
 
 - intermediate_classifications
     A list of intermediate classifications (i.e. "provisionalaccept",
