@@ -30,7 +30,7 @@
         "Accept borderline",
         "No provisional accept"
     ],
-    "_comment": "More information on the kundu decision tree and how it differs from other options is at https://tedana.readthedocs.io/en/stable/included_decision_trees.html. Descriptions of the metrics used are in desc-tedana.metrics.json, which is ouputted when this tree is run",
+    "_comment": "More information on the kundu decision tree and how it differs from other options is at https://tedana.readthedocs.io/en/stable/included_decision_trees.html. Descriptions of the metrics used are in desc-tedana_metrics.json, which is ouputted when this tree is run",
     "nodes": [
         {
             "functionname": "manual_classify",
