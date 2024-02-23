@@ -499,6 +499,7 @@ def plot_t2star_and_s0(
     ax.set_title("T2*", fontsize=20)
     ax.set_ylabel("Count", fontsize=16)
     ax.set_xlabel("Seconds\n(limited to 98th percentile)", fontsize=16)
+    fig.tight_layout()
     fig.savefig(os.path.join(io_generator.out_dir, "figures", t2star_histogram))
 
     s0_data = masking.apply_mask(s0_img, mask_img)
@@ -511,6 +512,7 @@ def plot_t2star_and_s0(
     ax.set_title("S0", fontsize=20)
     ax.set_ylabel("Count", fontsize=16)
     ax.set_xlabel("Arbitrary Units\n(limited to 98th percentile)", fontsize=16)
+    fig.tight_layout()
     fig.savefig(os.path.join(io_generator.out_dir, "figures", s0_histogram))
 
     # Plot T2* and S0 maps
