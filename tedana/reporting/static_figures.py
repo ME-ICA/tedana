@@ -261,12 +261,12 @@ def plot_component(
     ax_ts.set_xlabel("TRs")
     ax_ts.set_xlim(0, component_timeseries.shape[0] - 1)
     ax_ts.set_yticks([])
+    title_ = ax_ts.set_title(title)
+    title_.set_y(1.5)
 
     ax_map = fig.add_subplot(gs[1])
     ax_map.axis("off")
     ax_map.imshow(img)
-    title_ = ax_map.set_title(title)
-    title_.set_y(1.5)
 
     ax_freq = fig.add_subplot(gs[2])
     ax_freq.plot(frequencies, power_spectrum, color=classification_color)
