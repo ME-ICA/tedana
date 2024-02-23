@@ -250,12 +250,12 @@ def plot_component(
     # but add top and bottom axes that each take up 10% of the height
     width = 10
     img_hw_ratio = img.shape[0] / img.shape[1]
-    img_dims = (width, (width * img_hw_ratio * 1.3))
+    img_dims = (width, (width * img_hw_ratio * 1.6))
 
     # Create a new figure and gridspec
     fig = plt.figure(figsize=img_dims)
     fig.suptitle(title, fontsize=14)
-    gs = gridspec.GridSpec(3, 1, height_ratios=[1, 10, 1], hspace=0.2)
+    gs = gridspec.GridSpec(3, 1, height_ratios=[2, 10, 2], hspace=0.2)
 
     # Create three subplots
     ax_ts = fig.add_subplot(gs[0])
