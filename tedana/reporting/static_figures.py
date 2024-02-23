@@ -233,6 +233,7 @@ def plot_component(
         draw_cross=False,
         annotate=False,
     )
+    display.annotate(size=20)
     example_ax = list(display.axes.values())[0]
     nilearn_fig = example_ax.ax.figure
 
@@ -253,16 +254,15 @@ def plot_component(
 
     # Create a new figure and gridspec
     fig = plt.figure(figsize=img_dims)
+    fig.suptitle(title, fontsize=30)
     gs = gridspec.GridSpec(3, 1, height_ratios=[1, 10, 1])
 
     # Create three subplots
     ax_ts = fig.add_subplot(gs[0])
     ax_ts.plot(component_timeseries, color=classification_color)
-    ax_ts.set_xlabel("TRs")
+    ax_ts.set_xlabel("Volume")
     ax_ts.set_xlim(0, component_timeseries.shape[0] - 1)
     ax_ts.set_yticks([])
-    title_ = ax_ts.set_title(title)
-    title_.set_y(1.5)
 
     ax_map = fig.add_subplot(gs[1])
     ax_map.axis("off")
@@ -270,6 +270,7 @@ def plot_component(
 
     ax_freq = fig.add_subplot(gs[2])
     ax_freq.plot(frequencies, power_spectrum, color=classification_color)
+    ax_freq.set_xlabel("Frequency (Hz)")
     ax_freq.set_xlim(0, frequencies.max())
     ax_freq.set_yticks([])
 
