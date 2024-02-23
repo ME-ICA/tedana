@@ -14,15 +14,8 @@
         "d_table_score",
         "countnoise"
     ],
-    "generated_metrics": [
-        "d_table_score_node20",
-        "varex kappa ratio"
-    ],
-    "intermediate_classifications": [
-        "provisionalaccept",
-        "provisionalreject",
-        "unclass_highvar"
-    ],
+    "generated_metrics": ["d_table_score_node20", "varex kappa ratio"],
+    "intermediate_classifications": ["provisionalaccept", "provisionalreject", "unclass_highvar"],
     "classification_tags": [
         "Likely BOLD",
         "Unlikely BOLD",
@@ -35,14 +28,8 @@
     "nodes": [
         {
             "functionname": "manual_classify",
-            "parameters": {
-                "new_classification": "unclassified",
-                "decide_comps": "all"
-            },
-            "kwargs": {
-                "clear_classification_tags": true,
-                "dont_warn_reclassify": true
-            },
+            "parameters": {"new_classification": "unclassified", "decide_comps": "all"},
+            "kwargs": {"clear_classification_tags": true, "dont_warn_reclassify": true},
             "_comment": "All components are initially labeled as 'unclassified'."
         },
         {
@@ -55,9 +42,7 @@
                 "left": "rho",
                 "right": "kappa"
             },
-            "kwargs": {
-                "tag_if_true": "Unlikely BOLD"
-            },
+            "kwargs": {"tag_if_true": "Unlikely BOLD"},
             "_comment": "The first four steps are for rejecting components that very unlikely to have substantial T2* signal. Any components with rho greater than kappa are rejected (Code I002 in premodularized tedana). Higher rho than kappa means that the component better fits the TE-independence (S0) model than the TE-dependence (T2*) model."
         },
         {
@@ -103,7 +88,7 @@
                 "right2": "median_varex",
                 "tag_if_true": "Unlikely BOLD"
             },
-            "_comment":  "Any components with higher S0 model beta map-F-statistic map Dice similarity index than T2 model beta map-F-statistic map Dice similarity index and greater than median variance explained are rejected. In slightly plainer English, this step rejects any high-variance components where significant voxels in the F-stat map overlap more with highly S0-associated voxels than T2*-associated voxels. (Code I004 in premodularized tedana)"
+            "_comment": "Any components with higher S0 model beta map-F-statistic map Dice similarity index than T2 model beta map-F-statistic map Dice similarity index and greater than median variance explained are rejected. In slightly plainer English, this step rejects any high-variance components where significant voxels in the F-stat map overlap more with highly S0-associated voxels than T2*-associated voxels. (Code I004 in premodularized tedana)"
         },
         {
             "functionname": "dec_left_op_right",
@@ -125,9 +110,7 @@
         },
         {
             "functionname": "calc_kappa_elbow",
-            "parameters": {
-                "decide_comps": "all"
-            },
+            "parameters": {"decide_comps": "all"},
             "_comment": "The kappa elbow is calculated from all components, for use in later steps."
         },
         {
@@ -140,13 +123,8 @@
         },
         {
             "functionname": "calc_rho_elbow",
-            "parameters": {
-                "decide_comps": "all"
-            },
-            "kwargs": {
-                "subset_decide_comps": "unclassified",
-                "rho_elbow_type": "kundu"
-            },
+            "parameters": {"decide_comps": "all"},
+            "kwargs": {"subset_decide_comps": "unclassified", "rho_elbow_type": "kundu"},
             "_comment": "This step determines the 'rho elbow' based on the rho values for all of the components, as well as just the unclassified components (excluding unclass_highvar). It calculates the elbow for each set of components, as well as the F-statistic threshold associated with p < 0.05 given the number of echoes, and then takes the mean of the three values."
         },
         {
@@ -166,9 +144,7 @@
             "parameters": {
                 "if_true": "unclassified",
                 "if_false": "nochange",
-                "decide_comps": [
-                    "provisionalaccept"
-                ],
+                "decide_comps": ["provisionalaccept"],
                 "op": ">",
                 "left": "rho",
                 "right": "rho_elbow_kundu"
@@ -179,11 +155,7 @@
             "functionname": "dec_classification_doesnt_exist",
             "parameters": {
                 "new_classification": "accepted",
-                "decide_comps": [
-                    "provisionalaccept",
-                    "unclassified",
-                    "unclass_highvar"
-                ],
+                "decide_comps": ["provisionalaccept", "unclassified", "unclass_highvar"],
                 "class_comp_exists": "provisionalaccept"
             },
             "kwargs": {
@@ -218,16 +190,12 @@
         },
         {
             "functionname": "calc_max_good_meanmetricrank",
-            "parameters": {
-                "decide_comps": "provisionalaccept"
-            },
+            "parameters": {"decide_comps": "provisionalaccept"},
             "_comment": "'max_good_meanmetricrank' is the number of provisionalaccept components * extend_factor"
         },
         {
             "functionname": "calc_varex_kappa_ratio",
-            "parameters": {
-                "decide_comps": "provisionalaccept"
-            },
+            "parameters": {"decide_comps": "provisionalaccept"},
             "_comment": "'varex kappa ratio' is a new column in the component table. It's calcualted from the provisionally accepted components and is the maximum kappa minus the minimum kappa, divided by the maximum variance explained minus the minimum variance explained."
         },
         {
@@ -235,11 +203,7 @@
             "parameters": {
                 "if_true": "rejected",
                 "if_false": "nochange",
-                "decide_comps": [
-                    "provisionalaccept",
-                    "unclassified",
-                    "unclass_highvar"
-                ],
+                "decide_comps": ["provisionalaccept", "unclassified", "unclass_highvar"],
                 "op": ">",
                 "left": "d_table_score",
                 "right": "max_good_meanmetricrank"
@@ -259,11 +223,7 @@
             "parameters": {
                 "if_true": "accepted",
                 "if_false": "nochange",
-                "decide_comps": [
-                    "provisionalaccept",
-                    "unclassified",
-                    "unclass_highvar"
-                ],
+                "decide_comps": ["provisionalaccept", "unclassified", "unclass_highvar"],
                 "op": ">",
                 "left": "d_table_score",
                 "right": "max_good_meanmetricrank"
@@ -284,15 +244,8 @@
             "functionname": "dec_classification_doesnt_exist",
             "parameters": {
                 "new_classification": "accepted",
-                "decide_comps": [
-                    "provisionalaccept",
-                    "unclassified",
-                    "unclass_highvar"
-                ],
-                "class_comp_exists": [
-                    "unclassified",
-                    "unclass_highvar"
-                ]
+                "decide_comps": ["provisionalaccept", "unclassified", "unclass_highvar"],
+                "class_comp_exists": ["unclassified", "unclass_highvar"]
             },
             "kwargs": {
                 "tag": "Likely BOLD",
@@ -303,11 +256,7 @@
         {
             "functionname": "calc_revised_meanmetricrank_guesses",
             "parameters": {
-                "decide_comps": [
-                    "provisionalaccept",
-                    "unclassified",
-                    "unclass_highvar"
-                ]
+                "decide_comps": ["provisionalaccept", "unclassified", "unclass_highvar"]
             },
             "_comment": "If any components are still labeled as unclassified or unclassified high-variance, then a revised decision table score is calculated from the provisionally accepted, unclassified, and unclassified high-variance components."
         },
@@ -316,11 +265,7 @@
             "parameters": {
                 "if_true": "provisionalreject",
                 "if_false": "nochange",
-                "decide_comps": [
-                    "provisionalaccept",
-                    "unclassified",
-                    "unclass_highvar"
-                ],
+                "decide_comps": ["provisionalaccept", "unclassified", "unclass_highvar"],
                 "op": ">",
                 "left": "d_table_score_node20",
                 "right": "conservative_guess"
@@ -377,9 +322,7 @@
                 "thresh_label": "new_lower",
                 "percentile_thresh": 25
             },
-            "kwargs": {
-                "num_highest_var_comps": "num_acc_guess"
-            },
+            "kwargs": {"num_highest_var_comps": "num_acc_guess"},
             "_comment": "An updated variance explained lower threshold (25th percentile) is calculated from the 'num_acc_guess' highest variance explained components among the remaining provisionally accepted, unclassified, and unclassified high-variance components."
         },
         {
@@ -432,28 +375,19 @@
         },
         {
             "functionname": "manual_classify",
-            "parameters": {
-                "new_classification": "rejected",
-                "decide_comps": "provisionalreject"
-            },
-            "kwargs": {
-                "log_extra_info": "Reject anything that is provisionalreject"
-            },
+            "parameters": {"new_classification": "rejected", "decide_comps": "provisionalreject"},
+            "kwargs": {"log_extra_info": "Reject anything that is provisionalreject"},
             "_comment": "Rejecting components that used to be midK. These were already assigned tags when given the provisionalreject label"
         },
         {
             "functionname": "manual_classify",
             "parameters": {
                 "new_classification": "accepted",
-                "decide_comps": [
-                    "provisionalaccept",
-                    "unclassified",
-                    "unclass_highvar"
-                ]
+                "decide_comps": ["provisionalaccept", "unclassified", "unclass_highvar"]
             },
             "kwargs": {
                 "tag": "Likely BOLD",
-                "log_extra_info": "Anything still provisional (accepted or unclassified) should be accepted"
+                "log_extra_info": "Anything still provisional accepted or unclassified should be accepted"
             },
             "_comment": "All remaining unclassified, unclassified high-variance, or provisionally accepted components are accepted."
         }

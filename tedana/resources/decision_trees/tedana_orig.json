@@ -361,7 +361,7 @@
             },
             "kwargs": {
                 "tag": "Likely BOLD",
-                "log_extra_info": "Anything still provisional (accepted or rejected) should be accepted"
+                "log_extra_info": "Anything still provisional (accepted or rejected) or unclassified should be accepted"
             },
             "_comment": "All remaining unclassified, unclassified high-variance, or provisionally accepted components are accepted."
         }
