@@ -82,11 +82,11 @@ tedana_orig decision tree
 
 Identical to the meica decision tree until node 21. In the tedana tree,
 components that cross the threshold criteria in nodes 21 and 22 are
-rejected and not included in a calculate for a new variance explained
+rejected and not included in the calculation for a new variance explained
 threshold in node 23. In the meica tree, those components are provisionally
 rejected, but still included in the new variance explained calculation and
 can be potentially accepted in nodes 24 and 25. This means tedana will give
-the same results at meica or reject additional components base on those two
+the same results as meica or reject additional components base on those two
 final decision criteria.
 
 .. image:: _static/decision_tree_tedana_orig.png

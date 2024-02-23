@@ -59,7 +59,6 @@ def automatic_selection(component_table, n_echos, n_vols, tree="tedana_orig"):
     """
     LGR.info("Performing ICA component selection")
 
-    # TODO Dynamically update citations
     RepLGR.info(
         "\n\nNext, component selection was performed to identify BOLD (TE-dependent) and "
         "non-BOLD (TE-independent) components using a decision tree."
