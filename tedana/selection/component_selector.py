@@ -48,9 +48,12 @@ def load_config(tree):
     if tree in DEFAULT_TREES:
         fname = op.join(get_resource_path(), "decision_trees", tree + ".json")
     elif tree == "kundu":
-        raise ValueError(
-            "The decision tree that used to be called kundu is now called tedana_orig"
+        LGR.warning(
+            "The decision tree that used to be called kundu is now called tedana_orig. "
+            "This will be run using tedana_orig"
         )
+        tree = "tedana_orig"
+        fname = op.join(get_resource_path(), "decision_trees", tree + ".json")
     else:
         fname = tree
 

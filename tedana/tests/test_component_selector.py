@@ -9,6 +9,7 @@ import pandas as pd
 import pytest
 
 from tedana.selection import component_selector
+from tedana.utils import get_resource_path
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -167,6 +168,15 @@ def test_load_config_succeeds():
     # The minimal tree should have an id of "minimal_decision_tree"
     tree = component_selector.load_config("minimal")
     assert tree["tree_id"] == "minimal_decision_tree"
+
+    # Load the meica tree as a json file rather than just the label
+    fname = op.join(get_resource_path(), "decision_trees", "meica.json")
+    tree = component_selector.load_config(fname)
+    assert tree["tree_id"] == "MEICA_decision_tree"
+
+    # If "kundu" is used as a tree, it should log a warning and output the tedana_orig tree
+    tree = component_selector.load_config("kundu")
+    assert tree["tree_id"] == "tedana_orig_decision_tree"
 
 
 def test_minimal():
