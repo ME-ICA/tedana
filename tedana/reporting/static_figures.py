@@ -233,7 +233,7 @@ def plot_component(
         draw_cross=False,
         annotate=False,
     )
-    display.annotate(size=24)
+    display.annotate(size=30)
     example_ax = list(display.axes.values())[0]
     nilearn_fig = example_ax.ax.figure
 
@@ -254,7 +254,7 @@ def plot_component(
 
     # Create a new figure and gridspec
     fig = plt.figure(figsize=img_dims)
-    fig.suptitle(title, fontsize=20)
+    fig.suptitle(title, fontsize=14)
     gs = gridspec.GridSpec(3, 1, height_ratios=[1, 10, 1], hspace=0.2)
 
     # Create three subplots
