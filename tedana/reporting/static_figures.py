@@ -233,7 +233,7 @@ def plot_component(
         draw_cross=False,
         annotate=False,
     )
-    display.annotate(size=20)
+    display.annotate(size=14)
     example_ax = list(display.axes.values())[0]
     nilearn_fig = example_ax.ax.figure
 
