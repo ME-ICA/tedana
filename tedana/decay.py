@@ -510,15 +510,15 @@ def model_fit_decay_ts(
         n_good_echoes = adaptive_mask[i_voxel]
         for j_vol in range(n_vols):
             if fitmode == "all":
-                s0_vol = s0
-                t2s_vol = t2s
+                s0_vol = s0[i_voxel]
+                t2s_vol = t2s[i_voxel]
             else:
-                s0_vol = s0[:, j_vol]
-                t2s_vol = t2s[:, j_vol]
+                s0_vol = s0[i_voxel, j_vol]
+                t2s_vol = t2s[i_voxel, j_vol]
 
             good_data = data[i_voxel, :n_good_echoes, j_vol]
             predicted_data = monoexponential(
-                tes=tes,
+                tes=tes[:n_good_echoes],
                 s0=s0_vol,
                 t2star=t2s_vol,
             )
