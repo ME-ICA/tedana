@@ -40,13 +40,6 @@ decide_comps : :obj:`str` or :obj:`list[str]`
 """
 
 docdict[
-    "log_extra_report"
-] = """
-log_extra_report : :obj:`str`
-    Additional text to the report log. Default="".
-"""
-
-docdict[
     "log_extra_info"
 ] = """
 log_extra_info : :obj:`str`
