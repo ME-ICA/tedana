@@ -7,6 +7,7 @@ import os.path as op
 import sys
 
 import numpy as np
+import pandas as pd
 from scipy import stats
 from threadpoolctl import threadpool_limits
 
@@ -302,6 +303,12 @@ def t2smap_workflow(
         s0=s0_limited,
         fitmode=fitmode,
     )
+    confounds_df = pd.DataFrame(
+        columns=["RMSE", "RMSE_stdev"],
+        data=np.column_stack((rmse_timeseries, rmse_sd_timeseries)),
+    )
+    io_generator.save_file(rmse_map, "rmse img")
+    io_generator.save_file(confounds_df, "confounds tsv")
 
     LGR.info("Computing optimal combination")
     # optimally combine data

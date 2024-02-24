@@ -5,6 +5,7 @@ import logging
 import numpy as np
 import scipy
 from scipy import stats
+from typing import List, Literal, Tuple
 
 from tedana import utils
 
@@ -462,23 +463,31 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
     return t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts
 
 
-def model_fit_decay_ts(*, data, tes, adaptive_mask, t2s, s0, fitmode):
+def model_fit_decay_ts(
+    *,
+    data: np.ndarray,
+    tes: List[float],
+    adaptive_mask: np.ndarray,
+    t2s: np.ndarray,
+    s0: np.ndarray,
+    fitmode: Literal["all", "ts"],
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Estimate model fit of voxel- and timepoint-wise monoexponential decay models to ``data``.
 
     Parameters
     ----------
-    data : (S x E x T) array_like
+    data : (S x E x T) :obj:`numpy.ndarray`
         Multi-echo data array, where `S` is samples, `E` is echos, and `T` is time.
     tes : (E,) :obj:`list`
         Echo times.
-    adaptive_mask : (S,) array_like
+    adaptive_mask : (S,) :obj:`numpy.ndarray`
         Array where each value indicates the number of echoes with good signal for that voxel.
         This mask may be thresholded; for example, with values less than 3 set to 0.
         For more information on thresholding, see :func:`~tedana.utils.make_adaptive_mask`.
-    t2s : (S [x T]) array_like
+    t2s : (S [x T]) :obj:`numpy.ndarray`
         Voxel-wise (and possibly volume-wise) T2* estimates from
         :func:`~tedana.decay.fit_decay_ts`.
-    s0 : (S [x T]) array_like
+    s0 : (S [x T]) :obj:`numpy.ndarray`
         Voxel-wise (and possibly volume-wise) S0 estimates from :func:`~tedana.decay.fit_decay_ts`.
     fitmode : {"fit", "all"}
         Whether the T2* and S0 estimates are volume-wise ("fit") or not ("all").

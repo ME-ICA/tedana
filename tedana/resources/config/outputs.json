@@ -15,6 +15,14 @@
         "orig": "ts_OC",
         "bidsv1.5.0": "desc-optcom_bold"
     },
+    "rmse img": {
+        "orig": "rmse",
+        "bidsv1.5.0": "desc-rmse_statmap"
+    },
+    "confounds tsv": {
+        "orig": "confounds",
+        "bidsv1.5.0": "desc-confounds_timeseries"
+    },
     "ICA components img": {
         "orig": "ica_components",
         "bidsv1.5.0": "desc-ICA_components"
