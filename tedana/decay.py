@@ -1,11 +1,11 @@
 """Functions to estimate S0 and T2* from multi-echo data."""
 
 import logging
+from typing import List, Literal, Tuple
 
 import numpy as np
 import scipy
 from scipy import stats
-from typing import List, Literal, Tuple
 
 from tedana import utils
 
@@ -524,7 +524,7 @@ def model_fit_decay_ts(
             )
             rmse[i_voxel, j_vol] = np.sqrt(np.mean((good_data - predicted_data) ** 2))
 
-    rmse_map = np.mean(rmse, axis=1)
-    rmse_timeseries = np.mean(rmse, axis=0)
-    rmse_sd_timeseries = np.std(rmse, axis=0)
+    rmse_map = np.nanmean(rmse, axis=1)
+    rmse_timeseries = np.nanmean(rmse, axis=0)
+    rmse_sd_timeseries = np.nanstd(rmse, axis=0)
     return rmse_map, rmse_timeseries, rmse_sd_timeseries
