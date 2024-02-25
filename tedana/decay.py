@@ -512,8 +512,8 @@ def model_fit_decay_ts(
         data_voxel = data[i_voxel, :n_good_echoes, :]
 
         if fitmode == "all":
-            s0_voxel = np.fill(data_voxel.shape[-1], s0[i_voxel])
-            t2s_voxel = np.fill(data_voxel.shape[-1], t2s[i_voxel])
+            s0_voxel = np.full(data_voxel.shape[-1], s0[i_voxel])
+            t2s_voxel = np.full(data_voxel.shape[-1], t2s[i_voxel])
         else:
             s0_voxel = s0[i_voxel, :]
             t2s_voxel = t2s[i_voxel, :]
