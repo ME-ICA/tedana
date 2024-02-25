@@ -304,7 +304,7 @@ def t2smap_workflow(
         fitmode=fitmode,
     )
     confounds_df = pd.DataFrame(
-        columns=["RMSE", "RMSE_stdev"],
+        columns=["rmse", "rmse_std"],
         data=np.column_stack((rmse_timeseries, rmse_sd_timeseries)),
     )
     io_generator.save_file(rmse_map, "rmse img")

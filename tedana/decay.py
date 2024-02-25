@@ -508,21 +508,22 @@ def model_fit_decay_ts(
     rmse = np.zeros([n_samples, n_vols])
     for i_voxel in range(n_samples):
         n_good_echoes = adaptive_mask[i_voxel]
-        for j_vol in range(n_vols):
-            if fitmode == "all":
-                s0_vol = s0[i_voxel]
-                t2s_vol = t2s[i_voxel]
-            else:
-                s0_vol = s0[i_voxel, j_vol]
-                t2s_vol = t2s[i_voxel, j_vol]
 
-            good_data = data[i_voxel, :n_good_echoes, j_vol]
-            predicted_data = monoexponential(
-                tes=tes[:n_good_echoes],
-                s0=s0_vol,
-                t2star=t2s_vol,
-            )
-            rmse[i_voxel, j_vol] = np.sqrt(np.mean((good_data - predicted_data) ** 2))
+        data_voxel = data[i_voxel, :n_good_echoes, :]
+
+        if fitmode == "all":
+            s0_voxel = np.fill(data_voxel.shape[-1], s0[i_voxel])
+            t2s_voxel = np.fill(data_voxel.shape[-1], t2s[i_voxel])
+        else:
+            s0_voxel = s0[i_voxel, :]
+            t2s_voxel = t2s[i_voxel, :]
+
+        predicted_data = monoexponential(
+            tes=tes[:n_good_echoes],
+            s0=s0_voxel,
+            t2star=t2s_voxel,
+        )
+        rmse[i_voxel, :] = np.sqrt(np.mean((data_voxel - predicted_data) ** 2))
 
     rmse_map = np.nanmean(rmse, axis=1)
     rmse_timeseries = np.nanmean(rmse, axis=0)
