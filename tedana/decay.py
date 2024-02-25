@@ -524,11 +524,8 @@ def model_fit_decay_ts(
             s0=s0_voxel[None, :],
             t2star=t2s_voxel[None, :],
         )
-        print()
-        print(predicted_data)
-        print(data_voxel)
-        print()
         rmse[i_voxel, :] = np.sqrt(np.mean((data_voxel - predicted_data) ** 2))
+        print(rmse[i_voxel, :])
 
     rmse_map = np.nanmean(rmse, axis=1)
     rmse_timeseries = np.nanmean(rmse, axis=0)
