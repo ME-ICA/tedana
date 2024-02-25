@@ -6,6 +6,7 @@ from typing import List, Literal, Tuple
 import numpy as np
 import scipy
 from scipy import stats
+from tqdm.auto import tqdm
 
 from tedana import utils
 
@@ -113,7 +114,7 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True):
             "estimate T2* and S0. In cases of model fit failure, T2*/S0 "
             "estimates from the log-linear fit were retained instead."
         )
-    n_samp, n_echos, n_vols = data_cat.shape
+    n_samp, _, n_vols = data_cat.shape
 
     # Currently unused
     # fit_data = np.mean(data_cat, axis=2)
@@ -152,7 +153,7 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True):
         # perform a monoexponential fit of echo times against MR signal
         # using loglin estimates as initial starting points for fit
         fail_count = 0
-        for voxel in voxel_idx:
+        for voxel in tqdm(voxel_idx, desc=f"{echo_num}-echo monoexponential"):
             try:
                 popt, cov = scipy.optimize.curve_fit(
                     monoexponential,
@@ -506,7 +507,7 @@ def model_fit_decay_ts(
     tes = np.array(tes)
 
     rmse = np.zeros([n_samples, n_vols])
-    for i_voxel in range(n_samples):
+    for i_voxel in tqdm(range(n_samples)):
         n_good_echoes = adaptive_mask[i_voxel]
 
         data_voxel = data[i_voxel, :n_good_echoes, :]
