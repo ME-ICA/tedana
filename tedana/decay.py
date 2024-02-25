@@ -519,9 +519,9 @@ def model_fit_decay_ts(
             t2s_voxel = t2s[i_voxel, :]
 
         predicted_data = monoexponential(
-            tes=tes[:n_good_echoes],
-            s0=s0_voxel,
-            t2star=t2s_voxel,
+            tes=tes[:n_good_echoes, None],
+            s0=s0_voxel[None, :],
+            t2star=t2s_voxel[None, :],
         )
         rmse[i_voxel, :] = np.sqrt(np.mean((data_voxel - predicted_data) ** 2))
 
