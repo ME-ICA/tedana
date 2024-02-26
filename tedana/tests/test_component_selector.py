@@ -296,7 +296,7 @@ def test_selector_properties_smoke():
     """Tests to confirm properties match expected results."""
 
     selector = component_selector.ComponentSelector(tree="minimal")
-    selector.select(component_table=sample_comptable())
+    selector.select(component_table=sample_comptable(), cross_component_metrics={"n_echos": 3})
 
     assert selector.n_comps_ == 21
 
