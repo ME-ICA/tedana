@@ -10,7 +10,7 @@ RepLGR = logging.getLogger("REPORT")
 
 
 def automatic_selection(
-    component_table, n_echos, n_vols, tree="kundu", external_regressor_dict=None
+    component_table, n_echos, n_vols, tree="kundu", external_regressor_config=None
 ):
     """Classify components based on component table and decision tree type.
 
@@ -22,7 +22,7 @@ def automatic_selection(
         The number of echoes in this dataset
     tree : :obj:`str`
         The type of tree to use for the ComponentSelector object. Default="kundu"
-    external_regressor_dict : :obj:`dict`
+    external_regressor_config : :obj:`dict`
         Information describing the external regressors and
         method to use for fitting and statistical tests
 
@@ -74,7 +74,7 @@ def automatic_selection(
         tree,
         component_table,
         cross_component_metrics=xcomp,
-        external_regressor_dict=external_regressor_dict,
+        external_regressor_config=external_regressor_config,
     )
     selector.select()
     selector.metadata = collect.get_metadata(selector.component_table)

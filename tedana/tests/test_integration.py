@@ -414,7 +414,7 @@ def test_integration_three_echo_external_regressors_corr(skip_integration):
         external_regressors=resource_filename(
             "tedana", "tests/data/external_regress_corr_3echo.tsv"
         ),
-        external_regressor_dict="corr_detrend",
+        external_regressor_config="corr_detrend",
         low_mem=True,
         tedpca="aic",
     )
@@ -466,8 +466,8 @@ def test_integration_three_echo_external_regressors_fstat(skip_integration):
         external_regressors=resource_filename(
             "tedana", "tests/data/external_regress_Ftest_3echo.tsv"
         ),
-        # external_regressor_dict="Mot12_CSF",
-        external_regressor_dict="Fmodel",
+        # external_regressor_config="Mot12_CSF",
+        external_regressor_config="Fmodel",
         low_mem=True,
         tedpca="aic",
     )

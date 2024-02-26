@@ -120,7 +120,7 @@
         "external fit": [
             "mixing",
             "external_regressors",
-            "external_regressor_dict"
+            "external_regressor_config"
         ]
     }
 }

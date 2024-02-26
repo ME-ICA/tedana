@@ -22,7 +22,7 @@ class RegressError(Exception):
     pass
 
 
-def load_validate_external_regressors(external_regressors, external_regressor_dict, n_time):
+def load_validate_external_regressors(external_regressors, external_regressor_config, n_time):
     """
     Load and validate external regressors and descriptors in dictionary.
 
@@ -30,7 +30,7 @@ def load_validate_external_regressors(external_regressors, external_regressor_di
     ----------
     external_regressors: :obj:`str`
         Path and name of tsv file that includes external regressor time series
-    external_regressor_dict: :obj:`str`
+    external_regressor_config: :obj:`str`
         An included dictionary name or path to a JSON file that defines one.
         This contains expected column labels for the regressors,
         how the regressors can be grouped together, and what statistical
@@ -43,23 +43,23 @@ def load_validate_external_regressors(external_regressors, external_regressor_di
     external_regressors: :obj:`pandas.DataFrame`
         Each column is a labelled regressor and the number of rows should
         match the number of timepoints in the fMRI time series
-    external_regressor_dict : :obj:`dict`
+    external_regressor_config : :obj:`dict`
         A validated dictionary with info for fitting external regressors
         to component time series
     """
-    LGR.info(f"Loading external regressor dictionary: {external_regressor_dict}")
-    external_regressor_dict = load_external_regressor_dict(external_regressor_dict)
+    LGR.info(f"Loading external regressor dictionary: {external_regressor_config}")
+    external_regressor_config = load_external_regressor_config(external_regressor_config)
     try:
         external_regressors = pd.read_table(external_regressors)
     except FileNotFoundError:
         raise ValueError(f"Cannot load tsv file with external regressors: {external_regressors}")
 
-    validate_extern_regress(external_regressors, external_regressor_dict, n_time)
+    validate_extern_regress(external_regressors, external_regressor_config, n_time)
 
-    return external_regressors, external_regressor_dict
+    return external_regressors, external_regressor_config
 
 
-def load_external_regressor_dict(external_regressor_dict):
+def load_external_regressor_config(external_regressor_config):
     """
     Load and validate external regressor dictionary.
 
@@ -72,38 +72,38 @@ def load_external_regressor_dict(external_regressor_dict):
 
     Returns
     -------
-    external_regressor_dict : :obj:`dict`
+    external_regressor_config : :obj:`dict`
         A validated dictionary for fitting external regressors to component time series
     """
-    if external_regressor_dict in DEFAULT_REGRESSOR_DICTS:
+    if external_regressor_config in DEFAULT_REGRESSOR_DICTS:
         fname = op.join(
-            get_resource_path(), "extern_regress_dicts", external_regressor_dict + ".json"
+            get_resource_path(), "external_regressor_configs", external_regressor_config + ".json"
         )
     else:
-        fname = external_regressor_dict
+        fname = external_regressor_config
 
     try:
-        external_regressor_dict = load_json(fname)
+        external_regressor_config = load_json(fname)
     except FileNotFoundError:
         raise ValueError(
-            f"Cannot find external regressor dictionary {external_regressor_dict}. "
+            f"Cannot find external regressor dictionary {external_regressor_config}. "
             "Please check your path or use a "
             f"default dictionary: ({DEFAULT_REGRESSOR_DICTS})."
         )
     except IsADirectoryError:
         raise ValueError(
-            f"{external_regressor_dict} is a directory. Please supply a JSON file or "
+            f"{external_regressor_config} is a directory. Please supply a JSON file or "
             f"default dictionary: ({DEFAULT_REGRESSOR_DICTS})."
         )
 
-    return external_regressor_dict
+    return external_regressor_config
 
 
-def validate_extern_regress(external_regressors, external_regressor_dict, n_time):
+def validate_extern_regress(external_regressors, external_regressor_config, n_time):
     """
     Confirm that provided external regressor dictionary is valid and matches data.
 
-    Checks if expected keys are in external_regressor_dict.
+    Checks if expected keys are in external_regressor_config.
     Checks if any regressor labels in the dictionary are specified in the
     user-defined external_regressors
     Checks if the number of time points in the external regressors matches
@@ -114,7 +114,7 @@ def validate_extern_regress(external_regressors, external_regressor_dict, n_time
     external_regressors : :obj:`pandas.DataFrame`
         Each column is a labelled regressor and the number of rows should
         match the number of timepoints in the fMRI time series
-    external_regressor_dict : :obj:`dict`
+    external_regressor_config : :obj:`dict`
         Information describing the external regressors and
         method to use for fitting and statistical tests
     n_time : :obj:`int`
@@ -137,33 +137,33 @@ def validate_extern_regress(external_regressors, external_regressor_dict, n_time
     # default_decide_comps = {"all", "accepted", "rejected", "unclassified"}
 
     # Confirm that the required fields exist
-    missing_keys = dict_expected_keys - set(external_regressor_dict.keys())
+    missing_keys = dict_expected_keys - set(external_regressor_config.keys())
     if missing_keys:
         # If there are missing keys, this function may crash before the end.
         # End function here with a clear error message rather than adding
-        # `if assert external_regressor_dict.get()` statements before every section
+        # `if assert external_regressor_config.get()` statements before every section
         err_msg += f"External regressor dictionary missing required fields: {missing_keys}\n"
 
-    if external_regressor_dict["calc_stats"].lower() not in calc_stats_key_options:
+    if external_regressor_config["calc_stats"].lower() not in calc_stats_key_options:
         err_msg += (
-            "calc_stats in external_regressor_dict is "
-            f"{external_regressor_dict['calc_stats']}. It must be one of the following "
+            "calc_stats in external_regressor_config is "
+            f"{external_regressor_config['calc_stats']}. It must be one of the following "
             f"{calc_stats_key_options}\n"
         )
 
-    if (external_regressor_dict["calc_stats"].lower() != "f") and (
-        "f_stats_partial_models" in set(external_regressor_dict.keys())
+    if (external_regressor_config["calc_stats"].lower() != "f") and (
+        "f_stats_partial_models" in set(external_regressor_config.keys())
     ):
         err_msg += (
             "External regressor dictionary cannot include"
             "f_stats_partial_models if calc_stats is not F\n"
         )
 
-    if "f_stats_partial_models" in set(external_regressor_dict.keys()):
+    if "f_stats_partial_models" in set(external_regressor_config.keys()):
         dict_expected_keys.add("f_stats_partial_models")
-        dict_expected_keys.update(set(external_regressor_dict["f_stats_partial_models"]))
-        missing_partial_models = set(external_regressor_dict["f_stats_partial_models"]) - set(
-            external_regressor_dict.keys()
+        dict_expected_keys.update(set(external_regressor_config["f_stats_partial_models"]))
+        missing_partial_models = set(external_regressor_config["f_stats_partial_models"]) - set(
+            external_regressor_config.keys()
         )
         if missing_partial_models:
             raise RegressError(
@@ -173,22 +173,22 @@ def validate_extern_regress(external_regressors, external_regressor_dict, n_time
             )
 
     # Warn if unused fields exist
-    unused_keys = set(external_regressor_dict.keys()) - set(dict_expected_keys)
+    unused_keys = set(external_regressor_config.keys()) - set(dict_expected_keys)
     if unused_keys:
         LGR.warning(
             "External regressor dictionary includes fields that "
             f"are not used or logged {unused_keys}"
         )
 
-    # Validating the information in external_regressor_dict works
+    # Validating the information in external_regressor_config works
     # with the data in external_regressors
 
     # Currently column labels only need to be predefined for calc_stats==F
-    if "f_stats_partial_models" in set(external_regressor_dict.keys()):
+    if "f_stats_partial_models" in set(external_regressor_config.keys()):
         regressor_names = set(external_regressors.columns)
         expected_regressor_names = set()
-        for partial_models in external_regressor_dict["f_stats_partial_models"]:
-            tmp_names = set(external_regressor_dict[partial_models])
+        for partial_models in external_regressor_config["f_stats_partial_models"]:
+            tmp_names = set(external_regressor_config[partial_models])
             if expected_regressor_names - tmp_names:
                 LGR.warning(
                     "External regressors used in more than one partial model: "
@@ -222,12 +222,12 @@ def validate_extern_regress(external_regressors, external_regressor_dict, n_time
             raise RegressError(err_msg)
 
 
-def fit_regressors(comptable, external_regressors, external_regressor_dict, mixing):
+def fit_regressors(comptable, external_regressors, external_regressor_config, mixing):
     """
     Fit regressors to the mixing matrix.
 
     Uses correlation or F statistics in a linear model depending on the calc_stats
-    value in external_regressor_dict
+    value in external_regressor_config
 
     Parameters
     ----------
@@ -237,7 +237,7 @@ def fit_regressors(comptable, external_regressors, external_regressor_dict, mixi
     external_regressors : :obj:`pandas.DataFrame`
         Each column is a labelled regressor and the number of rows should
         match the number of timepoints in the fMRI time series
-    external_regressor_dict : :obj:`dict`
+    external_regressor_config : :obj:`dict`
         Information describing the external regressors and
         method to use for fitting and statistical tests
     mixing : (T x C) array_like
@@ -254,29 +254,29 @@ def fit_regressors(comptable, external_regressors, external_regressor_dict, mixi
 
     # If the order of polynomial detrending is specified, then pass to make_detrend_regressors
     # otherwise the function sets a detrending polynomial order
-    if external_regressor_dict["detrend"] is True:
+    if external_regressor_config["detrend"] is True:
         detrend_regressors = make_detrend_regressors(n_time, polort=None)
     elif (
-        isinstance(external_regressor_dict["detrend"], int)
-        and external_regressor_dict["detrend"] > 0
+        isinstance(external_regressor_config["detrend"], int)
+        and external_regressor_config["detrend"] > 0
     ):
         detrend_regressors = make_detrend_regressors(
-            n_time, polort=external_regressor_dict["detrend"]
+            n_time, polort=external_regressor_config["detrend"]
         )
     else:
         LGR.warning("External regressor fitting applied without detrending fMRI time series")
 
-    if external_regressor_dict["calc_stats"].lower() == "corr":
+    if external_regressor_config["calc_stats"].lower() == "corr":
         if "detrend_regressors" not in locals():
             # set detrend regressors to None if it doesn't exist
             detrend_regressors = None
         comptable = correlate_regressors(
             comptable, external_regressors, mixing, detrend_regressors=detrend_regressors
         )
-    elif external_regressor_dict["calc_stats"].lower() == "f":
+    elif external_regressor_config["calc_stats"].lower() == "f":
         # external_regressors = pd.concat([external_regressors, detrend_regressors])
         comptable = fit_mixing_to_regressors(
-            comptable, external_regressors, external_regressor_dict, mixing, detrend_regressors
+            comptable, external_regressors, external_regressor_config, mixing, detrend_regressors
         )
 
     return comptable
@@ -338,7 +338,7 @@ def make_detrend_regressors(n_time, polort=None):
 def fit_mixing_to_regressors(
     comptable,
     external_regressors,
-    external_regressor_dict,
+    external_regressor_config,
     mixing,
     detrend_regressors,
 ):
@@ -359,7 +359,7 @@ def fit_mixing_to_regressors(
     external_regressors : :obj:`pandas.DataFrame`
         Each column is a labelled regressor and the number of rows should
         match the number of timepoints in the fMRI time series
-    external_regressor_dict : :obj:`dict`
+    external_regressor_config : :obj:`dict`
         Information describing the external regressors and
         method to use for fitting and statistical tests
     mixing : (T x C) array_like
@@ -388,7 +388,7 @@ def fit_mixing_to_regressors(
     #  EXCEPT the category of interest. For example, there will also be a field for "no Motion"
     #  which contains all regressors in the full model except those that model motion
     regressor_models = build_fstat_regressor_models(
-        external_regressors, external_regressor_dict, detrend_regressors
+        external_regressors, external_regressor_config, detrend_regressors
     )
 
     # This is the test for the fit of the full model vs the polort detrending baseline
@@ -410,8 +410,8 @@ def fit_mixing_to_regressors(
     r2_vals = pd.DataFrame(data=r2_vals_tmp, columns=["R2stat Full Model"])
 
     # Test the fits between the full model and the full model excluding one category of regressor
-    if "f_stats_partial_models" in external_regressor_dict.keys():
-        for pmodel in external_regressor_dict["f_stats_partial_models"]:
+    if "f_stats_partial_models" in external_regressor_config.keys():
+        for pmodel in external_regressor_config["f_stats_partial_models"]:
             _, f_vals_tmp, p_vals_tmp, r2_vals_tmp = fit_model_with_stats(
                 mixing, regressor_models, f"no {pmodel}"
             )
@@ -425,7 +425,9 @@ def fit_mixing_to_regressors(
     return comptable
 
 
-def build_fstat_regressor_models(external_regressors, external_regressor_dict, detrend_regressors):
+def build_fstat_regressor_models(
+    external_regressors, external_regressor_config, detrend_regressors
+):
     """
     Combine detrending all or subsets of external regressors to make models to fit and test.
 
@@ -434,7 +436,7 @@ def build_fstat_regressor_models(external_regressors, external_regressor_dict, d
     external_regressors : :obj:`pandas.DataFrame`
         Each column is a labelled regressor and the number of rows should
         match the number of timepoints in the fMRI time series
-    external_regressor_dict : :obj:`dict`
+    external_regressor_config : :obj:`dict`
         Information describing the external regressors and
         method to use for fitting and statistical tests
     detrend_regressors: (n_time x polort) :obj:`pandas.DataFrame`
@@ -447,7 +449,7 @@ def build_fstat_regressor_models(external_regressors, external_regressor_dict, d
         regressor model. The models that are always included are 'base' which is just the
         detrending regressors, and 'full' which is all user-provided external regressors and
         the detrending regressors. If there are partial models that are named in
-        external_regressor_dict["f_stats_partial_models"] then each of those will have a
+        external_regressor_config["f_stats_partial_models"] then each of those will have a
         dictionary element named "no" then model name and the regressors included will be
         everything except the specified regressors. That is "no motion" will include all
         regressors except the motion regressors. This is for the F test which compares
@@ -455,8 +457,8 @@ def build_fstat_regressor_models(external_regressors, external_regressor_dict, d
         regressors-of-interest for the partial model are removed.
     """
     # The category titles to group each regressor
-    if "f_stats_partial_models" in external_regressor_dict:
-        partial_models = external_regressor_dict["f_stats_partial_models"]
+    if "f_stats_partial_models" in external_regressor_config:
+        partial_models = external_regressor_config["f_stats_partial_models"]
     else:
         partial_models = []
 
@@ -475,7 +477,7 @@ def build_fstat_regressor_models(external_regressors, external_regressor_dict, d
         # For F statistics, the other models to test are those that include everything EXCEPT
         # the category of interest
         # That is "no motion" should contain the full model excluding motion regressors
-        keep_labels = set(regressor_labels) - set(external_regressor_dict[pmodel])
+        keep_labels = set(regressor_labels) - set(external_regressor_config[pmodel])
         no_pmodel = f"no {pmodel}"
         regressor_models[no_pmodel] = detrend_regressors_arr
         for keep_label in keep_labels:

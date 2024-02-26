@@ -177,7 +177,7 @@ def _get_parser():
     )
     optional.add_argument(
         "--external_labels",
-        dest="external_regressor_dict",
+        dest="external_regressor_config",
         help=(
             "Column labels for external regressors & statistical tests to compare be used in the "
             "decision tree. Either the path and name of a json file or a packaged tree (Mot12_CSF)"
@@ -344,7 +344,7 @@ def tedana_workflow(
     combmode="t2s",
     tree="kundu",
     external_regressors=None,
-    external_regressor_dict=None,
+    external_regressor_config=None,
     tedpca="aic",
     fixed_seed=42,
     maxit=500,
@@ -533,17 +533,17 @@ def tedana_workflow(
     # Decided to do the validation here so that, if there are issues, an error
     #  will be raised before PCA/ICA
     if external_regressors:
-        if external_regressor_dict:
+        if external_regressor_config:
             (
                 external_regressors,
-                external_regressor_dict,
+                external_regressor_config,
             ) = metrics.external_regressor_fits.load_validate_external_regressors(
-                external_regressors, external_regressor_dict, catd.shape[2]
+                external_regressors, external_regressor_config, catd.shape[2]
             )
         else:
             raise ValueError(
                 "If external_regressors is an input, then "
-                "external_regressor_dict also needs to be used."
+                "external_regressor_config also needs to be used."
             )
 
     io_generator = io.OutputGenerator(
@@ -728,7 +728,7 @@ def tedana_workflow(
                 "d_table_score",
             ]
 
-            comptable, external_regressor_dict = metrics.collect.generate_metrics(
+            comptable, external_regressor_config = metrics.collect.generate_metrics(
                 data_cat=catd,
                 data_optcom=data_oc,
                 mixing=mmix,
@@ -737,7 +737,7 @@ def tedana_workflow(
                 io_generator=io_generator,
                 label="ICA",
                 external_regressors=external_regressors,
-                external_regressor_dict=external_regressor_dict,
+                external_regressor_config=external_regressor_config,
                 metrics=required_metrics,
             )
             ica_selector = selection.automatic_selection(
@@ -745,7 +745,7 @@ def tedana_workflow(
                 n_echos,
                 n_vols,
                 tree=tree,
-                external_regressor_dict=external_regressor_dict,
+                external_regressor_config=external_regressor_config,
             )
             n_likely_bold_comps = ica_selector.n_likely_bold_comps
             if (n_restarts < maxrestart) and (n_likely_bold_comps == 0):
@@ -780,7 +780,7 @@ def tedana_workflow(
             "normalized variance explained",
             "d_table_score",
         ]
-        comptable, external_regressor_dict = metrics.collect.generate_metrics(
+        comptable, external_regressor_config = metrics.collect.generate_metrics(
             data_cat=catd,
             data_optcom=data_oc,
             mixing=mmix,
@@ -789,7 +789,7 @@ def tedana_workflow(
             io_generator=io_generator,
             label="ICA",
             external_regressors=external_regressors,
-            external_regressor_dict=external_regressor_dict,
+            external_regressor_config=external_regressor_config,
             metrics=required_metrics,
         )
         ica_selector = selection.automatic_selection(

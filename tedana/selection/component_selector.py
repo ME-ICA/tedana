@@ -223,7 +223,7 @@ class ComponentSelector:
         component_table,
         cross_component_metrics={},
         status_table=None,
-        external_regressor_dict=None,
+        external_regressor_config=None,
     ):
         """Initialize the class using the info specified in the json file ``tree``.
 
@@ -241,7 +241,7 @@ class ComponentSelector:
             A table tracking the status of each component at each step.
             Pass a status table if running additional steps on a decision
             tree that was already executed. Default=None.
-        external_regressor_dict : :obj:`dict`
+        external_regressor_config : :obj:`dict`
             Information describing the external regressors and
             method to use for fitting and statistical tests
 
@@ -296,8 +296,8 @@ class ComponentSelector:
         LGR.info("Performing component selection with " + tree_config["tree_id"])
         LGR.info(tree_config.get("info", ""))
         RepLGR.info(tree_config.get("report", ""))
-        if external_regressor_dict is not None:
-            RepLGR.info(external_regressor_dict["report"])
+        if external_regressor_config is not None:
+            RepLGR.info(external_regressor_config["report"])
 
         self.tree["nodes"] = tree_config["nodes"]
         self.necessary_metrics = set(tree_config["necessary_metrics"])

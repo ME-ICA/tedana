@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from tedana import io, utils
-from tedana.metrics import dependence, external_regressor_fits
+from tedana.metrics import dependence, external
 from tedana.metrics._utils import dependency_resolver, determine_signs, flip_components
 from tedana.stats import getfbounds
 
@@ -25,7 +25,7 @@ def generate_metrics(
     io_generator,
     label,
     external_regressors=None,
-    external_regressor_dict=None,
+    external_regressor_config=None,
     metrics=None,
 ):
     """Fit TE-dependence and -independence models to components.
@@ -53,7 +53,7 @@ def generate_metrics(
     external_regressors : None or :obj:`pandas.DataFrame`, optional
         External regressors (e.g., motion parameters, physiological noise) to correlate with
         ICA components. If None, no external regressor metrics will be calculated.
-    external_regressor_dict : :obj:`dict`
+    external_regressor_config : :obj:`dict`
         A dictionary for defining how to fit external regressors to component time series
     metrics : list
         List of metrics to return
@@ -63,7 +63,7 @@ def generate_metrics(
     comptable : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index is the component number.
-    external_regressor_dict : :obj:`dict`
+    external_regressor_config : :obj:`dict`
         Information describing the external regressors and
         method used for fitting and statistical tests (or None if none were inputed)
     """
@@ -75,10 +75,10 @@ def generate_metrics(
         metrics = ["map weight"]
 
     if external_regressors is not None:
-        if external_regressor_dict is None:
+        if external_regressor_config is None:
             raise ValueError(
                 "If external_regressors is defined, then "
-                "external_regressor_dict also needs to be defined."
+                "external_regressor_config also needs to be defined."
             )
         metrics.append("external fit")
 
@@ -344,8 +344,8 @@ def generate_metrics(
     if "external fit" in required_metrics:
         # external_regressor_names = external_regressors.columns.tolist()
         LGR.info("Calculating external regressor fits")
-        comptable = external_regressor_fits.fit_regressors(
-            comptable, external_regressors, external_regressor_dict, mixing
+        comptable = external.fit_regressors(
+            comptable, external_regressors, external_regressor_config, mixing
         )
         # for col in external_regressor_names:
         #     external_regressor_arr = external_regressors[col].values
@@ -414,7 +414,7 @@ def generate_metrics(
     other_columns = [col for col in comptable.columns if col not in preferred_order]
     comptable = comptable[first_columns + other_columns]
 
-    return comptable, external_regressor_dict
+    return comptable, external_regressor_config
 
 
 def get_metadata(comptable):
