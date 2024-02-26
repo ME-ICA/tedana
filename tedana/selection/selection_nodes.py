@@ -19,7 +19,6 @@ from tedana.selection.selection_utils import (
 )
 
 LGR = logging.getLogger("GENERAL")
-RepLGR = logging.getLogger("REPORT")
 
 
 @fill_doc
@@ -28,7 +27,6 @@ def manual_classify(
     decide_comps,
     new_classification,
     clear_classification_tags=False,
-    log_extra_report="",
     log_extra_info="",
     custom_node_label="",
     only_used_metrics=False,
@@ -61,7 +59,6 @@ def manual_classify(
         (Useful if manual_classify is used to reset all labels to unclassified).
         Default=False
     %(log_extra_info)s
-    %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
 
@@ -107,8 +104,6 @@ def manual_classify(
     LGR.info(f"{function_name_idx}: {outputs['node_label']} ")
     if log_extra_info:
         LGR.info(f"{function_name_idx} {log_extra_info}")
-    if log_extra_report:
-        RepLGR.info(log_extra_report)
 
     comps2use = selectcomps2use(selector, decide_comps)
 
@@ -166,7 +161,6 @@ def dec_left_op_right(
     right3=None,
     left3_scale=1,
     right3_scale=1,
-    log_extra_report="",
     log_extra_info="",
     custom_node_label="",
     only_used_metrics=False,
@@ -207,7 +201,6 @@ def dec_left_op_right(
         (left_scale*)left op (right_scale*right) AND (left2_scale*)left2 op2 (right2_scale*right2)
         if the "3" parameters are also defined then it's the intersection of all 3 statements
     %(log_extra_info)s
-    %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
     %(tag_if_true)s
@@ -322,7 +315,7 @@ def dec_left_op_right(
         if val_scale == 1:
             return val
         else:
-            return f"{round(val_scale,2)}*{val}"
+            return f"{round(val_scale, 2)}*{val}"
 
     left_scale, left, right_scale, right = confirm_valid_conditional(
         left_scale, left, right_scale, right, op
@@ -396,8 +389,6 @@ def dec_left_op_right(
     LGR.info(f"{function_name_idx}: {if_true} if {outputs['node_label']}, else {if_false}")
     if log_extra_info:
         LGR.info(f"{function_name_idx} {log_extra_info}")
-    if log_extra_report:
-        RepLGR.info(log_extra_report)
 
     confirm_metrics_exist(
         selector.component_table, outputs["used_metrics"], function_name=function_name_idx
@@ -480,7 +471,6 @@ def dec_variance_lessthan_thresholds(
     var_metric="variance explained",
     single_comp_threshold=0.1,
     all_comp_threshold=1.0,
-    log_extra_report="",
     log_extra_info="",
     custom_node_label="",
     only_used_metrics=False,
@@ -511,7 +501,6 @@ def dec_variance_lessthan_thresholds(
         The number of the variance for all components less than single_comp_threshold
         needs to be under this threshold. Default=1.0
     %(log_extra_info)s
-    %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
     %(tag_if_true)s
@@ -544,8 +533,6 @@ def dec_variance_lessthan_thresholds(
     LGR.info(f"{function_name_idx}: {if_true} if {outputs['node_label']}, else {if_false}")
     if log_extra_info:
         LGR.info(f"{function_name_idx} {log_extra_info}")
-    if log_extra_report:
-        RepLGR.info(log_extra_report)
 
     comps2use = selectcomps2use(selector, decide_comps)
     confirm_metrics_exist(
@@ -605,7 +592,6 @@ def calc_median(
     decide_comps,
     metric_name,
     median_label,
-    log_extra_report="",
     log_extra_info="",
     custom_node_label="",
     only_used_metrics=False,
@@ -622,7 +608,6 @@ def calc_median(
     median_label : :obj:`str`
         The median will be saved in "median_(median_label)"
     %(log_extra_info)s
-    %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
 
@@ -668,8 +653,6 @@ def calc_median(
     LGR.info(f"{function_name_idx}: {outputs['node_label']}")
     if log_extra_info:
         LGR.info(f"{function_name_idx} {log_extra_info}")
-    if log_extra_report:
-        RepLGR.info(log_extra_report)
 
     comps2use = selectcomps2use(selector, decide_comps)
     confirm_metrics_exist(
@@ -698,7 +681,6 @@ def calc_median(
 def calc_kappa_elbow(
     selector,
     decide_comps,
-    log_extra_report="",
     log_extra_info="",
     custom_node_label="",
     only_used_metrics=False,
@@ -710,7 +692,6 @@ def calc_kappa_elbow(
     %(selector)s
     %(decide_comps)s
     %(log_extra_info)s
-    %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
 
@@ -776,8 +757,6 @@ def calc_kappa_elbow(
     LGR.info(f"{function_name_idx}: {outputs['node_label']}")
     if log_extra_info:
         LGR.info(f"{function_name_idx} {log_extra_info}")
-    if log_extra_report:
-        RepLGR.info(log_extra_report)
 
     comps2use = selectcomps2use(selector, decide_comps)
     confirm_metrics_exist(
@@ -815,7 +794,6 @@ def calc_rho_elbow(
     decide_comps,
     subset_decide_comps="unclassified",
     rho_elbow_type="kundu",
-    log_extra_report="",
     log_extra_info="",
     custom_node_label="",
     only_used_metrics=False,
@@ -835,7 +813,6 @@ def calc_rho_elbow(
         The algorithm used to calculate the rho elbow. Current options are:
         'kundu' and 'liberal'. Default='kundu'.
     %(log_extra_info)s
-    %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
 
@@ -855,9 +832,9 @@ def calc_rho_elbow(
     """
     function_name_idx = f"Step {selector.current_node_idx}: calc_rho_elbow"
 
-    if rho_elbow_type == "kundu".lower():
+    if rho_elbow_type == "kundu":
         elbow_name = "rho_elbow_kundu"
-    elif rho_elbow_type == "liberal".lower():
+    elif rho_elbow_type == "liberal":
         elbow_name = "rho_elbow_liberal"
     else:
         raise ValueError(
@@ -901,8 +878,6 @@ def calc_rho_elbow(
     LGR.info(f"{function_name_idx}: {outputs['node_label']}")
     if log_extra_info:
         LGR.info(f"{function_name_idx} {log_extra_info}")
-    if log_extra_report:
-        RepLGR.info(log_extra_report)
 
     comps2use = selectcomps2use(selector, decide_comps)
     confirm_metrics_exist(
@@ -951,7 +926,6 @@ def dec_classification_doesnt_exist(
     decide_comps,
     class_comp_exists,
     at_least_num_exist=1,
-    log_extra_report="",
     log_extra_info="",
     custom_node_label="",
     only_used_metrics=False,
@@ -978,7 +952,6 @@ def dec_classification_doesnt_exist(
         Instead of just testing whether a classification exists, test whether at least
         this number of components have that classification. Default=1
     %(log_extra_info)s
-    %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
     tag : :obj:`str`
@@ -1032,8 +1005,6 @@ def dec_classification_doesnt_exist(
     LGR.info(f"{function_name_idx}: {outputs['node_label']}")
     if log_extra_info:
         LGR.info(f"{function_name_idx} {log_extra_info}")
-    if log_extra_report:
-        RepLGR.info(log_extra_report)
 
     if_true = new_classification
     if_false = "nochange"
@@ -1083,7 +1054,6 @@ def dec_reclassify_high_var_comps(
     selector,
     new_classification,
     decide_comps,
-    log_extra_report="",
     log_extra_info="",
     custom_node_label="",
     only_used_metrics=False,
@@ -1100,7 +1070,6 @@ def dec_reclassify_high_var_comps(
         in new_classification.
     %(decide_comps)s
     %(log_extra_info)s
-    %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
     tag : :obj:`str`
@@ -1147,8 +1116,6 @@ def dec_reclassify_high_var_comps(
     LGR.info(f"{function_name_idx}: {outputs['node_label']}")
     if log_extra_info:
         LGR.info(f"{function_name_idx} {log_extra_info}")
-    if log_extra_report:
-        RepLGR.info(log_extra_report)
 
     if_true = new_classification
     if_false = "nochange"
@@ -1224,7 +1191,6 @@ def calc_varex_thresh(
     thresh_label,
     percentile_thresh,
     num_highest_var_comps=None,
-    log_extra_report="",
     log_extra_info="",
     custom_node_label="",
     only_used_metrics=False,
@@ -1251,7 +1217,6 @@ def calc_varex_thresh(
         a parameter stored in selector.cross_component_metrics ("num_acc_guess" in
         original decision tree). Default=None
     %(log_extra_info)s
-    %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
 
@@ -1339,8 +1304,6 @@ def calc_varex_thresh(
     LGR.info(f"{function_name_idx}: {outputs['node_label']}")
     if log_extra_info:
         LGR.info(f"{function_name_idx} {log_extra_info}")
-    if log_extra_report:
-        RepLGR.info(log_extra_report)
 
     if not comps2use:
         log_decision_tree_step(
@@ -1388,7 +1351,6 @@ def calc_varex_thresh(
 @fill_doc
 def calc_extend_factor(
     selector,
-    log_extra_report="",
     log_extra_info="",
     custom_node_label="",
     only_used_metrics=False,
@@ -1405,7 +1367,6 @@ def calc_extend_factor(
     %(selector)s
     %(decide_comps)s
     %(log_extra_info)s
-    %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
     extend_factor : :obj:`float`
@@ -1442,8 +1403,6 @@ def calc_extend_factor(
 
     if log_extra_info:
         LGR.info(f"{function_name_idx} {log_extra_info}")
-    if log_extra_report:
-        RepLGR.info(log_extra_report)
 
     outputs["extend_factor"] = get_extend_factor(
         n_vols=selector.cross_component_metrics["n_vols"], extend_factor=extend_factor
@@ -1463,7 +1422,6 @@ def calc_max_good_meanmetricrank(
     selector,
     decide_comps,
     metric_suffix=None,
-    log_extra_report="",
     log_extra_info="",
     custom_node_label="",
     only_used_metrics=False,
@@ -1483,7 +1441,6 @@ def calc_max_good_meanmetricrank(
         If this variable is not None or "" then it will output:
         "max_good_meanmetricrank_[metric_suffix]". Default=None
     %(log_extra_info)s
-    %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
 
@@ -1532,8 +1489,6 @@ def calc_max_good_meanmetricrank(
 
     if log_extra_info:
         LGR.info(f"{function_name_idx} {log_extra_info}")
-    if log_extra_report:
-        RepLGR.info(log_extra_report)
 
     comps2use = selectcomps2use(selector, decide_comps)
     confirm_metrics_exist(
@@ -1569,7 +1524,6 @@ def calc_max_good_meanmetricrank(
 def calc_varex_kappa_ratio(
     selector,
     decide_comps,
-    log_extra_report="",
     log_extra_info="",
     custom_node_label="",
     only_used_metrics=False,
@@ -1585,7 +1539,6 @@ def calc_varex_kappa_ratio(
     %(selector)s
     %(decide_comps)s
     %(log_extra_info)s
-    %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
 
@@ -1637,8 +1590,6 @@ def calc_varex_kappa_ratio(
 
     if log_extra_info:
         LGR.info(f"{function_name_idx}: {log_extra_info}")
-    if log_extra_report:
-        RepLGR.info(log_extra_report)
 
     comps2use = selectcomps2use(selector, decide_comps)
     confirm_metrics_exist(
@@ -1690,7 +1641,6 @@ def calc_revised_meanmetricrank_guesses(
     selector,
     decide_comps,
     restrict_factor=2,
-    log_extra_report="",
     log_extra_info="",
     custom_node_label="",
     only_used_metrics=False,
@@ -1706,7 +1656,6 @@ def calc_revised_meanmetricrank_guesses(
         Default=2.
 
     %(log_extra_info)s
-    %(log_extra_report)s
     %(custom_node_label)s
     %(only_used_metrics)s
 
@@ -1813,8 +1762,6 @@ def calc_revised_meanmetricrank_guesses(
     LGR.info(f"{function_name_idx}: {outputs['node_label']}")
     if log_extra_info:
         LGR.info(f"{function_name_idx}: {log_extra_info}")
-    if log_extra_report:
-        RepLGR.info(log_extra_report)
 
     comps2use = selectcomps2use(selector, decide_comps)
     confirm_metrics_exist(

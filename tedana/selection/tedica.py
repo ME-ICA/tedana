@@ -60,9 +60,8 @@ def automatic_selection(
     """
     LGR.info(f"Performing ICA component selection with tree: {tree}")
     RepLGR.info(
-        "Next, component selection was performed to identify "
-        "BOLD (TE-dependent), non-BOLD (TE-independent), and "
-        "uncertain (low-variance) components."
+        "\n\nNext, component selection was performed to identify BOLD (TE-dependent) and "
+        "non-BOLD (TE-independent) components using a decision tree."
     )
 
     component_table["classification_tags"] = ""

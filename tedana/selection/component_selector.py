@@ -150,7 +150,15 @@ def validate_tree(tree):
 
         # Only if kwargs are inputted, make sure they are all valid
         if node.get("kwargs") is not None:
-            invalid_kwargs = set(node.get("kwargs").keys()) - kwargs
+            node_kwargs = set(node.get("kwargs").keys())
+            if "log_extra_report" in node_kwargs:
+                LGR.warning(
+                    f"Node {i} includes the 'log_extra_report' parameter. "
+                    "This was removed from the code and will not be used."
+                )
+                node_kwargs.remove("log_extra_report")
+                del tree["nodes"][i]["kwargs"]["log_extra_report"]
+            invalid_kwargs = node_kwargs - kwargs
             if len(invalid_kwargs) > 0:
                 err_msg += (
                     f"Node {i} has additional, undefined optional parameters (kwargs): "
