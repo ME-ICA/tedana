@@ -319,7 +319,6 @@ class ComponentSelector:
           everything that changed in each node
         - current_node_idx_: The total number of nodes run in ``ComponentSelector``
         """
-        self.__dict__.update(cross_component_metrics)
         self.cross_component_metrics_ = cross_component_metrics
 
         # Construct an un-executed selector
