@@ -288,9 +288,8 @@ tree function:
 - ``custom_node_label``: A brief label for what happens in this node that can be used in
   a decision tree summary table or flow chart. If custom_node_label is not not defined,
   then each function has default descriptive text.
-- ``log_extra_report``, ``log_extra_info``: Text for each function call is automatically placed
-  in the logger output. In addition to that text, the text in these these strings will
-  also be included in the logger with the report or info codes respectively. These
+- ``log_extra_info``: Text for each function call is automatically placed
+  in the logger output with the info label. These
   might be useful to give a narrative explanation of why a step was parameterized a
   certain way.
 - ``only_used_metrics``: If true, this function will only return the names of the component
@@ -351,8 +350,8 @@ that should be used instead.
 Calculation nodes should check if the value they are calculating was already calculated
 and output a warning if the function overwrites an existing value
 
-Code that adds the text ``log_extra_info`` and ``log_extra_report`` into the appropriate
-logs (if they are provided by the user)
+Code that adds the text ``log_extra_info`` into the output
+log (if they are provided by the user)
 
 After the above information is included,
 all functions will call :func:`~tedana.selection.selection_utils.selectcomps2use`,

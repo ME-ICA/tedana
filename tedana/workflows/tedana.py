@@ -845,7 +845,7 @@ def tedana_workflow(
         json.dump(derivative_metadata, fo, sort_keys=True, indent=4)
 
     RepLGR.info(
-        "This workflow used numpy \\citep{van2011numpy}, scipy \\citep{virtanen2020scipy}, "
+        "\n\nThis workflow used numpy \\citep{van2011numpy}, scipy \\citep{virtanen2020scipy}, "
         "pandas \\citep{mckinney2010data,reback2020pandas}, "
         "scikit-learn \\citep{pedregosa2011scikit}, "
         "nilearn, bokeh \\citep{bokehmanual}, matplotlib \\citep{Hunter2007}, "
@@ -860,6 +860,8 @@ def tedana_workflow(
     with open(repname) as fo:
         report = [line.rstrip() for line in fo.readlines()]
         report = " ".join(report)
+        # Double-spaces reflect new paragraphs
+        report = report.replace("  ", "\n\n")
 
     with open(repname, "w") as fo:
         fo.write(report)

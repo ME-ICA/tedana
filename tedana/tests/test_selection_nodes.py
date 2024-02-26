@@ -30,7 +30,6 @@ def test_manual_classify_smoke():
         selector,
         decide_comps,
         new_classification,
-        log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
         tag="test tag",
@@ -55,7 +54,6 @@ def test_manual_classify_smoke():
         "rejected",
         new_classification,
         clear_classification_tags=True,
-        log_extra_report="report log",
         log_extra_info="info log",
         tag="test tag",
         dont_warn_reclassify=True,
@@ -91,7 +89,6 @@ def test_dec_left_op_right_succeeds():
         "rho",
         left_scale=0.9,
         right_scale=1.4,
-        log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
         tag_if_true="test true tag",
@@ -387,7 +384,6 @@ def test_dec_variance_lessthan_thresholds_smoke():
         var_metric="normalized variance explained",
         single_comp_threshold=0.05,
         all_comp_threshold=0.09,
-        log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
         tag_if_true="test true tag",
@@ -430,7 +426,6 @@ def test_calc_kappa_elbow():
     selector = selection_nodes.calc_kappa_elbow(
         selector,
         decide_comps,
-        log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
     )
@@ -456,7 +451,6 @@ def test_calc_kappa_elbow():
     selector = selection_nodes.calc_kappa_elbow(
         selector,
         decide_comps="accepted",
-        log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
     )
@@ -511,7 +505,6 @@ def test_calc_rho_elbow():
     selector = selection_nodes.calc_rho_elbow(
         selector,
         decide_comps,
-        log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
     )
@@ -538,7 +531,6 @@ def test_calc_rho_elbow():
         selector,
         decide_comps,
         rho_elbow_type="liberal",
-        log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
     )
@@ -564,7 +556,6 @@ def test_calc_rho_elbow():
     selector = selection_nodes.calc_rho_elbow(
         selector,
         decide_comps=["accepted", "unclassified"],
-        log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
     )
@@ -628,7 +619,6 @@ def test_calc_median_smoke():
         decide_comps,
         metric_name="variance explained",
         median_label="varex",
-        log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
     )
@@ -665,7 +655,6 @@ def test_calc_median_smoke():
             decide_comps,
             metric_name="variance explained",
             median_label=5,
-            log_extra_report="report log",
             log_extra_info="info log",
             custom_node_label="custom label",
         )
@@ -677,7 +666,6 @@ def test_calc_median_smoke():
             decide_comps,
             metric_name=5,
             median_label="varex",
-            log_extra_report="report log",
             log_extra_info="info log",
             custom_node_label="custom label",
         )
@@ -706,7 +694,6 @@ def test_dec_classification_doesnt_exist_smoke():
         decide_comps,
         at_least_num_exist=1,
         class_comp_exists="provisional accept",
-        log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
         tag="test true tag",
@@ -758,7 +745,6 @@ def test_dec_classification_doesnt_exist_smoke():
         decide_comps=["unclassified", "provisional accept"],
         at_least_num_exist=5,
         class_comp_exists="provisional accept",
-        log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
         tag="test true tag",
@@ -812,7 +798,6 @@ def test_dec_reclassify_high_var_comps():
         selector,
         "unclass_highvar",
         decide_comps,
-        log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
         tag="test true tag",
@@ -851,7 +836,6 @@ def test_calc_varex_thresh_smoke():
         decide_comps,
         thresh_label="upper",
         percentile_thresh=90,
-        log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
     )
@@ -870,7 +854,6 @@ def test_calc_varex_thresh_smoke():
         decide_comps,
         thresh_label="",
         percentile_thresh=90,
-        log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
     )
@@ -991,7 +974,6 @@ def test_calc_varex_thresh_smoke():
         decide_comps,
         thresh_label="upper",
         percentile_thresh=90,
-        log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
     )
@@ -1037,7 +1019,6 @@ def test_calc_extend_factor_smoke():
     # Standard call to this function.
     selector = selection_nodes.calc_extend_factor(
         selector,
-        log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
     )
@@ -1084,7 +1065,6 @@ def test_calc_max_good_meanmetricrank_smoke():
     selector = selection_nodes.calc_max_good_meanmetricrank(
         selector,
         "provisional accept",
-        log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
     )
@@ -1167,7 +1147,6 @@ def test_calc_varex_kappa_ratio_smoke():
     selector = selection_nodes.calc_varex_kappa_ratio(
         selector,
         "provisional accept",
-        log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
     )
@@ -1227,7 +1206,6 @@ def test_calc_revised_meanmetricrank_guesses_smoke():
     selector = selection_nodes.calc_revised_meanmetricrank_guesses(
         selector,
         ["provisional accept", "provisional reject", "unclassified"],
-        log_extra_report="report log",
         log_extra_info="info log",
         custom_node_label="custom label",
     )
