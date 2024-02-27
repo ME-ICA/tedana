@@ -188,6 +188,7 @@ def plot_component(
     component_timeseries,
     power_spectrum,
     frequencies,
+    tr,
     classification_color,
     png_cmap,
     title,
@@ -205,6 +206,8 @@ def plot_component(
         Power spectrum of the component's time series
     frequencies : (T,) array_like
         Frequencies for the power spectrum
+    tr : float
+        Repetition time of the time series
     classification_color : str
         Color to use for the time series and power spectrum
     png_cmap : str
@@ -258,29 +261,48 @@ def plot_component(
     gs = gridspec.GridSpec(3, 1, height_ratios=[2, 10, 2], hspace=0.2)
 
     # Create three subplots
+    # First is the time series of the component
     ax_ts = fig.add_subplot(gs[0])
     ax_ts.plot(component_timeseries, color=classification_color)
-    ax_ts.set_xlabel("Volume")
-    ax_ts.set_xlim(0, component_timeseries.shape[0] - 1)
-    ax_ts.set_yticks([])
 
+    max_xticks = 10
+    xloc = plt.MaxNLocator(max_xticks)
+    ax_ts.xaxis.set_major_locator(xloc)
+
+    ax_ts2 = ax_ts.twiny()
+    ax1_xs = ax_ts.get_xticks()
+
+    ax2_xs = []
+    for x in ax1_xs:
+        # Limit to 2 decimal places
+        seconds_val = round(x * tr, 2)
+        ax2_xs.append(seconds_val)
+
+    ax_ts2.set_xticks(ax1_xs)
+    ax_ts2.set_xlim(ax_ts.get_xbound())
+    ax_ts2.set_xticklabels(ax2_xs)
+    ax_ts2.set_xlabel("seconds")
+
+    # Second is the cached image of the spatial map
     ax_map = fig.add_subplot(gs[1])
     ax_map.axis("off")
     ax_map.imshow(img)
 
-    ax_freq = fig.add_subplot(gs[2])
-    ax_freq.plot(frequencies, power_spectrum, color=classification_color)
-    ax_freq.set_xlabel("Frequency (Hz)")
-    ax_freq.set_xlim(0, frequencies.max())
-    ax_freq.set_yticks([])
+    # Third is the power spectrum of the component's time series
+    ax_fft = fig.add_subplot(gs[2])
+    ax_fft.plot(frequencies, power_spectrum, color=classification_color)
+    ax_fft.set_title("One-Sided FFT")
+    ax_fft.set_xlabel("Frequency (Hz)")
+    ax_fft.set_xlim(0, frequencies.max())
+    ax_fft.set_yticks([])
 
     # Get the current positions of the second and last subplots
     # pos_ts = ax_ts.get_position()
-    # pos_freq = ax_freq.get_position()
+    # pos_freq = ax_fft.get_position()
 
     # Adjust the positions of the second and last subplots
     # ax_ts.set_position([pos_ts.x0, pos_ts.y0 - 0.1, pos_ts.width, pos_ts.height])
-    # ax_freq.set_position([pos_freq.x0, pos_freq.y0 - 0.2, pos_freq.width, pos_freq.height])
+    # ax_fft.set_position([pos_freq.x0, pos_freq.y0 - 0.2, pos_freq.width, pos_freq.height])
 
     fig.savefig(out_file)
     plt.close(fig)
@@ -369,6 +391,7 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
             component_timeseries=component_timeseries,
             power_spectrum=spectrum,
             frequencies=freqs,
+            tr=tr,
             classification_color=line_color,
             png_cmap=png_cmap,
             title=plt_title,
