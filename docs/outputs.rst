@@ -532,7 +532,10 @@ T2* and S0 Summary Plots
 ************************
 
 Below the carpet plots are summary plots for the T2* and S0 maps.
-Each map has two figures: a spatial map of the values and a histogram of the voxelwise values. The T2* map should look similar to T2 maps and be brightest in the ventricles and darkest in areas of largest susceptibility. The S0 map should roughly follow the signal-to-noise ratio and will be brightest near the surface near RF coils.
+Each map has two figures: a spatial map of the values and a histogram of the voxelwise values.
+The T2* map should look similar to T2 maps and be brightest in the ventricles and darkest in areas of largest susceptibility.
+The S0 map should roughly follow the signal-to-noise ratio and will be brightest near the surface near RF coils.
+
 It is important to note that the histogram is limited from 0 to the 98th percentile of the data to improve readability.
 
 .. image:: /_static/t2s_and_s0_plots.png

@@ -469,18 +469,15 @@ def plot_t2star_and_s0(
     *,
     io_generator: io.OutputGenerator,
     mask: np.ndarray,
-    png_cmap: str,
 ) -> None:
     """Create T2* and S0 maps and histograms.
 
     Parameters
     ----------
-    io_generator : :obj:`tedana.io.OutputGenerator`
+    io_generator : :obj:`~tedana.io.OutputGenerator`
         The output generator for this workflow
     mask : (S,) :obj:`numpy.ndarray`
         Binary mask used to apply to the data.
-    png_cmap : :obj:`str`
-        Name of the colormap to use for the T2* and S0 maps.
     """
     t2star_img = io_generator.get_name("t2star img")
     s0_img = io_generator.get_name("s0 img")
@@ -522,7 +519,7 @@ def plot_t2star_and_s0(
         bg_img=None,
         display_mode="mosaic",
         symmetric_cbar=False,
-        cmap=png_cmap,
+        cmap="binary",
         vmin=t2s_p02,
         vmax=t2s_p98,
         annotate=False,
@@ -535,7 +532,7 @@ def plot_t2star_and_s0(
         bg_img=None,
         display_mode="mosaic",
         symmetric_cbar=False,
-        cmap=png_cmap,
+        cmap="binary",
         vmin=s0_p02,
         vmax=s0_p98,
         annotate=False,
