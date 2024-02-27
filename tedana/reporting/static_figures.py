@@ -264,6 +264,7 @@ def plot_component(
     # First is the time series of the component
     ax_ts = fig.add_subplot(gs[0])
     ax_ts.plot(component_timeseries, color=classification_color)
+    ax_ts.set_xlim(0, len(component_timeseries) - 1)
 
     max_xticks = 10
     xloc = plt.MaxNLocator(max_xticks)
