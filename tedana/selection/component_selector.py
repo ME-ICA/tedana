@@ -348,8 +348,13 @@ class ComponentSelector:
             self.start_idx_ = 0
         else:
             # Since a status table exists, we need to skip nodes up to the
-            # point where the last tree finished
-            self.start_idx_ = len(self.tree["nodes"])
+            # point where the last tree finished. Notes that were executed
+            # have an output field. Identify the last node with an output field
+            tmp_idx = len(self.tree["nodes"]) - 1
+            while ("outputs" not in self.tree["nodes"][tmp_idx]) and (tmp_idx > 0):
+                tmp_idx -= 1
+            # start at the first node that does not have an output field
+            self.start_idx_ = tmp_idx + 1
             LGR.info(f"Start is {self.start_idx_}")
             self.component_status_table_ = status_table
 

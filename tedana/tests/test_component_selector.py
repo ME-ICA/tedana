@@ -303,8 +303,11 @@ def test_are_all_components_accepted_or_rejected():
 def test_selector_properties_smoke():
     """Tests to confirm properties match expected results."""
 
+    # Runs on un-executed component table to smoke test three class
+    # functions that are used to count various types of component
+    # classifications in the component table
     selector = component_selector.ComponentSelector(tree="minimal")
-    selector.select(component_table=sample_comptable(), cross_component_metrics={"n_echos": 3})
+    selector.component_table_ = sample_comptable()
 
     assert selector.n_comps_ == 21
 
