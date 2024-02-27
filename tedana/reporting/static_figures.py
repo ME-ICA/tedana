@@ -532,7 +532,7 @@ def plot_t2star_and_s0(
         bg_img=None,
         display_mode="mosaic",
         symmetric_cbar=False,
-        cmap="binary",
+        cmap="gray",
         vmin=s0_p02,
         vmax=s0_p98,
         annotate=False,
