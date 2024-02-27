@@ -1218,7 +1218,7 @@ def calc_varex_thresh(
     num_highest_var_comps : :obj:`str` :obj:`int`
         percentile can be calculated on the num_highest_var_comps components with the
         lowest variance. Either input an integer directly or input a string that is
-        a parameter stored in selector.cross_component_metrics_ ("num_acc_guess" in
+        a parameter stored in ``selector.cross_component_metrics_`` ("num_acc_guess" in
         original decision tree). Default=None
     %(log_extra_info)s
     %(custom_node_label)s

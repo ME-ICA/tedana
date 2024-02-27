@@ -272,8 +272,8 @@ class ComponentSelector:
         -----
         Adds to the ``ComponentSelector``:
 
-        - component_status_table_: empty dataframe or contents of inputted status_table
-        - cross_component_metrics_: empty dict or contents of inputed values
+        - ``component_status_table_``: empty dataframe or contents of inputted status_table
+        - ``cross_component_metrics_``: empty dict or contents of inputed values
         - used_metrics: empty set
 
         Any parameter that is used by a decision tree node function can be passed
@@ -307,17 +307,17 @@ class ComponentSelector:
 
         When this is run, multiple elements in `ComponentSelector` will change including:
 
-        - component_table_: ``classification`` column with ``accepted`` or ``rejected`` labels
+        - ``component_table_``: ``classification`` column with ``accepted`` or ``rejected`` labels
           and ``classification_tags`` column with can hold multiple comma-separated labels
           explaining why a classification happened
-        - cross_component_metrics_: Any values that were calculated based on the metric
+        - ``cross_component_metrics_``: Any values that were calculated based on the metric
           values across components or by direct user input
-        - component_status_table: Contains the classification statuses at each node in
+        - ``component_status_table_``: Contains the classification statuses at each node in
           the decision tree
         - used_metrics: A list of metrics used in the selection process
         - nodes: The original tree definition with an added ``outputs`` key listing
           everything that changed in each node
-        - current_node_idx_: The total number of nodes run in ``ComponentSelector``
+        - ``current_node_idx_``: The total number of nodes run in ``ComponentSelector``
         """
         self.cross_component_metrics_ = cross_component_metrics
 

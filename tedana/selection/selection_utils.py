@@ -100,8 +100,8 @@ def change_comptable_classifications(
     Parameters
     ----------
     selector : :obj:`tedana.selection.component_selector.ComponentSelector`
-        The attributes used are component_table, component_status_table, and
-        current_node_idx_
+        The attributes used are ``component_table_``, ``component_status_table_``, and
+        ``current_node_idx_``
     if_true, if_false : :obj:`str`
         If the condition in this step is true or false, give the component
         the label in this string. Options are 'accepted', 'rejected',
@@ -123,12 +123,12 @@ def change_comptable_classifications(
     Returns
     -------
     selector : :obj:`tedana.selection.component_selector.ComponentSelector`
-        component_table["classifications"] will reflect any new
+        ``component_table_["classifications"]`` will reflect any new
         classifications.
-        component_status_table will have a new column titled
-        "Node current_node_idx_" that is a copy of the updated classifications
+        ``component_status_table_`` will have a new column titled
+        "Node ``current_node_idx_``" that is a copy of the updated classifications
         column.
-        component_table["classification_tags"] will be updated to include any
+        ``component_table_["classification_tags"]`` will be updated to include any
         new tags. Each tag should appear only once in the string and tags will
         be separated by commas.
     n_true, n_false : :obj:`int`
@@ -178,8 +178,8 @@ def comptable_classification_changer(
     Parameters
     ----------
     selector : :obj:`tedana.selection.component_selector.ComponentSelector`
-        The attributes used are component_table, component_status_table, and
-        current_node_idx_
+        The attributes used are ``component_table_``, ``component_status_table_``, and
+        ``current_node_idx_``
     boolstate : :obj:`bool`
         Change classifications only for True or False components in
         decision_boolean based on this variable
@@ -207,12 +207,12 @@ def comptable_classification_changer(
     -------
     selector : :obj:`tedana.selection.component_selector.ComponentSelector`
         Operates on the True OR False components depending on boolstate
-        component_table["classifications"] will reflect any new
+        ``component_table_["classifications"]`` will reflect any new
         classifications.
-        component_status_table will have a new column titled
-        "Node current_node_idx_" that is a copy of the updated classifications
+        ``component_status_table_`` will have a new column titled
+        "Node ``current_node_idx_``" that is a copy of the updated classifications
         column.
-        component_table["classification_tags"] will be updated to include any
+        component_table_["classification_tags"] will be updated to include any
         new tags. Each tag should appear only once in the string and tags will
         be separated by commas.
 
@@ -363,7 +363,7 @@ def log_decision_tree_step(
     ----------
     function_name_idx : :obj:`str`
         The name of the function that should be logged. By convention, this
-        be "Step current_node_idx_: function_name"
+        be "Step ``current_node_idx_``: function_name"
     comps2use : :obj:`list[int]` or -1
         A list of component indices that should be used by a function.
         Only used to report no components found if empty and report

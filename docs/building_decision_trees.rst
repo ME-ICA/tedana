@@ -378,7 +378,7 @@ dataframe column that is True or False for the components in ``decide_comps`` ba
 the function's criteria.
 That column is an input to :func:`~tedana.selection.selection_utils.change_comptable_classifications`,
 which will update the component_table classifications, update the classification history
-in component_status_table, and update the component classification_tags. Components not
+in ``selector.component_status_table_``, and update the component classification_tags. Components not
 in ``decide_comps`` retain their existing classifications and tags.
 :func:`~tedana.selection.selection_utils.change_comptable_classifications`
 also returns and should assign values to
