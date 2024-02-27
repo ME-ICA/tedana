@@ -538,7 +538,7 @@ The S0 map should roughly follow the signal-to-noise ratio and will be brightest
 
 It is important to note that the histogram is limited from 0 to the 98th percentile of the data to improve readability.
 
-.. image:: /_static/t2s_and_s0_plots.png
+.. image:: /_static/t2star_plots.png
   :align: center
   :height: 400px
 
