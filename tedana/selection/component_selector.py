@@ -439,7 +439,7 @@ class ComponentSelector:
         for key, val in params.items():
             if val is None:
                 try:
-                    params[key] = getattr(self, key)
+                    params[key] = self.cross_component_metrics_[key]
                 except AttributeError:
                     raise ValueError(
                         f"Parameter {key} is required in node {fcn}, but not defined. "

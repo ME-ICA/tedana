@@ -38,6 +38,7 @@ def dicts_to_test(treechoice):
         "missing_req_param": A missing required param in a decision node function
         "missing_function": An undefined decision node function
         "missing_key": A dict missing one of the required keys (report)
+        "null_value": A parameter in one node improperly has a null value
 
     Returns
     -------
@@ -266,6 +267,13 @@ def test_check_null_succeeds():
     """Tests check_null finds empty parameter in self."""
     selector = component_selector.ComponentSelector(tree="minimal")
     selector.tree = dicts_to_test("null_value")
+
+    # "left" is missing from the function definition in node
+    # but is found as an initialized cross component metric
+    # so this should execute successfully
+    selector.cross_component_metrics_ = {
+        "left": 3,
+    }
 
     params = selector.tree["nodes"][0]["parameters"]
     functionname = selector.tree["nodes"][0]["functionname"]
