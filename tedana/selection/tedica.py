@@ -3,15 +3,12 @@
 import logging
 
 from tedana.metrics import collect
-from tedana.selection.component_selector import ComponentSelector
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
-def automatic_selection(
-    component_table, n_echos, n_vols, tree="kundu", external_regressor_config=None
-):
+def automatic_selection(component_table, selector, **kwargs):
     """Classify components based on component table and decision tree type.
 
     Parameters
@@ -22,9 +19,6 @@ def automatic_selection(
         The number of echoes in this dataset
     tree : :obj:`str`
         The type of tree to use for the ComponentSelector object. Default="kundu"
-    external_regressor_config : :obj:`dict`
-        Information describing the external regressors and
-        method to use for fitting and statistical tests
 
     Returns
     -------
@@ -58,24 +52,16 @@ def automatic_selection(
 
     .. _FAQ: faq.html
     """
-    LGR.info(f"Performing ICA component selection with tree: {tree}")
+    # TODO external_regressor_config was inputted in this function
+    LGR.info(f"Performing ICA component selection with tree: {selector.tree_name}")
     RepLGR.info(
         "\n\nNext, component selection was performed to identify BOLD (TE-dependent) and "
         "non-BOLD (TE-independent) components using a decision tree."
     )
 
+    # TODO external_regressor_config=external_regressor_config, was here
     component_table["classification_tags"] = ""
-    xcomp = {
-        "n_echos": n_echos,
-        "n_vols": n_vols,
-    }
-    selector = ComponentSelector(
-        tree,
-        component_table,
-        cross_component_metrics=xcomp,
-        external_regressor_config=external_regressor_config,
-    )
-    selector.select()
-    selector.metadata = collect.get_metadata(selector.component_table)
+    selector.select(component_table, cross_component_metrics=kwargs)
+    selector.metadata_ = collect.get_metadata(selector.component_table_)
 
     return selector

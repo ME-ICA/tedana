@@ -16,13 +16,13 @@ RepLGR = logging.getLogger("REPORT")
 ##############################################################
 
 
-def selectcomps2use(selector, decide_comps):
+def selectcomps2use(component_table, decide_comps):
     """Get a list of component numbers that fit the classification types in ``decide_comps``.
 
     Parameters
     ----------
-    selector : :obj:`~tedana.selection.component_selector.ComponentSelector`
-        Only uses the component_table in this object
+    component_table : :obj:`~pandas.DataFrame`
+        The component_table with metrics and labels for each ICA component
     decide_comps : :obj:`str` or :obj:`list[str]` or :obj:`list[int]`
         This is string or a list of strings describing what classifications
         of components to operate on, using default or intermediate_classification
@@ -36,33 +36,31 @@ def selectcomps2use(selector, decide_comps):
     comps2use : :obj:`list[int]`
         A list of component indices with classifications included in decide_comps
     """
-    if "classification" not in selector.component_table:
-        raise ValueError(
-            "selector.component_table needs a 'classification' column to run selectcomp2suse"
-        )
+    if "classification" not in component_table:
+        raise ValueError("component_table needs a 'classification' column to run selectcomps2use")
 
     if isinstance(decide_comps, (str, int)):
         decide_comps = [decide_comps]
 
     if isinstance(decide_comps, list) and (decide_comps[0] == "all"):
-        # All components with any string in the classification field
-        # are set to True
-        comps2use = list(range(selector.component_table.shape[0]))
+        # All components with any string in the classification field are set to True
+        comps2use = list(range(component_table.shape[0]))
 
     elif isinstance(decide_comps, list) and all(isinstance(elem, str) for elem in decide_comps):
         comps2use = []
         for didx in range(len(decide_comps)):
-            newcomps2use = selector.component_table.index[
-                selector.component_table["classification"] == decide_comps[didx]
+            newcomps2use = component_table.index[
+                component_table["classification"] == decide_comps[didx]
             ].tolist()
             comps2use = list(set(comps2use + newcomps2use))
+
     elif isinstance(decide_comps, list) and all(isinstance(elem, int) for elem in decide_comps):
         # decide_comps is already a list of indices
-        if len(selector.component_table) <= max(decide_comps):
+        if len(component_table) <= max(decide_comps):
             raise ValueError(
                 "decide_comps for selectcomps2use is selecting for a component with index"
                 f"{max(decide_comps)} (0 indexing) which is greater than the number "
-                f"of components: {len(selector.component_table)}"
+                f"of components: {len(component_table)}"
             )
         elif min(decide_comps) < 0:
             raise ValueError(
@@ -104,8 +102,8 @@ def change_comptable_classifications(
     Parameters
     ----------
     selector : :obj:`tedana.selection.component_selector.ComponentSelector`
-        The attributes used are component_table, component_status_table, and
-        current_node_idx
+        The attributes used are ``component_table_``, ``component_status_table_``, and
+        ``current_node_idx_``
     if_true, if_false : :obj:`str`
         If the condition in this step is true or false, give the component
         the label in this string. Options are 'accepted', 'rejected',
@@ -127,12 +125,12 @@ def change_comptable_classifications(
     Returns
     -------
     selector : :obj:`tedana.selection.component_selector.ComponentSelector`
-        component_table["classifications"] will reflect any new
+        ``component_table_["classifications"]`` will reflect any new
         classifications.
-        component_status_table will have a new column titled
-        "Node current_node_idx" that is a copy of the updated classifications
+        ``component_status_table_`` will have a new column titled
+        "Node ``current_node_idx_``" that is a copy of the updated classifications
         column.
-        component_table["classification_tags"] will be updated to include any
+        ``component_table_["classification_tags"]`` will be updated to include any
         new tags. Each tag should appear only once in the string and tags will
         be separated by commas.
     n_true, n_false : :obj:`int`
@@ -160,8 +158,8 @@ def change_comptable_classifications(
         dont_warn_reclassify=dont_warn_reclassify,
     )
 
-    selector.component_status_table[f"Node {selector.current_node_idx}"] = (
-        selector.component_table["classification"]
+    selector.component_status_table_[f"Node {selector.current_node_idx_}"] = (
+        selector.component_table_["classification"]
     )
 
     n_true = decision_boolean.sum()
@@ -182,8 +180,8 @@ def comptable_classification_changer(
     Parameters
     ----------
     selector : :obj:`tedana.selection.component_selector.ComponentSelector`
-        The attributes used are component_table, component_status_table, and
-        current_node_idx
+        The attributes used are ``component_table_``, ``component_status_table_``, and
+        ``current_node_idx_``
     boolstate : :obj:`bool`
         Change classifications only for True or False components in
         decision_boolean based on this variable
@@ -211,12 +209,12 @@ def comptable_classification_changer(
     -------
     selector : :obj:`tedana.selection.component_selector.ComponentSelector`
         Operates on the True OR False components depending on boolstate
-        component_table["classifications"] will reflect any new
+        ``component_table_["classifications"]`` will reflect any new
         classifications.
-        component_status_table will have a new column titled
-        "Node current_node_idx" that is a copy of the updated classifications
+        ``component_status_table_`` will have a new column titled
+        "Node ``current_node_idx_``" that is a copy of the updated classifications
         column.
-        component_table["classification_tags"] will be updated to include any
+        component_table_["classification_tags"] will be updated to include any
         new tags. Each tag should appear only once in the string and tags will
         be separated by commas.
 
@@ -237,7 +235,7 @@ def comptable_classification_changer(
         changeidx = decision_boolean.index[np.asarray(decision_boolean) == boolstate]
         if not changeidx.empty:
             current_classifications = set(
-                selector.component_table.loc[changeidx, "classification"].tolist()
+                selector.component_table_.loc[changeidx, "classification"].tolist()
             )
             if current_classifications.intersection({"accepted", "rejected"}):
                 if not dont_warn_reclassify:
@@ -247,11 +245,11 @@ def comptable_classification_changer(
                         ("accepted" in current_classifications) and (classify_if != "accepted")
                     ) or (("rejected" in current_classifications) and (classify_if != "rejected")):
                         LGR.warning(
-                            f"Step {selector.current_node_idx}: Some classifications are"
+                            f"Step {selector.current_node_idx_}: Some classifications are"
                             " changing away from accepted or rejected. Once a component is "
                             "accepted or rejected, it shouldn't be reclassified"
                         )
-            selector.component_table.loc[changeidx, "classification"] = classify_if
+            selector.component_table_.loc[changeidx, "classification"] = classify_if
             # NOTE: CAUTION: extremely bizarre pandas behavior violates guarantee
             # that df['COLUMN'] matches the df as a a whole in this case.
             # We cannot replicate this consistently, but it seems to happen in some
@@ -264,22 +262,22 @@ def comptable_classification_changer(
             #   Comment line below to re-introduce original bug. For the kundu decision
             #   tree it happens on node 6 which is the first time decide_comps is for
             #   a subset of components
-            selector.component_table = selector.component_table.copy()
+            selector.component_table_ = selector.component_table_.copy()
 
             if tag_if is not None:  # only run if a tag is provided
                 for idx in changeidx:
-                    tmpstr = selector.component_table.loc[idx, "classification_tags"]
+                    tmpstr = selector.component_table_.loc[idx, "classification_tags"]
                     if tmpstr == "" or isinstance(tmpstr, float):
                         tmpset = {tag_if}
                     else:
                         tmpset = set(tmpstr.split(","))
                         tmpset.update([tag_if])
-                    selector.component_table.loc[idx, "classification_tags"] = ",".join(
+                    selector.component_table_.loc[idx, "classification_tags"] = ",".join(
                         str(s) for s in tmpset
                     )
         else:
             LGR.info(
-                f"Step {selector.current_node_idx}: No components fit criterion "
+                f"Step {selector.current_node_idx_}: No components fit criterion "
                 f"{boolstate} to change classification"
             )
     return selector
@@ -415,34 +413,28 @@ def expand_nodes(tree, metrics):
 
 
 def confirm_metrics_exist(component_table, necessary_metrics, function_name=None):
-    """
-    Confirm that all metrics declared in necessary_metrics are included in comptable.
+    """Confirm that all metrics declared in necessary_metrics are already included in comptable.
 
     Parameters
     ----------
     component_table : (C x M) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
-    necessary_metrics : :obj:`set`
-        A set of strings of metric names
+    necessary_metrics : :obj:`list`
+        A list of strings of metric names.
     function_name : :obj:`str`
-        Text identifying the function name that called this function
-
-    Returns
-    -------
-    metrics_exist : :obj:`bool`
-        True if all metrics in necessary_metrics are in component_table
+        Text identifying the function name that called this function.
 
     Raises
     ------
     ValueError
-        If metrics_exist is False then raise an error and end the program
+        If ``metrics_exist`` is False then raise an error and end the program.
 
     Note
-    ----
-    This doesn't check if there are data in each metric's column, just that
-    the columns exist. Also, the string in `necessary_metrics` and the
-    column labels in component_table will only be matched if they're identical.
+    -----
+    This doesn't check if there are data in each metric's column, just that the columns exist.
+    Also, the string in ``necessary_metrics`` and the column labels in ``component_table`` will
+    only be matched if they're identical.
     """
     hardcoded_metrics = [metric for metric in necessary_metrics if not metric.startswith("^")]
     regex_metrics = [metric for metric in necessary_metrics if metric.startswith("^")]
@@ -486,7 +478,7 @@ def log_decision_tree_step(
     ----------
     function_name_idx : :obj:`str`
         The name of the function that should be logged. By convention, this
-        be "Step current_node_idx: function_name"
+        be "Step ``current_node_idx_``: function_name"
     comps2use : :obj:`list[int]` or -1
         A list of component indices that should be used by a function.
         Only used to report no components found if empty and report
