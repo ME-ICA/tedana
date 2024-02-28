@@ -499,6 +499,9 @@ def tedana_workflow(
     if isinstance(data, str):
         data = [data]
 
+    LGR.info("Initializing and validating component selection tree")
+    selector = ComponentSelector(tree)
+
     LGR.info(f"Loading input data: {[f for f in data]}")
     catd, ref_img = io.load_data(data, n_echos=n_echos)
 
@@ -630,8 +633,8 @@ def tedana_workflow(
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, masksum_denoise, t2s=t2s_full, combmode=combmode)
 
-    # regress out global signal unless explicitly not desired
     if "gsr" in gscontrol:
+        # regress out global signal
         catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, io_generator)
 
     fout = io_generator.save_file(data_oc, "combined img")
@@ -669,8 +672,6 @@ def tedana_workflow(
             # Estimate betas and compute selection metrics for mixing matrix
             # generated from dimensionally reduced data using full data (i.e., data
             # with thermal noise)
-            LGR.info("Making second component selection guess from ICA results")
-            selector = ComponentSelector(tree)
             necessary_metrics = selector.necessary_metrics
             # The figures require some metrics that might not be used by the decision tree.
             extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
@@ -686,6 +687,7 @@ def tedana_workflow(
                 "ICA",
                 metrics=necessary_metrics,
             )
+            LGR.info("Selecting components from ICA results")
             selector = selection.automatic_selection(
                 comptable,
                 selector,
@@ -704,6 +706,9 @@ def tedana_workflow(
             # If we're going to restart, temporarily allow force overwrite
             if keep_restarting:
                 io_generator.overwrite = True
+                # Create a re-initialized selector object if rerunning
+                selector = ComponentSelector(tree)
+
             RepLGR.disabled = True  # Disable the report to avoid duplicate text
         RepLGR.disabled = False  # Re-enable the report after the while loop is escaped
         io_generator.overwrite = overwrite  # Re-enable original overwrite behavior

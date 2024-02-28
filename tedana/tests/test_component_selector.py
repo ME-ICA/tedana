@@ -38,6 +38,7 @@ def dicts_to_test(treechoice):
         "missing_req_param": A missing required param in a decision node function
         "missing_function": An undefined decision node function
         "missing_key": A dict missing one of the required keys (report)
+        "null_value": A parameter in one node improperly has a null value
 
     Returns
     -------
@@ -267,6 +268,13 @@ def test_check_null_succeeds():
     selector = component_selector.ComponentSelector(tree="minimal")
     selector.tree = dicts_to_test("null_value")
 
+    # "left" is missing from the function definition in node
+    # but is found as an initialized cross component metric
+    # so this should execute successfully
+    selector.cross_component_metrics_ = {
+        "left": 3,
+    }
+
     params = selector.tree["nodes"][0]["parameters"]
     functionname = selector.tree["nodes"][0]["functionname"]
     selector.check_null(params, functionname)
@@ -295,8 +303,11 @@ def test_are_all_components_accepted_or_rejected():
 def test_selector_properties_smoke():
     """Tests to confirm properties match expected results."""
 
+    # Runs on un-executed component table to smoke test three class
+    # functions that are used to count various types of component
+    # classifications in the component table
     selector = component_selector.ComponentSelector(tree="minimal")
-    selector.select(component_table=sample_comptable(), cross_component_metrics={"n_echos": 3})
+    selector.component_table_ = sample_comptable()
 
     assert selector.n_comps_ == 21
 

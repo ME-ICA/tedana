@@ -14,13 +14,13 @@ RepLGR = logging.getLogger("REPORT")
 ##############################################################
 
 
-def selectcomps2use(comptable, decide_comps):
+def selectcomps2use(component_table, decide_comps):
     """Get a list of component numbers that fit the classification types in ``decide_comps``.
 
     Parameters
     ----------
-    comptable : :obj:`~pandas.DataFrame`
-        Only uses the component_table in this object
+    component_table : :obj:`~pandas.DataFrame`
+        The component_table with metrics and labels for each ICA component
     decide_comps : :obj:`str` or :obj:`list[str]` or :obj:`list[int]`
         This is string or a list of strings describing what classifications
         of components to operate on, using default or intermediate_classification
@@ -34,31 +34,31 @@ def selectcomps2use(comptable, decide_comps):
     comps2use : :obj:`list[int]`
         A list of component indices with classifications included in decide_comps
     """
-    if "classification" not in comptable:
-        raise ValueError("comptable needs a 'classification' column to run selectcomps2use")
+    if "classification" not in component_table:
+        raise ValueError("component_table needs a 'classification' column to run selectcomps2use")
 
     if isinstance(decide_comps, (str, int)):
         decide_comps = [decide_comps]
 
     if isinstance(decide_comps, list) and (decide_comps[0] == "all"):
         # All components with any string in the classification field are set to True
-        comps2use = list(range(comptable.shape[0]))
+        comps2use = list(range(component_table.shape[0]))
 
     elif isinstance(decide_comps, list) and all(isinstance(elem, str) for elem in decide_comps):
         comps2use = []
         for didx in range(len(decide_comps)):
-            newcomps2use = comptable.index[
-                comptable["classification"] == decide_comps[didx]
+            newcomps2use = component_table.index[
+                component_table["classification"] == decide_comps[didx]
             ].tolist()
             comps2use = list(set(comps2use + newcomps2use))
 
     elif isinstance(decide_comps, list) and all(isinstance(elem, int) for elem in decide_comps):
         # decide_comps is already a list of indices
-        if len(comptable) <= max(decide_comps):
+        if len(component_table) <= max(decide_comps):
             raise ValueError(
                 "decide_comps for selectcomps2use is selecting for a component with index"
                 f"{max(decide_comps)} (0 indexing) which is greater than the number "
-                f"of components: {len(comptable)}"
+                f"of components: {len(component_table)}"
             )
         elif min(decide_comps) < 0:
             raise ValueError(
@@ -100,8 +100,8 @@ def change_comptable_classifications(
     Parameters
     ----------
     selector : :obj:`tedana.selection.component_selector.ComponentSelector`
-        The attributes used are component_table, component_status_table, and
-        current_node_idx_
+        The attributes used are ``component_table_``, ``component_status_table_``, and
+        ``current_node_idx_``
     if_true, if_false : :obj:`str`
         If the condition in this step is true or false, give the component
         the label in this string. Options are 'accepted', 'rejected',
@@ -123,12 +123,12 @@ def change_comptable_classifications(
     Returns
     -------
     selector : :obj:`tedana.selection.component_selector.ComponentSelector`
-        component_table["classifications"] will reflect any new
+        ``component_table_["classifications"]`` will reflect any new
         classifications.
-        component_status_table will have a new column titled
-        "Node current_node_idx_" that is a copy of the updated classifications
+        ``component_status_table_`` will have a new column titled
+        "Node ``current_node_idx_``" that is a copy of the updated classifications
         column.
-        component_table["classification_tags"] will be updated to include any
+        ``component_table_["classification_tags"]`` will be updated to include any
         new tags. Each tag should appear only once in the string and tags will
         be separated by commas.
     n_true, n_false : :obj:`int`
@@ -178,8 +178,8 @@ def comptable_classification_changer(
     Parameters
     ----------
     selector : :obj:`tedana.selection.component_selector.ComponentSelector`
-        The attributes used are component_table, component_status_table, and
-        current_node_idx_
+        The attributes used are ``component_table_``, ``component_status_table_``, and
+        ``current_node_idx_``
     boolstate : :obj:`bool`
         Change classifications only for True or False components in
         decision_boolean based on this variable
@@ -207,12 +207,12 @@ def comptable_classification_changer(
     -------
     selector : :obj:`tedana.selection.component_selector.ComponentSelector`
         Operates on the True OR False components depending on boolstate
-        component_table["classifications"] will reflect any new
+        ``component_table_["classifications"]`` will reflect any new
         classifications.
-        component_status_table will have a new column titled
-        "Node current_node_idx_" that is a copy of the updated classifications
+        ``component_status_table_`` will have a new column titled
+        "Node ``current_node_idx_``" that is a copy of the updated classifications
         column.
-        component_table["classification_tags"] will be updated to include any
+        component_table_["classification_tags"] will be updated to include any
         new tags. Each tag should appear only once in the string and tags will
         be separated by commas.
 
@@ -363,7 +363,7 @@ def log_decision_tree_step(
     ----------
     function_name_idx : :obj:`str`
         The name of the function that should be logged. By convention, this
-        be "Step current_node_idx_: function_name"
+        be "Step ``current_node_idx_``: function_name"
     comps2use : :obj:`list[int]` or -1
         A list of component indices that should be used by a function.
         Only used to report no components found if empty and report

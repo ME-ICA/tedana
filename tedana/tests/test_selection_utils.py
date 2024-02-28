@@ -55,7 +55,17 @@ def sample_selector(options=None):
         "test_elbow": 21,
     }
     selector = ComponentSelector(tree=tree)
-    selector.select(component_table=component_table, cross_component_metrics=xcomp)
+
+    # Add an un-executed component table,cross component metrics, and status table
+    selector.component_table_ = component_table.copy()
+    selector.cross_component_metrics_ = xcomp
+    selector.component_status_table_ = selector.component_table_[
+        ["Component", "classification"]
+    ].copy()
+    selector.component_status_table_ = selector.component_status_table_.rename(
+        columns={"classification": "initialized classification"}
+    )
+
     selector.current_node_idx_ = 0
 
     return selector
