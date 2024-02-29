@@ -89,3 +89,7 @@ figures/sub-01_comp_017.png
 figures/sub-01_comp_018.png
 figures/sub-01_comp_019.png
 figures/sub-01_comp_020.png
+figures/sub-01_s0_brain.svg
+figures/sub-01_s0_histogram.svg
+figures/sub-01_t2star_brain.svg
+figures/sub-01_t2star_histogram.svg

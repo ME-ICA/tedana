@@ -8,7 +8,7 @@ import numpy as np
 
 matplotlib.use("AGG")
 import matplotlib.pyplot as plt
-from nilearn import plotting
+from nilearn import masking, plotting
 
 from tedana import io, stats, utils
 
@@ -463,3 +463,80 @@ def pca_results(criteria, n_components, all_varex, io_generator):
     pca_variance_explained_name = os.path.join(io_generator.out_dir, "figures", plot_name)
     plt.savefig(pca_variance_explained_name)
     plt.close()
+
+
+def plot_t2star_and_s0(
+    *,
+    io_generator: io.OutputGenerator,
+    mask: np.ndarray,
+) -> None:
+    """Create T2* and S0 maps and histograms.
+
+    Parameters
+    ----------
+    io_generator : :obj:`~tedana.io.OutputGenerator`
+        The output generator for this workflow
+    mask : (S,) :obj:`numpy.ndarray`
+        Binary mask used to apply to the data.
+    """
+    t2star_img = io_generator.get_name("t2star img")
+    s0_img = io_generator.get_name("s0 img")
+    mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
+    assert os.path.isfile(t2star_img), f"File {t2star_img} does not exist"
+    assert os.path.isfile(s0_img), f"File {s0_img} does not exist"
+
+    # Plot histograms
+    t2star_data = masking.apply_mask(t2star_img, mask_img)
+    t2s_p02, t2s_p98 = np.percentile(t2star_data, [2, 98])
+    t2star_histogram = f"{io_generator.prefix}t2star_histogram.svg"
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.hist(t2star_data[t2star_data <= t2s_p98], bins=100)
+    ax.set_xlim(0, t2s_p98)
+    ax.set_title("T2*", fontsize=20)
+    ax.set_ylabel("Count", fontsize=16)
+    ax.set_xlabel("Seconds\n(limited to 98th percentile)", fontsize=16)
+    fig.tight_layout()
+    fig.savefig(os.path.join(io_generator.out_dir, "figures", t2star_histogram))
+
+    s0_data = masking.apply_mask(s0_img, mask_img)
+    s0_p02, s0_p98 = np.percentile(s0_data, [2, 98])
+    s0_histogram = f"{io_generator.prefix}s0_histogram.svg"
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.hist(s0_data[s0_data <= s0_p98], bins=100)
+    ax.set_xlim(0, s0_p98)
+    ax.set_title("S0", fontsize=20)
+    ax.set_ylabel("Count", fontsize=16)
+    ax.set_xlabel("Arbitrary Units\n(limited to 98th percentile)", fontsize=16)
+    fig.tight_layout()
+    fig.savefig(os.path.join(io_generator.out_dir, "figures", s0_histogram))
+
+    # Plot T2* and S0 maps
+    t2star_plot = f"{io_generator.prefix}t2star_brain.svg"
+    plotting.plot_stat_map(
+        t2star_img,
+        bg_img=None,
+        display_mode="mosaic",
+        symmetric_cbar=False,
+        black_bg=True,
+        cmap="gray",
+        vmin=t2s_p02,
+        vmax=t2s_p98,
+        annotate=False,
+        output_file=os.path.join(io_generator.out_dir, "figures", t2star_plot),
+    )
+
+    s0_plot = f"{io_generator.prefix}s0_brain.svg"
+    plotting.plot_stat_map(
+        s0_img,
+        bg_img=None,
+        display_mode="mosaic",
+        symmetric_cbar=False,
+        black_bg=True,
+        cmap="gray",
+        vmin=s0_p02,
+        vmax=s0_p98,
+        annotate=False,
+        output_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
+    )
