@@ -27,7 +27,7 @@ dependencies = [
     "nibabel>=2.5.1,<=5.2.0",
     "nilearn>=0.7,<=0.10.3",
     "numpy>=1.16,<=1.26.4",
-    "pandas>=2.0,<=2.2.0",
+    "pandas>=2.0,<=2.2.1",
     "pybtex",
     "pybtex-apa-style",
     "robustica>=0.1.3",
