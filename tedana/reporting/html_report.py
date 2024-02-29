@@ -14,7 +14,7 @@ from pybtex.database.input import bibtex
 from pybtex.plugin import find_plugin
 
 from tedana import __version__
-from tedana.io import load_json
+from tedana.io import OutputGenerator, load_json
 from tedana.reporting import dynamic_figures as df
 
 LGR = logging.getLogger("GENERAL")
@@ -143,6 +143,12 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
     # Initial carpet plot (default one)
     initial_carpet = f"./figures/{prefix}carpet_optcom.svg"
 
+    # T2* and S0 images
+    t2star_brain = f"./figures/{prefix}t2star_brain.svg"
+    t2star_histogram = f"./figures/{prefix}t2star_histogram.svg"
+    s0_brain = f"./figures/{prefix}s0_brain.svg"
+    s0_histogram = f"./figures/{prefix}s0_histogram.svg"
+
     # Convert bibtex to html
     references, bibliography = _bib2html(references)
 
@@ -159,6 +165,10 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
         about=about,
         prefix=prefix,
         initialCarpet=initial_carpet,
+        t2starBrainPlot=t2star_brain,
+        t2starHistogram=t2star_histogram,
+        s0BrainPlot=s0_brain,
+        s0Histogram=s0_histogram,
         references=references,
         javascript=bokeh_js,
         buttons=buttons,
@@ -212,18 +222,17 @@ def _generate_info_table(info_dict):
     return info_html
 
 
-def generate_report(io_generator):
+def generate_report(io_generator: OutputGenerator) -> None:
     """Generate an HTML report.
 
     Parameters
     ----------
-    io_generator : tedana.io.OutputGenerator
+    io_generator : :obj:`tedana.io.OutputGenerator`
         io_generator object for this workflow's output
 
-    Returns
-    -------
-    HTML : file
-        A generated HTML report
+    Notes
+    -----
+    This writes out an HTML report to a file.
     """
     # Load the component time series
     comp_ts_path = io_generator.get_name("ICA mixing tsv")

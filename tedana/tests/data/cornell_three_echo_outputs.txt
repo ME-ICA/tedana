@@ -100,6 +100,10 @@ figures/comp_067.png
 figures/comp_068.png
 figures/pca_criteria.png
 figures/pca_variance_explained.png
+figures/s0_brain.svg
+figures/s0_histogram.svg
+figures/t2star_brain.svg
+figures/t2star_histogram.svg
 references.bib
 report.txt
 tedana_report.html
