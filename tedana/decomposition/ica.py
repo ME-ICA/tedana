@@ -13,6 +13,8 @@ from tedana.config import (
     DEFAULT_N_MAX_ITER,
     DEFAULT_N_MAX_RESTART,
     DEFAULT_N_ROBUST_RUNS,
+    WARN_IQ,
+    WARN_N_ROBUST_RUNS,
 )
 
 LGR = logging.getLogger("GENERAL")
@@ -114,7 +116,7 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
     fixed_seed : :obj:`int`
         Random seed from final decomposition.
     """
-    if n_robust_runs > 200:
+    if n_robust_runs > WARN_N_ROBUST_RUNS:
         LGR.warning(
             "The selected n_robust_runs is a very big number! The process will take a long time!"
         )
@@ -146,11 +148,16 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
         except Exception:
             continue
 
+    LGR.info(
+        f"The {robust_method} clustering algorithm was used clustering "
+        f"components across different runs"
+    )
+
     iq = np.array(
         np.mean(q[q["cluster_id"] >= 0].iq)
     )  # Excluding outliers (cluster -1) from the index quality calculation
 
-    if iq < 0.6:
+    if iq < WARN_IQ:
         LGR.warning(
             f"The resultant mean Index Quality is low ({iq}). It is recommended to rerun the "
             "process with a different seed."

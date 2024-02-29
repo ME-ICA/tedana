@@ -3,6 +3,8 @@
 import argparse
 import os.path as op
 
+from tedana.config import MAX_N_ROBUST_RUNS, MIN_N_ROBUST_RUNS
+
 
 def check_tedpca_value(string, is_parser=True):
     """
@@ -30,6 +32,31 @@ def check_tedpca_value(string, is_parser=True):
         intarg = int(floatarg)
         if floatarg < 1:
             raise error("Int argument must be greater than 1")
+        return intarg
+
+
+def check_n_robust_runs_value(string, is_parser=True):
+    """
+    Check n_robust_runs argument.
+
+    Check if argument is an int between MIN_N_ROBUST_RUNS  and MAX_N_ROBUST_RUNS.
+    """
+    error = argparse.ArgumentTypeError if is_parser else ValueError
+    try:
+        intarg = int(string)
+    except ValueError:
+        msg = (
+            f"Argument to n_robust_runs must be an integer "
+            f"between {MIN_N_ROBUST_RUNS} and {MAX_N_ROBUST_RUNS}."
+        )
+        raise error(msg)
+
+    if not (MIN_N_ROBUST_RUNS <= intarg <= MAX_N_ROBUST_RUNS):
+        raise error(
+            f"n_robust_runs must be an integer between {MIN_N_ROBUST_RUNS} "
+            f"and {MAX_N_ROBUST_RUNS}."
+        )
+    else:
         return intarg
 
 

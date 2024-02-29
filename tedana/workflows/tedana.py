@@ -419,11 +419,12 @@ def tedana_workflow(
         Testing to better understand the effects of the differences is ongoing.
         Default is 'kundu'.
     ica_method : {'robustica', 'fastica'}, optional
-        The applied ICA method. If set to fastica the FastICA from sklearn
-        library will be run once with the seed value. 'robustica' will run
+        The applied ICA method. fastica runs FastICA from sklearn
+        once with the seed value. 'robustica' will run
         'FastICA' n_robust_runs times and uses clustering methods to overcome
-        the randomness of the FastICA algorithm. When set to fastica n_robust_runs
-        will not be effective.
+        the randomness of the FastICA algorithm.
+        FastICA was the default in tedana version 23 and earlier.
+        robustica will be slower.
         Default is 'robustica'
     n_robust_runs : :obj:`int`, optional
         The number of times robustica will run. This is only effective when 'ica_method' is
