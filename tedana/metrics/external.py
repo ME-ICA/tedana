@@ -1,14 +1,10 @@
 """Metrics unrelated to TE-(in)dependence."""
 
 import logging
-import os.path as op
 
 import numpy as np
 import pandas as pd
 from scipy import linalg, stats
-
-from tedana.io import load_json
-from tedana.utils import get_resource_path
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -30,11 +26,9 @@ def load_validate_external_regressors(external_regressors, external_regressor_co
     ----------
     external_regressors: :obj:`str`
         Path and name of tsv file that includes external regressor time series
-    external_regressor_config: :obj:`str`
-        An included dictionary name or path to a JSON file that defines one.
-        This contains expected column labels for the regressors,
-        how the regressors can be grouped together, and what statistical
-        tests to use.
+    external_regressor_config: :obj:`dict`
+        A validated dictionary with info for fitting external regressors
+        to component time series
     n_time: :obj:`int`
         Number of timepoints in the fMRI time series
 
@@ -43,12 +37,7 @@ def load_validate_external_regressors(external_regressors, external_regressor_co
     external_regressors: :obj:`pandas.DataFrame`
         Each column is a labelled regressor and the number of rows should
         match the number of timepoints in the fMRI time series
-    external_regressor_config : :obj:`dict`
-        A validated dictionary with info for fitting external regressors
-        to component time series
     """
-    LGR.info(f"Loading external regressor dictionary: {external_regressor_config}")
-    external_regressor_config = load_external_regressor_config(external_regressor_config)
     try:
         external_regressors = pd.read_table(external_regressors)
     except FileNotFoundError:
@@ -56,47 +45,7 @@ def load_validate_external_regressors(external_regressors, external_regressor_co
 
     validate_extern_regress(external_regressors, external_regressor_config, n_time)
 
-    return external_regressors, external_regressor_config
-
-
-def load_external_regressor_config(external_regressor_config):
-    """
-    Load and validate external regressor dictionary.
-
-    Parameters
-    ----------
-        An included dictionary name or path to a JSON file that defines one.
-        This contains expected column labels for the regressors,
-        how the regressors can be grouped together, and what statistical
-        tests to use.
-
-    Returns
-    -------
-    external_regressor_config : :obj:`dict`
-        A validated dictionary for fitting external regressors to component time series
-    """
-    if external_regressor_config in DEFAULT_REGRESSOR_DICTS:
-        fname = op.join(
-            get_resource_path(), "external_regressor_configs", external_regressor_config + ".json"
-        )
-    else:
-        fname = external_regressor_config
-
-    try:
-        external_regressor_config = load_json(fname)
-    except FileNotFoundError:
-        raise ValueError(
-            f"Cannot find external regressor dictionary {external_regressor_config}. "
-            "Please check your path or use a "
-            f"default dictionary: ({DEFAULT_REGRESSOR_DICTS})."
-        )
-    except IsADirectoryError:
-        raise ValueError(
-            f"{external_regressor_config} is a directory. Please supply a JSON file or "
-            f"default dictionary: ({DEFAULT_REGRESSOR_DICTS})."
-        )
-
-    return external_regressor_config
+    return external_regressors
 
 
 def validate_extern_regress(external_regressors, external_regressor_config, n_time):
@@ -128,57 +77,6 @@ def validate_extern_regress(external_regressors, external_regressor_config, n_ti
     # multiple times to see all validation errors. Will either collect errors and raise at the
     # end of the function or raise errors that prevent the rest of the function from completing
     err_msg = ""
-
-    # Set the fields that should always be present
-    dict_expected_keys = set(["regess_ID", "info", "detrend", "calc_stats"])
-    calc_stats_key_options = set(["f", "corr"])
-    # defaults = {"selector", "decision_node_idx"}
-    # default_classifications = {"nochange", "accepted", "rejected", "unclassified"}
-    # default_decide_comps = {"all", "accepted", "rejected", "unclassified"}
-
-    # Confirm that the required fields exist
-    missing_keys = dict_expected_keys - set(external_regressor_config.keys())
-    if missing_keys:
-        # If there are missing keys, this function may crash before the end.
-        # End function here with a clear error message rather than adding
-        # `if assert external_regressor_config.get()` statements before every section
-        err_msg += f"External regressor dictionary missing required fields: {missing_keys}\n"
-
-    if external_regressor_config["calc_stats"].lower() not in calc_stats_key_options:
-        err_msg += (
-            "calc_stats in external_regressor_config is "
-            f"{external_regressor_config['calc_stats']}. It must be one of the following "
-            f"{calc_stats_key_options}\n"
-        )
-
-    if (external_regressor_config["calc_stats"].lower() != "f") and (
-        "f_stats_partial_models" in set(external_regressor_config.keys())
-    ):
-        err_msg += (
-            "External regressor dictionary cannot include"
-            "f_stats_partial_models if calc_stats is not F\n"
-        )
-
-    if "f_stats_partial_models" in set(external_regressor_config.keys()):
-        dict_expected_keys.add("f_stats_partial_models")
-        dict_expected_keys.update(set(external_regressor_config["f_stats_partial_models"]))
-        missing_partial_models = set(external_regressor_config["f_stats_partial_models"]) - set(
-            external_regressor_config.keys()
-        )
-        if missing_partial_models:
-            raise RegressError(
-                f"{err_msg}"
-                "External regressor dictionary missing required fields for partial "
-                f"models defined in f_stats_partial_models: {missing_partial_models}"
-            )
-
-    # Warn if unused fields exist
-    unused_keys = set(external_regressor_config.keys()) - set(dict_expected_keys)
-    if unused_keys:
-        LGR.warning(
-            "External regressor dictionary includes fields that "
-            f"are not used or logged {unused_keys}"
-        )
 
     # Validating the information in external_regressor_config works
     # with the data in external_regressors

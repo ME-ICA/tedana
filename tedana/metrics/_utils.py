@@ -8,6 +8,28 @@ from scipy import stats
 LGR = logging.getLogger("GENERAL")
 
 
+def add_external_dependencies(dependency_config, external_regressor_config):
+    """
+    Add dependency information in external regressors are inputted.
+
+    TODO Add a docstring
+    """
+    # Add "external regressors" and an existing input
+    dependency_config["inputs"].append("external regressors")
+
+    if external_regressor_config["calc_stats"].lower() == "f":
+        if "f_stats_partial_models" in set(external_regressor_config.keys()):
+            model_names = external_regressor_config["f_stats_partial_models"].append("Full")
+        else:
+            model_names = ["Full"]
+        for model_name in model_names:
+            for stat_type in ["Fstat", "R2stat", "pval"]:
+                dependency_config["dependencies"][f"{stat_type} {model_name} Model"] = [
+                    "external regressors"
+                ]
+    return dependency_config
+
+
 def dependency_resolver(dict_, requested_metrics, base_inputs):
     """Identify all necessary metrics based on a list of requested metrics.
 

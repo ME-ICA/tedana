@@ -94,10 +94,16 @@ def validate_tree(tree):
         "intermediate_classifications",
         "classification_tags",
         "nodes",
+        "external_regressors",
     ]
+    tree_optional_keys = ["generated_metrics"]
     defaults = {"selector", "decision_node_idx"}
     default_classifications = {"nochange", "accepted", "rejected", "unclassified"}
     default_decide_comps = {"all", "accepted", "rejected", "unclassified"}
+
+    # If a tree doesn't include "external_regressors", instead of crashing, set to None
+    if "external_regressors" not in set(tree.keys()):
+        tree["external_regressors"] = None
 
     # Confirm that the required fields exist
     missing_keys = set(tree_expected_keys) - set(tree.keys())
@@ -109,12 +115,9 @@ def validate_tree(tree):
 
     # Warn if unused fields exist
     unused_keys = set(tree.keys()) - set(tree_expected_keys) - {"used_metrics"}
-    # Make sure some fields don't trigger a warning; hacky, sorry
-    ok_to_not_use = (
-        "reconstruct_from",
-        "generated_metrics",
-    )
-    for k in ok_to_not_use:
+
+    # Separately check for optional, but used keys
+    for k in tree_optional_keys:
         if k in unused_keys:
             unused_keys.remove(k)
     if unused_keys:
@@ -216,6 +219,57 @@ def validate_tree(tree):
                     "tag that was not predefined"
                 )
 
+    # If there is an external_regressors field, validate it
+    if tree["external_regressors"] is not None:
+        external_regressor_config = tree["external_regressors"]
+        # Define the fields that should always be present
+        dict_expected_keys = set(["regess_ID", "info", "detrend", "calc_stats"])
+
+        # Right now, "f" is the only option, but this leaves open the possibility
+        #  to have additional options
+        calc_stats_key_options = set("f")
+
+        # Confirm that the required fields exist
+        missing_keys = dict_expected_keys - set(external_regressor_config.keys())
+        if missing_keys:
+            err_msg += f"External regressor dictionary missing required fields: {missing_keys}\n"
+
+        if external_regressor_config["calc_stats"].lower() not in calc_stats_key_options:
+            err_msg += (
+                "calc_stats in external_regressor_config is "
+                f"{external_regressor_config['calc_stats']}. It must be one of the following: "
+                f"{calc_stats_key_options}\n"
+            )
+
+        if (external_regressor_config["calc_stats"].lower() != "f") and (
+            "f_stats_partial_models" in set(external_regressor_config.keys())
+        ):
+            err_msg += (
+                "External regressor dictionary cannot include"
+                "f_stats_partial_models if calc_stats is not F\n"
+            )
+
+        if "f_stats_partial_models" in set(external_regressor_config.keys()):
+            dict_expected_keys.add("f_stats_partial_models")
+            dict_expected_keys.update(set(external_regressor_config["f_stats_partial_models"]))
+            missing_partial_models = set(
+                external_regressor_config["f_stats_partial_models"]
+            ) - set(external_regressor_config.keys())
+            if missing_partial_models:
+                raise TreeError(
+                    f"{err_msg}"
+                    "External regressor dictionary missing required fields for partial "
+                    f"models defined in f_stats_partial_models: {missing_partial_models}"
+                )
+
+        # Warn if unused fields exist
+        unused_keys = set(external_regressor_config.keys()) - set(dict_expected_keys)
+        if unused_keys:
+            LGR.warning(
+                "External regressor dictionary includes fields that "
+                f"are not used or logged {unused_keys}"
+            )
+
     if err_msg:
         raise TreeError("\n" + err_msg)
 
@@ -240,7 +294,6 @@ class ComponentSelector:
         """
         self.tree_name = tree
         self.tree = load_config(self.tree_name)
-        self.tree = expand_nodes(self.tree, self.component_table_.columns.tolist())
 
         LGR.info("Performing component selection with " + self.tree["tree_id"])
         LGR.info(self.tree.get("info", ""))
@@ -328,6 +381,8 @@ class ComponentSelector:
 
         # Construct an un-executed selector
         self.component_table_ = component_table.copy()
+        # Expand out metrics defined by regular expressions in the nodes
+        self.tree = expand_nodes(self.tree, self.component_table_.columns.tolist())
 
         # this will crash the program with an error message if not all
         # necessary_metrics are in the comptable

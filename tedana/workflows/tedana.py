@@ -536,19 +536,15 @@ def tedana_workflow(
     # Load external regressors if provided
     # Decided to do the validation here so that, if there are issues, an error
     #  will be raised before PCA/ICA
-    if external_regressors:
-        if external_regressor_config:
-            (
-                external_regressors,
-                external_regressor_config,
-            ) = metrics.external.load_validate_external_regressors(
-                external_regressors, external_regressor_config, catd.shape[2]
-            )
-        else:
-            raise ValueError(
-                "If external_regressors is an input, then "
-                "external_regressor_config also needs to be used."
-            )
+    if "external_regressors" in set(selector.tree.keys()):
+        external_regressors = metrics.external.load_validate_external_regressors(
+            external_regressors, selector.tree["external_regressors"], catd.shape[2]
+        )
+    else:
+        raise ValueError(
+            "If external_regressors is an input, then "
+            "external_regressor_config also needs to be used."
+        )
 
     io_generator = io.OutputGenerator(
         ref_img,
@@ -722,17 +718,17 @@ def tedana_workflow(
             extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
             necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
-            comptable = metrics.collect.generate_metrics(
-                catd,
-                data_oc,
-                mmix,
-                masksum_clf,
-                tes,
-                io_generator,
-                "ICA",
+            comptable, _ = metrics.collect.generate_metrics(
+                data_cat=catd,
+                data_optcom=data_oc,
+                mixing=mmix,
+                adaptive_mask=masksum_clf,
+                tes=tes,
+                io_generator=io_generator,
+                label="ICA",
                 metrics=necessary_metrics,
                 external_regressors=external_regressors,
-                external_regressor_config=external_regressor_config,
+                external_regressor_config=selector.tree["external_regressors"],
             )
             LGR.info("Selecting components from ICA results")
             selector = selection.automatic_selection(
@@ -770,14 +766,14 @@ def tedana_workflow(
         extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
         necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
-        comptable = metrics.collect.generate_metrics(
-            catd,
-            data_oc,
-            mmix,
-            masksum_clf,
-            tes,
-            io_generator,
-            "ICA",
+        comptable, _ = metrics.collect.generate_metrics(
+            data_cat=catd,
+            data_optcom=data_oc,
+            mixing=mmix,
+            adaptive_mask=masksum_clf,
+            tes=tes,
+            io_generator=io_generator,
+            label="ICA",
             metrics=necessary_metrics,
             external_regressors=external_regressors,
             external_regressor_config=external_regressor_config,

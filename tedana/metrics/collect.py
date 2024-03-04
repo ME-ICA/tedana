@@ -8,7 +8,12 @@ import pandas as pd
 
 from tedana import io, utils
 from tedana.metrics import dependence, external
-from tedana.metrics._utils import dependency_resolver, determine_signs, flip_components
+from tedana.metrics._utils import (
+    add_external_dependencies,
+    dependency_resolver,
+    determine_signs,
+    flip_components,
+)
 from tedana.stats import getfbounds
 
 LGR = logging.getLogger("GENERAL")
@@ -80,7 +85,8 @@ def generate_metrics(
                 "If external_regressors is defined, then "
                 "external_regressor_config also needs to be defined."
             )
-        metrics.append("external fit")
+        dependency_config = add_external_dependencies(dependency_config, external_regressor_config)
+        dependency_config["inputs"].append("external regressors")
 
     RepLGR.info(f"The following metrics were calculated: {', '.join(metrics)}.")
 
@@ -341,7 +347,7 @@ def generate_metrics(
         )
 
     # External regressor-based metrics
-    if "external fit" in required_metrics:
+    if external_regressors is not None and external_regressor_config is not None:
         # external_regressor_names = external_regressors.columns.tolist()
         LGR.info("Calculating external regressor fits")
         comptable = external.fit_regressors(

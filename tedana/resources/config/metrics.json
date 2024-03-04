@@ -6,8 +6,7 @@
         "adaptive_mask",
         "mask",
         "tes",
-        "ref_img",
-        "external_regressors"
+        "ref_img"
     ],
     "dependencies": {
         "kappa": [
