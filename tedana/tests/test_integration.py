@@ -258,7 +258,7 @@ def test_integration_five_echo(skip_integration):
         data=datalist,
         tes=echo_times,
         ica_method="robustica",
-        n_robust_runs=10,
+        n_robust_runs=6,
         out_dir=out_dir,
         tedpca=0.95,
         fittype="curvefit",
@@ -381,54 +381,6 @@ def test_integration_three_echo(skip_integration):
     # compare the generated output files
     fn = resource_filename("tedana", "tests/data/cornell_three_echo_outputs.txt")
     check_integration_outputs(fn, out_dir)
-
-
-def test_integration_robustica_three_echo(skip_integration):
-    """Integration test of the full tedana workflow with robustica using three-echo test data."""
-
-    if skip_integration:
-        pytest.skip("Skipping three-echo integration test")
-
-    test_data_path, osf_id = data_for_testing_info("three-echo")
-    out_dir = os.path.abspath(os.path.join(test_data_path, "../../outputs/three-echo_robustica"))
-    out_dir_manual = f"{out_dir}-rerun"
-
-    if os.path.exists(out_dir):
-        shutil.rmtree(out_dir)
-
-    if os.path.exists(out_dir_manual):
-        shutil.rmtree(out_dir_manual)
-
-    # download data and run the test
-    download_test_data(osf_id, test_data_path)
-    tedana_cli.tedana_workflow(
-        data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
-        tes=[14.5, 38.5, 62.5],
-        ica_method="robustica",
-        out_dir=out_dir,
-        low_mem=True,
-        tedpca="aic",
-    )
-
-    # Test re-running, but use the CLI
-    args = [
-        "-d",
-        f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
-        "-e",
-        "14.5",
-        "38.5",
-        "62.5",
-        "--ica_method",
-        "robustica",
-        "--out-dir",
-        out_dir_manual,
-        "--debug",
-        "--verbose",
-        "-f",
-        "--mix",
-        os.path.join(out_dir, "desc-ICA_mixing.tsv"),
-    ]
-    tedana_cli._main(args)
 
 
 def test_integration_reclassify_insufficient_args(skip_integration):

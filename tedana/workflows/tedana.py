@@ -37,7 +37,11 @@ from tedana.config import (
     DEFAULT_SEED,
 )
 from tedana.stats import computefeats2
-from tedana.workflows.parser_utils import check_tedpca_value, is_valid_file
+from tedana.workflows.parser_utils import (
+    check_n_robust_runs_value,
+    check_tedpca_value,
+    is_valid_file,
+)
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -202,13 +206,12 @@ def _get_parser():
     optional.add_argument(
         "--n_robust_runs",
         dest="n_robust_runs",
-        type=int,
+        type=check_n_robust_runs_value,
         help=(
             "The number of times robustica will run. "
             "This is only effective when ica_method is "
             "set to robustica."
         ),
-        choices=range(5, 500),
         default=DEFAULT_N_ROBUST_RUNS,
     )
     optional.add_argument(
