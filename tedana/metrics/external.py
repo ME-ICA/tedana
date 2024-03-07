@@ -4,7 +4,9 @@ import logging
 
 import numpy as np
 import pandas as pd
-from scipy import linalg, stats
+from scipy import stats
+
+from tedana.stats import fit_model
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -444,49 +446,6 @@ def build_fstat_regressor_models(
     #     )  # could also be saves as .eps
 
     return regressor_models
-
-
-def fit_model(x, y, output_residual=False):
-    """
-    Linear regression for a model y = betas * x + error.
-
-    Parameters
-    ----------
-    x : (R X T) :obj:`numpy.ndarray`
-        2D array with the regressors for the specified model an time
-    y : (T X C) :obj:`numpy.ndarray`
-        Time by mixing matrix components for the time series for fitting
-    output_residual : :obj:`bool`
-        If true, then this just outputs the residual of the fit.
-        If false, then outputs beta fits, sse, and df
-
-    Returns
-    -------
-    residual : (T X C) :obj:`numpy.ndarray`
-        The residual time series for the fit (only if output_residual is True)
-    betas : (R X C) :obj:`numpy.ndarray`
-        The magnitude fits for the model (only if output_residual is False)
-    sse : (R X C) :obj:`numpy.ndarray`
-        The sum of square error for the model (only if output_residual is False)
-    df : (R X C) :obj:`numpy.ndarray`
-        The degrees of freeom for the model (only if output_residual is False)
-        (timepoints - number of regressors)
-    """
-    betas, _, _, _ = linalg.lstsq(x, y)
-    # matrix-multiplication on the regressors with the betas -> to create a new 'estimated'
-    # component matrix  = fitted regressors (least squares beta solution * regressors)
-    fitted_regressors = np.matmul(x, betas)
-    residual = y - fitted_regressors
-    if output_residual:
-        return residual
-    else:
-        # sum the differences between the actual ICA components and the 'estimated'
-        # component matrix (beta-fitted regressors)
-        sse = np.sum(np.square(residual), axis=0)
-        # calculate how many individual values [timepoints] are free to vary after
-        # the least-squares solution [beta] betw X & Y is calculated
-        df = y.shape[0] - betas.shape[0]
-        return betas, sse, df
 
 
 def fit_model_with_stats(y, regressor_models, base_label, full_label="full"):
