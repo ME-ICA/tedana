@@ -536,14 +536,12 @@ def tedana_workflow(
     # Load external regressors if provided
     # Decided to do the validation here so that, if there are issues, an error
     #  will be raised before PCA/ICA
-    if "external_regressors" in set(selector.tree.keys()):
+    if (
+        "external_regressors" in set(selector.tree.keys())
+        and selector.tree["external_regressors"] is not None
+    ):
         external_regressors = metrics.external.load_validate_external_regressors(
             external_regressors, selector.tree["external_regressors"], catd.shape[2]
-        )
-    else:
-        raise ValueError(
-            "If external_regressors is an input, then "
-            "external_regressor_config also needs to be used."
         )
 
     io_generator = io.OutputGenerator(

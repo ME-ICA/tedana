@@ -164,17 +164,18 @@ def fit_regressors(comptable, external_regressors, external_regressor_config, mi
     else:
         LGR.warning("External regressor fitting applied without detrending fMRI time series")
 
-    if external_regressor_config["calc_stats"].lower() == "corr":
-        if "detrend_regressors" not in locals():
-            # set detrend regressors to None if it doesn't exist
-            detrend_regressors = None
-        comptable = correlate_regressors(
-            comptable, external_regressors, mixing, detrend_regressors=detrend_regressors
-        )
-    elif external_regressor_config["calc_stats"].lower() == "f":
+    if external_regressor_config["calc_stats"].lower() == "f":
         # external_regressors = pd.concat([external_regressors, detrend_regressors])
         comptable = fit_mixing_to_regressors(
             comptable, external_regressors, external_regressor_config, mixing, detrend_regressors
+        )
+    else:
+        # This should already be valided by this point, but keeping the catch clause here
+        # since this would otherwise just return comptable with no changes, which would
+        # make a hard-to-track error
+        raise ValueError(
+            "calc_stats for external regressors in decision tree is "
+            f"{external_regressor_config['calc_stats'].lower()}, which is not valid."
         )
 
     return comptable
@@ -300,12 +301,19 @@ def fit_mixing_to_regressors(
     # betas_full_model = pd.DataFrame(
     #     data=betas_full.T,
     #     columns=np.concatenate(
-    #         (np.array(detrend_regressors.columns), np.array(external_regressors.columns))
+    #         (np.array(detrend_regressors.columns), np.array(exte rnal_regressors.columns))
     #     ),
     # )
     f_vals = pd.DataFrame(data=f_vals_tmp, columns=["Fstat Full Model"])
     p_vals = pd.DataFrame(data=p_vals_tmp, columns=["pval Full Model"])
     r2_vals = pd.DataFrame(data=r2_vals_tmp, columns=["R2stat Full Model"])
+
+    # Run a separate model if there are task regressors that might want to be kept
+    # TODO Need to edit this function so regressor_models can use something besides the full model
+    if "task keep" in regressor_models.keys():
+        betas_task_keep, f_vals_tmp, p_vals_tmp, r2_vals_tmp = fit_model_with_stats(
+            y=mixing, regressor_models=regressor_models, base_label="base", full_label="task keep"
+        )
 
     # Test the fits between the full model and the full model excluding one category of regressor
     if "f_stats_partial_models" in external_regressor_config.keys():
@@ -362,14 +370,36 @@ def build_fstat_regressor_models(
 
     # All regressor labels from the data frame
     regressor_labels = external_regressors.columns
-
     detrend_regressors_arr = detrend_regressors.to_numpy()
-    regressor_models = {
-        "base": detrend_regressors_arr,
-        "full": np.concatenate(
+    regressor_models = {"base": detrend_regressors_arr}
+    LGR.info(f"Size for base Regressor Model: {regressor_models['base'].shape}")
+
+    if "task_keep_model" in external_regressor_config:
+        task_keep_model = external_regressor_config["task_keep_model"]
+        tmp_model_labels = {"full": set(regressor_labels) - set(task_keep_model)}
+        tmp_model_labels["task keep"] = set(task_keep_model)
+        for model_name in ["full", "task keep"]:
+            regressor_models[model_name] = detrend_regressors_arr
+            for keep_label in tmp_model_labels[model_name]:
+                regressor_models[model_name] = np.concatenate(
+                    (
+                        regressor_models[model_name],
+                        np.atleast_2d(
+                            stats.zscore(external_regressors[keep_label].to_numpy(), axis=0)
+                        ).T,
+                    ),
+                    axis=1,
+                )
+            tmp_model_labels[model_name].update(set(detrend_regressors.columns))
+            LGR.info(f"Size for {model_name} Model: {regressor_models[model_name].shape}")
+            LGR.info(
+                f"Regressors In {model_name} Model:'{model_name}': {tmp_model_labels[model_name]}"
+            )
+    else:
+        regressor_models["full"] = np.concatenate(
             (detrend_regressors_arr, stats.zscore(external_regressors.to_numpy(), axis=0)), axis=1
-        ),
-    }
+        )
+        LGR.info(f"Size for full Regressor Model: {regressor_models['full'].shape}")
 
     for pmodel in partial_models:
         # For F statistics, the other models to test are those that include everything EXCEPT
@@ -397,9 +427,6 @@ def build_fstat_regressor_models(
             "Regressors In Partial Model (everything but regressors of interest) "
             f"'{no_pmodel}': {keep_labels}"
         )
-
-    LGR.info(f"Size for full Regressor Model: {regressor_models['full'].shape}")
-    LGR.info(f"Size for base Regressor Model: {regressor_models['base'].shape}")
 
     # vestigial codethat was used to check outputs and might be worth reviving
     # if show_plot:
@@ -462,7 +489,7 @@ def fit_model(x, y, output_residual=False):
         return betas, sse, df
 
 
-def fit_model_with_stats(y, regressor_models, base_label):
+def fit_model_with_stats(y, regressor_models, base_label, full_label="full"):
     """
     Fit full and partial models and calculate F stats, R2, and p values.
 
@@ -483,6 +510,9 @@ def fit_model_with_stats(y, regressor_models, base_label):
         The base model to compare the full model against. For F stat for the full
         model, this should be 'base'. For partial models, this should be the name
         of the partial model (i.e. "no motion").
+    full_label : :obj:`str`
+        The full model to use. Default="full" but can also be "task_keep" if
+        tasks were inputted and want to compare results against task.
 
     Returns
     -------
@@ -496,7 +526,7 @@ def fit_model_with_stats(y, regressor_models, base_label):
         The R2 statistics for the fits to the full and partial models
     """
     betas_base, sse_base, df_base = fit_model(regressor_models[base_label], y)
-    betas_full, sse_full, df_full = fit_model(regressor_models["full"], y)
+    betas_full, sse_full, df_full = fit_model(regressor_models[full_label], y)
 
     # larger sample variance / smaller sample variance (F = (SSE1 – SSE2 / m) / SSE2 / n-k,
     # where SSE = residual sum of squares, m = number of restrictions and k = number of
@@ -549,50 +579,6 @@ def fit_model_with_stats(y, regressor_models, base_label):
     #     )  # could also be saved as eps
 
     return betas_full, f_vals, p_vals, r2_vals
-
-
-def correlate_regressors(comptable, external_regressors, mixing, detrend_regressors=None):
-    """Correlate external regressors with mixing components.
-
-    Parameters
-    ----------
-    comptable : (C x X) :obj:`pandas.DataFrame`
-        Component metric table. One row for each component, with a column for
-        each metric. The index is the component number.
-    external_regressors : :obj:`pandas.DataFrame`
-        Each column is a labelled regressor and the number of rows should
-        match the number of timepoints in the fMRI time series
-    mixing : (T x C) array_like
-        Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `data_cat`
-    detrend_regressors: (n_time x polort) :obj:`pandas.DataFrame`
-        Dataframe containing the detrending regressor time series
-
-    Returns
-    -------
-    comptable : (C x X) :obj:`pandas.DataFrame`
-        Component metric table. Same as inputted, with additional columns
-        for metrics related to fitting the external regressors. Each
-        external regressor has one metric column with the name of the
-        regressor followed by "_correlation_
-    """
-    if isinstance(detrend_regressors, pd.DataFrame):
-        # Detrend the mixing matrix before correlating to external regressors
-        mixing = fit_model(detrend_regressors.to_numpy(), mixing, output_residual=True)
-
-    external_regressor_names = external_regressors.columns.tolist()
-    for col in external_regressor_names:
-        external_regressor_arr = external_regressors[col].values
-        if isinstance(detrend_regressors, pd.DataFrame):
-            external_regressor_arr = fit_model(
-                detrend_regressors.to_numpy(), external_regressor_arr, output_residual=True
-            )
-        assert external_regressor_arr.ndim == 1
-        assert external_regressor_arr.shape[0] == mixing.shape[0]
-        corrs = np.abs(np.corrcoef(external_regressor_arr, mixing.T)[0, 1:])
-        comptable[f"{col}_correlation"] = corrs
-
-    return comptable
 
 
 # Vestigial code that was used for testing accuracy of some variables
