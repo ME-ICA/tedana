@@ -23,7 +23,7 @@
         "Unlikely BOLD",
         "Low variance"
     ],
-    "external_regressors": {
+    "external_regressor_config": {
         "regess_ID": "Fmodel",
         "info": "Fits all external regressors to a single model using an F statistic",
         "report": "Unspecified external nuissance regressors were fit to components using a linear model were rejected if they fit.",

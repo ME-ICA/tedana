@@ -115,11 +115,6 @@
             "mask",
             "ref_img",
             "tes"
-        ],
-        "external fit": [
-            "mixing",
-            "external_regressors",
-            "external_regressor_config"
         ]
     }
 }

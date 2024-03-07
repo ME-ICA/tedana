@@ -416,8 +416,6 @@ def test_integration_three_echo_external_regressors_fstat(skip_integration):
         external_regressors=resource_filename(
             "tedana", "tests/data/external_regress_Ftest_3echo.tsv"
         ),
-        # external_regressor_config="Mot12_CSF",
-        external_regressor_config="Fmodel",
         low_mem=True,
         tedpca="aic",
     )

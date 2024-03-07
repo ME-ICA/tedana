@@ -94,16 +94,16 @@ def validate_tree(tree):
         "intermediate_classifications",
         "classification_tags",
         "nodes",
-        "external_regressors",
+        "external_regressor_config",
     ]
     tree_optional_keys = ["generated_metrics"]
     defaults = {"selector", "decision_node_idx"}
     default_classifications = {"nochange", "accepted", "rejected", "unclassified"}
     default_decide_comps = {"all", "accepted", "rejected", "unclassified"}
 
-    # If a tree doesn't include "external_regressors", instead of crashing, set to None
-    if "external_regressors" not in set(tree.keys()):
-        tree["external_regressors"] = None
+    # If a tree doesn't include "external_regressor_config", instead of crashing, set to None
+    if "external_regressor_config" not in set(tree.keys()):
+        tree["external_regressor_config"] = None
 
     # Confirm that the required fields exist
     missing_keys = set(tree_expected_keys) - set(tree.keys())
@@ -219,9 +219,9 @@ def validate_tree(tree):
                     "tag that was not predefined"
                 )
 
-    # If there is an external_regressors field, validate it
-    if tree["external_regressors"] is not None:
-        external_regressor_config = tree["external_regressors"]
+    # If there is an external_regressor_config field, validate it
+    if tree["external_regressor_config"] is not None:
+        external_regressor_config = tree["external_regressor_config"]
         # Define the fields that should always be present
         dict_expected_keys = set(["regess_ID", "info", "detrend", "calc_stats"])
 

@@ -177,15 +177,6 @@ def _get_parser():
         default=None,
     )
     optional.add_argument(
-        "--external_labels",
-        dest="external_regressor_config",
-        help=(
-            "Column labels for external regressors & statistical tests to compare be used in the "
-            "decision tree. Either the path and name of a json file or a packaged tree (Mot12_CSF)"
-        ),
-        default=None,
-    )
-    optional.add_argument(
         "--seed",
         dest="fixed_seed",
         metavar="INT",
@@ -345,7 +336,6 @@ def tedana_workflow(
     combmode="t2s",
     tree="kundu",
     external_regressors=None,
-    external_regressor_config=None,
     tedpca="aic",
     fixed_seed=42,
     maxit=500,
@@ -537,11 +527,11 @@ def tedana_workflow(
     # Decided to do the validation here so that, if there are issues, an error
     #  will be raised before PCA/ICA
     if (
-        "external_regressors" in set(selector.tree.keys())
-        and selector.tree["external_regressors"] is not None
+        "external_regressor_config" in set(selector.tree.keys())
+        and selector.tree["external_regressor_config"] is not None
     ):
         external_regressors = metrics.external.load_validate_external_regressors(
-            external_regressors, selector.tree["external_regressors"], catd.shape[2]
+            external_regressors, selector.tree["external_regressor_config"], catd.shape[2]
         )
 
     io_generator = io.OutputGenerator(
@@ -726,7 +716,7 @@ def tedana_workflow(
                 label="ICA",
                 metrics=necessary_metrics,
                 external_regressors=external_regressors,
-                external_regressor_config=selector.tree["external_regressors"],
+                external_regressor_config=selector.tree["external_regressor_config"],
             )
             LGR.info("Selecting components from ICA results")
             selector = selection.automatic_selection(
@@ -774,7 +764,7 @@ def tedana_workflow(
             label="ICA",
             metrics=necessary_metrics,
             external_regressors=external_regressors,
-            external_regressor_config=external_regressor_config,
+            external_regressor_config=selector.tree["external_regressor_config"],
         )
         selector = selection.automatic_selection(
             comptable,
