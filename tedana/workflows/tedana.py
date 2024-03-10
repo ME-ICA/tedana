@@ -586,12 +586,7 @@ def tedana_workflow(
         )
 
     # Create an adaptive mask with at least 1 good echo, for denoising
-    mask_denoise, masksum_denoise = utils.make_adaptive_mask(
-        catd,
-        mask=mask,
-        getsum=True,
-        threshold=1,
-    )
+    mask_denoise, masksum_denoise = utils.make_adaptive_mask(catd, mask=mask, threshold=1)
     LGR.debug(f"Retaining {mask_denoise.sum()}/{n_samp} samples for denoising")
     io_generator.save_file(masksum_denoise, "adaptive mask img")
 

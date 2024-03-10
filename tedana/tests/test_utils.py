@@ -75,27 +75,24 @@ def test_reshape_niimg():
 
 
 def test_make_adaptive_mask():
+    mask_file = pjoin(datadir, "mask.nii.gz")
     # load data make masks
     data = io.load_data(fnames, n_echos=len(tes))[0]
-    mask, masksum = utils.make_adaptive_mask(data, getsum=True, threshold=1)
+    mask, masksum = utils.make_adaptive_mask(data, mask=mask_file, threshold=1)
 
-    # getsum doesn't change mask values
-    assert np.allclose(mask, utils.make_adaptive_mask(data))
     # shapes are all the same
     assert mask.shape == masksum.shape == (64350,)
     assert np.allclose(mask, (masksum >= 1).astype(bool))
     # mask has correct # of entries
-    assert mask.sum() == 50786
+    assert mask.sum() == 49451
     # masksum has correct values
     vals, counts = np.unique(masksum, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([13564, 3977, 5060, 41749]))
+    assert np.allclose(counts, np.array([14899, 3589, 5276, 40586]))
 
-    # test user-defined mask
+    # Apply a threshold of 3
     # TODO: Add mask file with no bad voxels to test against
-    mask, masksum = utils.make_adaptive_mask(
-        data, mask=pjoin(datadir, "mask.nii.gz"), getsum=True, threshold=3
-    )
+    mask, masksum = utils.make_adaptive_mask(data, mask=mask_file, threshold=3)
     assert np.allclose(mask, (masksum >= 3).astype(bool))
 
 
@@ -127,7 +124,7 @@ def test_smoke_make_adaptive_mask():
 
     in the correct format.
 
-    Note: make_adaptive_mask has optional paramters - mask and getsum.
+    Note: make_adaptive_mask has optional paramters - mask and threshold.
     """
     n_samples = 100
     n_echos = 5
@@ -135,9 +132,7 @@ def test_smoke_make_adaptive_mask():
     data = np.random.random((n_samples, n_echos, n_times))
     mask = np.random.randint(2, size=n_samples)
 
-    assert utils.make_adaptive_mask(data) is not None
-    assert utils.make_adaptive_mask(data, mask=mask) is not None  # functions with mask
-    assert utils.make_adaptive_mask(data, getsum=True) is not None  # functions when getsumis true
+    assert utils.make_adaptive_mask(data, mask=mask) is not None  # mask is required
 
 
 def test_smoke_unmask():
