@@ -123,7 +123,7 @@ def test_smoke_make_adaptive_mask():
 
     in the correct format.
 
-    Note: make_adaptive_mask has optional paramters - mask and getsum.
+    Note: make_adaptive_mask has optional paramters - mask and threshold.
     """
     n_samples = 100
     n_echos = 5

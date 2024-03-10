@@ -71,7 +71,7 @@ def make_adaptive_mask(data, mask=None, threshold=1):
         echo
     masksum : (S,) :obj:`numpy.ndarray`
         Valued array indicating the number of echos with sufficient signal in a
-        given voxel. Only returned if `getsum = True`
+        given voxel.
     """
     RepLGR.info(
         "An adaptive mask was then generated, in which each voxel's "
