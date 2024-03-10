@@ -77,10 +77,8 @@ def test_reshape_niimg():
 def test_make_adaptive_mask():
     # load data make masks
     data = io.load_data(fnames, n_echos=len(tes))[0]
-    mask, masksum = utils.make_adaptive_mask(data, getsum=True, threshold=1)
+    mask, masksum = utils.make_adaptive_mask(data, threshold=1)
 
-    # getsum doesn't change mask values
-    assert np.allclose(mask, utils.make_adaptive_mask(data))
     # shapes are all the same
     assert mask.shape == masksum.shape == (64350,)
     assert np.allclose(mask, (masksum >= 1).astype(bool))
@@ -89,13 +87,11 @@ def test_make_adaptive_mask():
     # masksum has correct values
     vals, counts = np.unique(masksum, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([13564, 3977, 5060, 41749]))
+    assert np.allclose(counts, np.array([13564, 4959, 5349, 40478]))
 
     # test user-defined mask
     # TODO: Add mask file with no bad voxels to test against
-    mask, masksum = utils.make_adaptive_mask(
-        data, mask=pjoin(datadir, "mask.nii.gz"), getsum=True, threshold=3
-    )
+    mask, masksum = utils.make_adaptive_mask(data, mask=pjoin(datadir, "mask.nii.gz"), threshold=3)
     assert np.allclose(mask, (masksum >= 3).astype(bool))
 
 
@@ -127,7 +123,7 @@ def test_smoke_make_adaptive_mask():
 
     in the correct format.
 
-    Note: make_adaptive_mask has optional paramters - mask and getsum.
+    Note: make_adaptive_mask has optional paramters - mask and threshold.
     """
     n_samples = 100
     n_echos = 5
@@ -137,7 +133,6 @@ def test_smoke_make_adaptive_mask():
 
     assert utils.make_adaptive_mask(data) is not None
     assert utils.make_adaptive_mask(data, mask=mask) is not None  # functions with mask
-    assert utils.make_adaptive_mask(data, getsum=True) is not None  # functions when getsumis true
 
 
 def test_smoke_unmask():
