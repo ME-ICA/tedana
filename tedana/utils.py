@@ -50,8 +50,7 @@ def reshape_niimg(data):
 
 
 def make_adaptive_mask(data, mask=None, threshold=1):
-    """
-    Make map of `data` specifying longest echo a voxel can be sampled with.
+    """Make map of `data` specifying longest echo a voxel can be sampled with.
 
     Parameters
     ----------
@@ -67,16 +66,36 @@ def make_adaptive_mask(data, mask=None, threshold=1):
     Returns
     -------
     mask : (S,) :obj:`numpy.ndarray`
-        Boolean array of voxels that have sufficient signal in at least one
-        echo
+        Boolean array of voxels that have sufficient signal in at least ``threshold`` echos.
     masksum : (S,) :obj:`numpy.ndarray`
-        Valued array indicating the number of echos with sufficient signal in a
-        given voxel.
+        Valued array indicating the number of echos with sufficient signal in a given voxel.
+
+    Notes
+    -----
+    The adaptive mask is constructed from two methods:
+
+    1.  Count the total number of echoes in each voxel that have "good" data.
+        a.  Calculate the 33rd percentile of values in the first echo,
+            based on voxel-wise mean over time.
+        b.  Identify voxels where the first echo's mean value is equal to the 33rd percentile.
+            Basically, this identifies "exemplar" voxels reflecting the 33rd percentile.
+            -   The 33rd percentile is arbitrary.
+        c.  Calculate 1/3 of the mean value of the exemplar voxels for each echo.
+            -   This is the threshold for "good" data.
+            -   The 1/3 value is arbitrary.
+        d.  Only retain the highest value for each echo, across exemplar voxels.
+        e.  For each voxel, count the number of echoes that have a mean value greater than the
+            corresponding echo's threshold.
+    2.  Determine the echo at which the signal stops decreasing for each voxel.
+        This essentially identifies the last echo with "good" data.
+
+    The element-wise minimum value between the two methods is used to construct the adaptive mask.
     """
     RepLGR.info(
         "An adaptive mask was then generated, in which each voxel's "
         "value reflects the number of echoes with 'good' data."
     )
+    n_samples, n_echos, _ = data.shape
 
     # take temporal mean of echos and extract non-zero values in first echo
     echo_means = data.mean(axis=-1)  # temporal mean of echos
@@ -104,6 +123,15 @@ def make_adaptive_mask(data, mask=None, threshold=1):
     # determine samples where absolute value is greater than echo-specific thresholds
     # and count # of echos that pass criterion
     masksum = (np.abs(echo_means) > lthrs).sum(axis=-1)
+
+    # Determine where voxels stop decreasing in signal from echo to echo
+    echo_diffs = np.hstack((np.full((n_samples, 1), -1), np.diff(echo_means, axis=1)))
+    diff_mask = echo_diffs >= 0  # flag where signal is not decreasing
+    last_decreasing_echo = diff_mask.argmax(axis=1)
+    last_decreasing_echo[last_decreasing_echo == 0] = n_echos  # if no increase, set to n_echos
+
+    # Retain the more conservative of the two adaptive mask estimates
+    masksum = np.minimum(masksum, last_decreasing_echo)
 
     if mask is None:
         # make it a boolean mask to (where we have at least `threshold` echoes with good signal)
