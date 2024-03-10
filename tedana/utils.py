@@ -49,20 +49,17 @@ def reshape_niimg(data):
     return fdata
 
 
-def make_adaptive_mask(data, mask=None, getsum=False, threshold=1):
+def make_adaptive_mask(data, mask=None, threshold=1):
     """
     Make map of `data` specifying longest echo a voxel can be sampled with.
 
     Parameters
     ----------
     data : (S x E x T) array_like
-        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
-        time
+        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is time.
     mask : :obj:`str` or img_like, optional
         Binary mask for voxels to consider in TE Dependent ANAlysis. Default is
         to generate mask from data with good signal across echoes
-    getsum : :obj:`bool`, optional
-        Return `masksum` in addition to `mask`. Default: False
     threshold : :obj:`int`, optional
         Minimum echo count to retain in the mask. Default is 1, which is
         equivalent not thresholding.
@@ -127,10 +124,7 @@ def make_adaptive_mask(data, mask=None, getsum=False, threshold=1):
             masksum[masksum < threshold] = 0
             mask = masksum.astype(bool)
 
-    if getsum:
-        return mask, masksum
-
-    return mask
+    return mask, masksum
 
 
 def unmask(data, mask):
