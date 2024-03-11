@@ -1,5 +1,5 @@
 {
-    "tree_id": "demo_minimal_externalregressors_Fstat",
+    "tree_id": "demo_minimal_external_regressors_single_model",
     "info": "Demonstration based on the minimal decision tree that uses an F stat on a model with multiple external regressors.",
     "report": "This is based on the minimal criteria of the original MEICA decision tree \\citep{kundu2013integrated} without the more aggressive noise removal steps \\citep{dupre2021te}.",
     "necessary_metrics": [

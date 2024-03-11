@@ -1,6 +1,7 @@
 """Metrics unrelated to TE-(in)dependence."""
 
 import logging
+import re
 
 import numpy as np
 import pandas as pd
@@ -29,7 +30,7 @@ def load_validate_external_regressors(external_regressors, external_regressor_co
     external_regressors: :obj:`str`
         Path and name of tsv file that includes external regressor time series
     external_regressor_config: :obj:`dict`
-        A validated dictionary with info for fitting external regressors
+        A dictionary with info for fitting external regressors
         to component time series
     n_time: :obj:`int`
         Number of timepoints in the fMRI time series
@@ -39,15 +40,22 @@ def load_validate_external_regressors(external_regressors, external_regressor_co
     external_regressors: :obj:`pandas.DataFrame`
         Each column is a labelled regressor and the number of rows should
         match the number of timepoints in the fMRI time series
+    external_regressor_config: :obj:`dict`
+        A validated dictionary with info for fitting external regressors
+        to component time series. If regex patterns like '^mot_.*$' are used to define
+        regressor names, this is replaced with a list of the match column names used in
+        external_regressors
     """
     try:
         external_regressors = pd.read_table(external_regressors)
     except FileNotFoundError:
         raise ValueError(f"Cannot load tsv file with external regressors: {external_regressors}")
 
-    validate_extern_regress(external_regressors, external_regressor_config, n_time)
+    external_regressor_config = validate_extern_regress(
+        external_regressors, external_regressor_config, n_time
+    )
 
-    return external_regressors
+    return external_regressors, external_regressor_config
 
 
 def validate_extern_regress(external_regressors, external_regressor_config, n_time):
@@ -71,6 +79,14 @@ def validate_extern_regress(external_regressors, external_regressor_config, n_ti
     n_time : :obj:`int`
         The number of time point in the fMRI time series
 
+    Returns
+    -------
+    external_regressor_config: :obj:`dict`
+        A validated dictionary with info for fitting external regressors
+        to component time series. If regex patterns like '^mot_.*$' are used to define
+        regressor names, this is replaced with a list of the match column names used in
+        external_regressors
+
     Raises
     ------
     RegressorError if any validation test fails
@@ -84,21 +100,51 @@ def validate_extern_regress(external_regressors, external_regressor_config, n_ti
     # with the data in external_regressors
 
     # Currently column labels only need to be predefined for calc_stats==F
+    #   or if "task_keep" is used. column_label_specifications will include the
+    #   names of the column labels for both f_stats_partial_models and task_keep
+    #   if eithe ror both are defined.
+    column_label_specifications = set()
     if "f_stats_partial_models" in set(external_regressor_config.keys()):
+        column_label_specifications.update(
+            set(external_regressor_config["f_stats_partial_models"])
+        )
+    if "task_keep" in set(external_regressor_config.keys()):
+        column_label_specifications.update(["task_keep"])
+
+    if column_label_specifications:
         regressor_names = set(external_regressors.columns)
         expected_regressor_names = set()
-        for partial_models in external_regressor_config["f_stats_partial_models"]:
-            tmp_names = set(external_regressor_config[partial_models])
-            if expected_regressor_names - tmp_names:
+        # for each column label, check if the label matches column names in external_regressors
+        for partial_models in column_label_specifications:
+            tmp_partial_model_names = set()
+            for tmp_name in external_regressor_config[partial_models]:
+                # If a label starts with ^ treat match the pattern to column names using regex
+                if tmp_name.startswith("^"):
+                    tmp_replacements = [
+                        reg_name
+                        for reg_name in regressor_names
+                        if re.match(tmp_name, reg_name.lower())
+                    ]
+                    if not tmp_replacements:
+                        err_msg += (
+                            f"No external regressor labels matching regex '{tmp_name}' found."
+                        )
+                    tmp_partial_model_names.update(set(tmp_replacements))
+                else:
+                    if not isinstance(tmp_name, list):
+                        tmp_name = [tmp_name]
+                    tmp_partial_model_names.update(tmp_name)
+            external_regressor_config[partial_models] = list(tmp_partial_model_names)
+            if expected_regressor_names.intersection(tmp_partial_model_names):
                 LGR.warning(
                     "External regressors used in more than one partial model: "
-                    f"{expected_regressor_names - tmp_names}"
+                    f"{expected_regressor_names.intersection(tmp_partial_model_names)}"
                 )
-            expected_regressor_names.update(tmp_names)
+            expected_regressor_names.update(tmp_partial_model_names)
         if expected_regressor_names - regressor_names:
             err_msg += (
                 "Inputed regressors in external_regressors do not include all expected "
-                "regressors in partial models\n"
+                "regressors in partial models or task\n"
                 "Expected regressors not in inputted regressors: "
                 f"{expected_regressor_names - regressor_names}\n"
                 f"Inputted Regressors: {regressor_names}"
@@ -106,20 +152,23 @@ def validate_extern_regress(external_regressors, external_regressor_config, n_ti
         if regressor_names - expected_regressor_names:
             LGR.warning(
                 "Regressor labels in external_regressors are not all included in F "
-                "statistic partial models. Whether or not a regressor is in a partial "
-                "model, it will be included in the full F statistic model"
-                "Regressors not incldued in any partial model: "
+                "statistic partial models or task models. Regressor not in a partial "
+                "model or task_keep, it will be included in the full F statistic model "
+                "and treated like nuisance regressors to remove. "
+                "Regressors not included in any partial model: "
                 f"{regressor_names - expected_regressor_names}"
             )
 
-        if len(external_regressors.index) != n_time:
-            err_msg += (
-                f"External Regressors have len(external_regressors.index) timepoints\n"
-                f"while fMRI data have {n_time} timepoints"
-            )
+    if len(external_regressors.index) != n_time:
+        err_msg += (
+            f"External Regressors have {len(external_regressors.index)} timepoints\n"
+            f"while fMRI data have {n_time} timepoints"
+        )
 
-        if err_msg:
-            raise RegressError(err_msg)
+    if err_msg:
+        raise RegressError(err_msg)
+
+    return external_regressor_config
 
 
 def fit_regressors(comptable, external_regressors, external_regressor_config, mixing):
@@ -311,11 +360,13 @@ def fit_mixing_to_regressors(
     r2_vals = pd.DataFrame(data=r2_vals_tmp, columns=["R2stat Full Model"])
 
     # Run a separate model if there are task regressors that might want to be kept
-    # TODO Need to edit this function so regressor_models can use something besides the full model
     if "task keep" in regressor_models.keys():
         betas_task_keep, f_vals_tmp, p_vals_tmp, r2_vals_tmp = fit_model_with_stats(
             y=mixing, regressor_models=regressor_models, base_label="base", full_label="task keep"
         )
+        f_vals["Fstat Task Model"] = f_vals_tmp
+        p_vals["pval Task Model"] = p_vals_tmp
+        r2_vals["R2stat Task Model"] = r2_vals_tmp
 
     # Test the fits between the full model and the full model excluding one category of regressor
     if "f_stats_partial_models" in external_regressor_config.keys():
@@ -376,8 +427,10 @@ def build_fstat_regressor_models(
     regressor_models = {"base": detrend_regressors_arr}
     LGR.info(f"Size for base Regressor Model: {regressor_models['base'].shape}")
 
-    if "task_keep_model" in external_regressor_config:
-        task_keep_model = external_regressor_config["task_keep_model"]
+    if "task_keep" in external_regressor_config:
+        task_keep_model = external_regressor_config["task_keep"]
+        # If there is a task_keep model, then the full model should exclude every
+        # regressor in task_keep
         tmp_model_labels = {"full": set(regressor_labels) - set(task_keep_model)}
         tmp_model_labels["task keep"] = set(task_keep_model)
         for model_name in ["full", "task keep"]:

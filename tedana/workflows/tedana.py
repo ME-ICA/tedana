@@ -530,8 +530,10 @@ def tedana_workflow(
         "external_regressor_config" in set(selector.tree.keys())
         and selector.tree["external_regressor_config"] is not None
     ):
-        external_regressors = metrics.external.load_validate_external_regressors(
-            external_regressors, selector.tree["external_regressor_config"], catd.shape[2]
+        external_regressors, selector.tree["external_regressor_config"] = (
+            metrics.external.load_validate_external_regressors(
+                external_regressors, selector.tree["external_regressor_config"], catd.shape[2]
+            )
         )
 
     io_generator = io.OutputGenerator(

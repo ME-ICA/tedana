@@ -18,10 +18,11 @@ def add_external_dependencies(dependency_config, external_regressor_config):
     dependency_config["inputs"].append("external regressors")
 
     if external_regressor_config["calc_stats"].lower() == "f":
+        model_names = ["Full"]
         if "f_stats_partial_models" in set(external_regressor_config.keys()):
-            model_names = external_regressor_config["f_stats_partial_models"].append("Full")
-        else:
-            model_names = ["Full"]
+            model_names.append(external_regressor_config["f_stats_partial_models"])
+        if "task_keep" in set(external_regressor_config.keys()):
+            model_names.append("task_keep")
         for model_name in model_names:
             for stat_type in ["Fstat", "R2stat", "pval"]:
                 dependency_config["dependencies"][f"{stat_type} {model_name} Model"] = [

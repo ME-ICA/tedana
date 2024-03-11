@@ -374,7 +374,7 @@ def test_integration_three_echo(skip_integration):
     check_integration_outputs(fn, out_dir)
 
 
-def test_integration_three_echo_external_regressors_fstat(skip_integration):
+def test_integration_three_echo_external_regressors_single_model(skip_integration):
     """Integration test of tedana workflow with extern regress and F stat."""
 
     if skip_integration:
@@ -384,13 +384,9 @@ def test_integration_three_echo_external_regressors_fstat(skip_integration):
     out_dir = os.path.abspath(
         os.path.join(test_data_path, "../../outputs/three-echo-externalreg-Ftest")
     )
-    out_dir_manual = f"{out_dir}-rerun"
 
     if os.path.exists(out_dir):
         shutil.rmtree(out_dir)
-
-    if os.path.exists(out_dir_manual):
-        shutil.rmtree(out_dir_manual)
 
     # download data and run the test
     # external_regress_Ftest_3echo.tsv has 13 rows. Based on a local run on the 3 echo data:
@@ -407,7 +403,54 @@ def test_integration_three_echo_external_regressors_fstat(skip_integration):
     # Note that the above is in comparision to the minimal decision tree
     # but the integration test for 3 echoes uses the kundu tree
     download_test_data(osf_id, test_data_path)
-    tree_name = "resources/decision_trees/demo_minimal_externalregressors_Fstat.json"
+    tree_name = "resources/decision_trees/demo_minimal_external_regressors_single_model.json"
+    tedana_cli.tedana_workflow(
+        data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
+        tes=[14.5, 38.5, 62.5],
+        out_dir=out_dir,
+        tree=resource_filename("tedana", tree_name),
+        external_regressors=resource_filename(
+            "tedana", "tests/data/external_regress_Ftest_3echo.tsv"
+        ),
+        low_mem=True,
+        tedpca="aic",
+    )
+
+    # compare the generated output files
+    fn = resource_filename("tedana", "tests/data/cornell_three_echo_outputs.txt")
+    check_integration_outputs(fn, out_dir)
+
+
+def test_integration_three_echo_external_regressors_motion_task_models(skip_integration):
+    """Integration test of tedana workflow with extern regress and F stat."""
+
+    if skip_integration:
+        pytest.skip("Skipping three-echo with external regressors integration test")
+
+    test_data_path, osf_id = data_for_testing_info("three-echo")
+    out_dir = os.path.abspath(
+        os.path.join(test_data_path, "../../outputs/three-echo-externalreg-Ftest-multimodels")
+    )
+
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    # download data and run the test
+    # external_regress_Ftest_3echo.tsv has 13 rows. Based on a local run on the 3 echo data:
+    #  Col 1 (trans_x_correlation) is the TS for ICA comp 59 + similar stdev Gaussian Noise
+    #  Col 2 (trans_y_correlation) is 0.4*comp29+0.5+comp20+Gaussian Noise
+    #  Col 3 (trans_z_correlation) is comp20+Gaussian Noise
+    # The above are the same as the test that uses corr for external regressors
+    #  Col 4-6 are Gaussian noise representing pitch/roll/yaw
+    #  Col 7-12 are the first derivative of col 1-6
+    # With the currently set up decision tree minimal_exteral 2, one component (my 59)
+    # should be rejected, but 20 and 29 aren't rejected because neither crosses the
+    # r>0.8 threshold. If trans_y and trans_Z were included in a single model then
+    # component 20 would have been rejected
+    # Note that the above is in comparision to the minimal decision tree
+    # but the integration test for 3 echoes uses the kundu tree
+    download_test_data(osf_id, test_data_path)
+    tree_name = "resources/decision_trees/demo_minimal_external_regressors_motion_task_models.json"
     tedana_cli.tedana_workflow(
         data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
         tes=[14.5, 38.5, 62.5],
