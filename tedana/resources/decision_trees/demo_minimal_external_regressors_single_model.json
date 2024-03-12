@@ -14,15 +14,8 @@
         "pval Full Model",
         "R2stat Full Model"
     ],
-    "intermediate_classifications": [
-        "provisionalaccept",
-        "provisionalreject"
-    ],
-    "classification_tags": [
-        "Likely BOLD",
-        "Unlikely BOLD",
-        "Low variance"
-    ],
+    "intermediate_classifications": ["provisionalaccept", "provisionalreject"],
+    "classification_tags": ["Likely BOLD", "Unlikely BOLD", "Low variance"],
     "external_regressor_config": {
         "regess_ID": "Fmodel",
         "info": "Fits all external regressors to a single model using an F statistic",
@@ -33,10 +26,7 @@
     "nodes": [
         {
             "functionname": "manual_classify",
-            "parameters": {
-                "new_classification": "unclassified",
-                "decide_comps": "all"
-            },
+            "parameters": {"new_classification": "unclassified", "decide_comps": "all"},
             "kwargs": {
                 "log_extra_report": "",
                 "clear_classification_tags": true,
@@ -53,10 +43,7 @@
                 "left": "rho",
                 "right": "kappa"
             },
-            "kwargs": {
-                "log_extra_report": "",
-                "tag_if_true": "Unlikely BOLD"
-            }
+            "kwargs": {"tag_if_true": "Unlikely BOLD"}
         },
         {
             "functionname": "dec_left_op_right",
@@ -72,7 +59,6 @@
                 "left2": "countsigFT2",
                 "op2": ">",
                 "right2": 0,
-                "log_extra_report": "",
                 "tag_if_true": "Unlikely BOLD"
             }
         },
@@ -98,7 +84,6 @@
                 "left2": "variance explained",
                 "op2": ">",
                 "right2": "median_varex",
-                "log_extra_report": "",
                 "tag_if_true": "Unlikely BOLD"
             }
         },
@@ -116,32 +101,18 @@
                 "left2": "variance explained",
                 "op2": ">",
                 "right2": "median_varex",
-                "log_extra_report": "",
                 "tag_if_true": "Unlikely BOLD"
             }
         },
         {
             "functionname": "calc_kappa_elbow",
-            "parameters": {
-                "decide_comps": "all"
-            },
-            "kwargs": {
-                "log_extra_info": "",
-                "log_extra_report": ""
-            },
+            "parameters": {"decide_comps": "all"},
             "_comment": ""
         },
         {
             "functionname": "calc_rho_elbow",
-            "parameters": {
-                "decide_comps": "all"
-            },
-            "kwargs": {
-                "subset_decide_comps": "unclassified",
-                "rho_elbow_type": "liberal",
-                "log_extra_info": "",
-                "log_extra_report": ""
-            },
+            "parameters": {"decide_comps": "all"},
+            "kwargs": {"subset_decide_comps": "unclassified", "rho_elbow_type": "liberal"},
             "_comment": ""
         },
         {
@@ -153,9 +124,6 @@
                 "op": ">=",
                 "left": "kappa",
                 "right": "kappa_elbow_kundu"
-            },
-            "kwargs": {
-                "log_extra_report": ""
             }
         },
         {
@@ -170,7 +138,6 @@
             },
             "kwargs": {
                 "log_extra_info": "If kappa>elbow and kappa>2*rho accept even if rho>elbow",
-                "log_extra_report": "",
                 "right_scale": 2,
                 "tag_if_true": "Likely BOLD"
             }
@@ -180,16 +147,10 @@
             "parameters": {
                 "if_true": "provisionalreject",
                 "if_false": "nochange",
-                "decide_comps": [
-                    "provisionalreject",
-                    "provisionalaccept"
-                ],
+                "decide_comps": ["provisionalreject", "provisionalaccept"],
                 "op": ">",
                 "left": "rho",
                 "right": "rho_elbow_liberal"
-            },
-            "kwargs": {
-                "log_extra_report": ""
             }
         },
         {
@@ -201,8 +162,6 @@
             },
             "kwargs": {
                 "var_metric": "variance explained",
-                "log_extra_info": "",
-                "log_extra_report": "",
                 "single_comp_threshold": 0.1,
                 "all_comp_threshold": 1.0,
                 "tag_if_true": "Low variance"
@@ -223,36 +182,21 @@
                 "left2": "R2stat Full Model",
                 "right2": 0.5,
                 "log_extra_info": "If external regressors fit with p<0.05 and model R2>0.5 of the variance, then reject.",
-                "log_extra_report": "",
                 "tag_if_true": "external regressors"
             }
         },
         {
             "functionname": "manual_classify",
-            "parameters": {
-                "new_classification": "accepted",
-                "decide_comps": "provisionalaccept"
-            },
-            "kwargs": {
-                "log_extra_info": "",
-                "log_extra_report": "",
-                "tag": "Likely BOLD"
-            }
+            "parameters": {"new_classification": "accepted", "decide_comps": "provisionalaccept"},
+            "kwargs": {"tag": "Likely BOLD"}
         },
         {
             "functionname": "manual_classify",
             "parameters": {
                 "new_classification": "rejected",
-                "decide_comps": [
-                    "provisionalreject",
-                    "unclassified"
-                ]
+                "decide_comps": ["provisionalreject", "unclassified"]
             },
-            "kwargs": {
-                "log_extra_info": "",
-                "log_extra_report": "",
-                "tag": "Unlikely BOLD"
-            }
+            "kwargs": {"tag": "Unlikely BOLD"}
         }
     ]
 }
