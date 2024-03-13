@@ -75,6 +75,15 @@ def make_adaptive_mask(data, mask=None, threshold=1):
     The adaptive mask is constructed from two methods:
 
     1.  Count the total number of echoes in each voxel that have "good" data.
+        This method assumes that an exemplar voxel's signal at later echoes is also reasonable,
+        and that any voxels whose values at a given echo are less than 1/3 of the exemplar voxel's
+        values at that echo are affected by dropout.
+
+        This method uses distributions of values across the mask.
+        Therefore, it is sensitive to the quality of the mask;
+        a bad mask may result in a bad adaptive mask.
+
+        This method is implemented as follows:
 
         a.  Calculate the 33rd percentile of values in the first echo,
             based on voxel-wise mean over time.
@@ -82,13 +91,15 @@ def make_adaptive_mask(data, mask=None, threshold=1):
             Basically, this identifies "exemplar" voxel reflecting the 33rd percentile.
 
             -   The 33rd percentile is arbitrary.
-            -   If more than one voxel equals the 33rd percentile, keep all of them.
+            -   If more than one voxel has a value exactly equal to the 33rd percentile,
+                keep all of them.
         c.  Calculate 1/3 of the mean value of the exemplar voxel for each echo.
 
             -   This is the threshold for "good" data.
             -   The 1/3 value is arbitrary.
-        d.  If there was more than one exemplar voxel, retain the the highest value for each echo.
-        e.  For each voxel, count the number of echoes that have a mean value greater than the
+            -   If there was more than one exemplar voxel,
+                retain the the highest value for each echo.
+        d.  For each voxel, count the number of echoes that have a mean value greater than the
             corresponding echo's threshold.
     2.  Determine the echo at which the signal stops decreasing for each voxel.
         If a voxel's signal stops decreasing as echo time increases, then we can infer that the
