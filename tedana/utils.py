@@ -78,15 +78,16 @@ def make_adaptive_mask(data, mask=None, threshold=1):
 
         a.  Calculate the 33rd percentile of values in the first echo,
             based on voxel-wise mean over time.
-        b.  Identify voxels where the first echo's mean value is equal to the 33rd percentile.
-            Basically, this identifies "exemplar" voxels reflecting the 33rd percentile.
+        b.  Identify the voxel where the first echo's mean value is equal to the 33rd percentile.
+            Basically, this identifies "exemplar" voxel reflecting the 33rd percentile.
 
             -   The 33rd percentile is arbitrary.
-        c.  Calculate 1/3 of the mean value of the exemplar voxels for each echo.
+            -   If more than one voxel equals the 33rd percentile, keep all of them.
+        c.  Calculate 1/3 of the mean value of the exemplar voxel for each echo.
 
             -   This is the threshold for "good" data.
             -   The 1/3 value is arbitrary.
-        d.  Only retain the highest value for each echo, across exemplar voxels.
+        d.  If there was more than one exemplar voxel, retain the the highest value for each echo.
         e.  For each voxel, count the number of echoes that have a mean value greater than the
             corresponding echo's threshold.
     2.  Determine the echo at which the signal stops decreasing for each voxel.
