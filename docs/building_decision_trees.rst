@@ -211,7 +211,7 @@ that is used to check whether results are plausible & can help avoid mistakes.
 - necessary_metrics
     A list of the necessary metrics in the component table that will be used
     by the tree. This field defines what metrics will be calculated on each ICA
-    comopnent. If a metric doesn't exist then this will raise an error instead
+    component. If a metric doesn't exist then this will raise an error instead
     of executing a tree. If a necessary metric isn't used, there will be a warning.
 
 - generated_metrics
