@@ -144,7 +144,8 @@ def make_adaptive_mask(data, mask, threshold=1):
             "signal. Removing voxels from mask."
         )
         masksum[masksum < threshold] = 0
-        modified_mask = masksum.astype(bool)
+
+    modified_mask = masksum.astype(bool)
 
     masksum = unmask(masksum, mask)
     modified_mask = unmask(modified_mask, mask)
