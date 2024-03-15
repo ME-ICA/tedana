@@ -57,11 +57,13 @@ def make_adaptive_mask(data, mask, threshold=1):
     data : (S x E x T) array_like
         Multi-echo data array, where `S` is samples, `E` is echos, and `T` is time.
     mask : :obj:`str` or img_like
-        Binary mask for voxels to consider in TE Dependent ANAlysis. Default is
-        to generate mask from data with good signal across echoes
+        Binary mask for voxels to consider in TE Dependent ANAlysis.
+        This must be provided, as the mask is used to identify exemplar voxels.
+        Without a mask limiting the voxels to consider,
+        the adaptive mask will generally select voxels outside the brain as exemplars.
     threshold : :obj:`int`, optional
-        Minimum echo count to retain in the mask. Default is 1, which is
-        equivalent not thresholding.
+        Minimum echo count to retain in the mask.
+        Default is 1, which is equivalent not thresholding.
 
     Returns
     -------
@@ -86,11 +88,15 @@ def make_adaptive_mask(data, mask, threshold=1):
         This method is implemented as follows:
 
         a.  Calculate the 33rd percentile of values in the first echo,
-            based on voxel-wise mean over time.
-        b.  Identify the voxel where the first echo's mean value is equal to the 33rd percentile.
-            Basically, this identifies "exemplar" voxel reflecting the 33rd percentile.
+            based on the voxel-wise mean over time.
 
             -   The 33rd percentile is arbitrary.
+            -   The percentile is calculated only across voxels with non-zero values.
+                However, it is rare for voxels to have values of zero in the first echo,
+                so this exclusion will likely not have a major effect.
+        b.  Identify the voxel where the first echo's mean value is equal to the 33rd percentile.
+            Basically, this identifies an "exemplar" voxel reflecting the 33rd percentile.
+
             -   If more than one voxel has a value exactly equal to the 33rd percentile,
                 keep all of them.
         c.  Calculate 1/3 of the mean value of the exemplar voxel for each echo.
@@ -98,13 +104,13 @@ def make_adaptive_mask(data, mask, threshold=1):
             -   This is the threshold for "good" data.
             -   The 1/3 value is arbitrary.
             -   If there was more than one exemplar voxel,
-                retain the the highest value for each echo.
+                retain the the highest value across the exemplars for each echo.
         d.  For each voxel, count the number of echoes that have a mean value greater than the
             corresponding echo's threshold.
     """
     RepLGR.info(
-        "An adaptive mask was then generated, in which each voxel's "
-        "value reflects the number of echoes with 'good' data."
+        "An adaptive mask was then generated, "
+        "in which each voxel's value reflects the number of echoes with 'good' data."
     )
     mask = reshape_niimg(mask).astype(bool)
     data = data[mask, :, :]
