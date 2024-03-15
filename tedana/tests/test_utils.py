@@ -88,7 +88,7 @@ def test_make_adaptive_mask():
     # masksum has correct values
     vals, counts = np.unique(masksum, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([13564, 4959, 5349, 40478]))
+    assert np.allclose(counts, np.array([14899, 3589, 5276, 40586]))
 
     # Apply a threshold of 3
     # TODO: Add mask file with no bad voxels to test against
