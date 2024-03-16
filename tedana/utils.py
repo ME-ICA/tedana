@@ -140,11 +140,11 @@ def make_adaptive_mask(data, mask, threshold=1):
 
     # Find the last good echo for each voxel
     # Add a 1 to the end of the threshold array to match the size of the echo_means array
-    lthrs = np.hstack((lthrs, 1))
+    lthrs = np.hstack((1, lthrs))
     # Add a 0 to the end of the echo_means array to make a trailing echo "bad".
     # This way, argmax can distinguish between all bad echoes and having the last echo be good.
     # The former will have a value of n_echoes + 1, while the latter will have a value of n_echoes.
-    echo_means = np.hstack((echo_means, np.zeros((n_samples, 1))))
+    echo_means = np.hstack((np.zeros((n_samples, 1)), echo_means))
     # argmax finds the first instance of the maximum value, so we need to reverse the order
     # of the array to find the last instance of the maximum value.
     masksum_inverted = np.argmax(np.abs(echo_means[:, ::-1]) > lthrs[::-1], axis=1)
