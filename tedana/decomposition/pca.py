@@ -208,9 +208,6 @@ def tedpca(
     data_z = ((data.T - data.T.mean(axis=0)) / data.T.std(axis=0)).T  # var normalize ts
     data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
 
-    if np.any(np.isnan(data_z)):
-        raise ValueError("NaNs in data_z")
-
     if algorithm in ["mdl", "aic", "kic"]:
         data_img = io.new_nii_like(io_generator.reference_img, utils.unmask(data, mask))
         mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
