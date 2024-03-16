@@ -151,6 +151,7 @@ def make_adaptive_mask(data, mask, threshold=1):
     masksum = n_echoes - masksum_inverted
     # Replace values of n_echoes + 1 (all bad echoes) with 0 (no good echoes)
     masksum[masksum == n_echoes + 1] = 0
+    raise ValueError(np.unique(masksum))
 
     # TODO: Use visual report to make checking the reduced mask easier
     if np.any(masksum < threshold):
