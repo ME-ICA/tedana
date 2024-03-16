@@ -115,7 +115,7 @@ def make_adaptive_mask(data, mask, threshold=1):
         "An adaptive mask was then generated, "
         "in which each voxel's value reflects the number of echoes with 'good' data."
     )
-    # mask = reshape_niimg(mask).astype(bool)
+    mask = reshape_niimg(mask).astype(bool)
     # data = data[mask, :, :]
 
     n_samples, n_echoes, _ = data.shape
