@@ -141,18 +141,15 @@ def make_adaptive_mask(data, mask, threshold=1):
         lthrs = lthrs[:, lthrs.sum(axis=0).argmax()]
 
     # Find the last good echo for each voxel
-    # Add a 1 to the end of the threshold array to match the size of the echo_means array
-    lthrs = np.hstack((1, lthrs))
-    # Add a 0 to the end of the echo_means array to make a trailing echo "bad".
-    # This way, argmax can distinguish between all bad echoes and having the last echo be good.
-    # The former will have a value of n_echoes + 1, while the latter will have a value of n_echoes.
-    echo_means = np.hstack((np.zeros((n_samples, 1)), echo_means))
-    # argmax finds the first instance of the maximum value, so we need to reverse the order
-    # of the array to find the last instance of the maximum value.
-    masksum_inverted = np.argmax(np.abs(echo_means[:, ::-1]) > lthrs[::-1], axis=1)
-    masksum = n_echoes - masksum_inverted
-    # Replace values of n_echoes + 1 (all bad echoes) with 0 (no good echoes)
-    masksum[masksum == n_echoes + 1] = 0
+    masksum = np.zeros(n_samples, dtype=np.int16)
+    for i_voxel in range(n_samples):
+        echo_means_voxel = np.abs(echo_means[i_voxel, :])
+        echos_over_threshold = echo_means_voxel > lthrs
+        # Find the index of the last True element in a 1D boolean array
+        last_true_index = (
+            (np.where(echos_over_threshold)[0][-1] + 1) if np.any(echos_over_threshold) else 0
+        )
+        masksum[i_voxel] = last_true_index
 
     # TODO: Use visual report to make checking the reduced mask easier
     if np.any(masksum < threshold):
