@@ -118,7 +118,7 @@ def make_adaptive_mask(data, mask, threshold=1):
     mask = reshape_niimg(mask).astype(bool)
     # data = data[mask, :, :]
 
-    n_samples, n_echoes, _ = data.shape
+    n_samples = data.shape[0]
 
     # take temporal mean of echos and extract non-zero values in first echo
     echo_means = data.mean(axis=-1)  # temporal mean of echos
