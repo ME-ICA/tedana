@@ -123,6 +123,8 @@ def make_adaptive_mask(data, mask, threshold=1):
     # take temporal mean of echos and extract non-zero values in first echo
     echo_means = data.mean(axis=-1)  # temporal mean of echos
     first_echo = echo_means[echo_means[:, 0] != 0, 0]
+    if any(np.isnan(echo_means)):
+        raise ValueError("NaN values found in data. Please check your data.")
 
     # get 33rd %ile of `first_echo` and find corresponding index
     # NOTE: percentile is arbitrary
