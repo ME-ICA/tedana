@@ -631,6 +631,18 @@ def tedana_workflow(
     fout = io_generator.save_file(data_oc, "combined img")
     LGR.info(f"Writing optimally combined data set: {fout}")
 
+    if np.any(np.isnan(catd)):
+        raise ValueError("NaNs in catd")
+
+    if np.any(np.isnan(data_oc)):
+        raise ValueError("NaNs in data_oc")
+
+    if np.any(np.isnan(mask_clf)):
+        raise ValueError("NaNs in mask_clf")
+
+    if np.any(np.isnan(masksum_clf)):
+        raise ValueError("NaNs in masksum_clf")
+
     if mixm is None:
         # Identify and remove thermal noise from data
         dd, n_components = decomposition.tedpca(
