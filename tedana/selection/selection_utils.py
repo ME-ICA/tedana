@@ -332,7 +332,7 @@ def confirm_metrics_exist(component_table, necessary_metrics, function_name=None
         If ``metrics_exist`` is False then raise an error and end the program.
 
     Notes
-    ----
+    -----
     This doesn't check if there are data in each metric's column, just that the columns exist.
     Also, the string in ``necessary_metrics`` and the column labels in ``component_table`` will
     only be matched if they're identical.
