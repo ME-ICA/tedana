@@ -138,6 +138,8 @@ def make_adaptive_mask(data, mask, threshold=1):
     if lthrs.ndim > 1:
         lthrs = lthrs[:, lthrs.sum(axis=0).argmax()]
 
+    LGR.info("Echo-wise intensity thresholds for adaptive mask: %s", lthrs)
+
     # determine samples where value is greater than echo-specific thresholds
     # and count # of echos that pass criterion
     masksum = (echo_means > lthrs).sum(axis=-1)
