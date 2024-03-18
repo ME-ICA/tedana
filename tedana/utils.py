@@ -138,9 +138,9 @@ def make_adaptive_mask(data, mask, threshold=1):
     if lthrs.ndim > 1:
         lthrs = lthrs[:, lthrs.sum(axis=0).argmax()]
 
-    # determine samples where absolute value is greater than echo-specific thresholds
+    # determine samples where value is greater than echo-specific thresholds
     # and count # of echos that pass criterion
-    masksum = (np.abs(echo_means) > lthrs).sum(axis=-1)
+    masksum = (echo_means > lthrs).sum(axis=-1)
 
     # TODO: Use visual report to make checking the reduced mask easier
     if np.any(masksum < threshold):
