@@ -115,7 +115,8 @@ def make_adaptive_mask(data, mask, threshold=1):
     mask = reshape_niimg(mask).astype(bool)
     data = data[mask, :, :]
 
-    # take temporal mean of echos and extract non-zero voxels in first echo
+    # take temporal mean of echos and extract non-zero voxels in first echo.
+    # limiting to non-zero voxels may reduce the effect of a low-quality brain mask.
     echo_means = data.mean(axis=-1)  # temporal mean of echos
     first_echo = echo_means[echo_means[:, 0] != 0, 0]
 
