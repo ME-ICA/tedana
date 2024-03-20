@@ -224,13 +224,39 @@ def validate_tree(tree):
 class ComponentSelector:
     """Load and classify components based on a specified ``tree``."""
 
-    def __init__(self, tree, component_table, cross_component_metrics={}, status_table=None):
+    def __init__(self, tree):
         """Initialize the class using the info specified in the json file ``tree``.
 
         Parameters
         ----------
         tree : :obj:`str`
             The named tree or path to a JSON file that defines one.
+
+        Notes
+        -----
+        Initializing the  ``ComponentSelector`` confirms tree is valid and
+        loads all information in the tree json file into ``ComponentSelector``.
+        """
+        self.tree_name = tree
+        self.tree = load_config(self.tree_name)
+
+        LGR.info("Performing component selection with " + self.tree["tree_id"])
+        LGR.info(self.tree.get("info", ""))
+        RepLGR.info(self.tree.get("report", ""))
+
+        self.necessary_metrics = self.tree["necessary_metrics"]
+        self.classification_tags = set(self.tree["classification_tags"])
+        self.tree["used_metrics"] = set(self.tree.get("used_metrics", []))
+
+    def select(self, component_table, cross_component_metrics={}, status_table=None):
+        """Apply the decision tree to data.
+
+        Using the validated tree in ``ComponentSelector`` to run the decision
+        tree functions to calculate cross_component metrics and classify
+        each component as accepted or rejected.
+
+        Parameters
+        ----------
         component_table : (C x M) :obj:`pandas.DataFrame`
             Component metric table. One row for each component, with a column for
             each metric; the index should be the component number.
@@ -244,13 +270,10 @@ class ComponentSelector:
 
         Notes
         -----
-        Initializing the  ``ComponentSelector`` confirms tree is valid and
-        loads all information in the tree json file into ``ComponentSelector``.
-
         Adds to the ``ComponentSelector``:
 
-        - component_status_table: empty dataframe or contents of inputted status_table
-        - cross_component_metrics: empty dict or contents of inputed values
+        - ``component_status_table_``: empty dataframe or contents of inputted status_table
+        - ``cross_component_metrics_``: empty dict or contents of inputed values
         - used_metrics: empty set
 
         Any parameter that is used by a decision tree node function can be passed
@@ -270,62 +293,8 @@ class ComponentSelector:
             Required for kundu tree
 
         An example initialization with these options would look like
-        ``selector = ComponentSelector(tree, comptable, n_echos=n_echos, n_vols=n_vols)``
-        """
-        self.tree_name = tree
+        ``selector = selector.select(comptable, n_echos=n_echos, n_vols=n_vols)``
 
-        self.__dict__.update(cross_component_metrics)
-        self.cross_component_metrics = cross_component_metrics
-
-        # Construct an un-executed selector
-        self.component_table = component_table.copy()
-
-        # To run a decision tree, each component needs to have an initial classification
-        # If the classification column doesn't exist, create it and label all components
-        # as unclassified
-        if "classification" not in self.component_table:
-            self.component_table["classification"] = "unclassified"
-
-        self.tree = load_config(self.tree_name)
-        tree_config = self.tree
-
-        LGR.info("Performing component selection with " + tree_config["tree_id"])
-        LGR.info(tree_config.get("info", ""))
-        RepLGR.info(tree_config.get("report", ""))
-
-        self.tree["nodes"] = tree_config["nodes"]
-        self.necessary_metrics = set(tree_config["necessary_metrics"])
-        self.intermediate_classifications = tree_config["intermediate_classifications"]
-        self.classification_tags = set(tree_config["classification_tags"])
-        if "used_metrics" not in self.tree.keys():
-            self.tree["used_metrics"] = set()
-        else:
-            self.tree["used_metrics"] = set(self.tree["used_metrics"])
-
-        if status_table is None:
-            self.component_status_table = self.component_table[
-                ["Component", "classification"]
-            ].copy()
-            self.component_status_table = self.component_status_table.rename(
-                columns={"classification": "initialized classification"}
-            )
-            self.start_idx = 0
-        else:
-            # Since a status table exists, we need to skip nodes up to the
-            # point where the last tree finished
-            self.start_idx = len(tree_config["nodes"])
-            LGR.info(f"Start is {self.start_idx}")
-            self.component_status_table = status_table
-
-    def select(self):
-        """Apply the decision tree to data.
-
-        Using the validated tree in ``ComponentSelector`` to run the decision
-        tree functions to calculate cross_component metrics and classify
-        each component as accepted or rejected.
-
-        Notes
-        -----
         The selection process uses previously calculated parameters stored in
         `component_table` for each ICA component such as Kappa (a T2* weighting metric),
         Rho (an S0 weighting metric), and variance explained. If a necessary metric
@@ -338,30 +307,63 @@ class ComponentSelector:
 
         When this is run, multiple elements in `ComponentSelector` will change including:
 
-        - component_table: ``classification`` column with ``accepted`` or ``rejected`` labels
+        - ``component_table_``: ``classification`` column with ``accepted`` or ``rejected`` labels
           and ``classification_tags`` column with can hold multiple comma-separated labels
           explaining why a classification happened
-        - cross_component_metrics: Any values that were calculated based on the metric
+        - ``cross_component_metrics_``: Any values that were calculated based on the metric
           values across components or by direct user input
-        - component_status_table: Contains the classification statuses at each node in
+        - ``component_status_table_``: Contains the classification statuses at each node in
           the decision tree
         - used_metrics: A list of metrics used in the selection process
         - nodes: The original tree definition with an added ``outputs`` key listing
           everything that changed in each node
-        - current_node_idx: The total number of nodes run in ``ComponentSelector``
+        - ``current_node_idx_``: The total number of nodes run in ``ComponentSelector``
         """
-        if "classification_tags" not in self.component_table.columns:
-            self.component_table["classification_tags"] = ""
+        self.cross_component_metrics_ = cross_component_metrics
+
+        # Construct an un-executed selector
+        self.component_table_ = component_table.copy()
 
         # this will crash the program with an error message if not all
         # necessary_metrics are in the comptable
         confirm_metrics_exist(
-            self.component_table, self.necessary_metrics, function_name=self.tree_name
+            self.component_table_,
+            self.necessary_metrics,
+            function_name=self.tree_name,
         )
 
+        # To run a decision tree, each component needs to have an initial classification
+        # If the classification column doesn't exist, create it and label all components
+        # as unclassified
+        if "classification" not in self.component_table_:
+            self.component_table_["classification"] = "unclassified"
+
+        if status_table is None:
+            self.component_status_table_ = self.component_table_[
+                ["Component", "classification"]
+            ].copy()
+            self.component_status_table_ = self.component_status_table_.rename(
+                columns={"classification": "initialized classification"}
+            )
+            self.start_idx_ = 0
+        else:
+            # Since a status table exists, we need to skip nodes up to the
+            # point where the last tree finished. Notes that were executed
+            # have an output field. Identify the last node with an output field
+            tmp_idx = len(self.tree["nodes"]) - 1
+            while ("outputs" not in self.tree["nodes"][tmp_idx]) and (tmp_idx > 0):
+                tmp_idx -= 1
+            # start at the first node that does not have an output field
+            self.start_idx_ = tmp_idx + 1
+            LGR.info(f"Start is {self.start_idx_}")
+            self.component_status_table_ = status_table
+
+        if "classification_tags" not in self.component_table_.columns:
+            self.component_table_["classification_tags"] = ""
+
         # for each node in the decision tree
-        for self.current_node_idx, node in enumerate(
-            self.tree["nodes"][self.start_idx :], start=self.start_idx
+        for self.current_node_idx_, node in enumerate(
+            self.tree["nodes"][self.start_idx_ :], start=self.start_idx_
         ):
             # parse the variables to use with the function
             fcn = getattr(selection_nodes, node["functionname"])
@@ -375,32 +377,29 @@ class ComponentSelector:
                 kwargs = self.check_null(kwargs, node["functionname"])
                 all_params = {**params, **kwargs}
             else:
-                kwargs = None
+                kwargs = {}
                 all_params = {**params}
 
             LGR.debug(
-                f"Step {self.current_node_idx}: Running function {node['functionname']} "
+                f"Step {self.current_node_idx_}: Running function {node['functionname']} "
                 f"with parameters: {all_params}"
             )
             # run the decision node function
-            if kwargs is not None:
-                self = fcn(self, **params, **kwargs)
-            else:
-                self = fcn(self, **params)
+            self = fcn(self, **params, **kwargs)
 
             self.tree["used_metrics"].update(
-                self.tree["nodes"][self.current_node_idx]["outputs"]["used_metrics"]
+                self.tree["nodes"][self.current_node_idx_]["outputs"]["used_metrics"]
             )
 
             # log the current counts for all classification labels
-            log_classification_counts(self.current_node_idx, self.component_table)
+            log_classification_counts(self.current_node_idx_, self.component_table_)
             LGR.debug(
-                f"Step {self.current_node_idx} Full outputs: "
-                f"{self.tree['nodes'][self.current_node_idx]['outputs']}"
+                f"Step {self.current_node_idx_} Full outputs: "
+                f"{self.tree['nodes'][self.current_node_idx_]['outputs']}"
             )
 
         # move decision columns to end
-        self.component_table = clean_dataframe(self.component_table)
+        self.component_table_ = clean_dataframe(self.component_table_)
         # warning anything called a necessary metric wasn't used and if
         # anything not called a necessary metric was used
         self.are_only_necessary_metrics_used()
@@ -445,7 +444,7 @@ class ComponentSelector:
         for key, val in params.items():
             if val is None:
                 try:
-                    params[key] = getattr(self, key)
+                    params[key] = self.cross_component_metrics_[key]
                 except AttributeError:
                     raise ValueError(
                         f"Parameter {key} is required in node {fcn}, but not defined. "
@@ -466,9 +465,11 @@ class ComponentSelector:
 
         If either of these happen, a warning is added to the logger.
         """
-        necessary_metrics = self.necessary_metrics
-        not_declared = self.tree["used_metrics"] - necessary_metrics
-        not_used = necessary_metrics - self.tree["used_metrics"]
+        necessary_metrics = set(self.necessary_metrics).union(
+            set(self.tree.get("generated_metrics", []))
+        )
+        not_declared = self.tree["used_metrics"] - set(necessary_metrics)
+        not_used = set(necessary_metrics) - self.tree["used_metrics"]
         if len(not_declared) > 0:
             LGR.warning(
                 f"Decision tree {self.tree_name} used the following metrics that were "
@@ -488,11 +489,11 @@ class ComponentSelector:
 
         If any other component classifications remain, log a warning.
         """
-        component_classifications = set(self.component_table["classification"].to_list())
+        component_classifications = set(self.component_table_["classification"].to_list())
         nonfinal_classifications = component_classifications.difference({"accepted", "rejected"})
         if nonfinal_classifications:
             for nonfinal_class in nonfinal_classifications:
-                numcomp = asarray(self.component_table["classification"] == nonfinal_class).sum()
+                numcomp = asarray(self.component_table_["classification"] == nonfinal_class).sum()
                 LGR.warning(
                     f"{numcomp} components have a final classification of {nonfinal_class}. "
                     "At the end of the selection process, all components are expected "
@@ -500,14 +501,14 @@ class ComponentSelector:
                 )
 
     @property
-    def n_comps(self):
+    def n_comps_(self):
         """The number of components in the component table."""
-        return len(self.component_table)
+        return len(self.component_table_)
 
     @property
-    def likely_bold_comps(self):
+    def likely_bold_comps_(self):
         """A boolean :obj:`pandas.Series` of components that are tagged "Likely BOLD"."""
-        likely_bold_comps = self.component_table["classification_tags"].copy()
+        likely_bold_comps = self.component_table_["classification_tags"].copy()
         for idx in range(len(likely_bold_comps)):
             if "Likely BOLD" in likely_bold_comps.loc[idx]:
                 likely_bold_comps.loc[idx] = True
@@ -516,24 +517,24 @@ class ComponentSelector:
         return likely_bold_comps
 
     @property
-    def n_likely_bold_comps(self):
+    def n_likely_bold_comps_(self):
         """The number of components that are tagged "Likely BOLD"."""
-        return self.likely_bold_comps.sum()
+        return self.likely_bold_comps_.sum()
 
     @property
-    def accepted_comps(self):
+    def accepted_comps_(self):
         """A boolean :obj:`pandas.Series` of components that are accepted."""
-        return self.component_table["classification"] == "accepted"
+        return self.component_table_["classification"] == "accepted"
 
     @property
-    def n_accepted_comps(self):
+    def n_accepted_comps_(self):
         """The number of components that are accepted."""
-        return self.accepted_comps.sum()
+        return self.accepted_comps_.sum()
 
     @property
-    def rejected_comps(self):
+    def rejected_comps_(self):
         """A boolean :obj:`pandas.Series` of components that are rejected."""
-        return self.component_table["classification"] == "rejected"
+        return self.component_table_["classification"] == "rejected"
 
     def to_files(self, io_generator):
         """Convert this selector into component files.
@@ -543,10 +544,10 @@ class ComponentSelector:
         io_generator : :obj:`tedana.io.OutputGenerator`
             The output generator to use for filename generation and saving.
         """
-        io_generator.save_file(self.component_table, "ICA metrics tsv")
+        io_generator.save_file(self.component_table_, "ICA metrics tsv")
         io_generator.save_file(
-            self.cross_component_metrics,
+            self.cross_component_metrics_,
             "ICA cross component metrics json",
         )
-        io_generator.save_file(self.component_status_table, "ICA status table tsv")
+        io_generator.save_file(self.component_status_table_, "ICA status table tsv")
         io_generator.save_file(self.tree, "ICA decision tree json")

@@ -3,13 +3,12 @@
 import logging
 
 from tedana.metrics import collect
-from tedana.selection.component_selector import ComponentSelector
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
-def automatic_selection(component_table, n_echos, n_vols, tree="kundu"):
+def automatic_selection(component_table, selector, **kwargs):
     """Classify components based on component table and decision tree type.
 
     Parameters
@@ -20,8 +19,6 @@ def automatic_selection(component_table, n_echos, n_vols, tree="kundu"):
         The number of echoes in this dataset
     tree : :obj:`str`
         The type of tree to use for the ComponentSelector object. Default="kundu"
-    verbose : :obj:`bool`
-        More verbose logging output if True. Default=False
 
     Returns
     -------
@@ -62,12 +59,7 @@ def automatic_selection(component_table, n_echos, n_vols, tree="kundu"):
     )
 
     component_table["classification_tags"] = ""
-    xcomp = {
-        "n_echos": n_echos,
-        "n_vols": n_vols,
-    }
-    selector = ComponentSelector(tree, component_table, cross_component_metrics=xcomp)
-    selector.select()
-    selector.metadata = collect.get_metadata(selector.component_table)
+    selector.select(component_table, cross_component_metrics=kwargs)
+    selector.metadata_ = collect.get_metadata(selector.component_table_)
 
     return selector
