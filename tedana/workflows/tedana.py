@@ -728,6 +728,14 @@ def tedana_workflow(
                 n_vols=n_vols,
             )
             n_likely_bold_comps = selector.n_likely_bold_comps_
+            LGR.info("Selecting components from ICA results")
+            selector = selection.automatic_selection(
+                comptable,
+                selector,
+                n_echos=n_echos,
+                n_vols=n_vols,
+            )
+            n_likely_bold_comps = selector.n_likely_bold_comps_
             if (n_restarts < maxrestart) and (n_likely_bold_comps == 0):
                 LGR.warning("No BOLD components found. Re-attempting ICA.")
             elif n_likely_bold_comps == 0:
@@ -769,10 +777,7 @@ def tedana_workflow(
             external_regressor_config=selector.tree["external_regressor_config"],
         )
         selector = selection.automatic_selection(
-            comptable,
-            selector,
-            n_echos=n_echos,
-            n_vols=n_vols,
+            comptable, selector, n_echos=n_echos, n_vols=n_vols
         )
 
     # TODO The ICA mixing matrix should be written out after it is created

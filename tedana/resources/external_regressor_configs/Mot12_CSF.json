@@ -1,5 +1,5 @@
 {
-    "regess_ID": "Motion12_CSF",
+    "regress_ID": "Motion12_CSF",
     "info": "Contains 6 columns for motion, 6 for first derivatives of motion, and 1 for a CSF ROI time series.",
     "detrend": true,
     "calc_stats": "F",

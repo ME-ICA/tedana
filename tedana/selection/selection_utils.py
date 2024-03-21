@@ -23,6 +23,8 @@ def selectcomps2use(component_table, decide_comps):
     ----------
     component_table : :obj:`~pandas.DataFrame`
         The component_table with metrics and labels for each ICA component
+    component_table : :obj:`~pandas.DataFrame`
+        The component_table with metrics and labels for each ICA component
     decide_comps : :obj:`str` or :obj:`list[str]` or :obj:`list[int]`
         This is string or a list of strings describing what classifications
         of components to operate on, using default or intermediate_classification
@@ -430,7 +432,7 @@ def confirm_metrics_exist(component_table, necessary_metrics, function_name=None
     ValueError
         If ``metrics_exist`` is False then raise an error and end the program.
 
-    Note
+    Notes
     -----
     This doesn't check if there are data in each metric's column, just that the columns exist.
     Also, the string in ``necessary_metrics`` and the column labels in ``component_table`` will
@@ -478,6 +480,7 @@ def log_decision_tree_step(
     ----------
     function_name_idx : :obj:`str`
         The name of the function that should be logged. By convention, this
+        be "Step ``current_node_idx_``: function_name"
         be "Step ``current_node_idx_``: function_name"
     comps2use : :obj:`list[int]` or -1
         A list of component indices that should be used by a function.

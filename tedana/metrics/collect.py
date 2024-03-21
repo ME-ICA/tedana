@@ -349,7 +349,9 @@ def generate_metrics(
     # External regressor-based metrics
     if external_regressors is not None and external_regressor_config is not None:
         # external_regressor_names = external_regressors.columns.tolist()
-        LGR.info("Calculating external regressor fits")
+        LGR.info(f"Calculating external regressor fits. {external_regressor_config['info']}")
+        RepLGR.info({external_regressor_config["report"]})
+
         comptable = external.fit_regressors(
             comptable, external_regressors, external_regressor_config, mixing
         )

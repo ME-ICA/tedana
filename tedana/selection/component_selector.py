@@ -223,7 +223,7 @@ def validate_tree(tree):
     if tree["external_regressor_config"] is not None:
         external_regressor_config = tree["external_regressor_config"]
         # Define the fields that should always be present
-        dict_expected_keys = set(["regess_ID", "info", "detrend", "calc_stats"])
+        dict_expected_keys = set(["regress_ID", "info", "detrend", "calc_stats"])
 
         # Right now, "f" is the only option, but this leaves open the possibility
         #  to have additional options
@@ -387,10 +387,39 @@ class ComponentSelector:
         # this will crash the program with an error message if not all
         # necessary_metrics are in the comptable
         confirm_metrics_exist(
-            self.component_table_,
-            self.necessary_metrics,
+            component_table=self.component_table_,
+            necessary_metrics=self.necessary_metrics,
             function_name=self.tree_name,
         )
+
+        # To run a decision tree, each component needs to have an initial classification
+        # If the classification column doesn't exist, create it and label all components
+        # as unclassified
+        if "classification" not in self.component_table_:
+            self.component_table_["classification"] = "unclassified"
+
+        if status_table is None:
+            self.component_status_table_ = self.component_table_[
+                ["Component", "classification"]
+            ].copy()
+            self.component_status_table_ = self.component_status_table_.rename(
+                columns={"classification": "initialized classification"}
+            )
+            self.start_idx_ = 0
+        else:
+            # Since a status table exists, we need to skip nodes up to the
+            # point where the last tree finished. Notes that were executed
+            # have an output field. Identify the last node with an output field
+            tmp_idx = len(self.tree["nodes"]) - 1
+            while ("outputs" not in self.tree["nodes"][tmp_idx]) and (tmp_idx > 0):
+                tmp_idx -= 1
+            # start at the first node that does not have an output field
+            self.start_idx_ = tmp_idx + 1
+            LGR.info(f"Start is {self.start_idx_}")
+            self.component_status_table_ = status_table
+
+        if "classification_tags" not in self.component_table_.columns:
+            self.component_table_["classification_tags"] = ""
 
         # To run a decision tree, each component needs to have an initial classification
         # If the classification column doesn't exist, create it and label all components
@@ -437,6 +466,7 @@ class ComponentSelector:
                 kwargs = self.check_null(kwargs, node["functionname"])
                 all_params = {**params, **kwargs}
             else:
+                kwargs = {}
                 kwargs = {}
                 all_params = {**params}
 

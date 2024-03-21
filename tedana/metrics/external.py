@@ -12,8 +12,6 @@ from tedana.stats import fit_model
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
-DEFAULT_REGRESSOR_DICTS = ["Mot12_CSF", "Fmodel", "corr_detrend", "corr"]
-
 
 class RegressError(Exception):
     """Passes errors that are raised when `validate_extern_regress` fails."""
@@ -213,7 +211,10 @@ def fit_regressors(comptable, external_regressors, external_regressor_config, mi
             n_time, polort=external_regressor_config["detrend"]
         )
     else:
-        LGR.warning("External regressor fitting applied without detrending fMRI time series")
+        LGR.warning(
+            "External regressor fitted without detrending fMRI time series. Only removing mean"
+        )
+        detrend_regressors = make_detrend_regressors(n_time, polort=0)
 
     if external_regressor_config["calc_stats"].lower() == "f":
         # external_regressors = pd.concat([external_regressors, detrend_regressors])
