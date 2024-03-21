@@ -29,6 +29,7 @@ from tedana import (
     utils,
 )
 from tedana.bibtex import get_description_references
+from tedana.selection.component_selector import ComponentSelector
 from tedana.stats import computefeats2
 from tedana.workflows.parser_utils import check_tedpca_value, is_valid_file
 
@@ -502,6 +503,9 @@ def tedana_workflow(
     if isinstance(data, str):
         data = [data]
 
+    LGR.info("Initializing and validating component selection tree")
+    selector = ComponentSelector(tree)
+
     LGR.info(f"Loading input data: {[f for f in data]}")
     catd, ref_img = io.load_data(data, n_echos=n_echos)
 
@@ -633,8 +637,8 @@ def tedana_workflow(
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, masksum_denoise, t2s=t2s_full, combmode=combmode)
 
-    # regress out global signal unless explicitly not desired
     if "gsr" in gscontrol:
+        # regress out global signal
         catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, io_generator)
 
     fout = io_generator.save_file(data_oc, "combined img")
@@ -672,20 +676,11 @@ def tedana_workflow(
             # Estimate betas and compute selection metrics for mixing matrix
             # generated from dimensionally reduced data using full data (i.e., data
             # with thermal noise)
-            LGR.info("Making second component selection guess from ICA results")
-            required_metrics = [
-                "kappa",
-                "rho",
-                "countnoise",
-                "countsigFT2",
-                "countsigFS0",
-                "dice_FT2",
-                "dice_FS0",
-                "signal-noise_t",
-                "variance explained",
-                "normalized variance explained",
-                "d_table_score",
-            ]
+            necessary_metrics = selector.necessary_metrics
+            # The figures require some metrics that might not be used by the decision tree.
+            extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
+            necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
+
             comptable = metrics.collect.generate_metrics(
                 catd,
                 data_oc,
@@ -694,10 +689,16 @@ def tedana_workflow(
                 tes,
                 io_generator,
                 "ICA",
-                metrics=required_metrics,
+                metrics=necessary_metrics,
             )
-            ica_selector = selection.automatic_selection(comptable, n_echos, n_vols, tree=tree)
-            n_likely_bold_comps = ica_selector.n_likely_bold_comps
+            LGR.info("Selecting components from ICA results")
+            selector = selection.automatic_selection(
+                comptable,
+                selector,
+                n_echos=n_echos,
+                n_vols=n_vols,
+            )
+            n_likely_bold_comps = selector.n_likely_bold_comps_
             if (n_restarts < maxrestart) and (n_likely_bold_comps == 0):
                 LGR.warning("No BOLD components found. Re-attempting ICA.")
             elif n_likely_bold_comps == 0:
@@ -709,6 +710,9 @@ def tedana_workflow(
             # If we're going to restart, temporarily allow force overwrite
             if keep_restarting:
                 io_generator.overwrite = True
+                # Create a re-initialized selector object if rerunning
+                selector = ComponentSelector(tree)
+
             RepLGR.disabled = True  # Disable the report to avoid duplicate text
         RepLGR.disabled = False  # Re-enable the report after the while loop is escaped
         io_generator.overwrite = overwrite  # Re-enable original overwrite behavior
@@ -717,19 +721,12 @@ def tedana_workflow(
         mixing_file = io_generator.get_name("ICA mixing tsv")
         mmix = pd.read_table(mixing_file).values
 
-        required_metrics = [
-            "kappa",
-            "rho",
-            "countnoise",
-            "countsigFT2",
-            "countsigFS0",
-            "dice_FT2",
-            "dice_FS0",
-            "signal-noise_t",
-            "variance explained",
-            "normalized variance explained",
-            "d_table_score",
-        ]
+        selector = ComponentSelector(tree)
+        necessary_metrics = selector.necessary_metrics
+        # The figures require some metrics that might not be used by the decision tree.
+        extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
+        necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
+
         comptable = metrics.collect.generate_metrics(
             catd,
             data_oc,
@@ -738,13 +735,13 @@ def tedana_workflow(
             tes,
             io_generator,
             "ICA",
-            metrics=required_metrics,
+            metrics=necessary_metrics,
         )
-        ica_selector = selection.automatic_selection(
+        selector = selection.automatic_selection(
             comptable,
-            n_echos,
-            n_vols,
-            tree=tree,
+            selector,
+            n_echos=n_echos,
+            n_vols=n_vols,
         )
 
     # TODO The ICA mixing matrix should be written out after it is created
@@ -762,7 +759,7 @@ def tedana_workflow(
     io_generator.save_file(betas_oc, "z-scored ICA components img")
 
     # Save component selector and tree
-    ica_selector.to_files(io_generator)
+    selector.to_files(io_generator)
     # Save metrics and metadata
     metric_metadata = metrics.collect.get_metadata(comptable)
     io_generator.save_file(metric_metadata, "ICA metrics json")
@@ -779,16 +776,16 @@ def tedana_workflow(
         }
     io_generator.save_file(decomp_metadata, "ICA decomposition json")
 
-    if ica_selector.n_likely_bold_comps == 0:
+    if selector.n_likely_bold_comps_ == 0:
         LGR.warning("No BOLD components detected! Please check data and results!")
 
     # TODO: un-hack separate comptable
-    comptable = ica_selector.component_table
+    comptable = selector.component_table_
 
     mmix_orig = mmix.copy()
     if tedort:
-        comps_accepted = ica_selector.accepted_comps
-        comps_rejected = ica_selector.rejected_comps
+        comps_accepted = selector.accepted_comps_
+        comps_rejected = selector.rejected_comps_
         acc_ts = mmix[:, comps_accepted]
         rej_ts = mmix[:, comps_rejected]
         betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
@@ -797,7 +794,7 @@ def tedana_workflow(
         mmix[:, comps_rejected] = resid
         comp_names = [
             io.add_decomp_prefix(comp, prefix="ICA", max_value=comptable.index.max())
-            for comp in range(ica_selector.n_comps)
+            for comp in range(selector.n_comps_)
         ]
 
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
@@ -906,6 +903,7 @@ def tedana_workflow(
             io_generator=io_generator,
             png_cmap=png_cmap,
         )
+        reporting.static_figures.plot_t2star_and_s0(io_generator=io_generator, mask=mask_denoise)
 
         LGR.info("Generating dynamic report")
         reporting.generate_report(io_generator)
