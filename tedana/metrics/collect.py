@@ -7,8 +7,13 @@ import numpy as np
 import pandas as pd
 
 from tedana import io, utils
-from tedana.metrics import dependence
-from tedana.metrics._utils import dependency_resolver, determine_signs, flip_components
+from tedana.metrics import dependence, external
+from tedana.metrics._utils import (
+    add_external_dependencies,
+    dependency_resolver,
+    determine_signs,
+    flip_components,
+)
 from tedana.stats import getfbounds
 
 LGR = logging.getLogger("GENERAL")
@@ -16,6 +21,7 @@ RepLGR = logging.getLogger("REPORT")
 
 
 def generate_metrics(
+    *,
     data_cat,
     data_optcom,
     mixing,
@@ -23,6 +29,8 @@ def generate_metrics(
     tes,
     io_generator,
     label,
+    external_regressors=None,
+    external_regressor_config=None,
     metrics=None,
 ):
     """Fit TE-dependence and -independence models to components.
@@ -47,6 +55,11 @@ def generate_metrics(
         The output generator object for this workflow
     label : str in ['ICA', 'PCA']
         The label for this metric generation type
+    external_regressors : None or :obj:`pandas.DataFrame`, optional
+        External regressors (e.g., motion parameters, physiological noise) to correlate with
+        ICA components. If None, no external regressor metrics will be calculated.
+    external_regressor_config : :obj:`dict`
+        A dictionary for defining how to fit external regressors to component time series
     metrics : list
         List of metrics to return
 
@@ -55,6 +68,9 @@ def generate_metrics(
     comptable : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index is the component number.
+    external_regressor_config : :obj:`dict`
+        Information describing the external regressors and
+        method used for fitting and statistical tests (or None if none were inputed)
     """
     # Load metric dependency tree from json file
     dependency_config = op.join(utils.get_resource_path(), "config", "metrics.json")
@@ -62,6 +78,16 @@ def generate_metrics(
 
     if metrics is None:
         metrics = ["map weight"]
+
+    if external_regressors is not None:
+        if external_regressor_config is None:
+            raise ValueError(
+                "If external_regressors is defined, then "
+                "external_regressor_config also needs to be defined."
+            )
+        dependency_config = add_external_dependencies(dependency_config, external_regressor_config)
+        dependency_config["inputs"].append("external regressors")
+
     RepLGR.info(f"The following metrics were calculated: {', '.join(metrics)}.")
 
     if not (data_cat.shape[0] == data_optcom.shape[0] == adaptive_mask.shape[0]):
@@ -320,6 +346,20 @@ def generate_metrics(
             comptable["countsigFT2"],
         )
 
+    # External regressor-based metrics
+    if external_regressors is not None and external_regressor_config is not None:
+        # external_regressor_names = external_regressors.columns.tolist()
+        LGR.info(f"Calculating external regressor fits. {external_regressor_config['info']}")
+        RepLGR.info({external_regressor_config["report"]})
+
+        comptable = external.fit_regressors(
+            comptable, external_regressors, external_regressor_config, mixing
+        )
+        # for col in external_regressor_names:
+        #     external_regressor_arr = external_regressors[col].values
+        #     corrs = external_regressors.correlate_regressor(external_regressor_arr, mixing)
+        #     comptable[f"{col}_correlation"] = corrs
+
     # Write verbose metrics if needed
     if io_generator.verbose:
         write_betas = "map echo betas" in metric_maps
@@ -374,6 +414,7 @@ def generate_metrics(
         "d_table_score",
         "kappa ratio",
         "d_table_score_scrub",
+        "external fit",
         "classification",
         "rationale",
     )
@@ -381,7 +422,7 @@ def generate_metrics(
     other_columns = [col for col in comptable.columns if col not in preferred_order]
     comptable = comptable[first_columns + other_columns]
 
-    return comptable
+    return comptable, external_regressor_config
 
 
 def get_metadata(comptable):
@@ -593,6 +634,19 @@ def get_metadata(comptable):
                 -1: "Component is flipped prior to metric calculation.",
             },
         }
+
+    if any(col.endswith("_correlation") for col in comptable.columns):
+        external_correlations = [col for col in comptable.columns if col.endswith("_correlation")]
+        for col in external_correlations:
+            original_col = col.replace("_correlation", "")
+            metric_metadata[col] = {
+                "LongName": f"{original_col}-component correlation",
+                "Description": (
+                    "Correlation between the component time series and the external regressor "
+                    f"{original_col}."
+                ),
+                "Units": "Pearson correlation coefficient",
+            }
 
     # There are always components in the comptable, definitionally
     metric_metadata["Component"] = {

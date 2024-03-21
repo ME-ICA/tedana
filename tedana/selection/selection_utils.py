@@ -1,6 +1,8 @@
 """Utility functions for tedana.selection."""
 
+import copy
 import logging
+import re
 
 import numpy as np
 
@@ -19,6 +21,8 @@ def selectcomps2use(component_table, decide_comps):
 
     Parameters
     ----------
+    component_table : :obj:`~pandas.DataFrame`
+        The component_table with metrics and labels for each ICA component
     component_table : :obj:`~pandas.DataFrame`
         The component_table with metrics and labels for each ICA component
     decide_comps : :obj:`str` or :obj:`list[str]` or :obj:`list[int]`
@@ -313,6 +317,103 @@ def clean_dataframe(component_table):
 #################################################
 
 
+def expand_dict(node, field, metrics):
+    """Expand a dictionary with regular expressions.
+
+    Parameters
+    ----------
+    node : dict
+        A dictionary containing nested dictionaries called "parameters" and,
+        optionally, "kwargs".
+        Any of the values in the "parameters" or "kwargs" dictionaries may be
+        a regular expression, denoted by starting with "^".
+    field : :obj:`str`
+        The key in the ``node`` dictionary that should be expanded.
+    metrics : list of str
+        List of metric names to compare regular expressions against.
+
+    Returns
+    -------
+    regex_found : :obj:`bool`
+        True if any regular expressions were found in the input dictionary
+    out_nodes : :obj:`list[dict]`
+        A list of dictionaries with regular expressions replaced by all
+        matching values in the 'metrics' list.
+    """
+    regex_found = False
+    out_nodes = []
+    for k, v in node.get(field, {}).items():
+        if isinstance(v, str) and v.startswith("^"):
+            regex_found = True
+            replacements = [metric for metric in metrics if re.match(v, metric)]
+            if not replacements:
+                raise ValueError(f"No metrics matching regex '{v}' found.")
+
+            for replacement in replacements:
+                LGR.warning(f"Replacing {v} with {replacement}")
+                mod_node = copy.deepcopy(node)
+                mod_node[field][k] = replacement
+                out_nodes.append(mod_node)
+
+    return regex_found, out_nodes
+
+
+def expand_node(node, metrics):
+    """Expand node definitions with regular expressions.
+
+    Recursively expand a node so that any regular expressions are replaced with
+    any matching values in the 'metrics' list.
+    Regular expressions may be present as the value of any key in the
+    subdictionaries "parameters" or "kwargs".
+
+    Parameters
+    ----------
+    node : dict
+        A dictionary containing nested dictionaries called "parameters" and,
+        optionally, "kwargs".
+        Any of the values in the "parameters" or "kwargs" dictionaries may be
+        a regular expression, denoted by starting with "^".
+    metrics : list of str
+        List of metric names.
+    """
+    regex_found, out_nodes = expand_dict(node, "parameters", metrics)
+    if not regex_found:
+        regex_found, out_nodes = expand_dict(node, "kwargs", metrics)
+
+    if not regex_found:
+        # Stop early and just return the node if no regular expressions were found
+        out_nodes = [copy.deepcopy(node)]
+        return out_nodes
+
+    real_out_nodes = []
+    for out_node in out_nodes:
+        real_out_nodes += expand_node(out_node, metrics)
+
+    return real_out_nodes
+
+
+def expand_nodes(tree, metrics):
+    """Expand all nodes in a decision tree.
+
+    Parameters
+    ----------
+    tree : dict
+        A dictionary containing nested dictionaries called "parameters" and,
+        optionally, "kwargs".
+        Any of the values in the "parameters" or "kwargs" dictionaries may be
+        a regular expression, denoted by starting with "^".
+    metrics : list of str
+        List of metric names.
+    """
+    expanded_tree = copy.deepcopy(tree)
+    expanded_tree["nodes"] = []
+    for node in tree["nodes"]:
+        nodes = expand_node(node, metrics)
+        expanded_tree["nodes"] += nodes
+
+    return expanded_tree
+
+
 def confirm_metrics_exist(component_table, necessary_metrics, function_name=None):
     """Confirm that all metrics declared in necessary_metrics are already included in comptable.
 
@@ -337,14 +438,30 @@ def confirm_metrics_exist(component_table, necessary_metrics, function_name=None
     Also, the string in ``necessary_metrics`` and the column labels in ``component_table`` will
     only be matched if they're identical.
     """
-    missing_metrics = set(necessary_metrics) - set(component_table.columns)
-    if missing_metrics:
-        function_name = function_name or "unknown function"
-        raise ValueError(
-            f"Necessary metrics for {function_name}: {necessary_metrics}. "
+    hardcoded_metrics = [metric for metric in necessary_metrics if not metric.startswith("^")]
+    regex_metrics = [metric for metric in necessary_metrics if metric.startswith("^")]
+    # Check that all hardcoded (literal string) metrics are accounted for.
+    missing_metrics = sorted(list(set(hardcoded_metrics) - set(component_table.columns)))
+    # Check that the regular expression-based metrics are accounted for.
+    found_metrics = component_table.columns.tolist()
+    for regex_metric in regex_metrics:
+        if not any(re.match(regex_metric, metric) for metric in found_metrics):
+            missing_metrics.append(regex_metric)
+
+    metrics_are_missing = len(missing_metrics) > 0
+    if metrics_are_missing:
+        if function_name is None:
+            function_name = "unknown function"
+
+        error_msg = (
+            f"Necessary metrics for {function_name}: "
+            f"{necessary_metrics}. "
             f"Comptable metrics: {set(component_table.columns)}. "
             f"MISSING METRICS: {missing_metrics}."
         )
+        raise ValueError(error_msg)
+
+    return metrics_are_missing
 
 
 def log_decision_tree_step(
@@ -363,6 +480,7 @@ def log_decision_tree_step(
     ----------
     function_name_idx : :obj:`str`
         The name of the function that should be logged. By convention, this
+        be "Step ``current_node_idx_``: function_name"
         be "Step ``current_node_idx_``: function_name"
     comps2use : :obj:`list[int]` or -1
         A list of component indices that should be used by a function.

@@ -165,6 +165,18 @@ def _get_parser():
         default="kundu",
     )
     optional.add_argument(
+        "--external",
+        dest="external_regressors",
+        type=lambda x: is_valid_file(parser, x),
+        help=(
+            "File containing external regressors to compare to ICA component be used in the "
+            "decision tree. For example, to identify components fit head motion time series."
+            "The file must be a TSV file with the same number of rows as the number of volumes in "
+            "the input data. Column labels and statistical tests are defined with external_labels."
+        ),
+        default=None,
+    )
+    optional.add_argument(
         "--seed",
         dest="fixed_seed",
         metavar="INT",
@@ -323,6 +335,7 @@ def tedana_workflow(
     fittype="loglin",
     combmode="t2s",
     tree="kundu",
+    external_regressors=None,
     tedpca="aic",
     fixed_seed=42,
     maxit=500,
@@ -382,6 +395,11 @@ def tedana_workflow(
         accepts and rejects some distinct components compared to kundu.
         Testing to better understand the effects of the differences is ongoing.
         Default is 'kundu'.
+    external_regressors : :obj:`str` or None, optional
+        File containing external regressors to be used in the decision tree.
+        The file must be a TSV file with the same number of rows as the number of volumes in
+        the input data. Each column in the file will be treated as a separate regressor.
+        Default is None.
     tedpca : {'mdl', 'aic', 'kic', 'kundu', 'kundu-stabilize', float, int}, optional
         Method with which to select components in TEDPCA.
         If a float is provided, then it is assumed to represent percentage of variance
@@ -504,6 +522,19 @@ def tedana_workflow(
 
     LGR.info(f"Loading input data: {[f for f in data]}")
     catd, ref_img = io.load_data(data, n_echos=n_echos)
+
+    # Load external regressors if provided
+    # Decided to do the validation here so that, if there are issues, an error
+    #  will be raised before PCA/ICA
+    if (
+        "external_regressor_config" in set(selector.tree.keys())
+        and selector.tree["external_regressor_config"] is not None
+    ):
+        external_regressors, selector.tree["external_regressor_config"] = (
+            metrics.external.load_validate_external_regressors(
+                external_regressors, selector.tree["external_regressor_config"], catd.shape[2]
+            )
+        )
 
     io_generator = io.OutputGenerator(
         ref_img,
@@ -677,16 +708,26 @@ def tedana_workflow(
             extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
             necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
-            comptable = metrics.collect.generate_metrics(
-                catd,
-                data_oc,
-                mmix,
-                masksum_clf,
-                tes,
-                io_generator,
-                "ICA",
+            comptable, _ = metrics.collect.generate_metrics(
+                data_cat=catd,
+                data_optcom=data_oc,
+                mixing=mmix,
+                adaptive_mask=masksum_clf,
+                tes=tes,
+                io_generator=io_generator,
+                label="ICA",
                 metrics=necessary_metrics,
+                external_regressors=external_regressors,
+                external_regressor_config=selector.tree["external_regressor_config"],
             )
+            LGR.info("Selecting components from ICA results")
+            selector = selection.automatic_selection(
+                comptable,
+                selector,
+                n_echos=n_echos,
+                n_vols=n_vols,
+            )
+            n_likely_bold_comps = selector.n_likely_bold_comps_
             LGR.info("Selecting components from ICA results")
             selector = selection.automatic_selection(
                 comptable,
@@ -723,21 +764,20 @@ def tedana_workflow(
         extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
         necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
-        comptable = metrics.collect.generate_metrics(
-            catd,
-            data_oc,
-            mmix,
-            masksum_clf,
-            tes,
-            io_generator,
-            "ICA",
+        comptable, _ = metrics.collect.generate_metrics(
+            data_cat=catd,
+            data_optcom=data_oc,
+            mixing=mmix,
+            adaptive_mask=masksum_clf,
+            tes=tes,
+            io_generator=io_generator,
+            label="ICA",
             metrics=necessary_metrics,
+            external_regressors=external_regressors,
+            external_regressor_config=selector.tree["external_regressor_config"],
         )
         selector = selection.automatic_selection(
-            comptable,
-            selector,
-            n_echos=n_echos,
-            n_vols=n_vols,
+            comptable, selector, n_echos=n_echos, n_vols=n_vols
         )
 
     # TODO The ICA mixing matrix should be written out after it is created

@@ -11,6 +11,7 @@ from tedana.selection import selection_nodes
 from tedana.selection.selection_utils import (
     clean_dataframe,
     confirm_metrics_exist,
+    expand_nodes,
     log_classification_counts,
 )
 from tedana.utils import get_resource_path
@@ -93,10 +94,16 @@ def validate_tree(tree):
         "intermediate_classifications",
         "classification_tags",
         "nodes",
+        "external_regressor_config",
     ]
+    tree_optional_keys = ["generated_metrics"]
     defaults = {"selector", "decision_node_idx"}
     default_classifications = {"nochange", "accepted", "rejected", "unclassified"}
     default_decide_comps = {"all", "accepted", "rejected", "unclassified"}
+
+    # If a tree doesn't include "external_regressor_config", instead of crashing, set to None
+    if "external_regressor_config" not in set(tree.keys()):
+        tree["external_regressor_config"] = None
 
     # Confirm that the required fields exist
     missing_keys = set(tree_expected_keys) - set(tree.keys())
@@ -108,12 +115,9 @@ def validate_tree(tree):
 
     # Warn if unused fields exist
     unused_keys = set(tree.keys()) - set(tree_expected_keys) - {"used_metrics"}
-    # Make sure some fields don't trigger a warning; hacky, sorry
-    ok_to_not_use = (
-        "reconstruct_from",
-        "generated_metrics",
-    )
-    for k in ok_to_not_use:
+
+    # Separately check for optional, but used keys
+    for k in tree_optional_keys:
         if k in unused_keys:
             unused_keys.remove(k)
     if unused_keys:
@@ -215,6 +219,57 @@ def validate_tree(tree):
                     "tag that was not predefined"
                 )
 
+    # If there is an external_regressor_config field, validate it
+    if tree["external_regressor_config"] is not None:
+        external_regressor_config = tree["external_regressor_config"]
+        # Define the fields that should always be present
+        dict_expected_keys = set(["regress_ID", "info", "detrend", "calc_stats"])
+
+        # Right now, "f" is the only option, but this leaves open the possibility
+        #  to have additional options
+        calc_stats_key_options = set("f")
+
+        # Confirm that the required fields exist
+        missing_keys = dict_expected_keys - set(external_regressor_config.keys())
+        if missing_keys:
+            err_msg += f"External regressor dictionary missing required fields: {missing_keys}\n"
+
+        if external_regressor_config["calc_stats"].lower() not in calc_stats_key_options:
+            err_msg += (
+                "calc_stats in external_regressor_config is "
+                f"{external_regressor_config['calc_stats']}. It must be one of the following: "
+                f"{calc_stats_key_options}\n"
+            )
+
+        if (external_regressor_config["calc_stats"].lower() != "f") and (
+            "f_stats_partial_models" in set(external_regressor_config.keys())
+        ):
+            err_msg += (
+                "External regressor dictionary cannot include"
+                "f_stats_partial_models if calc_stats is not F\n"
+            )
+
+        if "f_stats_partial_models" in set(external_regressor_config.keys()):
+            dict_expected_keys.add("f_stats_partial_models")
+            dict_expected_keys.update(set(external_regressor_config["f_stats_partial_models"]))
+            missing_partial_models = set(
+                external_regressor_config["f_stats_partial_models"]
+            ) - set(external_regressor_config.keys())
+            if missing_partial_models:
+                raise TreeError(
+                    f"{err_msg}"
+                    "External regressor dictionary missing required fields for partial "
+                    f"models defined in f_stats_partial_models: {missing_partial_models}"
+                )
+
+        # Warn if unused fields exist
+        unused_keys = set(external_regressor_config.keys()) - set(dict_expected_keys)
+        if unused_keys:
+            LGR.warning(
+                "External regressor dictionary includes fields that "
+                f"are not used or logged {unused_keys}"
+            )
+
     if err_msg:
         raise TreeError("\n" + err_msg)
 
@@ -267,6 +322,9 @@ class ComponentSelector:
             A table tracking the status of each component at each step.
             Pass a status table if running additional steps on a decision
             tree that was already executed. Default=None.
+        external_regressor_config : :obj:`dict`
+            Information describing the external regressors and
+            method to use for fitting and statistical tests
 
         Notes
         -----
@@ -323,14 +381,45 @@ class ComponentSelector:
 
         # Construct an un-executed selector
         self.component_table_ = component_table.copy()
+        # Expand out metrics defined by regular expressions in the nodes
+        self.tree = expand_nodes(self.tree, self.component_table_.columns.tolist())
 
         # this will crash the program with an error message if not all
         # necessary_metrics are in the comptable
         confirm_metrics_exist(
-            self.component_table_,
-            self.necessary_metrics,
+            component_table=self.component_table_,
+            necessary_metrics=self.necessary_metrics,
             function_name=self.tree_name,
         )
+
+        # To run a decision tree, each component needs to have an initial classification
+        # If the classification column doesn't exist, create it and label all components
+        # as unclassified
+        if "classification" not in self.component_table_:
+            self.component_table_["classification"] = "unclassified"
+
+        if status_table is None:
+            self.component_status_table_ = self.component_table_[
+                ["Component", "classification"]
+            ].copy()
+            self.component_status_table_ = self.component_status_table_.rename(
+                columns={"classification": "initialized classification"}
+            )
+            self.start_idx_ = 0
+        else:
+            # Since a status table exists, we need to skip nodes up to the
+            # point where the last tree finished. Notes that were executed
+            # have an output field. Identify the last node with an output field
+            tmp_idx = len(self.tree["nodes"]) - 1
+            while ("outputs" not in self.tree["nodes"][tmp_idx]) and (tmp_idx > 0):
+                tmp_idx -= 1
+            # start at the first node that does not have an output field
+            self.start_idx_ = tmp_idx + 1
+            LGR.info(f"Start is {self.start_idx_}")
+            self.component_status_table_ = status_table
+
+        if "classification_tags" not in self.component_table_.columns:
+            self.component_table_["classification_tags"] = ""
 
         # To run a decision tree, each component needs to have an initial classification
         # If the classification column doesn't exist, create it and label all components
@@ -377,6 +466,7 @@ class ComponentSelector:
                 kwargs = self.check_null(kwargs, node["functionname"])
                 all_params = {**params, **kwargs}
             else:
+                kwargs = {}
                 kwargs = {}
                 all_params = {**params}
 

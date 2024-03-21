@@ -207,8 +207,6 @@ def test_validate_tree_succeeds():
 
         # Test a few extra possabilities just using the minimal.json tree
         if "/minimal.json" in tree_name:
-            # Should remove/ignore the "reconstruct_from" key during validation
-            tree["reconstruct_from"] = "testinput"
             # Need to test handling of the tag_if_false kwarg somewhere
             tree["nodes"][1]["kwargs"]["tag_if_false"] = "testing tag"
             assert component_selector.validate_tree(tree)
