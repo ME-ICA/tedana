@@ -116,9 +116,9 @@ make sure to output the denoised time series into a separate directory.
 
 .. _tree differences:
 
-********************************************************************************************
-[tedana] What is the difference between the tedana_orig, meica, and minimal decision trees?
-********************************************************************************************
+*********************************************************************************************
+[tedana] What are the differences between the tedana_orig, meica, and minimal decision trees?
+*********************************************************************************************
 
 The decision tree is the series of conditions through which each component is
 classified as accepted or rejected. The meica tree (`--tree meica`) was created by Prantik
