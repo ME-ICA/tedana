@@ -49,37 +49,76 @@ def reshape_niimg(data):
     return fdata
 
 
-def make_adaptive_mask(data, mask=None, getsum=False, threshold=1):
-    """
-    Make map of `data` specifying longest echo a voxel can be sampled with.
+def make_adaptive_mask(data, mask, threshold=1):
+    """Make map of `data` specifying longest echo a voxel can be sampled with.
 
     Parameters
     ----------
     data : (S x E x T) array_like
-        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is
-        time
-    mask : :obj:`str` or img_like, optional
-        Binary mask for voxels to consider in TE Dependent ANAlysis. Default is
-        to generate mask from data with good signal across echoes
-    getsum : :obj:`bool`, optional
-        Return `masksum` in addition to `mask`. Default: False
+        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is time.
+    mask : :obj:`str` or img_like
+        Binary mask for voxels to consider in TE Dependent ANAlysis.
+        This must be provided, as the mask is used to identify exemplar voxels.
+        Without a mask limiting the voxels to consider,
+        the adaptive mask will generally select voxels outside the brain as exemplars.
     threshold : :obj:`int`, optional
-        Minimum echo count to retain in the mask. Default is 1, which is
-        equivalent not thresholding.
+        Minimum echo count to retain in the mask.
+        Default is 1, which is equivalent not thresholding.
 
     Returns
     -------
     mask : (S,) :obj:`numpy.ndarray`
-        Boolean array of voxels that have sufficient signal in at least one
-        echo
+        Boolean array of voxels that have sufficient signal in at least ``threshold`` echos.
     masksum : (S,) :obj:`numpy.ndarray`
-        Valued array indicating the number of echos with sufficient signal in a
-        given voxel. Only returned if `getsum = True`
+        Valued array indicating the number of echos with sufficient signal in a given voxel.
+
+    Notes
+    -----
+    The adaptive mask is constructed from the following method:
+
+    1.  Count the total number of echoes in each voxel that have "good" data.
+        This method assumes that an exemplar voxel's signal at later echoes is also reasonable,
+        and that any voxels whose values at a given echo are less than 1/3 of the exemplar voxel's
+        values at that echo are affected by dropout.
+
+        This method uses distributions of values across the mask.
+        Therefore, it is sensitive to the quality of the mask;
+        a bad mask may result in a bad adaptive mask.
+
+        This method is implemented as follows:
+
+        a.  Calculate the 33rd percentile of values in the first echo,
+            based on the voxel-wise mean over time.
+
+            -   The 33rd percentile is arbitrary.
+            -   The percentile is calculated only across voxels with non-zero values.
+                However, it is rare for voxels to have values of zero in the first echo,
+                so this exclusion will likely not have a major effect.
+        b.  Identify the voxel where the first echo's mean value is equal to the 33rd percentile.
+            Basically, this identifies an "exemplar" voxel reflecting the 33rd percentile.
+
+            -   If more than one voxel has a value exactly equal to the 33rd percentile,
+                keep all of them.
+        c.  Calculate 1/3 of the mean value of the exemplar voxel for each echo.
+
+            -   This is the threshold for "good" data.
+            -   The 1/3 value is arbitrary.
+            -   If there was more than one exemplar voxel,
+                retain the echo-wise values from the exemplar with the highest total value.
+        d.  For each voxel, identify the last echo with a mean value greater than the
+            corresponding echo's threshold.
+
+            -   Preceding echoes (including ones with mean values less than the threshold)
+                are considered "good" data.
     """
     RepLGR.info(
-        "An adaptive mask was then generated, in which each voxel's "
-        "value reflects the number of echoes with 'good' data."
+        "An adaptive mask was then generated, "
+        "in which each voxel's value reflects the number of echoes with 'good' data."
     )
+    mask = reshape_niimg(mask).astype(bool)
+    # data = data[mask, :, :]
+
+    n_samples = data.shape[0]
 
     # take temporal mean of echos and extract non-zero values in first echo
     echo_means = data.mean(axis=-1)  # temporal mean of echos
@@ -87,50 +126,45 @@ def make_adaptive_mask(data, mask=None, getsum=False, threshold=1):
 
     # get 33rd %ile of `first_echo` and find corresponding index
     # NOTE: percentile is arbitrary
-    # TODO: "interpolation" param changed to "method" in numpy 1.22.0
-    #       confirm method="higher" is the same as interpolation="higher"
-    #       Current minimum version for numpy in tedana is 1.16 where
-    #       there is no "method" parameter. Either wait until we bump
-    #       our minimum numpy version to 1.22 or add a version check
-    #       or try/catch statement.
-    perc = np.percentile(first_echo, 33, interpolation="higher")
-    perc_val = echo_means[:, 0] == perc
+    perc = np.percentile(first_echo, 33, method="higher")
+    voxels_at_perc = echo_means[:, 0] == perc
 
     # extract values from all echos at relevant index
     # NOTE: threshold of 1/3 voxel value is arbitrary
-    lthrs = np.squeeze(echo_means[perc_val].T) / 3
+    lthrs = np.squeeze(echo_means[voxels_at_perc, :].T) / 3
 
-    # if multiple samples were extracted per echo, keep the one w/the highest signal
+    # if multiple voxels exactly match the 33rd percentile value in the first echo,
+    # retain the values from the voxel with the highest total value across echoes
     if lthrs.ndim > 1:
         lthrs = lthrs[:, lthrs.sum(axis=0).argmax()]
 
-    # determine samples where absolute value is greater than echo-specific thresholds
-    # and count # of echos that pass criterion
-    masksum = (np.abs(echo_means) > lthrs).sum(axis=-1)
+    # Find the last good echo for each voxel
+    masksum = np.zeros(n_samples, dtype=np.int16)
+    for i_voxel in range(n_samples):
+        echo_means_voxel = np.abs(echo_means[i_voxel, :])
+        echos_over_threshold = echo_means_voxel > lthrs
+        # Find the index of the last True element in a 1D boolean array
+        last_true_index = (
+            (np.where(echos_over_threshold)[0][-1] + 1) if np.any(echos_over_threshold) else 0
+        )
+        masksum[i_voxel] = last_true_index
 
-    if mask is None:
-        # make it a boolean mask to (where we have at least `threshold` echoes with good signal)
-        mask = (masksum >= threshold).astype(bool)
+    # TODO: Use visual report to make checking the reduced mask easier
+    if np.any(masksum < threshold):
+        n_bad_voxels = np.sum(masksum < threshold)
+        LGR.warning(
+            f"{n_bad_voxels} voxels in user-defined mask do not have good signal. "
+            "Removing voxels from mask."
+        )
         masksum[masksum < threshold] = 0
-    else:
-        # if the user has supplied a binary mask
-        mask = reshape_niimg(mask).astype(bool)
-        masksum = masksum * mask
-        # reduce mask based on masksum
-        # TODO: Use visual report to make checking the reduced mask easier
-        if np.any(masksum[mask] < threshold):
-            n_bad_voxels = np.sum(masksum[mask] < threshold)
-            LGR.warning(
-                f"{n_bad_voxels} voxels in user-defined mask do not have good "
-                "signal. Removing voxels from mask."
-            )
-            masksum[masksum < threshold] = 0
-            mask = masksum.astype(bool)
 
-    if getsum:
-        return mask, masksum
+    masksum = masksum * mask
+    modified_mask = masksum.astype(bool)
 
-    return mask
+    # masksum = unmask(masksum, mask)
+    # modified_mask = unmask(modified_mask, mask)
+
+    return modified_mask, masksum
 
 
 def unmask(data, mask):
