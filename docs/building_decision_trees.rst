@@ -139,8 +139,8 @@ Each outputs field includes:
     It is possible to add a new metric to the component table during the selection process.
     This is useful if a metric is to be calculated on a subset of components based on what
     happened during previous steps in the selection process. This is **not** recommended,
-    but since it was done as part of the original kundu decision tree process defined in
-    meica it is possible.
+    but, since it was done as part of the original decision tree process used in the
+    meica and tedana_orig, it is possible.
 
 
 **************************************
@@ -160,7 +160,7 @@ Defining a custom decision tree
 Decision trees are stored in json files. The default trees are stored as part of
 the tedana code repository in `resources/decision_trees`_. The minimal tree,
 minimal.json, is a good example highlighting the structure and steps in a tree. It
-may be helpful to look at that tree while reading this section. kundu.json replicates
+may be helpful to look at that tree while reading this section. meica.json replicates
 the decision tree used in MEICA version 2.5, the predecessor to tedana. It is more
 complex, but also highlights additional possible functionality in decision trees.
 
@@ -221,7 +221,7 @@ that is used to check whether results are plausible & can help avoid mistakes.
     an error when these metrics are not found. One might want to calculate a new metric
     if the metric uses only a subset of the components based on previous
     classifications. This does make interpretation of results more confusing, but, since
-    this functionality was part of the kundu decision tree, it is included.
+    this functionality is part of the tedana_orig and meica decision trees, it is included.
 
 - intermediate_classifications
     A list of intermediate classifications (i.e. "provisionalaccept",

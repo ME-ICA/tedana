@@ -1,0 +1,395 @@
+{
+    "tree_id": "MEICA_decision_tree",
+    "info": "Following the full decision tree designed by Prantik Kundu for use in MEICA v2.5",
+    "report": "This is the MEICA decision tree in \\citep{tedana_decision_trees} uses the criteria of the MEICA v2.5 decision tree \\citep{kundu2013integrated}. For a description of the decision tree steps, with the rationale for each step, see \\citep{olafsson2015enhanced}.",
+    "necessary_metrics": [
+        "kappa",
+        "rho",
+        "countsigFS0",
+        "countsigFT2",
+        "dice_FS0",
+        "dice_FT2",
+        "signal-noise_t",
+        "variance explained",
+        "d_table_score",
+        "countnoise"
+    ],
+    "generated_metrics": ["d_table_score_node20", "varex kappa ratio"],
+    "intermediate_classifications": ["provisionalaccept", "provisionalreject", "unclass_highvar"],
+    "classification_tags": [
+        "Likely BOLD",
+        "Unlikely BOLD",
+        "Less likely BOLD",
+        "Low variance",
+        "Accept borderline",
+        "No provisional accept"
+    ],
+    "_comment": "More information on the meica decision tree and how it differs from other options is at https://tedana.readthedocs.io/en/stable/included_decision_trees.html. Descriptions of the metrics used are in desc-tedana_metrics.json, which is ouputted when this tree is run",
+    "nodes": [
+        {
+            "functionname": "manual_classify",
+            "parameters": {"new_classification": "unclassified", "decide_comps": "all"},
+            "kwargs": {"clear_classification_tags": true, "dont_warn_reclassify": true},
+            "_comment": "All components are initially labeled as 'unclassified'."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "rejected",
+                "if_false": "nochange",
+                "decide_comps": "all",
+                "op": ">",
+                "left": "rho",
+                "right": "kappa"
+            },
+            "kwargs": {"tag_if_true": "Unlikely BOLD"},
+            "_comment": "The first four steps are for rejecting components that very unlikely to have substantial T2* signal. Any components with rho greater than kappa are rejected (Code I002 in premodularized tedana). Higher rho than kappa means that the component better fits the TE-independence (S0) model than the TE-dependence (T2*) model."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "rejected",
+                "if_false": "nochange",
+                "decide_comps": "all",
+                "op": ">",
+                "left": "countsigFS0",
+                "right": "countsigFT2"
+            },
+            "kwargs": {
+                "left2": "countsigFT2",
+                "op2": ">",
+                "right2": 0,
+                "tag_if_true": "Unlikely BOLD"
+            },
+            "_comment": "Any components with more voxels that are significant based on the S0 model's F-statistics than the T2* model's are rejected, as long as there is at least one significant voxel for the T2 model (Code I003 in premodularized tedana)"
+        },
+        {
+            "functionname": "calc_median",
+            "parameters": {
+                "decide_comps": "all",
+                "metric_name": "variance explained",
+                "median_label": "varex"
+            },
+            "_comment": "The median variance explained is calculated across all components, for use in later steps."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "rejected",
+                "if_false": "nochange",
+                "decide_comps": "all",
+                "op": ">",
+                "left": "dice_FS0",
+                "right": "dice_FT2"
+            },
+            "kwargs": {
+                "left2": "variance explained",
+                "op2": ">",
+                "right2": "median_varex",
+                "tag_if_true": "Unlikely BOLD"
+            },
+            "_comment": "Any components with higher S0 model beta map-F-statistic map Dice similarity index than T2 model beta map-F-statistic map Dice similarity index and greater than median variance explained are rejected. In slightly plainer English, this step rejects any high-variance components where significant voxels in the F-stat map overlap more with highly S0-associated voxels than T2*-associated voxels. (Code I004 in premodularized tedana)"
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "rejected",
+                "if_false": "nochange",
+                "decide_comps": "all",
+                "op": ">",
+                "left": 0,
+                "right": "signal-noise_t"
+            },
+            "kwargs": {
+                "left2": "variance explained",
+                "op2": ">",
+                "right2": "median_varex",
+                "tag_if_true": "Unlikely BOLD"
+            },
+            "_comment": "Any components with a negative t-statistic comparing the distribution of T2* model F-statistics from voxels in clusters to those of voxels not in clusters and variance explained greater than median are rejected. That is reject any high-variance components exhibiting more 'speckled' T2*-associated voxels than 'clustered' ones. (Code I005 in premodularized tedana)"
+        },
+        {
+            "functionname": "calc_kappa_elbow",
+            "parameters": {"decide_comps": "all"},
+            "_comment": "The kappa elbow is calculated from all components, for use in later steps."
+        },
+        {
+            "functionname": "dec_reclassify_high_var_comps",
+            "parameters": {
+                "decide_comps": "unclassified",
+                "new_classification": "unclass_highvar"
+            },
+            "_comment": "Unclassified components exhibiting a large step down in variance explained are classified as 'unclassified high-variance' and excluded or partially excluded from several steps below."
+        },
+        {
+            "functionname": "calc_rho_elbow",
+            "parameters": {"decide_comps": "all"},
+            "kwargs": {"subset_decide_comps": "unclassified", "rho_elbow_type": "kundu"},
+            "_comment": "This step determines the 'rho elbow' based on the rho values for all of the components, as well as just the unclassified components (excluding unclass_highvar). It calculates the elbow for each set of components, as well as the F-statistic threshold associated with p < 0.05 given the number of echoes, and then takes the mean of the three values."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "provisionalaccept",
+                "if_false": "nochange",
+                "decide_comps": "unclassified",
+                "op": ">=",
+                "left": "kappa",
+                "right": "kappa_elbow_kundu"
+            },
+            "_comment": "Any unclassified components with kappa greater than or equal to the kappa elbow are provisionally accepted."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "unclassified",
+                "if_false": "nochange",
+                "decide_comps": ["provisionalaccept"],
+                "op": ">",
+                "left": "rho",
+                "right": "rho_elbow_kundu"
+            },
+            "_comment": "Any provisionally accepted components with rho greater than the rho elbow are reset to 'unclassified'."
+        },
+        {
+            "functionname": "dec_classification_doesnt_exist",
+            "parameters": {
+                "new_classification": "accepted",
+                "decide_comps": ["provisionalaccept", "unclassified", "unclass_highvar"],
+                "class_comp_exists": "provisionalaccept"
+            },
+            "kwargs": {
+                "at_least_num_exist": 2,
+                "tag": "No provisional accept",
+                "log_extra_info": "If nothing is provisionally accepted by this point, then rerun ICA & selection. If max iterations of rerunning done, then accept everything not already rejected"
+            },
+            "_comment": "Code I006 in premodularized tedana"
+        },
+        {
+            "functionname": "calc_varex_thresh",
+            "parameters": {
+                "decide_comps": "provisionalaccept",
+                "thresh_label": "upper",
+                "percentile_thresh": 90
+            },
+            "_comment": "The variance explained upper threshold is calculated as the 90th percentile of variance explained from provisionally accepted components."
+        },
+        {
+            "functionname": "calc_varex_thresh",
+            "parameters": {
+                "decide_comps": "provisionalaccept",
+                "thresh_label": "lower",
+                "percentile_thresh": 25
+            },
+            "_comment": "The variance explained lower threshold is calculated as the 25th percentile of variance explained from provisionally accepted components."
+        },
+        {
+            "functionname": "calc_extend_factor",
+            "parameters": {},
+            "_comment": "'extend factor' is a scaling number that is used for a few thresholds. 2 if fewer than 90 fMRI volumes, 3 if more than 110 and linear in-between. In the original MEICA, this was discrete with no linear slope between 90 & 110 so this might result in a small difference in results from MEICA for runs with 91-109 volumes."
+        },
+        {
+            "functionname": "calc_max_good_meanmetricrank",
+            "parameters": {"decide_comps": "provisionalaccept"},
+            "_comment": "'max_good_meanmetricrank' is the number of provisionalaccept components * extend_factor"
+        },
+        {
+            "functionname": "calc_varex_kappa_ratio",
+            "parameters": {"decide_comps": "provisionalaccept"},
+            "_comment": "'varex kappa ratio' is a new column in the component table. It's calcualted from the provisionally accepted components and is the maximum kappa minus the minimum kappa, divided by the maximum variance explained minus the minimum variance explained."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "rejected",
+                "if_false": "nochange",
+                "decide_comps": ["provisionalaccept", "unclassified", "unclass_highvar"],
+                "op": ">",
+                "left": "d_table_score",
+                "right": "max_good_meanmetricrank"
+            },
+            "kwargs": {
+                "op2": ">",
+                "left2": "variance explained",
+                "right2": "varex_upper_thresh",
+                "right2_scale": "extend_factor",
+                "tag_if_true": "Less likely BOLD",
+                "log_extra_info": "If variance and d_table_scores are high, then reject"
+            },
+            "_comment": "One of several steps that makes it more likely to reject high variance components. Any provisionally accepted, unclassified, or unclassified high-variance components with a decision table score greater than 'max_good_meanmetricrank' and variance explained greater than the variance explained upper threshold multiplied by the extend factor are rejected. (Code I007 in premodularized tedana.)"
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "accepted",
+                "if_false": "nochange",
+                "decide_comps": ["provisionalaccept", "unclassified", "unclass_highvar"],
+                "op": ">",
+                "left": "d_table_score",
+                "right": "max_good_meanmetricrank"
+            },
+            "kwargs": {
+                "tag_if_true": "Low variance",
+                "op2": "<=",
+                "left2": "variance explained",
+                "right2": "varex_lower_thresh",
+                "op3": "<=",
+                "left3": "kappa",
+                "right3": "kappa_elbow_kundu",
+                "log_extra_info": "If low variance, accept even if bad kappa & d_table_scores"
+            },
+            "_comment": "Any provisionally accepted, unclassified, or unclassified high-variance components with a decision table score greater than 'max_good_meanmetricrank', variance explained less than or equal to the variance explained lower threshold, and kappa less than or equal to the kappa elbow will be accepted and labeled as 'low variance'. (Code I008 in premodularized tedana)"
+        },
+        {
+            "functionname": "dec_classification_doesnt_exist",
+            "parameters": {
+                "new_classification": "accepted",
+                "decide_comps": ["provisionalaccept", "unclassified", "unclass_highvar"],
+                "class_comp_exists": ["unclassified", "unclass_highvar"]
+            },
+            "kwargs": {
+                "tag": "Likely BOLD",
+                "log_extra_info": "If nothing left is unclassified, then accept all"
+            },
+            "_comment": "If no components are still labeled as unclassified or unclassified high-variance, then all remaining provisionally accepted components are accepted."
+        },
+        {
+            "functionname": "calc_revised_meanmetricrank_guesses",
+            "parameters": {
+                "decide_comps": ["provisionalaccept", "unclassified", "unclass_highvar"]
+            },
+            "_comment": "If any components are still labeled as unclassified or unclassified high-variance, then a revised decision table score is calculated from the provisionally accepted, unclassified, and unclassified high-variance components."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "provisionalreject",
+                "if_false": "nochange",
+                "decide_comps": ["provisionalaccept", "unclassified", "unclass_highvar"],
+                "op": ">",
+                "left": "d_table_score_node20",
+                "right": "conservative_guess"
+            },
+            "kwargs": {
+                "tag_if_true": "Less likely BOLD",
+                "op2": ">",
+                "left2": "varex kappa ratio",
+                "right2": "extend_factor",
+                "right2_scale": 2,
+                "op3": ">",
+                "left3": "variance explained",
+                "right3": "varex_upper_thresh",
+                "right3_scale": "extend_factor",
+                "log_extra_info": "Reject if a combination of kappa, variance, and other factors are ranked worse than others"
+            },
+            "_comment": "A quirky combination of a bunch of metrics that deal with rejecting some edge cases. Any provisionally accepted, unclassified, or unclassified high-variance components with a revised decision tree score greater than the 'conservative_guess', variance explained-kappa ratio greater than the extend factor times two, and variance explained greater than the variance explained upper threshold times the extend factor are rejected. (Code I009 in premodularized tedana)"
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "provisionalreject",
+                "if_false": "nochange",
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject",
+                    "unclassified",
+                    "unclass_highvar"
+                ],
+                "op": ">",
+                "left": "d_table_score_node20",
+                "right": "num_acc_guess"
+            },
+            "kwargs": {
+                "tag_if_true": "Less likely BOLD",
+                "right_scale": 0.9,
+                "op2": ">",
+                "left2": "variance explained",
+                "right2": "varex_lower_thresh",
+                "right2_scale": "extend_factor",
+                "log_extra_info": "Reject if a combination of variance and ranks of other metrics are worse than others"
+            },
+            "_comment": "A quirky combination of a bunch of metrics that deal with rejecting some edge cases. Any provisionally accepted, unclassified, or unclassified high-variance components with a revised decision table score greater than 'num_acc_guess' times 0.9 and variance explained greater than variance explained lower threshold times the extend factor are rejected. (Code I010 in premodularized tedana)"
+        },
+        {
+            "functionname": "calc_varex_thresh",
+            "parameters": {
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject",
+                    "unclassified",
+                    "unclass_highvar"
+                ],
+                "thresh_label": "new_lower",
+                "percentile_thresh": 25
+            },
+            "kwargs": {"num_highest_var_comps": "num_acc_guess"},
+            "_comment": "An updated variance explained lower threshold (25th percentile) is calculated from the 'num_acc_guess' highest variance explained components among the remaining provisionally accepted, unclassified, and unclassified high-variance components."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "accepted",
+                "if_false": "nochange",
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject",
+                    "unclassified",
+                    "unclass_highvar"
+                ],
+                "op": ">",
+                "left": "d_table_score_node20",
+                "right": "num_acc_guess"
+            },
+            "kwargs": {
+                "tag_if_true": "Accept borderline",
+                "op2": ">",
+                "left2": "variance explained",
+                "right2": "varex_new_lower_thresh",
+                "log_extra_info": "Accept components with a bad d_table_score, but are at the higher end of the remaining variance so more cautious to not remove"
+            },
+            "_comment": "Another quirky criterion, but this one to keep components. Any provisionally accepted, unclassified, or unclassified high-variance components with a revised decision table score greater than 'num_acc_guess' and variance explained greater than the new variance explained lower threshold are accepted and labeled as 'borderline'. Prior to tedana vs 23.0.1 a mistake meant varex_new_lower_thresh would be lower than it is here and that might cause different results (Code I011 in premodularized tedana)."
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "accepted",
+                "if_false": "nochange",
+                "decide_comps": [
+                    "provisionalaccept",
+                    "provisionalreject",
+                    "unclassified",
+                    "unclass_highvar"
+                ],
+                "op": "<=",
+                "left": "kappa",
+                "right": "kappa_elbow_kundu"
+            },
+            "kwargs": {
+                "tag_if_true": "Accept borderline",
+                "op2": ">",
+                "left2": "variance explained",
+                "right2": "varex_new_lower_thresh",
+                "log_extra_info": "For not already rejected components, accept ones below the kappa elbow, but at the higher end of the remaining variance so more cautious to not remove"
+            },
+            "_comment": "Another quirky criterion to keep components. Any provisionally accepted, unclassified, or unclassified high-variance components with kappa less than or equal to the kappa elbow and variance explained greater than the new variance explained lower threshold are accepted and labeled as 'borderline'. Prior to tedana vs 23.0.1 a mistake meant varex_new_lower_thresh would be lower than it is here and that might cause different results.(Code I012 in premodularized tedana)"
+        },
+        {
+            "functionname": "manual_classify",
+            "parameters": {"new_classification": "rejected", "decide_comps": "provisionalreject"},
+            "kwargs": {"log_extra_info": "Reject anything that is provisionalreject"},
+            "_comment": "Rejecting components that used to be midK. These were already assigned tags when given the provisionalreject label"
+        },
+        {
+            "functionname": "manual_classify",
+            "parameters": {
+                "new_classification": "accepted",
+                "decide_comps": ["provisionalaccept", "unclassified", "unclass_highvar"]
+            },
+            "kwargs": {
+                "tag": "Likely BOLD",
+                "log_extra_info": "Anything still provisional accepted or unclassified should be accepted"
+            },
+            "_comment": "All remaining unclassified, unclassified high-variance, or provisionally accepted components are accepted."
+        }
+    ]
+}

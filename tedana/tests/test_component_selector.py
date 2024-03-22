@@ -9,6 +9,7 @@ import pandas as pd
 import pytest
 
 from tedana.selection import component_selector
+from tedana.utils import get_resource_path
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -168,6 +169,15 @@ def test_load_config_succeeds():
     tree = component_selector.load_config("minimal")
     assert tree["tree_id"] == "minimal_decision_tree"
 
+    # Load the meica tree as a json file rather than just the label
+    fname = op.join(get_resource_path(), "decision_trees", "meica.json")
+    tree = component_selector.load_config(fname)
+    assert tree["tree_id"] == "MEICA_decision_tree"
+
+    # If "kundu" is used as a tree, it should log a warning and output the tedana_orig tree
+    tree = component_selector.load_config("kundu")
+    assert tree["tree_id"] == "tedana_orig_decision_tree"
+
 
 def test_minimal():
     """Smoke test for constructor for ComponentSelector using minimal tree."""
@@ -188,7 +198,8 @@ def test_minimal():
 
 
 def test_validate_tree_succeeds():
-    """Test to make sure validate_tree suceeds for all default trees.
+    """
+    Tests to make sure validate_tree suceeds for all default decision trees.
 
     Tested on all default trees in ./tedana/resources/decision_trees
     Note: If there is a tree in the default trees directory that

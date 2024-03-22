@@ -157,12 +157,12 @@ def _get_parser():
         dest="tree",
         help=(
             "Decision tree to use. You may use a "
-            "packaged tree (kundu, minimal) or supply a JSON "
+            "packaged tree (tedana_orig, meica, minimal) or supply a JSON "
             "file which matches the decision tree file "
             "specification. Minimal still being tested with more"
             "details in docs"
         ),
-        default="kundu",
+        default="tedana_orig",
     )
     optional.add_argument(
         "--seed",
@@ -322,7 +322,7 @@ def tedana_workflow(
     prefix="",
     fittype="loglin",
     combmode="t2s",
-    tree="kundu",
+    tree="tedana_orig",
     tedpca="aic",
     fixed_seed=42,
     maxit=500,
@@ -374,14 +374,18 @@ def tedana_workflow(
         Default is 'loglin'.
     combmode : {'t2s'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default).
-    tree : {'kundu', 'minimal', 'json file'}, optional
+    tree : {'tedana_orig', 'meica', 'minimal', 'json file'}, optional
         Decision tree to use for component selection. Can be a
-        packaged tree (kundu, minimal) or a user-supplied JSON file that
-        matches the decision tree file specification. Minimal is intented
-        to be a simpler process that is a bit more conservative, but it
-        accepts and rejects some distinct components compared to kundu.
-        Testing to better understand the effects of the differences is ongoing.
-        Default is 'kundu'.
+        packaged tree (tedana_orig, meica, minimal) or a user-supplied JSON file that
+        matches the decision tree file specification. tedana_orig is the tree that has
+        been distributed with tedana from the beginning and was designed to match the
+        process in MEICA. A difference between that tree and the older MEICA was
+        identified so the original meica tree is also included. meica will always
+        accept the same or more components, but those accepted components are sometimes
+        high variance so the differences can be non-trivial. Minimal is intented
+        to be a simpler process, but it accepts and rejects some distinct components
+        compared to the others. Testing to better understand the effects of the
+        differences is ongoing. Default is 'tedana_orig'.
     tedpca : {'mdl', 'aic', 'kic', 'kundu', 'kundu-stabilize', float, int}, optional
         Method with which to select components in TEDPCA.
         If a float is provided, then it is assumed to represent percentage of variance
