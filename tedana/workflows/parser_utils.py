@@ -4,33 +4,50 @@ import argparse
 import os.path as op
 
 
-def check_tedpca_value(string, is_parser=True):
+def check_tedpca_value(value, is_parser=True):
     """
     Check tedpca argument.
 
-    Check if argument is a float in range (0,1), an int greater than 1 or one of a
-    list of strings.
+    Check if argument is a float in range (0,1], a positive integer,
+    or one of a list of strings.
     """
     valid_options = ("mdl", "aic", "kic", "kundu", "kundu-stabilize")
-    if string in valid_options:
-        return string
+    if value in valid_options:
+        return value
 
     error = argparse.ArgumentTypeError if is_parser else ValueError
+    dashes = "--" if is_parser else ""
+
+    def check_float(floatvalue):
+        assert isinstance(floatvalue, float)
+        if not (0.0 < floatvalue <= 1.0):
+            msg = f"Floating-point argument to {dashes}tedpca must be in the range (0.0, 1.0]."
+            raise error(msg)
+        return floatvalue
+
+    def check_int(intvalue):
+        assert isinstance(intvalue, int)
+        if intvalue < 1:
+            msg = f"Integer argument to {dashes}tedpca must be positive"
+            raise error(msg)
+        return intvalue
+
+    if isinstance(value, float):
+        return check_float(value)
+    if isinstance(value, int):
+        return check_int(value)
+
     try:
-        floatarg = float(string)
+        floatvalue = float(value)
     except ValueError:
-        msg = f"Argument to tedpca must be a number or one of: {', '.join(valid_options)}"
+        msg = f"Argument to {dashes}tedpca must be a number or one of: {', '.join(valid_options)}"
         raise error(msg)
 
-    if floatarg != int(floatarg):
-        if not (0 < floatarg < 1):
-            raise error("Float argument to tedpca must be between 0 and 1.")
-        return floatarg
-    else:
-        intarg = int(floatarg)
-        if floatarg < 1:
-            raise error("Int argument must be greater than 1")
-        return intarg
+    try:
+        intvalue = int(value)
+    except ValueError:
+        return check_float(floatvalue)
+    return check_int(intvalue)
 
 
 def is_valid_file(parser, arg):

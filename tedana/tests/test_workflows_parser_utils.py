@@ -16,15 +16,27 @@ def test_check_tedpca_value():
         check_tedpca_value("hello", is_parser=False)
 
     with pytest.raises(argparse.ArgumentTypeError):
-        check_tedpca_value(1.5, is_parser=True)
+        check_tedpca_value("1.5", is_parser=True)
 
     with pytest.raises(ValueError):
         check_tedpca_value(1.5, is_parser=False)
 
     with pytest.raises(ValueError):
+        check_tedpca_value(0.0, is_parser=False)
+
+    with pytest.raises(ValueError):
         check_tedpca_value(-1, is_parser=False)
+
+    with pytest.raises(ValueError):
+        check_tedpca_value(0, is_parser=False)
 
     assert check_tedpca_value(0.95) == 0.95
     assert check_tedpca_value("0.95") == 0.95
     assert check_tedpca_value("mdl") == "mdl"
     assert check_tedpca_value(52) == 52
+
+    assert check_tedpca_value(1, is_parser=False) == 1
+    assert check_tedpca_value(1.0, is_parser=False) == 1.0
+    assert check_tedpca_value("1.0") == 1.0
+    assert check_tedpca_value("1.") == 1.0
+    assert check_tedpca_value("1") == 1
