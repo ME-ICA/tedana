@@ -1,10 +1,12 @@
 """Functions to estimate S0 and T2* from multi-echo data."""
 
 import logging
+from typing import List, Literal, Tuple
 
 import numpy as np
 import scipy
 from scipy import stats
+from tqdm.auto import tqdm
 
 from tedana import utils
 
@@ -112,7 +114,7 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True):
             "estimate T2* and S0. In cases of model fit failure, T2*/S0 "
             "estimates from the log-linear fit were retained instead."
         )
-    n_samp, n_echos, n_vols = data_cat.shape
+    n_samp, _, n_vols = data_cat.shape
 
     # Currently unused
     # fit_data = np.mean(data_cat, axis=2)
@@ -151,7 +153,7 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True):
         # perform a monoexponential fit of echo times against MR signal
         # using loglin estimates as initial starting points for fit
         fail_count = 0
-        for voxel in voxel_idx:
+        for voxel in tqdm(voxel_idx, desc=f"{echo_num}-echo monoexponential"):
             try:
                 popt, cov = scipy.optimize.curve_fit(
                     monoexponential,
@@ -460,3 +462,71 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
         report = False
 
     return t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts
+
+
+def model_fit_decay_ts(
+    *,
+    data: np.ndarray,
+    tes: List[float],
+    adaptive_mask: np.ndarray,
+    t2s: np.ndarray,
+    s0: np.ndarray,
+    fitmode: Literal["all", "ts"],
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Estimate model fit of voxel- and timepoint-wise monoexponential decay models to ``data``.
+
+    Parameters
+    ----------
+    data : (S x E x T) :obj:`numpy.ndarray`
+        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is time.
+    tes : (E,) :obj:`list`
+        Echo times.
+    adaptive_mask : (S,) :obj:`numpy.ndarray`
+        Array where each value indicates the number of echoes with good signal for that voxel.
+        This mask may be thresholded; for example, with values less than 3 set to 0.
+        For more information on thresholding, see :func:`~tedana.utils.make_adaptive_mask`.
+    t2s : (S [x T]) :obj:`numpy.ndarray`
+        Voxel-wise (and possibly volume-wise) T2* estimates from
+        :func:`~tedana.decay.fit_decay_ts`.
+    s0 : (S [x T]) :obj:`numpy.ndarray`
+        Voxel-wise (and possibly volume-wise) S0 estimates from :func:`~tedana.decay.fit_decay_ts`.
+    fitmode : {"fit", "all"}
+        Whether the T2* and S0 estimates are volume-wise ("fit") or not ("all").
+
+    Returns
+    -------
+    rmse_map : (S,) :obj:`numpy.ndarray`
+        Mean root mean squared error of the model fit across all volumes at each voxel.
+    rmse_timeseries : (T,) :obj:`numpy.ndarray`
+        Mean root mean squared error of the model fit across all voxels at each timepoint.
+    rmse_sd_timeseries : (T,) :obj:`numpy.ndarray`
+        Standard deviation of root mean squared error of the model fit across all voxels at each
+        timepoint.
+    """
+    n_samples, _, n_vols = data.shape
+    tes = np.array(tes)
+
+    rmse = np.zeros([n_samples, n_vols])
+    for i_voxel in tqdm(range(n_samples)):
+        n_good_echoes = adaptive_mask[i_voxel]
+
+        data_voxel = data[i_voxel, :n_good_echoes, :]
+
+        if fitmode == "all":
+            s0_voxel = np.full(data_voxel.shape[-1], s0[i_voxel])
+            t2s_voxel = np.full(data_voxel.shape[-1], t2s[i_voxel])
+        else:
+            s0_voxel = s0[i_voxel, :]
+            t2s_voxel = t2s[i_voxel, :]
+
+        predicted_data = monoexponential(
+            tes=tes[:n_good_echoes, None],
+            s0=s0_voxel[None, :],
+            t2star=t2s_voxel[None, :],
+        )
+        rmse[i_voxel, :] = np.sqrt(np.mean((data_voxel - predicted_data) ** 2, axis=0))
+
+    rmse_map = np.nanmean(rmse, axis=1)
+    rmse_timeseries = np.nanmean(rmse, axis=0)
+    rmse_sd_timeseries = np.nanstd(rmse, axis=0)
+    return rmse_map, rmse_timeseries, rmse_sd_timeseries
