@@ -155,7 +155,7 @@ def make_adaptive_mask(data, mask=None, threshold=1, methods=["decay", "dropout"
         adaptive_masks.append(last_decreasing_echo)
 
     # Retain the more conservative of the two adaptive mask estimates
-    adaptive_mask = np.minimum(adaptive_masks)
+    adaptive_mask = np.minimum.reduce(adaptive_masks)
 
     if mask is None:
         # make it a boolean mask to (where we have at least `threshold` echoes with good signal)
