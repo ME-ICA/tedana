@@ -92,7 +92,7 @@ def _get_parser():
         nargs="+",
         help="Method(s) by which to define the adaptive mask.",
         choices=["dropout", "decay", "none"],
-        default=["dropout", "decay"],
+        default=["dropout"],
     )
     optional.add_argument(
         "--fittype",
@@ -162,7 +162,7 @@ def t2smap_workflow(
     mask=None,
     prefix="",
     convention="bids",
-    masktype=["dropout", "decay"],
+    masktype=["dropout"],
     fittype="loglin",
     fitmode="all",
     combmode="t2s",
@@ -188,7 +188,7 @@ def t2smap_workflow(
         Binary mask of voxels to include in TE Dependent ANAlysis. Must be spatially
         aligned with `data`.
     masktype : {'dropout', 'decay'} or :obj:`list`, optional
-        Method(s) by which to define the adaptive mask. Default is ["dropout", "decay"].
+        Method(s) by which to define the adaptive mask. Default is ["dropout"].
     fittype : {'loglin', 'curvefit'}, optional
         Monoexponential fitting method.
         'loglin' means to use the the default linear fit to the log of

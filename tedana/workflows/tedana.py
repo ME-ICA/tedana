@@ -118,7 +118,7 @@ def _get_parser():
         nargs="+",
         help="Method(s) by which to define the adaptive mask.",
         choices=["dropout", "decay", "none"],
-        default=["dropout", "decay"],
+        default=["dropout"],
     )
     optional.add_argument(
         "--fittype",
@@ -330,7 +330,7 @@ def tedana_workflow(
     mask=None,
     convention="bids",
     prefix="",
-    masktype=["dropout", "decay"],
+    masktype=["dropout"],
     fittype="loglin",
     combmode="t2s",
     tree="tedana_orig",
@@ -379,7 +379,7 @@ def tedana_workflow(
         Prefix for filenames generated.
         Default is ""
     masktype : {'dropout', 'decay'} or :obj:`list`, optional
-        Method(s) by which to define the adaptive mask. Default is ["dropout", "decay"].
+        Method(s) by which to define the adaptive mask. Default is ["dropout"].
     fittype : {'loglin', 'curvefit'}, optional
         Monoexponential fitting method. 'loglin' uses the the default linear
         fit to the log of the data. 'curvefit' uses a monoexponential fit to

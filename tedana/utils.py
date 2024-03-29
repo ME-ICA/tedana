@@ -49,7 +49,7 @@ def reshape_niimg(data):
     return fdata
 
 
-def make_adaptive_mask(data, mask=None, threshold=1, methods=["decay", "dropout"]):
+def make_adaptive_mask(data, mask=None, threshold=1, methods=["dropout"]):
     """Make map of `data` specifying longest echo a voxel can be sampled with.
 
     Parameters
@@ -63,8 +63,7 @@ def make_adaptive_mask(data, mask=None, threshold=1, methods=["decay", "dropout"
         Minimum echo count to retain in the mask. Default is 1, which is
         equivalent not thresholding.
     methods : :obj:`list`, optional
-        List of methods to use for adaptive mask generation. Default is
-        ["decay", "dropout"].
+        List of methods to use for adaptive mask generation. Default is ["dropout"].
         Valid methods are "decay", "dropout", and "none".
 
     Returns
