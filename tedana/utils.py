@@ -49,7 +49,7 @@ def reshape_niimg(data):
     return fdata
 
 
-def make_adaptive_mask(data, mask=None, threshold=1):
+def make_adaptive_mask(data, mask=None, threshold=1, methods=["decay", "dropout"]):
     """Make map of `data` specifying longest echo a voxel can be sampled with.
 
     Parameters
@@ -67,7 +67,7 @@ def make_adaptive_mask(data, mask=None, threshold=1):
     -------
     mask : (S,) :obj:`numpy.ndarray`
         Boolean array of voxels that have sufficient signal in at least ``threshold`` echos.
-    masksum : (S,) :obj:`numpy.ndarray`
+    adaptive_mask : (S,) :obj:`numpy.ndarray`
         Valued array indicating the number of echos with sufficient signal in a given voxel.
 
     Notes
@@ -112,64 +112,71 @@ def make_adaptive_mask(data, mask=None, threshold=1):
         "An adaptive mask was then generated, in which each voxel's "
         "value reflects the number of echoes with 'good' data."
     )
-    n_samples, n_echos, _ = data.shape
+    assert methods, "No methods provided for adaptive mask generation."
+    assert all([method in ["decay", "dropout"] for method in methods])
 
-    # take temporal mean of echos and extract non-zero values in first echo
-    echo_means = data.mean(axis=-1)  # temporal mean of echos
-    first_echo = echo_means[echo_means[:, 0] != 0, 0]
+    adaptive_masks = []
+    if "dropout" in methods:
+        # take temporal mean of echos and extract non-zero values in first echo
+        echo_means = data.mean(axis=-1)  # temporal mean of echos
+        first_echo = echo_means[echo_means[:, 0] != 0, 0]
 
-    # get 33rd %ile of `first_echo` and find corresponding index
-    # NOTE: percentile is arbitrary
-    # TODO: "interpolation" param changed to "method" in numpy 1.22.0
-    #       confirm method="higher" is the same as interpolation="higher"
-    #       Current minimum version for numpy in tedana is 1.16 where
-    #       there is no "method" parameter. Either wait until we bump
-    #       our minimum numpy version to 1.22 or add a version check
-    #       or try/catch statement.
-    perc = np.percentile(first_echo, 33, interpolation="higher")
-    perc_val = echo_means[:, 0] == perc
+        # get 33rd %ile of `first_echo` and find corresponding index
+        # NOTE: percentile is arbitrary
+        # TODO: "interpolation" param changed to "method" in numpy 1.22.0
+        #       confirm method="higher" is the same as interpolation="higher"
+        #       Current minimum version for numpy in tedana is 1.16 where
+        #       there is no "method" parameter. Either wait until we bump
+        #       our minimum numpy version to 1.22 or add a version check
+        #       or try/catch statement.
+        perc = np.percentile(first_echo, 33, interpolation="higher")
+        perc_val = echo_means[:, 0] == perc
 
-    # extract values from all echos at relevant index
-    # NOTE: threshold of 1/3 voxel value is arbitrary
-    lthrs = np.squeeze(echo_means[perc_val].T) / 3
+        # extract values from all echos at relevant index
+        # NOTE: threshold of 1/3 voxel value is arbitrary
+        lthrs = np.squeeze(echo_means[perc_val].T) / 3
 
-    # if multiple samples were extracted per echo, keep the one w/the highest signal
-    if lthrs.ndim > 1:
-        lthrs = lthrs[:, lthrs.sum(axis=0).argmax()]
+        # if multiple samples were extracted per echo, keep the one w/the highest signal
+        if lthrs.ndim > 1:
+            lthrs = lthrs[:, lthrs.sum(axis=0).argmax()]
 
-    # determine samples where absolute value is greater than echo-specific thresholds
-    # and count # of echos that pass criterion
-    masksum = (np.abs(echo_means) > lthrs).sum(axis=-1)
+        # determine samples where absolute value is greater than echo-specific thresholds
+        # and count # of echos that pass criterion
+        dropout_adaptive_mask = (np.abs(echo_means) > lthrs).sum(axis=-1)
+        adaptive_masks.append(dropout_adaptive_mask)
 
-    # Determine where voxels stop decreasing in signal from echo to echo
-    echo_diffs = np.hstack((np.full((n_samples, 1), -1), np.diff(echo_means, axis=1)))
-    diff_mask = echo_diffs >= 0  # flag where signal is not decreasing
-    last_decreasing_echo = diff_mask.argmax(axis=1)
-    last_decreasing_echo[last_decreasing_echo == 0] = n_echos  # if no increase, set to n_echos
+    if "decay" in methods:
+        # Determine where voxels stop decreasing in signal from echo to echo
+        n_samples, n_echos, _ = data.shape
+        echo_diffs = np.hstack((np.full((n_samples, 1), -1), np.diff(echo_means, axis=1)))
+        diff_mask = echo_diffs >= 0  # flag where signal is not decreasing
+        last_decreasing_echo = diff_mask.argmax(axis=1)
+        last_decreasing_echo[last_decreasing_echo == 0] = n_echos  # if no increase, set to n_echos
+        adaptive_masks.append(last_decreasing_echo)
 
     # Retain the more conservative of the two adaptive mask estimates
-    masksum = np.minimum(masksum, last_decreasing_echo)
+    adaptive_mask = np.minimum(adaptive_masks)
 
     if mask is None:
         # make it a boolean mask to (where we have at least `threshold` echoes with good signal)
-        mask = (masksum >= threshold).astype(bool)
-        masksum[masksum < threshold] = 0
+        mask = (adaptive_mask >= threshold).astype(bool)
+        adaptive_mask[adaptive_mask < threshold] = 0
     else:
         # if the user has supplied a binary mask
         mask = reshape_niimg(mask).astype(bool)
-        masksum = masksum * mask
-        # reduce mask based on masksum
+        adaptive_mask = adaptive_mask * mask
+        # reduce mask based on adaptive_mask
         # TODO: Use visual report to make checking the reduced mask easier
-        if np.any(masksum[mask] < threshold):
-            n_bad_voxels = np.sum(masksum[mask] < threshold)
+        if np.any(adaptive_mask[mask] < threshold):
+            n_bad_voxels = np.sum(adaptive_mask[mask] < threshold)
             LGR.warning(
                 f"{n_bad_voxels} voxels in user-defined mask do not have good "
                 "signal. Removing voxels from mask."
             )
-            masksum[masksum < threshold] = 0
-            mask = masksum.astype(bool)
+            adaptive_mask[adaptive_mask < threshold] = 0
+            mask = adaptive_mask.astype(bool)
 
-    return mask, masksum
+    return mask, adaptive_mask
 
 
 def unmask(data, mask):

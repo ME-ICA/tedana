@@ -85,6 +85,16 @@ def _get_parser():
         default="bids",
     )
     optional.add_argument(
+        "--masktype",
+        dest="masktype",
+        required=False,
+        action="store",
+        nargs="+",
+        help="Method(s) by which to define the adaptive mask.",
+        choices=["dropout", "decay"],
+        default=["dropout", "decay"],
+    )
+    optional.add_argument(
         "--fittype",
         dest="fittype",
         action="store",
@@ -152,6 +162,7 @@ def t2smap_workflow(
     mask=None,
     prefix="",
     convention="bids",
+    masktype=["dropout", "decay"],
     fittype="loglin",
     fitmode="all",
     combmode="t2s",
@@ -176,6 +187,8 @@ def t2smap_workflow(
     mask : :obj:`str`, optional
         Binary mask of voxels to include in TE Dependent ANAlysis. Must be spatially
         aligned with `data`.
+    masktype : {'dropout', 'decay'} or :obj:`list`, optional
+        Method(s) by which to define the adaptive mask. Default is ["dropout", "decay"].
     fittype : {'loglin', 'curvefit'}, optional
         Monoexponential fitting method.
         'loglin' means to use the the default linear fit to the log of
@@ -278,7 +291,12 @@ def t2smap_workflow(
         LGR.info("Computing adaptive mask")
     else:
         LGR.info("Using user-defined mask")
-    mask, masksum = utils.make_adaptive_mask(catd, mask=mask, threshold=1)
+    mask, masksum = utils.make_adaptive_mask(
+        catd,
+        mask=mask,
+        threshold=1,
+        methods=masktype,
+    )
 
     LGR.info("Computing adaptive T2* map")
     if fitmode == "all":

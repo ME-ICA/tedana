@@ -77,7 +77,7 @@ def test_reshape_niimg():
 def test_make_adaptive_mask():
     # load data make masks
     data = io.load_data(fnames, n_echos=len(tes))[0]
-    mask, masksum = utils.make_adaptive_mask(data, threshold=1)
+    mask, masksum = utils.make_adaptive_mask(data, threshold=1, methods=["dropout", "decay"])
 
     # shapes are all the same
     assert mask.shape == masksum.shape == (64350,)
@@ -91,7 +91,12 @@ def test_make_adaptive_mask():
 
     # test user-defined mask
     # TODO: Add mask file with no bad voxels to test against
-    mask, masksum = utils.make_adaptive_mask(data, mask=pjoin(datadir, "mask.nii.gz"), threshold=3)
+    mask, masksum = utils.make_adaptive_mask(
+        data,
+        mask=pjoin(datadir, "mask.nii.gz"),
+        threshold=3,
+        methods=["dropout", "decay"],
+    )
     assert np.allclose(mask, (masksum >= 3).astype(bool))
 
 
@@ -131,8 +136,9 @@ def test_smoke_make_adaptive_mask():
     data = np.random.random((n_samples, n_echos, n_times))
     mask = np.random.randint(2, size=n_samples)
 
-    assert utils.make_adaptive_mask(data) is not None
-    assert utils.make_adaptive_mask(data, mask=mask) is not None  # functions with mask
+    assert utils.make_adaptive_mask(data, methods=["dropout", "decay"]) is not None
+    # functions with mask
+    assert utils.make_adaptive_mask(data, mask=mask, methods=["dropout", "decay"]) is not None
 
 
 def test_smoke_unmask():

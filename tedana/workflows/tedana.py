@@ -111,6 +111,16 @@ def _get_parser():
         default="bids",
     )
     optional.add_argument(
+        "--masktype",
+        dest="masktype",
+        required=False,
+        action="store",
+        nargs="+",
+        help="Method(s) by which to define the adaptive mask.",
+        choices=["dropout", "decay"],
+        default=["dropout", "decay"],
+    )
+    optional.add_argument(
         "--fittype",
         dest="fittype",
         action="store",
@@ -320,6 +330,7 @@ def tedana_workflow(
     mask=None,
     convention="bids",
     prefix="",
+    masktype=["dropout", "decay"],
     fittype="loglin",
     combmode="t2s",
     tree="tedana_orig",
@@ -367,6 +378,8 @@ def tedana_workflow(
     prefix : :obj:`str` or None, optional
         Prefix for filenames generated.
         Default is ""
+    masktype : {'dropout', 'decay'} or :obj:`list`, optional
+        Method(s) by which to define the adaptive mask. Default is ["dropout", "decay"].
     fittype : {'loglin', 'curvefit'}, optional
         Monoexponential fitting method. 'loglin' uses the the default linear
         fit to the log of the data. 'curvefit' uses a monoexponential fit to
@@ -594,7 +607,12 @@ def tedana_workflow(
         )
 
     # Create an adaptive mask with at least 1 good echo, for denoising
-    mask_denoise, masksum_denoise = utils.make_adaptive_mask(catd, mask=mask, threshold=1)
+    mask_denoise, masksum_denoise = utils.make_adaptive_mask(
+        catd,
+        mask=mask,
+        threshold=1,
+        methods=masktype,
+    )
     LGR.debug(f"Retaining {mask_denoise.sum()}/{n_samp} samples for denoising")
     io_generator.save_file(masksum_denoise, "adaptive mask img")
 
