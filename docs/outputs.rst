@@ -258,23 +258,24 @@ component and **rejected** components are be removed through denoising.
 ``classification_tags`` provide more information on why
 components received a specific classification.
 Each component can receive more than one tag.
-The following tags are included depending if ``--tree`` is "minimal", "kundu",
-or if ``ica_reclassify`` is run.
+The following tags are included depending if ``--tree`` is "minimal", "meica",
+"tedana_orig" or if ``ica_reclassify`` is run. The same tags are included
+for "meica" and "tedana_orig"
 
 ===================== ================  ========================================
 Tag                   Included in Tree  Explanation
 ===================== ================  ========================================
-Likely BOLD           minimal,kundu     Accepted because likely to include some
+Likely BOLD           minimal,meica     Accepted because likely to include some
                                         BOLD signal
-Unlikely BOLD         minimal,kundu     Rejected because likely to include a
+Unlikely BOLD         minimal,meica     Rejected because likely to include a
                                         lot of non-BOLD signal
-Low variance          minimal,kundu     Accepted because too low variance to
+Low variance          minimal,meica     Accepted because too low variance to
                                         lose a degree-of-freedom by rejecting
-Less likely BOLD      kundu             Rejected based on some edge criteria
+Less likely BOLD      meica             Rejected based on some edge criteria
                                         based on relative rankings of components
-Accept borderline     kundu             Accepted based on some edge criteria
+Accept borderline     meica             Accepted based on some edge criteria
                                         based on relative rankings of components
-No provisional accept kundu             Accepted because because kundu tree did
+No provisional accept meica             Accepted because because meica tree did
                                         not find any components to consider
                                         accepting so the conservative "failure"
                                         case is accept everything rather than

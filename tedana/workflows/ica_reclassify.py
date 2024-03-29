@@ -351,7 +351,7 @@ def ica_reclassify_workflow(
             in_both.append(a)
 
     if len(in_both) != 0:
-        raise ValueError("The following components were both accepted and rejected: " f"{in_both}")
+        raise ValueError(f"The following components were both accepted and rejected: {in_both}")
 
     # Save command into sh file, if the command-line interface was used
     # TODO: use io_generator to save command
@@ -402,12 +402,7 @@ def ica_reclassify_workflow(
     )
 
     # Make a new selector with the added files
-    selector = selection.component_selector.ComponentSelector(
-        previous_tree_fname,
-        comptable,
-        cross_component_metrics=xcomp,
-        status_table=status_table,
-    )
+    selector = selection.component_selector.ComponentSelector(previous_tree_fname)
 
     if accept:
         selector.add_manual(accept, "accepted")
@@ -415,8 +410,12 @@ def ica_reclassify_workflow(
     if reject:
         selector.add_manual(reject, "rejected")
 
-    selector.select()
-    comptable = selector.component_table
+    selector.select(
+        comptable,
+        cross_component_metrics=xcomp,
+        status_table=status_table,
+    )
+    comptable = selector.component_table_
 
     # NOTE: most of these will be identical to previous, but this makes
     # things easier for programs which will view the data after running.
@@ -440,7 +439,7 @@ def ica_reclassify_workflow(
     # Save component selector and tree
     selector.to_files(io_generator)
 
-    if selector.n_accepted_comps == 0:
+    if selector.n_accepted_comps_ == 0:
         LGR.warning(
             "No accepted components remaining after manual classification! "
             "Please check data and results!"
@@ -449,8 +448,8 @@ def ica_reclassify_workflow(
     mmix_orig = mmix.copy()
     # TODO: make this a function
     if tedort:
-        comps_accepted = selector.accepted_comps
-        comps_rejected = selector.rejected_comps
+        comps_accepted = selector.accepted_comps_
+        comps_rejected = selector.rejected_comps_
         acc_ts = mmix[:, comps_accepted]
         rej_ts = mmix[:, comps_rejected]
         betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
@@ -459,7 +458,7 @@ def ica_reclassify_workflow(
         mmix[:, comps_rejected] = resid
         comp_names = [
             io.add_decomp_prefix(comp, prefix="ica", max_value=comptable.index.max())
-            for comp in range(selector.n_comps)
+            for comp in range(selector.n_comps_)
         ]
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
         io_generator.save_file(mixing_df, "ICA orthogonalized mixing tsv")
