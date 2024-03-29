@@ -62,6 +62,10 @@ def make_adaptive_mask(data, mask=None, threshold=1, methods=["decay", "dropout"
     threshold : :obj:`int`, optional
         Minimum echo count to retain in the mask. Default is 1, which is
         equivalent not thresholding.
+    methods : :obj:`list`, optional
+        List of methods to use for adaptive mask generation. Default is
+        ["decay", "dropout"].
+        Valid methods are "decay", "dropout", and "none".
 
     Returns
     -------
@@ -113,9 +117,15 @@ def make_adaptive_mask(data, mask=None, threshold=1, methods=["decay", "dropout"
         "value reflects the number of echoes with 'good' data."
     )
     assert methods, "No methods provided for adaptive mask generation."
-    assert all([method in ["decay", "dropout"] for method in methods])
+    assert all([method in ["decay", "dropout", "none"] for method in methods])
 
+    n_samples, n_echos, _ = data.shape
     adaptive_masks = []
+
+    if "none" in methods:
+        none_adaptive_mask = np.full(n_samples, n_echos, dtype=int)
+        adaptive_masks.append(none_adaptive_mask)
+
     if "dropout" in methods:
         # take temporal mean of echos and extract non-zero values in first echo
         echo_means = data.mean(axis=-1)  # temporal mean of echos
@@ -147,7 +157,6 @@ def make_adaptive_mask(data, mask=None, threshold=1, methods=["decay", "dropout"
 
     if "decay" in methods:
         # Determine where voxels stop decreasing in signal from echo to echo
-        n_samples, n_echos, _ = data.shape
         echo_diffs = np.hstack((np.full((n_samples, 1), -1), np.diff(echo_means, axis=1)))
         diff_mask = echo_diffs >= 0  # flag where signal is not decreasing
         last_decreasing_echo = diff_mask.argmax(axis=1)

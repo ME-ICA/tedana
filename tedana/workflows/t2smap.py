@@ -91,7 +91,7 @@ def _get_parser():
         action="store",
         nargs="+",
         help="Method(s) by which to define the adaptive mask.",
-        choices=["dropout", "decay"],
+        choices=["dropout", "decay", "none"],
         default=["dropout", "decay"],
     )
     optional.add_argument(
