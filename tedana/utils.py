@@ -162,7 +162,7 @@ def make_adaptive_mask(data, mask=None, threshold=1, methods=["dropout"]):
         last_decreasing_echo[last_decreasing_echo == 0] = n_echos  # if no increase, set to n_echos
         adaptive_masks.append(last_decreasing_echo)
 
-    # Retain the more conservative of the two adaptive mask estimates
+    # Retain the most conservative of the selected adaptive mask estimates
     adaptive_mask = np.minimum.reduce(adaptive_masks)
 
     if mask is None:
