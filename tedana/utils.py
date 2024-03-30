@@ -119,52 +119,59 @@ def make_adaptive_mask(data, mask, threshold=1):
     # data = data[mask, :, :]
 
     n_samples = data.shape[0]
+    adaptive_masks = []
 
-    # take temporal mean of echos and extract non-zero values in first echo
-    echo_means = data.mean(axis=-1)  # temporal mean of echos
-    first_echo = echo_means[echo_means[:, 0] != 0, 0]
+    if True:
+        # take temporal mean of echos and extract non-zero values in first echo
+        echo_means = data.mean(axis=-1)  # temporal mean of echos
+        first_echo = echo_means[echo_means[:, 0] != 0, 0]
 
-    # get 33rd %ile of `first_echo` and find corresponding index
-    # NOTE: percentile is arbitrary
-    perc = np.percentile(first_echo, 33, method="higher")
-    voxels_at_perc = echo_means[:, 0] == perc
+        # get 33rd %ile of `first_echo` and find corresponding index
+        # NOTE: percentile is arbitrary
+        perc = np.percentile(first_echo, 33, method="higher")
+        voxels_at_perc = echo_means[:, 0] == perc
 
-    # extract values from all echos at relevant index
-    # NOTE: threshold of 1/3 voxel value is arbitrary
-    lthrs = np.squeeze(echo_means[voxels_at_perc, :].T) / 3
+        # extract values from all echos at relevant index
+        # NOTE: threshold of 1/3 voxel value is arbitrary
+        lthrs = np.squeeze(echo_means[voxels_at_perc, :].T) / 3
 
-    # if multiple voxels exactly match the 33rd percentile value in the first echo,
-    # retain the values from the voxel with the highest total value across echoes
-    if lthrs.ndim > 1:
-        lthrs = lthrs[:, lthrs.sum(axis=0).argmax()]
+        # if multiple voxels exactly match the 33rd percentile value in the first echo,
+        # retain the values from the voxel with the highest total value across echoes
+        if lthrs.ndim > 1:
+            lthrs = lthrs[:, lthrs.sum(axis=0).argmax()]
 
-    # Find the last good echo for each voxel
-    masksum = np.zeros(n_samples, dtype=np.int16)
-    for i_voxel in range(n_samples):
-        echo_means_voxel = np.abs(echo_means[i_voxel, :])
-        echos_over_threshold = echo_means_voxel > lthrs
-        # Find the index of the last True element in a 1D boolean array
-        last_true_index = (
-            (np.where(echos_over_threshold)[0][-1] + 1) if np.any(echos_over_threshold) else 0
-        )
-        masksum[i_voxel] = last_true_index
+        # Find the last good echo for each voxel
+        dropout_adaptive_mask = np.zeros(n_samples, dtype=np.int16)
+        for i_voxel in range(n_samples):
+            echo_means_voxel = np.abs(echo_means[i_voxel, :])
+            echos_over_threshold = echo_means_voxel > lthrs
+            # Find the index of the last True element in a 1D boolean array
+            last_true_index = (
+                (np.where(echos_over_threshold)[0][-1] + 1) if np.any(echos_over_threshold) else 0
+            )
+            dropout_adaptive_mask[i_voxel] = last_true_index
+
+        adaptive_masks.append(dropout_adaptive_mask)
+
+    # Retain the most conservative of the selected adaptive mask estimates
+    adaptive_mask = np.minimum.reduce(adaptive_masks)
 
     # TODO: Use visual report to make checking the reduced mask easier
-    if np.any(masksum < threshold):
-        n_bad_voxels = np.sum(masksum < threshold)
+    if np.any(adaptive_mask < threshold):
+        n_bad_voxels = np.sum(adaptive_mask < threshold)
         LGR.warning(
             f"{n_bad_voxels} voxels in user-defined mask do not have good signal. "
             "Removing voxels from mask."
         )
-        masksum[masksum < threshold] = 0
+        adaptive_mask[adaptive_mask < threshold] = 0
 
-    masksum = masksum * mask
-    modified_mask = masksum.astype(bool)
+    adaptive_mask = adaptive_mask * mask
+    modified_mask = adaptive_mask.astype(bool)
 
-    # masksum = unmask(masksum, mask)
+    # adaptive_mask = unmask(adaptive_mask, mask)
     # modified_mask = unmask(modified_mask, mask)
 
-    return modified_mask, masksum
+    return modified_mask, adaptive_mask
 
 
 def unmask(data, mask):
