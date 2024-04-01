@@ -170,7 +170,7 @@ def _create_kr_plt(comptable_cds, kappa_elbow=None, rho_elbow=None):
     )
     diagonal = models.Slope(gradient=1, y_intercept=0, line_color="#D3D3D3")
     fig.add_layout(diagonal)
-    fig.circle(
+    fig.scatter(
         "kappa",
         "rho",
         size="size",
@@ -287,7 +287,7 @@ def _create_sorted_plt(
         y=comptable_cds.data[y_var].sort_values(ascending=False).values,
         color="black",
     )
-    fig.circle(x_var, y_var, source=comptable_cds, size=5, color="color", alpha=0.7)
+    fig.scatter(x_var, y_var, source=comptable_cds, size=5, color="color", alpha=0.7)
     fig.xaxis.axis_label = x_label
     fig.yaxis.axis_label = y_label
     fig.x_range = models.Range1d(-1, n_comps + 1)
@@ -347,7 +347,9 @@ def _create_varexp_pie_plt(comptable_cds):
     fig.grid.visible = False
     fig.toolbar.logo = None
 
-    circle = models.Circle(x=0, y=1, size=150, fill_color="white", line_color="white")
+    circle = models.Scatter(
+        x=0, y=1, size=150, marker="circle", fill_color="white", line_color="white"
+    )
     fig.add_glyph(circle)
 
     return fig
