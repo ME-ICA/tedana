@@ -125,9 +125,11 @@ def make_adaptive_mask(data, mask=None, threshold=1, methods=["dropout"]):
         none_adaptive_mask = np.full(n_samples, n_echos, dtype=int)
         adaptive_masks.append(none_adaptive_mask)
 
+    if ("dropout" in methods) or ("decay" in methods):
+        echo_means = data.mean(axis=-1)  # temporal mean of echos
+
     if "dropout" in methods:
         # take temporal mean of echos and extract non-zero values in first echo
-        echo_means = data.mean(axis=-1)  # temporal mean of echos
         first_echo = echo_means[echo_means[:, 0] != 0, 0]
 
         # get 33rd %ile of `first_echo` and find corresponding index
