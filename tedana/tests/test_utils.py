@@ -95,8 +95,8 @@ def test_make_adaptive_mask():
     assert np.allclose(mask, (masksum >= 1).astype(bool))
     assert mask.sum() == 64350  # This method can't flag first echo as bad
     vals, counts = np.unique(masksum, return_counts=True)
-    assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([13564, 3977, 5060, 41749]))
+    assert np.allclose(vals, np.array([1, 2, 3]))
+    assert np.allclose(counts, np.array([5666, 6552, 52132]))
 
     # Dropout and decay methods combined
     mask, masksum = utils.make_adaptive_mask(data, threshold=1, methods=["dropout", "decay"])
