@@ -75,6 +75,7 @@ def test_reshape_niimg():
 
 
 def test_make_adaptive_mask():
+    """Test tedana.utils.make_adaptive_mask with different methods."""
     # load data make masks
     data = io.load_data(fnames, n_echos=len(tes))[0]
 
