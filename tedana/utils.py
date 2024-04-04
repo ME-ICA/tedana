@@ -127,9 +127,18 @@ def make_adaptive_mask(data, mask=None, threshold=1, methods=["dropout"]):
     n_samples, n_echos, _ = data.shape
     adaptive_masks = []
 
-    if "none" in methods:
-        none_adaptive_mask = np.full(n_samples, n_echos, dtype=int)
-        adaptive_masks.append(none_adaptive_mask)
+    # Generate a base adaptive mask that flags any NaNs or negative values
+    base_adaptive_mask = np.full(n_samples, n_echos, dtype=int)
+    for i_voxel in range(n_samples):
+        voxel_data = data[i_voxel, :, :]
+        nonnan_echoes = ~np.any(np.isnan(voxel_data), axis=1)
+        nonneg_echoes = ~np.any(voxel_data < 0, axis=1)
+        good_echoes = nonnan_echoes * nonneg_echoes
+        # Find the index of the last True element in a 1D boolean array
+        last_good_echo = (np.where(good_echoes)[0][-1] + 1) if np.any(good_echoes) else 0
+        base_adaptive_mask[i_voxel] = last_good_echo
+
+    adaptive_masks.append(base_adaptive_mask)
 
     if ("dropout" in methods) or ("decay" in methods):
         echo_means = data.mean(axis=-1)  # temporal mean of echos
