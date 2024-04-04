@@ -75,42 +75,47 @@ def make_adaptive_mask(data, mask=None, threshold=1, methods=["dropout"]):
 
     Notes
     -----
-    The adaptive mask can remove voxels with two methods: dropout and decay.
-    Both methods are applied to the mean magnitude across time for each voxel and echo.
+    The adaptive mask can flag "bad" echoes via two methods: dropout and decay.
+    Either or both methods are applied to the mean magnitude across time for each voxel and echo.
 
-    1.  Dropout
-        Remove voxels with relatively low mean magnitudes from the mask.
-        This method uses distributions of values across the mask.
-        Therefore, it is sensitive to the quality of the mask.
-        A bad mask may result in a bad adaptive mask.
+    Dropout
 
-        This method is implemented as follows:
+    Remove voxels with relatively low mean magnitudes from the mask.
+    This method uses distributions of values across the mask.
+    Therefore, it is sensitive to the quality of the mask.
+    A bad mask may result in a bad adaptive mask.
 
-        a.  Calculate the 33rd percentile of values in the first echo,
-            based on voxel-wise mean over time.
-        b.  Identify the voxel where the first echo's mean value is equal to the 33rd percentile.
-            Basically, this identifies "exemplar" voxel reflecting the 33rd percentile.
+    This method is implemented as follows:
 
-            -   The 33rd percentile is arbitrary.
-            -   If more than one voxel has a value exactly equal to the 33rd percentile,
-                keep all of them.
-        c.  For the exemplar voxel from the first echo, calculate 1/3 of the mean value for each echo.
+    a.  Calculate the 33rd percentile of values in the first echo,
+        based on voxel-wise mean over time.
+    b.  Identify the voxel where the first echo's mean value is equal to the 33rd percentile.
+        Basically, this identifies "exemplar" voxel reflecting the 33rd percentile.
 
-            -   This is the threshold for "good" data.
-            -   The 1/3 value is arbitrary.
-            -   If there was more than one exemplar voxel,
-                retain the the highest value for each echo.
-        d.  For each voxel, count the number of echoes that have a mean value greater than the
-            corresponding echo's threshold.
-    2.  Determine the echo at which the signal stops decreasing for each voxel.
-        If a voxel's signal stops decreasing as echo time increases, then we can infer that the
-        voxel has either fully dephased (i.e., "bottomed out") or been contaminated by noise.
-        This essentially identifies the last echo with "good" data. For a scan that collects many echoes
-        for T2* estimation or has a relatively short echo spacing, it is possible that a later echo will have
-        a higher value, but the overall trend still shows a decay. This method should not be used in those
-        situations.
+        -   The 33rd percentile is arbitrary.
+        -   If more than one voxel has a value exactly equal to the 33rd percentile,
+            keep all of them.
+    c.  For the exemplar voxel from the first echo, calculate 1/3 of the mean value for each echo.
 
-    The element-wise minimum value between the two methods is used to construct the adaptive mask.
+        -   This is the threshold for "good" data.
+        -   The 1/3 value is arbitrary.
+        -   If there was more than one exemplar voxel, retain the the highest value for each echo.
+    d.  For each voxel, count the number of echoes that have a mean value greater than the
+        corresponding echo's threshold.
+
+    Decay
+
+    Determine the echo at which the signal stops decreasing for each voxel.
+    If a voxel's signal stops decreasing as echo time increases, then we can infer that the
+    voxel has either fully dephased (i.e., "bottomed out") or been contaminated by noise.
+    This essentially identifies the last echo with "good" data.
+    For a scan that collects many echoes for T2* estimation or has a relatively short echo
+    spacing, it is possible that a later echo will have a higher value,
+    but the overall trend still shows a decay.
+    This method should not be used in those situations.
+
+    The element-wise minimum value between any selected methods is used to construct the adaptive
+    mask.
     """
     RepLGR.info(
         "An adaptive mask was then generated, in which each voxel's "
