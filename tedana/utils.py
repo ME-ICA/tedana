@@ -118,8 +118,8 @@ def make_adaptive_mask(data, mask=None, threshold=1, methods=["dropout"]):
     mask.
     """
     RepLGR.info(
-        "An adaptive mask was then generated, in which each voxel's "
-        "value reflects the number of echoes with 'good' data."
+        f"An adaptive mask was then generated using the {'+'.join(methods)} method(s), "
+        "in which each voxel's value reflects the number of echoes with 'good' data."
     )
     assert methods, "No methods provided for adaptive mask generation."
     assert all([method.lower() in ["decay", "dropout", "none"] for method in methods])
