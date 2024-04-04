@@ -162,10 +162,15 @@ def _create_kr_plt(comptable_cds, kappa_elbow=None, rho_elbow=None):
             ("Tags", "@classtag"),
         ]
     )
+
     fig = plotting.figure(
         width=400,
         height=400,
-        tools=["tap,wheel_zoom,reset,pan,crosshair,save", kr_hovertool],
+        tools=[
+            "wheel_zoom,reset,pan,crosshair,save",
+            models.TapTool(mode="replace"),
+            kr_hovertool,
+        ],
         title="Kappa / Rho Plot",
     )
     diagonal = models.Slope(gradient=1, y_intercept=0, line_color="#D3D3D3")
@@ -279,7 +284,7 @@ def _create_sorted_plt(
     fig = plotting.figure(
         width=400,
         height=400,
-        tools=["tap,wheel_zoom,reset,pan,crosshair,save", hovertool],
+        tools=["wheel_zoom,reset,pan,crosshair,save", models.TapTool(mode="replace"), hovertool],
         title=title,
     )
     fig.line(
@@ -319,18 +324,22 @@ def _create_sorted_plt(
 
 
 def _create_varexp_pie_plt(comptable_cds):
+
+    pie_hovertool = models.HoverTool(
+        tooltips=[
+            ("Component ID", "@component"),
+            ("Kappa", "@kappa{0.00}"),
+            ("Rho", "@rho{0.00}"),
+            ("Var. Expl.", "@varexp{0.00}%"),
+            ("Tags", "@classtag"),
+        ]
+    )
+
     fig = plotting.figure(
         width=400,
         height=400,
         title="Variance Explained View",
-        tools=["hover,tap,save"],
-        tooltips=[
-            ("Component ID", " @component"),
-            ("Kappa", "@kappa{0.00}"),
-            ("Rho", "@rho{0.00}"),
-            ("Var. Exp.", "@varexp{0.00}%"),
-            ("Tags", "@classtag"),
-        ],
+        tools=[pie_hovertool, models.TapTool(mode="replace"), "save"],
     )
     fig.wedge(
         x=0,
