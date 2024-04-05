@@ -140,7 +140,7 @@ def make_adaptive_mask(data, mask=None, threshold=1, methods=["dropout"]):
     adaptive_masks = []
 
     # Generate a base adaptive mask that flags any NaNs or negative values
-     # TODO When masking is moved before dropout calc, change to "data <= 0"
+    # TODO When masking is moved before dropout calc, change to "data <= 0"
     bad_data_vals = np.isnan(data) + (data < 0)
     good_vox_echoes = 1 - np.any(bad_data_vals, axis=-1).astype(int)
     base_adaptive_mask = np.zeros(n_samples, dtype=int)
