@@ -187,7 +187,7 @@ def t2smap_workflow(
     mask : :obj:`str`, optional
         Binary mask of voxels to include in TE Dependent ANAlysis. Must be spatially
         aligned with `data`.
-    masktype : {'dropout', 'decay'} or :obj:`list`, optional
+    masktype : :obj:`list` with 'dropout' and/or 'decay' or None, optional
         Method(s) by which to define the adaptive mask. Default is ["dropout"].
     fittype : {'loglin', 'curvefit'}, optional
         Monoexponential fitting method.
