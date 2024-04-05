@@ -121,7 +121,19 @@ def make_adaptive_mask(data, mask=None, threshold=1, methods=["dropout"]):
         f"An adaptive mask was then generated using the {'+'.join(methods)} method(s), "
         "in which each voxel's value reflects the number of echoes with 'good' data."
     )
-    assert methods, "No methods provided for adaptive mask generation."
+    if (methods is None) or (len(methods) == 1 and methods[0].lower() == "none"):
+        LGR.warning(
+            "No methods provided for adaptive mask generation. "
+            "Only removing voxels with negative or NaN values"
+        )
+        RepLGR.info(
+            "An adaptive mask was then generated that retained echoes with negative or NaN values."
+        )
+    else:
+        RepLGR.info(
+            f"An adaptive mask was then generated using the {'+'.join(methods)} method(s), "
+            "in which each voxel's value reflects the number of echoes with 'good' data."
+        )
     assert all([method.lower() in ["decay", "dropout", "none"] for method in methods])
 
     n_samples, n_echos, _ = data.shape
