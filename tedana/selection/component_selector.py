@@ -24,7 +24,7 @@ RepLGR = logging.getLogger("REPORT")
 # A user can run the desision tree either using one of these
 # names or by giving the full path to a tree in a different
 # location
-DEFAULT_TREES = ["minimal", "kundu"]
+DEFAULT_TREES = ["minimal", "meica", "tedana_orig"]
 
 
 class TreeError(Exception):
@@ -47,6 +47,13 @@ def load_config(tree):
         A validated decision tree for the component selection process.
     """
     if tree in DEFAULT_TREES:
+        fname = op.join(get_resource_path(), "decision_trees", tree + ".json")
+    elif tree == "kundu":
+        LGR.warning(
+            "The decision tree that used to be called kundu is now called tedana_orig. "
+            "This will be run using tedana_orig"
+        )
+        tree = "tedana_orig"
         fname = op.join(get_resource_path(), "decision_trees", tree + ".json")
     else:
         fname = tree
@@ -345,10 +352,10 @@ class ComponentSelector:
 
         n_echos : :obj:`int`
             Number of echos in multi-echo fMRI data.
-            Required for kundu and minimal trees
+            Required for tedana_orig, meica, and minimal trees
         n_vols : :obj:`int`
             Number of volumes (time points) in the fMRI data
-            Required for kundu tree
+            Required for tedana_orig and meica trees
 
         An example initialization with these options would look like
         ``selector = selector.select(comptable, n_echos=n_echos, n_vols=n_vols)``

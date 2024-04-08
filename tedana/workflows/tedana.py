@@ -111,6 +111,16 @@ def _get_parser():
         default="bids",
     )
     optional.add_argument(
+        "--masktype",
+        dest="masktype",
+        required=False,
+        action="store",
+        nargs="+",
+        help="Method(s) by which to define the adaptive mask.",
+        choices=["dropout", "decay", "none"],
+        default=["dropout"],
+    )
+    optional.add_argument(
         "--fittype",
         dest="fittype",
         action="store",
@@ -157,12 +167,12 @@ def _get_parser():
         dest="tree",
         help=(
             "Decision tree to use. You may use a "
-            "packaged tree (kundu, minimal) or supply a JSON "
+            "packaged tree (tedana_orig, meica, minimal) or supply a JSON "
             "file which matches the decision tree file "
             "specification. Minimal still being tested with more"
             "details in docs"
         ),
-        default="kundu",
+        default="tedana_orig",
     )
     optional.add_argument(
         "--external",
@@ -332,9 +342,10 @@ def tedana_workflow(
     mask=None,
     convention="bids",
     prefix="",
+    masktype=["dropout"],
     fittype="loglin",
     combmode="t2s",
-    tree="kundu",
+    tree="tedana_orig",
     external_regressors=None,
     tedpca="aic",
     fixed_seed=42,
@@ -380,6 +391,8 @@ def tedana_workflow(
     prefix : :obj:`str` or None, optional
         Prefix for filenames generated.
         Default is ""
+    masktype : :obj:`list` with 'dropout' and/or 'decay' or None, optional
+        Method(s) by which to define the adaptive mask. Default is ["dropout"].
     fittype : {'loglin', 'curvefit'}, optional
         Monoexponential fitting method. 'loglin' uses the the default linear
         fit to the log of the data. 'curvefit' uses a monoexponential fit to
@@ -387,14 +400,18 @@ def tedana_workflow(
         Default is 'loglin'.
     combmode : {'t2s'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default).
-    tree : {'kundu', 'minimal', 'json file'}, optional
+    tree : {'tedana_orig', 'meica', 'minimal', 'json file'}, optional
         Decision tree to use for component selection. Can be a
-        packaged tree (kundu, minimal) or a user-supplied JSON file that
-        matches the decision tree file specification. Minimal is intented
-        to be a simpler process that is a bit more conservative, but it
-        accepts and rejects some distinct components compared to kundu.
-        Testing to better understand the effects of the differences is ongoing.
-        Default is 'kundu'.
+        packaged tree (tedana_orig, meica, minimal) or a user-supplied JSON file that
+        matches the decision tree file specification. tedana_orig is the tree that has
+        been distributed with tedana from the beginning and was designed to match the
+        process in MEICA. A difference between that tree and the older MEICA was
+        identified so the original meica tree is also included. meica will always
+        accept the same or more components, but those accepted components are sometimes
+        high variance so the differences can be non-trivial. Minimal is intended
+        to be a simpler process, but it accepts and rejects some distinct components
+        compared to the others. Testing to better understand the effects of the
+        differences is ongoing. Default is 'tedana_orig'.
     external_regressors : :obj:`str` or None, optional
         File containing external regressors to be used in the decision tree.
         The file must be a TSV file with the same number of rows as the number of volumes in
@@ -624,8 +641,8 @@ def tedana_workflow(
     mask_denoise, masksum_denoise = utils.make_adaptive_mask(
         catd,
         mask=mask,
-        getsum=True,
         threshold=1,
+        methods=masktype,
     )
     LGR.debug(f"Retaining {mask_denoise.sum()}/{n_samp} samples for denoising")
     io_generator.save_file(masksum_denoise, "adaptive mask img")
