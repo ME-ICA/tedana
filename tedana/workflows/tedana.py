@@ -29,6 +29,7 @@ from tedana import (
     utils,
 )
 from tedana.bibtex import get_description_references
+from tedana.selection.component_selector import ComponentSelector
 from tedana.stats import computefeats2
 from tedana.workflows.parser_utils import check_tedpca_value, is_valid_file
 
@@ -110,6 +111,16 @@ def _get_parser():
         default="bids",
     )
     optional.add_argument(
+        "--masktype",
+        dest="masktype",
+        required=False,
+        action="store",
+        nargs="+",
+        help="Method(s) by which to define the adaptive mask.",
+        choices=["dropout", "decay", "none"],
+        default=["dropout"],
+    )
+    optional.add_argument(
         "--fittype",
         dest="fittype",
         action="store",
@@ -156,12 +167,12 @@ def _get_parser():
         dest="tree",
         help=(
             "Decision tree to use. You may use a "
-            "packaged tree (kundu, minimal) or supply a JSON "
+            "packaged tree (tedana_orig, meica, minimal) or supply a JSON "
             "file which matches the decision tree file "
             "specification. Minimal still being tested with more"
             "details in docs"
         ),
-        default="kundu",
+        default="tedana_orig",
     )
     optional.add_argument(
         "--seed",
@@ -319,9 +330,10 @@ def tedana_workflow(
     mask=None,
     convention="bids",
     prefix="",
+    masktype=["dropout"],
     fittype="loglin",
     combmode="t2s",
-    tree="kundu",
+    tree="tedana_orig",
     tedpca="aic",
     fixed_seed=42,
     maxit=500,
@@ -366,6 +378,8 @@ def tedana_workflow(
     prefix : :obj:`str` or None, optional
         Prefix for filenames generated.
         Default is ""
+    masktype : :obj:`list` with 'dropout' and/or 'decay' or None, optional
+        Method(s) by which to define the adaptive mask. Default is ["dropout"].
     fittype : {'loglin', 'curvefit'}, optional
         Monoexponential fitting method. 'loglin' uses the the default linear
         fit to the log of the data. 'curvefit' uses a monoexponential fit to
@@ -373,14 +387,18 @@ def tedana_workflow(
         Default is 'loglin'.
     combmode : {'t2s'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default).
-    tree : {'kundu', 'minimal', 'json file'}, optional
+    tree : {'tedana_orig', 'meica', 'minimal', 'json file'}, optional
         Decision tree to use for component selection. Can be a
-        packaged tree (kundu, minimal) or a user-supplied JSON file that
-        matches the decision tree file specification. Minimal is intented
-        to be a simpler process that is a bit more conservative, but it
-        accepts and rejects some distinct components compared to kundu.
-        Testing to better understand the effects of the differences is ongoing.
-        Default is 'kundu'.
+        packaged tree (tedana_orig, meica, minimal) or a user-supplied JSON file that
+        matches the decision tree file specification. tedana_orig is the tree that has
+        been distributed with tedana from the beginning and was designed to match the
+        process in MEICA. A difference between that tree and the older MEICA was
+        identified so the original meica tree is also included. meica will always
+        accept the same or more components, but those accepted components are sometimes
+        high variance so the differences can be non-trivial. Minimal is intented
+        to be a simpler process, but it accepts and rejects some distinct components
+        compared to the others. Testing to better understand the effects of the
+        differences is ongoing. Default is 'tedana_orig'.
     tedpca : {'mdl', 'aic', 'kic', 'kundu', 'kundu-stabilize', float, int}, optional
         Method with which to select components in TEDPCA.
         If a float is provided, then it is assumed to represent percentage of variance
@@ -498,6 +516,9 @@ def tedana_workflow(
     if isinstance(data, str):
         data = [data]
 
+    LGR.info("Initializing and validating component selection tree")
+    selector = ComponentSelector(tree)
+
     LGR.info(f"Loading input data: {[f for f in data]}")
     catd, ref_img = io.load_data(data, n_echos=n_echos)
 
@@ -586,7 +607,12 @@ def tedana_workflow(
         )
 
     # Create an adaptive mask with at least 1 good echo, for denoising
-    mask_denoise, masksum_denoise = utils.make_adaptive_mask(catd, mask=mask, threshold=1)
+    mask_denoise, masksum_denoise = utils.make_adaptive_mask(
+        catd,
+        mask=mask,
+        threshold=1,
+        methods=masktype,
+    )
     LGR.debug(f"Retaining {mask_denoise.sum()}/{n_samp} samples for denoising")
     io_generator.save_file(masksum_denoise, "adaptive mask img")
 
@@ -624,8 +650,8 @@ def tedana_workflow(
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, masksum_denoise, t2s=t2s_full, combmode=combmode)
 
-    # regress out global signal unless explicitly not desired
     if "gsr" in gscontrol:
+        # regress out global signal
         catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, io_generator)
 
     fout = io_generator.save_file(data_oc, "combined img")
@@ -663,20 +689,11 @@ def tedana_workflow(
             # Estimate betas and compute selection metrics for mixing matrix
             # generated from dimensionally reduced data using full data (i.e., data
             # with thermal noise)
-            LGR.info("Making second component selection guess from ICA results")
-            required_metrics = [
-                "kappa",
-                "rho",
-                "countnoise",
-                "countsigFT2",
-                "countsigFS0",
-                "dice_FT2",
-                "dice_FS0",
-                "signal-noise_t",
-                "variance explained",
-                "normalized variance explained",
-                "d_table_score",
-            ]
+            necessary_metrics = selector.necessary_metrics
+            # The figures require some metrics that might not be used by the decision tree.
+            extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
+            necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
+
             comptable = metrics.collect.generate_metrics(
                 catd,
                 data_oc,
@@ -685,10 +702,16 @@ def tedana_workflow(
                 tes,
                 io_generator,
                 "ICA",
-                metrics=required_metrics,
+                metrics=necessary_metrics,
             )
-            ica_selector = selection.automatic_selection(comptable, n_echos, n_vols, tree=tree)
-            n_likely_bold_comps = ica_selector.n_likely_bold_comps
+            LGR.info("Selecting components from ICA results")
+            selector = selection.automatic_selection(
+                comptable,
+                selector,
+                n_echos=n_echos,
+                n_vols=n_vols,
+            )
+            n_likely_bold_comps = selector.n_likely_bold_comps_
             if (n_restarts < maxrestart) and (n_likely_bold_comps == 0):
                 LGR.warning("No BOLD components found. Re-attempting ICA.")
             elif n_likely_bold_comps == 0:
@@ -700,6 +723,9 @@ def tedana_workflow(
             # If we're going to restart, temporarily allow force overwrite
             if keep_restarting:
                 io_generator.overwrite = True
+                # Create a re-initialized selector object if rerunning
+                selector = ComponentSelector(tree)
+
             RepLGR.disabled = True  # Disable the report to avoid duplicate text
         RepLGR.disabled = False  # Re-enable the report after the while loop is escaped
         io_generator.overwrite = overwrite  # Re-enable original overwrite behavior
@@ -708,19 +734,12 @@ def tedana_workflow(
         mixing_file = io_generator.get_name("ICA mixing tsv")
         mmix = pd.read_table(mixing_file).values
 
-        required_metrics = [
-            "kappa",
-            "rho",
-            "countnoise",
-            "countsigFT2",
-            "countsigFS0",
-            "dice_FT2",
-            "dice_FS0",
-            "signal-noise_t",
-            "variance explained",
-            "normalized variance explained",
-            "d_table_score",
-        ]
+        selector = ComponentSelector(tree)
+        necessary_metrics = selector.necessary_metrics
+        # The figures require some metrics that might not be used by the decision tree.
+        extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
+        necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
+
         comptable = metrics.collect.generate_metrics(
             catd,
             data_oc,
@@ -729,13 +748,13 @@ def tedana_workflow(
             tes,
             io_generator,
             "ICA",
-            metrics=required_metrics,
+            metrics=necessary_metrics,
         )
-        ica_selector = selection.automatic_selection(
+        selector = selection.automatic_selection(
             comptable,
-            n_echos,
-            n_vols,
-            tree=tree,
+            selector,
+            n_echos=n_echos,
+            n_vols=n_vols,
         )
 
     # TODO The ICA mixing matrix should be written out after it is created
@@ -753,7 +772,7 @@ def tedana_workflow(
     io_generator.save_file(betas_oc, "z-scored ICA components img")
 
     # Save component selector and tree
-    ica_selector.to_files(io_generator)
+    selector.to_files(io_generator)
     # Save metrics and metadata
     metric_metadata = metrics.collect.get_metadata(comptable)
     io_generator.save_file(metric_metadata, "ICA metrics json")
@@ -770,16 +789,16 @@ def tedana_workflow(
         }
     io_generator.save_file(decomp_metadata, "ICA decomposition json")
 
-    if ica_selector.n_likely_bold_comps == 0:
+    if selector.n_likely_bold_comps_ == 0:
         LGR.warning("No BOLD components detected! Please check data and results!")
 
     # TODO: un-hack separate comptable
-    comptable = ica_selector.component_table
+    comptable = selector.component_table_
 
     mmix_orig = mmix.copy()
     if tedort:
-        comps_accepted = ica_selector.accepted_comps
-        comps_rejected = ica_selector.rejected_comps
+        comps_accepted = selector.accepted_comps_
+        comps_rejected = selector.rejected_comps_
         acc_ts = mmix[:, comps_accepted]
         rej_ts = mmix[:, comps_rejected]
         betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
@@ -788,7 +807,7 @@ def tedana_workflow(
         mmix[:, comps_rejected] = resid
         comp_names = [
             io.add_decomp_prefix(comp, prefix="ICA", max_value=comptable.index.max())
-            for comp in range(ica_selector.n_comps)
+            for comp in range(selector.n_comps_)
         ]
 
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)

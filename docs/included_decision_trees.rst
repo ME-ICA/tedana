@@ -2,11 +2,13 @@
 Included Decision Trees
 #######################
 
-Two decision trees are currently distributed with ``tedana``.
+Three decision trees are currently distributed with ``tedana``.
 
-``kundu`` is the decision tree that is based on MEICA version 2.5
-and has been included with ``tedana`` since the start of this project.
-While multiple publications have used and benefits from this decision,
+``meica`` is the decision tree that is based on MEICA version 2.5 and
+``tedana_orig`` is very similar and has been included with ``tedana``
+since the start of this project. An explanation of why these both exist
+is `in the FAQ`_
+While multiple publications have used and benefited from this decision,
 tree, but it includes many steps with arbitrary thresholds and, when
 components seem misclassified, it's often hard to understand why.
 
@@ -42,9 +44,10 @@ to see when in the process a component's classifiation changed.
 
         <img src = "_static/decision_tree_legend.svg" alt="Legend for Decision Tree Flow Charts"/>
 
+.. _in the FAQ: faq.html#tree-differences
 
 *******************
-Kundu decision tree
+meica decision tree
 *******************
 
 Nodes 1-5 reject components that are very unlikely to be BOLD.
@@ -65,19 +68,40 @@ like the `accepted` components. This was widely confusing to many users so they
 are now classified as `accepted` but with classification tags `low variance`
 (node 18) or `accept borderline` (nodes 24 & 25).
 
-.. image:: _static/decision_tree_kundu.png
+.. image:: _static/decision_tree_meica.png
     :width: 400
-    :alt: Kundu Decision Tree Flow Chart
+    :alt: MEICA Decision Tree Flow Chart
 
-`LaTeX file to generate the kundu decision tree flow chart`_
+`LaTeX file to generate the meica decision tree flow chart`_
 
-.. _LaTeX file to generate the kundu decision tree flow chart: _static/decision_tree_kundu.tex
+.. _LaTeX file to generate the meica decision tree flow chart: _static/decision_tree_meica.tex
+
+***************************
+tedana_orig decision tree
+***************************
+
+Identical to the meica decision tree until node 21. In the tedana tree,
+components that cross the threshold criteria in nodes 21 and 22 are
+rejected and not included in the calculation for a new variance explained
+threshold in node 23. In the meica tree, those components are provisionally
+rejected, but still included in the new variance explained calculation and
+can be potentially accepted in nodes 24 and 25. This means tedana will give
+the same results as meica or reject additional components base on those two
+final decision criteria.
+
+.. image:: _static/decision_tree_tedana_orig.png
+    :width: 400
+    :alt: tedana_orig Decision Tree Flow Chart
+
+`LaTeX file to generate the tedana_orig decision tree flow chart`_
+
+.. _LaTeX file to generate the tedana_orig decision tree flow chart: _static/decision_tree_tedana_orig.tex
 
 *********************
 Minimal decision tree
 *********************
 
-The minimal tree starts similarly to the kundu tree by rejecting components
+The minimal tree starts similarly to the other trees by rejecting components
 that are very unlikely to be BOLD (nodes 1-5). Then all components where
 :math:`\kappa` > :math:`\kappa` elbow and :math:`\rho` < :math:`\rho` elbow
 are `provisional accept` and otherwise are `provisional reject` (nodes 8 & 10).
