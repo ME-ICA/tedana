@@ -186,6 +186,8 @@ def make_adaptive_mask(data, mask, threshold=1, methods=["dropout"]):
         if lthrs.ndim > 1:
             lthrs = lthrs[:, lthrs.sum(axis=0).argmax()]
 
+        LGR.info("Echo-wise intensity thresholds for adaptive mask: %s", lthrs)
+
         # determine samples where absolute value is greater than echo-specific thresholds
         # and count # of echos that pass criterion
         dropout_adaptive_mask = (np.abs(echo_means) > lthrs).sum(axis=-1)
