@@ -25,7 +25,7 @@
         "f_stats_partial_models": ["Motion", "CSF"],
         "Motion": ["^mot_.*$"],
         "CSF": ["^csf.*$"],
-        "task_keep": ["^task.*$"]
+        "task_keep": ["^signal.*$"]
     },
     "nodes": [
         {
