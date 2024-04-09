@@ -122,7 +122,7 @@ def test_validate_extern_regress_succeeds(caplog):
         ]
     )
     assert external_regressor_config_expanded["CSF"] == ["CSF"]
-    assert external_regressor_config_expanded["task_keep"] == ["Task"]
+    assert external_regressor_config_expanded["task_keep"] == ["Signal"]
     assert "WARNING" not in caplog.text
 
     # Rerunning with explicit names for the above three categories instead of regex patterns
