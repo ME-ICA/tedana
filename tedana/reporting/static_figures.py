@@ -675,4 +675,4 @@ def plot_adaptive_mask(
     ob.frame_axes.legend(handles=legend_elements, facecolor="white", ncols=3, loc="lower center")
     fig = ob.frame_axes.get_figure()
     adaptive_mask_plot = f"{io_generator.prefix}adaptive_mask.svg"
-    fig.savefig(adaptive_mask_plot)
+    fig.savefig(os.path.join(io_generator.out_dir, "figures", adaptive_mask_plot))
