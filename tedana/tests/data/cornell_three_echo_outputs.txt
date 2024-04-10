@@ -23,6 +23,7 @@ desc-adaptiveGoodSignal_mask.nii.gz
 desc-denoised_bold.nii.gz
 desc-optcom_bold.nii.gz
 figures
+figures/adaptive_mask.svg
 figures/carpet_optcom.svg
 figures/carpet_denoised.svg
 figures/carpet_accepted.svg

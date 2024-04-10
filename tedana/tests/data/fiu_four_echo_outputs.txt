@@ -61,6 +61,7 @@ sub-01_echo-4_desc-Rejected_bold.nii.gz
 sub-01_report.txt
 sub-01_tedana_report.html
 figures
+figures/sub-01_adaptive_mask.svg
 figures/sub-01_carpet_optcom.svg
 figures/sub-01_carpet_denoised.svg
 figures/sub-01_carpet_accepted.svg
