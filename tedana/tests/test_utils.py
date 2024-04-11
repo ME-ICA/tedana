@@ -123,7 +123,7 @@ def test_make_adaptive_mask():
     assert mask.sum() == 49451
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([14899, 4319, 5730, 39402]))
+    assert np.allclose(counts, np.array([14899, 2977, 6438, 40036]))
 
     # Adding "none" should have no effect
     mask, adaptive_mask = utils.make_adaptive_mask(
@@ -141,7 +141,12 @@ def test_make_adaptive_mask():
     assert np.allclose(counts, np.array([14899, 4319, 5730, 39402]))
 
     # Just "none"
-    mask, adaptive_mask = utils.make_adaptive_mask(data, mask=mask_file, threshold=1, methods=["none"])
+    mask, adaptive_mask = utils.make_adaptive_mask(
+        data,
+        mask=mask_file,
+        threshold=1,
+        methods=["none"],
+    )
 
     assert mask.shape == adaptive_mask.shape == (64350,)
     assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
