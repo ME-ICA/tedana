@@ -75,25 +75,80 @@ def test_reshape_niimg():
 
 
 def test_make_adaptive_mask():
-    mask_file = pjoin(datadir, "mask.nii.gz")
+    """Test tedana.utils.make_adaptive_mask with different methods."""
     # load data make masks
+    mask_file = pjoin(datadir, "mask.nii.gz")
     data = io.load_data(fnames, n_echos=len(tes))[0]
-    mask, masksum = utils.make_adaptive_mask(data, mask=mask_file, threshold=1)
 
-    # shapes are all the same
+    # Just dropout method
+    mask, masksum = utils.make_adaptive_mask(
+        data,
+        mask=mask_file,
+        threshold=1,
+        methods=["dropout"],
+    )
+
     assert mask.shape == masksum.shape == (64350,)
     assert np.allclose(mask, (masksum >= 1).astype(bool))
-    # mask has correct # of entries
-    assert mask.sum() == 50380
-    # masksum has correct values
+    assert mask.sum() == 49451
     vals, counts = np.unique(masksum, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([13970, 1462, 3456, 45462]))
+    assert np.allclose(counts, np.array([14899, 3589, 5276, 40586]))
 
-    # Apply a threshold of 3
-    # TODO: Add mask file with no bad voxels to test against
-    mask, masksum = utils.make_adaptive_mask(data, mask=mask_file, threshold=3)
-    assert np.allclose(mask, (masksum >= 3).astype(bool))
+    # Just decay method
+    mask, masksum = utils.make_adaptive_mask(
+        data,
+        mask=mask_file,
+        threshold=1,
+        methods=["decay"],
+    )
+
+    assert mask.shape == masksum.shape == (64350,)
+    assert np.allclose(mask, (masksum >= 1).astype(bool))
+    assert mask.sum() == 61954  # This method can't flag first echo as bad
+    vals, counts = np.unique(masksum, return_counts=True)
+    assert np.allclose(vals, np.array([0, 1, 2, 3]))
+    assert np.allclose(counts, np.array([2396, 3578, 6295, 52081]))
+
+    # Dropout and decay methods combined
+    mask, masksum = utils.make_adaptive_mask(
+        data,
+        mask=mask_file,
+        threshold=1,
+        methods=["dropout", "decay"],
+    )
+
+    assert mask.shape == masksum.shape == (64350,)
+    assert np.allclose(mask, (masksum >= 1).astype(bool))
+    assert mask.sum() == 49451
+    vals, counts = np.unique(masksum, return_counts=True)
+    assert np.allclose(vals, np.array([0, 1, 2, 3]))
+    assert np.allclose(counts, np.array([14899, 4319, 5730, 39402]))
+
+    # Adding "none" should have no effect
+    mask, masksum = utils.make_adaptive_mask(
+        data,
+        mask=mask_file,
+        threshold=1,
+        methods=["dropout", "decay", "none"],
+    )
+
+    assert mask.shape == masksum.shape == (64350,)
+    assert np.allclose(mask, (masksum >= 1).astype(bool))
+    assert mask.sum() == 49451
+    vals, counts = np.unique(masksum, return_counts=True)
+    assert np.allclose(vals, np.array([0, 1, 2, 3]))
+    assert np.allclose(counts, np.array([14899, 4319, 5730, 39402]))
+
+    # Just "none"
+    mask, masksum = utils.make_adaptive_mask(data, mask=mask_file, threshold=1, methods=["none"])
+
+    assert mask.shape == masksum.shape == (64350,)
+    assert np.allclose(mask, (masksum >= 1).astype(bool))
+    assert mask.sum() == 61954
+    vals, counts = np.unique(masksum, return_counts=True)
+    assert np.allclose(vals, np.array([0, 3]))
+    assert np.allclose(counts, np.array([2396, 61954]))
 
 
 # SMOKE TESTS
@@ -132,7 +187,7 @@ def test_smoke_make_adaptive_mask():
     data = np.random.random((n_samples, n_echos, n_times))
     mask = np.random.randint(2, size=n_samples)
 
-    assert utils.make_adaptive_mask(data, mask=mask) is not None  # mask is required
+    assert utils.make_adaptive_mask(data, mask=mask, methods=["dropout", "decay"]) is not None
 
 
 def test_smoke_unmask():

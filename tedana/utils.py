@@ -49,7 +49,7 @@ def reshape_niimg(data):
     return fdata
 
 
-def make_adaptive_mask(data, mask, threshold=1):
+def make_adaptive_mask(data, mask, threshold=1, methods=["dropout"]):
     """Make map of `data` specifying longest echo a voxel can be sampled with.
 
     Parameters
@@ -63,82 +63,133 @@ def make_adaptive_mask(data, mask, threshold=1):
         the adaptive mask will generally select voxels outside the brain as exemplars.
     threshold : :obj:`int`, optional
         Minimum echo count to retain in the mask.
-        Default is 1, which is equivalent not thresholding.
+        Default is 1, which is equivalent to not thresholding.
+    methods : :obj:`list`, optional
+        List of methods to use for adaptive mask generation. Default is ["dropout"].
+        Valid methods are "decay", "dropout", and "none".
 
     Returns
     -------
     mask : (S,) :obj:`numpy.ndarray`
         Boolean array of voxels that have sufficient signal in at least ``threshold`` echos.
-    masksum : (S,) :obj:`numpy.ndarray`
+    adaptive_mask : (S,) :obj:`numpy.ndarray`
         Valued array indicating the number of echos with sufficient signal in a given voxel.
 
     Notes
     -----
-    The adaptive mask is constructed from the following method:
+    The adaptive mask can flag "bad" echoes via two methods: dropout and decay.
+    Either or both methods are applied to the mean magnitude across time for each voxel and echo.
 
-    1.  Count the total number of echoes in each voxel that have "good" data.
-        This method assumes that an exemplar voxel's signal at later echoes is also reasonable,
-        and that any voxels whose values at a given echo are less than 1/3 of the exemplar voxel's
-        values at that echo are affected by dropout.
+    Dropout
 
-        This method uses distributions of values across the mask.
-        Therefore, it is sensitive to the quality of the mask;
-        a bad mask may result in a bad adaptive mask.
+    Remove voxels with relatively low mean magnitudes from the mask.
 
-        This method is implemented as follows:
+    This method uses distributions of values across the mask.
+    Therefore, it is sensitive to the quality of the mask.
+    A bad mask may result in a bad adaptive mask.
 
-        a.  Calculate the 33rd percentile of values in the first echo,
-            based on the voxel-wise mean over time.
+    This method is implemented as follows:
 
-            -   The 33rd percentile is arbitrary.
-            -   The percentile is calculated only across voxels with non-zero values.
-                However, it is rare for voxels to have values of zero in the first echo,
-                so this exclusion will likely not have a major effect.
-        b.  Identify the voxel where the first echo's mean value is equal to the 33rd percentile.
-            Basically, this identifies an "exemplar" voxel reflecting the 33rd percentile.
+    a.  Calculate the 33rd percentile of values in the first echo,
+        based on voxel-wise mean over time.
+    b.  Identify the voxel where the first echo's mean value is equal to the 33rd percentile.
+        Basically, this identifies "exemplar" voxel reflecting the 33rd percentile.
 
-            -   If more than one voxel has a value exactly equal to the 33rd percentile,
-                keep all of them.
-        c.  Calculate 1/3 of the mean value of the exemplar voxel for each echo.
+        -   The 33rd percentile is arbitrary.
+        -   If more than one voxel has a value exactly equal to the 33rd percentile,
+            keep all of them.
+    c.  For the exemplar voxel from the first echo, calculate 1/3 of the mean value for each echo.
 
-            -   This is the threshold for "good" data.
-            -   The 1/3 value is arbitrary.
-            -   If there was more than one exemplar voxel,
-                retain the echo-wise values from the exemplar with the highest total value.
-        d.  For each voxel, identify the last echo with a mean value greater than the
-            corresponding echo's threshold.
+        -   This is the threshold for "good" data.
+        -   The 1/3 value is arbitrary.
+        -   If there was more than one exemplar voxel, retain the the highest value for each echo.
+    d.  For each voxel, identify the last echo with a mean value greater than the
+        corresponding echo's threshold.
 
-            -   Preceding echoes (including ones with mean values less than the threshold)
-                are considered "good" data.
+        -   Preceding echoes (including ones with mean values less than the threshold)
+            are considered "good" data.
+
+    Decay
+
+    Determine the echo at which the signal stops decreasing for each voxel.
+    If a voxel's signal stops decreasing as echo time increases, then we can infer that the
+    voxel has either fully dephased (i.e., "bottomed out") or been contaminated by noise.
+    This essentially identifies the last echo with "good" data.
+    For a scan that collects many echoes for T2* estimation or has a relatively short echo
+    spacing, it is possible that a later echo will have a higher value,
+    but the overall trend still shows a decay.
+    This method should not be used in those situations.
+
+    The element-wise minimum value between any selected methods is used to construct the adaptive
+    mask.
     """
     RepLGR.info(
-        "An adaptive mask was then generated, "
+        f"An adaptive mask was then generated using the {'+'.join(methods)} method(s), "
         "in which each voxel's value reflects the number of echoes with 'good' data."
     )
     mask = reshape_niimg(mask).astype(bool)
-    # data = data[mask, :, :]
+    data = data[mask, :, :]
 
-    n_samples = data.shape[0]
+    if (methods is None) or (len(methods) == 1 and methods[0].lower() == "none"):
+        LGR.warning(
+            "No methods provided for adaptive mask generation. "
+            "Only removing voxels with negative or NaN values"
+        )
+        RepLGR.info(
+            "An adaptive mask was then generated that retained echoes with negative or NaN values."
+        )
+    else:
+        RepLGR.info(
+            f"An adaptive mask was then generated using the {'+'.join(methods)} method(s), "
+            "in which each voxel's value reflects the number of echoes with 'good' data."
+        )
+    assert all([method.lower() in ["decay", "dropout", "none"] for method in methods])
+
+    n_samples, n_echos, _ = data.shape
     adaptive_masks = []
 
-    if True:
-        # take temporal mean of echos and extract non-zero values in first echo
+    # Generate a base adaptive mask that flags any NaNs or negative values
+    # TODO When masking is moved before dropout calc, change to "data <= 0"
+    bad_data_vals = np.isnan(data) + (data < 0)
+    good_vox_echoes = 1 - np.any(bad_data_vals, axis=-1).astype(int)
+    base_adaptive_mask = np.zeros(n_samples, dtype=int)
+    for echo_idx in range(n_echos):
+        # For voxels that were in the mask for the immediately previous echo
+        # If they are still good in the current echo, increment the adaptive
+        # mask value
+        base_adaptive_mask[
+            (base_adaptive_mask == (echo_idx)) * (good_vox_echoes[:, echo_idx] == 1)
+        ] = (echo_idx + 1)
+
+    adaptive_masks.append(base_adaptive_mask)
+
+    if ("dropout" in methods) or ("decay" in methods):
         echo_means = data.mean(axis=-1)  # temporal mean of echos
+
+    if "dropout" in methods:
+        # take temporal mean of echos and extract non-zero values in first echo
         first_echo = echo_means[echo_means[:, 0] != 0, 0]
 
         # get 33rd %ile of `first_echo` and find corresponding index
         # NOTE: percentile is arbitrary
-        perc = np.percentile(first_echo, 33, method="higher")
-        voxels_at_perc = echo_means[:, 0] == perc
+        # TODO: "interpolation" param changed to "method" in numpy 1.22.0
+        #       confirm method="higher" is the same as interpolation="higher"
+        #       Current minimum version for numpy in tedana is 1.16 where
+        #       there is no "method" parameter. Either wait until we bump
+        #       our minimum numpy version to 1.22 or add a version check
+        #       or try/catch statement.
+        perc = np.percentile(first_echo, 33, interpolation="higher")
+        perc_val = echo_means[:, 0] == perc
 
         # extract values from all echos at relevant index
         # NOTE: threshold of 1/3 voxel value is arbitrary
-        lthrs = np.squeeze(echo_means[voxels_at_perc, :].T) / 3
+        lthrs = np.squeeze(echo_means[perc_val].T) / 3
 
-        # if multiple voxels exactly match the 33rd percentile value in the first echo,
-        # retain the values from the voxel with the highest total value across echoes
+        # if multiple samples were extracted per echo, keep the one w/the highest signal
         if lthrs.ndim > 1:
             lthrs = lthrs[:, lthrs.sum(axis=0).argmax()]
+
+        LGR.info("Echo-wise intensity thresholds for adaptive mask: %s", lthrs)
 
         # Find the last good echo for each voxel
         dropout_adaptive_mask = np.zeros(n_samples, dtype=np.int16)
@@ -153,6 +204,14 @@ def make_adaptive_mask(data, mask, threshold=1):
 
         adaptive_masks.append(dropout_adaptive_mask)
 
+    if "decay" in methods:
+        # Determine where voxels stop decreasing in signal from echo to echo
+        echo_diffs = np.hstack((np.full((n_samples, 1), -1), np.diff(echo_means, axis=1)))
+        diff_mask = echo_diffs >= 0  # flag where signal is not decreasing
+        last_decreasing_echo = diff_mask.argmax(axis=1)
+        last_decreasing_echo[last_decreasing_echo == 0] = n_echos  # if no increase, set to n_echos
+        adaptive_masks.append(last_decreasing_echo)
+
     # Retain the most conservative of the selected adaptive mask estimates
     adaptive_mask = np.minimum.reduce(adaptive_masks)
 
@@ -165,11 +224,10 @@ def make_adaptive_mask(data, mask, threshold=1):
         )
         adaptive_mask[adaptive_mask < threshold] = 0
 
-    adaptive_mask = adaptive_mask * mask
     modified_mask = adaptive_mask.astype(bool)
 
-    # adaptive_mask = unmask(adaptive_mask, mask)
-    # modified_mask = unmask(modified_mask, mask)
+    adaptive_mask = unmask(adaptive_mask, mask)
+    modified_mask = unmask(modified_mask, mask)
 
     return modified_mask, adaptive_mask
 
