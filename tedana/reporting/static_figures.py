@@ -674,7 +674,18 @@ def plot_adaptive_mask(
         line = Line2D([0], [0], color=v, label=k, markersize=10)
         legend_elements.append(line)
 
-    ob.frame_axes.legend(handles=legend_elements, facecolor="white", ncols=3, loc="lower center")
     fig = ob.frame_axes.get_figure()
+    width = fig.get_size_inches()[0]
+
+    ob.frame_axes.legend(
+        handles=legend_elements,
+        facecolor="white",
+        ncols=3,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.05),
+        fancybox=True,
+        shadow=True,
+        fontsize=width * 0.25,
+    )
     adaptive_mask_plot = f"{io_generator.prefix}adaptive_mask.svg"
     fig.savefig(os.path.join(io_generator.out_dir, "figures", adaptive_mask_plot))
