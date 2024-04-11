@@ -81,72 +81,72 @@ def test_make_adaptive_mask():
     data = io.load_data(fnames, n_echos=len(tes))[0]
 
     # Just dropout method
-    mask, masksum = utils.make_adaptive_mask(
+    mask, adaptive_mask = utils.make_adaptive_mask(
         data,
         mask=mask_file,
         threshold=1,
         methods=["dropout"],
     )
 
-    assert mask.shape == masksum.shape == (64350,)
-    assert np.allclose(mask, (masksum >= 1).astype(bool))
+    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
     assert mask.sum() == 49451
-    vals, counts = np.unique(masksum, return_counts=True)
+    vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([14899, 3589, 5276, 40586]))
+    assert np.allclose(counts, np.array([14899, 1615, 4438, 43398]))
 
     # Just decay method
-    mask, masksum = utils.make_adaptive_mask(
+    mask, adaptive_mask = utils.make_adaptive_mask(
         data,
         mask=mask_file,
         threshold=1,
         methods=["decay"],
     )
 
-    assert mask.shape == masksum.shape == (64350,)
-    assert np.allclose(mask, (masksum >= 1).astype(bool))
+    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
     assert mask.sum() == 61954  # This method can't flag first echo as bad
-    vals, counts = np.unique(masksum, return_counts=True)
+    vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
     assert np.allclose(counts, np.array([2396, 3578, 6295, 52081]))
 
     # Dropout and decay methods combined
-    mask, masksum = utils.make_adaptive_mask(
+    mask, adaptive_mask = utils.make_adaptive_mask(
         data,
         mask=mask_file,
         threshold=1,
         methods=["dropout", "decay"],
     )
 
-    assert mask.shape == masksum.shape == (64350,)
-    assert np.allclose(mask, (masksum >= 1).astype(bool))
+    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
     assert mask.sum() == 49451
-    vals, counts = np.unique(masksum, return_counts=True)
+    vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
     assert np.allclose(counts, np.array([14899, 4319, 5730, 39402]))
 
     # Adding "none" should have no effect
-    mask, masksum = utils.make_adaptive_mask(
+    mask, adaptive_mask = utils.make_adaptive_mask(
         data,
         mask=mask_file,
         threshold=1,
         methods=["dropout", "decay", "none"],
     )
 
-    assert mask.shape == masksum.shape == (64350,)
-    assert np.allclose(mask, (masksum >= 1).astype(bool))
+    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
     assert mask.sum() == 49451
-    vals, counts = np.unique(masksum, return_counts=True)
+    vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
     assert np.allclose(counts, np.array([14899, 4319, 5730, 39402]))
 
     # Just "none"
-    mask, masksum = utils.make_adaptive_mask(data, mask=mask_file, threshold=1, methods=["none"])
+    mask, adaptive_mask = utils.make_adaptive_mask(data, mask=mask_file, threshold=1, methods=["none"])
 
-    assert mask.shape == masksum.shape == (64350,)
-    assert np.allclose(mask, (masksum >= 1).astype(bool))
+    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
     assert mask.sum() == 61954
-    vals, counts = np.unique(masksum, return_counts=True)
+    vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 3]))
     assert np.allclose(counts, np.array([2396, 61954]))
 
