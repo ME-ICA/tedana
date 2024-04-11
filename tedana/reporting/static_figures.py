@@ -665,7 +665,8 @@ def plot_adaptive_mask(
         annotate=False,
         draw_cross=False,
         cmap=cmap,
-        cut_coords=[0, 0, 0],
+        display_mode="mosaic",
+        cut_coords=4,
     )
 
     legend_elements = []
