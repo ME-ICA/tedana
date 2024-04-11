@@ -682,10 +682,10 @@ def plot_adaptive_mask(
         facecolor="white",
         ncols=3,
         loc="upper center",
-        bbox_to_anchor=(0.5, -0.05),
+        bbox_to_anchor=(0, -0.05),
         fancybox=True,
         shadow=True,
-        fontsize=width * 0.25,
+        fontsize=width,
     )
     adaptive_mask_plot = f"{io_generator.prefix}adaptive_mask.svg"
     fig.savefig(os.path.join(io_generator.out_dir, "figures", adaptive_mask_plot))
