@@ -528,11 +528,30 @@ should not overly focus on carpet plots and should examine these results in cont
   :height: 400px
 
 
+**************************
+Adaptive Mask Summary Plot
+**************************
+
+Below the carpet plots is a summary plot of the adaptive mask.
+
+This figure overlays contours reflecting the boundaries of the following masks onto the mean optimally combined data:
+
+- **Base**: The base mask, either provided by the user or generated automatically using ``compute_epi_mask``.
+- **Optimal combination**: The mask used for optimal combination and denoising.
+  This corresponds to values greater than or equal to 1 in the adaptive mask.
+- **Classification**: The mask used for the decomposition and component classification steps.
+  This corresponds to values greather than or equal to 3 in the adaptive mask.
+
+.. image:: /_static/adaptive_mask.png
+  :align: center
+  :height: 400px
+
+
 ************************
 T2* and S0 Summary Plots
 ************************
 
-Below the carpet plots are summary plots for the T2* and S0 maps.
+Below the adaptive mask plot are summary plots for the T2* and S0 maps.
 Each map has two figures: a spatial map of the values and a histogram of the voxelwise values.
 The T2* map should look similar to T2 maps and be brightest in the ventricles and darkest in areas of largest susceptibility.
 The S0 map should roughly follow the signal-to-noise ratio and will be brightest near the surface near RF coils.
