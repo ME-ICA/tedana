@@ -654,6 +654,7 @@ def plot_rmse(
         "figures",
         f"{io_generator.prefix}rmse_timeseries.svg",
     )
+    ax.set_xlim(0, time_arr[-2])
     fig.savefig(rmse_ts_plot)
     plt.close(fig)
 
