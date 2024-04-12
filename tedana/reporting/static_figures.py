@@ -626,14 +626,20 @@ def plot_adaptive_mask(
 ):
     """Create a figure to show the adaptive mask.
 
+    This figure shows the base mask, the adaptive mask thresholded for denoising (threshold >= 1),
+    and the adaptive mask thresholded for classification (threshold >= 3),
+    overlaid on the mean optimal combination image.
+
     Parameters
     ----------
     optcom : (S x T) :obj:`numpy.ndarray`
-        Optimal combination of components
+        Optimal combination of components.
+        The mean image over time is used as the underlay for the figure.
     base_mask : (S,) :obj:`numpy.ndarray`
-        Base mask used in tedana
+        Base mask used in tedana.
+        This is the original mask either provided by the user or generated with `compute_epi_mask`.
     io_generator : :obj:`~tedana.io.OutputGenerator`
-        The output generator for this workflow
+        The output generator for this workflow.
     """
     from matplotlib.lines import Line2D
     from nilearn import image
