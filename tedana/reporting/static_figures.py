@@ -677,7 +677,7 @@ def plot_adaptive_mask(
     fig = ob.frame_axes.get_figure()
     width = fig.get_size_inches()[0]
 
-    ob.frame_axes.set_zorder(-1)
+    ob.frame_axes.set_zorder(100)
     ob.frame_axes.legend(
         handles=legend_elements,
         facecolor="white",
