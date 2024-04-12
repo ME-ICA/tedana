@@ -616,3 +616,62 @@ def plot_t2star_and_s0(
         annotate=False,
         output_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
     )
+
+
+def plot_rmse(
+    *,
+    io_generator: io.OutputGenerator,
+):
+    """Create a plot of the root mean square error (RMSE) for each component."""
+    import pandas as pd
+
+    rmse_img = io_generator.get_name("rmse img")
+    confounds_file = io_generator.get_name("confounds tsv")
+
+    # Get repetition time from reference image
+    tr = io_generator.reference_img.header.get_zooms()[-1]
+
+    # Load the confounds file
+    confounds_df = pd.read_table(confounds_file)
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    rmse_arr = confounds_df["rmse"].values
+    sd_arr = confounds_df["rmse_std"].values
+    time_arr = np.arange(confounds_df.shape[0]) * tr
+    ax.plot(time_arr, rmse_arr, color="black")
+    ax.fill_between(
+        time_arr,
+        rmse_arr - sd_arr,
+        rmse_arr + sd_arr,
+        color="blue",
+        alpha=0.2,
+    )
+    ax.set_ylabel("RMSE", fontsize=16)
+    ax.set_xlabel("Time (s)", fontsize=16)
+    ax.set_title("Mean root mean squared error", fontsize=20)
+    rmse_ts_plot = os.path.join(
+        io_generator.out_dir,
+        "figures",
+        f"{io_generator.prefix}rmse_timeseries.svg",
+    )
+    fig.savefig(rmse_ts_plot)
+    plt.close(fig)
+
+    # Plot RMSE
+    rmse_brain_plot = os.path.join(
+        io_generator.out_dir,
+        "figures",
+        f"{io_generator.prefix}rmse_brain.svg",
+    )
+    plotting.plot_stat_map(
+        rmse_img,
+        bg_img=None,
+        display_mode="mosaic",
+        cut_coords=4,
+        symmetric_cbar=False,
+        black_bg=True,
+        cmap="Reds",
+        vmin=0,
+        annotate=False,
+        output_file=rmse_brain_plot,
+    )
