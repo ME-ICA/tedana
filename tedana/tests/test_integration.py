@@ -678,6 +678,7 @@ def test_integration_t2smap(skip_integration):
         + ["-e"]
         + [str(te) for te in echo_times]
         + ["--out-dir", out_dir, "--fittype", "curvefit"]
+        + ["--masktype", "dropout", "decay"]
     )
     t2smap_cli._main(args)
 
