@@ -538,9 +538,9 @@ This figure overlays contours reflecting the boundaries of the following masks o
 
 - **Base**: The base mask, either provided by the user or generated automatically using ``compute_epi_mask``.
 - **Optimal combination**: The mask used for optimal combination and denoising.
-  This corresponds to values greater than or equal to 1 in the adaptive mask.
+  This corresponds to values greater than or equal to 1 (at least 1 good echo) in the adaptive mask.
 - **Classification**: The mask used for the decomposition and component classification steps.
-  This corresponds to values greather than or equal to 3 in the adaptive mask.
+  This corresponds to values greather than or equal to 3 (at least 3 good echoes) in the adaptive mask.
 
 .. image:: /_static/adaptive_mask.png
   :align: center
