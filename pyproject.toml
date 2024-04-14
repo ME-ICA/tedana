@@ -21,7 +21,7 @@ classifiers = [
 license = {file = "LICENSE"}
 requires-python = ">=3.8"
 dependencies = [
-    "bokeh",
+    "bokeh>=1.0.0,<=3.4.0",
     "mapca>=0.0.4,<=0.0.5",
     "matplotlib",
     "nibabel>=2.5.1,<=5.2.1",
@@ -31,7 +31,7 @@ dependencies = [
     "pybtex",
     "pybtex-apa-style",
     "scikit-learn>=0.21, <=1.4.1.post1",
-    "scipy>=1.2.0, <=1.12.0",
+    "scipy>=1.2.0, <=1.13.0",
     "threadpoolctl",
     "tqdm",
 ]

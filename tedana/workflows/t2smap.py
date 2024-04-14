@@ -8,6 +8,7 @@ import sys
 
 import numpy as np
 import pandas as pd
+from nilearn.masking import compute_epi_mask
 from scipy import stats
 from threadpoolctl import threadpool_limits
 
@@ -86,6 +87,16 @@ def _get_parser():
         default="bids",
     )
     optional.add_argument(
+        "--masktype",
+        dest="masktype",
+        required=False,
+        action="store",
+        nargs="+",
+        help="Method(s) by which to define the adaptive mask.",
+        choices=["dropout", "decay", "none"],
+        default=["dropout"],
+    )
+    optional.add_argument(
         "--fittype",
         dest="fittype",
         action="store",
@@ -153,6 +164,7 @@ def t2smap_workflow(
     mask=None,
     prefix="",
     convention="bids",
+    masktype=["dropout"],
     fittype="loglin",
     fitmode="all",
     combmode="t2s",
@@ -177,6 +189,8 @@ def t2smap_workflow(
     mask : :obj:`str`, optional
         Binary mask of voxels to include in TE Dependent ANAlysis. Must be spatially
         aligned with `data`.
+    masktype : :obj:`list` with 'dropout' and/or 'decay' or None, optional
+        Method(s) by which to define the adaptive mask. Default is ["dropout"].
     fittype : {'loglin', 'curvefit'}, optional
         Monoexponential fitting method.
         'loglin' means to use the the default linear fit to the log of
@@ -272,14 +286,23 @@ def t2smap_workflow(
         config="auto",
         make_figures=False,
     )
-    n_samp, n_echos, n_vols = catd.shape
+    n_echos = catd.shape[1]
     LGR.debug(f"Resulting data shape: {catd.shape}")
 
     if mask is None:
-        LGR.info("Computing adaptive mask")
+        LGR.info(
+            "Computing initial mask from the first echo using nilearn's compute_epi_mask function."
+        )
+        first_echo_img = io.new_nii_like(io_generator.reference_img, catd[:, 0, :])
+        mask = compute_epi_mask(first_echo_img)
     else:
         LGR.info("Using user-defined mask")
-    mask, masksum = utils.make_adaptive_mask(catd, mask=mask, getsum=True, threshold=1)
+    mask, masksum = utils.make_adaptive_mask(
+        catd,
+        mask=mask,
+        threshold=1,
+        methods=masktype,
+    )
 
     LGR.info("Computing adaptive T2* map")
     decay_function = decay.fit_decay if fitmode == "all" else decay.fit_decay_ts
