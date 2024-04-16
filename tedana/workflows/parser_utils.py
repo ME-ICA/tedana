@@ -40,7 +40,10 @@ def check_tedpca_value(value, is_parser=True):
     try:
         floatvalue = float(value)
     except ValueError:
-        msg = f"Argument to {dashes}tedpca must be either a number, or one of: {', '.join(valid_options)}"
+        msg = (
+            f"Argument to {dashes}tedpca must be either a number, "
+            f"or one of: {', '.join(valid_options)}"
+        )
         raise error(msg)
 
     try:
