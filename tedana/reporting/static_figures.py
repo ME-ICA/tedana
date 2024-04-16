@@ -616,3 +616,82 @@ def plot_t2star_and_s0(
         annotate=False,
         output_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
     )
+
+
+def plot_adaptive_mask(
+    *,
+    optcom: np.ndarray,
+    base_mask: np.ndarray,
+    io_generator: io.OutputGenerator,
+):
+    """Create a figure to show the adaptive mask.
+
+    This figure shows the base mask, the adaptive mask thresholded for denoising (threshold >= 1),
+    and the adaptive mask thresholded for classification (threshold >= 3),
+    overlaid on the mean optimal combination image.
+
+    Parameters
+    ----------
+    optcom : (S x T) :obj:`numpy.ndarray`
+        Optimal combination of components.
+        The mean image over time is used as the underlay for the figure.
+    base_mask : (S,) :obj:`numpy.ndarray`
+        Base mask used in tedana.
+        This is the original mask either provided by the user or generated with `compute_epi_mask`.
+    io_generator : :obj:`~tedana.io.OutputGenerator`
+        The output generator for this workflow.
+    """
+    from matplotlib.lines import Line2D
+    from nilearn import image
+
+    adaptive_mask_img = io_generator.get_name("adaptive mask img")
+    mean_optcom_img = io.new_nii_like(io_generator.reference_img, np.mean(optcom, axis=1))
+
+    # Concatenate the three masks used in tedana to treat as a probabilistic atlas
+    base_mask = io.new_nii_like(io_generator.reference_img, base_mask)
+    mask_denoise = image.math_img("(img >= 1).astype(np.uint8)", img=adaptive_mask_img)
+    mask_clf = image.math_img("(img >= 3).astype(np.uint8)", img=adaptive_mask_img)
+    all_masks = image.concat_imgs((base_mask, mask_denoise, mask_clf))
+    # Set values to 0.5 for probabilistic atlas plotting
+    all_masks = image.math_img("img * 0.5", img=all_masks)
+
+    cmap = plt.cm.gist_rainbow
+    discrete_cmap = cmap.resampled(3)  # colors matching the mask lines in the image
+    color_dict = {
+        "Base": discrete_cmap(0),
+        "Optimal combination": discrete_cmap(0.4),
+        "Classification": discrete_cmap(0.9),
+    }
+
+    ob = plotting.plot_prob_atlas(
+        maps_img=all_masks,
+        bg_img=mean_optcom_img,
+        view_type="contours",
+        threshold=0.2,
+        annotate=False,
+        draw_cross=False,
+        cmap=cmap,
+        display_mode="mosaic",
+        cut_coords=4,
+    )
+
+    legend_elements = []
+    for k, v in color_dict.items():
+        line = Line2D([0], [0], color=v, label=k, markersize=10)
+        legend_elements.append(line)
+
+    fig = ob.frame_axes.get_figure()
+    width = fig.get_size_inches()[0]
+
+    ob.frame_axes.set_zorder(100)
+    ob.frame_axes.legend(
+        handles=legend_elements,
+        facecolor="white",
+        ncols=3,
+        loc="lower center",
+        fancybox=True,
+        shadow=True,
+        fontsize=width,
+    )
+    adaptive_mask_plot = f"{io_generator.prefix}adaptive_mask.svg"
+    fig.savefig(os.path.join(io_generator.out_dir, "figures", adaptive_mask_plot))
