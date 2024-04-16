@@ -143,6 +143,9 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
     # Initial carpet plot (default one)
     initial_carpet = f"./figures/{prefix}carpet_optcom.svg"
 
+    # Adaptive mask image
+    adaptive_mask = f"./figures/{prefix}adaptive_mask.svg"
+
     # T2* and S0 images
     t2star_brain = f"./figures/{prefix}t2star_brain.svg"
     t2star_histogram = f"./figures/{prefix}t2star_histogram.svg"
@@ -168,6 +171,7 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
         about=about,
         prefix=prefix,
         initialCarpet=initial_carpet,
+        adaptiveMask=adaptive_mask,
         t2starBrainPlot=t2star_brain,
         t2starHistogram=t2star_histogram,
         s0BrainPlot=s0_brain,

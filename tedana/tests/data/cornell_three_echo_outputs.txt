@@ -25,6 +25,7 @@ desc-optcom_bold.nii.gz
 desc-confounds_timeseries.tsv
 desc-rmse_statmap.nii.gz
 figures
+figures/adaptive_mask.svg
 figures/carpet_optcom.svg
 figures/carpet_denoised.svg
 figures/carpet_accepted.svg
