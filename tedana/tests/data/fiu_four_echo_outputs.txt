@@ -23,7 +23,6 @@ sub-01_desc-ICA_stat-z_components.nii.gz
 sub-01_desc-T1likeEffect_min.nii.gz
 sub-01_desc-adaptiveGoodSignal_mask.nii.gz
 sub-01_desc-globalSignal_map.nii.gz
-sub-01_desc-globalSignal_timeseries.tsv
 sub-01_desc-limited_S0map.nii.gz
 sub-01_desc-limited_T2starmap.nii.gz
 sub-01_desc-optcomAcceptedMIRDenoised_bold.nii.gz
