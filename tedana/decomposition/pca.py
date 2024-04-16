@@ -85,7 +85,7 @@ def tedpca(
         (stationary Gaussian) process and are ordered from most to least aggressive
         (see :footcite:p:`li2007estimating`).
         If a float is provided, then it is assumed to represent percentage of variance
-        explained (0.0-1.0] to retain from PCA.
+        explained (0.0-1.0) to retain from PCA.
         If an int is provided, then it is assumed to be the number of components
         to select
         Default is 'aic'.

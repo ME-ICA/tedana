@@ -151,7 +151,7 @@ def _get_parser():
             "Method by which to select number of components in TEDPCA. "
             "This can be one of the following: "
             "String ('mdl', 'kic', 'aic', 'kundu', or 'kundu-stabilize'); "
-            "floating-point value (in the range (0.0, 1.0]); "
+            "floating-point value in the range (0.0, 1.0); "
             "positive integer value. "
             "PCA decomposition with the mdl, kic and aic options "
             "are based on a Moving Average (stationary Gaussian) process, "
@@ -405,7 +405,7 @@ def tedana_workflow(
     tedpca : {'mdl', 'aic', 'kic', 'kundu', 'kundu-stabilize', float, int}, optional
         Method with which to select components in TEDPCA.
         If a float is provided, then it is assumed to represent percentage of variance
-        explained (0.0-1.0] to retain from PCA. If an int is provided, it will output
+        explained (0.0-1.0) to retain from PCA. If an int is provided, it will output
         a fixed number of components defined by the integer; must be between 1 and the
         number of time points.
         Default is 'aic'.
@@ -512,7 +512,7 @@ def tedana_workflow(
         gscontrol = [gscontrol]
 
     # Check value of tedpca *if* it is a predefined string,
-    # a float in (0.0, 1.0] or an int >= 1
+    # a float in (0.0, 1.0) or an int >= 1
     tedpca = check_tedpca_value(tedpca, is_parser=False)
 
     # For z-catted files, make sure it's a list of size 1

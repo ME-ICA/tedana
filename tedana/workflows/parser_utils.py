@@ -20,8 +20,8 @@ def check_tedpca_value(value, is_parser=True):
 
     def check_float(floatvalue):
         assert isinstance(floatvalue, float)
-        if not (0.0 < floatvalue <= 1.0):
-            msg = f"Floating-point argument to {dashes}tedpca must be in the range (0.0, 1.0]."
+        if not (0.0 < floatvalue < 1.0):
+            msg = f"Floating-point argument to {dashes}tedpca must be in the range (0.0, 1.0)."
             raise error(msg)
         return floatvalue
 
@@ -40,7 +40,7 @@ def check_tedpca_value(value, is_parser=True):
     try:
         floatvalue = float(value)
     except ValueError:
-        msg = f"Argument to {dashes}tedpca must be a number or one of: {', '.join(valid_options)}"
+        msg = f"Argument to {dashes}tedpca must be either a number, or one of: {', '.join(valid_options)}"
         raise error(msg)
 
     try:
