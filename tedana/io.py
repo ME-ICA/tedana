@@ -346,6 +346,31 @@ class OutputGenerator:
         deblanked = data.replace("", np.nan)
         deblanked.to_csv(name, sep="\t", lineterminator="\n", na_rep="n/a", index=False)
 
+    def add_df_to_file(self, data, description, **kwargs):
+        """Add a DataFrame to a tsv file, which may or may not exist.
+
+        Parameters
+        ----------
+        data : dict or img_like or pandas.DataFrame
+            Data to save to file.
+        description : str
+            Description of the data, used to determine the appropriate filename from
+            ``self.config``.
+
+        Returns
+        -------
+        name : str
+            The full file path of the saved file.
+        """
+        name = self.get_name(description, **kwargs)
+        if op.isfile(name):
+            old_data = pd.read_table(name)
+            data = pd.concat([old_data, data], ignore_index=False)
+
+        self.save_tsv(data, name)
+
+        return name
+
     def save_self(self):
         """Save the registry to a json file.
 
