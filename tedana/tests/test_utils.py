@@ -80,6 +80,24 @@ def test_make_adaptive_mask():
     mask_file = pjoin(datadir, "mask.nii.gz")
     data = io.load_data(fnames, n_echos=len(tes))[0]
 
+    # Add in simulated values
+    base_val = np.mean(data[:, 0, 0])  # mean value of first echo
+    idx = 5457
+    # Three good echoes (3)
+    data[idx, :, :] = np.array([base_val, base_val - 1, base_val - 2])[:, None]
+    # Dropout: Good bad good (3)
+    # Decay: Good good bad (2)
+    data[idx + 1, :, :] = np.array([base_val, 1, base_val])[:, None]
+    # Dropout: Good bad bad (1)
+    # Decay: Good good bad (2)
+    data[idx + 2, :, :] = np.array([base_val, 1, 1])[:, None]
+    # Dropout: Good good good (3)
+    # Decay: Good bad bad (1)
+    data[idx + 3, :, :] = np.array([base_val, base_val, base_val])[:, None]
+    # Dropout: Bad bad bad (0)
+    # Decay: Good good good (3)
+    data[idx + 4, :, :] = np.array([1, 0.9, 0.8])[:, None]
+
     # Just dropout method
     mask, adaptive_mask = utils.make_adaptive_mask(
         data,
@@ -90,10 +108,15 @@ def test_make_adaptive_mask():
 
     assert mask.shape == adaptive_mask.shape == (64350,)
     assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
-    assert mask.sum() == 49376
+    assert mask.sum() == 49375
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([14974, 1816, 4428, 43132]))
+    assert np.allclose(counts, np.array([14975, 1817, 4427, 43131]))
+    assert adaptive_mask[idx] == 3
+    assert adaptive_mask[idx + 1] == 3
+    assert adaptive_mask[idx + 2] == 1
+    assert adaptive_mask[idx + 3] == 3
+    assert adaptive_mask[idx + 4] == 0
 
     # Just decay method
     mask, adaptive_mask = utils.make_adaptive_mask(
@@ -108,7 +131,12 @@ def test_make_adaptive_mask():
     assert mask.sum() == 60985  # This method can't flag first echo as bad
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([3365, 4365, 5971, 50649]))
+    assert np.allclose(counts, np.array([3365, 4366, 5972, 50647]))
+    assert adaptive_mask[idx] == 3
+    assert adaptive_mask[idx + 1] == 2
+    assert adaptive_mask[idx + 2] == 2
+    assert adaptive_mask[idx + 3] == 1
+    assert adaptive_mask[idx + 4] == 3
 
     # Dropout and decay methods combined
     mask, adaptive_mask = utils.make_adaptive_mask(
@@ -120,10 +148,15 @@ def test_make_adaptive_mask():
 
     assert mask.shape == adaptive_mask.shape == (64350,)
     assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
-    assert mask.sum() == 49376
+    assert mask.sum() == 49375
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([14974, 3109, 6248, 40019]))
+    assert np.allclose(counts, np.array([14975, 3111, 6248, 40016]))
+    assert adaptive_mask[idx] == 3
+    assert adaptive_mask[idx + 1] == 2
+    assert adaptive_mask[idx + 2] == 1
+    assert adaptive_mask[idx + 3] == 1
+    assert adaptive_mask[idx + 4] == 0
 
     # Adding "none" should have no effect
     mask, adaptive_mask = utils.make_adaptive_mask(
@@ -135,10 +168,15 @@ def test_make_adaptive_mask():
 
     assert mask.shape == adaptive_mask.shape == (64350,)
     assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
-    assert mask.sum() == 49376
+    assert mask.sum() == 49375
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([14974, 3109, 6248, 40019]))
+    assert np.allclose(counts, np.array([14975, 3111, 6248, 40016]))
+    assert adaptive_mask[idx] == 3
+    assert adaptive_mask[idx + 1] == 2
+    assert adaptive_mask[idx + 2] == 1
+    assert adaptive_mask[idx + 3] == 1
+    assert adaptive_mask[idx + 4] == 0
 
     # Just "none"
     mask, adaptive_mask = utils.make_adaptive_mask(
@@ -153,7 +191,12 @@ def test_make_adaptive_mask():
     assert mask.sum() == 60985
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([3365, 1412, 1195, 58378]))
+    assert np.allclose(counts, np.array([3365, 1412, 1194, 58379]))
+    assert adaptive_mask[idx] == 3
+    assert adaptive_mask[idx + 1] == 3
+    assert adaptive_mask[idx + 2] == 3
+    assert adaptive_mask[idx + 3] == 3
+    assert adaptive_mask[idx + 4] == 3
 
 
 # SMOKE TESTS
