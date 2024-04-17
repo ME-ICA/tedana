@@ -40,7 +40,7 @@ Key: Filename                                                                Con
 "data description json": dataset_description.json                            Top-level metadata for the workflow.
 tedana_report.html                                                           The interactive HTML report.
 "combined img": desc-optcom_bold.nii.gz                                      Optimally combined time series.
-"denoised ts img": desc-optcomDenoised_bold.nii.gz                           Denoised optimally combined time series. Recommended
+"denoised ts img": desc-denoised_bold.nii.gz                                 Denoised optimally combined time series. Recommended
                                                                              dataset for analysis.
 "adaptive mask img": desc-adaptiveGoodSignal_mask.nii.gz                     Integer-valued mask used in the workflow, where
                                                                              each voxel's value corresponds to the number of good
