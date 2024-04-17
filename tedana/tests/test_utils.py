@@ -109,7 +109,6 @@ def test_make_adaptive_mask():
         threshold=1,
         methods=["dropout"],
     )
-    print(adaptive_mask[5458])
 
     assert mask.shape == adaptive_mask.shape == (64350,)
     assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
