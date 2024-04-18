@@ -584,6 +584,7 @@ def tedana_workflow(
         # TODO: add affine check
         LGR.info("Using user-defined mask")
         RepLGR.info("A user-defined mask was applied to the data.")
+        mask = utils.reshape_niimg(mask).astype(int)
     elif t2smap and not mask:
         LGR.info("Using user-defined T2* map to generate mask")
         t2s_limited_sec = utils.reshape_niimg(t2smap)
