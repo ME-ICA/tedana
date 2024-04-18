@@ -107,7 +107,9 @@ def make_adaptive_mask(data, mask, threshold=1, methods=["dropout"]):
         corresponding echo's threshold.
 
         -   Preceding echoes (including ones with mean values less than the threshold)
-            are considered "good" data.
+            are considered "good" data. That means, if echoes 1-3 in a voxel are
+            [good, good, bad] the adaptive mask will assign a 2, and if they are
+            [good, bad, good], the adaptive mask will assign a 3.
 
     Decay
 
