@@ -62,8 +62,8 @@ def make_adaptive_mask(data, mask, threshold=1, methods=["dropout"]):
         Without a mask limiting the voxels to consider,
         the adaptive mask will generally select voxels outside the brain as exemplars.
     threshold : :obj:`int`, optional
-        Minimum echo count to retain in the mask. Default is 1, which is
-        equivalent not thresholding.
+        Minimum echo count to retain in the mask.
+        Default is 1, which is equivalent to not thresholding.
     methods : :obj:`list`, optional
         List of methods to use for adaptive mask generation. Default is ["dropout"].
         Valid methods are "decay", "dropout", and "none".
@@ -103,8 +103,13 @@ def make_adaptive_mask(data, mask, threshold=1, methods=["dropout"]):
         -   This is the threshold for "good" data.
         -   The 1/3 value is arbitrary.
         -   If there was more than one exemplar voxel, retain the the highest value for each echo.
-    d.  For each voxel, count the number of echoes that have a mean value greater than the
+    d.  For each voxel, identify the last echo with a mean value greater than the
         corresponding echo's threshold.
+
+        -   Preceding echoes (including ones with mean values less than the threshold)
+            are considered "good" data. That means, if echoes 1-3 in a voxel are
+            [good, good, bad] the adaptive mask will assign a 2, and if they are
+            [good, bad, good], the adaptive mask will assign a 3.
 
     Decay
 
@@ -187,9 +192,17 @@ def make_adaptive_mask(data, mask, threshold=1, methods=["dropout"]):
 
         LGR.info("Echo-wise intensity thresholds for adaptive mask: %s", lthrs)
 
-        # determine samples where absolute value is greater than echo-specific thresholds
-        # and count # of echos that pass criterion
-        dropout_adaptive_mask = (np.abs(echo_means) > lthrs).sum(axis=-1)
+        # Find the last good echo for each voxel
+        # Start with every voxel's value==0, increment up the echoes, and
+        # change to a new value every time a later good echo is found
+        dropout_adaptive_mask = np.zeros(n_samples, dtype=np.int16)
+        for echo_idx in range(n_echos):
+            dropout_adaptive_mask[(np.abs(echo_means[:, echo_idx]) > lthrs[echo_idx])] = (
+                echo_idx + 1
+            )
+
+        adaptive_masks.append(dropout_adaptive_mask)
+
         adaptive_masks.append(dropout_adaptive_mask)
 
     if "decay" in methods:
