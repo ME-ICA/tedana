@@ -8,7 +8,8 @@ def check_tedpca_value(value, is_parser=True):
     """
     Check tedpca argument.
 
-    Check if argument is a float in range (0,1], a positive integer,
+    Check if argument is a float in range (0,1),
+    a positive integer,
     or one of a list of strings.
     """
     valid_options = ("mdl", "aic", "kic", "kundu", "kundu-stabilize")
