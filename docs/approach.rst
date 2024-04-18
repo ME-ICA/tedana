@@ -357,7 +357,7 @@ The actual decision tree is dependent on the component selection algorithm emplo
 `These decision trees are detailed here`_.
 
 Components that are classified as noise are projected out of the optimally combined data,
-yielding a denoised timeseries, which is saved as **desc-optcomDenoised_bold.nii.gz**.
+yielding a denoised timeseries, which is saved as **desc-denoised_bold.nii.gz**.
 
 .. image:: /_static/a15_denoised_data_timeseries.png
 
