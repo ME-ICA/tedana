@@ -191,15 +191,15 @@ def make_adaptive_mask(data, mask, threshold=1, methods=["dropout"]):
         LGR.info("Echo-wise intensity thresholds for adaptive mask: %s", lthrs)
 
         # Find the last good echo for each voxel
+        # Start with every voxel's value==0, increment up the echoes, and
+        # change to a new value every time a later good echo is found
         dropout_adaptive_mask = np.zeros(n_samples, dtype=np.int16)
-        for i_voxel in range(n_samples):
-            echo_means_voxel = np.abs(echo_means[i_voxel, :])
-            echos_over_threshold = echo_means_voxel > lthrs
-            # Find the index of the last True element in a 1D boolean array
-            last_true_index = (
-                (np.where(echos_over_threshold)[0][-1] + 1) if np.any(echos_over_threshold) else 0
+        for echo_idx in range(n_echos):
+            dropout_adaptive_mask[(np.abs(echo_means[:, echo_idx]) > lthrs[echo_idx])] = (
+                echo_idx + 1
             )
-            dropout_adaptive_mask[i_voxel] = last_true_index
+
+        adaptive_masks.append(dropout_adaptive_mask)
 
         adaptive_masks.append(dropout_adaptive_mask)
 
