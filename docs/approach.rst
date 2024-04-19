@@ -368,7 +368,7 @@ These classifications are saved in **desc-tedana_metrics.tsv**.
 The actual decision tree is dependent on the component selection algorithm employed.
 ``tedana`` includes three options `tedana_orig`, `meica` and `minimal`
 (which uses hardcoded thresholds applied to each of the metrics).
-These decision trees are detailed in :ref:`included_decision_trees`.
+These decision trees are detailed in :doc:`/included_decision_trees`.
 
 Components that are classified as noise are projected out of the optimally combined data,
 yielding a denoised timeseries, which is saved as **desc-denoised_bold.nii.gz**.
@@ -383,7 +383,7 @@ Manual classification with RICA
 ``RICA`` is a tool for manual ICA classification.
 Once the .tsv file containing the result of manual component classification is obtained,
 it is necessary to re-run the tedana workflow
-(see :ref:`usage:Arguments for Rerunning the Workflow`)
+(see :ref:`usage:running the ica_reclassify workflow`)
 passing the ``manual_classification.tsv`` file with the ``--ctab`` option.
 To save the output correctly,
 make sure that the output directory does not coincide with the input directory.
