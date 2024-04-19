@@ -111,6 +111,9 @@ estimating them on a volume-by-volume basis with only a small number of echoes i
 (i.e., the estimates would be extremely noisy).
 As such, we estimate average :math:`T_{2}^*` and :math:`S_0` maps and use those
 throughout the workflow.
+However, it is important to note that promising work has been done using
+volume-wise :math:`T_{2}^*` and :math:`S_0` estimates :footcite:p:`heunis2021effects`,
+which can be estimated with ``--fitmode ts`` in :func:`tedana.workflows.t2smap_workflow`.
 
 In order to make it easier to fit the decay model to the data,
 ``tedana`` transforms the data by default.
