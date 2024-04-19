@@ -506,25 +506,34 @@ def rmse_of_fit_decay_ts(
     n_samples, _, n_vols = data.shape
     tes = np.array(tes)
 
-    rmse = np.zeros([n_samples, n_vols])
-    for i_voxel in tqdm(range(n_samples)):
-        n_good_echoes = adaptive_mask[i_voxel]
-
-        data_voxel = data[i_voxel, :n_good_echoes, :]
-
+    rmse = np.full([n_samples, n_vols], np.nan, dtype=np.float32)
+    # n_good_echoes interates from 2 through the number of echoes
+    #   0 and 1 are excluded because there aren't T2* and S0 estimates
+    #   for less than 2 voxels. 2 voxels will have a bad estimate so consider
+    #   how/if we want to distinguish those
+    for n_good_echoes in range(2, len(tes) + 1):
+        # a boolean mask for voxels with a specific num of good echoes
+        use_vox = adaptive_mask == n_good_echoes
+        data_echo = data[use_vox, :n_good_echoes, :]
         if fitmode == "all":
-            s0_voxel = np.full(data_voxel.shape[-1], s0[i_voxel])
-            t2s_voxel = np.full(data_voxel.shape[-1], t2s[i_voxel])
-        else:
-            s0_voxel = s0[i_voxel, :]
-            t2s_voxel = t2s[i_voxel, :]
+            s0_echo = np.matlib.repmat(s0[use_vox].T, n_vols, 1).T
+            t2s_echo = np.matlib.repmat(t2s[use_vox], n_vols, 1).T
+        elif fitmode == "fit":
+            s0_echo = s0[use_vox, :]
+            t2s_echo = t2s[use_vox, :]
+        # TODO add an else if fitmode is neither.
+        # TODO Might also want to check if s0 and t2 are the right dimensions for fitmode option
 
-        predicted_data = monoexponential(
-            tes=tes[:n_good_echoes, None],
-            s0=s0_voxel[None, :],
-            t2star=t2s_voxel[None, :],
-        )
-        rmse[i_voxel, :] = np.sqrt(np.mean((data_voxel - predicted_data) ** 2, axis=0))
+        predicted_data = np.full([use_vox.sum(), n_good_echoes, n_vols], np.nan, dtype=np.float32)
+        # Need to loop by echo since monoexponential can take either single vals for s0 and t2star
+        #   or a single TE value. We could expand that func, but this is a functional solution
+        for echo_num in range(n_good_echoes):
+            predicted_data[:, echo_num, :] = monoexponential(
+                tes=tes[echo_num],
+                s0=s0_echo,
+                t2star=t2s_echo,
+            )
+        rmse[use_vox, :] = np.sqrt(np.mean((data_echo - predicted_data) ** 2, axis=1))
 
     rmse_map = np.nanmean(rmse, axis=1)
     rmse_timeseries = np.nanmean(rmse, axis=0)
