@@ -318,7 +318,7 @@ def t2smap_workflow(
     t2s_full[t2s_full > cap_t2s * 10] = cap_t2s
 
     LGR.info("Calculating model fit quality metrics")
-    rmse_map, rmse_timeseries, rmse_sd_timeseries = decay.model_fit_decay_ts(
+    rmse_map, rmse_timeseries, rmse_sd_timeseries = decay.rmse_fit_decay_ts(
         data=catd,
         tes=tes,
         adaptive_mask=masksum,

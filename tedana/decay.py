@@ -464,7 +464,7 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
     return t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts
 
 
-def model_fit_decay_ts(
+def rmse_fit_decay_ts(
     *,
     data: np.ndarray,
     tes: List[float],
