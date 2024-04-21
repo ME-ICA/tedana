@@ -202,6 +202,7 @@ def minimum_image_regression(
     data_optcom_z = stats.zscore(data_optcom_masked, axis=-1)
     # component parameter estimates
     comp_pes = np.linalg.lstsq(mixing, data_optcom_z.T, rcond=None)[0].T
+    # Get residuals (ignored/low-variance components and unmodeled noise)
     resid = data_optcom_z - np.dot(comp_pes[:, not_ign], mixing[:, not_ign].T)
 
     # Build time series of just BOLD-like components (i.e., MEHK) and save T1-like effect
