@@ -3,6 +3,7 @@ sub-01_references.bib
 sub-01_S0map.nii.gz
 sub-01_T2starmap.nii.gz
 sub-01_dataset_description.json
+sub-01_desc-ICAAcceptedMIRDenoised_components.nii.gz
 sub-01_desc-ICAAccepted_components.nii.gz
 sub-01_desc-ICAAccepted_stat-z_components.nii.gz
 sub-01_desc-ICAAveragingWeights_components.nii.gz
@@ -25,6 +26,7 @@ sub-01_desc-globalSignal_map.nii.gz
 sub-01_desc-globalSignal_timeseries.tsv
 sub-01_desc-limited_S0map.nii.gz
 sub-01_desc-limited_T2starmap.nii.gz
+sub-01_desc-optcomAcceptedMIRDenoised_bold.nii.gz
 sub-01_desc-optcomAccepted_bold.nii.gz
 sub-01_desc-denoised_bold.nii.gz
 sub-01_desc-optcomMIRDenoised_bold.nii.gz
@@ -66,6 +68,7 @@ figures/sub-01_carpet_accepted.svg
 figures/sub-01_carpet_rejected.svg
 figures/sub-01_carpet_optcom_nogsr.svg
 figures/sub-01_carpet_denoised_mir.svg
+figures/sub-01_carpet_accepted_mir.svg
 figures/sub-01_comp_000.png
 figures/sub-01_comp_001.png
 figures/sub-01_comp_002.png
