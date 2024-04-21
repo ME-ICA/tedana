@@ -49,19 +49,21 @@ def reshape_niimg(data):
     return fdata
 
 
-def make_adaptive_mask(data, mask=None, threshold=1, methods=["dropout"]):
+def make_adaptive_mask(data, mask, threshold=1, methods=["dropout"]):
     """Make map of `data` specifying longest echo a voxel can be sampled with.
 
     Parameters
     ----------
     data : (S x E x T) array_like
         Multi-echo data array, where `S` is samples, `E` is echos, and `T` is time.
-    mask : :obj:`str` or img_like, optional
-        Binary mask for voxels to consider in TE Dependent ANAlysis. Default is
-        to generate mask from data with good signal across echoes
+    mask : :obj:`str` or img_like
+        Binary mask for voxels to consider in TE Dependent ANAlysis.
+        This must be provided, as the mask is used to identify exemplar voxels.
+        Without a mask limiting the voxels to consider,
+        the adaptive mask will generally select voxels outside the brain as exemplars.
     threshold : :obj:`int`, optional
-        Minimum echo count to retain in the mask. Default is 1, which is
-        equivalent not thresholding.
+        Minimum echo count to retain in the mask.
+        Default is 1, which is equivalent to not thresholding.
     methods : :obj:`list`, optional
         List of methods to use for adaptive mask generation. Default is ["dropout"].
         Valid methods are "decay", "dropout", and "none".
@@ -81,6 +83,7 @@ def make_adaptive_mask(data, mask=None, threshold=1, methods=["dropout"]):
     Dropout
 
     Remove voxels with relatively low mean magnitudes from the mask.
+
     This method uses distributions of values across the mask.
     Therefore, it is sensitive to the quality of the mask.
     A bad mask may result in a bad adaptive mask.
@@ -100,8 +103,13 @@ def make_adaptive_mask(data, mask=None, threshold=1, methods=["dropout"]):
         -   This is the threshold for "good" data.
         -   The 1/3 value is arbitrary.
         -   If there was more than one exemplar voxel, retain the the highest value for each echo.
-    d.  For each voxel, count the number of echoes that have a mean value greater than the
+    d.  For each voxel, identify the last echo with a mean value greater than the
         corresponding echo's threshold.
+
+        -   Preceding echoes (including ones with mean values less than the threshold)
+            are considered "good" data. That means, if echoes 1-3 in a voxel are
+            [good, good, bad] the adaptive mask will assign a 2, and if they are
+            [good, bad, good], the adaptive mask will assign a 3.
 
     Decay
 
@@ -121,6 +129,9 @@ def make_adaptive_mask(data, mask=None, threshold=1, methods=["dropout"]):
         f"An adaptive mask was then generated using the {'+'.join(methods)} method(s), "
         "in which each voxel's value reflects the number of echoes with 'good' data."
     )
+    mask = reshape_niimg(mask).astype(bool)
+    data = data[mask, :, :]
+
     if (methods is None) or (len(methods) == 1 and methods[0].lower() == "none"):
         LGR.warning(
             "No methods provided for adaptive mask generation. "
@@ -139,9 +150,8 @@ def make_adaptive_mask(data, mask=None, threshold=1, methods=["dropout"]):
     n_samples, n_echos, _ = data.shape
     adaptive_masks = []
 
-    # Generate a base adaptive mask that flags any NaNs or negative values
-    # TODO When masking is moved before dropout calc, change to "data <= 0"
-    bad_data_vals = np.isnan(data) + (data < 0)
+    # Generate a base adaptive mask that flags any NaN, zero, or negative values
+    bad_data_vals = np.isnan(data) + (data <= 0)
     good_vox_echoes = 1 - np.any(bad_data_vals, axis=-1).astype(int)
     base_adaptive_mask = np.zeros(n_samples, dtype=int)
     for echo_idx in range(n_echos):
@@ -180,9 +190,19 @@ def make_adaptive_mask(data, mask=None, threshold=1, methods=["dropout"]):
         if lthrs.ndim > 1:
             lthrs = lthrs[:, lthrs.sum(axis=0).argmax()]
 
-        # determine samples where absolute value is greater than echo-specific thresholds
-        # and count # of echos that pass criterion
-        dropout_adaptive_mask = (np.abs(echo_means) > lthrs).sum(axis=-1)
+        LGR.info("Echo-wise intensity thresholds for adaptive mask: %s", lthrs)
+
+        # Find the last good echo for each voxel
+        # Start with every voxel's value==0, increment up the echoes, and
+        # change to a new value every time a later good echo is found
+        dropout_adaptive_mask = np.zeros(n_samples, dtype=np.int16)
+        for echo_idx in range(n_echos):
+            dropout_adaptive_mask[(np.abs(echo_means[:, echo_idx]) > lthrs[echo_idx])] = (
+                echo_idx + 1
+            )
+
+        adaptive_masks.append(dropout_adaptive_mask)
+
         adaptive_masks.append(dropout_adaptive_mask)
 
     if "decay" in methods:
@@ -196,26 +216,21 @@ def make_adaptive_mask(data, mask=None, threshold=1, methods=["dropout"]):
     # Retain the most conservative of the selected adaptive mask estimates
     adaptive_mask = np.minimum.reduce(adaptive_masks)
 
-    if mask is None:
-        # make it a boolean mask to (where we have at least `threshold` echoes with good signal)
-        mask = (adaptive_mask >= threshold).astype(bool)
+    # TODO: Use visual report to make checking the reduced mask easier
+    if np.any(adaptive_mask < threshold):
+        n_bad_voxels = np.sum(adaptive_mask < threshold)
+        LGR.warning(
+            f"{n_bad_voxels} voxels in user-defined mask do not have good signal. "
+            "Removing voxels from mask."
+        )
         adaptive_mask[adaptive_mask < threshold] = 0
-    else:
-        # if the user has supplied a binary mask
-        mask = reshape_niimg(mask).astype(bool)
-        adaptive_mask = adaptive_mask * mask
-        # reduce mask based on adaptive_mask
-        # TODO: Use visual report to make checking the reduced mask easier
-        if np.any(adaptive_mask[mask] < threshold):
-            n_bad_voxels = np.sum(adaptive_mask[mask] < threshold)
-            LGR.warning(
-                f"{n_bad_voxels} voxels in user-defined mask do not have good "
-                "signal. Removing voxels from mask."
-            )
-            adaptive_mask[adaptive_mask < threshold] = 0
-            mask = adaptive_mask.astype(bool)
 
-    return mask, adaptive_mask
+    modified_mask = adaptive_mask.astype(bool)
+
+    adaptive_mask = unmask(adaptive_mask, mask)
+    modified_mask = unmask(modified_mask, mask)
+
+    return modified_mask, adaptive_mask
 
 
 def unmask(data, mask):
