@@ -160,25 +160,27 @@ def minimum_image_regression(
     -----
     Minimum image regression operates by constructing a amplitude-normalized form of the multi-echo
     high Kappa (MEHK) time series from BOLD-like ICA components,
-    and then taking voxel-wise minimum over time.
+    and then taking the voxel-wise minimum over time.
     This "minimum map" serves as a voxel-wise estimate of the T1-like effect in the time series.
     From this minimum map, a T1-like global signal (i.e., a 1D time series) is estimated.
     The component time series in the mixing matrix are then corrected for the T1-like effect by
     regressing out the global signal time series from each.
-    Finally, the multi-echo denoising (MEDN) and MEHK time series are reconstructed from the
+    Finally, the multi-echo denoised (MEDN) and MEHK time series are reconstructed from the
     corrected mixing matrix and are written out to new files.
 
     This function writes out several files:
 
-    ======================    =================================================
-    Filename                  Content
-    ======================    =================================================
-    sphis_hik.nii             T1-like effect
-    hik_ts_OC_MIR.nii         T1-corrected BOLD (high-Kappa) time series
-    dn_ts_OC_MIR.nii          Denoised version of T1-corrected time series
-    betas_hik_OC_MIR.nii      T1 global signal-corrected components
-    meica_mix_MIR.1D          T1 global signal-corrected mixing matrix
-    ======================    =================================================
+    ========================================    =================================================
+    IOGenerator Label                           Content
+    ========================================    =================================================
+    "t1 like img"                               T1-like effect
+    "mir denoised img"                          Denoised version of T1-corrected time series
+    "ICA MIR mixing tsv"                        T1 global signal-corrected mixing matrix
+
+    if io_generator.verbose==True
+    "ICA accepted mir denoised img"             T1-corrected BOLD (high-Kappa) time series
+    "ICA accepted mir component weights img"    T1 global signal-corrected components
+    ========================================    =================================================
 
     References
     ----------
