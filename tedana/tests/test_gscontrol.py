@@ -14,11 +14,7 @@ ref_img = os.path.join(data_dir, "mask.nii.gz")
 
 
 def test_break_gscontrol_raw():
-    """
-    Ensure that gscontrol_raw fails when input data do not have the right.
-
-    shapes.
-    """
+    """Ensure that gscontrol_raw fails when input data do not have the right shapes."""
     n_samples, n_echos, n_vols = 10000, 4, 100
     catd = np.empty((n_samples, n_echos, n_vols))
     optcom = np.empty((n_samples, n_vols))
@@ -34,7 +30,8 @@ def test_break_gscontrol_raw():
             dtrank=4,
         )
     assert str(e_info.value) == (
-        f"First dimensions of catd ({catd.shape[0]}) and optcom ({optcom.shape[0]}) do not match"
+        f"First dimensions of data_cat ({catd.shape[0]}) and data_optcom ({optcom.shape[0]}) "
+        "do not match"
     )
 
     catd = np.empty((n_samples, n_echos + 1, n_vols))
@@ -47,7 +44,7 @@ def test_break_gscontrol_raw():
             dtrank=4,
         )
     assert str(e_info.value) == (
-        f"Second dimension of catd ({catd.shape[1]}) does not match n_echos ({n_echos})"
+        f"Second dimension of data_cat ({catd.shape[1]}) does not match n_echos ({n_echos})"
     )
 
     catd = np.empty((n_samples, n_echos, n_vols))
@@ -61,6 +58,6 @@ def test_break_gscontrol_raw():
             dtrank=4,
         )
     assert str(e_info.value) == (
-        f"Third dimension of catd ({catd.shape[2]}) does not match "
-        f"second dimension of optcom ({optcom.shape[1]})"
+        f"Third dimension of data_cat ({catd.shape[2]}) does not match "
+        f"second dimension of data_optcom ({optcom.shape[1]})"
     )

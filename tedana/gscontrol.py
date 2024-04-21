@@ -132,7 +132,6 @@ def minimum_image_regression(
     mask: np.ndarray,
     comptable: pd.DataFrame,
     io_generator: io.OutputGenerator,
-    verbose: bool = False,
 ):
     """Perform minimum image regression (MIR) to remove T1-like effects from BOLD-like components.
 
@@ -153,8 +152,6 @@ def minimum_image_regression(
         each metric. The index should be the component number.
     io_generator : :obj:`tedana.io.OutputGenerator`
         The output generating object for this workflow
-    verbose : :obj:`bool`, optional
-        If True, save additional outputs. Default: False
 
     Notes
     -----
@@ -236,7 +233,7 @@ def minimum_image_regression(
     mixing_df = pd.DataFrame(data=mixing_not1gs.T, columns=comptable["Component"].values)
     io_generator.save_file(mixing_df, "ICA MIR mixing tsv")
 
-    if verbose:
+    if io_generator.verbose:
         hik_ts = mehk_no_t1_gs * optcom_std  # rescale
         io_generator.save_file(utils.unmask(hik_ts, mask), "ICA accepted mir denoised img")
 
