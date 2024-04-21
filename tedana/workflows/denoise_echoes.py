@@ -7,6 +7,7 @@ import os.path as op
 import sys
 
 import numpy as np
+import pandas as pd
 from scipy import stats
 from threadpoolctl import threadpool_limits
 
@@ -163,7 +164,7 @@ def _get_parser():
     return parser
 
 
-def t2smap_workflow(
+def denoise_echoes_workflow(
     data,
     tes,
     out_dir=".",
@@ -289,7 +290,7 @@ def t2smap_workflow(
         data = [data]
 
     LGR.info(f"Loading input data: {[f for f in data]}")
-    catd, ref_img = io.load_data(data, n_echos=n_echos)
+    data_cat, ref_img = io.load_data(data, n_echos=n_echos)
     io_generator = io.OutputGenerator(
         ref_img,
         convention=convention,
@@ -298,15 +299,15 @@ def t2smap_workflow(
         config="auto",
         make_figures=False,
     )
-    n_samp, n_echos, n_vols = catd.shape
-    LGR.debug(f"Resulting data shape: {catd.shape}")
+    n_samp, n_echos, n_vols = data_cat.shape
+    LGR.debug(f"Resulting data shape: {data_cat.shape}")
 
     if mask is None:
         LGR.info("Computing adaptive mask")
     else:
         LGR.info("Using user-defined mask")
-    mask, masksum = utils.make_adaptive_mask(
-        catd,
+    mask, adaptive_mask = utils.make_adaptive_mask(
+        data_cat,
         mask=mask,
         threshold=1,
         methods=masktype,
@@ -315,11 +316,11 @@ def t2smap_workflow(
     LGR.info("Computing adaptive T2* map")
     if fitmode == "all":
         (t2s_limited, s0_limited, t2s_full, s0_full) = decay.fit_decay(
-            catd, tes, mask, masksum, fittype
+            data_cat, tes, mask, adaptive_mask, fittype
         )
     else:
         (t2s_limited, s0_limited, t2s_full, s0_full) = decay.fit_decay_ts(
-            catd, tes, mask, masksum, fittype
+            data_cat, tes, mask, adaptive_mask, fittype
         )
 
     # set a hard cap for the T2* map/timeseries
@@ -331,15 +332,11 @@ def t2smap_workflow(
 
     LGR.info("Computing optimal combination")
     # optimally combine data
-    data_oc = combine.make_optcom(catd, tes, masksum, t2s=t2s_full, combmode=combmode)
+    data_oc = combine.make_optcom(data_cat, tes, adaptive_mask, t2s=t2s_full, combmode=combmode)
 
     # clean up numerical errors
     for arr in (data_oc, s0_full, t2s_full):
         np.nan_to_num(arr, copy=False)
-
-    if "gsr" in gscontrol:
-        # regress out global signal
-        catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, io_generator)
 
     s0_full[s0_full < 0] = 0
     t2s_full[t2s_full < 0] = 0
@@ -407,8 +404,91 @@ def _main(argv=None):
     n_threads = kwargs.pop("n_threads")
     n_threads = None if n_threads == -1 else n_threads
     with threadpool_limits(limits=n_threads, user_api=None):
-        t2smap_workflow(**kwargs, t2smap_command=t2smap_command)
+        denoise_echoes_workflow(**kwargs, t2smap_command=t2smap_command)
 
 
 if __name__ == "__main__":
     _main()
+
+
+def denoise_echoes(data_cat, data_oc, mask, confounds):
+    LGR.info("Applying amplitude-based T1 equilibration correction")
+    RepLGR.info(
+        "Global signal regression was applied to the multi-echo "
+        "and optimally combined datasets."
+    )
+    n_samples, n_echos, n_volumes = data_cat.shape
+    if data_cat.shape[0] != data_oc.shape[0]:
+        raise ValueError(
+            f"First dimensions of data_cat ({data_cat.shape[0]}) and data_oc ({data_oc.shape[0]}) "
+            "do not match"
+        )
+    elif data_cat.shape[2] != data_oc.shape[1]:
+        raise ValueError(
+            f"Third dimension of data_cat ({data_cat.shape[2]}) does not match second dimension "
+            f"of data_oc ({data_oc.shape[1]})"
+        )
+
+    confound_arrs = []
+    confound_types = []
+    for confound in confounds:
+        if confound.endswith(".tsv"):
+            # One or more time series
+            confound_df = pd.read_table(confound)
+            confound_arr = confound_df.to_numpy()
+            assert confound_arr.shape[0] == n_volumes
+            confound_types.append("temporal")
+        elif confound.endswith(".nii.gz"):
+            confound_arr = utils.reshape_niimg(confound)
+            if confound_arr.ndim == 1:
+                # Spatial map that must be regressed to produce a single time series
+                assert confound_arr.shape[0] == n_samples
+                confound_types.append("spatial")
+
+                # Mask out out-of-brain voxels
+                confound_arr = confound_arr[mask]
+
+                # Find the time course for the spatial map
+                confound_timeseries = np.linalg.lstsq(
+                    np.atleast_2d(confound_arr).T,
+                    data_oc,
+                    rcond=None,
+                )[0]
+                confound_timeseries = stats.zscore(confound_timeseries, axis=None)
+
+            elif confound_arr.ndim == 2:
+                # Voxel-wise regressors
+                assert confound_arr.shape[0] == n_samples
+                assert confound_arr.shape[1] == n_volumes
+                # Mask out out-of-brain voxels
+                confound_arr = confound_arr[mask, ...]
+                confound_types.append("voxelwise")
+
+            else:
+                raise ValueError(f"Unknown shape for confound array: {confound_arr.shape}")
+        else:
+            raise ValueError(f"Unknown file type: {confound}")
+
+        confound_arrs.append(confound_arr)
+
+    # Project global signal out of optimally combined data
+    sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T, rcond=None)[0]
+    tsoc_nogs = (
+        dat
+        - np.dot(np.atleast_2d(sol[dtrank]).T, np.atleast_2d(glbase.T[dtrank]))
+        + temporal_mean[temporal_mean_mask][:, np.newaxis]
+    )
+
+    io_generator.save_file(data_oc, "has gs combined img")
+    dm_optcom = utils.unmask(tsoc_nogs, temporal_mean_mask)
+    io_generator.save_file(dm_optcom, "removed gs combined img")
+
+    # Project glbase out of each echo
+    dm_catd = data_cat.copy()  # don't overwrite data_cat
+    for echo in range(n_echos):
+        dat = dm_catd[:, echo, :][temporal_mean_mask]
+        sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T, rcond=None)[0]
+        e_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T, np.atleast_2d(glbase.T[dtrank]))
+        dm_catd[:, echo, :] = utils.unmask(e_nogs, temporal_mean_mask)
+
+    return dm_catd, dm_optcom
