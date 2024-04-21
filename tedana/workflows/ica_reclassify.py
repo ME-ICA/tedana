@@ -493,7 +493,7 @@ def ica_reclassify_workflow(
             data_optcom=data_oc,
             mixing=mmix,
             mask=mask_denoise,
-            comptabl=comptable,
+            comptable=comptable,
             io_generator=io_generator,
         )
         io_generator.overwrite = False
