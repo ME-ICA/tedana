@@ -27,7 +27,11 @@ def test_break_gscontrol_raw():
     catd = np.empty((n_samples + 1, n_echos, n_vols))
     with pytest.raises(ValueError) as e_info:
         gsc.gscontrol_raw(
-            catd=catd, optcom=optcom, n_echos=n_echos, io_generator=io_generator, dtrank=4
+            data_cat=catd,
+            data_optcom=optcom,
+            n_echos=n_echos,
+            io_generator=io_generator,
+            dtrank=4,
         )
     assert str(e_info.value) == (
         f"First dimensions of catd ({catd.shape[0]}) and optcom ({optcom.shape[0]}) do not match"
@@ -36,7 +40,11 @@ def test_break_gscontrol_raw():
     catd = np.empty((n_samples, n_echos + 1, n_vols))
     with pytest.raises(ValueError) as e_info:
         gsc.gscontrol_raw(
-            catd=catd, optcom=optcom, n_echos=n_echos, io_generator=io_generator, dtrank=4
+            data_cat=catd,
+            data_optcom=optcom,
+            n_echos=n_echos,
+            io_generator=io_generator,
+            dtrank=4,
         )
     assert str(e_info.value) == (
         f"Second dimension of catd ({catd.shape[1]}) does not match n_echos ({n_echos})"
@@ -46,7 +54,11 @@ def test_break_gscontrol_raw():
     optcom = np.empty((n_samples, n_vols + 1))
     with pytest.raises(ValueError) as e_info:
         gsc.gscontrol_raw(
-            catd=catd, optcom=optcom, n_echos=n_echos, io_generator=io_generator, dtrank=4
+            data_cat=catd,
+            data_optcom=optcom,
+            n_echos=n_echos,
+            io_generator=io_generator,
+            dtrank=4,
         )
     assert str(e_info.value) == (
         f"Third dimension of catd ({catd.shape[2]}) does not match "

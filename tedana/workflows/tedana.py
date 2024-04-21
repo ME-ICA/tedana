@@ -654,7 +654,12 @@ def tedana_workflow(
 
     if "gsr" in gscontrol:
         # regress out global signal
-        catd, data_oc = gsc.gscontrol_raw(catd, data_oc, n_echos, io_generator)
+        catd, data_oc = gsc.gscontrol_raw(
+            data_cat=catd,
+            data_optcom=data_oc,
+            n_echos=n_echos,
+            io_generator=io_generator,
+        )
 
     fout = io_generator.save_file(data_oc, "combined img")
     LGR.info(f"Writing optimally combined data set: {fout}")
@@ -829,7 +834,13 @@ def tedana_workflow(
     )
 
     if "mir" in gscontrol:
-        gsc.minimum_image_regression(data_oc, mmix, mask_denoise, comptable, io_generator)
+        gsc.minimum_image_regression(
+            data_optcom=data_oc,
+            mixing=mmix,
+            mask=mask_denoise,
+            comptable=comptable,
+            io_generator=io_generator,
+        )
 
     if verbose:
         io.writeresults_echoes(catd, mmix, mask_denoise, comptable, io_generator)
