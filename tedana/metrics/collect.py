@@ -190,7 +190,7 @@ def generate_metrics(
             maps=metric_maps["map Z"],
             mask=mask,
             ref_img=ref_img,
-            z_thresh=z_thresh,
+            threshold=z_thresh,
         )
 
     if "map FT2 clusterized" in required_metrics:
@@ -200,7 +200,7 @@ def generate_metrics(
             maps=metric_maps["map FT2"],
             mask=mask,
             ref_img=ref_img,
-            f_thresh=f_thresh,
+            threshold=f_thresh,
         )
 
     if "map FS0 clusterized" in required_metrics:
@@ -210,7 +210,7 @@ def generate_metrics(
             maps=metric_maps["map FS0"],
             mask=mask,
             ref_img=ref_img,
-            f_thresh=f_thresh,
+            threshold=f_thresh,
         )
 
     # Intermediate metrics
