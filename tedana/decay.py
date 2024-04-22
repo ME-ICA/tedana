@@ -522,12 +522,13 @@ def rmse_of_fit_decay_ts(
         elif fitmode == "fit":
             s0_echo = s0[use_vox, :]
             t2s_echo = t2s[use_vox, :]
-        # TODO add an else if fitmode is neither.
-        # TODO Might also want to check if s0 and t2 are the right dimensions for fitmode option
+        else:
+            raise ValueError(f"Unknown fitmode option {fitmode}")
 
         predicted_data = np.full([use_vox.sum(), n_good_echoes, n_vols], np.nan, dtype=np.float32)
         # Need to loop by echo since monoexponential can take either single vals for s0 and t2star
-        #   or a single TE value. We could expand that func, but this is a functional solution
+        #   or a single TE value.
+        # We could expand that func, but this is a functional solution
         for echo_num in range(n_good_echoes):
             predicted_data[:, echo_num, :] = monoexponential(
                 tes=tes[echo_num],
