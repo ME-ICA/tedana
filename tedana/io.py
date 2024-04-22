@@ -658,7 +658,7 @@ def writeresults(ts, mask, comptable, mmix, io_generator):
     acc = comptable[comptable.classification == "accepted"].index.values
     write_split_ts(ts, mmix, mask, comptable, io_generator)
 
-    ts_pes = get_coeffs(ts, mmix, mask)
+    ts_pes = get_coeffs(ts, mmix, mask, add_const=True)
     fout = io_generator.save_file(ts_pes, "ICA components img")
     LGR.info(f"Writing full ICA coefficient feature set: {fout}")
 
@@ -829,7 +829,7 @@ def split_ts(data, mmix, mask, comptable):
     """
     acc = comptable[comptable.classification == "accepted"].index.values
 
-    cbetas = get_coeffs(data - data.mean(axis=-1, keepdims=True), mmix, mask)
+    cbetas = get_coeffs(data, mmix, mask, add_const=True)
     betas = cbetas[mask]
     if len(acc) != 0:
         hikts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
