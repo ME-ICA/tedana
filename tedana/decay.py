@@ -4,6 +4,7 @@ import logging
 from typing import List, Literal, Tuple
 
 import numpy as np
+import numpy.matlib
 import scipy
 from scipy import stats
 from tqdm.auto import tqdm
@@ -516,8 +517,8 @@ def rmse_of_fit_decay_ts(
         use_vox = adaptive_mask == n_good_echoes
         data_echo = data[use_vox, :n_good_echoes, :]
         if fitmode == "all":
-            s0_echo = np.matlib.repmat(s0[use_vox].T, n_vols, 1).T
-            t2s_echo = np.matlib.repmat(t2s[use_vox], n_vols, 1).T
+            s0_echo = numpy.matlib.repmat(s0[use_vox].T, n_vols, 1).T
+            t2s_echo = numpy.matlib.repmat(t2s[use_vox], n_vols, 1).T
         elif fitmode == "fit":
             s0_echo = s0[use_vox, :]
             t2s_echo = t2s[use_vox, :]
