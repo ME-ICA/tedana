@@ -137,7 +137,7 @@ def calculate_f_maps(
     adaptive_mask: np.ndarray,
     tes: np.ndarray,
     f_max: float = 500,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> typing.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Calculate pseudo-F-statistic maps for TE-dependence and -independence models.
 
     Parameters
@@ -351,7 +351,7 @@ def calculate_dependence_metrics(
     f_t2_maps: np.ndarray,
     f_s0_maps: np.ndarray,
     z_maps: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> typing.Tuple[np.ndarray, np.ndarray]:
     """Calculate Kappa and Rho metrics from F-statistic maps.
 
     Just a weighted average over voxels.
@@ -464,7 +464,7 @@ def compute_signal_minus_noise_z(
     z_clmaps: np.ndarray,
     f_t2_maps: np.ndarray,
     z_thresh: float = 1.95,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> typing.Tuple[np.ndarray, np.ndarray]:
     """Compare signal and noise z-statistic distributions with a two-sample t-test.
 
     Divide voxel-level thresholded F-statistic maps into distributions of
@@ -532,7 +532,7 @@ def compute_signal_minus_noise_t(
     z_clmaps: np.ndarray,
     f_t2_maps: np.ndarray,
     z_thresh: float = 1.95,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> typing.Tuple[np.ndarray, np.ndarray]:
     """Compare signal and noise t-statistic distributions with a two-sample t-test.
 
     Divide voxel-level thresholded F-statistic maps into distributions of
