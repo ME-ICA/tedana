@@ -307,6 +307,7 @@ def denoise_echoes_workflow(
         LGR.info("Computing adaptive mask")
     else:
         LGR.info("Using user-defined mask")
+
     mask, adaptive_mask = utils.make_adaptive_mask(
         data_cat,
         mask=mask,
@@ -342,20 +343,21 @@ def denoise_echoes_workflow(
     s0_full[s0_full < 0] = 0
     t2s_full[t2s_full < 0] = 0
 
-    io_generator.save_file(
-        utils.millisec2sec(t2s_full),
-        "t2star img",
-    )
+    io_generator.save_file(utils.millisec2sec(t2s_full), "t2star img")
     io_generator.save_file(s0_full, "s0 img")
-    io_generator.save_file(
-        utils.millisec2sec(t2s_limited),
-        "limited t2star img",
-    )
-    io_generator.save_file(
-        s0_limited,
-        "limited s0 img",
-    )
+    io_generator.save_file(utils.millisec2sec(t2s_limited), "limited t2star img")
+    io_generator.save_file(s0_limited, "limited s0 img")
     io_generator.save_file(data_oc, "combined img")
+
+    if confounds is not None:
+        data_cat_denoised, data_optcom_denoised = denoise_echoes(
+            data_cat=data_cat,
+            data_oc=data_oc,
+            mask=mask,
+            confounds=confounds,
+        )
+        io_generator.save_file(data_cat_denoised, "echo img")
+        io_generator.save_file(data_optcom_denoised, "optcom img")
 
     # Write out BIDS-compatible description file
     derivative_metadata = {
@@ -413,11 +415,12 @@ if __name__ == "__main__":
 
 
 def denoise_echoes(
+    *,
     data_cat: np.ndarray,
     data_oc: np.ndarray,
     mask: np.ndarray,
     confounds: dict[str, str],
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, pd.DataFrame]:
     """Denoise echoes using external regressors.
 
     TODO: Calculate confound-wise echo-dependence metrics.
@@ -440,6 +443,8 @@ def denoise_echoes(
         Denoised concatenated data across echoes.
     data_optcom_denoised : :obj:`numpy.ndarray` of shape (n_samples, n_volumes)
         Denoised optimally combined data.
+    metrics : :obj:`pandas.DataFrame` of shape (n_volumes, n_confounds)
+        Metrics of confound-wise echo-dependence.
     """
     LGR.info("Applying a priori confound regression")
     RepLGR.info("Confounds were regressed out of the multi-echo and optimally combined datasets.")
@@ -521,6 +526,9 @@ def denoise_echoes(
         betas = np.linalg.lstsq(confounds_df.values, data_optcom_denoised.T, rcond=None)[0]
         data_optcom_denoised -= np.dot(np.atleast_2d(betas).T, confounds_df.values)
 
+    # Add the temporal mean back
+    data_optcom_denoised += temporal_mean[mask, np.newaxis]
+
     # io_generator.save_file(data_oc, "has gs combined img")
     data_optcom_denoised = utils.unmask(data_optcom_denoised, mask)
     # io_generator.save_file(data_optcom_denoised, "removed regressors combined img")
@@ -529,6 +537,9 @@ def denoise_echoes(
     data_cat_denoised = data_cat.copy()  # don't overwrite data_cat
     for echo in range(n_echos):
         echo_denoised = data_cat_denoised[:, echo, :][mask]
+        # Remove the temporal mean
+        temporal_mean = echo_denoised.mean(axis=-1)
+        echo_denoised -= temporal_mean
         if voxelwise_confounds:
             for i_voxel in trange(echo_denoised.shape[0], desc=f"Denoise echo {echo + 1}"):
                 design_matrix = confounds_df.copy()
@@ -541,6 +552,12 @@ def denoise_echoes(
             betas = np.linalg.lstsq(confounds_df.values, echo_denoised.T, rcond=None)[0]
             echo_denoised -= np.dot(np.atleast_2d(betas).T, confounds_df.values)
 
+        # Add the temporal mean back
+        echo_denoised += temporal_mean
+
         data_cat_denoised[:, echo, :] = utils.unmask(echo_denoised, mask)
 
-    return data_cat_denoised, data_optcom_denoised
+    # TODO: Calculate metrics of confound-wise echo-dependence
+    metrics = pd.DataFrame()
+
+    return data_cat_denoised, data_optcom_denoised, metrics
