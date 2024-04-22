@@ -519,7 +519,7 @@ def rmse_of_fit_decay_ts(
         if fitmode == "all":
             s0_echo = numpy.matlib.repmat(s0[use_vox].T, n_vols, 1).T
             t2s_echo = numpy.matlib.repmat(t2s[use_vox], n_vols, 1).T
-        elif fitmode == "fit":
+        elif fitmode == "ts":
             s0_echo = s0[use_vox, :]
             t2s_echo = t2s[use_vox, :]
         else:
