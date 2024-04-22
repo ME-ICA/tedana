@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from threadpoolctl import threadpool_limits
+from tqdm import trange
 
 from tedana import __version__, combine, decay, io, utils
 from tedana.workflows.parser_utils import is_valid_file
@@ -411,12 +412,37 @@ if __name__ == "__main__":
     _main()
 
 
-def denoise_echoes(data_cat, data_oc, mask, confounds):
-    LGR.info("Applying amplitude-based T1 equilibration correction")
-    RepLGR.info(
-        "Global signal regression was applied to the multi-echo "
-        "and optimally combined datasets."
-    )
+def denoise_echoes(
+    data_cat: np.ndarray,
+    data_oc: np.ndarray,
+    mask: np.ndarray,
+    confounds: dict[str, str],
+) -> tuple[np.ndarray, np.ndarray]:
+    """Denoise echoes using external regressors.
+
+    TODO: Calculate confound-wise echo-dependence metrics.
+
+    Parameters
+    ----------
+    data_cat : :obj:`numpy.ndarray` of shape (n_samples, n_echos, n_volumes)
+        Concatenated data across echoes.
+    data_oc : :obj:`numpy.ndarray` of shape (n_samples, n_volumes)
+        Optimally combined data across echoes.
+    mask : :obj:`numpy.ndarray` of shape (n_samples,)
+        Binary mask of voxels to include in TE Dependent ANAlysis.
+    confounds : :obj:`dict`
+        Files defining confounds to regress from the echo-wise data.
+        Keys indicate the names to use for the confounds.
+
+    Returns
+    -------
+    data_cat_denoised : :obj:`numpy.ndarray` of shape (n_samples, n_echos, n_volumes)
+        Denoised concatenated data across echoes.
+    data_optcom_denoised : :obj:`numpy.ndarray` of shape (n_samples, n_volumes)
+        Denoised optimally combined data.
+    """
+    LGR.info("Applying a priori confound regression")
+    RepLGR.info("Confounds were regressed out of the multi-echo and optimally combined datasets.")
     n_samples, n_echos, n_volumes = data_cat.shape
     if data_cat.shape[0] != data_oc.shape[0]:
         raise ValueError(
@@ -429,21 +455,20 @@ def denoise_echoes(data_cat, data_oc, mask, confounds):
             f"of data_oc ({data_oc.shape[1]})"
         )
 
-    confound_arrs = []
-    confound_types = []
-    for confound in confounds:
-        if confound.endswith(".tsv"):
+    confound_dfs = []
+    voxelwise_confounds = {}
+    for confound_name, confound_file in confounds.items():
+        if confound_file.endswith(".tsv"):
             # One or more time series
-            confound_df = pd.read_table(confound)
-            confound_arr = confound_df.to_numpy()
-            assert confound_arr.shape[0] == n_volumes
-            confound_types.append("temporal")
-        elif confound.endswith(".nii.gz"):
-            confound_arr = utils.reshape_niimg(confound)
+            confound_df = pd.read_table(confound_file)
+            confound_df = confound_df.add_suffix(f"_{confound_name}")
+            assert confound_df.shape[0] == n_volumes
+            confound_dfs.append(confound_df)
+        elif confound_file.endswith(".nii.gz"):
+            confound_arr = utils.reshape_niimg(confound_file)
             if confound_arr.ndim == 1:
                 # Spatial map that must be regressed to produce a single time series
                 assert confound_arr.shape[0] == n_samples
-                confound_types.append("spatial")
 
                 # Mask out out-of-brain voxels
                 confound_arr = confound_arr[mask]
@@ -455,6 +480,9 @@ def denoise_echoes(data_cat, data_oc, mask, confounds):
                     rcond=None,
                 )[0]
                 confound_timeseries = stats.zscore(confound_timeseries, axis=None)
+                confound_df = pd.DataFrame(confound_timeseries.T, columns=[confound_name])
+                assert confound_df.shape[0] == n_volumes
+                confound_dfs.append(confound_df)
 
             elif confound_arr.ndim == 2:
                 # Voxel-wise regressors
@@ -462,33 +490,57 @@ def denoise_echoes(data_cat, data_oc, mask, confounds):
                 assert confound_arr.shape[1] == n_volumes
                 # Mask out out-of-brain voxels
                 confound_arr = confound_arr[mask, ...]
-                confound_types.append("voxelwise")
+                voxelwise_confounds[confound_name] = confound_arr
 
             else:
                 raise ValueError(f"Unknown shape for confound array: {confound_arr.shape}")
         else:
-            raise ValueError(f"Unknown file type: {confound}")
+            raise ValueError(f"Unknown file type: {confound_file}")
 
-        confound_arrs.append(confound_arr)
+    if confound_dfs:
+        confounds_df = pd.concat(confound_dfs, axis=1)
+        confounds_df = confounds_df.fillna(0)
+    else:
+        confounds_df = pd.DataFrame(index=range(n_volumes))
 
-    # Project global signal out of optimally combined data
-    sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T, rcond=None)[0]
-    tsoc_nogs = (
-        dat
-        - np.dot(np.atleast_2d(sol[dtrank]).T, np.atleast_2d(glbase.T[dtrank]))
-        + temporal_mean[temporal_mean_mask][:, np.newaxis]
-    )
+    # Project confounds out of optimally combined data
+    temporal_mean = data_oc.mean(axis=-1)  # temporal mean
+    data_optcom_denoised = data_oc[mask] - temporal_mean[mask, np.newaxis]
+    if voxelwise_confounds:
+        for i_voxel in trange(data_optcom_denoised.shape[0], desc="Denoise optimally combined"):
+            design_matrix = confounds_df.copy()
+            for confound_name, confound_arr in voxelwise_confounds.items():
+                design_matrix[confound_name] = confound_arr[i_voxel, :]
 
-    io_generator.save_file(data_oc, "has gs combined img")
-    dm_optcom = utils.unmask(tsoc_nogs, temporal_mean_mask)
-    io_generator.save_file(dm_optcom, "removed gs combined img")
+            betas = np.linalg.lstsq(design_matrix.values, data_optcom_denoised.T, rcond=None)[0]
+            data_optcom_denoised[i_voxel, :] -= np.dot(
+                np.atleast_2d(betas).T,
+                design_matrix.values,
+            )
+    else:
+        betas = np.linalg.lstsq(confounds_df.values, data_optcom_denoised.T, rcond=None)[0]
+        data_optcom_denoised -= np.dot(np.atleast_2d(betas).T, confounds_df.values)
 
-    # Project glbase out of each echo
-    dm_catd = data_cat.copy()  # don't overwrite data_cat
+    # io_generator.save_file(data_oc, "has gs combined img")
+    data_optcom_denoised = utils.unmask(data_optcom_denoised, mask)
+    # io_generator.save_file(data_optcom_denoised, "removed regressors combined img")
+
+    # Project confounds out of each echo
+    data_cat_denoised = data_cat.copy()  # don't overwrite data_cat
     for echo in range(n_echos):
-        dat = dm_catd[:, echo, :][temporal_mean_mask]
-        sol = np.linalg.lstsq(np.atleast_2d(glbase), dat.T, rcond=None)[0]
-        e_nogs = dat - np.dot(np.atleast_2d(sol[dtrank]).T, np.atleast_2d(glbase.T[dtrank]))
-        dm_catd[:, echo, :] = utils.unmask(e_nogs, temporal_mean_mask)
+        echo_denoised = data_cat_denoised[:, echo, :][mask]
+        if voxelwise_confounds:
+            for i_voxel in trange(echo_denoised.shape[0], desc=f"Denoise echo {echo + 1}"):
+                design_matrix = confounds_df.copy()
+                for confound_name, confound_arr in voxelwise_confounds.items():
+                    design_matrix[confound_name] = confound_arr[i_voxel, :]
 
-    return dm_catd, dm_optcom
+                betas = np.linalg.lstsq(design_matrix.values, echo_denoised.T, rcond=None)[0]
+                echo_denoised[i_voxel, :] -= np.dot(np.atleast_2d(betas).T, design_matrix.values)
+        else:
+            betas = np.linalg.lstsq(confounds_df.values, echo_denoised.T, rcond=None)[0]
+            echo_denoised -= np.dot(np.atleast_2d(betas).T, confounds_df.values)
+
+        data_cat_denoised[:, echo, :] = utils.unmask(echo_denoised, mask)
+
+    return data_cat_denoised, data_optcom_denoised
