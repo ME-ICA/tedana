@@ -50,14 +50,14 @@ def calculate_betas(
 
     Parameters
     ----------
-    data : (M x [E] x T) array_like
+    data : (M [x E] x T) array_like
         Data to calculate betas for
     mixing : (T x C) array_like
         Mixing matrix
 
     Returns
     -------
-    betas : (M x [E] x C) array_like
+    betas : (M [x E] x C) array_like
         Unstandardized parameter estimates
     """
     if len(data.shape) == 2:
