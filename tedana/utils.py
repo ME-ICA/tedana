@@ -8,19 +8,9 @@ import warnings
 
 import nibabel as nib
 import numpy as np
-from bokeh import __version__ as bokeh_version
-from mapca import __version__ as mapca_version
-from matplotlib import __version__ as matplotlib_version
-from nibabel import __version__ as nibabel_version
-from nilearn import __version__ as nilearn_version
 from nilearn._utils import check_niimg
-from numpy import __version__ as numpy_version
-from pandas import __version__ as pandas_version
-from scipy import __version__ as scipy_version
 from scipy import ndimage
-from sklearn import __version__ as sklearn_version
 from sklearn.utils import check_array
-from threadpoolctl import __version__ as threadpoolctl_version
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -579,6 +569,17 @@ def get_system_version_info():
         and python and python library versioning info for key
         modules used by tedana.
     """
+    from bokeh import __version__ as bokeh_version
+    from mapca import __version__ as mapca_version
+    from matplotlib import __version__ as matplotlib_version
+    from nibabel import __version__ as nibabel_version
+    from nilearn import __version__ as nilearn_version
+    from numpy import __version__ as numpy_version
+    from pandas import __version__ as pandas_version
+    from scipy import __version__ as scipy_version
+    from sklearn import __version__ as sklearn_version
+    from threadpoolctl import __version__ as threadpoolctl_version
+
     system_info = platform.uname()
 
     python_libraries = {
