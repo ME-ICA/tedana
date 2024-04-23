@@ -569,7 +569,6 @@ def get_system_version_info():
         and python and python library versioning info for key
         modules used by tedana.
     """
-    from bokeh import __version__ as bokeh_version
     from mapca import __version__ as mapca_version
     from matplotlib import __version__ as matplotlib_version
     from nibabel import __version__ as nibabel_version
@@ -583,7 +582,6 @@ def get_system_version_info():
     system_info = platform.uname()
 
     python_libraries = {
-        "bokeh": bokeh_version,
         "matplotlib": matplotlib_version,
         "mapca": mapca_version,
         "nibabel": nibabel_version,
@@ -594,6 +592,13 @@ def get_system_version_info():
         "scipy": scipy_version,
         "threadpoolctl": threadpoolctl_version,
     }
+
+    try:
+        from bokeh import __version__ as bokeh_version
+
+        python_libraries["bokeh"] = bokeh_version
+    except ImportError:
+        pass
 
     return {
         "System": system_info.system,
