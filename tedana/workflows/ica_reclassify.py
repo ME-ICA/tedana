@@ -255,9 +255,9 @@ def ica_reclassify_workflow(
     ----------
     registry : :obj:`str`
         The previously run registry as a JSON file.
-    accept: :obj:`list`
+    accept : :obj:`list`
         A list of integer values of components to accept in this workflow.
-    reject: :obj:`list`
+    reject : :obj:`list`
         A list of integer values of components to reject in this workflow.
     out_dir : :obj:`str`, optional
         Output directory.
