@@ -20,11 +20,10 @@ desc-PCA_metrics.tsv
 desc-PCA_mixing.tsv
 desc-PCA_stat-z_components.nii.gz
 desc-adaptiveGoodSignal_mask.nii.gz
-desc-optcomAccepted_bold.nii.gz
-desc-optcomDenoised_bold.nii.gz
-desc-optcomRejected_bold.nii.gz
+desc-denoised_bold.nii.gz
 desc-optcom_bold.nii.gz
 figures
+figures/adaptive_mask.svg
 figures/carpet_optcom.svg
 figures/carpet_denoised.svg
 figures/carpet_accepted.svg
@@ -100,6 +99,10 @@ figures/comp_067.png
 figures/comp_068.png
 figures/pca_criteria.png
 figures/pca_variance_explained.png
+figures/s0_brain.svg
+figures/s0_histogram.svg
+figures/t2star_brain.svg
+figures/t2star_histogram.svg
 references.bib
 report.txt
 tedana_report.html

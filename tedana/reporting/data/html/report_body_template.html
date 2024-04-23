@@ -1,4 +1,9 @@
 <style type="text/css">
+  .brainplot {
+    width: 50%;
+    height: auto;
+  }
+
   .report {
     display: flex;
     flex-direction: column;
@@ -22,6 +27,10 @@
     font-size: larger;
     float: left;
     width: 80%;
+  }
+
+  .references ul {
+    line-height: 150%;
   }
 
   .carpet-wrapper {
@@ -170,17 +179,42 @@
       <img id="imgCarpetPlot" src="$initialCarpet" />
     </div>
   </div>
-  <div class="info">
-    <h1>Info</h1>
-    $info
+</div>
+<div class="carpet-plots">
+  <h1>Adaptive mask</h1>
+  <img id="adaptiveMask" src="$adaptiveMask" style="height: 500px" />
+</div>
+<div class="carpet-plots">
+  <h1>T2* and S0</h1>
+  <h2>T2*</h2>
+  <div class="carpet-plots-image">
+    <img id="t2starBrainPlot" src="$t2starBrainPlot" style="height: 500px" />
   </div>
-  <div class="about">
-    <h1>About tedana</h1>
-    $about
-
-    <h1>References</h1>
+  <div class="carpet-plots-image">
+    <img id="t2starHistogram" src="$t2starHistogram" style="height: 500px" />
+  </div>
+  <h2>S0</h2>
+  <div class="carpet-plots-image">
+    <img id="s0BrainPlot" src="$s0BrainPlot" style="height: 500px" />
+  </div>
+  <div class="carpet-plots-image">
+    <img id="s0Histogram" src="$s0Histogram" style="height: 500px" />
+  </div>
+</div>
+</div>
+<div class="info">
+  <h1>Info</h1>
+  $info
+</div>
+<div class="about">
+  <h1>About tedana</h1>
+  $about
+</div>
+<div class="content references">
+  <h1>References</h1>
+  <ul>
     $references
-  </div>
+  </ul>
 </div>
 
 <script type="text/javascript">

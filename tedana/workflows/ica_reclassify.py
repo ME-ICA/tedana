@@ -1,4 +1,5 @@
 """Run the reclassification workflow for a previous tedana run."""
+
 import argparse
 import datetime
 import logging
@@ -49,7 +50,7 @@ def _get_parser():
         nargs="+",
         help=(
             "Component indices to accept (zero-indexed)."
-            "Supply as a comma-delimited liist with no spaces, "
+            "Supply as a comma-delimited list with no spaces, "
             "as a csv file, or as a text file with an allowed "
             f"delimiter {repr(ALLOWED_COMPONENT_DELIMITERS)}."
         ),
@@ -60,8 +61,8 @@ def _get_parser():
         dest="manual_reject",
         nargs="+",
         help=(
-            "Component indices to accept (zero-indexed)."
-            "Supply as a comma-delimited liist with no spaces, "
+            "Component indices to reject (zero-indexed)."
+            "Supply as a comma-delimited list with no spaces, "
             "as a csv file, or as a text file with an allowed "
             f"delimiter {repr(ALLOWED_COMPONENT_DELIMITERS)}."
         ),
@@ -150,7 +151,11 @@ def _get_parser():
 
 def _main(argv=None):
     """Run the ica_reclassify workflow."""
-    reclassify_command = "ica_reclassify " + " ".join(sys.argv[1:])
+    if argv:
+        # relevant for tests or if CLI called using ica_reclassify_cli._main(args)
+        reclassify_command = "ica_reclassify " + " ".join(argv)
+    else:
+        reclassify_command = "ica_reclassify " + " ".join(sys.argv[1:])
 
     args = _get_parser().parse_args(argv)
 
@@ -197,6 +202,9 @@ def _parse_manual_list(manual_list):
     """
     if not manual_list:
         manual_nums = []
+    elif op.exists(op.expanduser(str(manual_list[0]).strip(" "))):
+        # filename was given
+        manual_nums = fname_to_component_list(op.expanduser(str(manual_list[0]).strip(" ")))
     elif len(manual_list) > 1:
         # Assume that this is a list of integers, but raise error if not
         manual_nums = []
@@ -208,9 +216,6 @@ def _parse_manual_list(manual_list):
                     "_parse_manual_list expected a list of integers, "
                     f"but the input is {manual_list}"
                 )
-    elif op.exists(op.expanduser(str(manual_list[0]).strip(" "))):
-        # filename was given
-        manual_nums = fname_to_component_list(op.expanduser(str(manual_list[0]).strip(" ")))
     elif isinstance(manual_list[0], str):
         # arbitrary string was given, length of list is 1
         manual_nums = str_to_component_list(manual_list[0])
@@ -299,6 +304,27 @@ def ica_reclassify_workflow(
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
 
+    # boilerplate
+    prefix = io._infer_prefix(prefix)
+    basename = f"{prefix}report"
+    extension = "txt"
+    repname = op.join(out_dir, (basename + "." + extension))
+    bibtex_file = op.join(out_dir, f"{prefix}references.bib")
+    repex = op.join(out_dir, (basename + "*"))
+    previousreps = glob(repex)
+    previousreps.sort(reverse=True)
+    for f in previousreps:
+        previousparts = op.splitext(f)
+        newname = previousparts[0] + "_old" + previousparts[1]
+        os.rename(f, newname)
+
+    # create logfile name
+    basename = "tedana_"
+    extension = "tsv"
+    start_time = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
+    logname = op.join(out_dir, (basename + start_time + "." + extension))
+    utils.setup_loggers(logname=logname, repname=repname, quiet=quiet, debug=debug)
+
     # If accept and reject are a list of integers, they stay the same
     # If they are a filename, load numbers of from
     # If they are a string of values, convert to a list of ints
@@ -327,28 +353,7 @@ def ica_reclassify_workflow(
             in_both.append(a)
 
     if len(in_both) != 0:
-        raise ValueError("The following components were both accepted and rejected: " f"{in_both}")
-
-    # boilerplate
-    prefix = io._infer_prefix(prefix)
-    basename = f"{prefix}report"
-    extension = "txt"
-    repname = op.join(out_dir, (basename + "." + extension))
-    bibtex_file = op.join(out_dir, f"{prefix}references.bib")
-    repex = op.join(out_dir, (basename + "*"))
-    previousreps = glob(repex)
-    previousreps.sort(reverse=True)
-    for f in previousreps:
-        previousparts = op.splitext(f)
-        newname = previousparts[0] + "_old" + previousparts[1]
-        os.rename(f, newname)
-
-    # create logfile name
-    basename = "tedana_"
-    extension = "tsv"
-    start_time = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
-    logname = op.join(out_dir, (basename + start_time + "." + extension))
-    utils.setup_loggers(logname=logname, repname=repname, quiet=quiet, debug=debug)
+        raise ValueError(f"The following components were both accepted and rejected: {in_both}")
 
     # Save command into sh file, if the command-line interface was used
     # TODO: use io_generator to save command
@@ -364,8 +369,7 @@ def ica_reclassify_workflow(
         reclassify_command = f"ica_reclassify_workflow({variables})"
 
     # Save system info to json
-    info_dict = utils.get_system_info()
-    info_dict["Python"] = sys.version
+    info_dict = utils.get_system_version_info()
     info_dict["Command"] = reclassify_command
 
     LGR.info(f"Using output directory: {out_dir}")
@@ -400,12 +404,7 @@ def ica_reclassify_workflow(
     )
 
     # Make a new selector with the added files
-    selector = selection.component_selector.ComponentSelector(
-        previous_tree_fname,
-        comptable,
-        cross_component_metrics=xcomp,
-        status_table=status_table,
-    )
+    selector = selection.component_selector.ComponentSelector(previous_tree_fname)
 
     if accept:
         selector.add_manual(accept, "accepted")
@@ -413,8 +412,12 @@ def ica_reclassify_workflow(
     if reject:
         selector.add_manual(reject, "rejected")
 
-    selector.select()
-    comptable = selector.component_table
+    selector.select(
+        comptable,
+        cross_component_metrics=xcomp,
+        status_table=status_table,
+    )
+    comptable = selector.component_table_
 
     # NOTE: most of these will be identical to previous, but this makes
     # things easier for programs which will view the data after running.
@@ -438,7 +441,7 @@ def ica_reclassify_workflow(
     # Save component selector and tree
     selector.to_files(io_generator)
 
-    if selector.n_accepted_comps == 0:
+    if selector.n_accepted_comps_ == 0:
         LGR.warning(
             "No accepted components remaining after manual classification! "
             "Please check data and results!"
@@ -447,8 +450,8 @@ def ica_reclassify_workflow(
     mmix_orig = mmix.copy()
     # TODO: make this a function
     if tedort:
-        comps_accepted = selector.accepted_comps
-        comps_rejected = selector.rejected_comps
+        comps_accepted = selector.accepted_comps_
+        comps_rejected = selector.rejected_comps_
         acc_ts = mmix[:, comps_accepted]
         rej_ts = mmix[:, comps_rejected]
         betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
@@ -457,7 +460,7 @@ def ica_reclassify_workflow(
         mmix[:, comps_rejected] = resid
         comp_names = [
             io.add_decomp_prefix(comp, prefix="ica", max_value=comptable.index.max())
-            for comp in range(selector.n_comps)
+            for comp in range(selector.n_comps_)
         ]
         mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
         io_generator.save_file(mixing_df, "ICA orthogonalized mixing tsv")
@@ -514,6 +517,7 @@ def ica_reclassify_workflow(
                     "Version": info_dict["Version"],
                 },
                 "Python": info_dict["Python"],
+                "Python_Libraries": info_dict["Python_Libraries"],
                 "Command": info_dict["Command"],
             }
         ],
@@ -543,7 +547,7 @@ def ica_reclassify_workflow(
             gscontrol.append("gsr")
         if mir:
             gscontrol.append("mir")
-        gscontrol = None if gscontrol is [] else gscontrol
+        gscontrol = None if gscontrol == [] else gscontrol
 
         reporting.static_figures.carpet_plot(
             optcom_ts=data_oc,

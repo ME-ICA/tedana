@@ -1,4 +1,5 @@
 """Test workflow parser utility functions."""
+
 import argparse
 
 import pytest

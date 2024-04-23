@@ -40,7 +40,7 @@ Key: Filename                                                                Con
 "data description json": dataset_description.json                            Top-level metadata for the workflow.
 tedana_report.html                                                           The interactive HTML report.
 "combined img": desc-optcom_bold.nii.gz                                      Optimally combined time series.
-"denoised ts img": desc-optcomDenoised_bold.nii.gz                           Denoised optimally combined time series. Recommended
+"denoised ts img": desc-denoised_bold.nii.gz                                 Denoised optimally combined time series. Recommended
                                                                              dataset for analysis.
 "adaptive mask img": desc-adaptiveGoodSignal_mask.nii.gz                     Integer-valued mask used in the workflow, where
                                                                              each voxel's value corresponds to the number of good
@@ -258,23 +258,24 @@ component and **rejected** components are be removed through denoising.
 ``classification_tags`` provide more information on why
 components received a specific classification.
 Each component can receive more than one tag.
-The following tags are included depending if ``--tree`` is "minimal", "kundu",
-or if ``ica_reclassify`` is run.
+The following tags are included depending if ``--tree`` is "minimal", "meica",
+"tedana_orig" or if ``ica_reclassify`` is run. The same tags are included
+for "meica" and "tedana_orig"
 
 ===================== ================  ========================================
 Tag                   Included in Tree  Explanation
 ===================== ================  ========================================
-Likely BOLD           minimal,kundu     Accepted because likely to include some
+Likely BOLD           minimal,meica     Accepted because likely to include some
                                         BOLD signal
-Unlikely BOLD         minimal,kundu     Rejected because likely to include a
+Unlikely BOLD         minimal,meica     Rejected because likely to include a
                                         lot of non-BOLD signal
-Low variance          minimal,kundu     Accepted because too low variance to
+Low variance          minimal,meica     Accepted because too low variance to
                                         lose a degree-of-freedom by rejecting
-Less likely BOLD      kundu             Rejected based on some edge criteria
+Less likely BOLD      meica             Rejected based on some edge criteria
                                         based on relative rankings of components
-Accept borderline     kundu             Accepted based on some edge criteria
+Accept borderline     meica             Accepted based on some edge criteria
                                         based on relative rankings of components
-No provisional accept kundu             Accepted because because kundu tree did
+No provisional accept meica             Accepted because because meica tree did
                                         not find any components to consider
                                         accepting so the conservative "failure"
                                         case is accept everything rather than
@@ -528,6 +529,41 @@ should not overly focus on carpet plots and should examine these results in cont
 
 
 **************************
+Adaptive Mask Summary Plot
+**************************
+
+Below the carpet plots is a summary plot of the adaptive mask.
+
+This figure overlays contours reflecting the boundaries of the following masks onto the mean optimally combined data:
+
+- **Base**: The base mask, either provided by the user or generated automatically using ``compute_epi_mask``.
+- **Optimal combination**: The mask used for optimal combination and denoising.
+  This corresponds to values greater than or equal to 1 (at least 1 good echo) in the adaptive mask.
+- **Classification**: The mask used for the decomposition and component classification steps.
+  This corresponds to values greather than or equal to 3 (at least 3 good echoes) in the adaptive mask.
+
+.. image:: /_static/adaptive_mask.png
+  :align: center
+  :height: 400px
+
+
+************************
+T2* and S0 Summary Plots
+************************
+
+Below the adaptive mask plot are summary plots for the T2* and S0 maps.
+Each map has two figures: a spatial map of the values and a histogram of the voxelwise values.
+The T2* map should look similar to T2 maps and be brightest in the ventricles and darkest in areas of largest susceptibility.
+The S0 map should roughly follow the signal-to-noise ratio and will be brightest near the surface near RF coils.
+
+It is important to note that the histogram is limited from 0 to the 98th percentile of the data to improve readability.
+
+.. image:: /_static/t2star_plots.png
+  :align: center
+  :height: 400px
+
+
+**************************
 Citable workflow summaries
 **************************
 
@@ -546,7 +582,7 @@ An example report
   A two-stage masking procedure was applied, in which a liberal mask (including voxels with good data in at least the first echo) was used for optimal combination, T2*/S0 estimation, and denoising, while a more conservative mask (restricted to voxels with good data in at least the first three echoes) was used for the component classification procedure.
   Multi-echo data were then optimally combined using the T2* combination method \\citep{posse1999enhancement}.
   Next, components were manually classified as BOLD (TE-dependent), non-BOLD (TE-independent), or uncertain (low-variance).
-  This workflow used numpy \\citep{van2011numpy}, scipy \\citep{virtanen2020scipy}, pandas \\citep{mckinney2010data,reback2020pandas}, scikit-learn \\citep{pedregosa2011scikit}, nilearn, bokeh \\citep{bokehmanual}, matplotlib \\citep{Hunter:2007}, and nibabel \\citep{brett_matthew_2019_3233118}.
+  This workflow used numpy \\citep{van2011numpy}, scipy \\citep{virtanen2020scipy}, pandas \\citep{mckinney2010data,reback2020pandas}, scikit-learn \\citep{pedregosa2011scikit}, nilearn, bokeh \\citep{bokehmanual}, matplotlib \\citep{Hunter2007}, and nibabel \\citep{brett_matthew_2019_3233118}.
   This workflow also used the Dice similarity index \\citep{dice1945measures,sorensen1948method}.
 
   References

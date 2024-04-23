@@ -1,7 +1,7 @@
 {
-    "tree_id": "minimal_decision_tree_test1",
-    "info": "Proposed minimal decision tree",
-    "report": "This is based on the minimal criteria of the original MEICA decision tree \\citep{kundu2013integrated} without the more aggressive noise removal steps \\citep{dupre2021te}.",
+    "tree_id": "minimal_decision_tree",
+    "info": "first version of minimal decision tree",
+    "report": "The minimal decision tree \\citep{tedana_decision_trees} is a simplified version of the MEICA decision tree \\citep{kundu2013integrated,dupre2021te} without many criteria that do not rely on kappa and rho thresholds. ",
     "necessary_metrics": [
         "kappa",
         "rho",
@@ -12,27 +12,18 @@
         "signal-noise_t",
         "variance explained"
     ],
-    "intermediate_classifications": [
-        "provisionalaccept",
-        "provisionalreject"
-    ],
-    "classification_tags": [
-        "Likely BOLD",
-        "Unlikely BOLD",
-        "Low variance"
-    ],
+    "intermediate_classifications": ["provisionalaccept", "provisionalreject"],
+    "classification_tags": ["Likely BOLD", "Unlikely BOLD", "Low variance"],
+    "_comment": "More information on the minimial decision tree and how it differs from other options is at https://tedana.readthedocs.io/en/stable/included_decision_trees.html. Descriptions of the metrics used are in desc-tedana.metrics.json, which is ouputted when this tree is run",
     "nodes": [
         {
             "functionname": "manual_classify",
-            "parameters": {
-                "new_classification": "unclassified",
-                "decide_comps": "all"
-            },
+            "parameters": {"new_classification": "unclassified", "decide_comps": "all"},
             "kwargs": {
-                "log_extra_report": "",
                 "clear_classification_tags": true,
                 "dont_warn_reclassify": true
-            }
+            },
+            "_comment": "All components are initially labeled as 'unclassified'."
         },
         {
             "functionname": "dec_left_op_right",
@@ -44,10 +35,8 @@
                 "left": "rho",
                 "right": "kappa"
             },
-            "kwargs": {
-                "log_extra_report": "",
-                "tag_if_true": "Unlikely BOLD"
-            }
+            "kwargs": {"tag_if_true": "Unlikely BOLD"},
+            "_comment": "The first four steps are for rejecting components that very unlikely to have substantial T2* signal. Any components with rho greater than kappa are rejected. Higher rho than kappa means that the component better fits the TE-independence (S0) model than the TE-dependence (T2*) model."
         },
         {
             "functionname": "dec_left_op_right",
@@ -63,9 +52,9 @@
                 "left2": "countsigFT2",
                 "op2": ">",
                 "right2": 0,
-                "log_extra_report": "",
                 "tag_if_true": "Unlikely BOLD"
-            }
+            },
+            "_comment": "Any components with more voxels that are significant based on the S0 model's F-statistics than the T2* model's are rejected, as long as there is at least one significant voxel for the T2 model."
         },
         {
             "functionname": "calc_median",
@@ -73,7 +62,8 @@
                 "decide_comps": "all",
                 "metric_name": "variance explained",
                 "median_label": "varex"
-            }
+            },
+            "_comment": "The median variance explained is calculated across all components, for use in later steps."
         },
         {
             "functionname": "dec_left_op_right",
@@ -89,9 +79,9 @@
                 "left2": "variance explained",
                 "op2": ">",
                 "right2": "median_varex",
-                "log_extra_report": "",
                 "tag_if_true": "Unlikely BOLD"
-            }
+            },
+            "_comment": "Any components with higher S0 model beta map-F-statistic map Dice similarity index than T2 model beta map-F-statistic map Dice similarity index and greater than median variance explained are rejected. In slightly plainer English, this step rejects any high-variance components where significant voxels in the F-stat map overlap more with highly S0-associated voxels than T2*-associated voxels."
         },
         {
             "functionname": "dec_left_op_right",
@@ -107,33 +97,23 @@
                 "left2": "variance explained",
                 "op2": ">",
                 "right2": "median_varex",
-                "log_extra_report": "",
                 "tag_if_true": "Unlikely BOLD"
-            }
+            },
+            "_comment": "Any components with a negative t-statistic comparing the distribution of T2* model F-statistics from voxels in clusters to those of voxels not in clusters and variance explained greater than median are rejected. That is reject any high-variance components exhibiting more 'speckled' T2*-associated voxels than 'clustered' ones."
         },
         {
             "functionname": "calc_kappa_elbow",
-            "parameters": {
-                "decide_comps": "all"
-            },
-            "kwargs": {
-                "log_extra_info": "",
-                "log_extra_report": ""
-            },
-            "_comment": ""
+            "parameters": {"decide_comps": "all"},
+            "_comment": "The kappa elbow is calculated from all components, for use in later steps."
         },
         {
             "functionname": "calc_rho_elbow",
-            "parameters": {
-                "decide_comps": "all"
-            },
+            "parameters": {"decide_comps": "all"},
             "kwargs": {
                 "subset_decide_comps": "unclassified",
-                "rho_elbow_type": "liberal",
-                "log_extra_info": "",
-                "log_extra_report": ""
+                "rho_elbow_type": "liberal"
             },
-            "_comment": ""
+            "_comment": "This step determines the 'rho elbow' based on the rho values for all of the components, as well as just the unclassified components. It calculates the elbow for each set of components and then takes the maximum of the two."
         },
         {
             "functionname": "dec_left_op_right",
@@ -145,9 +125,7 @@
                 "left": "kappa",
                 "right": "kappa_elbow_kundu"
             },
-            "kwargs": {
-                "log_extra_report": ""
-            }
+            "_comment": "Any unclassified components with kappa greater than or equal to the kappa elbow are provisionally accepted. Any remaining unclassified components are provisionally rejected. Nothing is left 'unclassified'"
         },
         {
             "functionname": "dec_left_op_right",
@@ -159,29 +137,20 @@
                 "left": "kappa",
                 "right": "rho"
             },
-            "kwargs": {
-                "log_extra_info": "If kappa>elbow and kappa>2*rho accept even if rho>elbow",
-                "log_extra_report": "",
-                "right_scale": 2,
-                "tag_if_true": "Likely BOLD"
-            }
+            "kwargs": {"right_scale": 2, "tag_if_true": "Likely BOLD"},
+            "_comment": "Any provisionally accepted components with kappa greater than two times rho are accepted. That is, even if a component has a high rho value, if kappa above threshold and substantially higher, assume it as something work keeping and accept it"
         },
         {
             "functionname": "dec_left_op_right",
             "parameters": {
                 "if_true": "provisionalreject",
                 "if_false": "nochange",
-                "decide_comps": [
-                    "provisionalreject",
-                    "provisionalaccept"
-                ],
+                "decide_comps": ["provisionalreject", "provisionalaccept"],
                 "op": ">",
                 "left": "rho",
                 "right": "rho_elbow_liberal"
             },
-            "kwargs": {
-                "log_extra_report": ""
-            }
+            "_comment": "Any provisionally accepted or provisionally rejected components with rho values greater than the liberal rho elbow are provisionally rejected."
         },
         {
             "functionname": "dec_variance_lessthan_thresholds",
@@ -192,39 +161,26 @@
             },
             "kwargs": {
                 "var_metric": "variance explained",
-                "log_extra_info": "",
-                "log_extra_report": "",
                 "single_comp_threshold": 0.1,
                 "all_comp_threshold": 1.0,
                 "tag_if_true": "Low variance"
-            }
+            },
+            "_comment": "This step flags remaining low-variance components (less than 0.1%) and accepts up to 1% cumulative variance across these components. This is done because these components don't explain enough variance to be worth further reducing the degrees of freedom of the denoised data."
         },
         {
             "functionname": "manual_classify",
-            "parameters": {
-                "new_classification": "accepted",
-                "decide_comps": "provisionalaccept"
-            },
-            "kwargs": {
-                "log_extra_info": "",
-                "log_extra_report": "",
-                "tag": "Likely BOLD"
-            }
+            "parameters": {"new_classification": "accepted", "decide_comps": "provisionalaccept"},
+            "kwargs": {"tag": "Likely BOLD"},
+            "_comment": "All remaining provisionally accepted components are accepted."
         },
         {
             "functionname": "manual_classify",
             "parameters": {
                 "new_classification": "rejected",
-                "decide_comps": [
-                    "provisionalreject",
-                    "unclassified"
-                ]
+                "decide_comps": ["provisionalreject", "unclassified"]
             },
-            "kwargs": {
-                "log_extra_info": "",
-                "log_extra_report": "",
-                "tag": "Unlikely BOLD"
-            }
+            "kwargs": {"tag": "Unlikely BOLD"},
+            "_comment": "All remaining unclassified (nothing should be unclassified) or provisionally rejected components are rejected."
         }
     ]
 }

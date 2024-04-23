@@ -51,7 +51,7 @@ The file key names are used below the full file names in the
 General outputs from component selection
 ========================================
 
-New columns in ``selector.component_table`` and the "ICA metrics tsv" file:
+New columns in ``selector.component_table_`` and the "ICA metrics tsv" file:
 
   - classification:
     While the decision table is running, there may also be intermediate
@@ -63,13 +63,13 @@ New columns in ``selector.component_table`` and the "ICA metrics tsv" file:
     or a comma separated list of tags. These tags may be useful parameters
     for visualizing and reviewing results
 
-``selector.cross_component_metrics`` and "ICA cross component metrics json":
+``selector.cross_component_metrics_`` and "ICA cross component metrics json":
   A dictionary of metrics that are each a single value calculated across components,
   for example, kappa and rho elbows. User or pre-defined scaling factors are
   also stored here. Any constant that is used in the component classification
   processes that isn't pre-defined in the decision tree file should be saved here.
 
-``selector.component_status_table`` and "ICA status table tsv":
+``selector.component_status_table_`` and "ICA status table tsv":
   A table where each column lists the classification status of
   each component after each node was run. Columns are only added
   for runs where component statuses can change.
@@ -139,8 +139,8 @@ Each outputs field includes:
     It is possible to add a new metric to the component table during the selection process.
     This is useful if a metric is to be calculated on a subset of components based on what
     happened during previous steps in the selection process. This is **not** recommended,
-    but since it was done as part of the original kundu decision tree process defined in
-    meica it is possible.
+    but, since it was done as part of the original decision tree process used in the
+    meica and tedana_orig, it is possible.
 
 
 **************************************
@@ -160,7 +160,7 @@ Defining a custom decision tree
 Decision trees are stored in json files. The default trees are stored as part of
 the tedana code repository in `resources/decision_trees`_. The minimal tree,
 minimal.json, is a good example highlighting the structure and steps in a tree. It
-may be helpful to look at that tree while reading this section. kundu.json replicates
+may be helpful to look at that tree while reading this section. meica.json replicates
 the decision tree used in MEICA version 2.5, the predecessor to tedana. It is more
 complex, but also highlights additional possible functionality in decision trees.
 
@@ -210,11 +210,9 @@ that is used to check whether results are plausible & can help avoid mistakes.
 
 - necessary_metrics
     A list of the necessary metrics in the component table that will be used
-    by the tree. If a metric doesn't exist then this will raise an error instead
-    of executing a tree. (Depending on future code development, this could
-    potentially be used to run ``tedana`` by specifying a decision tree and
-    metrics are calculated based on the contents of this field.) If a necessary
-    metric isn't used, there will be a warning.
+    by the tree. This field defines what metrics will be calculated on each ICA
+    component. If a metric doesn't exist then this will raise an error instead
+    of executing a tree. If a necessary metric isn't used, there will be a warning.
 
 - generated_metrics
     An optional initial field. It lists metrics that are to be calculated as
@@ -223,7 +221,7 @@ that is used to check whether results are plausible & can help avoid mistakes.
     an error when these metrics are not found. One might want to calculate a new metric
     if the metric uses only a subset of the components based on previous
     classifications. This does make interpretation of results more confusing, but, since
-    this functionality was part of the kundu decision tree, it is included.
+    this functionality is part of the tedana_orig and meica decision trees, it is included.
 
 - intermediate_classifications
     A list of intermediate classifications (i.e. "provisionalaccept",
@@ -288,9 +286,8 @@ tree function:
 - ``custom_node_label``: A brief label for what happens in this node that can be used in
   a decision tree summary table or flow chart. If custom_node_label is not not defined,
   then each function has default descriptive text.
-- ``log_extra_report``, ``log_extra_info``: Text for each function call is automatically placed
-  in the logger output. In addition to that text, the text in these these strings will
-  also be included in the logger with the report or info codes respectively. These
+- ``log_extra_info``: Text for each function call is automatically placed
+  in the logger output with the info label. These
   might be useful to give a narrative explanation of why a step was parameterized a
   certain way.
 - ``only_used_metrics``: If true, this function will only return the names of the component
@@ -316,7 +313,7 @@ are good examples for how to meet these expectations.
 
 Create a dictionary called "outputs" that includes key fields that should be recorded.
 The following line should be at the end of each function to retain the output info:
-``selector.nodes[selector.current_node_idx]["outputs"] = outputs``
+``selector.nodes[selector.current_node_idx_]["outputs"] = outputs``
 
 Additional fields can be used to log function-specific information, but the following
 fields are common and may be used by other parts of the code:
@@ -340,7 +337,7 @@ Before any data are touched in the function, there should be an
 call. This will be useful to gather all metrics a tree will use without requiring a
 specific dataset.
 
-Existing functions define ``function_name_idx = f"Step {selector.current_node_idx}: [text of function_name]``.
+Existing functions define ``function_name_idx = f"Step {selector.current_node_idx_}: [text of function_name]``.
 This is used in logging and is cleaner to initialize near the top of each function.
 
 Each function has code that creates a default node label in ``outputs["node_label"]``.
@@ -351,8 +348,8 @@ that should be used instead.
 Calculation nodes should check if the value they are calculating was already calculated
 and output a warning if the function overwrites an existing value
 
-Code that adds the text ``log_extra_info`` and ``log_extra_report`` into the appropriate
-logs (if they are provided by the user)
+Code that adds the text ``log_extra_info`` into the output
+log (if they are provided by the user)
 
 After the above information is included,
 all functions will call :func:`~tedana.selection.selection_utils.selectcomps2use`,
@@ -379,7 +376,7 @@ dataframe column that is True or False for the components in ``decide_comps`` ba
 the function's criteria.
 That column is an input to :func:`~tedana.selection.selection_utils.change_comptable_classifications`,
 which will update the component_table classifications, update the classification history
-in component_status_table, and update the component classification_tags. Components not
+in ``selector.component_status_table_``, and update the component classification_tags. Components not
 in ``decide_comps`` retain their existing classifications and tags.
 :func:`~tedana.selection.selection_utils.change_comptable_classifications`
 also returns and should assign values to
@@ -387,7 +384,7 @@ also returns and should assign values to
 identified as true or false within each function.
 
 For calculation functions, the calculated values should be added as a value/key pair to
-both ``selector.cross_component_metrics`` and ``outputs``.
+both ``selector.cross_component_metrics_`` and ``outputs``.
 
 :func:`~tedana.selection.selection_utils.log_decision_tree_step`
 puts the relevant info from the function call into the program's output log.
@@ -396,7 +393,7 @@ Every function should end with:
 
 .. code-block:: python
 
-  selector.nodes[selector.current_node_idx]["outputs"] = outputs
+  selector.nodes[selector.current_node_idx_]["outputs"] = outputs
   return selector
 
   functionname.__doc__ = (functionname.__doc__.format(**DECISION_DOCS))

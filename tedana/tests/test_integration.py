@@ -132,11 +132,10 @@ def data_for_testing_info(test_dataset=str):
 
 
 def download_test_data(osf_id, test_data_path):
-    """
-    If current data is not already available, downloads tar.gz data
-    stored at `https://osf.io/osf_id/download`.
+    """If current data is not already available, downloads tar.gz data.
 
-    and unpacks into `out_path`.
+    Data are stored at `https://osf.io/osf_id/download`.
+    It unpacks into `out_path`.
 
     Parameters
     ----------
@@ -261,6 +260,7 @@ def test_integration_five_echo(skip_integration):
         out_dir=out_dir,
         tedpca=0.95,
         fittype="curvefit",
+        tree="minimal",
         fixed_seed=49,
         tedort=True,
         verbose=True,
@@ -380,10 +380,12 @@ def test_integration_reclassify_insufficient_args(skip_integration):
 
     guarantee_reclassify_data()
 
-    args = [
-        "ica_reclassify",
-        reclassify_raw_registry(),
-    ]
+    test_data_path, osf_id = data_for_testing_info("three-echo")
+    out_dir = os.path.abspath(
+        os.path.join(test_data_path, "../../outputs/reclassify/insufficient")
+    )
+
+    args = ["ica_reclassify", reclassify_raw_registry(), "--out-dir", out_dir]
 
     result = subprocess.run(args, capture_output=True)
     assert b"ValueError: Must manually accept or reject" in result.stderr
@@ -667,6 +669,7 @@ def test_integration_t2smap(skip_integration):
         + ["-e"]
         + [str(te) for te in echo_times]
         + ["--out-dir", out_dir, "--fittype", "curvefit"]
+        + ["--masktype", "dropout", "decay"]
     )
     t2smap_cli._main(args)
 

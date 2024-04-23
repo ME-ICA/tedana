@@ -1,4 +1,5 @@
 """Documentation to be injected into docstrings."""
+
 import sys
 
 ###################################
@@ -36,13 +37,6 @@ decide_comps : :obj:`str` or :obj:`list[str]`
     intermediate_classification labels. For example: decide_comps='unclassified'
     means to operate only on unclassified components. Use 'all' to include all
     components.
-"""
-
-docdict[
-    "log_extra_report"
-] = """
-log_extra_report : :obj:`str`
-    Additional text to the report log. Default="".
 """
 
 docdict[

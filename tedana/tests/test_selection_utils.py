@@ -1,4 +1,5 @@
 """Tests for the tedana.selection.selection_utils module."""
+
 import os
 
 import numpy as np
@@ -35,9 +36,9 @@ def sample_component_table(options=None):
 
 
 def sample_selector(options=None):
-    """
-    Retrieves a sample component table and initializes
-    a selector using that component table and the minimal tree.
+    """Retrieve a sample component table and initializes a selector.
+
+    The selector uses that component table and the minimal tree.
 
     options: Different strings will alter the selector
        'provclass': Change the classifications to "provisional accept" for 4 components
@@ -53,8 +54,19 @@ def sample_selector(options=None):
         "n_vols": 201,
         "test_elbow": 21,
     }
-    selector = ComponentSelector(tree, component_table, cross_component_metrics=xcomp)
-    selector.current_node_idx = 0
+    selector = ComponentSelector(tree=tree)
+
+    # Add an un-executed component table,cross component metrics, and status table
+    selector.component_table_ = component_table.copy()
+    selector.cross_component_metrics_ = xcomp
+    selector.component_status_table_ = selector.component_table_[
+        ["Component", "classification"]
+    ].copy()
+    selector.component_status_table_ = selector.component_status_table_.rename(
+        columns={"classification": "initialized classification"}
+    )
+
+    selector.current_node_idx_ = 0
 
     return selector
 
@@ -88,7 +100,7 @@ def test_selectcomps2use_succeeds():
     decide_comps_lengths = [4, 17, 21, 21, 1, 3, 0]
 
     for idx, decide_comps in enumerate(decide_comps_options):
-        comps2use = selection_utils.selectcomps2use(selector, decide_comps)
+        comps2use = selection_utils.selectcomps2use(selector.component_table_, decide_comps)
         assert len(comps2use) == decide_comps_lengths[idx], (
             f"selectcomps2use test should select {decide_comps_lengths[idx]} with "
             f"decide_comps={decide_comps}, but it selected {len(comps2use)}"
@@ -109,16 +121,16 @@ def test_selectcomps2use_fails():
     ]
     for decide_comps in decide_comps_options:
         with pytest.raises(ValueError):
-            selection_utils.selectcomps2use(selector, decide_comps)
+            selection_utils.selectcomps2use(selector.component_table_, decide_comps)
 
-    selector.component_table = selector.component_table.drop(columns="classification")
+    selector.component_table_ = selector.component_table_.drop(columns="classification")
     with pytest.raises(ValueError):
-        selection_utils.selectcomps2use(selector, "all")
+        selection_utils.selectcomps2use(selector.component_table_, "all")
 
 
 def test_comptable_classification_changer_succeeds():
-    """
-    All conditions where comptable_classification_changer should run
+    """All conditions where comptable_classification_changer should run.
+
     Note: This confirms the function runs, but not that outputs are accurate.
 
     Also tests conditions where the warning logger is used, but doesn't
@@ -128,13 +140,13 @@ def test_comptable_classification_changer_succeeds():
     def validate_changes(expected_classification):
         # check every element that was supposed to change, did change
         changeidx = decision_boolean.index[np.asarray(decision_boolean) == boolstate]
-        new_vals = selector.component_table.loc[changeidx, "classification"]
+        new_vals = selector.component_table_.loc[changeidx, "classification"]
         for val in new_vals:
             assert val == expected_classification
 
     # Change if true
     selector = sample_selector(options="provclass")
-    decision_boolean = selector.component_table["classification"] == "provisional accept"
+    decision_boolean = selector.component_table_["classification"] == "provisional accept"
     boolstate = True
     selector = selection_utils.comptable_classification_changer(
         selector, boolstate, "accepted", decision_boolean, tag_if="testing_tag"
@@ -143,7 +155,7 @@ def test_comptable_classification_changer_succeeds():
 
     # Run nochange condition
     selector = sample_selector(options="provclass")
-    decision_boolean = selector.component_table["classification"] == "provisional accept"
+    decision_boolean = selector.component_table_["classification"] == "provisional accept"
     selector = selection_utils.comptable_classification_changer(
         selector, boolstate, "nochange", decision_boolean, tag_if="testing_tag"
     )
@@ -151,7 +163,7 @@ def test_comptable_classification_changer_succeeds():
 
     # Change if false
     selector = sample_selector(options="provclass")
-    decision_boolean = selector.component_table["classification"] != "provisional accept"
+    decision_boolean = selector.component_table_["classification"] != "provisional accept"
     boolstate = False
     selector = selection_utils.comptable_classification_changer(
         selector, boolstate, "rejected", decision_boolean, tag_if="testing_tag1, testing_tag2"
@@ -161,7 +173,7 @@ def test_comptable_classification_changer_succeeds():
     # Change from accepted to rejected, which should output a warning
     # (test if the warning appears?)
     selector = sample_selector(options="provclass")
-    decision_boolean = selector.component_table["classification"] == "accepted"
+    decision_boolean = selector.component_table_["classification"] == "accepted"
     boolstate = True
     selector = selection_utils.comptable_classification_changer(
         selector, boolstate, "rejected", decision_boolean, tag_if="testing_tag"
@@ -170,7 +182,7 @@ def test_comptable_classification_changer_succeeds():
 
     # Change from rejected to accepted and suppress warning
     selector = sample_selector(options="provclass")
-    decision_boolean = selector.component_table["classification"] == "rejected"
+    decision_boolean = selector.component_table_["classification"] == "rejected"
     boolstate = True
     selector = selection_utils.comptable_classification_changer(
         selector,
@@ -190,8 +202,8 @@ def test_change_comptable_classifications_succeeds():
 
     # Given the rho values in the sample table, decision_boolean should have
     # 2 True and 2 False values
-    comps2use = selection_utils.selectcomps2use(selector, "provisional accept")
-    rho = selector.component_table.loc[comps2use, "rho"]
+    comps2use = selection_utils.selectcomps2use(selector.component_table_, "provisional accept")
+    rho = selector.component_table_.loc[comps2use, "rho"]
     decision_boolean = rho < 13.5
 
     selector, n_true, n_false = selection_utils.change_comptable_classifications(
@@ -207,7 +219,7 @@ def test_change_comptable_classifications_succeeds():
     assert n_false == 2
     # check every element that was supposed to change, did change
     changeidx = decision_boolean.index[np.asarray(decision_boolean) == True]  # noqa: E712
-    new_vals = selector.component_table.loc[changeidx, "classification"]
+    new_vals = selector.component_table_.loc[changeidx, "classification"]
     for val in new_vals:
         assert val == "accepted"
 
@@ -253,7 +265,7 @@ def test_log_decision_tree_step_smoke():
     selector = sample_selector()
 
     # Standard run for logging classification changes
-    comps2use = selection_utils.selectcomps2use(selector, "reject")
+    comps2use = selection_utils.selectcomps2use(selector.component_table_, "reject")
     selection_utils.log_decision_tree_step(
         "Step 0: test_function_name",
         comps2use,
@@ -287,7 +299,7 @@ def test_log_decision_tree_step_smoke():
     )
 
     # Logging no components found with a specified classification
-    comps2use = selection_utils.selectcomps2use(selector, "NotALabel")
+    comps2use = selection_utils.selectcomps2use(selector.component_table_, "NotALabel")
     selection_utils.log_decision_tree_step(
         "Step 0: test_function_name",
         comps2use,

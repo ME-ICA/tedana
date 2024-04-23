@@ -15,8 +15,13 @@ from tedana.tests.utils import get_test_data_path
 def testdata1():
     tes = np.array([14.5, 38.5, 62.5])
     in_files = [op.join(get_test_data_path(), f"echo{i + 1}.nii.gz") for i in range(3)]
+    mask_file = op.join(get_test_data_path(), "mask.nii.gz")
     data, _ = io.load_data(in_files, n_echos=len(tes))
-    mask, adaptive_mask = utils.make_adaptive_mask(data, getsum=True)
+    mask, adaptive_mask = utils.make_adaptive_mask(
+        data,
+        mask=mask_file,
+        methods=["dropout", "decay"],
+    )
     fittype = "loglin"
     data_dict = {
         "data": data,

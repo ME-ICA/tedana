@@ -1,4 +1,5 @@
 """Tests for the decision tree modularization."""
+
 import glob
 import json
 import os
@@ -8,6 +9,7 @@ import pandas as pd
 import pytest
 
 from tedana.selection import component_selector
+from tedana.utils import get_resource_path
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -37,12 +39,12 @@ def dicts_to_test(treechoice):
         "missing_req_param": A missing required param in a decision node function
         "missing_function": An undefined decision node function
         "missing_key": A dict missing one of the required keys (report)
+        "null_value": A parameter in one node improperly has a null value
 
     Returns
     -------
     tree : :ojb:`dict` A dict that can be input into component_selector.validate_tree
     """
-
     # valid_dict is a simple valid dictionary to test
     # It includes a few things that should trigger warnings, but not errors.
     valid_dict = {
@@ -82,7 +84,6 @@ def dicts_to_test(treechoice):
                 },
                 "kwargs": {
                     "log_extra_info": "random2 if Kappa>Rho",
-                    "log_extra_report": "",
                     # Warning for an non-predefined classification assigned to a component
                     "tag_if_true": "random2notpredefined",
                 },
@@ -97,7 +98,6 @@ def dicts_to_test(treechoice):
                 },
                 "kwargs": {
                     "log_extra_info": "",
-                    "log_extra_report": "",
                     # Warning for a tag that wasn't predefined
                     "tag": "Random2_NotPredefined",
                 },
@@ -110,6 +110,10 @@ def dicts_to_test(treechoice):
                 },
                 "kwargs": {
                     "tag": "Random1",
+                    # log_extra_report was removed from the code.
+                    # If someone runs a tree that uses this field, rather than crash
+                    # it will log a warning
+                    "log_extra_report": "This should not be logged",
                 },
             },
         ],
@@ -161,9 +165,18 @@ def test_load_config_fails():
 def test_load_config_succeeds():
     """Tests to make sure load_config succeeds."""
 
-    # The minimal tree should have an id of "minimal_decision_tree_test1"
+    # The minimal tree should have an id of "minimal_decision_tree"
     tree = component_selector.load_config("minimal")
-    assert tree["tree_id"] == "minimal_decision_tree_test1"
+    assert tree["tree_id"] == "minimal_decision_tree"
+
+    # Load the meica tree as a json file rather than just the label
+    fname = op.join(get_resource_path(), "decision_trees", "meica.json")
+    tree = component_selector.load_config(fname)
+    assert tree["tree_id"] == "MEICA_decision_tree"
+
+    # If "kundu" is used as a tree, it should log a warning and output the tedana_orig tree
+    tree = component_selector.load_config("kundu")
+    assert tree["tree_id"] == "tedana_orig_decision_tree"
 
 
 def test_minimal():
@@ -171,21 +184,13 @@ def test_minimal():
     xcomp = {
         "n_echos": 3,
     }
-    selector = component_selector.ComponentSelector(
-        "minimal",
-        sample_comptable(),
-        cross_component_metrics=xcomp.copy(),
-    )
-    selector.select()
+    selector = component_selector.ComponentSelector(tree="minimal")
+    selector.select(component_table=sample_comptable(), cross_component_metrics=xcomp.copy())
 
     # rerun without classification_tags column initialized
-    selector = component_selector.ComponentSelector(
-        "minimal",
-        sample_comptable(),
-        cross_component_metrics=xcomp.copy(),
-    )
-    selector.component_table = selector.component_table.drop(columns="classification_tags")
-    selector.select()
+    selector = component_selector.ComponentSelector(tree="minimal")
+    temp_comptable = sample_comptable().drop(columns="classification_tags")
+    selector.select(component_table=temp_comptable, cross_component_metrics=xcomp.copy())
 
 
 # validate_tree
@@ -194,8 +199,7 @@ def test_minimal():
 
 def test_validate_tree_succeeds():
     """
-    Tests to make sure validate_tree suceeds for all default
-    decision trees in  decision trees.
+    Tests to make sure validate_tree suceeds for all default decision trees.
 
     Tested on all default trees in ./tedana/resources/decision_trees
     Note: If there is a tree in the default trees directory that
@@ -222,20 +226,16 @@ def test_validate_tree_succeeds():
 
 
 def test_validate_tree_warnings():
-    """
-    Tests to make sure validate_tree triggers all warning conditions
-    but still succeeds.
-    """
+    """Test to make sure validate_tree triggers all warning conditions."""
 
     # A tree that raises all possible warnings in the validator should still be valid
     assert component_selector.validate_tree(dicts_to_test("valid"))
 
 
 def test_validate_tree_fails():
-    """
-    Tests to make sure validate_tree fails for invalid trees
-    Tests ../resources/decision_trees/invalid*.json and.
+    """Test to make sure validate_tree fails for invalid trees.
 
+    Tests ../resources/decision_trees/invalid*.json and
     ./data/ComponentSelection/invalid*.json trees.
     """
 
@@ -265,7 +265,7 @@ def test_validate_tree_fails():
 def test_check_null_fails():
     """Tests to trigger check_null missing parameter error."""
 
-    selector = component_selector.ComponentSelector("minimal", sample_comptable())
+    selector = component_selector.ComponentSelector(tree="minimal")
     selector.tree = dicts_to_test("null_value")
 
     params = selector.tree["nodes"][0]["parameters"]
@@ -276,18 +276,15 @@ def test_check_null_fails():
 
 def test_check_null_succeeds():
     """Tests check_null finds empty parameter in self."""
+    selector = component_selector.ComponentSelector(tree="minimal")
+    selector.tree = dicts_to_test("null_value")
 
     # "left" is missing from the function definition in node
     # but is found as an initialized cross component metric
-    xcomp = {
+    # so this should execute successfully
+    selector.cross_component_metrics_ = {
         "left": 3,
     }
-    selector = component_selector.ComponentSelector(
-        "minimal",
-        sample_comptable(),
-        cross_component_metrics=xcomp,
-    )
-    selector.tree = dicts_to_test("null_value")
 
     params = selector.tree["nodes"][0]["parameters"]
     functionname = selector.tree["nodes"][0]["functionname"]
@@ -296,8 +293,8 @@ def test_check_null_succeeds():
 
 def test_are_only_necessary_metrics_used_warning():
     """Tests a warning that wasn't triggered in other test workflows."""
-
-    selector = component_selector.ComponentSelector("minimal", sample_comptable())
+    selector = component_selector.ComponentSelector(tree="minimal")
+    # selector.select(component_table=sample_comptable())
 
     # warning when an element of necessary_metrics was not in used_metrics
     selector.tree["used_metrics"] = {"A", "B", "C"}
@@ -307,23 +304,27 @@ def test_are_only_necessary_metrics_used_warning():
 
 def test_are_all_components_accepted_or_rejected():
     """Tests warnings are triggered in are_all_components_accepted_or_rejected."""
-
-    selector = component_selector.ComponentSelector("minimal", sample_comptable())
-    selector.component_table.loc[7, "classification"] = "intermediate1"
-    selector.component_table.loc[[1, 3, 5], "classification"] = "intermediate2"
+    selector = component_selector.ComponentSelector(tree="minimal")
+    selector.select(component_table=sample_comptable(), cross_component_metrics={"n_echos": 3})
+    selector.component_table_.loc[7, "classification"] = "intermediate1"
+    selector.component_table_.loc[[1, 3, 5], "classification"] = "intermediate2"
     selector.are_all_components_accepted_or_rejected()
 
 
 def test_selector_properties_smoke():
     """Tests to confirm properties match expected results."""
 
-    selector = component_selector.ComponentSelector("minimal", sample_comptable())
+    # Runs on un-executed component table to smoke test three class
+    # functions that are used to count various types of component
+    # classifications in the component table
+    selector = component_selector.ComponentSelector(tree="minimal")
+    selector.component_table_ = sample_comptable()
 
-    assert selector.n_comps == 21
+    assert selector.n_comps_ == 21
 
-    # Also runs selector.likely_bold_comps and should need to deal with sets in each field
-    assert selector.n_likely_bold_comps == 17
+    # Also runs selector.likely_bold_comps_ and should need to deal with sets in each field
+    assert selector.n_likely_bold_comps_ == 17
 
-    assert selector.n_accepted_comps == 17
+    assert selector.n_accepted_comps_ == 17
 
-    assert selector.rejected_comps.sum() == 4
+    assert selector.rejected_comps_.sum() == 4

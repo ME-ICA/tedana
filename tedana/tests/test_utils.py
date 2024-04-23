@@ -75,36 +75,145 @@ def test_reshape_niimg():
 
 
 def test_make_adaptive_mask():
+    """Test tedana.utils.make_adaptive_mask with different methods."""
     # load data make masks
+    mask_file = pjoin(datadir, "mask.nii.gz")
     data = io.load_data(fnames, n_echos=len(tes))[0]
-    mask, masksum = utils.make_adaptive_mask(data, getsum=True, threshold=1)
 
-    # getsum doesn't change mask values
-    assert np.allclose(mask, utils.make_adaptive_mask(data))
-    # shapes are all the same
-    assert mask.shape == masksum.shape == (64350,)
-    assert np.allclose(mask, (masksum >= 1).astype(bool))
-    # mask has correct # of entries
-    assert mask.sum() == 50786
-    # masksum has correct values
-    vals, counts = np.unique(masksum, return_counts=True)
-    assert np.allclose(vals, np.array([0, 1, 2, 3]))
-    assert np.allclose(counts, np.array([13564, 3977, 5060, 41749]))
+    # Add in simulated values
+    base_val = np.mean(data[:, 0, :])  # mean value of first echo
+    idx = 5457
+    # Three good echoes (3)
+    data[idx, :, :] = np.array([base_val, base_val - 1, base_val - 2])[:, None]
+    # Dropout: good bad good (3)
+    # Decay: good good bad (2)
+    data[idx + 1, :, :] = np.array([base_val, 1, base_val])[:, None]
+    # Dropout: good bad bad (1)
+    # Decay: good good bad (2)
+    data[idx + 2, :, :] = np.array([base_val, 1, 1])[:, None]
+    # Dropout: good good good (3)
+    # Decay: good bad bad (1)
+    data[idx + 3, :, :] = np.array([base_val, base_val, base_val])[:, None]
+    # Dropout: bad bad bad (0)
+    # Decay: good good good (3)
+    data[idx + 4, :, :] = np.array([1, 0.9, 0.8])[:, None]
+    # Base: good good bad (2)
+    # Dropout: bad bad bad (0)
+    # Decay: good good good (3)
+    data[idx + 5, :, :] = np.array([1, 0.9, -1])[:, None]
 
-    # test user-defined mask
-    # TODO: Add mask file with no bad voxels to test against
-    mask, masksum = utils.make_adaptive_mask(
-        data, mask=pjoin(datadir, "mask.nii.gz"), getsum=True, threshold=3
+    # Just dropout method
+    mask, adaptive_mask = utils.make_adaptive_mask(
+        data,
+        mask=mask_file,
+        threshold=1,
+        methods=["dropout"],
     )
-    assert np.allclose(mask, (masksum >= 3).astype(bool))
+
+    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
+    assert adaptive_mask[idx] == 3
+    assert adaptive_mask[idx + 1] == 3
+    assert adaptive_mask[idx + 2] == 1
+    assert adaptive_mask[idx + 3] == 3
+    assert adaptive_mask[idx + 4] == 0
+    assert adaptive_mask[idx + 5] == 0
+    assert mask.sum() == 49374
+    vals, counts = np.unique(adaptive_mask, return_counts=True)
+    assert np.allclose(vals, np.array([0, 1, 2, 3]))
+    assert np.allclose(counts, np.array([14976, 1817, 4427, 43130]))
+
+    # Just decay method
+    mask, adaptive_mask = utils.make_adaptive_mask(
+        data,
+        mask=mask_file,
+        threshold=1,
+        methods=["decay"],
+    )
+
+    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
+    assert adaptive_mask[idx] == 3
+    assert adaptive_mask[idx + 1] == 2
+    assert adaptive_mask[idx + 2] == 2
+    assert adaptive_mask[idx + 3] == 1
+    assert adaptive_mask[idx + 4] == 3
+    assert adaptive_mask[idx + 5] == 2
+    assert mask.sum() == 60985  # This method can't flag first echo as bad
+    vals, counts = np.unique(adaptive_mask, return_counts=True)
+    assert np.allclose(vals, np.array([0, 1, 2, 3]))
+    assert np.allclose(counts, np.array([3365, 4366, 5973, 50646]))
+
+    # Dropout and decay methods combined
+    mask, adaptive_mask = utils.make_adaptive_mask(
+        data,
+        mask=mask_file,
+        threshold=1,
+        methods=["dropout", "decay"],
+    )
+
+    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
+    assert adaptive_mask[idx] == 3
+    assert adaptive_mask[idx + 1] == 2
+    assert adaptive_mask[idx + 2] == 1
+    assert adaptive_mask[idx + 3] == 1
+    assert adaptive_mask[idx + 4] == 0
+    assert adaptive_mask[idx + 5] == 0
+    assert mask.sum() == 49374
+    vals, counts = np.unique(adaptive_mask, return_counts=True)
+    assert np.allclose(vals, np.array([0, 1, 2, 3]))
+    assert np.allclose(counts, np.array([14976, 3111, 6248, 40015]))
+
+    # Adding "none" should have no effect
+    mask, adaptive_mask = utils.make_adaptive_mask(
+        data,
+        mask=mask_file,
+        threshold=1,
+        methods=["dropout", "decay", "none"],
+    )
+
+    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
+    assert adaptive_mask[idx] == 3
+    assert adaptive_mask[idx + 1] == 2
+    assert adaptive_mask[idx + 2] == 1
+    assert adaptive_mask[idx + 3] == 1
+    assert adaptive_mask[idx + 4] == 0
+    assert adaptive_mask[idx + 5] == 0
+    assert mask.sum() == 49374
+    vals, counts = np.unique(adaptive_mask, return_counts=True)
+    assert np.allclose(vals, np.array([0, 1, 2, 3]))
+    assert np.allclose(counts, np.array([14976, 3111, 6248, 40015]))
+
+    # Just "none"
+    mask, adaptive_mask = utils.make_adaptive_mask(
+        data,
+        mask=mask_file,
+        threshold=1,
+        methods=["none"],
+    )
+
+    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
+    assert adaptive_mask[idx] == 3
+    assert adaptive_mask[idx + 1] == 3
+    assert adaptive_mask[idx + 2] == 3
+    assert adaptive_mask[idx + 3] == 3
+    assert adaptive_mask[idx + 4] == 3
+    assert adaptive_mask[idx + 5] == 2
+    assert mask.sum() == 60985
+    vals, counts = np.unique(adaptive_mask, return_counts=True)
+    assert np.allclose(vals, np.array([0, 1, 2, 3]))
+    assert np.allclose(counts, np.array([3365, 1412, 1195, 58378]))
 
 
 # SMOKE TESTS
 
 
 def test_smoke_reshape_niimg():
-    """
-    Ensure that reshape_niimg returns reasonable objects with random inputs
+    """Ensure that reshape_niimg returns reasonable objects with random inputs.
+
     in the correct format.
 
     Note: reshape_niimg could take in 3D or 4D array.
@@ -123,11 +232,11 @@ def test_smoke_reshape_niimg():
 
 
 def test_smoke_make_adaptive_mask():
-    """
-    Ensure that make_adaptive_mask returns reasonable objects with random inputs
+    """Ensure that make_adaptive_mask returns reasonable objects with random inputs.
+
     in the correct format.
 
-    Note: make_adaptive_mask has optional paramters - mask and getsum.
+    Note: make_adaptive_mask has optional paramters - mask and threshold.
     """
     n_samples = 100
     n_echos = 5
@@ -135,14 +244,12 @@ def test_smoke_make_adaptive_mask():
     data = np.random.random((n_samples, n_echos, n_times))
     mask = np.random.randint(2, size=n_samples)
 
-    assert utils.make_adaptive_mask(data) is not None
-    assert utils.make_adaptive_mask(data, mask=mask) is not None  # functions with mask
-    assert utils.make_adaptive_mask(data, getsum=True) is not None  # functions when getsumis true
+    assert utils.make_adaptive_mask(data, mask=mask, methods=["dropout", "decay"]) is not None
 
 
 def test_smoke_unmask():
-    """
-    Ensure that unmask returns reasonable objects with random inputs
+    """Ensure that unmask returns reasonable objects with random inputs.
+
     in the correct format.
 
     Note: unmask could take in 1D or 2D or 3D arrays.
@@ -158,8 +265,8 @@ def test_smoke_unmask():
 
 
 def test_smoke_dice():
-    """
-    Ensure that dice returns reasonable objects with random inputs
+    """Ensure that dice returns reasonable objects with random inputs.
+
     in the correct format.
 
     Note: two arrays must be in the same length.
@@ -171,8 +278,8 @@ def test_smoke_dice():
 
 
 def test_smoke_andb():
-    """
-    Ensure that andb returns reasonable objects with random inputs
+    """Ensure that andb returns reasonable objects with random inputs.
+
     in the correct format.
     """
     arr = np.random.random((100, 10)).tolist()  # 2D list of "arrays"
@@ -181,8 +288,8 @@ def test_smoke_andb():
 
 
 def test_smoke_get_spectrum():
-    """
-    Ensure that get_spectrum returns reasonable objects with random inputs
+    """Ensure that get_spectrum returns reasonable objects with random inputs.
+
     in the correct format.
     """
     data = np.random.random(100)
@@ -194,8 +301,8 @@ def test_smoke_get_spectrum():
 
 
 def test_smoke_threshold_map():
-    """
-    Ensure that threshold_map returns reasonable objects with random inputs
+    """Ensure that threshold_map returns reasonable objects with random inputs.
+
     in the correct format.
 
     Note: using 3D array as img, some parameters are optional and are all tested.

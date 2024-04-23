@@ -29,7 +29,7 @@ sub-01_desc-adaptiveGoodSignal_mask.nii.gz
 sub-01_desc-limited_S0map.nii.gz
 sub-01_desc-limited_T2starmap.nii.gz
 sub-01_desc-optcomAccepted_bold.nii.gz
-sub-01_desc-optcomDenoised_bold.nii.gz
+sub-01_desc-denoised_bold.nii.gz
 sub-01_desc-optcom_whitened_bold.nii.gz
 sub-01_desc-optcomRejected_bold.nii.gz
 sub-01_desc-optcom_bold.nii.gz
@@ -82,6 +82,7 @@ sub-01_references.bib
 sub-01_report.txt
 sub-01_tedana_report.html
 figures
+figures/sub-01_adaptive_mask.svg
 figures/sub-01_carpet_optcom.svg
 figures/sub-01_carpet_denoised.svg
 figures/sub-01_carpet_accepted.svg
@@ -138,3 +139,7 @@ figures/sub-01_comp_048.png
 figures/sub-01_comp_049.png
 figures/sub-01_comp_050.png
 figures/sub-01_comp_051.png
+figures/sub-01_s0_brain.svg
+figures/sub-01_s0_histogram.svg
+figures/sub-01_t2star_brain.svg
+figures/sub-01_t2star_histogram.svg
