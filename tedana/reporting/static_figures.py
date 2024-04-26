@@ -652,7 +652,7 @@ def plot_rmse(
     # Load the confounds file
     confounds_df = pd.read_table(confounds_file)
 
-     fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(10, 6))
     rmse_arr = confounds_df["rmse_median"].values
     p25_arr = confounds_df["rmse_percentile25"].values
     p75_arr = confounds_df["rmse_percentile75"].values
