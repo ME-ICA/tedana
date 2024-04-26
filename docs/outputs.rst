@@ -581,7 +581,9 @@ This plot includes the median RMSE time series,
 along with an error band representing the 25th and 75th percentiles,
 and dotted lines indicating the 2nd and 98th percentile RMSE values.
 
-The fit quality will vary depending on acquisition parameters and will likely be worse near signal drop-out areas. For a study with consistent acquisition parameters, relatively high RMSE values for runs or timepoints might be a marker of an underlying data quality issue.
+The fit quality will vary depending on acquisition parameters and will likely be worse near signal drop-out areas.
+For a study with consistent acquisition parameters,
+relatively high RMSE values for runs or timepoints might be a marker of an underlying data quality issue.
 
 .. image:: /_static/rmse_plots.png
   :align: center
