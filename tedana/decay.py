@@ -541,7 +541,7 @@ def rmse_of_fit_decay_ts(
     rmse_map = np.nanmean(rmse, axis=1)
     rmse_timeseries = np.nanmean(rmse, axis=0)
     rmse_sd_timeseries = np.nanstd(rmse, axis=0)
-    rmse_percentiles_timeseries = np.percentile(rmse, [0, 2, 25, 50, 75, 98, 100], axis=0)
+    rmse_percentiles_timeseries = np.nanpercentile(rmse, [0, 2, 25, 50, 75, 98, 100], axis=0)
 
     rmse_df = pd.DataFrame(
         columns=[
