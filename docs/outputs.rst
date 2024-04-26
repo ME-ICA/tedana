@@ -574,11 +574,12 @@ These plots show residual mean squared error (RMSE) values for the
 monoexponential decay model, based on the T2* and S0 maps.
 
 The first plot is the mean RMSE brain plot, which shows the mean RMSE over time for each voxel in the brain.
+This plot is limited from the 2nd percentile to the 98th percentile.
 
 The second plot is a time series of RMSE values across the brain, over time.
 This plot includes the median RMSE time series,
 along with an error band representing the 25th and 75th percentiles,
-and dotted lines indicating the minimum and maximum RMSE values.
+and dotted lines indicating the 2nd and 98th percentile RMSE values.
 
 .. image:: /_static/rmse_plots.png
   :align: center
