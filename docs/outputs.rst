@@ -565,6 +565,26 @@ It is important to note that the histogram is limited from 0 to the 98th percent
   :height: 400px
 
 
+*********************
+Decay Model Fit Plots
+*********************
+
+Below the T2* and S0 summary plots are the decay model fit plots.
+These plots show residual mean squared error (RMSE) values for the
+monoexponential decay model, based on the T2* and S0 maps.
+
+The first plot is the mean RMSE brain plot, which shows the mean RMSE over time for each voxel in the brain.
+
+The second plot is a time series of RMSE values across the brain, over time.
+This plot includes the median RMSE time series,
+along with an error band representing the 25th and 75th percentiles,
+and dotted lines indicating the minimum and maximum RMSE values.
+
+.. image:: /_static/rmse_plots.png
+  :align: center
+  :height: 400px
+
+
 **************************
 Citable workflow summaries
 **************************

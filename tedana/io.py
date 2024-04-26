@@ -373,7 +373,7 @@ class OutputGenerator:
         name = self.get_name(description, **kwargs)
         if op.isfile(name):
             old_data = pd.read_table(name)
-            data = pd.concat([old_data, data], ignore_index=False)
+            data = pd.concat([old_data, data], axis=1, ignore_index=False)
 
         self.save_tsv(data, name)
 
