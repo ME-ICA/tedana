@@ -650,7 +650,7 @@ def tedana_workflow(
             io_generator.save_file(s0_limited, "limited s0 img")
 
         # Calculate RMSE if S0 and T2* are fit
-        rmse_map, rmse_timeseries, rmse_sd_timeseries = decay.rmse_of_fit_decay_ts(
+        rmse_map, rmse_df = decay.rmse_of_fit_decay_ts(
             data=catd,
             tes=tes,
             adaptive_mask=masksum_denoise,
@@ -658,12 +658,8 @@ def tedana_workflow(
             s0=s0_limited,
             fitmode="all",
         )
-        confounds_df = pd.DataFrame(
-            columns=["rmse", "rmse_std"],
-            data=np.column_stack((rmse_timeseries, rmse_sd_timeseries)),
-        )
         io_generator.save_file(rmse_map, "rmse img")
-        io_generator.add_df_to_file(confounds_df, "confounds tsv")
+        io_generator.add_df_to_file(rmse_df, "confounds tsv")
 
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, masksum_denoise, t2s=t2s_full, combmode=combmode)

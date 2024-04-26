@@ -5,6 +5,7 @@ from typing import List, Literal, Tuple
 
 import numpy as np
 import numpy.matlib
+import pandas as pd
 import scipy
 from scipy import stats
 from tqdm.auto import tqdm
@@ -498,11 +499,11 @@ def rmse_of_fit_decay_ts(
     -------
     rmse_map : (S,) :obj:`numpy.ndarray`
         Mean root mean squared error of the model fit across all volumes at each voxel.
-    rmse_timeseries : (T,) :obj:`numpy.ndarray`
-        Mean root mean squared error of the model fit across all voxels at each timepoint.
-    rmse_sd_timeseries : (T,) :obj:`numpy.ndarray`
-        Standard deviation of root mean squared error of the model fit across all voxels at each
-        timepoint.
+    rmse_df : :obj:`pandas.DataFrame`
+        Each column is the root mean squared error of the model fit at each timepoint.
+        Columns are mean, standard deviation, and percentiles across voxels. Column labels are
+        "rmse_mean", "rmse_std", "rmse_min", "rmse_percentile02", "rmse_percentile25",
+        "rmse_median", "rmse_percentile75", "rmse_percentile98", and "rmse_max"
     """
     n_samples, _, n_vols = data.shape
     tes = np.array(tes)
@@ -510,7 +511,7 @@ def rmse_of_fit_decay_ts(
     rmse = np.full([n_samples, n_vols], np.nan, dtype=np.float32)
     # n_good_echoes interates from 2 through the number of echoes
     #   0 and 1 are excluded because there aren't T2* and S0 estimates
-    #   for less than 2 voxels. 2 voxels will have a bad estimate so consider
+    #   for less than 2 good echoes. 2 echoes will have a bad estimate so consider
     #   how/if we want to distinguish those
     for n_good_echoes in range(2, len(tes) + 1):
         # a boolean mask for voxels with a specific num of good echoes
@@ -540,4 +541,26 @@ def rmse_of_fit_decay_ts(
     rmse_map = np.nanmean(rmse, axis=1)
     rmse_timeseries = np.nanmean(rmse, axis=0)
     rmse_sd_timeseries = np.nanstd(rmse, axis=0)
-    return rmse_map, rmse_timeseries, rmse_sd_timeseries
+
+    rmse_df = pd.DataFrame(
+        columns=[
+            "rmse_mean",
+            "rmse_std",
+            "rmse_min",
+            "rmse_percentile02",
+            "rmse_percentile25",
+            "rmse_median",
+            "rmse_percentile75",
+            "rmse_percentile98",
+            "rmse_max",
+        ],
+        data=np.column_stack(
+            (
+                rmse_timeseries,
+                rmse_sd_timeseries,
+                rmse_percentiles_timeseries.T,
+            )
+        ),
+    )
+
+    return (rmse_map, rmse_df)

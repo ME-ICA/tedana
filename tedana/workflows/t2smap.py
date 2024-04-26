@@ -7,7 +7,6 @@ import os.path as op
 import sys
 
 import numpy as np
-import pandas as pd
 from nilearn.masking import compute_epi_mask
 from scipy import stats
 from threadpoolctl import threadpool_limits
@@ -318,7 +317,7 @@ def t2smap_workflow(
     t2s_full[t2s_full > cap_t2s * 10] = cap_t2s
 
     LGR.info("Calculating model fit quality metrics")
-    rmse_map, rmse_timeseries, rmse_sd_timeseries = decay.rmse_of_fit_decay_ts(
+    rmse_map, rmse_timeseries, rmse_df = decay.rmse_of_fit_decay_ts(
         data=catd,
         tes=tes,
         adaptive_mask=masksum,
@@ -326,12 +325,8 @@ def t2smap_workflow(
         s0=s0_limited,
         fitmode=fitmode,
     )
-    confounds_df = pd.DataFrame(
-        columns=["rmse", "rmse_std"],
-        data=np.column_stack((rmse_timeseries, rmse_sd_timeseries)),
-    )
     io_generator.save_file(rmse_map, "rmse img")
-    io_generator.save_file(confounds_df, "confounds tsv")
+    io_generator.save_file(rmse_df, "confounds tsv")
 
     LGR.info("Computing optimal combination")
     # optimally combine data
