@@ -155,6 +155,14 @@ class OutputGenerator:
             LGR.info(f"Generating figures directory: {self.figures_dir}")
             os.mkdir(self.figures_dir)
 
+        # Remove files that are appended to instead of overwritten.
+        if overwrite:
+            files_to_remove = ["confounds tsv"]
+            for file_ in files_to_remove:
+                filepath = self.get_name(file_)
+                if op.exists(filepath):
+                    os.remove(filepath)
+
     def _determine_extension(self, description, name):
         """Infer the extension for a file based on its description.
 
