@@ -115,6 +115,8 @@ report.txt                                                                   A s
 "high kappa ts img": desc-optcomAccepted_bold.nii.gz                         High-kappa time series. This dataset does not
                                                                              include thermal noise or low variance components.
                                                                              Not the recommended dataset for analysis.
+"confounds tsv": desc-confounds_timeseries.tsv                               Summary time series measures, including RMSE measures
+                                                                             of T2*/S0 model fit.
 references.bib                                                               The BibTeX entries for references cited in
                                                                              report.txt.
 
@@ -167,8 +169,8 @@ If ``gscontrol`` includes 'gsr'
 Key: Filename                                                      Content
 =================================================================  =====================================================
 "gs img": desc-globalSignal_map.nii.gz                             Spatial global signal
-"global signal time series tsv": desc-globalSignal_timeseries.tsv  Time series of global signal from optimally combined
-                                                                   data.
+"confounds tsv": desc-confounds_timeseries.tsv                     Time series of global signal from optimally combined
+                                                                   data will be added to this file.
 "has gs combined img": desc-optcomWithGlobalSignal_bold.nii.gz     Optimally combined time series with global signal
                                                                    retained.
 "removed gs combined img": desc-optcomNoGlobalSignal_bold.nii.gz   Optimally combined time series with global signal
