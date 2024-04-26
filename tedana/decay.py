@@ -564,4 +564,4 @@ def rmse_of_fit_decay_ts(
         ),
     )
 
-    return (rmse_map, rmse_df)
+    return rmse_map, rmse_df

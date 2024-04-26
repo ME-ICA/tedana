@@ -937,7 +937,10 @@ def tedana_workflow(
         )
         reporting.static_figures.plot_t2star_and_s0(io_generator=io_generator, mask=mask_denoise)
         if t2smap is None:
-            reporting.static_figures.plot_rmse(io_generator=io_generator)
+            reporting.static_figures.plot_rmse(
+                io_generator=io_generator,
+                adaptive_mask=masksum_denoise,
+            )
 
         LGR.info("Generating dynamic report")
         reporting.generate_report(io_generator)
