@@ -623,18 +623,16 @@ def plot_rmse(
     io_generator: io.OutputGenerator,
     adaptive_mask: np.ndarray,
 ):
-    """
-    Create a plot of the root mean square error (RMSE) for each component.
+    """Plot the residual mean squared error map and time series for the monoexponential model fit.
 
     Parameters
     ----------
     io_generator : :obj:`~tedana.io.OutputGenerator`
-        The output generator for this workflow
+        The output generator for this workflow.
     adaptive_mask : (S,) :obj:`numpy.ndarray`
         A mask where each value is the number of good echoes.
-        Since the T2* and S0 estimations require a minimum of 2
-        good echoes, the outputted plots will only include mask
-        values of at least 2.
+        Since the T2* and S0 estimations require a minimum of 2 good echoes,
+        the outputted plots will only include mask values of at least 2.
     """
     import pandas as pd
 
