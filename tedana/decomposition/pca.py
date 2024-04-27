@@ -6,6 +6,7 @@ from numbers import Number
 import numpy as np
 import pandas as pd
 from mapca import MovingAveragePCA
+from nilearn.signal import standardize_signal
 from scipy import stats
 from sklearn.decomposition import PCA
 
@@ -204,12 +205,11 @@ def tedpca(
         f"Computing PCA of optimally combined multi-echo data with selection criteria: {algorithm}"
     )
     data = data_oc[mask, :]
-
-    data_z = ((data.T - data.T.mean(axis=0)) / data.T.std(axis=0)).T  # var normalize ts
-    data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
+    data_z = standardize_signal(data.T, detrend=True, standardize="zscore_sample").T
+    # data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
 
     if algorithm in ["mdl", "aic", "kic"]:
-        data_img = io.new_nii_like(io_generator.reference_img, utils.unmask(data, mask))
+        data_img = io.new_nii_like(io_generator.reference_img, utils.unmask(data_z, mask))
         mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
         ma_pca = MovingAveragePCA(criterion=algorithm, normalize=True)
         _ = ma_pca.fit_transform(data_img, mask_img)
