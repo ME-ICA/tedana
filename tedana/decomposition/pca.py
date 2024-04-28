@@ -144,9 +144,9 @@ def tedpca(
 
             - Nonsignificant :math:`{\kappa}` and :math:`{\rho}`.
             - Nonsignificant variance explained.
+
     Generated Files
     ---------------
-
     ===========================    =============================================
     Default Filename               Content
     ===========================    =============================================
@@ -205,11 +205,16 @@ def tedpca(
         f"Computing PCA of optimally combined multi-echo data with selection criteria: {algorithm}"
     )
     data = data_oc[mask, :]
-    data_z = standardize_signal(data.T, detrend=True, standardize="zscore_sample").T
-    data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
+    if algorithm in ["mdl", "aic", "kic"]:
+        # Detrend the data, but don't z-score, if using MAPCA
+        data = standardize_signal(data.T, detrend=True, standardize=False).T
+    else:
+        # Z-score the data otherwise
+        data = standardize_signal(data.T, detrend=True, standardize="zscore_sample").T
+        data = (data - data.mean()) / data.std()  # var normalize everything
 
     if algorithm in ["mdl", "aic", "kic"]:
-        data_img = io.new_nii_like(io_generator.reference_img, utils.unmask(data_z, mask))
+        data_img = io.new_nii_like(io_generator.reference_img, utils.unmask(data, mask))
         mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
         ma_pca = MovingAveragePCA(criterion=algorithm, normalize=True)
         _ = ma_pca.fit_transform(data_img, mask_img)
@@ -315,23 +320,23 @@ def tedpca(
 
     elif isinstance(algorithm, Number):
         ppca = PCA(copy=False, n_components=algorithm, svd_solver="full")
-        ppca.fit(data_z)
+        ppca.fit(data)
         comp_ts = ppca.components_.T
         varex = ppca.explained_variance_
-        voxel_comp_weights = np.dot(np.dot(data_z, comp_ts), np.diag(1.0 / varex))
+        voxel_comp_weights = np.dot(np.dot(data, comp_ts), np.diag(1.0 / varex))
         varex_norm = ppca.explained_variance_ratio_
     elif low_mem:
-        voxel_comp_weights, varex, varex_norm, comp_ts = low_mem_pca(data_z)
+        voxel_comp_weights, varex, varex_norm, comp_ts = low_mem_pca(data)
     else:
         # If algorithm is kundu or kundu-stablize component metrics
         # are calculated without dimensionality estimation and
         # reduction and then kundu identifies components that are
         # to be accepted or rejected
         ppca = PCA(copy=False, n_components=(n_vols - 1))
-        ppca.fit(data_z)
+        ppca.fit(data)
         comp_ts = ppca.components_.T
         varex = ppca.explained_variance_
-        voxel_comp_weights = np.dot(np.dot(data_z, comp_ts), np.diag(1.0 / varex))
+        voxel_comp_weights = np.dot(np.dot(data, comp_ts), np.diag(1.0 / varex))
         varex_norm = ppca.explained_variance_ratio_
 
     # Compute Kappa and Rho for PCA comps
