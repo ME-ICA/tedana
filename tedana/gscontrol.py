@@ -197,15 +197,15 @@ def minimum_image_regression(
     # Get accepted and ignored components
     # Tedana has removed the "ignored" classification,
     # so we must separate "accepted" components based on the classification tag(s).
-    IGNORE_TAGS = ["low variance", "accept borderline"]
-    if not any(tag in classification_tags for tag in IGNORE_TAGS):
+    ignore_tags = ["low variance", "accept borderline"]
+    if not any(tag in classification_tags for tag in ignore_tags):
         LGR.warning(
             "Decision tree does not contain classification tags indicating low variance "
-            f"components ({', '.join(IGNORE_TAGS)})."
+            f"components ({', '.join(ignore_tags)})."
         )
         ign = np.array([], dtype=int)
     else:
-        pattern = "|".join(IGNORE_TAGS)  # Create a pattern that matches any of the ignore tags
+        pattern = "|".join(ignore_tags)  # Create a pattern that matches any of the ignore tags
 
         # Select rows where the 'classification_tags' column contains any of the ignore tags
         ign = comptable[
