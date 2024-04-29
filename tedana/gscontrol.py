@@ -131,6 +131,7 @@ def minimum_image_regression(
     mixing: np.ndarray,
     mask: np.ndarray,
     comptable: pd.DataFrame,
+    classification_tags: list,
     io_generator: io.OutputGenerator,
 ):
     """Perform minimum image regression (MIR) to remove T1-like effects from BOLD-like components.
@@ -150,6 +151,9 @@ def minimum_image_regression(
     comptable : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
+    classification_tags : :obj:`list` of :obj:`str`
+        List of classification tags used in the decision tree.
+        This is used to separate "accepted" and "ignored" components.
     io_generator : :obj:`tedana.io.OutputGenerator`
         The output generating object for this workflow
 
@@ -190,8 +194,27 @@ def minimum_image_regression(
     )
 
     all_comps = comptable.index.values
+    # Get accepted and ignored components
+    # Tedana has removed the "ignored" classification,
+    # so we must separate "accepted" components based on the classification tag(s).
+    IGNORE_TAGS = ["low variance", "accept borderline"]
+    if not any(tag in classification_tags for tag in IGNORE_TAGS):
+        LGR.warning(
+            "Decision tree does not contain classification tags indicating low variance "
+            f"components ({', '.join(IGNORE_TAGS)})."
+        )
+        ign = np.array([], dtype=int)
+    else:
+        pattern = "|".join(IGNORE_TAGS)  # Create a pattern that matches any of the ignore tags
+
+        # Select rows where the 'classification_tags' column contains any of the ignore tags
+        ign = comptable[
+            comptable.classification_tags.str.contains(pattern, na=False, regex=True)
+        ].index.values
+
     acc = comptable[comptable.classification == "accepted"].index.values
-    ign = comptable[comptable.classification == "ignored"].index.values
+    # Ignored components are classified as "accepted", so we need to remove them from the list
+    acc = sorted(np.setdiff1d(acc, ign))
     not_ign = sorted(np.setdiff1d(all_comps, ign))
 
     data_optcom_masked = data_optcom[mask, :]
