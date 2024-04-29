@@ -121,7 +121,7 @@ def gscontrol_raw(
 
     # Project global signal (but not Legendre bases) out of optimally combined data
     betas = np.linalg.lstsq(glbase, data_optcom_masked.T, rcond=None)[0]
-    gs_fitted = np.dot(glbase[:, :1], betas[:1, :])
+    gs_fitted = np.dot(glbase[:, :1], betas[:1, :]).T
     data_optcom_nogs = data_optcom_masked - gs_fitted + temporal_mean
     data_optcom_nogs = utils.unmask(data_optcom_nogs, temporal_mean_mask)
     io_generator.save_file(data_optcom_nogs, "removed gs combined img")
@@ -137,7 +137,7 @@ def gscontrol_raw(
 
         # Fit regression, then remove global signal
         betas = np.linalg.lstsq(glbase, data_echo_masked.T, rcond=None)[0]
-        echo_nogs = data_echo_masked - np.dot(glbase[:, :1], betas[:1, :]) + echo_mean
+        echo_nogs = data_echo_masked - np.dot(glbase[:, :1], betas[:1, :]).T + echo_mean
         data_cat_nogs[:, echo, :] = utils.unmask(echo_nogs, temporal_mean_mask)
 
     return data_cat_nogs, data_optcom_nogs
