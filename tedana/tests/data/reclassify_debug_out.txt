@@ -20,3 +20,4 @@ sub-testymctestface_ica_orth_mixing.tsv
 sub-testymctestface_ica_status_table.tsv
 sub-testymctestface_registry.json
 sub-testymctestface_sphis_hik.nii.gz
+sub-testymctestface_confounds.tsv
