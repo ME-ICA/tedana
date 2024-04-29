@@ -649,6 +649,18 @@ def tedana_workflow(
             io_generator.save_file(utils.millisec2sec(t2s_limited), "limited t2star img")
             io_generator.save_file(s0_limited, "limited s0 img")
 
+        # Calculate RMSE if S0 and T2* are fit
+        rmse_map, rmse_df = decay.rmse_of_fit_decay_ts(
+            data=catd,
+            tes=tes,
+            adaptive_mask=masksum_denoise,
+            t2s=t2s_limited,
+            s0=s0_limited,
+            fitmode="all",
+        )
+        io_generator.save_file(rmse_map, "rmse img")
+        io_generator.add_df_to_file(rmse_df, "confounds tsv")
+
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, masksum_denoise, t2s=t2s_full, combmode=combmode)
 
@@ -936,6 +948,11 @@ def tedana_workflow(
             png_cmap=png_cmap,
         )
         reporting.static_figures.plot_t2star_and_s0(io_generator=io_generator, mask=mask_denoise)
+        if t2smap is None:
+            reporting.static_figures.plot_rmse(
+                io_generator=io_generator,
+                adaptive_mask=masksum_denoise,
+            )
 
         LGR.info("Generating dynamic report")
         reporting.generate_report(io_generator)

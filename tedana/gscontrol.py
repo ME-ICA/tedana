@@ -49,6 +49,22 @@ def gscontrol_raw(
         Input ``data_cat`` with global signal removed from time series.
     data_optcom_nogs : (S x T) array_like
         Input ``data_optcom`` with global signal removed from time series.
+
+    Notes
+    -----
+    This function writes out several files:
+
+    ========================================    =================================================
+    IOGenerator Label                           Content
+    ========================================    =================================================
+    "has gs combined img"                       Optimally combined data before global signal
+                                                removal
+    "gs img"                                    Spatial global signal map
+    "confounds tsv"                             A "global_signal" column with the time course
+                                                of the global signal is added to this TSV.
+    "removed gs combined img"                   Optimally combined data after global signal
+                                                removal
+    ========================================    =================================================
     """
     LGR.info("Applying amplitude-based T1 equilibration correction")
     RepLGR.info(
@@ -99,7 +115,7 @@ def gscontrol_raw(
     gs_ts = stats.zscore(gs_ts, axis=None)
 
     glsig_df = pd.DataFrame(data=gs_ts.T, columns=["global_signal"])
-    io_generator.save_file(glsig_df, "global signal time series tsv")
+    io_generator.add_df_to_file(glsig_df, "confounds tsv")
     glbase = np.hstack([legendre_arr, gs_ts.T])
 
     # Project global signal out of optimally combined data
@@ -175,6 +191,8 @@ def minimum_image_regression(
     IOGenerator Label                           Content
     ========================================    =================================================
     "t1 like img"                               T1-like effect
+    "confounds tsv"                             A "mir_global_signal" column with the time course
+                                                of the T1-like effect is added to this TSV.
     "mir denoised img"                          Denoised version of T1-corrected time series
     "ICA MIR mixing tsv"                        T1 global signal-corrected mixing matrix
 
@@ -237,6 +255,8 @@ def minimum_image_regression(
 
     # Find the global signal based on the T1-like effect
     gs_ts = np.linalg.lstsq(t1_map, data_optcom_z, rcond=None)[0]
+    glsig_df = pd.DataFrame(data=gs_ts.T, columns=["mir_global_signal"])
+    io_generator.add_df_to_file(glsig_df, "confounds tsv")
 
     # Remove T1-like global signal from MEHK time series
     mehk_no_t1_gs = mehk_ts - np.dot(
