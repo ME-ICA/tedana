@@ -33,6 +33,8 @@ sub-01_desc-denoised_bold.nii.gz
 sub-01_desc-optcom_whitened_bold.nii.gz
 sub-01_desc-optcomRejected_bold.nii.gz
 sub-01_desc-optcom_bold.nii.gz
+sub-01_desc-confounds_timeseries.tsv
+sub-01_desc-rmse_statmap.nii.gz
 sub-01_echo-1_desc-Accepted_bold.nii.gz
 sub-01_echo-1_desc-Denoised_bold.nii.gz
 sub-01_echo-1_desc-ICAT2ModelPredictions_components.nii.gz
@@ -139,6 +141,8 @@ figures/sub-01_comp_048.png
 figures/sub-01_comp_049.png
 figures/sub-01_comp_050.png
 figures/sub-01_comp_051.png
+figures/sub-01_rmse_brain.svg
+figures/sub-01_rmse_timeseries.svg
 figures/sub-01_s0_brain.svg
 figures/sub-01_s0_histogram.svg
 figures/sub-01_t2star_brain.svg
