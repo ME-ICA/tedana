@@ -96,46 +96,48 @@ def gscontrol_raw(
     # inefficient, but makes this function a bit more modular
     temporal_mean = data_optcom.mean(axis=-1)  # temporal mean
     temporal_mean_mask = temporal_mean != 0
+    temporal_mean = temporal_mean[temporal_mean_mask][:, np.newaxis]
 
     # Mean-center optimally combined data over time
-    data_optcom_masked = (
-        data_optcom[temporal_mean_mask] - temporal_mean[temporal_mean_mask][:, np.newaxis]
-    )
+    data_optcom_masked = data_optcom[temporal_mean_mask] - temporal_mean
+
     # Detrend the data using the Legendre basis functions
     betas = np.linalg.lstsq(legendre_arr, data_optcom_masked.T, rcond=None)[0]
     optcom_detr = data_optcom_masked - np.dot(betas.T, legendre_arr.T)[0]
+
     # The spatial global signal is the minimum of the detrended data
     gs_spatial = (optcom_detr).min(axis=1)
     gs_spatial -= gs_spatial.mean()
     io_generator.save_file(utils.unmask(gs_spatial, temporal_mean_mask), "gs img")
 
-    # find time course of the spatial global signal
-    # make basis with the Legendre basis
+    # Find time course of the spatial global signal
+    # Make basis with the Legendre basis
     gs_ts = np.linalg.lstsq(np.atleast_2d(gs_spatial).T, data_optcom_masked, rcond=None)[0]
     gs_ts = stats.zscore(gs_ts, axis=None)
 
     glsig_df = pd.DataFrame(data=gs_ts.T, columns=["global_signal"])
     io_generator.add_df_to_file(glsig_df, "confounds tsv")
-    glbase = np.hstack([legendre_arr, gs_ts.T])
+    glbase = np.atleast_2d(np.hstack([gs_ts.T, legendre_arr]))
 
-    # Project global signal out of optimally combined data
-    betas = np.linalg.lstsq(np.atleast_2d(glbase), data_optcom_masked.T, rcond=None)[0]
-    gs_fitted = np.dot(np.atleast_2d(betas[dtrank]).T, np.atleast_2d(glbase.T[dtrank]))
-    data_optcom_nogs = (
-        data_optcom_masked - gs_fitted + temporal_mean[temporal_mean_mask][:, np.newaxis]
-    )
+    # Project global signal (but not Legendre bases) out of optimally combined data
+    betas = np.linalg.lstsq(glbase, data_optcom_masked.T, rcond=None)[0]
+    gs_fitted = np.dot(glbase[:, :1], betas[:1, :])
+    data_optcom_nogs = data_optcom_masked - gs_fitted + temporal_mean
     data_optcom_nogs = utils.unmask(data_optcom_nogs, temporal_mean_mask)
     io_generator.save_file(data_optcom_nogs, "removed gs combined img")
 
-    # Project glbase out of each echo
+    # Project global signal (but not Legendre bases) out of each echo
     data_cat_nogs = data_cat.copy()  # don't overwrite data_cat
     for echo in range(n_echos):
-        data_echo_masked = data_cat_nogs[:, echo, :][temporal_mean_mask]
-        betas = np.linalg.lstsq(np.atleast_2d(glbase), data_echo_masked.T, rcond=None)[0]
-        echo_nogs = data_echo_masked - np.dot(
-            np.atleast_2d(betas[dtrank]).T,
-            np.atleast_2d(glbase.T[dtrank]),
-        )
+        data_echo_masked = data_cat_nogs[temporal_mean_mask, echo, :]
+
+        # Mean center echo's data over time
+        echo_mean = data_echo_masked.mean(axis=-1, keepdims=True)
+        data_echo_masked -= echo_mean
+
+        # Fit regression, then remove global signal
+        betas = np.linalg.lstsq(glbase, data_echo_masked.T, rcond=None)[0]
+        echo_nogs = data_echo_masked - np.dot(glbase[:, :1], betas[:1, :]) + echo_mean
         data_cat_nogs[:, echo, :] = utils.unmask(echo_nogs, temporal_mean_mask)
 
     return data_cat_nogs, data_optcom_nogs
