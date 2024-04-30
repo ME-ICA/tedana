@@ -13,6 +13,7 @@ from threadpoolctl import threadpool_limits
 from tqdm import trange
 
 from tedana import __version__, combine, decay, io, utils
+from tedana.metrics.collect import generate_metrics
 from tedana.workflows.parser_utils import is_valid_file
 
 LGR = logging.getLogger("GENERAL")
@@ -334,10 +335,16 @@ def denoise_echoes_workflow(
 
     LGR.info("Computing optimal combination")
     # optimally combine data
-    data_oc = combine.make_optcom(data_cat, tes, adaptive_mask, t2s=t2s_full, combmode=combmode)
+    data_optcom = combine.make_optcom(
+        data_cat,
+        tes,
+        adaptive_mask,
+        t2s=t2s_full,
+        combmode=combmode,
+    )
 
     # clean up numerical errors
-    for arr in (data_oc, s0_full, t2s_full):
+    for arr in (data_optcom, s0_full, t2s_full):
         np.nan_to_num(arr, copy=False)
 
     s0_full[s0_full < 0] = 0
@@ -347,17 +354,22 @@ def denoise_echoes_workflow(
     io_generator.save_file(s0_full, "s0 img")
     io_generator.save_file(utils.millisec2sec(t2s_limited), "limited t2star img")
     io_generator.save_file(s0_limited, "limited s0 img")
-    io_generator.save_file(data_oc, "combined img")
+    io_generator.save_file(data_optcom, "combined img")
 
     if confounds is not None:
-        data_cat_denoised, data_optcom_denoised = denoise_echoes(
+        data_cat_denoised, data_optcom_denoised, metrics = denoise_echoes(
             data_cat=data_cat,
-            data_oc=data_oc,
+            data_optcom=data_optcom,
             mask=mask,
             confounds=confounds,
         )
         io_generator.save_file(data_cat_denoised, "echo img")
         io_generator.save_file(data_optcom_denoised, "optcom img")
+        name = os.path.join(
+            io_generator.out_dir,
+            io_generator.prefix + "desc-external_metrics.tsv",
+        )
+        io_generator.save_tsv(metrics, name)
 
     # Write out BIDS-compatible description file
     derivative_metadata = {
@@ -417,9 +429,11 @@ if __name__ == "__main__":
 def denoise_echoes(
     *,
     data_cat: np.ndarray,
-    data_oc: np.ndarray,
-    mask: np.ndarray,
+    tes: np.ndarray,
+    data_optcom: np.ndarray,
+    adaptive_mask: np.ndarray,
     confounds: dict[str, str],
+    io_generator: io.OutputGenerator,
 ) -> tuple[np.ndarray, np.ndarray, pd.DataFrame]:
     """Denoise echoes using external regressors.
 
@@ -429,13 +443,17 @@ def denoise_echoes(
     ----------
     data_cat : :obj:`numpy.ndarray` of shape (n_samples, n_echos, n_volumes)
         Concatenated data across echoes.
-    data_oc : :obj:`numpy.ndarray` of shape (n_samples, n_volumes)
+    tes : :obj:`numpy.ndarray` of shape (n_echos,)
+        Echo times in milliseconds.
+    data_optcom : :obj:`numpy.ndarray` of shape (n_samples, n_volumes)
         Optimally combined data across echoes.
-    mask : :obj:`numpy.ndarray` of shape (n_samples,)
-        Binary mask of voxels to include in TE Dependent ANAlysis.
+    adaptive_mask : :obj:`numpy.ndarray` of shape (n_samples,)
+        Adaptive mask of voxels to include in TE Dependent ANAlysis.
     confounds : :obj:`dict`
         Files defining confounds to regress from the echo-wise data.
         Keys indicate the names to use for the confounds.
+    io_generator : :obj:`~tedana.io.OutputGenerator`
+        Output generator.
 
     Returns
     -------
@@ -449,15 +467,16 @@ def denoise_echoes(
     LGR.info("Applying a priori confound regression")
     RepLGR.info("Confounds were regressed out of the multi-echo and optimally combined datasets.")
     n_samples, n_echos, n_volumes = data_cat.shape
-    if data_cat.shape[0] != data_oc.shape[0]:
+    mask = adaptive_mask >= 1
+    if data_cat.shape[0] != data_optcom.shape[0]:
         raise ValueError(
-            f"First dimensions of data_cat ({data_cat.shape[0]}) and data_oc ({data_oc.shape[0]}) "
+            f"First dimensions of data_cat ({data_cat.shape[0]}) and data_optcom ({data_optcom.shape[0]}) "
             "do not match"
         )
-    elif data_cat.shape[2] != data_oc.shape[1]:
+    elif data_cat.shape[2] != data_optcom.shape[1]:
         raise ValueError(
             f"Third dimension of data_cat ({data_cat.shape[2]}) does not match second dimension "
-            f"of data_oc ({data_oc.shape[1]})"
+            f"of data_optcom ({data_optcom.shape[1]})"
         )
 
     confound_dfs = []
@@ -481,7 +500,7 @@ def denoise_echoes(
                 # Find the time course for the spatial map
                 confound_timeseries = np.linalg.lstsq(
                     np.atleast_2d(confound_arr).T,
-                    data_oc,
+                    data_optcom,
                     rcond=None,
                 )[0]
                 confound_timeseries = stats.zscore(confound_timeseries, axis=None)
@@ -505,12 +524,38 @@ def denoise_echoes(
     if confound_dfs:
         confounds_df = pd.concat(confound_dfs, axis=1)
         confounds_df = confounds_df.fillna(0)
+
+        # Calculate dependence metrics for non-voxel-wise confounds
+        # TODO: Support metrics for voxel-wise confounds too
+        required_metrics = [
+            "kappa",
+            "rho",
+            "countnoise",
+            "countsigFT2",
+            "countsigFS0",
+            "dice_FT2",
+            "dice_FS0",
+            "signal-noise_t",
+            "variance explained",
+            "normalized variance explained",
+            "d_table_score",
+        ]
+        metrics = generate_metrics(
+            data_cat=data_cat,
+            data_optcom=data_optcom,
+            mixing=confounds_df.values,
+            adaptive_mask=adaptive_mask,
+            tes=tes,
+            io_generator=io_generator,
+            label="external",
+            metrics=required_metrics,
+        )
     else:
         confounds_df = pd.DataFrame(index=range(n_volumes))
 
     # Project confounds out of optimally combined data
-    temporal_mean = data_oc.mean(axis=-1)  # temporal mean
-    data_optcom_denoised = data_oc[mask] - temporal_mean[mask, np.newaxis]
+    temporal_mean = data_optcom.mean(axis=-1)  # temporal mean
+    data_optcom_denoised = data_optcom[mask] - temporal_mean[mask, np.newaxis]
     if voxelwise_confounds:
         for i_voxel in trange(data_optcom_denoised.shape[0], desc="Denoise optimally combined"):
             design_matrix = confounds_df.copy()
@@ -529,7 +574,7 @@ def denoise_echoes(
     # Add the temporal mean back
     data_optcom_denoised += temporal_mean[mask, np.newaxis]
 
-    # io_generator.save_file(data_oc, "has gs combined img")
+    # io_generator.save_file(data_optcom, "has gs combined img")
     data_optcom_denoised = utils.unmask(data_optcom_denoised, mask)
     # io_generator.save_file(data_optcom_denoised, "removed regressors combined img")
 
@@ -556,8 +601,5 @@ def denoise_echoes(
         echo_denoised += temporal_mean
 
         data_cat_denoised[:, echo, :] = utils.unmask(echo_denoised, mask)
-
-    # TODO: Calculate metrics of confound-wise echo-dependence
-    metrics = pd.DataFrame()
 
     return data_cat_denoised, data_optcom_denoised, metrics
