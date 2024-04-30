@@ -115,6 +115,8 @@ report.txt                                                                   A s
 "high kappa ts img": desc-optcomAccepted_bold.nii.gz                         High-kappa time series. This dataset does not
                                                                              include thermal noise or low variance components.
                                                                              Not the recommended dataset for analysis.
+"confounds tsv": desc-confounds_timeseries.tsv                               Summary time series measures, including RMSE measures
+                                                                             of T2*/S0 model fit.
 references.bib                                                               The BibTeX entries for references cited in
                                                                              report.txt.
 
@@ -167,8 +169,8 @@ If ``gscontrol`` includes 'gsr'
 Key: Filename                                                      Content
 =================================================================  =====================================================
 "gs img": desc-globalSignal_map.nii.gz                             Spatial global signal
-"global signal time series tsv": desc-globalSignal_timeseries.tsv  Time series of global signal from optimally combined
-                                                                   data.
+"confounds tsv": desc-confounds_timeseries.tsv                     Time series of global signal from optimally combined
+                                                                   data will be added to this file.
 "has gs combined img": desc-optcomWithGlobalSignal_bold.nii.gz     Optimally combined time series with global signal
                                                                    retained.
 "removed gs combined img": desc-optcomNoGlobalSignal_bold.nii.gz   Optimally combined time series with global signal
@@ -559,6 +561,31 @@ The S0 map should roughly follow the signal-to-noise ratio and will be brightest
 It is important to note that the histogram is limited from 0 to the 98th percentile of the data to improve readability.
 
 .. image:: /_static/t2star_plots.png
+  :align: center
+  :height: 400px
+
+
+*********************
+Decay Model Fit Plots
+*********************
+
+Below the T2* and S0 summary plots are the decay model fit plots.
+These plots show residual mean squared error (RMSE) values for the
+monoexponential decay model, based on the T2* and S0 maps.
+
+The first plot is the mean RMSE brain plot, which shows the mean RMSE over time for each voxel in the brain.
+This plot is limited from the 2nd percentile to the 98th percentile.
+
+The second plot is a time series of RMSE values across the brain, over time.
+This plot includes the median RMSE time series,
+along with an error band representing the 25th and 75th percentiles,
+and dotted lines indicating the 2nd and 98th percentile RMSE values.
+
+The fit quality will vary depending on acquisition parameters and will likely be worse near signal drop-out areas.
+For a study with consistent acquisition parameters,
+relatively high RMSE values for runs or timepoints might be a marker of an underlying data quality issue.
+
+.. image:: /_static/rmse_plots.png
   :align: center
   :height: 400px
 

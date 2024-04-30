@@ -86,7 +86,7 @@ def gscontrol_raw(catd, optcom, n_echos, io_generator, dtrank=4):
     glsig = stats.zscore(glsig, axis=None)
 
     glsig_df = pd.DataFrame(data=glsig.T, columns=["global_signal"])
-    io_generator.save_file(glsig_df, "global signal time series tsv")
+    io_generator.add_df_to_file(glsig_df, "confounds tsv")
     glbase = np.hstack([legendre_arr, glsig.T])
 
     # Project global signal out of optimally combined data
