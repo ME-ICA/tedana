@@ -2,6 +2,7 @@
 
 import logging
 import re
+from typing import Dict, Tuple
 
 import numpy as np
 import pandas as pd
@@ -19,7 +20,9 @@ class RegressError(Exception):
     pass
 
 
-def load_validate_external_regressors(external_regressors, external_regressor_config, n_vols):
+def load_validate_external_regressors(
+    external_regressors: Dict, external_regressor_config: Dict, n_vols: int
+) -> Dict:
     """Load and validate external regressors and descriptors in dictionary.
 
     Parameters
@@ -55,7 +58,9 @@ def load_validate_external_regressors(external_regressors, external_regressor_co
     return external_regressors, external_regressor_config
 
 
-def validate_extern_regress(external_regressors, external_regressor_config, n_vols):
+def validate_extern_regress(
+    external_regressors: Dict, external_regressor_config: Dict, n_vols: int
+) -> Dict:
     """
     Confirm that provided external regressor dictionary is valid and matches data.
 
@@ -168,7 +173,12 @@ def validate_extern_regress(external_regressors, external_regressor_config, n_vo
     return external_regressor_config
 
 
-def fit_regressors(comptable, external_regressors, external_regressor_config, mixing):
+def fit_regressors(
+    comptable: pd.DataFrame,
+    external_regressors: pd.DataFrame,
+    external_regressor_config: Dict,
+    mixing: np._typing.ArrayLike,
+) -> pd.DataFrame:
     """
     Fit regressors to the mixing matrix.
 
@@ -232,7 +242,7 @@ def fit_regressors(comptable, external_regressors, external_regressor_config, mi
     return comptable
 
 
-def make_detrend_regressors(n_vols, polort=None):
+def make_detrend_regressors(n_vols: int, polort: int | None = None) -> pd.DataFrame:
     """
     Create polynomial detrending regressors to use for removing slow drifts from data.
 
@@ -286,12 +296,12 @@ def make_detrend_regressors(n_vols, polort=None):
 
 
 def fit_mixing_to_regressors(
-    comptable,
-    external_regressors,
-    external_regressor_config,
-    mixing,
-    detrend_regressors,
-):
+    comptable: pd.DataFrame,
+    external_regressors: pd.DataFrame,
+    external_regressor_config: Dict,
+    mixing: np._typing.ArrayLike,
+    detrend_regressors: pd.DataFrame,
+) -> pd.DataFrame:
     """
     Compute Linear Model and calculate F statistics and P values for combinations of regressors.
 
@@ -385,8 +395,10 @@ def fit_mixing_to_regressors(
 
 
 def build_fstat_regressor_models(
-    external_regressors, external_regressor_config, detrend_regressors
-):
+    external_regressors: pd.DataFrame,
+    external_regressor_config: Dict,
+    detrend_regressors: pd.DataFrame,
+) -> Dict:
     """
     Combine detrending all or subsets of external regressors to make models to fit and test.
 
@@ -483,25 +495,12 @@ def build_fstat_regressor_models(
             f"'{no_pmodel}': {keep_labels}"
         )
 
-    # vestigial codethat was used to check outputs and might be worth reviving
-    # if show_plot:
-    #     fig = plt.figure(figsize=(10, 10))
-    #     ax = fig.add_subplot(3, 2, 1)
-    #     ax.plot(detrend_regressors)
-    #     plt.title("detrend")
-    #     for idx, reg_cat in enumerate(regress_categories):
-    #         if idx < 5:
-    #             ax = fig.add_subplot(3, 2, idx + 2)
-    #             ax.plot(stats.zscore(categorized_regressors[reg_cat].to_numpy(), axis=0))
-    #             plt.title(reg_cat)
-    #     plt.savefig(
-    #         f"{prefix}_ModelRegressors.jpeg", pil_kwargs={"quality": 20}, dpi="figure"
-    #     )  # could also be saves as .eps
-
     return regressor_models
 
 
-def fit_model_with_stats(y, regressor_models, base_label, full_label="full"):
+def fit_model_with_stats(
+    y: np._typing.ArrayLike, regressor_models: Dict, base_label: str, full_label: str = "full"
+) -> Tuple[np._typing.ArrayLike, np._typing.ArrayLike, np._typing.ArrayLike, np._typing.ArrayLike]:
     """
     Fit full and partial models and calculate F stats, R2, and p values.
 
@@ -558,92 +557,4 @@ def fit_model_with_stats(y, regressor_models, base_label, full_label="full"):
     r2_vals = 1 - np.divide(sse_full, sse_base)
     print(y.shape)
 
-    # Vestigial code for testing that might be worth reviving
-    # Plots the fits for the first 20 components
-    # if show_plot:
-    #     plt.clf()
-    #     fig = plt.figure(figsize=(20, 24))
-    #     for idx in range(30):
-    #         # print('Outer bound index: ', idx)
-
-    #         if idx < Y.shape[1]:  # num of components
-    #             # print('Actual axis index: ', idx)
-    #             ax = fig.add_subplot(5, 6, idx + 1)  # this axis index starts from 1
-    #             plot_fit(
-    #                 ax,
-    #                 Y[:, idx],
-    #                 betas_full[:, idx],
-    #                 regressor_models["full"],
-    #                 betas_base=betas_base[:, idx],
-    #                 X_base=regressor_models[base_label],
-    #                 F_val=F_vals[idx],
-    #                 p_val=p_vals[idx],
-    #                 R2_val=R2_vals[idx],
-    #                 SSE_base=SSE_base[idx],
-    #                 SSE_full=SSE_full[idx],
-    #                 base_legend=base_label,
-    #             )
-    #     base_save_label = base_label.replace(" ", "_")
-    #     plt.savefig(
-    #         f"{prefix}_ModelFits_{base_save_label}.jpeg",
-    #         pil_kwargs={"quality": 20},
-    #         dpi="figure",
-    #     )  # could also be saved as eps
-
     return betas_full, f_vals, p_vals, r2_vals
-
-
-# Vestigial code that was used for testing accuracy of some variables
-# Might be worth reviving
-# def plot_fit(
-#     ax,
-#     Y,
-#     betas_full,
-#     X_full,
-#     betas_base=None,
-#     X_base=None,
-#     F_val=None,
-#     p_val=None,
-#     R2_val=None,
-#     SSE_base=None,
-#     SSE_full=None,
-#     base_legend="base fit",
-# ):
-#     """
-#     plot_fit: Plot the component time series and the fits to the full and base models
-
-#     INPUTS:
-#     ax: axis handle for the figure subplot
-#     Y: The ICA component time series to fit to
-#     betas_full: The full model fitting parameters
-#     X_full: The time series for the full model
-
-#     Optional:
-#     betas_base, X_base=None: Model parameters and time series for base model
-#     (not plotted if absent)
-#     F_val, p_val, R2_val, SSE_base, SSE_full: Fit statistics to include with each plot
-#     base_legend: A description of what the base model is to include in the legent
-#     """
-
-#     ax.plot(Y, color="black")
-#     ax.plot(
-#         np.matmul(X_full, betas_full.T), color="red"
-#     )  # the 'red' plot is the matrix-multiplication product of the time series *
-#     if (type(betas_base) != "NoneType") and (type(X_base) != "NoneType"):
-#         ax.plot(np.matmul(X_base, betas_base.T), color="green")
-#         ax.text(
-#             250,
-#             2,
-#             f"F={np.around(F_val, decimals=4)}\np={np.around(p_val, decimals=4)}
-#               \nR2={np.around(R2_val, decimals=4)}\nSSE_base={np.around(SSE_base,
-#               decimals=4)}\nSSE_full={np.around(SSE_full, decimals=4)}",
-#         )
-#         ax.legend(["ICA Component", "Full fit", f"{base_legend} fit"], loc="best")
-#     else:
-#         ax.text(
-#             250,
-#             2,
-#             f"F={np.around(F_val, decimals=4)}\np={np.around(p_val, decimals=4)}\nR2=
-#                   {np.around(R2_val, decimals=4)}\nSSE_full={np.around(SSE_full, decimals=4)}",
-#         )
-#         ax.legend(["ICA Component", "Full fit"], loc="best")
