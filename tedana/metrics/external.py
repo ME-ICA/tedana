@@ -263,7 +263,7 @@ def make_detrend_regressors(n_time, polort=None):
     # **1 [linear trend -> f(x) = a + bx],
     # **2 [quadratic trend -> f(x) = a + bx + cx²],
     # **3 [cubic trend -> f(x) = f(x) = a + bx + cx² + dx³],
-    # **4 [quintic trend -> f(x) = a + bx + cx² + dx³ + ex⁴]
+    # **4 [quartic trend -> f(x) = a + bx + cx² + dx³ + ex⁴]
     for idx in range(polort):
         # create a linear space with numbers in range [-1,1] because the mean = 0,
         # and include the number of timepoints for each regressor
