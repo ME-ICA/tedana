@@ -1,4 +1,4 @@
-"""Metrics based on correlations of component time series to external time series."""
+"""Metrics based on fits of component time series to external time series."""
 
 import logging
 import re
