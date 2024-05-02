@@ -615,6 +615,7 @@ def tedana_workflow(
         # TODO: add affine check
         LGR.info("Using user-defined mask")
         RepLGR.info("A user-defined mask was applied to the data.")
+        mask = utils.reshape_niimg(mask).astype(int)
     elif t2smap and not mask:
         LGR.info("Using user-defined T2* map to generate mask")
         t2s_limited_sec = utils.reshape_niimg(t2smap)
@@ -626,12 +627,13 @@ def tedana_workflow(
         t2s_limited_sec = utils.reshape_niimg(t2smap)
         t2s_limited = utils.sec2millisec(t2s_limited_sec)
         t2s_full = t2s_limited.copy()
-        mask = utils.reshape_niimg(mask)
+        mask = utils.reshape_niimg(mask).astype(int)
         mask[t2s_limited == 0] = 0  # reduce mask based on T2* map
     else:
         LGR.info("Computing EPI mask from first echo")
         first_echo_img = io.new_nii_like(io_generator.reference_img, catd[:, 0, :])
-        mask = compute_epi_mask(first_echo_img)
+        mask = compute_epi_mask(first_echo_img).get_fdata()
+        mask = utils.reshape_niimg(mask).astype(int)
         RepLGR.info(
             "An initial mask was generated from the first echo using "
             "nilearn's compute_epi_mask function."
@@ -677,6 +679,18 @@ def tedana_workflow(
         if verbose:
             io_generator.save_file(utils.millisec2sec(t2s_limited), "limited t2star img")
             io_generator.save_file(s0_limited, "limited s0 img")
+
+        # Calculate RMSE if S0 and T2* are fit
+        rmse_map, rmse_df = decay.rmse_of_fit_decay_ts(
+            data=catd,
+            tes=tes,
+            adaptive_mask=masksum_denoise,
+            t2s=t2s_limited,
+            s0=s0_limited,
+            fitmode="all",
+        )
+        io_generator.save_file(rmse_map, "rmse img")
+        io_generator.add_df_to_file(rmse_df, "confounds tsv")
 
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, masksum_denoise, t2s=t2s_full, combmode=combmode)
@@ -939,6 +953,11 @@ def tedana_workflow(
 
         dn_ts, hikts, lowkts = io.denoise_ts(data_oc, mmix, mask_denoise, comptable)
 
+        reporting.static_figures.plot_adaptive_mask(
+            optcom=data_oc,
+            base_mask=mask,
+            io_generator=io_generator,
+        )
         reporting.static_figures.carpet_plot(
             optcom_ts=data_oc,
             denoised_ts=dn_ts,
@@ -957,6 +976,11 @@ def tedana_workflow(
             png_cmap=png_cmap,
         )
         reporting.static_figures.plot_t2star_and_s0(io_generator=io_generator, mask=mask_denoise)
+        if t2smap is None:
+            reporting.static_figures.plot_rmse(
+                io_generator=io_generator,
+                adaptive_mask=masksum_denoise,
+            )
 
         LGR.info("Generating dynamic report")
         reporting.generate_report(io_generator)
