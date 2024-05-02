@@ -355,11 +355,6 @@ def generate_metrics(
         comptable = external.fit_regressors(
             comptable, external_regressors, external_regressor_config, mixing
         )
-        # for col in external_regressor_names:
-        #     external_regressor_arr = external_regressors[col].values
-        #     corrs = external_regressors.correlate_regressor(external_regressor_arr, mixing)
-        #     comptable[f"{col}_correlation"] = corrs
-
     # Write verbose metrics if needed
     if io_generator.verbose:
         write_betas = "map echo betas" in metric_maps
