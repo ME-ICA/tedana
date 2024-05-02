@@ -20,8 +20,7 @@ class RegressError(Exception):
 
 
 def load_validate_external_regressors(external_regressors, external_regressor_config, n_time):
-    """
-    Load and validate external regressors and descriptors in dictionary.
+    """Load and validate external regressors and descriptors in dictionary.
 
     Parameters
     ----------
