@@ -221,7 +221,7 @@ def fit_regressors(comptable, external_regressors, external_regressor_config, mi
             comptable, external_regressors, external_regressor_config, mixing, detrend_regressors
         )
     else:
-        # This should already be valided by this point, but keeping the catch clause here
+        # This should already be validated by this point, but keeping the catch clause here
         # since this would otherwise just return comptable with no changes, which would
         # make a hard-to-track error
         raise ValueError(
