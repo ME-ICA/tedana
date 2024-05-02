@@ -12,7 +12,20 @@ def add_external_dependencies(dependency_config, external_regressor_config):
     """
     Add dependency information in external regressors are inputted.
 
-    TODO Add a docstring
+    Parameters
+    ----------
+    dependency_config: :obj:`dict`
+        A dictionary stored in ./config/metrics.json with information on all the
+        internally defined metrics like kappa and rho
+    external_regressor_config: :obj:`dict`
+        A dictionary with info for fitting external regressors
+        to component time series
+
+    Returns
+    -------
+    dependency_config: :obj:`dict`
+        A dictionary with the internally defined regressors inputted with this parameter
+        and the information for fitting external regressors defined in external_regressor_config
     """
     # Add "external regressors" and an existing input
     dependency_config["inputs"].append("external regressors")

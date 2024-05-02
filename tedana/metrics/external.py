@@ -1,4 +1,4 @@
-"""Metrics unrelated to TE-(in)dependence."""
+"""Metrics based on correlations of component time series to external time series."""
 
 import logging
 import re
@@ -19,7 +19,7 @@ class RegressError(Exception):
     pass
 
 
-def load_validate_external_regressors(external_regressors, external_regressor_config, n_time):
+def load_validate_external_regressors(external_regressors, external_regressor_config, n_vols):
     """Load and validate external regressors and descriptors in dictionary.
 
     Parameters
@@ -29,7 +29,7 @@ def load_validate_external_regressors(external_regressors, external_regressor_co
     external_regressor_config: :obj:`dict`
         A dictionary with info for fitting external regressors
         to component time series
-    n_time: :obj:`int`
+    n_vols: :obj:`int`
         Number of timepoints in the fMRI time series
 
     Returns
@@ -49,13 +49,13 @@ def load_validate_external_regressors(external_regressors, external_regressor_co
         raise ValueError(f"Cannot load tsv file with external regressors: {external_regressors}")
 
     external_regressor_config = validate_extern_regress(
-        external_regressors, external_regressor_config, n_time
+        external_regressors, external_regressor_config, n_vols
     )
 
     return external_regressors, external_regressor_config
 
 
-def validate_extern_regress(external_regressors, external_regressor_config, n_time):
+def validate_extern_regress(external_regressors, external_regressor_config, n_vols):
     """
     Confirm that provided external regressor dictionary is valid and matches data.
 
@@ -73,7 +73,7 @@ def validate_extern_regress(external_regressors, external_regressor_config, n_ti
     external_regressor_config : :obj:`dict`
         Information describing the external regressors and
         method to use for fitting and statistical tests
-    n_time : :obj:`int`
+    n_vols : :obj:`int`
         The number of time point in the fMRI time series
 
     Returns
@@ -156,10 +156,10 @@ def validate_extern_regress(external_regressors, external_regressor_config, n_ti
                 f"{regressor_names - expected_regressor_names}"
             )
 
-    if len(external_regressors.index) != n_time:
+    if len(external_regressors.index) != n_vols:
         err_msg += (
             f"External Regressors have {len(external_regressors.index)} timepoints\n"
-            f"while fMRI data have {n_time} timepoints"
+            f"while fMRI data have {n_vols} timepoints"
         )
 
     if err_msg:
@@ -196,24 +196,24 @@ def fit_regressors(comptable, external_regressors, external_regressor_config, mi
         Component metric table. Same as inputted, with additional columns
         for metrics related to fitting the external regressors
     """
-    n_time = mixing.shape[0]
+    n_vols = mixing.shape[0]
 
     # If the order of polynomial detrending is specified, then pass to make_detrend_regressors
     # otherwise the function sets a detrending polynomial order
     if external_regressor_config["detrend"] is True:
-        detrend_regressors = make_detrend_regressors(n_time, polort=None)
+        detrend_regressors = make_detrend_regressors(n_vols, polort=None)
     elif (
         isinstance(external_regressor_config["detrend"], int)
         and external_regressor_config["detrend"] > 0
     ):
         detrend_regressors = make_detrend_regressors(
-            n_time, polort=external_regressor_config["detrend"]
+            n_vols, polort=external_regressor_config["detrend"]
         )
     else:
         LGR.warning(
             "External regressor fitted without detrending fMRI time series. Only removing mean"
         )
-        detrend_regressors = make_detrend_regressors(n_time, polort=0)
+        detrend_regressors = make_detrend_regressors(n_vols, polort=0)
 
     if external_regressor_config["calc_stats"].lower() == "f":
         # external_regressors = pd.concat([external_regressors, detrend_regressors])
@@ -232,32 +232,32 @@ def fit_regressors(comptable, external_regressors, external_regressor_config, mi
     return comptable
 
 
-def make_detrend_regressors(n_time, polort=None):
+def make_detrend_regressors(n_vols, polort=None):
     """
     Create polynomial detrending regressors to use for removing slow drifts from data.
 
     Parameters
     ----------
-    n_time : :obj:`int`
+    n_vols : :obj:`int`
         The number of time point in the fMRI time series
     polort : :obj:`int` or :obj:`NoneType`
         The number of polynomial regressors to create (i.e. 3 is x^0, x^1, x^2)
-        If None, then this is set to 1+floor(n_time/150)
+        If None, then this is set to 1+floor(n_vols/150)
 
     Returns
     -------
-    detrend_regressors: (n_time x polort) :obj:`pandas.DataFrame`
+    detrend_regressors: (n_vols x polort) :obj:`pandas.DataFrame`
         Dataframe containing the detrending regressor time series
         x^0 = 1. All other regressors are zscored so that they have
         a mean of 0 and a stdev of 1.
         Dataframe column labels are polort0 - polort{polort-1}
     """
     if polort is None:
-        polort = int(1 + np.floor(n_time / 150))
+        polort = int(1 + np.floor(n_vols / 150))
 
     # create polynomial detrending regressors -> each additive term leads
     # to more points of transformation [curves]
-    detrend_regressors = np.zeros((n_time, polort))
+    detrend_regressors = np.zeros((n_vols, polort))
     # create polynomial detrended to the power of 0 [1's],
     # **1 [linear trend -> f(x) = a + bx],
     # **2 [quadratic trend -> f(x) = a + bx + cx²],
@@ -266,7 +266,7 @@ def make_detrend_regressors(n_time, polort=None):
     for idx in range(polort):
         # create a linear space with numbers in range [-1,1] because the mean = 0,
         # and include the number of timepoints for each regressor
-        tmp = np.linspace(-1, 1, num=n_time) ** idx
+        tmp = np.linspace(-1, 1, num=n_vols) ** idx
         if idx == 0:
             detrend_regressors[:, idx] = tmp
             detrend_labels = ["polort0"]
@@ -315,7 +315,7 @@ def fit_mixing_to_regressors(
     mixing : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data_cat`
-    detrend_regressors: (n_time x polort) :obj:`pandas.DataFrame`
+    detrend_regressors: (n_vols x polort) :obj:`pandas.DataFrame`
         Dataframe containing the detrending regressor time series
 
     Returns
@@ -398,7 +398,7 @@ def build_fstat_regressor_models(
     external_regressor_config : :obj:`dict`
         Information describing the external regressors and
         method to use for fitting and statistical tests
-    detrend_regressors: (n_time x polort) :obj:`pandas.DataFrame`
+    detrend_regressors: (n_vols x polort) :obj:`pandas.DataFrame`
         Dataframe containing the detrending regressor time series
 
     Returns

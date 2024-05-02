@@ -630,19 +630,6 @@ def get_metadata(comptable):
             },
         }
 
-    if any(col.endswith("_correlation") for col in comptable.columns):
-        external_correlations = [col for col in comptable.columns if col.endswith("_correlation")]
-        for col in external_correlations:
-            original_col = col.replace("_correlation", "")
-            metric_metadata[col] = {
-                "LongName": f"{original_col}-component correlation",
-                "Description": (
-                    "Correlation between the component time series and the external regressor "
-                    f"{original_col}."
-                ),
-                "Units": "Pearson correlation coefficient",
-            }
-
     # There are always components in the comptable, definitionally
     metric_metadata["Component"] = {
         "LongName": "Component identifier",
