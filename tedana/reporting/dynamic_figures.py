@@ -4,7 +4,6 @@ from math import pi
 
 import numpy as np
 import pandas as pd
-from bokeh import events, models, plotting, transform
 from sklearn.preprocessing import MinMaxScaler
 
 color_mapping = {"accepted": "#2ecc71", "rejected": "#e74c3c", "ignored": "#3498db"}
@@ -67,6 +66,8 @@ def _create_data_struct(comptable_path, color_mapping=color_mapping):
     cds : bokeh.models.ColumnDataSource
         Data structure with all the fields to plot or hover over
     """
+    from bokeh import models
+
     unused_cols = [
         "normalized variance explained",
         "countsigFT2",
@@ -152,6 +153,8 @@ def _create_kr_plt(comptable_cds, kappa_elbow=None, rho_elbow=None):
     fig : bokeh.plotting.figure.Figure
         Bokeh scatter plot of kappa vs. rho
     """
+    from bokeh import models, plotting
+
     # Create Panel for the Kappa - Rho Scatter
     kr_hovertool = models.HoverTool(
         tooltips=[
@@ -272,6 +275,8 @@ def _create_sorted_plt(
     fig : bokeh.plotting.figure.Figure
         Bokeh plot of components ranked by a given feature
     """
+    from bokeh import models, plotting
+
     hovertool = models.HoverTool(
         tooltips=[
             ("Component ID", "@component"),
@@ -324,6 +329,7 @@ def _create_sorted_plt(
 
 
 def _create_varexp_pie_plt(comptable_cds):
+    from bokeh import models, plotting, transform
 
     pie_hovertool = models.HoverTool(
         tooltips=[
@@ -383,6 +389,8 @@ def _tap_callback(comptable_cds, div_content, io_generator):
     CustomJS : bokeh.models.CustomJS
         Javascript function that adds the tapping functionality
     """
+    from bokeh import models
+
     return models.CustomJS(
         args=dict(
             source_comp_table=comptable_cds,
@@ -419,5 +427,7 @@ def _link_figures(fig, comptable_ds, div_content, io_generator):
         Same as input figure, but with a linked method to
         its Tap event.
     """
+    from bokeh import events
+
     fig.js_on_event(events.Tap, _tap_callback(comptable_ds, div_content, io_generator))
     return fig

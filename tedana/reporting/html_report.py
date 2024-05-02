@@ -8,8 +8,6 @@ from pathlib import Path
 from string import Template
 
 import pandas as pd
-from bokeh import __version__ as bokehversion
-from bokeh import embed, layouts, models
 from pybtex.database.input import bibtex
 from pybtex.plugin import find_plugin
 
@@ -194,6 +192,8 @@ def _save_as_html(body):
     body : str
         Body for HTML report with embedded figures
     """
+    from bokeh import __version__ as bokehversion
+
     resource_path = Path(__file__).resolve().parent.joinpath("data", "html")
     head_template_name = "report_head_template.html"
     head_template_path = resource_path.joinpath(head_template_name)
@@ -243,6 +243,8 @@ def generate_report(io_generator: OutputGenerator) -> None:
     -----
     This writes out an HTML report to a file.
     """
+    from bokeh import embed, layouts, models
+
     # Load the component time series
     comp_ts_path = io_generator.get_name("ICA mixing tsv")
     comp_ts_df = pd.read_csv(comp_ts_path, sep="\t", encoding="utf=8")

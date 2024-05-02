@@ -8,19 +8,9 @@ import warnings
 
 import nibabel as nib
 import numpy as np
-from bokeh import __version__ as bokeh_version
-from mapca import __version__ as mapca_version
-from matplotlib import __version__ as matplotlib_version
-from nibabel import __version__ as nibabel_version
-from nilearn import __version__ as nilearn_version
 from nilearn._utils import check_niimg
-from numpy import __version__ as numpy_version
-from pandas import __version__ as pandas_version
-from scipy import __version__ as scipy_version
 from scipy import ndimage
-from sklearn import __version__ as sklearn_version
 from sklearn.utils import check_array
-from threadpoolctl import __version__ as threadpoolctl_version
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -555,9 +545,22 @@ def get_resource_path():
     return op.abspath(op.join(op.dirname(__file__), "resources") + op.sep)
 
 
+def _check_report_dependencies():
+    """Check if dependencies required for reports are installed."""
+    try:
+        import bokeh  # noqa F401
+        import jinja2  # noqa F401
+    except ImportError:
+        raise ImportError(
+            "Running tedana/ica_reclassify without the --no-reports flag requires extra "
+            "dependencies. "
+            "Please install tedana with the [reports] dependency group "
+            "(e.g., 'pip install tedana[reports]')."
+        )
+
+
 def get_system_version_info():
-    """
-    Return information about the system tedana is being run on.
+    """Return information about the system tedana is being run on.
 
     Returns
     -------
@@ -566,10 +569,19 @@ def get_system_version_info():
         and python and python library versioning info for key
         modules used by tedana.
     """
+    from mapca import __version__ as mapca_version
+    from matplotlib import __version__ as matplotlib_version
+    from nibabel import __version__ as nibabel_version
+    from nilearn import __version__ as nilearn_version
+    from numpy import __version__ as numpy_version
+    from pandas import __version__ as pandas_version
+    from scipy import __version__ as scipy_version
+    from sklearn import __version__ as sklearn_version
+    from threadpoolctl import __version__ as threadpoolctl_version
+
     system_info = platform.uname()
 
     python_libraries = {
-        "bokeh": bokeh_version,
         "matplotlib": matplotlib_version,
         "mapca": mapca_version,
         "nibabel": nibabel_version,
@@ -580,6 +592,13 @@ def get_system_version_info():
         "scipy": scipy_version,
         "threadpoolctl": threadpoolctl_version,
     }
+
+    try:
+        from bokeh import __version__ as bokeh_version
+
+        python_libraries["bokeh"] = bokeh_version
+    except ImportError:
+        pass
 
     return {
         "System": system_info.system,
