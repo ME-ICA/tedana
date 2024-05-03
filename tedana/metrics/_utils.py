@@ -1,14 +1,16 @@
 """Miscellaneous utility functions for metric calculation."""
 
 import logging
+from typing import Dict, List
 
 import numpy as np
+import numpy.typing as npt
 from scipy import stats
 
 LGR = logging.getLogger("GENERAL")
 
 
-def add_external_dependencies(dependency_config, external_regressor_config):
+def add_external_dependencies(dependency_config: Dict, external_regressor_config: Dict) -> Dict:
     """
     Add dependency information in external regressors are inputted.
 
@@ -46,7 +48,9 @@ def add_external_dependencies(dependency_config, external_regressor_config):
     return dependency_config
 
 
-def dependency_resolver(dict_, requested_metrics, base_inputs):
+def dependency_resolver(
+    dict_: Dict, requested_metrics: List[str], base_inputs: List[str]
+) -> List[str]:
     """Identify all necessary metrics based on a list of requested metrics.
 
     This also determines which metrics each requested metric requires to be calculated,
@@ -96,7 +100,7 @@ def dependency_resolver(dict_, requested_metrics, base_inputs):
     return required_metrics
 
 
-def determine_signs(weights, axis=0):
+def determine_signs(weights: npt.NDArray, axis: int = 0) -> npt.NDArray:
     """Determine component-wise optimal signs using voxel-wise parameter estimates.
 
     Parameters
@@ -104,6 +108,9 @@ def determine_signs(weights, axis=0):
     weights : (S x C) array_like
         Parameter estimates for optimally combined data against the mixing
         matrix.
+    axis : int
+        The axis to calculate the weights over.
+        Default is 0
 
     Returns
     -------
@@ -118,7 +125,7 @@ def determine_signs(weights, axis=0):
     return signs.astype(int)
 
 
-def flip_components(*args, signs):
+def flip_components(*args: npt.NDArray, signs: npt.NDArray) -> npt.NDArray:
     """Flip an arbitrary set of input arrays based on a set of signs.
 
     Parameters
@@ -149,7 +156,7 @@ def flip_components(*args, signs):
     return [arg * signs for arg in args]
 
 
-def check_mask(data, mask):
+def check_mask(data: npt.NDArray, mask: npt.NDArray) -> None:
     """Check that no zero-variance voxels remain in masked data.
 
     Parameters

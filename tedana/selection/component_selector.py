@@ -3,7 +3,9 @@
 import inspect
 import logging
 import os.path as op
+from typing import Dict, List, Union
 
+import pandas as pd
 from numpy import asarray
 
 from tedana.io import load_json
@@ -33,7 +35,7 @@ class TreeError(Exception):
     pass
 
 
-def load_config(tree):
+def load_config(tree: str) -> Dict:
     """Load the json file with the decision tree and validate the fields in the decision tree.
 
     Parameters
@@ -74,7 +76,7 @@ def load_config(tree):
     return validate_tree(dectree)
 
 
-def validate_tree(tree):
+def validate_tree(tree: Dict) -> Dict:
     """Confirm that provided `tree` is a valid decision tree.
 
     Parameters
@@ -286,7 +288,7 @@ def validate_tree(tree):
 class ComponentSelector:
     """Load and classify components based on a specified ``tree``."""
 
-    def __init__(self, tree):
+    def __init__(self, tree: str):
         """Initialize the class using the info specified in the json file ``tree``.
 
         Parameters
@@ -310,7 +312,12 @@ class ComponentSelector:
         self.classification_tags = set(self.tree["classification_tags"])
         self.tree["used_metrics"] = set(self.tree.get("used_metrics", []))
 
-    def select(self, component_table, cross_component_metrics={}, status_table=None):
+    def select(
+        self,
+        component_table: pd.DataFrame,
+        cross_component_metrics: Dict = {},
+        status_table: Union[pd.DataFrame, None] = None,
+    ):
         """Apply the decision tree to data.
 
         Using the validated tree in ``ComponentSelector`` to run the decision
@@ -503,7 +510,7 @@ class ComponentSelector:
 
         self.are_all_components_accepted_or_rejected()
 
-    def add_manual(self, indices, classification):
+    def add_manual(self, indices: List[int], classification: str):
         """Add nodes that will manually classify components.
 
         Parameters
@@ -527,16 +534,25 @@ class ComponentSelector:
             }
         )
 
-    def check_null(self, params, fcn):
+    def check_null(self, params: Dict, fcn: str) -> Dict:
         """
         Check that required parameters for selection node functions are attributes in the class.
 
         Error if any are undefined.
 
+        Parameters
+        ----------
+        params : :obj:`dict`
+            The keys and values for the inputted parameters
+        fcn : :obj:`str`
+            The name of a component selection function in selection_nodes.py
+
         Returns
         -------
         params : :obj:`dict`
-            The keys and values for the inputted parameters
+            The keys and values for the inputted parameters.
+            If a parameter's value was defined in self.cross_component_metrics
+            then that value is also in params when returned
         """
         for key, val in params.items():
             if val is None:
@@ -598,12 +614,12 @@ class ComponentSelector:
                 )
 
     @property
-    def n_comps_(self):
+    def n_comps_(self) -> int:
         """The number of components in the component table."""
         return len(self.component_table_)
 
     @property
-    def likely_bold_comps_(self):
+    def likely_bold_comps_(self) -> int:
         """A boolean :obj:`pandas.Series` of components that are tagged "Likely BOLD"."""
         likely_bold_comps = self.component_table_["classification_tags"].copy()
         for idx in range(len(likely_bold_comps)):
@@ -614,22 +630,22 @@ class ComponentSelector:
         return likely_bold_comps
 
     @property
-    def n_likely_bold_comps_(self):
+    def n_likely_bold_comps_(self) -> int:
         """The number of components that are tagged "Likely BOLD"."""
         return self.likely_bold_comps_.sum()
 
     @property
-    def accepted_comps_(self):
+    def accepted_comps_(self) -> pd.Series:
         """A boolean :obj:`pandas.Series` of components that are accepted."""
         return self.component_table_["classification"] == "accepted"
 
     @property
-    def n_accepted_comps_(self):
+    def n_accepted_comps_(self) -> int:
         """The number of components that are accepted."""
         return self.accepted_comps_.sum()
 
     @property
-    def rejected_comps_(self):
+    def rejected_comps_(self) -> pd.Series:
         """A boolean :obj:`pandas.Series` of components that are rejected."""
         return self.component_table_["classification"] == "rejected"
 

@@ -2,8 +2,10 @@
 
 import logging
 import os.path as op
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 
 from tedana import io, utils
@@ -22,17 +24,17 @@ RepLGR = logging.getLogger("REPORT")
 
 def generate_metrics(
     *,
-    data_cat,
-    data_optcom,
-    mixing,
-    adaptive_mask,
-    tes,
-    io_generator,
-    label,
-    external_regressors=None,
-    external_regressor_config=None,
+    data_cat: npt.NDArray,
+    data_optcom: npt.NDArray,
+    mixing: npt.NDArray,
+    adaptive_mask: npt.NDArray,
+    tes: Union[List[int], List[float], npt.NDArray],
+    io_generator: io.OutputGenerator,
+    label: str,
+    external_regressors: Union[pd.DataFrame, None] = None,
+    external_regressor_config: Union[Dict, None] = None,
     metrics=None,
-):
+) -> Tuple[pd.DataFrame, Dict]:
     """Fit TE-dependence and -independence models to components.
 
     Parameters
@@ -420,7 +422,7 @@ def generate_metrics(
     return comptable, external_regressor_config
 
 
-def get_metadata(comptable):
+def get_metadata(comptable: pd.DataFrame) -> Dict:
     """Fill in metric metadata for a given comptable.
 
     Parameters
@@ -430,9 +432,10 @@ def get_metadata(comptable):
 
     Returns
     -------
-    A dict containing the metadata for each column in the comptable for
-    which we have a metadata description, plus the "Component" metadata
-    description (always).
+    metric_metadata : dict
+        The metadata for each column in the comptable for
+        which we have a metadata description, plus the "Component" metadata
+        description (always).
     """
     metric_metadata = {}
     if "kappa" in comptable:
