@@ -5,6 +5,7 @@ import re
 from typing import Dict, Tuple
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from scipy import stats
 
@@ -177,7 +178,7 @@ def fit_regressors(
     comptable: pd.DataFrame,
     external_regressors: pd.DataFrame,
     external_regressor_config: Dict,
-    mixing: np._typing.ArrayLike,
+    mixing: npt.NDArray,
 ) -> pd.DataFrame:
     """
     Fit regressors to the mixing matrix.
@@ -242,7 +243,7 @@ def fit_regressors(
     return comptable
 
 
-def make_detrend_regressors(n_vols: int, polort: int | None = None) -> pd.DataFrame:
+def make_detrend_regressors(n_vols: int, polort: int = None) -> pd.DataFrame:
     """
     Create polynomial detrending regressors to use for removing slow drifts from data.
 
@@ -299,7 +300,7 @@ def fit_mixing_to_regressors(
     comptable: pd.DataFrame,
     external_regressors: pd.DataFrame,
     external_regressor_config: Dict,
-    mixing: np._typing.ArrayLike,
+    mixing: npt.NDArray,
     detrend_regressors: pd.DataFrame,
 ) -> pd.DataFrame:
     """
@@ -499,8 +500,8 @@ def build_fstat_regressor_models(
 
 
 def fit_model_with_stats(
-    y: np._typing.ArrayLike, regressor_models: Dict, base_label: str, full_label: str = "full"
-) -> Tuple[np._typing.ArrayLike, np._typing.ArrayLike, np._typing.ArrayLike, np._typing.ArrayLike]:
+    y: npt.NDArray, regressor_models: Dict, base_label: str, full_label: str = "full"
+) -> Tuple[npt.NDArray, npt.NDArray, npt.NDArray, npt.NDArray]:
     """
     Fit full and partial models and calculate F stats, R2, and p values.
 
