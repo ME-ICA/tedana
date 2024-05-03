@@ -2,7 +2,7 @@
 
 import logging
 import re
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -22,8 +22,8 @@ class RegressError(Exception):
 
 
 def load_validate_external_regressors(
-    external_regressors: Dict, external_regressor_config: Dict, n_vols: int
-) -> Dict:
+    external_regressors: str, external_regressor_config: Dict, n_vols: int
+) -> Tuple[pd.DataFrame, Dict]:
     """Load and validate external regressors and descriptors in dictionary.
 
     Parameters
@@ -243,7 +243,7 @@ def fit_regressors(
     return comptable
 
 
-def make_detrend_regressors(n_vols: int, polort: int = None) -> pd.DataFrame:
+def make_detrend_regressors(n_vols: int, polort: Union[int, None] = None) -> pd.DataFrame:
     """
     Create polynomial detrending regressors to use for removing slow drifts from data.
 

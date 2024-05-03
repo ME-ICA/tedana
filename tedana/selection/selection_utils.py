@@ -3,9 +3,12 @@
 import copy
 import logging
 import re
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
+import pandas as pd
 
+# from tedana.selection.component_selector import ComponentSelector
 from tedana.stats import getfbounds
 
 LGR = logging.getLogger("GENERAL")
@@ -16,13 +19,13 @@ RepLGR = logging.getLogger("REPORT")
 ##############################################################
 
 
-def selectcomps2use(component_table, decide_comps):
+def selectcomps2use(
+    component_table: pd.DataFrame, decide_comps: Union[str, List[str], List[int]]
+) -> List[int]:
     """Get a list of component numbers that fit the classification types in ``decide_comps``.
 
     Parameters
     ----------
-    component_table : :obj:`~pandas.DataFrame`
-        The component_table with metrics and labels for each ICA component
     component_table : :obj:`~pandas.DataFrame`
         The component_table with metrics and labels for each ICA component
     decide_comps : :obj:`str` or :obj:`list[str]` or :obj:`list[int]`
@@ -87,14 +90,14 @@ def selectcomps2use(component_table, decide_comps):
 
 
 def change_comptable_classifications(
-    selector,
-    if_true,
-    if_false,
-    decision_boolean,
-    tag_if_true=None,
-    tag_if_false=None,
-    dont_warn_reclassify=False,
-):
+    selector,  # ComponentSelector
+    if_true: str,
+    if_false: str,
+    decision_boolean: pd.Series,
+    tag_if_true: str = None,
+    tag_if_false: str = None,
+    dont_warn_reclassify: bool = False,
+):  # -> Tuple[ComponentSelector, int, int]
     """
     Change or don't change the component classification.
 
@@ -170,13 +173,13 @@ def change_comptable_classifications(
 
 
 def comptable_classification_changer(
-    selector,
-    boolstate,
-    classify_if,
-    decision_boolean,
-    tag_if=None,
-    dont_warn_reclassify=False,
-):
+    selector,  # : ComponentSelector,
+    boolstate: bool,
+    classify_if: str,
+    decision_boolean: pd.Series,
+    tag_if: Union[str, None] = None,
+    dont_warn_reclassify: bool = False,
+):  # -> ComponentSelector
     """Implement the component classification changes from ``change_comptable_classifications``.
 
     Parameters
@@ -285,7 +288,7 @@ def comptable_classification_changer(
     return selector
 
 
-def clean_dataframe(component_table):
+def clean_dataframe(component_table: pd.DataFrame) -> pd.DataFrame:
     """
     Reorder columns in component table.
 
@@ -317,7 +320,7 @@ def clean_dataframe(component_table):
 #################################################
 
 
-def expand_dict(node, field, metrics):
+def expand_dict(node: Dict, field: str, metrics: List[str]) -> Tuple[bool, List[Dict]]:
     """Expand a dictionary with regular expressions.
 
     Parameters
@@ -329,6 +332,7 @@ def expand_dict(node, field, metrics):
         a regular expression, denoted by starting with "^".
     field : :obj:`str`
         The key in the ``node`` dictionary that should be expanded.
+        Current keys that could include regular expressions are "parameters" and "kwargs"
     metrics : list of str
         List of metric names to compare regular expressions against.
 
@@ -358,7 +362,7 @@ def expand_dict(node, field, metrics):
     return regex_found, out_nodes
 
 
-def expand_node(node, metrics):
+def expand_node(node: Dict, metrics: List[str]):
     """Expand node definitions with regular expressions.
 
     Recursively expand a node so that any regular expressions are replaced with
@@ -368,13 +372,19 @@ def expand_node(node, metrics):
 
     Parameters
     ----------
-    node : dict
+    node : :obj:`dict`
         A dictionary containing nested dictionaries called "parameters" and,
         optionally, "kwargs".
         Any of the values in the "parameters" or "kwargs" dictionaries may be
         a regular expression, denoted by starting with "^".
-    metrics : list of str
-        List of metric names.
+    metrics : :obj:`list[str]`
+        List of metric names to compare regular expressions against.
+
+    Returns
+    -------
+    out_nodes or expanded_out_nodes: :obj:`list[dict]`
+        A list of dictionaries with regular expressions replaced by all
+        matching values in the 'metrics' list.
     """
     regex_found, out_nodes = expand_dict(node, "parameters", metrics)
     if not regex_found:
@@ -385,25 +395,30 @@ def expand_node(node, metrics):
         out_nodes = [copy.deepcopy(node)]
         return out_nodes
 
-    real_out_nodes = []
+    expanded_out_nodes = []
     for out_node in out_nodes:
-        real_out_nodes += expand_node(out_node, metrics)
+        expanded_out_nodes += expand_node(out_node, metrics)
 
-    return real_out_nodes
+    return expanded_out_nodes
 
 
-def expand_nodes(tree, metrics):
-    """Expand all nodes in a decision tree.
+def expand_nodes(tree: Dict, metrics: List[str]) -> Dict:
+    """Expand regular expressions in all nodes of a decision tree.
 
     Parameters
     ----------
-    tree : dict
-        A dictionary containing nested dictionaries called "parameters" and,
-        optionally, "kwargs".
-        Any of the values in the "parameters" or "kwargs" dictionaries may be
-        a regular expression, denoted by starting with "^".
-    metrics : list of str
-        List of metric names.
+    tree : :obj:`dict`
+        A dictionary containing the info needed to run the component selection decision tree.
+        tree["nodes"] is a list of dictionaries with each element is a sept in the decision tree.
+        Each node contains "parameters" and optionally, "kwargs" that are used in funciton calls.
+        "parameters" or "kwargs" may include a regular expression, denoted by starting with "^".
+    metrics : :obj:`list[str]`
+        List of metric names like "kappa" and "rho" to compare regular expressions against.
+
+    Returns
+    -------
+    tree : :obj:`dict`
+        The same decision tree dictionary that was inputted with all regular expressions expanded.
     """
     expanded_tree = copy.deepcopy(tree)
     expanded_tree["nodes"] = []
@@ -414,7 +429,11 @@ def expand_nodes(tree, metrics):
     return expanded_tree
 
 
-def confirm_metrics_exist(component_table, necessary_metrics, function_name=None):
+def confirm_metrics_exist(
+    component_table: pd.DataFrame,
+    necessary_metrics: List[str],
+    function_name: Union[str, None] = None,
+) -> Union[None, bool]:
     """Confirm that all metrics declared in necessary_metrics are already included in comptable.
 
     Parameters
@@ -422,10 +441,15 @@ def confirm_metrics_exist(component_table, necessary_metrics, function_name=None
     component_table : (C x M) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
-    necessary_metrics : :obj:`list`
+    necessary_metrics : :obj:`list[str]`
         A list of strings of metric names.
     function_name : :obj:`str`
         Text identifying the function name that called this function.
+
+    Returns
+    -------
+    metrics_are_missing : :obj:`bool`
+        If there are no metrics missing, this returns True.
 
     Raises
     ------
@@ -465,22 +489,21 @@ def confirm_metrics_exist(component_table, necessary_metrics, function_name=None
 
 
 def log_decision_tree_step(
-    function_name_idx,
-    comps2use,
-    decide_comps=None,
-    n_true=None,
-    n_false=None,
-    if_true=None,
-    if_false=None,
-    calc_outputs=None,
-):
+    function_name_idx: str,
+    comps2use: Union[List[int], int],
+    decide_comps: Union[str, List[str], List[int], None] = None,
+    n_true: Union[int, None] = None,
+    n_false: Union[int, None] = None,
+    if_true: Union[str, None] = None,
+    if_false: Union[str, None] = None,
+    calc_outputs: Union[Dict, None] = None,
+) -> None:
     """Log text to add after every decision tree calculation.
 
     Parameters
     ----------
     function_name_idx : :obj:`str`
         The name of the function that should be logged. By convention, this
-        be "Step ``current_node_idx_``: function_name"
         be "Step ``current_node_idx_``: function_name"
     comps2use : :obj:`list[int]` or -1
         A list of component indices that should be used by a function.
@@ -541,7 +564,7 @@ def log_decision_tree_step(
             )
 
 
-def log_classification_counts(decision_node_idx, component_table):
+def log_classification_counts(decision_node_idx: int, component_table: pd.DataFrame) -> None:
     """Log the total counts for each component classification in component_table.
 
     Parameters
