@@ -383,8 +383,14 @@ def denoise_echoes_workflow(
             confounds=confounds,
             io_generator=io_generator,
         )
-        io_generator.save_file(data_cat_denoised, "echo img")
-        io_generator.save_file(data_optcom_denoised, "optcom img")
+        io_generator.save_file(data_optcom_denoised, "denoised ts img")
+        for echo in range(n_echos):
+            io_generator.save_file(
+                data_cat_denoised[:, echo, :],
+                "denoised ts split img",
+                echo=echo + 1,
+            )
+
         name = os.path.join(
             io_generator.out_dir,
             io_generator.prefix + "desc-external_metrics.tsv",
@@ -393,7 +399,7 @@ def denoise_echoes_workflow(
 
     # Write out BIDS-compatible description file
     derivative_metadata = {
-        "Name": "t2smap Outputs",
+        "Name": "denoise_echoes Outputs",
         "BIDSVersion": "1.5.0",
         "DatasetType": "derivative",
         "GeneratedBy": [
@@ -567,15 +573,15 @@ def denoise_echoes(
             adaptive_mask=adaptive_mask,
             tes=tes,
             io_generator=io_generator,
-            label="external",
+            label=confounds_df.columns.tolist(),
             metrics=required_metrics,
         )
     else:
         confounds_df = pd.DataFrame(index=range(n_volumes))
 
     # Project confounds out of optimally combined data
-    temporal_mean = data_optcom.mean(axis=-1)  # temporal mean
-    data_optcom_denoised = data_optcom[mask] - temporal_mean[mask, np.newaxis]
+    temporal_mean = data_optcom.mean(axis=-1, keepdims=True)  # temporal mean
+    data_optcom_denoised = data_optcom[mask] - temporal_mean[mask]
     if voxelwise_confounds:
         for i_voxel in trange(data_optcom_denoised.shape[0], desc="Denoise optimally combined"):
             design_matrix = confounds_df.copy()
@@ -589,10 +595,10 @@ def denoise_echoes(
             )
     else:
         betas = np.linalg.lstsq(confounds_df.values, data_optcom_denoised.T, rcond=None)[0]
-        data_optcom_denoised -= np.dot(np.atleast_2d(betas).T, confounds_df.values)
+        data_optcom_denoised -= np.dot(np.atleast_2d(betas).T, confounds_df.values.T)
 
     # Add the temporal mean back
-    data_optcom_denoised += temporal_mean[mask, np.newaxis]
+    data_optcom_denoised += temporal_mean[mask]
 
     # io_generator.save_file(data_optcom, "has gs combined img")
     data_optcom_denoised = utils.unmask(data_optcom_denoised, mask)
@@ -603,7 +609,7 @@ def denoise_echoes(
     for echo in range(n_echos):
         echo_denoised = data_cat_denoised[:, echo, :][mask]
         # Remove the temporal mean
-        temporal_mean = echo_denoised.mean(axis=-1)
+        temporal_mean = echo_denoised.mean(axis=-1, keepdims=True)
         echo_denoised -= temporal_mean
         if voxelwise_confounds:
             for i_voxel in trange(echo_denoised.shape[0], desc=f"Denoise echo {echo + 1}"):
@@ -615,7 +621,7 @@ def denoise_echoes(
                 echo_denoised[i_voxel, :] -= np.dot(np.atleast_2d(betas).T, design_matrix.values)
         else:
             betas = np.linalg.lstsq(confounds_df.values, echo_denoised.T, rcond=None)[0]
-            echo_denoised -= np.dot(np.atleast_2d(betas).T, confounds_df.values)
+            echo_denoised -= np.dot(np.atleast_2d(betas).T, confounds_df.values.T)
 
         # Add the temporal mean back
         echo_denoised += temporal_mean
