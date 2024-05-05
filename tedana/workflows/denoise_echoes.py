@@ -5,6 +5,7 @@ import logging
 import os
 import os.path as op
 import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -28,6 +29,24 @@ def _get_parser():
     parser.parse_args() : argparse dict
     """
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    class ToDict(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            d = {}
+            for spec in values:
+                try:
+                    name, loc = spec.split("=")
+                    loc = Path(loc)
+                except ValueError:
+                    loc = Path(spec)
+                    name = loc.name
+
+                if name in d:
+                    raise ValueError(f"Received duplicate derivative name: {name}")
+
+                d[name] = loc
+            setattr(namespace, self.dest, d)
+
     # Argument parser follow template provided by RalphyZ
     # https://stackoverflow.com/a/43456577
     optional = parser._action_groups.pop()
@@ -59,9 +78,9 @@ def _get_parser():
     required.add_argument(
         "--confounds",
         dest="confounds",
-        nargs="+",
-        metavar="FILE",
+        action=ToDict,
         type=lambda x: is_valid_file(parser, x),
+        nargs="+",
         help="Files defining confounds to regress from the echo-wise data.",
     )
     optional.add_argument(
@@ -182,8 +201,7 @@ def denoise_echoes_workflow(
     quiet=False,
     t2smap_command=None,
 ):
-    """
-    Estimate T2 and S0, and optimally combine data across TEs.
+    """Estimate T2 and S0, and optimally combine data across TEs.
 
     Please remember to cite :footcite:t:`dupre2021te`.
 
@@ -196,7 +214,7 @@ def denoise_echoes_workflow(
         List of echo times associated with data in milliseconds.
     out_dir : :obj:`str`, optional
         Output directory.
-    confounds : :obj:`list` of :obj:`str`
+    confounds : :obj:`dict` of :obj:`str`
         Files defining confounds to regress from the echo-wise data.
     mask : :obj:`str`, optional
         Binary mask of voxels to include in TE Dependent ANAlysis. Must be spatially
@@ -359,9 +377,11 @@ def denoise_echoes_workflow(
     if confounds is not None:
         data_cat_denoised, data_optcom_denoised, metrics = denoise_echoes(
             data_cat=data_cat,
+            tes=tes,
             data_optcom=data_optcom,
-            mask=mask,
+            adaptive_mask=adaptive_mask,
             confounds=confounds,
+            io_generator=io_generator,
         )
         io_generator.save_file(data_cat_denoised, "echo img")
         io_generator.save_file(data_optcom_denoised, "optcom img")
@@ -470,8 +490,8 @@ def denoise_echoes(
     mask = adaptive_mask >= 1
     if data_cat.shape[0] != data_optcom.shape[0]:
         raise ValueError(
-            f"First dimensions of data_cat ({data_cat.shape[0]}) and data_optcom ({data_optcom.shape[0]}) "
-            "do not match"
+            f"First dimensions of data_cat ({data_cat.shape[0]}) and "
+            f"data_optcom ({data_optcom.shape[0]}) do not match"
         )
     elif data_cat.shape[2] != data_optcom.shape[1]:
         raise ValueError(
