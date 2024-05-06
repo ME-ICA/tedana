@@ -8,7 +8,6 @@ from typing import Dict, List, Tuple, Union
 import numpy as np
 import pandas as pd
 
-# from tedana.selection.component_selector import ComponentSelector
 from tedana.stats import getfbounds
 
 LGR = logging.getLogger("GENERAL")
@@ -382,7 +381,7 @@ def expand_node(node: Dict, metrics: List[str]):
 
     Returns
     -------
-    out_nodes or expanded_out_nodes: :obj:`list[dict]`
+    out_nodes : :obj:`list[dict]`
         A list of dictionaries with regular expressions replaced by all
         matching values in the 'metrics' list.
     """
@@ -393,13 +392,8 @@ def expand_node(node: Dict, metrics: List[str]):
     if not regex_found:
         # Stop early and just return the node if no regular expressions were found
         out_nodes = [copy.deepcopy(node)]
-        return out_nodes
 
-    expanded_out_nodes = []
-    for out_node in out_nodes:
-        expanded_out_nodes += expand_node(out_node, metrics)
-
-    return expanded_out_nodes
+    return out_nodes
 
 
 def expand_nodes(tree: Dict, metrics: List[str]) -> Dict:
