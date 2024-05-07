@@ -13,7 +13,6 @@ from tedana.selection import selection_nodes
 from tedana.selection.selection_utils import (
     clean_dataframe,
     confirm_metrics_exist,
-    expand_nodes,
     log_classification_counts,
 )
 from tedana.utils import get_resource_path
@@ -395,8 +394,6 @@ class ComponentSelector:
 
         # Construct an un-executed selector
         self.component_table_ = component_table.copy()
-        # Expand out metrics defined by regular expressions in the nodes
-        self.tree = expand_nodes(self.tree, self.component_table_.columns.tolist())
 
         # this will crash the program with an error message if not all
         # necessary_metrics are in the comptable

@@ -1,9 +1,8 @@
 """Utility functions for tedana.selection."""
 
-import copy
 import logging
 import re
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Union
 
 import numpy as np
 import pandas as pd
@@ -317,110 +316,6 @@ def clean_dataframe(component_table: pd.DataFrame) -> pd.DataFrame:
 #################################################
 # Functions to validate inputs or log information
 #################################################
-
-
-def expand_dict(node: Dict, field: str, metrics: List[str]) -> Tuple[bool, List[Dict]]:
-    """Expand a dictionary with regular expressions.
-
-    Parameters
-    ----------
-    node : dict
-        A dictionary containing nested dictionaries called "parameters" and,
-        optionally, "kwargs".
-        Any of the values in the "parameters" or "kwargs" dictionaries may be
-        a regular expression, denoted by starting with "^".
-    field : :obj:`str`
-        The key in the ``node`` dictionary that should be expanded.
-        Current keys that could include regular expressions are "parameters" and "kwargs"
-    metrics : list of str
-        List of metric names to compare regular expressions against.
-
-    Returns
-    -------
-    regex_found : :obj:`bool`
-        True if any regular expressions were found in the input dictionary
-    out_nodes : :obj:`list[dict]`
-        A list of dictionaries with regular expressions replaced by all
-        matching values in the 'metrics' list.
-    """
-    regex_found = False
-    out_nodes = []
-    for k, v in node.get(field, {}).items():
-        if isinstance(v, str) and v.startswith("^"):
-            regex_found = True
-            replacements = [metric for metric in metrics if re.match(v, metric)]
-            if not replacements:
-                raise ValueError(f"No metrics matching regex '{v}' found.")
-
-            for replacement in replacements:
-                LGR.warning(f"Replacing {v} with {replacement}")
-                mod_node = copy.deepcopy(node)
-                mod_node[field][k] = replacement
-                out_nodes.append(mod_node)
-
-    return regex_found, out_nodes
-
-
-def expand_node(node: Dict, metrics: List[str]):
-    """Expand node definitions with regular expressions.
-
-    Recursively expand a node so that any regular expressions are replaced with
-    any matching values in the 'metrics' list.
-    Regular expressions may be present as the value of any key in the
-    subdictionaries "parameters" or "kwargs".
-
-    Parameters
-    ----------
-    node : :obj:`dict`
-        A dictionary containing nested dictionaries called "parameters" and,
-        optionally, "kwargs".
-        Any of the values in the "parameters" or "kwargs" dictionaries may be
-        a regular expression, denoted by starting with "^".
-    metrics : :obj:`list[str]`
-        List of metric names to compare regular expressions against.
-
-    Returns
-    -------
-    out_nodes : :obj:`list[dict]`
-        A list of dictionaries with regular expressions replaced by all
-        matching values in the 'metrics' list.
-    """
-    regex_found, out_nodes = expand_dict(node, "parameters", metrics)
-    if not regex_found:
-        regex_found, out_nodes = expand_dict(node, "kwargs", metrics)
-
-    if not regex_found:
-        # Stop early and just return the node if no regular expressions were found
-        out_nodes = [copy.deepcopy(node)]
-
-    return out_nodes
-
-
-def expand_nodes(tree: Dict, metrics: List[str]) -> Dict:
-    """Expand regular expressions in all nodes of a decision tree.
-
-    Parameters
-    ----------
-    tree : :obj:`dict`
-        A dictionary containing the info needed to run the component selection decision tree.
-        tree["nodes"] is a list of dictionaries with each element is a sept in the decision tree.
-        Each node contains "parameters" and optionally, "kwargs" that are used in funciton calls.
-        "parameters" or "kwargs" may include a regular expression, denoted by starting with "^".
-    metrics : :obj:`list[str]`
-        List of metric names like "kappa" and "rho" to compare regular expressions against.
-
-    Returns
-    -------
-    tree : :obj:`dict`
-        The same decision tree dictionary that was inputted with all regular expressions expanded.
-    """
-    expanded_tree = copy.deepcopy(tree)
-    expanded_tree["nodes"] = []
-    for node in tree["nodes"]:
-        nodes = expand_node(node, metrics)
-        expanded_tree["nodes"] += nodes
-
-    return expanded_tree
 
 
 def confirm_metrics_exist(
