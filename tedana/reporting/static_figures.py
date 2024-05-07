@@ -335,7 +335,7 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
     mmix = mmix * comptable["optimal sign"].values
 
     # regenerate the beta images
-    component_maps_arr = stats.get_coeffs(ts, mmix, mask)
+    component_maps_arr = stats.get_coeffs(ts, mmix, mask, add_const=True)
     component_maps_arr = component_maps_arr.reshape(
         io_generator.reference_img.shape[:3] + component_maps_arr.shape[1:],
     )
