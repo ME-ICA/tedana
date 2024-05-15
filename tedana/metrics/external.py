@@ -31,8 +31,7 @@ def load_validate_external_regressors(
     external_regressors: :obj:`str`
         Path and name of tsv file that includes external regressor time series
     external_regressor_config: :obj:`dict`
-        A dictionary with info for fitting external regressors
-        to component time series
+        A dictionary with info for fitting external regressors to component time series
     n_vols: :obj:`int`
         Number of timepoints in the fMRI time series
 
@@ -42,10 +41,9 @@ def load_validate_external_regressors(
         Each column is a labelled regressor and the number of rows should
         match the number of timepoints in the fMRI time series
     external_regressor_config: :obj:`dict`
-        A validated dictionary with info for fitting external regressors
-        to component time series. If regex patterns like '^mot_.*$' are used to define
-        regressor names, this is replaced with a list of the match column names used in
-        external_regressors
+        A validated dictionary with info for fitting external regressors to component time series.
+        If regex patterns like '^mot_.*$' are used to define regressor names,
+        this is replaced with a list of the match column names used in external_regressors
     """
     try:
         external_regressors = pd.read_table(external_regressors)
@@ -67,9 +65,9 @@ def validate_extern_regress(
 
     Checks if expected keys are in external_regressor_config.
     Checks if any regressor labels in the dictionary are specified in the
-    user-defined external_regressors
+    user-defined external_regressors.
     Checks if the number of time points in the external regressors matches
-    the number of time point in the fMRI data
+    the number of time point in the fMRI data.
 
     Parameters
     ----------
@@ -86,9 +84,9 @@ def validate_extern_regress(
     -------
     external_regressor_config: :obj:`dict`
         A validated dictionary with info for fitting external regressors
-        to component time series. If regex patterns like '^mot_.*$' are used to define
-        regressor names, this is replaced with a list of the match column names used in
-        external_regressors
+        to component time series.
+        If regex patterns like '^mot_.*$' are used to define regressor names,
+        this is replaced with a list of the match column names used in external_regressors
 
     Raises
     ------
@@ -189,8 +187,8 @@ def fit_regressors(
     Parameters
     ----------
     comptable : (C x X) :obj:`pandas.DataFrame`
-        Component metric table. One row for each component, with a column for
-        each metric. The index is the component number.
+        Component metric table. One row for each component,
+        with a column for each metric. The index is the component number.
     external_regressors : :obj:`pandas.DataFrame`
         Each column is a labelled regressor and the number of rows should
         match the number of timepoints in the fMRI time series
@@ -198,14 +196,14 @@ def fit_regressors(
         Information describing the external regressors and
         method to use for fitting and statistical tests
     mixing : (T x C) array_like
-        Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `data_cat`
+        Mixing matrix for converting input data to component space,
+        where `C` is components and `T` is the same as in `data_cat`
 
     Returns
     -------
     comptable : (C x X) :obj:`pandas.DataFrame`
-        Component metric table. Same as inputted, with additional columns
-        for metrics related to fitting the external regressors
+        Component metric table.
+        Same as inputted, with added columns for metrics related to the external regressor fits
     """
     n_vols = mixing.shape[0]
 
@@ -259,8 +257,8 @@ def make_detrend_regressors(n_vols: int, polort: Union[int, None] = None) -> pd.
     -------
     detrend_regressors: (n_vols x polort) :obj:`pandas.DataFrame`
         Dataframe containing the detrending regressor time series
-        x^0 = 1. All other regressors are zscored so that they have
-        a mean of 0 and a stdev of 1.
+        x^0 = 1.
+        All other regressors are zscored so that they have a mean of 0 and a stdev of 1.
         Dataframe column labels are polort0 - polort{polort-1}
     """
     if polort is None:
@@ -315,8 +313,9 @@ def fit_mixing_to_regressors(
     Parameters
     ----------
     comptable : (C x X) :obj:`pandas.DataFrame`
-        Component metric table. One row for each component, with a column for
-        each metric. The index is the component number.
+        Component metric table.
+        One row for each component, with a column for each metric.
+        The index is the component number.
     external_regressors : :obj:`pandas.DataFrame`
         Each column is a labelled regressor and the number of rows should
         match the number of timepoints in the fMRI time series
@@ -324,20 +323,19 @@ def fit_mixing_to_regressors(
         Information describing the external regressors and
         method to use for fitting and statistical tests
     mixing : (T x C) array_like
-        Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `data_cat`
+        Mixing matrix for converting input data to component space,
+        where `C` is components and `T` is the same as in `data_cat`
     detrend_regressors: (n_vols x polort) :obj:`pandas.DataFrame`
         Dataframe containing the detrending regressor time series
 
     Returns
     -------
     comptable : (C x X) :obj:`pandas.DataFrame`
-        Component metric table. Same as inputted, with additional columns
-        for metrics related to fitting the external regressors.
-        There are new columns for F, R2, and p values for the full model
-        and all partial models. Names are "Fstat Full Model", "pval Full Model",
-        "R2stat Full Model" and "Full" is replaced by the partial model name
-        for each partial model
+        Component metric table.
+        Same as inputted, with added columns for metrics related to external regressor fits.
+        New columns for F, R2, and p values for the full model and all partial models.
+        Names are "Fstat Full Model", "pval Full Model", "R2stat Full Model",
+        and "Full" is replaced by the partial model name for each partial model
     """
     LGR.info("Running fit_mixing_to_regressors")
     LGR.info(f"ICA matrix has {mixing.shape[0]} time points and {mixing.shape[1]} components")
@@ -418,15 +416,15 @@ def build_fstat_regressor_models(
     -------
     regressor_models: :obj:`dict`
         Each element in the dictionary is a numpy array defining the regressors in a
-        regressor model. The models that are always included are 'base' which is just the
-        detrending regressors, and 'full' which is all user-provided external regressors and
-        the detrending regressors. If there are partial models that are named in
-        external_regressor_config["f_stats_partial_models"] then each of those will have a
-        dictionary element named "no" then model name and the regressors included will be
-        everything except the specified regressors. That is "no motion" will include all
-        regressors except the motion regressors. This is for the F test which compares
-        the variance explained with the full model to the variance explained if the
-        regressors-of-interest for the partial model are removed.
+        regressor model.
+        The models that are always included are 'base' which is just the detrending regressors,
+        and 'full' which is all user-provided external regressors and the detrending regressors.
+        If partial models are named in external_regressor_config["f_stats_partial_models"],
+        then each of those will have a dictionary element named "no" then model name and the
+        regressors included will be everything except the specified regressors.
+        That is "no motion" will include all regressors except the motion regressors.
+        This is for the F test which compares the variance explained with the full model to the
+        variance explained if the regressors-of-interest for the partial model are removed.
     """
     # The category titles to group each regressor
     if "f_stats_partial_models" in external_regressor_config:
@@ -517,14 +515,17 @@ def fit_model_with_stats(
         Time by mixing matrix components for the time series for fitting
     regressor_models: :obj:`dict`
         Each element in the dictionary is a numpy array defining the regressors in a
-        regressor model. Inclues 'full', 'base' and partial models.
+        regressor model.
+        Inclues 'full', 'base' and partial models.
     base_label : :obj:`str`
-        The base model to compare the full model against. For F stat for the full
-        model, this should be 'base'. For partial models, this should be the name
-        of the partial model (i.e. "no motion").
+        The base model to compare the full model against.
+        For F stat for the full model, this should be 'base'.
+        For partial models, this should be the name of the partial model (i.e. "no motion").
     full_label : :obj:`str`
-        The full model to use. Default="full" but can also be "task_keep" if
-        tasks were inputted and want to compare results against task.
+        The full model to use.
+        Default="full".
+        "full" is expected if the goal is to compare all nuissance regressors to a base model.
+        "task_keep" for the special case of fitting pre-defined task-locked regressors.
 
     Returns
     -------

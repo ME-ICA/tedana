@@ -44,12 +44,12 @@ def generate_metrics(
     data_optcom : (S x T) array_like
         Optimally combined data
     mixing : (T x C) array_like
-        Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `data_cat`
+        Mixing matrix for converting input data to component space,
+        where `C` is components and `T` is the same as in `data_cat`
     adaptive_mask : (S) array_like
         Array where each value indicates the number of echoes with good signal
-        for that voxel. This mask may be thresholded; for example, with values
-        less than 3 set to 0.
+        for that voxel.
+        This mask may be thresholded; for example, with values less than 3 set to 0.
         For more information on thresholding, see `make_adaptive_mask`.
     tes : list
         List of echo times associated with `data_cat`, in milliseconds
@@ -58,8 +58,9 @@ def generate_metrics(
     label : str in ['ICA', 'PCA']
         The label for this metric generation type
     external_regressors : None or :obj:`pandas.DataFrame`, optional
-        External regressors (e.g., motion parameters, physiological noise) to correlate with
-        ICA components. If None, no external regressor metrics will be calculated.
+        External regressors (e.g., motion parameters, physiological noise)
+        to correlate with ICA components.
+        If None, no external regressor metrics will be calculated.
     external_regressor_config : :obj:`dict`
         A dictionary for defining how to fit external regressors to component time series
     metrics : list
@@ -68,11 +69,11 @@ def generate_metrics(
     Returns
     -------
     comptable : (C x X) :obj:`pandas.DataFrame`
-        Component metric table. One row for each component, with a column for
-        each metric. The index is the component number.
+        Component metric table. One row for each component, with a column for each metric.
+        The index is the component number.
     external_regressor_config : :obj:`dict`
-        Information describing the external regressors and
-        method used for fitting and statistical tests (or None if none were inputed)
+        Info describing the external regressors and method used for fitting and statistical tests
+        (or None if none were inputed)
     """
     # Load metric dependency tree from json file
     dependency_config = op.join(utils.get_resource_path(), "config", "metrics.json")
@@ -433,9 +434,8 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
     Returns
     -------
     metric_metadata : dict
-        The metadata for each column in the comptable for
-        which we have a metadata description, plus the "Component" metadata
-        description (always).
+        The metadata for each column in the comptable for which we have a metadata description,
+        plus the "Component" metadata description (always).
     """
     metric_metadata = {}
     if "kappa" in comptable:

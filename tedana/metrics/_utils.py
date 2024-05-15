@@ -17,11 +17,10 @@ def add_external_dependencies(dependency_config: Dict, external_regressor_config
     Parameters
     ----------
     dependency_config: :obj:`dict`
-        A dictionary stored in ./config/metrics.json with information on all the
-        internally defined metrics like kappa and rho
+        A dictionary stored in ./config/metrics.json
+        with information on all the internally defined metrics like kappa and rho
     external_regressor_config: :obj:`dict`
-        A dictionary with info for fitting external regressors
-        to component time series
+        A dictionary with info for fitting external regressors to component time series
 
     Returns
     -------
