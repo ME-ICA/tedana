@@ -34,7 +34,7 @@ def sample_external_regressors(regress_choice="valid"):
     Returns
     -------
     external_regressors : :obj:`pandas.DataFrame` External regressor table
-    n_time : :obj:`int` Number of time points (rows) in external_regressors
+    n_vols : :obj:`int` Number of time points (rows) in external_regressors
     """
     sample_fname = op.join(THIS_DIR, "data", "external_regress_Ftest_3echo.tsv")
 
@@ -45,9 +45,9 @@ def sample_external_regressors(regress_choice="valid"):
     elif regress_choice != "valid":
         raise ValueError(f"regress_choice is {regress_choice}, which is not a listed option")
 
-    n_time = len(external_regressors)
+    n_vols = len(external_regressors)
 
-    return external_regressors, n_time
+    return external_regressors, n_vols
 
 
 def sample_external_regressor_config(config_choice="valid"):
@@ -94,14 +94,14 @@ def sample_external_regressor_config(config_choice="valid"):
 
 
 # validate_extern_regress
-# -----------
+# -----------------------
 def test_validate_extern_regress_succeeds(caplog):
     """Test validate_extern_regress works as expected."""
 
-    external_regressors, n_time = sample_external_regressors()
+    external_regressors, n_vols = sample_external_regressors()
     external_regressor_config = sample_external_regressor_config()
     external_regressor_config_expanded = external.validate_extern_regress(
-        external_regressors, external_regressor_config, n_time
+        external_regressors, external_regressor_config, n_vols
     )
 
     # The regex patterns should have been replaced with the full names of the regressors
@@ -129,60 +129,91 @@ def test_validate_extern_regress_succeeds(caplog):
     # Shouldn't change anything, but making sure it runs
     caplog.clear()
     external_regressor_config = external.validate_extern_regress(
-        external_regressors, external_regressor_config_expanded, n_time
+        external_regressors, external_regressor_config_expanded, n_vols
     )
     assert "WARNING" not in caplog.text
 
     # Removing all partial model and task_keep stuff to confirm it still runs
     caplog.clear()
     external_regressor_config = sample_external_regressor_config("no_task_partial")
-    external.validate_extern_regress(external_regressors, external_regressor_config, n_time)
+    external.validate_extern_regress(external_regressors, external_regressor_config, n_vols)
     assert caplog.text == ""
 
     # Removing "task_keep" from config to test if warning appears
     caplog.clear()
     external_regressor_config = sample_external_regressor_config("no_task")
-    external.validate_extern_regress(external_regressors, external_regressor_config, n_time)
+    external.validate_extern_regress(external_regressors, external_regressor_config, n_vols)
     assert "Regressor labels in external_regressors are not all included in F" in caplog.text
 
-    # Removing "task_keep" from config to test if warning appears
+    # Add "CSF" to "Motion" partial model (also in "CSF" partial model) to test if warning appears
     caplog.clear()
     external_regressor_config = sample_external_regressor_config("csf_in_mot")
-    external.validate_extern_regress(external_regressors, external_regressor_config, n_time)
+    external.validate_extern_regress(external_regressors, external_regressor_config, n_vols)
     assert "External regressors used in more than one partial model" in caplog.text
 
 
 def test_validate_extern_regress_fails():
     """Test validate_extern_regress fails when expected."""
 
-    external_regressors, n_time = sample_external_regressors()
+    external_regressors, n_vols = sample_external_regressors()
     external_regressor_config = sample_external_regressor_config()
 
     # If there are a different number of time points in the fMRI data and external regressors
     with pytest.raises(
-        external.RegressError, match=f"while fMRI data have {n_time - 1} timepoints"
+        external.RegressError, match=f"while fMRI data have {n_vols - 1} timepoints"
     ):
         external.validate_extern_regress(
-            external_regressors, external_regressor_config, n_time - 1
+            external_regressors, external_regressor_config, n_vols - 1
         )
 
     # If no external regressor labels match the regex label in config
     external_regressor_config = sample_external_regressor_config("unmatched_regex")
     with pytest.raises(external.RegressError, match="No external regressor labels matching regex"):
-        external.validate_extern_regress(external_regressors, external_regressor_config, n_time)
+        external.validate_extern_regress(external_regressors, external_regressor_config, n_vols)
 
     # If a regressor expected in the config is not in external_regressors
     # Run successfully to expand Motion labels in config and then create error
     # when "Mot_Y" is in the config, but removed from external_regressros
     external_regressor_config = sample_external_regressor_config()
     external_regressor_config_expanded = external.validate_extern_regress(
-        external_regressors, external_regressor_config, n_time
+        external_regressors, external_regressor_config, n_vols
     )
-    external_regressors, n_time = sample_external_regressors("no_mot_y_column")
+    external_regressors, n_vols = sample_external_regressors("no_mot_y_column")
     with pytest.raises(
         external.RegressError,
         match="Inputed regressors in external_regressors do not include all expected",
     ):
         external.validate_extern_regress(
-            external_regressors, external_regressor_config_expanded, n_time
+            external_regressors, external_regressor_config_expanded, n_vols
         )
+
+
+# load_validate_external_regressors
+# ---------------------------------
+
+
+def test_load_validate_external_regressors_fails():
+    """Test load_validate_external_regressors fails when not given a  tsv file."""
+
+    external_regressors = "NotATSVFile.tsv"
+    external_regressor_config = sample_external_regressor_config("valid")
+    with pytest.raises(
+        ValueError, match=f"Cannot load tsv file with external regressors: {external_regressors}"
+    ):
+        external.load_validate_external_regressors(
+            external_regressors, external_regressor_config, 200
+        )
+
+
+def test_load_validate_external_regressors_smoke():
+    """Test load_validate_external_regressors succeeds."""
+
+    external_regressors = op.join(THIS_DIR, "data", "external_regress_Ftest_3echo.tsv")
+    n_vols = 75
+    external_regressor_config = sample_external_regressor_config()
+
+    # Not testing outputs because this is just calling validate_extern_regress and
+    # outputs are checked in those tests
+    external.load_validate_external_regressors(
+        external_regressors, external_regressor_config, n_vols
+    )

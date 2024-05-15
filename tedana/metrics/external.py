@@ -60,13 +60,15 @@ def load_validate_external_regressors(
 def validate_extern_regress(
     external_regressors: Dict, external_regressor_config: Dict, n_vols: int
 ) -> Dict:
-    """
-    Confirm that provided external regressor dictionary is valid and matches data.
+    """Confirm external regressor dictionary matches data and expands regular expressions.
 
-    Checks if expected keys are in external_regressor_config.
-    Checks if any regressor labels in the dictionary are specified in the
-    user-defined external_regressors.
-    Checks if the number of time points in the external regressors matches
+    Most keys in external_regressor_config are valided in component_selector.validate_tree
+    which is run when a component selector object is initialized.
+    This function validates external_regressor_config against the dataset-specific
+    external_regressors time series.
+    If the config names specific column labels with the f_stats_partial_models key,
+    then this confirms those column labels are used in external_regressors
+    Also checks if the number of time points in the external regressors matches
     the number of time point in the fMRI data.
 
     Parameters
@@ -78,7 +80,7 @@ def validate_extern_regress(
         Information describing the external regressors and
         method to use for fitting and statistical tests
     n_vols : :obj:`int`
-        The number of time point in the fMRI time series
+        The number of time points in the fMRI time series
 
     Returns
     -------
@@ -86,7 +88,7 @@ def validate_extern_regress(
         A validated dictionary with info for fitting external regressors
         to component time series.
         If regex patterns like '^mot_.*$' are used to define regressor names,
-        this is replaced with a list of the match column names used in external_regressors
+        this is replaced with a list of the matching column names used in external_regressors
 
     Raises
     ------
@@ -101,9 +103,9 @@ def validate_extern_regress(
     # with the data in external_regressors
 
     # Currently column labels only need to be predefined for calc_stats==F
-    #   or if "task_keep" is used. column_label_specifications will include the
-    #   names of the column labels for both f_stats_partial_models and task_keep
-    #   if eithe ror both are defined.
+    # and there are f_stats_partial_models or if "task_keep" is used.
+    # column_label_specifications will include the names of the column labels for
+    # both f_stats_partial_models and task_keep if either or both are defined.
     column_label_specifications = set()
     if "f_stats_partial_models" in set(external_regressor_config.keys()):
         column_label_specifications.update(
@@ -178,8 +180,7 @@ def fit_regressors(
     external_regressor_config: Dict,
     mixing: npt.NDArray,
 ) -> pd.DataFrame:
-    """
-    Fit regressors to the mixing matrix.
+    """Fit regressors to the mixing matrix.
 
     Uses correlation or F statistics in a linear model depending on the calc_stats
     value in external_regressor_config
@@ -242,8 +243,7 @@ def fit_regressors(
 
 
 def make_detrend_regressors(n_vols: int, polort: Union[int, None] = None) -> pd.DataFrame:
-    """
-    Create polynomial detrending regressors to use for removing slow drifts from data.
+    """Create polynomial detrending regressors to use for removing slow drifts from data.
 
     Parameters
     ----------
@@ -256,8 +256,7 @@ def make_detrend_regressors(n_vols: int, polort: Union[int, None] = None) -> pd.
     Returns
     -------
     detrend_regressors: (n_vols x polort) :obj:`pandas.DataFrame`
-        Dataframe containing the detrending regressor time series
-        x^0 = 1.
+        Dataframe containing the detrending regressor time series x^0 = 1.
         All other regressors are zscored so that they have a mean of 0 and a stdev of 1.
         Dataframe column labels are polort0 - polort{polort-1}
     """
@@ -301,8 +300,7 @@ def fit_mixing_to_regressors(
     mixing: npt.NDArray,
     detrend_regressors: pd.DataFrame,
 ) -> pd.DataFrame:
-    """
-    Compute Linear Model and calculate F statistics and P values for combinations of regressors.
+    """Compute Linear Model and calculate F statistics and P values for combinations of regressors.
 
     Equation: Y = XB + E
     - Y = each ICA component (mixing)
@@ -398,8 +396,7 @@ def build_fstat_regressor_models(
     external_regressor_config: Dict,
     detrend_regressors: pd.DataFrame,
 ) -> Dict:
-    """
-    Combine detrending all or subsets of external regressors to make models to fit and test.
+    """Combine detrending all or subsets of external regressors to make models to fit and test.
 
     Parameters
     ----------
@@ -500,8 +497,7 @@ def build_fstat_regressor_models(
 def fit_model_with_stats(
     y: npt.NDArray, regressor_models: Dict, base_label: str, full_label: str = "full"
 ) -> Tuple[npt.NDArray, npt.NDArray, npt.NDArray, npt.NDArray]:
-    """
-    Fit full and partial models and calculate F stats, R2, and p values.
+    """Fit full and partial models and calculate F stats, R2, and p values.
 
     Math from page 11-14 of https://afni.nimh.nih.gov/pub/dist/doc/manual/3dDeconvolve.pdf
     Calculates Y=betas*X + error for the base and the full model

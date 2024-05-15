@@ -19,7 +19,7 @@
     "external_regressor_config": {
         "regress_ID": "Fmodel",
         "info": "Fits all external regressors to a single model using an F statistic",
-        "report": "Unspecified external nuissance regressors were fit to components using a linear model were rejected if they fit.",
+        "report": "Unspecified external nuisance regressors that were fit to components using a linear model were rejected if they fit.",
         "detrend": true,
         "calc_stats": "F",
         "f_stats_partial_models": ["Motion", "CSF"],
