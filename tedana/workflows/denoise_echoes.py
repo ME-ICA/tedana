@@ -6,6 +6,7 @@ import os
 import os.path as op
 import sys
 from pathlib import Path
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -457,7 +458,7 @@ def denoise_echoes(
     tes: np.ndarray,
     data_optcom: np.ndarray,
     adaptive_mask: np.ndarray,
-    confounds: dict[str, str],
+    confounds: Dict[str, str],
     io_generator: io.OutputGenerator,
 ) -> tuple[np.ndarray, np.ndarray, pd.DataFrame]:
     """Denoise echoes using external regressors.
