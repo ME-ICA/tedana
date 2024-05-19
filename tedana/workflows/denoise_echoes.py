@@ -436,7 +436,7 @@ def denoise_echoes_workflow(
 def _main(argv=None):
     """Run the denoise_echoes workflow."""
     if argv:
-        # relevant for tests when CLI called with t2smap_cli._main(args)
+        # relevant for tests when CLI called with denoise_echoes_cli._main(args)
         denoise_echoes_command = "denoise_echoes " + " ".join(argv)
     else:
         denoise_echoes_command = "denoise_echoes " + " ".join(sys.argv[1:])
