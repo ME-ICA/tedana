@@ -32,7 +32,7 @@ def _get_parser():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     class ToDict(argparse.Action):
-        def __call__(self, parser, namespace, values, option_string=None):
+        def __call__(self, parser, namespace, values, option_string=None):  # noqa: U100
             d = {}
             for spec in values:
                 try:
