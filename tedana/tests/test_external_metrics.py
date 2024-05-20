@@ -1,7 +1,6 @@
 """Tests for tedana.metrics.external."""
 
 import logging
-import os
 import os.path as op
 
 import pandas as pd
@@ -9,8 +8,9 @@ import pytest
 
 from tedana.io import load_json
 from tedana.metrics import external
+from tedana.tests.utils import data_for_testing_info, download_test_data
 
-THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+THIS_DIR = op.dirname(op.abspath(__file__))
 LGR = logging.getLogger("GENERAL")
 
 # ----------------------------------------------------------------------
@@ -91,6 +91,31 @@ def sample_external_regressor_config(config_choice="valid"):
         raise ValueError(f"config_choice is {config_choice}, which is not a listed option")
 
     return external_regressor_config
+
+
+def sample_mixing_matrix():
+    """Load and return the three-echo mixing matrix."""
+
+    test_data_path, osf_id = data_for_testing_info("three-echo")
+    download_test_data(osf_id, test_data_path)
+
+    return pd.read_csv(
+        op.join(
+            THIS_DIR,
+            "../../.testing_data_cache/three-echo/TED.three-echo/desc_ICA_mixing_static.tsv",
+        ),
+        delimiter="\t",
+    ).to_numpy()
+
+
+def sample_comptable(n_components):
+    """Create an empty component table."""
+
+    row_vals = []
+    for ridx in range(n_components):
+        row_vals.append(f"ICA_{str(ridx).zfill(2)}")
+
+    return pd.DataFrame(data={"Component": row_vals})
 
 
 # validate_extern_regress
@@ -217,3 +242,25 @@ def test_load_validate_external_regressors_smoke():
     external.load_validate_external_regressors(
         external_regressors, external_regressor_config, n_vols
     )
+
+
+# fit_regressors
+# --------------
+
+
+def test_fit_regressors_succeeds():
+    """Test conditions fit_regressors should succeed."""
+
+    external_regressors, n_vols = sample_external_regressors()
+    external_regressor_config = sample_external_regressor_config()
+    external_regressor_config_expanded = external.validate_extern_regress(
+        external_regressors, external_regressor_config, n_vols
+    )
+    mixing = sample_mixing_matrix()
+
+    comptable = sample_comptable(mixing.shape[1])
+    comptable = external.fit_regressors(
+        comptable, external_regressors, external_regressor_config_expanded, mixing
+    )
+
+    # TODO Add validation of output and tests of conditional statements
