@@ -602,7 +602,6 @@ def plot_t2star_and_s0(
         vmax=t2s_p98,
         annotate=False,
         output_file=os.path.join(io_generator.out_dir, "figures", t2star_plot),
-        resampling_interpolation="nearest",
     )
 
     s0_plot = f"{io_generator.prefix}s0_brain.svg"
@@ -617,7 +616,6 @@ def plot_t2star_and_s0(
         vmax=s0_p98,
         annotate=False,
         output_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
-        resampling_interpolation="nearest",
     )
 
 
@@ -704,7 +702,6 @@ def plot_rmse(
         vmax=rmse_p98,
         annotate=False,
         output_file=rmse_brain_plot,
-        resampling_interpolation="nearest",
     )
 
 
