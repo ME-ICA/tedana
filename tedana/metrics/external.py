@@ -458,6 +458,8 @@ def build_fstat_regressor_models(
             LGR.info(
                 f"Regressors In {model_name} Model:'{model_name}': {tmp_model_labels[model_name]}"
             )
+            # Remove task_keep regressors from regressor_labels before calculating partial models
+            regressor_labels = set(regressor_labels) - set(task_keep_model)
     else:
         regressor_models["full"] = np.concatenate(
             (detrend_regressors_arr, stats.zscore(external_regressors.to_numpy(), axis=0)), axis=1
