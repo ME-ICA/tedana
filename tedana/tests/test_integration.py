@@ -224,6 +224,8 @@ def test_integration_three_echo(skip_integration):
     )
 
     # Test re-running, but use the CLI
+    # TODO Move this to a separate integration test, use the fixed desc_ICA_mixing_static.tsv that
+    #      is distributed with the testing data, and test specific outputs for consistent values
     args = [
         "-d",
         f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
@@ -307,19 +309,9 @@ def test_integration_three_echo_external_regressors_motion_task_models(skip_inte
         shutil.rmtree(out_dir)
 
     # download data and run the test
-    # external_regress_Ftest_3echo.tsv has 13 rows. Based on a local run on the 3 echo data:
-    #  Col 1 (trans_x_correlation) is the TS for ICA comp 59 + similar stdev Gaussian Noise
-    #  Col 2 (trans_y_correlation) is 0.4*comp29+0.5+comp20+Gaussian Noise
-    #  Col 3 (trans_z_correlation) is comp20+Gaussian Noise
-    # The above are the same as the test that uses corr for external regressors
-    #  Col 4-6 are Gaussian noise representing pitch/roll/yaw
-    #  Col 7-12 are the first derivative of col 1-6
-    # With the currently set up decision tree minimal_exteral 2, one component (my 59)
-    # should be rejected, but 20 and 29 aren't rejected because neither crosses the
-    # r>0.8 threshold. If trans_y and trans_Z were included in a single model then
-    # component 20 would have been rejected
-    # Note that the above is in comparision to the minimal decision tree
-    # but the integration test for 3 echoes uses the kundu tree
+    # external_regress_Ftest_3echo.tsv has 12 columns for motion, 1 for CSF, and 1 for task signal
+    # The regressor values and expected fits with the data are detailed in:
+    # tests.test_external_metrics.sample_external_regressors
     download_test_data(osf_id, test_data_path)
     tree_name = "resources/decision_trees/demo_minimal_external_regressors_motion_task_models.json"
     tedana_cli.tedana_workflow(
@@ -330,12 +322,13 @@ def test_integration_three_echo_external_regressors_motion_task_models(skip_inte
         external_regressors=resource_filename(
             "tedana", "tests/data/external_regress_Ftest_3echo.tsv"
         ),
+        mixm=f"{test_data_path}/desc_ICA_mixing_static.tsv",
         low_mem=True,
         tedpca="aic",
     )
 
     # compare the generated output files
-    fn = resource_filename("tedana", "tests/data/cornell_three_echo_outputs.txt")
+    fn = resource_filename("tedana", "tests/data/cornell_three_echo_preset_mixing_outputs.txt")
     check_integration_outputs(fn, out_dir)
 
 

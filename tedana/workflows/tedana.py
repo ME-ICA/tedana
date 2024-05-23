@@ -779,7 +779,12 @@ def tedana_workflow(
             if keep_restarting:
                 io_generator.overwrite = True
                 # Create a re-initialized selector object if rerunning
+                # Since external_regressor_config might have been expanded to remove
+                # regular expressions immediately after initialization,
+                # store and copy this key
+                tmp_external_regressor_config = selector.tree["external_regressor_config"]
                 selector = ComponentSelector(tree)
+                selector.tree["external_regressor_config"] = tmp_external_regressor_config
 
             RepLGR.disabled = True  # Disable the report to avoid duplicate text
         RepLGR.disabled = False  # Re-enable the report after the while loop is escaped
@@ -789,7 +794,7 @@ def tedana_workflow(
         mixing_file = io_generator.get_name("ICA mixing tsv")
         mmix = pd.read_table(mixing_file).values
 
-        selector = ComponentSelector(tree)
+        # selector = ComponentSelector(tree)
         necessary_metrics = selector.necessary_metrics
         # The figures require some metrics that might not be used by the decision tree.
         extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]

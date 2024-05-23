@@ -222,7 +222,7 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "if_true": "accept",
+                "if_true": "accepted",
                 "if_false": "nochange",
                 "decide_comps": ["provisionalreject", "rejected"],
                 "op": "<",
@@ -236,7 +236,7 @@
                 "op3": ">=",
                 "left3": "kappa",
                 "right3": "kappa_elbow_kundu",
-                "tag_if_true": "Fits task"
+                "tag_if_true": "fits task"
             },
             "_comment": "Keep if it fits task regressors and contains T2* signal, as defined by kappa>elbow"
         },

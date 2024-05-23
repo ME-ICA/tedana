@@ -35,6 +35,30 @@ def sample_external_regressors(regress_choice="valid"):
     -------
     external_regressors : :obj:`pandas.DataFrame` External regressor table
     n_vols : :obj:`int` Number of time points (rows) in external_regressors
+
+    Notes
+    -----
+    The loaded external regressors are in ./tests/data/external_regress_Ftest_3echo.tsv
+    These are based on tedana being run with default parameters on the 3 echo data using
+    the mixing matrix downloaded with the three echo data
+    .testing_data_cache/three-echo/TED.three-echo/desc_ICA_mixing_static.tsv
+    For the external regressors:
+    Column 0 (Mot_X) is the time series for ICA component 8 + Gaussian noise
+    Column 1 (Mot_Y) is 0.6 * comp 18 + 0.4 * comp 29 + Gaussian Noise
+    Column 2 (Mot_Z) is 0.8 * comp 18 + 1.2 * Gaussian Noise
+    Column 3 (Mot_Pitch) is 0.9 * comp 30 + 0.1 * comp 61 + Gaussian Noise
+    Columns 4-5 are Gaussian noise
+    Columns 6-11 are the first derivatives of columns 0-5
+    Column 12 (CSF) is comp 11 + Gaussian Noise
+    Column 13 (Signal) is comp 30 + Gaussian Noise
+
+    The Gaussian Noise levels are set so that, with an R^2>0.5 threshold:
+    ICA Comp 8 rejected solely based on the fit to Mot_X
+    ICA Comp 31 looks strongly inversely correlated to Comp 8 and is also rejected
+    ICA Comp 18 rejected based on the combined fit to Mot_X and Mot_Y (signif Motion partial model)
+    ICA Comp 29 NOT rejected based only on the fit to Mot_Y
+    ICA Comp 11 rejected based on a fit to CSF (signif CSF partial model)
+    ICA Comp 30 accepted based on fit to task model even through also fits to Mot_Pitch
     """
     sample_fname = op.join(THIS_DIR, "data", "external_regress_Ftest_3echo.tsv")
 
