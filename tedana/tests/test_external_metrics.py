@@ -6,6 +6,7 @@ import os.path as op
 import pandas as pd
 import pytest
 
+from tedana import utils
 from tedana.io import load_json
 from tedana.metrics import external
 from tedana.tests.utils import data_for_testing_info, download_test_data
@@ -52,7 +53,8 @@ def sample_external_regressors(regress_choice="valid"):
     Column 12 (CSF) is comp 11 + Gaussian Noise
     Column 13 (Signal) is comp 30 + Gaussian Noise
 
-    The Gaussian Noise levels are set so that, with an R^2>0.5 threshold:
+    The base gaussian noise is mean=0, stdev=1.
+    The scaling weights for components and noise are set so that, with an R^2>0.5 threshold:
     ICA Comp 8 rejected solely based on the fit to Mot_X
     ICA Comp 31 looks strongly inversely correlated to Comp 8 and is also rejected
     ICA Comp 18 rejected based on the combined fit to Mot_X and Mot_Y (signif Motion partial model)
@@ -272,9 +274,10 @@ def test_load_validate_external_regressors_smoke():
 # --------------
 
 
-def test_fit_regressors_succeeds():
-    """Test conditions fit_regressors should succeed."""
+def test_fit_regressors(caplog):
+    """Test conditions fit_regressors succeeds and fails."""
 
+    caplog.set_level(logging.INFO)
     external_regressors, n_vols = sample_external_regressors()
     external_regressor_config = sample_external_regressor_config()
     external_regressor_config_expanded = external.validate_extern_regress(
@@ -282,9 +285,167 @@ def test_fit_regressors_succeeds():
     )
     mixing = sample_mixing_matrix()
 
+    # Running with external_regressor_config["detrend"] is True,
+    #  which results in 1 detrending regressor
     comptable = sample_comptable(mixing.shape[1])
     comptable = external.fit_regressors(
         comptable, external_regressors, external_regressor_config_expanded, mixing
     )
 
-    # TODO Add validation of output and tests of conditional statements
+    # Contents will be valided in fit_mixing_to_regressors so just checking column labels here
+    assert set(comptable.keys()) == {
+        "Component",
+        "Fstat Full Model",
+        "Fstat Task Model",
+        "Fstat Motion Model",
+        "Fstat CSF Model",
+        "pval Full Model",
+        "pval Task Model",
+        "pval Motion Model",
+        "pval CSF Model",
+        "R2stat Full Model",
+        "R2stat Task Model",
+        "R2stat Motion Model",
+        "R2stat CSF Model",
+    }
+
+    assert (
+        "External regressors fit includes detrending with 1 Legendre Polynomial regressors"
+        in caplog.text
+    )
+
+    caplog.clear()
+    # Running with external_regressor_config["detrend"]=3, which results in 3 detrending regressors
+    external_regressor_config["detrend"] = 3
+    comptable = sample_comptable(mixing.shape[1])
+    comptable = external.fit_regressors(
+        comptable, external_regressors, external_regressor_config_expanded, mixing
+    )
+    assert (
+        "External regressors fit includes detrending with 3 Legendre Polynomial regressors"
+        in caplog.text
+    )
+
+    caplog.clear()
+    # Running with external_regressor_config["detrend"]=0,
+    #  which results in 1 detrend regressors (demeaning)
+    external_regressor_config["detrend"] = 0
+    comptable = sample_comptable(mixing.shape[1])
+    comptable = external.fit_regressors(
+        comptable, external_regressors, external_regressor_config_expanded, mixing
+    )
+    assert (
+        "External regressor fitted without detrending fMRI time series. Only removing mean"
+        in caplog.text
+    )
+
+    caplog.clear()
+    external_regressor_config["calc_stats"] = "Corr"
+    comptable = sample_comptable(mixing.shape[1])
+    with pytest.raises(
+        ValueError,
+        match="calc_stats for external regressors in decision tree is corr, which is not valid.",
+    ):
+        comptable = external.fit_regressors(
+            comptable, external_regressors, external_regressor_config_expanded, mixing
+        )
+
+
+def test_fit_mixing_to_regressors(caplog):
+    """Test conditions fit_mixing_to_regressors succeeds and fails."""
+
+    caplog.set_level(logging.INFO)
+    external_regressors, n_vols = sample_external_regressors()
+    external_regressor_config = sample_external_regressor_config()
+    external_regressor_config_expanded = external.validate_extern_regress(
+        external_regressors, external_regressor_config, n_vols
+    )
+    mixing = sample_mixing_matrix()
+
+    # Creating detrend_regressors
+    legendre_arr = utils.create_legendre_polynomial_basis_set(n_vols, dtrank=None)
+    detrend_labels = []
+    for label_idx in range(legendre_arr.shape[1]):
+        detrend_labels.append(f"baseline {label_idx}")
+    detrend_regressors = pd.DataFrame(data=legendre_arr, columns=detrend_labels)
+
+    # Running with external_regressor_config["detrend"] is True,
+    #  which results in 1 detrending regressor
+    comptable = sample_comptable(mixing.shape[1])
+
+    comptable = external.fit_mixing_to_regressors(
+        comptable,
+        external_regressors,
+        external_regressor_config_expanded,
+        mixing,
+        detrend_regressors,
+    )
+
+    # Since a fixed mixing matrix is used, the values should always be consistent
+    # Comparing just 3 rows and rounding to 6 decimal places to avoid testing failures
+    # due to differences in floating point precision between systems
+    output_rows_to_validate = comptable.iloc[[0, 11, 30]].round(decimals=6)
+    expected_results = pd.DataFrame(
+        columns=[
+            "Component",
+            "Fstat Full Model",
+            "Fstat Task Model",
+            "Fstat Motion Model",
+            "Fstat CSF Model",
+            "pval Full Model",
+            "pval Task Model",
+            "pval Motion Model",
+            "pval CSF Model",
+            "R2stat Full Model",
+            "R2stat Task Model",
+            "R2stat Motion Model",
+            "R2stat CSF Model",
+        ]
+    )
+    expected_results.loc[0] = [
+        "ICA_00",
+        0.5898043794795538,
+        0.040242260292383224,
+        0.6359651437299336,
+        0.5882298391006501,
+        0.8529159565446598,
+        0.8415655022508225,
+        0.8033066601119929,
+        0.4460627598486151,
+        0.1116607090996441,
+        0.0005509601152330346,
+        0.11119635498661495,
+        0.009551010649882286,
+    ]
+    expected_results.loc[11] = [
+        "ICA_11",
+        5.050391950932562,
+        0.3101483992796387,
+        0.6191428219572478,
+        37.021610927761515,
+        5.897391126885587e-06,
+        0.5792925973677331,
+        0.8177727274388485,
+        8.422777264538439e-08,
+        0.518377055217612,
+        0.004230633903377634,
+        0.10857438156630017,
+        0.377688252390028,
+    ]
+    expected_results.loc[30] = [
+        "ICA_30",
+        5.869398664558788,
+        109.32951177196031,
+        6.215675922255525,
+        1.524970189426933,
+        7.193855290354989e-07,
+        3.3306690738754696e-16,
+        5.303071232143353e-07,
+        0.22160450819684074,
+        0.5557244697248107,
+        0.5996259777665551,
+        0.5501080476751579,
+        0.024389778752502478,
+    ]
+
+    assert output_rows_to_validate.compare(expected_results.round(decimals=6)).empty

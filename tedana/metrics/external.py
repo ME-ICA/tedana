@@ -214,6 +214,11 @@ def fit_regressors(
     # otherwise the function sets an order for the Legendre polynomials
     if external_regressor_config["detrend"] is True:
         legendre_arr = utils.create_legendre_polynomial_basis_set(n_vols, dtrank=None)
+        LGR.info(
+            "External regressors fit includes detrending with "
+            f"{legendre_arr.shape[1]} Legendre Polynomial regressors."
+        )
+
     elif (
         isinstance(external_regressor_config["detrend"], int)
         and external_regressor_config["detrend"] > 0
@@ -221,11 +226,15 @@ def fit_regressors(
         legendre_arr = utils.create_legendre_polynomial_basis_set(
             n_vols, dtrank=external_regressor_config["detrend"]
         )
+        LGR.info(
+            "External regressors fit includes detrending with "
+            f"{legendre_arr.shape[1]} Legendre Polynomial regressors."
+        )
     else:
         LGR.warning(
             "External regressor fitted without detrending fMRI time series. Only removing mean"
         )
-        legendre_arr = utils.create_legendre_polynomial_basis_set(n_vols, dtrank=0)
+        legendre_arr = utils.create_legendre_polynomial_basis_set(n_vols, dtrank=1)
 
     detrend_labels = []
     for label_idx in range(legendre_arr.shape[1]):
