@@ -2,13 +2,14 @@
 
 import logging
 import re
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 from scipy import stats
 
+from tedana import utils
 from tedana.stats import fit_model
 
 LGR = logging.getLogger("GENERAL")
@@ -208,25 +209,30 @@ def fit_regressors(
     """
     n_vols = mixing.shape[0]
 
-    # If the order of polynomial detrending is specified, then pass to make_detrend_regressors
-    # otherwise the function sets a detrending polynomial order
+    # If the order of detrending regressors is specified, then pass to
+    # create_legendre_polynomial_basis_set
+    # otherwise the function sets an order for the Legendre polynomials
     if external_regressor_config["detrend"] is True:
-        detrend_regressors = make_detrend_regressors(n_vols, polort=None)
+        legendre_arr = utils.create_legendre_polynomial_basis_set(n_vols, dtrank=None)
     elif (
         isinstance(external_regressor_config["detrend"], int)
         and external_regressor_config["detrend"] > 0
     ):
-        detrend_regressors = make_detrend_regressors(
-            n_vols, polort=external_regressor_config["detrend"]
+        legendre_arr = utils.create_legendre_polynomial_basis_set(
+            n_vols, dtrank=external_regressor_config["detrend"]
         )
     else:
         LGR.warning(
             "External regressor fitted without detrending fMRI time series. Only removing mean"
         )
-        detrend_regressors = make_detrend_regressors(n_vols, polort=0)
+        legendre_arr = utils.create_legendre_polynomial_basis_set(n_vols, dtrank=0)
+
+    detrend_labels = []
+    for label_idx in range(legendre_arr.shape[1]):
+        detrend_labels.append(f"baseline {label_idx}")
+    detrend_regressors = pd.DataFrame(data=legendre_arr, columns=detrend_labels)
 
     if external_regressor_config["calc_stats"].lower() == "f":
-        # external_regressors = pd.concat([external_regressors, detrend_regressors])
         comptable = fit_mixing_to_regressors(
             comptable, external_regressors, external_regressor_config, mixing, detrend_regressors
         )
@@ -240,57 +246,6 @@ def fit_regressors(
         )
 
     return comptable
-
-
-def make_detrend_regressors(n_vols: int, polort: Union[int, None] = None) -> pd.DataFrame:
-    """Create polynomial detrending regressors to use for removing slow drifts from data.
-
-    Parameters
-    ----------
-    n_vols : :obj:`int`
-        The number of time point in the fMRI time series
-    polort : :obj:`int` or :obj:`NoneType`
-        The number of polynomial regressors to create (i.e. 3 is x^0, x^1, x^2)
-        If None, then this is set to 1+floor(n_vols/150)
-
-    Returns
-    -------
-    detrend_regressors: (n_vols x polort) :obj:`pandas.DataFrame`
-        Dataframe containing the detrending regressor time series x^0 = 1.
-        All other regressors are zscored so that they have a mean of 0 and a stdev of 1.
-        Dataframe column labels are polort0 - polort{polort-1}
-    """
-    if polort is None:
-        polort = int(1 + np.floor(n_vols / 150))
-
-    # create polynomial detrending regressors -> each additive term leads
-    # to more points of transformation [curves]
-    detrend_regressors = np.zeros((n_vols, polort))
-    # create polynomial detrended to the power of 0 [1's],
-    # **1 [linear trend -> f(x) = a + bx],
-    # **2 [quadratic trend -> f(x) = a + bx + cx²],
-    # **3 [cubic trend -> f(x) = f(x) = a + bx + cx² + dx³],
-    # **4 [quartic trend -> f(x) = a + bx + cx² + dx³ + ex⁴]
-    for idx in range(polort):
-        # create a linear space with numbers in range [-1,1] because the mean = 0,
-        # and include the number of timepoints for each regressor
-        tmp = np.linspace(-1, 1, num=n_vols) ** idx
-        if idx == 0:
-            detrend_regressors[:, idx] = tmp
-            detrend_labels = ["polort0"]
-        else:
-            # detrend the regressors by z-scoring the data (zero-mean-centered & stdev of 1)
-            detrend_regressors[:, idx] = stats.zscore(tmp)
-            # concatenate the polynomial power-detrended regressors within a matrix
-            detrend_labels.append(f"polort{idx}")
-
-    # Vestigial code that was used to test whether outputs looked correct.
-    # if show_plot:
-    #     plt.plot(detrend_regressors)  # display the polynomial power-detrended regressors
-    #     plt.show()
-    detrend_regressors = pd.DataFrame(data=detrend_regressors, columns=detrend_labels)
-
-    return detrend_regressors
 
 
 def fit_mixing_to_regressors(

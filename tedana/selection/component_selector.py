@@ -25,7 +25,16 @@ RepLGR = logging.getLogger("REPORT")
 # A user can run the desision tree either using one of these
 # names or by giving the full path to a tree in a different
 # location
-DEFAULT_TREES = ["minimal", "meica", "tedana_orig"]
+# Including the demo trees here so people do not need to type the full
+# path, but these are not listed as options in the CLI help menu until
+# they are actually validated as useful on some data
+DEFAULT_TREES = [
+    "minimal",
+    "meica",
+    "tedana_orig",
+    "demo_minimal_external_regressors_single_model",
+    "demo_minimal_external_regressors_motion_task_models",
+]
 
 
 class TreeError(Exception):

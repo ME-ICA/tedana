@@ -264,7 +264,8 @@
             "parameters": {
                 "new_classification": "rejected",
                 "decide_comps": ["provisionalreject", "unclassified"]
-            }
+            },
+            "kwargs": {"tag": "Unlikely BOLD"}
         }
     ]
 }
