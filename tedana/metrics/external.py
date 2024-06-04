@@ -397,7 +397,7 @@ def build_fstat_regressor_models(
     regressor_labels = external_regressors.columns
     detrend_regressors_arr = detrend_regressors.to_numpy()
     regressor_models = {"base": detrend_regressors_arr}
-    LGR.info(f"Size for base Regressor Model: {regressor_models['base'].shape}")
+    LGR.info(f"Size for base regressor model: {regressor_models['base'].shape}")
 
     if "task_keep" in external_regressor_config:
         task_keep_model = external_regressor_config["task_keep"]
@@ -418,17 +418,21 @@ def build_fstat_regressor_models(
                     axis=1,
                 )
             tmp_model_labels[model_name].update(set(detrend_regressors.columns))
-            LGR.info(f"Size for {model_name} Model: {regressor_models[model_name].shape}")
             LGR.info(
-                f"Regressors In {model_name} Model:'{model_name}': {tmp_model_labels[model_name]}"
+                f"Size for {model_name} regressor model: {regressor_models[model_name].shape}"
             )
+            LGR.info(f"Regressors in {model_name} model: {sorted(tmp_model_labels[model_name])}")
         # Remove task_keep regressors from regressor_labels before calculating partial models
         regressor_labels = set(regressor_labels) - set(task_keep_model)
     else:
         regressor_models["full"] = np.concatenate(
             (detrend_regressors_arr, stats.zscore(external_regressors.to_numpy(), axis=0)), axis=1
         )
-        LGR.info(f"Size for full Regressor Model: {regressor_models['full'].shape}")
+        LGR.info(f"Size for full regressor model: {regressor_models['full'].shape}")
+        LGR.info(
+            "Regressors in full model: "
+            f"{sorted(set(regressor_labels).union(set(detrend_regressors.columns)))}"
+        )
 
     for pmodel in partial_models:
         # For F statistics, the other models to test are those that include everything EXCEPT
@@ -449,12 +453,12 @@ def build_fstat_regressor_models(
             )
         keep_labels.update(set(detrend_regressors.columns))
         LGR.info(
-            f"Size for External Regressor Partial Model '{no_pmodel}': "
+            f"Size for external regressor partial model '{no_pmodel}': "
             f"{regressor_models[no_pmodel].shape}"
         )
         LGR.info(
-            "Regressors In Partial Model (everything but regressors of interest) "
-            f"'{no_pmodel}': {keep_labels}"
+            "Regressors in partial model (everything but regressors of interest) "
+            f"'{no_pmodel}': {sorted(keep_labels)}"
         )
 
     return regressor_models

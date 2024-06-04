@@ -135,13 +135,49 @@ def sample_mixing_matrix():
 
 
 def sample_comptable(n_components):
-    """Create an empty component table."""
+    """Create an empty component table.
+
+    Parameters
+    ----------
+    n_components : :obj:`int`
+        The number of components (rows) in the compponent table DataFrame
+
+    Returns
+    -------
+    component_table : :obj:`pd.DataFrame`
+        A component table with a single "Component" column with
+        "ICA_" number for each row
+    """
 
     row_vals = []
     for ridx in range(n_components):
         row_vals.append(f"ICA_{str(ridx).zfill(2)}")
 
     return pd.DataFrame(data={"Component": row_vals})
+
+
+def sample_detrend_regressors(n_vols, dtrank=None):
+    """
+    Creates Legendre polynomial detrending regressors.
+
+    Parameters
+    ----------
+    n_vols: :obj:`int`
+        The number of volumes or time points for the regressors
+    dtrank : :obj:`int` or None
+        The rank (number) of detrending regressors to create
+        Automatically calculate if None (default)
+
+    Returns
+    -------
+    detrend_regressors : :obj:`pd.DataFrame` The specified detrending regressors
+    """
+
+    legendre_arr = utils.create_legendre_polynomial_basis_set(n_vols, dtrank)
+    detrend_labels = []
+    for label_idx in range(legendre_arr.shape[1]):
+        detrend_labels.append(f"baseline {label_idx}")
+    return pd.DataFrame(data=legendre_arr, columns=detrend_labels)
 
 
 # validate_extern_regress
@@ -351,8 +387,14 @@ def test_fit_regressors(caplog):
         )
 
 
+# fit_mixing_to_regressors
+# --------------
+
+
 def test_fit_mixing_to_regressors(caplog):
     """Test conditions fit_mixing_to_regressors succeeds and fails."""
+
+    # Note: Outputs from fit_model_with_stats are also tested within this function
 
     caplog.set_level(logging.INFO)
     external_regressors, n_vols = sample_external_regressors()
@@ -362,12 +404,7 @@ def test_fit_mixing_to_regressors(caplog):
     )
     mixing = sample_mixing_matrix()
 
-    # Creating detrend_regressors
-    legendre_arr = utils.create_legendre_polynomial_basis_set(n_vols, dtrank=None)
-    detrend_labels = []
-    for label_idx in range(legendre_arr.shape[1]):
-        detrend_labels.append(f"baseline {label_idx}")
-    detrend_regressors = pd.DataFrame(data=legendre_arr, columns=detrend_labels)
+    detrend_regressors = sample_detrend_regressors(n_vols, dtrank=None)
 
     # Running with external_regressor_config["detrend"] is True,
     #  which results in 1 detrending regressor
@@ -449,3 +486,67 @@ def test_fit_mixing_to_regressors(caplog):
     ]
 
     assert output_rows_to_validate.compare(expected_results.round(decimals=6)).empty
+
+
+# build_fstat_regressor_models
+# --------------
+
+
+def test_build_fstat_regressor_models(caplog):
+    """Test conditions build_fstat_regressor_models succeeds and fails."""
+
+    caplog.set_level(logging.INFO)
+    external_regressors, n_vols = sample_external_regressors()
+    external_regressor_config = sample_external_regressor_config()
+    external_regressor_config_expanded = external.validate_extern_regress(
+        external_regressors, external_regressor_config, n_vols
+    )
+
+    detrend_regressors = sample_detrend_regressors(n_vols, dtrank=3)
+
+    # Running with f_stats_partial_models
+    regressor_models = external.build_fstat_regressor_models(
+        external_regressors, external_regressor_config_expanded, detrend_regressors
+    )
+
+    assert regressor_models["full"].shape == (n_vols, 16)
+    assert (
+        "Regressors in full model: ['CSF', 'Mot_Pitch', 'Mot_Roll', 'Mot_X', 'Mot_Y', 'Mot_Yaw', "
+        "'Mot_Z', 'Mot_d1_Pitch', 'Mot_d1_Roll', 'Mot_d1_X', 'Mot_d1_Y', 'Mot_d1_Yaw', "
+        "'Mot_d1_Z', 'baseline 0', 'baseline 1', 'baseline 2']"
+    ) in caplog.text
+    assert regressor_models["task keep"].shape == (n_vols, 4)
+    assert (
+        "Regressors in task keep model: ['Signal', 'baseline 0', 'baseline 1', 'baseline 2']"
+        in caplog.text
+    )
+
+    assert regressor_models["no CSF"].shape == (n_vols, 15)
+    assert (
+        "Regressors in partial model (everything but regressors of interest) 'no CSF': "
+        "['Mot_Pitch', 'Mot_Roll', 'Mot_X', 'Mot_Y', 'Mot_Yaw', 'Mot_Z', 'Mot_d1_Pitch', "
+        "'Mot_d1_Roll', 'Mot_d1_X', 'Mot_d1_Y', 'Mot_d1_Yaw', 'Mot_d1_Z', "
+        "'baseline 0', 'baseline 1', 'baseline 2']"
+    ) in caplog.text
+    assert regressor_models["no Motion"].shape == (n_vols, 4)
+    assert (
+        "Regressors in partial model (everything but regressors of interest) 'no Motion': "
+        "['CSF', 'baseline 0', 'baseline 1', 'baseline 2']" in caplog.text
+    )
+
+    # Rerunning with no "task_keep" model (creates full model slightly differently)
+    # Since the "Signal" column is still in exernal regressors, it would be included
+    # in the full model
+    external_regressor_config = sample_external_regressor_config("no_task")
+    external_regressor_config_expanded = external.validate_extern_regress(
+        external_regressors, external_regressor_config, n_vols
+    )
+    regressor_models = external.build_fstat_regressor_models(
+        external_regressors, external_regressor_config_expanded, detrend_regressors
+    )
+    assert regressor_models["full"].shape == (n_vols, 17)
+    assert (
+        "Regressors in full model: ['CSF', 'Mot_Pitch', 'Mot_Roll', 'Mot_X', 'Mot_Y', 'Mot_Yaw', "
+        "'Mot_Z', 'Mot_d1_Pitch', 'Mot_d1_Roll', 'Mot_d1_X', 'Mot_d1_Y', 'Mot_d1_Yaw', "
+        "'Mot_d1_Z', 'Signal', 'baseline 0', 'baseline 1', 'baseline 2']"
+    ) in caplog.text
