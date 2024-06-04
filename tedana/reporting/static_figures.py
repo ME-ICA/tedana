@@ -235,6 +235,7 @@ def plot_component(
         colorbar=False,
         draw_cross=False,
         annotate=False,
+        resampling_interpolation="nearest",
     )
     display.annotate(size=30)
     example_ax = list(display.axes.values())[0]
