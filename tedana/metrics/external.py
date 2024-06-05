@@ -135,9 +135,7 @@ def validate_extern_regress(
                         )
                     tmp_partial_model_names.update(set(tmp_replacements))
                 else:
-                    if not isinstance(tmp_name, list):
-                        tmp_name = [tmp_name]
-                    tmp_partial_model_names.update(tmp_name)
+                    tmp_partial_model_names.add(tmp_name)
             external_regressor_config[partial_models] = list(tmp_partial_model_names)
             if expected_regressor_names.intersection(tmp_partial_model_names):
                 LGR.warning(

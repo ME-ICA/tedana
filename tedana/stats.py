@@ -231,7 +231,7 @@ def fit_model(x, y, output_residual=False):
 
     Parameters
     ----------
-    x : (R X T) :obj:`numpy.ndarray`
+    x : (T X R) :obj:`numpy.ndarray`
         2D array with the regressors for the specified model an time
     y : (T X C) :obj:`numpy.ndarray`
         Time by mixing matrix components for the time series for fitting
@@ -245,9 +245,9 @@ def fit_model(x, y, output_residual=False):
         The residual time series for the fit (only if output_residual is True)
     betas : (R X C) :obj:`numpy.ndarray`
         The magnitude fits for the model (only if output_residual is False)
-    sse : (R X C) :obj:`numpy.ndarray`
+    sse : (C) :obj:`numpy.ndarray`
         The sum of square error for the model (only if output_residual is False)
-    df : (R X C) :obj:`numpy.ndarray`
+    df : :obj:`int`
         The degrees of freeom for the model (only if output_residual is False)
         (timepoints - number of regressors)
     """
