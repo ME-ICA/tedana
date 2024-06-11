@@ -34,10 +34,13 @@ def add_external_dependencies(dependency_config: Dict, external_regressor_config
     if external_regressor_config["calc_stats"].lower() == "f":
         model_names = ["Full"]
         if "f_stats_partial_models" in set(external_regressor_config.keys()):
-            model_names.append(external_regressor_config["f_stats_partial_models"])
+            if isinstance(external_regressor_config["f_stats_partial_models"], list):
+                model_names.extend(external_regressor_config["f_stats_partial_models"])
+            else:  # A single string
+                model_names.append(external_regressor_config["f_stats_partial_models"])
 
         if "task_keep" in set(external_regressor_config.keys()):
-            model_names.append("task_keep")
+            model_names.append("Task")
 
         for model_name in model_names:
             for stat_type in ["Fstat", "R2stat", "pval"]:

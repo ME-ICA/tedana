@@ -2,6 +2,7 @@
 
 import glob
 import json
+import logging
 import os
 import os.path as op
 
@@ -12,6 +13,8 @@ from tedana.selection import component_selector
 from tedana.utils import get_resource_path
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+LGR = logging.getLogger("GENERAL")
+
 
 # ----------------------------------------------------------------------
 # Functions Used For Tests
@@ -40,6 +43,9 @@ def dicts_to_test(treechoice):
         "missing_function": An undefined decision node function
         "missing_key": A dict missing one of the required keys (report)
         "null_value": A parameter in one node improperly has a null value
+        "external_missing_key": external_regressors_config missing a required key
+        "external_invalid_calc_stats": external_regressors_config calc_stats is not "F"
+        "external_missing_partial_model": external regress names partial F model but not regressors
 
     Returns
     -------
@@ -56,6 +62,18 @@ def dicts_to_test(treechoice):
         "necessary_metrics": ["kappa", "rho"],
         "intermediate_classifications": ["random1"],
         "classification_tags": ["Random1"],
+        "external_regressor_config": {
+            "regress_ID": "Fmodel",
+            "info": "Info Text",
+            "report": "Report Text",
+            "detrend": True,
+            "calc_stats": "F",
+            "f_stats_partial_models": ["Motion", "CSF"],
+            "Motion": ["^mot_.*$"],
+            "CSF": ["^csf.*$"],
+            "task_keep": ["^signal.*$"],
+            "extra field": 42,
+        },
         "nodes": [
             {
                 "functionname": "dec_left_op_right",
@@ -134,6 +152,12 @@ def dicts_to_test(treechoice):
         tree.pop("report")
     elif treechoice == "null_value":
         tree["nodes"][0]["parameters"]["left"] = None
+    elif treechoice == "external_missing_key":
+        tree["external_regressor_config"].pop("calc_stats")
+    elif treechoice == "external_invalid_calc_stats":
+        tree["external_regressor_config"]["calc_stats"] = "corr"
+    elif treechoice == "external_missing_partial_model":
+        tree["external_regressor_config"].pop("Motion")
     else:
         raise Exception(f"{treechoice} is an invalid option for treechoice")
 
@@ -223,11 +247,44 @@ def test_validate_tree_succeeds():
             assert component_selector.validate_tree(tree)
 
 
-def test_validate_tree_warnings():
+def test_validate_tree_warnings(caplog):
     """Test to make sure validate_tree triggers all warning conditions."""
 
+    caplog.set_level(logging.WARNING)
     # A tree that raises all possible warnings in the validator should still be valid
     assert component_selector.validate_tree(dicts_to_test("valid"))
+
+    assert (
+        r"Decision tree includes fields that are not used or logged {'unused_key'}" in caplog.text
+    )
+    assert (
+        r"{'random1'} in node 0 of the decision tree includes "
+        "a classification tag that was not predefined"
+    ) in caplog.text
+    assert (
+        r"{'random2', 'nochange'} in node 1 of the decision tree includes a classification"
+        in caplog.text
+    )
+    assert (
+        r"{'random2notpredefined'} in node 1 of the decision tree "
+        "includes a classification tag that was not predefined"
+    ) in caplog.text
+    assert (
+        r"{'random2notpredefined'} in node 2 of the decision tree includes "
+        "a classification label that was not predefined"
+    ) in caplog.text
+    assert (
+        r"{'Random2_NotPredefined'} in node 2 of the decision tree "
+        "includes a classification tag that was not predefined"
+    ) in caplog.text
+    assert (
+        r"Node 3 includes the 'log_extra_report' parameter. "
+        "This was removed from the code and will not be used."
+    ) in caplog.text
+    assert (
+        "External regressor dictionary includes fields "
+        r"that are not used or logged {'extra field'}"
+    ) in caplog.text
 
 
 def test_validate_tree_fails():
@@ -238,26 +295,64 @@ def test_validate_tree_fails():
     """
 
     # An empty dict should not be valid
-    with pytest.raises(component_selector.TreeError):
+    with pytest.raises(
+        component_selector.TreeError, match="Decision tree missing required fields"
+    ):
         component_selector.validate_tree({})
     # A tree that is missing a required key should not be valid
-    with pytest.raises(component_selector.TreeError):
+    with pytest.raises(
+        component_selector.TreeError, match=r"Decision tree missing required fields: {'report'}"
+    ):
         component_selector.validate_tree(dicts_to_test("missing_key"))
     # Calling a selection node function that does not exist should not be valid
-    with pytest.raises(component_selector.TreeError):
+    with pytest.raises(
+        component_selector.TreeError,
+        match=r"Node 0 has invalid functionname parameter: not_a_function",
+    ):
         component_selector.validate_tree(dicts_to_test("missing_function"))
 
     # Calling a function with an non-existent required parameter should not be valid
-    with pytest.raises(component_selector.TreeError):
+    with pytest.raises(
+        component_selector.TreeError,
+        match=r"Node 0 has additional, undefined required parameters: {'nonexistent_req_param'}",
+    ):
         component_selector.validate_tree(dicts_to_test("extra_req_param"))
 
     # Calling a function with an non-existent optional parameter should not be valid
-    with pytest.raises(component_selector.TreeError):
+    with pytest.raises(
+        component_selector.TreeError, match=r"Node 0 has additional, undefined optional parameters"
+    ):
         component_selector.validate_tree(dicts_to_test("extra_opt_param"))
 
     # Calling a function missing a required parameter should not be valid
-    with pytest.raises(component_selector.TreeError):
+    with pytest.raises(
+        component_selector.TreeError, match=r"Node 0 is missing required parameter"
+    ):
         component_selector.validate_tree(dicts_to_test("missing_req_param"))
+
+    with pytest.raises(
+        component_selector.TreeError,
+        match=r"External regressor dictionary missing required fields: {'calc_stats'}",
+    ):
+        component_selector.validate_tree(dicts_to_test("external_missing_key"))
+
+    with pytest.raises(
+        component_selector.TreeError,
+        match=(
+            "External regressor dictionary cannot include "
+            "f_stats_partial_models if calc_stats is not F"
+        ),
+    ):
+        component_selector.validate_tree(dicts_to_test("external_invalid_calc_stats"))
+
+    with pytest.raises(
+        component_selector.TreeError,
+        match=(
+            "External regressor dictionary missing required fields for partial models "
+            r"defined in f_stats_partial_models: {'Motion'}"
+        ),
+    ):
+        component_selector.validate_tree(dicts_to_test("external_missing_partial_model"))
 
 
 def test_check_null_fails():

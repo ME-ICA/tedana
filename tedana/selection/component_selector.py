@@ -240,8 +240,8 @@ def validate_tree(tree: Dict) -> Dict:
     if tree["external_regressor_config"] is not None:
         external_regressor_config = tree["external_regressor_config"]
         # Define the fields that should always be present
-        dict_expected_keys = set(["regress_ID", "info", "detrend", "calc_stats"])
-
+        dict_expected_keys = set(["regress_ID", "info", "report", "detrend", "calc_stats"])
+        dict_optional_keys = set(["task_keep"])
         # Right now, "f" is the only option, but this leaves open the possibility
         #  to have additional options
         calc_stats_key_options = set("f")
@@ -251,20 +251,21 @@ def validate_tree(tree: Dict) -> Dict:
         if missing_keys:
             err_msg += f"External regressor dictionary missing required fields: {missing_keys}\n"
 
-        if external_regressor_config["calc_stats"].lower() not in calc_stats_key_options:
-            err_msg += (
-                "calc_stats in external_regressor_config is "
-                f"{external_regressor_config['calc_stats']}. It must be one of the following: "
-                f"{calc_stats_key_options}\n"
-            )
+        if "calc_stats" in set(external_regressor_config.keys()):
+            if external_regressor_config["calc_stats"].lower() not in calc_stats_key_options:
+                err_msg += (
+                    "calc_stats in external_regressor_config is "
+                    f"{external_regressor_config['calc_stats']}. It must be one of the following: "
+                    f"{calc_stats_key_options}\n"
+                )
 
-        if (external_regressor_config["calc_stats"].lower() != "f") and (
-            "f_stats_partial_models" in set(external_regressor_config.keys())
-        ):
-            err_msg += (
-                "External regressor dictionary cannot include"
-                "f_stats_partial_models if calc_stats is not F\n"
-            )
+            if (external_regressor_config["calc_stats"].lower() != "f") and (
+                "f_stats_partial_models" in set(external_regressor_config.keys())
+            ):
+                err_msg += (
+                    "External regressor dictionary cannot include "
+                    "f_stats_partial_models if calc_stats is not F\n"
+                )
 
         if "f_stats_partial_models" in set(external_regressor_config.keys()):
             dict_expected_keys.add("f_stats_partial_models")
@@ -280,7 +281,9 @@ def validate_tree(tree: Dict) -> Dict:
                 )
 
         # Warn if unused fields exist
-        unused_keys = set(external_regressor_config.keys()) - set(dict_expected_keys)
+        unused_keys = (
+            set(external_regressor_config.keys()) - set(dict_expected_keys) - dict_optional_keys
+        )
         if unused_keys:
             LGR.warning(
                 "External regressor dictionary includes fields that "
