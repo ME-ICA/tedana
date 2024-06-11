@@ -239,6 +239,89 @@ that is used to check whether results are plausible & can help avoid mistakes.
     none of the components include the "Likely BOLD" tag, then ICA will be repeated
     with a different seed and then the selection process will repeat.
 
+External regressor configuration
+================================
+
+``external_regressor_config`` is an optional field. If this field is specified, then
+additional metrics will be calculated that include F, R^2, and p values for the fit
+of external regressors to each component time series. Users will need to specify the
+external regressors using the ``--external`` option.
+This functionality can be used to integrate non-multi-echo desision criteria,
+such as correlations to head motion,  CSF, or respiration time series.
+These added metrics can then be used in decision tree steps just like any other metric.
+Two demonstration trees that apply this functionality are in `resources/decision_trees`_.
+demo_minimal_external_regressors_single_model.json demonstrates the simplest applications
+of external regressors and demo_minimal_external_regressors_motion_task_models.json
+highlights some added functionality. Both these trees are based on minimal.json.
+While these might be good decision trees to use as is,
+they are both called "demo" because they demonstrate what is possible,
+but the utility of these specific decision trees have **not** been validated yet.
+
+``external_regressor_config`` must include the following sub-fields
+
+- "regress_ID"
+    A descriptive name for the external regressors that will be logged.
+
+- "info"
+    A brief description of the external regressors for info logging
+
+- "report"
+    A narrative description of how the external regressors are used
+    that will be used in report logging.
+    This should include any citations, which must be included in the
+    `references BibTeX file`_.
+
+- "detrend"
+    "true" or "false" to specify whether to include detrending regressors
+    when fitting the external regressors to the ICA component time series.
+    If "true" it will specify the number of detrending time regressors to
+    include based on the length of the time series.
+    If "false" it will just include an intercept regressor to remove the mean.
+    This can also be a integer that defines the number of regressors to include
+
+- "calc_stats"
+    The statistical test to use for fitting the external regressors to the
+    ICA component time series. Currently, the only valid option is "F" for
+    fitting using a linear model with an F statistic.
+
+With just the above fields, all regressors in the user provided file will be
+fit to the ICA times series data and columns will be added to
+``selector.component_table_`` that are called ``Fstat Full Model``,
+``pval Full Model``, and ``R2stat Full Model``. The p value might be useful for
+defining a statistically significant fit while R2stat might be useful for assessing
+whether the regressors defined a meaningful amount of variance. That is, even if
+head motion regressors significant correlated to an ICA component, if they only
+model 1% of the total variance of that component, it might be detrimental to
+reject that comopnent.
+
+There are several optional fields for ``external_regressor_config`` that require specifying
+external regressors by name.
+
+- "f_stats_partial_models"
+    In addition to calculated an F statistic across all regressors, it is possible to define
+    partial F statistics. For example, if field is ``["Motion", "CSF"]``, then there will be
+    additional metrics called ``Fstat Motion Model``, ``pval Motion Model``, ``R2stat Motion Model``,
+    ``Fstat CSF Model``, ``pval CSF Model``, and ``R2stat CSF Model``. These fields will say whether
+    subsets of the external regressors significantly fit the data. This the demo decision tree,
+    this isn't used to decide whether to accept or reject any components, but it is used to add
+    informational tags. That is, a component that is rejected due to a fit to external regressors
+    can be tagged with "Fits motion external regressors". This specific field is a list of strings.
+    Each string needs to be the name of another field. So, if "Motion" included, there needs to be
+    another field called "Motion". That field will include a list of column names of
+    external regressors that should be part of that label. Regular expressions are also allowed
+    so that ``"Motion": ["^mot_.*$"]`` means that any external regressor column label that begins
+    with "mot_" is considered part of "Motion". Capitalization is ignored.
+
+- "task_keep"
+    This is a list of regressor names or regular expressions that model the task design.
+    Any regressor defined in "task_keep" will **not** be part of the Full F statistic model.
+    These will be separate fit to the component time series to generate metrics labelled
+    ``Fstat Task Model``, ``pval Task Model``, and ``R2stat Task Model``.
+    These can be used to accept metrics that would otherwise be rejected. For example,
+    in demo_minimal_external_regressors_motion_task_models.json, if a component fits
+    the task design and has substantical T2* signal (kappa>kappa elbow), accept the component
+    even if other metrics show the component also contains noise.
+
 
 Nodes in the decision tree
 ==========================
