@@ -138,7 +138,9 @@ def validate_tree(tree: Dict) -> Dict:
         if k in unused_keys:
             unused_keys.remove(k)
     if unused_keys:
-        LGR.warning(f"Decision tree includes fields that are not used or logged {unused_keys}")
+        LGR.warning(
+            f"Decision tree includes fields that are not used or logged {sorted(unused_keys)}"
+        )
 
     # Combine the default classifications with the user inputted classifications
     all_classifications = set(tree.get("intermediate_classifications")) | set(
@@ -208,7 +210,9 @@ def validate_tree(tree: Dict) -> Dict:
             compclass = compclass | set(tmp_comp)
         nonstandard_labels = compclass.difference(all_classifications)
         if nonstandard_labels:
-            LGR.warning(f"{compclass} in node {i} of the decision tree includes a classification")
+            LGR.warning(
+                f"{sorted(compclass)} in node {i} of the decision tree includes a classification"
+            )
         if "decide_comps" in node.get("parameters").keys():
             tmp_comp = node["parameters"]["decide_comps"]
             if isinstance(tmp_comp, str):
@@ -217,7 +221,7 @@ def validate_tree(tree: Dict) -> Dict:
         nonstandard_labels = compclass.difference(all_decide_comps)
         if nonstandard_labels:
             LGR.warning(
-                f"{compclass} in node {i} of the decision tree includes a classification "
+                f"{sorted(compclass)} in node {i} of the decision tree includes a classification "
                 "label that was not predefined"
             )
 
@@ -232,7 +236,7 @@ def validate_tree(tree: Dict) -> Dict:
             undefined_classification_tags = tagset.difference(set(tree.get("classification_tags")))
             if undefined_classification_tags:
                 LGR.warning(
-                    f"{tagset} in node {i} of the decision tree includes a classification "
+                    f"{sorted(tagset)} in node {i} of the decision tree includes a classification "
                     "tag that was not predefined"
                 )
 
@@ -287,7 +291,7 @@ def validate_tree(tree: Dict) -> Dict:
         if unused_keys:
             LGR.warning(
                 "External regressor dictionary includes fields that "
-                f"are not used or logged {unused_keys}"
+                f"are not used or logged {sorted(unused_keys)}"
             )
 
     if err_msg:

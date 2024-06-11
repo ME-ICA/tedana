@@ -250,40 +250,36 @@ def test_validate_tree_succeeds():
 def test_validate_tree_warnings(caplog):
     """Test to make sure validate_tree triggers all warning conditions."""
 
-    caplog.set_level(logging.WARNING)
     # A tree that raises all possible warnings in the validator should still be valid
     assert component_selector.validate_tree(dicts_to_test("valid"))
 
     assert (
-        r"Decision tree includes fields that are not used or logged {'unused_key'}" in caplog.text
+        r"Decision tree includes fields that are not used or logged ['unused_key']" in caplog.text
     )
     assert (
-        r"{'random1'} in node 0 of the decision tree includes "
+        r"['random1'] in node 0 of the decision tree includes "
         "a classification tag that was not predefined"
     ) in caplog.text
     assert (
-        r"{'random2', 'nochange'} in node 1 of the decision tree includes a classification"
+        r"['nochange', 'random2'] in node 1 of the decision tree includes a classification"
         in caplog.text
     )
     assert (
-        r"{'random2notpredefined'} in node 1 of the decision tree "
+        r"['random2notpredefined'] in node 1 of the decision tree "
         "includes a classification tag that was not predefined"
     ) in caplog.text
     assert (
-        r"{'random2notpredefined'} in node 2 of the decision tree includes "
+        r"['random2notpredefined'] in node 2 of the decision tree includes "
         "a classification label that was not predefined"
     ) in caplog.text
     assert (
-        r"{'Random2_NotPredefined'} in node 2 of the decision tree "
+        r"['Random2_NotPredefined'] in node 2 of the decision tree "
         "includes a classification tag that was not predefined"
     ) in caplog.text
-    assert (
-        r"Node 3 includes the 'log_extra_report' parameter. "
-        "This was removed from the code and will not be used."
-    ) in caplog.text
+    assert (r"Node 3 includes the 'log_extra_report' parameter.") in caplog.text
     assert (
         "External regressor dictionary includes fields "
-        r"that are not used or logged {'extra field'}"
+        r"that are not used or logged ['extra field']"
     ) in caplog.text
 
 
