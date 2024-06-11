@@ -33,7 +33,7 @@ def generate_metrics(
     label: str,
     external_regressors: Union[pd.DataFrame, None] = None,
     external_regressor_config: Union[Dict, None] = None,
-    metrics=None,
+    metrics: Union[List[str], None] = None,
 ) -> Tuple[pd.DataFrame, Dict]:
     """Fit TE-dependence and -independence models to components.
 
@@ -102,7 +102,7 @@ def generate_metrics(
     elif data_cat.shape[1] != len(tes):
         raise ValueError(
             f"Second dimension of data_cat ({data_cat.shape[1]}) does not match "
-            f"number of echoes provided (tes; {len(tes)})"
+            f"number of echoes provided ({tes}; {len(tes)})"
         )
     elif not (data_cat.shape[2] == data_optcom.shape[1] == mixing.shape[0]):
         raise ValueError(
