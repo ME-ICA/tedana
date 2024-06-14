@@ -2,6 +2,7 @@
 
 import logging
 import os
+import warnings
 from io import BytesIO
 
 import matplotlib
@@ -223,20 +224,23 @@ def plot_component(
     # Set range to ~1/10th of max positive or negative beta
     imgmax = 0.1 * np.max(np.abs(stat_img.get_fdata()))
 
-    # Save the figure to an in-memory file object
-    display = plotting.plot_stat_map(
-        stat_img,
-        bg_img=None,
-        display_mode="mosaic",
-        cut_coords=5,
-        vmax=imgmax,
-        cmap=png_cmap,
-        symmetric_cbar=True,
-        colorbar=False,
-        draw_cross=False,
-        annotate=False,
-        resampling_interpolation="nearest",
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="non-diagonal affine")
+        # Save the figure to an in-memory file object
+        display = plotting.plot_stat_map(
+            stat_img,
+            bg_img=None,
+            display_mode="mosaic",
+            cut_coords=5,
+            vmax=imgmax,
+            cmap=png_cmap,
+            symmetric_cbar=True,
+            colorbar=False,
+            draw_cross=False,
+            annotate=False,
+            resampling_interpolation="nearest",
+        )
+
     display.annotate(size=30)
     example_ax = list(display.axes.values())[0]
     nilearn_fig = example_ax.ax.figure
@@ -591,32 +595,36 @@ def plot_t2star_and_s0(
 
     # Plot T2* and S0 maps
     t2star_plot = f"{io_generator.prefix}t2star_brain.svg"
-    plotting.plot_stat_map(
-        t2star_img,
-        bg_img=None,
-        display_mode="mosaic",
-        symmetric_cbar=False,
-        black_bg=True,
-        cmap="gray",
-        vmin=t2s_p02,
-        vmax=t2s_p98,
-        annotate=False,
-        output_file=os.path.join(io_generator.out_dir, "figures", t2star_plot),
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="non-diagonal affine")
+        plotting.plot_stat_map(
+            t2star_img,
+            bg_img=None,
+            display_mode="mosaic",
+            symmetric_cbar=False,
+            black_bg=True,
+            cmap="gray",
+            vmin=t2s_p02,
+            vmax=t2s_p98,
+            annotate=False,
+            output_file=os.path.join(io_generator.out_dir, "figures", t2star_plot),
+        )
 
     s0_plot = f"{io_generator.prefix}s0_brain.svg"
-    plotting.plot_stat_map(
-        s0_img,
-        bg_img=None,
-        display_mode="mosaic",
-        symmetric_cbar=False,
-        black_bg=True,
-        cmap="gray",
-        vmin=s0_p02,
-        vmax=s0_p98,
-        annotate=False,
-        output_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="non-diagonal affine")
+        plotting.plot_stat_map(
+            s0_img,
+            bg_img=None,
+            display_mode="mosaic",
+            symmetric_cbar=False,
+            black_bg=True,
+            cmap="gray",
+            vmin=s0_p02,
+            vmax=s0_p98,
+            annotate=False,
+            output_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
+        )
 
 
 def plot_rmse(
@@ -690,19 +698,21 @@ def plot_rmse(
         "figures",
         f"{io_generator.prefix}rmse_brain.svg",
     )
-    plotting.plot_stat_map(
-        rmse_img,
-        bg_img=None,
-        display_mode="mosaic",
-        cut_coords=4,
-        symmetric_cbar=False,
-        black_bg=True,
-        cmap="Reds",
-        vmin=rmse_p02,
-        vmax=rmse_p98,
-        annotate=False,
-        output_file=rmse_brain_plot,
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="non-diagonal affine")
+        plotting.plot_stat_map(
+            rmse_img,
+            bg_img=None,
+            display_mode="mosaic",
+            cut_coords=4,
+            symmetric_cbar=False,
+            black_bg=True,
+            cmap="Reds",
+            vmin=rmse_p02,
+            vmax=rmse_p98,
+            annotate=False,
+            output_file=rmse_brain_plot,
+        )
 
 
 def plot_adaptive_mask(
