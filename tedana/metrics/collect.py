@@ -82,6 +82,9 @@ def generate_metrics(
             "match."
         )
 
+    if isinstance(label, list):
+        assert len(label) == mixing.shape[1]
+
     # Derive mask from thresholded adaptive mask
     mask = adaptive_mask >= 3
 
@@ -109,10 +112,13 @@ def generate_metrics(
     # throughout this function
     n_components = mixing.shape[1]
     comptable = pd.DataFrame(index=np.arange(n_components, dtype=int))
-    comptable["Component"] = [
-        io.add_decomp_prefix(comp, prefix=label, max_value=comptable.shape[0])
-        for comp in comptable.index.values
-    ]
+    if isinstance(label, str):
+        comptable["Component"] = [
+            io.add_decomp_prefix(comp, prefix=label, max_value=comptable.shape[0])
+            for comp in comptable.index.values
+        ]
+    else:
+        comptable["Component"] = label
 
     # Metric maps
     # Maps will be stored as arrays in an easily-indexable dictionary

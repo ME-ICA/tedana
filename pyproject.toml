@@ -76,6 +76,7 @@ all = ["tedana[dev,doc,tests]"]
 ica_reclassify = "tedana.workflows.ica_reclassify:_main"
 t2smap = "tedana.workflows.t2smap:_main"
 tedana = "tedana.workflows.tedana:_main"
+denoise_echoes = "tedana.workflows.denoise_echoes:_main"
 
 #
 # Hatch configurations
