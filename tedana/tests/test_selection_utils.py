@@ -241,8 +241,12 @@ def test_confirm_metrics_exist_succeeds():
 
     # Testing for metrics that exist with 1 or 2 necessary metrics in a set
     # Returns True if an undefined metric exists so using "assert not"
+    # Testing if it can find a single metric
     assert not selection_utils.confirm_metrics_exist(component_table, {"kappa"})
+    # Testing if it can find multiple metrics
     assert not selection_utils.confirm_metrics_exist(component_table, {"kappa", "rho"})
+    # Testing if it can find metrics that use regular expressions
+    assert not selection_utils.confirm_metrics_exist(component_table, {"kappa", "^count.*$"})
 
 
 def test_confirm_metrics_exist_fails():
@@ -251,12 +255,21 @@ def test_confirm_metrics_exist_fails():
     component_table = sample_component_table(options="comptable")
 
     # Should fail with and error would have default or pre-defined file name
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Necessary metrics for unknown function"):
         selection_utils.confirm_metrics_exist(component_table, {"kappa", "quack"})
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"MISSING METRICS: \['quack'\]"):
+        selection_utils.confirm_metrics_exist(
+            component_table,
+            necessary_metrics={"kappa", "quack"},
+            function_name="dec_left_op_right",
+        )
+    with pytest.raises(ValueError, match="Necessary metrics for farm"):
         selection_utils.confirm_metrics_exist(
             component_table, {"kappa", "mooo"}, function_name="farm"
         )
+
+    with pytest.raises(ValueError, match=r"MISSING METRICS: \['\^mount.\*\$'\]."):
+        selection_utils.confirm_metrics_exist(component_table, {"kappa", "^mount.*$"})
 
 
 def test_log_decision_tree_step_smoke():

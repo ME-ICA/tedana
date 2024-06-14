@@ -2,7 +2,7 @@
 Included Decision Trees
 #######################
 
-Three decision trees are currently distributed with ``tedana``.
+Five decision trees are currently distributed with ``tedana``.
 
 ``meica`` is the decision tree that is based on MEICA version 2.5 and
 ``tedana_orig`` is very similar and has been included with ``tedana``
@@ -18,7 +18,18 @@ and comprehensible, but it has not yet be extensively validated and
 parts of the tree may change in response to additional tests on a
 wider range of data sets.
 
-Flowcharts describing the steps in both trees are below.
+With the addition of options to fit external regressors to components,
+there are two demonstration decision trees that implement this new functionality.
+While these might work well, since they have not yet been validated on data, they
+are labeled ``demo``.
+``decision_tree_demo_minimal_external_regressors_single_model``
+demonstrates fitting all nuissance regressors to a single model.
+``decision_tree_demo_minimal_external_regressors_motion_task_models``
+demonstrates fitting nuissance regressors to a model,
+partial tests and tagging for components that fit Motion or CSF regressors,
+and retention of some components that fit task regressors.
+
+Flowcharts describing the steps in these trees are below.
 As documented more in :doc:`building_decision_trees`, the input to each tree
 is a table with metrics, like :math:`\kappa` or :math:`\rho`, for each
 component. Each step or node in the decision tree either calculates
@@ -122,3 +133,19 @@ is rejected (node 13)
 `LaTeX file to generate the minimal decision tree flow chart`_
 
 .. _LaTeX file to generate the minimal decision tree flow chart: _static/decision_tree_minimal.tex
+
+*********************************************
+Demo minimal external regressors single model
+*********************************************
+
+To be added
+
+****************************************************
+Demo minimal external regressors, motion task models
+****************************************************
+
+Add text
+
+.. image:: _static/decision_tree_demo_minimal_external_regressors_motion_task_models.png
+    :width: 400
+    :alt: External Decision Tree With Motion and Task Models Flow Chart

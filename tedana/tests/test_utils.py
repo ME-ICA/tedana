@@ -323,6 +323,34 @@ def test_smoke_threshold_map():
     assert utils.threshold_map(img, min_cluster_size, sided="bi") is not None
 
 
+def test_create_legendre_polynomial_basis_set():
+    """Checking that accurate Legendre polynomials are created."""
+
+    n_vols = 100
+    legendre_arr = utils.create_legendre_polynomial_basis_set(n_vols, dtrank=6)
+
+    # Testing first 6 orders to 6 decimal accuracy using
+    #  explicit equations rathern than scipy's lpmv
+    legendre_rounded = np.round(legendre_arr, decimals=6)
+    bounds = np.linspace(-1, 1, n_vols)
+    # order 0 (all 1's)
+    assert (legendre_arr[:, 0] == 1).sum() == n_vols
+    # order 1 (y=x)
+    assert np.abs((legendre_rounded[:, 1] - np.round(bounds, decimals=6))).sum() == 0
+    # order 2 (y = 0.5*(3*x^2 - 1))
+    tmp_o2 = 0.5 * (3 * bounds**2 - 1)
+    assert np.abs((legendre_rounded[:, 2] - np.round(tmp_o2, decimals=6))).sum() == 0
+    # order 3 (y = 0.5*(5*x^3 - 3*x))
+    tmp_o3 = 0.5 * (5 * bounds**3 - 3 * bounds)
+    assert np.abs((legendre_rounded[:, 3] - np.round(tmp_o3, decimals=6))).sum() == 0
+    # order 4 (y = 0.125*(35*x^4 - 30*x^2 + 3))
+    tmp_o4 = 0.125 * (35 * bounds**4 - 30 * bounds**2 + 3)
+    assert np.abs((legendre_rounded[:, 4] - np.round(tmp_o4, decimals=6))).sum() == 0
+    # order 5 (y = 0.125*(63*x^5 - 70*x^3 + 15x))
+    tmp_o5 = 0.125 * (63 * bounds**5 - 70 * bounds**3 + 15 * bounds)
+    assert np.abs((legendre_rounded[:, 5] - np.round(tmp_o5, decimals=6))).sum() == 0
+
+
 def test_sec2millisec():
     """Ensure that sec2millisec returns 1000x the input values."""
     assert utils.sec2millisec(5) == 5000
