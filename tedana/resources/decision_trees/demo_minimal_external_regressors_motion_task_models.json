@@ -140,19 +140,14 @@
                 "op": ">=",
                 "left": "kappa",
                 "right": "kappa_elbow_kundu"
-            }
-        },
-        {
-            "functionname": "dec_left_op_right",
-            "parameters": {
-                "if_true": "provisionalreject",
-                "if_false": "nochange",
-                "decide_comps": ["provisionalreject", "provisionalaccept"],
-                "op": ">",
-                "left": "rho",
-                "right": "rho_elbow_liberal"
             },
-            "kwargs": {"tag_if_true": "Unlikely BOLD"}
+            "kwargs": {
+                "log_extra_info": "If kappa> kappa elbow and rho<rho elbow, provisional accept. Otherwise provisional reject",
+                "op2": "<",
+                "left2": "rho",
+                "right2": "rho_elbow_liberal",
+                "tag_if_true": "Likely BOLD"
+            }
         },
         {
             "functionname": "dec_left_op_right",
@@ -170,7 +165,8 @@
                 "op2": ">",
                 "left2": "kappa",
                 "right2": "kappa_elbow_kundu",
-                "tag_if_true": "Likely BOLD"
+                "tag_if_true": "Likely BOLD",
+                "tag_if_false": "Unlikely BOLD"
             }
         },
         {
@@ -197,7 +193,7 @@
             "parameters": {
                 "if_true": "nochange",
                 "if_false": "nochange",
-                "decide_comps": "all",
+                "decide_comps": "provisionalreject",
                 "op": "<",
                 "left": "pval Full Model",
                 "right": 0.05
@@ -218,7 +214,7 @@
             "parameters": {
                 "if_true": "nochange",
                 "if_false": "nochange",
-                "decide_comps": "all",
+                "decide_comps": "provisionalreject",
                 "op": "<",
                 "left": "pval Full Model",
                 "right": 0.05
@@ -239,7 +235,7 @@
             "parameters": {
                 "if_true": "accepted",
                 "if_false": "nochange",
-                "decide_comps": ["provisionalreject", "rejected"],
+                "decide_comps": ["provisionalreject"],
                 "op": "<",
                 "left": "pval Task Model",
                 "right": 0.05
