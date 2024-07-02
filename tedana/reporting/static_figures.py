@@ -225,7 +225,7 @@ def plot_component(
     imgmax = 0.1 * np.max(np.abs(stat_img.get_fdata()))
 
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", message="non-diagonal affine")
+        warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
         # Save the figure to an in-memory file object
         display = plotting.plot_stat_map(
             stat_img,
@@ -596,7 +596,7 @@ def plot_t2star_and_s0(
     # Plot T2* and S0 maps
     t2star_plot = f"{io_generator.prefix}t2star_brain.svg"
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", message="non-diagonal affine")
+        warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
         plotting.plot_stat_map(
             t2star_img,
             bg_img=None,
@@ -612,7 +612,7 @@ def plot_t2star_and_s0(
 
     s0_plot = f"{io_generator.prefix}s0_brain.svg"
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", message="non-diagonal affine")
+        warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
         plotting.plot_stat_map(
             s0_img,
             bg_img=None,
@@ -699,7 +699,7 @@ def plot_rmse(
         f"{io_generator.prefix}rmse_brain.svg",
     )
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", message="non-diagonal affine")
+        warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
         plotting.plot_stat_map(
             rmse_img,
             bg_img=None,
@@ -760,17 +760,19 @@ def plot_adaptive_mask(
         "Classification": discrete_cmap(0.9),
     }
 
-    ob = plotting.plot_prob_atlas(
-        maps_img=all_masks,
-        bg_img=mean_optcom_img,
-        view_type="contours",
-        threshold=0.2,
-        annotate=False,
-        draw_cross=False,
-        cmap=cmap,
-        display_mode="mosaic",
-        cut_coords=4,
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
+        ob = plotting.plot_prob_atlas(
+            maps_img=all_masks,
+            bg_img=mean_optcom_img,
+            view_type="contours",
+            threshold=0.2,
+            annotate=False,
+            draw_cross=False,
+            cmap=cmap,
+            display_mode="mosaic",
+            cut_coords=4,
+        )
 
     legend_elements = []
     for k, v in color_dict.items():
