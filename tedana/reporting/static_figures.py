@@ -224,6 +224,9 @@ def plot_component(
     # Set range to ~1/10th of max positive or negative beta
     imgmax = 0.1 * np.max(np.abs(stat_img.get_fdata()))
 
+    # nilearn posts a warning when saving an image with a non-diagonal affine
+    # This is not relevant for how we use this function and it flood our screen
+    # output with repeated warnings so suppressing this warning.
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
         # Save the figure to an in-memory file object
