@@ -22,9 +22,9 @@ With the addition of options to fit external regressors to components,
 there are two demonstration decision trees that implement this new functionality.
 While these might work well, since they have not yet been validated on data, they
 are labeled ``demo``.
-``decision_tree_demo_minimal_external_regressors_single_model``
+``decision_tree_demo_external_regressors_single_model``
 demonstrates fitting all nuissance regressors to a single model.
-``decision_tree_demo_minimal_external_regressors_motion_task_models``
+``decision_tree_demo_external_regressors_motion_task_models``
 demonstrates fitting nuissance regressors to a model,
 partial tests and tagging for components that fit Motion or CSF regressors,
 and retention of some components that fit task regressors.
@@ -135,17 +135,43 @@ is rejected (node 13)
 .. _LaTeX file to generate the minimal decision tree flow chart: _static/decision_tree_minimal.tex
 
 *********************************************
-Demo minimal external regressors single model
+Demo external regressors single model
 *********************************************
 
-To be added
+This tree is similar to the minimal tree except there is an added node (node 11)
+where components are rejected if they significant fit a model of external nuisance regressor
+time series and the fit models a substantial amount of the total variance.
+Unlike the minimal tree, components that would be accepted based on :math:`\kappa` & :math:`\rho`
+criteria can be rejected based on a fit to external regressors.
+This is called a "demo" tree because it is demonstrating how fits to external regressors can
+be used. It might be a good decision tree to use,
+but results have not yet been tested and validated.
+
+.. image:: _static/decision_tree_demo_external_regressors_single_model.png
+    :width: 400
+    :alt: External Decision Tree With Motion and Task Models Flow Chart
 
 ****************************************************
-Demo minimal external regressors, motion task models
+Demo external regressors, motion task models
 ****************************************************
 
-Add text
+This is based on the minimal tree, but multiple nodes were added to demonstrate how to use
+external regressors for fits.
+Unlike the minimal tree, components that would be accepted based on :math:`\kappa` & :math:`\rho`
+criteria can be rejected based on a fit to external regressors.
+Components are rejected if they significant fit a model of external nuisance regressor
+time series and the fit models a substantial amount of the total variance (node 10).
+For rejected components, if they also fit a partial model of motion external regressors (node 11),
+or CSF external regressors (node 12), the outputs are also tagged to say they fit those groups
+of regressors.
+Additionally, if a rejected component fits the task design and has
+:math:`\kappa` > :math:`\kappa` elbow, then it is accepted under the conservative assumption to
+retain task fitting components with some :math:`T_2^*`` signal even if those components also
+contain potentially rejection-worthy noise (node 13).
+This is called a "demo" tree because it is demonstrating how fits to external regressors can
+be used. It might be a good decision tree to use,
+but results have not yet been tested and validated.
 
-.. image:: _static/decision_tree_demo_minimal_external_regressors_motion_task_models.png
+.. image:: _static/decision_tree_demo_external_regressors_motion_task_models.png
     :width: 400
     :alt: External Decision Tree With Motion and Task Models Flow Chart

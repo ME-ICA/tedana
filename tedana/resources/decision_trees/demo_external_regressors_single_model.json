@@ -1,6 +1,6 @@
 {
-    "tree_id": "demo_minimal_external_regressors_motion_task_models",
-    "info": "Demonstration based on the minimal decision tree that uses partial F stats on a model with multiple external regressors divided by category and task regressors to bias towards keeping.",
+    "tree_id": "demo_external_regressors_single_model",
+    "info": "Demonstration based on the minimal decision tree that uses an F stat on a model with multiple external regressors.",
     "report": "This is based on the minimal criteria of the original MEICA decision tree \\citep{kundu2013integrated} without the more aggressive noise removal steps \\citep{dupre2021te}.",
     "necessary_metrics": [
         "kappa",
@@ -12,22 +12,10 @@
         "signal-noise_t",
         "variance explained",
         "pval nuisance model",
-        "pval task model",
-        "pval nuisance Motion partial model",
-        "pval nuisance CSF partial model",
-        "R2stat nuisance model",
-        "R2stat task model"
+        "R2stat nuisance model"
     ],
     "intermediate_classifications": ["provisionalaccept", "provisionalreject"],
-    "classification_tags": [
-        "Likely BOLD",
-        "Unlikely BOLD",
-        "Low variance",
-        "External regressors",
-        "Fits motion external regressors",
-        "Fits CSF external regressors",
-        "Fits task"
-    ],
+    "classification_tags": ["Likely BOLD", "Unlikely BOLD", "Low variance", "External regressors"],
     "external_regressor_config": [
         {
             "regress_ID": "nuisance",
@@ -35,19 +23,7 @@
             "report": "External nuisance regressors that fit to components using a linear model were rejected.",
             "detrend": true,
             "statistic": "F",
-            "regressors": ["^(?!signal).*$"],
-            "partial_models": {
-                "Motion": ["^mot_.*$"],
-                "CSF": ["^csf.*$"]
-            }
-        },
-        {
-            "regress_ID": "task",
-            "info": "Fits all task regressors to a single model using an F statistic",
-            "report": "Task regressors that fit to components using a linear model and have some T2* weighting were accepted even if they would have been rejected base on other criteriea.",
-            "detrend": true,
-            "statistic": "F",
-            "regressors": ["^signal.*$"]
+            "regressors": ["^.*$"]
         }
     ],
     "nodes": [
@@ -59,7 +35,7 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "if_true": "provisionalreject",
+                "if_true": "rejected",
                 "if_false": "nochange",
                 "decide_comps": "all",
                 "op": ">",
@@ -71,7 +47,7 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "if_true": "provisionalreject",
+                "if_true": "rejected",
                 "if_false": "nochange",
                 "decide_comps": "all",
                 "op": ">",
@@ -96,7 +72,7 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "if_true": "provisionalreject",
+                "if_true": "rejected",
                 "if_false": "nochange",
                 "decide_comps": "all",
                 "op": ">",
@@ -113,7 +89,7 @@
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "if_true": "provisionalreject",
+                "if_true": "rejected",
                 "if_false": "nochange",
                 "decide_comps": "all",
                 "op": ">",
@@ -135,11 +111,7 @@
         {
             "functionname": "calc_rho_elbow",
             "parameters": {"decide_comps": "all"},
-            "kwargs": {
-                "subset_decide_comps": "unclassified",
-                "rho_elbow_type": "liberal",
-                "log_extra_info": ""
-            },
+            "kwargs": {"subset_decide_comps": "unclassified", "rho_elbow_type": "liberal"},
             "_comment": ""
         },
         {
@@ -151,13 +123,17 @@
                 "op": ">=",
                 "left": "kappa",
                 "right": "kappa_elbow_kundu"
-            },
-            "kwargs": {
-                "log_extra_info": "If kappa> kappa elbow and rho<rho elbow, provisional accept. Otherwise provisional reject",
-                "op2": "<",
-                "left2": "rho",
-                "right2": "rho_elbow_liberal",
-                "tag_if_true": "Likely BOLD"
+            }
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "provisionalreject",
+                "if_false": "nochange",
+                "decide_comps": ["provisionalreject", "provisionalaccept"],
+                "op": ">",
+                "left": "rho",
+                "right": "rho_elbow_liberal"
             }
         },
         {
@@ -176,14 +152,13 @@
                 "op2": ">",
                 "left2": "kappa",
                 "right2": "kappa_elbow_kundu",
-                "tag_if_true": "Likely BOLD",
-                "tag_if_false": "Unlikely BOLD"
+                "tag_if_true": "Likely BOLD"
             }
         },
         {
             "functionname": "dec_left_op_right",
             "parameters": {
-                "if_true": "provisionalreject",
+                "if_true": "rejected",
                 "if_false": "nochange",
                 "decide_comps": "all",
                 "op": "<",
@@ -196,71 +171,7 @@
                 "right2": 0.5,
                 "log_extra_info": "If external regressors fit with p<0.05 and model R2>0.5 of the variance, then reject.",
                 "tag_if_true": "External regressors"
-            },
-            "_comment": "Provisionally rejecting components that fit to the external regressor noise model"
-        },
-        {
-            "functionname": "dec_left_op_right",
-            "parameters": {
-                "if_true": "nochange",
-                "if_false": "nochange",
-                "decide_comps": "provisionalreject",
-                "op": "<",
-                "left": "pval nuisance model",
-                "right": 0.05
-            },
-            "kwargs": {
-                "op2": ">",
-                "left2": "R2stat nuisance model",
-                "right2": 0.5,
-                "op3": "<",
-                "left3": "pval nuisance Motion partial model",
-                "right3": 0.05,
-                "tag_if_true": "Fits motion external regressors"
-            },
-            "_comment": "Identical to the one above, & not changing classifications, but tagging if fits to motion regressors"
-        },
-        {
-            "functionname": "dec_left_op_right",
-            "parameters": {
-                "if_true": "nochange",
-                "if_false": "nochange",
-                "decide_comps": "provisionalreject",
-                "op": "<",
-                "left": "pval nuisance model",
-                "right": 0.05
-            },
-            "kwargs": {
-                "op2": ">",
-                "left2": "R2stat nuisance model",
-                "right2": 0.5,
-                "op3": "<",
-                "left3": "pval nuisance CSF partial model",
-                "right3": 0.05,
-                "tag_if_true": "Fits CSF external regressors"
-            },
-            "_comment": "Identical to the one above, & not changing classifications, but tagging if fits to CSF regressors"
-        },
-        {
-            "functionname": "dec_left_op_right",
-            "parameters": {
-                "if_true": "accepted",
-                "if_false": "nochange",
-                "decide_comps": ["provisionalreject"],
-                "op": "<",
-                "left": "pval task model",
-                "right": 0.05
-            },
-            "kwargs": {
-                "op2": ">",
-                "left2": "R2stat task model",
-                "right2": 0.5,
-                "op3": ">=",
-                "left3": "kappa",
-                "right3": "kappa_elbow_kundu",
-                "tag_if_true": "Fits task"
-            },
-            "_comment": "Keep if it fits task regressors and contains T2* signal, as defined by kappa>elbow"
+            }
         },
         {
             "functionname": "dec_variance_lessthan_thresholds",
@@ -276,6 +187,7 @@
                 "tag_if_true": "Low variance"
             }
         },
+
         {
             "functionname": "manual_classify",
             "parameters": {"new_classification": "accepted", "decide_comps": "provisionalaccept"},

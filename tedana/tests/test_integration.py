@@ -276,7 +276,7 @@ def test_integration_three_echo_external_regressors_single_model(skip_integratio
     # Note that the above is in comparision to the minimal decision tree
     # but the integration test for 3 echoes uses the kundu tree
     download_test_data(osf_id, test_data_path)
-    tree_name = "resources/decision_trees/demo_minimal_external_regressors_single_model.json"
+    tree_name = "resources/decision_trees/demo_external_regressors_single_model.json"
     tedana_cli.tedana_workflow(
         data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
         tes=[14.5, 38.5, 62.5],
@@ -313,7 +313,7 @@ def test_integration_three_echo_external_regressors_motion_task_models(skip_inte
     # The regressor values and expected fits with the data are detailed in:
     # tests.test_external_metrics.sample_external_regressors
     download_test_data(osf_id, test_data_path)
-    tree_name = "resources/decision_trees/demo_minimal_external_regressors_motion_task_models.json"
+    tree_name = "resources/decision_trees/demo_external_regressors_motion_task_models.json"
     tedana_cli.tedana_workflow(
         data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
         tes=[14.5, 38.5, 62.5],

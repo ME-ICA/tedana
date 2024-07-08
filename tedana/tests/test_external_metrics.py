@@ -28,7 +28,7 @@ def sample_external_regressors(regress_choice="valid"):
     ----------
     regress_choice : :obj:`str` How to keep or alter the external regressor data
         Options are:
-        "valid": Column labels expected in demo_minimal_external_regressors_motion_task_models
+        "valid": Column labels expected in demo_external_regressors_motion_task_models
         The labels in the config file are lowercase and this file is capitalized, but it should
         still be valid.
         "no_mot_y_column": The column labeled "Mot_Pitch" is removed.
@@ -85,7 +85,7 @@ def sample_external_regressor_config(config_choice="valid"):
     ----------
     config_choice : :obj:`str` How to keep or alter the config file
         Options are:
-        "valid": Config dictionary stored in demo_minimal_external_regressors_motion_task_models
+        "valid": Config dictionary stored in demo_external_regressors_motion_task_models
         "no_task_partial": Removes "task_keep" and everything with partial F stats
         "csf_in_mot": Adds "CSF" to the list of motion regressor partial models
         "signal_in_mot": Adds "Signal" to the list of motion regressor partial models
@@ -98,7 +98,7 @@ def sample_external_regressor_config(config_choice="valid"):
     sample_fname = op.join(
         THIS_DIR,
         "../resources/decision_trees",
-        "demo_minimal_external_regressors_motion_task_models.json",
+        "demo_external_regressors_motion_task_models.json",
     )
     tree = load_json(sample_fname)
     external_regressor_config = tree["external_regressor_config"]
