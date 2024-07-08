@@ -2,6 +2,7 @@
 
 import logging
 import os.path as op
+import re
 
 import pandas as pd
 import pytest
@@ -85,9 +86,9 @@ def sample_external_regressor_config(config_choice="valid"):
     config_choice : :obj:`str` How to keep or alter the config file
         Options are:
         "valid": Config dictionary stored in demo_minimal_external_regressors_motion_task_models
-        "no_task": Removes "task_keep" info from config
         "no_task_partial": Removes "task_keep" and everything with partial F stats
         "csf_in_mot": Adds "CSF" to the list of motion regressor partial models
+        "signal_in_mot": Adds "Signal" to the list of motion regressor partial models
 
     Returns
     -------
@@ -102,17 +103,15 @@ def sample_external_regressor_config(config_choice="valid"):
     tree = load_json(sample_fname)
     external_regressor_config = tree["external_regressor_config"]
 
-    if config_choice == "no_task":
-        external_regressor_config.pop("task_keep")
-    elif config_choice == "no_task_partial":
-        external_regressor_config.pop("task_keep")
-        external_regressor_config.pop("f_stats_partial_models")
-        external_regressor_config.pop("Motion")
-        external_regressor_config.pop("CSF")
+    if config_choice == "no_task_partial":
+        external_regressor_config = [external_regressor_config[0]]
+        external_regressor_config[0].pop("partial_models")
     elif config_choice == "csf_in_mot":
-        external_regressor_config["Motion"].append("CSF")
+        external_regressor_config[0]["partial_models"]["Motion"].append("^csf.*$")
+    elif config_choice == "signal_in_mot":
+        external_regressor_config[0]["partial_models"]["Motion"].append("Signal")
     elif config_choice == "unmatched_regex":
-        external_regressor_config["Motion"] = ["^translation_.*$"]
+        external_regressor_config[0]["partial_models"]["Motion"] = ["^translation_.*$"]
     elif config_choice != "valid":
         raise ValueError(f"config_choice is {config_choice}, which is not a listed option")
 
@@ -192,7 +191,7 @@ def test_validate_extern_regress_succeeds(caplog):
     )
 
     # The regex patterns should have been replaced with the full names of the regressors
-    assert set(external_regressor_config_expanded["Motion"]) == set(
+    assert set(external_regressor_config_expanded[0]["partial_models"]["Motion"]) == set(
         [
             "Mot_X",
             "Mot_d1_Yaw",
@@ -208,35 +207,32 @@ def test_validate_extern_regress_succeeds(caplog):
             "Mot_Roll",
         ]
     )
-    assert external_regressor_config_expanded["CSF"] == ["CSF"]
-    assert external_regressor_config_expanded["task_keep"] == ["Signal"]
+    assert external_regressor_config_expanded[0]["partial_models"]["CSF"] == ["CSF"]
+    assert external_regressor_config_expanded[1]["regressors"] == ["Signal"]
     assert "WARNING" not in caplog.text
 
     # Rerunning with explicit names for the above three categories instead of regex patterns
     # Shouldn't change anything, but making sure it runs
     caplog.clear()
-    external_regressor_config = external.validate_extern_regress(
+    external_regressor_config_expanded = external.validate_extern_regress(
         external_regressors, external_regressor_config_expanded, n_vols
     )
     assert "WARNING" not in caplog.text
 
-    # Removing all partial model and task_keep stuff to confirm it still runs
+    # Removing all partial model and task_keep stuff to confirm it still runs, but with a warning
     caplog.clear()
     external_regressor_config = sample_external_regressor_config("no_task_partial")
     external.validate_extern_regress(external_regressors, external_regressor_config, n_vols)
-    assert caplog.text == ""
-
-    # Removing "task_keep" from config to test if warning appears
-    caplog.clear()
-    external_regressor_config = sample_external_regressor_config("no_task")
-    external.validate_extern_regress(external_regressors, external_regressor_config, n_vols)
-    assert "Regressor labels in external_regressors are not all included in F" in caplog.text
+    assert (
+        "User-provided external_regressors include columns not used "
+        "in any external regressor model: ['Signal']"
+    ) in caplog.text
 
     # Add "CSF" to "Motion" partial model (also in "CSF" partial model) to test if warning appears
     caplog.clear()
     external_regressor_config = sample_external_regressor_config("csf_in_mot")
     external.validate_extern_regress(external_regressors, external_regressor_config, n_vols)
-    assert "External regressors used in more than one partial model" in caplog.text
+    assert "['CSF'] used in more than one partial regressor model for nuisance" in caplog.text
 
 
 def test_validate_extern_regress_fails():
@@ -255,20 +251,46 @@ def test_validate_extern_regress_fails():
 
     # If no external regressor labels match the regex label in config
     external_regressor_config = sample_external_regressor_config("unmatched_regex")
-    with pytest.raises(external.RegressError, match="No external regressor labels matching regex"):
+    with pytest.raises(
+        external.RegressError,
+        match=(
+            re.escape(
+                "No external regressor labels matching regular expression '^translation_.*$' found"
+            )
+        ),
+    ):
+        external.validate_extern_regress(external_regressors, external_regressor_config, n_vols)
+
+    # If Signal is in a partial model, but not "regressors" for the full model
+    external_regressor_config = sample_external_regressor_config("signal_in_mot")
+    with pytest.raises(
+        external.RegressError,
+        match=(
+            re.escape(
+                "Partial models in nuisance include regressors that "
+                "are excluded from its full model: ['Signal']"
+            )
+        ),
+    ):
         external.validate_extern_regress(external_regressors, external_regressor_config, n_vols)
 
     # If a regressor expected in the config is not in external_regressors
     # Run successfully to expand Motion labels in config and then create error
-    # when "Mot_Y" is in the config, but removed from external_regressros
+    # when "Mot_Y" is in the config, but removed from external_regressors
     external_regressor_config = sample_external_regressor_config()
+    external_regressors, n_vols = sample_external_regressors()
     external_regressor_config_expanded = external.validate_extern_regress(
         external_regressors, external_regressor_config, n_vols
     )
     external_regressors, n_vols = sample_external_regressors("no_mot_y_column")
+    # The same error message will appear twice.
+    # One for "regressor" and once for motion partial model
     with pytest.raises(
         external.RegressError,
-        match="Inputed regressors in external_regressors do not include all expected",
+        match=re.escape(
+            "No external regressor matching 'Mot_Y' was found.\n"
+            "No external regressor matching 'Mot_Y' was found."
+        ),
     ):
         external.validate_extern_regress(
             external_regressors, external_regressor_config_expanded, n_vols
@@ -331,56 +353,59 @@ def test_fit_regressors(caplog):
     # Contents will be valided in fit_mixing_to_regressors so just checking column labels here
     assert set(comptable.keys()) == {
         "Component",
-        "Fstat Full Model",
-        "Fstat Task Model",
-        "Fstat Motion Model",
-        "Fstat CSF Model",
-        "pval Full Model",
-        "pval Task Model",
-        "pval Motion Model",
-        "pval CSF Model",
-        "R2stat Full Model",
-        "R2stat Task Model",
-        "R2stat Motion Model",
-        "R2stat CSF Model",
+        "Fstat nuisance model",
+        "Fstat task model",
+        "Fstat nuisance Motion partial model",
+        "Fstat nuisance CSF partial model",
+        "pval nuisance model",
+        "pval task model",
+        "pval nuisance Motion partial model",
+        "pval nuisance CSF partial model",
+        "R2stat nuisance model",
+        "R2stat task model",
+        "R2stat nuisance Motion partial model",
+        "R2stat nuisance CSF partial model",
     }
 
     assert (
-        "External regressors fit includes detrending with 1 Legendre Polynomial regressors"
-        in caplog.text
+        "External regressors fit for nuisance includes detrending "
+        "with 1 Legendre Polynomial regressors" in caplog.text
     )
 
     caplog.clear()
     # Running with external_regressor_config["detrend"]=3, which results in 3 detrending regressors
-    external_regressor_config["detrend"] = 3
+    external_regressor_config[1]["detrend"] = 3
     comptable = sample_comptable(mixing.shape[1])
     comptable = external.fit_regressors(
         comptable, external_regressors, external_regressor_config_expanded, mixing
     )
     assert (
-        "External regressors fit includes detrending with 3 Legendre Polynomial regressors"
-        in caplog.text
+        "External regressors fit for task includes detrending "
+        "with 3 Legendre Polynomial regressors" in caplog.text
     )
 
     caplog.clear()
     # Running with external_regressor_config["detrend"]=0,
     #  which results in 1 detrend regressors (demeaning)
-    external_regressor_config["detrend"] = 0
+    external_regressor_config[0]["detrend"] = 0
     comptable = sample_comptable(mixing.shape[1])
     comptable = external.fit_regressors(
         comptable, external_regressors, external_regressor_config_expanded, mixing
     )
     assert (
-        "External regressor fitted without detrending fMRI time series. Only removing mean"
-        in caplog.text
+        "External regressor for nuisance fitted without detrending fMRI time series. "
+        "Only removing mean" in caplog.text
     )
 
     caplog.clear()
-    external_regressor_config["calc_stats"] = "Corr"
+    external_regressor_config[1]["statistic"] = "Corr"
     comptable = sample_comptable(mixing.shape[1])
     with pytest.raises(
         ValueError,
-        match="calc_stats for external regressors in decision tree is corr, which is not valid.",
+        match=(
+            "statistic for task external regressors in decision tree is corr, "
+            "which is not valid."
+        ),
     ):
         comptable = external.fit_regressors(
             comptable, external_regressors, external_regressor_config_expanded, mixing
@@ -410,13 +435,14 @@ def test_fit_mixing_to_regressors(caplog):
     #  which results in 1 detrending regressor
     comptable = sample_comptable(mixing.shape[1])
 
-    comptable = external.fit_mixing_to_regressors(
-        comptable,
-        external_regressors,
-        external_regressor_config_expanded,
-        mixing,
-        detrend_regressors,
-    )
+    for config_idx in range(2):
+        comptable = external.fit_mixing_to_regressors(
+            comptable,
+            external_regressors,
+            external_regressor_config_expanded[config_idx],
+            mixing,
+            detrend_regressors,
+        )
 
     # Since a fixed mixing matrix is used, the values should always be consistent
     # Comparing just 3 rows and rounding to 6 decimal places to avoid testing failures
@@ -425,18 +451,18 @@ def test_fit_mixing_to_regressors(caplog):
     expected_results = pd.DataFrame(
         columns=[
             "Component",
-            "Fstat Full Model",
-            "Fstat Task Model",
-            "Fstat Motion Model",
-            "Fstat CSF Model",
-            "pval Full Model",
-            "pval Task Model",
-            "pval Motion Model",
-            "pval CSF Model",
-            "R2stat Full Model",
-            "R2stat Task Model",
-            "R2stat Motion Model",
-            "R2stat CSF Model",
+            "Fstat nuisance model",
+            "Fstat task model",
+            "Fstat nuisance Motion partial model",
+            "Fstat nuisance CSF partial model",
+            "pval nuisance model",
+            "pval task model",
+            "pval nuisance Motion partial model",
+            "pval nuisance CSF partial model",
+            "R2stat nuisance model",
+            "R2stat task model",
+            "R2stat nuisance Motion partial model",
+            "R2stat nuisance CSF partial model",
         ]
     )
     expected_results.loc[0] = [
@@ -485,7 +511,11 @@ def test_fit_mixing_to_regressors(caplog):
         0.024389778752502478,
     ]
 
-    assert output_rows_to_validate.compare(expected_results.round(decimals=6)).empty
+    assert (
+        (output_rows_to_validate.sort_index(axis=1))
+        .compare(expected_results.sort_index(axis=1).round(decimals=6))
+        .empty
+    )
 
 
 # build_fstat_regressor_models
@@ -504,23 +534,18 @@ def test_build_fstat_regressor_models(caplog):
 
     detrend_regressors = sample_detrend_regressors(n_vols, dtrank=3)
 
-    # Running with f_stats_partial_models
+    # Running nuisance with partial_models
     regressor_models = external.build_fstat_regressor_models(
-        external_regressors, external_regressor_config_expanded, detrend_regressors
+        external_regressors, external_regressor_config_expanded[0], detrend_regressors
     )
 
     assert regressor_models["full"].shape == (n_vols, 16)
     assert (
-        "Regressors in full model: ['CSF', 'Mot_Pitch', 'Mot_Roll', 'Mot_X', 'Mot_Y', 'Mot_Yaw', "
+        "Regressors in full model for nuisance: "
+        "['CSF', 'Mot_Pitch', 'Mot_Roll', 'Mot_X', 'Mot_Y', 'Mot_Yaw', "
         "'Mot_Z', 'Mot_d1_Pitch', 'Mot_d1_Roll', 'Mot_d1_X', 'Mot_d1_Y', 'Mot_d1_Yaw', "
         "'Mot_d1_Z', 'baseline 0', 'baseline 1', 'baseline 2']"
     ) in caplog.text
-    assert regressor_models["task keep"].shape == (n_vols, 4)
-    assert (
-        "Regressors in task keep model: ['Signal', 'baseline 0', 'baseline 1', 'baseline 2']"
-        in caplog.text
-    )
-
     assert regressor_models["no CSF"].shape == (n_vols, 15)
     assert (
         "Regressors in partial model (everything but regressors of interest) 'no CSF': "
@@ -534,19 +559,14 @@ def test_build_fstat_regressor_models(caplog):
         "['CSF', 'baseline 0', 'baseline 1', 'baseline 2']" in caplog.text
     )
 
-    # Rerunning with no "task_keep" model (creates full model slightly differently)
-    # Since the "Signal" column is still in exernal regressors, it would be included
-    # in the full model
-    external_regressor_config = sample_external_regressor_config("no_task")
-    external_regressor_config_expanded = external.validate_extern_regress(
-        external_regressors, external_regressor_config, n_vols
-    )
+    # Running task regressor
+    caplog.clear()
     regressor_models = external.build_fstat_regressor_models(
-        external_regressors, external_regressor_config_expanded, detrend_regressors
+        external_regressors, external_regressor_config_expanded[1], detrend_regressors
     )
-    assert regressor_models["full"].shape == (n_vols, 17)
+
+    assert regressor_models["full"].shape == (n_vols, 4)
     assert (
-        "Regressors in full model: ['CSF', 'Mot_Pitch', 'Mot_Roll', 'Mot_X', 'Mot_Y', 'Mot_Yaw', "
-        "'Mot_Z', 'Mot_d1_Pitch', 'Mot_d1_Roll', 'Mot_d1_X', 'Mot_d1_Y', 'Mot_d1_Yaw', "
-        "'Mot_d1_Z', 'Signal', 'baseline 0', 'baseline 1', 'baseline 2']"
-    ) in caplog.text
+        "Regressors in full model for task: ['Signal', 'baseline 0', 'baseline 1', 'baseline 2']"
+        in caplog.text
+    )

@@ -10,17 +10,19 @@ from scipy import stats
 LGR = logging.getLogger("GENERAL")
 
 
-def add_external_dependencies(dependency_config: Dict, external_regressor_config: Dict) -> Dict:
+def add_external_dependencies(
+    dependency_config: Dict, external_regressor_config: List[Dict]
+) -> Dict:
     """
-    Add dependency information in external regressors are inputted.
+    Add dependency information when external regressors are inputted.
 
     Parameters
     ----------
     dependency_config: :obj:`dict`
         A dictionary stored in ./config/metrics.json
         with information on all the internally defined metrics like kappa and rho
-    external_regressor_config: :obj:`dict`
-        A dictionary with info for fitting external regressors to component time series
+    external_regressor_config: :obj:`list[dict]`
+        A list of dictionaries with info for fitting external regressors to component time series
 
     Returns
     -------
@@ -31,22 +33,22 @@ def add_external_dependencies(dependency_config: Dict, external_regressor_config
     # Add "external regressors" and an existing input
     dependency_config["inputs"].append("external regressors")
 
-    if external_regressor_config["calc_stats"].lower() == "f":
-        model_names = ["Full"]
-        if "f_stats_partial_models" in set(external_regressor_config.keys()):
-            if isinstance(external_regressor_config["f_stats_partial_models"], list):
-                model_names.extend(external_regressor_config["f_stats_partial_models"])
-            else:  # A single string
-                model_names.append(external_regressor_config["f_stats_partial_models"])
+    for config_idx in range(len(external_regressor_config)):
+        model_names = [external_regressor_config[config_idx]["regress_ID"]]
+        if "partial_models" in set(external_regressor_config[config_idx].keys()):
+            partial_keys = external_regressor_config[config_idx]["partial_models"].keys()
+            for key_name in partial_keys:
+                model_names.append(
+                    f"{external_regressor_config[config_idx]['regress_ID']} {key_name} partial"
+                )
 
-        if "task_keep" in set(external_regressor_config.keys()):
-            model_names.append("Task")
-
-        for model_name in model_names:
-            for stat_type in ["Fstat", "R2stat", "pval"]:
-                dependency_config["dependencies"][f"{stat_type} {model_name} Model"] = [
-                    "external regressors"
-                ]
+        # F is currently the only option so this only names metrics if "statistic"=="f"
+        if external_regressor_config[config_idx]["statistic"].lower() == "f":
+            for model_name in model_names:
+                for stat_type in ["Fstat", "R2stat", "pval"]:
+                    dependency_config["dependencies"][f"{stat_type} {model_name} model"] = [
+                        "external regressors"
+                    ]
     return dependency_config
 
 

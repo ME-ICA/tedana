@@ -32,7 +32,7 @@ def generate_metrics(
     io_generator: io.OutputGenerator,
     label: str,
     external_regressors: Union[pd.DataFrame, None] = None,
-    external_regressor_config: Union[Dict, None] = None,
+    external_regressor_config: Union[List[Dict], None] = None,
     metrics: Union[List[str], None] = None,
 ) -> Tuple[pd.DataFrame, Dict]:
     """Fit TE-dependence and -independence models to components.
@@ -61,8 +61,8 @@ def generate_metrics(
         External regressors (e.g., motion parameters, physiological noise)
         to correlate with ICA components.
         If None, no external regressor metrics will be calculated.
-    external_regressor_config : :obj:`dict`
-        A dictionary for defining how to fit external regressors to component time series
+    external_regressor_config : :obj:`list[dic]t`
+        A list of dictionaries defining how to fit external regressors to component time series
     metrics : list
         List of metrics to return
 
@@ -352,8 +352,12 @@ def generate_metrics(
     # External regressor-based metrics
     if external_regressors is not None and external_regressor_config is not None:
         # external_regressor_names = external_regressors.columns.tolist()
-        LGR.info(f"Calculating external regressor fits. {external_regressor_config['info']}")
-        RepLGR.info({external_regressor_config["report"]})
+        for config_idx in range(len(external_regressor_config)):
+            LGR.info(
+                "Calculating external regressor fits. "
+                f"{external_regressor_config[config_idx]['info']}"
+            )
+            RepLGR.info({external_regressor_config[config_idx]["report"]})
 
         comptable = external.fit_regressors(
             comptable, external_regressors, external_regressor_config, mixing

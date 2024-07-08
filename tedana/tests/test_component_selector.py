@@ -44,8 +44,7 @@ def dicts_to_test(treechoice):
         "missing_key": A dict missing one of the required keys (report)
         "null_value": A parameter in one node improperly has a null value
         "external_missing_key": external_regressors_config missing a required key
-        "external_invalid_calc_stats": external_regressors_config calc_stats is not "F"
-        "external_missing_partial_model": external regress names partial F model but not regressors
+        "external_invalid_statistic": external_regressors_config statistic is not "F"
 
     Returns
     -------
@@ -62,18 +61,36 @@ def dicts_to_test(treechoice):
         "necessary_metrics": ["kappa", "rho"],
         "intermediate_classifications": ["random1"],
         "classification_tags": ["Random1"],
-        "external_regressor_config": {
-            "regress_ID": "Fmodel",
-            "info": "Info Text",
-            "report": "Report Text",
-            "detrend": True,
-            "calc_stats": "F",
-            "f_stats_partial_models": ["Motion", "CSF"],
-            "Motion": ["^mot_.*$"],
-            "CSF": ["^csf.*$"],
-            "task_keep": ["^signal.*$"],
-            "extra field": 42,
-        },
+        "external_regressor_config": [
+            {
+                "regress_ID": "nuisance",
+                "info": (
+                    "Fits all external nuissance regressors to "
+                    "a single model using an F statistic"
+                ),
+                "report": (
+                    "External nuisance regressors that fit to "
+                    "components using a linear model were rejected."
+                ),
+                "detrend": True,
+                "statistic": "F",
+                "regressors": ["^(?!signal).*$"],
+                "partial_models": {"Motion": ["^mot_.*$"], "CSF": ["^csf.*$"]},
+            },
+            {
+                "regress_ID": "task",
+                "info": "Fits all task regressors to a single model using an F statistic",
+                "report": (
+                    "Task regressors that fit to components using a linear model and "
+                    "have some T2* weighting were accepted even if they would have "
+                    "been rejected base on other criteriea."
+                ),
+                "detrend": True,
+                "statistic": "F",
+                "regressors": ["^signal.*$"],
+                "extra field": 42,
+            },
+        ],
         "nodes": [
             {
                 "functionname": "dec_left_op_right",
@@ -153,11 +170,10 @@ def dicts_to_test(treechoice):
     elif treechoice == "null_value":
         tree["nodes"][0]["parameters"]["left"] = None
     elif treechoice == "external_missing_key":
-        tree["external_regressor_config"].pop("calc_stats")
-    elif treechoice == "external_invalid_calc_stats":
-        tree["external_regressor_config"]["calc_stats"] = "corr"
-    elif treechoice == "external_missing_partial_model":
-        tree["external_regressor_config"].pop("Motion")
+        tree["external_regressor_config"][1].pop("statistic")
+    elif treechoice == "external_invalid_statistic":
+        # Will also trigger statistic isn't F and partial models exist
+        tree["external_regressor_config"][0]["statistic"] = "corr"
     else:
         raise Exception(f"{treechoice} is an invalid option for treechoice")
 
@@ -228,11 +244,11 @@ def test_validate_tree_succeeds():
     Tested on all default trees in ./tedana/resources/decision_trees
     Note: If there is a tree in the default trees directory that
     is being developed and not yet valid, it's file name should
-    include 'invalid' as a prefix.
+    begin with 'X'.
     """
 
     default_tree_names = glob.glob(
-        os.path.join(THIS_DIR, "../resources/decision_trees/[!invalid]*.json")
+        os.path.join(f"{THIS_DIR}/../resources/decision_trees/", "[!X]*.json")
     )
 
     for tree_name in default_tree_names:
@@ -278,7 +294,7 @@ def test_validate_tree_warnings(caplog):
     ) in caplog.text
     assert (r"Node 3 includes the 'log_extra_report' parameter.") in caplog.text
     assert (
-        "External regressor dictionary includes fields "
+        "External regressor dictionary 1 includes fields "
         r"that are not used or logged ['extra field']"
     ) in caplog.text
 
@@ -328,27 +344,19 @@ def test_validate_tree_fails():
 
     with pytest.raises(
         component_selector.TreeError,
-        match=r"External regressor dictionary missing required fields: {'calc_stats'}",
+        match=r"External regressor dictionary 1 is missing required fields: {'statistic'}",
     ):
         component_selector.validate_tree(dicts_to_test("external_missing_key"))
 
     with pytest.raises(
         component_selector.TreeError,
         match=(
-            "External regressor dictionary cannot include "
-            "f_stats_partial_models if calc_stats is not F"
+            "statistic in external_regressor_config 1 is corr. It must be one of the following: "
+            "{'f'}\nExternal regressor dictionary cannot include partial_models "
+            "if statistic is not F"
         ),
     ):
-        component_selector.validate_tree(dicts_to_test("external_invalid_calc_stats"))
-
-    with pytest.raises(
-        component_selector.TreeError,
-        match=(
-            "External regressor dictionary missing required fields for partial models "
-            r"defined in f_stats_partial_models: {'Motion'}"
-        ),
-    ):
-        component_selector.validate_tree(dicts_to_test("external_missing_partial_model"))
+        component_selector.validate_tree(dicts_to_test("external_invalid_statistic"))
 
 
 def test_check_null_fails():

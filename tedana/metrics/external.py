@@ -2,7 +2,7 @@
 
 import logging
 import re
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -59,8 +59,8 @@ def load_validate_external_regressors(
 
 
 def validate_extern_regress(
-    external_regressors: Dict, external_regressor_config: Dict, n_vols: int
-) -> Dict:
+    external_regressors: pd.DataFrame, external_regressor_config: List[Dict], n_vols: int
+) -> List[Dict]:
     """Confirm external regressor dictionary matches data and expands regular expressions.
 
     Most keys in external_regressor_config are valided in component_selector.validate_tree
@@ -77,94 +77,123 @@ def validate_extern_regress(
     external_regressors : :obj:`pandas.DataFrame`
         Each column is a labelled regressor and the number of rows should
         match the number of timepoints in the fMRI time series
-    external_regressor_config : :obj:`dict`
+    external_regressor_config : :obj:`list[dict]`
         Information describing the external regressors and
-        method to use for fitting and statistical tests
+        method to use for fitting and statistical tests.
+        Each element in the list is a dict defining the regressors
+        and statistical models for a test.
     n_vols : :obj:`int`
         The number of time points in the fMRI time series
 
     Returns
     -------
-    external_regressor_config: :obj:`dict`
-        A validated dictionary with info for fitting external regressors
+    external_regressor_config: :obj:`list[dict]`
+        A validated list of dictionaries with info for fitting external regressors
         to component time series.
         If regex patterns like '^mot_.*$' are used to define regressor names,
-        this is replaced with a list of the matching column names used in external_regressors
+        these are replaced with a list of the matching column names used in external_regressors
 
     Raises
     ------
     RegressorError if any validation test fails
     """
     # err_msg is used to collect all errors in validation rather than require this to be run
-    # multiple times to see all validation errors. Will either collect errors and raise at the
-    # end of the function or raise errors that prevent the rest of the function from completing
+    # multiple times to see all validation errors.
+    # Will either collect errors and raise at the end of the function
+    # or raise errors that prevent the rest of the function from completing
     err_msg = ""
 
-    # Validating the information in external_regressor_config works
-    # with the data in external_regressors
+    external_regressor_names = set(external_regressors.columns)
 
-    # Currently column labels only need to be predefined for calc_stats==F
-    # and there are f_stats_partial_models or if "task_keep" is used.
-    # column_label_specifications will include the names of the column labels for
-    # both f_stats_partial_models and task_keep if either or both are defined.
-    column_label_specifications = set()
-    if "f_stats_partial_models" in set(external_regressor_config.keys()):
-        column_label_specifications.update(
-            set(external_regressor_config["f_stats_partial_models"])
-        )
-    if "task_keep" in set(external_regressor_config.keys()):
-        column_label_specifications.update(["task_keep"])
-
-    if column_label_specifications:
-        regressor_names = set(external_regressors.columns)
-        expected_regressor_names = set()
-        # for each column label, check if the label matches column names in external_regressors
-        for partial_models in column_label_specifications:
-            tmp_partial_model_names = set()
-            for tmp_name in external_regressor_config[partial_models]:
-                # If a label starts with ^ treat match the pattern to column names using regex
-                if tmp_name.startswith("^"):
-                    tmp_replacements = [
-                        reg_name
-                        for reg_name in regressor_names
-                        if re.match(tmp_name, reg_name, re.IGNORECASE)
-                    ]
-                    if not tmp_replacements:
-                        err_msg += (
-                            f"No external regressor labels matching regex '{tmp_name}' found."
-                        )
-                    tmp_partial_model_names.update(set(tmp_replacements))
+    def expand_regress_regex(regressor_templates, external_regressor_names, err_msg):
+        """Match or regex expand regressor names from config."""
+        expanded_regressor_names = set()
+        for tmp_regressor_name in regressor_templates:
+            # If a regressor name is a regular expression, use re to match and expand
+            # by comparing to regressor names in external_regressor_names.
+            if tmp_regressor_name.startswith("^"):
+                expanded_names = [
+                    reg_name
+                    for reg_name in external_regressor_names
+                    if re.match(tmp_regressor_name, reg_name, re.IGNORECASE)
+                ]
+                if not expanded_names:
+                    err_msg += (
+                        "No external regressor labels matching "
+                        f"regular expression '{tmp_regressor_name}' found.\n"
+                    )
                 else:
-                    tmp_partial_model_names.add(tmp_name)
-            external_regressor_config[partial_models] = list(tmp_partial_model_names)
-            if expected_regressor_names.intersection(tmp_partial_model_names):
-                LGR.warning(
-                    "External regressors used in more than one partial model: "
-                    f"{expected_regressor_names.intersection(tmp_partial_model_names)}"
-                )
-            expected_regressor_names.update(tmp_partial_model_names)
-        if expected_regressor_names - regressor_names:
-            err_msg += (
-                "Inputed regressors in external_regressors do not include all expected "
-                "regressors in partial models or task\n"
-                "Expected regressors not in inputted regressors: "
-                f"{expected_regressor_names - regressor_names}\n"
-                f"Inputted Regressors: {regressor_names}"
-            )
-        if regressor_names - expected_regressor_names:
+                    expanded_regressor_names.update(set(expanded_names))
+            else:
+                # If a regressor name is a string, check if it is in external_regressor_names
+                if tmp_regressor_name in external_regressor_names:
+                    expanded_regressor_names.add(tmp_regressor_name)
+                else:
+                    err_msg += (
+                        f"No external regressor matching '{tmp_regressor_name}' was found.\n"
+                    )
+        return expanded_regressor_names, err_msg
+
+    # Expanding the regressors used for each model
+    all_regressor_names = set()
+    for config_idx in range(len(external_regressor_config)):
+        expanded_regressor_names, err_msg = expand_regress_regex(
+            external_regressor_config[config_idx]["regressors"], external_regressor_names, err_msg
+        )
+        reused_regressors = all_regressor_names.intersection(expanded_regressor_names)
+        if reused_regressors:
             LGR.warning(
-                "Regressor labels in external_regressors are not all included in F "
-                "statistic partial models or task models. Regressor not in a partial "
-                "model or task_keep, it will be included in the full F statistic model "
-                "and treated like nuisance regressors to remove. "
-                "Regressors not included in any partial model: "
-                f"{regressor_names - expected_regressor_names}"
+                f"{list(reused_regressors).sort()} used in "
+                "more than one external regressor model"
             )
+        all_regressor_names.update(expanded_regressor_names)
+        external_regressor_config[config_idx]["regressors"] = sorted(expanded_regressor_names)
+
+    extra_names = set(external_regressor_names) - all_regressor_names
+    if extra_names:
+        LGR.warning(
+            "User-provided external_regressors include columns not used in any "
+            f"external regressor model: {sorted(extra_names)}"
+        )
+
+    # If a model includes specifications for partial regressors, expand them
+    for config_idx in range(len(external_regressor_config)):
+        if "partial_models" in external_regressor_config[config_idx].keys():
+            if not isinstance(external_regressor_config[config_idx]["partial_models"], type(None)):
+                part_model_regress_names = set()
+                for part_model in external_regressor_config[config_idx]["partial_models"].keys():
+                    expanded_regressor_names, err_msg = expand_regress_regex(
+                        external_regressor_config[config_idx]["partial_models"][part_model],
+                        external_regressor_names,
+                        err_msg,
+                    )
+                    reused_regressors = part_model_regress_names.intersection(
+                        expanded_regressor_names
+                    )
+                    if reused_regressors:
+                        LGR.warning(
+                            f"{sorted(reused_regressors)} used in "
+                            "more than one partial regressor model for "
+                            f"{external_regressor_config[config_idx]['regress_ID']}"
+                        )
+                    part_model_regress_names.update(expanded_regressor_names)
+                    external_regressor_config[config_idx]["partial_models"][part_model] = sorted(
+                        expanded_regressor_names
+                    )
+                extra_names = part_model_regress_names - set(
+                    external_regressor_config[config_idx]["regressors"]
+                )
+                if extra_names:
+                    err_msg += (
+                        f"Partial models in {external_regressor_config[config_idx]['regress_ID']} "
+                        "include regressors that are excluded from its full model: "
+                        f"{sorted(extra_names)}\n"
+                    )
 
     if len(external_regressors.index) != n_vols:
         err_msg += (
-            f"External Regressors have {len(external_regressors.index)} timepoints\n"
-            f"while fMRI data have {n_vols} timepoints"
+            f"External Regressors have {len(external_regressors.index)} timepoints "
+            f"while fMRI data have {n_vols} timepoints\n"
         )
 
     if err_msg:
@@ -176,7 +205,7 @@ def validate_extern_regress(
 def fit_regressors(
     comptable: pd.DataFrame,
     external_regressors: pd.DataFrame,
-    external_regressor_config: Dict,
+    external_regressor_config: List[Dict],
     mixing: npt.NDArray,
 ) -> pd.DataFrame:
     """Fit regressors to the mixing matrix.
@@ -189,10 +218,10 @@ def fit_regressors(
     comptable : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component,
         with a column for each metric. The index is the component number.
-    external_regressors : :obj:`pandas.DataFrame`
+    external_regressors : (T x R) :obj:`pandas.DataFrame`
         Each column is a labelled regressor and the number of rows should
         match the number of timepoints in the fMRI time series
-    external_regressor_config : :obj:`dict`
+    external_regressor_config : :obj:`list[dict]`
         Information describing the external regressors and
         method to use for fitting and statistical tests
     mixing : (T x C) array_like
@@ -207,50 +236,60 @@ def fit_regressors(
     """
     n_vols = mixing.shape[0]
 
-    # If the order of detrending regressors is specified, then pass to
-    # create_legendre_polynomial_basis_set
-    # otherwise the function sets an order for the Legendre polynomials
-    if external_regressor_config["detrend"] is True:
-        legendre_arr = utils.create_legendre_polynomial_basis_set(n_vols, dtrank=None)
-        LGR.info(
-            "External regressors fit includes detrending with "
-            f"{legendre_arr.shape[1]} Legendre Polynomial regressors."
-        )
+    # For every model (i.e. nuisance and task) in external_regressor_config
+    # setup and run fit_mixing_to_regressors to add columns to comptable
+    for config_idx in range(len(external_regressor_config)):
+        regress_id = external_regressor_config[config_idx]["regress_ID"]
+        # If the order of detrending regressors is specified, then pass to
+        # create_legendre_polynomial_basis_set
+        # otherwise the function sets an order for the Legendre polynomials
+        if external_regressor_config[config_idx]["detrend"] is True:
+            legendre_arr = utils.create_legendre_polynomial_basis_set(n_vols, dtrank=None)
+            LGR.info(
+                f"External regressors fit for {regress_id} includes detrending with "
+                f"{legendre_arr.shape[1]} Legendre Polynomial regressors."
+            )
 
-    elif (
-        isinstance(external_regressor_config["detrend"], int)
-        and external_regressor_config["detrend"] > 0
-    ):
-        legendre_arr = utils.create_legendre_polynomial_basis_set(
-            n_vols, dtrank=external_regressor_config["detrend"]
-        )
-        LGR.info(
-            "External regressors fit includes detrending with "
-            f"{legendre_arr.shape[1]} Legendre Polynomial regressors."
-        )
-    else:
-        LGR.warning(
-            "External regressor fitted without detrending fMRI time series. Only removing mean"
-        )
-        legendre_arr = utils.create_legendre_polynomial_basis_set(n_vols, dtrank=1)
+        elif (
+            isinstance(external_regressor_config[config_idx]["detrend"], int)
+            and external_regressor_config[config_idx]["detrend"] > 0
+        ):
+            legendre_arr = utils.create_legendre_polynomial_basis_set(
+                n_vols, dtrank=external_regressor_config[config_idx]["detrend"]
+            )
+            LGR.info(
+                f"External regressors fit for {regress_id} includes detrending with "
+                f"{legendre_arr.shape[1]} Legendre Polynomial regressors."
+            )
+        else:
+            LGR.warning(
+                f"External regressor for {regress_id} fitted without detrending fMRI time series. "
+                "Only removing mean"
+            )
+            legendre_arr = utils.create_legendre_polynomial_basis_set(n_vols, dtrank=1)
 
-    detrend_labels = []
-    for label_idx in range(legendre_arr.shape[1]):
-        detrend_labels.append(f"baseline {label_idx}")
-    detrend_regressors = pd.DataFrame(data=legendre_arr, columns=detrend_labels)
+        detrend_labels = []
+        for label_idx in range(legendre_arr.shape[1]):
+            detrend_labels.append(f"baseline {label_idx}")
+        detrend_regressors = pd.DataFrame(data=legendre_arr, columns=detrend_labels)
 
-    if external_regressor_config["calc_stats"].lower() == "f":
-        comptable = fit_mixing_to_regressors(
-            comptable, external_regressors, external_regressor_config, mixing, detrend_regressors
-        )
-    else:
-        # This should already be validated by this point, but keeping the catch clause here
-        # since this would otherwise just return comptable with no changes, which would
-        # make a hard-to-track error
-        raise ValueError(
-            "calc_stats for external regressors in decision tree is "
-            f"{external_regressor_config['calc_stats'].lower()}, which is not valid."
-        )
+        if external_regressor_config[config_idx]["statistic"].lower() == "f":
+            comptable = fit_mixing_to_regressors(
+                comptable,
+                external_regressors,
+                external_regressor_config[config_idx],
+                mixing,
+                detrend_regressors,
+            )
+        else:
+            # This should already be validated by this point, but keeping the catch clause here
+            # since this would otherwise just return comptable with no changes, which would
+            # make a hard-to-track error
+            raise ValueError(
+                f"statistic for {regress_id} external regressors in decision tree is "
+                f"{external_regressor_config[config_idx]['statistic'].lower()}, "
+                "which is not valid."
+            )
 
     return comptable
 
@@ -281,7 +320,9 @@ def fit_mixing_to_regressors(
         match the number of timepoints in the fMRI time series
     external_regressor_config : :obj:`dict`
         Information describing the external regressors and
-        method to use for fitting and statistical tests
+        method to use for fitting and statistical tests.
+        In other functions this is a list[dict] but here it is a
+        single dict which is one element in the list[dict]
     mixing : (T x C) array_like
         Mixing matrix for converting input data to component space,
         where `C` is components and `T` is the same as in `data_cat`
@@ -297,7 +338,8 @@ def fit_mixing_to_regressors(
         Names are "Fstat Full Model", "pval Full Model", "R2stat Full Model",
         and "Full" is replaced by the partial model name for each partial model
     """
-    LGR.info("Running fit_mixing_to_regressors")
+    regress_id = external_regressor_config["regress_ID"]
+    LGR.info(f"Running fit_mixing_to_regressors for {regress_id}")
     LGR.info(f"ICA matrix has {mixing.shape[0]} time points and {mixing.shape[1]} components")
 
     # regressor_models is a dictionary of all the models that will be fit to the mixing matrix
@@ -324,28 +366,19 @@ def fit_mixing_to_regressors(
     #         (np.array(detrend_regressors.columns), np.array(exte rnal_regressors.columns))
     #     ),
     # )
-    f_vals = pd.DataFrame(data=f_vals_tmp, columns=["Fstat Full Model"])
-    p_vals = pd.DataFrame(data=p_vals_tmp, columns=["pval Full Model"])
-    r2_vals = pd.DataFrame(data=r2_vals_tmp, columns=["R2stat Full Model"])
-
-    # Run a separate model if there are task regressors that might want to be kept
-    if "task keep" in regressor_models.keys():
-        betas_task_keep, f_vals_tmp, p_vals_tmp, r2_vals_tmp = fit_model_with_stats(
-            y=mixing, regressor_models=regressor_models, base_label="base", full_label="task keep"
-        )
-        f_vals["Fstat Task Model"] = f_vals_tmp
-        p_vals["pval Task Model"] = p_vals_tmp
-        r2_vals["R2stat Task Model"] = r2_vals_tmp
+    f_vals = pd.DataFrame(data=f_vals_tmp, columns=[f"Fstat {regress_id} model"])
+    p_vals = pd.DataFrame(data=p_vals_tmp, columns=[f"pval {regress_id} model"])
+    r2_vals = pd.DataFrame(data=r2_vals_tmp, columns=[f"R2stat {regress_id} model"])
 
     # Test the fits between the full model and the full model excluding one category of regressor
-    if "f_stats_partial_models" in external_regressor_config.keys():
-        for pmodel in external_regressor_config["f_stats_partial_models"]:
+    if "partial_models" in external_regressor_config.keys():
+        for pmodel in external_regressor_config["partial_models"].keys():
             _, f_vals_tmp, p_vals_tmp, r2_vals_tmp = fit_model_with_stats(
                 mixing, regressor_models, f"no {pmodel}"
             )
-            f_vals[f"Fstat {pmodel} Model"] = f_vals_tmp
-            p_vals[f"pval {pmodel} Model"] = p_vals_tmp
-            r2_vals[f"R2stat {pmodel} Model"] = r2_vals_tmp
+            f_vals[f"Fstat {regress_id} {pmodel} partial model"] = f_vals_tmp
+            p_vals[f"pval {regress_id} {pmodel} partial model"] = p_vals_tmp
+            r2_vals[f"R2stat {regress_id} {pmodel} partial model"] = r2_vals_tmp
 
     # Add all F p and R2 statistics to comptable
     comptable = pd.concat((comptable, f_vals, p_vals, r2_vals), axis=1)
@@ -367,7 +400,9 @@ def build_fstat_regressor_models(
         match the number of timepoints in the fMRI time series
     external_regressor_config : :obj:`dict`
         Information describing the external regressors and
-        method to use for fitting and statistical tests
+        method to use for fitting and statistical tests.
+        In other functions this is a list[dict] but here it is a
+        single dict which is one element in the list[dict]
     detrend_regressors: (n_vols x polort) :obj:`pandas.DataFrame`
         Dataframe containing the detrending regressor time series
 
@@ -385,58 +420,43 @@ def build_fstat_regressor_models(
         This is for the F test which compares the variance explained with the full model to the
         variance explained if the regressors-of-interest for the partial model are removed.
     """
+    regress_id = external_regressor_config["regress_ID"]
     # The category titles to group each regressor
-    if "f_stats_partial_models" in external_regressor_config:
-        partial_models = external_regressor_config["f_stats_partial_models"]
+    if "partial_models" in external_regressor_config:
+        partial_models = external_regressor_config["partial_models"].keys()
     else:
         partial_models = []
 
-    # All regressor labels from the data frame
-    regressor_labels = external_regressors.columns
+    # All regressor labels for the full model
+    regressor_labels = set(external_regressor_config["regressors"])
+
     detrend_regressors_arr = detrend_regressors.to_numpy()
     regressor_models = {"base": detrend_regressors_arr}
-    LGR.info(f"Size for base regressor model: {regressor_models['base'].shape}")
+    LGR.info(f"Size for base regressor model for {regress_id}: {regressor_models['base'].shape}")
 
-    if "task_keep" in external_regressor_config:
-        task_keep_model = external_regressor_config["task_keep"]
-        # If there is a task_keep model, then the full model should exclude every
-        # regressor in task_keep
-        tmp_model_labels = {"full": set(regressor_labels) - set(task_keep_model)}
-        tmp_model_labels["task keep"] = set(task_keep_model)
-        for model_name in ["full", "task keep"]:
-            regressor_models[model_name] = detrend_regressors_arr
-            for keep_label in tmp_model_labels[model_name]:
-                regressor_models[model_name] = np.concatenate(
-                    (
-                        regressor_models[model_name],
-                        np.atleast_2d(
-                            stats.zscore(external_regressors[keep_label].to_numpy(), axis=0)
-                        ).T,
-                    ),
-                    axis=1,
-                )
-            tmp_model_labels[model_name].update(set(detrend_regressors.columns))
-            LGR.info(
-                f"Size for {model_name} regressor model: {regressor_models[model_name].shape}"
-            )
-            LGR.info(f"Regressors in {model_name} model: {sorted(tmp_model_labels[model_name])}")
-        # Remove task_keep regressors from regressor_labels before calculating partial models
-        regressor_labels = set(regressor_labels) - set(task_keep_model)
-    else:
+    regressor_models["full"] = detrend_regressors_arr
+    for keep_label in regressor_labels:
         regressor_models["full"] = np.concatenate(
-            (detrend_regressors_arr, stats.zscore(external_regressors.to_numpy(), axis=0)), axis=1
+            (
+                regressor_models["full"],
+                np.atleast_2d(stats.zscore(external_regressors[keep_label].to_numpy(), axis=0)).T,
+            ),
+            axis=1,
         )
-        LGR.info(f"Size for full regressor model: {regressor_models['full'].shape}")
-        LGR.info(
-            "Regressors in full model: "
-            f"{sorted(set(regressor_labels).union(set(detrend_regressors.columns)))}"
-        )
+    regressor_labels.update(set(detrend_regressors.columns))
+    # regressor_models["full"] = np.concatenate(
+    #     (detrend_regressors_arr, stats.zscore(external_regressors.to_numpy(), axis=0)), axis=1
+    # )
+    LGR.info(f"Size for full regressor model for {regress_id}: {regressor_models['full'].shape}")
+    LGR.info(f"Regressors in full model for {regress_id}: {sorted(set(regressor_labels))}")
 
     for pmodel in partial_models:
         # For F statistics, the other models to test are those that include everything EXCEPT
         # the category of interest
         # That is "no motion" should contain the full model excluding motion regressors
-        keep_labels = set(regressor_labels) - set(external_regressor_config[pmodel])
+        keep_labels = set(external_regressor_config["regressors"]) - set(
+            external_regressor_config["partial_models"][pmodel]
+        )
         no_pmodel = f"no {pmodel}"
         regressor_models[no_pmodel] = detrend_regressors_arr
         for keep_label in keep_labels:
@@ -451,7 +471,7 @@ def build_fstat_regressor_models(
             )
         keep_labels.update(set(detrend_regressors.columns))
         LGR.info(
-            f"Size for external regressor partial model '{no_pmodel}': "
+            f"Size of external regressor partial model '{no_pmodel}': "
             f"{regressor_models[no_pmodel].shape}"
         )
         LGR.info(

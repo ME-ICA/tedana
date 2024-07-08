@@ -7,7 +7,11 @@ import pandas as pd
 import pytest
 
 from tedana import io, utils
-from tedana.metrics import collect, dependence
+from tedana.metrics import collect, dependence, external
+from tedana.tests.test_external_metrics import (
+    sample_external_regressor_config,
+    sample_external_regressors,
+)
 from tedana.tests.utils import get_test_data_path
 
 
@@ -24,7 +28,7 @@ def testdata1():
         methods=["dropout", "decay"],
     )
     data_optcom = np.mean(data_cat, axis=1)
-    mixing = np.random.random((data_optcom.shape[1], 50))
+    mixing = np.random.random((data_optcom.shape[1], 3))
     io_generator = io.OutputGenerator(ref_img)
 
     # includes adaptive_mask_cut and mixing_cut which are used for ValueError tests
@@ -57,6 +61,19 @@ def test_smoke_generate_metrics(testdata1):
         "normalized variance explained",
         "d_table_score",
     ]
+
+    external_regressors, _ = sample_external_regressors()
+    # these data have 50 volumes so cut external_regressors to 50 vols for these tests
+    # This is just testing execution. Accuracy of values for external regressors are
+    # tested in test_external_metrics
+    n_vols = 5
+    external_regressors = external_regressors.drop(labels=range(5, 75), axis=0)
+
+    external_regressor_config = sample_external_regressor_config()
+    external_regressor_config_expanded = external.validate_extern_regress(
+        external_regressors, external_regressor_config, n_vols
+    )
+
     comptable, _ = collect.generate_metrics(
         data_cat=testdata1["data_cat"],
         data_optcom=testdata1["data_optcom"],
@@ -65,7 +82,8 @@ def test_smoke_generate_metrics(testdata1):
         tes=testdata1["tes"],
         io_generator=testdata1["generator"],
         label="ICA",
-        external_regressors=None,
+        external_regressors=external_regressors,
+        external_regressor_config=external_regressor_config_expanded,
         metrics=metrics,
     )
     assert isinstance(comptable, pd.DataFrame)

@@ -11,12 +11,12 @@
         "dice_FT2",
         "signal-noise_t",
         "variance explained",
-        "pval Full Model",
-        "pval Task Model",
-        "pval Motion Model",
-        "pval CSF Model",
-        "R2stat Full Model",
-        "R2stat Task Model"
+        "pval nuisance model",
+        "pval task model",
+        "pval nuisance Motion partial model",
+        "pval nuisance CSF partial model",
+        "R2stat nuisance model",
+        "R2stat task model"
     ],
     "intermediate_classifications": ["provisionalaccept", "provisionalreject"],
     "classification_tags": [
@@ -28,17 +28,28 @@
         "Fits CSF external regressors",
         "Fits task"
     ],
-    "external_regressor_config": {
-        "regress_ID": "Fmodel",
-        "info": "Fits all external regressors to a single model using an F statistic",
-        "report": "Unspecified external nuisance regressors that were fit to components using a linear model were rejected if they fit.",
-        "detrend": true,
-        "calc_stats": "F",
-        "f_stats_partial_models": ["Motion", "CSF"],
-        "Motion": ["^mot_.*$"],
-        "CSF": ["^csf.*$"],
-        "task_keep": ["^signal.*$"]
-    },
+    "external_regressor_config": [
+        {
+            "regress_ID": "nuisance",
+            "info": "Fits all external nuissance regressors to a single model using an F statistic",
+            "report": "External nuisance regressors that fit to components using a linear model were rejected.",
+            "detrend": true,
+            "statistic": "F",
+            "regressors": ["^(?!signal).*$"],
+            "partial_models": {
+                "Motion": ["^mot_.*$"],
+                "CSF": ["^csf.*$"]
+            }
+        },
+        {
+            "regress_ID": "task",
+            "info": "Fits all task regressors to a single model using an F statistic",
+            "report": "Task regressors that fit to components using a linear model and have some T2* weighting were accepted even if they would have been rejected base on other criteriea.",
+            "detrend": true,
+            "statistic": "F",
+            "regressors": ["^signal.*$"]
+        }
+    ],
     "nodes": [
         {
             "functionname": "manual_classify",
@@ -176,12 +187,12 @@
                 "if_false": "nochange",
                 "decide_comps": "all",
                 "op": "<",
-                "left": "pval Full Model",
+                "left": "pval nuisance model",
                 "right": 0.05
             },
             "kwargs": {
                 "op2": ">",
-                "left2": "R2stat Full Model",
+                "left2": "R2stat nuisance model",
                 "right2": 0.5,
                 "log_extra_info": "If external regressors fit with p<0.05 and model R2>0.5 of the variance, then reject.",
                 "tag_if_true": "External regressors"
@@ -195,15 +206,15 @@
                 "if_false": "nochange",
                 "decide_comps": "provisionalreject",
                 "op": "<",
-                "left": "pval Full Model",
+                "left": "pval nuisance model",
                 "right": 0.05
             },
             "kwargs": {
                 "op2": ">",
-                "left2": "R2stat Full Model",
+                "left2": "R2stat nuisance model",
                 "right2": 0.5,
                 "op3": "<",
-                "left3": "pval Motion Model",
+                "left3": "pval nuisance Motion partial model",
                 "right3": 0.05,
                 "tag_if_true": "Fits motion external regressors"
             },
@@ -216,15 +227,15 @@
                 "if_false": "nochange",
                 "decide_comps": "provisionalreject",
                 "op": "<",
-                "left": "pval Full Model",
+                "left": "pval nuisance model",
                 "right": 0.05
             },
             "kwargs": {
                 "op2": ">",
-                "left2": "R2stat Full Model",
+                "left2": "R2stat nuisance model",
                 "right2": 0.5,
                 "op3": "<",
-                "left3": "pval CSF Model",
+                "left3": "pval nuisance CSF partial model",
                 "right3": 0.05,
                 "tag_if_true": "Fits CSF external regressors"
             },
@@ -237,12 +248,12 @@
                 "if_false": "nochange",
                 "decide_comps": ["provisionalreject"],
                 "op": "<",
-                "left": "pval Task Model",
+                "left": "pval task model",
                 "right": 0.05
             },
             "kwargs": {
                 "op2": ">",
-                "left2": "R2stat Task Model",
+                "left2": "R2stat task model",
                 "right2": 0.5,
                 "op3": ">=",
                 "left3": "kappa",

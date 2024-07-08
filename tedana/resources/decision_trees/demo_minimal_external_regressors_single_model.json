@@ -11,18 +11,21 @@
         "dice_FT2",
         "signal-noise_t",
         "variance explained",
-        "pval Full Model",
-        "R2stat Full Model"
+        "pval nuisance model",
+        "R2stat nuisance model"
     ],
     "intermediate_classifications": ["provisionalaccept", "provisionalreject"],
     "classification_tags": ["Likely BOLD", "Unlikely BOLD", "Low variance", "External regressors"],
-    "external_regressor_config": {
-        "regress_ID": "Fmodel",
-        "info": "Fits all external regressors to a single model using an F statistic",
-        "report": "Unspecified external nuissance regressors were fit to components using a linear model were rejected if they fit.",
-        "detrend": true,
-        "calc_stats": "F"
-    },
+    "external_regressor_config": [
+        {
+            "regress_ID": "nuisance",
+            "info": "Fits all external nuissance regressors to a single model using an F statistic",
+            "report": "External nuisance regressors that fit to components using a linear model were rejected.",
+            "detrend": true,
+            "statistic": "F",
+            "regressors": ["^.*$"]
+        }
+    ],
     "nodes": [
         {
             "functionname": "manual_classify",
@@ -173,12 +176,12 @@
                 "if_false": "nochange",
                 "decide_comps": "all",
                 "op": "<",
-                "left": "pval Full Model",
+                "left": "pval nuisance model",
                 "right": 0.05
             },
             "kwargs": {
                 "op2": ">",
-                "left2": "R2stat Full Model",
+                "left2": "R2stat nuisance model",
                 "right2": 0.5,
                 "log_extra_info": "If external regressors fit with p<0.05 and model R2>0.5 of the variance, then reject.",
                 "tag_if_true": "External regressors"
