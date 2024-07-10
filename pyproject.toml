@@ -31,7 +31,7 @@ dependencies = [
     "pybtex",
     "pybtex-apa-style",
     "scikit-learn>=0.21, <=1.5.1",
-    "scipy>=1.2.0, <=1.13.1",
+    "scipy>=1.2.0, <=1.14.0",
     "threadpoolctl",
     "tqdm",
 ]
