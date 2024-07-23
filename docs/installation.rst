@@ -9,7 +9,11 @@ If you already have a python environment and you want to add tedana, type:
 
   pip install tedana
 
-You can use a program like `conda`_ to create an environment for ``tedana`` with:
+As long as your python environment contains a compatible version of python, this should work.
+
+If you want more control over your environment to ensure that every python dependency
+is optimized for tedana, 
+you can use a program like `conda`_ to create an environment specifically for ``tedana`` with:
 
 .. code-block:: bash
 
