@@ -186,7 +186,7 @@ All functions are currently in :mod:`~tedana.selection.selection_nodes`.
   to interpret.
 
 .. _resources/decision_trees: https://github.com/ME-ICA/tedana/tree/main/tedana/resources/decision_trees
-
+.. _This is an example TSV file: https://github.com/ME-ICA/tedana/tree/main/tedana/tests/data/external_regress_Ftest_3echo.tsv
 
 General information fields
 ==========================
@@ -260,7 +260,9 @@ These added metrics can then be used in decision tree steps just like any other 
 Two demonstration trees that apply this functionality are in `resources/decision_trees`_.
 ``demo_external_regressors_single_model.json`` demonstrates the simplest application
 of external regressors and ``demo_external_regressors_motion_task_models.json``
-highlights the full range of functionality. Both these trees are based on ``minimal.json``.
+highlights the full range of functionality.
+`This is an example TSV file`_ with column labels that work with both of those trees.
+Both these trees are based on ``minimal.json``.
 While these might be good decision trees to use as is,
 they are both called "demo" because they demonstrate what is possible,
 but the utility of these specific decision trees have **not yet** been validated.
