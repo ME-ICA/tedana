@@ -24,7 +24,7 @@ you can use a program like `conda`_ to create an environment specifically for ``
 The above will create a python environment for tedana called ``tedenv``,
 and you can enter that environment with ``conda activate tedenv``.
 
-With either of the above methods, `pip` will install python and all its dependencies.
+With either of the above methods, `pip` will install tedana and all its dependencies.
 tedana's `dependencies are listed here`_.
 
 
