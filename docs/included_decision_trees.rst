@@ -23,9 +23,9 @@ there are two demonstration decision trees that implement this new functionality
 While these might work well, since they have not yet been validated on data, they
 are labeled ``demo``.
 ``decision_tree_demo_external_regressors_single_model``
-demonstrates fitting all nuissance regressors to a single model.
+demonstrates fitting all nuisance regressors to a single model.
 ``decision_tree_demo_external_regressors_motion_task_models``
-demonstrates fitting nuissance regressors to a model,
+demonstrates fitting nuisance regressors to a model,
 partial tests and tagging for components that fit Motion or CSF regressors,
 and retention of some components that fit task regressors.
 

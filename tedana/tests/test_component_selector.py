@@ -65,7 +65,7 @@ def dicts_to_test(treechoice):
             {
                 "regress_ID": "nuisance",
                 "info": (
-                    "Fits all external nuissance regressors to "
+                    "Fits all external nuisance regressors to "
                     "a single model using an F statistic"
                 ),
                 "report": (

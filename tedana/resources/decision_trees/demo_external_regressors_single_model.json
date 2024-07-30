@@ -19,7 +19,7 @@
     "external_regressor_config": [
         {
             "regress_ID": "nuisance",
-            "info": "Fits all external nuissance regressors to a single model using an F statistic",
+            "info": "Fits all external nuisance regressors to a single model using an F statistic",
             "report": "External nuisance regressors that fit to components using a linear model were rejected.",
             "detrend": true,
             "statistic": "F",
