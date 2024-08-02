@@ -139,7 +139,7 @@ Demo external regressors single model
 *********************************************
 
 This tree is similar to the minimal tree except there is an added node (node 11)
-where components are rejected if they significant fit a model of external nuisance regressor
+where components are rejected if they significantly fit a model of external nuisance regressor
 time series and the fit models a substantial amount of the total variance.
 Unlike the minimal tree, components that would be accepted based on :math:`\kappa` & :math:`\rho`
 criteria can be rejected based on a fit to external regressors.
@@ -159,7 +159,7 @@ This is based on the minimal tree, but multiple nodes were added to demonstrate 
 external regressors for fits.
 Unlike the minimal tree, components that would be accepted based on :math:`\kappa` & :math:`\rho`
 criteria can be rejected based on a fit to external regressors.
-Components are rejected if they significant fit a model of external nuisance regressor
+Components are rejected if they significantly fit a model of external nuisance regressor
 time series and the fit models a substantial amount of the total variance (node 10).
 For rejected components, if they also fit a partial model of motion external regressors (node 11),
 or CSF external regressors (node 12), the outputs are also tagged to say they fit those groups
