@@ -3,7 +3,9 @@
 import inspect
 import logging
 import os.path as op
+from typing import Dict, List, Union
 
+import pandas as pd
 from numpy import asarray
 
 from tedana.io import load_json
@@ -23,7 +25,16 @@ RepLGR = logging.getLogger("REPORT")
 # A user can run the desision tree either using one of these
 # names or by giving the full path to a tree in a different
 # location
-DEFAULT_TREES = ["minimal", "meica", "tedana_orig"]
+# Including the demo trees here so people do not need to type the full
+# path, but these are not listed as options in the CLI help menu until
+# they are actually validated as useful on some data
+DEFAULT_TREES = [
+    "minimal",
+    "meica",
+    "tedana_orig",
+    "demo_external_regressors_single_model",
+    "demo_external_regressors_motion_task_models",
+]
 
 
 class TreeError(Exception):
@@ -32,7 +43,7 @@ class TreeError(Exception):
     pass
 
 
-def load_config(tree):
+def load_config(tree: str) -> Dict:
     """Load the json file with the decision tree and validate the fields in the decision tree.
 
     Parameters
@@ -73,7 +84,7 @@ def load_config(tree):
     return validate_tree(dectree)
 
 
-def validate_tree(tree):
+def validate_tree(tree: Dict) -> Dict:
     """Confirm that provided `tree` is a valid decision tree.
 
     Parameters
@@ -100,10 +111,16 @@ def validate_tree(tree):
         "intermediate_classifications",
         "classification_tags",
         "nodes",
+        "external_regressor_config",
     ]
+    tree_optional_keys = ["generated_metrics"]
     defaults = {"selector", "decision_node_idx"}
     default_classifications = {"nochange", "accepted", "rejected", "unclassified"}
     default_decide_comps = {"all", "accepted", "rejected", "unclassified"}
+
+    # If a tree doesn't include "external_regressor_config", instead of crashing, set to None
+    if "external_regressor_config" not in set(tree.keys()):
+        tree["external_regressor_config"] = None
 
     # Confirm that the required fields exist
     missing_keys = set(tree_expected_keys) - set(tree.keys())
@@ -115,16 +132,15 @@ def validate_tree(tree):
 
     # Warn if unused fields exist
     unused_keys = set(tree.keys()) - set(tree_expected_keys) - {"used_metrics"}
-    # Make sure some fields don't trigger a warning; hacky, sorry
-    ok_to_not_use = (
-        "reconstruct_from",
-        "generated_metrics",
-    )
-    for k in ok_to_not_use:
+
+    # Separately check for optional, but used keys
+    for k in tree_optional_keys:
         if k in unused_keys:
             unused_keys.remove(k)
     if unused_keys:
-        LGR.warning(f"Decision tree includes fields that are not used or logged {unused_keys}")
+        LGR.warning(
+            f"Decision tree includes fields that are not used or logged {sorted(unused_keys)}"
+        )
 
     # Combine the default classifications with the user inputted classifications
     all_classifications = set(tree.get("intermediate_classifications")) | set(
@@ -194,7 +210,9 @@ def validate_tree(tree):
             compclass = compclass | set(tmp_comp)
         nonstandard_labels = compclass.difference(all_classifications)
         if nonstandard_labels:
-            LGR.warning(f"{compclass} in node {i} of the decision tree includes a classification")
+            LGR.warning(
+                f"{sorted(compclass)} in node {i} of the decision tree includes a classification"
+            )
         if "decide_comps" in node.get("parameters").keys():
             tmp_comp = node["parameters"]["decide_comps"]
             if isinstance(tmp_comp, str):
@@ -203,7 +221,7 @@ def validate_tree(tree):
         nonstandard_labels = compclass.difference(all_decide_comps)
         if nonstandard_labels:
             LGR.warning(
-                f"{compclass} in node {i} of the decision tree includes a classification "
+                f"{sorted(compclass)} in node {i} of the decision tree includes a classification "
                 "label that was not predefined"
             )
 
@@ -218,9 +236,67 @@ def validate_tree(tree):
             undefined_classification_tags = tagset.difference(set(tree.get("classification_tags")))
             if undefined_classification_tags:
                 LGR.warning(
-                    f"{tagset} in node {i} of the decision tree includes a classification "
+                    f"{sorted(tagset)} in node {i} of the decision tree includes a classification "
                     "tag that was not predefined"
                 )
+
+    # If there is an external_regressor_config field, validate it
+    if tree["external_regressor_config"] is not None:
+        external_regressor_config = tree["external_regressor_config"]
+        if isinstance(external_regressor_config, list):
+            # Define the fields that should always be present
+            dict_expected_keys = set(
+                ["regress_ID", "info", "report", "detrend", "statistic", "regressors"]
+            )
+            dict_optional_keys = set(["partial_models"])
+            # Right now, "f" is the only option, but this leaves open the possibility
+            #  to have additional options
+            statistic_key_options = set("f")
+
+            for config_idx in range(len(external_regressor_config)):
+                # Confirm that the required fields exist
+                missing_keys = dict_expected_keys - set(
+                    external_regressor_config[config_idx].keys()
+                )
+                if missing_keys:
+                    err_msg += (
+                        f"External regressor dictionary {config_idx} "
+                        f"is missing required fields: {missing_keys}\n"
+                    )
+
+                if "statistic" in set(external_regressor_config[config_idx].keys()):
+                    if (
+                        external_regressor_config[config_idx]["statistic"].lower()
+                        not in statistic_key_options
+                    ):
+                        err_msg += (
+                            "statistic in external_regressor_config 1 is "
+                            f"{external_regressor_config[config_idx]['statistic']}. "
+                            "It must be one of the following: "
+                            f"{statistic_key_options}\n"
+                        )
+
+                    if (external_regressor_config[config_idx]["statistic"].lower() != "f") and (
+                        "partial_models" in set(external_regressor_config[config_idx].keys())
+                    ):
+                        err_msg += (
+                            "External regressor dictionary cannot include "
+                            "partial_models if statistic is not F\n"
+                        )
+
+                # Warn if unused fields exist
+                unused_keys = (
+                    set(external_regressor_config[config_idx].keys())
+                    - dict_expected_keys
+                    - dict_optional_keys
+                )
+                if unused_keys:
+                    LGR.warning(
+                        f"External regressor dictionary {config_idx} includes fields that "
+                        f"are not used or logged {sorted(unused_keys)}"
+                    )
+        else:
+            err_msg += "External regressor dictional exists, but is not a list\n"
 
     if err_msg:
         raise TreeError("\n" + err_msg)
@@ -231,7 +307,7 @@ def validate_tree(tree):
 class ComponentSelector:
     """Load and classify components based on a specified ``tree``."""
 
-    def __init__(self, tree):
+    def __init__(self, tree: str):
         """Initialize the class using the info specified in the json file ``tree``.
 
         Parameters
@@ -255,7 +331,12 @@ class ComponentSelector:
         self.classification_tags = set(self.tree["classification_tags"])
         self.tree["used_metrics"] = set(self.tree.get("used_metrics", []))
 
-    def select(self, component_table, cross_component_metrics={}, status_table=None):
+    def select(
+        self,
+        component_table: pd.DataFrame,
+        cross_component_metrics: Dict = {},
+        status_table: Union[pd.DataFrame, None] = None,
+    ):
         """Apply the decision tree to data.
 
         Using the validated tree in ``ComponentSelector`` to run the decision
@@ -274,6 +355,9 @@ class ComponentSelector:
             A table tracking the status of each component at each step.
             Pass a status table if running additional steps on a decision
             tree that was already executed. Default=None.
+        external_regressor_config : :obj:`dict`
+            Information describing the external regressors and
+            method to use for fitting and statistical tests
 
         Notes
         -----
@@ -334,10 +418,39 @@ class ComponentSelector:
         # this will crash the program with an error message if not all
         # necessary_metrics are in the comptable
         confirm_metrics_exist(
-            self.component_table_,
-            self.necessary_metrics,
+            component_table=self.component_table_,
+            necessary_metrics=self.necessary_metrics,
             function_name=self.tree_name,
         )
+
+        # To run a decision tree, each component needs to have an initial classification
+        # If the classification column doesn't exist, create it and label all components
+        # as unclassified
+        if "classification" not in self.component_table_:
+            self.component_table_["classification"] = "unclassified"
+
+        if status_table is None:
+            self.component_status_table_ = self.component_table_[
+                ["Component", "classification"]
+            ].copy()
+            self.component_status_table_ = self.component_status_table_.rename(
+                columns={"classification": "initialized classification"}
+            )
+            self.start_idx_ = 0
+        else:
+            # Since a status table exists, we need to skip nodes up to the
+            # point where the last tree finished. Notes that were executed
+            # have an output field. Identify the last node with an output field
+            tmp_idx = len(self.tree["nodes"]) - 1
+            while ("outputs" not in self.tree["nodes"][tmp_idx]) and (tmp_idx > 0):
+                tmp_idx -= 1
+            # start at the first node that does not have an output field
+            self.start_idx_ = tmp_idx + 1
+            LGR.info(f"Start is {self.start_idx_}")
+            self.component_status_table_ = status_table
+
+        if "classification_tags" not in self.component_table_.columns:
+            self.component_table_["classification_tags"] = ""
 
         # To run a decision tree, each component needs to have an initial classification
         # If the classification column doesn't exist, create it and label all components
@@ -385,6 +498,7 @@ class ComponentSelector:
                 all_params = {**params, **kwargs}
             else:
                 kwargs = {}
+                kwargs = {}
                 all_params = {**params}
 
             LGR.debug(
@@ -413,7 +527,7 @@ class ComponentSelector:
 
         self.are_all_components_accepted_or_rejected()
 
-    def add_manual(self, indices, classification):
+    def add_manual(self, indices: List[int], classification: str):
         """Add nodes that will manually classify components.
 
         Parameters
@@ -437,16 +551,25 @@ class ComponentSelector:
             }
         )
 
-    def check_null(self, params, fcn):
+    def check_null(self, params: Dict, fcn: str) -> Dict:
         """
         Check that required parameters for selection node functions are attributes in the class.
 
         Error if any are undefined.
 
+        Parameters
+        ----------
+        params : :obj:`dict`
+            The keys and values for the inputted parameters
+        fcn : :obj:`str`
+            The name of a component selection function in selection_nodes.py
+
         Returns
         -------
         params : :obj:`dict`
-            The keys and values for the inputted parameters
+            The keys and values for the inputted parameters.
+            If a parameter's value was defined in self.cross_component_metrics
+            then that value is also in params when returned
         """
         for key, val in params.items():
             if val is None:
@@ -508,12 +631,12 @@ class ComponentSelector:
                 )
 
     @property
-    def n_comps_(self):
+    def n_comps_(self) -> int:
         """The number of components in the component table."""
         return len(self.component_table_)
 
     @property
-    def likely_bold_comps_(self):
+    def likely_bold_comps_(self) -> int:
         """A boolean :obj:`pandas.Series` of components that are tagged "Likely BOLD"."""
         likely_bold_comps = self.component_table_["classification_tags"].copy()
         for idx in range(len(likely_bold_comps)):
@@ -524,22 +647,22 @@ class ComponentSelector:
         return likely_bold_comps
 
     @property
-    def n_likely_bold_comps_(self):
+    def n_likely_bold_comps_(self) -> int:
         """The number of components that are tagged "Likely BOLD"."""
         return self.likely_bold_comps_.sum()
 
     @property
-    def accepted_comps_(self):
+    def accepted_comps_(self) -> pd.Series:
         """A boolean :obj:`pandas.Series` of components that are accepted."""
         return self.component_table_["classification"] == "accepted"
 
     @property
-    def n_accepted_comps_(self):
+    def n_accepted_comps_(self) -> int:
         """The number of components that are accepted."""
         return self.accepted_comps_.sum()
 
     @property
-    def rejected_comps_(self):
+    def rejected_comps_(self) -> pd.Series:
         """A boolean :obj:`pandas.Series` of components that are rejected."""
         return self.component_table_["classification"] == "rejected"
 

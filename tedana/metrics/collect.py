@@ -2,13 +2,20 @@
 
 import logging
 import os.path as op
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 
 from tedana import io, utils
-from tedana.metrics import dependence
-from tedana.metrics._utils import dependency_resolver, determine_signs, flip_components
+from tedana.metrics import dependence, external
+from tedana.metrics._utils import (
+    add_external_dependencies,
+    dependency_resolver,
+    determine_signs,
+    flip_components,
+)
 from tedana.stats import getfbounds
 
 LGR = logging.getLogger("GENERAL")
@@ -16,15 +23,18 @@ RepLGR = logging.getLogger("REPORT")
 
 
 def generate_metrics(
-    data_cat,
-    data_optcom,
-    mixing,
-    adaptive_mask,
-    tes,
-    io_generator,
-    label,
-    metrics=None,
-):
+    *,
+    data_cat: npt.NDArray,
+    data_optcom: npt.NDArray,
+    mixing: npt.NDArray,
+    adaptive_mask: npt.NDArray,
+    tes: Union[List[int], List[float], npt.NDArray],
+    io_generator: io.OutputGenerator,
+    label: str,
+    external_regressors: Union[pd.DataFrame, None] = None,
+    external_regressor_config: Union[List[Dict], None] = None,
+    metrics: Union[List[str], None] = None,
+) -> Tuple[pd.DataFrame, Dict]:
     """Fit TE-dependence and -independence models to components.
 
     Parameters
@@ -34,12 +44,12 @@ def generate_metrics(
     data_optcom : (S x T) array_like
         Optimally combined data
     mixing : (T x C) array_like
-        Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `data_cat`
+        Mixing matrix for converting input data to component space,
+        where `C` is components and `T` is the same as in `data_cat`
     adaptive_mask : (S) array_like
         Array where each value indicates the number of echoes with good signal
-        for that voxel. This mask may be thresholded; for example, with values
-        less than 3 set to 0.
+        for that voxel.
+        This mask may be thresholded; for example, with values less than 3 set to 0.
         For more information on thresholding, see `make_adaptive_mask`.
     tes : list
         List of echo times associated with `data_cat`, in milliseconds
@@ -47,14 +57,23 @@ def generate_metrics(
         The output generator object for this workflow
     label : str in ['ICA', 'PCA']
         The label for this metric generation type
+    external_regressors : None or :obj:`pandas.DataFrame`, optional
+        External regressors (e.g., motion parameters, physiological noise)
+        to correlate with ICA components.
+        If None, no external regressor metrics will be calculated.
+    external_regressor_config : :obj:`list[dic]t`
+        A list of dictionaries defining how to fit external regressors to component time series
     metrics : list
         List of metrics to return
 
     Returns
     -------
     comptable : (C x X) :obj:`pandas.DataFrame`
-        Component metric table. One row for each component, with a column for
-        each metric. The index is the component number.
+        Component metric table. One row for each component, with a column for each metric.
+        The index is the component number.
+    external_regressor_config : :obj:`dict`
+        Info describing the external regressors and method used for fitting and statistical tests
+        (or None if none were inputed)
     """
     # Load metric dependency tree from json file
     dependency_config = op.join(utils.get_resource_path(), "config", "metrics.json")
@@ -62,6 +81,16 @@ def generate_metrics(
 
     if metrics is None:
         metrics = ["map weight"]
+
+    if external_regressors is not None:
+        if external_regressor_config is None:
+            raise ValueError(
+                "If external_regressors is defined, then "
+                "external_regressor_config also needs to be defined."
+            )
+        dependency_config = add_external_dependencies(dependency_config, external_regressor_config)
+        dependency_config["inputs"].append("external regressors")
+
     RepLGR.info(f"The following metrics were calculated: {', '.join(metrics)}.")
 
     if not (data_cat.shape[0] == data_optcom.shape[0] == adaptive_mask.shape[0]):
@@ -73,7 +102,7 @@ def generate_metrics(
     elif data_cat.shape[1] != len(tes):
         raise ValueError(
             f"Second dimension of data_cat ({data_cat.shape[1]}) does not match "
-            f"number of echoes provided (tes; {len(tes)})"
+            f"number of echoes provided ({tes}; {len(tes)})"
         )
     elif not (data_cat.shape[2] == data_optcom.shape[1] == mixing.shape[0]):
         raise ValueError(
@@ -345,6 +374,19 @@ def generate_metrics(
             countsig_ft2=comptable["countsigFT2"],
         )
 
+    # External regressor-based metrics
+    if external_regressors is not None and external_regressor_config is not None:
+        # external_regressor_names = external_regressors.columns.tolist()
+        for config_idx in range(len(external_regressor_config)):
+            LGR.info(
+                "Calculating external regressor fits. "
+                f"{external_regressor_config[config_idx]['info']}"
+            )
+            RepLGR.info({external_regressor_config[config_idx]["report"]})
+
+        comptable = external.fit_regressors(
+            comptable, external_regressors, external_regressor_config, mixing
+        )
     # Write verbose metrics if needed
     if io_generator.verbose:
         write_betas = "map echo betas" in metric_maps
@@ -400,6 +442,7 @@ def generate_metrics(
         "d_table_score",
         "kappa ratio",
         "d_table_score_scrub",
+        "external fit",
         "classification",
         "rationale",
     )
@@ -407,10 +450,10 @@ def generate_metrics(
     other_columns = [col for col in comptable.columns if col not in preferred_order]
     comptable = comptable[first_columns + other_columns]
 
-    return comptable
+    return comptable, external_regressor_config
 
 
-def get_metadata(comptable):
+def get_metadata(comptable: pd.DataFrame) -> Dict:
     """Fill in metric metadata for a given comptable.
 
     Parameters
@@ -420,9 +463,9 @@ def get_metadata(comptable):
 
     Returns
     -------
-    A dict containing the metadata for each column in the comptable for
-    which we have a metadata description, plus the "Component" metadata
-    description (always).
+    metric_metadata : dict
+        The metadata for each column in the comptable for which we have a metadata description,
+        plus the "Component" metadata description (always).
     """
     metric_metadata = {}
     if "kappa" in comptable:

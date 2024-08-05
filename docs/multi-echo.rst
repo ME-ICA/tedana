@@ -596,37 +596,31 @@ Datasets
 A number of multi-echo datasets have been made public so far.
 This list is not necessarily up to date, so please check out OpenNeuro to potentially find more.
 
-* `Multi-echo fMRI replication sample of autobiographical memory, prospection and theory of mind reasoning tasks`_
-* `Multi-echo Cambridge`_
-* `Multiband multi-echo imaging of simultaneous oxygenation and flow timeseries for resting state connectivity`_
-* `Multiband multi-echo simultaneous ASL/BOLD for task-induced functional MRI`_
-* `Valence processing differs across stimulus modalities`_
-* `Cambridge Centre for Ageing Neuroscience (Cam-CAN)`_
-* `rt-me-fMRI - A task and resting state dataset for real-time, multi-echo fMRI methods development and validation`_
-* `EuskalIBUR`_
-* `Le Petit Prince`_
-* `Evidence supporting a time-limited hippocampal role in retrieving autobiographical memories`_
-* `Neurocognitive aging data release with behavioral, structural, and multi-echo functional MRI measures`_
-* `Heart rate variability biofeedback training and emotion regulation`_
-* `A mesial-to-lateral dissociation for orthographic processing in the visual cortex (dual-echo)`_
-* `Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice`_
-* `Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice (pilot data)`_
-
-.. _Multi-echo fMRI replication sample of autobiographical memory, prospection and theory of mind reasoning tasks: https://openneuro.org/datasets/ds000210/
-.. _Multi-echo Cambridge: https://openneuro.org/datasets/ds000258
-.. _Multiband multi-echo imaging of simultaneous oxygenation and flow timeseries for resting state connectivity: https://openneuro.org/datasets/ds000216
-.. _Multiband multi-echo simultaneous ASL/BOLD for task-induced functional MRI: https://openneuro.org/datasets/ds000254
-.. _Valence processing differs across stimulus modalities: https://openneuro.org/datasets/ds001491
-.. _Cambridge Centre for Ageing Neuroscience (Cam-CAN): https://camcan-archive.mrc-cbu.cam.ac.uk/dataaccess/
-.. _rt-me-fMRI - A task and resting state dataset for real-time, multi-echo fMRI methods development and validation: https://doi.org/10.34894/R1TNL8
-.. _EuskalIBUR: https://openneuro.org/datasets/ds003192
-.. _Le Petit Prince: https://openneuro.org/datasets/ds003643
-.. _Evidence supporting a time-limited hippocampal role in retrieving autobiographical memories: https://openneuro.org/datasets/ds003511
-.. _Neurocognitive aging data release with behavioral, structural, and multi-echo functional MRI measures: https://openneuro.org/datasets/ds003592
-.. _Heart rate variability biofeedback training and emotion regulation: https://openneuro.org/datasets/ds003823/versions/1.2.3
-.. _A mesial-to-lateral dissociation for orthographic processing in the visual cortex (dual-echo): https://openneuro.org/datasets/ds002155
-.. _Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice: https://openneuro.org/datasets/ds001725
-.. _Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice (pilot data): https://openneuro.org/datasets/ds002154
+* `Multi-echo fMRI replication sample of autobiographical memory, prospection and theory of mind reasoning tasks <https://openneuro.org/datasets/ds000210/>`_
+* `Multi-echo Cambridge <https://openneuro.org/datasets/ds000258>`_
+* `Multiband multi-echo imaging of simultaneous oxygenation and flow timeseries for resting state connectivity <https://openneuro.org/datasets/ds000216>`_
+* `Multiband multi-echo simultaneous ASL/BOLD for task-induced functional MRI <https://openneuro.org/datasets/ds000254>`_
+* `Valence processing differs across stimulus modalities <https://openneuro.org/datasets/ds001491>`_
+* `Cambridge Centre for Ageing Neuroscience (Cam-CAN) <https://camcan-archive.mrc-cbu.cam.ac.uk/dataaccess/>`_
+* `rt-me-fMRI - A task and resting state dataset for real-time, multi-echo fMRI methods development and validation <https://doi.org/10.34894/R1TNL8>`_
+* `EuskalIBUR <https://openneuro.org/datasets/ds003192>`_
+* `Le Petit Prince <https://openneuro.org/datasets/ds003643>`_
+* `Evidence supporting a time-limited hippocampal role in retrieving autobiographical memories <https://openneuro.org/datasets/ds003511>`_
+* `Neurocognitive aging data release with behavioral, structural, and multi-echo functional MRI measures <https://openneuro.org/datasets/ds003592>`_
+* `Heart rate variability biofeedback training and emotion regulation <https://openneuro.org/datasets/ds003823/versions/1.2.3>`_
+* `A mesial-to-lateral dissociation for orthographic processing in the visual cortex (dual-echo) <https://openneuro.org/datasets/ds002155>`_
+* `Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice <https://openneuro.org/datasets/ds001725>`_
+* `Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice (pilot data) <https://openneuro.org/datasets/ds002154>`_
+* `MICA-PNI <https://osf.io/mhq3f/>`_
+* `SoCal Kinesia and Incentivization for Parkinson's Disease (SKIP) <https://openneuro.org/datasets/ds005264>`_
+* `Single-echo/multi-echo comparison pilot <https://openneuro.org/datasets/ds005250>`_
+* `Social Reward and Aging: A Preliminary Multi-echo fMRI and Diffusion Dataset <https://openneuro.org/datasets/ds005123>`_
+* `Dense Investigation of Variability of Affect (DIVA) <https://openneuro.org/datasets/ds002278>`_
+* `Multivariate Assessment of Inhibitory Control in Youth: Links with Psychopathology and Brain Function Dataset <https://openneuro.org/datasets/ds004935>`_
+* `Multi-echo simultaneous multislice fMRI dataset: Effect of acquisition parameters on fMRI data <https://openneuro.org/datasets/ds004499>`_
+* `Sequence pilot: multiecho and multiband fMRI <https://openneuro.org/datasets/ds005085>`_
+* `Weill Cornell Medicine Multi-echo (WCM-ME) Dataset <https://openneuro.org/datasets/ds005118>`_
+* `Characterization and Treatment of Adolescent Depression (CAT-D) <https://openneuro.org/datasets/ds004627>`_
 
 .. _spreadsheet of publications:
 

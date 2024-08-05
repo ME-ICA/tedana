@@ -1,10 +1,14 @@
 """Functions to estimate S0 and T2* from multi-echo data."""
 
 import logging
+from typing import List, Literal, Tuple
 
 import numpy as np
+import numpy.matlib
+import pandas as pd
 import scipy
 from scipy import stats
+from tqdm.auto import tqdm
 
 from tedana import utils
 
@@ -112,7 +116,7 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True):
             "estimate T2* and S0. In cases of model fit failure, T2*/S0 "
             "estimates from the log-linear fit were retained instead."
         )
-    n_samp, n_echos, n_vols = data_cat.shape
+    n_samp, _, n_vols = data_cat.shape
 
     # Currently unused
     # fit_data = np.mean(data_cat, axis=2)
@@ -151,7 +155,7 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True):
         # perform a monoexponential fit of echo times against MR signal
         # using loglin estimates as initial starting points for fit
         fail_count = 0
-        for voxel in voxel_idx:
+        for voxel in tqdm(voxel_idx, desc=f"{echo_num}-echo monoexponential"):
             try:
                 popt, cov = scipy.optimize.curve_fit(
                     monoexponential,
@@ -460,3 +464,104 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype):
         report = False
 
     return t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts
+
+
+def rmse_of_fit_decay_ts(
+    *,
+    data: np.ndarray,
+    tes: List[float],
+    adaptive_mask: np.ndarray,
+    t2s: np.ndarray,
+    s0: np.ndarray,
+    fitmode: Literal["all", "ts"],
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Estimate model fit of voxel- and timepoint-wise monoexponential decay models to ``data``.
+
+    Parameters
+    ----------
+    data : (S x E x T) :obj:`numpy.ndarray`
+        Multi-echo data array, where `S` is samples, `E` is echos, and `T` is time.
+    tes : (E,) :obj:`list`
+        Echo times.
+    adaptive_mask : (S,) :obj:`numpy.ndarray`
+        Array where each value indicates the number of echoes with good signal for that voxel.
+        This mask may be thresholded; for example, with values less than 3 set to 0.
+        For more information on thresholding, see :func:`~tedana.utils.make_adaptive_mask`.
+    t2s : (S [x T]) :obj:`numpy.ndarray`
+        Voxel-wise (and possibly volume-wise) T2* estimates from
+        :func:`~tedana.decay.fit_decay_ts`.
+    s0 : (S [x T]) :obj:`numpy.ndarray`
+        Voxel-wise (and possibly volume-wise) S0 estimates from :func:`~tedana.decay.fit_decay_ts`.
+    fitmode : {"fit", "all"}
+        Whether the T2* and S0 estimates are volume-wise ("fit") or not ("all").
+
+    Returns
+    -------
+    rmse_map : (S,) :obj:`numpy.ndarray`
+        Mean root mean squared error of the model fit across all volumes at each voxel.
+    rmse_df : :obj:`pandas.DataFrame`
+        Each column is the root mean squared error of the model fit at each timepoint.
+        Columns are mean, standard deviation, and percentiles across voxels. Column labels are
+        "rmse_mean", "rmse_std", "rmse_min", "rmse_percentile02", "rmse_percentile25",
+        "rmse_median", "rmse_percentile75", "rmse_percentile98", and "rmse_max"
+    """
+    n_samples, _, n_vols = data.shape
+    tes = np.array(tes)
+
+    rmse = np.full([n_samples, n_vols], np.nan, dtype=np.float32)
+    # n_good_echoes interates from 2 through the number of echoes
+    #   0 and 1 are excluded because there aren't T2* and S0 estimates
+    #   for less than 2 good echoes. 2 echoes will have a bad estimate so consider
+    #   how/if we want to distinguish those
+    for n_good_echoes in range(2, len(tes) + 1):
+        # a boolean mask for voxels with a specific num of good echoes
+        use_vox = adaptive_mask == n_good_echoes
+        data_echo = data[use_vox, :n_good_echoes, :]
+        if fitmode == "all":
+            s0_echo = numpy.matlib.repmat(s0[use_vox].T, n_vols, 1).T
+            t2s_echo = numpy.matlib.repmat(t2s[use_vox], n_vols, 1).T
+        elif fitmode == "ts":
+            s0_echo = s0[use_vox, :]
+            t2s_echo = t2s[use_vox, :]
+        else:
+            raise ValueError(f"Unknown fitmode option {fitmode}")
+
+        predicted_data = np.full([use_vox.sum(), n_good_echoes, n_vols], np.nan, dtype=np.float32)
+        # Need to loop by echo since monoexponential can take either single vals for s0 and t2star
+        #   or a single TE value.
+        # We could expand that func, but this is a functional solution
+        for echo_num in range(n_good_echoes):
+            predicted_data[:, echo_num, :] = monoexponential(
+                tes=tes[echo_num],
+                s0=s0_echo,
+                t2star=t2s_echo,
+            )
+        rmse[use_vox, :] = np.sqrt(np.mean((data_echo - predicted_data) ** 2, axis=1))
+
+    rmse_map = np.nanmean(rmse, axis=1)
+    rmse_timeseries = np.nanmean(rmse, axis=0)
+    rmse_sd_timeseries = np.nanstd(rmse, axis=0)
+    rmse_percentiles_timeseries = np.nanpercentile(rmse, [0, 2, 25, 50, 75, 98, 100], axis=0)
+
+    rmse_df = pd.DataFrame(
+        columns=[
+            "rmse_mean",
+            "rmse_std",
+            "rmse_min",
+            "rmse_percentile02",
+            "rmse_percentile25",
+            "rmse_median",
+            "rmse_percentile75",
+            "rmse_percentile98",
+            "rmse_max",
+        ],
+        data=np.column_stack(
+            (
+                rmse_timeseries,
+                rmse_sd_timeseries,
+                rmse_percentiles_timeseries.T,
+            )
+        ),
+    )
+
+    return rmse_map, rmse_df
