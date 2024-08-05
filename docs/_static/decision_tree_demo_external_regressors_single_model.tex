@@ -1,0 +1,109 @@
+\documentclass[border=2pt]{standalone}
+\usepackage[utf8]{inputenc} % Required for inserting images
+\usepackage{tikz}
+\usepackage{helvet}
+\usetikzlibrary{shapes.geometric, arrows}
+\pagecolor{white}
+
+%-------------------------defining colorblind friendly colors
+% Using pale color scheme in Figure 6
+% by Paul Tol https://personal.sron.nl/~pault/
+\definecolor{cbblue}{HTML}{BBCCEE}
+\definecolor{cbcyan}{HTML}{CCEEFF}
+\definecolor{cbgreen}{HTML}{CCDDAA}
+\definecolor{cbyellow}{HTML}{EEEEBB}
+\definecolor{cbred}{HTML}{FFCCCC}
+\definecolor{cbgrey}{HTML}{DDDDDD}
+
+% -------------------------defining nodes
+\tikzstyle{input} = [trapezium, trapezium left angle =80, trapezium right angle = 100,
+minimum width= 3cm, minimum height=0.5cm, text centered, draw=black, fill=cbblue]
+\tikzstyle{process} = [rectangle, minimum width = 3cm, minimum height = 1cm,
+text centered, , text width=4cm,draw=black, fill=cbgrey]
+\tikzstyle{decision} = [diamond, minimum width = 3cm, minimum height = 1cm,
+text centered, , text width=3cm, draw=black, fill=cbcyan]
+\tikzstyle{changeclass} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,
+text centered, draw = black, fill=cbyellow]
+\tikzstyle{reject} = [trapezium, trapezium left angle =80, trapezium right angle = 100,
+minimum width= 1cm, minimum height=0.5cm, text centered, draw=black, fill=cbred]
+\tikzstyle{accept} = [trapezium, trapezium left angle =80, trapezium right angle = 100,
+minimum width= 1cm, minimum height=0.5cm, text centered, draw=black, fill=cbgreen]
+
+% -------------------------defining connectors
+\tikzstyle{arrow} = [thick,->, >=stealth]
+\tikzstyle{line} = [thick,-,>=stealth]
+\begin{document}
+
+% ------------------------- tikz image (flow chart)
+\begin{tikzpicture}[node distance = 2cm]
+
+% ------------------------- nodes -------------------------
+% ----- node: 0
+\node(0)[input,label={90:\textbf{Demo Decision Tree. Single model with external regressors}}, label={180:$node\ 0$}]{Set all components to unclassified};
+% ----- node: 1
+\node(1)[decision, below of=0,label={180:$node\ 1$}, yshift=-1cm]{$\rho$ $>$ $\kappa$};
+\node(rej1)[reject, right of=1, xshift=2cm, align=center]{Unlikely BOLD\\$\rightarrow$ Reject};
+% ----- node: 2
+\node(2)[decision, below of=1,label={180:$node\ 2$}, label={[align=center] 315: voxel counts for signif fit\\of multi-echo data\\to $T_2$ or $S_0$ decay models}, yshift=-3.0cm]{$n \, FS_0 \, > \, n \, FT_2$ \& $n \,FT_2$ $>$ 0};
+\node(rej2)[reject, right of=2, xshift=2cm, align=center]{Unlikely BOLD\\$\rightarrow$ Reject};
+% ----- node: 3
+\node(3)[process, below of=2, label={180:$node\ 3$}, label={[align=center] 315: varex: variance explained\\by each component}, yshift=-1.5cm]{Calculate median(varex) across all components};
+% ----- node: 4
+\node(4)[decision, below of=3,label={180:$node\ 4$},label={[align=center] 315:DICE overlap between $T_2$ or $S_0$\\decay models and ICA component\\peak clusters}, yshift=-1.5cm]{dice $FS_0$ $>$ dice $FT_2$ \& varex $>$ median(varex)
+};
+\node(rej4)[reject, right of=4, xshift=2.5cm, align=center]{Unlikely BOLD\\$\rightarrow$ Reject};
+% ----- node: 5
+\node(5)[decision, below of=4,label={180:$node\ 5$}, label={[align=center] 315: $t-statistic$ of $FT_2$ values\\in component peak clusters vs\\peak voxels outside of clusters}, yshift=-4.0cm]{ $0 \, >$ signal-noise \&  varex $>$ median(varex)};
+\node(rej5)[reject, right of=5, xshift=2.5cm, align=center]{Unlikely BOLD\\$\rightarrow$ Reject};
+% ----- node: 6
+\node(6)[process, below of=5, label={180:$node\ 6$}, label={0: Uses all components}, yshift=-2.0cm]{Calculate $\kappa$ elbow};
+% ----- node: 7
+\node(7)[process, below of=6, label={180:$node\ 7$}, label={[align=center] 0: Uses all components and subset\\of unclassified components}]{Calculate $\rho$ elbow\\(liberal method)};
+% ----- node: 7
+\node(8)[decision, below of=7,label={180:$node\ 8$}, yshift=-1.5cm]{$\kappa \geq \kappa$ elbow};
+\node(chrej8)[changeclass, below of=8, yshift=-1.5cm]{Provisional reject};
+\node(chacc8)[changeclass, right of=8, xshift=3cm, yshift=0cm]{Provisional accept};
+% ----- node: 8
+\node(9)[decision, below of=chacc8,label={170:$node\ 9$}, yshift=-1.5cm]{ $\rho$ $>$ $\rho$ elbow};
+\node(chrej9)[changeclass, below of=9, yshift=-1.5cm]{Provisional reject};
+% ----- node: 9
+\node(10)[decision, left of=chrej9,label={180:$node\ 10$},label={235: Accept even if $\rho < \rho\ elbow$},xshift=-3.5cm]{$\kappa \geq \kappa$ elbow\\$\kappa > 2\rho$  };
+\node(chacc10)[changeclass, below of=10, xshift=0cm, yshift=-1.5cm, align=center]{Provisional accept};
+% ----- node: 10
+\node(11)[decision, below of=chacc10,label={180:$node\ 11$}, xshift=0cm, yshift=-2cm]{External regressor\\nuisance model\\$p<0.05$\\$R^2>0.5$};%--check in kundu
+\node(chrej11)[changeclass, below of=11, xshift=0cm, yshift=-1.5cm, align=center]{Tag: External Regressors\\Provisional reject};
+% ----- node: 11
+\node(12)[decision, below of=chrej11,label={180:$node\ 11$},label={[align=left] 335: Will accept the lowest\\variance components until\\1\% of total variance is\\accepted this way}, yshift=-1.5cm]{$if$ component variance $<0.1$};%--check in kundu
+\node(acc12)[accept, right of=12, xshift=3cm, align=center]{Low variance\\$\rightarrow$ Accept};
+% ----- node: 12
+\node(13)[accept, below of=12,label={180:$node\ 12$},yshift=-1.5cm, align=center]{Likely BOLD\\Change provisional accept\\$\rightarrow$Accept};
+% ----- node: 13
+\node(14)[reject, below of=13,label={180:$node\ 13$}, yshift=0cm, align=center]{Unlikely BOLD\\Change provisional reject\\$\rightarrow$Reject};
+
+
+% ------------------------- connections -------------------------
+\draw[arrow](0)--(1);
+\draw[arrow](1)--node[anchor=south, right=0] {no} (2);
+\draw[arrow](1)--node[anchor=south] {yes} (rej1);
+\draw[arrow](2)--node[anchor=south, right=0] {no} (3);
+\draw[arrow](2)--node[anchor=south] {yes} (rej2);
+\draw[arrow](3)--(4);
+\draw[arrow](4)--node[anchor=south, right=0] {no} (5);
+\draw[arrow](4)--node[anchor=south] {yes} (rej4);
+\draw[arrow](5)--node[anchor=south, right=0] {no} (6);
+\draw[arrow](5)--node[anchor=south] {yes} (rej5);
+\draw[arrow](6)--(7);
+\draw[arrow](7)--(8);
+\draw[arrow](8)--node[anchor=south] {yes} (chacc8);
+\draw[arrow](8)--node[anchor=south, right=0] {no} (chrej8);
+\draw[arrow](chacc8)--(9);
+\draw[arrow](chrej8)--(9);
+\draw[arrow](9)--node[anchor=south, right=0] {yes} (chrej9);
+\draw[arrow](chrej9)--(10);
+\draw[arrow](10)--node[anchor=south, right=0] {yes} (chacc10);
+\draw[arrow](chacc10)--(11);
+\draw[arrow](11)--node[anchor=south, right=0] {yes} (chrej11);
+\draw[arrow](chrej11)--(12);
+\draw[arrow](12)--node[anchor=south] {yes} (acc12);
+\end{tikzpicture}
+\end{document}

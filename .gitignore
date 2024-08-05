@@ -6,6 +6,13 @@ docs/generated/
 .pytest_cache/
 .testing_data_cache/
 
+# For decision tree .tex flow charts do not archive intermediate files
+decision_tree*.aux
+decision_tree*.fdb_latexmk
+decision_tree*.fls
+decision_tree*.log
+decision_tree*.synctex.gz
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

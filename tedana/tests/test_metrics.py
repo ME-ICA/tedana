@@ -7,7 +7,11 @@ import pandas as pd
 import pytest
 
 from tedana import io, utils
-from tedana.metrics import collect, dependence
+from tedana.metrics import collect, dependence, external
+from tedana.tests.test_external_metrics import (
+    sample_external_regressor_config,
+    sample_external_regressors,
+)
 from tedana.tests.utils import get_test_data_path
 
 
@@ -24,15 +28,20 @@ def testdata1():
         methods=["dropout", "decay"],
     )
     data_optcom = np.mean(data_cat, axis=1)
-    mixing = np.random.random((data_optcom.shape[1], 50))
+    mixing = np.random.random((data_optcom.shape[1], 3))
     io_generator = io.OutputGenerator(ref_img)
+
+    # includes adaptive_mask_cut and mixing_cut which are used for ValueError tests
+    #  for when dimensions do not align
     data_dict = {
         "data_cat": data_cat,
         "tes": tes,
         "data_optcom": data_optcom,
         "adaptive_mask": adaptive_mask,
+        "adaptive_mask_cut": np.delete(adaptive_mask, (0), axis=0),
         "generator": io_generator,
         "mixing": mixing,
+        "mixing_cut": np.delete(mixing, (0), axis=0),
     }
     return data_dict
 
@@ -52,17 +61,107 @@ def test_smoke_generate_metrics(testdata1):
         "normalized variance explained",
         "d_table_score",
     ]
-    comptable = collect.generate_metrics(
-        testdata1["data_cat"],
-        testdata1["data_optcom"],
-        testdata1["mixing"],
-        testdata1["adaptive_mask"],
-        testdata1["tes"],
-        testdata1["generator"],
-        "ICA",
+
+    external_regressors, _ = sample_external_regressors()
+    # these data have 50 volumes so cut external_regressors to 50 vols for these tests
+    # This is just testing execution. Accuracy of values for external regressors are
+    # tested in test_external_metrics
+    n_vols = 5
+    external_regressors = external_regressors.drop(labels=range(5, 75), axis=0)
+
+    external_regressor_config = sample_external_regressor_config()
+    external_regressor_config_expanded = external.validate_extern_regress(
+        external_regressors, external_regressor_config, n_vols
+    )
+
+    comptable, _ = collect.generate_metrics(
+        data_cat=testdata1["data_cat"],
+        data_optcom=testdata1["data_optcom"],
+        mixing=testdata1["mixing"],
+        adaptive_mask=testdata1["adaptive_mask"],
+        tes=testdata1["tes"],
+        io_generator=testdata1["generator"],
+        label="ICA",
+        external_regressors=external_regressors,
+        external_regressor_config=external_regressor_config_expanded,
         metrics=metrics,
     )
     assert isinstance(comptable, pd.DataFrame)
+
+
+def test_generate_metrics_fails(testdata1):
+    """Testing error conditions for tedana.metrics.collect.generate_metrics."""
+
+    metrics = [
+        "kappa",
+        "rho",
+    ]
+
+    # missing external regressors
+    external_regress = pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
+    with pytest.raises(
+        ValueError,
+        match=(
+            "If external_regressors is defined, then "
+            "external_regressor_config also needs to be defined."
+        ),
+    ):
+        comptable, _ = collect.generate_metrics(
+            data_cat=testdata1["data_cat"],
+            data_optcom=testdata1["data_optcom"],
+            mixing=testdata1["mixing"],
+            adaptive_mask=testdata1["adaptive_mask"],
+            tes=testdata1["tes"],
+            io_generator=testdata1["generator"],
+            label="ICA",
+            external_regressors=external_regress,
+            metrics=metrics,
+        )
+
+    with pytest.raises(
+        ValueError,
+        match=(r"First dimensions \(number of samples\) of data_cat"),
+    ):
+        comptable, _ = collect.generate_metrics(
+            data_cat=testdata1["data_cat"],
+            data_optcom=testdata1["data_optcom"],
+            mixing=testdata1["mixing"],
+            adaptive_mask=testdata1["adaptive_mask_cut"],
+            tes=testdata1["tes"],
+            io_generator=testdata1["generator"],
+            label="ICA",
+            metrics=metrics,
+        )
+
+    with pytest.raises(
+        ValueError,
+        match=("does not match number of echoes provided"),
+    ):
+        comptable, _ = collect.generate_metrics(
+            data_cat=testdata1["data_cat"],
+            data_optcom=testdata1["data_optcom"],
+            mixing=testdata1["mixing"],
+            adaptive_mask=testdata1["adaptive_mask"],
+            tes=testdata1["tes"][0:2],
+            io_generator=testdata1["generator"],
+            label="ICA",
+            metrics=metrics,
+        )
+
+    with pytest.raises(
+        ValueError,
+        match=("Number of volumes in data_cat"),
+    ):
+        comptable, _ = collect.generate_metrics(
+            data_cat=testdata1["data_cat"],
+            data_optcom=testdata1["data_optcom"],
+            mixing=testdata1["mixing_cut"],
+            adaptive_mask=testdata1["adaptive_mask"],
+            tes=testdata1["tes"],
+            io_generator=testdata1["generator"],
+            label="ICA",
+            metrics=metrics,
+        )
 
 
 def test_smoke_calculate_weights():
