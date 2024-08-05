@@ -88,7 +88,7 @@ def gscontrol_raw(
     io_generator.save_file(data_optcom, "has gs combined img")
 
     # Legendre polynomial basis for denoising
-    legendre_arr = utils.create_legendre_polynomial_basis_set(optcom.shape[-1], dtrank=dtrank)
+    legendre_arr = utils.create_legendre_polynomial_basis_set(data_optcom.shape[-1], dtrank=dtrank)
 
     # compute mean, std, mask local to this function
     # inefficient, but makes this function a bit more modular
