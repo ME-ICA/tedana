@@ -5,7 +5,6 @@ import logging
 import numpy as np
 import pandas as pd
 from scipy import stats
-from scipy.special import lpmv
 
 from tedana import io, utils
 
@@ -89,8 +88,7 @@ def gscontrol_raw(
     io_generator.save_file(data_optcom, "has gs combined img")
 
     # Legendre polynomial basis for denoising
-    bounds = np.linspace(-1, 1, data_optcom.shape[-1])
-    legendre_arr = np.column_stack([lpmv(0, vv, bounds) for vv in range(dtrank)])
+    legendre_arr = utils.create_legendre_polynomial_basis_set(optcom.shape[-1], dtrank=dtrank)
 
     # compute mean, std, mask local to this function
     # inefficient, but makes this function a bit more modular
