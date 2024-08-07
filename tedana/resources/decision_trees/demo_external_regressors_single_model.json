@@ -1,0 +1,205 @@
+{
+    "tree_id": "demo_external_regressors_single_model",
+    "info": "Demonstration based on the minimal decision tree that uses an F stat on a model with multiple external regressors.",
+    "report": "This is based on the minimal criteria of the original MEICA decision tree \\citep{kundu2013integrated} without the more aggressive noise removal steps \\citep{dupre2021te}.",
+    "necessary_metrics": [
+        "kappa",
+        "rho",
+        "countsigFS0",
+        "countsigFT2",
+        "dice_FS0",
+        "dice_FT2",
+        "signal-noise_t",
+        "variance explained",
+        "pval nuisance model",
+        "R2stat nuisance model"
+    ],
+    "intermediate_classifications": ["provisionalaccept", "provisionalreject"],
+    "classification_tags": ["Likely BOLD", "Unlikely BOLD", "Low variance", "External regressors"],
+    "external_regressor_config": [
+        {
+            "regress_ID": "nuisance",
+            "info": "Fits all external nuisance regressors to a single model using an F statistic",
+            "report": "External nuisance regressors that fit to components using a linear model were rejected.",
+            "detrend": true,
+            "statistic": "F",
+            "regressors": ["^.*$"]
+        }
+    ],
+    "nodes": [
+        {
+            "functionname": "manual_classify",
+            "parameters": {"new_classification": "unclassified", "decide_comps": "all"},
+            "kwargs": {"clear_classification_tags": true, "dont_warn_reclassify": true}
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "rejected",
+                "if_false": "nochange",
+                "decide_comps": "all",
+                "op": ">",
+                "left": "rho",
+                "right": "kappa"
+            },
+            "kwargs": {"tag_if_true": "Unlikely BOLD"}
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "rejected",
+                "if_false": "nochange",
+                "decide_comps": "all",
+                "op": ">",
+                "left": "countsigFS0",
+                "right": "countsigFT2"
+            },
+            "kwargs": {
+                "left2": "countsigFT2",
+                "op2": ">",
+                "right2": 0,
+                "tag_if_true": "Unlikely BOLD"
+            }
+        },
+        {
+            "functionname": "calc_median",
+            "parameters": {
+                "decide_comps": "all",
+                "metric_name": "variance explained",
+                "median_label": "varex"
+            }
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "rejected",
+                "if_false": "nochange",
+                "decide_comps": "all",
+                "op": ">",
+                "left": "dice_FS0",
+                "right": "dice_FT2"
+            },
+            "kwargs": {
+                "left2": "variance explained",
+                "op2": ">",
+                "right2": "median_varex",
+                "tag_if_true": "Unlikely BOLD"
+            }
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "rejected",
+                "if_false": "nochange",
+                "decide_comps": "all",
+                "op": ">",
+                "left": 0,
+                "right": "signal-noise_t"
+            },
+            "kwargs": {
+                "left2": "variance explained",
+                "op2": ">",
+                "right2": "median_varex",
+                "tag_if_true": "Unlikely BOLD"
+            }
+        },
+        {
+            "functionname": "calc_kappa_elbow",
+            "parameters": {"decide_comps": "all"},
+            "_comment": ""
+        },
+        {
+            "functionname": "calc_rho_elbow",
+            "parameters": {"decide_comps": "all"},
+            "kwargs": {"subset_decide_comps": "unclassified", "rho_elbow_type": "liberal"},
+            "_comment": ""
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "provisionalaccept",
+                "if_false": "provisionalreject",
+                "decide_comps": "unclassified",
+                "op": ">=",
+                "left": "kappa",
+                "right": "kappa_elbow_kundu"
+            }
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "provisionalreject",
+                "if_false": "nochange",
+                "decide_comps": ["provisionalreject", "provisionalaccept"],
+                "op": ">",
+                "left": "rho",
+                "right": "rho_elbow_liberal"
+            }
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "provisionalaccept",
+                "if_false": "nochange",
+                "decide_comps": "provisionalreject",
+                "op": ">",
+                "left": "kappa",
+                "right": "rho"
+            },
+            "kwargs": {
+                "log_extra_info": "If kappa>elbow and kappa>2*rho accept even if rho>elbow",
+                "right_scale": 2,
+                "op2": ">",
+                "left2": "kappa",
+                "right2": "kappa_elbow_kundu",
+                "tag_if_true": "Likely BOLD"
+            }
+        },
+        {
+            "functionname": "dec_left_op_right",
+            "parameters": {
+                "if_true": "rejected",
+                "if_false": "nochange",
+                "decide_comps": "all",
+                "op": "<",
+                "left": "pval nuisance model",
+                "right": 0.05
+            },
+            "kwargs": {
+                "op2": ">",
+                "left2": "R2stat nuisance model",
+                "right2": 0.5,
+                "log_extra_info": "If external regressors fit with p<0.05 and model R2>0.5 of the variance, then reject.",
+                "tag_if_true": "External regressors"
+            }
+        },
+        {
+            "functionname": "dec_variance_lessthan_thresholds",
+            "parameters": {
+                "if_true": "accepted",
+                "if_false": "nochange",
+                "decide_comps": "provisionalreject"
+            },
+            "kwargs": {
+                "var_metric": "variance explained",
+                "single_comp_threshold": 0.1,
+                "all_comp_threshold": 1.0,
+                "tag_if_true": "Low variance"
+            }
+        },
+
+        {
+            "functionname": "manual_classify",
+            "parameters": {"new_classification": "accepted", "decide_comps": "provisionalaccept"},
+            "kwargs": {"tag": "Likely BOLD"}
+        },
+        {
+            "functionname": "manual_classify",
+            "parameters": {
+                "new_classification": "rejected",
+                "decide_comps": ["provisionalreject", "unclassified"]
+            },
+            "kwargs": {"tag": "Unlikely BOLD"}
+        }
+    ]
+}

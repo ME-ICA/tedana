@@ -5,9 +5,11 @@ import os.path as op
 import platform
 import sys
 import warnings
+from typing import Union
 
 import nibabel as nib
 import numpy as np
+import numpy.typing as npt
 from bokeh import __version__ as bokeh_version
 from mapca import __version__ as mapca_version
 from matplotlib import __version__ as matplotlib_version
@@ -18,6 +20,7 @@ from numpy import __version__ as numpy_version
 from pandas import __version__ as pandas_version
 from scipy import __version__ as scipy_version
 from scipy import ndimage
+from scipy.special import lpmv
 from sklearn import __version__ as sklearn_version
 from sklearn.utils import check_array
 from threadpoolctl import __version__ as threadpoolctl_version
@@ -453,6 +456,42 @@ def threshold_map(img, min_cluster_size, threshold=None, mask=None, binarize=Tru
         clust_thresholded = clust_thresholded[mask]
 
     return clust_thresholded
+
+
+def create_legendre_polynomial_basis_set(
+    n_vols: int, dtrank: Union[int, None] = None
+) -> npt.NDArray:
+    """
+    Create Legendre polynomial basis set for detrending time series.
+
+    Parameters
+    ----------
+    n_vols : :obj:`int`
+        The number of time points in the fMRI time series
+    dtrank : :obj:`int`, optional
+        Specifies degree of Legendre polynomial basis function for estimating
+        spatial global signal. Default: None
+        If None, then this is set to 1+floor(n_vols/150)
+
+    Returns
+    -------
+    legendre_arr : (T X R) :obj:`np.ndarray`
+        A time by rank matrix of the first dtrank order Legendre polynomials.
+        These include:
+        Order 0: y = 1
+        Order 1: y = x
+        Order 2: y = 0.5*(3*x^2 - 1)
+        Order 3: y = 0.5*(5*x^3 - 3*x)
+        Order 4: y = 0.125*(35*x^4 - 30*x^2 + 3)
+        Order 5: y = 0.125*(63*x^5 - 70*x^3 + 15x)
+    """
+    if dtrank is None:
+        dtrank = int(1 + np.floor(n_vols / 150))
+
+    bounds = np.linspace(-1, 1, n_vols)
+    legendre_arr = np.column_stack([lpmv(0, vv, bounds) for vv in range(dtrank)])
+
+    return legendre_arr
 
 
 def sec2millisec(arr):
