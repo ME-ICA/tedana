@@ -593,6 +593,16 @@ These include:
 Datasets
 ========
 
+.. tip::
+
+  We have attempted to compile a list of open multi-echo fMRI datasets in
+  `open-multi-echo-data <https://me-ica.github.io/open-multi-echo-data>`_.
+  We try to keep that list up to date, but it may not be complete.
+
+  The list of datasets on that site is limited to (1) human data,
+  (2) data that are accessible without a data usage agreement or registration,
+  and (3) data with at least three echoes.
+
 A number of multi-echo datasets have been made public so far.
 This list is not necessarily up to date, so please check out OpenNeuro to potentially find more.
 
