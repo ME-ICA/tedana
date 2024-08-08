@@ -424,6 +424,9 @@ individual echo level (see above).
 Instead, we recommend that researchers apply the same transforms to all echoes in an ME-EPI series.
 That is, that they calculate head motion correction parameters from one echo
 and apply the resulting transformation to all echoes.
+Based on `Mao et. al. Imaging Neuroscience 2024`_, we recommend using the earliest echo.
+
+.. _Mao et. al. Imaging Neuroscience 2024: https://doi.org/10.1162/imag_a_00151
 
 
 2. Perform slice timing correction and motion correction **before** multi-echo denoising
@@ -514,19 +517,19 @@ Journal articles describing multi-echo methods
 Videos
 ======
 
-* An `educational session from OHBM 2017`_ by Dr. Prantik Kundu about multi-echo denoising
-* A `series of lectures from the OHBM 2017 multi-echo session`_ on multiple facets of multi-echo data analysis
-* | Multi-echo fMRI lecture from the `2018 NIH FMRI Summer Course`_ by Javier Gonzalez-Castillo
-  | `Slides from 2018 NIH FMRI Summer Course`_
-* NIMH Center for Multimodal Neuroimaging `Advantages of multi-echo fMRI`_ (2019) by Dan Handwerker, Javier Gonzalez-Castillo, and Vinai Roopchansingh
+* | Multi-echo fMRI lecture from the `2024 NIH FMRI Summer Course`_ by Dan Handwerker
+  | `Slides from 2024 NIH FMRI Summer Course`_
 * | MRI Together 2022 Conference Presentations by Eneko Uruñuela
   | Tedana: Analysis of echo-time dependent fMRI data (`recording <https://youtu.be/4wsEodepyI8?t=96>`_, `slides  <https://eurunuela.github.io/tedana_MRITogether_2022>`_)
   | A tour of tedana (`tour recording <https://youtu.be/P4cV-sGeltk?t=10>`_, `tour slides <https://eurunuela.github.io/tedana_tutorial_MRITogether_2022/>`_)
+* | NIMH Center for Multimodal Neuroimaging `Advantages of multi-echo fMRI`_ (2019) by Dan Handwerker, Javier Gonzalez-Castillo, and Vinai Roopchansingh
+* | Multi-echo fMRI lecture from the `2018 NIH FMRI Summer Course`_ by Javier Gonzalez-Castillo
+  | `Slides from 2018 NIH FMRI Summer Course`_
 
-.. _educational session from OHBM 2017: https://www.pathlms.com/ohbm/courses/5158/sections/7788/video_presentations/75977
-.. _series of lectures from the OHBM 2017 multi-echo session: https://www.pathlms.com/ohbm/courses/5158/sections/7822
-.. _2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/course/fmrif_course/2018/14_Javier_20180713
-.. _Slides from 2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/COURSE/fmrif_course/2018/content/14_Javier_20180713.pdf
+.. _2024 NIH FMRI Summer Course: https://youtu.be/Uc-1DcgNQzk?feature=shared
+.. _Slides from 2024 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/images/3/3a/12_MultiEcho_Summer_Handwerker2024.pdf
+.. _2018 NIH FMRI Summer Course: https://www.youtube.com/watch?v=83bavs4rlUg
+.. _Slides from 2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/images/1/12/14_Javier_20180713.pdf
 .. _Advantages of multi-echo fMRI: https://youtu.be/G1Ftd2IwF14
 
 
