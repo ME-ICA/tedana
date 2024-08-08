@@ -164,23 +164,24 @@ def carpet_plot(
             )
         )
 
-        mir_denoised_img = io_generator.get_name("ICA accepted mir denoised img")
-        fig, ax = plt.subplots(figsize=(14, 7))
-        plotting.plot_carpet(
-            mir_denoised_img,
-            mask_img,
-            figure=fig,
-            axes=ax,
-            title="High-Kappa Data (Post-MIR)",
-        )
-        fig.tight_layout()
-        fig.savefig(
-            os.path.join(
-                io_generator.out_dir,
-                "figures",
-                f"{io_generator.prefix}carpet_accepted_mir.svg",
+        if io_generator.verbose:
+            mir_denoised_img = io_generator.get_name("ICA accepted mir denoised img")
+            fig, ax = plt.subplots(figsize=(14, 7))
+            plotting.plot_carpet(
+                mir_denoised_img,
+                mask_img,
+                figure=fig,
+                axes=ax,
+                title="High-Kappa Data (Post-MIR)",
             )
-        )
+            fig.tight_layout()
+            fig.savefig(
+                os.path.join(
+                    io_generator.out_dir,
+                    "figures",
+                    f"{io_generator.prefix}carpet_accepted_mir.svg",
+                )
+            )
 
 
 def plot_component(
