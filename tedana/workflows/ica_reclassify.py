@@ -489,7 +489,14 @@ def ica_reclassify_workflow(
 
     if mir:
         io_generator.overwrite = True
-        gsc.minimum_image_regression(data_oc, mmix, mask_denoise, comptable, io_generator)
+        gsc.minimum_image_regression(
+            data_optcom=data_oc,
+            mixing=mmix,
+            mask=mask_denoise,
+            comptable=comptable,
+            classification_tags=selector.classification_tags,
+            io_generator=io_generator,
+        )
         io_generator.overwrite = False
 
     # Write out BIDS-compatible description file
