@@ -186,6 +186,18 @@ def _get_parser():
         default="tedana_orig",
     )
     optional.add_argument(
+        "--external",
+        dest="external_regressors",
+        type=lambda x: is_valid_file(parser, x),
+        help=(
+            "File containing external regressors to compare to ICA component be used in the "
+            "decision tree. For example, to identify components fit head motion time series."
+            "The file must be a TSV file with the same number of rows as the number of volumes in "
+            "the input data. Column labels and statistical tests are defined with external_labels."
+        ),
+        default=None,
+    )
+    optional.add_argument(
         "--ica_method",
         dest="ica_method",
         help=(
@@ -372,6 +384,7 @@ def tedana_workflow(
     fittype="loglin",
     combmode="t2s",
     tree="tedana_orig",
+    external_regressors=None,
     ica_method=DEFAULT_ICA_METHOD,
     n_robust_runs=DEFAULT_N_ROBUST_RUNS,
     tedpca="aic",
@@ -435,10 +448,15 @@ def tedana_workflow(
         process in MEICA. A difference between that tree and the older MEICA was
         identified so the original meica tree is also included. meica will always
         accept the same or more components, but those accepted components are sometimes
-        high variance so the differences can be non-trivial. Minimal is intented
+        high variance so the differences can be non-trivial. Minimal is intended
         to be a simpler process, but it accepts and rejects some distinct components
         compared to the others. Testing to better understand the effects of the
         differences is ongoing. Default is 'tedana_orig'.
+    external_regressors : :obj:`str` or None, optional
+        File containing external regressors to be used in the decision tree.
+        The file must be a TSV file with the same number of rows as the number of volumes in
+        the input data. Each column in the file will be treated as a separate regressor.
+        Default is None.
     ica_method : {'robustica', 'fastica'}, optional
         The applied ICA method. fastica runs FastICA from sklearn
         once with the seed value. 'robustica' will run
@@ -573,6 +591,19 @@ def tedana_workflow(
     LGR.info(f"Loading input data: {[f for f in data]}")
     catd, ref_img = io.load_data(data, n_echos=n_echos)
 
+    # Load external regressors if provided
+    # Decided to do the validation here so that, if there are issues, an error
+    #  will be raised before PCA/ICA
+    if (
+        "external_regressor_config" in set(selector.tree.keys())
+        and selector.tree["external_regressor_config"] is not None
+    ):
+        external_regressors, selector.tree["external_regressor_config"] = (
+            metrics.external.load_validate_external_regressors(
+                external_regressors, selector.tree["external_regressor_config"], catd.shape[2]
+            )
+        )
+
     io_generator = io.OutputGenerator(
         ref_img,
         convention=convention,
@@ -635,6 +666,7 @@ def tedana_workflow(
         # TODO: add affine check
         LGR.info("Using user-defined mask")
         RepLGR.info("A user-defined mask was applied to the data.")
+        mask = utils.reshape_niimg(mask).astype(int)
     elif t2smap and not mask:
         LGR.info("Using user-defined T2* map to generate mask")
         t2s_limited_sec = utils.reshape_niimg(t2smap)
@@ -646,12 +678,13 @@ def tedana_workflow(
         t2s_limited_sec = utils.reshape_niimg(t2smap)
         t2s_limited = utils.sec2millisec(t2s_limited_sec)
         t2s_full = t2s_limited.copy()
-        mask = utils.reshape_niimg(mask)
+        mask = utils.reshape_niimg(mask).astype(int)
         mask[t2s_limited == 0] = 0  # reduce mask based on T2* map
     else:
         LGR.info("Computing EPI mask from first echo")
         first_echo_img = io.new_nii_like(io_generator.reference_img, catd[:, 0, :])
-        mask = compute_epi_mask(first_echo_img)
+        mask = compute_epi_mask(first_echo_img).get_fdata()
+        mask = utils.reshape_niimg(mask).astype(int)
         RepLGR.info(
             "An initial mask was generated from the first echo using "
             "nilearn's compute_epi_mask function."
@@ -697,6 +730,18 @@ def tedana_workflow(
         if verbose:
             io_generator.save_file(utils.millisec2sec(t2s_limited), "limited t2star img")
             io_generator.save_file(s0_limited, "limited s0 img")
+
+        # Calculate RMSE if S0 and T2* are fit
+        rmse_map, rmse_df = decay.rmse_of_fit_decay_ts(
+            data=catd,
+            tes=tes,
+            adaptive_mask=masksum_denoise,
+            t2s=t2s_limited,
+            s0=s0_limited,
+            fitmode="all",
+        )
+        io_generator.save_file(rmse_map, "rmse img")
+        io_generator.add_df_to_file(rmse_df, "confounds tsv")
 
     # optimally combine data
     data_oc = combine.make_optcom(catd, tes, masksum_denoise, t2s=t2s_full, combmode=combmode)
@@ -751,16 +796,26 @@ def tedana_workflow(
             extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
             necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
-            comptable = metrics.collect.generate_metrics(
-                catd,
-                data_oc,
-                mmix,
-                masksum_clf,
-                tes,
-                io_generator,
-                "ICA",
+            comptable, _ = metrics.collect.generate_metrics(
+                data_cat=catd,
+                data_optcom=data_oc,
+                mixing=mmix,
+                adaptive_mask=masksum_clf,
+                tes=tes,
+                io_generator=io_generator,
+                label="ICA",
                 metrics=necessary_metrics,
+                external_regressors=external_regressors,
+                external_regressor_config=selector.tree["external_regressor_config"],
             )
+            LGR.info("Selecting components from ICA results")
+            selector = selection.automatic_selection(
+                comptable,
+                selector,
+                n_echos=n_echos,
+                n_vols=n_vols,
+            )
+            n_likely_bold_comps = selector.n_likely_bold_comps_
             LGR.info("Selecting components from ICA results")
             selector = selection.automatic_selection(
                 comptable,
@@ -781,7 +836,12 @@ def tedana_workflow(
             if keep_restarting:
                 io_generator.overwrite = True
                 # Create a re-initialized selector object if rerunning
+                # Since external_regressor_config might have been expanded to remove
+                # regular expressions immediately after initialization,
+                # store and copy this key
+                tmp_external_regressor_config = selector.tree["external_regressor_config"]
                 selector = ComponentSelector(tree)
+                selector.tree["external_regressor_config"] = tmp_external_regressor_config
 
             RepLGR.disabled = True  # Disable the report to avoid duplicate text
         RepLGR.disabled = False  # Re-enable the report after the while loop is escaped
@@ -791,27 +851,26 @@ def tedana_workflow(
         mixing_file = io_generator.get_name("ICA mixing tsv")
         mmix = pd.read_table(mixing_file).values
 
-        selector = ComponentSelector(tree)
+        # selector = ComponentSelector(tree)
         necessary_metrics = selector.necessary_metrics
         # The figures require some metrics that might not be used by the decision tree.
         extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
         necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
-        comptable = metrics.collect.generate_metrics(
-            catd,
-            data_oc,
-            mmix,
-            masksum_clf,
-            tes,
-            io_generator,
-            "ICA",
+        comptable, _ = metrics.collect.generate_metrics(
+            data_cat=catd,
+            data_optcom=data_oc,
+            mixing=mmix,
+            adaptive_mask=masksum_clf,
+            tes=tes,
+            io_generator=io_generator,
+            label="ICA",
             metrics=necessary_metrics,
+            external_regressors=external_regressors,
+            external_regressor_config=selector.tree["external_regressor_config"],
         )
         selector = selection.automatic_selection(
-            comptable,
-            selector,
-            n_echos=n_echos,
-            n_vols=n_vols,
+            comptable, selector, n_echos=n_echos, n_vols=n_vols
         )
 
     # TODO The ICA mixing matrix should be written out after it is created
@@ -956,6 +1015,11 @@ def tedana_workflow(
 
         dn_ts, hikts, lowkts = io.denoise_ts(data_oc, mmix, mask_denoise, comptable)
 
+        reporting.static_figures.plot_adaptive_mask(
+            optcom=data_oc,
+            base_mask=mask,
+            io_generator=io_generator,
+        )
         reporting.static_figures.carpet_plot(
             optcom_ts=data_oc,
             denoised_ts=dn_ts,
@@ -974,6 +1038,11 @@ def tedana_workflow(
             png_cmap=png_cmap,
         )
         reporting.static_figures.plot_t2star_and_s0(io_generator=io_generator, mask=mask_denoise)
+        if t2smap is None:
+            reporting.static_figures.plot_rmse(
+                io_generator=io_generator,
+                adaptive_mask=masksum_denoise,
+            )
 
         LGR.info("Generating dynamic report")
         reporting.generate_report(io_generator)

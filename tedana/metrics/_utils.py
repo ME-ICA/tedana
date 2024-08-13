@@ -1,14 +1,60 @@
 """Miscellaneous utility functions for metric calculation."""
 
 import logging
+from typing import Dict, List
 
 import numpy as np
+import numpy.typing as npt
 from scipy import stats
 
 LGR = logging.getLogger("GENERAL")
 
 
-def dependency_resolver(dict_, requested_metrics, base_inputs):
+def add_external_dependencies(
+    dependency_config: Dict, external_regressor_config: List[Dict]
+) -> Dict:
+    """
+    Add dependency information when external regressors are inputted.
+
+    Parameters
+    ----------
+    dependency_config: :obj:`dict`
+        A dictionary stored in ./config/metrics.json
+        with information on all the internally defined metrics like kappa and rho
+    external_regressor_config: :obj:`list[dict]`
+        A list of dictionaries with info for fitting external regressors to component time series
+
+    Returns
+    -------
+    dependency_config: :obj:`dict`
+        A dictionary with the internally defined regressors inputted with this parameter
+        and the information for fitting external regressors defined in external_regressor_config
+    """
+    # Add "external regressors" and an existing input
+    dependency_config["inputs"].append("external regressors")
+
+    for config_idx in range(len(external_regressor_config)):
+        model_names = [external_regressor_config[config_idx]["regress_ID"]]
+        if "partial_models" in set(external_regressor_config[config_idx].keys()):
+            partial_keys = external_regressor_config[config_idx]["partial_models"].keys()
+            for key_name in partial_keys:
+                model_names.append(
+                    f"{external_regressor_config[config_idx]['regress_ID']} {key_name} partial"
+                )
+
+        # F is currently the only option so this only names metrics if "statistic"=="f"
+        if external_regressor_config[config_idx]["statistic"].lower() == "f":
+            for model_name in model_names:
+                for stat_type in ["Fstat", "R2stat", "pval"]:
+                    dependency_config["dependencies"][f"{stat_type} {model_name} model"] = [
+                        "external regressors"
+                    ]
+    return dependency_config
+
+
+def dependency_resolver(
+    dict_: Dict, requested_metrics: List[str], base_inputs: List[str]
+) -> List[str]:
     """Identify all necessary metrics based on a list of requested metrics.
 
     This also determines which metrics each requested metric requires to be calculated,
@@ -58,7 +104,7 @@ def dependency_resolver(dict_, requested_metrics, base_inputs):
     return required_metrics
 
 
-def determine_signs(weights, axis=0):
+def determine_signs(weights: npt.NDArray, axis: int = 0) -> npt.NDArray:
     """Determine component-wise optimal signs using voxel-wise parameter estimates.
 
     Parameters
@@ -66,6 +112,9 @@ def determine_signs(weights, axis=0):
     weights : (S x C) array_like
         Parameter estimates for optimally combined data against the mixing
         matrix.
+    axis : int
+        The axis to calculate the weights over.
+        Default is 0
 
     Returns
     -------
@@ -80,7 +129,7 @@ def determine_signs(weights, axis=0):
     return signs.astype(int)
 
 
-def flip_components(*args, signs):
+def flip_components(*args: npt.NDArray, signs: npt.NDArray) -> npt.NDArray:
     """Flip an arbitrary set of input arrays based on a set of signs.
 
     Parameters
@@ -111,7 +160,7 @@ def flip_components(*args, signs):
     return [arg * signs for arg in args]
 
 
-def check_mask(data, mask):
+def check_mask(data: npt.NDArray, mask: npt.NDArray) -> None:
     """Check that no zero-variance voxels remain in masked data.
 
     Parameters
