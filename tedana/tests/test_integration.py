@@ -130,7 +130,7 @@ def test_integration_five_echo(skip_integration):
         data=datalist,
         tes=echo_times,
         ica_method="robustica",
-        n_robust_runs=3,
+        n_robust_runs=4,
         out_dir=out_dir,
         tedpca=0.95,
         fittype="curvefit",
