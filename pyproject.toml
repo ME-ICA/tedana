@@ -26,7 +26,7 @@ dependencies = [
     "matplotlib",
     "nibabel>=2.5.1,<=5.2.1",
     "nilearn>=0.10.3,<=0.10.4",
-    "numpy>=1.16,<=2.0.1",
+    "numpy>=1.16,<=2.1.0",
     "pandas>=2.0,<=2.2.2",
     "pybtex",
     "pybtex-apa-style",
