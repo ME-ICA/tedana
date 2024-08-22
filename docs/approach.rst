@@ -33,6 +33,8 @@ Here are the echo-specific time series for a single voxel in an example
 resting-state scan with 8 echoes.
 This voxel was selected because it is fairly correlated with the checkerboard task,
 but you can see that the signal changes substantially across echoes.
+With a 9.58ms echo time, little :math:`T_{2}^*`  has developed,
+and the response to the task has a lower magnitude.
 
 .. image:: /_static/a01_echo_timeseries.png
 
