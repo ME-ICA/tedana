@@ -205,7 +205,6 @@ def _get_parser():
             "fastica runs FastICA from sklearn once with the seed value. "
             "robustica will run FastICA n_robust_runs times and uses "
             "clustering methods to overcome the randomness of the FastICA algorithm. "
-            "FastICA was the default in tedana version 23 and earlier. "
             "robustica will be slower."
         ),
         choices=["robustica", "fastica"],
@@ -463,9 +462,8 @@ def tedana_workflow(
         once with the seed value. 'robustica' will run
         'FastICA' n_robust_runs times and uses clustering methods to overcome
         the randomness of the FastICA algorithm.
-        FastICA was the default in tedana version 23 and earlier.
         robustica will be slower.
-        Default is 'robustica'
+        Default is 'fastica'
     n_robust_runs : :obj:`int`, optional
         The number of times robustica will run. This is only effective when 'ica_method' is
         set to 'robustica'.
