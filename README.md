@@ -179,6 +179,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     </tr>
     <tr>
       <td align="center" valign="top" width="20%"><a href="https://github.com/mvdoc"><img src="https://avatars.githubusercontent.com/u/6150554?v=4?s=100" width="100px;" alt="Matteo Visconti di Oleggio Castello"/><br /><sub><b>Matteo Visconti di Oleggio Castello</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=mvdoc" title="Code">💻</a> <a href="https://github.com/ME-ICA/tedana/issues?q=author%3Amvdoc" title="Bug reports">🐛</a> <a href="https://github.com/ME-ICA/tedana/commits?author=mvdoc" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="20%"><a href="http://www.mrtrix.org"><img src="https://avatars.githubusercontent.com/u/5637955?v=4?s=100" width="100px;" alt="Robert Smith"/><br /><sub><b>Robert Smith</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=Lestropie" title="Code">💻</a> <a href="#design-Lestropie" title="Design">🎨</a> <a href="#ideas-Lestropie" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/ME-ICA/tedana/pulls?q=is%3Apr+reviewed-by%3ALestropie" title="Reviewed Pull Requests">👀</a></td>
     </tr>
   </tbody>
 </table>
