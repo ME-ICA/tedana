@@ -143,11 +143,16 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
     # Initial carpet plot (default one)
     initial_carpet = f"./figures/{prefix}carpet_optcom.svg"
 
+    # Adaptive mask image
+    adaptive_mask = f"./figures/{prefix}adaptive_mask.svg"
+
     # T2* and S0 images
     t2star_brain = f"./figures/{prefix}t2star_brain.svg"
     t2star_histogram = f"./figures/{prefix}t2star_histogram.svg"
     s0_brain = f"./figures/{prefix}s0_brain.svg"
     s0_histogram = f"./figures/{prefix}s0_histogram.svg"
+    rmse_brain = f"./figures/{prefix}rmse_brain.svg"
+    rmse_timeseries = f"./figures/{prefix}rmse_timeseries.svg"
 
     # Convert bibtex to html
     references, bibliography = _bib2html(references)
@@ -159,16 +164,20 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
     body_template_path = resource_path.joinpath(body_template_name)
     with open(str(body_template_path)) as body_file:
         body_tpl = Template(body_file.read())
+
     body = body_tpl.substitute(
         content=bokeh_id,
         info=info_table,
         about=about,
         prefix=prefix,
         initialCarpet=initial_carpet,
+        adaptiveMask=adaptive_mask,
         t2starBrainPlot=t2star_brain,
         t2starHistogram=t2star_histogram,
         s0BrainPlot=s0_brain,
         s0Histogram=s0_histogram,
+        rmseBrainPlot=rmse_brain,
+        rmseTimeseries=rmse_timeseries,
         references=references,
         javascript=bokeh_js,
         buttons=buttons,

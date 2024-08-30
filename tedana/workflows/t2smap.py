@@ -7,6 +7,7 @@ import os.path as op
 import sys
 
 import numpy as np
+from nilearn.masking import compute_epi_mask
 from scipy import stats
 from threadpoolctl import threadpool_limits
 
@@ -284,11 +285,15 @@ def t2smap_workflow(
         config="auto",
         make_figures=False,
     )
-    n_samp, n_echos, n_vols = catd.shape
+    n_echos = catd.shape[1]
     LGR.debug(f"Resulting data shape: {catd.shape}")
 
     if mask is None:
-        LGR.info("Computing adaptive mask")
+        LGR.info(
+            "Computing initial mask from the first echo using nilearn's compute_epi_mask function."
+        )
+        first_echo_img = io.new_nii_like(io_generator.reference_img, catd[:, 0, :])
+        mask = compute_epi_mask(first_echo_img)
     else:
         LGR.info("Using user-defined mask")
     mask, masksum = utils.make_adaptive_mask(
@@ -299,14 +304,10 @@ def t2smap_workflow(
     )
 
     LGR.info("Computing adaptive T2* map")
-    if fitmode == "all":
-        (t2s_limited, s0_limited, t2s_full, s0_full) = decay.fit_decay(
-            catd, tes, mask, masksum, fittype
-        )
-    else:
-        (t2s_limited, s0_limited, t2s_full, s0_full) = decay.fit_decay_ts(
-            catd, tes, mask, masksum, fittype
-        )
+    decay_function = decay.fit_decay if fitmode == "all" else decay.fit_decay_ts
+    (t2s_limited, s0_limited, t2s_full, s0_full) = decay_function(
+        catd, tes, mask, masksum, fittype
+    )
 
     # set a hard cap for the T2* map/timeseries
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
@@ -314,6 +315,18 @@ def t2smap_workflow(
     cap_t2s_sec = utils.millisec2sec(cap_t2s * 10.0)
     LGR.debug(f"Setting cap on T2* map at {cap_t2s_sec:.5f}s")
     t2s_full[t2s_full > cap_t2s * 10] = cap_t2s
+
+    LGR.info("Calculating model fit quality metrics")
+    rmse_map, rmse_df = decay.rmse_of_fit_decay_ts(
+        data=catd,
+        tes=tes,
+        adaptive_mask=masksum,
+        t2s=t2s_limited,
+        s0=s0_limited,
+        fitmode=fitmode,
+    )
+    io_generator.save_file(rmse_map, "rmse img")
+    io_generator.save_file(rmse_df, "confounds tsv")
 
     LGR.info("Computing optimal combination")
     # optimally combine data

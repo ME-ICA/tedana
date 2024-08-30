@@ -311,6 +311,8 @@ Next, ``tedana`` applies TE-dependent independent component analysis (ICA) in
 order to identify and remove TE-independent (i.e., non-BOLD noise) components.
 The dimensionally reduced optimally combined data are first subjected to ICA in
 order to fit a mixing matrix to the whitened data.
+``tedana`` can use a single interation of FastICA or multiple interations of robustICA,
+with an explanation of those approaches `in our FAQ`_.
 This generates a number of independent timeseries (saved as **desc-ICA_mixing.tsv**),
 as well as parameter estimate maps which show the spatial loading of these components on the
 brain (**desc-ICA_components.nii.gz**).
@@ -352,10 +354,11 @@ The actual decision tree is dependent on the component selection algorithm emplo
 thresholds applied to each of the metrics). `These decision trees are detailed here`_.
 
 Components that are classified as noise are projected out of the optimally combined data,
-yielding a denoised timeseries, which is saved as **desc-optcomDenoised_bold.nii.gz**.
+yielding a denoised timeseries, which is saved as **desc-denoised_bold.nii.gz**.
 
 .. image:: /_static/a15_denoised_data_timeseries.png
 
+.. _in our FAQ: faq.html#tedana-what-is-the-right-number-of-ica-components-what-options-let-me-get-it
 .. _These decision trees are detailed here: included_decision_trees.html
 
 *******************************

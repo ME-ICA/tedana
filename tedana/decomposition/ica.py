@@ -59,7 +59,6 @@ def tedica(
         where `C` is components and `T` is the same as in `data`
     fixed_seed : :obj:`int`
         Random seed from final decomposition.
-
     """
     warnings.filterwarnings(action="ignore", module="scipy", message="^internal gelsd")
     RepLGR.info(
@@ -126,10 +125,11 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
     if fixed_seed == -1:
         fixed_seed = np.random.randint(low=1, high=1000)
 
-    for robust_method in ("DBSCAN", "AgglomerativeClustering"):
-
+    robust_method = "DBSCAN"
+    robust_ica_converged = False
+    while not robust_ica_converged:
         try:
-            rica = RobustICA(
+            robust_ica = RobustICA(
                 n_components=n_components,
                 robust_runs=n_robust_runs,
                 whiten="arbitrary-variance",
@@ -140,13 +140,21 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
                 robust_method=robust_method,
             )
 
-            s, mmix = rica.fit_transform(data)
-            q = rica.evaluate_clustering(
-                rica.S_all, rica.clustering.labels_, rica.signs_, rica.orientation_
+            s, mmix = robust_ica.fit_transform(data)
+            q = robust_ica.evaluate_clustering(
+                robust_ica.S_all,
+                robust_ica.clustering.labels_,
+                robust_ica.signs_,
+                robust_ica.orientation_,
             )
+            robust_ica_converged = True
 
         except Exception:
-            continue
+            if robust_method == "DBSCAN":
+                # if RobustICA failed wtih DBSCAN, run again wtih AgglomerativeClustering
+                robust_method = "AgglomerativeClustering"
+            else:
+                raise ValueError("RobustICA failed to converge")
 
     LGR.info(
         f"The {robust_method} clustering algorithm was used clustering "
@@ -173,7 +181,7 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
         f"The mean Index Quality is {iq}."
     )
 
-    no_outliers = np.count_nonzero(rica.clustering.labels_ == -1)
+    no_outliers = np.count_nonzero(robust_ica.clustering.labels_ == -1)
     if no_outliers:
         LGR.info(
             f"The {robust_method} clustering algorithm detected outliers when clustering "

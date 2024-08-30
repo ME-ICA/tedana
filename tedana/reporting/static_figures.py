@@ -2,6 +2,7 @@
 
 import logging
 import os
+import warnings
 from io import BytesIO
 
 import matplotlib
@@ -223,19 +224,26 @@ def plot_component(
     # Set range to ~1/10th of max positive or negative beta
     imgmax = 0.1 * np.max(np.abs(stat_img.get_fdata()))
 
-    # Save the figure to an in-memory file object
-    display = plotting.plot_stat_map(
-        stat_img,
-        bg_img=None,
-        display_mode="mosaic",
-        cut_coords=5,
-        vmax=imgmax,
-        cmap=png_cmap,
-        symmetric_cbar=True,
-        colorbar=False,
-        draw_cross=False,
-        annotate=False,
-    )
+    # nilearn raises a warning when creating a figure from an image with a non-diagonal affine.
+    # This is not relevant for how we use this function and it flood our screen
+    # output with repeated warnings so suppressing this warning.
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
+        # Save the figure to an in-memory file object
+        display = plotting.plot_stat_map(
+            stat_img,
+            bg_img=None,
+            display_mode="mosaic",
+            cut_coords=5,
+            vmax=imgmax,
+            cmap=png_cmap,
+            symmetric_cbar=True,
+            colorbar=False,
+            draw_cross=False,
+            annotate=False,
+            resampling_interpolation="nearest",
+        )
+
     display.annotate(size=30)
     example_ax = list(display.axes.values())[0]
     nilearn_fig = example_ax.ax.figure
@@ -590,29 +598,202 @@ def plot_t2star_and_s0(
 
     # Plot T2* and S0 maps
     t2star_plot = f"{io_generator.prefix}t2star_brain.svg"
-    plotting.plot_stat_map(
-        t2star_img,
-        bg_img=None,
-        display_mode="mosaic",
-        symmetric_cbar=False,
-        black_bg=True,
-        cmap="gray",
-        vmin=t2s_p02,
-        vmax=t2s_p98,
-        annotate=False,
-        output_file=os.path.join(io_generator.out_dir, "figures", t2star_plot),
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
+        plotting.plot_stat_map(
+            t2star_img,
+            bg_img=None,
+            display_mode="mosaic",
+            symmetric_cbar=False,
+            black_bg=True,
+            cmap="gray",
+            vmin=t2s_p02,
+            vmax=t2s_p98,
+            annotate=False,
+            output_file=os.path.join(io_generator.out_dir, "figures", t2star_plot),
+        )
 
     s0_plot = f"{io_generator.prefix}s0_brain.svg"
-    plotting.plot_stat_map(
-        s0_img,
-        bg_img=None,
-        display_mode="mosaic",
-        symmetric_cbar=False,
-        black_bg=True,
-        cmap="gray",
-        vmin=s0_p02,
-        vmax=s0_p98,
-        annotate=False,
-        output_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
+        plotting.plot_stat_map(
+            s0_img,
+            bg_img=None,
+            display_mode="mosaic",
+            symmetric_cbar=False,
+            black_bg=True,
+            cmap="gray",
+            vmin=s0_p02,
+            vmax=s0_p98,
+            annotate=False,
+            output_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
+        )
+
+
+def plot_rmse(
+    *,
+    io_generator: io.OutputGenerator,
+    adaptive_mask: np.ndarray,
+):
+    """Plot the residual mean squared error map and time series for the monoexponential model fit.
+
+    Parameters
+    ----------
+    io_generator : :obj:`~tedana.io.OutputGenerator`
+        The output generator for this workflow.
+    adaptive_mask : (S,) :obj:`numpy.ndarray`
+        A mask where each value is the number of good echoes.
+        Since the T2* and S0 estimations require a minimum of 2 good echoes,
+        the outputted plots will only include mask values of at least 2.
+    """
+    import pandas as pd
+
+    rmse_img = io_generator.get_name("rmse img")
+    confounds_file = io_generator.get_name("confounds tsv")
+    # Mask that only includes values >=2 (i.e. at least 2 good echoes)
+    mask_img = io.new_nii_like(io_generator.reference_img, (adaptive_mask >= 2).astype(np.int32))
+
+    rmse_data = masking.apply_mask(rmse_img, mask_img)
+    rmse_p02, rmse_p98 = np.percentile(rmse_data, [2, 98])
+
+    # Get repetition time from reference image
+    tr = io_generator.reference_img.header.get_zooms()[-1]
+
+    # Load the confounds file
+    confounds_df = pd.read_table(confounds_file)
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    rmse_arr = confounds_df["rmse_median"].values
+    p25_arr = confounds_df["rmse_percentile25"].values
+    p75_arr = confounds_df["rmse_percentile75"].values
+    p02_arr = confounds_df["rmse_percentile02"].values
+    p98_arr = confounds_df["rmse_percentile98"].values
+    time_arr = np.arange(confounds_df.shape[0]) * tr
+    ax.plot(time_arr, rmse_arr, color="black")
+    ax.fill_between(
+        time_arr,
+        p25_arr,
+        p75_arr,
+        color="blue",
+        alpha=0.2,
     )
+    ax.plot(time_arr, p02_arr, color="black", linestyle="dashed")
+    ax.plot(time_arr, p98_arr, color="black", linestyle="dashed")
+    ax.set_ylabel("RMSE", fontsize=16)
+    ax.set_xlabel(
+        "Time (s)",
+        fontsize=16,
+    )
+    ax.legend(["Median", "25th-75th percentiles", "2nd and 98th percentiles"])
+    ax.set_title("Root mean squared error of T2* and S0 fit across voxels", fontsize=20)
+    rmse_ts_plot = os.path.join(
+        io_generator.out_dir,
+        "figures",
+        f"{io_generator.prefix}rmse_timeseries.svg",
+    )
+    ax.set_xlim(0, time_arr[-2])
+    fig.savefig(rmse_ts_plot)
+    plt.close(fig)
+
+    # Plot RMSE
+    rmse_brain_plot = os.path.join(
+        io_generator.out_dir,
+        "figures",
+        f"{io_generator.prefix}rmse_brain.svg",
+    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
+        plotting.plot_stat_map(
+            rmse_img,
+            bg_img=None,
+            display_mode="mosaic",
+            cut_coords=4,
+            symmetric_cbar=False,
+            black_bg=True,
+            cmap="Reds",
+            vmin=rmse_p02,
+            vmax=rmse_p98,
+            annotate=False,
+            output_file=rmse_brain_plot,
+        )
+
+
+def plot_adaptive_mask(
+    *,
+    optcom: np.ndarray,
+    base_mask: np.ndarray,
+    io_generator: io.OutputGenerator,
+):
+    """Create a figure to show the adaptive mask.
+
+    This figure shows the base mask, the adaptive mask thresholded for denoising (threshold >= 1),
+    and the adaptive mask thresholded for classification (threshold >= 3),
+    overlaid on the mean optimal combination image.
+
+    Parameters
+    ----------
+    optcom : (S x T) :obj:`numpy.ndarray`
+        Optimal combination of components.
+        The mean image over time is used as the underlay for the figure.
+    base_mask : (S,) :obj:`numpy.ndarray`
+        Base mask used in tedana.
+        This is the original mask either provided by the user or generated with `compute_epi_mask`.
+    io_generator : :obj:`~tedana.io.OutputGenerator`
+        The output generator for this workflow.
+    """
+    from matplotlib.lines import Line2D
+    from nilearn import image
+
+    adaptive_mask_img = io_generator.get_name("adaptive mask img")
+    mean_optcom_img = io.new_nii_like(io_generator.reference_img, np.mean(optcom, axis=1))
+
+    # Concatenate the three masks used in tedana to treat as a probabilistic atlas
+    base_mask = io.new_nii_like(io_generator.reference_img, base_mask)
+    mask_denoise = image.math_img("(img >= 1).astype(np.uint8)", img=adaptive_mask_img)
+    mask_clf = image.math_img("(img >= 3).astype(np.uint8)", img=adaptive_mask_img)
+    all_masks = image.concat_imgs((base_mask, mask_denoise, mask_clf))
+    # Set values to 0.5 for probabilistic atlas plotting
+    all_masks = image.math_img("img * 0.5", img=all_masks)
+
+    cmap = plt.cm.gist_rainbow
+    discrete_cmap = cmap.resampled(3)  # colors matching the mask lines in the image
+    color_dict = {
+        "Base": discrete_cmap(0),
+        "Optimal combination": discrete_cmap(0.4),
+        "Classification": discrete_cmap(0.9),
+    }
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
+        ob = plotting.plot_prob_atlas(
+            maps_img=all_masks,
+            bg_img=mean_optcom_img,
+            view_type="contours",
+            threshold=0.2,
+            annotate=False,
+            draw_cross=False,
+            cmap=cmap,
+            display_mode="mosaic",
+            cut_coords=4,
+        )
+
+    legend_elements = []
+    for k, v in color_dict.items():
+        line = Line2D([0], [0], color=v, label=k, markersize=10)
+        legend_elements.append(line)
+
+    fig = ob.frame_axes.get_figure()
+    width = fig.get_size_inches()[0]
+
+    ob.frame_axes.set_zorder(100)
+    ob.frame_axes.legend(
+        handles=legend_elements,
+        facecolor="white",
+        ncols=3,
+        loc="lower center",
+        fancybox=True,
+        shadow=True,
+        fontsize=width,
+    )
+    adaptive_mask_plot = f"{io_generator.prefix}adaptive_mask.svg"
+    fig.savefig(os.path.join(io_generator.out_dir, "figures", adaptive_mask_plot))

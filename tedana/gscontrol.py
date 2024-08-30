@@ -5,7 +5,6 @@ import logging
 import numpy as np
 import pandas as pd
 from scipy import stats
-from scipy.special import lpmv
 
 from tedana import utils
 
@@ -64,8 +63,7 @@ def gscontrol_raw(catd, optcom, n_echos, io_generator, dtrank=4):
         )
 
     # Legendre polynomial basis for denoising
-    bounds = np.linspace(-1, 1, optcom.shape[-1])
-    legendre_arr = np.column_stack([lpmv(0, vv, bounds) for vv in range(dtrank)])
+    legendre_arr = utils.create_legendre_polynomial_basis_set(optcom.shape[-1], dtrank=dtrank)
 
     # compute mean, std, mask local to this function
     # inefficient, but makes this function a bit more modular
@@ -86,7 +84,7 @@ def gscontrol_raw(catd, optcom, n_echos, io_generator, dtrank=4):
     glsig = stats.zscore(glsig, axis=None)
 
     glsig_df = pd.DataFrame(data=glsig.T, columns=["global_signal"])
-    io_generator.save_file(glsig_df, "global signal time series tsv")
+    io_generator.add_df_to_file(glsig_df, "confounds tsv")
     glbase = np.hstack([legendre_arr, glsig.T])
 
     # Project global signal out of optimally combined data

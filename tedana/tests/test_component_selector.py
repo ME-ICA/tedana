@@ -2,6 +2,7 @@
 
 import glob
 import json
+import logging
 import os
 import os.path as op
 
@@ -12,6 +13,8 @@ from tedana.selection import component_selector
 from tedana.utils import get_resource_path
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+LGR = logging.getLogger("GENERAL")
+
 
 # ----------------------------------------------------------------------
 # Functions Used For Tests
@@ -40,6 +43,8 @@ def dicts_to_test(treechoice):
         "missing_function": An undefined decision node function
         "missing_key": A dict missing one of the required keys (report)
         "null_value": A parameter in one node improperly has a null value
+        "external_missing_key": external_regressors_config missing a required key
+        "external_invalid_statistic": external_regressors_config statistic is not "F"
 
     Returns
     -------
@@ -56,6 +61,36 @@ def dicts_to_test(treechoice):
         "necessary_metrics": ["kappa", "rho"],
         "intermediate_classifications": ["random1"],
         "classification_tags": ["Random1"],
+        "external_regressor_config": [
+            {
+                "regress_ID": "nuisance",
+                "info": (
+                    "Fits all external nuisance regressors to "
+                    "a single model using an F statistic"
+                ),
+                "report": (
+                    "External nuisance regressors that fit to "
+                    "components using a linear model were rejected."
+                ),
+                "detrend": True,
+                "statistic": "F",
+                "regressors": ["^(?!signal).*$"],
+                "partial_models": {"Motion": ["^mot_.*$"], "CSF": ["^csf.*$"]},
+            },
+            {
+                "regress_ID": "task",
+                "info": "Fits all task regressors to a single model using an F statistic",
+                "report": (
+                    "Task regressors that fit to components using a linear model and "
+                    "have some T2* weighting were accepted even if they would have "
+                    "been rejected base on other criteriea."
+                ),
+                "detrend": True,
+                "statistic": "F",
+                "regressors": ["^signal.*$"],
+                "extra field": 42,
+            },
+        ],
         "nodes": [
             {
                 "functionname": "dec_left_op_right",
@@ -134,6 +169,11 @@ def dicts_to_test(treechoice):
         tree.pop("report")
     elif treechoice == "null_value":
         tree["nodes"][0]["parameters"]["left"] = None
+    elif treechoice == "external_missing_key":
+        tree["external_regressor_config"][1].pop("statistic")
+    elif treechoice == "external_invalid_statistic":
+        # Will also trigger statistic isn't F and partial models exist
+        tree["external_regressor_config"][0]["statistic"] = "corr"
     else:
         raise Exception(f"{treechoice} is an invalid option for treechoice")
 
@@ -204,11 +244,11 @@ def test_validate_tree_succeeds():
     Tested on all default trees in ./tedana/resources/decision_trees
     Note: If there is a tree in the default trees directory that
     is being developed and not yet valid, it's file name should
-    include 'invalid' as a prefix.
+    begin with 'X'.
     """
 
     default_tree_names = glob.glob(
-        os.path.join(THIS_DIR, "../resources/decision_trees/[!invalid]*.json")
+        os.path.join(f"{THIS_DIR}/../resources/decision_trees/", "[!X]*.json")
     )
 
     for tree_name in default_tree_names:
@@ -218,18 +258,45 @@ def test_validate_tree_succeeds():
 
         # Test a few extra possabilities just using the minimal.json tree
         if "/minimal.json" in tree_name:
-            # Should remove/ignore the "reconstruct_from" key during validation
-            tree["reconstruct_from"] = "testinput"
             # Need to test handling of the tag_if_false kwarg somewhere
             tree["nodes"][1]["kwargs"]["tag_if_false"] = "testing tag"
             assert component_selector.validate_tree(tree)
 
 
-def test_validate_tree_warnings():
+def test_validate_tree_warnings(caplog):
     """Test to make sure validate_tree triggers all warning conditions."""
 
     # A tree that raises all possible warnings in the validator should still be valid
     assert component_selector.validate_tree(dicts_to_test("valid"))
+
+    assert (
+        r"Decision tree includes fields that are not used or logged ['unused_key']" in caplog.text
+    )
+    assert (
+        r"['random1'] in node 0 of the decision tree includes "
+        "a classification tag that was not predefined"
+    ) in caplog.text
+    assert (
+        r"['nochange', 'random2'] in node 1 of the decision tree includes a classification"
+        in caplog.text
+    )
+    assert (
+        r"['random2notpredefined'] in node 1 of the decision tree "
+        "includes a classification tag that was not predefined"
+    ) in caplog.text
+    assert (
+        r"['random2notpredefined'] in node 2 of the decision tree includes "
+        "a classification label that was not predefined"
+    ) in caplog.text
+    assert (
+        r"['Random2_NotPredefined'] in node 2 of the decision tree "
+        "includes a classification tag that was not predefined"
+    ) in caplog.text
+    assert (r"Node 3 includes the 'log_extra_report' parameter.") in caplog.text
+    assert (
+        "External regressor dictionary 1 includes fields "
+        r"that are not used or logged ['extra field']"
+    ) in caplog.text
 
 
 def test_validate_tree_fails():
@@ -240,26 +307,56 @@ def test_validate_tree_fails():
     """
 
     # An empty dict should not be valid
-    with pytest.raises(component_selector.TreeError):
+    with pytest.raises(
+        component_selector.TreeError, match="Decision tree missing required fields"
+    ):
         component_selector.validate_tree({})
     # A tree that is missing a required key should not be valid
-    with pytest.raises(component_selector.TreeError):
+    with pytest.raises(
+        component_selector.TreeError, match=r"Decision tree missing required fields: {'report'}"
+    ):
         component_selector.validate_tree(dicts_to_test("missing_key"))
     # Calling a selection node function that does not exist should not be valid
-    with pytest.raises(component_selector.TreeError):
+    with pytest.raises(
+        component_selector.TreeError,
+        match=r"Node 0 has invalid functionname parameter: not_a_function",
+    ):
         component_selector.validate_tree(dicts_to_test("missing_function"))
 
     # Calling a function with an non-existent required parameter should not be valid
-    with pytest.raises(component_selector.TreeError):
+    with pytest.raises(
+        component_selector.TreeError,
+        match=r"Node 0 has additional, undefined required parameters: {'nonexistent_req_param'}",
+    ):
         component_selector.validate_tree(dicts_to_test("extra_req_param"))
 
     # Calling a function with an non-existent optional parameter should not be valid
-    with pytest.raises(component_selector.TreeError):
+    with pytest.raises(
+        component_selector.TreeError, match=r"Node 0 has additional, undefined optional parameters"
+    ):
         component_selector.validate_tree(dicts_to_test("extra_opt_param"))
 
     # Calling a function missing a required parameter should not be valid
-    with pytest.raises(component_selector.TreeError):
+    with pytest.raises(
+        component_selector.TreeError, match=r"Node 0 is missing required parameter"
+    ):
         component_selector.validate_tree(dicts_to_test("missing_req_param"))
+
+    with pytest.raises(
+        component_selector.TreeError,
+        match=r"External regressor dictionary 1 is missing required fields: {'statistic'}",
+    ):
+        component_selector.validate_tree(dicts_to_test("external_missing_key"))
+
+    with pytest.raises(
+        component_selector.TreeError,
+        match=(
+            "statistic in external_regressor_config 1 is corr. It must be one of the following: "
+            "{'f'}\nExternal regressor dictionary cannot include partial_models "
+            "if statistic is not F"
+        ),
+    ):
+        component_selector.validate_tree(dicts_to_test("external_invalid_statistic"))
 
 
 def test_check_null_fails():

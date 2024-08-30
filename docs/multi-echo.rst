@@ -424,6 +424,9 @@ individual echo level (see above).
 Instead, we recommend that researchers apply the same transforms to all echoes in an ME-EPI series.
 That is, that they calculate head motion correction parameters from one echo
 and apply the resulting transformation to all echoes.
+Based on `Mao et. al. Imaging Neuroscience 2024`_, we recommend using the earliest echo.
+
+.. _Mao et. al. Imaging Neuroscience 2024: https://doi.org/10.1162/imag_a_00151
 
 
 2. Perform slice timing correction and motion correction **before** multi-echo denoising
@@ -514,19 +517,19 @@ Journal articles describing multi-echo methods
 Videos
 ======
 
-* An `educational session from OHBM 2017`_ by Dr. Prantik Kundu about multi-echo denoising
-* A `series of lectures from the OHBM 2017 multi-echo session`_ on multiple facets of multi-echo data analysis
-* | Multi-echo fMRI lecture from the `2018 NIH FMRI Summer Course`_ by Javier Gonzalez-Castillo
-  | `Slides from 2018 NIH FMRI Summer Course`_
-* NIMH Center for Multimodal Neuroimaging `Advantages of multi-echo fMRI`_ (2019) by Dan Handwerker, Javier Gonzalez-Castillo, and Vinai Roopchansingh
+* | Multi-echo fMRI lecture from the `2024 NIH FMRI Summer Course`_ by Dan Handwerker
+  | `Slides from 2024 NIH FMRI Summer Course`_
 * | MRI Together 2022 Conference Presentations by Eneko Uruñuela
   | Tedana: Analysis of echo-time dependent fMRI data (`recording <https://youtu.be/4wsEodepyI8?t=96>`_, `slides  <https://eurunuela.github.io/tedana_MRITogether_2022>`_)
   | A tour of tedana (`tour recording <https://youtu.be/P4cV-sGeltk?t=10>`_, `tour slides <https://eurunuela.github.io/tedana_tutorial_MRITogether_2022/>`_)
+* | NIMH Center for Multimodal Neuroimaging `Advantages of multi-echo fMRI`_ (2019) by Dan Handwerker, Javier Gonzalez-Castillo, and Vinai Roopchansingh
+* | Multi-echo fMRI lecture from the `2018 NIH FMRI Summer Course`_ by Javier Gonzalez-Castillo
+  | `Slides from 2018 NIH FMRI Summer Course`_
 
-.. _educational session from OHBM 2017: https://www.pathlms.com/ohbm/courses/5158/sections/7788/video_presentations/75977
-.. _series of lectures from the OHBM 2017 multi-echo session: https://www.pathlms.com/ohbm/courses/5158/sections/7822
-.. _2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/course/fmrif_course/2018/14_Javier_20180713
-.. _Slides from 2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/COURSE/fmrif_course/2018/content/14_Javier_20180713.pdf
+.. _2024 NIH FMRI Summer Course: https://youtu.be/Uc-1DcgNQzk?feature=shared
+.. _Slides from 2024 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/images/3/3a/12_MultiEcho_Summer_Handwerker2024.pdf
+.. _2018 NIH FMRI Summer Course: https://www.youtube.com/watch?v=83bavs4rlUg
+.. _Slides from 2018 NIH FMRI Summer Course: https://fmrif.nimh.nih.gov/images/1/12/14_Javier_20180713.pdf
 .. _Advantages of multi-echo fMRI: https://youtu.be/G1Ftd2IwF14
 
 
@@ -593,40 +596,44 @@ These include:
 Datasets
 ========
 
+.. tip::
+
+  We have attempted to compile a list of open multi-echo fMRI datasets in
+  `open-multi-echo-data <https://me-ica.github.io/open-multi-echo-data>`_.
+  We try to keep that list up to date, but it may not be complete.
+
+  The list of datasets on that site is limited to (1) human data,
+  (2) data that are accessible without a data usage agreement or registration,
+  and (3) data with at least three echoes.
+
 A number of multi-echo datasets have been made public so far.
 This list is not necessarily up to date, so please check out OpenNeuro to potentially find more.
 
-* `Multi-echo fMRI replication sample of autobiographical memory, prospection and theory of mind reasoning tasks`_
-* `Multi-echo Cambridge`_
-* `Multiband multi-echo imaging of simultaneous oxygenation and flow timeseries for resting state connectivity`_
-* `Multiband multi-echo simultaneous ASL/BOLD for task-induced functional MRI`_
-* `Valence processing differs across stimulus modalities`_
-* `Cambridge Centre for Ageing Neuroscience (Cam-CAN)`_
-* `rt-me-fMRI - A task and resting state dataset for real-time, multi-echo fMRI methods development and validation`_
-* `EuskalIBUR`_
-* `Le Petit Prince`_
-* `Evidence supporting a time-limited hippocampal role in retrieving autobiographical memories`_
-* `Neurocognitive aging data release with behavioral, structural, and multi-echo functional MRI measures`_
-* `Heart rate variability biofeedback training and emotion regulation`_
-* `A mesial-to-lateral dissociation for orthographic processing in the visual cortex (dual-echo)`_
-* `Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice`_
-* `Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice (pilot data)`_
-
-.. _Multi-echo fMRI replication sample of autobiographical memory, prospection and theory of mind reasoning tasks: https://openneuro.org/datasets/ds000210/
-.. _Multi-echo Cambridge: https://openneuro.org/datasets/ds000258
-.. _Multiband multi-echo imaging of simultaneous oxygenation and flow timeseries for resting state connectivity: https://openneuro.org/datasets/ds000216
-.. _Multiband multi-echo simultaneous ASL/BOLD for task-induced functional MRI: https://openneuro.org/datasets/ds000254
-.. _Valence processing differs across stimulus modalities: https://openneuro.org/datasets/ds001491
-.. _Cambridge Centre for Ageing Neuroscience (Cam-CAN): https://camcan-archive.mrc-cbu.cam.ac.uk/dataaccess/
-.. _rt-me-fMRI - A task and resting state dataset for real-time, multi-echo fMRI methods development and validation: https://doi.org/10.34894/R1TNL8
-.. _EuskalIBUR: https://openneuro.org/datasets/ds003192
-.. _Le Petit Prince: https://openneuro.org/datasets/ds003643
-.. _Evidence supporting a time-limited hippocampal role in retrieving autobiographical memories: https://openneuro.org/datasets/ds003511
-.. _Neurocognitive aging data release with behavioral, structural, and multi-echo functional MRI measures: https://openneuro.org/datasets/ds003592
-.. _Heart rate variability biofeedback training and emotion regulation: https://openneuro.org/datasets/ds003823/versions/1.2.3
-.. _A mesial-to-lateral dissociation for orthographic processing in the visual cortex (dual-echo): https://openneuro.org/datasets/ds002155
-.. _Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice: https://openneuro.org/datasets/ds001725
-.. _Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice (pilot data): https://openneuro.org/datasets/ds002154
+* `Multi-echo fMRI replication sample of autobiographical memory, prospection and theory of mind reasoning tasks <https://openneuro.org/datasets/ds000210/>`_
+* `Multi-echo Cambridge <https://openneuro.org/datasets/ds000258>`_
+* `Multiband multi-echo imaging of simultaneous oxygenation and flow timeseries for resting state connectivity <https://openneuro.org/datasets/ds000216>`_
+* `Multiband multi-echo simultaneous ASL/BOLD for task-induced functional MRI <https://openneuro.org/datasets/ds000254>`_
+* `Valence processing differs across stimulus modalities <https://openneuro.org/datasets/ds001491>`_
+* `Cambridge Centre for Ageing Neuroscience (Cam-CAN) <https://camcan-archive.mrc-cbu.cam.ac.uk/dataaccess/>`_
+* `rt-me-fMRI - A task and resting state dataset for real-time, multi-echo fMRI methods development and validation <https://doi.org/10.34894/R1TNL8>`_
+* `EuskalIBUR <https://openneuro.org/datasets/ds003192>`_
+* `Le Petit Prince <https://openneuro.org/datasets/ds003643>`_
+* `Evidence supporting a time-limited hippocampal role in retrieving autobiographical memories <https://openneuro.org/datasets/ds003511>`_
+* `Neurocognitive aging data release with behavioral, structural, and multi-echo functional MRI measures <https://openneuro.org/datasets/ds003592>`_
+* `Heart rate variability biofeedback training and emotion regulation <https://openneuro.org/datasets/ds003823/versions/1.2.3>`_
+* `A mesial-to-lateral dissociation for orthographic processing in the visual cortex (dual-echo) <https://openneuro.org/datasets/ds002155>`_
+* `Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice <https://openneuro.org/datasets/ds001725>`_
+* `Psilocybin exerts distinct effects on resting state networks associated with serotonin and dopamine in mice (pilot data) <https://openneuro.org/datasets/ds002154>`_
+* `MICA-PNI <https://osf.io/mhq3f/>`_
+* `SoCal Kinesia and Incentivization for Parkinson's Disease (SKIP) <https://openneuro.org/datasets/ds005264>`_
+* `Single-echo/multi-echo comparison pilot <https://openneuro.org/datasets/ds005250>`_
+* `Social Reward and Aging: A Preliminary Multi-echo fMRI and Diffusion Dataset <https://openneuro.org/datasets/ds005123>`_
+* `Dense Investigation of Variability of Affect (DIVA) <https://openneuro.org/datasets/ds002278>`_
+* `Multivariate Assessment of Inhibitory Control in Youth: Links with Psychopathology and Brain Function Dataset <https://openneuro.org/datasets/ds004935>`_
+* `Multi-echo simultaneous multislice fMRI dataset: Effect of acquisition parameters on fMRI data <https://openneuro.org/datasets/ds004499>`_
+* `Sequence pilot: multiecho and multiband fMRI <https://openneuro.org/datasets/ds005085>`_
+* `Weill Cornell Medicine Multi-echo (WCM-ME) Dataset <https://openneuro.org/datasets/ds005118>`_
+* `Characterization and Treatment of Adolescent Depression (CAT-D) <https://openneuro.org/datasets/ds004627>`_
 
 .. _spreadsheet of publications:
 

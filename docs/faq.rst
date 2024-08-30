@@ -93,10 +93,78 @@ The TEDICA step may fail to converge if TEDPCA is either too strict
 With updates to the ``tedana`` code, this issue is now rare, but it may happen
 when preprocessing has not been applied to the data, or when improper steps have
 been applied to the data (e.g. rescaling, nuisance regression).
+I can also still happen when everything is seemingly correct
+(see the answer to the next question).
 If you are confident that your data have been preprocessed correctly prior to
 applying tedana, and you encounter this problem, please submit a question to `NeuroStars`_.
 
 .. _NeuroStars: https://neurostars.org
+
+*********************************************************************************
+[tedana] What is the right number of ICA components & what options let me get it?
+*********************************************************************************
+
+Part of the PCA step in ``tedana`` processing involves identifying the number of
+components that contain meaningful signal.
+The PCA components are then used to calculate the same number of ICA components.
+The ``--tedpca`` option includes several options to identify the "correct" number
+of PCA components.
+``kundu`` and ``kundu-stabilize`` use several echo-based criteria to exclude PCA
+components that are unlikely to contain T2* or S0 signal.
+``mdl`` (conservative & fewest components), ``kic``,
+& ``aic`` (liberal & more components) use `MAPCA`_.
+Within the same general method, each uses a cost function to find a minimum
+where more components no longer model meaningful variance.
+For some datasets we see all methods fail and result in too few or too many components.
+There is no consistent number of components or % variance explained to define the correct number.
+The correct number of components will depend on the noise levels of the data.
+For example, smaller voxels will results in more thermal noise and less total variance explained.
+A dataset with more head motion artifacts will have more variance explained,
+since more structured signal is within the head motion artifacts.
+The clear failure cases are extreme. That is getting less than 1/5 the number of components
+compared to time points or having nearly has many components as time point.
+We are working on identifying why this happens and adding get better solutions.
+Our current guess is that most of the above methods assume data are
+independant and identically distributed (IID),
+and signal leakage from in-slice and multi-slice accelleration may violate this assumption.
+
+We have one option that is generally useful and is also a partial solution.
+``--ica_method robustica`` will run `robustica`_.
+This is a method that, for a given number of PCA components,
+will repeated run ICA and identify components that are stable across iterations.
+While running ICA multiple times will slow processing, as a general benefit,
+this means that the ICA results are less sensitive to the initialization parameters,
+computer hardware, and software versions.
+This will result in better stability and replicability of ICA results.
+Additionally, `robustica`_ almost always results in fewer components than initially prescripted,
+since there are fewer stable components across interations than the total number of components.
+This means, even if the initial PCA component estimate is a bit off,
+the number of resulting robust ICA components will represent stable information in the data.
+For a dataset where the PCA comoponent estimation methods are failing,
+one could use ``--tedpca`` with a fixed integer for a constant number of components,
+that is on the high end of typical for a study,
+and then `robustica`_ will reduce the number of components to only find stable information.
+That said, if the fixed PCA component number is too high,
+then the method will have too many unstable components,
+and if the fixed PCA component number is too low, then there will be even fewer ICA components.
+The number of ICA components is more consisent,
+but is still sensitive to the intial number of PCA components.
+For example, for a single dataset 60 PCA components might result in 46 stable ICA components,
+while 55 PCA components might results in 43 stable ICA components.
+We are still testing how these interact and give better recommendations and even more stable results.
+At that point, ``--ica_method robustica`` might become the default setting,
+While the TEDANA developers expect that ``--ica_method robustica`` may become
+the default configuration in future TEDANA versions,
+it is first being released to the public as a non-default option
+in hope of gaining insight into its behaviour
+across a broader range of multi-echo fMRI data.
+If users are having trouble with PCA component estimation failing on a dataset,
+we recommend using RobustICA;
+we also invite user feedback on its behaviour and efficacy.
+
+
+.. _MAPCA: https://github.com/ME-ICA/mapca
+.. _robustica: https://github.com/CRG-CNAG/robustica
 
 .. _manual classification:
 

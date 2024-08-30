@@ -1,7 +1,9 @@
 """Metrics evaluating component TE-dependence or -independence."""
 
 import logging
+import typing
 
+import nibabel as nb
 import numpy as np
 from scipy import stats
 
@@ -12,7 +14,11 @@ LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
-def calculate_weights(data_optcom, mixing):
+def calculate_weights(
+    *,
+    data_optcom: np.ndarray,
+    mixing: np.ndarray,
+) -> np.ndarray:
     """Calculate standardized parameter estimates between data and mixing matrix.
 
     Parameters
@@ -35,19 +41,23 @@ def calculate_weights(data_optcom, mixing):
     return weights
 
 
-def calculate_betas(data, mixing):
+def calculate_betas(
+    *,
+    data: np.ndarray,
+    mixing: np.ndarray,
+) -> np.ndarray:
     """Calculate unstandardized parameter estimates between data and mixing matrix.
 
     Parameters
     ----------
-    data : (M x [E] x T) array_like
+    data : (M [x E] x T) array_like
         Data to calculate betas for
     mixing : (T x C) array_like
         Mixing matrix
 
     Returns
     -------
-    betas : (M x [E] x C) array_like
+    betas : (M [x E] x C) array_like
         Unstandardized parameter estimates
     """
     if len(data.shape) == 2:
@@ -66,7 +76,11 @@ def calculate_betas(data, mixing):
         return betas
 
 
-def calculate_psc(data_optcom, optcom_betas):
+def calculate_psc(
+    *,
+    data_optcom: np.ndarray,
+    optcom_betas: np.ndarray,
+) -> np.ndarray:
     """Calculate percent signal change maps for components against optimally-combined data.
 
     Parameters
@@ -87,7 +101,11 @@ def calculate_psc(data_optcom, optcom_betas):
     return psc
 
 
-def calculate_z_maps(weights, z_max=8):
+def calculate_z_maps(
+    *,
+    weights: np.ndarray,
+    z_max: float = 8,
+) -> np.ndarray:
     """Calculate component-wise z-statistic maps.
 
     This is done by z-scoring standardized parameter estimate maps and cropping extreme values.
@@ -111,7 +129,15 @@ def calculate_z_maps(weights, z_max=8):
     return z_maps
 
 
-def calculate_f_maps(data_cat, z_maps, mixing, adaptive_mask, tes, f_max=500):
+def calculate_f_maps(
+    *,
+    data_cat: np.ndarray,
+    z_maps: np.ndarray,
+    mixing: np.ndarray,
+    adaptive_mask: np.ndarray,
+    tes: np.ndarray,
+    f_max: float = 500,
+) -> typing.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Calculate pseudo-F-statistic maps for TE-dependence and -independence models.
 
     Parameters
@@ -196,7 +222,14 @@ def calculate_f_maps(data_cat, z_maps, mixing, adaptive_mask, tes, f_max=500):
     return f_t2_maps, f_s0_maps, pred_t2_maps, pred_s0_maps
 
 
-def threshold_map(maps, mask, ref_img, threshold, csize=None):
+def threshold_map(
+    *,
+    maps: np.ndarray,
+    mask: np.ndarray,
+    ref_img: nb.Nifti1Image,
+    threshold: float,
+    csize: typing.Union[int, None] = None,
+) -> np.ndarray:
     """Perform cluster-extent thresholding.
 
     Parameters
@@ -234,7 +267,14 @@ def threshold_map(maps, mask, ref_img, threshold, csize=None):
     return maps_thresh
 
 
-def threshold_to_match(maps, n_sig_voxels, mask, ref_img, csize=None):
+def threshold_to_match(
+    *,
+    maps: np.ndarray,
+    n_sig_voxels: np.ndarray,
+    mask: np.ndarray,
+    ref_img: nb.Nifti1Image,
+    csize: typing.Union[int, None] = None,
+) -> np.ndarray:
     """Cluster-extent threshold a map to target number of significant voxels.
 
     Resulting maps have roughly the requested number of significant voxels, after cluster-extent
@@ -306,7 +346,12 @@ def threshold_to_match(maps, n_sig_voxels, mask, ref_img, csize=None):
     return clmaps
 
 
-def calculate_dependence_metrics(f_t2_maps, f_s0_maps, z_maps):
+def calculate_dependence_metrics(
+    *,
+    f_t2_maps: np.ndarray,
+    f_s0_maps: np.ndarray,
+    z_maps: np.ndarray,
+) -> typing.Tuple[np.ndarray, np.ndarray]:
     """Calculate Kappa and Rho metrics from F-statistic maps.
 
     Just a weighted average over voxels.
@@ -341,7 +386,10 @@ def calculate_dependence_metrics(f_t2_maps, f_s0_maps, z_maps):
     return kappas, rhos
 
 
-def calculate_varex(optcom_betas):
+def calculate_varex(
+    *,
+    optcom_betas: np.ndarray,
+) -> np.ndarray:
     """Calculate unnormalized(?) variance explained from unstandardized parameter estimate maps.
 
     Parameters
@@ -360,7 +408,10 @@ def calculate_varex(optcom_betas):
     return varex
 
 
-def calculate_varex_norm(weights):
+def calculate_varex_norm(
+    *,
+    weights: np.ndarray,
+) -> np.ndarray:
     """Calculate normalized variance explained from standardized parameter estimate maps.
 
     Parameters
@@ -378,7 +429,12 @@ def calculate_varex_norm(weights):
     return varex_norm
 
 
-def compute_dice(clmaps1, clmaps2, axis=0):
+def compute_dice(
+    *,
+    clmaps1: np.ndarray,
+    clmaps2: np.ndarray,
+    axis: typing.Union[int, None] = 0,
+) -> np.ndarray:
     """Compute the Dice similarity index between two thresholded and binarized maps.
 
     NaNs are converted automatically to zeroes.
@@ -402,7 +458,13 @@ def compute_dice(clmaps1, clmaps2, axis=0):
     return dice_values
 
 
-def compute_signal_minus_noise_z(z_maps, z_clmaps, f_t2_maps, z_thresh=1.95):
+def compute_signal_minus_noise_z(
+    *,
+    z_maps: np.ndarray,
+    z_clmaps: np.ndarray,
+    f_t2_maps: np.ndarray,
+    z_thresh: float = 1.95,
+) -> typing.Tuple[np.ndarray, np.ndarray]:
     """Compare signal and noise z-statistic distributions with a two-sample t-test.
 
     Divide voxel-level thresholded F-statistic maps into distributions of
@@ -464,7 +526,13 @@ def compute_signal_minus_noise_z(z_maps, z_clmaps, f_t2_maps, z_thresh=1.95):
     return signal_minus_noise_z, signal_minus_noise_p
 
 
-def compute_signal_minus_noise_t(z_maps, z_clmaps, f_t2_maps, z_thresh=1.95):
+def compute_signal_minus_noise_t(
+    *,
+    z_maps: np.ndarray,
+    z_clmaps: np.ndarray,
+    f_t2_maps: np.ndarray,
+    z_thresh: float = 1.95,
+) -> typing.Tuple[np.ndarray, np.ndarray]:
     """Compare signal and noise t-statistic distributions with a two-sample t-test.
 
     Divide voxel-level thresholded F-statistic maps into distributions of
@@ -511,7 +579,10 @@ def compute_signal_minus_noise_t(z_maps, z_clmaps, f_t2_maps, z_thresh=1.95):
     return signal_minus_noise_t, signal_minus_noise_p
 
 
-def compute_countsignal(stat_cl_maps):
+def compute_countsignal(
+    *,
+    stat_cl_maps: np.ndarray,
+) -> np.ndarray:
     """Count the number of significant voxels in a set of cluster-extent thresholded maps.
 
     Parameters
@@ -528,7 +599,12 @@ def compute_countsignal(stat_cl_maps):
     return countsignal
 
 
-def compute_countnoise(stat_maps, stat_cl_maps, stat_thresh=1.95):
+def compute_countnoise(
+    *,
+    stat_maps: np.ndarray,
+    stat_cl_maps: np.ndarray,
+    stat_thresh: float = 1.95,
+) -> np.ndarray:
     """Count the number of significant voxels from non-significant clusters.
 
     This is done after application of a cluster-defining threshold, but compared against results
@@ -556,7 +632,14 @@ def compute_countnoise(stat_maps, stat_cl_maps, stat_thresh=1.95):
     return countnoise
 
 
-def generate_decision_table_score(kappa, dice_ft2, signal_minus_noise_t, countnoise, countsig_ft2):
+def generate_decision_table_score(
+    *,
+    kappa: np.ndarray,
+    dice_ft2: np.ndarray,
+    signal_minus_noise_t: np.ndarray,
+    countnoise: np.ndarray,
+    countsig_ft2: np.ndarray,
+) -> np.ndarray:
     """Generate a five-metric decision table.
 
     Metrics are ranked in either descending or ascending order if they measure TE-dependence or

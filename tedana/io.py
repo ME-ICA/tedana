@@ -155,6 +155,14 @@ class OutputGenerator:
             LGR.info(f"Generating figures directory: {self.figures_dir}")
             os.mkdir(self.figures_dir)
 
+        # Remove files that are appended to instead of overwritten.
+        if overwrite:
+            files_to_remove = ["confounds tsv"]
+            for file_ in files_to_remove:
+                filepath = self.get_name(file_)
+                if op.exists(filepath):
+                    os.remove(filepath)
+
     def _determine_extension(self, description, name):
         """Infer the extension for a file based on its description.
 
@@ -345,6 +353,31 @@ class OutputGenerator:
         # Replace blanks with numpy NaN
         deblanked = data.replace("", np.nan)
         deblanked.to_csv(name, sep="\t", lineterminator="\n", na_rep="n/a", index=False)
+
+    def add_df_to_file(self, data, description, **kwargs):
+        """Add a DataFrame to a tsv file, which may or may not exist.
+
+        Parameters
+        ----------
+        data : dict or img_like or pandas.DataFrame
+            Data to save to file.
+        description : str
+            Description of the data, used to determine the appropriate filename from
+            ``self.config``.
+
+        Returns
+        -------
+        name : str
+            The full file path of the saved file.
+        """
+        name = self.get_name(description, **kwargs)
+        if op.isfile(name):
+            old_data = pd.read_table(name)
+            data = pd.concat([old_data, data], axis=1, ignore_index=False)
+
+        self.save_tsv(data, name)
+
+        return name
 
     def save_self(self):
         """Save the registry to a json file.
