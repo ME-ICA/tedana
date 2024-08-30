@@ -334,6 +334,18 @@
         "bug",
         "doc"
       ]
+    },
+    {
+      "login": "Lestropie",
+      "name": "Robert Smith",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5637955?v=4",
+      "profile": "http://www.mrtrix.org",
+      "contributions": [
+        "code",
+        "design",
+        "ideas",
+        "review"
+      ]
     }
   ],
   "contributorsPerLine": 5,
