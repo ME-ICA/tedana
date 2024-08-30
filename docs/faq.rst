@@ -144,7 +144,7 @@ For a dataset where the PCA comoponent estimation methods are failing,
 one could use ``--tedpca`` with a fixed integer for a constant number of components,
 that is on the high end of typical for a study,
 and then `robustica`_ will reduce the number of components to only find stable information.
-That said, of the fixed PCA component number is too high,
+That said, if the fixed PCA component number is too high,
 then the method will have too many unstable components,
 and if the fixed PCA component number is too low, then there will be even fewer ICA components.
 The number of ICA components is more consisent,
