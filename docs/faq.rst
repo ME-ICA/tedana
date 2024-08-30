@@ -153,9 +153,14 @@ For example, for a single dataset 60 PCA components might result in 46 stable IC
 while 55 PCA components might results in 43 stable ICA components.
 We are still testing how these interact and give better recommendations and even more stable results.
 At that point, ``--ica_method robustica`` might become the default setting,
-but we still wanted to release this option to let users access it in its current form.
+While the TEDANA developers expect that ``--ica_method robustica`` may become
+the default configuration in future TEDANA versions,
+it is first being released to the public as a non-default option
+in hope of gaining insight into its behaviour
+across a broader range of multi-echo fMRI data.
 If users are having trouble with PCA component estimation failing on a dataset,
-we recommend using robustica.
+we recommend using RobustICA;
+we also invite user feedback on its behaviour and efficacy.
 
 
 .. _MAPCA: https://github.com/ME-ICA/mapca
