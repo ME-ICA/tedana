@@ -379,7 +379,7 @@ presented at MRITogether 2022 for a hands-on tutorial.
 Removal of spatially diffuse noise (optional)
 *********************************************
 
-:func:`tedana.gscontrol.gscontrol_raw`, :func:`tedana.gscontrol.gscontrol_mmix`
+:func:`tedana.gscontrol.gscontrol_raw`, :func:`tedana.gscontrol.minimum_image_regression`
 
 Due to the constraints of ICA, TEDICA is able to identify and remove spatially
 localized noise components, but it cannot identify components that are spread

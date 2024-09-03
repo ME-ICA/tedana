@@ -60,20 +60,20 @@ def calculate_betas(
     betas : (M [x E] x C) array_like
         Unstandardized parameter estimates
     """
-    if len(data.shape) == 2:
+    if data.ndim == 2:
         data_optcom = data
         assert data_optcom.shape[1] == mixing.shape[0]
         # mean-center optimally-combined data
         data_optcom_dm = data_optcom - data_optcom.mean(axis=-1, keepdims=True)
-        # betas are the result of a normal OLS fit of the mixing matrix
-        # against the mean-center data
+        # betas are from a normal OLS fit of the mixing matrix against the mean-centered data
         betas = get_coeffs(data_optcom_dm, mixing)
-        return betas
+
     else:
         betas = np.zeros([data.shape[0], data.shape[1], mixing.shape[1]])
         for n_echo in range(data.shape[1]):
             betas[:, n_echo, :] = get_coeffs(data[:, n_echo, :], mixing)
-        return betas
+
+    return betas
 
 
 def calculate_psc(
