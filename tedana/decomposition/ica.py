@@ -41,9 +41,9 @@ def tedica(
         Number of components retained from PCA decomposition.
     fixed_seed : :obj:`int`
         Seed for ensuring reproducibility of ICA results.
-    ica_method : :obj: `str'
+    ica_method : :obj: `str`
         slected ICA method, can be fastica or robutica.
-    n_robust_runs : :obj: `int'
+    n_robust_runs : :obj: `int`
         selected number of robust runs when robustica is used. Default is 30.
     maxit : :obj:`int`, optional
         Maximum number of iterations for ICA. Default is 500.
