@@ -346,6 +346,17 @@
         "ideas",
         "review"
       ]
+    },
+    {
+      "login": "BahmanTahayori",
+      "name": "Bahman ",
+      "avatar_url": "https://avatars.githubusercontent.com/u/19523962?v=4",
+      "profile": "https://github.com/BahmanTahayori",
+      "contributions": [
+        "code",
+        "design",
+        "ideas"
+      ]
     }
   ],
   "contributorsPerLine": 5,
