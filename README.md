@@ -179,6 +179,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     </tr>
     <tr>
       <td align="center" valign="top" width="20%"><a href="https://github.com/mvdoc"><img src="https://avatars.githubusercontent.com/u/6150554?v=4?s=100" width="100px;" alt="Matteo Visconti di Oleggio Castello"/><br /><sub><b>Matteo Visconti di Oleggio Castello</b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=mvdoc" title="Code">💻</a> <a href="https://github.com/ME-ICA/tedana/issues?q=author%3Amvdoc" title="Bug reports">🐛</a> <a href="https://github.com/ME-ICA/tedana/commits?author=mvdoc" title="Documentation">📖</a></td>
+      <td align="center" valign="top" width="20%"><a href="https://github.com/BahmanTahayori"><img src="https://avatars.githubusercontent.com/u/19523962?v=4?s=100" width="100px;" alt="Bahman "/><br /><sub><b>Bahman </b></sub></a><br /><a href="https://github.com/ME-ICA/tedana/commits?author=BahmanTahayori" title="Code">💻</a> <a href="#design-BahmanTahayori" title="Design">🎨</a> <a href="#ideas-BahmanTahayori" title="Ideas, Planning, & Feedback">🤔</a></td>
     </tr>
   </tbody>
 </table>
