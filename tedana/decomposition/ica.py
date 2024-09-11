@@ -157,7 +157,7 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
                 raise ValueError("RobustICA failed to converge")
 
     LGR.info(
-        f"The {robust_method} clustering algorithm was used clustering "
+        f"The {robust_method} clustering algorithm was used for clustering "
         f"components across different runs"
     )
 
@@ -198,7 +198,7 @@ def f_ica(data, n_components, fixed_seed, maxit, maxrestart):
 
     Parameters
     ----------
-    data : (S x T) :obj:`numpy.ndarray`
+    data : :obj:`numpy.ndarray`
         Dimensionally reduced optimally combined functional data, where `S` is
         samples and `T` is time
     n_components : :obj:`int`
