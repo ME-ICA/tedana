@@ -138,9 +138,9 @@ def _get_parser():
         choices=["loglin", "curvefit"],
         help=(
             "Desired T2*/S0 fitting method. "
-            '"loglin" means that a linear model is fit "
+            '"loglin" means that a linear model is fit '
             "to the log of the data. "
-            '"curvefit" means that a more computationally "
+            '"curvefit" means that a more computationally '
             "demanding monoexponential model is fit "
             "to the raw data. "
         ),
