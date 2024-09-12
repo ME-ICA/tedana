@@ -138,9 +138,9 @@ def _get_parser():
         choices=["loglin", "curvefit"],
         help=(
             "Desired T2*/S0 fitting method. "
-            '"loglin" means that a linear model is fit '
+            '"loglin" means that a linear model is fit "
             "to the log of the data. "
-            '"curvefit" means that a more computationally '
+            '"curvefit" means that a more computationally "
             "demanding monoexponential model is fit "
             "to the raw data. "
         ),
@@ -167,7 +167,7 @@ def _get_parser():
             "were distributed with MEICA. "
             "Users may also provide a float from 0 to 1, "
             "in which case components will be selected based on the "
-            "cumulative variance explained or an integer greater than 1"
+            "cumulative variance explained or an integer greater than 1 "
             "in which case the specificed number of components will be "
             "selected."
         ),
@@ -180,7 +180,7 @@ def _get_parser():
             "Decision tree to use. You may use a "
             "packaged tree (tedana_orig, meica, minimal) or supply a JSON "
             "file which matches the decision tree file "
-            "specification. Minimal still being tested with more"
+            "specification. Minimal still being tested with more "
             "details in docs"
         ),
         default="tedana_orig",
@@ -191,7 +191,7 @@ def _get_parser():
         type=lambda x: is_valid_file(parser, x),
         help=(
             "File containing external regressors to compare to ICA component be used in the "
-            "decision tree. For example, to identify components fit head motion time series."
+            "decision tree. For example, to identify components fit head motion time series. "
             "The file must be a TSV file with the same number of rows as the number of volumes in "
             "the input data. Column labels and statistical tests are defined with external_labels."
         ),
@@ -220,7 +220,7 @@ def _get_parser():
             "Value used for random initialization of ICA "
             "algorithm. Set to an integer value for "
             "reproducible ICA results. Set to -1 for "
-            "varying results across ICA calls. This"
+            "varying results across ICA calls. This "
             "applies to both fastica and robustica methods."
         ),
         default=DEFAULT_SEED,
@@ -276,7 +276,7 @@ def _get_parser():
             "Perform additional denoising to remove "
             "spatially diffuse noise. "
             "This argument can be single value or a space "
-            "delimited list"
+            "delimited list."
         ),
         choices=["mir", "gsr"],
         default="",
