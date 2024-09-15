@@ -112,8 +112,8 @@ When using tedana, please include the following citations:
       }
       </script>
       <p>
-      <span id="tedana_citation">tedana</span>
-      This link is for the most recent version of the code and that page has links to DOIs
+      <span id="tedana_citation"></span>
+      1. This link is for the most recent version of the code and that page has links to DOIs
       for older versions. To support reproducibility, please cite the version you used:
       <a id="tedana_doi_url" href="https://doi.org/10.5281/zenodo.1250561">https://doi.org/10.5281/zenodo.1250561</a>
       <img src onerror='fillCitation()' alt=""/>
@@ -156,9 +156,9 @@ You can also learn more about `why citing software is important`_.
 Posters
 *******
 
-.. image:: /_static/tedana-ohbm2019-poster.png
+.. image:: /_static/tedana-ohbm2024-poster.png
 
-.. image:: /_static/tedana-ohbm2018-poster.png
+.. image:: /_static/tedana-ohbm2023-poster.png
 
 
 *******************

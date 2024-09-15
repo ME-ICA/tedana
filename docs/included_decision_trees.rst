@@ -2,7 +2,7 @@
 Included Decision Trees
 #######################
 
-Three decision trees are currently distributed with ``tedana``.
+Five decision trees are currently distributed with ``tedana``.
 
 ``meica`` is the decision tree that is based on MEICA version 2.5 and
 ``tedana_orig`` is very similar and has been included with ``tedana``
@@ -18,7 +18,18 @@ and comprehensible, but it has not yet be extensively validated and
 parts of the tree may change in response to additional tests on a
 wider range of data sets.
 
-Flowcharts describing the steps in both trees are below.
+With the addition of options to fit external regressors to components,
+there are two demonstration decision trees that implement this new functionality.
+While these might work well, since they have not yet been validated on data, they
+are labeled ``demo``.
+``decision_tree_demo_external_regressors_single_model``
+demonstrates fitting all nuisance regressors to a single model.
+``decision_tree_demo_external_regressors_motion_task_models``
+demonstrates fitting nuisance regressors to a model,
+partial tests and tagging for components that fit Motion or CSF regressors,
+and retention of some components that fit task regressors.
+
+Flowcharts describing the steps in these trees are below.
 As documented more in :doc:`building_decision_trees`, the input to each tree
 is a table with metrics, like :math:`\kappa` or :math:`\rho`, for each
 component. Each step or node in the decision tree either calculates
@@ -122,3 +133,45 @@ is rejected (node 13)
 `LaTeX file to generate the minimal decision tree flow chart`_
 
 .. _LaTeX file to generate the minimal decision tree flow chart: _static/decision_tree_minimal.tex
+
+*********************************************
+Demo external regressors single model
+*********************************************
+
+This tree is similar to the minimal tree except there is an added node (node 11)
+where components are rejected if they significantly fit a model of external nuisance regressor
+time series and the fit models a substantial amount of the total variance.
+Unlike the minimal tree, components that would be accepted based on :math:`\kappa` & :math:`\rho`
+criteria can be rejected based on a fit to external regressors.
+This is called a "demo" tree because it is demonstrating how fits to external regressors can
+be used. It might be a good decision tree to use,
+but results have not yet been tested and validated.
+
+.. image:: _static/decision_tree_demo_external_regressors_single_model.png
+    :width: 400
+    :alt: External Decision Tree With Motion and Task Models Flow Chart
+
+****************************************************
+Demo external regressors, motion task models
+****************************************************
+
+This is based on the minimal tree, but multiple nodes were added to demonstrate how to use
+external regressors for fits.
+Unlike the minimal tree, components that would be accepted based on :math:`\kappa` & :math:`\rho`
+criteria can be rejected based on a fit to external regressors.
+Components are rejected if they significantly fit a model of external nuisance regressor
+time series and the fit models a substantial amount of the total variance (node 10).
+For rejected components, if they also fit a partial model of motion external regressors (node 11),
+or CSF external regressors (node 12), the outputs are also tagged to say they fit those groups
+of regressors.
+Additionally, if a rejected component fits the task design and has
+:math:`\kappa` > :math:`\kappa` elbow, then it is accepted under the conservative assumption to
+retain task fitting components with some :math:`T_2^*`` signal even if those components also
+contain potentially rejection-worthy noise (node 13).
+This is called a "demo" tree because it is demonstrating how fits to external regressors can
+be used. It might be a good decision tree to use,
+but results have not yet been tested and validated.
+
+.. image:: _static/decision_tree_demo_external_regressors_motion_task_models.png
+    :width: 400
+    :alt: External Decision Tree With Motion and Task Models Flow Chart

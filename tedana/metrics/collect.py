@@ -2,13 +2,20 @@
 
 import logging
 import os.path as op
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 
 from tedana import io, utils
-from tedana.metrics import dependence
-from tedana.metrics._utils import dependency_resolver, determine_signs, flip_components
+from tedana.metrics import dependence, external
+from tedana.metrics._utils import (
+    add_external_dependencies,
+    dependency_resolver,
+    determine_signs,
+    flip_components,
+)
 from tedana.stats import getfbounds
 
 LGR = logging.getLogger("GENERAL")
@@ -16,15 +23,18 @@ RepLGR = logging.getLogger("REPORT")
 
 
 def generate_metrics(
-    data_cat,
-    data_optcom,
-    mixing,
-    adaptive_mask,
-    tes,
-    io_generator,
-    label,
-    metrics=None,
-):
+    *,
+    data_cat: npt.NDArray,
+    data_optcom: npt.NDArray,
+    mixing: npt.NDArray,
+    adaptive_mask: npt.NDArray,
+    tes: Union[List[int], List[float], npt.NDArray],
+    io_generator: io.OutputGenerator,
+    label: str,
+    external_regressors: Union[pd.DataFrame, None] = None,
+    external_regressor_config: Union[List[Dict], None] = None,
+    metrics: Union[List[str], None] = None,
+) -> Tuple[pd.DataFrame, Dict]:
     """Fit TE-dependence and -independence models to components.
 
     Parameters
@@ -34,12 +44,12 @@ def generate_metrics(
     data_optcom : (S x T) array_like
         Optimally combined data
     mixing : (T x C) array_like
-        Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `data_cat`
+        Mixing matrix for converting input data to component space,
+        where `C` is components and `T` is the same as in `data_cat`
     adaptive_mask : (S) array_like
         Array where each value indicates the number of echoes with good signal
-        for that voxel. This mask may be thresholded; for example, with values
-        less than 3 set to 0.
+        for that voxel.
+        This mask may be thresholded; for example, with values less than 3 set to 0.
         For more information on thresholding, see `make_adaptive_mask`.
     tes : list
         List of echo times associated with `data_cat`, in milliseconds
@@ -47,14 +57,23 @@ def generate_metrics(
         The output generator object for this workflow
     label : str in ['ICA', 'PCA']
         The label for this metric generation type
+    external_regressors : None or :obj:`pandas.DataFrame`, optional
+        External regressors (e.g., motion parameters, physiological noise)
+        to correlate with ICA components.
+        If None, no external regressor metrics will be calculated.
+    external_regressor_config : :obj:`list[dic]t`
+        A list of dictionaries defining how to fit external regressors to component time series
     metrics : list
         List of metrics to return
 
     Returns
     -------
     comptable : (C x X) :obj:`pandas.DataFrame`
-        Component metric table. One row for each component, with a column for
-        each metric. The index is the component number.
+        Component metric table. One row for each component, with a column for each metric.
+        The index is the component number.
+    external_regressor_config : :obj:`dict`
+        Info describing the external regressors and method used for fitting and statistical tests
+        (or None if none were inputed)
     """
     # Load metric dependency tree from json file
     dependency_config = op.join(utils.get_resource_path(), "config", "metrics.json")
@@ -62,6 +81,16 @@ def generate_metrics(
 
     if metrics is None:
         metrics = ["map weight"]
+
+    if external_regressors is not None:
+        if external_regressor_config is None:
+            raise ValueError(
+                "If external_regressors is defined, then "
+                "external_regressor_config also needs to be defined."
+            )
+        dependency_config = add_external_dependencies(dependency_config, external_regressor_config)
+        dependency_config["inputs"].append("external regressors")
+
     RepLGR.info(f"The following metrics were calculated: {', '.join(metrics)}.")
 
     if not (data_cat.shape[0] == data_optcom.shape[0] == adaptive_mask.shape[0]):
@@ -73,7 +102,7 @@ def generate_metrics(
     elif data_cat.shape[1] != len(tes):
         raise ValueError(
             f"Second dimension of data_cat ({data_cat.shape[1]}) does not match "
-            f"number of echoes provided (tes; {len(tes)})"
+            f"number of echoes provided ({tes}; {len(tes)})"
         )
     elif not (data_cat.shape[2] == data_optcom.shape[1] == mixing.shape[0]):
         raise ValueError(
@@ -119,7 +148,10 @@ def generate_metrics(
     metric_maps = {}
     if "map weight" in required_metrics:
         LGR.info("Calculating weight maps")
-        metric_maps["map weight"] = dependence.calculate_weights(data_optcom, mixing)
+        metric_maps["map weight"] = dependence.calculate_weights(
+            data_optcom=data_optcom,
+            mixing=mixing,
+        )
         signs = determine_signs(metric_maps["map weight"], axis=0)
         comptable["optimal sign"] = signs
         metric_maps["map weight"], mixing = flip_components(
@@ -128,31 +160,42 @@ def generate_metrics(
 
     if "map optcom betas" in required_metrics:
         LGR.info("Calculating parameter estimate maps for optimally combined data")
-        metric_maps["map optcom betas"] = dependence.calculate_betas(data_optcom, mixing)
+        metric_maps["map optcom betas"] = dependence.calculate_betas(
+            data=data_optcom,
+            mixing=mixing,
+        )
         if io_generator.verbose:
-            metric_maps["map echo betas"] = dependence.calculate_betas(data_cat, mixing)
+            metric_maps["map echo betas"] = dependence.calculate_betas(
+                data=data_cat,
+                mixing=mixing,
+            )
 
     if "map percent signal change" in required_metrics:
         LGR.info("Calculating percent signal change maps")
         # used in kundu v3.2 tree
         metric_maps["map percent signal change"] = dependence.calculate_psc(
-            data_optcom, metric_maps["map optcom betas"]
+            data_optcom=data_optcom,
+            optcom_betas=metric_maps["map optcom betas"],
         )
 
     if "map Z" in required_metrics:
         LGR.info("Calculating z-statistic maps")
-        metric_maps["map Z"] = dependence.calculate_z_maps(metric_maps["map weight"])
+        metric_maps["map Z"] = dependence.calculate_z_maps(weights=metric_maps["map weight"])
 
         if io_generator.verbose:
             io_generator.save_file(
                 utils.unmask(metric_maps["map Z"] ** 2, mask),
-                label + " component weights img",
+                f"{label} component weights img",
             )
 
     if ("map FT2" in required_metrics) or ("map FS0" in required_metrics):
         LGR.info("Calculating F-statistic maps")
         m_t2, m_s0, p_m_t2, p_m_s0 = dependence.calculate_f_maps(
-            data_cat, metric_maps["map Z"], mixing, adaptive_mask, tes
+            data_cat=data_cat,
+            z_maps=metric_maps["map Z"],
+            mixing=mixing,
+            adaptive_mask=adaptive_mask,
+            tes=tes,
         )
         metric_maps["map FT2"] = m_t2
         metric_maps["map FS0"] = m_s0
@@ -162,58 +205,73 @@ def generate_metrics(
         if io_generator.verbose:
             io_generator.save_file(
                 utils.unmask(metric_maps["map FT2"], mask),
-                label + " component F-T2 img",
+                f"{label} component F-T2 img",
             )
             io_generator.save_file(
                 utils.unmask(metric_maps["map FS0"], mask),
-                label + " component F-S0 img",
+                f"{label} component F-S0 img",
             )
 
     if "map Z clusterized" in required_metrics:
         LGR.info("Thresholding z-statistic maps")
         z_thresh = 1.95
         metric_maps["map Z clusterized"] = dependence.threshold_map(
-            metric_maps["map Z"], mask, ref_img, z_thresh
+            maps=metric_maps["map Z"],
+            mask=mask,
+            ref_img=ref_img,
+            threshold=z_thresh,
         )
 
     if "map FT2 clusterized" in required_metrics:
         LGR.info("Calculating T2* F-statistic maps")
         f_thresh, _, _ = getfbounds(len(tes))
         metric_maps["map FT2 clusterized"] = dependence.threshold_map(
-            metric_maps["map FT2"], mask, ref_img, f_thresh
+            maps=metric_maps["map FT2"],
+            mask=mask,
+            ref_img=ref_img,
+            threshold=f_thresh,
         )
 
     if "map FS0 clusterized" in required_metrics:
         LGR.info("Calculating S0 F-statistic maps")
         f_thresh, _, _ = getfbounds(len(tes))
         metric_maps["map FS0 clusterized"] = dependence.threshold_map(
-            metric_maps["map FS0"], mask, ref_img, f_thresh
+            maps=metric_maps["map FS0"],
+            mask=mask,
+            ref_img=ref_img,
+            threshold=f_thresh,
         )
 
     # Intermediate metrics
     if "countsigFT2" in required_metrics:
         LGR.info("Counting significant voxels in T2* F-statistic maps")
         comptable["countsigFT2"] = dependence.compute_countsignal(
-            metric_maps["map FT2 clusterized"]
+            stat_cl_maps=metric_maps["map FT2 clusterized"],
         )
 
     if "countsigFS0" in required_metrics:
         LGR.info("Counting significant voxels in S0 F-statistic maps")
         comptable["countsigFS0"] = dependence.compute_countsignal(
-            metric_maps["map FS0 clusterized"]
+            stat_cl_maps=metric_maps["map FS0 clusterized"],
         )
 
     # Back to maps
     if "map beta T2 clusterized" in required_metrics:
         LGR.info("Thresholding optimal combination beta maps to match T2* F-statistic maps")
         metric_maps["map beta T2 clusterized"] = dependence.threshold_to_match(
-            metric_maps["map optcom betas"], comptable["countsigFT2"], mask, ref_img
+            maps=metric_maps["map optcom betas"],
+            n_sig_voxels=comptable["countsigFT2"],
+            mask=mask,
+            ref_img=ref_img,
         )
 
     if "map beta S0 clusterized" in required_metrics:
         LGR.info("Thresholding optimal combination beta maps to match S0 F-statistic maps")
         metric_maps["map beta S0 clusterized"] = dependence.threshold_to_match(
-            metric_maps["map optcom betas"], comptable["countsigFS0"], mask, ref_img
+            maps=metric_maps["map optcom betas"],
+            n_sig_voxels=comptable["countsigFS0"],
+            mask=mask,
+            ref_img=ref_img,
         )
 
     # Dependence metrics
@@ -229,24 +287,23 @@ def generate_metrics(
     if "variance explained" in required_metrics:
         LGR.info("Calculating variance explained")
         comptable["variance explained"] = dependence.calculate_varex(
-            metric_maps["map optcom betas"]
+            optcom_betas=metric_maps["map optcom betas"],
         )
 
     if "normalized variance explained" in required_metrics:
         LGR.info("Calculating normalized variance explained")
         comptable["normalized variance explained"] = dependence.calculate_varex_norm(
-            metric_maps["map weight"]
+            weights=metric_maps["map weight"],
         )
 
     # Spatial metrics
     if "dice_FT2" in required_metrics:
         LGR.info(
-            "Calculating DSI between thresholded T2* F-statistic and "
-            "optimal combination beta maps"
+            "Calculating DSI between thresholded T2* F-statistic and optimal combination beta maps"
         )
         comptable["dice_FT2"] = dependence.compute_dice(
-            metric_maps["map beta T2 clusterized"],
-            metric_maps["map FT2 clusterized"],
+            clmaps1=metric_maps["map beta T2 clusterized"],
+            clmaps2=metric_maps["map FT2 clusterized"],
             axis=0,
         )
 
@@ -256,20 +313,18 @@ def generate_metrics(
             "optimal combination beta maps"
         )
         comptable["dice_FS0"] = dependence.compute_dice(
-            metric_maps["map beta S0 clusterized"],
-            metric_maps["map FS0 clusterized"],
+            clmaps1=metric_maps["map beta S0 clusterized"],
+            clmaps2=metric_maps["map FS0 clusterized"],
             axis=0,
         )
 
     if "signal-noise_t" in required_metrics:
         LGR.info("Calculating signal-noise t-statistics")
         RepLGR.info(
-            "A t-test was performed between the distributions of T2*-model "
-            "F-statistics associated with clusters (i.e., signal) and "
-            "non-cluster voxels (i.e., noise) to generate a t-statistic "
-            "(metric signal-noise_z) and p-value (metric signal-noise_p) "
-            "measuring relative association of the component to signal "
-            "over noise."
+            "A t-test was performed between the distributions of T2*-model F-statistics "
+            "associated with clusters (i.e., signal) and non-cluster voxels (i.e., noise) to "
+            "generate a t-statistic (metric signal-noise_z) and p-value (metric signal-noise_p) "
+            "measuring relative association of the component to signal over noise."
         )
         (
             comptable["signal-noise_t"],
@@ -283,20 +338,18 @@ def generate_metrics(
     if "signal-noise_z" in required_metrics:
         LGR.info("Calculating signal-noise z-statistics")
         RepLGR.info(
-            "A t-test was performed between the distributions of T2*-model "
-            "F-statistics associated with clusters (i.e., signal) and "
-            "non-cluster voxels (i.e., noise) to generate a z-statistic "
-            "(metric signal-noise_z) and p-value (metric signal-noise_p) "
-            "measuring relative association of the component to signal "
-            "over noise."
+            "A t-test was performed between the distributions of T2*-model F-statistics "
+            "associated with clusters (i.e., signal) and non-cluster voxels (i.e., noise) to "
+            "generate a z-statistic (metric signal-noise_z) and p-value (metric signal-noise_p) "
+            "measuring relative association of the component to signal over noise."
         )
         (
             comptable["signal-noise_z"],
             comptable["signal-noise_p"],
         ) = dependence.compute_signal_minus_noise_z(
-            Z_maps=metric_maps["map Z"],
-            Z_clmaps=metric_maps["map Z clusterized"],
-            F_T2_maps=metric_maps["map FT2"],
+            z_maps=metric_maps["map Z"],
+            z_clmaps=metric_maps["map Z clusterized"],
+            f_t2_maps=metric_maps["map FT2"],
         )
 
     if "countnoise" in required_metrics:
@@ -306,26 +359,41 @@ def generate_metrics(
             "calculated for each component."
         )
         comptable["countnoise"] = dependence.compute_countnoise(
-            metric_maps["map Z"], metric_maps["map Z clusterized"]
+            stat_maps=metric_maps["map Z"],
+            stat_cl_maps=metric_maps["map Z clusterized"],
         )
 
     # Composite metrics
     if "d_table_score" in required_metrics:
         LGR.info("Calculating decision table score")
         comptable["d_table_score"] = dependence.generate_decision_table_score(
-            comptable["kappa"],
-            comptable["dice_FT2"],
-            comptable["signal-noise_t"],
-            comptable["countnoise"],
-            comptable["countsigFT2"],
+            kappa=comptable["kappa"],
+            dice_ft2=comptable["dice_FT2"],
+            signal_minus_noise_t=comptable["signal-noise_t"],
+            countnoise=comptable["countnoise"],
+            countsig_ft2=comptable["countsigFT2"],
         )
 
+    # External regressor-based metrics
+    if external_regressors is not None and external_regressor_config is not None:
+        # external_regressor_names = external_regressors.columns.tolist()
+        for config_idx in range(len(external_regressor_config)):
+            LGR.info(
+                "Calculating external regressor fits. "
+                f"{external_regressor_config[config_idx]['info']}"
+            )
+            RepLGR.info({external_regressor_config[config_idx]["report"]})
+
+        comptable = external.fit_regressors(
+            comptable, external_regressors, external_regressor_config, mixing
+        )
     # Write verbose metrics if needed
     if io_generator.verbose:
         write_betas = "map echo betas" in metric_maps
         write_t2s0 = "map predicted T2" in metric_maps
         if write_betas:
             betas = metric_maps["map echo betas"]
+
         if write_t2s0:
             pred_t2_maps = metric_maps["map predicted T2"]
             pred_s0_maps = metric_maps["map predicted S0"]
@@ -335,7 +403,7 @@ def generate_metrics(
                 echo_betas = betas[:, i_echo, :]
                 io_generator.save_file(
                     utils.unmask(echo_betas, mask),
-                    "echo weight " + label + " map split img",
+                    f"echo weight {label} map split img",
                     echo=(i_echo + 1),
                 )
 
@@ -343,14 +411,14 @@ def generate_metrics(
                 echo_pred_t2_maps = pred_t2_maps[:, i_echo, :]
                 io_generator.save_file(
                     utils.unmask(echo_pred_t2_maps, mask),
-                    "echo T2 " + label + " split img",
+                    f"echo T2 {label} split img",
                     echo=(i_echo + 1),
                 )
 
                 echo_pred_s0_maps = pred_s0_maps[:, i_echo, :]
                 io_generator.save_file(
                     utils.unmask(echo_pred_s0_maps, mask),
-                    "echo S0 " + label + " split img",
+                    f"echo S0 {label} split img",
                     echo=(i_echo + 1),
                 )
 
@@ -374,6 +442,7 @@ def generate_metrics(
         "d_table_score",
         "kappa ratio",
         "d_table_score_scrub",
+        "external fit",
         "classification",
         "rationale",
     )
@@ -381,10 +450,10 @@ def generate_metrics(
     other_columns = [col for col in comptable.columns if col not in preferred_order]
     comptable = comptable[first_columns + other_columns]
 
-    return comptable
+    return comptable, external_regressor_config
 
 
-def get_metadata(comptable):
+def get_metadata(comptable: pd.DataFrame) -> Dict:
     """Fill in metric metadata for a given comptable.
 
     Parameters
@@ -394,9 +463,9 @@ def get_metadata(comptable):
 
     Returns
     -------
-    A dict containing the metadata for each column in the comptable for
-    which we have a metadata description, plus the "Component" metadata
-    description (always).
+    metric_metadata : dict
+        The metadata for each column in the comptable for which we have a metadata description,
+        plus the "Component" metadata description (always).
     """
     metric_metadata = {}
     if "kappa" in comptable:
