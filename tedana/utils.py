@@ -617,7 +617,7 @@ def get_system_version_info():
         "nilearn": nilearn_version,
         "numpy": numpy_version,
         "pandas": pandas_version,
-        "robustica": robustica_version
+        "robustica": robustica_version,
         "scikit-learn": sklearn_version,
         "scipy": scipy_version,
         "threadpoolctl": threadpoolctl_version,
