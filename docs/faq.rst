@@ -131,7 +131,7 @@ and signal leakage from in-slice and multi-slice accelleration may violate this 
 We have one option that is generally useful and is also a partial solution.
 ``--ica_method robustica`` will run `robustica`_.
 This is a method that, for a given number of PCA components,
-will repeated run ICA and identify components that are stable across iterations.
+will repeatedly run ICA and identify components that are stable across iterations.
 While running ICA multiple times will slow processing, as a general benefit,
 this means that the ICA results are less sensitive to the initialization parameters,
 computer hardware, and software versions.
