@@ -457,7 +457,7 @@ def tedana_workflow(
         The file must be a TSV file with the same number of rows as the number of volumes in
         the input data. Each column in the file will be treated as a separate regressor.
         Default is None.
-    ica_method : {'robustica', 'fastica'}, optional
+    ica_method : {'fastica', 'robustica'}, optional
         The applied ICA method. fastica runs FastICA from sklearn
         once with the seed value. 'robustica' will run
         'FastICA' n_robust_runs times and uses clustering methods to overcome

@@ -122,8 +122,8 @@ For example, smaller voxels will results in more thermal noise and less total va
 A dataset with more head motion artifacts will have more variance explained,
 since more structured signal is within the head motion artifacts.
 The clear failure cases are extreme. That is getting less than 1/5 the number of components
-compared to time points or having nearly has many components as time point.
-We are working on identifying why this happens and adding get better solutions.
+compared to time points or having nearly as many components as time points.
+We are working on identifying why this happens and adding better solutions.
 Our current guess is that most of the above methods assume data are
 independant and identically distributed (IID),
 and signal leakage from in-slice and multi-slice accelleration may violate this assumption.
@@ -142,17 +142,16 @@ This means, even if the initial PCA component estimate is a bit off,
 the number of resulting robust ICA components will represent stable information in the data.
 For a dataset where the PCA comoponent estimation methods are failing,
 one could use ``--tedpca`` with a fixed integer for a constant number of components,
-that is on the high end of typical for a study,
+that is on the high end of the typical number of components for a study,
 and then `robustica`_ will reduce the number of components to only find stable information.
 That said, if the fixed PCA component number is too high,
 then the method will have too many unstable components,
 and if the fixed PCA component number is too low, then there will be even fewer ICA components.
-The number of ICA components is more consisent,
+With this approach, the number of ICA components is more consistent,
 but is still sensitive to the intial number of PCA components.
 For example, for a single dataset 60 PCA components might result in 46 stable ICA components,
 while 55 PCA components might results in 43 stable ICA components.
-We are still testing how these interact and give better recommendations and even more stable results.
-At that point, ``--ica_method robustica`` might become the default setting,
+We are still testing how these interact to give better recommendations for even more stable results.
 While the TEDANA developers expect that ``--ica_method robustica`` may become
 the default configuration in future TEDANA versions,
 it is first being released to the public as a non-default option
@@ -160,7 +159,7 @@ in hope of gaining insight into its behaviour
 across a broader range of multi-echo fMRI data.
 If users are having trouble with PCA component estimation failing on a dataset,
 we recommend using RobustICA;
-we also invite user feedback on its behaviour and efficacy.
+and we invite users to send us feedback on its behavior and efficacy.
 
 
 .. _MAPCA: https://github.com/ME-ICA/mapca

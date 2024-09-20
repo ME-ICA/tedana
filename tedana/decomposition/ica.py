@@ -42,7 +42,7 @@ def tedica(
     fixed_seed : :obj:`int`
         Seed for ensuring reproducibility of ICA results.
     ica_method : :obj: `str`
-        slected ICA method, can be fastica or robutica.
+        selected ICA method, can be fastica or robustica.
     n_robust_runs : :obj: `int`
         selected number of robust runs when robustica is used. Default is 30.
     maxit : :obj:`int`, optional
