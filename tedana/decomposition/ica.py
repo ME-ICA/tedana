@@ -153,6 +153,10 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
             if robust_method == "DBSCAN":
                 # if RobustICA failed wtih DBSCAN, run again wtih AgglomerativeClustering
                 robust_method = "AgglomerativeClustering"
+                LGR.warning(
+                    "DBSCAN clustering method did not converge. "
+                    "Agglomerative clustering will be tried now."
+                )
             else:
                 raise ValueError("RobustICA failed to converge")
 
