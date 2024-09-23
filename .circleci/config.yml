@@ -13,7 +13,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py38-v2-{{ checksum "pyproject.toml" }}
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Generate environment
           command: |
@@ -23,7 +23,7 @@ jobs:
               pip install -e .[tests]
             fi
       - save_cache:
-          key: conda-py38-v2-{{ checksum "pyproject.toml" }}
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
           paths:
             - /opt/conda/envs/tedana_py38
 
@@ -34,7 +34,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py38-v2-{{ checksum "pyproject.toml" }}
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Running unit tests
           command: |
@@ -56,7 +56,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py39-v2-{{ checksum "pyproject.toml" }}
+          key: conda-py39-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Generate environment
           command: |
@@ -75,7 +75,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py39
       - save_cache:
-          key: conda-py39-v2-{{ checksum "pyproject.toml" }}
+          key: conda-py39-v3-{{ checksum "pyproject.toml" }}
           paths:
             - /opt/conda/envs/tedana_py39
       - persist_to_workspace:
@@ -90,7 +90,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py310-v1-{{ checksum "pyproject.toml" }}
+          key: conda-py310-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Generate environment
           command: |
@@ -109,7 +109,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py310
       - save_cache:
-          key: conda-py310-v1-{{ checksum "pyproject.toml" }}
+          key: conda-py310-v3-{{ checksum "pyproject.toml" }}
           paths:
             - /opt/conda/envs/tedana_py310
       - persist_to_workspace:
@@ -124,7 +124,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py311-v1-{{ checksum "pyproject.toml" }}
+          key: conda-py311-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Generate environment
           command: |
@@ -143,7 +143,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py311
       - save_cache:
-          key: conda-py311-v1-{{ checksum "pyproject.toml" }}
+          key: conda-py311-v3-{{ checksum "pyproject.toml" }}
           paths:
             - /opt/conda/envs/tedana_py311
       - persist_to_workspace:
@@ -158,7 +158,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py312-v1-{{ checksum "pyproject.toml" }}
+          key: conda-py312-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Generate environment
           command: |
@@ -177,7 +177,7 @@ jobs:
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py312
       - save_cache:
-          key: conda-py312-v1-{{ checksum "pyproject.toml" }}
+          key: conda-py312-v3-{{ checksum "pyproject.toml" }}
           paths:
             - /opt/conda/envs/tedana_py312
       - persist_to_workspace:
@@ -192,7 +192,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py38-v2-{{ checksum "pyproject.toml" }}
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Style check
           command: |
@@ -208,7 +208,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py38-v2-{{ checksum "pyproject.toml" }}
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -233,7 +233,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py38-v2-{{ checksum "pyproject.toml" }}
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -258,7 +258,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py38-v2-{{ checksum "pyproject.toml" }}
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -283,7 +283,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py38-v2-{{ checksum "pyproject.toml" }}
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -308,7 +308,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py38-v2-{{ checksum "pyproject.toml" }}
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -335,7 +335,7 @@ jobs:
           at: /tmp
       - checkout
       - restore_cache:
-          key: conda-py38-v2-{{ checksum "pyproject.toml" }}
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Merge coverage files
           command: |

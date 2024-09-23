@@ -129,6 +129,8 @@ def test_integration_five_echo(skip_integration):
     tedana_cli.tedana_workflow(
         data=datalist,
         tes=echo_times,
+        ica_method="robustica",
+        n_robust_runs=4,
         out_dir=out_dir,
         tedpca=0.95,
         fittype="curvefit",
@@ -174,6 +176,7 @@ def test_integration_four_echo(skip_integration):
         data=datalist,
         mixm=op.join(op.dirname(datalist[0]), "desc-ICA_mixing_static.tsv"),
         tes=[11.8, 28.04, 44.28, 60.52],
+        ica_method="fastica",
         out_dir=out_dir,
         tedpca="kundu-stabilize",
         gscontrol=["gsr", "mir"],

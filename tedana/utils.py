@@ -18,12 +18,14 @@ from nilearn import __version__ as nilearn_version
 from nilearn._utils import check_niimg
 from numpy import __version__ as numpy_version
 from pandas import __version__ as pandas_version
+from robustica import __version__ as robustica_version
 from scipy import __version__ as scipy_version
 from scipy import ndimage
 from scipy.special import lpmv
 from sklearn import __version__ as sklearn_version
 from sklearn.utils import check_array
 from threadpoolctl import __version__ as threadpoolctl_version
+from tqdm import __version__ as tqdm_version
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -615,9 +617,11 @@ def get_system_version_info():
         "nilearn": nilearn_version,
         "numpy": numpy_version,
         "pandas": pandas_version,
+        "robustica": robustica_version,
         "scikit-learn": sklearn_version,
         "scipy": scipy_version,
         "threadpoolctl": threadpoolctl_version,
+        "tqdm": tqdm_version,
     }
 
     return {

@@ -29,9 +29,20 @@ from tedana import (
     utils,
 )
 from tedana.bibtex import get_description_references
+from tedana.config import (
+    DEFAULT_ICA_METHOD,
+    DEFAULT_N_MAX_ITER,
+    DEFAULT_N_MAX_RESTART,
+    DEFAULT_N_ROBUST_RUNS,
+    DEFAULT_SEED,
+)
 from tedana.selection.component_selector import ComponentSelector
 from tedana.stats import computefeats2
-from tedana.workflows.parser_utils import check_tedpca_value, is_valid_file
+from tedana.workflows.parser_utils import (
+    check_n_robust_runs_value,
+    check_tedpca_value,
+    is_valid_file,
+)
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -156,7 +167,7 @@ def _get_parser():
             "were distributed with MEICA. "
             "Users may also provide a float from 0 to 1, "
             "in which case components will be selected based on the "
-            "cumulative variance explained or an integer greater than 1"
+            "cumulative variance explained or an integer greater than 1 "
             "in which case the specificed number of components will be "
             "selected."
         ),
@@ -169,7 +180,7 @@ def _get_parser():
             "Decision tree to use. You may use a "
             "packaged tree (tedana_orig, meica, minimal) or supply a JSON "
             "file which matches the decision tree file "
-            "specification. Minimal still being tested with more"
+            "specification. Minimal still being tested with more "
             "details in docs"
         ),
         default="tedana_orig",
@@ -180,11 +191,25 @@ def _get_parser():
         type=lambda x: is_valid_file(parser, x),
         help=(
             "File containing external regressors to compare to ICA component be used in the "
-            "decision tree. For example, to identify components fit head motion time series."
+            "decision tree. For example, to identify components fit head motion time series. "
             "The file must be a TSV file with the same number of rows as the number of volumes in "
             "the input data. Column labels and statistical tests are defined with external_labels."
         ),
         default=None,
+    )
+    optional.add_argument(
+        "--ica_method",
+        dest="ica_method",
+        help=(
+            "The applied ICA method. "
+            "fastica runs FastICA from sklearn once with the seed value. "
+            "robustica will run FastICA n_robust_runs times and uses "
+            "clustering methods to overcome the randomness of the FastICA algorithm. "
+            "robustica will be slower."
+        ),
+        choices=["robustica", "fastica"],
+        type=str.lower,
+        default=DEFAULT_ICA_METHOD,
     )
     optional.add_argument(
         "--seed",
@@ -195,9 +220,22 @@ def _get_parser():
             "Value used for random initialization of ICA "
             "algorithm. Set to an integer value for "
             "reproducible ICA results. Set to -1 for "
-            "varying results across ICA calls. "
+            "varying results across ICA calls. This "
+            "applies to both fastica and robustica methods."
         ),
-        default=42,
+        default=DEFAULT_SEED,
+    )
+    optional.add_argument(
+        "--n_robust_runs",
+        dest="n_robust_runs",
+        metavar="[5-500]",
+        type=check_n_robust_runs_value,
+        help=(
+            "The number of times robustica will run. "
+            "This is only effective when ica_method is "
+            "set to robustica."
+        ),
+        default=DEFAULT_N_ROBUST_RUNS,
     )
     optional.add_argument(
         "--maxit",
@@ -205,7 +243,7 @@ def _get_parser():
         metavar="INT",
         type=int,
         help=("Maximum number of iterations for ICA."),
-        default=500,
+        default=DEFAULT_N_MAX_ITER,
     )
     optional.add_argument(
         "--maxrestart",
@@ -219,7 +257,7 @@ def _get_parser():
             "convergence is achieved before maxrestart "
             "attempts, ICA will finish early."
         ),
-        default=10,
+        default=DEFAULT_N_MAX_RESTART,
     )
     optional.add_argument(
         "--tedort",
@@ -238,7 +276,7 @@ def _get_parser():
             "Perform additional denoising to remove "
             "spatially diffuse noise. "
             "This argument can be single value or a space "
-            "delimited list"
+            "delimited list."
         ),
         choices=["mir", "gsr"],
         default="",
@@ -347,10 +385,12 @@ def tedana_workflow(
     combmode="t2s",
     tree="tedana_orig",
     external_regressors=None,
+    ica_method=DEFAULT_ICA_METHOD,
+    n_robust_runs=DEFAULT_N_ROBUST_RUNS,
     tedpca="aic",
-    fixed_seed=42,
-    maxit=500,
-    maxrestart=10,
+    fixed_seed=DEFAULT_SEED,
+    maxit=DEFAULT_N_MAX_ITER,
+    maxrestart=DEFAULT_N_MAX_RESTART,
     tedort=False,
     gscontrol=None,
     no_reports=False,
@@ -417,6 +457,16 @@ def tedana_workflow(
         The file must be a TSV file with the same number of rows as the number of volumes in
         the input data. Each column in the file will be treated as a separate regressor.
         Default is None.
+    ica_method : {'fastica', 'robustica'}, optional
+        The applied ICA method. fastica runs FastICA from sklearn
+        once with the seed value. 'robustica' will run
+        'FastICA' n_robust_runs times and uses clustering methods to overcome
+        the randomness of the FastICA algorithm.
+        robustica will be slower.
+        Default is 'fastica'
+    n_robust_runs : :obj:`int`, optional
+        The number of times robustica will run. This is only effective when 'ica_method' is
+        set to 'robustica'.
     tedpca : {'mdl', 'aic', 'kic', 'kundu', 'kundu-stabilize', float, int}, optional
         Method with which to select components in TEDPCA.
         If a float is provided, then it is assumed to represent percentage of variance
@@ -426,8 +476,8 @@ def tedana_workflow(
         Default is 'aic'.
     fixed_seed : :obj:`int`, optional
         Value passed to ``mdp.numx_rand.seed()``.
-        Set to a positive integer value for reproducible ICA results;
-        otherwise, set to -1 for varying results across calls.
+        Set to a positive integer value for reproducible ICA results (fastica/robustica);
+        otherwise, set to -1 for varying results across ICA (fastica/robustica) calls.
     maxit : :obj:`int`, optional
         Maximum number of iterations for ICA. Default is 500.
     maxrestart : :obj:`int`, optional
@@ -731,7 +781,13 @@ def tedana_workflow(
         seed = fixed_seed
         while keep_restarting:
             mmix, seed = decomposition.tedica(
-                dd, n_components, seed, maxit, maxrestart=(maxrestart - n_restarts)
+                dd,
+                n_components,
+                seed,
+                ica_method,
+                n_robust_runs,
+                maxit,
+                maxrestart=(maxrestart - n_restarts),
             )
             seed += 1
             n_restarts = seed - fixed_seed

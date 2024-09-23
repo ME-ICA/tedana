@@ -128,7 +128,6 @@ def gscontrol_raw(
     data_cat_nogs = data_cat.copy()  # don't overwrite data_cat
     for echo in range(n_echos):
         data_echo_masked = data_cat_nogs[temporal_mean_mask, echo, :]
-
         # Mean center echo's data over time
         echo_mean = data_echo_masked.mean(axis=-1, keepdims=True)
         data_echo_masked -= echo_mean
