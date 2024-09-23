@@ -241,7 +241,9 @@ For consistency, we have adopted the following standard for our section headings
 When opening the pull request, we ask that you follow some [specific conventions](#pull-requests). We outline these below.
 
 After you have submitted the pull request, a member of the development team will review your changes to confirm that they can be merged into the main code base.
-When you have two approving reviewers and all tests are passing, your pull request may be merged.
+When you have an approving reviewer and all tests are passing, your pull request may be merged.
+
+For more substantial changes, we may require two approving reviews instead of the standard one.
 
 
 ### Pull Requests
@@ -257,20 +259,6 @@ ME-ICA/tedana.
 Once you have pushed changes to the repository, please do not use commands such as rebase and
 amend, as they will rewrite your history and make it difficult for developers to work with you on
 your pull request. You can read more about that [here][link_git_rewriting].
-
-To improve understanding pull requests "at a glance", we encourage the use of several standardized tags.
-When opening a pull request, please use at least one of the following prefixes:
-
-* **[BRK]** for changes which break existing builds or tests
-* **[DOC]** for new or updated documentation
-* **[ENH]** for enhancements
-* **[FIX]** for bug fixes
-* **[REF]** for refactoring existing code
-* **[TST]** for new or updated tests, and
-* **[MAINT]** for maintenance of code
-
-You can also combine the tags above, for example if you are updating both a test and
-the documentation: **[TST, DOC]**.
 
 Pull requests should be submitted early and often!
 If your pull request is not yet ready to be merged, please use [draft PRs][link_draftpr]
