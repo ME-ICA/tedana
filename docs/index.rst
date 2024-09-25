@@ -183,6 +183,7 @@ tedana is licensed under GNU Lesser General Public License version 2.1.
    roadmap
    api
    denoising
+   What's New <https://github.com/ME-ICA/tedana/releases>
 
 .. toctree::
    :hidden:
