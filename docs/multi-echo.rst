@@ -478,7 +478,7 @@ time point.
     there have been anecdotal cases where this might be an issue. Still, since serial spatial transforms spatially
     smooth the data and most modern pipeline combine all spatial transforms into a single step, we recommend doing
     these steps before running denoising. Particularly for data with high intensity heterogeneity between the surface
-    and center of the brain, we recommend checking if distoration correction and normalization adversely affect the
+    and center of the brain, we recommend checking if distortion correction and normalization adversely affect the
     relationship between echoes.
 
 .. _fMRIPrep: https://fmriprep.readthedocs.io
