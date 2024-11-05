@@ -345,13 +345,13 @@ def test_fit_regressors(caplog):
 
     # Running with external_regressor_config["detrend"] is True,
     #  which results in 1 detrending regressor
-    comptable = sample_comptable(mixing.shape[1])
-    comptable = external.fit_regressors(
-        comptable, external_regressors, external_regressor_config_expanded, mixing
+    component_table = sample_comptable(mixing.shape[1])
+    component_table = external.fit_regressors(
+        component_table, external_regressors, external_regressor_config_expanded, mixing
     )
 
     # Contents will be valided in fit_mixing_to_regressors so just checking column labels here
-    assert set(comptable.keys()) == {
+    assert set(component_table.keys()) == {
         "Component",
         "Fstat nuisance model",
         "Fstat task model",
@@ -375,9 +375,9 @@ def test_fit_regressors(caplog):
     caplog.clear()
     # Running with external_regressor_config["detrend"]=3, which results in 3 detrending regressors
     external_regressor_config[1]["detrend"] = 3
-    comptable = sample_comptable(mixing.shape[1])
-    comptable = external.fit_regressors(
-        comptable, external_regressors, external_regressor_config_expanded, mixing
+    component_table = sample_comptable(mixing.shape[1])
+    component_table = external.fit_regressors(
+        component_table, external_regressors, external_regressor_config_expanded, mixing
     )
     assert (
         "External regressors fit for task includes detrending "
@@ -388,9 +388,9 @@ def test_fit_regressors(caplog):
     # Running with external_regressor_config["detrend"]=0,
     #  which results in 1 detrend regressors (demeaning)
     external_regressor_config[0]["detrend"] = 0
-    comptable = sample_comptable(mixing.shape[1])
-    comptable = external.fit_regressors(
-        comptable, external_regressors, external_regressor_config_expanded, mixing
+    component_table = sample_comptable(mixing.shape[1])
+    component_table = external.fit_regressors(
+        component_table, external_regressors, external_regressor_config_expanded, mixing
     )
     assert (
         "External regressor for nuisance fitted without detrending fMRI time series. "
@@ -399,7 +399,7 @@ def test_fit_regressors(caplog):
 
     caplog.clear()
     external_regressor_config[1]["statistic"] = "Corr"
-    comptable = sample_comptable(mixing.shape[1])
+    component_table = sample_comptable(mixing.shape[1])
     with pytest.raises(
         ValueError,
         match=(
@@ -407,8 +407,8 @@ def test_fit_regressors(caplog):
             "which is not valid."
         ),
     ):
-        comptable = external.fit_regressors(
-            comptable, external_regressors, external_regressor_config_expanded, mixing
+        component_table = external.fit_regressors(
+            component_table, external_regressors, external_regressor_config_expanded, mixing
         )
 
 
@@ -433,11 +433,11 @@ def test_fit_mixing_to_regressors(caplog):
 
     # Running with external_regressor_config["detrend"] is True,
     #  which results in 1 detrending regressor
-    comptable = sample_comptable(mixing.shape[1])
+    component_table = sample_comptable(mixing.shape[1])
 
     for config_idx in range(2):
-        comptable = external.fit_mixing_to_regressors(
-            comptable,
+        component_table = external.fit_mixing_to_regressors(
+            component_table,
             external_regressors,
             external_regressor_config_expanded[config_idx],
             mixing,
@@ -447,7 +447,7 @@ def test_fit_mixing_to_regressors(caplog):
     # Since a fixed mixing matrix is used, the values should always be consistent
     # Comparing just 3 rows and rounding to 6 decimal places to avoid testing failures
     # due to differences in floating point precision between systems
-    output_rows_to_validate = comptable.iloc[[0, 11, 30]].round(decimals=6)
+    output_rows_to_validate = component_table.iloc[[0, 11, 30]].round(decimals=6)
     expected_results = pd.DataFrame(
         columns=[
             "Component",

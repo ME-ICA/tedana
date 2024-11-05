@@ -68,7 +68,7 @@ def generate_metrics(
 
     Returns
     -------
-    comptable : (C x X) :obj:`pandas.DataFrame`
+    component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for each metric.
         The index is the component number.
     external_regressor_config : :obj:`dict`
@@ -137,10 +137,10 @@ def generate_metrics(
     # Generate the component table, which will be filled out, column by column,
     # throughout this function
     n_components = mixing.shape[1]
-    comptable = pd.DataFrame(index=np.arange(n_components, dtype=int))
-    comptable["Component"] = [
-        io.add_decomp_prefix(comp, prefix=label, max_value=comptable.shape[0])
-        for comp in comptable.index.values
+    component_table = pd.DataFrame(index=np.arange(n_components, dtype=int))
+    component_table["Component"] = [
+        io.add_decomp_prefix(comp, prefix=label, max_value=component_table.shape[0])
+        for comp in component_table.index.values
     ]
 
     # Metric maps
@@ -153,7 +153,7 @@ def generate_metrics(
             mixing=mixing,
         )
         signs = determine_signs(metric_maps["map weight"], axis=0)
-        comptable["optimal sign"] = signs
+        component_table["optimal sign"] = signs
         metric_maps["map weight"], mixing = flip_components(
             metric_maps["map weight"], mixing, signs=signs
         )
@@ -245,13 +245,13 @@ def generate_metrics(
     # Intermediate metrics
     if "countsigFT2" in required_metrics:
         LGR.info("Counting significant voxels in T2* F-statistic maps")
-        comptable["countsigFT2"] = dependence.compute_countsignal(
+        component_table["countsigFT2"] = dependence.compute_countsignal(
             stat_cl_maps=metric_maps["map FT2 clusterized"],
         )
 
     if "countsigFS0" in required_metrics:
         LGR.info("Counting significant voxels in S0 F-statistic maps")
-        comptable["countsigFS0"] = dependence.compute_countsignal(
+        component_table["countsigFS0"] = dependence.compute_countsignal(
             stat_cl_maps=metric_maps["map FS0 clusterized"],
         )
 
@@ -260,7 +260,7 @@ def generate_metrics(
         LGR.info("Thresholding optimal combination beta maps to match T2* F-statistic maps")
         metric_maps["map beta T2 clusterized"] = dependence.threshold_to_match(
             maps=metric_maps["map optcom betas"],
-            n_sig_voxels=comptable["countsigFT2"],
+            n_sig_voxels=component_table["countsigFT2"],
             mask=mask,
             ref_img=ref_img,
         )
@@ -269,7 +269,7 @@ def generate_metrics(
         LGR.info("Thresholding optimal combination beta maps to match S0 F-statistic maps")
         metric_maps["map beta S0 clusterized"] = dependence.threshold_to_match(
             maps=metric_maps["map optcom betas"],
-            n_sig_voxels=comptable["countsigFS0"],
+            n_sig_voxels=component_table["countsigFS0"],
             mask=mask,
             ref_img=ref_img,
         )
@@ -277,7 +277,7 @@ def generate_metrics(
     # Dependence metrics
     if ("kappa" in required_metrics) or ("rho" in required_metrics):
         LGR.info("Calculating kappa and rho")
-        comptable["kappa"], comptable["rho"] = dependence.calculate_dependence_metrics(
+        component_table["kappa"], component_table["rho"] = dependence.calculate_dependence_metrics(
             f_t2_maps=metric_maps["map FT2"],
             f_s0_maps=metric_maps["map FS0"],
             z_maps=metric_maps["map Z"],
@@ -286,13 +286,13 @@ def generate_metrics(
     # Generic metrics
     if "variance explained" in required_metrics:
         LGR.info("Calculating variance explained")
-        comptable["variance explained"] = dependence.calculate_varex(
+        component_table["variance explained"] = dependence.calculate_varex(
             optcom_betas=metric_maps["map optcom betas"],
         )
 
     if "normalized variance explained" in required_metrics:
         LGR.info("Calculating normalized variance explained")
-        comptable["normalized variance explained"] = dependence.calculate_varex_norm(
+        component_table["normalized variance explained"] = dependence.calculate_varex_norm(
             weights=metric_maps["map weight"],
         )
 
@@ -301,7 +301,7 @@ def generate_metrics(
         LGR.info(
             "Calculating DSI between thresholded T2* F-statistic and optimal combination beta maps"
         )
-        comptable["dice_FT2"] = dependence.compute_dice(
+        component_table["dice_FT2"] = dependence.compute_dice(
             clmaps1=metric_maps["map beta T2 clusterized"],
             clmaps2=metric_maps["map FT2 clusterized"],
             axis=0,
@@ -312,7 +312,7 @@ def generate_metrics(
             "Calculating DSI between thresholded S0 F-statistic and "
             "optimal combination beta maps"
         )
-        comptable["dice_FS0"] = dependence.compute_dice(
+        component_table["dice_FS0"] = dependence.compute_dice(
             clmaps1=metric_maps["map beta S0 clusterized"],
             clmaps2=metric_maps["map FS0 clusterized"],
             axis=0,
@@ -327,8 +327,8 @@ def generate_metrics(
             "measuring relative association of the component to signal over noise."
         )
         (
-            comptable["signal-noise_t"],
-            comptable["signal-noise_p"],
+            component_table["signal-noise_t"],
+            component_table["signal-noise_p"],
         ) = dependence.compute_signal_minus_noise_t(
             z_maps=metric_maps["map Z"],
             z_clmaps=metric_maps["map Z clusterized"],
@@ -344,8 +344,8 @@ def generate_metrics(
             "measuring relative association of the component to signal over noise."
         )
         (
-            comptable["signal-noise_z"],
-            comptable["signal-noise_p"],
+            component_table["signal-noise_z"],
+            component_table["signal-noise_p"],
         ) = dependence.compute_signal_minus_noise_z(
             z_maps=metric_maps["map Z"],
             z_clmaps=metric_maps["map Z clusterized"],
@@ -358,7 +358,7 @@ def generate_metrics(
             "The number of significant voxels not from clusters was "
             "calculated for each component."
         )
-        comptable["countnoise"] = dependence.compute_countnoise(
+        component_table["countnoise"] = dependence.compute_countnoise(
             stat_maps=metric_maps["map Z"],
             stat_cl_maps=metric_maps["map Z clusterized"],
         )
@@ -366,12 +366,12 @@ def generate_metrics(
     # Composite metrics
     if "d_table_score" in required_metrics:
         LGR.info("Calculating decision table score")
-        comptable["d_table_score"] = dependence.generate_decision_table_score(
-            kappa=comptable["kappa"],
-            dice_ft2=comptable["dice_FT2"],
-            signal_minus_noise_t=comptable["signal-noise_t"],
-            countnoise=comptable["countnoise"],
-            countsig_ft2=comptable["countsigFT2"],
+        component_table["d_table_score"] = dependence.generate_decision_table_score(
+            kappa=component_table["kappa"],
+            dice_ft2=component_table["dice_FT2"],
+            signal_minus_noise_t=component_table["signal-noise_t"],
+            countnoise=component_table["countnoise"],
+            countsig_ft2=component_table["countsigFT2"],
         )
 
     # External regressor-based metrics
@@ -384,8 +384,8 @@ def generate_metrics(
             )
             RepLGR.info({external_regressor_config[config_idx]["report"]})
 
-        comptable = external.fit_regressors(
-            comptable, external_regressors, external_regressor_config, mixing
+        component_table = external.fit_regressors(
+            component_table, external_regressors, external_regressor_config, mixing
         )
     # Write verbose metrics if needed
     if io_generator.verbose:
@@ -446,29 +446,29 @@ def generate_metrics(
         "classification",
         "rationale",
     )
-    first_columns = [col for col in preferred_order if col in comptable.columns]
-    other_columns = [col for col in comptable.columns if col not in preferred_order]
-    comptable = comptable[first_columns + other_columns]
+    first_columns = [col for col in preferred_order if col in component_table.columns]
+    other_columns = [col for col in component_table.columns if col not in preferred_order]
+    component_table = component_table[first_columns + other_columns]
 
-    return comptable, external_regressor_config
+    return component_table, external_regressor_config
 
 
-def get_metadata(comptable: pd.DataFrame) -> Dict:
-    """Fill in metric metadata for a given comptable.
+def get_metadata(component_table: pd.DataFrame) -> Dict:
+    """Fill in metric metadata for a given component_table.
 
     Parameters
     ----------
-    comptable : pandas.DataFrame
+    component_table : pandas.DataFrame
         The component table for this workflow
 
     Returns
     -------
     metric_metadata : dict
-        The metadata for each column in the comptable for which we have a metadata description,
+        The metadata for each column in the component_table for which we have a metadata description,
         plus the "Component" metadata description (always).
     """
     metric_metadata = {}
-    if "kappa" in comptable:
+    if "kappa" in component_table:
         metric_metadata["kappa"] = {
             "LongName": "Kappa",
             "Description": (
@@ -480,7 +480,7 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
             ),
             "Units": "arbitrary",
         }
-    if "rho" in comptable:
+    if "rho" in component_table:
         metric_metadata["rho"] = {
             "LongName": "Rho",
             "Description": (
@@ -492,7 +492,7 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
             ),
             "Units": "arbitrary",
         }
-    if "variance explained" in comptable:
+    if "variance explained" in component_table:
         metric_metadata["variance explained"] = {
             "LongName": "Variance explained",
             "Description": (
@@ -501,7 +501,7 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
             ),
             "Units": "arbitrary",
         }
-    if "normalized variance explained" in comptable:
+    if "normalized variance explained" in component_table:
         metric_metadata["normalized variance explained"] = {
             "LongName": "Normalized variance explained",
             "Description": (
@@ -511,7 +511,7 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
             ),
             "Units": "arbitrary",
         }
-    if "countsigFT2" in comptable:
+    if "countsigFT2" in component_table:
         metric_metadata["countsigFT2"] = {
             "LongName": "T2 model F-statistic map significant voxel count",
             "Description": (
@@ -520,7 +520,7 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
             ),
             "Units": "voxel",
         }
-    if "countsigFS0" in comptable:
+    if "countsigFS0" in component_table:
         metric_metadata["countsigFS0"] = {
             "LongName": "S0 model F-statistic map significant voxel count",
             "Description": (
@@ -529,7 +529,7 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
             ),
             "Units": "voxel",
         }
-    if "dice_FT2" in comptable:
+    if "dice_FT2" in component_table:
         metric_metadata["dice_FT2"] = {
             "LongName": "T2 model beta map-F-statistic map Dice similarity index",
             "Description": (
@@ -538,7 +538,7 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
             ),
             "Units": "arbitrary",
         }
-    if "dice_FS0" in comptable:
+    if "dice_FS0" in component_table:
         metric_metadata["dice_FS0"] = {
             "LongName": ("S0 model beta map-F-statistic map Dice similarity index"),
             "Description": (
@@ -547,7 +547,7 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
             ),
             "Units": "arbitrary",
         }
-    if "countnoise" in comptable:
+    if "countnoise" in component_table:
         metric_metadata["countnoise"] = {
             "LongName": "Noise voxel count",
             "Description": (
@@ -556,7 +556,7 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
             ),
             "Units": "voxel",
         }
-    if "signal-noise_t" in comptable:
+    if "signal-noise_t" in component_table:
         metric_metadata["signal-noise_t"] = {
             "LongName": "Signal > noise t-statistic",
             "Description": (
@@ -566,7 +566,7 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
             ),
             "Units": "arbitrary",
         }
-    if "signal-noise_p" in comptable:
+    if "signal-noise_p" in component_table:
         metric_metadata["signal-noise_p"] = {
             "LongName": "Signal > noise p-value",
             "Description": (
@@ -576,7 +576,7 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
             ),
             "Units": "arbitrary",
         }
-    if "d_table_score" in comptable:
+    if "d_table_score" in component_table:
         metric_metadata["d_table_score"] = {
             "LongName": "Decision table score",
             "Description": (
@@ -586,7 +586,7 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
             ),
             "Units": "arbitrary",
         }
-    if "original_classification" in comptable:
+    if "original_classification" in component_table:
         metric_metadata["original_classification"] = {
             "LongName": "Original classification",
             "Description": ("Classification from the original decision tree."),
@@ -600,7 +600,7 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
             },
         }
 
-    if "classification" in comptable:
+    if "classification" in component_table:
         metric_metadata["classification"] = {
             "LongName": "Component classification",
             "Description": ("Classification from the manual classification procedure."),
@@ -613,7 +613,7 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
                 ),
             },
         }
-    if "classification_tags" in comptable:
+    if "classification_tags" in component_table:
         metric_metadata["classification_tags"] = {
             "LongName": "Component classification tags",
             "Description": (
@@ -621,7 +621,7 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
                 " received its classification"
             ),
         }
-    if "rationale" in comptable:
+    if "rationale" in component_table:
         metric_metadata["rationale"] = {
             "LongName": "Rationale for component classification",
             "Description": (
@@ -629,7 +629,7 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
                 "This column label was replaced with classification_tags in late 2022"
             ),
         }
-    if "kappa ratio" in comptable:
+    if "kappa ratio" in component_table:
         metric_metadata["kappa ratio"] = {
             "LongName": "Kappa ratio",
             "Description": (
@@ -638,7 +638,7 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
             ),
             "Units": "arbitrary",
         }
-    if "d_table_score_scrub" in comptable:
+    if "d_table_score_scrub" in component_table:
         metric_metadata["d_table_score_scrub"] = {
             "LongName": "Updated decision table score",
             "Description": (
@@ -649,7 +649,7 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
             ),
             "Units": "arbitrary",
         }
-    if "optimal sign" in comptable:
+    if "optimal sign" in component_table:
         metric_metadata["optimal sign"] = {
             "LongName": "Optimal component sign",
             "Description": (
@@ -663,7 +663,7 @@ def get_metadata(comptable: pd.DataFrame) -> Dict:
             },
         }
 
-    # There are always components in the comptable, definitionally
+    # There are always components in the component_table, definitionally
     metric_metadata["Component"] = {
         "LongName": "Component identifier",
         "Description": (

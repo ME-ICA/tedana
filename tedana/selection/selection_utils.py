@@ -323,7 +323,7 @@ def confirm_metrics_exist(
     necessary_metrics: List[str],
     function_name: Union[str, None] = None,
 ) -> Union[None, bool]:
-    """Confirm that all metrics declared in necessary_metrics are already included in comptable.
+    """Confirm that all metrics declared in necessary_metrics are already included in component_table.
 
     Parameters
     ----------

@@ -203,7 +203,7 @@ def validate_extern_regress(
 
 
 def fit_regressors(
-    comptable: pd.DataFrame,
+    component_table: pd.DataFrame,
     external_regressors: pd.DataFrame,
     external_regressor_config: List[Dict],
     mixing: npt.NDArray,
@@ -215,7 +215,7 @@ def fit_regressors(
 
     Parameters
     ----------
-    comptable : (C x X) :obj:`pandas.DataFrame`
+    component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component,
         with a column for each metric. The index is the component number.
     external_regressors : (T x R) :obj:`pandas.DataFrame`
@@ -230,14 +230,14 @@ def fit_regressors(
 
     Returns
     -------
-    comptable : (C x X) :obj:`pandas.DataFrame`
+    component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table.
         Same as inputted, with added columns for metrics related to the external regressor fits
     """
     n_vols = mixing.shape[0]
 
     # For every model (i.e. nuisance and task) in external_regressor_config
-    # setup and run fit_mixing_to_regressors to add columns to comptable
+    # setup and run fit_mixing_to_regressors to add columns to component_table
     for config_idx in range(len(external_regressor_config)):
         regress_id = external_regressor_config[config_idx]["regress_ID"]
         # If the order of detrending regressors is specified, then pass to
@@ -274,8 +274,8 @@ def fit_regressors(
         detrend_regressors = pd.DataFrame(data=legendre_arr, columns=detrend_labels)
 
         if external_regressor_config[config_idx]["statistic"].lower() == "f":
-            comptable = fit_mixing_to_regressors(
-                comptable,
+            component_table = fit_mixing_to_regressors(
+                component_table,
                 external_regressors,
                 external_regressor_config[config_idx],
                 mixing,
@@ -283,7 +283,7 @@ def fit_regressors(
             )
         else:
             # This should already be validated by this point, but keeping the catch clause here
-            # since this would otherwise just return comptable with no changes, which would
+            # since this would otherwise just return component_table with no changes, which would
             # make a hard-to-track error
             raise ValueError(
                 f"statistic for {regress_id} external regressors in decision tree is "
@@ -291,11 +291,11 @@ def fit_regressors(
                 "which is not valid."
             )
 
-    return comptable
+    return component_table
 
 
 def fit_mixing_to_regressors(
-    comptable: pd.DataFrame,
+    component_table: pd.DataFrame,
     external_regressors: pd.DataFrame,
     external_regressor_config: Dict,
     mixing: npt.NDArray,
@@ -311,7 +311,7 @@ def fit_mixing_to_regressors(
 
     Parameters
     ----------
-    comptable : (C x X) :obj:`pandas.DataFrame`
+    component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table.
         One row for each component, with a column for each metric.
         The index is the component number.
@@ -331,7 +331,7 @@ def fit_mixing_to_regressors(
 
     Returns
     -------
-    comptable : (C x X) :obj:`pandas.DataFrame`
+    component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table.
         Same as inputted, with added columns for metrics related to external regressor fits.
         New columns for F, R2, and p values for the full model and all partial models.
@@ -380,10 +380,10 @@ def fit_mixing_to_regressors(
             p_vals[f"pval {regress_id} {pmodel} partial model"] = p_vals_tmp
             r2_vals[f"R2stat {regress_id} {pmodel} partial model"] = r2_vals_tmp
 
-    # Add all F p and R2 statistics to comptable
-    comptable = pd.concat((comptable, f_vals, p_vals, r2_vals), axis=1)
+    # Add all F p and R2 statistics to component_table
+    component_table = pd.concat((component_table, f_vals, p_vals, r2_vals), axis=1)
 
-    return comptable
+    return component_table
 
 
 def build_fstat_regressor_models(

@@ -32,15 +32,15 @@ def getfbounds(n_echos):
     return f05, f025, f01
 
 
-def computefeats2(data, mmix, mask=None, normalize=True):
+def computefeats2(data, mixing, mask=None, normalize=True):
     """
-    Convert `data` to component space using `mmix`.
+    Convert `data` to component space using `mixing`.
 
     Parameters
     ----------
     data : (S x T) array_like
         Input data
-    mmix : (T [x C]) array_like
+    mixing : (T [x C]) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
     mask : (S,) array_like or None, optional
@@ -55,8 +55,8 @@ def computefeats2(data, mmix, mask=None, normalize=True):
     """
     if data.ndim != 2:
         raise ValueError(f"Parameter data should be 2d, not {data.ndim}d")
-    elif mmix.ndim not in [2]:
-        raise ValueError(f"Parameter mmix should be 2d, not {mmix.ndim}d")
+    elif mixing.ndim not in [2]:
+        raise ValueError(f"Parameter mixing should be 2d, not {mixing.ndim}d")
     elif (mask is not None) and (mask.ndim != 1):
         raise ValueError(f"Parameter mask should be 1d, not {mask.ndim}d")
     elif (mask is not None) and (data.shape[0] != mask.shape[0]):
@@ -64,10 +64,10 @@ def computefeats2(data, mmix, mask=None, normalize=True):
             f"First dimensions (number of samples) of data ({data.shape[0]}) "
             f"and mask ({mask.shape[0]}) do not match."
         )
-    elif data.shape[1] != mmix.shape[0]:
+    elif data.shape[1] != mixing.shape[0]:
         raise ValueError(
             f"Second dimensions (number of volumes) of data ({data.shape[0]}) "
-            f"and mmix ({mmix.shape[0]}) do not match."
+            f"and mixing ({mixing.shape[0]}) do not match."
         )
 
     # demean masked data
@@ -75,11 +75,11 @@ def computefeats2(data, mmix, mask=None, normalize=True):
         data = data[mask, ...]
     # normalize data (subtract mean and divide by standard deviation) in the last dimension
     # so that least-squares estimates represent "approximate" correlation values (data_r)
-    # assuming mixing matrix (mmix) values are also normalized
+    # assuming mixing matrix (mixing) values are also normalized
     data_vn = stats.zscore(data, axis=-1)
 
-    # get betas of `data`~`mmix` and limit to range [-0.999, 0.999]
-    data_r = get_coeffs(data_vn, mmix, mask=None)
+    # get betas of `data`~`mixing` and limit to range [-0.999, 0.999]
+    data_r = get_coeffs(data_vn, mixing, mask=None)
     # Avoid abs(data_r) => 1, otherwise Fisher's transform will return Inf or -Inf
     data_r[data_r < -0.999] = -0.999
     data_r[data_r > 0.999] = 0.999

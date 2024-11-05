@@ -142,8 +142,8 @@ def test_integration_five_echo(skip_integration):
     )
 
     # Just a check on the component table pending a unit test of load_comptable
-    comptable = os.path.join(out_dir, "sub-01_desc-tedana_metrics.tsv")
-    df = pd.read_table(comptable)
+    component_table = os.path.join(out_dir, "sub-01_desc-tedana_metrics.tsv")
+    df = pd.read_table(component_table)
     assert isinstance(df, pd.DataFrame)
 
     # compare the generated output files
@@ -537,8 +537,8 @@ def test_integration_reclassify_no_bold(skip_integration, caplog):
         shutil.rmtree(out_dir)
 
     ioh = InputHarvester(reclassify_raw_registry())
-    comptable = ioh.get_file_contents("ICA metrics tsv")
-    to_accept = [i for i in range(len(comptable))]
+    component_table = ioh.get_file_contents("ICA metrics tsv")
+    to_accept = [i for i in range(len(component_table))]
 
     ica_reclassify_workflow(
         reclassify_raw_registry(),
@@ -562,8 +562,8 @@ def test_integration_reclassify_accrej_files(skip_integration, caplog):
         shutil.rmtree(out_dir)
 
     ioh = InputHarvester(reclassify_raw_registry())
-    comptable = ioh.get_file_contents("ICA metrics tsv")
-    to_accept = [i for i in range(len(comptable))]
+    component_table = ioh.get_file_contents("ICA metrics tsv")
+    to_accept = [i for i in range(len(component_table))]
 
     ica_reclassify_workflow(
         reclassify_raw_registry(),

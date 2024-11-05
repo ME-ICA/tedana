@@ -522,19 +522,19 @@ def add_decomp_prefix(comp_num, prefix, max_value):
     return comp_name
 
 
-def denoise_ts(data, mmix, mask, comptable):
+def denoise_ts(data, mixing, mask, component_table):
     """Apply component classifications to data for denoising.
 
     Parameters
     ----------
     data : (S x T) array_like
         Input time series
-    mmix : (C x T) array_like
+    mixing : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
     mask : (S,) array_like
         Boolean mask array
-    comptable : (C x X) :obj:`pandas.DataFrame`
+    component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. Requires at least one column: "classification".
 
@@ -547,34 +547,34 @@ def denoise_ts(data, mmix, mask, comptable):
     lowkts : (S x T) array_like
         Low-Kappa data (i.e., data composed only of rejected components).
     """
-    acc = comptable[comptable.classification == "accepted"].index.values
-    rej = comptable[comptable.classification == "rejected"].index.values
+    acc = component_table[component_table.classification == "accepted"].index.values
+    rej = component_table[component_table.classification == "rejected"].index.values
 
     # mask and de-mean data
     mdata = data[mask]
     dmdata = mdata.T - mdata.T.mean(axis=0)
 
     # get variance explained by retained components
-    betas = get_coeffs(dmdata.T, mmix, mask=None)
-    varexpl = (1 - ((dmdata.T - betas.dot(mmix.T)) ** 2.0).sum() / (dmdata**2.0).sum()) * 100
+    betas = get_coeffs(dmdata.T, mixing, mask=None)
+    varexpl = (1 - ((dmdata.T - betas.dot(mixing.T)) ** 2.0).sum() / (dmdata**2.0).sum()) * 100
     LGR.info(f"Variance explained by decomposition: {varexpl:.02f}%")
 
     # create component-based data
-    hikts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
-    lowkts = utils.unmask(betas[:, rej].dot(mmix.T[rej, :]), mask)
+    hikts = utils.unmask(betas[:, acc].dot(mixing.T[acc, :]), mask)
+    lowkts = utils.unmask(betas[:, rej].dot(mixing.T[rej, :]), mask)
     dnts = utils.unmask(data[mask] - lowkts[mask], mask)
     return dnts, hikts, lowkts
 
 
 # File Writing Functions
-def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
+def write_split_ts(data, mixing, mask, component_table, io_generator, echo=0):
     """Split `data` into denoised / noise / ignored time series and save to disk.
 
     Parameters
     ----------
     data : (S x T) array_like
         Input time series
-    mmix : (C x T) array_like
+    mixing : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
     mask : (S,) array_like
@@ -614,10 +614,10 @@ def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
                                              number ``echo``.
     =====================================    ============================================
     """
-    acc = comptable[comptable.classification == "accepted"].index.values
-    rej = comptable[comptable.classification == "rejected"].index.values
+    acc = component_table[component_table.classification == "accepted"].index.values
+    rej = component_table[component_table.classification == "rejected"].index.values
 
-    dnts, hikts, lowkts = denoise_ts(data, mmix, mask, comptable)
+    dnts, hikts, lowkts = denoise_ts(data, mixing, mask, component_table)
 
     if len(acc) != 0:
         if echo != 0:
@@ -647,7 +647,7 @@ def write_split_ts(data, mmix, mask, comptable, io_generator, echo=0):
     LGR.info(f"Writing denoised time series: {fout}")
 
 
-def writeresults(ts, mask, comptable, mmix, io_generator):
+def writeresults(ts, mask, component_table, mixing, io_generator):
     """Denoise `ts` and save all resulting files to disk.
 
     Parameters
@@ -656,11 +656,11 @@ def writeresults(ts, mask, comptable, mmix, io_generator):
         Time series to denoise and save to disk
     mask : (S,) array_like
         Boolean mask array
-    comptable : (C x X) :obj:`pandas.DataFrame`
+    component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. Requires at least two columns: "component" and
         "classification".
-    mmix : (C x T) array_like
+    mixing : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
     ref_img : :obj:`str` or img_like
@@ -688,10 +688,10 @@ def writeresults(ts, mask, comptable, mmix, io_generator):
                                                  for accepted components.
     =========================================    ===========================================
     """
-    acc = comptable[comptable.classification == "accepted"].index.values
-    write_split_ts(ts, mmix, mask, comptable, io_generator)
+    acc = component_table[component_table.classification == "accepted"].index.values
+    write_split_ts(ts, mixing, mask, component_table, io_generator)
 
-    ts_pes = get_coeffs(ts, mmix, mask)
+    ts_pes = get_coeffs(ts, mixing, mask)
     fout = io_generator.save_file(ts_pes, "ICA components img")
     LGR.info(f"Writing full ICA coefficient feature set: {fout}")
 
@@ -700,25 +700,25 @@ def writeresults(ts, mask, comptable, mmix, io_generator):
         LGR.info(f"Writing denoised ICA coefficient feature set: {fout}")
 
         # write feature versions of components
-        feats = computefeats2(split_ts(ts, mmix, mask, comptable)[0], mmix[:, acc], mask)
+        feats = computefeats2(split_ts(ts, mixing, mask, component_table)[0], mixing[:, acc], mask)
         feats = utils.unmask(feats, mask)
         fname = io_generator.save_file(feats, "z-scored ICA accepted components img")
         LGR.info(f"Writing Z-normalized spatial component maps: {fname}")
 
 
-def writeresults_echoes(catd, mmix, mask, comptable, io_generator):
+def writeresults_echoes(data_cat, mixing, mask, component_table, io_generator):
     """Save individually denoised echos to disk.
 
     Parameters
     ----------
-    catd : (S x E x T) array_like
+    data_cat : (S x E x T) array_like
         Input data time series
-    mmix : (C x T) array_like
+    mixing : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
     mask : (S,) array_like
         Boolean mask array
-    comptable : (C x X) :obj:`pandas.DataFrame`
+    component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
     ref_img : :obj:`str` or img_like
@@ -742,9 +742,16 @@ def writeresults_echoes(catd, mmix, mask, comptable, io_generator):
                                              number ``echo``.
     =====================================    ===================================
     """
-    for i_echo in range(catd.shape[1]):
+    for i_echo in range(data_cat.shape[1]):
         LGR.info(f"Writing Kappa-filtered echo #{i_echo + 1:01d} timeseries")
-        write_split_ts(catd[:, i_echo, :], mmix, mask, comptable, io_generator, echo=(i_echo + 1))
+        write_split_ts(
+            data_cat[:, i_echo, :],
+            mixing,
+            mask,
+            component_table,
+            io_generator,
+            echo=(i_echo + 1),
+        )
 
 
 # File Loading Functions
@@ -836,19 +843,19 @@ def new_nii_like(ref_img, data, affine=None, copy_header=True):
     return nii
 
 
-def split_ts(data, mmix, mask, comptable):
+def split_ts(data, mixing, mask, component_table):
     """Split `data` time series into accepted component time series and remainder.
 
     Parameters
     ----------
     data : (S x T) array_like
         Input data, where `S` is samples and `T` is time
-    mmix : (T x C) array_like
+    mixing : (T x C) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
     mask : (S,) array_like
         Boolean mask array
-    comptable : (C x X) :obj:`pandas.DataFrame`
+    component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. Requires at least two columns: "component" and
         "classification".
@@ -860,12 +867,12 @@ def split_ts(data, mmix, mask, comptable):
     resid : (S x T) :obj:`numpy.ndarray`
         Original data with `hikts` removed
     """
-    acc = comptable[comptable.classification == "accepted"].index.values
+    acc = component_table[component_table.classification == "accepted"].index.values
 
-    cbetas = get_coeffs(data - data.mean(axis=-1, keepdims=True), mmix, mask)
+    cbetas = get_coeffs(data - data.mean(axis=-1, keepdims=True), mixing, mask)
     betas = cbetas[mask]
     if len(acc) != 0:
-        hikts = utils.unmask(betas[:, acc].dot(mmix.T[acc, :]), mask)
+        hikts = utils.unmask(betas[:, acc].dot(mixing.T[acc, :]), mask)
     else:
         hikts = None
 

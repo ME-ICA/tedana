@@ -145,7 +145,7 @@ def minimum_image_regression(
     data_optcom: np.ndarray,
     mixing: np.ndarray,
     mask: np.ndarray,
-    comptable: pd.DataFrame,
+    component_table: pd.DataFrame,
     classification_tags: list,
     io_generator: io.OutputGenerator,
 ):
@@ -163,7 +163,7 @@ def minimum_image_regression(
         is components and ``T`` is the same as in ``data_optcom``
     mask : (S,) array_like
         Boolean mask array
-    comptable : (C x X) :obj:`pandas.DataFrame`
+    component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
     classification_tags : :obj:`list` of :obj:`str`
@@ -210,7 +210,7 @@ def minimum_image_regression(
         "diffuse noise \\citep{kundu2013integrated}."
     )
 
-    all_comps = comptable.index.values
+    all_comps = component_table.index.values
     # Get accepted and ignored components
     # Tedana has removed the "ignored" classification,
     # so we must separate "accepted" components based on the classification tag(s).
@@ -225,11 +225,11 @@ def minimum_image_regression(
         pattern = "|".join(ignore_tags)  # Create a pattern that matches any of the ignore tags
 
         # Select rows where the 'classification_tags' column contains any of the ignore tags
-        ign = comptable[
-            comptable.classification_tags.str.contains(pattern, na=False, regex=True)
+        ign = component_table[
+            component_table.classification_tags.str.contains(pattern, na=False, regex=True)
         ].index.values
 
-    acc = comptable[comptable.classification == "accepted"].index.values
+    acc = component_table[component_table.classification == "accepted"].index.values
     # Ignored components are classified as "accepted", so we need to remove them from the list
     acc = sorted(np.setdiff1d(acc, ign))
     not_ign = sorted(np.setdiff1d(all_comps, ign))
@@ -273,7 +273,7 @@ def minimum_image_regression(
     mixing_not1gs_z = np.vstack((np.atleast_2d(np.ones(max(gs_ts.shape))), gs_ts, mixing_not1gs_z))
 
     # Write T1-corrected components and mixing matrix
-    mixing_df = pd.DataFrame(data=mixing_not1gs.T, columns=comptable["Component"].values)
+    mixing_df = pd.DataFrame(data=mixing_not1gs.T, columns=component_table["Component"].values)
     io_generator.save_file(mixing_df, "ICA MIR mixing tsv")
 
     if io_generator.verbose:

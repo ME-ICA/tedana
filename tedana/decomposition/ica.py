@@ -54,7 +54,7 @@ def tedica(
 
     Returns
     -------
-    mmix : (T x C) :obj:`numpy.ndarray`
+    mixing : (T x C) :obj:`numpy.ndarray`
         Z-scored mixing matrix for converting input data to component space,
         where `C` is components and `T` is the same as in `data`
     fixed_seed : :obj:`int`
@@ -69,7 +69,7 @@ def tedica(
     ica_method = ica_method.lower()
 
     if ica_method == "robustica":
-        mmix, fixed_seed = r_ica(
+        mixing, fixed_seed = r_ica(
             data,
             n_components=n_components,
             fixed_seed=fixed_seed,
@@ -77,7 +77,7 @@ def tedica(
             max_it=maxit,
         )
     elif ica_method == "fastica":
-        mmix, fixed_seed = f_ica(
+        mixing, fixed_seed = f_ica(
             data,
             n_components=n_components,
             fixed_seed=fixed_seed,
@@ -87,7 +87,7 @@ def tedica(
     else:
         raise ValueError("The selected ICA method is invalid!")
 
-    return mmix, fixed_seed
+    return mixing, fixed_seed
 
 
 def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
@@ -109,7 +109,7 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
 
     Returns
     -------
-    mmix : (T x C) :obj:`numpy.ndarray`
+    mixing : (T x C) :obj:`numpy.ndarray`
         Z-scored mixing matrix for converting input data to component space,
         where `C` is components and `T` is the same as in `data`
     fixed_seed : :obj:`int`
@@ -140,7 +140,7 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
                 robust_method=robust_method,
             )
 
-            s, mmix = robust_ica.fit_transform(data)
+            s, mixing = robust_ica.fit_transform(data)
             q = robust_ica.evaluate_clustering(
                 robust_ica.S_all,
                 robust_ica.clustering.labels_,
@@ -151,7 +151,7 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
 
         except Exception:
             if robust_method == "DBSCAN":
-                # if RobustICA failed wtih DBSCAN, run again wtih AgglomerativeClustering
+                # if RobustICA failed wtih DBSCAN, run again with AgglomerativeClustering
                 robust_method = "AgglomerativeClustering"
                 LGR.warning(
                     "DBSCAN clustering method did not converge. "
@@ -165,9 +165,8 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
         f"components across different runs"
     )
 
-    iq = np.array(
-        np.mean(q[q["cluster_id"] >= 0].iq)
-    )  # Excluding outliers (cluster -1) from the index quality calculation
+    # Excluding outliers (cluster -1) from the index quality calculation
+    iq = np.array(np.mean(q[q["cluster_id"] >= 0].iq))
 
     if iq < WARN_IQ:
         LGR.warning(
@@ -175,10 +174,9 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
             "process with a different seed."
         )
 
-    mmix = mmix[
-        :, q["cluster_id"] >= 0
-    ]  # Excluding outliers (cluster -1) when calculating the mixing matrix
-    mmix = stats.zscore(mmix, axis=0)
+    # Excluding outliers (cluster -1) when calculating the mixing matrix
+    mixing = mixing[:, q["cluster_id"] >= 0]
+    mixing = stats.zscore(mixing, axis=0)
 
     LGR.info(
         f"RobustICA with {n_robust_runs} robust runs and seed {fixed_seed} was used. "
@@ -194,7 +192,7 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
             f"decomposition."
         )
 
-    return mmix, fixed_seed
+    return mixing, fixed_seed
 
 
 def f_ica(data, n_components, fixed_seed, maxit, maxrestart):
@@ -218,7 +216,7 @@ def f_ica(data, n_components, fixed_seed, maxit, maxrestart):
 
     Returns
     -------
-    mmix : (T x C) :obj:`numpy.ndarray`
+    mixing : (T x C) :obj:`numpy.ndarray`
         Z-scored mixing matrix for converting input data to component space,
         where `C` is components and `T` is the same as in `data`
     fixed_seed : :obj:`int`
@@ -262,6 +260,6 @@ def f_ica(data, n_components, fixed_seed, maxit, maxrestart):
                 )
                 break
 
-    mmix = ica.mixing_
-    mmix = stats.zscore(mmix, axis=0)
-    return mmix, fixed_seed
+    mixing = ica.mixing_
+    mixing = stats.zscore(mixing, axis=0)
+    return mixing, fixed_seed

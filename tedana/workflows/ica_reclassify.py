@@ -373,25 +373,25 @@ def ica_reclassify_workflow(
     LGR.info(f"Using output directory: {out_dir}")
 
     ioh = io.InputHarvester(registry)
-    comptable = ioh.get_file_contents("ICA metrics tsv")
+    component_table = ioh.get_file_contents("ICA metrics tsv")
     xcomp = ioh.get_file_contents("ICA cross component metrics json")
     status_table = ioh.get_file_contents("ICA status table tsv")
     previous_tree_fname = ioh.get_file_path("ICA decision tree json")
-    mmix = np.asarray(ioh.get_file_contents("ICA mixing tsv"))
+    mixing = np.asarray(ioh.get_file_contents("ICA mixing tsv"))
     adaptive_mask = ioh.get_file_contents("adaptive mask img")
     # If global signal was removed in the previous run, we can assume that
     # the user wants to use that file again. If not, use the default of
     # optimally combined data.
     gskey = "removed gs combined img"
     if ioh.get_file_path(gskey):
-        data_oc = ioh.get_file_contents(gskey)
+        data_optcom = ioh.get_file_contents(gskey)
         used_gs = True
     else:
-        data_oc = ioh.get_file_contents("combined img")
+        data_optcom = ioh.get_file_contents("combined img")
         used_gs = False
 
     io_generator = io.OutputGenerator(
-        data_oc,
+        data_optcom,
         convention=convention,
         prefix=prefix,
         config=config,
@@ -411,17 +411,17 @@ def ica_reclassify_workflow(
         selector.add_manual(reject, "rejected")
 
     selector.select(
-        comptable,
+        component_table,
         cross_component_metrics=xcomp,
         status_table=status_table,
     )
-    comptable = selector.component_table_
+    component_table = selector.component_table_
 
     # NOTE: most of these will be identical to previous, but this makes
     # things easier for programs which will view the data after running.
     # First, make the output generator
-    comp_names = comptable["Component"].values
-    mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
+    comp_names = component_table["Component"].values
+    mixing_df = pd.DataFrame(data=mixing, columns=comp_names)
     to_copy = [
         "z-scored ICA components img",
         "ICA mixing tsv",
@@ -445,22 +445,22 @@ def ica_reclassify_workflow(
             "Please check data and results!"
         )
 
-    mmix_orig = mmix.copy()
+    mmix_orig = mixing.copy()
     # TODO: make this a function
     if tedort:
         comps_accepted = selector.accepted_comps_
         comps_rejected = selector.rejected_comps_
-        acc_ts = mmix[:, comps_accepted]
-        rej_ts = mmix[:, comps_rejected]
+        acc_ts = mixing[:, comps_accepted]
+        rej_ts = mixing[:, comps_rejected]
         betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
         pred_rej_ts = np.dot(acc_ts, betas)
         resid = rej_ts - pred_rej_ts
-        mmix[:, comps_rejected] = resid
+        mixing[:, comps_rejected] = resid
         comp_names = [
-            io.add_decomp_prefix(comp, prefix="ica", max_value=comptable.index.max())
+            io.add_decomp_prefix(comp, prefix="ica", max_value=component_table.index.max())
             for comp in range(selector.n_comps_)
         ]
-        mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
+        mixing_df = pd.DataFrame(data=mixing, columns=comp_names)
         io_generator.save_file(mixing_df, "ICA orthogonalized mixing tsv")
         RepLGR.info(
             "Rejected components' time series were then "
@@ -471,7 +471,7 @@ def ica_reclassify_workflow(
     # img_t_r = io_generator.reference_img.header.get_zooms()[-1]
     adaptive_mask = utils.reshape_niimg(adaptive_mask)
     mask_denoise = adaptive_mask >= 1
-    data_oc = utils.reshape_niimg(data_oc)
+    data_optcom = utils.reshape_niimg(data_optcom)
 
     # TODO: make a better result-writing function
     # #############################################!!!!
@@ -480,20 +480,20 @@ def ica_reclassify_workflow(
     #       - get_ts_regress/residual_tag(include=[], exclude=[])
     #       How to handle [acc/rej] + tag ?
     io.writeresults(
-        data_oc,
+        data_optcom,
         mask=mask_denoise,
-        comptable=comptable,
-        mmix=mmix,
+        component_table=component_table,
+        mixing=mixing,
         io_generator=io_generator,
     )
 
     if mir:
         io_generator.overwrite = True
         gsc.minimum_image_regression(
-            data_optcom=data_oc,
-            mixing=mmix,
+            data_optcom=data_optcom,
+            mixing=mixing,
             mask=mask_denoise,
-            comptable=comptable,
+            component_table=component_table,
             classification_tags=selector.classification_tags,
             io_generator=io_generator,
         )
@@ -544,7 +544,7 @@ def ica_reclassify_workflow(
     if not no_reports:
         LGR.info("Making figures folder with static component maps and timecourse plots.")
 
-        dn_ts, hikts, lowkts = io.denoise_ts(data_oc, mmix, mask_denoise, comptable)
+        dn_ts, hikts, lowkts = io.denoise_ts(data_optcom, mixing, mask_denoise, component_table)
 
         # Figure out which control methods were used
         gscontrol = []
@@ -555,7 +555,7 @@ def ica_reclassify_workflow(
         gscontrol = None if gscontrol == [] else gscontrol
 
         reporting.static_figures.carpet_plot(
-            optcom_ts=data_oc,
+            optcom_ts=data_optcom,
             denoised_ts=dn_ts,
             hikts=hikts,
             lowkts=lowkts,
@@ -564,10 +564,10 @@ def ica_reclassify_workflow(
             gscontrol=gscontrol,
         )
         reporting.static_figures.comp_figures(
-            data_oc,
+            data_optcom,
             mask=mask_denoise,
-            comptable=comptable,
-            mmix=mmix_orig,
+            component_table=component_table,
+            mixing=mmix_orig,
             io_generator=io_generator,
             png_cmap=png_cmap,
         )

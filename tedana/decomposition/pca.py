@@ -50,7 +50,7 @@ def low_mem_pca(data):
 
 def tedpca(
     data_cat,
-    data_oc,
+    data_optcom,
     mask,
     adaptive_mask,
     io_generator,
@@ -66,7 +66,7 @@ def tedpca(
     ----------
     data_cat : (S x E x T) array_like
         Input functional data
-    data_oc : (S x T) array_like
+    data_optcom : (S x T) array_like
         Optimally combined time series data
     mask : (S,) array_like
         Boolean mask array
@@ -203,7 +203,7 @@ def tedpca(
     LGR.info(
         f"Computing PCA of optimally combined multi-echo data with selection criteria: {algorithm}"
     )
-    data = data_oc[mask, :]
+    data = data_optcom[mask, :]
 
     data_z = ((data.T - data.T.mean(axis=0)) / data.T.std(axis=0)).T  # var normalize ts
     data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
@@ -349,9 +349,9 @@ def tedpca(
         "d_table_score",
     ]
     # Even if user inputted, don't fit external_regressors to PCA components
-    comptable, _ = metrics.collect.generate_metrics(
+    component_table, _ = metrics.collect.generate_metrics(
         data_cat=data_cat,
-        data_optcom=data_oc,
+        data_optcom=data_optcom,
         mixing=comp_ts,
         adaptive_mask=adaptive_mask,
         tes=tes,
@@ -363,27 +363,27 @@ def tedpca(
 
     # varex_norm from PCA overrides varex_norm from dependence_metrics,
     # but we retain the original
-    comptable["estimated normalized variance explained"] = comptable[
+    component_table["estimated normalized variance explained"] = component_table[
         "normalized variance explained"
     ]
-    comptable["normalized variance explained"] = varex_norm
+    component_table["normalized variance explained"] = varex_norm
 
     # write component maps to 4D image
-    comp_maps = utils.unmask(computefeats2(data_oc, comp_ts, mask), mask)
+    comp_maps = utils.unmask(computefeats2(data_optcom, comp_ts, mask), mask)
     io_generator.save_file(comp_maps, "z-scored PCA components img")
 
     # Select components using decision tree
     if algorithm == "kundu":
-        comptable, metric_metadata = kundu_tedpca(
-            comptable,
+        component_table, metric_metadata = kundu_tedpca(
+            component_table,
             n_echos,
             kdaw,
             rdaw,
             stabilize=False,
         )
     elif algorithm == "kundu-stabilize":
-        comptable, metric_metadata = kundu_tedpca(
-            comptable,
+        component_table, metric_metadata = kundu_tedpca(
+            component_table,
             n_echos,
             kdaw,
             rdaw,
@@ -397,25 +397,25 @@ def tedpca(
         else:
             alg_str = algorithm
         LGR.info(
-            f"Selected {comptable.shape[0]} components with {round(100 * varex_norm.sum(), 2)}% "
+            f"Selected {component_table.shape[0]} components with {round(100 * varex_norm.sum(), 2)}% "
             f"normalized variance explained using {alg_str} dimensionality estimate"
         )
-        comptable["classification"] = "accepted"
-        comptable["rationale"] = ""
+        component_table["classification"] = "accepted"
+        component_table["rationale"] = ""
 
     # Save decomposition files
     comp_names = [
-        io.add_decomp_prefix(comp, prefix="pca", max_value=comptable.index.max())
-        for comp in comptable.index.values
+        io.add_decomp_prefix(comp, prefix="pca", max_value=component_table.index.max())
+        for comp in component_table.index.values
     ]
 
     mixing_df = pd.DataFrame(data=comp_ts, columns=comp_names)
     io_generator.save_file(mixing_df, "PCA mixing tsv")
 
     # Save component table and associated json
-    io_generator.save_file(comptable, "PCA metrics tsv")
+    io_generator.save_file(component_table, "PCA metrics tsv")
 
-    metric_metadata = metrics.collect.get_metadata(comptable)
+    metric_metadata = metrics.collect.get_metadata(component_table)
     io_generator.save_file(metric_metadata, "PCA metrics json")
 
     decomp_metadata = {
@@ -431,7 +431,7 @@ def tedpca(
         }
     io_generator.save_file(decomp_metadata, "PCA decomposition json")
 
-    acc = comptable[comptable.classification == "accepted"].index.values
+    acc = component_table[component_table.classification == "accepted"].index.values
     n_components = acc.size
     voxel_kept_comp_weighted = voxel_comp_weights[:, acc] * varex[None, acc]
     kept_data = np.dot(voxel_kept_comp_weighted, comp_ts[:, acc].T)
