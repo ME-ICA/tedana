@@ -464,8 +464,8 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
     Returns
     -------
     metric_metadata : dict
-        The metadata for each column in the component_table for which we have a metadata description,
-        plus the "Component" metadata description (always).
+        The metadata for each column in the component_table for which we have a metadata
+        description, plus the "Component" metadata description (always).
     """
     metric_metadata = {}
     if "kappa" in component_table:

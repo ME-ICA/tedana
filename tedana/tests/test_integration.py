@@ -174,7 +174,7 @@ def test_integration_four_echo(skip_integration):
     datalist = [prepend + str(i + 1) + suffix for i in range(4)]
     tedana_cli.tedana_workflow(
         data=datalist,
-        mixm=op.join(op.dirname(datalist[0]), "desc-ICA_mixing_static.tsv"),
+        mixing_file=op.join(op.dirname(datalist[0]), "desc-ICA_mixing_static.tsv"),
         tes=[11.8, 28.04, 44.28, 60.52],
         ica_method="fastica",
         out_dir=out_dir,
@@ -325,7 +325,7 @@ def test_integration_three_echo_external_regressors_motion_task_models(skip_inte
         external_regressors=resource_filename(
             "tedana", "tests/data/external_regress_Ftest_3echo.tsv"
         ),
-        mixm=f"{test_data_path}/desc_ICA_mixing_static.tsv",
+        mixing_file=f"{test_data_path}/desc_ICA_mixing_static.tsv",
         low_mem=True,
         tedpca="aic",
     )
