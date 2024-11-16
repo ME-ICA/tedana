@@ -198,6 +198,7 @@ def _get_parser():
         default=None,
     )
     optional.add_argument(
+        "--ica-method",
         "--ica_method",
         dest="ica_method",
         help=(
@@ -226,6 +227,7 @@ def _get_parser():
         default=DEFAULT_SEED,
     )
     optional.add_argument(
+        "--n-robust-runs",
         "--n_robust_runs",
         dest="n_robust_runs",
         metavar="[5-500]",
