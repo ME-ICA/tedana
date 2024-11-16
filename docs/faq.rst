@@ -129,7 +129,7 @@ independant and identically distributed (IID),
 and signal leakage from in-slice and multi-slice accelleration may violate this assumption.
 
 We have one option that is generally useful and is also a partial solution.
-``--ica_method robustica`` will run `robustica`_.
+``--ica-method robustica`` will run `robustica`_.
 This is a method that, for a given number of PCA components,
 will repeatedly run ICA and identify components that are stable across iterations.
 While running ICA multiple times will slow processing, as a general benefit,
@@ -152,7 +152,7 @@ but is still sensitive to the intial number of PCA components.
 For example, for a single dataset 60 PCA components might result in 46 stable ICA components,
 while 55 PCA components might results in 43 stable ICA components.
 We are still testing how these interact to give better recommendations for even more stable results.
-While the TEDANA developers expect that ``--ica_method robustica`` may become
+While the TEDANA developers expect that ``--ica-method robustica`` may become
 the default configuration in future TEDANA versions,
 it is first being released to the public as a non-default option
 in hope of gaining insight into its behaviour
