@@ -884,7 +884,7 @@ def tedana_workflow(
         )
 
     # TODO The ICA mixing matrix should be written out after it is created
-    #     It is currently being writen after component selection is done
+    #     It is currently being written after component selection is done
     #     and rewritten if an existing mixing matrix is given as an input
     comp_names = component_table["Component"].values
     mixing_df = pd.DataFrame(data=mixing, columns=comp_names)

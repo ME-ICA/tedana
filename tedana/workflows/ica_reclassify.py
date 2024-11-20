@@ -445,7 +445,7 @@ def ica_reclassify_workflow(
             "Please check data and results!"
         )
 
-    mmix_orig = mixing.copy()
+    mixing_orig = mixing.copy()
     # TODO: make this a function
     if tedort:
         comps_accepted = selector.accepted_comps_
@@ -567,7 +567,7 @@ def ica_reclassify_workflow(
             data_optcom,
             mask=mask_denoise,
             component_table=component_table,
-            mixing=mmix_orig,
+            mixing=mixing_orig,
             io_generator=io_generator,
             png_cmap=png_cmap,
         )
