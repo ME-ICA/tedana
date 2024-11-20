@@ -13,43 +13,43 @@ def test_break_computefeats2():
     """Ensure that computefeats2 fails when input data do not have the right shapes."""
     n_samples, n_vols, n_comps = 10000, 100, 50
     data = np.empty((n_samples, n_vols))
-    mmix = np.empty((n_vols, n_comps))
+    mixing = np.empty((n_vols, n_comps))
     mask = np.empty(n_samples)
 
     data = np.empty(n_samples)
     with pytest.raises(ValueError):
-        computefeats2(data, mmix, mask, normalize=True)
+        computefeats2(data, mixing, mask, normalize=True)
 
     data = np.empty((n_samples, n_vols))
-    mmix = np.empty(n_vols)
+    mixing = np.empty(n_vols)
     with pytest.raises(ValueError):
-        computefeats2(data, mmix, mask, normalize=True)
+        computefeats2(data, mixing, mask, normalize=True)
 
-    mmix = np.empty((n_vols, n_comps))
+    mixing = np.empty((n_vols, n_comps))
     mask = np.empty((n_samples, n_vols))
     with pytest.raises(ValueError):
-        computefeats2(data, mmix, mask, normalize=True)
+        computefeats2(data, mixing, mask, normalize=True)
 
     mask = np.empty(n_samples + 1)
     with pytest.raises(ValueError):
-        computefeats2(data, mmix, mask, normalize=True)
-    data.shape[1] != mmix.shape[0]
+        computefeats2(data, mixing, mask, normalize=True)
+    data.shape[1] != mixing.shape[0]
     mask = np.empty(n_samples)
-    mmix = np.empty((n_vols + 1, n_comps))
+    mixing = np.empty((n_vols + 1, n_comps))
     with pytest.raises(ValueError):
-        computefeats2(data, mmix, mask, normalize=True)
+        computefeats2(data, mixing, mask, normalize=True)
 
 
 def test_smoke_computefeats2():
     """Ensures that computefeats2 works with random inputs and different optional parameters."""
     n_samples, n_times, n_components = 100, 20, 6
     data = np.random.random((n_samples, n_times))
-    mmix = np.random.random((n_times, n_components))
+    mixing = np.random.random((n_times, n_components))
     mask = np.random.randint(2, size=n_samples)
 
-    assert computefeats2(data, mmix) is not None
-    assert computefeats2(data, mmix, mask=mask) is not None
-    assert computefeats2(data, mmix, normalize=False) is not None
+    assert computefeats2(data, mixing) is not None
+    assert computefeats2(data, mixing, mask=mask) is not None
+    assert computefeats2(data, mixing, normalize=False) is not None
 
 
 def test_get_coeffs():

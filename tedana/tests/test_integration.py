@@ -142,8 +142,8 @@ def test_integration_five_echo(skip_integration):
     )
 
     # Just a check on the component table pending a unit test of load_comptable
-    comptable = os.path.join(out_dir, "sub-01_desc-tedana_metrics.tsv")
-    df = pd.read_table(comptable)
+    component_table = os.path.join(out_dir, "sub-01_desc-tedana_metrics.tsv")
+    df = pd.read_table(component_table)
     assert isinstance(df, pd.DataFrame)
 
     # compare the generated output files
@@ -174,7 +174,7 @@ def test_integration_four_echo(skip_integration):
     datalist = [prepend + str(i + 1) + suffix for i in range(4)]
     tedana_cli.tedana_workflow(
         data=datalist,
-        mixm=op.join(op.dirname(datalist[0]), "desc-ICA_mixing_static.tsv"),
+        mixing_file=op.join(op.dirname(datalist[0]), "desc-ICA_mixing_static.tsv"),
         tes=[11.8, 28.04, 44.28, 60.52],
         ica_method="fastica",
         out_dir=out_dir,
@@ -325,7 +325,7 @@ def test_integration_three_echo_external_regressors_motion_task_models(skip_inte
         external_regressors=resource_filename(
             "tedana", "tests/data/external_regress_Ftest_3echo.tsv"
         ),
-        mixm=f"{test_data_path}/desc_ICA_mixing_static.tsv",
+        mixing_file=f"{test_data_path}/desc_ICA_mixing_static.tsv",
         low_mem=True,
         tedpca="aic",
     )
@@ -537,8 +537,8 @@ def test_integration_reclassify_no_bold(skip_integration, caplog):
         shutil.rmtree(out_dir)
 
     ioh = InputHarvester(reclassify_raw_registry())
-    comptable = ioh.get_file_contents("ICA metrics tsv")
-    to_accept = [i for i in range(len(comptable))]
+    component_table = ioh.get_file_contents("ICA metrics tsv")
+    to_accept = [i for i in range(len(component_table))]
 
     ica_reclassify_workflow(
         reclassify_raw_registry(),
@@ -562,8 +562,8 @@ def test_integration_reclassify_accrej_files(skip_integration, caplog):
         shutil.rmtree(out_dir)
 
     ioh = InputHarvester(reclassify_raw_registry())
-    comptable = ioh.get_file_contents("ICA metrics tsv")
-    to_accept = [i for i in range(len(comptable))]
+    component_table = ioh.get_file_contents("ICA metrics tsv")
+    to_accept = [i for i in range(len(component_table))]
 
     ica_reclassify_workflow(
         reclassify_raw_registry(),

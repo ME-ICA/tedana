@@ -351,7 +351,7 @@ def _get_parser():
     )
     optional.add_argument(
         "--mix",
-        dest="mixm",
+        dest="mixing_file",
         metavar="FILE",
         type=lambda x: is_valid_file(parser, x),
         help=("File containing mixing matrix. If not provided, ME-PCA & ME-ICA is done."),
@@ -403,7 +403,7 @@ def tedana_workflow(
     quiet=False,
     overwrite=False,
     t2smap=None,
-    mixm=None,
+    mixing_file=None,
     tedana_command=None,
 ):
     """Run the "canonical" TE-Dependent ANAlysis workflow.
@@ -509,7 +509,7 @@ def tedana_workflow(
     t2smap : :obj:`str`, optional
         Precalculated T2* map in the same space as the input data. Values in
         the map must be in seconds.
-    mixm : :obj:`str` or None, optional
+    mixing_file : :obj:`str` or None, optional
         File containing mixing matrix, to be used when re-running the workflow.
         If not provided, ME-PCA and ME-ICA are done. Default is None.
     quiet : :obj:`bool`, optional
@@ -590,7 +590,7 @@ def tedana_workflow(
     selector = ComponentSelector(tree)
 
     LGR.info(f"Loading input data: {[f for f in data]}")
-    catd, ref_img = io.load_data(data, n_echos=n_echos)
+    data_cat, ref_img = io.load_data(data, n_echos=n_echos)
 
     # Load external regressors if provided
     # Decided to do the validation here so that, if there are issues, an error
@@ -601,7 +601,7 @@ def tedana_workflow(
     ):
         external_regressors, selector.tree["external_regressor_config"] = (
             metrics.external.load_validate_external_regressors(
-                external_regressors, selector.tree["external_regressor_config"], catd.shape[2]
+                external_regressors, selector.tree["external_regressor_config"], data_cat.shape[2]
             )
         )
 
@@ -623,8 +623,8 @@ def tedana_workflow(
     info_dict = utils.get_system_version_info()
     info_dict["Command"] = tedana_command
 
-    n_samp, n_echos, n_vols = catd.shape
-    LGR.debug(f"Resulting data shape: {catd.shape}")
+    n_samp, n_echos, n_vols = data_cat.shape
+    LGR.debug(f"Resulting data shape: {data_cat.shape}")
 
     # check if TR is 0
     img_t_r = io_generator.reference_img.header.get_zooms()[-1]
@@ -639,15 +639,15 @@ def tedana_workflow(
             "to correct your TR to the value it should be."
         )
 
-    if mixm is not None and op.isfile(mixm):
-        mixm = op.abspath(mixm)
+    if mixing_file is not None and op.isfile(mixing_file):
+        mixing_file = op.abspath(mixing_file)
         # Allow users to re-run on same folder
         mixing_name = io_generator.get_name("ICA mixing tsv")
-        if mixm != mixing_name:
-            shutil.copyfile(mixm, mixing_name)
-            shutil.copyfile(mixm, op.join(io_generator.out_dir, op.basename(mixm)))
-    elif mixm is not None:
-        raise OSError("Argument 'mixm' must be an existing file.")
+        if mixing_file != mixing_name:
+            shutil.copyfile(mixing_file, mixing_name)
+            shutil.copyfile(mixing_file, op.join(io_generator.out_dir, op.basename(mixing_file)))
+    elif mixing_file is not None:
+        raise OSError("Argument '--mix' must be an existing file.")
 
     if t2smap is not None and op.isfile(t2smap):
         t2smap_file = io_generator.get_name("t2star img")
@@ -683,7 +683,7 @@ def tedana_workflow(
         mask[t2s_limited == 0] = 0  # reduce mask based on T2* map
     else:
         LGR.info("Computing EPI mask from first echo")
-        first_echo_img = io.new_nii_like(io_generator.reference_img, catd[:, 0, :])
+        first_echo_img = io.new_nii_like(io_generator.reference_img, data_cat[:, 0, :])
         mask = compute_epi_mask(first_echo_img).get_fdata()
         mask = utils.reshape_niimg(mask).astype(int)
         RepLGR.info(
@@ -693,7 +693,7 @@ def tedana_workflow(
 
     # Create an adaptive mask with at least 1 good echo, for denoising
     mask_denoise, masksum_denoise = utils.make_adaptive_mask(
-        catd,
+        data_cat,
         mask=mask,
         threshold=1,
         methods=masktype,
@@ -717,7 +717,7 @@ def tedana_workflow(
     if t2smap is None:
         LGR.info("Computing T2* map")
         t2s_limited, s0_limited, t2s_full, s0_full = decay.fit_decay(
-            catd, tes, mask_denoise, masksum_denoise, fittype
+            data_cat, tes, mask_denoise, masksum_denoise, fittype
         )
 
         # set a hard cap for the T2* map
@@ -734,7 +734,7 @@ def tedana_workflow(
 
         # Calculate RMSE if S0 and T2* are fit
         rmse_map, rmse_df = decay.rmse_of_fit_decay_ts(
-            data=catd,
+            data=data_cat,
             tes=tes,
             adaptive_mask=masksum_denoise,
             t2s=t2s_limited,
@@ -745,25 +745,31 @@ def tedana_workflow(
         io_generator.add_df_to_file(rmse_df, "confounds tsv")
 
     # optimally combine data
-    data_oc = combine.make_optcom(catd, tes, masksum_denoise, t2s=t2s_full, combmode=combmode)
+    data_optcom = combine.make_optcom(
+        data_cat,
+        tes,
+        masksum_denoise,
+        t2s=t2s_full,
+        combmode=combmode,
+    )
 
     if "gsr" in gscontrol:
         # regress out global signal
-        catd, data_oc = gsc.gscontrol_raw(
-            data_cat=catd,
-            data_optcom=data_oc,
+        data_cat, data_optcom = gsc.gscontrol_raw(
+            data_cat=data_cat,
+            data_optcom=data_optcom,
             n_echos=n_echos,
             io_generator=io_generator,
         )
 
-    fout = io_generator.save_file(data_oc, "combined img")
+    fout = io_generator.save_file(data_optcom, "combined img")
     LGR.info(f"Writing optimally combined data set: {fout}")
 
-    if mixm is None:
+    if mixing_file is None:
         # Identify and remove thermal noise from data
-        dd, n_components = decomposition.tedpca(
-            catd,
-            data_oc,
+        data_reduced, n_components = decomposition.tedpca(
+            data_cat,
+            data_optcom,
             mask_clf,
             masksum_clf,
             io_generator,
@@ -774,7 +780,7 @@ def tedana_workflow(
             low_mem=low_mem,
         )
         if verbose:
-            io_generator.save_file(utils.unmask(dd, mask_clf), "whitened img")
+            io_generator.save_file(utils.unmask(data_reduced, mask_clf), "whitened img")
 
         # Perform ICA, calculate metrics, and apply decision tree
         # Restart when ICA fails to converge or too few BOLD components found
@@ -782,8 +788,8 @@ def tedana_workflow(
         n_restarts = 0
         seed = fixed_seed
         while keep_restarting:
-            mmix, seed = decomposition.tedica(
-                dd,
+            mixing, seed = decomposition.tedica(
+                data_reduced,
                 n_components,
                 seed,
                 ica_method,
@@ -802,10 +808,10 @@ def tedana_workflow(
             extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
             necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
-            comptable, _ = metrics.collect.generate_metrics(
-                data_cat=catd,
-                data_optcom=data_oc,
-                mixing=mmix,
+            component_table, _ = metrics.collect.generate_metrics(
+                data_cat=data_cat,
+                data_optcom=data_optcom,
+                mixing=mixing,
                 adaptive_mask=masksum_clf,
                 tes=tes,
                 io_generator=io_generator,
@@ -816,7 +822,7 @@ def tedana_workflow(
             )
             LGR.info("Selecting components from ICA results")
             selector = selection.automatic_selection(
-                comptable,
+                component_table,
                 selector,
                 n_echos=n_echos,
                 n_vols=n_vols,
@@ -824,7 +830,7 @@ def tedana_workflow(
             n_likely_bold_comps = selector.n_likely_bold_comps_
             LGR.info("Selecting components from ICA results")
             selector = selection.automatic_selection(
-                comptable,
+                component_table,
                 selector,
                 n_echos=n_echos,
                 n_vols=n_vols,
@@ -855,7 +861,7 @@ def tedana_workflow(
     else:
         LGR.info("Using supplied mixing matrix from ICA")
         mixing_file = io_generator.get_name("ICA mixing tsv")
-        mmix = pd.read_table(mixing_file).values
+        mixing = pd.read_table(mixing_file).values
 
         # selector = ComponentSelector(tree)
         necessary_metrics = selector.necessary_metrics
@@ -863,10 +869,10 @@ def tedana_workflow(
         extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
         necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
-        comptable, _ = metrics.collect.generate_metrics(
-            data_cat=catd,
-            data_optcom=data_oc,
-            mixing=mmix,
+        component_table, _ = metrics.collect.generate_metrics(
+            data_cat=data_cat,
+            data_optcom=data_optcom,
+            mixing=mixing,
             adaptive_mask=masksum_clf,
             tes=tes,
             io_generator=io_generator,
@@ -876,27 +882,27 @@ def tedana_workflow(
             external_regressor_config=selector.tree["external_regressor_config"],
         )
         selector = selection.automatic_selection(
-            comptable, selector, n_echos=n_echos, n_vols=n_vols
+            component_table, selector, n_echos=n_echos, n_vols=n_vols
         )
 
     # TODO The ICA mixing matrix should be written out after it is created
-    #     It is currently being writen after component selection is done
+    #     It is currently being written after component selection is done
     #     and rewritten if an existing mixing matrix is given as an input
-    comp_names = comptable["Component"].values
-    mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
+    comp_names = component_table["Component"].values
+    mixing_df = pd.DataFrame(data=mixing, columns=comp_names)
     if not op.exists(io_generator.get_name("ICA mixing tsv")):
         io_generator.save_file(mixing_df, "ICA mixing tsv")
     else:  # Make sure the relative path to the supplied mixing matrix is saved in the registry
         io_generator.registry["ICA mixing tsv"] = op.basename(
             io_generator.get_name("ICA mixing tsv")
         )
-    betas_oc = utils.unmask(computefeats2(data_oc, mmix, mask_denoise), mask_denoise)
+    betas_oc = utils.unmask(computefeats2(data_optcom, mixing, mask_denoise), mask_denoise)
     io_generator.save_file(betas_oc, "z-scored ICA components img")
 
     # Save component selector and tree
     selector.to_files(io_generator)
     # Save metrics and metadata
-    metric_metadata = metrics.collect.get_metadata(comptable)
+    metric_metadata = metrics.collect.get_metadata(component_table)
     io_generator.save_file(metric_metadata, "ICA metrics json")
 
     decomp_metadata = {
@@ -914,25 +920,25 @@ def tedana_workflow(
     if selector.n_likely_bold_comps_ == 0:
         LGR.warning("No BOLD components detected! Please check data and results!")
 
-    # TODO: un-hack separate comptable
-    comptable = selector.component_table_
+    # TODO: un-hack separate component_table
+    component_table = selector.component_table_
 
-    mmix_orig = mmix.copy()
+    mixing_orig = mixing.copy()
     if tedort:
         comps_accepted = selector.accepted_comps_
         comps_rejected = selector.rejected_comps_
-        acc_ts = mmix[:, comps_accepted]
-        rej_ts = mmix[:, comps_rejected]
+        acc_ts = mixing[:, comps_accepted]
+        rej_ts = mixing[:, comps_rejected]
         betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
         pred_rej_ts = np.dot(acc_ts, betas)
         resid = rej_ts - pred_rej_ts
-        mmix[:, comps_rejected] = resid
+        mixing[:, comps_rejected] = resid
         comp_names = [
-            io.add_decomp_prefix(comp, prefix="ICA", max_value=comptable.index.max())
+            io.add_decomp_prefix(comp, prefix="ICA", max_value=component_table.index.max())
             for comp in range(selector.n_comps_)
         ]
 
-        mixing_df = pd.DataFrame(data=mmix, columns=comp_names)
+        mixing_df = pd.DataFrame(data=mixing, columns=comp_names)
         io_generator.save_file(mixing_df, "ICA orthogonalized mixing tsv")
         RepLGR.info(
             "Rejected components' time series were then "
@@ -941,25 +947,25 @@ def tedana_workflow(
         )
 
     io.writeresults(
-        data_oc,
+        data_optcom,
         mask=mask_denoise,
-        comptable=comptable,
-        mmix=mmix,
+        component_table=component_table,
+        mixing=mixing,
         io_generator=io_generator,
     )
 
     if "mir" in gscontrol:
         gsc.minimum_image_regression(
-            data_optcom=data_oc,
-            mixing=mmix,
+            data_optcom=data_optcom,
+            mixing=mixing,
             mask=mask_denoise,
-            comptable=comptable,
+            component_table=component_table,
             classification_tags=selector.classification_tags,
             io_generator=io_generator,
         )
 
     if verbose:
-        io.writeresults_echoes(catd, mmix, mask_denoise, comptable, io_generator)
+        io.writeresults_echoes(data_cat, mixing, mask_denoise, component_table, io_generator)
 
     # Write out registry of outputs
     io_generator.save_self()
@@ -1026,27 +1032,32 @@ def tedana_workflow(
     if not no_reports:
         LGR.info("Making figures folder with static component maps and timecourse plots.")
 
-        dn_ts, hikts, lowkts = io.denoise_ts(data_oc, mmix, mask_denoise, comptable)
+        data_denoised, data_accepted, data_rejected = io.denoise_ts(
+            data_optcom,
+            mixing,
+            mask_denoise,
+            component_table,
+        )
 
         reporting.static_figures.plot_adaptive_mask(
-            optcom=data_oc,
+            optcom=data_optcom,
             base_mask=mask,
             io_generator=io_generator,
         )
         reporting.static_figures.carpet_plot(
-            optcom_ts=data_oc,
-            denoised_ts=dn_ts,
-            hikts=hikts,
-            lowkts=lowkts,
+            optcom_ts=data_optcom,
+            denoised_ts=data_denoised,
+            hikts=data_accepted,
+            lowkts=data_rejected,
             mask=mask_denoise,
             io_generator=io_generator,
             gscontrol=gscontrol,
         )
         reporting.static_figures.comp_figures(
-            data_oc,
+            data_optcom,
             mask=mask_denoise,
-            comptable=comptable,
-            mmix=mmix_orig,
+            component_table=component_table,
+            mixing=mixing_orig,
             io_generator=io_generator,
             png_cmap=png_cmap,
         )

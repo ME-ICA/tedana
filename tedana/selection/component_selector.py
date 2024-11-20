@@ -384,7 +384,7 @@ class ComponentSelector:
             Required for tedana_orig and meica trees
 
         An example initialization with these options would look like
-        ``selector = selector.select(comptable, n_echos=n_echos, n_vols=n_vols)``
+        ``selector = selector.select(component_table, n_echos=n_echos, n_vols=n_vols)``
 
         The selection process uses previously calculated parameters stored in
         `component_table` for each ICA component such as Kappa (a T2* weighting metric),
@@ -416,7 +416,7 @@ class ComponentSelector:
         self.component_table_ = component_table.copy()
 
         # this will crash the program with an error message if not all
-        # necessary_metrics are in the comptable
+        # necessary_metrics are in the component_table
         confirm_metrics_exist(
             component_table=self.component_table_,
             necessary_metrics=self.necessary_metrics,

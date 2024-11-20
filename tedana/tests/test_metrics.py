@@ -74,7 +74,7 @@ def test_smoke_generate_metrics(testdata1):
         external_regressors, external_regressor_config, n_vols
     )
 
-    comptable, _ = collect.generate_metrics(
+    component_table, _ = collect.generate_metrics(
         data_cat=testdata1["data_cat"],
         data_optcom=testdata1["data_optcom"],
         mixing=testdata1["mixing"],
@@ -86,7 +86,7 @@ def test_smoke_generate_metrics(testdata1):
         external_regressor_config=external_regressor_config_expanded,
         metrics=metrics,
     )
-    assert isinstance(comptable, pd.DataFrame)
+    assert isinstance(component_table, pd.DataFrame)
 
 
 def test_generate_metrics_fails(testdata1):
@@ -106,7 +106,7 @@ def test_generate_metrics_fails(testdata1):
             "external_regressor_config also needs to be defined."
         ),
     ):
-        comptable, _ = collect.generate_metrics(
+        component_table, _ = collect.generate_metrics(
             data_cat=testdata1["data_cat"],
             data_optcom=testdata1["data_optcom"],
             mixing=testdata1["mixing"],
@@ -122,7 +122,7 @@ def test_generate_metrics_fails(testdata1):
         ValueError,
         match=(r"First dimensions \(number of samples\) of data_cat"),
     ):
-        comptable, _ = collect.generate_metrics(
+        component_table, _ = collect.generate_metrics(
             data_cat=testdata1["data_cat"],
             data_optcom=testdata1["data_optcom"],
             mixing=testdata1["mixing"],
@@ -137,7 +137,7 @@ def test_generate_metrics_fails(testdata1):
         ValueError,
         match=("does not match number of echoes provided"),
     ):
-        comptable, _ = collect.generate_metrics(
+        component_table, _ = collect.generate_metrics(
             data_cat=testdata1["data_cat"],
             data_optcom=testdata1["data_optcom"],
             mixing=testdata1["mixing"],
@@ -152,7 +152,7 @@ def test_generate_metrics_fails(testdata1):
         ValueError,
         match=("Number of volumes in data_cat"),
     ):
-        comptable, _ = collect.generate_metrics(
+        component_table, _ = collect.generate_metrics(
             data_cat=testdata1["data_cat"],
             data_optcom=testdata1["data_optcom"],
             mixing=testdata1["mixing_cut"],

@@ -319,7 +319,7 @@ def plot_component(
     plt.close(fig)
 
 
-def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
+def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap):
     """Create static figures that highlight certain aspects of tedana processing.
 
     This includes a figure for each component showing the component time course,
@@ -331,20 +331,20 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
         Time series from which to derive ICA betas
     mask : (S,) array_like
         Boolean mask array
-    comptable : (C x M) :obj:`pandas.DataFrame`
+    component_table : (C x M) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
-    mmix : (C x T) array_like
+    mixing : (C x T) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
     io_generator : :obj:`tedana.io.OutputGenerator`
         Output Generator object to use for this workflow
     """
     # Flip signs of mixing matrix as needed
-    mmix = mmix * comptable["optimal sign"].values
+    mixing = mixing * component_table["optimal sign"].values
 
     # regenerate the beta images
-    component_maps_arr = stats.get_coeffs(ts, mmix, mask)
+    component_maps_arr = stats.get_coeffs(ts, mixing, mask)
     component_maps_arr = component_maps_arr.reshape(
         io_generator.reference_img.shape[:3] + component_maps_arr.shape[1:],
     )
@@ -353,19 +353,25 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
     tr = io_generator.reference_img.header.get_zooms()[-1]
 
     # Remove trailing ';' from rationale column
-    # comptable["rationale"] = comptable["rationale"].str.rstrip(";")
-    for compnum in comptable.index.values:
-        if comptable.loc[compnum, "classification"] == "accepted":
+    # component_table["rationale"] = component_table["rationale"].str.rstrip(";")
+    for compnum in component_table.index.values:
+        if component_table.loc[compnum, "classification"] == "accepted":
             line_color = "g"
-            expl_text = "accepted reason(s): " + str(comptable.loc[compnum, "classification_tags"])
+            expl_text = "accepted reason(s): " + str(
+                component_table.loc[compnum, "classification_tags"]
+            )
 
-        elif comptable.loc[compnum, "classification"] == "rejected":
+        elif component_table.loc[compnum, "classification"] == "rejected":
             line_color = "r"
-            expl_text = "rejected reason(s): " + str(comptable.loc[compnum, "classification_tags"])
+            expl_text = "rejected reason(s): " + str(
+                component_table.loc[compnum, "classification_tags"]
+            )
 
-        elif comptable.loc[compnum, "classification"] == "ignored":
+        elif component_table.loc[compnum, "classification"] == "ignored":
             line_color = "k"
-            expl_text = "ignored reason(s): " + str(comptable.loc[compnum, "classification_tags"])
+            expl_text = "ignored reason(s): " + str(
+                component_table.loc[compnum, "classification_tags"]
+            )
 
         else:
             # Classification not added
@@ -373,10 +379,10 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
             line_color = "0.75"
             expl_text = "other classification"
 
-        # Title will include variance from comptable
-        comp_var = f"{comptable.loc[compnum, 'variance explained']:.2f}"
-        comp_kappa = f"{comptable.loc[compnum, 'kappa']:.2f}"
-        comp_rho = f"{comptable.loc[compnum, 'rho']:.2f}"
+        # Title will include variance from component_table
+        comp_var = f"{component_table.loc[compnum, 'variance explained']:.2f}"
+        comp_kappa = f"{component_table.loc[compnum, 'kappa']:.2f}"
+        comp_rho = f"{component_table.loc[compnum, 'rho']:.2f}"
 
         plt_title = (
             f"Comp. {compnum}: variance: {comp_var}%, kappa: {comp_kappa}, "
@@ -388,7 +394,7 @@ def comp_figures(ts, mask, comptable, mmix, io_generator, png_cmap):
             header=io_generator.reference_img.header,
         )
 
-        component_timeseries = mmix[:, compnum]
+        component_timeseries = mixing[:, compnum]
 
         # Get fft and freqs for this component
         # adapted from @dangom
