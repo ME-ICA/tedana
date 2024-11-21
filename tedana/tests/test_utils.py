@@ -363,4 +363,13 @@ def test_millisec2sec():
     assert utils.millisec2sec(np.array([5000])) == np.array([5])
 
 
+def test_check_te_values():
+    """Ensure that check_te_values returns the correct values."""
+    assert utils.check_te_values([2, 3, 4]) == [2, 3, 4]
+    assert utils.check_te_values([0.15, 0.35, 0.55]) == [150, 350, 550]
+    # Check that the error is raised when TE values are in different units
+    with pytest.raises(ValueError):
+        utils.check_te_values([0.5, 1, 2.5])
+
+
 # TODO: "BREAK" AND UNIT TESTS
