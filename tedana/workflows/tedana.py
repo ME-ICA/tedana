@@ -572,6 +572,7 @@ def tedana_workflow(
 
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
+    tes = utils.check_te_values(tes)
     n_echos = len(tes)
 
     # Coerce gscontrol to list

@@ -634,3 +634,27 @@ def get_system_version_info():
         "Python": sys.version,
         "Python_Libraries": python_libraries,
     }
+
+
+def check_te_values(te_values):
+    """Check if all TE values are in ms by checking if they are higher than 1.
+
+    Parameters
+    ----------
+    te_values : list
+        TE values to check.
+
+    Returns
+    -------
+    list
+        TE values in milliseconds.
+    """
+    te_values = np.array(te_values)
+    if all(te_values > 1):
+        return te_values.tolist()
+    elif all((te_values > 0) & (te_values < 1)):
+        # Raise a warning and convert to ms by multiplying by 1000
+        LGR.warning("Assuming the provided TE values are in seconds. Converting to ms.")
+        return (te_values * 1000).tolist()
+    else:
+        raise ValueError("TE values must be positive and in milliseconds.")
