@@ -654,7 +654,7 @@ def check_te_values(te_values):
         return te_values.tolist()
     elif all((te_values > 0) & (te_values < 1)):
         # Raise a warning and convert to ms by multiplying by 1000
-        LGR.warning("TE values are not in milliseconds. Converting to ms.")
+        LGR.warning("Assuming the provided TE values are in seconds. Converting to ms.")
         return (te_values * 1000).tolist()
     else:
         raise ValueError("TE values must be positive and in milliseconds.")
