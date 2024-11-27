@@ -231,7 +231,7 @@ def _generate_info_table(info_dict):
     return info_html
 
 
-def generate_report(io_generator: OutputGenerator) -> None:
+def generate_report(io_generator: OutputGenerator, cluster_labels, similarity_t_sne) -> None:
     """Generate an HTML report.
 
     Parameters
@@ -319,6 +319,12 @@ def generate_report(io_generator: OutputGenerator) -> None:
         elbow=rho_elbow,
     )
     varexp_pie_plot = df._create_varexp_pie_plt(comptable_cds)
+
+    # Create clustering plot
+    clustering_tsne_plot = df._create_clustering_tsne_plt(
+        cluster_labels, similarity_t_sne, io_generator
+    )
+    breakpoint()
 
     # link all dynamic figures
     figs = [kappa_rho_plot, kappa_sorted_plot, rho_sorted_plot, varexp_pie_plot]

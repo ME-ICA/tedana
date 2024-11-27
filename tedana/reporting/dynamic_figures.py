@@ -451,6 +451,8 @@ def _create_clustering_tsne_plt(cluster_labels, similarity_t_sne, io_generator):
     p.xaxis.axis_label = "x1"
     p.yaxis.axis_label = "x2"
 
+    breakpoint()
+
     # # Create ColumnDataSource for all points
     # source_data = {
     #     "x": similarity_t_sne[:, 0],

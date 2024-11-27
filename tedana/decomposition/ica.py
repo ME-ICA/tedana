@@ -69,7 +69,7 @@ def tedica(
     ica_method = ica_method.lower()
 
     if ica_method == "robustica":
-        mixing, fixed_seed = r_ica(
+        mixing, fixed_seed, cluster_labels, signs = r_ica(
             data,
             n_components=n_components,
             fixed_seed=fixed_seed,
@@ -87,7 +87,7 @@ def tedica(
     else:
         raise ValueError("The selected ICA method is invalid!")
 
-    return mixing, fixed_seed
+    return mixing, fixed_seed, cluster_labels, signs
 
 
 def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
@@ -192,7 +192,7 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
             f"decomposition."
         )
 
-    return mixing, fixed_seed
+    return mixing, fixed_seed, robust_ica.clustering.labels_, robust_ica.signs_
 
 
 def f_ica(data, n_components, fixed_seed, maxit, maxrestart):
