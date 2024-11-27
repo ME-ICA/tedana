@@ -421,3 +421,112 @@ def _link_figures(fig, comptable_ds, div_content, io_generator):
     """
     fig.js_on_event(events.Tap, _tap_callback(comptable_ds, div_content, io_generator))
     return fig
+
+
+def _create_clustering_tsne_plt(cluster_labels, similarity_t_sne, io_generator):
+    """Plot the clustering results of robustica using Bokeh.
+
+    Parameters
+    ----------
+    cluster_labels : (n_pca_components x n_robust_runs,) : numpy.ndarray
+        A one dimensional array that has the cluster label of each run.
+    similarity_t_sne : (n_pca_components x n_robust_runs,2) : numpy.ndarray
+        An array containing the coordinates of projected data.
+    io_generator : object
+        An object containing all the information needed to generate the output.
+    """
+    title = "2D projection of clustered ICA runs using TSNE"
+    marker_size = 8
+    alpha = 0.8
+    line_width = 2
+
+    # Create figure
+    p = plotting.figure(
+        title=title,
+        width=800,
+        height=600,
+        tools="pan,box_zoom,wheel_zoom,reset,save",
+    )
+    p.title.text_font_size = "16px"
+    p.xaxis.axis_label = "x1"
+    p.yaxis.axis_label = "x2"
+
+    # # Create ColumnDataSource for all points
+    # source_data = {
+    #     "x": similarity_t_sne[:, 0],
+    #     "y": similarity_t_sne[:, 1],
+    #     "cluster": cluster_labels,
+    # }
+    # source = models.ColumnDataSource(source_data)
+
+    # Plot regular clusters
+    for cluster_id in range(np.max(cluster_labels) + 1):
+        cluster_mask = cluster_labels == cluster_id
+        if not np.any(cluster_mask):
+            continue
+
+        # Get points for this cluster
+        cluster_points = similarity_t_sne[cluster_mask]
+
+        # Add scatter plot for cluster points
+        p.circle(
+            x="x",
+            y="y",
+            source=models.ColumnDataSource({"x": cluster_points[:, 0], "y": cluster_points[:, 1]}),
+            size=marker_size,
+            alpha=alpha,
+            line_color="black",
+            fill_color=None,
+            line_width=line_width,
+            legend_label="Clustered runs",
+        )
+
+        # Add hull if enough points
+        if cluster_points.shape[0] > 2:
+            from scipy.spatial import ConvexHull
+
+            hull = ConvexHull(cluster_points)
+            centroid = np.mean(cluster_points[hull.vertices], axis=0)
+            scaled_points = centroid + 1.5 * (cluster_points - centroid)
+
+            # Create hull line segments
+            xs = []
+            ys = []
+            for simplex in hull.simplices:
+                xs.extend([scaled_points[simplex[0], 0], scaled_points[simplex[1], 0], None])
+                ys.extend([scaled_points[simplex[0], 1], scaled_points[simplex[1], 1], None])
+
+            p.line(
+                x=xs,
+                y=ys,
+                line_color="blue",
+                line_dash="dashed",
+                line_width=line_width,
+                legend_label="Cluster's boundary",
+            )
+
+    # Plot noise clusters if they exist
+    if np.min(cluster_labels) == -1:
+        noise_mask = cluster_labels == -1
+        noise_points = similarity_t_sne[noise_mask]
+
+        p.x(
+            x=noise_points[:, 0],
+            y=noise_points[:, 1],
+            size=marker_size * 2,
+            alpha=0.6,
+            color="red",
+            legend_label="Unclustered runs",
+        )
+
+    # Configure legend
+    p.legend.click_policy = "hide"
+    p.legend.location = "top_right"
+
+    # Save HTML file
+    # plot_name = f"{io_generator.prefix}clustering_projection_tsne.html"
+    # plotting.save(p, os.path.join(io_generator.out_dir, "figures", plot_name))
+
+    breakpoint()
+
+    return p
