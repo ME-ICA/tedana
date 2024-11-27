@@ -440,26 +440,15 @@ def _create_clustering_tsne_plt(cluster_labels, similarity_t_sne, io_generator):
     alpha = 0.8
     line_width = 2
 
-    # Create figure
+    # First create the figure without the hover tool
     p = plotting.figure(
         title=title,
         width=800,
         height=600,
-        tools="pan,box_zoom,wheel_zoom,reset,save",
+        tools=["pan", "box_zoom", "wheel_zoom", "reset", "save"],  # No hover tool here
     )
-    p.title.text_font_size = "16px"
-    p.xaxis.axis_label = "x1"
-    p.yaxis.axis_label = "x2"
 
-    breakpoint()
-
-    # # Create ColumnDataSource for all points
-    # source_data = {
-    #     "x": similarity_t_sne[:, 0],
-    #     "y": similarity_t_sne[:, 1],
-    #     "cluster": cluster_labels,
-    # }
-    # source = models.ColumnDataSource(source_data)
+    point_renderers = []  # List to store point renderers
 
     # Plot regular clusters
     for cluster_id in range(np.max(cluster_labels) + 1):
@@ -470,18 +459,26 @@ def _create_clustering_tsne_plt(cluster_labels, similarity_t_sne, io_generator):
         # Get points for this cluster
         cluster_points = similarity_t_sne[cluster_mask]
 
-        # Add scatter plot for cluster points
-        p.circle(
+        # Add scatter plot for cluster points with hover info
+        circle_renderer = p.circle(
             x="x",
             y="y",
-            source=models.ColumnDataSource({"x": cluster_points[:, 0], "y": cluster_points[:, 1]}),
+            source=models.ColumnDataSource(
+                {
+                    "x": cluster_points[:, 0],
+                    "y": cluster_points[:, 1],
+                    "cluster": [f"Cluster {cluster_id}"] * len(cluster_points),
+                }
+            ),
             size=marker_size,
             alpha=alpha,
             line_color="black",
             fill_color=None,
             line_width=line_width,
             legend_label="Clustered runs",
+            name="points",
         )
+        point_renderers.append(circle_renderer)
 
         # Add hull if enough points
         if cluster_points.shape[0] > 2:
@@ -498,6 +495,7 @@ def _create_clustering_tsne_plt(cluster_labels, similarity_t_sne, io_generator):
                 xs.extend([scaled_points[simplex[0], 0], scaled_points[simplex[1], 0], None])
                 ys.extend([scaled_points[simplex[0], 1], scaled_points[simplex[1], 1], None])
 
+            # Add line without hover tooltips
             p.line(
                 x=xs,
                 y=ys,
@@ -512,23 +510,33 @@ def _create_clustering_tsne_plt(cluster_labels, similarity_t_sne, io_generator):
         noise_mask = cluster_labels == -1
         noise_points = similarity_t_sne[noise_mask]
 
-        p.x(
-            x=noise_points[:, 0],
-            y=noise_points[:, 1],
+        # Add noise points with hover tooltips
+        x_renderer = p.x(
+            x="x",
+            y="y",
             size=marker_size * 2,
             alpha=0.6,
             color="red",
             legend_label="Unclustered runs",
+            source=models.ColumnDataSource(
+                {
+                    "x": noise_points[:, 0],
+                    "y": noise_points[:, 1],
+                    "cluster": ["Unclustered"] * len(noise_points),
+                }
+            ),
         )
+        point_renderers.append(x_renderer)
+
+    # Add hover tool after creating all renderers, specifically for points
+    hover_tool = models.HoverTool(
+        tooltips=[("Cluster", "@cluster")],
+        renderers=point_renderers,  # Only apply to stored point renderers
+    )
+    p.add_tools(hover_tool)
 
     # Configure legend
     p.legend.click_policy = "hide"
     p.legend.location = "top_right"
-
-    # Save HTML file
-    # plot_name = f"{io_generator.prefix}clustering_projection_tsne.html"
-    # plotting.save(p, os.path.join(io_generator.out_dir, "figures", plot_name))
-
-    breakpoint()
 
     return p
