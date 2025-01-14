@@ -789,7 +789,7 @@ def tedana_workflow(
         n_restarts = 0
         seed = fixed_seed
         while keep_restarting:
-            mixing, seed = decomposition.tedica(
+            mixing, seed, cluster_labels, similarity_t_sne = decomposition.tedica(
                 data_reduced,
                 n_components,
                 seed,
@@ -1070,7 +1070,7 @@ def tedana_workflow(
             )
 
         LGR.info("Generating dynamic report")
-        reporting.generate_report(io_generator)
+        reporting.generate_report(io_generator, cluster_labels, similarity_t_sne)
 
     LGR.info("Workflow completed")
     utils.teardown_loggers()
