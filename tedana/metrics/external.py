@@ -156,6 +156,20 @@ def validate_extern_regress(
             f"external regressor model: {sorted(extra_names)}"
         )
 
+    nan_columns = []
+    for column in external_regressor_names:
+        if external_regressors[column].isna().values.any():
+            nan_columns.append(column)
+
+    if nan_columns:
+        LGR.warning(
+            f"External regressors include columns with NaN values: {sorted(nan_columns)}. "
+            "These will be backfilled with the nearest non-NaN value."
+        )
+        external_regressors = external_regressors.bfill(axis=0)
+        # Also ffill just in case there are NaNs at the end of the time series
+        external_regressors = external_regressors.ffill(axis=0)
+
     # If a model includes specifications for partial regressors, expand them
     for config_idx in range(len(external_regressor_config)):
         if "partial_models" in external_regressor_config[config_idx].keys():
