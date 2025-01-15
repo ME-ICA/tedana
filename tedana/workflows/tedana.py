@@ -361,7 +361,7 @@ def _get_parser():
     optional.add_argument(
         "--quiet", dest="quiet", help=argparse.SUPPRESS, action="store_true", default=False
     )
-    parser.add_argument(
+    optional.add_argument(
         "--overwrite",
         "-f",
         dest="overwrite",

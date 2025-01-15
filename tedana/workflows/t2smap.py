@@ -152,6 +152,21 @@ def _get_parser():
     optional.add_argument(
         "--quiet", dest="quiet", help=argparse.SUPPRESS, action="store_true", default=False
     )
+    optional.add_argument(
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        help="Generate intermediate and additional files.",
+        default=False,
+    )
+    optional.add_argument(
+        "--overwrite",
+        "-f",
+        dest="overwrite",
+        action="store_true",
+        help="Force overwriting of files.",
+        default=False,
+    )
     parser._action_groups.append(optional)
     return parser
 
@@ -168,7 +183,9 @@ def t2smap_workflow(
     fitmode="all",
     combmode="t2s",
     debug=False,
+    verbose=False,
     quiet=False,
+    overwrite=False,
     t2smap_command=None,
 ):
     """
@@ -205,6 +222,11 @@ def t2smap_workflow(
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'paid' (Poser).
     t2smap_command : :obj:`str`, optional
         The command used to run t2smap. Default is None.
+    verbose : :obj:`bool`, optional
+        Generate intermediate and additional files. Default is False.
+    overwrite : :obj:`bool`, optional
+        If True, force overwriting of files. Default is False.
+
 
     Other Parameters
     ----------------
@@ -284,6 +306,8 @@ def t2smap_workflow(
         prefix=prefix,
         config="auto",
         make_figures=False,
+        overwrite=overwrite,
+        verbose=verbose,
     )
     n_echos = data_cat.shape[1]
     LGR.debug(f"Resulting data shape: {data_cat.shape}")
