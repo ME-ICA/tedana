@@ -331,7 +331,10 @@ def generate_report(io_generator: OutputGenerator, cluster_labels, similarity_t_
             cluster_labels, similarity_t_sne, io_generator
         )
         tsne_script, tsne_div = embed.components(clustering_tsne_plot)
-        tsne_html = f"{tsne_script}<div class='tsne-plots'><h1>Robust ICA component clustering</h1>{tsne_div}</div>"
+        tsne_html = f"{tsne_script}"
+        tsne_html += (
+            f"<div class='tsne-plots'><h1>Robust ICA component clustering</h1>{tsne_div}</div>"
+        )
 
     # link all dynamic figures
     figs = [kappa_rho_plot, kappa_sorted_plot, rho_sorted_plot, varexp_pie_plot]

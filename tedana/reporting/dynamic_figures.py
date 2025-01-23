@@ -423,7 +423,7 @@ def _link_figures(fig, comptable_ds, div_content, io_generator):
     return fig
 
 
-def _create_clustering_tsne_plt(cluster_labels, similarity_t_sne, io_generator):
+def _create_clustering_tsne_plt(cluster_labels, similarity_t_sne):
     """Plot the clustering results of robustica using Bokeh.
 
     Parameters
@@ -432,8 +432,6 @@ def _create_clustering_tsne_plt(cluster_labels, similarity_t_sne, io_generator):
         A one dimensional array that has the cluster label of each run.
     similarity_t_sne : (n_pca_components x n_robust_runs,2) : numpy.ndarray
         An array containing the coordinates of projected data.
-    io_generator : object
-        An object containing all the information needed to generate the output.
     """
     title = "2D projection of clustered ICA runs using TSNE"
     marker_size = 8
