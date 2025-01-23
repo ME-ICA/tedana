@@ -100,12 +100,12 @@ def test_smoke_split_ts():
 
     Note: classification is ["accepted", "rejected", "ignored"].
     """
-    np.random.seed(0)  # seeded because comptable MUST have accepted components
+    np.random.seed(0)  # seeded because component_table MUST have accepted components
     n_samples = 100
     n_times = 20
     n_components = 6
     data = np.random.random((n_samples, n_times))
-    mmix = np.random.random((n_times, n_components))
+    mixing = np.random.random((n_times, n_components))
     mask = np.random.randint(2, size=n_samples)
 
     # creating the component table with component as random floats,
@@ -114,9 +114,9 @@ def test_smoke_split_ts():
     metric = np.random.random(n_components)
     classification = np.random.choice(["accepted", "rejected", "ignored"], n_components)
     df_data = np.column_stack((component, metric, classification))
-    comptable = pd.DataFrame(df_data, columns=["component", "metric", "classification"])
+    component_table = pd.DataFrame(df_data, columns=["component", "metric", "classification"])
 
-    hikts, resid = me.split_ts(data, mmix, mask, comptable)
+    hikts, resid = me.split_ts(data, mixing, mask, component_table)
 
     assert hikts is not None
     assert resid is not None
@@ -130,7 +130,7 @@ def test_smoke_write_split_ts():
     np.random.seed(0)  # at least one accepted and one rejected, thus all files are generated
     n_samples, n_times, n_components = 64350, 10, 6
     data = np.random.random((n_samples, n_times))
-    mmix = np.random.random((n_times, n_components))
+    mixing = np.random.random((n_times, n_components))
     mask = np.random.randint(2, size=n_samples)
     ref_img = os.path.join(data_dir, "mask.nii.gz")
     # ref_img has shape of (39, 50, 33) so data is 64350 (39*33*50) x 10
@@ -141,10 +141,10 @@ def test_smoke_write_split_ts():
     metric = np.random.random(n_components)
     classification = np.random.choice(["accepted", "rejected", "ignored"], n_components)
     df_data = np.column_stack((component, metric, classification))
-    comptable = pd.DataFrame(df_data, columns=["component", "metric", "classification"])
+    component_table = pd.DataFrame(df_data, columns=["component", "metric", "classification"])
     io_generator.verbose = True
 
-    me.write_split_ts(data, mmix, mask, comptable, io_generator)
+    me.write_split_ts(data, mixing, mask, component_table, io_generator)
 
     # TODO: midk_ts.nii is never generated?
     fn = io_generator.get_name
@@ -156,7 +156,7 @@ def test_smoke_write_split_ts():
 
     io_generator.verbose = False
 
-    me.write_split_ts(data, mmix, mask, comptable, io_generator)
+    me.write_split_ts(data, mixing, mask, component_table, io_generator)
 
     # TODO: midk_ts.nii is never generated?
     fn = io_generator.get_name

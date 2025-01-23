@@ -21,18 +21,20 @@ classifiers = [
 license = {file = "LICENSE"}
 requires-python = ">=3.8"
 dependencies = [
-    "bokeh>=1.0.0,<=3.4.0",
+    "bokeh>=1.0.0,<=3.6.2",
     "mapca>=0.0.4,<=0.0.5",
     "matplotlib",
-    "nibabel>=2.5.1,<=5.2.1",
-    "nilearn>=0.7,<=0.10.3",
-    "numpy>=1.16,<=1.26.4",
-    "pandas>=2.0,<=2.2.1",
+    "nibabel>=2.5.1,<=5.3.2",
+    "nilearn>=0.10.3,<=0.11.1",
+    "numpy>=1.16,<=2.2.1",
+    "pandas>=2.0,<=2.2.3",
     "pybtex",
     "pybtex-apa-style",
-    "scikit-learn>=0.21, <=1.4.1.post1",
-    "scipy>=1.2.0, <=1.13.0",
+    "robustica>=0.1.4,<=0.1.4",
+    "scikit-learn>=0.21, <=1.6.1",
+    "scipy>=1.2.0, <=1.15.1",
     "threadpoolctl",
+    "tqdm",
 ]
 dynamic = ["version"]
 

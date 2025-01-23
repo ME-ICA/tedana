@@ -94,7 +94,7 @@ def test_selectcomps2use_succeeds():
         [2, 6, 4],
         "NotALabel",
     ]
-    # Given the pre-defined comptable in sample_table_selector, these
+    # Given the pre-defined component_table in sample_table_selector, these
     #   are the expected number of components that should be selected
     #   for each of the above decide_comps_options
     decide_comps_lengths = [4, 17, 21, 21, 1, 3, 0]
@@ -226,7 +226,7 @@ def test_change_comptable_classifications_succeeds():
 
 def test_clean_dataframe_smoke():
     """A smoke test for the clean_dataframe function."""
-    component_table = sample_component_table(options="comptable")
+    component_table = sample_component_table(options="component_table")
     selection_utils.clean_dataframe(component_table)
 
 
@@ -237,26 +237,39 @@ def test_clean_dataframe_smoke():
 
 def test_confirm_metrics_exist_succeeds():
     """Tests confirm_metrics_exist run with correct inputs."""
-    component_table = sample_component_table(options="comptable")
+    component_table = sample_component_table(options="component_table")
 
     # Testing for metrics that exist with 1 or 2 necessary metrics in a set
     # Returns True if an undefined metric exists so using "assert not"
+    # Testing if it can find a single metric
     assert not selection_utils.confirm_metrics_exist(component_table, {"kappa"})
+    # Testing if it can find multiple metrics
     assert not selection_utils.confirm_metrics_exist(component_table, {"kappa", "rho"})
+    # Testing if it can find metrics that use regular expressions
+    assert not selection_utils.confirm_metrics_exist(component_table, {"kappa", "^count.*$"})
 
 
 def test_confirm_metrics_exist_fails():
     """Tests confirm_metrics_exist for failure conditions."""
 
-    component_table = sample_component_table(options="comptable")
+    component_table = sample_component_table(options="component_table")
 
     # Should fail with and error would have default or pre-defined file name
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Necessary metrics for unknown function"):
         selection_utils.confirm_metrics_exist(component_table, {"kappa", "quack"})
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"MISSING METRICS: \['quack'\]"):
+        selection_utils.confirm_metrics_exist(
+            component_table,
+            necessary_metrics={"kappa", "quack"},
+            function_name="dec_left_op_right",
+        )
+    with pytest.raises(ValueError, match="Necessary metrics for farm"):
         selection_utils.confirm_metrics_exist(
             component_table, {"kappa", "mooo"}, function_name="farm"
         )
+
+    with pytest.raises(ValueError, match=r"MISSING METRICS: \['\^mount.\*\$'\]."):
+        selection_utils.confirm_metrics_exist(component_table, {"kappa", "^mount.*$"})
 
 
 def test_log_decision_tree_step_smoke():
@@ -314,7 +327,7 @@ def test_log_decision_tree_step_smoke():
 def test_log_classification_counts_smoke():
     """A smoke test for log_classification_counts."""
 
-    component_table = sample_component_table(options="comptable")
+    component_table = sample_component_table(options="component_table")
 
     selection_utils.log_classification_counts(5, component_table)
 

@@ -1,24 +1,19 @@
 """Integration tests for "real" data."""
 
 import glob
-import json
 import logging
 import os
 import os.path as op
 import re
 import shutil
 import subprocess
-import tarfile
-from datetime import datetime
-from gzip import GzipFile
-from io import BytesIO
 
 import pandas as pd
 import pytest
-import requests
 from pkg_resources import resource_filename
 
 from tedana.io import InputHarvester
+from tedana.tests.utils import data_for_testing_info, download_test_data
 from tedana.workflows import t2smap as t2smap_cli
 from tedana.workflows import tedana as tedana_cli
 from tedana.workflows.ica_reclassify import ica_reclassify_workflow
@@ -74,129 +69,6 @@ def check_integration_outputs(fname, outpath, n_logs=1):
             msg += "\nFound but not expected:\n\t"
             msg += "\n\t".join(found_not_expected)
         raise ValueError(msg)
-
-
-def data_for_testing_info(test_dataset=str):
-    """
-    Get the path and download link for each dataset used for testing.
-
-    Also creates the base directories into which the data and output
-    directories are written
-
-    Parameters
-    ----------
-    test_dataset : str
-       References one of the datasets to download. It can be:
-        three-echo
-        three-echo-reclassify
-        four-echo
-        five-echo
-
-    Returns
-    -------
-    test_data_path : str
-       The path to the local directory where the data will be downloaded
-    osf_id : str
-       The ID for the OSF file.
-       Data download link would be https://osf.io/osf_id/download
-       Metadata download link would be https://osf.io/osf_id/metadata/?format=datacite-json
-    """
-
-    tedana_path = os.path.dirname(tedana_cli.__file__)
-    base_data_path = os.path.abspath(os.path.join(tedana_path, "../../.testing_data_cache"))
-    os.makedirs(base_data_path, exist_ok=True)
-    os.makedirs(os.path.join(base_data_path, "outputs"), exist_ok=True)
-    if test_dataset == "three-echo":
-        test_data_path = os.path.join(base_data_path, "three-echo/TED.three-echo")
-        osf_id = "rqhfc"
-        os.makedirs(os.path.join(base_data_path, "three-echo"), exist_ok=True)
-        os.makedirs(os.path.join(base_data_path, "outputs/three-echo"), exist_ok=True)
-    elif test_dataset == "three-echo-reclassify":
-        test_data_path = os.path.join(base_data_path, "reclassify")
-        osf_id = "f6g45"
-        os.makedirs(os.path.join(base_data_path, "outputs/reclassify"), exist_ok=True)
-    elif test_dataset == "four-echo":
-        test_data_path = os.path.join(base_data_path, "four-echo/TED.four-echo")
-        osf_id = "gnj73"
-        os.makedirs(os.path.join(base_data_path, "four-echo"), exist_ok=True)
-        os.makedirs(os.path.join(base_data_path, "outputs/four-echo"), exist_ok=True)
-    elif test_dataset == "five-echo":
-        test_data_path = os.path.join(base_data_path, "five-echo/TED.five-echo")
-        osf_id = "9c42e"
-        os.makedirs(os.path.join(base_data_path, "five-echo"), exist_ok=True)
-        os.makedirs(os.path.join(base_data_path, "outputs/five-echo"), exist_ok=True)
-    else:
-        raise ValueError(f"{test_dataset} is not a valid dataset string for data_for_testing_info")
-
-    return test_data_path, osf_id
-
-
-def download_test_data(osf_id, test_data_path):
-    """If current data is not already available, downloads tar.gz data.
-
-    Data are stored at `https://osf.io/osf_id/download`.
-    It unpacks into `out_path`.
-
-    Parameters
-    ----------
-    osf_id : str
-       The ID for the OSF file.
-    out_path : str
-        Path to directory where OSF data should be extracted
-    """
-
-    try:
-        datainfo = requests.get(f"https://osf.io/{osf_id}/metadata/?format=datacite-json")
-    except Exception:
-        if len(os.listdir(test_data_path)) == 0:
-            raise ConnectionError(
-                f"Cannot access https://osf.io/{osf_id} and testing data " "are not yet downloaded"
-            )
-        else:
-            TestLGR.warning(
-                f"Cannot access https://osf.io/{osf_id}. "
-                f"Using local copy of testing data in {test_data_path} "
-                "but cannot validate that local copy is up-to-date"
-            )
-            return
-    datainfo.raise_for_status()
-    metadata = json.loads(datainfo.content)
-    # 'dates' is a list with all udpates to the file, the last item in the list
-    # is the most recent and the 'date' field in the list is the date of the last
-    # update.
-    osf_filedate = metadata["dates"][-1]["date"]
-
-    # File the file with the most recent date for comparision with
-    # the lsst updated date for the osf file
-    if os.path.exists(test_data_path):
-        filelist = glob.glob(f"{test_data_path}/*")
-        most_recent_file = max(filelist, key=os.path.getctime)
-        if os.path.exists(most_recent_file):
-            local_filedate = os.path.getmtime(most_recent_file)
-            local_filedate_str = str(datetime.fromtimestamp(local_filedate).date())
-            local_data_exists = True
-        else:
-            local_data_exists = False
-    else:
-        local_data_exists = False
-    if local_data_exists:
-        if local_filedate_str == osf_filedate:
-            TestLGR.info(
-                f"Downloaded and up-to-date data already in {test_data_path}. Not redownloading"
-            )
-            return
-        else:
-            TestLGR.info(
-                f"Downloaded data in {test_data_path} was last modified on "
-                f"{local_filedate_str}. Data on https://osf.io/{osf_id} "
-                f" was last updated on {osf_filedate}. Deleting and redownloading"
-            )
-            shutil.rmtree(test_data_path)
-    req = requests.get(f"https://osf.io/{osf_id}/download")
-    req.raise_for_status()
-    t = tarfile.open(fileobj=GzipFile(fileobj=BytesIO(req.content)))
-    os.makedirs(test_data_path, exist_ok=True)
-    t.extractall(test_data_path)
 
 
 def reclassify_raw() -> str:
@@ -257,6 +129,8 @@ def test_integration_five_echo(skip_integration):
     tedana_cli.tedana_workflow(
         data=datalist,
         tes=echo_times,
+        ica_method="robustica",
+        n_robust_runs=4,
         out_dir=out_dir,
         tedpca=0.95,
         fittype="curvefit",
@@ -268,8 +142,8 @@ def test_integration_five_echo(skip_integration):
     )
 
     # Just a check on the component table pending a unit test of load_comptable
-    comptable = os.path.join(out_dir, "sub-01_desc-tedana_metrics.tsv")
-    df = pd.read_table(comptable)
+    component_table = os.path.join(out_dir, "sub-01_desc-tedana_metrics.tsv")
+    df = pd.read_table(component_table)
     assert isinstance(df, pd.DataFrame)
 
     # compare the generated output files
@@ -300,8 +174,9 @@ def test_integration_four_echo(skip_integration):
     datalist = [prepend + str(i + 1) + suffix for i in range(4)]
     tedana_cli.tedana_workflow(
         data=datalist,
-        mixm=op.join(op.dirname(datalist[0]), "desc-ICA_mixing_static.tsv"),
+        mixing_file=op.join(op.dirname(datalist[0]), "desc-ICA_mixing_static.tsv"),
         tes=[11.8, 28.04, 44.28, 60.52],
+        ica_method="fastica",
         out_dir=out_dir,
         tedpca="kundu-stabilize",
         gscontrol=["gsr", "mir"],
@@ -352,6 +227,8 @@ def test_integration_three_echo(skip_integration):
     )
 
     # Test re-running, but use the CLI
+    # TODO Move this to a separate integration test, use the fixed desc_ICA_mixing_static.tsv that
+    #      is distributed with the testing data, and test specific outputs for consistent values
     args = [
         "-d",
         f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
@@ -371,6 +248,90 @@ def test_integration_three_echo(skip_integration):
 
     # compare the generated output files
     fn = resource_filename("tedana", "tests/data/cornell_three_echo_outputs.txt")
+    check_integration_outputs(fn, out_dir)
+
+
+def test_integration_three_echo_external_regressors_single_model(skip_integration):
+    """Integration test of tedana workflow with extern regress and F stat."""
+
+    if skip_integration:
+        pytest.skip("Skipping three-echo with external regressors integration test")
+
+    test_data_path, osf_id = data_for_testing_info("three-echo")
+    out_dir = os.path.abspath(
+        os.path.join(test_data_path, "../../outputs/three-echo-externalreg-Ftest")
+    )
+
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    # download data and run the test
+    # external_regress_Ftest_3echo.tsv has 13 rows. Based on a local run on the 3 echo data:
+    #  Col 1 (trans_x_correlation) is the TS for ICA comp 59 + similar stdev Gaussian Noise
+    #  Col 2 (trans_y_correlation) is 0.4*comp29+0.5+comp20+Gaussian Noise
+    #  Col 3 (trans_z_correlation) is comp20+Gaussian Noise
+    #  Col 4-6 are Gaussian noise representing pitch/roll/yaw
+    #  Col 7-12 are the first derivative of col 1-6
+    # With the currently set up decision tree,
+    # Component 59 should be rejected because it is correlated to trans_x and,
+    # comp 20 should be rejected because of a signif fit to a combination of trans_y and trans_z.
+    # Component 29 is not rejected because the fit does not cross a r>0.8 threshold
+    # Note that the above is in comparision to the minimal decision tree
+    # but the integration test for 3 echoes uses the kundu tree
+    download_test_data(osf_id, test_data_path)
+    tree_name = "resources/decision_trees/demo_external_regressors_single_model.json"
+    tedana_cli.tedana_workflow(
+        data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
+        tes=[14.5, 38.5, 62.5],
+        out_dir=out_dir,
+        tree=resource_filename("tedana", tree_name),
+        external_regressors=resource_filename(
+            "tedana", "tests/data/external_regress_Ftest_3echo.tsv"
+        ),
+        low_mem=True,
+        tedpca="aic",
+    )
+
+    # compare the generated output files
+    fn = resource_filename("tedana", "tests/data/cornell_three_echo_outputs.txt")
+    check_integration_outputs(fn, out_dir)
+
+
+def test_integration_three_echo_external_regressors_motion_task_models(skip_integration):
+    """Integration test of tedana workflow with extern regress and F stat."""
+
+    if skip_integration:
+        pytest.skip("Skipping three-echo with external regressors integration test")
+
+    test_data_path, osf_id = data_for_testing_info("three-echo")
+    out_dir = os.path.abspath(
+        os.path.join(test_data_path, "../../outputs/three-echo-externalreg-Ftest-multimodels")
+    )
+
+    if os.path.exists(out_dir):
+        shutil.rmtree(out_dir)
+
+    # download data and run the test
+    # external_regress_Ftest_3echo.tsv has 12 columns for motion, 1 for CSF, and 1 for task signal
+    # The regressor values and expected fits with the data are detailed in:
+    # tests.test_external_metrics.sample_external_regressors
+    download_test_data(osf_id, test_data_path)
+    tree_name = "resources/decision_trees/demo_external_regressors_motion_task_models.json"
+    tedana_cli.tedana_workflow(
+        data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
+        tes=[14.5, 38.5, 62.5],
+        out_dir=out_dir,
+        tree=resource_filename("tedana", tree_name),
+        external_regressors=resource_filename(
+            "tedana", "tests/data/external_regress_Ftest_3echo.tsv"
+        ),
+        mixing_file=f"{test_data_path}/desc_ICA_mixing_static.tsv",
+        low_mem=True,
+        tedpca="aic",
+    )
+
+    # compare the generated output files
+    fn = resource_filename("tedana", "tests/data/cornell_three_echo_preset_mixing_outputs.txt")
     check_integration_outputs(fn, out_dir)
 
 
@@ -576,8 +537,8 @@ def test_integration_reclassify_no_bold(skip_integration, caplog):
         shutil.rmtree(out_dir)
 
     ioh = InputHarvester(reclassify_raw_registry())
-    comptable = ioh.get_file_contents("ICA metrics tsv")
-    to_accept = [i for i in range(len(comptable))]
+    component_table = ioh.get_file_contents("ICA metrics tsv")
+    to_accept = [i for i in range(len(component_table))]
 
     ica_reclassify_workflow(
         reclassify_raw_registry(),
@@ -601,8 +562,8 @@ def test_integration_reclassify_accrej_files(skip_integration, caplog):
         shutil.rmtree(out_dir)
 
     ioh = InputHarvester(reclassify_raw_registry())
-    comptable = ioh.get_file_contents("ICA metrics tsv")
-    to_accept = [i for i in range(len(comptable))]
+    component_table = ioh.get_file_contents("ICA metrics tsv")
+    to_accept = [i for i in range(len(component_table))]
 
     ica_reclassify_workflow(
         reclassify_raw_registry(),

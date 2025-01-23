@@ -59,7 +59,7 @@ def _create_data_struct(comptable_path, color_mapping=color_mapping):
 
     Parameters
     ----------
-    comptable : str
+    component_table : str
         file path to component table, JSON format
 
     Returns
@@ -404,7 +404,7 @@ def _link_figures(fig, comptable_ds, div_content, io_generator):
         Figure containing a given plot
 
     comptable_ds : bokeh.models.ColumnDataSource
-        Data structure with a limited version of the comptable
+        Data structure with a limited version of the component_table
         suitable for dynamic plot purposes
 
     div_content : bokeh.models.Div

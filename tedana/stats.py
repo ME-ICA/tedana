@@ -3,7 +3,7 @@
 import logging
 
 import numpy as np
-from scipy import stats
+from scipy import linalg, stats
 
 from tedana import utils
 
@@ -32,15 +32,15 @@ def getfbounds(n_echos):
     return f05, f025, f01
 
 
-def computefeats2(data, mmix, mask=None, normalize=True):
+def computefeats2(data, mixing, mask=None, normalize=True):
     """
-    Convert `data` to component space using `mmix`.
+    Convert `data` to component space using `mixing`.
 
     Parameters
     ----------
     data : (S x T) array_like
         Input data
-    mmix : (T [x C]) array_like
+    mixing : (T [x C]) array_like
         Mixing matrix for converting input data to component space, where `C`
         is components and `T` is the same as in `data`
     mask : (S,) array_like or None, optional
@@ -55,8 +55,8 @@ def computefeats2(data, mmix, mask=None, normalize=True):
     """
     if data.ndim != 2:
         raise ValueError(f"Parameter data should be 2d, not {data.ndim}d")
-    elif mmix.ndim not in [2]:
-        raise ValueError(f"Parameter mmix should be 2d, not {mmix.ndim}d")
+    elif mixing.ndim not in [2]:
+        raise ValueError(f"Parameter mixing should be 2d, not {mixing.ndim}d")
     elif (mask is not None) and (mask.ndim != 1):
         raise ValueError(f"Parameter mask should be 1d, not {mask.ndim}d")
     elif (mask is not None) and (data.shape[0] != mask.shape[0]):
@@ -64,10 +64,10 @@ def computefeats2(data, mmix, mask=None, normalize=True):
             f"First dimensions (number of samples) of data ({data.shape[0]}) "
             f"and mask ({mask.shape[0]}) do not match."
         )
-    elif data.shape[1] != mmix.shape[0]:
+    elif data.shape[1] != mixing.shape[0]:
         raise ValueError(
             f"Second dimensions (number of volumes) of data ({data.shape[0]}) "
-            f"and mmix ({mmix.shape[0]}) do not match."
+            f"and mixing ({mixing.shape[0]}) do not match."
         )
 
     # demean masked data
@@ -75,11 +75,11 @@ def computefeats2(data, mmix, mask=None, normalize=True):
         data = data[mask, ...]
     # normalize data (subtract mean and divide by standard deviation) in the last dimension
     # so that least-squares estimates represent "approximate" correlation values (data_r)
-    # assuming mixing matrix (mmix) values are also normalized
+    # assuming mixing matrix (mixing) values are also normalized
     data_vn = stats.zscore(data, axis=-1)
 
-    # get betas of `data`~`mmix` and limit to range [-0.999, 0.999]
-    data_r = get_coeffs(data_vn, mmix, mask=None)
+    # get betas of `data`~`mixing` and limit to range [-0.999, 0.999]
+    data_r = get_coeffs(data_vn, mixing, mask=None)
     # Avoid abs(data_r) => 1, otherwise Fisher's transform will return Inf or -Inf
     data_r[data_r < -0.999] = -0.999
     data_r[data_r > 0.999] = 0.999
@@ -223,3 +223,46 @@ def t_to_z(t_values, dof):
     if ret_float:
         out = out[0]
     return out
+
+
+def fit_model(x, y, output_residual=False):
+    """
+    Linear regression for a model y = betas * x + error.
+
+    Parameters
+    ----------
+    x : (T X R) :obj:`numpy.ndarray`
+        2D array with the regressors for the specified model an time
+    y : (T X C) :obj:`numpy.ndarray`
+        Time by mixing matrix components for the time series for fitting
+    output_residual : :obj:`bool`
+        If true, then this just outputs the residual of the fit.
+        If false, then outputs beta fits, sse, and df
+
+    Returns
+    -------
+    residual : (T X C) :obj:`numpy.ndarray`
+        The residual time series for the fit (only if output_residual is True)
+    betas : (R X C) :obj:`numpy.ndarray`
+        The magnitude fits for the model (only if output_residual is False)
+    sse : (C) :obj:`numpy.ndarray`
+        The sum of square error for the model (only if output_residual is False)
+    df : :obj:`int`
+        The degrees of freeom for the model (only if output_residual is False)
+        (timepoints - number of regressors)
+    """
+    betas, _, _, _ = linalg.lstsq(x, y)
+    # matrix-multiplication on the regressors with the betas -> to create a new 'estimated'
+    # component matrix  = fitted regressors (least squares beta solution * regressors)
+    fitted_regressors = np.matmul(x, betas)
+    residual = y - fitted_regressors
+    if output_residual:
+        return residual
+    else:
+        # sum the differences between the actual ICA components and the 'estimated'
+        # component matrix (beta-fitted regressors)
+        sse = np.sum(np.square(residual), axis=0)
+        # calculate how many individual values [timepoints] are free to vary after
+        # the least-squares solution [beta] betw X & Y is calculated
+        df = y.shape[0] - betas.shape[0]
+        return betas, sse, df

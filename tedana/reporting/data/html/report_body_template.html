@@ -176,25 +176,36 @@
   <div class="carpet-wrapper">
     <div class="carpet-buttons">$buttons</div>
     <div class="carpet-plots-image">
-      <img id="imgCarpetPlot" src="$initialCarpet" />
+      <img id="imgCarpetPlot" src="$initialCarpet" style="width: 95%; max-width: 1200px; height: auto;" />
     </div>
   </div>
+</div>
+<div class="carpet-plots">
+  <h1>Adaptive mask</h1>
+  <img id="adaptiveMask" src="$adaptiveMask" style="width: 95%; max-width: 1200px; height: auto;" />
 </div>
 <div class="carpet-plots">
   <h1>T2* and S0</h1>
   <h2>T2*</h2>
   <div class="carpet-plots-image">
-    <img id="t2starBrainPlot" src="$t2starBrainPlot" class="brainplot" />
+    <img id="t2starBrainPlot" src="$t2starBrainPlot" style="width: 95%; max-width: 1200px; height: auto;" />
   </div>
   <div class="carpet-plots-image">
-    <img id="t2starHistogram" src="$t2starHistogram" />
+    <img id="t2starHistogram" src="$t2starHistogram" style="width: 95%; max-width: 1200px; height: auto;" />
   </div>
   <h2>S0</h2>
   <div class="carpet-plots-image">
-    <img id="s0BrainPlot" src="$s0BrainPlot" class="brainplot" />
+    <img id="s0BrainPlot" src="$s0BrainPlot" style="width: 95%; max-width: 1200px; height: auto;" />
   </div>
   <div class="carpet-plots-image">
-    <img id="s0Histogram" src="$s0Histogram" />
+    <img id="s0Histogram" src="$s0Histogram" style="width: 95%; max-width: 1200px; height: auto;" />
+  </div>
+  <h2>T2* and S0 model fit (RMSE). (Scaled between 2nd and 98th percentiles)</h2>
+  <div class="carpet-plots-image">
+    <img id="rmseBrainPlot" src="$rmseBrainPlot" style="width: 95%; max-width: 1200px; height: auto;" />
+  </div>
+  <div class="carpet-plots-image">
+    <img id="rmseTimeseries" src="$rmseTimeseries" style="width: 95%; max-width: 1200px; height: auto;" />
   </div>
 </div>
 </div>

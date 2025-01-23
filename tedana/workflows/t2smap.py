@@ -7,6 +7,7 @@ import os.path as op
 import sys
 
 import numpy as np
+from nilearn.masking import compute_epi_mask
 from scipy import stats
 from threadpoolctl import threadpool_limits
 
@@ -151,6 +152,21 @@ def _get_parser():
     optional.add_argument(
         "--quiet", dest="quiet", help=argparse.SUPPRESS, action="store_true", default=False
     )
+    optional.add_argument(
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        help="Generate intermediate and additional files.",
+        default=False,
+    )
+    optional.add_argument(
+        "--overwrite",
+        "-f",
+        dest="overwrite",
+        action="store_true",
+        help="Force overwriting of files.",
+        default=False,
+    )
     parser._action_groups.append(optional)
     return parser
 
@@ -167,7 +183,9 @@ def t2smap_workflow(
     fitmode="all",
     combmode="t2s",
     debug=False,
+    verbose=False,
     quiet=False,
+    overwrite=False,
     t2smap_command=None,
 ):
     """
@@ -204,6 +222,11 @@ def t2smap_workflow(
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'paid' (Poser).
     t2smap_command : :obj:`str`, optional
         The command used to run t2smap. Default is None.
+    verbose : :obj:`bool`, optional
+        Generate intermediate and additional files. Default is False.
+    overwrite : :obj:`bool`, optional
+        If True, force overwriting of files. Default is False.
+
 
     Other Parameters
     ----------------
@@ -275,7 +298,7 @@ def t2smap_workflow(
         data = [data]
 
     LGR.info(f"Loading input data: {[f for f in data]}")
-    catd, ref_img = io.load_data(data, n_echos=n_echos)
+    data_cat, ref_img = io.load_data(data, n_echos=n_echos)
     io_generator = io.OutputGenerator(
         ref_img,
         convention=convention,
@@ -283,30 +306,32 @@ def t2smap_workflow(
         prefix=prefix,
         config="auto",
         make_figures=False,
+        overwrite=overwrite,
+        verbose=verbose,
     )
-    n_samp, n_echos, n_vols = catd.shape
-    LGR.debug(f"Resulting data shape: {catd.shape}")
+    n_echos = data_cat.shape[1]
+    LGR.debug(f"Resulting data shape: {data_cat.shape}")
 
     if mask is None:
-        LGR.info("Computing adaptive mask")
+        LGR.info(
+            "Computing initial mask from the first echo using nilearn's compute_epi_mask function."
+        )
+        first_echo_img = io.new_nii_like(io_generator.reference_img, data_cat[:, 0, :])
+        mask = compute_epi_mask(first_echo_img)
     else:
         LGR.info("Using user-defined mask")
     mask, masksum = utils.make_adaptive_mask(
-        catd,
+        data_cat,
         mask=mask,
         threshold=1,
         methods=masktype,
     )
 
     LGR.info("Computing adaptive T2* map")
-    if fitmode == "all":
-        (t2s_limited, s0_limited, t2s_full, s0_full) = decay.fit_decay(
-            catd, tes, mask, masksum, fittype
-        )
-    else:
-        (t2s_limited, s0_limited, t2s_full, s0_full) = decay.fit_decay_ts(
-            catd, tes, mask, masksum, fittype
-        )
+    decay_function = decay.fit_decay if fitmode == "all" else decay.fit_decay_ts
+    (t2s_limited, s0_limited, t2s_full, s0_full) = decay_function(
+        data_cat, tes, mask, masksum, fittype
+    )
 
     # set a hard cap for the T2* map/timeseries
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
@@ -315,12 +340,24 @@ def t2smap_workflow(
     LGR.debug(f"Setting cap on T2* map at {cap_t2s_sec:.5f}s")
     t2s_full[t2s_full > cap_t2s * 10] = cap_t2s
 
+    LGR.info("Calculating model fit quality metrics")
+    rmse_map, rmse_df = decay.rmse_of_fit_decay_ts(
+        data=data_cat,
+        tes=tes,
+        adaptive_mask=masksum,
+        t2s=t2s_limited,
+        s0=s0_limited,
+        fitmode=fitmode,
+    )
+    io_generator.save_file(rmse_map, "rmse img")
+    io_generator.save_file(rmse_df, "confounds tsv")
+
     LGR.info("Computing optimal combination")
     # optimally combine data
-    data_oc = combine.make_optcom(catd, tes, masksum, t2s=t2s_full, combmode=combmode)
+    data_optcom = combine.make_optcom(data_cat, tes, masksum, t2s=t2s_full, combmode=combmode)
 
     # clean up numerical errors
-    for arr in (data_oc, s0_full, t2s_full):
+    for arr in (data_optcom, s0_full, t2s_full):
         np.nan_to_num(arr, copy=False)
 
     s0_full[s0_full < 0] = 0
@@ -339,7 +376,7 @@ def t2smap_workflow(
         s0_limited,
         "limited s0 img",
     )
-    io_generator.save_file(data_oc, "combined img")
+    io_generator.save_file(data_optcom, "combined img")
 
     # Write out BIDS-compatible description file
     derivative_metadata = {

@@ -1,8 +1,11 @@
 """Utility functions for tedana.selection."""
 
 import logging
+import re
+from typing import Dict, List, Union
 
 import numpy as np
+import pandas as pd
 
 from tedana.stats import getfbounds
 
@@ -14,7 +17,9 @@ RepLGR = logging.getLogger("REPORT")
 ##############################################################
 
 
-def selectcomps2use(component_table, decide_comps):
+def selectcomps2use(
+    component_table: pd.DataFrame, decide_comps: Union[str, List[str], List[int]]
+) -> List[int]:
     """Get a list of component numbers that fit the classification types in ``decide_comps``.
 
     Parameters
@@ -83,14 +88,14 @@ def selectcomps2use(component_table, decide_comps):
 
 
 def change_comptable_classifications(
-    selector,
-    if_true,
-    if_false,
-    decision_boolean,
-    tag_if_true=None,
-    tag_if_false=None,
-    dont_warn_reclassify=False,
-):
+    selector,  # ComponentSelector
+    if_true: str,
+    if_false: str,
+    decision_boolean: pd.Series,
+    tag_if_true: str = None,
+    tag_if_false: str = None,
+    dont_warn_reclassify: bool = False,
+):  # -> Tuple[ComponentSelector, int, int]
     """
     Change or don't change the component classification.
 
@@ -166,13 +171,13 @@ def change_comptable_classifications(
 
 
 def comptable_classification_changer(
-    selector,
-    boolstate,
-    classify_if,
-    decision_boolean,
-    tag_if=None,
-    dont_warn_reclassify=False,
-):
+    selector,  # : ComponentSelector,
+    boolstate: bool,
+    classify_if: str,
+    decision_boolean: pd.Series,
+    tag_if: Union[str, None] = None,
+    dont_warn_reclassify: bool = False,
+):  # -> ComponentSelector
     """Implement the component classification changes from ``change_comptable_classifications``.
 
     Parameters
@@ -281,7 +286,7 @@ def comptable_classification_changer(
     return selector
 
 
-def clean_dataframe(component_table):
+def clean_dataframe(component_table: pd.DataFrame) -> pd.DataFrame:
     """
     Reorder columns in component table.
 
@@ -313,18 +318,27 @@ def clean_dataframe(component_table):
 #################################################
 
 
-def confirm_metrics_exist(component_table, necessary_metrics, function_name=None):
-    """Confirm that all metrics declared in necessary_metrics are already included in comptable.
+def confirm_metrics_exist(
+    component_table: pd.DataFrame,
+    necessary_metrics: List[str],
+    function_name: Union[str, None] = None,
+) -> Union[None, bool]:
+    """Confirm that all metrics in necessary_metrics are in component_table.
 
     Parameters
     ----------
     component_table : (C x M) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
-    necessary_metrics : :obj:`list`
+    necessary_metrics : :obj:`list[str]`
         A list of strings of metric names.
     function_name : :obj:`str`
         Text identifying the function name that called this function.
+
+    Returns
+    -------
+    metrics_are_missing : :obj:`bool`
+        If there are no metrics missing, this returns True.
 
     Raises
     ------
@@ -337,26 +351,42 @@ def confirm_metrics_exist(component_table, necessary_metrics, function_name=None
     Also, the string in ``necessary_metrics`` and the column labels in ``component_table`` will
     only be matched if they're identical.
     """
-    missing_metrics = set(necessary_metrics) - set(component_table.columns)
-    if missing_metrics:
-        function_name = function_name or "unknown function"
-        raise ValueError(
-            f"Necessary metrics for {function_name}: {necessary_metrics}. "
+    hardcoded_metrics = [metric for metric in necessary_metrics if not metric.startswith("^")]
+    regex_metrics = [metric for metric in necessary_metrics if metric.startswith("^")]
+    # Check that all hardcoded (literal string) metrics are accounted for.
+    missing_metrics = sorted(list(set(hardcoded_metrics) - set(component_table.columns)))
+    # Check that the regular expression-based metrics are accounted for.
+    found_metrics = component_table.columns.tolist()
+    for regex_metric in regex_metrics:
+        if not any(re.match(regex_metric, metric) for metric in found_metrics):
+            missing_metrics.append(regex_metric)
+
+    metrics_are_missing = len(missing_metrics) > 0
+    if metrics_are_missing:
+        if function_name is None:
+            function_name = "unknown function"
+
+        error_msg = (
+            f"Necessary metrics for {function_name}: "
+            f"{necessary_metrics}. "
             f"Comptable metrics: {set(component_table.columns)}. "
             f"MISSING METRICS: {missing_metrics}."
         )
+        raise ValueError(error_msg)
+
+    return metrics_are_missing
 
 
 def log_decision_tree_step(
-    function_name_idx,
-    comps2use,
-    decide_comps=None,
-    n_true=None,
-    n_false=None,
-    if_true=None,
-    if_false=None,
-    calc_outputs=None,
-):
+    function_name_idx: str,
+    comps2use: Union[List[int], int],
+    decide_comps: Union[str, List[str], List[int], None] = None,
+    n_true: Union[int, None] = None,
+    n_false: Union[int, None] = None,
+    if_true: Union[str, None] = None,
+    if_false: Union[str, None] = None,
+    calc_outputs: Union[Dict, None] = None,
+) -> None:
     """Log text to add after every decision tree calculation.
 
     Parameters
@@ -423,7 +453,7 @@ def log_decision_tree_step(
             )
 
 
-def log_classification_counts(decision_node_idx, component_table):
+def log_classification_counts(decision_node_idx: int, component_table: pd.DataFrame) -> None:
     """Log the total counts for each component classification in component_table.
 
     Parameters

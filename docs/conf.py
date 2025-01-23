@@ -43,6 +43,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "matplotlib.sphinxext.plot_directive",
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosectionlabel",
     "sphinx.ext.autosummary",
     "sphinx.ext.doctest",
     "sphinx.ext.ifconfig",
@@ -154,6 +155,9 @@ def setup(app):
 
 
 html_favicon = "_static/tedana_favicon.png"
+
+# Make sure the target is unique
+autosectionlabel_prefix_document = True
 
 # -----------------------------------------------------------------------------
 # sphinxcontrib-bibtex
