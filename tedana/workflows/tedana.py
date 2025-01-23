@@ -476,8 +476,9 @@ def tedana_workflow(
         Method with which to select components in TEDPCA.
         If a float is provided, then it is assumed to represent percentage of variance
         explained (0.0-1.0) to retain from PCA. If an int is provided, it will output
-        a fixed number of components defined by the integer; must be between 1 and the
-        number of time points.
+        a fixed number of components defined by the integer; must be between 2 and the
+        number of time points. If 1 is provided as an integer, it will considered as 100%
+        of the variance explained.
         Default is 'aic'.
     fixed_seed : :obj:`int`, optional
         Value passed to ``mdp.numx_rand.seed()``.

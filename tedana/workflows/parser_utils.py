@@ -33,6 +33,10 @@ def check_tedpca_value(value, is_parser=True):
         if intvalue < 1:
             msg = f"Integer argument to {dashes}tedpca must be positive"
             raise error(msg)
+        elif intvalue == 1:
+            # Assume user meant 100% (1.0), as it is highly unlikely they meant to get a
+            # single component
+            return 1.0
         return intvalue
 
     if isinstance(value, float):

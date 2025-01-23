@@ -39,6 +39,6 @@ def test_check_tedpca_value():
     assert check_tedpca_value(0.95, is_parser=False) == 0.95
     assert check_tedpca_value("0.95") == 0.95
     assert check_tedpca_value("mdl") == "mdl"
-    assert check_tedpca_value(1, is_parser=False) == 1
-    assert check_tedpca_value("1") == 1
+    assert check_tedpca_value(1, is_parser=False) == 1.0
+    assert check_tedpca_value("1") == 1.0
     assert check_tedpca_value(52, is_parser=False) == 52
