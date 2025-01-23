@@ -327,9 +327,7 @@ def generate_report(io_generator: OutputGenerator, cluster_labels, similarity_t_
 
     # Create clustering plot
     if cluster_labels is not None:
-        clustering_tsne_plot = df._create_clustering_tsne_plt(
-            cluster_labels, similarity_t_sne, io_generator
-        )
+        clustering_tsne_plot = df._create_clustering_tsne_plt(cluster_labels, similarity_t_sne)
         tsne_script, tsne_div = embed.components(clustering_tsne_plot)
         tsne_html = f"{tsne_script}"
         tsne_html += (
