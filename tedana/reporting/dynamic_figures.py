@@ -421,3 +421,120 @@ def _link_figures(fig, comptable_ds, div_content, io_generator):
     """
     fig.js_on_event(events.Tap, _tap_callback(comptable_ds, div_content, io_generator))
     return fig
+
+
+def _create_clustering_tsne_plt(cluster_labels, similarity_t_sne):
+    """Plot the clustering results of robustica using Bokeh.
+
+    Parameters
+    ----------
+    cluster_labels : (n_pca_components x n_robust_runs,) : numpy.ndarray
+        A one dimensional array that has the cluster label of each run.
+    similarity_t_sne : (n_pca_components x n_robust_runs,2) : numpy.ndarray
+        An array containing the coordinates of projected data.
+    """
+    title = "2D projection of clustered ICA runs using TSNE"
+    marker_size = 8
+    alpha = 0.8
+    line_width = 2
+
+    # First create the figure without the hover tool
+    p = plotting.figure(
+        title=title,
+        width=800,
+        height=600,
+        tools=["pan", "box_zoom", "wheel_zoom", "reset", "save"],  # No hover tool here
+    )
+
+    point_renderers = []  # List to store point renderers
+
+    # Plot regular clusters
+    for cluster_id in range(np.max(cluster_labels) + 1):
+        cluster_mask = cluster_labels == cluster_id
+        if not np.any(cluster_mask):
+            continue
+
+        # Get points for this cluster
+        cluster_points = similarity_t_sne[cluster_mask]
+
+        # Add scatter plot for cluster points with hover info
+        circle_renderer = p.circle(
+            x="x",
+            y="y",
+            source=models.ColumnDataSource(
+                {
+                    "x": cluster_points[:, 0],
+                    "y": cluster_points[:, 1],
+                    "cluster": [f"Cluster {cluster_id}"] * len(cluster_points),
+                }
+            ),
+            size=marker_size,
+            alpha=alpha,
+            line_color="black",
+            fill_color=None,
+            line_width=line_width,
+            legend_label="Clustered runs",
+            name="points",
+        )
+        point_renderers.append(circle_renderer)
+
+        # Add hull if enough points
+        if cluster_points.shape[0] > 2:
+            from scipy.spatial import ConvexHull
+
+            hull = ConvexHull(cluster_points)
+            centroid = np.mean(cluster_points[hull.vertices], axis=0)
+            scaled_points = centroid + 1.5 * (cluster_points - centroid)
+
+            # Create hull line segments
+            xs = []
+            ys = []
+            for simplex in hull.simplices:
+                xs.extend([scaled_points[simplex[0], 0], scaled_points[simplex[1], 0], None])
+                ys.extend([scaled_points[simplex[0], 1], scaled_points[simplex[1], 1], None])
+
+            # Add line without hover tooltips
+            p.line(
+                x=xs,
+                y=ys,
+                line_color="blue",
+                line_dash="dashed",
+                line_width=line_width,
+                legend_label="Cluster's boundary",
+            )
+
+    # Plot noise clusters if they exist
+    if np.min(cluster_labels) == -1:
+        noise_mask = cluster_labels == -1
+        noise_points = similarity_t_sne[noise_mask]
+
+        # Add noise points with hover tooltips
+        x_renderer = p.x(
+            x="x",
+            y="y",
+            size=marker_size * 2,
+            alpha=0.6,
+            color="red",
+            legend_label="Unclustered runs",
+            source=models.ColumnDataSource(
+                {
+                    "x": noise_points[:, 0],
+                    "y": noise_points[:, 1],
+                    "cluster": ["Unclustered"] * len(noise_points),
+                }
+            ),
+        )
+        point_renderers.append(x_renderer)
+
+    # Add hover tool after creating all renderers, specifically for points
+    hover_tool = models.HoverTool(
+        tooltips=[("Cluster", "@cluster")],
+        renderers=point_renderers,  # Only apply to stored point renderers
+    )
+    p.add_tools(hover_tool)
+
+    # Configure legend
+    p.legend.click_policy = "hide"
+    p.legend.location = "top_right"
+
+    return p
