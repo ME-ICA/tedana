@@ -55,7 +55,7 @@ def tedpca(
     adaptive_mask,
     io_generator,
     tes,
-    echo_DOF=None,
+    echo_dof=None,
     algorithm="aic",
     kdaw=10.0,
     rdaw=1.0,
@@ -80,8 +80,9 @@ def tedpca(
         The output generation object for this workflow
     tes : :obj:`list`
         List of echo times associated with `data_cat`, in milliseconds
-    echo_DOF : :obj:`int`, optional
-        Degree of freedom to use in goodness of fit metrics (fstat). If None, number of echoes will be used. Default is None.
+    echo_dof : :obj:`int`, optional
+        Degree of freedom to use in goodness of fit metrics (fstat).
+        If None, number of echoes will be used. Default is None.
     algorithm : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic', float}, optional
         Method with which to select components in TEDPCA. PCA
         decomposition with the mdl, kic and aic options are based on a Moving Average
@@ -358,7 +359,7 @@ def tedpca(
         mixing=comp_ts,
         adaptive_mask=adaptive_mask,
         tes=tes,
-        echo_DOF=echo_DOF,
+        echo_dof=echo_dof,
         io_generator=io_generator,
         label="PCA",
         external_regressors=None,

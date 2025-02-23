@@ -410,14 +410,7 @@ class ComponentSelector:
           everything that changed in each node
         - ``current_node_idx_``: The total number of nodes run in ``ComponentSelector``
         """
-        
         self.cross_component_metrics_ = cross_component_metrics
-
-        ### REMOVE ###
-        check=self.cross_component_metrics_["echo_DOF"]
-        LGR.info(f"DOF = {check}")
-        ##############
-    
 
         # Construct an un-executed selector
         self.component_table_ = component_table.copy()
@@ -513,8 +506,6 @@ class ComponentSelector:
                 f"with parameters: {all_params}"
             )
 
-                
-                
             # run the decision node function
             self = fcn(self, **params, **kwargs)
 

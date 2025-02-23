@@ -29,7 +29,7 @@ def generate_metrics(
     mixing: npt.NDArray,
     adaptive_mask: npt.NDArray,
     tes: Union[List[int], List[float], npt.NDArray],
-    echo_DOF: int = None, 
+    echo_dof: int = None,
     io_generator: io.OutputGenerator,
     label: str,
     external_regressors: Union[pd.DataFrame, None] = None,
@@ -54,8 +54,9 @@ def generate_metrics(
         For more information on thresholding, see `make_adaptive_mask`.
     tes : list
         List of echo times associated with `data_cat`, in milliseconds
-    echo_DOF : int
-        Degree of freedom to use in goodness of fit metrics (fstat). If None, number of echoes will be used. Default is None.
+    echo_dof : int
+        Degree of freedom to use in goodness of fit metrics (fstat).
+        If None, number of echoes will be used. Default is None.
     io_generator : tedana.io.OutputGenerator
         The output generator object for this workflow
     label : str in ['ICA', 'PCA']
@@ -193,17 +194,13 @@ def generate_metrics(
 
     if ("map FT2" in required_metrics) or ("map FS0" in required_metrics):
         LGR.info("Calculating F-statistic maps")
-
-        ### REMOVE ###
-        LGR.info(f"DOF = {echo_DOF}")
-        ##############
         m_t2, m_s0, p_m_t2, p_m_s0 = dependence.calculate_f_maps(
             data_cat=data_cat,
             z_maps=metric_maps["map Z"],
             mixing=mixing,
             adaptive_mask=adaptive_mask,
             tes=tes,
-            echo_DOF=echo_DOF,
+            echo_dof=echo_dof,
         )
         metric_maps["map FT2"] = m_t2
         metric_maps["map FS0"] = m_s0
