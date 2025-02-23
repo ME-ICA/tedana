@@ -718,6 +718,7 @@ def calc_kappa_elbow(
         "decision_node_idx": selector.current_node_idx_,
         "node_label": None,
         "n_echos": selector.cross_component_metrics_["n_echos"],
+        "echo_DOF": selector.cross_component_metrics_["echo_DOF"],
         "used_metrics": {"kappa"},
         "calc_cross_comp_metrics": [
             "kappa_elbow_kundu",
@@ -770,6 +771,10 @@ def calc_kappa_elbow(
             decide_comps=decide_comps,
         )
     else:
+        ### REMOVE ###
+        check=selector.cross_component_metrics_["echo_DOF"]
+        LGR.info(f"DOF = {check}")
+        ##############
         (
             outputs["kappa_elbow_kundu"],
             outputs["kappa_allcomps_elbow"],
@@ -778,6 +783,7 @@ def calc_kappa_elbow(
         ) = kappa_elbow_kundu(
             selector.component_table_,
             selector.cross_component_metrics_["n_echos"],
+            selector.cross_component_metrics_["echo_DOF"],
             comps2use=comps2use,
         )
         selector.cross_component_metrics_["kappa_elbow_kundu"] = outputs["kappa_elbow_kundu"]
@@ -850,6 +856,7 @@ def calc_rho_elbow(
         "decision_node_idx": selector.current_node_idx_,
         "node_label": None,
         "n_echos": selector.cross_component_metrics_["n_echos"],
+        "echo_DOF": selector.cross_component_metrics_["echo_DOF"],
         "calc_cross_comp_metrics": [
             elbow_name,
             "rho_allcomps_elbow",
@@ -897,6 +904,10 @@ def calc_rho_elbow(
             decide_comps=decide_comps,
         )
     else:
+        ### REMOVE ###
+        check=selector.cross_component_metrics_["echo_DOF"]
+        LGR.info(f"DOF = {check}")
+        ##############
         (
             outputs[elbow_name],
             outputs["rho_allcomps_elbow"],
@@ -905,6 +916,7 @@ def calc_rho_elbow(
         ) = rho_elbow_kundu_liberal(
             selector.component_table_,
             selector.cross_component_metrics_["n_echos"],
+            selector.cross_component_metrics_["echo_DOF"],
             rho_elbow_type=rho_elbow_type,
             comps2use=comps2use,
             subset_comps2use=subset_comps2use,
