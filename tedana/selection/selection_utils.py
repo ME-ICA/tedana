@@ -580,7 +580,7 @@ def getelbow(arr, return_val=False):
         return k_min_ind
 
 
-def kappa_elbow_kundu(component_table, n_echos, echo_dof, comps2use=None):
+def kappa_elbow_kundu(component_table, n_echos, echo_dof=None, comps2use=None):
     """
     Calculate an elbow for kappa.
 
@@ -676,7 +676,12 @@ def kappa_elbow_kundu(component_table, n_echos, echo_dof, comps2use=None):
 
 
 def rho_elbow_kundu_liberal(
-    component_table, n_echos, echo_dof, rho_elbow_type="kundu", comps2use=None, subset_comps2use=-1
+    component_table,
+    n_echos,
+    echo_dof=None,
+    rho_elbow_type="kundu",
+    comps2use=None,
+    subset_comps2use=-1,
 ):
     """
     Calculate an elbow for rho.

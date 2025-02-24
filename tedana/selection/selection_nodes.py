@@ -714,11 +714,15 @@ def calc_kappa_elbow(
     This also means the kappa elbow should be calculated before those two other functions
     are called
     """
+    if "echo_dof" in selector.cross_component_metrics_.keys():
+        echo_dof = selector.cross_component_metrics_["echo_dof"]
+    else:
+        echo_dof = None
     outputs = {
         "decision_node_idx": selector.current_node_idx_,
         "node_label": None,
         "n_echos": selector.cross_component_metrics_["n_echos"],
-        "echo_dof": selector.cross_component_metrics_["echo_dof"],
+        "echo_dof": echo_dof,
         "used_metrics": {"kappa"},
         "calc_cross_comp_metrics": [
             "kappa_elbow_kundu",
@@ -779,7 +783,7 @@ def calc_kappa_elbow(
         ) = kappa_elbow_kundu(
             selector.component_table_,
             selector.cross_component_metrics_["n_echos"],
-            selector.cross_component_metrics_["echo_dof"],
+            echo_dof=echo_dof,
             comps2use=comps2use,
         )
         selector.cross_component_metrics_["kappa_elbow_kundu"] = outputs["kappa_elbow_kundu"]
@@ -848,11 +852,16 @@ def calc_rho_elbow(
             f"It is {rho_elbow_type} "
         )
 
+    if "echo_dof" in selector.cross_component_metrics_.keys():
+        echo_dof = selector.cross_component_metrics_["echo_dof"]
+    else:
+        echo_dof = None
+
     outputs = {
         "decision_node_idx": selector.current_node_idx_,
         "node_label": None,
         "n_echos": selector.cross_component_metrics_["n_echos"],
-        "echo_dof": selector.cross_component_metrics_["echo_dof"],
+        "echo_dof": echo_dof,
         "calc_cross_comp_metrics": [
             elbow_name,
             "rho_allcomps_elbow",
@@ -908,7 +917,7 @@ def calc_rho_elbow(
         ) = rho_elbow_kundu_liberal(
             selector.component_table_,
             selector.cross_component_metrics_["n_echos"],
-            selector.cross_component_metrics_["echo_dof"],
+            echo_dof=echo_dof,
             rho_elbow_type=rho_elbow_type,
             comps2use=comps2use,
             subset_comps2use=subset_comps2use,
