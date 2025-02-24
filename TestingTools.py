@@ -188,7 +188,7 @@ def fileSortHelperType2(fileName):
     return int(index)
     
 
-def runFullTedana(echoDir,savedir,tes,brain_mask_path, save_prefix,echo_DOF=None,echosToDownload=None, tes_conversion_factor=10**3,
+def runFullTedana(echoDir,savedir,tes,brain_mask_path, save_prefix,echo_dof=None,echosToDownload=None, tes_conversion_factor=10**3,
                   echofilePattern="*_echo-*_desc-preproc_bold.nii*",echofileSortType=2,topOfBidsPath=None,
                   mixm=None, tree="tedana_orig",overwrite=False):
 
@@ -219,7 +219,7 @@ def runFullTedana(echoDir,savedir,tes,brain_mask_path, save_prefix,echo_DOF=None
         mask=brain_mask_path,
         convention="bids",
         prefix=save_prefix,
-        echo_DOF=echo_DOF,
+        echo_dof=echo_dof,
         tree=tree,
         external_regressors=None,
         verbose=True,
@@ -250,7 +250,7 @@ def runFullTedana(echoDir,savedir,tes,brain_mask_path, save_prefix,echo_DOF=None
                 print("Unable to remove: {0}".format(file_path))
 
 def subsampleEchoes(echoDir,savedir,tes,brain_mask_path, 
-                    save_prefix,echo_DOF=None,echo_start=None,echo_stop=None,echo_step_size=None,echoes=None,
+                    save_prefix,echo_dof=None,echo_start=None,echo_stop=None,echo_step_size=None,echoes=None,
                     tes_conversion_factor=10**3,echofilePattern="*_echo-*_desc-preproc_bold.nii*",echofileSortType=2,
                     topOfBidsPath=None,mixm=None, tree="tedana_orig",overwrite=False):
 
@@ -264,7 +264,7 @@ def subsampleEchoes(echoDir,savedir,tes,brain_mask_path,
         assert False, "echo_start, echo_stop, and echo_step_size must be numeric OR echoes must be a nonempty list."
 
     
-    runFullTedana(echoDir,savedir,tes,brain_mask_path, save_prefix,echo_DOF=echo_DOF, 
+    runFullTedana(echoDir,savedir,tes,brain_mask_path, save_prefix,echo_dof=echo_dof, 
                   echosToDownload=echosToDownload,tes_conversion_factor=tes_conversion_factor,
                   echofilePattern=echofilePattern,echofileSortType=echofileSortType,
                   topOfBidsPath=topOfBidsPath,mixm=mixm,tree=tree,overwrite=overwrite)
