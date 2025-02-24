@@ -120,10 +120,6 @@ ENV/
 
 # jupyter notebooks
 .ipynb_checkpoints/
-*/TestingUpdate.ipynb
-
-# testing .py files
-*/TestingTools.py
 
 # vim swap files
 *.swp
