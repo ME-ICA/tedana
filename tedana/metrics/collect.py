@@ -56,6 +56,7 @@ def generate_metrics(
         List of echo times associated with `data_cat`, in milliseconds
     echo_dof : int
         Degree of freedom to use in goodness of fit metrics (fstat).
+        Primarily used for EPTI acquisitions.
         If None, number of echoes will be used. Default is None.
     io_generator : tedana.io.OutputGenerator
         The output generator object for this workflow

@@ -596,6 +596,7 @@ def kappa_elbow_kundu(component_table, n_echos, echo_dof=None, comps2use=None):
         The number of echos in the multi-echo data
     echo_dof : :obj:`int`, optional
         Degree of freedom to use in goodness of fit metrics (fstat).
+        Primarily used for EPTI acquisitions.
         If None, number of echoes will be used. Default is None.
     comps2use : :obj:`list[int]`
         A list of component indices used to calculate the elbow
@@ -699,6 +700,7 @@ def rho_elbow_kundu_liberal(
         The number of echos in the multi-echo data
     echo_dof : :obj:`int`, optional
         Degree of freedom to use in goodness of fit metrics (fstat).
+        Primarily used for EPTI acquisitions.
         If None, number of echoes will be used. Default is None.
     rho_elbow_type : :obj:`str`
         The algorithm used to calculate the rho elbow. Current options are

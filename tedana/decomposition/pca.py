@@ -82,6 +82,7 @@ def tedpca(
         List of echo times associated with `data_cat`, in milliseconds
     echo_dof : :obj:`int`, optional
         Degree of freedom to use in goodness of fit metrics (fstat).
+        Primarily used for EPTI acquisitions.
         If None, number of echoes will be used. Default is None.
     algorithm : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic', float}, optional
         Method with which to select components in TEDPCA. PCA

@@ -156,6 +156,7 @@ def calculate_f_maps(
         Echo times in milliseconds, in the same order as the echoes in data_cat.
     echo_dof : int
         Degree of freedom to use in goodness of fit metrics (fstat).
+        Primarily used for EPTI acquisitions.
         If None, number of echoes will be used. Default is None.
     f_max : float, optional
         Maximum F-statistic, used to crop extreme values. Values in the

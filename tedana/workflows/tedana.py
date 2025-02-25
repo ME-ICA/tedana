@@ -375,7 +375,11 @@ def _get_parser():
         dest="echo_dof",
         metavar="INT",
         type=int,
-        help=("FIX ME"),
+        help=(
+            "Degree of freedom to use in goodness of fit metrics (fstat)."
+            "Primarily used for EPTI acquisitions."
+            "If not provided, number of echoes will be used."
+        ),
         default=None,
     )
     optional.add_argument("-v", "--version", action="version", version=verstr)
@@ -454,6 +458,7 @@ def tedana_workflow(
         Combination scheme for TEs: 't2s' (Posse 1999, default).
     echo_dof : :obj:`int`, optional
         Degree of freedom to use in goodness of fit metrics (fstat).
+        Primarily used for EPTI acquisitions.
         If None, number of echoes will be used. Default is None.
     tree : {'tedana_orig', 'meica', 'minimal', 'json file'}, optional
         Decision tree to use for component selection. Can be a
