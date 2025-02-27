@@ -714,6 +714,7 @@ def tedana_workflow(
     mask_denoise, masksum_denoise = utils.make_adaptive_mask(
         data_cat,
         mask=mask,
+        echo_dof=echo_dof,
         threshold=1,
         methods=masktype,
     )

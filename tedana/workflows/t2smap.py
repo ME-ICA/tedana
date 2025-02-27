@@ -174,6 +174,7 @@ def _get_parser():
 def t2smap_workflow(
     data,
     tes,
+    echo_dof=None,
     out_dir=".",
     mask=None,
     prefix="",
@@ -200,6 +201,10 @@ def t2smap_workflow(
         list of echo-specific files, in ascending order.
     tes : :obj:`list`
         List of echo times associated with data in milliseconds.
+    echo_dof : :obj:`int`, optional
+        Degree of freedom to use in goodness of fit metrics (fstat).
+        Primarily used for EPTI acquisitions.
+        If None, number of echoes will be used. Default is None.
     out_dir : :obj:`str`, optional
         Output directory.
     mask : :obj:`str`, optional
@@ -323,6 +328,7 @@ def t2smap_workflow(
     mask, masksum = utils.make_adaptive_mask(
         data_cat,
         mask=mask,
+        echo_dof=echo_dof,
         threshold=1,
         methods=masktype,
     )
