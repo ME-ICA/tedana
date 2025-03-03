@@ -404,7 +404,6 @@ def ica_reclassify_workflow(
         data_cat = ioh.get_file_contents("input img")
         # Extract the data from the nibabel objects
         data_cat, _ = io.load_data(data_cat, n_echos=len(data_cat))
-        breakpoint()
 
     io_generator = io.OutputGenerator(
         data_optcom,
