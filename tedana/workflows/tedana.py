@@ -369,6 +369,19 @@ def _get_parser():
         help="Force overwriting of files.",
         default=False,
     )
+
+    optional.add_argument(
+        "--n-independent-echos",
+        dest="echo_dof",
+        metavar="INT",
+        type=int,
+        help=(
+            "Degree of freedom to use in goodness of fit metrics (fstat)."
+            "Primarily used for EPTI acquisitions."
+            "If not provided, number of echoes will be used."
+        ),
+        default=None,
+    )
     optional.add_argument("-v", "--version", action="version", version=verstr)
     parser._action_groups.append(optional)
 
@@ -385,6 +398,7 @@ def tedana_workflow(
     masktype=["dropout"],
     fittype="loglin",
     combmode="t2s",
+    echo_dof=None,
     tree="tedana_orig",
     external_regressors=None,
     ica_method=DEFAULT_ICA_METHOD,
@@ -442,6 +456,10 @@ def tedana_workflow(
         Default is 'loglin'.
     combmode : {'t2s'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default).
+    echo_dof : :obj:`int`, optional
+        Degree of freedom to use in goodness of fit metrics (fstat).
+        Primarily used for EPTI acquisitions.
+        If None, number of echoes will be used. Default is None.
     tree : {'tedana_orig', 'meica', 'minimal', 'json file'}, optional
         Decision tree to use for component selection. Can be a
         packaged tree (tedana_orig, meica, minimal) or a user-supplied JSON file that
@@ -696,6 +714,7 @@ def tedana_workflow(
     mask_denoise, masksum_denoise = utils.make_adaptive_mask(
         data_cat,
         mask=mask,
+        echo_dof=echo_dof,
         threshold=1,
         methods=masktype,
     )
@@ -775,6 +794,7 @@ def tedana_workflow(
             masksum_clf,
             io_generator,
             tes=tes,
+            echo_dof=echo_dof,
             algorithm=tedpca,
             kdaw=10.0,
             rdaw=1.0,
@@ -815,6 +835,7 @@ def tedana_workflow(
                 mixing=mixing,
                 adaptive_mask=masksum_clf,
                 tes=tes,
+                echo_dof=echo_dof,
                 io_generator=io_generator,
                 label="ICA",
                 metrics=necessary_metrics,
@@ -827,6 +848,7 @@ def tedana_workflow(
                 selector,
                 n_echos=n_echos,
                 n_vols=n_vols,
+                echo_dof=echo_dof,
             )
             n_likely_bold_comps = selector.n_likely_bold_comps_
             LGR.info("Selecting components from ICA results")
@@ -835,6 +857,7 @@ def tedana_workflow(
                 selector,
                 n_echos=n_echos,
                 n_vols=n_vols,
+                echo_dof=echo_dof,
             )
             n_likely_bold_comps = selector.n_likely_bold_comps_
             if (n_restarts < maxrestart) and (n_likely_bold_comps == 0):
@@ -876,6 +899,7 @@ def tedana_workflow(
             mixing=mixing,
             adaptive_mask=masksum_clf,
             tes=tes,
+            echo_dof=echo_dof,
             io_generator=io_generator,
             label="ICA",
             metrics=necessary_metrics,
@@ -883,7 +907,7 @@ def tedana_workflow(
             external_regressor_config=selector.tree["external_regressor_config"],
         )
         selector = selection.automatic_selection(
-            component_table, selector, n_echos=n_echos, n_vols=n_vols
+            component_table, selector, n_echos=n_echos, n_vols=n_vols, echo_dof=echo_dof
         )
 
     # TODO The ICA mixing matrix should be written out after it is created

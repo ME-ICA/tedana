@@ -29,6 +29,7 @@ def generate_metrics(
     mixing: npt.NDArray,
     adaptive_mask: npt.NDArray,
     tes: Union[List[int], List[float], npt.NDArray],
+    echo_dof: int = None,
     io_generator: io.OutputGenerator,
     label: str,
     external_regressors: Union[pd.DataFrame, None] = None,
@@ -53,6 +54,10 @@ def generate_metrics(
         For more information on thresholding, see `make_adaptive_mask`.
     tes : list
         List of echo times associated with `data_cat`, in milliseconds
+    echo_dof : int
+        Degree of freedom to use in goodness of fit metrics (fstat).
+        Primarily used for EPTI acquisitions.
+        If None, number of echoes will be used. Default is None.
     io_generator : tedana.io.OutputGenerator
         The output generator object for this workflow
     label : str in ['ICA', 'PCA']
@@ -196,6 +201,7 @@ def generate_metrics(
             mixing=mixing,
             adaptive_mask=adaptive_mask,
             tes=tes,
+            echo_dof=echo_dof,
         )
         metric_maps["map FT2"] = m_t2
         metric_maps["map FS0"] = m_s0
@@ -224,7 +230,11 @@ def generate_metrics(
 
     if "map FT2 clusterized" in required_metrics:
         LGR.info("Calculating T2* F-statistic maps")
-        f_thresh, _, _ = getfbounds(len(tes))
+        if echo_dof is None:
+            f_thresh, _, _ = getfbounds(len(tes))
+        else:
+            f_thresh, _, _ = getfbounds(echo_dof)
+
         metric_maps["map FT2 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FT2"],
             mask=mask,
@@ -234,7 +244,11 @@ def generate_metrics(
 
     if "map FS0 clusterized" in required_metrics:
         LGR.info("Calculating S0 F-statistic maps")
-        f_thresh, _, _ = getfbounds(len(tes))
+        if echo_dof is None:
+            f_thresh, _, _ = getfbounds(len(tes))
+        else:
+            f_thresh, _, _ = getfbounds(echo_dof)
+
         metric_maps["map FS0 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FS0"],
             mask=mask,
