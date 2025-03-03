@@ -192,6 +192,7 @@ def test_integration_four_echo(skip_integration):
         reject=[4, 5, 6],
         out_dir=out_dir_manual,
         mir=True,
+        verbose=True,
     )
 
     # compare the generated output files
