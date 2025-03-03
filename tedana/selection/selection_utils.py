@@ -580,7 +580,7 @@ def getelbow(arr, return_val=False):
         return k_min_ind
 
 
-def kappa_elbow_kundu(component_table, n_echos, echo_dof=None, comps2use=None):
+def kappa_elbow_kundu(component_table, echo_dof, comps2use=None):
     """
     Calculate an elbow for kappa.
 
@@ -592,12 +592,10 @@ def kappa_elbow_kundu(component_table, n_echos, echo_dof=None, comps2use=None):
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
         Only the 'kappa' column is used in this function
-    n_echos : :obj:`int`
-        The number of echos in the multi-echo data
-    echo_dof : :obj:`int`, optional
+    echo_dof : :obj:`int`
         Degree of freedom to use in goodness of fit metrics (fstat).
-        Primarily used for EPTI acquisitions.
-        If None, number of echoes will be used. Default is None.
+        Typically the number of echos in the multi-echo data
+        May be a lower value for EPTI acquisitions.
     comps2use : :obj:`list[int]`
         A list of component indices used to calculate the elbow
         default=None which means use all components
@@ -637,10 +635,7 @@ def kappa_elbow_kundu(component_table, n_echos, echo_dof=None, comps2use=None):
     kappas2use = component_table.loc[comps2use, "kappa"].to_numpy()
 
     # low kappa threshold
-    if echo_dof is None:
-        _, _, f01 = getfbounds(n_echos)
-    else:
-        _, _, f01 = getfbounds(echo_dof)
+    _, _, f01 = getfbounds(echo_dof)
     # get kappa values for components below a significance threshold
     kappas_nonsig = kappas2use[kappas2use < f01]
 
@@ -678,8 +673,7 @@ def kappa_elbow_kundu(component_table, n_echos, echo_dof=None, comps2use=None):
 
 def rho_elbow_kundu_liberal(
     component_table,
-    n_echos,
-    echo_dof=None,
+    echo_dof,
     rho_elbow_type="kundu",
     comps2use=None,
     subset_comps2use=-1,
@@ -696,12 +690,10 @@ def rho_elbow_kundu_liberal(
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
         Only the 'kappa' column is used in this function
-    n_echos : :obj:`int`
-        The number of echos in the multi-echo data
-    echo_dof : :obj:`int`, optional
+    echo_dof : :obj:`int`
         Degree of freedom to use in goodness of fit metrics (fstat).
-        Primarily used for EPTI acquisitions.
-        If None, number of echoes will be used. Default is None.
+        Typically the number of echos in the multi-echo data
+        May be a lower value for EPTI acquisitions.
     rho_elbow_type : :obj:`str`
         The algorithm used to calculate the rho elbow. Current options are
         'kundu' and 'liberal'.
@@ -769,10 +761,7 @@ def rho_elbow_kundu_liberal(
         ].tolist()
 
     # One rho elbow threshold set just on the number of echoes
-    if echo_dof is None:
-        elbow_f05, _, _ = getfbounds(n_echos)
-    else:
-        elbow_f05, _, _ = getfbounds(echo_dof)
+    elbow_f05, _, _ = getfbounds(echo_dof)
     # One rho elbow threshold set using all componets in comps2use
     rhos_comps2use = component_table.loc[comps2use, "rho"].to_numpy()
     rho_allcomps_elbow = getelbow(rhos_comps2use, return_val=True)

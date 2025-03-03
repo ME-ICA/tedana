@@ -717,7 +717,8 @@ def calc_kappa_elbow(
     if "echo_dof" in selector.cross_component_metrics_.keys():
         echo_dof = selector.cross_component_metrics_["echo_dof"]
     else:
-        echo_dof = None
+        # DOF is number of echoes if not otherwise specified
+        echo_dof = selector.cross_component_metrics_["n_echos"]
     outputs = {
         "decision_node_idx": selector.current_node_idx_,
         "node_label": None,
@@ -782,8 +783,7 @@ def calc_kappa_elbow(
             outputs["varex_upper_p"],
         ) = kappa_elbow_kundu(
             selector.component_table_,
-            selector.cross_component_metrics_["n_echos"],
-            echo_dof=echo_dof,
+            echo_dof,
             comps2use=comps2use,
         )
         selector.cross_component_metrics_["kappa_elbow_kundu"] = outputs["kappa_elbow_kundu"]
@@ -855,7 +855,8 @@ def calc_rho_elbow(
     if "echo_dof" in selector.cross_component_metrics_.keys():
         echo_dof = selector.cross_component_metrics_["echo_dof"]
     else:
-        echo_dof = None
+        # DOF is number of echoes if not otherwise specified
+        echo_dof = selector.cross_component_metrics_["n_echos"]
 
     outputs = {
         "decision_node_idx": selector.current_node_idx_,
@@ -916,8 +917,7 @@ def calc_rho_elbow(
             outputs["elbow_f05"],
         ) = rho_elbow_kundu_liberal(
             selector.component_table_,
-            selector.cross_component_metrics_["n_echos"],
-            echo_dof=echo_dof,
+            echo_dof,
             rho_elbow_type=rho_elbow_type,
             comps2use=comps2use,
             subset_comps2use=subset_comps2use,
