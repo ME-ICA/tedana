@@ -401,6 +401,7 @@ def ica_reclassify_workflow(
         used_gs = False
 
     if verbose:
+        LGR.debug("Loading input 4D data")
         data_cat = ioh.get_file_contents("input img")
         # Extract the data from the nibabel objects
         data_cat, _ = io.load_data(data_cat, n_echos=len(data_cat))
@@ -515,6 +516,7 @@ def ica_reclassify_workflow(
         io_generator.overwrite = False
 
     if verbose:
+        LGR.debug("Writing out verbose data")
         io.writeresults_echoes(data_cat, mixing, mask_denoise, component_table, io_generator)
 
     # Write out BIDS-compatible description file
