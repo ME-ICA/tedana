@@ -383,6 +383,7 @@ def tedpca(
         component_table, metric_metadata = kundu_tedpca(
             component_table,
             n_echos,
+            echo_dof,
             kdaw,
             rdaw,
             stabilize=False,
@@ -391,6 +392,7 @@ def tedpca(
         component_table, metric_metadata = kundu_tedpca(
             component_table,
             n_echos,
+            echo_dof,
             kdaw,
             rdaw,
             stabilize=True,

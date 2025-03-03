@@ -230,7 +230,11 @@ def generate_metrics(
 
     if "map FT2 clusterized" in required_metrics:
         LGR.info("Calculating T2* F-statistic maps")
-        f_thresh, _, _ = getfbounds(len(tes))
+        if echo_dof is None:
+            f_thresh, _, _ = getfbounds(len(tes))
+        else:
+            f_thresh, _, _ = getfbounds(echo_dof)
+
         metric_maps["map FT2 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FT2"],
             mask=mask,
@@ -240,7 +244,11 @@ def generate_metrics(
 
     if "map FS0 clusterized" in required_metrics:
         LGR.info("Calculating S0 F-statistic maps")
-        f_thresh, _, _ = getfbounds(len(tes))
+        if echo_dof is None:
+            f_thresh, _, _ = getfbounds(len(tes))
+        else:
+            f_thresh, _, _ = getfbounds(echo_dof)
+
         metric_maps["map FS0 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FS0"],
             mask=mask,
