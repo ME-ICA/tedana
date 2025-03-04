@@ -180,6 +180,7 @@ def _main(argv=None):
         no_reports=args.no_reports,
         png_cmap=args.png_cmap,
         overwrite=args.overwrite,
+        verbose=args.verbose,
         debug=args.debug,
         quiet=args.quiet,
         reclassify_command=reclassify_command,
