@@ -714,7 +714,10 @@ def calc_kappa_elbow(
     This also means the kappa elbow should be calculated before those two other functions
     are called
     """
-    if "echo_dof" in selector.cross_component_metrics_.keys():
+    if (
+        "echo_dof" in selector.cross_component_metrics_.keys()
+        and selector.cross_component_metrics_["echo_dof"]
+    ):
         echo_dof = selector.cross_component_metrics_["echo_dof"]
     else:
         # DOF is number of echoes if not otherwise specified
@@ -852,7 +855,10 @@ def calc_rho_elbow(
             f"It is {rho_elbow_type} "
         )
 
-    if "echo_dof" in selector.cross_component_metrics_.keys():
+    if (
+        "echo_dof" in selector.cross_component_metrics_.keys()
+        and selector.cross_component_metrics_["echo_dof"]
+    ):
         echo_dof = selector.cross_component_metrics_["echo_dof"]
     else:
         # DOF is number of echoes if not otherwise specified
