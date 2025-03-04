@@ -207,7 +207,7 @@ def test_smoke_calculate_f_maps():
     mixing = np.random.random((n_volumes, n_components))
     adaptive_mask = np.random.randint(1, n_echos + 1, size=n_voxels)
     tes = np.array([15, 25, 35, 45, 55])
-    f_t2_maps, f_s0_maps, _, _ = dependence.calculate_f_maps(
+    f_t2_maps_orig, f_s0_maps_orig, _, _ = dependence.calculate_f_maps(
         data_cat=data_cat,
         z_maps=z_maps,
         mixing=mixing,
@@ -215,7 +215,25 @@ def test_smoke_calculate_f_maps():
         tes=tes,
         f_max=500,
     )
+    assert f_t2_maps_orig.shape == f_s0_maps_orig.shape == (n_voxels, n_components)
+
+    # rerunning with echo_dof=3
+    f_t2_maps, f_s0_maps, _, _ = dependence.calculate_f_maps(
+        data_cat=data_cat,
+        z_maps=z_maps,
+        mixing=mixing,
+        adaptive_mask=adaptive_mask,
+        tes=tes,
+        echo_dof=3,
+        f_max=500,
+    )
     assert f_t2_maps.shape == f_s0_maps.shape == (n_voxels, n_components)
+    # When echo_dof < the number of echoes, then the f maps should have the same or larger values
+    assert np.min(f_t2_maps_orig - f_t2_maps) == 0
+    assert np.min(f_s0_maps_orig - f_s0_maps) == 0
+    # When echo_dof==3 and there are 5 good echoes, then the f maps should always be larger than 0
+    assert np.min(f_t2_maps_orig[adaptive_mask == 5] - f_t2_maps[adaptive_mask == 5]) > 0
+    assert np.min(f_s0_maps_orig[adaptive_mask == 5] - f_s0_maps[adaptive_mask == 5]) > 0
 
 
 def test_smoke_calculate_varex():
