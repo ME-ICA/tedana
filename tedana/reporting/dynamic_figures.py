@@ -437,6 +437,7 @@ def _create_clustering_tsne_plt(cluster_labels, similarity_t_sne):
     marker_size = 8
     alpha = 0.8
     line_width = 2
+    scaling_factor = 1.1  # Moderate scaling factor
 
     # First create the figure without the hover tool
     p = plotting.figure(
@@ -482,26 +483,39 @@ def _create_clustering_tsne_plt(cluster_labels, similarity_t_sne):
         if cluster_points.shape[0] > 2:
             from scipy.spatial import ConvexHull
 
-            hull = ConvexHull(cluster_points)
-            centroid = np.mean(cluster_points[hull.vertices], axis=0)
-            scaled_points = centroid + 1.5 * (cluster_points - centroid)
+            try:
+                hull = ConvexHull(cluster_points)
+                # Get the vertices of the hull in order
+                hull_vertices = hull.vertices
 
-            # Create hull line segments
-            xs = []
-            ys = []
-            for simplex in hull.simplices:
-                xs.extend([scaled_points[simplex[0], 0], scaled_points[simplex[1], 0], None])
-                ys.extend([scaled_points[simplex[0], 1], scaled_points[simplex[1], 1], None])
+                # Calculate the centroid of the cluster
+                centroid = np.mean(cluster_points, axis=0)
 
-            # Add line without hover tooltips
-            p.line(
-                x=xs,
-                y=ys,
-                line_color="blue",
-                line_dash="dashed",
-                line_width=line_width,
-                legend_label="Cluster's boundary",
-            )
+                # Create hull line segments with moderate scaling from centroid
+                hull_points = cluster_points[hull_vertices]
+                # Apply moderate scaling from centroid
+                scaled_hull_points = centroid + scaling_factor * (hull_points - centroid)
+
+                # Extract x and y coordinates
+                x_hull = scaled_hull_points[:, 0]
+                y_hull = scaled_hull_points[:, 1]
+
+                # Close the loop by adding the first point at the end
+                x_hull = np.append(x_hull, x_hull[0])
+                y_hull = np.append(y_hull, y_hull[0])
+
+                # Add line without hover tooltips
+                p.line(
+                    x=x_hull,
+                    y=y_hull,
+                    line_color="blue",
+                    line_dash="dashed",
+                    line_width=line_width,
+                    legend_label="Cluster's boundary",
+                )
+            except Exception:
+                # Skip hull if it can't be computed (e.g., coplanar points)
+                pass
 
     # Plot noise clusters if they exist
     if np.min(cluster_labels) == -1:
