@@ -335,13 +335,17 @@ def test_integration_three_echo_external_regressors_motion_task_models(skip_inte
     check_integration_outputs(fn, out_dir)
 
 
-def test_integration_reclassify_insufficient_args(skip_integration):
+def test_integration_reclassify_no_manual(skip_integration):
+    """Run reclassification workflow without providing any manual accept/reject arguments.
+
+    This should result in the component table being used for classification.
+    """
     if skip_integration:
         pytest.skip("Skipping reclassify insufficient args")
 
     guarantee_reclassify_data()
 
-    test_data_path, osf_id = data_for_testing_info("three-echo")
+    test_data_path, _ = data_for_testing_info("three-echo")
     out_dir = os.path.abspath(
         os.path.join(test_data_path, "../../outputs/reclassify/insufficient")
     )
@@ -349,8 +353,7 @@ def test_integration_reclassify_insufficient_args(skip_integration):
     args = ["ica_reclassify", reclassify_raw_registry(), "--out-dir", out_dir]
 
     result = subprocess.run(args, capture_output=True)
-    assert b"ValueError: Must manually accept or reject" in result.stderr
-    assert result.returncode != 0
+    assert result.returncode == 0
 
 
 def test_integration_reclassify_quiet_csv(skip_integration):

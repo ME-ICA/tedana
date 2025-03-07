@@ -52,9 +52,11 @@ def _get_parser():
             "Component indices to accept (zero-indexed)."
             "Supply as a comma-delimited list with no spaces, "
             "as a csv file, or as a text file with an allowed "
-            f"delimiter {repr(ALLOWED_COMPONENT_DELIMITERS)}."
+            f"delimiter {repr(ALLOWED_COMPONENT_DELIMITERS)}. "
+            "Components that are not in ``manacc`` or ``manrej`` will be classified according to "
+            "the previous run's component table."
         ),
-        default=[],
+        default=None,
     )
     optional.add_argument(
         "--manrej",
@@ -64,9 +66,11 @@ def _get_parser():
             "Component indices to reject (zero-indexed)."
             "Supply as a comma-delimited list with no spaces, "
             "as a csv file, or as a text file with an allowed "
-            f"delimiter {repr(ALLOWED_COMPONENT_DELIMITERS)}."
+            f"delimiter {repr(ALLOWED_COMPONENT_DELIMITERS)}. "
+            "Components that are not in ``manacc`` or ``manrej`` will be classified according to "
+            "the previous run's component table."
         ),
-        default=[],
+        default=None,
     )
     optional.add_argument(
         "--config",
@@ -97,7 +101,7 @@ def _get_parser():
         "--tedort",
         dest="tedort",
         action="store_true",
-        help=("Orthogonalize rejected components w.r.t. accepted components prior to denoising."),
+        help="Orthogonalize rejected components w.r.t. accepted components prior to denoising.",
         default=False,
     )
     optional.add_argument(
@@ -232,8 +236,8 @@ def _parse_manual_list(manual_list):
 
 def ica_reclassify_workflow(
     registry,
-    accept=[],
-    reject=[],
+    accept=None,
+    reject=None,
     out_dir=".",
     config="auto",
     convention="bids",
@@ -256,10 +260,14 @@ def ica_reclassify_workflow(
     ----------
     registry : :obj:`str`
         The previously run registry as a JSON file.
-    accept : :obj: `list`
+    accept : :obj: `list` or None
         A list of integer values of components to accept in this workflow.
-    reject : :obj: `list`
+        Components that are not in ``accept`` or ``reject`` will be classified according to
+        the previous run's component table.
+    reject : :obj: `list` or None
         A list of integer values of components to reject in this workflow.
+        Components that are not in ``accept`` or ``reject`` will be classified according to
+        the previous run's component table.
     out_dir : :obj:`str`, optional
         Output directory.
     tedort : :obj:`bool`, optional
@@ -330,27 +338,16 @@ def ica_reclassify_workflow(
     reject = _parse_manual_list(reject)
 
     # Check that there is no overlap in accepted/rejected components
-    if accept:
-        acc = set(accept)
-    else:
-        acc = ()
-    if reject:
-        rej = set(reject)
-    else:
-        rej = ()
-
     if (not accept) and (not reject):
-        # TODO: remove
-        print(accept)
-        print(reject)
-        raise ValueError("Must manually accept or reject at least one component")
+        LGR.warn(
+            "No manually accepted or rejected components provided. "
+            "Applying classification from component table."
+        )
 
-    in_both = []
-    for a in acc:
-        if a in rej:
-            in_both.append(a)
-
-    if len(in_both) != 0:
+    acc = set(accept)
+    rej = set(reject)
+    in_both = acc.intersection(rej)
+    if len(in_both):
         raise ValueError(f"The following components were both accepted and rejected: {in_both}")
 
     # Save command into sh file, if the command-line interface was used
