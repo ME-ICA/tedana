@@ -388,7 +388,7 @@ def test_kappa_elbow_kundu_smoke():
         kappa_allcomps_elbow,
         kappa_nonsig_elbow,
         varex_upper_p,
-    ) = selection_utils.kappa_elbow_kundu(component_table, n_echos=5)
+    ) = selection_utils.kappa_elbow_kundu(component_table, echo_dof=5)
     assert isinstance(kappa_elbow_kundu, float)
     assert isinstance(kappa_allcomps_elbow, float)
     assert isinstance(kappa_nonsig_elbow, float)
@@ -401,7 +401,7 @@ def test_kappa_elbow_kundu_smoke():
         kappa_allcomps_elbow,
         kappa_nonsig_elbow,
         varex_upper_p,
-    ) = selection_utils.kappa_elbow_kundu(component_table, n_echos=6)
+    ) = selection_utils.kappa_elbow_kundu(component_table, echo_dof=6)
     assert isinstance(kappa_elbow_kundu, float)
     assert isinstance(kappa_allcomps_elbow, float)
     assert isinstance(kappa_nonsig_elbow, type(None))
@@ -415,7 +415,7 @@ def test_kappa_elbow_kundu_smoke():
         varex_upper_p,
     ) = selection_utils.kappa_elbow_kundu(
         component_table,
-        n_echos=5,
+        echo_dof=5,
         comps2use=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 17, 18, 20],
     )
     assert isinstance(kappa_elbow_kundu, float)
@@ -434,7 +434,7 @@ def test_rho_elbow_kundu_liberal_smoke():
         rho_allcomps_elbow,
         rho_unclassified_elbow,
         elbow_f05,
-    ) = selection_utils.rho_elbow_kundu_liberal(component_table, n_echos=3)
+    ) = selection_utils.rho_elbow_kundu_liberal(component_table, echo_dof=3)
     assert isinstance(rho_elbow_kundu, float)
     assert isinstance(rho_allcomps_elbow, float)
     assert isinstance(rho_unclassified_elbow, float)
@@ -447,7 +447,7 @@ def test_rho_elbow_kundu_liberal_smoke():
         rho_unclassified_elbow,
         elbow_f05,
     ) = selection_utils.rho_elbow_kundu_liberal(
-        component_table, n_echos=3, rho_elbow_type="liberal"
+        component_table, echo_dof=3, rho_elbow_type="liberal"
     )
     assert isinstance(rho_elbow_kundu, float)
     assert isinstance(rho_allcomps_elbow, float)
@@ -462,7 +462,7 @@ def test_rho_elbow_kundu_liberal_smoke():
         elbow_f05,
     ) = selection_utils.rho_elbow_kundu_liberal(
         component_table,
-        n_echos=3,
+        echo_dof=3,
         rho_elbow_type="kundu",
         comps2use=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 17, 18, 20],
         subset_comps2use=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 18, 20],
@@ -479,7 +479,7 @@ def test_rho_elbow_kundu_liberal_smoke():
         rho_allcomps_elbow,
         rho_unclassified_elbow,
         elbow_f05,
-    ) = selection_utils.rho_elbow_kundu_liberal(component_table, n_echos=3)
+    ) = selection_utils.rho_elbow_kundu_liberal(component_table, echo_dof=3)
     assert isinstance(rho_elbow_kundu, float)
     assert isinstance(rho_allcomps_elbow, float)
     assert isinstance(rho_unclassified_elbow, type(None))
@@ -487,7 +487,7 @@ def test_rho_elbow_kundu_liberal_smoke():
 
     with pytest.raises(ValueError):
         selection_utils.rho_elbow_kundu_liberal(
-            component_table, n_echos=3, rho_elbow_type="perfect"
+            component_table, echo_dof=3, rho_elbow_type="perfect"
         )
 
 

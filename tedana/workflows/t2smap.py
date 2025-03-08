@@ -133,6 +133,18 @@ def _get_parser():
         default="t2s",
     )
     optional.add_argument(
+        "--n-independent-echos",
+        dest="echo_dof",
+        metavar="INT",
+        type=int,
+        help=(
+            "Degree of freedom to use in goodness of fit metrics (fstat)."
+            "Primarily used for EPTI acquisitions."
+            "If not provided, number of echoes will be used."
+        ),
+        default=None,
+    )
+    optional.add_argument(
         "--n-threads",
         dest="n_threads",
         type=int,
@@ -231,7 +243,6 @@ def t2smap_workflow(
         Generate intermediate and additional files. Default is False.
     overwrite : :obj:`bool`, optional
         If True, force overwriting of files. Default is False.
-
 
     Other Parameters
     ----------------

@@ -240,14 +240,15 @@ def make_adaptive_mask(data, mask, echo_dof=None, threshold=1, methods=["dropout
         # To track this, we are flagging voxels that might mark less independant signal.
         # If such voxels appear often, this would show we might need to alter how the mask is used.
         # The thresh where there might not be 3 independent sources of data within the good echoes
-        # For n_echos=100 & echo_dof=3, threshold_dof=66.6.
+        # For n_echos=100 & echo_dof=3, threshold_dof=66.
         # For n_echos=100 & echo_dof=4, threshold_dof=50
-        threshold_3dof = 2 * n_echos / echo_dof
+        threshold_3dof = np.floor(2 * n_echos / echo_dof)
         n_3dof_voxels = np.sum(np.logical_and(adaptive_mask < threshold_3dof, adaptive_mask >= 1))
         perc_3dof_voxels = 100 * n_3dof_voxels / np.sum(adaptive_mask >= 1)
         if perc_3dof_voxels > 0:
             LGR.warning(
-                f"{n_3dof_voxels} voxels ({perc_3dof_voxels}%) have fewer than {threshold_3dof} "
+                f"{n_3dof_voxels} voxels ({np.round(perc_3dof_voxels, decimals=1)}%) have fewer "
+                f"than {np.round(threshold_3dof)} "
                 "good voxels. These voxels will be used in all analyses, "
                 "but might not include 3 independant echo measurements."
             )
@@ -255,14 +256,14 @@ def make_adaptive_mask(data, mask, echo_dof=None, threshold=1, methods=["dropout
         if echo_dof > 3:
             # The threshold where the loss of good echoes might affect the DOF
             # For n_echos=100 & echo_dof=4, threshold_dof=75
-            threshold_dof = (echo_dof - 1) * n_echos / echo_dof
+            threshold_dof = np.floor((echo_dof - 1) * n_echos / echo_dof)
             n_dof_voxels = np.sum(
                 np.logical_and(adaptive_mask < threshold_dof, adaptive_mask >= 1)
             )
             perc_dof_voxels = 100 * n_dof_voxels / np.sum(adaptive_mask >= 1)
             LGR.warning(
-                f"{n_dof_voxels} voxels ({perc_dof_voxels}%) have fewer than {threshold_dof} "
-                "good voxels."
+                f"{n_dof_voxels} voxels ({np.round(perc_dof_voxels, decimals=1)}%) have fewer "
+                f"than {np.round(threshold_dof)} good voxels. "
                 f"The degrees of freedom for fits across echoes will remain {echo_dof} even if "
                 "there might be fewer independant echo measurements."
             )
