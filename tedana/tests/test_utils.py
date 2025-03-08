@@ -103,7 +103,7 @@ def test_make_adaptive_mask(caplog):
     data[idx + 5, :, :] = np.array([1, 0.9, -1])[:, None]
 
     # Simulating 5 echo data to test the echo_dof parameter
-    data5 = np.concat(
+    data5 = np.concatenate(
         (
             data,
             0.95 * np.expand_dims(data[:, 2, :], axis=1),

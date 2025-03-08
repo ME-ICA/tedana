@@ -229,8 +229,8 @@ def test_smoke_calculate_f_maps():
     )
     assert f_t2_maps.shape == f_s0_maps.shape == (n_voxels, n_components)
     # When echo_dof < the number of echoes, then f_maps_orig should have the same or larger values
-    assert np.min(f_t2_maps_orig - f_t2_maps) == 0
-    assert np.min(f_s0_maps_orig - f_s0_maps) == 0
+    assert np.min(f_t2_maps_orig - f_t2_maps) >= 0
+    assert np.min(f_s0_maps_orig - f_s0_maps) >= 0
     # When echo_dof==3 and there are 5 good echoes, then f_maps_orig should always be larger than 0
     assert np.min(f_t2_maps_orig[adaptive_mask == 5] - f_t2_maps[adaptive_mask == 5]) > 0
     assert np.min(f_s0_maps_orig[adaptive_mask == 5] - f_s0_maps[adaptive_mask == 5]) > 0
