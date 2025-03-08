@@ -11,14 +11,16 @@ LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
 
-def getfbounds(n_echos):
+def getfbounds(echo_dof):
     """
     Get F-statistic boundaries based on number of echos.
 
     Parameters
     ----------
-    n_echos : :obj:`int`
-        Number of echoes
+    echo_dof : :obj:`int`
+        Degree of freedom to use in goodness of fit metrics (fstat).
+        Typically the number of echos in the multi-echo data
+        May be a lower value for EPTI acquisitions.
 
     Returns
     -------
@@ -26,9 +28,9 @@ def getfbounds(n_echos):
         F-statistic thresholds for alphas of 0.05, 0.025, and 0.01,
         respectively.
     """
-    f05 = stats.f.ppf(q=(1 - 0.05), dfn=1, dfd=(n_echos - 1))
-    f025 = stats.f.ppf(q=(1 - 0.025), dfn=1, dfd=(n_echos - 1))
-    f01 = stats.f.ppf(q=(1 - 0.01), dfn=1, dfd=(n_echos - 1))
+    f05 = stats.f.ppf(q=(1 - 0.05), dfn=1, dfd=(echo_dof - 1))
+    f025 = stats.f.ppf(q=(1 - 0.025), dfn=1, dfd=(echo_dof - 1))
+    f01 = stats.f.ppf(q=(1 - 0.01), dfn=1, dfd=(echo_dof - 1))
     return f05, f025, f01
 
 
