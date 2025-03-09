@@ -351,12 +351,10 @@ def ica_reclassify_workflow(
     # Check that there is no overlap in accepted/rejected components
     if (not accept) and (not reject) and (not ctab):
         raise ValueError(
-            "No updated classifications provided. Please use --ctab, --manacc, and/or --manref."
+            "No updated classifications provided. Please use --ctab, --manacc, and/or --manrej."
         )
 
-    acc = set(accept)
-    rej = set(reject)
-    in_both = acc.intersection(rej)
+    in_both = set(accept).intersection(reject)
     if len(in_both):
         raise ValueError(f"The following components were both accepted and rejected: {in_both}")
 
