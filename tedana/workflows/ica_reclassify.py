@@ -45,6 +45,12 @@ def _get_parser():
         help="File registry from a previous tedana run",
     )
     optional.add_argument(
+        "--ctab",
+        dest="ctab",
+        help="Path to the component table to use for reclassification.",
+        default=None,
+    )
+    optional.add_argument(
         "--manacc",
         dest="manual_accept",
         nargs="+",
@@ -166,6 +172,7 @@ def _main(argv=None):
     # Run ica_reclassify_workflow
     ica_reclassify_workflow(
         args.registry,
+        ctab=args.ctab,
         accept=args.manual_accept,
         reject=args.manual_reject,
         out_dir=args.out_dir,
@@ -236,6 +243,7 @@ def _parse_manual_list(manual_list):
 
 def ica_reclassify_workflow(
     registry,
+    ctab=None,
     accept=None,
     reject=None,
     out_dir=".",
@@ -260,14 +268,17 @@ def ica_reclassify_workflow(
     ----------
     registry : :obj:`str`
         The previously run registry as a JSON file.
+    ctab : :obj:`str`, optional
+        Path to the component table to use for reclassification.
+        Classifications in the table are superseded by manual classifications.
     accept : :obj: `list` or None
         A list of integer values of components to accept in this workflow.
         Components that are not in ``accept`` or ``reject`` will be classified according to
-        the previous run's component table.
+        the component table.
     reject : :obj: `list` or None
         A list of integer values of components to reject in this workflow.
         Components that are not in ``accept`` or ``reject`` will be classified according to
-        the previous run's component table.
+        the component table.
     out_dir : :obj:`str`, optional
         Output directory.
     tedort : :obj:`bool`, optional
@@ -338,10 +349,9 @@ def ica_reclassify_workflow(
     reject = _parse_manual_list(reject)
 
     # Check that there is no overlap in accepted/rejected components
-    if (not accept) and (not reject):
-        LGR.warn(
-            "No manually accepted or rejected components provided. "
-            "Applying classification from component table."
+    if (not accept) and (not reject) and (not ctab):
+        raise ValueError(
+            "No updated classifications provided. Please use --ctab, --manacc, and/or --manref."
         )
 
     acc = set(accept)
@@ -370,7 +380,13 @@ def ica_reclassify_workflow(
     LGR.info(f"Using output directory: {out_dir}")
 
     ioh = io.InputHarvester(registry)
-    component_table = ioh.get_file_contents("ICA metrics tsv")
+    if ctab:
+        # Load provided component table
+        component_table = pd.read_table(ctab)
+    else:
+        # Load previous component table
+        component_table = ioh.get_file_contents("ICA metrics tsv")
+
     xcomp = ioh.get_file_contents("ICA cross component metrics json")
     status_table = ioh.get_file_contents("ICA status table tsv")
     previous_tree_fname = ioh.get_file_path("ICA decision tree json")
