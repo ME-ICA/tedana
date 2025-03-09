@@ -353,7 +353,8 @@ def test_integration_reclassify_no_manual(skip_integration):
     args = ["ica_reclassify", reclassify_raw_registry(), "--out-dir", out_dir]
 
     result = subprocess.run(args, capture_output=True)
-    assert result.returncode == 0
+    assert b"ValueError: No updated classifications provided" in result.stderr
+    assert result.returncode != 0
 
 
 def test_integration_reclassify_quiet_csv(skip_integration):
