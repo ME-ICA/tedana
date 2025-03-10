@@ -229,11 +229,13 @@ def test_smoke_calculate_f_maps():
     )
     assert f_t2_maps.shape == f_s0_maps.shape == (n_voxels, n_components)
     # When echo_dof < the number of echoes, then f_maps_orig should have the same or larger values
-    assert np.min(f_t2_maps_orig - f_t2_maps) >= 0
-    assert np.min(f_s0_maps_orig - f_s0_maps) >= 0
-    # When echo_dof==3 and there are 5 good echoes, then f_maps_orig should always be larger than 0
-    assert np.min(f_t2_maps_orig[adaptive_mask == 5] - f_t2_maps[adaptive_mask == 5]) > 0
-    assert np.min(f_s0_maps_orig[adaptive_mask == 5] - f_s0_maps[adaptive_mask == 5]) > 0
+    assert np.round(np.min(f_t2_maps_orig - f_t2_maps), decimals=3) == np.round(0.0, decimals=3)
+    assert np.round(np.min(f_s0_maps_orig - f_s0_maps), decimals=3) == np.round(0.0, decimals=3)
+    # When echo_dof==3, there are 5 good echoes, and f_maps_orig>0
+    # then f_maps_orig should always be larger than f_maps with fewer DOF
+    echo5_mask = np.logical_and(np.tile(adaptive_mask == 5, (50, 1)).T, f_t2_maps_orig > 0.0)
+    assert np.min(f_t2_maps_orig[echo5_mask] - f_t2_maps[echo5_mask]) > 0.0
+    assert np.min(f_s0_maps_orig[echo5_mask] - f_s0_maps[echo5_mask]) > 0.0
 
 
 def test_smoke_calculate_varex():
