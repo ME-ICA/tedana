@@ -143,9 +143,9 @@ class OutputGenerator:
             del old_registry["root"]
             for k, v in old_registry.items():
                 if isinstance(v, list):
-                    self.registry[k] = [op.join(rel_root, vv) for vv in v]
+                    self.registry[k] = [op.normpath(op.join(rel_root, vv)) for vv in v]
                 else:
-                    self.registry[k] = op.join(rel_root, v)
+                    self.registry[k] = op.normpath(op.join(rel_root, v))
 
         if not op.isdir(self.out_dir):
             LGR.info(f"Generating output directory: {self.out_dir}")
@@ -414,7 +414,10 @@ class InputHarvester:
             Description of the file to get the path for.
         """
         if description in self._registry.keys():
-            return op.join(self._base_dir, self._registry[description])
+            if isinstance(self._registry[description], list):
+                return [op.join(self._base_dir, f) for f in self._registry[description]]
+            else:
+                return op.join(self._base_dir, self._registry[description])
         else:
             return None
 
@@ -429,7 +432,10 @@ class InputHarvester:
         """
         for ftype, loader in InputHarvester.loaders.items():
             if ftype in description:
-                return loader(self.get_file_path(description))
+                if isinstance(self.get_file_path(description), list):
+                    return [loader(f) for f in self.get_file_path(description)]
+                else:
+                    return loader(self.get_file_path(description))
 
     @property
     def registry(self):
