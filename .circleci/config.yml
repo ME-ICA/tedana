@@ -414,6 +414,7 @@ workflows:
       - unittest_310
       - unittest_311
       - unittest_312
+      - unittest_313
       - merge_coverage:
           requires:
             - unittest_38
@@ -421,6 +422,7 @@ workflows:
             - unittest_310
             - unittest_311
             - unittest_312
+            - unittest_313
             - three-echo
             - four-echo
             - five-echo
