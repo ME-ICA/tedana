@@ -143,9 +143,9 @@ class OutputGenerator:
             del old_registry["root"]
             for k, v in old_registry.items():
                 if isinstance(v, list):
-                    self.registry[k] = [op.join(rel_root, vv) for vv in v]
+                    self.registry[k] = [op.normpath(op.join(rel_root, vv)) for vv in v]
                 else:
-                    self.registry[k] = op.join(rel_root, v)
+                    self.registry[k] = op.normpath(op.join(rel_root, v))
 
         if not op.isdir(self.out_dir):
             LGR.info(f"Generating output directory: {self.out_dir}")
