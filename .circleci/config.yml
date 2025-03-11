@@ -61,8 +61,10 @@ jobs:
           command: |
             source activate py<< parameters.PYTHON >>_env
             make unittest
-            mkdir /tmp/src/coverage
-            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py<< parameters.PYTHON >>
+            mkdir -p /tmp/src/coverage
+            if [ -f /tmp/src/tedana/.coverage ]; then
+              mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py<< parameters.PYTHON >>
+            fi
       - save_cache:
           key: conda-py<< parameters.PYTHON >>-v3-{{ checksum "pyproject.toml" }}
           paths:
@@ -70,7 +72,7 @@ jobs:
       - persist_to_workspace:
           root: /tmp
           paths:
-            - src/coverage/.coverage.unittest
+            - src/coverage
 
   style_check:
     working_directory: /tmp/src/tedana
