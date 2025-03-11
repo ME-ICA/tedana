@@ -108,14 +108,16 @@ jobs:
             apt-get install -yqq curl
             source activate py<< parameters.PYTHON >>_env
             make three-echo
-            mkdir /tmp/src/coverage
-            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.three-echo
+            mkdir -p /tmp/src/coverage
+            if [ -f /tmp/src/tedana/.coverage ]; then
+              mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.three-echo
+            fi
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:
-            - src/coverage/.coverage.three-echo
+            - src/coverage
 
   four-echo:
     parameters:
@@ -137,14 +139,16 @@ jobs:
             apt-get install -yqq curl
             source activate py<< parameters.PYTHON >>_env
             make four-echo
-            mkdir /tmp/src/coverage
-            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.four-echo
+            mkdir -p /tmp/src/coverage
+            if [ -f /tmp/src/tedana/.coverage ]; then
+              mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.four-echo
+            fi
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:
-            - src/coverage/.coverage.four-echo
+            - src/coverage
 
   five-echo:
     parameters:
@@ -166,14 +170,16 @@ jobs:
             apt-get install -yqq curl
             source activate py<< parameters.PYTHON >>_env
             make five-echo
-            mkdir /tmp/src/coverage
-            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.five-echo
+            mkdir -p /tmp/src/coverage
+            if [ -f /tmp/src/tedana/.coverage ]; then
+              mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.five-echo
+            fi
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:
-            - src/coverage/.coverage.five-echo
+            - src/coverage
 
   reclassify:
     parameters:
@@ -195,14 +201,16 @@ jobs:
             apt-get install -yqq curl
             source activate py<< parameters.PYTHON >>_env
             make reclassify
-            mkdir /tmp/src/coverage
-            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.reclassify
+            mkdir -p /tmp/src/coverage
+            if [ -f /tmp/src/tedana/.coverage ]; then
+              mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.reclassify
+            fi
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:
-            - src/coverage/.coverage.reclassify
+            - src/coverage
 
   t2smap:
     parameters:
@@ -224,14 +232,16 @@ jobs:
             apt-get install -yqq curl
             source activate py<< parameters.PYTHON >>_env
             make t2smap
-            mkdir /tmp/src/coverage
-            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.t2smap
+            mkdir -p /tmp/src/coverage
+            if [ -f /tmp/src/tedana/.coverage ]; then
+              mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.t2smap
+            fi
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:
-            - src/coverage/.coverage.t2smap
+            - src/coverage
 
   merge_coverage:
     working_directory: /tmp/src/tedana
