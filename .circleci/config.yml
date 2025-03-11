@@ -54,7 +54,6 @@ jobs:
             apt-get update
             apt-get install -yqq make
             apt-get install -yqq curl
-            cp -r /opt/conda/envs/py<< parameters.PYTHON >>_env /opt/miniconda-latest/envs/py<< parameters.PYTHON >>_env
             source activate py<< parameters.PYTHON >>_env
             pip install -e .[all]
       - run:
@@ -107,7 +106,6 @@ jobs:
             apt-get update
             apt-get install -yqq make
             apt-get install -yqq curl
-            cp -r /opt/conda/envs/py<< parameters.PYTHON >>_env /opt/miniconda-latest/envs/py<< parameters.PYTHON >>_env
             source activate py<< parameters.PYTHON >>_env
             make three-echo
             mkdir /tmp/src/coverage
@@ -137,7 +135,6 @@ jobs:
             apt-get update
             apt-get install -yqq make
             apt-get install -yqq curl
-            cp -r /opt/conda/envs/py<< parameters.PYTHON >>_env /opt/miniconda-latest/envs/py<< parameters.PYTHON >>_env
             source activate py<< parameters.PYTHON >>_env
             make four-echo
             mkdir /tmp/src/coverage
@@ -167,7 +164,6 @@ jobs:
             apt-get update
             apt-get install -yqq make
             apt-get install -yqq curl
-            cp -r /opt/conda/envs/py<< parameters.PYTHON >>_env /opt/miniconda-latest/envs/py<< parameters.PYTHON >>_env
             source activate py<< parameters.PYTHON >>_env
             make five-echo
             mkdir /tmp/src/coverage
@@ -197,7 +193,6 @@ jobs:
             apt-get update
             apt-get install -yqq make
             apt-get install -yqq curl
-            cp -r /opt/conda/envs/py<< parameters.PYTHON >>_env /opt/miniconda-latest/envs/py<< parameters.PYTHON >>_env
             source activate py<< parameters.PYTHON >>_env
             make reclassify
             mkdir /tmp/src/coverage
@@ -227,7 +222,6 @@ jobs:
             apt-get update
             apt-get install -yqq make
             apt-get install -yqq curl
-            cp -r /opt/conda/envs/py<< parameters.PYTHON >>_env /opt/miniconda-latest/envs/py<< parameters.PYTHON >>_env
             source activate py<< parameters.PYTHON >>_env
             make t2smap
             mkdir /tmp/src/coverage
