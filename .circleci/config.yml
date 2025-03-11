@@ -273,17 +273,45 @@ workflows:
       - style_check:
           requires:
             - py_env-3.9
-      - py_unittest:
-          name: py_unittest-<< matrix.PYTHON >>
+      - unittest:
+          name: unittest-<< matrix.PYTHON >>
           matrix:
             parameters:
               PYTHON: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
           requires:
             - py_env-<< matrix.PYTHON >>
-      - py_integration:
-          name: py_integration-<< matrix.PYTHON >>
+      - t2smap:
+          name: t2smap-<< matrix.PYTHON >>
           matrix:
             parameters:
-              PYTHON: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+              PYTHON: ["3.9"]
+          requires:
+            - py_env-<< matrix.PYTHON >>
+      - reclassify:
+          name: reclassify-<< matrix.PYTHON >>
+          matrix:
+            parameters:
+              PYTHON: ["3.9"]
+          requires:
+            - py_env-<< matrix.PYTHON >>
+      - three-echo:
+          name: three-echo-<< matrix.PYTHON >>
+          matrix:
+            parameters:
+              PYTHON: ["3.9"]
+          requires:
+            - py_env-<< matrix.PYTHON >>
+      - four-echo:
+          name: four-echo-<< matrix.PYTHON >>
+          matrix:
+            parameters:
+              PYTHON: ["3.9"]
+          requires:
+            - py_env-<< matrix.PYTHON >>
+      - five-echo:
+          name: five-echo-<< matrix.PYTHON >>
+          matrix:
+            parameters:
+              PYTHON: ["3.9"]
           requires:
             - py_env-<< matrix.PYTHON >>
