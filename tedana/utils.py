@@ -238,7 +238,7 @@ def make_adaptive_mask(data, mask, echo_dof=None, threshold=1, methods=["dropout
         # because sequential echoes have overlapping information and 
         # there is no clear mapping between the independent sources and the echoes.
         # Since EPTI has less dropout, it is unclear how often this will cause issues.
-        # To track this, we are flagging voxels that might mark less independant signal.
+        # To track this, we are flagging voxels that might mark less independent signal.
         # If such voxels appear often, this would show we might need to alter how the mask is used.
         # The thresh where there might not be 3 independent sources of data within the good echoes
         # For n_echos=100 & echo_dof=3, threshold_dof=66.
