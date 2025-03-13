@@ -235,7 +235,8 @@ def make_adaptive_mask(data, mask, echo_dof=None, threshold=1, methods=["dropout
         adaptive_mask[adaptive_mask < threshold] = 0
     if isinstance(echo_dof, int):
         # For EPTI sequences, the way we use adaptive mask thresholding fails
-        # because sequential echoes have overlapping information.
+        # because sequential echoes have overlapping information and 
+        # there is no clear mapping between the independent sources and the echoes.
         # Since EPTI has less dropout, it is unclear how often this will cause issues.
         # To track this, we are flagging voxels that might mark less independant signal.
         # If such voxels appear often, this would show we might need to alter how the mask is used.
