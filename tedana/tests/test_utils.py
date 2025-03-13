@@ -102,7 +102,7 @@ def test_make_adaptive_mask(caplog):
     # Decay: good good good (3)
     data[idx + 5, :, :] = np.array([1, 0.9, -1])[:, None]
 
-    # Simulating 5 echo data to test the echo_dof parameter
+    # Simulating 5 echo data to test the n_independent_echos parameter
     data5 = np.concatenate(
         (
             data,
@@ -219,11 +219,11 @@ def test_make_adaptive_mask(caplog):
     assert np.allclose(counts, np.array([3365, 1412, 1195, 58378]))
     assert "No methods provided for adaptive mask generation." in caplog.text
 
-    # testing echo_dof
+    # testing n_independent_echos
     # This should match "decay" from above, except all voxels with 3 good echoes should now have 5
     # since two echoes were added that should not have caused more decay
     mask, adaptive_mask = utils.make_adaptive_mask(
-        data5, mask=mask_file, threshold=1, methods=["decay"], echo_dof=3
+        data5, mask=mask_file, threshold=1, methods=["decay"], n_independent_echos=3
     )
 
     assert mask.shape == adaptive_mask.shape == (64350,)
@@ -246,7 +246,7 @@ def test_make_adaptive_mask(caplog):
     ) in caplog.text
 
     mask, adaptive_mask = utils.make_adaptive_mask(
-        data5, mask=mask_file, threshold=1, methods=["decay"], echo_dof=4
+        data5, mask=mask_file, threshold=1, methods=["decay"], n_independent_echos=4
     )
 
     assert (

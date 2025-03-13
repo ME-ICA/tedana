@@ -54,7 +54,7 @@ def reshape_niimg(data):
     return fdata
 
 
-def make_adaptive_mask(data, mask, echo_dof=None, threshold=1, methods=["dropout"]):
+def make_adaptive_mask(data, mask, n_independent_echos=None, threshold=1, methods=["dropout"]):
     """Make map of `data` specifying longest echo a voxel can be sampled with.
 
     Parameters
@@ -66,8 +66,8 @@ def make_adaptive_mask(data, mask, echo_dof=None, threshold=1, methods=["dropout
         This must be provided, as the mask is used to identify exemplar voxels.
         Without a mask limiting the voxels to consider,
         the adaptive mask will generally select voxels outside the brain as exemplars.
-    echo_dof : :obj:`int`, optional
-        Degree of freedom to use in goodness of fit metrics (fstat).
+    n_independent_echos : :obj:`int`, optional
+        Number of independent echoes to use in goodness of fit metrics (fstat).
         Primarily used for EPTI acquisitions.
         If None, number of echoes will be used. Default is None.
     threshold : :obj:`int`, optional
@@ -233,16 +233,16 @@ def make_adaptive_mask(data, mask, echo_dof=None, threshold=1, methods=["dropout
             "Removing voxels from mask."
         )
         adaptive_mask[adaptive_mask < threshold] = 0
-    if isinstance(echo_dof, int):
+    if isinstance(n_independent_echos, int):
         # For EPTI sequences, the way we use adaptive mask thresholding fails
         # because sequential echoes have overlapping information.
         # Since EPTI has less dropout, it is unclear how often this will cause issues.
         # To track this, we are flagging voxels that might mark less independent signal.
         # If such voxels appear often, this would show we might need to alter how the mask is used.
         # The thresh where there might not be 3 independent sources of data within the good echoes
-        # For n_echos=100 & echo_dof=3, threshold_dof=66.
-        # For n_echos=100 & echo_dof=4, threshold_dof=50
-        threshold_3dof = np.floor(2 * n_echos / echo_dof)
+        # For n_echos=100 & n_independent_echos=3, threshold_dof=66.
+        # For n_echos=100 & n_independent_echos=4, threshold_dof=50
+        threshold_3dof = np.floor(2 * n_echos / n_independent_echos)
         n_3dof_voxels = np.sum(np.logical_and(adaptive_mask < threshold_3dof, adaptive_mask >= 1))
         perc_3dof_voxels = 100 * n_3dof_voxels / np.sum(adaptive_mask >= 1)
         if perc_3dof_voxels > 0:
@@ -253,10 +253,10 @@ def make_adaptive_mask(data, mask, echo_dof=None, threshold=1, methods=["dropout
                 "but might not include 3 independent echo measurements."
             )
         # There's a separate warning about DOF if it's possible there's a DOF reduction.
-        if echo_dof > 3:
+        if n_independent_echos > 3:
             # The threshold where the loss of good echoes might affect the DOF
-            # For n_echos=100 & echo_dof=4, threshold_dof=75
-            threshold_dof = np.floor((echo_dof - 1) * n_echos / echo_dof)
+            # For n_echos=100 & n_independent_echos=4, threshold_dof=75
+            threshold_dof = np.floor((n_independent_echos - 1) * n_echos / n_independent_echos)
             n_dof_voxels = np.sum(
                 np.logical_and(adaptive_mask < threshold_dof, adaptive_mask >= 1)
             )
@@ -264,8 +264,8 @@ def make_adaptive_mask(data, mask, echo_dof=None, threshold=1, methods=["dropout
             LGR.warning(
                 f"{n_dof_voxels} voxels ({np.round(perc_dof_voxels, decimals=1)}%) have fewer "
                 f"than {np.round(threshold_dof)} good voxels. "
-                f"The degrees of freedom for fits across echoes will remain {echo_dof} even if "
-                "there might be fewer independent echo measurements."
+                f"The degrees of freedom for fits across echoes will remain {n_independent_echos} "
+                "even if there might be fewer independent echo measurements."
             )
     modified_mask = adaptive_mask.astype(bool)
     adaptive_mask = unmask(adaptive_mask, mask)

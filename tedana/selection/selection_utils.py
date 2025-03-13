@@ -580,7 +580,7 @@ def getelbow(arr, return_val=False):
         return k_min_ind
 
 
-def kappa_elbow_kundu(component_table, echo_dof, comps2use=None):
+def kappa_elbow_kundu(component_table, n_independent_echos, comps2use=None):
     """
     Calculate an elbow for kappa.
 
@@ -592,8 +592,8 @@ def kappa_elbow_kundu(component_table, echo_dof, comps2use=None):
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
         Only the 'kappa' column is used in this function
-    echo_dof : :obj:`int`
-        Degree of freedom to use in goodness of fit metrics (fstat).
+    n_independent_echos : :obj:`int`
+        Number of independent echoes to use in goodness of fit metrics (fstat).
         Typically the number of echos in the multi-echo data
         May be a lower value for EPTI acquisitions.
     comps2use : :obj:`list[int]`
@@ -635,7 +635,7 @@ def kappa_elbow_kundu(component_table, echo_dof, comps2use=None):
     kappas2use = component_table.loc[comps2use, "kappa"].to_numpy()
 
     # low kappa threshold
-    _, _, f01 = getfbounds(echo_dof)
+    _, _, f01 = getfbounds(n_independent_echos)
     # get kappa values for components below a significance threshold
     kappas_nonsig = kappas2use[kappas2use < f01]
 
@@ -673,7 +673,7 @@ def kappa_elbow_kundu(component_table, echo_dof, comps2use=None):
 
 def rho_elbow_kundu_liberal(
     component_table,
-    echo_dof,
+    n_independent_echos,
     rho_elbow_type="kundu",
     comps2use=None,
     subset_comps2use=-1,
@@ -690,8 +690,8 @@ def rho_elbow_kundu_liberal(
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
         Only the 'kappa' column is used in this function
-    echo_dof : :obj:`int`
-        Degree of freedom to use in goodness of fit metrics (fstat).
+    n_independent_echos : :obj:`int`
+        Number of independent echoes to use in goodness of fit metrics (fstat).
         Typically the number of echos in the multi-echo data
         May be a lower value for EPTI acquisitions.
     rho_elbow_type : :obj:`str`
@@ -761,7 +761,7 @@ def rho_elbow_kundu_liberal(
         ].tolist()
 
     # One rho elbow threshold set just on the number of echoes
-    elbow_f05, _, _ = getfbounds(echo_dof)
+    elbow_f05, _, _ = getfbounds(n_independent_echos)
     # One rho elbow threshold set using all componets in comps2use
     rhos_comps2use = component_table.loc[comps2use, "rho"].to_numpy()
     rho_allcomps_elbow = getelbow(rhos_comps2use, return_val=True)

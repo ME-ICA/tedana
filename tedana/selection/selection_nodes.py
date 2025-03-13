@@ -715,18 +715,18 @@ def calc_kappa_elbow(
     are called
     """
     if (
-        "echo_dof" in selector.cross_component_metrics_.keys()
-        and selector.cross_component_metrics_["echo_dof"]
+        "n_independent_echos" in selector.cross_component_metrics_.keys()
+        and selector.cross_component_metrics_["n_independent_echos"]
     ):
-        echo_dof = selector.cross_component_metrics_["echo_dof"]
+        n_independent_echos = selector.cross_component_metrics_["n_independent_echos"]
     else:
-        # DOF is number of echoes if not otherwise specified
-        echo_dof = selector.cross_component_metrics_["n_echos"]
+        # Number of independent echoes is the number of echoes if not otherwise specified
+        n_independent_echos = selector.cross_component_metrics_["n_echos"]
     outputs = {
         "decision_node_idx": selector.current_node_idx_,
         "node_label": None,
         "n_echos": selector.cross_component_metrics_["n_echos"],
-        "echo_dof": echo_dof,
+        "n_independent_echos": n_independent_echos,
         "used_metrics": {"kappa"},
         "calc_cross_comp_metrics": [
             "kappa_elbow_kundu",
@@ -786,7 +786,7 @@ def calc_kappa_elbow(
             outputs["varex_upper_p"],
         ) = kappa_elbow_kundu(
             selector.component_table_,
-            echo_dof,
+            n_independent_echos,
             comps2use=comps2use,
         )
         selector.cross_component_metrics_["kappa_elbow_kundu"] = outputs["kappa_elbow_kundu"]
@@ -856,19 +856,19 @@ def calc_rho_elbow(
         )
 
     if (
-        "echo_dof" in selector.cross_component_metrics_.keys()
-        and selector.cross_component_metrics_["echo_dof"]
+        "n_independent_echos" in selector.cross_component_metrics_.keys()
+        and selector.cross_component_metrics_["n_independent_echos"]
     ):
-        echo_dof = selector.cross_component_metrics_["echo_dof"]
+        n_independent_echos = selector.cross_component_metrics_["n_independent_echos"]
     else:
         # DOF is number of echoes if not otherwise specified
-        echo_dof = selector.cross_component_metrics_["n_echos"]
+        n_independent_echos = selector.cross_component_metrics_["n_echos"]
 
     outputs = {
         "decision_node_idx": selector.current_node_idx_,
         "node_label": None,
         "n_echos": selector.cross_component_metrics_["n_echos"],
-        "echo_dof": echo_dof,
+        "n_independent_echos": n_independent_echos,
         "calc_cross_comp_metrics": [
             elbow_name,
             "rho_allcomps_elbow",
@@ -923,7 +923,7 @@ def calc_rho_elbow(
             outputs["elbow_f05"],
         ) = rho_elbow_kundu_liberal(
             selector.component_table_,
-            echo_dof,
+            n_independent_echos,
             rho_elbow_type=rho_elbow_type,
             comps2use=comps2use,
             subset_comps2use=subset_comps2use,
