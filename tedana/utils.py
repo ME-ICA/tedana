@@ -266,7 +266,7 @@ def make_adaptive_mask(data, mask, echo_dof=None, threshold=1, methods=["dropout
                 f"{n_dof_voxels} voxels ({np.round(perc_dof_voxels, decimals=1)}%) have fewer "
                 f"than {np.round(threshold_dof)} good voxels. "
                 f"The degrees of freedom for fits across echoes will remain {echo_dof} even if "
-                "there might be fewer independant echo measurements."
+                "there might be fewer independent echo measurements."
             )
     modified_mask = adaptive_mask.astype(bool)
     adaptive_mask = unmask(adaptive_mask, mask)
