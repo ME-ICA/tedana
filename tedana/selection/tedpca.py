@@ -63,10 +63,8 @@ def kundu_tedpca(component_table, n_echos, echo_dof=None, kdaw=10.0, rdaw=1.0, s
         + 1
     ]
     varex_norm_cum = np.cumsum(component_table["normalized variance explained"])
-    if echo_dof is None:
-        fmin, fmid, fmax = getfbounds(n_echos)
-    else:
-        fmin, fmid, fmax = getfbounds(echo_dof)
+    echo_dof = echo_dof or n_echos
+    fmin, fmid, fmax = getfbounds(n_echos)
 
     if int(kdaw) == -1:
         lim_idx = (
