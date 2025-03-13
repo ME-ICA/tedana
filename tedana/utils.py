@@ -249,8 +249,8 @@ def make_adaptive_mask(data, mask, echo_dof=None, threshold=1, methods=["dropout
         if perc_3dof_voxels > 0:
             LGR.warning(
                 f"{n_3dof_voxels} voxels ({np.round(perc_3dof_voxels, decimals=1)}%) have fewer "
-                f"than {np.round(threshold_3dof)} "
-                "good voxels. These voxels will be used in all analyses, "
+                f"than {np.round(threshold_3dof)} good voxels. "
+                "These voxels will be used in all analyses, "
                 "but might not include 3 independent echo measurements."
             )
 
