@@ -253,6 +253,7 @@ def make_adaptive_mask(data, mask, echo_dof=None, threshold=1, methods=["dropout
                 "good voxels. These voxels will be used in all analyses, "
                 "but might not include 3 independent echo measurements."
             )
+
         # There's a separate warning about DOF if it's possible there's a DOF reduction.
         if echo_dof > 3:
             # The threshold where the loss of good echoes might affect the DOF
