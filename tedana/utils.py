@@ -251,7 +251,7 @@ def make_adaptive_mask(data, mask, echo_dof=None, threshold=1, methods=["dropout
                 f"{n_3dof_voxels} voxels ({np.round(perc_3dof_voxels, decimals=1)}%) have fewer "
                 f"than {np.round(threshold_3dof)} "
                 "good voxels. These voxels will be used in all analyses, "
-                "but might not include 3 independant echo measurements."
+                "but might not include 3 independent echo measurements."
             )
         # There's a separate warning about DOF if it's possible there's a DOF reduction.
         if echo_dof > 3:
