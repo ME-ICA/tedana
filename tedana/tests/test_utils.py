@@ -242,7 +242,7 @@ def test_make_adaptive_mask(caplog):
     assert (
         "10339 voxels (17.0%) have fewer than 3.0 good voxels. "
         "These voxels will be used in all analyses, "
-        "but might not include 3 independant echo measurements."
+        "but might not include 3 independent echo measurements."
     ) in caplog.text
 
     mask, adaptive_mask = utils.make_adaptive_mask(
@@ -252,7 +252,7 @@ def test_make_adaptive_mask(caplog):
     assert (
         "10339 voxels (17.0%) have fewer than 3.0 good voxels. "
         "The degrees of freedom for fits across echoes will remain 4 even if "
-        "there might be fewer independant echo measurements."
+        "there might be fewer independent echo measurements."
     ) in caplog.text
 
 

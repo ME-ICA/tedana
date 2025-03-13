@@ -237,7 +237,7 @@ def make_adaptive_mask(data, mask, echo_dof=None, threshold=1, methods=["dropout
         # For EPTI sequences, the way we use adaptive mask thresholding fails
         # because sequential echoes have overlapping information.
         # Since EPTI has less dropout, it is unclear how often this will cause issues.
-        # To track this, we are flagging voxels that might mark less independant signal.
+        # To track this, we are flagging voxels that might mark less independent signal.
         # If such voxels appear often, this would show we might need to alter how the mask is used.
         # The thresh where there might not be 3 independent sources of data within the good echoes
         # For n_echos=100 & echo_dof=3, threshold_dof=66.
@@ -250,7 +250,7 @@ def make_adaptive_mask(data, mask, echo_dof=None, threshold=1, methods=["dropout
                 f"{n_3dof_voxels} voxels ({np.round(perc_3dof_voxels, decimals=1)}%) have fewer "
                 f"than {np.round(threshold_3dof)} "
                 "good voxels. These voxels will be used in all analyses, "
-                "but might not include 3 independant echo measurements."
+                "but might not include 3 independent echo measurements."
             )
         # There's a separate warning about DOF if it's possible there's a DOF reduction.
         if echo_dof > 3:
@@ -265,7 +265,7 @@ def make_adaptive_mask(data, mask, echo_dof=None, threshold=1, methods=["dropout
                 f"{n_dof_voxels} voxels ({np.round(perc_dof_voxels, decimals=1)}%) have fewer "
                 f"than {np.round(threshold_dof)} good voxels. "
                 f"The degrees of freedom for fits across echoes will remain {echo_dof} even if "
-                "there might be fewer independant echo measurements."
+                "there might be fewer independent echo measurements."
             )
     modified_mask = adaptive_mask.astype(bool)
     adaptive_mask = unmask(adaptive_mask, mask)
