@@ -125,7 +125,7 @@ The clear failure cases are extreme. That is getting less than 1/5 the number of
 compared to time points or having nearly as many components as time points.
 We are working on identifying why this happens and adding better solutions.
 Our current guess is that most of the above methods assume data are
-independant and identically distributed (IID),
+independent and identically distributed (IID),
 and signal leakage from in-slice and multi-slice accelleration may violate this assumption.
 
 We have one option that is generally useful and is also a partial solution.

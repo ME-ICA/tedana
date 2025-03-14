@@ -15,7 +15,9 @@ RepLGR = logging.getLogger("REPORT")
 F_MAX = 500
 
 
-def kundu_tedpca(component_table, n_echos, kdaw=10.0, rdaw=1.0, stabilize=False):
+def kundu_tedpca(
+    component_table, n_echos, n_independent_echos=None, kdaw=10.0, rdaw=1.0, stabilize=False
+):
     """Select PCA components using Kundu's decision tree approach.
 
     Parameters
@@ -25,6 +27,10 @@ def kundu_tedpca(component_table, n_echos, kdaw=10.0, rdaw=1.0, stabilize=False)
         variance explained. Component number should be the index.
     n_echos : :obj:`int`
         Number of echoes in dataset.
+    n_independent_echos : int
+        Number of independent echoes to use in goodness of fit metrics (fstat).
+        Primarily used for EPTI acquisitions.
+        If None, number of echoes will be used. Default is None.
     kdaw : :obj:`float`, optional
         Kappa dimensionality augmentation weight. Must be a non-negative float,
         or -1 (a special value). Default is 10.
@@ -59,8 +65,9 @@ def kundu_tedpca(component_table, n_echos, kdaw=10.0, rdaw=1.0, stabilize=False)
         + 1
     ]
     varex_norm_cum = np.cumsum(component_table["normalized variance explained"])
+    n_independent_echos = n_independent_echos or n_echos
+    fmin, fmid, fmax = getfbounds(n_independent_echos)
 
-    fmin, fmid, fmax = getfbounds(n_echos)
     if int(kdaw) == -1:
         lim_idx = (
             utils.andb([component_table["kappa"] < fmid, component_table["kappa"] > fmin]) == 2

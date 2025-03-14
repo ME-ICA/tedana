@@ -74,7 +74,7 @@ def test_reshape_niimg():
     assert utils.reshape_niimg(fimg.get_fdata()).shape == exp_shape
 
 
-def test_make_adaptive_mask():
+def test_make_adaptive_mask(caplog):
     """Test tedana.utils.make_adaptive_mask with different methods."""
     # load data make masks
     mask_file = pjoin(datadir, "mask.nii.gz")
@@ -102,6 +102,16 @@ def test_make_adaptive_mask():
     # Decay: good good good (3)
     data[idx + 5, :, :] = np.array([1, 0.9, -1])[:, None]
 
+    # Simulating 5 echo data to test the n_independent_echos parameter
+    data5 = np.concatenate(
+        (
+            data,
+            0.95 * np.expand_dims(data[:, 2, :], axis=1),
+            0.9 * np.expand_dims(data[:, 2, :], axis=1),
+        ),
+        axis=1,
+    )
+
     # Just dropout method
     mask, adaptive_mask = utils.make_adaptive_mask(
         data,
@@ -122,6 +132,7 @@ def test_make_adaptive_mask():
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
     assert np.allclose(counts, np.array([14976, 1817, 4427, 43130]))
+    assert "voxels in user-defined mask do not have good signal" in caplog.text
 
     # Just decay method
     mask, adaptive_mask = utils.make_adaptive_mask(
@@ -206,6 +217,43 @@ def test_make_adaptive_mask():
     vals, counts = np.unique(adaptive_mask, return_counts=True)
     assert np.allclose(vals, np.array([0, 1, 2, 3]))
     assert np.allclose(counts, np.array([3365, 1412, 1195, 58378]))
+    assert "No methods provided for adaptive mask generation." in caplog.text
+
+    # testing n_independent_echos
+    # This should match "decay" from above, except all voxels with 3 good echoes should now have 5
+    # since two echoes were added that should not have caused more decay
+    mask, adaptive_mask = utils.make_adaptive_mask(
+        data5, mask=mask_file, threshold=1, methods=["decay"], n_independent_echos=3
+    )
+
+    assert mask.shape == adaptive_mask.shape == (64350,)
+    assert np.allclose(mask, (adaptive_mask >= 1).astype(bool))
+    assert adaptive_mask[idx] == 5
+    assert adaptive_mask[idx + 1] == 2
+    assert adaptive_mask[idx + 2] == 2
+    assert adaptive_mask[idx + 3] == 1
+    assert adaptive_mask[idx + 4] == 5
+    assert adaptive_mask[idx + 5] == 2
+    assert mask.sum() == 60985  # This method can't flag first echo as bad
+    vals, counts = np.unique(adaptive_mask, return_counts=True)
+    assert np.allclose(vals, np.array([0, 1, 2, 5]))
+    assert np.allclose(counts, np.array([3365, 4366, 5973, 50646]))
+    # 4366 + 5973 = 10399 (i.e. voxels with 1 or 2 good echoes are flagged here)
+    assert (
+        "10339 voxels (17.0%) have fewer than 3.0 good voxels. "
+        "These voxels will be used in all analyses, "
+        "but might not include 3 independent echo measurements."
+    ) in caplog.text
+
+    mask, adaptive_mask = utils.make_adaptive_mask(
+        data5, mask=mask_file, threshold=1, methods=["decay"], n_independent_echos=4
+    )
+
+    assert (
+        "10339 voxels (17.0%) have fewer than 3.0 good voxels. "
+        "The degrees of freedom for fits across echoes will remain 4 even if "
+        "there might be fewer independent echo measurements."
+    ) in caplog.text
 
 
 # SMOKE TESTS
