@@ -207,7 +207,7 @@ def test_smoke_calculate_f_maps():
     mixing = np.random.random((n_volumes, n_components))
     # The ordering is random, but make sure the adaptive mask always includes values of 1-5
     adaptive_mask = np.random.permutation(
-        np.concat(
+        np.concatenate(
             (
                 np.tile(1, int(np.round(n_voxels * 0.05))),
                 np.tile(2, int(np.round(n_voxels * 0.1))),

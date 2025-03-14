@@ -235,7 +235,7 @@ def make_adaptive_mask(data, mask, n_independent_echos=None, threshold=1, method
         adaptive_mask[adaptive_mask < threshold] = 0
     if isinstance(n_independent_echos, int):
         # For EPTI sequences, the way we use adaptive mask thresholding fails
-        # because sequential echoes have overlapping information and 
+        # because sequential echoes have overlapping information and
         # there is no clear mapping between the independent sources and the echoes.
         # Since EPTI has less dropout, it is unclear how often this will cause issues.
         # To track this, we are flagging voxels that might mark less independent signal.
@@ -264,11 +264,10 @@ def make_adaptive_mask(data, mask, n_independent_echos=None, threshold=1, method
             )
             perc_dof_voxels = 100 * n_dof_voxels / np.sum(adaptive_mask >= 1)
             LGR.warning(
-                f"{n_dof_voxels} voxels ({np.round(perc_dof_voxels, decimals=1)}%) have fewer "
-                f"than {np.round(threshold_dof)} good voxels. "
-                f"The degrees of freedom for fits across echoes will remain {n_independent_echos} "
-                "even if there might be fewer independent echo measurements."
-
+                f"{n_dof_voxels} voxels ({np.round(perc_dof_voxels, decimals=1)}%) have fewer"
+                f"than {np.round(threshold_dof)} good voxels."
+                f"The degrees of freedom for fits across echoes will remain {n_independent_echos}"
+                f"even if there might be fewer independent echo measurements."
             )
     modified_mask = adaptive_mask.astype(bool)
     adaptive_mask = unmask(adaptive_mask, mask)
