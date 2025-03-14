@@ -205,7 +205,18 @@ def test_smoke_calculate_f_maps():
     data_cat = np.random.random((n_voxels, n_echos, n_volumes))
     z_maps = np.random.normal(size=(n_voxels, n_components))
     mixing = np.random.random((n_volumes, n_components))
-    adaptive_mask = np.random.randint(1, n_echos + 1, size=n_voxels)
+    # The ordering is random, but make sure the adaptive mask always includes values of 1-5
+    adaptive_mask = np.random.permutation(
+        np.concat(
+            (
+                np.tile(1, int(np.round(n_voxels * 0.05))),
+                np.tile(2, int(np.round(n_voxels * 0.1))),
+                np.tile(3, int(np.round(n_voxels * 0.4))),
+                np.tile(4, int(np.round(n_voxels * 0.2))),
+                np.tile(5, int(np.round(n_voxels * 0.25))),
+            )
+        )
+    )
     tes = np.array([15, 25, 35, 45, 55])
     f_t2_maps_orig, f_s0_maps_orig, _, _ = dependence.calculate_f_maps(
         data_cat=data_cat,
@@ -217,38 +228,44 @@ def test_smoke_calculate_f_maps():
     )
     assert f_t2_maps_orig.shape == f_s0_maps_orig.shape == (n_voxels, n_components)
 
-    # rerunning with echo_dof=3
+    # rerunning with n_independent_echos=3
     f_t2_maps, f_s0_maps, _, _ = dependence.calculate_f_maps(
         data_cat=data_cat,
         z_maps=z_maps,
         mixing=mixing,
         adaptive_mask=adaptive_mask,
         tes=tes,
-        echo_dof=3,
+        n_independent_echos=3,
         f_max=500,
     )
     assert f_t2_maps.shape == f_s0_maps.shape == (n_voxels, n_components)
-    # When echo_dof < the number of echoes, then f_maps_orig should have the same or larger values
-    assert np.round(np.min(f_t2_maps_orig - f_t2_maps), decimals=3) == np.round(0.0, decimals=3)
-    assert np.round(np.min(f_s0_maps_orig - f_s0_maps), decimals=3) == np.round(0.0, decimals=3)
-    # When echo_dof==3, there are 5 good echoes, and f_maps_orig>0
+    # exclude voxels f==0 and f==f_max since the >0 clause for 5 echoes wouldn't be true
+    noextreme_f_mask = np.logical_and(
+        np.logical_and(
+            np.logical_and(f_t2_maps_orig > 0.0, f_s0_maps_orig > 0.0), f_t2_maps_orig < 500
+        ),
+        f_s0_maps_orig < 500,
+    )
+    # When n_independent_echos == the number of echoes (3),
+    # then f_maps_orig should equal f_maps
+    echo3_mask = np.logical_and(np.tile(adaptive_mask == 3, (50, 1)).T, noextreme_f_mask)
+    assert np.round(
+        np.min(f_t2_maps_orig[echo3_mask] - f_t2_maps[echo3_mask]), decimals=3
+    ) == np.round(0.0, decimals=3)
+    assert np.round(
+        np.min(f_s0_maps_orig[echo3_mask] - f_s0_maps[echo3_mask]), decimals=3
+    ) == np.round(0.0, decimals=3)
+    assert np.round(
+        np.max(f_t2_maps_orig[echo3_mask] - f_t2_maps[echo3_mask]), decimals=3
+    ) == np.round(0.0, decimals=3)
+    assert np.round(
+        np.max(f_s0_maps_orig[echo3_mask] - f_s0_maps[echo3_mask]), decimals=3
+    ) == np.round(0.0, decimals=3)
+    # When n_independent_echos==3, there are 5 good echoes,
     # then f_maps_orig should always be larger than f_maps with fewer DOF
-    t2_echo5_mask = np.logical_and(
-        np.logical_and(
-            np.tile(adaptive_mask == 5, (n_components, 1)).T,
-            f_t2_maps_orig > 0.2,
-        ),
-        f_t2_maps_orig < 499,
-    )
-    assert np.min(f_t2_maps_orig[t2_echo5_mask] - f_t2_maps[t2_echo5_mask]) > 0.0
-    s0_echo5_mask = np.logical_and(
-        np.logical_and(
-            np.tile(adaptive_mask == 5, (n_components, 1)).T,
-            f_s0_maps_orig > 0.2,
-        ),
-        f_s0_maps_orig < 499,
-    )
-    assert np.min(f_s0_maps_orig[s0_echo5_mask] - f_s0_maps[s0_echo5_mask]) > 0.0
+    echo5_mask = np.logical_and(np.tile(adaptive_mask == 5, (50, 1)).T, noextreme_f_mask)
+    assert np.min(f_t2_maps_orig[echo5_mask] - f_t2_maps[echo5_mask]) > 0.0
+    assert np.min(f_s0_maps_orig[echo5_mask] - f_s0_maps[echo5_mask]) > 0.0
 
 
 def test_smoke_calculate_varex():

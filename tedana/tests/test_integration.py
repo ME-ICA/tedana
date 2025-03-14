@@ -126,13 +126,13 @@ def test_integration_five_echo(skip_integration):
     suffix = ".sm.nii.gz"
     datalist = [prepend + str(i + 1) + suffix for i in range(5)]
     echo_times = [15.4, 29.7, 44.0, 58.3, 72.6]
-    # also adding echo_dof=4 to make sure all workflow code using echo_dof is executed
+    # adding n_independent_echos=4 to test workflow code using n_independent_echos is executed
     tedana_cli.tedana_workflow(
         data=datalist,
         tes=echo_times,
         ica_method="robustica",
         n_robust_runs=4,
-        echo_dof=4,
+        n_independent_echos=4,
         out_dir=out_dir,
         tedpca=0.95,
         fittype="curvefit",

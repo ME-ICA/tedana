@@ -55,7 +55,7 @@ def tedpca(
     adaptive_mask,
     io_generator,
     tes,
-    echo_dof=None,
+    n_independent_echos=None,
     algorithm="aic",
     kdaw=10.0,
     rdaw=1.0,
@@ -80,8 +80,8 @@ def tedpca(
         The output generation object for this workflow
     tes : :obj:`list`
         List of echo times associated with `data_cat`, in milliseconds
-    echo_dof : :obj:`int`, optional
-        Degree of freedom to use in goodness of fit metrics (fstat).
+    n_independent_echos : :obj:`int`, optional
+        Number of independent echoes to use in goodness of fit metrics (fstat).
         Primarily used for EPTI acquisitions.
         If None, number of echoes will be used. Default is None.
     algorithm : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic', float}, optional
@@ -360,7 +360,7 @@ def tedpca(
         mixing=comp_ts,
         adaptive_mask=adaptive_mask,
         tes=tes,
-        echo_dof=echo_dof,
+        n_independent_echos=n_independent_echos,
         io_generator=io_generator,
         label="PCA",
         external_regressors=None,
@@ -383,7 +383,7 @@ def tedpca(
         component_table, metric_metadata = kundu_tedpca(
             component_table,
             n_echos,
-            echo_dof,
+            n_independent_echos,
             kdaw,
             rdaw,
             stabilize=False,
@@ -392,7 +392,7 @@ def tedpca(
         component_table, metric_metadata = kundu_tedpca(
             component_table,
             n_echos,
-            echo_dof,
+            n_independent_echos,
             kdaw,
             rdaw,
             stabilize=True,
