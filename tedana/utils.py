@@ -264,9 +264,9 @@ def make_adaptive_mask(data, mask, n_independent_echos=None, threshold=1, method
             )
             perc_dof_voxels = 100 * n_dof_voxels / np.sum(adaptive_mask >= 1)
             LGR.warning(
-                f"{n_dof_voxels} voxels ({np.round(perc_dof_voxels, decimals=1)}%) have fewer"
-                f"than {np.round(threshold_dof)} good voxels."
-                f"The degrees of freedom for fits across echoes will remain {n_independent_echos}"
+                f"{n_dof_voxels} voxels ({np.round(perc_dof_voxels, decimals=1)}%) have fewer "
+                f"than {np.round(threshold_dof)} good voxels. "
+                f"The degrees of freedom for fits across echoes will remain {n_independent_echos} "
                 f"even if there might be fewer independent echo measurements."
             )
     modified_mask = adaptive_mask.astype(bool)
