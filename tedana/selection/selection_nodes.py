@@ -722,6 +722,7 @@ def calc_kappa_elbow(
     else:
         # Number of independent echoes is the number of echoes if not otherwise specified
         n_independent_echos = selector.cross_component_metrics_["n_echos"]
+
     outputs = {
         "decision_node_idx": selector.current_node_idx_,
         "node_label": None,
