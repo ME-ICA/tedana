@@ -233,6 +233,7 @@ def make_adaptive_mask(data, mask, n_independent_echos=None, threshold=1, method
             "Removing voxels from mask."
         )
         adaptive_mask[adaptive_mask < threshold] = 0
+
     if isinstance(n_independent_echos, int):
         # For EPTI sequences, the way we use adaptive mask thresholding fails
         # because sequential echoes have overlapping information and
