@@ -138,7 +138,7 @@ def _get_parser():
         metavar="INT",
         type=int,
         help=(
-            "Degree of freedom to use in goodness of fit metrics (fstat)."
+            "Number of independent echoes to use in goodness of fit metrics (fstat)."
             "Primarily used for EPTI acquisitions."
             "If not provided, number of echoes will be used."
         ),
