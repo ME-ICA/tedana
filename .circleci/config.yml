@@ -381,8 +381,6 @@ jobs:
             coverage xml
       - store_artifacts:
           path: /tmp/src/coverage
-      - codecov/upload:
-          file: /tmp/src/coverage/coverage.xml
 
 workflows:
   version: 2.1
