@@ -123,6 +123,13 @@ def _get_parser():
         "--png-cmap", dest="png_cmap", type=str, help="Colormap for figures", default="coolwarm"
     )
     optional.add_argument(
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        help="Generate intermediate and additional files.",
+        default=False,
+    )
+    optional.add_argument(
         "--debug",
         dest="debug",
         action="store_true",
@@ -173,6 +180,7 @@ def _main(argv=None):
         no_reports=args.no_reports,
         png_cmap=args.png_cmap,
         overwrite=args.overwrite,
+        verbose=args.verbose,
         debug=args.debug,
         quiet=args.quiet,
         reclassify_command=reclassify_command,
@@ -242,6 +250,7 @@ def ica_reclassify_workflow(
     mir=False,
     no_reports=False,
     png_cmap="coolwarm",
+    verbose=False,
     overwrite=False,
     debug=False,
     quiet=False,
@@ -273,6 +282,8 @@ def ica_reclassify_workflow(
     png_cmap : obj:'str', optional
         Name of a matplotlib colormap to be used when generating figures.
         Cannot be used with --no-png. Default is 'coolwarm'.
+    verbose : :obj:`bool`, optional
+        Generate intermediate and additional files. Default is False.
     debug : :obj:`bool`, optional
         Whether to run in debugging mode or not. Default is False.
     overwrite : :obj:`bool`, optional
@@ -390,13 +401,19 @@ def ica_reclassify_workflow(
         data_optcom = ioh.get_file_contents("combined img")
         used_gs = False
 
+    if verbose:
+        LGR.debug("Loading input 4D data")
+        data_cat = ioh.get_file_contents("input img")
+        # Extract the data from the nibabel objects
+        data_cat, _ = io.load_data(data_cat, n_echos=len(data_cat))
+
     io_generator = io.OutputGenerator(
         data_optcom,
         convention=convention,
         prefix=prefix,
         config=config,
         overwrite=overwrite,
-        verbose=False,
+        verbose=verbose,
         out_dir=out_dir,
         old_registry=ioh.registry,
     )
@@ -498,6 +515,10 @@ def ica_reclassify_workflow(
             io_generator=io_generator,
         )
         io_generator.overwrite = False
+
+    if verbose:
+        LGR.debug("Writing out verbose data")
+        io.writeresults_echoes(data_cat, mixing, mask_denoise, component_table, io_generator)
 
     # Write out BIDS-compatible description file
     derivative_metadata = {
