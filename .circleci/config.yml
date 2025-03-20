@@ -381,6 +381,9 @@ jobs:
             coverage xml
       - store_artifacts:
           path: /tmp/src/coverage
+      - codecov/upload:
+          file: /tmp/src/coverage/coverage.xml
+          flags: integration,unittests
 
 workflows:
   upload-to-codecov:
