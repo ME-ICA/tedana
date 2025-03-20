@@ -374,7 +374,7 @@ jobs:
           name: Merge coverage files
           command: |
             apt-get update
-            apt-get install -yqq curl
+            apt-get install -yqq curl gnupg
             source activate tedana_py38  # depends on makeenv38
             cd /tmp/src/coverage/
             coverage combine
