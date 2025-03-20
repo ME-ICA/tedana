@@ -127,6 +127,10 @@ def generate_metrics(
     # Ensure that echo times are in an array, rather than a list
     tes = np.asarray(tes)
 
+    # use either the inputted number of indie echoes or the total number of echoes
+    # to calcualte the threshold for f tests
+    f_thresh, _, _ = getfbounds(n_independent_echos or len(tes))
+
     # Get reference image from io_generator
     ref_img = io_generator.reference_img
 
@@ -230,9 +234,6 @@ def generate_metrics(
 
     if "map FT2 clusterized" in required_metrics:
         LGR.info("Calculating T2* F-statistic maps")
-        # use either the inputted number of indie echoes or the total number of echoes
-        n_independent_echos = n_independent_echos or len(tes)
-        f_thresh, _, _ = getfbounds(n_independent_echos)
 
         metric_maps["map FT2 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FT2"],
@@ -243,9 +244,6 @@ def generate_metrics(
 
     if "map FS0 clusterized" in required_metrics:
         LGR.info("Calculating S0 F-statistic maps")
-        # use either the inputted number of indie echoes or the total number of echoes
-        n_independent_echos = n_independent_echos or len(tes)
-        f_thresh, _, _ = getfbounds(n_independent_echos)
 
         metric_maps["map FS0 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FS0"],
