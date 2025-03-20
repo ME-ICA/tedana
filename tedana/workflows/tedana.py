@@ -1,4 +1,4 @@
-"""Run the TE-Dependent ANAlysis workflow."""
+"""Run the "canonical" TE-Dependent ANAlysis workflow."""
 
 import argparse
 import datetime
