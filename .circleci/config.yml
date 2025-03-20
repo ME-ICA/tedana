@@ -4,7 +4,7 @@
 #
 version: 2.1
 orbs:
-  codecov: codecov/codecov@1.0.5
+  codecov: codecov/codecov@5.2.1
 jobs:
   py_env:
     parameters:
@@ -257,19 +257,18 @@ jobs:
           name: Merge coverage files
           command: |
             apt-get update
-            apt-get install -yqq curl
+            apt-get install -yqq curl gnupg
             source activate tedana_py38  # depends on makeenv38
             cd /tmp/src/coverage/
             coverage combine
             coverage xml
+            mv coverage.xml /tmp/src/tedana/
       - store_artifacts:
           path: /tmp/src/coverage
-      - codecov/upload:
-          file: /tmp/src/coverage/coverage.xml
+      - codecov/upload
 
 workflows:
-  version: 2.1
-  run_tests:
+  upload-to-codecov:
     jobs:
       - py_env:
           name: py_env-<< matrix.PYTHON >>
