@@ -379,10 +379,10 @@ jobs:
             cd /tmp/src/coverage/
             coverage combine
             coverage xml
+            mv coverage.xml /tmp/src/tedana/
       - store_artifacts:
           path: /tmp/src/coverage
-      - codecov/upload:
-          coverage_files: /tmp/src/coverage/coverage.xml
+      - codecov/upload
 
 workflows:
   upload-to-codecov:
