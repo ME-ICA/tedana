@@ -126,11 +126,13 @@ def test_integration_five_echo(skip_integration):
     suffix = ".sm.nii.gz"
     datalist = [prepend + str(i + 1) + suffix for i in range(5)]
     echo_times = [15.4, 29.7, 44.0, 58.3, 72.6]
+    # adding n_independent_echos=4 to test workflow code using n_independent_echos is executed
     tedana_cli.tedana_workflow(
         data=datalist,
         tes=echo_times,
         ica_method="robustica",
         n_robust_runs=4,
+        n_independent_echos=4,
         out_dir=out_dir,
         tedpca=0.95,
         fittype="curvefit",
@@ -632,6 +634,7 @@ def test_integration_t2smap(skip_integration):
         + [str(te) for te in echo_times]
         + ["--out-dir", out_dir, "--fittype", "curvefit"]
         + ["--masktype", "dropout", "decay"]
+        + ["--n-independent-echos", "4"]
     )
     t2smap_cli._main(args)
 
