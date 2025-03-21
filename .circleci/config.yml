@@ -66,7 +66,7 @@ jobs:
               mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py<< parameters.PYTHON >>
             fi
       - save_cache:
-          key: conda-py<< parameters.PYTHON >>-v4-{{ checksum "pyproject.toml" }}
+          key: conda-py<< parameters.PYTHON >>-v3-{{ checksum "pyproject.toml" }}
           paths:
             - /opt/conda/envs/py<< parameters.PYTHON >>_env
       - persist_to_workspace:
