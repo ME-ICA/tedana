@@ -598,6 +598,10 @@ def ica_reclassify_workflow(
 
     io_generator.save_self()
     LGR.info("Workflow completed")
+
+    # Add newsletter info to the log
+    utils.log_newsletter_info()
+
     utils.teardown_loggers()
 
 

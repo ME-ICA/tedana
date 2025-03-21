@@ -658,3 +658,12 @@ def check_te_values(te_values):
         return (te_values * 1000).tolist()
     else:
         raise ValueError("TE values must be positive and in milliseconds.")
+
+def log_newsletter_info():
+    """Log information about the tedana newsletter."""
+    # Add log encouraging users to subscribe to the tedana newsletter
+    LGR.info(
+        "Don't forget to subscribe to the tedana newsletter for updates!"
+        "We send no more than 5 emails a year."
+    )
+    LGR.info("https://groups.google.com/g/tedana-newsletter")
