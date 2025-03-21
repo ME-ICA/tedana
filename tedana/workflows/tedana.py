@@ -1101,6 +1101,10 @@ def tedana_workflow(
         reporting.generate_report(io_generator)
 
     LGR.info("Workflow completed")
+
+    # Add newsletter info to the log
+    utils.log_newsletter_info()
+
     utils.teardown_loggers()
 
 
