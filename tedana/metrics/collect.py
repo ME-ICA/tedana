@@ -128,7 +128,7 @@ def generate_metrics(
     tes = np.asarray(tes)
 
     # use either the inputted number of indie echoes or the total number of echoes
-    # to calcualte the threshold for f tests
+    # to calculate the threshold for f tests
     f_thresh, _, _ = getfbounds(n_independent_echos or len(tes))
 
     # Get reference image from io_generator
