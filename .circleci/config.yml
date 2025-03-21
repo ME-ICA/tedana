@@ -20,7 +20,7 @@ jobs:
           paths:
             - src/tedana
       - restore_cache: # ensure this step occurs *before* installing dependencies
-          key: v2-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
       - run: # will overwrite pySPFM installation each time
           name: Generate environment
           command: |
@@ -33,7 +33,7 @@ jobs:
                 pip install -e .[tests,doc]
             fi
       - save_cache: # environment cache tied to requirements
-          key: v2-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
           paths:
             - "/opt/conda/envs/py<< parameters.PYTHON >>_env"
 
@@ -47,7 +47,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v2-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
       - run:
           name: Generate environment
           command: |
@@ -81,7 +81,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v2-{{ checksum "pyproject.toml" }}-{{ "3.9" }}
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.9" }}
       - run:
           name: Linting
           command: |
@@ -100,7 +100,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v2-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -131,7 +131,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v2-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -162,7 +162,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v2-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -193,7 +193,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v2-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -224,7 +224,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v2-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -252,7 +252,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v2-{{ checksum "pyproject.toml" }}-{{ "3.9" }}
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.9" }}
       - run:
           name: Merge coverage files
           command: |
