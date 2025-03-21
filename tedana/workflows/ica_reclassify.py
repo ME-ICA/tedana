@@ -76,7 +76,7 @@ def _get_parser():
             "Classification tag(s) to add to accepted components."
             "Will be applied to all listed accepted components, "
             "even if they were already accepted."
-            "Supply a single tag or a comment-delimited list with no spaces."
+            "Supply a single tag or a comma-delimited list."
         ),
         default=[],
     )
@@ -88,7 +88,7 @@ def _get_parser():
             "Classification tag(s) to add to rejected components."
             "Will be applied to all listed rejected components, "
             "even if they were already rejected."
-            "Supply a single tag or a comment-delimited list with no spaces."
+            "Supply a single tag or a comma-delimited list."
         ),
         default=[],
     )
@@ -267,48 +267,55 @@ def _parse_manual_list_int(manual_list):
 
 def _parse_manual_list_str(manual_list):
     """
-    Parse the list of components tags into a list of strings.
+    Parse the list of components tags into a comma delimited list of strings.
 
     Parameters
     ----------
     manual_list : :obj:`str` :obj:`list[str]` or [] or None
-        String of strings (classification tags) separated by spaces, commas, or tabs
+        Strings (classification tags) separated by commas
 
     Returns
     -------
-    manual_nums : :obj:`list[int]`
-        A list of strings or an empty list.
+    manual_vals : :obj:`str`
+        A comma delimited
 
     Note
     ----
-    Inititally tried to add string parsing to _parse_manual_list_int
-    but there were so many conditional statements that a separate function was
-    shorter and clearer.
-    This cannot currently parse values provided in a file like _prase_manual_list_int.
+    Unlike _parse_manual_list_int, only ',' is a permitted delimiter.
+    Classification tags can use spaces so that cannot be a delimiter.
+    Classification tags cannot include commas.
+    Those strings would be split at other points in the code.
     """
     if not manual_list:
         manual_vals = []
-    elif len(manual_list) > 1:
-        # Assume that this is a list of strings, but raise error if not
-        manual_nums = []
-        for x in manual_list:
+    elif not isinstance(manual_list, list):
+        manual_vals = [manual_list]
+    else:
+        manual_vals = manual_list
+
+    if len(manual_vals) > 1:
+        for x in manual_vals:
             if not isinstance(x, "str"):
                 raise ValueError(
-                    "_parse_manual_list_str expected a list of strings, "
+                    "_parse_manual_list_str expected a string or a list of strings, "
                     f"but the input is {manual_list}"
                 )
-    elif isinstance(manual_list[0], str):
-        # arbitrary string was given, length of list is 1
-        manual_nums = str_to_component_list(manual_list[0])
-    elif isinstance(manual_list[0], int):
-        # Is a single integer and should remain a list with a single integer
-        manual_nums = manual_list
-    else:
-        raise ValueError(
-            f"_parse_manual_list_int expected integers or a filename, but the input is {manual_list}"
-        )
+            elif "," in x:
+                raise ValueError(
+                    "_parse_manual_list_str includes a comma in a list of multiple strings."
+                    "Input can include a comma deliminated string, but not multiple strings."
+                    f"Input is {manual_list}"
+                )
 
-    return manual_nums
+    # separate string by commas and remove leading & training whitespace
+    if len(manual_vals) == 1 and isinstance(x, "str"):
+        possible_list = manual_vals.split(",")
+        manual_vals = [s.strip() for s in possible_list]
+
+    # Convert the list of strings back to a single comma delimited string with no trailing spaces
+    manual_string = ",".join(str(s) for s in manual_vals)
+
+    return manual_string
 
 
 def ica_reclassify_workflow(
@@ -421,6 +428,12 @@ def ica_reclassify_workflow(
     accept = _parse_manual_list_int(accept)
     reject = _parse_manual_list_int(reject)
 
+    # If classification tags are a list of strings without commas, they stay the same.
+    # If classification tags are a single string,
+    # convert to a list with a single string or a split into a comma delimited list of strings.
+    tag_accept = _parse_manual_list_str(tag_accept)
+    tag_reject = _parse_manual_list_str(tag_reject)
+
     # Check that there is no overlap in accepted/rejected components
     if accept:
         acc = set(accept)
@@ -432,9 +445,6 @@ def ica_reclassify_workflow(
         rej = ()
 
     if (not accept) and (not reject):
-        # TODO: remove
-        print(accept)
-        print(reject)
         raise ValueError("Must manually accept or reject at least one component")
 
     in_both = []
@@ -503,10 +513,10 @@ def ica_reclassify_workflow(
     selector = selection.component_selector.ComponentSelector(previous_tree_fname)
 
     if accept:
-        selector.add_manual(accept, "accepted")
+        selector.add_manual(accept, "accepted", classification_tags=tag_accept)
 
     if reject:
-        selector.add_manual(reject, "rejected")
+        selector.add_manual(reject, "rejected", classification_tags=tag_reject)
 
     selector.select(
         component_table,
