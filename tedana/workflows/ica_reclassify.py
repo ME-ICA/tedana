@@ -69,6 +69,30 @@ def _get_parser():
         default=[],
     )
     optional.add_argument(
+        "--tagacc",
+        dest="tag_accept",
+        nargs="+",
+        help=(
+            "Classification tag(s) to add to accepted components."
+            "Will be applied to all listed accepted components, "
+            "even if they were already accepted."
+            "Supply a single tag or a comment-delimited list with no spaces."
+        ),
+        default=[],
+    )
+    optional.add_argument(
+        "--tagrej",
+        dest="tag_rej",
+        nargs="+",
+        help=(
+            "Classification tag(s) to add to rejected components."
+            "Will be applied to all listed rejected components, "
+            "even if they were already rejected."
+            "Supply a single tag or a comment-delimited list with no spaces."
+        ),
+        default=[],
+    )
+    optional.add_argument(
         "--config",
         dest="config",
         help="File naming configuration.",
@@ -171,6 +195,8 @@ def _main(argv=None):
         args.registry,
         accept=args.manual_accept,
         reject=args.manual_reject,
+        tag_accept=args.tag_accept,
+        tag_reject=args.tag_reject,
         out_dir=args.out_dir,
         config=args.config,
         prefix=args.prefix,
@@ -187,7 +213,7 @@ def _main(argv=None):
     )
 
 
-def _parse_manual_list(manual_list):
+def _parse_manual_list_int(manual_list):
     """
     Parse the list of components to accept or reject into a list of integers.
 
@@ -221,7 +247,7 @@ def _parse_manual_list(manual_list):
                 manual_nums.append(int(x))
             else:
                 raise ValueError(
-                    "_parse_manual_list expected a list of integers, "
+                    "_parse_manual_list_int expected a list of integers, "
                     f"but the input is {manual_list}"
                 )
     elif isinstance(manual_list[0], str):
@@ -232,7 +258,54 @@ def _parse_manual_list(manual_list):
         manual_nums = manual_list
     else:
         raise ValueError(
-            f"_parse_manual_list expected integers or a filename, but the input is {manual_list}"
+            "_parse_manual_list_int expected integers or a filename, "
+            f"but the input is {manual_list}"
+        )
+
+    return manual_nums
+
+
+def _parse_manual_list_str(manual_list):
+    """
+    Parse the list of components tags into a list of strings.
+
+    Parameters
+    ----------
+    manual_list : :obj:`str` :obj:`list[str]` or [] or None
+        String of strings (classification tags) separated by spaces, commas, or tabs
+
+    Returns
+    -------
+    manual_nums : :obj:`list[int]`
+        A list of strings or an empty list.
+
+    Note
+    ----
+    Inititally tried to add string parsing to _parse_manual_list_int
+    but there were so many conditional statements that a separate function was
+    shorter and clearer.
+    This cannot currently parse values provided in a file like _prase_manual_list_int.
+    """
+    if not manual_list:
+        manual_vals = []
+    elif len(manual_list) > 1:
+        # Assume that this is a list of strings, but raise error if not
+        manual_nums = []
+        for x in manual_list:
+            if not isinstance(x, "str"):
+                raise ValueError(
+                    "_parse_manual_list_str expected a list of strings, "
+                    f"but the input is {manual_list}"
+                )
+    elif isinstance(manual_list[0], str):
+        # arbitrary string was given, length of list is 1
+        manual_nums = str_to_component_list(manual_list[0])
+    elif isinstance(manual_list[0], int):
+        # Is a single integer and should remain a list with a single integer
+        manual_nums = manual_list
+    else:
+        raise ValueError(
+            f"_parse_manual_list_int expected integers or a filename, but the input is {manual_list}"
         )
 
     return manual_nums
@@ -242,6 +315,8 @@ def ica_reclassify_workflow(
     registry,
     accept=[],
     reject=[],
+    tag_accept=[],
+    tag_reject=[],
     out_dir=".",
     config="auto",
     convention="bids",
@@ -269,6 +344,12 @@ def ica_reclassify_workflow(
         A list of integer values of components to accept in this workflow.
     reject : :obj: `list`
         A list of integer values of components to reject in this workflow.
+    tag_accept : :obj: `list`
+        A list of classification tags to add to accepted components.
+        Will be applied to all listed accepted components, even if they were already accepted.
+    tag_reject : :obj: `list`
+        A list of classification tags to add to rejected components.
+        Will be applied to all listed rejected components, even if they were already rejected.
     out_dir : :obj:`str`, optional
         Output directory.
     tedort : :obj:`bool`, optional
@@ -337,8 +418,8 @@ def ica_reclassify_workflow(
     # If accept and reject are a list of integers, they stay the same
     # If they are a filename, load numbers of from
     # If they are a string of values, convert to a list of ints
-    accept = _parse_manual_list(accept)
-    reject = _parse_manual_list(reject)
+    accept = _parse_manual_list_int(accept)
+    reject = _parse_manual_list_int(reject)
 
     # Check that there is no overlap in accepted/rejected components
     if accept:
