@@ -698,6 +698,7 @@ def check_te_values(te_values):
     else:
         raise ValueError("TE values must be positive and in milliseconds.")
 
+
 def log_newsletter_info():
     """Log information about the tedana newsletter."""
     # Add log encouraging users to subscribe to the tedana newsletter
