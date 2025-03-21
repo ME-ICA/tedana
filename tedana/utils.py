@@ -663,7 +663,7 @@ def log_newsletter_info():
     """Log information about the tedana newsletter."""
     # Add log encouraging users to subscribe to the tedana newsletter
     LGR.info(
-        "Don't forget to subscribe to the tedana newsletter for updates!"
-        "We send no more than 5 emails a year."
+        "Don't forget to subscribe to the tedana newsletter for updates! "
+        "This is a very low volume email list."
     )
     LGR.info("https://groups.google.com/g/tedana-newsletter")
