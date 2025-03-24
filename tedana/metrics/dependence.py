@@ -136,6 +136,7 @@ def calculate_f_maps(
     mixing: np.ndarray,
     adaptive_mask: np.ndarray,
     tes: np.ndarray,
+    n_independent_echos=None,
     f_max: float = 500,
 ) -> typing.Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Calculate pseudo-F-statistic maps for TE-dependence and -independence models.
@@ -153,6 +154,10 @@ def calculate_f_maps(
         "good signal". Limited to masked voxels.
     tes : (E) array_like
         Echo times in milliseconds, in the same order as the echoes in data_cat.
+    n_independent_echos : int
+        Number of independent echoes to use in goodness of fit metrics (fstat).
+        Primarily used for EPTI acquisitions.
+        If None, number of echoes will be used. Default is None.
     f_max : float, optional
         Maximum F-statistic, used to crop extreme values. Values in the
         F-statistic maps greater than this value are set to it.
@@ -201,7 +206,10 @@ def calculate_f_maps(
             pred_s0 = x1[:j_echo, :] * np.tile(coeffs_s0, (j_echo, 1))
             sse_s0 = (comp_betas[:j_echo] - pred_s0) ** 2
             sse_s0 = sse_s0.sum(axis=0)  # (S,) prediction error map
-            f_s0 = (alpha - sse_s0) * (j_echo - 1) / (sse_s0)
+            if n_independent_echos is None or n_independent_echos >= j_echo:
+                f_s0 = (alpha - sse_s0) * (j_echo - 1) / (sse_s0)
+            else:
+                f_s0 = (alpha - sse_s0) * (n_independent_echos - 1) / (sse_s0)
             f_s0[f_s0 > f_max] = f_max
             f_s0_maps[mask_idx, i_comp] = f_s0[mask_idx]
 
@@ -212,7 +220,10 @@ def calculate_f_maps(
             pred_t2 = x2[:j_echo] * np.tile(coeffs_t2, (j_echo, 1))
             sse_t2 = (comp_betas[:j_echo] - pred_t2) ** 2
             sse_t2 = sse_t2.sum(axis=0)
-            f_t2 = (alpha - sse_t2) * (j_echo - 1) / (sse_t2)
+            if n_independent_echos is None or n_independent_echos >= j_echo:
+                f_t2 = (alpha - sse_t2) * (j_echo - 1) / (sse_t2)
+            else:
+                f_t2 = (alpha - sse_t2) * (n_independent_echos - 1) / (sse_t2)
             f_t2[f_t2 > f_max] = f_max
             f_t2_maps[mask_idx, i_comp] = f_t2[mask_idx]
 

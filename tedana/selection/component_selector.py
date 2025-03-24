@@ -505,6 +505,7 @@ class ComponentSelector:
                 f"Step {self.current_node_idx_}: Running function {node['functionname']} "
                 f"with parameters: {all_params}"
             )
+
             # run the decision node function
             self = fcn(self, **params, **kwargs)
 

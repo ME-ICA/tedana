@@ -133,6 +133,18 @@ def _get_parser():
         default="t2s",
     )
     optional.add_argument(
+        "--n-independent-echos",
+        dest="n_independent_echos",
+        metavar="INT",
+        type=int,
+        help=(
+            "Number of independent echoes to use in goodness of fit metrics (fstat)."
+            "Primarily used for EPTI acquisitions."
+            "If not provided, number of echoes will be used."
+        ),
+        default=None,
+    )
+    optional.add_argument(
         "--n-threads",
         dest="n_threads",
         type=int,
@@ -174,6 +186,7 @@ def _get_parser():
 def t2smap_workflow(
     data,
     tes,
+    n_independent_echos=None,
     out_dir=".",
     mask=None,
     prefix="",
@@ -200,6 +213,10 @@ def t2smap_workflow(
         list of echo-specific files, in ascending order.
     tes : :obj:`list`
         List of echo times associated with data in milliseconds.
+    n_independent_echos : :obj:`int`, optional
+        Number of independent echoes to use in goodness of fit metrics (fstat).
+        Primarily used for EPTI acquisitions.
+        If None, number of echoes will be used. Default is None.
     out_dir : :obj:`str`, optional
         Output directory.
     mask : :obj:`str`, optional
@@ -226,7 +243,6 @@ def t2smap_workflow(
         Generate intermediate and additional files. Default is False.
     overwrite : :obj:`bool`, optional
         If True, force overwriting of files. Default is False.
-
 
     Other Parameters
     ----------------
@@ -323,6 +339,7 @@ def t2smap_workflow(
     mask, masksum = utils.make_adaptive_mask(
         data_cat,
         mask=mask,
+        n_independent_echos=n_independent_echos,
         threshold=1,
         methods=masktype,
     )
