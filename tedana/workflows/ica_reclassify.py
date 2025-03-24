@@ -82,7 +82,7 @@ def _get_parser():
     )
     optional.add_argument(
         "--tagrej",
-        dest="tag_rej",
+        dest="tag_reject",
         nargs="+",
         help=(
             "Classification tag(s) to add to rejected components."
@@ -295,7 +295,7 @@ def _parse_manual_list_str(manual_list):
 
     if len(manual_vals) > 1:
         for x in manual_vals:
-            if not isinstance(x, "str"):
+            if not isinstance(x, str):
                 raise ValueError(
                     "_parse_manual_list_str expected a string or a list of strings, "
                     f"but the input is {manual_list}"
@@ -308,8 +308,8 @@ def _parse_manual_list_str(manual_list):
                 )
 
     # separate string by commas and remove leading & training whitespace
-    if len(manual_vals) == 1 and isinstance(x, "str"):
-        possible_list = manual_vals.split(",")
+    if len(manual_vals) == 1 and isinstance(manual_vals[0], str):
+        possible_list = manual_vals[0].split(",")
         manual_vals = [s.strip() for s in possible_list]
 
     # Convert the list of strings back to a single comma delimited string with no trailing spaces

@@ -234,12 +234,12 @@ def comptable_classification_changer(
     This function is run twice, ones for changes to make of a component is
     True and again for components that are False.
     """
-    if classify_if != "nochange":
-        changeidx = decision_boolean.index[np.asarray(decision_boolean) == boolstate]
-        if not changeidx.empty:
-            current_classifications = set(
-                selector.component_table_.loc[changeidx, "classification"].tolist()
-            )
+    changeidx = decision_boolean.index[np.asarray(decision_boolean) == boolstate]
+    if not changeidx.empty:
+        current_classifications = set(
+            selector.component_table_.loc[changeidx, "classification"].tolist()
+        )
+        if classify_if != "nochange":
             if current_classifications.intersection({"accepted", "rejected"}):
                 if not dont_warn_reclassify:
                     # don't make a warning if classify_if matches the current classification
@@ -253,6 +253,27 @@ def comptable_classification_changer(
                             "accepted or rejected, it shouldn't be reclassified"
                         )
             selector.component_table_.loc[changeidx, "classification"] = classify_if
+
+        if tag_if is not None:  # only run if a tag is provided
+            # if tag_if has commas, divide into multiple tags
+            if "," in tag_if:
+                multi_tags = tag_if.split(",")
+                tag_if = set([s.strip() for s in multi_tags])
+            else:
+                tag_if = {tag_if}
+            for idx in changeidx:
+                tmpstr = selector.component_table_.loc[idx, "classification_tags"]
+                if tmpstr == "" or isinstance(tmpstr, float):
+                    tmpset = tag_if
+                else:
+                    tmpset = set(tmpstr.split(","))
+                    tmpset = tmpset.union(tag_if)
+                selector.component_table_.loc[idx, "classification_tags"] = ",".join(
+                    str(s) for s in tmpset
+                )
+
+        # Do this last step if anything changed in the component table
+        if classify_if != "nochange" or tag_if is not None:
             # NOTE: CAUTION: extremely bizarre pandas behavior violates guarantee
             # that df['COLUMN'] matches the df as a a whole in this case.
             # We cannot replicate this consistently, but it seems to happen in some
@@ -267,28 +288,11 @@ def comptable_classification_changer(
             #   a subset of components
             selector.component_table_ = selector.component_table_.copy()
 
-            if tag_if is not None:  # only run if a tag is provided
-                # if tag_if has commas, divide into multiple tags
-                if "," in tag_if:
-                    multi_tags = tag_if.split(",")
-                    tag_if = set([s.strip() for s in multi_tags])
-                else:
-                    tag_if = {tag_if}
-                for idx in changeidx:
-                    tmpstr = selector.component_table_.loc[idx, "classification_tags"]
-                    if tmpstr == "" or isinstance(tmpstr, float):
-                        tmpset = tag_if
-                    else:
-                        tmpset = set(tmpstr.split(","))
-                        tmpset.union(tag_if)
-                    selector.component_table_.loc[idx, "classification_tags"] = ",".join(
-                        str(s) for s in tmpset
-                    )
-        else:
-            LGR.info(
-                f"Step {selector.current_node_idx_}: No components fit criterion "
-                f"{boolstate} to change classification"
-            )
+    else:
+        LGR.info(
+            f"Step {selector.current_node_idx_}: No components fit criterion "
+            f"{boolstate} to change classification"
+        )
     return selector
 
 
