@@ -332,3 +332,14 @@ workflows:
             - py_env-3.<< matrix.PYTHON >>
           post-steps:
             - codecov/upload
+      - merge_coverage:
+          matrix:
+            parameters:
+              PYTHON: ["8", "9", "10", "11", "12", "13"]
+          requires:
+            - unittest_3<< matrix.PYTHON >>
+            - three-echo
+            - four-echo
+            - five-echo
+            - reclassify
+            - t2smap
