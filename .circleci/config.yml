@@ -245,6 +245,28 @@ jobs:
           paths:
             - src/coverage
 
+  merge_coverage:
+    working_directory: /tmp/src/tedana
+    docker:
+      - image: continuumio/miniconda3
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.9" }}
+      - run:
+          name: Merge coverage files
+          command: |
+            apt-get update
+            apt-get install -yqq curl gnupg
+            source activate tedana_py38  # depends on makeenv38
+            cd /tmp/src/coverage/
+            coverage combine
+            coverage xml
+            mv coverage.xml /tmp/src/tedana/
+      - store_artifacts:
+          path: /tmp/src/coverage
+      - codecov/upload
+
 workflows:
   upload-to-codecov:
     jobs:
