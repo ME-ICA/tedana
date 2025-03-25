@@ -47,28 +47,28 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v1-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.<< parameters.PYTHON >>" }}
       - run:
           name: Generate environment
           command: |
             apt-get update
             apt-get install -yqq make
             apt-get install -yqq curl
-            source activate py<< parameters.PYTHON >>_env
+            source activate py3.<< parameters.PYTHON >>_env
             pip install -e .[all]
       - run:
           name: Running unit tests
           command: |
-            source activate py<< parameters.PYTHON >>_env
+            source activate py3.<< parameters.PYTHON >>_env
             make unittest
             mkdir -p /tmp/src/coverage
             if [ -f /tmp/src/tedana/.coverage ]; then
-              mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py<< parameters.PYTHON >>
+              mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py3.<< parameters.PYTHON >>
             fi
       - save_cache:
-          key: conda-py<< parameters.PYTHON >>-v3-{{ checksum "pyproject.toml" }}
+          key: conda-py3.<< parameters.PYTHON >>-v3-{{ checksum "pyproject.toml" }}
           paths:
-            - /opt/conda/envs/py<< parameters.PYTHON >>_env
+            - /opt/conda/envs/py3.<< parameters.PYTHON >>_env
       - persist_to_workspace:
           root: /tmp
           paths:
@@ -279,11 +279,10 @@ workflows:
           requires:
             - py_env-3.9
       - unittest:
-          name: unittest_<< matrix.PYTHONLABEL >>
+          name: unittest_3<< matrix.PYTHON >>
           matrix:
             parameters:
-              PYTHON: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
-              PYTHONLABEL: ["38", "39", "310", "311", "312", "313"]
+              PYTHON: ["8", "9", "10", "11", "12", "13"]
           requires:
             - py_env-<< matrix.PYTHON >>
       - t2smap:
