@@ -275,8 +275,6 @@ workflows:
           matrix:
             parameters:
               PYTHON: ["8", "9", "10", "11", "12", "13"]
-          post-steps:
-            - codecov/upload
       - style_check:
           requires:
             - py_env-3.9
