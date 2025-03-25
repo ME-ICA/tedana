@@ -300,21 +300,21 @@ workflows:
           requires:
             - py_env-<< matrix.PYTHON >>
       - three-echo:
-          name: three-echo-<< matrix.PYTHON >>
+          name: three-echo
           matrix:
             parameters:
               PYTHON: ["3.9"]
           requires:
             - py_env-<< matrix.PYTHON >>
       - four-echo:
-          name: four-echo-<< matrix.PYTHON >>
+          name: four-echo
           matrix:
             parameters:
               PYTHON: ["3.9"]
           requires:
             - py_env-<< matrix.PYTHON >>
       - five-echo:
-          name: five-echo-<< matrix.PYTHON >>
+          name: five-echo
           matrix:
             parameters:
               PYTHON: ["3.9"]
