@@ -4,7 +4,7 @@
 #
 version: 2.1
 orbs:
-  codecov: codecov/codecov@5.2.1
+  codecov: codecov/codecov@5.3.0
 jobs:
   py_env:
     parameters:
@@ -20,22 +20,22 @@ jobs:
           paths:
             - src/tedana
       - restore_cache: # ensure this step occurs *before* installing dependencies
-          key: v1-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.<< parameters.PYTHON >>" }}
       - run: # will overwrite pySPFM installation each time
           name: Generate environment
           command: |
-            if [[ -e /opt/conda/envs/py<< parameters.PYTHON >>_env ]]; then
+            if [[ -e /opt/conda/envs/py3.<< parameters.PYTHON >>_env ]]; then
                 echo "Restoring environment from cache"
-                source activate py<< parameters.PYTHON >>_env
+                source activate py3.<< parameters.PYTHON >>_env
             else
-                conda create -n py<< parameters.PYTHON >>_env python=<< parameters.PYTHON >> -yq
-                source activate py<< parameters.PYTHON >>_env
+                conda create -n py3.<< parameters.PYTHON >>_env python=3.<< parameters.PYTHON >> -yq
+                source activate py3.<< parameters.PYTHON >>_env
                 pip install -e .[tests,doc]
             fi
       - save_cache: # environment cache tied to requirements
-          key: v1-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.<< parameters.PYTHON >>" }}
           paths:
-            - "/opt/conda/envs/py<< parameters.PYTHON >>_env"
+            - "/opt/conda/envs/py3.<< parameters.PYTHON >>_env"
 
   unittest:
     parameters:
@@ -47,28 +47,28 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v1-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.<< parameters.PYTHON >>" }}
       - run:
           name: Generate environment
           command: |
             apt-get update
             apt-get install -yqq make
             apt-get install -yqq curl
-            source activate py<< parameters.PYTHON >>_env
+            source activate py3.<< parameters.PYTHON >>_env
             pip install -e .[all]
       - run:
           name: Running unit tests
           command: |
-            source activate py<< parameters.PYTHON >>_env
+            source activate py3.<< parameters.PYTHON >>_env
             make unittest
             mkdir -p /tmp/src/coverage
             if [ -f /tmp/src/tedana/.coverage ]; then
-              mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py<< parameters.PYTHON >>
+              mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py3.<< parameters.PYTHON >>
             fi
       - save_cache:
-          key: conda-py<< parameters.PYTHON >>-v3-{{ checksum "pyproject.toml" }}
+          key: conda-py3.<< parameters.PYTHON >>-v3-{{ checksum "pyproject.toml" }}
           paths:
-            - /opt/conda/envs/py<< parameters.PYTHON >>_env
+            - /opt/conda/envs/py3.<< parameters.PYTHON >>_env
       - persist_to_workspace:
           root: /tmp
           paths:
@@ -100,7 +100,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v1-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.<< parameters.PYTHON >>" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -108,7 +108,7 @@ jobs:
             apt-get update
             apt-get install -yqq make
             apt-get install -yqq curl
-            source activate py<< parameters.PYTHON >>_env
+            source activate py3.<< parameters.PYTHON >>_env
             make three-echo
             mkdir -p /tmp/src/coverage
             if [ -f /tmp/src/tedana/.coverage ]; then
@@ -131,7 +131,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v1-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.<< parameters.PYTHON >>" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -139,7 +139,7 @@ jobs:
             apt-get update
             apt-get install -yqq make
             apt-get install -yqq curl
-            source activate py<< parameters.PYTHON >>_env
+            source activate py3.<< parameters.PYTHON >>_env
             make four-echo
             mkdir -p /tmp/src/coverage
             if [ -f /tmp/src/tedana/.coverage ]; then
@@ -162,7 +162,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v1-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.<< parameters.PYTHON >>" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -170,7 +170,7 @@ jobs:
             apt-get update
             apt-get install -yqq make
             apt-get install -yqq curl
-            source activate py<< parameters.PYTHON >>_env
+            source activate py3.<< parameters.PYTHON >>_env
             make five-echo
             mkdir -p /tmp/src/coverage
             if [ -f /tmp/src/tedana/.coverage ]; then
@@ -193,7 +193,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v1-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.<< parameters.PYTHON >>" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -201,7 +201,7 @@ jobs:
             apt-get update
             apt-get install -yqq make
             apt-get install -yqq curl
-            source activate py<< parameters.PYTHON >>_env
+            source activate py3.<< parameters.PYTHON >>_env
             make reclassify
             mkdir -p /tmp/src/coverage
             if [ -f /tmp/src/tedana/.coverage ]; then
@@ -224,7 +224,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v1-{{ checksum "pyproject.toml" }}-{{ "<< parameters.PYTHON >>" }}
+          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.<< parameters.PYTHON >>" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
@@ -232,7 +232,7 @@ jobs:
             apt-get update
             apt-get install -yqq make
             apt-get install -yqq curl
-            source activate py<< parameters.PYTHON >>_env
+            source activate py3.<< parameters.PYTHON >>_env
             make t2smap
             mkdir -p /tmp/src/coverage
             if [ -f /tmp/src/tedana/.coverage ]; then
@@ -271,52 +271,52 @@ workflows:
   upload-to-codecov:
     jobs:
       - py_env:
-          name: py_env-<< matrix.PYTHON >>
+          name: py_env-3.<< matrix.PYTHON >>
           matrix:
             parameters:
-              PYTHON: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+              PYTHON: ["8", "9", "10", "11", "12", "13"]
       - style_check:
           requires:
             - py_env-3.9
       - unittest:
-          name: unittest-<< matrix.PYTHON >>
+          name: unittest_3<< matrix.PYTHON >>
           matrix:
             parameters:
-              PYTHON: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+              PYTHON: ["8", "9", "10", "11", "12", "13"]
           requires:
-            - py_env-<< matrix.PYTHON >>
+            - py_env-3.<< matrix.PYTHON >>
       - t2smap:
-          name: t2smap-<< matrix.PYTHON >>
+          name: t2smap
           matrix:
             parameters:
               PYTHON: ["3.9"]
           requires:
-            - py_env-<< matrix.PYTHON >>
+            - py_env-3.<< matrix.PYTHON >>
       - reclassify:
-          name: reclassify-<< matrix.PYTHON >>
+          name: reclassify
           matrix:
             parameters:
               PYTHON: ["3.9"]
           requires:
-            - py_env-<< matrix.PYTHON >>
+            - py_env-3.<< matrix.PYTHON >>
       - three-echo:
-          name: three-echo-<< matrix.PYTHON >>
+          name: three-echo
           matrix:
             parameters:
               PYTHON: ["3.9"]
           requires:
-            - py_env-<< matrix.PYTHON >>
+            - py_env-3.<< matrix.PYTHON >>
       - four-echo:
-          name: four-echo-<< matrix.PYTHON >>
+          name: four-echo
           matrix:
             parameters:
               PYTHON: ["3.9"]
           requires:
-            - py_env-<< matrix.PYTHON >>
+            - py_env-3.<< matrix.PYTHON >>
       - five-echo:
-          name: five-echo-<< matrix.PYTHON >>
+          name: five-echo
           matrix:
             parameters:
               PYTHON: ["3.9"]
           requires:
-            - py_env-<< matrix.PYTHON >>
+            - py_env-3.<< matrix.PYTHON >>
