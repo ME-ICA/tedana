@@ -279,21 +279,22 @@ workflows:
           requires:
             - py_env-3.9
       - unittest:
-          name: unittest-<< matrix.PYTHON >>
+          name: unittest_<< matrix.PYTHONLABEL >>
           matrix:
             parameters:
               PYTHON: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+              PYTHONLABEL: ["38", "39", "310", "311", "312", "313"]
           requires:
             - py_env-<< matrix.PYTHON >>
       - t2smap:
-          name: t2smap-<< matrix.PYTHON >>
+          name: t2smap
           matrix:
             parameters:
               PYTHON: ["3.9"]
           requires:
             - py_env-<< matrix.PYTHON >>
       - reclassify:
-          name: reclassify-<< matrix.PYTHON >>
+          name: reclassify
           matrix:
             parameters:
               PYTHON: ["3.9"]
