@@ -333,11 +333,13 @@ workflows:
           post-steps:
             - codecov/upload
       - merge_coverage:
-          matrix:
-            parameters:
-              PYTHON: ["8", "9", "10", "11", "12", "13"]
           requires:
-            - unittest_3<< matrix.PYTHON >>
+            - unittest_38
+            - unittest_39
+            - unittest_310
+            - unittest_311
+            - unittest_312
+            - unittest_313
             - three-echo
             - four-echo
             - five-echo
