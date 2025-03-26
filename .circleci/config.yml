@@ -258,7 +258,7 @@ jobs:
       - run:
           name: Merge coverage files
           command: |
-            source activate py3.8_env  # depends on makeenv38
+            source activate py3.9_env  # depends on makeenv38
             apt-get update
             apt-get install -yqq curl gnupg
             cd /tmp/src/coverage/
@@ -268,7 +268,6 @@ jobs:
       - store_artifacts:
           path: /tmp/src/coverage
       - codecov/upload
-
 
 workflows:
   upload-to-codecov:
