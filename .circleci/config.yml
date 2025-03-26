@@ -291,7 +291,7 @@ workflows:
           post-steps:
             - codecov/upload
       - t2smap:
-          name: t2smap_job
+          name: t2smap
           matrix:
             parameters:
               PYTHON: ["9"]
@@ -300,7 +300,7 @@ workflows:
           post-steps:
             - codecov/upload
       - reclassify:
-          name: reclassify_job
+          name: reclassify
           matrix:
             parameters:
               PYTHON: ["9"]
@@ -309,7 +309,7 @@ workflows:
           post-steps:
             - codecov/upload
       - three_echo:
-          name: three_echo_job
+          name: three_echo
           matrix:
             parameters:
               PYTHON: ["9"]
@@ -318,7 +318,7 @@ workflows:
           post-steps:
             - codecov/upload
       - four_echo:
-          name: four_echo_job
+          name: four_echo
           matrix:
             parameters:
               PYTHON: ["9"]
@@ -327,7 +327,7 @@ workflows:
           post-steps:
             - codecov/upload
       - five_echo:
-          name: five_echo_job
+          name: five_echo
           matrix:
             parameters:
               PYTHON: ["9"]
@@ -343,8 +343,8 @@ workflows:
             - unittest_311
             - unittest_312
             - unittest_313
-            - three_echo_job
-            - four_echo_job
-            - five_echo_job
-            - t2smap_job
-            - reclassify_job
+            - three_echo
+            - four_echo
+            - five_echo
+            - t2smap
+            - reclassify
