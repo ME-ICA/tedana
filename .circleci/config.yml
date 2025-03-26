@@ -63,7 +63,7 @@ jobs:
             make unittest
             mkdir -p /tmp/src/coverage
             if [ -f /tmp/src/tedana/.coverage ]; then
-              mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py3.<< parameters.PYTHON >>
+              cp /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.unittest.py3.<< parameters.PYTHON >>
             fi
       - save_cache:
           key: conda-py3.<< parameters.PYTHON >>-v3-{{ checksum "pyproject.toml" }}
@@ -112,7 +112,7 @@ jobs:
             make three-echo
             mkdir -p /tmp/src/coverage
             if [ -f /tmp/src/tedana/.coverage ]; then
-              mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.three-echo
+              cp /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.three-echo
             fi
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
@@ -143,7 +143,7 @@ jobs:
             make four-echo
             mkdir -p /tmp/src/coverage
             if [ -f /tmp/src/tedana/.coverage ]; then
-              mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.four-echo
+              cp /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.four-echo
             fi
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
@@ -174,7 +174,7 @@ jobs:
             make five-echo
             mkdir -p /tmp/src/coverage
             if [ -f /tmp/src/tedana/.coverage ]; then
-              mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.five-echo
+              cp /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.five-echo
             fi
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
@@ -205,7 +205,7 @@ jobs:
             make reclassify
             mkdir -p /tmp/src/coverage
             if [ -f /tmp/src/tedana/.coverage ]; then
-              mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.reclassify
+              cp /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.reclassify
             fi
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
@@ -236,7 +236,7 @@ jobs:
             make t2smap
             mkdir -p /tmp/src/coverage
             if [ -f /tmp/src/tedana/.coverage ]; then
-              mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.t2smap
+              cp /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.t2smap
             fi
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
@@ -261,6 +261,7 @@ jobs:
             source activate py3.9_env  # depends on makeenv38
             apt-get update
             apt-get install -yqq curl gnupg
+            ls -la /tmp/src/coverage/
             cd /tmp/src/coverage/
             coverage combine
             coverage xml
