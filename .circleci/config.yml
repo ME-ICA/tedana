@@ -258,7 +258,7 @@ jobs:
       - run:
           name: Merge coverage files
           command: |
-            source activate py3.9_env  # depends on makeenv38
+            source activate py3.9_env
             apt-get update
             apt-get install -yqq curl gnupg
             ls -la /tmp/src/coverage/
@@ -271,7 +271,7 @@ jobs:
       - codecov/upload
 
 workflows:
-  upload-to-codecov:
+  test-jobs:
     jobs:
       - py_env:
           name: py_env-3.<< matrix.PYTHON >>
@@ -287,11 +287,10 @@ workflows:
             parameters:
               PYTHON: ["8", "9", "10", "11", "12", "13"]
           requires:
-            - py_env-3.<< matrix.PYTHON >>
+            - py_env-3.<< parameters.PYTHON >>
           post-steps:
             - codecov/upload
       - t2smap:
-          name: t2smap
           matrix:
             parameters:
               PYTHON: ["9"]
@@ -300,7 +299,6 @@ workflows:
           post-steps:
             - codecov/upload
       - reclassify:
-          name: reclassify
           matrix:
             parameters:
               PYTHON: ["9"]
@@ -309,7 +307,6 @@ workflows:
           post-steps:
             - codecov/upload
       - three_echo:
-          name: three_echo
           matrix:
             parameters:
               PYTHON: ["9"]
@@ -318,7 +315,6 @@ workflows:
           post-steps:
             - codecov/upload
       - four_echo:
-          name: four_echo
           matrix:
             parameters:
               PYTHON: ["9"]
@@ -327,7 +323,6 @@ workflows:
           post-steps:
             - codecov/upload
       - five_echo:
-          name: five_echo
           matrix:
             parameters:
               PYTHON: ["9"]
@@ -335,16 +330,19 @@ workflows:
             - py_env-3.<< matrix.PYTHON >>
           post-steps:
             - codecov/upload
+
+  merge-coverage:
+    jobs:
       - merge_coverage:
           requires:
-            - unittest_38
-            - unittest_39
-            - unittest_310
-            - unittest_311
-            - unittest_312
-            - unittest_313
-            - three_echo
-            - four_echo
-            - five_echo
-            - t2smap
-            - reclassify
+            - test-jobs/unittest_38
+            - test-jobs/unittest_39
+            - test-jobs/unittest_310
+            - test-jobs/unittest_311
+            - test-jobs/unittest_312
+            - test-jobs/unittest_313
+            - test-jobs/t2smap
+            - test-jobs/reclassify
+            - test-jobs/three_echo
+            - test-jobs/four_echo
+            - test-jobs/five_echo
