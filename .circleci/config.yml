@@ -90,7 +90,7 @@ jobs:
             source activate py3.9_env
             make lint
 
-  three-echo:
+  three_echo:
     parameters:
       PYTHON:
         type: string
@@ -109,10 +109,10 @@ jobs:
             apt-get install -yqq make
             apt-get install -yqq curl gnupg
             source activate py3.<< parameters.PYTHON >>_env
-            make three-echo
+            make three_echo
             mkdir -p /tmp/src/coverage
             if [ -f /tmp/src/tedana/.coverage ]; then
-              cp /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.three-echo
+              cp /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.three_echo
             fi
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
@@ -121,7 +121,7 @@ jobs:
           paths:
             - src/coverage
 
-  four-echo:
+  four_echo:
     parameters:
       PYTHON:
         type: string
@@ -140,10 +140,10 @@ jobs:
             apt-get install -yqq make
             apt-get install -yqq curl gnupg
             source activate py3.<< parameters.PYTHON >>_env
-            make four-echo
+            make four_echo
             mkdir -p /tmp/src/coverage
             if [ -f /tmp/src/tedana/.coverage ]; then
-              cp /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.four-echo
+              cp /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.four_echo
             fi
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
@@ -152,7 +152,7 @@ jobs:
           paths:
             - src/coverage
 
-  five-echo:
+  five_echo:
     parameters:
       PYTHON:
         type: string
@@ -171,10 +171,10 @@ jobs:
             apt-get install -yqq make
             apt-get install -yqq curl gnupg
             source activate py3.<< parameters.PYTHON >>_env
-            make five-echo
+            make five_echo
             mkdir -p /tmp/src/coverage
             if [ -f /tmp/src/tedana/.coverage ]; then
-              cp /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.five-echo
+              cp /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.five_echo
             fi
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
@@ -271,79 +271,80 @@ jobs:
       - codecov/upload
 
 workflows:
-  jobs:
-    - py_env:
-        name: py_env-3.<< matrix.PYTHON >>
-        matrix:
-          parameters:
-            PYTHON: ["8", "9", "10", "11", "12", "13"]
-    - style_check:
-        requires:
-          - py_env-3.9
-    - unittest:
-        name: unittest_3<< matrix.PYTHON >>
-        matrix:
-          parameters:
-            PYTHON: ["8", "9", "10", "11", "12", "13"]
-        requires:
-          - py_env-3.<< matrix.PYTHON >>
-        post-steps:
-          - codecov/upload
-    - t2smap:
-        name: t2smap
-        matrix:
-          parameters:
-            PYTHON: ["9"]
-        requires:
-          - py_env-3.<< matrix.PYTHON >>
-        post-steps:
-          - codecov/upload
-    - reclassify:
-        name: reclassify
-        matrix:
-          parameters:
-            PYTHON: ["9"]
-        requires:
-          - py_env-3.<< matrix.PYTHON >>
-        post-steps:
-          - codecov/upload
-    - three-echo:
-        name: three-echo
-        matrix:
-          parameters:
-            PYTHON: ["9"]
-        requires:
-          - py_env-3.<< matrix.PYTHON >>
-        post-steps:
-          - codecov/upload
-    - four-echo:
-        name: four-echo
-        matrix:
-          parameters:
-            PYTHON: ["9"]
-        requires:
-          - py_env-3.<< matrix.PYTHON >>
-        post-steps:
-          - codecov/upload
-    - five-echo:
-        name: five-echo
-        matrix:
-          parameters:
-            PYTHON: ["9"]
-        requires:
-          - py_env-3.<< matrix.PYTHON >>
-        post-steps:
-          - codecov/upload
-    - merge_coverage:
-        requires:
-          - unittest_38
-          - unittest_39
-          - unittest_310
-          - unittest_311
-          - unittest_312
-          - unittest_313
-          - three-echo
-          - four-echo
-          - five-echo
-          - t2smap
-          - reclassify
+  upload-to-codecov:
+    jobs:
+      - py_env:
+          name: py_env-3.<< matrix.PYTHON >>
+          matrix:
+            parameters:
+              PYTHON: ["8", "9", "10", "11", "12", "13"]
+      - style_check:
+          requires:
+            - py_env-3.9
+      - unittest:
+          name: unittest_3<< matrix.PYTHON >>
+          matrix:
+            parameters:
+              PYTHON: ["8", "9", "10", "11", "12", "13"]
+          requires:
+            - py_env-3.<< matrix.PYTHON >>
+          post-steps:
+            - codecov/upload
+      - t2smap:
+          name: t2smap
+          matrix:
+            parameters:
+              PYTHON: ["9"]
+          requires:
+            - py_env-3.<< matrix.PYTHON >>
+          post-steps:
+            - codecov/upload
+      - reclassify:
+          name: reclassify
+          matrix:
+            parameters:
+              PYTHON: ["9"]
+          requires:
+            - py_env-3.<< matrix.PYTHON >>
+          post-steps:
+            - codecov/upload
+      - three_echo:
+          name: three_echo
+          matrix:
+            parameters:
+              PYTHON: ["9"]
+          requires:
+            - py_env-3.<< matrix.PYTHON >>
+          post-steps:
+            - codecov/upload
+      - four_echo:
+          name: four_echo
+          matrix:
+            parameters:
+              PYTHON: ["9"]
+          requires:
+            - py_env-3.<< matrix.PYTHON >>
+          post-steps:
+            - codecov/upload
+      - five_echo:
+          name: five_echo
+          matrix:
+            parameters:
+              PYTHON: ["9"]
+          requires:
+            - py_env-3.<< matrix.PYTHON >>
+          post-steps:
+            - codecov/upload
+      - merge_coverage:
+          requires:
+            - unittest_38
+            - unittest_39
+            - unittest_310
+            - unittest_311
+            - unittest_312
+            - unittest_313
+            - three_echo
+            - four_echo
+            - five_echo
+            - t2smap
+            - reclassify
