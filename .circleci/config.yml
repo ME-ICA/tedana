@@ -343,3 +343,8 @@ workflows:
             - unittest_311
             - unittest_312
             - unittest_313
+            - three-echo
+            - four-echo
+            - five-echo
+            - t2smap
+            - reclassify
