@@ -250,8 +250,6 @@ jobs:
     docker:
       - image: continuumio/miniconda3
     steps:
-      - attach_workspace:
-          at: /tmp
       - checkout
       - restore_cache:
           key: v1-{{ checksum "pyproject.toml" }}-{{ "3.9" }}
