@@ -271,80 +271,79 @@ jobs:
       - codecov/upload
 
 workflows:
-  upload-to-codecov:
-    jobs:
-      - py_env:
-          name: py_env-3.<< matrix.PYTHON >>
-          matrix:
-            parameters:
-              PYTHON: ["8", "9", "10", "11", "12", "13"]
-      - style_check:
-          requires:
-            - py_env-3.9
-      - unittest:
-          name: unittest_3<< matrix.PYTHON >>
-          matrix:
-            parameters:
-              PYTHON: ["8", "9", "10", "11", "12", "13"]
-          requires:
-            - py_env-3.<< matrix.PYTHON >>
-          post-steps:
-            - codecov/upload
-      - t2smap:
-          name: t2smap
-          matrix:
-            parameters:
-              PYTHON: ["9"]
-          requires:
-            - py_env-3.<< matrix.PYTHON >>
-          post-steps:
-            - codecov/upload
-      - reclassify:
-          name: reclassify
-          matrix:
-            parameters:
-              PYTHON: ["9"]
-          requires:
-            - py_env-3.<< matrix.PYTHON >>
-          post-steps:
-            - codecov/upload
-      - three-echo:
-          name: three-echo
-          matrix:
-            parameters:
-              PYTHON: ["9"]
-          requires:
-            - py_env-3.<< matrix.PYTHON >>
-          post-steps:
-            - codecov/upload
-      - four-echo:
-          name: four-echo
-          matrix:
-            parameters:
-              PYTHON: ["9"]
-          requires:
-            - py_env-3.<< matrix.PYTHON >>
-          post-steps:
-            - codecov/upload
-      - five-echo:
-          name: five-echo
-          matrix:
-            parameters:
-              PYTHON: ["9"]
-          requires:
-            - py_env-3.<< matrix.PYTHON >>
-          post-steps:
-            - codecov/upload
-      - merge_coverage:
-          requires:
-            - unittest_38
-            - unittest_39
-            - unittest_310
-            - unittest_311
-            - unittest_312
-            - unittest_313
-            - three-echo
-            - four-echo
-            - five-echo
-            - t2smap
-            - reclassify
+  jobs:
+    - py_env:
+        name: py_env-3.<< matrix.PYTHON >>
+        matrix:
+          parameters:
+            PYTHON: ["8", "9", "10", "11", "12", "13"]
+    - style_check:
+        requires:
+          - py_env-3.9
+    - unittest:
+        name: unittest_3<< matrix.PYTHON >>
+        matrix:
+          parameters:
+            PYTHON: ["8", "9", "10", "11", "12", "13"]
+        requires:
+          - py_env-3.<< matrix.PYTHON >>
+        post-steps:
+          - codecov/upload
+    - t2smap:
+        name: t2smap
+        matrix:
+          parameters:
+            PYTHON: ["9"]
+        requires:
+          - py_env-3.<< matrix.PYTHON >>
+        post-steps:
+          - codecov/upload
+    - reclassify:
+        name: reclassify
+        matrix:
+          parameters:
+            PYTHON: ["9"]
+        requires:
+          - py_env-3.<< matrix.PYTHON >>
+        post-steps:
+          - codecov/upload
+    - three-echo:
+        name: three-echo
+        matrix:
+          parameters:
+            PYTHON: ["9"]
+        requires:
+          - py_env-3.<< matrix.PYTHON >>
+        post-steps:
+          - codecov/upload
+    - four-echo:
+        name: four-echo
+        matrix:
+          parameters:
+            PYTHON: ["9"]
+        requires:
+          - py_env-3.<< matrix.PYTHON >>
+        post-steps:
+          - codecov/upload
+    - five-echo:
+        name: five-echo
+        matrix:
+          parameters:
+            PYTHON: ["9"]
+        requires:
+          - py_env-3.<< matrix.PYTHON >>
+        post-steps:
+          - codecov/upload
+    - merge_coverage:
+        requires:
+          - unittest_38
+          - unittest_39
+          - unittest_310
+          - unittest_311
+          - unittest_312
+          - unittest_313
+          - three-echo
+          - four-echo
+          - five-echo
+          - t2smap
+          - reclassify
