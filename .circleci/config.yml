@@ -250,6 +250,8 @@ jobs:
     docker:
       - image: continuumio/miniconda3
     steps:
+      - attach_workspace:
+          at: /tmp
       - checkout
       - restore_cache:
           key: v1-{{ checksum "pyproject.toml" }}-{{ "3.9" }}
@@ -258,7 +260,7 @@ jobs:
           command: |
             apt-get update
             apt-get install -yqq curl gnupg
-            source activate py_env-3.8  # depends on makeenv38
+            source activate py3.8_env  # depends on makeenv38
             cd /tmp/src/coverage/
             coverage combine
             coverage xml
@@ -266,6 +268,7 @@ jobs:
       - store_artifacts:
           path: /tmp/src/coverage
       - codecov/upload
+
 
 workflows:
   upload-to-codecov:
