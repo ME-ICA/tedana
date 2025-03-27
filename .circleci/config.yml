@@ -4,322 +4,417 @@
 #
 version: 2.1
 orbs:
-  codecov: codecov/codecov@5.3.0
+  codecov: codecov/codecov@5.2.1
 jobs:
-  py_env:
-    parameters:
-      PYTHON:
-        type: string
-    working_directory: /tmp/src/tedana
+  makeenv_38:
     docker:
       - image: continuumio/miniconda3
-    steps:
-      - checkout
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-            - src/tedana
-      - restore_cache: # ensure this step occurs *before* installing dependencies
-          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.<< parameters.PYTHON >>" }}
-      - run: # will overwrite pySPFM installation each time
-          name: Generate environment
-          command: |
-            if [[ -e /opt/conda/envs/py3.<< parameters.PYTHON >>_env ]]; then
-                echo "Restoring environment from cache"
-                source activate py3.<< parameters.PYTHON >>_env
-            else
-                conda create -n py3.<< parameters.PYTHON >>_env python=3.<< parameters.PYTHON >> -yq
-                source activate py3.<< parameters.PYTHON >>_env
-                pip install -e .[tests,doc]
-            fi
-      - save_cache: # environment cache tied to requirements
-          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.<< parameters.PYTHON >>" }}
-          paths:
-            - "/opt/conda/envs/py3.<< parameters.PYTHON >>_env"
-
-  unittest:
-    parameters:
-      PYTHON:
-        type: string
     working_directory: /tmp/src/tedana
-    docker:
-      - image: continuumio/miniconda3
     steps:
       - checkout
       - restore_cache:
-          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.<< parameters.PYTHON >>" }}
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Generate environment
           command: |
-            apt-get update
-            apt-get install -yqq make
-            apt-get install -yqq curl gnupg
-            source activate py3.<< parameters.PYTHON >>_env
-            pip install -e .[all]
+            if [ ! -d /opt/conda/envs/tedana_py38 ]; then
+              conda create -yq -n tedana_py38 python=3.8
+              source activate tedana_py38
+              pip install -e .[tests]
+            fi
+      - save_cache:
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
+          paths:
+            - /opt/conda/envs/tedana_py38
+
+  unittest_38:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Running unit tests
           command: |
-            source activate py3.<< parameters.PYTHON >>_env
+            apt-get update
+            apt-get install -y make
+            source activate tedana_py38  # depends on makeenv_38
             make unittest
-            mkdir -p /tmp/src/coverage/unittest_3<< parameters.PYTHON >>
-            if [ -f /tmp/src/tedana/.coverage ]; then
-              cp /tmp/src/tedana/.coverage /tmp/src/coverage/unittest_3<< parameters.PYTHON >>/.coverage
-            fi
-      - save_cache:
-          key: conda-py3.<< parameters.PYTHON >>-v3-{{ checksum "pyproject.toml" }}
-          paths:
-            - /opt/conda/envs/py3.<< parameters.PYTHON >>_env
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py38
       - persist_to_workspace:
           root: /tmp
           paths:
-            - src/coverage
+            - src/coverage/.coverage.py38
 
-  style_check:
-    working_directory: /tmp/src/tedana
+  unittest_39:
     docker:
       - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
     steps:
       - checkout
       - restore_cache:
-          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.9" }}
+          key: conda-py39-v3-{{ checksum "pyproject.toml" }}
       - run:
-          name: Linting
+          name: Generate environment
           command: |
             apt-get update
             apt-get install -yqq make
-            source activate py3.9_env
+            if [ ! -d /opt/conda/envs/tedana_py39 ]; then
+              conda create -yq -n tedana_py39 python=3.9
+              source activate tedana_py39
+              pip install .[tests]
+            fi
+      - run:
+          name: Running unit tests
+          command: |
+            source activate tedana_py39
+            make unittest
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py39
+      - save_cache:
+          key: conda-py39-v3-{{ checksum "pyproject.toml" }}
+          paths:
+            - /opt/conda/envs/tedana_py39
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - src/coverage/.coverage.py39
+
+  unittest_310:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py310-v3-{{ checksum "pyproject.toml" }}
+      - run:
+          name: Generate environment
+          command: |
+            apt-get update
+            apt-get install -yqq make
+            if [ ! -d /opt/conda/envs/tedana_py310 ]; then
+              conda create -yq -n tedana_py310 python=3.10
+              source activate tedana_py310
+              pip install .[tests]
+            fi
+      - run:
+          name: Running unit tests
+          command: |
+            source activate tedana_py310
+            make unittest
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py310
+      - save_cache:
+          key: conda-py310-v3-{{ checksum "pyproject.toml" }}
+          paths:
+            - /opt/conda/envs/tedana_py310
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - src/coverage/.coverage.py310
+
+  unittest_311:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py311-v3-{{ checksum "pyproject.toml" }}
+      - run:
+          name: Generate environment
+          command: |
+            apt-get update
+            apt-get install -yqq make
+            if [ ! -d /opt/conda/envs/tedana_py311 ]; then
+              conda create -yq -n tedana_py311 python=3.11
+              source activate tedana_py311
+              pip install .[tests]
+            fi
+      - run:
+          name: Running unit tests
+          command: |
+            source activate tedana_py311
+            make unittest
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py311
+      - save_cache:
+          key: conda-py311-v3-{{ checksum "pyproject.toml" }}
+          paths:
+            - /opt/conda/envs/tedana_py311
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - src/coverage/.coverage.py311
+
+  unittest_312:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py312-v3-{{ checksum "pyproject.toml" }}
+      - run:
+          name: Generate environment
+          command: |
+            apt-get update
+            apt-get install -yqq make
+            if [ ! -d /opt/conda/envs/tedana_py312 ]; then
+              conda create -yq -n tedana_py312 python=3.12
+              source activate tedana_py312
+              pip install .[tests]
+            fi
+      - run:
+          name: Running unit tests
+          command: |
+            source activate tedana_py312
+            make unittest
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py312
+      - save_cache:
+          key: conda-py312-v3-{{ checksum "pyproject.toml" }}
+          paths:
+            - /opt/conda/envs/tedana_py312
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - src/coverage/.coverage.py312
+
+  unittest_313:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py313-v3-{{ checksum "pyproject.toml" }}
+      - run:
+          name: Generate environment
+          command: |
+            apt-get update
+            apt-get install -yqq make
+            if [ ! -d /opt/conda/envs/tedana_py313 ]; then
+              conda create -yq -n tedana_py313 python=3.13
+              source activate tedana_py313
+              pip install .[tests]
+            fi
+      - run:
+          name: Running unit tests
+          command: |
+            source activate tedana_py313
+            make unittest
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py313
+      - save_cache:
+          key: conda-py313-v3-{{ checksum "pyproject.toml" }}
+          paths:
+            - /opt/conda/envs/tedana_py313
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - src/coverage/.coverage.py313
+
+  style_check:
+    docker:
+      - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
+    steps:
+      - checkout
+      - restore_cache:
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
+      - run:
+          name: Style check
+          command: |
+            apt-get update
+            apt-get install -yqq make
+            source activate tedana_py38  # depends on makeenv38
             make lint
 
   three-echo:
-    parameters:
-      PYTHON:
-        type: string
-    working_directory: /tmp/src/tedana
     docker:
       - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
     steps:
       - checkout
       - restore_cache:
-          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.<< parameters.PYTHON >>" }}
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
             apt-get update
             apt-get install -yqq make
-            apt-get install -yqq curl gnupg
-            source activate py3.<< parameters.PYTHON >>_env
+            source activate tedana_py38  # depends on makeenv_38
             make three-echo
-            mkdir -p /tmp/src/coverage/three-echo
-            if [ -f /tmp/src/tedana/.coverage ]; then
-              cp /tmp/src/tedana/.coverage /tmp/src/coverage/three-echo/.coverage
-            fi
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.three-echo
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:
-            - src/coverage
+            - src/coverage/.coverage.three-echo
 
   four-echo:
-    parameters:
-      PYTHON:
-        type: string
-    working_directory: /tmp/src/tedana
     docker:
       - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
     steps:
       - checkout
       - restore_cache:
-          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.<< parameters.PYTHON >>" }}
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
             apt-get update
             apt-get install -yqq make
-            apt-get install -yqq curl gnupg
-            source activate py3.<< parameters.PYTHON >>_env
+            source activate tedana_py38  # depends on makeenv_38
             make four-echo
-            mkdir -p /tmp/src/coverage/four-echo
-            if [ -f /tmp/src/tedana/.coverage ]; then
-              cp /tmp/src/tedana/.coverage /tmp/src/coverage/four-echo/.coverage
-            fi
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.four-echo
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:
-            - src/coverage
+            - src/coverage/.coverage.four-echo
 
   five-echo:
-    parameters:
-      PYTHON:
-        type: string
-    working_directory: /tmp/src/tedana
     docker:
       - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
     steps:
       - checkout
       - restore_cache:
-          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.<< parameters.PYTHON >>" }}
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
             apt-get update
             apt-get install -yqq make
-            apt-get install -yqq curl gnupg
-            source activate py3.<< parameters.PYTHON >>_env
+            source activate tedana_py38  # depends on makeenv_38
             make five-echo
-            mkdir -p /tmp/src/coverage/five-echo
-            if [ -f /tmp/src/tedana/.coverage ]; then
-              cp /tmp/src/tedana/.coverage /tmp/src/coverage/five-echo/.coverage
-            fi
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.five-echo
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:
-            - src/coverage
+            - src/coverage/.coverage.five-echo
 
   reclassify:
-    parameters:
-      PYTHON:
-        type: string
-    working_directory: /tmp/src/tedana
     docker:
       - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
     steps:
       - checkout
       - restore_cache:
-          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.<< parameters.PYTHON >>" }}
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
             apt-get update
             apt-get install -yqq make
-            apt-get install -yqq curl gnupg
-            source activate py3.<< parameters.PYTHON >>_env
+            source activate tedana_py38  # depends on makeenv_38
             make reclassify
-            mkdir -p /tmp/src/coverage/reclassify
-            if [ -f /tmp/src/tedana/.coverage ]; then
-              cp /tmp/src/tedana/.coverage /tmp/src/coverage/reclassify/.coverage
-            fi
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.reclassify
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:
-            - src/coverage
+            - src/coverage/.coverage.reclassify
 
   t2smap:
-    parameters:
-      PYTHON:
-        type: string
-    working_directory: /tmp/src/tedana
     docker:
       - image: continuumio/miniconda3
+    working_directory: /tmp/src/tedana
     steps:
       - checkout
       - restore_cache:
-          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.<< parameters.PYTHON >>" }}
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
             apt-get update
             apt-get install -yqq make
-            apt-get install -yqq curl gnupg
-            source activate py3.<< parameters.PYTHON >>_env
+            source activate tedana_py38  # depends on makeenv_38
             make t2smap
-            mkdir -p /tmp/src/coverage/t2smap
-            if [ -f /tmp/src/tedana/.coverage ]; then
-              cp /tmp/src/tedana/.coverage /tmp/src/coverage/t2smap/.coverage
-            fi
+            mkdir /tmp/src/coverage
+            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.t2smap
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
       - persist_to_workspace:
           root: /tmp
           paths:
-            - src/coverage
+            - src/coverage/.coverage.t2smap
 
-  test-and-upload-python:
+  merge_coverage:
+    working_directory: /tmp/src/tedana
     docker:
       - image: continuumio/miniconda3
     steps:
+      - attach_workspace:
+          at: /tmp
       - checkout
-      - run: pip install -e .[all]
-      - run: pytest --cov .
+      - restore_cache:
+          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
+      - run:
+          name: Merge coverage files
+          command: |
+            apt-get update
+            apt-get install -yqq curl gnupg
+            source activate tedana_py38  # depends on makeenv38
+            cd /tmp/src/coverage/
+            coverage combine
+            coverage xml
+            mv coverage.xml /tmp/src/tedana/
+      - store_artifacts:
+          path: /tmp/src/coverage
       - codecov/upload
 
 workflows:
   upload-to-codecov:
     jobs:
-      - py_env:
-          name: py_env-3.<< matrix.PYTHON >>
-          matrix:
-            parameters:
-              PYTHON: ["8", "9", "10", "11", "12", "13"]
+      - makeenv_38
+      - unittest_38:
+          requires:
+            - makeenv_38
       - style_check:
           requires:
-            - py_env-3.9
-      - unittest:
-          name: unittest_3<< matrix.PYTHON >>
-          matrix:
-            parameters:
-              PYTHON: ["8", "9", "10", "11", "12", "13"]
-          requires:
-            - py_env-3.<< matrix.PYTHON >>
-          post-steps:
-            - codecov/upload
-      - t2smap:
-          name: t2smap
-          matrix:
-            parameters:
-              PYTHON: ["9"]
-          requires:
-            - py_env-3.<< matrix.PYTHON >>
-          post-steps:
-            - codecov/upload
-      - reclassify:
-          name: reclassify
-          matrix:
-            parameters:
-              PYTHON: ["9"]
-          requires:
-            - py_env-3.<< matrix.PYTHON >>
-          post-steps:
-            - codecov/upload
+            - makeenv_38
       - three-echo:
-          name: three-echo
-          matrix:
-            parameters:
-              PYTHON: ["9"]
           requires:
-            - py_env-3.<< matrix.PYTHON >>
-          post-steps:
-            - codecov/upload
+            - makeenv_38
       - four-echo:
-          name: four-echo
-          matrix:
-            parameters:
-              PYTHON: ["9"]
           requires:
-            - py_env-3.<< matrix.PYTHON >>
-          post-steps:
-            - codecov/upload
+            - makeenv_38
       - five-echo:
-          name: five-echo
-          matrix:
-            parameters:
-              PYTHON: ["9"]
           requires:
-            - py_env-3.<< matrix.PYTHON >>
-          post-steps:
-            - codecov/upload
-      - test-and-upload-python:
+            - makeenv_38
+      - reclassify:
+          requires:
+            - makeenv_38
+      - t2smap:
+          requires:
+            - makeenv_38
+      - unittest_39
+      - unittest_310
+      - unittest_311
+      - unittest_312
+      - unittest_313
+      - merge_coverage:
           requires:
             - unittest_38
             - unittest_39
@@ -327,8 +422,8 @@ workflows:
             - unittest_311
             - unittest_312
             - unittest_313
-            - t2smap
-            - reclassify
             - three-echo
             - four-echo
             - five-echo
+            - reclassify
+            - t2smap
