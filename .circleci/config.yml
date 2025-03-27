@@ -90,7 +90,7 @@ jobs:
             source activate py3.9_env
             make lint
 
-  three_echo:
+  three-echo:
     parameters:
       PYTHON:
         type: string
@@ -109,10 +109,10 @@ jobs:
             apt-get install -yqq make
             apt-get install -yqq curl gnupg
             source activate py3.<< parameters.PYTHON >>_env
-            make three_echo
-            mkdir -p /tmp/src/coverage/three_echo
+            make three-echo
+            mkdir -p /tmp/src/coverage/three-echo
             if [ -f /tmp/src/tedana/.coverage ]; then
-              cp /tmp/src/tedana/.coverage /tmp/src/coverage/three_echo/.coverage
+              cp /tmp/src/tedana/.coverage /tmp/src/coverage/three-echo/.coverage
             fi
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
@@ -121,7 +121,7 @@ jobs:
           paths:
             - src/coverage
 
-  four_echo:
+  four-echo:
     parameters:
       PYTHON:
         type: string
@@ -140,10 +140,10 @@ jobs:
             apt-get install -yqq make
             apt-get install -yqq curl gnupg
             source activate py3.<< parameters.PYTHON >>_env
-            make four_echo
-            mkdir -p /tmp/src/coverage/four_echo
+            make four-echo
+            mkdir -p /tmp/src/coverage/four-echo
             if [ -f /tmp/src/tedana/.coverage ]; then
-              cp /tmp/src/tedana/.coverage /tmp/src/coverage/four_echo/.coverage
+              cp /tmp/src/tedana/.coverage /tmp/src/coverage/four-echo/.coverage
             fi
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
@@ -152,7 +152,7 @@ jobs:
           paths:
             - src/coverage
 
-  five_echo:
+  five-echo:
     parameters:
       PYTHON:
         type: string
@@ -171,10 +171,10 @@ jobs:
             apt-get install -yqq make
             apt-get install -yqq curl gnupg
             source activate py3.<< parameters.PYTHON >>_env
-            make five_echo
-            mkdir -p /tmp/src/coverage/five_echo
+            make five-echo
+            mkdir -p /tmp/src/coverage/five-echo
             if [ -f /tmp/src/tedana/.coverage ]; then
-              cp /tmp/src/tedana/.coverage /tmp/src/coverage/five_echo/.coverage
+              cp /tmp/src/tedana/.coverage /tmp/src/coverage/five-echo/.coverage
             fi
       - store_artifacts:
           path: /tmp/src/tedana/.testing_data_cache/outputs
@@ -325,8 +325,8 @@ workflows:
             - py_env-3.<< matrix.PYTHON >>
           post-steps:
             - codecov/upload
-      - three_echo:
-          name: three_echo
+      - three-echo:
+          name: three-echo
           matrix:
             parameters:
               PYTHON: ["9"]
@@ -334,8 +334,8 @@ workflows:
             - py_env-3.<< matrix.PYTHON >>
           post-steps:
             - codecov/upload
-      - four_echo:
-          name: four_echo
+      - four-echo:
+          name: four-echo
           matrix:
             parameters:
               PYTHON: ["9"]
@@ -343,8 +343,8 @@ workflows:
             - py_env-3.<< matrix.PYTHON >>
           post-steps:
             - codecov/upload
-      - five_echo:
-          name: five_echo
+      - five-echo:
+          name: five-echo
           matrix:
             parameters:
               PYTHON: ["9"]
@@ -362,6 +362,6 @@ workflows:
             - unittest_313
             - t2smap
             - reclassify
-            - three_echo
-            - four_echo
-            - five_echo
+            - three-echo
+            - four-echo
+            - five-echo
