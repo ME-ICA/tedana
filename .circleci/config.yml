@@ -245,50 +245,17 @@ jobs:
           paths:
             - src/coverage
 
-  merge_coverage:
-    working_directory: /tmp/src/tedana
+  test-and-upload-python:
     docker:
       - image: continuumio/miniconda3
     steps:
-      - attach_workspace:
-          at: /tmp
       - checkout
-      - restore_cache:
-          key: v1-{{ checksum "pyproject.toml" }}-{{ "3.9" }}
-      - run:
-          name: Merge coverage files
-          command: |
-            source activate py3.9_env
-            apt-get update
-            apt-get install -yqq curl gnupg
-
-            # List all coverage directories
-            ls -la /tmp/src/coverage/
-
-            # Create a combined coverage file
-            cd /tmp/src/coverage/
-
-            # Create a combined .coveragerc file to handle paths
-            echo "[paths]" > .coveragerc
-            echo "source =" >> .coveragerc
-            echo "    /tmp/src/tedana" >> .coveragerc
-
-            # Combine all coverage files from subdirectories
-            echo "Finding coverage files in subdirectories..."
-            find . -name ".coverage" -type f | xargs ls -la
-
-            # Combine using absolute paths to avoid issues
-            find . -name ".coverage" -type f -print0 | xargs -0 -I{} coverage combine --append "{}"
-
-            # Generate the XML report
-            coverage xml
-            mv coverage.xml /tmp/src/tedana/
-      - store_artifacts:
-          path: /tmp/src/coverage
+      - run: pip install -e .[all]
+      - run: pytest --cov .
       - codecov/upload
 
 workflows:
-  coverage:
+  upload-to-codecov:
     jobs:
       - py_env:
           name: py_env-3.<< matrix.PYTHON >>
@@ -352,16 +319,4 @@ workflows:
             - py_env-3.<< matrix.PYTHON >>
           post-steps:
             - codecov/upload
-      - merge_coverage:
-          requires:
-            - unittest_38
-            - unittest_39
-            - unittest_310
-            - unittest_311
-            - unittest_312
-            - unittest_313
-            - t2smap
-            - reclassify
-            - three_echo
-            - four_echo
-            - five_echo
+      - test-and-upload-python
