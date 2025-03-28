@@ -233,6 +233,26 @@ def test_minimal():
     selector.select(component_table=temp_comptable, cross_component_metrics=xcomp.copy())
 
 
+def test_add_manual():
+    """Test to confirm add_manual correctly adds a node to tree."""
+    xcomp = {
+        "n_echos": 3,
+    }
+    selector = component_selector.ComponentSelector(tree="minimal")
+    selector.select(component_table=sample_comptable(), cross_component_metrics=xcomp.copy())
+    # Add three manual_classify nodes to the end of the tree with different properties
+    selector.add_manual([0, 1, 2], "accept", classification_tags="perfect")
+    selector.add_manual([3, 4, 5], "accept", classification_tags="")
+    selector.add_manual([6, 7, 8], "accept")
+    assert selector.tree["nodes"][-3]["functionname"] == "manual_classify"
+    assert selector.tree["nodes"][-3]["parameters"]["decide_comps"] == [0, 1, 2]
+    assert selector.tree["nodes"][-3]["kwargs"]["tag"] == "perfect"
+    assert selector.tree["nodes"][-2]["parameters"]["decide_comps"] == [3, 4, 5]
+    assert selector.tree["nodes"][-2]["kwargs"]["tag"] == "manual reclassify"
+    assert selector.tree["nodes"][-1]["parameters"]["decide_comps"] == [6, 7, 8]
+    assert selector.tree["nodes"][-1]["kwargs"]["tag"] == "manual reclassify"
+
+
 # validate_tree
 # -------------
 
