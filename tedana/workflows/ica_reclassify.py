@@ -302,8 +302,8 @@ def _parse_manual_list_str(manual_list):
                 )
             elif "," in x:
                 raise ValueError(
-                    "_parse_manual_list_str includes a comma in a list of multiple strings."
-                    "Input can include a comma deliminated string, but not multiple strings."
+                    "_parse_manual_list_str includes a comma in a list of multiple strings. "
+                    "Input can include a comma deliminated string, but not multiple strings. "
                     f"Input is {manual_list}"
                 )
 
