@@ -106,7 +106,7 @@ def _get_parser():
             "space as `data`. If an explicit mask is not "
             "provided, then Nilearn's compute_epi_mask "
             "function will be used to derive a mask "
-            "from the first echo's data."
+            "from the first echo's data. "
             "Providing a mask is recommended."
         ),
         default=None,
@@ -443,7 +443,7 @@ def tedana_workflow(
         then Nilearn's compute_epi_mask function will be used to derive a mask
         from the first echo's data.
         Since most pipelines use better masking tools,
-        providing a mask, rather than using compute_epi_mask is recommended.
+        providing a mask, rather than using compute_epi_mask, is recommended.
     convention : {'bids', 'orig'}, optional
         Filenaming convention. bids uses the latest BIDS derivatives version (1.5.0).
         Default is 'bids'.
