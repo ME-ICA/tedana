@@ -106,7 +106,8 @@ def _get_parser():
             "space as `data`. If an explicit mask is not "
             "provided, then Nilearn's compute_epi_mask "
             "function will be used to derive a mask "
-            "from the first echo's data."
+            "from the first echo's data. "
+            "Providing a mask is recommended."
         ),
         default=None,
     )
@@ -441,6 +442,8 @@ def tedana_workflow(
         spatially aligned with `data`. If an explicit mask is not provided,
         then Nilearn's compute_epi_mask function will be used to derive a mask
         from the first echo's data.
+        Since most pipelines use better masking tools,
+        providing a mask, rather than using compute_epi_mask, is recommended.
     convention : {'bids', 'orig'}, optional
         Filenaming convention. bids uses the latest BIDS derivatives version (1.5.0).
         Default is 'bids'.
@@ -688,7 +691,7 @@ def tedana_workflow(
         RepLGR.info("A user-defined mask was applied to the data.")
         mask = utils.reshape_niimg(mask).astype(int)
     elif t2smap and not mask:
-        LGR.info("Using user-defined T2* map to generate mask")
+        LGR.info("Assuming user=defined T2* map is masked and using it to generate mask")
         t2s_limited_sec = utils.reshape_niimg(t2smap)
         t2s_limited = utils.sec2millisec(t2s_limited_sec)
         t2s_full = t2s_limited.copy()
@@ -701,7 +704,12 @@ def tedana_workflow(
         mask = utils.reshape_niimg(mask).astype(int)
         mask[t2s_limited == 0] = 0  # reduce mask based on T2* map
     else:
-        LGR.info("Computing EPI mask from first echo")
+        LGR.warning(
+            "Computing EPI mask from first echo using nilearn's compute_epi_mask function. "
+            "Most external pipelines include more reliable masking functions. "
+            "It is strongly recommended to provide an external mask, "
+            "and to visually confirm that mask accurately conforms to data boundaries."
+        )
         first_echo_img = io.new_nii_like(io_generator.reference_img, data_cat[:, 0, :])
         mask = compute_epi_mask(first_echo_img).get_fdata()
         mask = utils.reshape_niimg(mask).astype(int)
