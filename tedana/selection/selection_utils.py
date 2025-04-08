@@ -261,6 +261,7 @@ def comptable_classification_changer(
                 tag_if = set([s.strip() for s in multi_tags])
             else:
                 tag_if = {tag_if}
+
             for idx in changeidx:
                 tmpstr = selector.component_table_.loc[idx, "classification_tags"]
                 if tmpstr == "" or isinstance(tmpstr, float):

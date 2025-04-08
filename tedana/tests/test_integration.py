@@ -203,7 +203,7 @@ def test_integration_four_echo(skip_integration):
         verbose=True,
     )
 
-    component_table = pd.read_csv(op.join(out_dir_manual, "desc-tedana_metrics.tsv"), sep="\t")
+    component_table = pd.read_table(op.join(out_dir_manual, "desc-tedana_metrics.tsv"))
     assert set(component_table.loc[1]["classification_tags"].split(",")) == {
         "Likely BOLD",
         "manual tag 1",
