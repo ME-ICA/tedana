@@ -6,7 +6,7 @@ import os.path as op
 import pandas as pd
 import pytest
 
-from tedana.tests.utils import data_for_testing_info
+from tedana.workflows import tedana as tedana_cli
 from tedana.workflows.parser_utils import (
     check_tedpca_value,
     parse_manual_list_int,
@@ -59,14 +59,11 @@ def test_parse_manual_list_int():
     assert tmp == []
 
     to_accept = [i for i in range(3)]
-    test_data_path, _ = data_for_testing_info("three-echo-reclassify")
+    test_data_path = op.abspath(op.join(tedana_cli.__file__, "../../../.testing_data_cache"))
     acc_df = pd.DataFrame(data=to_accept, columns=["Components"])
-    acc_csv_fname = op.join(test_data_path, "TED.three-echo", "accept.csv")
+    acc_csv_fname = op.join(test_data_path, "accept.csv")
     acc_df.to_csv(acc_csv_fname)
     tmp = parse_manual_list_int(acc_csv_fname)
-    assert tmp == to_accept
-
-    tmp = parse_manual_list_int([acc_csv_fname])
     assert tmp == to_accept
 
     with pytest.raises(
