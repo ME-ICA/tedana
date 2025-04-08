@@ -14,11 +14,8 @@ import pandas as pd
 import tedana.gscontrol as gsc
 from tedana import __version__, io, reporting, selection, utils
 from tedana.bibtex import get_description_references
-from tedana.io import (
-    ALLOWED_COMPONENT_DELIMITERS,
-    fname_to_component_list,
-    str_to_component_list,
-)
+from tedana.io import ALLOWED_COMPONENT_DELIMITERS
+from tedana.workflows.parser_utils import parse_manual_list_int, parse_manual_list_str
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -213,111 +210,6 @@ def _main(argv=None):
     )
 
 
-def _parse_manual_list_int(manual_list):
-    """
-    Parse the list of components to accept or reject into a list of integers.
-
-    Parameters
-    ----------
-    manual_list : :obj:`str` :obj:`list[str]` or [] or None
-        String of integers separated by spaces, commas, or tabs
-        A file name for a file that contains integers
-
-    Returns
-    -------
-    manual_nums : :obj:`list[int]`
-        A list of integers or an empty list.
-
-    Note
-    ----
-    Do not need to check if integers are less than 0 or greater than the total
-    number of components here, because it is later checked in selectcomps2use
-    and a descriptive error message will appear there
-    """
-    if not manual_list:
-        manual_nums = []
-    elif op.exists(op.expanduser(str(manual_list[0]).strip(" "))):
-        # filename was given
-        manual_nums = fname_to_component_list(op.expanduser(str(manual_list[0]).strip(" ")))
-    elif len(manual_list) > 1:
-        # Assume that this is a list of integers, but raise error if not
-        manual_nums = []
-        for x in manual_list:
-            if float(x) == int(x):
-                manual_nums.append(int(x))
-            else:
-                raise ValueError(
-                    "_parse_manual_list_int expected a list of integers, "
-                    f"but the input is {manual_list}"
-                )
-    elif isinstance(manual_list[0], str):
-        # arbitrary string was given, length of list is 1
-        manual_nums = str_to_component_list(manual_list[0])
-    elif isinstance(manual_list[0], int):
-        # Is a single integer and should remain a list with a single integer
-        manual_nums = manual_list
-    else:
-        raise ValueError(
-            "_parse_manual_list_int expected integers or a filename, "
-            f"but the input is {manual_list}"
-        )
-
-    return manual_nums
-
-
-def _parse_manual_list_str(manual_list):
-    """
-    Parse the list of components tags into a comma delimited list of strings.
-
-    Parameters
-    ----------
-    manual_list : :obj:`str` :obj:`list[str]` or [] or None
-        Strings (classification tags) separated by commas
-
-    Returns
-    -------
-    manual_vals : :obj:`str`
-        A comma delimited
-
-    Note
-    ----
-    Unlike _parse_manual_list_int, only ',' is a permitted delimiter.
-    Classification tags can use spaces so that cannot be a delimiter.
-    Classification tags cannot include commas.
-    Those strings would be split at other points in the code.
-    """
-    if not manual_list:
-        manual_vals = []
-    elif not isinstance(manual_list, list):
-        manual_vals = [manual_list]
-    else:
-        manual_vals = manual_list
-
-    if len(manual_vals) > 1:
-        for x in manual_vals:
-            if not isinstance(x, str):
-                raise ValueError(
-                    "_parse_manual_list_str expected a string or a list of strings, "
-                    f"but the input is {manual_list}"
-                )
-            elif "," in x:
-                raise ValueError(
-                    "_parse_manual_list_str includes a comma in a list of multiple strings. "
-                    "Input can include a comma deliminated string, but not multiple strings. "
-                    f"Input is {manual_list}"
-                )
-
-    # separate string by commas and remove leading & training whitespace
-    if len(manual_vals) == 1 and isinstance(manual_vals[0], str):
-        possible_list = manual_vals[0].split(",")
-        manual_vals = [s.strip() for s in possible_list]
-
-    # Convert the list of strings back to a single comma delimited string with no trailing spaces
-    manual_string = ",".join(str(s) for s in manual_vals)
-
-    return manual_string
-
-
 def ica_reclassify_workflow(
     registry,
     accept=[],
@@ -425,14 +317,14 @@ def ica_reclassify_workflow(
     # If accept and reject are a list of integers, they stay the same
     # If they are a filename, load numbers of from
     # If they are a string of values, convert to a list of ints
-    accept = _parse_manual_list_int(accept)
-    reject = _parse_manual_list_int(reject)
+    accept = parse_manual_list_int(accept)
+    reject = parse_manual_list_int(reject)
 
     # If classification tags are a list of strings without commas, they stay the same.
     # If classification tags are a single string,
     # convert to a list with a single string or a split into a comma delimited list of strings.
-    tag_accept = _parse_manual_list_str(tag_accept)
-    tag_reject = _parse_manual_list_str(tag_reject)
+    tag_accept = parse_manual_list_str(tag_accept)
+    tag_reject = parse_manual_list_str(tag_reject)
 
     # Check that there is no overlap in accepted/rejected components
     if accept:
