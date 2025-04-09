@@ -1,10 +1,6 @@
-import logging
 import numpy as np
 import pandas as pd
 from tedana.stats import fit_model
-
-LGR = logging.getLogger("GENERAL")
-RepLGR = logging.getLogger("REPORT")
 
 
 def calculate_rejected_components_impact(selector, mixing):
@@ -25,6 +21,7 @@ def calculate_rejected_components_impact(selector, mixing):
     Returns
     -------
     None
+        Updates the selector object's cross_component_metrics_ and component_table_
     """
     component_table = selector.component_table_
 
