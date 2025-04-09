@@ -808,7 +808,7 @@ def tedana_workflow(
             # The figures require some metrics that might not be used by the decision tree.
             extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
             necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
-
+            
             component_table, _ = metrics.collect.generate_metrics(
                 data_cat=data_cat,
                 data_optcom=data_optcom,
@@ -900,6 +900,11 @@ def tedana_workflow(
     betas_oc = utils.unmask(computefeats2(data_optcom, mixing, mask_denoise), mask_denoise)
     io_generator.save_file(betas_oc, "z-scored ICA components img")
 
+    # TODO: un-hack separate component_table
+    component_table = selector.component_table_
+
+    reporting.quality_metrics.calculate_rejected_components_impact(selector, mixing)
+
     # Save component selector and tree
     selector.to_files(io_generator)
     # Save metrics and metadata
@@ -921,8 +926,6 @@ def tedana_workflow(
     if selector.n_likely_bold_comps_ == 0:
         LGR.warning("No BOLD components detected! Please check data and results!")
 
-    # TODO: un-hack separate component_table
-    component_table = selector.component_table_
 
     mixing_orig = mixing.copy()
     if tedort:
