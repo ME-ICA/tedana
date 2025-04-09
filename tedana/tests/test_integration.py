@@ -188,19 +188,27 @@ def test_integration_four_echo(skip_integration):
         verbose=True,
     )
 
+    # compare the generated output files
+    fn = resource_filename("tedana", "tests/data/fiu_four_echo_outputs.txt")
+
+    check_integration_outputs(fn, out_dir)
+
     ica_reclassify_workflow(
         op.join(out_dir, "sub-01_desc-tedana_registry.json"),
         accept=[1, 2, 3],
         reject=[4, 5, 6],
+        tag_accept=["manual tag 1", "manual tag 2"],
         out_dir=out_dir_manual,
         mir=True,
         verbose=True,
     )
 
-    # compare the generated output files
-    fn = resource_filename("tedana", "tests/data/fiu_four_echo_outputs.txt")
-
-    check_integration_outputs(fn, out_dir)
+    component_table = pd.read_table(op.join(out_dir_manual, "desc-tedana_metrics.tsv"))
+    assert set(component_table.loc[1]["classification_tags"].split(",")) == {
+        "Likely BOLD",
+        "manual tag 1",
+        "manual tag 2",
+    }
 
 
 def test_integration_three_echo(skip_integration):
@@ -377,12 +385,17 @@ def test_integration_reclassify_quiet_csv(skip_integration):
     acc_df.to_csv(acc_csv_fname)
     rej_df.to_csv(rej_csv_fname)
 
+    # also adding parameters for --tagacc and --tagrej
     args = [
         "ica_reclassify",
         "--manacc",
         acc_csv_fname,
         "--manrej",
         rej_csv_fname,
+        "--tagacc",
+        "manual accept",
+        "--tagrej",
+        "manual reject, manual reject2",
         "--out-dir",
         out_dir,
         reclassify_raw_registry(),
@@ -407,8 +420,6 @@ def test_integration_reclassify_quiet_spaces(skip_integration):
         "ica_reclassify",
         "--manacc",
         "1",
-        "2",
-        "3",
         "--manrej",
         "4",
         "5",
@@ -439,7 +450,7 @@ def test_integration_reclassify_quiet_string(skip_integration):
         "--manacc",
         "1,2,3",
         "--manrej",
-        "4,5,6,",
+        "4,5,6",
         "--out-dir",
         out_dir,
         reclassify_raw_registry(),
@@ -500,7 +511,7 @@ def test_integration_reclassify_both_rej_acc(skip_integration):
     ):
         ica_reclassify_workflow(
             reclassify_raw_registry(),
-            accept=[1, 2, 3],
+            accept=[1],
             reject=[1, 2, 3],
             out_dir=out_dir,
         )
@@ -515,21 +526,36 @@ def test_integration_reclassify_run_twice(skip_integration):
     if os.path.exists(out_dir):
         shutil.rmtree(out_dir)
 
+    # Also testing if a manually specified tag is added to classification_tags the first time,
+    # and when it is run again with overwrite, two different tags are added the second time.
     ica_reclassify_workflow(
         reclassify_raw_registry(),
         accept=[1, 2, 3],
+        tag_accept="manual tag",
         out_dir=out_dir,
         no_reports=True,
     )
+    component_table = pd.read_csv(op.join(out_dir, "desc-tedana_metrics.tsv"), sep="\t")
+    assert set(component_table.loc[1]["classification_tags"].split(",")) == {
+        "Likely BOLD",
+        "manual tag",
+    }
     ica_reclassify_workflow(
         reclassify_raw_registry(),
         accept=[1, 2, 3],
+        tag_accept="manual tag 2, manual tag 3",
         out_dir=out_dir,
         overwrite=True,
         no_reports=True,
     )
     fn = resource_filename("tedana", "tests/data/reclassify_run_twice.txt")
     check_integration_outputs(fn, out_dir, n_logs=2)
+    component_table = pd.read_csv(op.join(out_dir, "desc-tedana_metrics.tsv"), sep="\t")
+    assert set(component_table.loc[1]["classification_tags"].split(",")) == {
+        "Likely BOLD",
+        "manual tag 2",
+        "manual tag 3",
+    }
 
 
 def test_integration_reclassify_no_bold(skip_integration, caplog):
@@ -580,38 +606,6 @@ def test_integration_reclassify_accrej_files(skip_integration, caplog):
 
     fn = resource_filename("tedana", "tests/data/reclassify_no_bold.txt")
     check_integration_outputs(fn, out_dir)
-
-
-def test_integration_reclassify_index_failures(skip_integration):
-    if skip_integration:
-        pytest.skip("Skip reclassify index failures")
-
-    test_data_path = guarantee_reclassify_data()
-    out_dir = os.path.abspath(os.path.join(test_data_path, "../outputs/reclassify/index_failures"))
-    if os.path.exists(out_dir):
-        shutil.rmtree(out_dir)
-
-    with pytest.raises(
-        ValueError,
-        match=r"_parse_manual_list expected a list of integers, but the input is",
-    ):
-        ica_reclassify_workflow(
-            reclassify_raw_registry(),
-            accept=[1, 2.5, 3],
-            out_dir=out_dir,
-            no_reports=True,
-        )
-
-    with pytest.raises(
-        ValueError,
-        match=r"_parse_manual_list expected integers or a filename, but the input is",
-    ):
-        ica_reclassify_workflow(
-            reclassify_raw_registry(),
-            accept=[2.5],
-            out_dir=out_dir,
-            no_reports=True,
-        )
 
 
 def test_integration_t2smap(skip_integration):

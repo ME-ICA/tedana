@@ -1,5 +1,6 @@
 """Tests for the tedana.selection.selection_utils module."""
 
+import logging
 import os
 
 import numpy as np
@@ -32,6 +33,8 @@ def sample_component_table(options=None):
 
     if (options == "provclass") or (options == "unclass"):
         component_table.loc[[2, 4, 6, 8], "classification"] = "provisional accept"
+        component_table.loc[[2, 4], "classification_tags"] = "borderline accept"
+        component_table.loc[[6], "classification_tags"] = "borderline accept, border accept 2"
     return component_table
 
 
@@ -128,7 +131,7 @@ def test_selectcomps2use_fails():
         selection_utils.selectcomps2use(selector.component_table_, "all")
 
 
-def test_comptable_classification_changer_succeeds():
+def test_comptable_classification_changer_succeeds(caplog):
     """All conditions where comptable_classification_changer should run.
 
     Note: This confirms the function runs, but not that outputs are accurate.
@@ -137,21 +140,34 @@ def test_comptable_classification_changer_succeeds():
     check the logger.
     """
 
-    def validate_changes(expected_classification):
+    def validate_changes(expected_classification, added_tags):
         # check every element that was supposed to change, did change
         changeidx = decision_boolean.index[np.asarray(decision_boolean) == boolstate]
         new_vals = selector.component_table_.loc[changeidx, "classification"]
-        for val in new_vals:
-            assert val == expected_classification
+        orig_tags = orig_component_table.loc[changeidx, "classification_tags"]
+        new_tags = selector.component_table_.loc[changeidx, "classification_tags"]
+        for idx in changeidx:
+            assert new_vals[idx] == expected_classification
+            if "," in orig_tags[idx]:
+                orig_tags_set = set(orig_tags[idx].split(","))
+            else:
+                orig_tags_set = {orig_tags[idx]}
+            if "," in new_tags[idx]:
+                new_tags_set = set(new_tags[idx].split(","))
+            else:
+                new_tags_set = {new_tags[idx]}
+            # Note: added_tags should be input as a set
+            assert new_tags_set - orig_tags_set == added_tags
 
     # Change if true
     selector = sample_selector(options="provclass")
+    orig_component_table = selector.component_table_.copy()
     decision_boolean = selector.component_table_["classification"] == "provisional accept"
     boolstate = True
     selector = selection_utils.comptable_classification_changer(
         selector, boolstate, "accepted", decision_boolean, tag_if="testing_tag"
     )
-    validate_changes("accepted")
+    validate_changes("accepted", {"testing_tag"})
 
     # Run nochange condition
     selector = sample_selector(options="provclass")
@@ -159,7 +175,7 @@ def test_comptable_classification_changer_succeeds():
     selector = selection_utils.comptable_classification_changer(
         selector, boolstate, "nochange", decision_boolean, tag_if="testing_tag"
     )
-    validate_changes("provisional accept")
+    validate_changes("provisional accept", {"testing_tag"})
 
     # Change if false
     selector = sample_selector(options="provclass")
@@ -168,19 +184,23 @@ def test_comptable_classification_changer_succeeds():
     selector = selection_utils.comptable_classification_changer(
         selector, boolstate, "rejected", decision_boolean, tag_if="testing_tag1, testing_tag2"
     )
-    validate_changes("rejected")
+    validate_changes("rejected", {"testing_tag1", "testing_tag2"})
 
     # Change from accepted to rejected, which should output a warning
     # (test if the warning appears?)
+    caplog.clear()
     selector = sample_selector(options="provclass")
     decision_boolean = selector.component_table_["classification"] == "accepted"
     boolstate = True
     selector = selection_utils.comptable_classification_changer(
         selector, boolstate, "rejected", decision_boolean, tag_if="testing_tag"
     )
-    validate_changes("rejected")
+    validate_changes("rejected", {"testing_tag"})
+
+    assert "Some classifications are changing away from accepted or rejected" in caplog.text
 
     # Change from rejected to accepted and suppress warning
+    caplog.clear()
     selector = sample_selector(options="provclass")
     decision_boolean = selector.component_table_["classification"] == "rejected"
     boolstate = True
@@ -192,7 +212,24 @@ def test_comptable_classification_changer_succeeds():
         tag_if="testing_tag",
         dont_warn_reclassify=True,
     )
-    validate_changes("accepted")
+    validate_changes("accepted", {"testing_tag"})
+    assert "Some classifications are changing away from accepted or rejected" not in caplog.text
+
+    # Give an info message if no components fit criterion
+    caplog.clear()
+    caplog.set_level(logging.INFO)
+    selector = sample_selector(options="provclass")
+    decision_boolean = selector.component_table_["classification"] == "Not a label"
+    boolstate = True
+    selector = selection_utils.comptable_classification_changer(
+        selector,
+        boolstate,
+        "accepted",
+        decision_boolean,
+        tag_if="testing_tag",
+        dont_warn_reclassify=True,
+    )
+    assert "No components fit criterion" in caplog.text
 
 
 def test_change_comptable_classifications_succeeds():

@@ -528,7 +528,7 @@ class ComponentSelector:
 
         self.are_all_components_accepted_or_rejected()
 
-    def add_manual(self, indices: List[int], classification: str):
+    def add_manual(self, indices: List[int], classification: str, classification_tags: str = None):
         """Add nodes that will manually classify components.
 
         Parameters
@@ -537,7 +537,14 @@ class ComponentSelector:
             The indices to manually classify
         classification : :obj:`str`
             The classification to set the nodes to (i.e. accepted or rejected)
+        classification_tags : :obj:`str`
+            A single string for a classification tag to add or
+            A single comma deliminited string for multiple classification tags to add.
+            Default is None, which will use the tag "manual reclassify"
         """
+        if not classification_tags:
+            classification_tags = "manual reclassify"
+
         self.tree["nodes"].append(
             {
                 "functionname": "manual_classify",
@@ -547,7 +554,7 @@ class ComponentSelector:
                 },
                 "kwargs": {
                     "dont_warn_reclassify": "true",
-                    "tag": "manual reclassify",
+                    "tag": classification_tags,
                 },
             }
         )
