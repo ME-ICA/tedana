@@ -26,9 +26,9 @@ def test_calculate_rejected_components_impact():
 
     rej = component_table[component_table["classification"] == "rejected"]
     acc = component_table[component_table["classification"] == "accepted"]
-    
-    assert rej['R2 of fit of rejected to accepted'].isna().all()
-    assert not acc['R2 of fit of rejected to accepted'].isna().all()
+
+    assert rej["R2 of fit of rejected to accepted"].isna().all()
+    assert not acc["R2 of fit of rejected to accepted"].isna().all()
 
 
 # TODO: Test other functions in reporting?

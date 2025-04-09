@@ -1,14 +1,15 @@
+"""File to assess quality metrics for components."""
+
 import numpy as np
-import pandas as pd
+
 from tedana.stats import fit_model
 
 
 def calculate_rejected_components_impact(selector, mixing):
-    """
-    This function calculates the % variance explained by the rejected components for
-    each of the accepted components. The final metric is the weighted sum of the variances.
-    This quantifies the impact of rejected components on the overall variance explained by
-    accepted components.
+    """Calculate the % variance explained by the rejected components for accepted components.
+
+    The final metric is the weighted sum of the variances. This quantifies the impact of
+    rejected components on the overall variance explained by accepted components.
 
     Parameters
     ----------
@@ -38,7 +39,7 @@ def calculate_rejected_components_impact(selector, mixing):
 
         _, sse, _ = fit_model(rej_arrs, acc_arr)
         ss_total = np.sum((acc_arr - np.mean(acc_arr)) ** 2)
-            
+
         r2 = 1 - (sse / ss_total)
 
         all_rvals[accepted_column] = r2
@@ -54,7 +55,7 @@ def calculate_rejected_components_impact(selector, mixing):
         var_explained = component_table.loc[component, "variance explained"].item() / 100
         measures.append(var_explained * val)
         vars_explained.append(var_explained)
-    
+
     # Final QC metric as the sum of the weighted measures
     rejected_components_impact = np.sum(measures)
 
