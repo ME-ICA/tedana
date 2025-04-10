@@ -672,6 +672,19 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
                 -1: "Component is flipped prior to metric calculation.",
             },
         }
+    if "Var Exp of rejected to accepted" in component_table:
+        metric_metadata["Var Exp of rejected to accepted"] = {
+            "LongName": "100*R2 of fit of rejected to accepted mixing matrix time series",
+            "Description": (
+                "The time series for each component are not independent. "
+                "Time series from rejected components are regressed from the data. "
+                "For each accepted component, this is a calculation of how much "
+                "the variance of the accept component times series is explained "
+                "by the rejected component time series. "
+                "This is not used in decision trees but might be a useful quality metric."
+            ),
+            "Units": "percent",
+        }
 
     # There are always components in the component_table, definitionally
     metric_metadata["Component"] = {
