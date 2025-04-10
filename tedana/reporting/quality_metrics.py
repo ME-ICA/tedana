@@ -8,21 +8,29 @@ from tedana.stats import fit_model
 def calculate_rejected_components_impact(selector, mixing):
     """Calculate the % variance explained by the rejected components for accepted components.
 
-    The final metric is the weighted sum of the variances. This quantifies the impact of
-    rejected components on the overall variance explained by accepted components.
+    The final metric is the weighted sum across accepted components of
+    the total variance explained by each accepted component times
+    the varianced explained (100*R^2) of each accepted component by the rejected comp time series.
+    This quantifies the impact of rejected components on the overall variance explained
+    by accepted components.
 
     Parameters
     ----------
     selector : :obj: tedana.selection.component_selector.ComponentSelector
-        Contains component classifications in component_table.
+        Uses `variance explained` and `classification` columns in ``selector.component_table_``.
     mixing : (T [x C]) array_like
         Mixing matrix for converting input data to component space, where `C`
-        is components and `T` is the same as in `data`
+        is components and `T` is time
 
     Returns
     -------
     None
-        Updates the selector object's cross_component_metrics_ and component_table_
+        Updates elements the selector object:
+        ``selector.component_table_`` has an added column for "Var Exp of rejected to accepted"
+        ``selector.cross_component_metrics_`` has an added value
+        `total_var_exp_rejected_components_on_accepted`
+        `variance explained` is a percentage ranging from 0-100% and
+        `total_var_exp_rejected_components_on_accepted` is also a percent with the same range.
     """
     component_table = selector.component_table_
 
@@ -31,33 +39,31 @@ def calculate_rejected_components_impact(selector, mixing):
 
     rej_arrs, acc_arrs = mixing[:, rej], mixing[:, acc]
 
-    all_rvals = {}
-
     # Calculate the R-squared values for each accepted component
-    for i, accepted_column in enumerate(acc):
-        acc_arr = acc_arrs[:, i]
+    _, sse, _ = fit_model(rej_arrs, acc_arrs)
+    # Note: Since the mixing matrix time series are typically mean centered with stdev 1,
+    #    ss_total will be the number of time points (+ rounding errors)
+    ss_total = np.sum(
+        (acc_arrs - np.tile(np.mean(acc_arrs, axis=0), [acc_arrs.shape[0], 1])) ** 2, axis=0
+    )
+    r2 = 1 - (sse / ss_total)
 
-        _, sse, _ = fit_model(rej_arrs, acc_arr)
-        ss_total = np.sum((acc_arr - np.mean(acc_arr)) ** 2)
+    if "Var Exp of rejected to accepted" in component_table.columns:
+        # Reset to NaN before calculating for accepted components
+        component_table["Var Exp of rejected to accepted"] = np.nan
+    else:
+        # initialize new column in component table that's left of the classification & tag columns
+        num_columns = len(component_table.columns)
+        component_table.insert(num_columns - 2, "Var Exp of rejected to accepted", np.nan)
 
-        r2 = 1 - (sse / ss_total)
+    # Calculated r2 is assigned to accepted components and the rest remain NaN
+    component_table["Var Exp of rejected to accepted"][acc] = 100 * r2
 
-        all_rvals[accepted_column] = r2
-
-    # Update component table
-    component_table["R2 of fit of rejected to accepted"] = component_table.index.map(all_rvals)
-
-    measures = []
-    vars_explained = []
-
-    # Calculate the final weighted sum of the variances
-    for component, val in all_rvals.items():
-        var_explained = component_table.loc[component, "variance explained"].item() / 100
-        measures.append(var_explained * val)
-        vars_explained.append(var_explained)
-
-    # Final QC metric as the sum of the weighted measures
-    rejected_components_impact = np.sum(measures)
-
-    # Update selector
-    selector.cross_component_metrics_["rejected_components_impact"] = rejected_components_impact
+    # Update selector with the overall impact measure
+    selector.cross_component_metrics_["total_var_exp_rejected_components_on_accepted"] = (
+        np.sum(
+            component_table["Var Exp of rejected to accepted"][acc]
+            * component_table["variance explained"][acc]
+        )
+        / 100
+    )

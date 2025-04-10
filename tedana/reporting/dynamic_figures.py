@@ -87,6 +87,7 @@ def _create_data_struct(comptable_path, color_mapping=color_mapping):
 
     # remove space from column name
     df.rename(columns={"variance explained": "var_exp"}, inplace=True)
+    df.rename(columns={"Var Exp of rejected to accepted": "var_exp_rej"}, inplace=True)
 
     # For providing sizes based on Var Explained that are visible
     mm_scaler = MinMaxScaler(feature_range=(4, 20))
@@ -119,6 +120,7 @@ def _create_data_struct(comptable_path, color_mapping=color_mapping):
             kappa=df["kappa"],
             rho=df["rho"],
             varexp=df["var_exp"],
+            varexprej=100 * df["var_exp_rej"],
             kappa_rank=df["kappa_rank"],
             rho_rank=df["rho_rank"],
             varexp_rank=df["var_exp_rank"],
@@ -159,6 +161,7 @@ def _create_kr_plt(comptable_cds, kappa_elbow=None, rho_elbow=None):
             ("Kappa", "@kappa{0.00}"),
             ("Rho", "@rho{0.00}"),
             ("Var. Expl.", "@varexp{0.00}%"),
+            ("Var. Expl. by Rej.", "@varexprej{0.00}%"),
             ("Tags", "@classtag"),
         ]
     )
@@ -278,6 +281,7 @@ def _create_sorted_plt(
             ("Kappa", "@kappa{0.00}"),
             ("Rho", "@rho{0.00}"),
             ("Var. Expl.", "@varexp{0.00}%"),
+            ("Var. Expl. by Rej.", "@varexprej{0.00}%"),
             ("Tags", "@classtag"),
         ]
     )
@@ -331,6 +335,7 @@ def _create_varexp_pie_plt(comptable_cds):
             ("Kappa", "@kappa{0.00}"),
             ("Rho", "@rho{0.00}"),
             ("Var. Expl.", "@varexp{0.00}%"),
+            ("Var. Expl. by Rej.", "@varexprej{0.00}%"),
             ("Tags", "@classtag"),
         ]
     )

@@ -2,8 +2,6 @@
 
 import logging
 
-from tedana.metrics import collect
-
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
 
@@ -63,6 +61,5 @@ def automatic_selection(component_table, selector, **kwargs):
     # TODO external_regressor_config=external_regressor_config, was here
     component_table["classification_tags"] = ""
     selector.select(component_table, cross_component_metrics=kwargs)
-    selector.metadata_ = collect.get_metadata(selector.component_table_)
 
     return selector

@@ -436,6 +436,10 @@ def ica_reclassify_workflow(
         print(tc)
         io_generator.save_file(ioh.get_file_contents(tc), tc)
 
+    # calculate the fit of rejected to accepted components to use as a quality measure
+    # Note: This adds a column to component_table & needs to run before the table is saved
+    reporting.quality_metrics.calculate_rejected_components_impact(selector, mixing)
+
     # Save component selector and tree
     selector.to_files(io_generator)
 

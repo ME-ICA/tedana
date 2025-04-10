@@ -21,14 +21,14 @@ def test_calculate_rejected_components_impact():
 
     reporting.calculate_rejected_components_impact(selector, mixing)
 
-    assert selector.cross_component_metrics_["rejected_components_impact"] <= 1
-    assert "R2 of fit of rejected to accepted" in selector.component_table_.columns
+    # Total matches expecting value in testing data
+    assert np.round(
+        selector.cross_component_metrics_["total_var_exp_rejected_components_on_accepted"], 4
+    ) == np.round(4.0927834, 4)
 
+    assert "Var Exp of rejected to accepted" in selector.component_table_.columns
     rej = component_table[component_table["classification"] == "rejected"]
     acc = component_table[component_table["classification"] == "accepted"]
 
-    assert rej["R2 of fit of rejected to accepted"].isna().all()
-    assert not acc["R2 of fit of rejected to accepted"].isna().all()
-
-
-# TODO: Test other functions in reporting?
+    assert rej["Var Exp of rejected to accepted"].isna().all()
+    assert not acc["Var Exp of rejected to accepted"].isna().all()
