@@ -672,7 +672,7 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
                 -1: "Component is flipped prior to metric calculation.",
             },
         }
-    if "R2 of fit of rejected to accepted" in component_table:
+    if "Var Exp of rejected to accepted" in component_table:
         metric_metadata["Var Exp of rejected to accepted"] = {
             "LongName": "100*R2 of fit of rejected to accepted mixing matrix time series",
             "Description": (
