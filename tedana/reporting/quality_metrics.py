@@ -37,6 +37,11 @@ def calculate_rejected_components_impact(selector, mixing):
     rej = component_table.loc[component_table["classification"] == "rejected"].index
     acc = component_table.loc[component_table["classification"] == "accepted"].index
 
+    if len(rej) == 0 or len(acc) == 0:
+        component_table["Var Exp of rejected to accepted"] = np.nan
+        selector.cross_component_metrics_["total_var_exp_rejected_components_on_accepted"] = np.nan
+        return
+
     rej_arrs, acc_arrs = mixing[:, rej], mixing[:, acc]
 
     # Calculate the R-squared values for each accepted component
@@ -57,7 +62,7 @@ def calculate_rejected_components_impact(selector, mixing):
         component_table.insert(num_columns - 2, "Var Exp of rejected to accepted", np.nan)
 
     # Calculated r2 is assigned to accepted components and the rest remain NaN
-    component_table["Var Exp of rejected to accepted"][acc] = 100 * r2
+    component_table.loc[acc, "Var Exp of rejected to accepted"] = 100 * r2
 
     # Update selector with the overall impact measure
     selector.cross_component_metrics_["total_var_exp_rejected_components_on_accepted"] = (

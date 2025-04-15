@@ -32,3 +32,41 @@ def test_calculate_rejected_components_impact():
 
     assert rej["Var Exp of rejected to accepted"].isna().all()
     assert not acc["Var Exp of rejected to accepted"].isna().all()
+
+
+def test_calculate_rejected_components_impact_no_rej():
+    selector = sample_selector()
+    mixing = sample_mixing_matrix()
+
+    component_table = selector.component_table_
+
+    component_table.drop(
+        component_table[component_table["classification"] == "rejected"].index, inplace=True
+    )
+
+    reporting.calculate_rejected_components_impact(selector, mixing)
+
+    assert "Var Exp of rejected to accepted" in selector.component_table_.columns
+    assert selector.component_table_["Var Exp of rejected to accepted"].isna().all()
+    assert np.isnan(
+        selector.cross_component_metrics_["total_var_exp_rejected_components_on_accepted"]
+    )
+
+
+def test_calculate_rejected_components_impact_no_acc():
+    selector = sample_selector()
+    mixing = sample_mixing_matrix()
+
+    component_table = selector.component_table_
+
+    component_table.drop(
+        component_table[component_table["classification"] == "accepted"].index, inplace=True
+    )
+
+    reporting.calculate_rejected_components_impact(selector, mixing)
+
+    assert "Var Exp of rejected to accepted" in selector.component_table_.columns
+    assert selector.component_table_["Var Exp of rejected to accepted"].isna().all()
+    assert np.isnan(
+        selector.cross_component_metrics_["total_var_exp_rejected_components_on_accepted"]
+    )
