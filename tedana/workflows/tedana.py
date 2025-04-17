@@ -936,6 +936,10 @@ def tedana_workflow(
     betas_oc = utils.unmask(computefeats2(data_optcom, mixing, mask_denoise), mask_denoise)
     io_generator.save_file(betas_oc, "z-scored ICA components img")
 
+    # calculate the fit of rejected to accepted components to use as a quality measure
+    # Note: This adds a column to component_table & needs to run before the table is saved
+    reporting.quality_metrics.calculate_rejected_components_impact(selector, mixing)
+
     # Save component selector and tree
     selector.to_files(io_generator)
     # Save metrics and metadata
