@@ -8,7 +8,7 @@ from typing import Dict, List, Union
 import pandas as pd
 from numpy import asarray
 
-from tedana.io import load_json
+from tedana.io import load_json, download_json
 from tedana.selection import selection_nodes
 from tedana.selection.selection_utils import (
     clean_dataframe,
@@ -43,19 +43,22 @@ class TreeError(Exception):
     pass
 
 
-def load_config(tree: str) -> Dict:
+def load_config(tree: str, out_dir: str = ".") -> Dict:
     """Load the json file with the decision tree and validate the fields in the decision tree.
 
     Parameters
     ----------
     tree : :obj:`str`
         The named tree or path to a JSON file that defines one
-
+    out_dir :obj:`str`, optional
+        The output directory. Default is current working directory.
     Returns
     -------
     tree : :obj:`dict`
         A validated decision tree for the component selection process.
     """
+    fname, dectree = None, None
+
     if tree in DEFAULT_TREES:
         fname = op.join(get_resource_path(), "decision_trees", tree + ".json")
     elif tree == "kundu":
@@ -65,21 +68,19 @@ def load_config(tree: str) -> Dict:
         )
         tree = "tedana_orig"
         fname = op.join(get_resource_path(), "decision_trees", tree + ".json")
-    else:
+    elif op.isfile(tree):
         fname = tree
-
+    else:
+        fname = download_json(tree, out_dir)
+        
     try:
         dectree = load_json(fname)
-    except FileNotFoundError:
+    except:
         raise ValueError(
             f"Cannot find tree {tree}. Please check your path or use a "
-            f"default tree ({DEFAULT_TREES})."
+            f"default tree ({DEFAULT_TREES}) or one from figshare."
         )
-    except IsADirectoryError:
-        raise ValueError(
-            f"Tree {tree} is a directory. Please supply a JSON file or "
-            f"default tree ({DEFAULT_TREES})."
-        )
+
 
     return validate_tree(dectree)
 
@@ -307,13 +308,15 @@ def validate_tree(tree: Dict) -> Dict:
 class ComponentSelector:
     """Load and classify components based on a specified ``tree``."""
 
-    def __init__(self, tree: str):
+    def __init__(self, tree: str, out_dir: str = "."):
         """Initialize the class using the info specified in the json file ``tree``.
 
         Parameters
         ----------
         tree : :obj:`str`
             The named tree or path to a JSON file that defines one.
+        out_dir :obj:`str`, optional
+            The output directory. Default is current working directory.
 
         Notes
         -----
@@ -321,7 +324,7 @@ class ComponentSelector:
         loads all information in the tree json file into ``ComponentSelector``.
         """
         self.tree_name = tree
-        self.tree = load_config(self.tree_name)
+        self.tree = load_config(self.tree_name, out_dir)
 
         LGR.info("Performing component selection with " + self.tree["tree_id"])
         LGR.info(self.tree.get("info", ""))

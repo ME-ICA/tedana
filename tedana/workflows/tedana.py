@@ -609,7 +609,7 @@ def tedana_workflow(
         data = [data]
 
     LGR.info("Initializing and validating component selection tree")
-    selector = ComponentSelector(tree)
+    selector = ComponentSelector(tree, out_dir)
 
     LGR.info(f"Loading input data: {[f for f in data]}")
     data_cat, ref_img = io.load_data(data, n_echos=n_echos)
@@ -884,7 +884,7 @@ def tedana_workflow(
                 # regular expressions immediately after initialization,
                 # store and copy this key
                 tmp_external_regressor_config = selector.tree["external_regressor_config"]
-                selector = ComponentSelector(tree)
+                selector = ComponentSelector(tree, out_dir)
                 selector.tree["external_regressor_config"] = tmp_external_regressor_config
 
             RepLGR.disabled = True  # Disable the report to avoid duplicate text
