@@ -368,6 +368,15 @@
         "design",
         "ideas"
       ]
+    },
+    {
+      "login": "marlyr",
+      "name": "Marly Rubin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/75410817?v=4",
+      "profile": "https://marlyr.github.io/",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 5,
