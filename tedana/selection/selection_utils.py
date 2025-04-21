@@ -234,12 +234,12 @@ def comptable_classification_changer(
     This function is run twice, ones for changes to make of a component is
     True and again for components that are False.
     """
-    if classify_if != "nochange":
-        changeidx = decision_boolean.index[np.asarray(decision_boolean) == boolstate]
-        if not changeidx.empty:
-            current_classifications = set(
-                selector.component_table_.loc[changeidx, "classification"].tolist()
-            )
+    changeidx = decision_boolean.index[np.asarray(decision_boolean) == boolstate]
+    if not changeidx.empty:
+        current_classifications = set(
+            selector.component_table_.loc[changeidx, "classification"].tolist()
+        )
+        if classify_if != "nochange":
             if current_classifications.intersection({"accepted", "rejected"}):
                 if not dont_warn_reclassify:
                     # don't make a warning if classify_if matches the current classification
@@ -253,6 +253,28 @@ def comptable_classification_changer(
                             "accepted or rejected, it shouldn't be reclassified"
                         )
             selector.component_table_.loc[changeidx, "classification"] = classify_if
+
+        if tag_if is not None:  # only run if a tag is provided
+            # if tag_if has commas, divide into multiple tags
+            if "," in tag_if:
+                multi_tags = tag_if.split(",")
+                tag_if = set([s.strip() for s in multi_tags])
+            else:
+                tag_if = {tag_if}
+
+            for idx in changeidx:
+                tmpstr = selector.component_table_.loc[idx, "classification_tags"]
+                if tmpstr == "" or isinstance(tmpstr, float):
+                    tmpset = tag_if
+                else:
+                    tmpset = set(tmpstr.split(","))
+                    tmpset = tmpset.union(tag_if)
+                selector.component_table_.loc[idx, "classification_tags"] = ",".join(
+                    str(s) for s in tmpset
+                )
+
+        # Do this last step if anything changed in the component table
+        if classify_if != "nochange" or tag_if is not None:
             # NOTE: CAUTION: extremely bizarre pandas behavior violates guarantee
             # that df['COLUMN'] matches the df as a a whole in this case.
             # We cannot replicate this consistently, but it seems to happen in some
@@ -267,22 +289,11 @@ def comptable_classification_changer(
             #   a subset of components
             selector.component_table_ = selector.component_table_.copy()
 
-            if tag_if is not None:  # only run if a tag is provided
-                for idx in changeidx:
-                    tmpstr = selector.component_table_.loc[idx, "classification_tags"]
-                    if tmpstr == "" or isinstance(tmpstr, float):
-                        tmpset = {tag_if}
-                    else:
-                        tmpset = set(tmpstr.split(","))
-                        tmpset.update([tag_if])
-                    selector.component_table_.loc[idx, "classification_tags"] = ",".join(
-                        str(s) for s in tmpset
-                    )
-        else:
-            LGR.info(
-                f"Step {selector.current_node_idx_}: No components fit criterion "
-                f"{boolstate} to change classification"
-            )
+    else:
+        LGR.info(
+            f"Step {selector.current_node_idx_}: No components fit criterion "
+            f"{boolstate} to change classification"
+        )
     return selector
 
 
@@ -580,7 +591,7 @@ def getelbow(arr, return_val=False):
         return k_min_ind
 
 
-def kappa_elbow_kundu(component_table, n_echos, comps2use=None):
+def kappa_elbow_kundu(component_table, n_independent_echos, comps2use=None):
     """
     Calculate an elbow for kappa.
 
@@ -592,8 +603,10 @@ def kappa_elbow_kundu(component_table, n_echos, comps2use=None):
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
         Only the 'kappa' column is used in this function
-    n_echos : :obj:`int`
-        The number of echos in the multi-echo data
+    n_independent_echos : :obj:`int`
+        Number of independent echoes to use in goodness of fit metrics (fstat).
+        Typically the number of echos in the multi-echo data
+        May be a lower value for EPTI acquisitions.
     comps2use : :obj:`list[int]`
         A list of component indices used to calculate the elbow
         default=None which means use all components
@@ -633,7 +646,7 @@ def kappa_elbow_kundu(component_table, n_echos, comps2use=None):
     kappas2use = component_table.loc[comps2use, "kappa"].to_numpy()
 
     # low kappa threshold
-    _, _, f01 = getfbounds(n_echos)
+    _, _, f01 = getfbounds(n_independent_echos)
     # get kappa values for components below a significance threshold
     kappas_nonsig = kappas2use[kappas2use < f01]
 
@@ -670,7 +683,11 @@ def kappa_elbow_kundu(component_table, n_echos, comps2use=None):
 
 
 def rho_elbow_kundu_liberal(
-    component_table, n_echos, rho_elbow_type="kundu", comps2use=None, subset_comps2use=-1
+    component_table,
+    n_independent_echos,
+    rho_elbow_type="kundu",
+    comps2use=None,
+    subset_comps2use=-1,
 ):
     """
     Calculate an elbow for rho.
@@ -684,8 +701,10 @@ def rho_elbow_kundu_liberal(
         Component metric table. One row for each component, with a column for
         each metric. The index should be the component number.
         Only the 'kappa' column is used in this function
-    n_echos : :obj:`int`
-        The number of echos in the multi-echo data
+    n_independent_echos : :obj:`int`
+        Number of independent echoes to use in goodness of fit metrics (fstat).
+        Typically the number of echos in the multi-echo data
+        May be a lower value for EPTI acquisitions.
     rho_elbow_type : :obj:`str`
         The algorithm used to calculate the rho elbow. Current options are
         'kundu' and 'liberal'.
@@ -753,8 +772,7 @@ def rho_elbow_kundu_liberal(
         ].tolist()
 
     # One rho elbow threshold set just on the number of echoes
-    elbow_f05, _, _ = getfbounds(n_echos)
-
+    elbow_f05, _, _ = getfbounds(n_independent_echos)
     # One rho elbow threshold set using all componets in comps2use
     rhos_comps2use = component_table.loc[comps2use, "rho"].to_numpy()
     rho_allcomps_elbow = getelbow(rhos_comps2use, return_val=True)
