@@ -9,7 +9,7 @@ from pathlib import Path
 import pandas as pd
 from bokeh import __version__ as bokehversion
 from bokeh import embed, layouts, models
-from jinja2 import Environment, FileSystemLoader, Template
+from jinja2 import Environment, FileSystemLoader
 from pybtex.database.input import bibtex
 from pybtex.plugin import find_plugin
 
