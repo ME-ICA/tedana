@@ -9,7 +9,7 @@ from pathlib import Path
 import pandas as pd
 from bokeh import __version__ as bokehversion
 from bokeh import embed, layouts, models
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, Template
 from pybtex.database.input import bibtex
 from pybtex.plugin import find_plugin
 
@@ -78,13 +78,8 @@ def _get_template_env():
     """Create and return Jinja2 environment with template directory."""
     resource_path = Path(__file__).resolve().parent.joinpath("data", "html")
 
-    # Use variable_start_string and variable_end_string to match the syntax used in the templates
-    # This allows us to keep the existing templates without modifying them
-    template_env = Environment(
-        loader=FileSystemLoader(str(resource_path)),
-        variable_start_string="${",  # Match the string.Template syntax
-        variable_end_string="}",
-    )
+    # Standard Jinja2 environment - no need for special configuration now
+    template_env = Environment(loader=FileSystemLoader(str(resource_path)))
     return template_env
 
 
