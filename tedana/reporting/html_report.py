@@ -77,7 +77,14 @@ def _inline_citations(text, bibliography):
 def _get_template_env():
     """Create and return Jinja2 environment with template directory."""
     resource_path = Path(__file__).resolve().parent.joinpath("data", "html")
-    template_env = Environment(loader=FileSystemLoader(str(resource_path)))
+
+    # Use variable_start_string and variable_end_string to match the syntax used in the templates
+    # This allows us to keep the existing templates without modifying them
+    template_env = Environment(
+        loader=FileSystemLoader(str(resource_path)),
+        variable_start_string="${",  # Match the string.Template syntax
+        variable_end_string="}",
+    )
     return template_env
 
 
@@ -197,6 +204,7 @@ def _save_as_html(body):
     head_template = template_env.get_template("report_head_template.html")
 
     html = head_template.render(version=__version__, bokehversion=bokehversion, body=body)
+
     return html
 
 
