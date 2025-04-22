@@ -180,10 +180,13 @@
     </div>
   </div>
 </div>
+{% if adaptiveMaskExists %}
 <div class="carpet-plots">
   <h1>Adaptive mask</h1>
   <img id="adaptiveMask" src="{{ adaptiveMask }}" style="width: 95%; max-width: 1200px; height: auto;" />
 </div>
+{% endif %}
+{% if t2s0Exists %}
 <div class="carpet-plots">
   <h1>T2* and S0</h1>
   <h2>T2*</h2>
@@ -208,6 +211,7 @@
     <img id="rmseTimeseries" src="{{ rmseTimeseries }}" style="width: 95%; max-width: 1200px; height: auto;" />
   </div>
 </div>
+{% endif %}
 </div>
 <div class="info">
   <h1>Info</h1>

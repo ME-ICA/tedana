@@ -146,8 +146,12 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
     # Initial carpet plot (default one)
     initial_carpet = f"./figures/{prefix}carpet_optcom.svg"
 
+    # Check if images exist in the figures directory
+    figures_dir = os.path.join(os.path.dirname(initial_carpet), "")
+
     # Adaptive mask image
     adaptive_mask = f"./figures/{prefix}adaptive_mask.svg"
+    adaptive_mask_exists = os.path.isfile(adaptive_mask.replace("./figures/", figures_dir))
 
     # T2* and S0 images
     t2star_brain = f"./figures/{prefix}t2star_brain.svg"
@@ -156,6 +160,14 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
     s0_histogram = f"./figures/{prefix}s0_histogram.svg"
     rmse_brain = f"./figures/{prefix}rmse_brain.svg"
     rmse_timeseries = f"./figures/{prefix}rmse_timeseries.svg"
+
+    # Check if T2* and S0 images exist
+    t2s0_exists = (
+        os.path.isfile(t2star_brain.replace("./figures/", figures_dir))
+        and os.path.isfile(t2star_histogram.replace("./figures/", figures_dir))
+        and os.path.isfile(s0_brain.replace("./figures/", figures_dir))
+        and os.path.isfile(s0_histogram.replace("./figures/", figures_dir))
+    )
 
     # Convert bibtex to html
     references, bibliography = _bib2html(references)
@@ -173,10 +185,12 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
         prefix=prefix,
         initialCarpet=initial_carpet,
         adaptiveMask=adaptive_mask,
+        adaptiveMaskExists=adaptive_mask_exists,
         t2starBrainPlot=t2star_brain,
         t2starHistogram=t2star_histogram,
         s0BrainPlot=s0_brain,
         s0Histogram=s0_histogram,
+        t2s0Exists=t2s0_exists,
         rmseBrainPlot=rmse_brain,
         rmseTimeseries=rmse_timeseries,
         references=references,
