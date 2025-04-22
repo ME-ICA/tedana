@@ -579,8 +579,8 @@ def plot_t2star_and_s0(
     s0_exists = os.path.isfile(s0_img)
     if not s0_exists:
         LGR.info(
-            "S0 maps and T2* fit metrics are not in report since a pre-existing T2* map ",
-            "was provided",
+            "S0 maps and T2* fit metrics are not in report since a pre-existing "
+            "T2* map was provided"
         )
 
     # Plot histograms
