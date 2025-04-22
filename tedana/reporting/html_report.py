@@ -5,11 +5,11 @@ import os
 import re
 from os.path import join as opj
 from pathlib import Path
-from string import Template
 
 import pandas as pd
 from bokeh import __version__ as bokehversion
 from bokeh import embed, layouts, models
+from jinja2 import Environment, FileSystemLoader
 from pybtex.database.input import bibtex
 from pybtex.plugin import find_plugin
 
@@ -74,9 +74,14 @@ def _inline_citations(text, bibliography):
     return updated_text
 
 
-def _generate_buttons(out_dir, io_generator):
+def _get_template_env():
+    """Create and return Jinja2 environment with template directory."""
     resource_path = Path(__file__).resolve().parent.joinpath("data", "html")
+    template_env = Environment(loader=FileSystemLoader(str(resource_path)))
+    return template_env
 
+
+def _generate_buttons(out_dir, io_generator):
     images_list = [img for img in os.listdir(out_dir) if ".svg" in img]
     optcom_nogsr_disp = "none"
     optcom_name = ""
@@ -96,12 +101,10 @@ def _generate_buttons(out_dir, io_generator):
         accepted_mir_disp = "block"
         accepted_name = "before MIR"
 
-    buttons_template_name = "report_carpet_buttons_template.html"
-    buttons_template_path = resource_path.joinpath(buttons_template_name)
-    with open(str(buttons_template_path)) as buttons_file:
-        buttons_tpl = Template(buttons_file.read())
+    template_env = _get_template_env()
+    template = template_env.get_template("report_carpet_buttons_template.html")
 
-    buttons_html = buttons_tpl.substitute(
+    buttons_html = template.render(
         optcomdisp=optcom_nogsr_disp,
         denoiseddisp=denoised_mir_disp,
         accepteddisp=accepted_mir_disp,
@@ -138,8 +141,6 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
     -------
     HTMLReport : an instance of a populated HTML report
     """
-    resource_path = Path(__file__).resolve().parent.joinpath("data", "html")
-
     # Initial carpet plot (default one)
     initial_carpet = f"./figures/{prefix}carpet_optcom.svg"
 
@@ -160,12 +161,10 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
     # Update inline citations
     about = _inline_citations(about, bibliography)
 
-    body_template_name = "report_body_template.html"
-    body_template_path = resource_path.joinpath(body_template_name)
-    with open(str(body_template_path)) as body_file:
-        body_tpl = Template(body_file.read())
+    template_env = _get_template_env()
+    body_template = template_env.get_template("report_body_template.html")
 
-    body = body_tpl.substitute(
+    body = body_template.render(
         content=bokeh_id,
         info=info_table,
         about=about,
@@ -194,29 +193,22 @@ def _save_as_html(body):
     body : str
         Body for HTML report with embedded figures
     """
-    resource_path = Path(__file__).resolve().parent.joinpath("data", "html")
-    head_template_name = "report_head_template.html"
-    head_template_path = resource_path.joinpath(head_template_name)
-    with open(str(head_template_path)) as head_file:
-        head_tpl = Template(head_file.read())
+    template_env = _get_template_env()
+    head_template = template_env.get_template("report_head_template.html")
 
-    html = head_tpl.substitute(version=__version__, bokehversion=bokehversion, body=body)
+    html = head_template.render(version=__version__, bokehversion=bokehversion, body=body)
     return html
 
 
 def _generate_info_table(info_dict):
     """Generate a table with relevant information about the system and tedana."""
-    resource_path = Path(__file__).resolve().parent.joinpath("data", "html")
-
-    info_template_name = "report_info_table_template.html"
-    info_template_path = resource_path.joinpath(info_template_name)
-    with open(str(info_template_path)) as info_file:
-        info_tpl = Template(info_file.read())
-
     info_dict = info_dict["GeneratedBy"][0]
     node_dict = info_dict["Node"]
 
-    info_html = info_tpl.substitute(
+    template_env = _get_template_env()
+    info_template = template_env.get_template("report_info_table_template.html")
+
+    info_html = info_template.render(
         command=info_dict["Command"],
         system=node_dict["System"],
         node=node_dict["Name"],
