@@ -146,8 +146,8 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
     # Initial carpet plot (default one)
     initial_carpet = f"./figures/{prefix}carpet_optcom.svg"
 
-    # Get the figures directory - it's in the same directory as the references file
-    figures_dir = "./figures"
+    # Get the figures directory
+    figures_dir = "figures"
 
     # List all files in the figures directory
     files_in_figures = os.listdir(figures_dir)
