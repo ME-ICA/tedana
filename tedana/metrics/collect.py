@@ -667,7 +667,9 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
             "Description": (
                 "Optimal sign determined based on skew direction of component parameter estimates "
                 "across the brain. In cases where components were left-skewed (-1), the component "
-                "time series and map weights are flipped prior to metric calculation."
+                "time series and map weights are flipped prior to metric calculation. "
+                "This sign applies to the original mixing matrix and map weights. "
+                "The outputs produced by tedana are already flipped."
             ),
             "Levels": {
                 1: "Component is not flipped prior to metric calculation.",
