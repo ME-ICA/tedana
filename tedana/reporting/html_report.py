@@ -161,28 +161,38 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
         f"Checking for adaptive mask: {adaptive_mask_filename}, exists: {adaptive_mask_exists}"
     )
 
-    # Check if essential T2* and S0 images exist
+    # Check for T2* images
     t2star_brain_filename = f"{prefix}t2star_brain.svg"
     t2star_histogram_filename = f"{prefix}t2star_histogram.svg"
-    s0_brain_filename = f"{prefix}s0_brain.svg"
-    s0_histogram_filename = f"{prefix}s0_histogram.svg"
-    rmse_brain_filename = f"{prefix}rmse_brain.svg"
-    rmse_timeseries_filename = f"{prefix}rmse_timeseries.svg"
-
-    # T2* and S0 images for HTML
     t2star_brain = f"./figures/{t2star_brain_filename}"
     t2star_histogram = f"./figures/{t2star_histogram_filename}"
+
+    # Check for S0 images
+    s0_brain_filename = f"{prefix}s0_brain.svg"
+    s0_histogram_filename = f"{prefix}s0_histogram.svg"
     s0_brain = f"./figures/{s0_brain_filename}"
     s0_histogram = f"./figures/{s0_histogram_filename}"
+
+    # Check for RMSE images
+    rmse_brain_filename = f"{prefix}rmse_brain.svg"
+    rmse_timeseries_filename = f"{prefix}rmse_timeseries.svg"
     rmse_brain = f"./figures/{rmse_brain_filename}"
     rmse_timeseries = f"./figures/{rmse_timeseries_filename}"
 
-    t2s0_exists = (
-        t2star_brain_filename in files_in_figures
-        and t2star_histogram_filename in files_in_figures
-        and s0_brain_filename in files_in_figures
-        and s0_histogram_filename in files_in_figures
+    # Check if each set of images exists
+    t2star_exists = (
+        t2star_brain_filename in files_in_figures and t2star_histogram_filename in files_in_figures
     )
+
+    s0_exists = s0_brain_filename in files_in_figures and s0_histogram_filename in files_in_figures
+
+    rmse_exists = (
+        rmse_brain_filename in files_in_figures and rmse_timeseries_filename in files_in_figures
+    )
+
+    LGR.info(f"T2* files exist: {t2star_exists}")
+    LGR.info(f"S0 files exist: {s0_exists}")
+    LGR.info(f"RMSE files exist: {rmse_exists}")
 
     # Convert bibtex to html
     references, bibliography = _bib2html(references)
@@ -203,11 +213,13 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
         adaptiveMaskExists=adaptive_mask_exists,
         t2starBrainPlot=t2star_brain,
         t2starHistogram=t2star_histogram,
+        t2starExists=t2star_exists,
         s0BrainPlot=s0_brain,
         s0Histogram=s0_histogram,
-        t2s0Exists=t2s0_exists,
+        s0Exists=s0_exists,
         rmseBrainPlot=rmse_brain,
         rmseTimeseries=rmse_timeseries,
+        rmseExists=rmse_exists,
         references=references,
         javascript=bokeh_js,
         buttons=buttons,
