@@ -150,7 +150,7 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
     figures_dir = "figures"
 
     # List all files in the figures directory
-    files_in_figures = os.listdir(figures_dir)
+    files_in_figures = os.listdir(os.path.abspath(figures_dir))
     LGR.info(f"Files in figures directory: {files_in_figures}")
 
     # Adaptive mask image
