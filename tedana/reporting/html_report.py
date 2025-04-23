@@ -191,16 +191,20 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
     )
 
     LGR.info(
-        f"Checking for T2*/S0 files: t2star_brain: {t2star_brain_filename} in files: {t2star_brain_filename in files_in_figures}"
+        f"Checking for T2*/S0 files: t2star_brain: {t2star_brain_filename} in files: "
+        f"{t2star_brain_filename in files_in_figures}"
     )
     LGR.info(
-        f"Checking for T2*/S0 files: t2star_histogram: {t2star_histogram_filename} in files: {t2star_histogram_filename in files_in_figures}"
+        f"Checking for T2*/S0 files: t2star_histogram: {t2star_histogram_filename} in files: "
+        f"{t2star_histogram_filename in files_in_figures}"
     )
     LGR.info(
-        f"Checking for T2*/S0 files: s0_brain: {s0_brain_filename} in files: {s0_brain_filename in files_in_figures}"
+        f"Checking for T2*/S0 files: s0_brain: {s0_brain_filename} in files: "
+        f"{s0_brain_filename in files_in_figures}"
     )
     LGR.info(
-        f"Checking for T2*/S0 files: s0_histogram: {s0_histogram_filename} in files: {s0_histogram_filename in files_in_figures}"
+        f"Checking for T2*/S0 files: s0_histogram: {s0_histogram_filename} in files: "
+        f"{s0_histogram_filename in files_in_figures}"
     )
     LGR.info(f"T2*/S0 section will be shown: {t2s0_exists}")
 
