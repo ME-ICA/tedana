@@ -121,6 +121,9 @@ figures/sub-01_comp_028.png
 figures/sub-01_comp_029.png
 figures/sub-01_comp_030.png
 figures/sub-01_comp_031.png
+figures/sub-01_comp_032.png
+figures/sub-01_comp_033.png
+figures/sub-01_comp_034.png
 figures/sub-01_rmse_brain.svg
 figures/sub-01_rmse_timeseries.svg
 figures/sub-01_s0_brain.svg
