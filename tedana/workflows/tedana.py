@@ -669,8 +669,14 @@ def tedana_workflow(
         mixing_file = op.abspath(mixing_file)
         # Allow users to re-run on same folder
         mixing_name = io_generator.get_name("ICA mixing tsv")
-        if mixing_file != mixing_name:
+        if op.basename(mixing_file) != op.basename(mixing_name):
             shutil.copyfile(mixing_file, op.join(io_generator.out_dir, op.basename(mixing_file)))
+        else:
+            # Add "user_provided" to the mixing file's name if it's identical to the new file name
+            shutil.copyfile(
+                mixing_file,
+                op.join(io_generator.out_dir, f"user_provided_{op.basename(mixing_file)}"),
+            )
     elif mixing_file is not None:
         raise OSError("Argument '--mix' must be an existing file.")
 
