@@ -147,17 +147,11 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
     initial_carpet = f"./figures/{prefix}carpet_optcom.svg"
 
     # Get the figures directory - it's in the same directory as the references file
-    figures_dir = os.path.join(os.path.dirname(references), "figures")
-
-    LGR.info(f"Figures directory: {figures_dir}")
+    figures_dir = "./figures"
 
     # List all files in the figures directory
-    if os.path.exists(figures_dir):
-        files_in_figures = os.listdir(figures_dir)
-        LGR.info(f"Files in figures directory: {files_in_figures}")
-    else:
-        files_in_figures = []
-        LGR.warning(f"Figures directory not found at {figures_dir}")
+    files_in_figures = os.listdir(figures_dir)
+    LGR.info(f"Files in figures directory: {files_in_figures}")
 
     # Adaptive mask image
     adaptive_mask_filename = f"{prefix}adaptive_mask.svg"
