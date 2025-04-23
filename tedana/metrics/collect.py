@@ -35,7 +35,7 @@ def generate_metrics(
     external_regressors: Union[pd.DataFrame, None] = None,
     external_regressor_config: Union[List[Dict], None] = None,
     metrics: Union[List[str], None] = None,
-) -> Tuple[pd.DataFrame, Dict]:
+) -> Tuple[pd.DataFrame, npt.NDArray]:
     """Fit TE-dependence and -independence models to components.
 
     Parameters
@@ -76,9 +76,11 @@ def generate_metrics(
     component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for each metric.
         The index is the component number.
-    external_regressor_config : :obj:`dict`
-        Info describing the external regressors and method used for fitting and statistical tests
-        (or None if none were inputed)
+    mixing : (T x C) array_like
+        Mixing matrix for converting input data to component space,
+        where `C` is components and `T` is the same as in `data_cat`
+        The signs of a component time series are flipped so that the components spatial map
+        has more positive voxel weights
     """
     # Load metric dependency tree from json file
     dependency_config = op.join(utils.get_resource_path(), "config", "metrics.json")
@@ -460,7 +462,7 @@ def generate_metrics(
     other_columns = [col for col in component_table.columns if col not in preferred_order]
     component_table = component_table[first_columns + other_columns]
 
-    return component_table, external_regressor_config
+    return component_table, mixing
 
 
 def get_metadata(component_table: pd.DataFrame) -> Dict:
@@ -665,7 +667,7 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
             "Description": (
                 "Optimal sign determined based on skew direction of component parameter estimates "
                 "across the brain. In cases where components were left-skewed (-1), the component "
-                "time series is flipped prior to metric calculation."
+                "time series and map weights are flipped prior to metric calculation."
             ),
             "Levels": {
                 1: "Component is not flipped prior to metric calculation.",

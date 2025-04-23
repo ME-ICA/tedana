@@ -841,7 +841,7 @@ def tedana_workflow(
             extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
             necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
-            component_table, _ = metrics.collect.generate_metrics(
+            component_table, mixing = metrics.collect.generate_metrics(
                 data_cat=data_cat,
                 data_optcom=data_optcom,
                 mixing=mixing,
@@ -905,7 +905,7 @@ def tedana_workflow(
         extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
         necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
-        component_table, _ = metrics.collect.generate_metrics(
+        component_table, mixing = metrics.collect.generate_metrics(
             data_cat=data_cat,
             data_optcom=data_optcom,
             mixing=mixing,

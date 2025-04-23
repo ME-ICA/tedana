@@ -340,8 +340,6 @@ def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap):
     io_generator : :obj:`tedana.io.OutputGenerator`
         Output Generator object to use for this workflow
     """
-    # Flip signs of mixing matrix as needed
-    mixing = mixing * component_table["optimal sign"].values
 
     # regenerate the beta images
     component_maps_arr = stats.get_coeffs(ts, mixing, mask)
