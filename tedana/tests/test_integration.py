@@ -237,9 +237,39 @@ def test_integration_three_echo(skip_integration):
         tedpca="aic",
     )
 
-    # Test re-running, but use the CLI
-    # TODO Move this to a separate integration test, use the fixed desc_ICA_mixing_static.tsv that
-    #      is distributed with the testing data, and test specific outputs for consistent values
+    # compare the generated output files
+    fn = resource_filename("tedana", "tests/data/cornell_three_echo_outputs.txt")
+    check_integration_outputs(fn, out_dir)
+
+
+def test_integration_three_echo_nocomp_rerun(skip_integration):
+    """Integration test with CLI, three-echo test data, a supplied mixing matrix, no accepted."""
+
+    if skip_integration:
+        pytest.skip("Skipping three-echo integration test")
+
+    test_data_path, osf_id = data_for_testing_info("three-echo")
+    out_dir = os.path.abspath(os.path.join(test_data_path, "../../outputs/three-echo-rerun"))
+
+    # Run first with robustICA and no accepted components
+    # Using tedpca=50 to speed up processing
+    tedana_cli.tedana_workflow(
+        data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
+        tes=[14.5, 38.5, 62.5],
+        out_dir=out_dir,
+        ica_method="robustica",
+        tedpca=50,
+        n_robust_runs=2,
+        tree=resource_filename("tedana", "tests/data/reject_all_tree.json"),
+    )
+
+    # TODO error for mixing file present is not being shown
+    # TODO add tests for the expected warning & a file check
+    # compare the generated output files
+    # fn = resource_filename("tedana", "tests/data/cornell_three_echo_outputs.txt")
+    # check_integration_outputs(fn, out_dir)
+
+    # Rerun in the same directory with supplied mixing matrix & tree that results in no accepted components
     args = [
         "-d",
         f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
@@ -248,18 +278,21 @@ def test_integration_three_echo(skip_integration):
         "38.5",
         "62.5",
         "--out-dir",
-        out_dir_manual,
+        out_dir,
         "--debug",
         "--verbose",
         "-f",
         "--mix",
-        os.path.join(out_dir, "desc-ICA_mixing.tsv"),
+        os.path.join(test_data_path, "desc_ICA_mixing_static.tsv"),
+        "--tree",
+        resource_filename("tedana", "tests/data/reject_all_tree.json"),
     ]
     tedana_cli._main(args)
 
+    # TODO add tests for the expected warning & a file check
     # compare the generated output files
-    fn = resource_filename("tedana", "tests/data/cornell_three_echo_outputs.txt")
-    check_integration_outputs(fn, out_dir)
+    # fn = resource_filename("tedana", "tests/data/cornell_three_echo_outputs.txt")
+    # check_integration_outputs(fn, out_dir)
 
 
 def test_integration_three_echo_external_regressors_single_model(skip_integration, caplog):

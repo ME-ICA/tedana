@@ -863,15 +863,7 @@ def tedana_workflow(
                 n_independent_echos=n_independent_echos,
             )
             n_likely_bold_comps = selector.n_likely_bold_comps_
-            LGR.info("Selecting components from ICA results")
-            selector = selection.automatic_selection(
-                component_table,
-                selector,
-                n_echos=n_echos,
-                n_vols=n_vols,
-                n_independent_echos=n_independent_echos,
-            )
-            n_likely_bold_comps = selector.n_likely_bold_comps_
+
             if n_likely_bold_comps == 0:
                 if mixing_file is not None:
                     LGR.warning("No BOLD components found with user-provided ICA mixing matrix.")
@@ -886,19 +878,19 @@ def tedana_workflow(
                     keep_restarting = False
                 else:
                     LGR.warning("No BOLD components found. Re-attempting ICA.")
+                    # If we're going to restart, temporarily allow force overwrite
+                    io_generator.overwrite = True
+                    # Create a re-initialized selector object if rerunning
+                    # Since external_regressor_config might have been expanded to remove
+                    # regular expressions immediately after initialization,
+                    # store and copy this key
+                    tmp_external_regressor_config = selector.tree["external_regressor_config"]
+                    selector = ComponentSelector(tree)
+                    selector.tree["external_regressor_config"] = tmp_external_regressor_config
+                    RepLGR.disabled = True  # Disable the report to avoid duplicate text
+            else:
+                keep_restarting = False
 
-            # If we're going to restart, temporarily allow force overwrite
-            if keep_restarting:
-                io_generator.overwrite = True
-                # Create a re-initialized selector object if rerunning
-                # Since external_regressor_config might have been expanded to remove
-                # regular expressions immediately after initialization,
-                # store and copy this key
-                tmp_external_regressor_config = selector.tree["external_regressor_config"]
-                selector = ComponentSelector(tree)
-                selector.tree["external_regressor_config"] = tmp_external_regressor_config
-
-            RepLGR.disabled = True  # Disable the report to avoid duplicate text
         RepLGR.disabled = False  # Re-enable the report after the while loop is escaped
         io_generator.overwrite = overwrite  # Re-enable original overwrite behavior
     else:
