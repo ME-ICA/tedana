@@ -146,16 +146,16 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
     # Initial carpet plot (default one)
     initial_carpet = f"./figures/{prefix}carpet_optcom.svg"
 
-    # Get the figures directory
-    figures_dir = "figures"
+    # Get the figures directory - relative to the directory containing the references file
+    base_dir = os.path.dirname(references)
+    figures_dir = os.path.join(base_dir, "figures")
 
     # List all files in the figures directory
-    files_in_figures = os.listdir(os.path.abspath(figures_dir))
-    LGR.info(f"Files in figures directory: {files_in_figures}")
+    files_in_figures = os.listdir(figures_dir)
 
     # Adaptive mask image
     adaptive_mask_filename = f"{prefix}adaptive_mask.svg"
-    adaptive_mask = os.path.join(figures_dir, adaptive_mask_filename)
+    adaptive_mask = f"./figures/{adaptive_mask_filename}"
     adaptive_mask_exists = adaptive_mask_filename in files_in_figures
     LGR.info(
         f"Checking for adaptive mask: {adaptive_mask_filename}, exists: {adaptive_mask_exists}"
@@ -169,13 +169,13 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
     rmse_brain_filename = f"{prefix}rmse_brain.svg"
     rmse_timeseries_filename = f"{prefix}rmse_timeseries.svg"
 
-    # T2* and S0 images
-    t2star_brain = os.path.join(figures_dir, t2star_brain_filename)
-    t2star_histogram = os.path.join(figures_dir, t2star_histogram_filename)
-    s0_brain = os.path.join(figures_dir, s0_brain_filename)
-    s0_histogram = os.path.join(figures_dir, s0_histogram_filename)
-    rmse_brain = os.path.join(figures_dir, rmse_brain_filename)
-    rmse_timeseries = os.path.join(figures_dir, rmse_timeseries_filename)
+    # T2* and S0 images for HTML
+    t2star_brain = f"./figures/{t2star_brain_filename}"
+    t2star_histogram = f"./figures/{t2star_histogram_filename}"
+    s0_brain = f"./figures/{s0_brain_filename}"
+    s0_histogram = f"./figures/{s0_histogram_filename}"
+    rmse_brain = f"./figures/{rmse_brain_filename}"
+    rmse_timeseries = f"./figures/{rmse_timeseries_filename}"
 
     t2s0_exists = (
         t2star_brain_filename in files_in_figures
@@ -183,24 +183,6 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
         and s0_brain_filename in files_in_figures
         and s0_histogram_filename in files_in_figures
     )
-
-    LGR.info(
-        f"Checking for T2*/S0 files: t2star_brain: {t2star_brain_filename} in files: "
-        f"{t2star_brain_filename in files_in_figures}"
-    )
-    LGR.info(
-        f"Checking for T2*/S0 files: t2star_histogram: {t2star_histogram_filename} in files: "
-        f"{t2star_histogram_filename in files_in_figures}"
-    )
-    LGR.info(
-        f"Checking for T2*/S0 files: s0_brain: {s0_brain_filename} in files: "
-        f"{s0_brain_filename in files_in_figures}"
-    )
-    LGR.info(
-        f"Checking for T2*/S0 files: s0_histogram: {s0_histogram_filename} in files: "
-        f"{s0_histogram_filename in files_in_figures}"
-    )
-    LGR.info(f"T2*/S0 section will be shown: {t2s0_exists}")
 
     # Convert bibtex to html
     references, bibliography = _bib2html(references)
