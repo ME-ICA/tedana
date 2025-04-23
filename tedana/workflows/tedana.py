@@ -872,13 +872,20 @@ def tedana_workflow(
                 n_independent_echos=n_independent_echos,
             )
             n_likely_bold_comps = selector.n_likely_bold_comps_
-            if (n_restarts < maxrestart) and (n_likely_bold_comps == 0):
-                LGR.warning("No BOLD components found. Re-attempting ICA.")
-            elif n_likely_bold_comps == 0:
-                LGR.warning("No BOLD components found, but maximum number of restarts reached.")
-                keep_restarting = False
-            else:
-                keep_restarting = False
+            if n_likely_bold_comps == 0:
+                if mixing_file is not None:
+                    LGR.warning("No BOLD components found with user-provided ICA mixing matrix.")
+                    keep_restarting = False
+                elif ica_method.lower() == "robustica":
+                    LGR.warning("No BOLD components found with robustICA mixing matrix.")
+                    keep_restarting = False
+                elif n_restarts >= maxrestart:
+                    LGR.warning(
+                        "No BOLD components found, but maximum number of restarts reached."
+                    )
+                    keep_restarting = False
+                else:
+                    LGR.warning("No BOLD components found. Re-attempting ICA.")
 
             # If we're going to restart, temporarily allow force overwrite
             if keep_restarting:
