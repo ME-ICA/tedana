@@ -575,7 +575,7 @@ def plot_t2star_and_s0(
     mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
     assert os.path.isfile(t2star_img), f"File {t2star_img} does not exist"
 
-    # Check if S0 image exists, issue warning if not
+    # Check if S0 image exists, add message to log if not
     s0_exists = os.path.isfile(s0_img)
     if not s0_exists:
         LGR.info(
