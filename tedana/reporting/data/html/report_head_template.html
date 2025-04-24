@@ -8,15 +8,15 @@
       charset="UTF-8"
     />
     <script
-      src="https://cdn.bokeh.org/bokeh/release/bokeh-$bokehversion.min.js"
+      src="https://cdn.bokeh.org/bokeh/release/bokeh-{{ bokehversion }}.min.js"
       crossorigin="anonymous"
     ></script>
     <script
-      src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-$bokehversion.min.js"
+      src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-{{ bokehversion }}.min.js"
       crossorigin="anonymous"
     ></script>
     <script
-      src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-$bokehversion.min.js"
+      src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-{{ bokehversion }}.min.js"
       crossorigin="anonymous"
     ></script>
     <link
@@ -52,7 +52,7 @@
       <a
         href="https://github.com/ME-ICA/tedana"
         class="pure-menu-heading pure-menu-link"
-        >tedana $version</a
+        >tedana {{ version }}</a
       >
       <ul class="pure-menu-list">
         <li class="pure-menu-item">
@@ -65,6 +65,6 @@
   </nav>
 
   <body>
-    $body
+    {{ body }}
   </body>
 </html>
