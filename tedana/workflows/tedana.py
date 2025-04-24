@@ -160,17 +160,20 @@ def _get_parser():
         dest="tedpca",
         type=check_tedpca_value,
         help=(
-            "Method with which to select components in TEDPCA. "
+            "Method by which to select number of components in TEDPCA. "
+            "This can be one of the following: "
+            "String ('mdl', 'kic', 'aic', 'kundu', or 'kundu-stabilize'); "
+            "floating-point value in the range (0.0, 1.0); "
+            "positive integer value. "
             "PCA decomposition with the mdl, kic and aic options "
-            "is based on a Moving Average (stationary Gaussian) "
-            "process and are ordered from most to least aggressive. "
-            "'kundu' or 'kundu-stabilize' are selection methods that "
-            "were distributed with MEICA. "
-            "Users may also provide a float from 0 to 1, "
-            "in which case components will be selected based on the "
-            "cumulative variance explained or an integer greater than 1 "
-            "in which case the specificed number of components will be "
-            "selected."
+            "are based on a Moving Average (stationary Gaussian) process, "
+            "and are ordered from most to least aggressive. "
+            "'kundu' or 'kundu-stabilize' are legacy selection methods "
+            "that were distributed with MEICA. "
+            "Floating-point inputs select components based on the "
+            "cumulative variance explained. "
+            "Integer inputs select the specificed number of components. "
+            "Default: 'aic'."
         ),
         default="aic",
     )
@@ -493,9 +496,10 @@ def tedana_workflow(
     tedpca : {'mdl', 'aic', 'kic', 'kundu', 'kundu-stabilize', float, int}, optional
         Method with which to select components in TEDPCA.
         If a float is provided, then it is assumed to represent percentage of variance
-        explained (0-1) to retain from PCA. If an int is provided, it will output
-        a fixed number of components defined by the integer between 1 and the
-        number of time points.
+        explained (0.0-1.0) to retain from PCA. If an int is provided, it will output
+        a fixed number of components defined by the integer; must be between 2 and the
+        number of time points. If 1 is provided as an integer, it will considered as 100%
+        of the variance explained.
         Default is 'aic'.
     fixed_seed : :obj:`int`, optional
         Value passed to ``mdp.numx_rand.seed()``.
@@ -601,7 +605,7 @@ def tedana_workflow(
         gscontrol = [gscontrol]
 
     # Check value of tedpca *if* it is a predefined string,
-    # a float on [0, 1] or an int >= 1
+    # a float in (0.0, 1.0) or an int >= 1
     tedpca = check_tedpca_value(tedpca, is_parser=False)
 
     # For z-catted files, make sure it's a list of size 1

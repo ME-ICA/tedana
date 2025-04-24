@@ -254,6 +254,8 @@ def test_integration_three_echo(skip_integration):
         "-f",
         "--mix",
         os.path.join(out_dir, "desc-ICA_mixing.tsv"),
+        "--t2smap",
+        os.path.join(out_dir, "T2starmap.nii.gz"),
     ]
     tedana_cli._main(args)
 
