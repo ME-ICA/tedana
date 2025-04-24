@@ -356,6 +356,8 @@ def test_integration_three_echo_noacc_rerun(skip_integration, caplog):
     assert "No BOLD components found with robustICA mixing matrix" in caplog.text
 
     # Rerun in the same dir with supplied mixing matrix & tree that results in no accepted comps
+    # This is also the test that supplies a t2smap
+    # and can be used to confirm T2* and S0 QC image are correctly not rendered in tedana_report
     tedana_cli.tedana_workflow(
         data=f"{test_data_path}/three_echo_Cornell_zcat.nii.gz",
         tes=[14.5, 38.5, 62.5],
@@ -369,8 +371,10 @@ def test_integration_three_echo_noacc_rerun(skip_integration, caplog):
 
     # compare the generated output files. There are 68 components in the predefined mixing matrix
     fn = resource_filename("tedana", "tests/data/cornell_three_echo_verbose_outputs.txt")
-    # The since using a mixing matrix and skipping PCA, the same files from the previous iteration are excluded
-    # Also excluding counfounds, which is generated with the T2* map estimate, which is skipped here
+    # The since using a mixing matrix and skipping PCA,
+    # the same files from the previous iteration are excluded
+    # Also excluding counfounds, which is generated with the T2* map estimate,
+    # which is skipped here
     unexpected_files.append("desc-confounds_timeseries.tsv")
     # mixing_static is the name of the provided mixing matrix
     # When rerun in the same directory, report_old is a backup of the immediately previous report
