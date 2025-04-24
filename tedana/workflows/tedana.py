@@ -668,11 +668,15 @@ def tedana_workflow(
     if mixing_file is not None and op.isfile(mixing_file):
         mixing_file = op.abspath(mixing_file)
         # Allow users to re-run on same folder
-        mixing_name = io_generator.get_name("ICA mixing tsv")
-        if op.basename(mixing_file) != op.basename(mixing_name):
-            shutil.copyfile(mixing_file, op.join(io_generator.out_dir, op.basename(mixing_file)))
+        mixing_name_output = io_generator.get_name("ICA mixing tsv")
+        mixing_file_new_path = op.join(io_generator.out_dir, op.basename(mixing_file))
+        if op.basename(mixing_file) != op.basename(mixing_name_output) and not op.isfile(
+            mixing_file_new_path
+        ):
+            shutil.copyfile(mixing_file, mixing_file_new_path)
         else:
             # Add "user_provided" to the mixing file's name if it's identical to the new file name
+            # or if there's already a file in the output directory with the same name
             shutil.copyfile(
                 mixing_file,
                 op.join(io_generator.out_dir, f"user_provided_{op.basename(mixing_file)}"),
