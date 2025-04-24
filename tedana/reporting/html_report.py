@@ -5,11 +5,11 @@ import os
 import re
 from os.path import join as opj
 from pathlib import Path
-from string import Template
 
 import pandas as pd
 from bokeh import __version__ as bokehversion
 from bokeh import embed, layouts, models
+from jinja2 import Environment, FileSystemLoader
 from pybtex.database.input import bibtex
 from pybtex.plugin import find_plugin
 
@@ -74,9 +74,16 @@ def _inline_citations(text, bibliography):
     return updated_text
 
 
-def _generate_buttons(out_dir, io_generator):
+def _get_template_env():
+    """Create and return Jinja2 environment with template directory."""
     resource_path = Path(__file__).resolve().parent.joinpath("data", "html")
 
+    # Standard Jinja2 environment - no need for special configuration now
+    template_env = Environment(loader=FileSystemLoader(str(resource_path)))
+    return template_env
+
+
+def _generate_buttons(out_dir, io_generator):
     images_list = [img for img in os.listdir(out_dir) if ".svg" in img]
     optcom_nogsr_disp = "none"
     optcom_name = ""
@@ -96,12 +103,10 @@ def _generate_buttons(out_dir, io_generator):
         accepted_mir_disp = "block"
         accepted_name = "before MIR"
 
-    buttons_template_name = "report_carpet_buttons_template.html"
-    buttons_template_path = resource_path.joinpath(buttons_template_name)
-    with open(str(buttons_template_path)) as buttons_file:
-        buttons_tpl = Template(buttons_file.read())
+    template_env = _get_template_env()
+    template = template_env.get_template("report_carpet_buttons_template.html")
 
-    buttons_html = buttons_tpl.substitute(
+    buttons_html = template.render(
         optcomdisp=optcom_nogsr_disp,
         denoiseddisp=denoised_mir_disp,
         accepteddisp=accepted_mir_disp,
@@ -138,21 +143,56 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
     -------
     HTMLReport : an instance of a populated HTML report
     """
-    resource_path = Path(__file__).resolve().parent.joinpath("data", "html")
-
     # Initial carpet plot (default one)
     initial_carpet = f"./figures/{prefix}carpet_optcom.svg"
 
-    # Adaptive mask image
-    adaptive_mask = f"./figures/{prefix}adaptive_mask.svg"
+    # Get the figures directory - relative to the directory containing the references file
+    base_dir = os.path.dirname(references)
+    figures_dir = os.path.join(base_dir, "figures")
 
-    # T2* and S0 images
-    t2star_brain = f"./figures/{prefix}t2star_brain.svg"
-    t2star_histogram = f"./figures/{prefix}t2star_histogram.svg"
-    s0_brain = f"./figures/{prefix}s0_brain.svg"
-    s0_histogram = f"./figures/{prefix}s0_histogram.svg"
-    rmse_brain = f"./figures/{prefix}rmse_brain.svg"
-    rmse_timeseries = f"./figures/{prefix}rmse_timeseries.svg"
+    # List all files in the figures directory
+    files_in_figures = os.listdir(figures_dir)
+
+    # Adaptive mask image
+    adaptive_mask_filename = f"{prefix}adaptive_mask.svg"
+    adaptive_mask = f"./figures/{adaptive_mask_filename}"
+    adaptive_mask_exists = adaptive_mask_filename in files_in_figures
+    LGR.info(
+        f"Checking for adaptive mask: {adaptive_mask_filename}, exists: {adaptive_mask_exists}"
+    )
+
+    # Check for T2* images
+    t2star_brain_filename = f"{prefix}t2star_brain.svg"
+    t2star_histogram_filename = f"{prefix}t2star_histogram.svg"
+    t2star_brain = f"./figures/{t2star_brain_filename}"
+    t2star_histogram = f"./figures/{t2star_histogram_filename}"
+
+    # Check for S0 images
+    s0_brain_filename = f"{prefix}s0_brain.svg"
+    s0_histogram_filename = f"{prefix}s0_histogram.svg"
+    s0_brain = f"./figures/{s0_brain_filename}"
+    s0_histogram = f"./figures/{s0_histogram_filename}"
+
+    # Check for RMSE images
+    rmse_brain_filename = f"{prefix}rmse_brain.svg"
+    rmse_timeseries_filename = f"{prefix}rmse_timeseries.svg"
+    rmse_brain = f"./figures/{rmse_brain_filename}"
+    rmse_timeseries = f"./figures/{rmse_timeseries_filename}"
+
+    # Check if each set of images exists
+    t2star_exists = (
+        t2star_brain_filename in files_in_figures and t2star_histogram_filename in files_in_figures
+    )
+
+    s0_exists = s0_brain_filename in files_in_figures and s0_histogram_filename in files_in_figures
+
+    rmse_exists = (
+        rmse_brain_filename in files_in_figures and rmse_timeseries_filename in files_in_figures
+    )
+
+    LGR.info(f"T2* files exist: {t2star_exists}")
+    LGR.info(f"S0 files exist: {s0_exists}")
+    LGR.info(f"RMSE files exist: {rmse_exists}")
 
     # Convert bibtex to html
     references, bibliography = _bib2html(references)
@@ -160,24 +200,26 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
     # Update inline citations
     about = _inline_citations(about, bibliography)
 
-    body_template_name = "report_body_template.html"
-    body_template_path = resource_path.joinpath(body_template_name)
-    with open(str(body_template_path)) as body_file:
-        body_tpl = Template(body_file.read())
+    template_env = _get_template_env()
+    body_template = template_env.get_template("report_body_template.html")
 
-    body = body_tpl.substitute(
+    body = body_template.render(
         content=bokeh_id,
         info=info_table,
         about=about,
         prefix=prefix,
         initialCarpet=initial_carpet,
         adaptiveMask=adaptive_mask,
+        adaptiveMaskExists=adaptive_mask_exists,
         t2starBrainPlot=t2star_brain,
         t2starHistogram=t2star_histogram,
+        t2starExists=t2star_exists,
         s0BrainPlot=s0_brain,
         s0Histogram=s0_histogram,
+        s0Exists=s0_exists,
         rmseBrainPlot=rmse_brain,
         rmseTimeseries=rmse_timeseries,
+        rmseExists=rmse_exists,
         references=references,
         javascript=bokeh_js,
         buttons=buttons,
@@ -194,29 +236,23 @@ def _save_as_html(body):
     body : str
         Body for HTML report with embedded figures
     """
-    resource_path = Path(__file__).resolve().parent.joinpath("data", "html")
-    head_template_name = "report_head_template.html"
-    head_template_path = resource_path.joinpath(head_template_name)
-    with open(str(head_template_path)) as head_file:
-        head_tpl = Template(head_file.read())
+    template_env = _get_template_env()
+    head_template = template_env.get_template("report_head_template.html")
 
-    html = head_tpl.substitute(version=__version__, bokehversion=bokehversion, body=body)
+    html = head_template.render(version=__version__, bokehversion=bokehversion, body=body)
+
     return html
 
 
 def _generate_info_table(info_dict):
     """Generate a table with relevant information about the system and tedana."""
-    resource_path = Path(__file__).resolve().parent.joinpath("data", "html")
-
-    info_template_name = "report_info_table_template.html"
-    info_template_path = resource_path.joinpath(info_template_name)
-    with open(str(info_template_path)) as info_file:
-        info_tpl = Template(info_file.read())
-
     info_dict = info_dict["GeneratedBy"][0]
     node_dict = info_dict["Node"]
 
-    info_html = info_tpl.substitute(
+    template_env = _get_template_env()
+    info_template = template_env.get_template("report_info_table_template.html")
+
+    info_html = info_template.render(
         command=info_dict["Command"],
         system=node_dict["System"],
         node=node_dict["Name"],
