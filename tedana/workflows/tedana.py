@@ -865,10 +865,7 @@ def tedana_workflow(
             n_likely_bold_comps = selector.n_likely_bold_comps_
 
             if n_likely_bold_comps == 0:
-                if mixing_file is not None:
-                    LGR.warning("No BOLD components found with user-provided ICA mixing matrix.")
-                    keep_restarting = False
-                elif ica_method.lower() == "robustica":
+                if ica_method.lower() == "robustica":
                     LGR.warning("No BOLD components found with robustICA mixing matrix.")
                     keep_restarting = False
                 elif n_restarts >= maxrestart:
@@ -924,6 +921,9 @@ def tedana_workflow(
             n_vols=n_vols,
             n_independent_echos=n_independent_echos,
         )
+
+        if selector.n_likely_bold_comps_ == 0:
+            LGR.warning("No BOLD components found with user-provided ICA mixing matrix.")
 
     # TODO The ICA mixing matrix should be written out after it is created
     #     It is currently being written after component selection is done
