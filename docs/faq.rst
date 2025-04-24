@@ -161,6 +161,14 @@ If users are having trouble with PCA component estimation failing on a dataset,
 we recommend using RobustICA;
 and we invite users to send us feedback on its behavior and efficacy.
 
+Also note that ``--ica-method robustica`` can be paired with ``--n_robust_runs``.
+That second option defines how many interations of ICA to run.
+The default is ``--n_robust_runs 30`` which was selected because the resulting components
+stabilized and the activation volumes plateaued during testing on a large dataset.
+If one wants to examine on other data sets, a basic guide is,
+since larger ``--n_robust_runs`` means more compute time,
+it should be set to the lowest value where the stability of the resulting components plateaus.
+
 
 .. _MAPCA: https://github.com/ME-ICA/mapca
 .. _robustica: https://github.com/CRG-CNAG/robustica
