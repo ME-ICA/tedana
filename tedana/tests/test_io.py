@@ -332,10 +332,10 @@ def test_download_json_file_not_found(mock_isfile, mock_requests_get):
     mock_response.json.return_value = {"files": [{"name": "tree.json", "download_url": "url.com"}]}
     mock_requests_get.return_value = mock_response
 
-    with mock.patch("tedana.io.LGR") as mock_lgr:
-        result = me.download_json("non_existent_tree", "some_dir")
-        assert result is None
-        mock_lgr.info.assert_called_with("Tree non_existent_tree not found on figshare.")
+    result = me.download_json("non_existent_tree", "some_dir")
+
+    assert result is None
+    mock_response.raise_for_status.assert_called_once()
 
 
 @mock.patch("tedana.io.requests.get")

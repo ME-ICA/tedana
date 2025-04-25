@@ -518,36 +518,35 @@ def download_json(tree: str, out_dir: str) -> str:
     save_path : str
         The filepath of the downloaded decision tree.
     """
-    base_url = 'https://api.figshare.com/v2'
+    base_url = "https://api.figshare.com/v2"
     item_id = 25251433
 
-    fname = tree + ".json" if not tree.endswith(".json") else tree 
+    fname = tree + ".json" if not tree.endswith(".json") else tree
     save_path = op.join(out_dir, fname)
 
     if op.isfile(save_path):
         return save_path
 
     try:
-        r = requests.get(f'{base_url}/articles/{item_id}')
+        r = requests.get(f"{base_url}/articles/{item_id}")
         r.raise_for_status()
         metadata = r.json()
 
-        file_info = next((f for f in metadata["files"] if f["name"] == fname), None)
-        
+        file_info = next((f for f in metadata["files"] if f["name"] == fname.lower()), None)
+
         if not file_info:
-            LGR.info(f"Tree {tree} not found on figshare.")
             return
 
-        download_r = requests.get(file_info['download_url'])
+        download_r = requests.get(file_info["download_url"])
         download_r.raise_for_status()
 
-        with open(save_path, 'wb') as f:
+        with open(save_path, "wb") as f:
             f.write(download_r.content)
         LGR.info(f"Tree {tree} downloaded from figshare to {save_path}")
         return save_path
 
     except requests.RequestException as e:
-        LGR.error(e)
+        LGR.error(f"Cannot connect to figshare: {e}")
  
 
 

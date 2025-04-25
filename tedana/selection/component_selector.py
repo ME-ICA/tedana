@@ -72,15 +72,14 @@ def load_config(tree: str, out_dir: str = ".") -> Dict:
         fname = tree
     else:
         fname = download_json(tree, out_dir)
-        
+
     try:
         dectree = load_json(fname)
-    except:
+    except Exception:
         raise ValueError(
             f"Cannot find tree {tree}. Please check your path or use a "
             f"default tree ({DEFAULT_TREES}) or one from figshare."
         )
-
 
     return validate_tree(dectree)
 
