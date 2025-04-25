@@ -2,13 +2,13 @@
 
 import json
 import os
+from unittest import mock
 
 import nibabel as nib
 import numpy as np
 import pandas as pd
 import pytest
 
-from unittest import mock
 from tedana import io as me
 from tedana.tests.test_utils import fnames, tes
 from tedana.tests.utils import get_test_data_path
