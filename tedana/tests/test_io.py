@@ -7,6 +7,7 @@ import nibabel as nib
 import numpy as np
 import pandas as pd
 import pytest
+from unittest import mock
 
 from tedana import io as me
 from tedana.tests.test_utils import fnames, tes
@@ -318,3 +319,32 @@ def test_custom_encoder():
     encoded = json.dumps(test_data, cls=me.CustomEncoder)
     decoded = json.loads(encoded)
     assert test_data == decoded
+
+
+@mock.patch("tedana.io.requests.get")
+@mock.patch("tedana.io.op.isfile")
+def test_download_json_file_not_found(mock_isfile, mock_requests_get):
+    """Test case when file doesn't exist locally or on figshare"""
+    mock_isfile.return_value = False
+
+    mock_response = mock.Mock()
+    mock_response.raise_for_status = mock.Mock()
+    mock_response.json.return_value = {"files": [{"name": "tree.json", "download_url": "url.com"}]}
+    mock_requests_get.return_value = mock_response
+
+    with mock.patch("tedana.io.LGR") as mock_lgr:
+        result = me.download_json("non_existent_tree", "some_dir")
+        assert result is None
+        mock_lgr.info.assert_called_with("Tree non_existent_tree not found on figshare.")
+
+
+@mock.patch("tedana.io.requests.get")
+@mock.patch("tedana.io.op.isfile")
+def test_download_json_skips_if_exists(mock_isfile, mock_requests_get):
+    """Test case when file already exists locally"""
+    mock_isfile.return_value = True
+
+    result = me.download_json("my_tree", "some_dir")
+
+    assert result == "some_dir/my_tree.json"
+    mock_requests_get.assert_not_called()
