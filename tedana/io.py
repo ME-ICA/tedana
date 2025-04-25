@@ -547,7 +547,6 @@ def download_json(tree: str, out_dir: str) -> str:
 
     except requests.RequestException as e:
         LGR.error(f"Cannot connect to figshare: {e}")
- 
 
 
 def add_decomp_prefix(comp_num, prefix, max_value):

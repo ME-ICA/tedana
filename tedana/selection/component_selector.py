@@ -8,7 +8,7 @@ from typing import Dict, List, Union
 import pandas as pd
 from numpy import asarray
 
-from tedana.io import load_json, download_json
+from tedana.io import download_json, load_json
 from tedana.selection import selection_nodes
 from tedana.selection.selection_utils import (
     clean_dataframe,
@@ -52,10 +52,15 @@ def load_config(tree: str, out_dir: str = ".") -> Dict:
         The named tree or path to a JSON file that defines one
     out_dir :obj:`str`, optional
         The output directory. Default is current working directory.
+
     Returns
     -------
     tree : :obj:`dict`
         A validated decision tree for the component selection process.
+
+    Raises
+    ------
+    ValueError if the tree can't be loaded
     """
     fname, dectree = None, None
 
