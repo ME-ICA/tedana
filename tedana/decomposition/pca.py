@@ -354,7 +354,7 @@ def tedpca(
         "d_table_score",
     ]
     # Even if user inputted, don't fit external_regressors to PCA components
-    component_table, _ = metrics.collect.generate_metrics(
+    component_table, comp_ts = metrics.collect.generate_metrics(
         data_cat=data_cat,
         data_optcom=data_optcom,
         mixing=comp_ts,

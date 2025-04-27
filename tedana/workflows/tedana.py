@@ -668,10 +668,19 @@ def tedana_workflow(
     if mixing_file is not None and op.isfile(mixing_file):
         mixing_file = op.abspath(mixing_file)
         # Allow users to re-run on same folder
-        mixing_name = io_generator.get_name("ICA mixing tsv")
-        if mixing_file != mixing_name:
-            shutil.copyfile(mixing_file, mixing_name)
-            shutil.copyfile(mixing_file, op.join(io_generator.out_dir, op.basename(mixing_file)))
+        mixing_name_output = io_generator.get_name("ICA mixing tsv")
+        mixing_file_new_path = op.join(io_generator.out_dir, op.basename(mixing_file))
+        if op.basename(mixing_file) != op.basename(mixing_name_output) and not op.isfile(
+            mixing_file_new_path
+        ):
+            shutil.copyfile(mixing_file, mixing_file_new_path)
+        else:
+            # Add "user_provided" to the mixing file's name if it's identical to the new file name
+            # or if there's already a file in the output directory with the same name
+            shutil.copyfile(
+                mixing_file,
+                op.join(io_generator.out_dir, f"user_provided_{op.basename(mixing_file)}"),
+            )
     elif mixing_file is not None:
         raise OSError("Argument '--mix' must be an existing file.")
 
@@ -841,7 +850,7 @@ def tedana_workflow(
             extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
             necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
-            component_table, _ = metrics.collect.generate_metrics(
+            component_table, mixing = metrics.collect.generate_metrics(
                 data_cat=data_cat,
                 data_optcom=data_optcom,
                 mixing=mixing,
@@ -896,7 +905,6 @@ def tedana_workflow(
         io_generator.overwrite = overwrite  # Re-enable original overwrite behavior
     else:
         LGR.info("Using supplied mixing matrix from ICA")
-        mixing_file = io_generator.get_name("ICA mixing tsv")
         mixing = pd.read_table(mixing_file).values
 
         # selector = ComponentSelector(tree)
@@ -905,7 +913,7 @@ def tedana_workflow(
         extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
         necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
-        component_table, _ = metrics.collect.generate_metrics(
+        component_table, mixing = metrics.collect.generate_metrics(
             data_cat=data_cat,
             data_optcom=data_optcom,
             mixing=mixing,
@@ -926,17 +934,10 @@ def tedana_workflow(
             n_independent_echos=n_independent_echos,
         )
 
-    # TODO The ICA mixing matrix should be written out after it is created
-    #     It is currently being written after component selection is done
-    #     and rewritten if an existing mixing matrix is given as an input
     comp_names = component_table["Component"].values
     mixing_df = pd.DataFrame(data=mixing, columns=comp_names)
-    if not op.exists(io_generator.get_name("ICA mixing tsv")):
-        io_generator.save_file(mixing_df, "ICA mixing tsv")
-    else:  # Make sure the relative path to the supplied mixing matrix is saved in the registry
-        io_generator.registry["ICA mixing tsv"] = op.basename(
-            io_generator.get_name("ICA mixing tsv")
-        )
+    io_generator.save_file(mixing_df, "ICA mixing tsv")
+
     betas_oc = utils.unmask(computefeats2(data_optcom, mixing, mask_denoise), mask_denoise)
     io_generator.save_file(betas_oc, "z-scored ICA components img")
 
