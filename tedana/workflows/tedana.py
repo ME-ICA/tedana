@@ -829,6 +829,9 @@ def tedana_workflow(
         keep_restarting = True
         n_restarts = 0
         seed = fixed_seed
+        cluster_labels = None
+        similarity_t_sne = None
+
         while keep_restarting:
             mixing, seed, cluster_labels, similarity_t_sne = decomposition.tedica(
                 data_reduced,
