@@ -69,6 +69,9 @@ def tedica(
 
     ica_method = ica_method.lower()
 
+    # Default r_ica results to None to avoid errors in the case of fastica
+    c_labels, similarity_t_sne = None, None
+
     if ica_method == "robustica":
         mixing, fixed_seed, c_labels, similarity_t_sne = r_ica(
             data,
