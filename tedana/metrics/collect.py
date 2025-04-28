@@ -29,12 +29,13 @@ def generate_metrics(
     mixing: npt.NDArray,
     adaptive_mask: npt.NDArray,
     tes: Union[List[int], List[float], npt.NDArray],
+    n_independent_echos: int = None,
     io_generator: io.OutputGenerator,
     label: str,
     external_regressors: Union[pd.DataFrame, None] = None,
     external_regressor_config: Union[List[Dict], None] = None,
     metrics: Union[List[str], None] = None,
-) -> Tuple[pd.DataFrame, Dict]:
+) -> Tuple[pd.DataFrame, npt.NDArray]:
     """Fit TE-dependence and -independence models to components.
 
     Parameters
@@ -53,6 +54,10 @@ def generate_metrics(
         For more information on thresholding, see `make_adaptive_mask`.
     tes : list
         List of echo times associated with `data_cat`, in milliseconds
+    n_independent_echos : int
+        Number of independent echoes to use in goodness of fit metrics (fstat).
+        Primarily used for EPTI acquisitions.
+        If None, number of echoes will be used. Default is None.
     io_generator : tedana.io.OutputGenerator
         The output generator object for this workflow
     label : str in ['ICA', 'PCA']
@@ -71,9 +76,11 @@ def generate_metrics(
     component_table : (C x X) :obj:`pandas.DataFrame`
         Component metric table. One row for each component, with a column for each metric.
         The index is the component number.
-    external_regressor_config : :obj:`dict`
-        Info describing the external regressors and method used for fitting and statistical tests
-        (or None if none were inputed)
+    mixing : (T x C) array_like
+        Mixing matrix for converting input data to component space,
+        where `C` is components and `T` is the same as in `data_cat`
+        The signs of a component time series are flipped so that the components spatial map
+        has more positive voxel weights
     """
     # Load metric dependency tree from json file
     dependency_config = op.join(utils.get_resource_path(), "config", "metrics.json")
@@ -121,6 +128,10 @@ def generate_metrics(
 
     # Ensure that echo times are in an array, rather than a list
     tes = np.asarray(tes)
+
+    # use either the inputted number of indie echoes or the total number of echoes
+    # to calculate the threshold for f tests
+    f_thresh, _, _ = getfbounds(n_independent_echos or len(tes))
 
     # Get reference image from io_generator
     ref_img = io_generator.reference_img
@@ -196,6 +207,7 @@ def generate_metrics(
             mixing=mixing,
             adaptive_mask=adaptive_mask,
             tes=tes,
+            n_independent_echos=n_independent_echos,
         )
         metric_maps["map FT2"] = m_t2
         metric_maps["map FS0"] = m_s0
@@ -224,7 +236,7 @@ def generate_metrics(
 
     if "map FT2 clusterized" in required_metrics:
         LGR.info("Calculating T2* F-statistic maps")
-        f_thresh, _, _ = getfbounds(len(tes))
+
         metric_maps["map FT2 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FT2"],
             mask=mask,
@@ -234,7 +246,7 @@ def generate_metrics(
 
     if "map FS0 clusterized" in required_metrics:
         LGR.info("Calculating S0 F-statistic maps")
-        f_thresh, _, _ = getfbounds(len(tes))
+
         metric_maps["map FS0 clusterized"] = dependence.threshold_map(
             maps=metric_maps["map FS0"],
             mask=mask,
@@ -450,7 +462,7 @@ def generate_metrics(
     other_columns = [col for col in component_table.columns if col not in preferred_order]
     component_table = component_table[first_columns + other_columns]
 
-    return component_table, external_regressor_config
+    return component_table, mixing
 
 
 def get_metadata(component_table: pd.DataFrame) -> Dict:
@@ -655,12 +667,27 @@ def get_metadata(component_table: pd.DataFrame) -> Dict:
             "Description": (
                 "Optimal sign determined based on skew direction of component parameter estimates "
                 "across the brain. In cases where components were left-skewed (-1), the component "
-                "time series is flipped prior to metric calculation."
+                "time series and map weights are flipped prior to metric calculation. "
+                "This sign applies to the original mixing matrix and map weights. "
+                "The outputs produced by tedana are already flipped."
             ),
             "Levels": {
                 1: "Component is not flipped prior to metric calculation.",
                 -1: "Component is flipped prior to metric calculation.",
             },
+        }
+    if "Var Exp of rejected to accepted" in component_table:
+        metric_metadata["Var Exp of rejected to accepted"] = {
+            "LongName": "100*R2 of fit of rejected to accepted mixing matrix time series",
+            "Description": (
+                "The time series for each component are not independent. "
+                "Time series from rejected components are regressed from the data. "
+                "For each accepted component, this is a calculation of how much "
+                "the variance of the accept component times series is explained "
+                "by the rejected component time series. "
+                "This is not used in decision trees but might be a useful quality metric."
+            ),
+            "Units": "percent",
         }
 
     # There are always components in the component_table, definitionally

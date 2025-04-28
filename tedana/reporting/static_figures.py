@@ -340,9 +340,6 @@ def comp_figures(ts, mask, component_table, mixing, io_generator, png_cmap):
     io_generator : :obj:`tedana.io.OutputGenerator`
         Output Generator object to use for this workflow
     """
-    # Flip signs of mixing matrix as needed
-    mixing = mixing * component_table["optimal sign"].values
-
     # regenerate the beta images
     component_maps_arr = stats.get_coeffs(ts, mixing, mask)
     component_maps_arr = component_maps_arr.reshape(
@@ -574,7 +571,14 @@ def plot_t2star_and_s0(
     s0_img = io_generator.get_name("s0 img")
     mask_img = io.new_nii_like(io_generator.reference_img, mask.astype(int))
     assert os.path.isfile(t2star_img), f"File {t2star_img} does not exist"
-    assert os.path.isfile(s0_img), f"File {s0_img} does not exist"
+
+    # Check if S0 image exists, add message to log if not
+    s0_exists = os.path.isfile(s0_img)
+    if not s0_exists:
+        LGR.info(
+            "S0 maps and T2* fit metrics are not in report since a pre-existing "
+            "T2* map was provided"
+        )
 
     # Plot histograms
     t2star_data = masking.apply_mask(t2star_img, mask_img)
@@ -590,18 +594,20 @@ def plot_t2star_and_s0(
     fig.tight_layout()
     fig.savefig(os.path.join(io_generator.out_dir, "figures", t2star_histogram))
 
-    s0_data = masking.apply_mask(s0_img, mask_img)
-    s0_p02, s0_p98 = np.percentile(s0_data, [2, 98])
-    s0_histogram = f"{io_generator.prefix}s0_histogram.svg"
+    # Only plot S0 data if the file exists
+    if s0_exists:
+        s0_data = masking.apply_mask(s0_img, mask_img)
+        s0_p02, s0_p98 = np.percentile(s0_data, [2, 98])
+        s0_histogram = f"{io_generator.prefix}s0_histogram.svg"
 
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.hist(s0_data[s0_data <= s0_p98], bins=100)
-    ax.set_xlim(0, s0_p98)
-    ax.set_title("S0", fontsize=20)
-    ax.set_ylabel("Count", fontsize=16)
-    ax.set_xlabel("Arbitrary Units\n(limited to 98th percentile)", fontsize=16)
-    fig.tight_layout()
-    fig.savefig(os.path.join(io_generator.out_dir, "figures", s0_histogram))
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.hist(s0_data[s0_data <= s0_p98], bins=100)
+        ax.set_xlim(0, s0_p98)
+        ax.set_title("S0", fontsize=20)
+        ax.set_ylabel("Count", fontsize=16)
+        ax.set_xlabel("Arbitrary Units\n(limited to 98th percentile)", fontsize=16)
+        fig.tight_layout()
+        fig.savefig(os.path.join(io_generator.out_dir, "figures", s0_histogram))
 
     # Plot T2* and S0 maps
     t2star_plot = f"{io_generator.prefix}t2star_brain.svg"
@@ -620,21 +626,25 @@ def plot_t2star_and_s0(
             output_file=os.path.join(io_generator.out_dir, "figures", t2star_plot),
         )
 
-    s0_plot = f"{io_generator.prefix}s0_brain.svg"
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
-        plotting.plot_stat_map(
-            s0_img,
-            bg_img=None,
-            display_mode="mosaic",
-            symmetric_cbar=False,
-            black_bg=True,
-            cmap="gray",
-            vmin=s0_p02,
-            vmax=s0_p98,
-            annotate=False,
-            output_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
-        )
+    # Only plot S0 map if the file exists
+    if s0_exists:
+        s0_plot = f"{io_generator.prefix}s0_brain.svg"
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message="A non-diagonal affine.*", category=UserWarning
+            )
+            plotting.plot_stat_map(
+                s0_img,
+                bg_img=None,
+                display_mode="mosaic",
+                symmetric_cbar=False,
+                black_bg=True,
+                cmap="gray",
+                vmin=s0_p02,
+                vmax=s0_p98,
+                annotate=False,
+                output_file=os.path.join(io_generator.out_dir, "figures", s0_plot),
+            )
 
 
 def plot_rmse(

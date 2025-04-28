@@ -173,7 +173,7 @@
 </style>
 <div class="content">
   <h1>ICA components</h1>
-  $content
+  {{ content }}
 </div>
 <div>
   $tsne
@@ -181,60 +181,98 @@
 <div class="carpet-plots">
   <h1>Carpet plots</h1>
   <div class="carpet-wrapper">
-    <div class="carpet-buttons">$buttons</div>
+    <div class="carpet-buttons">{{ buttons }}</div>
     <div class="carpet-plots-image">
-      <img id="imgCarpetPlot" src="$initialCarpet" style="width: 95%; max-width: 1200px; height: auto;" />
+      <img
+        id="imgCarpetPlot"
+        src="{{ initialCarpet }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
     </div>
   </div>
 </div>
+{% if adaptiveMaskExists %}
 <div class="carpet-plots">
   <h1>Adaptive mask</h1>
-  <img id="adaptiveMask" src="$adaptiveMask" style="width: 95%; max-width: 1200px; height: auto;" />
+  <img
+    id="adaptiveMask"
+    src="{{ adaptiveMask }}"
+    style="width: 95%; max-width: 1200px; height: auto"
+  />
 </div>
+{% endif %}
 <div class="carpet-plots">
-  <h1>T2* and S0</h1>
+  {% if t2starExists %}
   <h2>T2*</h2>
   <div class="carpet-plots-image">
-    <img id="t2starBrainPlot" src="$t2starBrainPlot" style="width: 95%; max-width: 1200px; height: auto;" />
+    <img
+      id="t2starBrainPlot"
+      src="{{ t2starBrainPlot }}"
+      style="width: 95%; max-width: 1200px; height: auto"
+    />
   </div>
   <div class="carpet-plots-image">
-    <img id="t2starHistogram" src="$t2starHistogram" style="width: 95%; max-width: 1200px; height: auto;" />
+    <img
+      id="t2starHistogram"
+      src="{{ t2starHistogram }}"
+      style="width: 95%; max-width: 1200px; height: auto"
+    />
   </div>
+  {% endif %} {% if s0Exists %}
   <h2>S0</h2>
   <div class="carpet-plots-image">
-    <img id="s0BrainPlot" src="$s0BrainPlot" style="width: 95%; max-width: 1200px; height: auto;" />
+    <img
+      id="s0BrainPlot"
+      src="{{ s0BrainPlot }}"
+      style="width: 95%; max-width: 1200px; height: auto"
+    />
   </div>
   <div class="carpet-plots-image">
-    <img id="s0Histogram" src="$s0Histogram" style="width: 95%; max-width: 1200px; height: auto;" />
+    <img
+      id="s0Histogram"
+      src="{{ s0Histogram }}"
+      style="width: 95%; max-width: 1200px; height: auto"
+    />
   </div>
-  <h2>T2* and S0 model fit (RMSE). (Scaled between 2nd and 98th percentiles)</h2>
+  {% endif %} {% if rmseExists %}
+  <h2>
+    T2* and S0 model fit (RMSE). (Scaled between 2nd and 98th percentiles)
+  </h2>
   <div class="carpet-plots-image">
-    <img id="rmseBrainPlot" src="$rmseBrainPlot" style="width: 95%; max-width: 1200px; height: auto;" />
+    <img
+      id="rmseBrainPlot"
+      src="{{ rmseBrainPlot }}"
+      style="width: 95%; max-width: 1200px; height: auto"
+    />
   </div>
   <div class="carpet-plots-image">
-    <img id="rmseTimeseries" src="$rmseTimeseries" style="width: 95%; max-width: 1200px; height: auto;" />
+    <img
+      id="rmseTimeseries"
+      src="{{ rmseTimeseries }}"
+      style="width: 95%; max-width: 1200px; height: auto"
+    />
   </div>
-</div>
+  {% endif %}
 </div>
 <div class="info">
   <h1>Info</h1>
-  $info
+  {{ info }}
 </div>
 <div class="about">
   <h1>About tedana</h1>
-  $about
+  {{ about }}
 </div>
 <div class="content references">
   <h1>References</h1>
   <ul>
-    $references
+    {{ references }}
   </ul>
 </div>
 
 <script type="text/javascript">
   function updateCarpetPlot(name) {
     // Create variable to hold the image source
-    let carpetPlot = "./figures/$prefix";
+    let carpetPlot = "./figures/{{ prefix }}";
 
     if (name == "optcom") {
       carpetPlot += "carpet_optcom.svg";
@@ -257,4 +295,4 @@
   }
 </script>
 
-$javascript
+{{ javascript }}

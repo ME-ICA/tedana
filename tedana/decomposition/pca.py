@@ -55,6 +55,7 @@ def tedpca(
     adaptive_mask,
     io_generator,
     tes,
+    n_independent_echos=None,
     algorithm="aic",
     kdaw=10.0,
     rdaw=1.0,
@@ -79,13 +80,17 @@ def tedpca(
         The output generation object for this workflow
     tes : :obj:`list`
         List of echo times associated with `data_cat`, in milliseconds
+    n_independent_echos : :obj:`int`, optional
+        Number of independent echoes to use in goodness of fit metrics (fstat).
+        Primarily used for EPTI acquisitions.
+        If None, number of echoes will be used. Default is None.
     algorithm : {'kundu', 'kundu-stabilize', 'mdl', 'aic', 'kic', float}, optional
         Method with which to select components in TEDPCA. PCA
         decomposition with the mdl, kic and aic options are based on a Moving Average
         (stationary Gaussian) process and are ordered from most to least aggressive
         (see :footcite:p:`li2007estimating`).
         If a float is provided, then it is assumed to represent percentage of variance
-        explained (0-1) to retain from PCA.
+        explained (0.0-1.0) to retain from PCA.
         If an int is provided, then it is assumed to be the number of components
         to select
         Default is 'aic'.
@@ -349,12 +354,13 @@ def tedpca(
         "d_table_score",
     ]
     # Even if user inputted, don't fit external_regressors to PCA components
-    component_table, _ = metrics.collect.generate_metrics(
+    component_table, comp_ts = metrics.collect.generate_metrics(
         data_cat=data_cat,
         data_optcom=data_optcom,
         mixing=comp_ts,
         adaptive_mask=adaptive_mask,
         tes=tes,
+        n_independent_echos=n_independent_echos,
         io_generator=io_generator,
         label="PCA",
         external_regressors=None,
@@ -377,6 +383,7 @@ def tedpca(
         component_table, metric_metadata = kundu_tedpca(
             component_table,
             n_echos,
+            n_independent_echos,
             kdaw,
             rdaw,
             stabilize=False,
@@ -385,6 +392,7 @@ def tedpca(
         component_table, metric_metadata = kundu_tedpca(
             component_table,
             n_echos,
+            n_independent_echos,
             kdaw,
             rdaw,
             stabilize=True,

@@ -357,6 +357,26 @@
         "design",
         "ideas"
       ]
+    },
+    {
+      "login": "katielamar",
+      "name": "Katie Lamar",
+      "avatar_url": "https://avatars.githubusercontent.com/u/65981856?v=4",
+      "profile": "https://katielamar.github.io/",
+      "contributions": [
+        "code",
+        "design",
+        "ideas"
+      ]
+    },
+    {
+      "login": "marlyr",
+      "name": "Marly Rubin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/75410817?v=4",
+      "profile": "https://marlyr.github.io/",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 5,

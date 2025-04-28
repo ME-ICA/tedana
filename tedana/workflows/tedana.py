@@ -106,7 +106,8 @@ def _get_parser():
             "space as `data`. If an explicit mask is not "
             "provided, then Nilearn's compute_epi_mask "
             "function will be used to derive a mask "
-            "from the first echo's data."
+            "from the first echo's data. "
+            "Providing a mask is recommended."
         ),
         default=None,
     )
@@ -159,17 +160,20 @@ def _get_parser():
         dest="tedpca",
         type=check_tedpca_value,
         help=(
-            "Method with which to select components in TEDPCA. "
+            "Method by which to select number of components in TEDPCA. "
+            "This can be one of the following: "
+            "String ('mdl', 'kic', 'aic', 'kundu', or 'kundu-stabilize'); "
+            "floating-point value in the range (0.0, 1.0); "
+            "positive integer value. "
             "PCA decomposition with the mdl, kic and aic options "
-            "is based on a Moving Average (stationary Gaussian) "
-            "process and are ordered from most to least aggressive. "
-            "'kundu' or 'kundu-stabilize' are selection methods that "
-            "were distributed with MEICA. "
-            "Users may also provide a float from 0 to 1, "
-            "in which case components will be selected based on the "
-            "cumulative variance explained or an integer greater than 1 "
-            "in which case the specificed number of components will be "
-            "selected."
+            "are based on a Moving Average (stationary Gaussian) process, "
+            "and are ordered from most to least aggressive. "
+            "'kundu' or 'kundu-stabilize' are legacy selection methods "
+            "that were distributed with MEICA. "
+            "Floating-point inputs select components based on the "
+            "cumulative variance explained. "
+            "Integer inputs select the specificed number of components. "
+            "Default: 'aic'."
         ),
         default="aic",
     )
@@ -369,6 +373,19 @@ def _get_parser():
         help="Force overwriting of files.",
         default=False,
     )
+
+    optional.add_argument(
+        "--n-independent-echos",
+        dest="n_independent_echos",
+        metavar="INT",
+        type=int,
+        help=(
+            "Number of independent echoes to use in goodness of fit metrics (fstat)."
+            "Primarily used for EPTI acquisitions."
+            "If not provided, number of echoes will be used."
+        ),
+        default=None,
+    )
     optional.add_argument("-v", "--version", action="version", version=verstr)
     parser._action_groups.append(optional)
 
@@ -385,6 +402,7 @@ def tedana_workflow(
     masktype=["dropout"],
     fittype="loglin",
     combmode="t2s",
+    n_independent_echos=None,
     tree="tedana_orig",
     external_regressors=None,
     ica_method=DEFAULT_ICA_METHOD,
@@ -427,6 +445,8 @@ def tedana_workflow(
         spatially aligned with `data`. If an explicit mask is not provided,
         then Nilearn's compute_epi_mask function will be used to derive a mask
         from the first echo's data.
+        Since most pipelines use better masking tools,
+        providing a mask, rather than using compute_epi_mask, is recommended.
     convention : {'bids', 'orig'}, optional
         Filenaming convention. bids uses the latest BIDS derivatives version (1.5.0).
         Default is 'bids'.
@@ -442,6 +462,10 @@ def tedana_workflow(
         Default is 'loglin'.
     combmode : {'t2s'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default).
+    n_independent_echos : :obj:`int`, optional
+        Number of independent echoes to use in goodness of fit metrics (fstat).
+        Primarily used for EPTI acquisitions.
+        If None, number of echoes will be used. Default is None.
     tree : {'tedana_orig', 'meica', 'minimal', 'json file'}, optional
         Decision tree to use for component selection. Can be a
         packaged tree (tedana_orig, meica, minimal) or a user-supplied JSON file that
@@ -472,9 +496,10 @@ def tedana_workflow(
     tedpca : {'mdl', 'aic', 'kic', 'kundu', 'kundu-stabilize', float, int}, optional
         Method with which to select components in TEDPCA.
         If a float is provided, then it is assumed to represent percentage of variance
-        explained (0-1) to retain from PCA. If an int is provided, it will output
-        a fixed number of components defined by the integer between 1 and the
-        number of time points.
+        explained (0.0-1.0) to retain from PCA. If an int is provided, it will output
+        a fixed number of components defined by the integer; must be between 2 and the
+        number of time points. If 1 is provided as an integer, it will considered as 100%
+        of the variance explained.
         Default is 'aic'.
     fixed_seed : :obj:`int`, optional
         Value passed to ``mdp.numx_rand.seed()``.
@@ -580,7 +605,7 @@ def tedana_workflow(
         gscontrol = [gscontrol]
 
     # Check value of tedpca *if* it is a predefined string,
-    # a float on [0, 1] or an int >= 1
+    # a float in (0.0, 1.0) or an int >= 1
     tedpca = check_tedpca_value(tedpca, is_parser=False)
 
     # For z-catted files, make sure it's a list of size 1
@@ -643,10 +668,19 @@ def tedana_workflow(
     if mixing_file is not None and op.isfile(mixing_file):
         mixing_file = op.abspath(mixing_file)
         # Allow users to re-run on same folder
-        mixing_name = io_generator.get_name("ICA mixing tsv")
-        if mixing_file != mixing_name:
-            shutil.copyfile(mixing_file, mixing_name)
-            shutil.copyfile(mixing_file, op.join(io_generator.out_dir, op.basename(mixing_file)))
+        mixing_name_output = io_generator.get_name("ICA mixing tsv")
+        mixing_file_new_path = op.join(io_generator.out_dir, op.basename(mixing_file))
+        if op.basename(mixing_file) != op.basename(mixing_name_output) and not op.isfile(
+            mixing_file_new_path
+        ):
+            shutil.copyfile(mixing_file, mixing_file_new_path)
+        else:
+            # Add "user_provided" to the mixing file's name if it's identical to the new file name
+            # or if there's already a file in the output directory with the same name
+            shutil.copyfile(
+                mixing_file,
+                op.join(io_generator.out_dir, f"user_provided_{op.basename(mixing_file)}"),
+            )
     elif mixing_file is not None:
         raise OSError("Argument '--mix' must be an existing file.")
 
@@ -670,7 +704,7 @@ def tedana_workflow(
         RepLGR.info("A user-defined mask was applied to the data.")
         mask = utils.reshape_niimg(mask).astype(int)
     elif t2smap and not mask:
-        LGR.info("Using user-defined T2* map to generate mask")
+        LGR.info("Assuming user=defined T2* map is masked and using it to generate mask")
         t2s_limited_sec = utils.reshape_niimg(t2smap)
         t2s_limited = utils.sec2millisec(t2s_limited_sec)
         t2s_full = t2s_limited.copy()
@@ -683,7 +717,12 @@ def tedana_workflow(
         mask = utils.reshape_niimg(mask).astype(int)
         mask[t2s_limited == 0] = 0  # reduce mask based on T2* map
     else:
-        LGR.info("Computing EPI mask from first echo")
+        LGR.warning(
+            "Computing EPI mask from first echo using nilearn's compute_epi_mask function. "
+            "Most external pipelines include more reliable masking functions. "
+            "It is strongly recommended to provide an external mask, "
+            "and to visually confirm that mask accurately conforms to data boundaries."
+        )
         first_echo_img = io.new_nii_like(io_generator.reference_img, data_cat[:, 0, :])
         mask = compute_epi_mask(first_echo_img).get_fdata()
         mask = utils.reshape_niimg(mask).astype(int)
@@ -696,6 +735,7 @@ def tedana_workflow(
     mask_denoise, masksum_denoise = utils.make_adaptive_mask(
         data_cat,
         mask=mask,
+        n_independent_echos=n_independent_echos,
         threshold=1,
         methods=masktype,
     )
@@ -775,6 +815,7 @@ def tedana_workflow(
             masksum_clf,
             io_generator,
             tes=tes,
+            n_independent_echos=n_independent_echos,
             algorithm=tedpca,
             kdaw=10.0,
             rdaw=1.0,
@@ -809,12 +850,13 @@ def tedana_workflow(
             extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
             necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
-            component_table, _ = metrics.collect.generate_metrics(
+            component_table, mixing = metrics.collect.generate_metrics(
                 data_cat=data_cat,
                 data_optcom=data_optcom,
                 mixing=mixing,
                 adaptive_mask=masksum_clf,
                 tes=tes,
+                n_independent_echos=n_independent_echos,
                 io_generator=io_generator,
                 label="ICA",
                 metrics=necessary_metrics,
@@ -827,6 +869,7 @@ def tedana_workflow(
                 selector,
                 n_echos=n_echos,
                 n_vols=n_vols,
+                n_independent_echos=n_independent_echos,
             )
             n_likely_bold_comps = selector.n_likely_bold_comps_
             LGR.info("Selecting components from ICA results")
@@ -835,6 +878,7 @@ def tedana_workflow(
                 selector,
                 n_echos=n_echos,
                 n_vols=n_vols,
+                n_independent_echos=n_independent_echos,
             )
             n_likely_bold_comps = selector.n_likely_bold_comps_
             if (n_restarts < maxrestart) and (n_likely_bold_comps == 0):
@@ -861,7 +905,6 @@ def tedana_workflow(
         io_generator.overwrite = overwrite  # Re-enable original overwrite behavior
     else:
         LGR.info("Using supplied mixing matrix from ICA")
-        mixing_file = io_generator.get_name("ICA mixing tsv")
         mixing = pd.read_table(mixing_file).values
 
         # selector = ComponentSelector(tree)
@@ -870,12 +913,13 @@ def tedana_workflow(
         extra_metrics = ["variance explained", "normalized variance explained", "kappa", "rho"]
         necessary_metrics = sorted(list(set(necessary_metrics + extra_metrics)))
 
-        component_table, _ = metrics.collect.generate_metrics(
+        component_table, mixing = metrics.collect.generate_metrics(
             data_cat=data_cat,
             data_optcom=data_optcom,
             mixing=mixing,
             adaptive_mask=masksum_clf,
             tes=tes,
+            n_independent_echos=n_independent_echos,
             io_generator=io_generator,
             label="ICA",
             metrics=necessary_metrics,
@@ -883,22 +927,23 @@ def tedana_workflow(
             external_regressor_config=selector.tree["external_regressor_config"],
         )
         selector = selection.automatic_selection(
-            component_table, selector, n_echos=n_echos, n_vols=n_vols
+            component_table,
+            selector,
+            n_echos=n_echos,
+            n_vols=n_vols,
+            n_independent_echos=n_independent_echos,
         )
 
-    # TODO The ICA mixing matrix should be written out after it is created
-    #     It is currently being written after component selection is done
-    #     and rewritten if an existing mixing matrix is given as an input
     comp_names = component_table["Component"].values
     mixing_df = pd.DataFrame(data=mixing, columns=comp_names)
-    if not op.exists(io_generator.get_name("ICA mixing tsv")):
-        io_generator.save_file(mixing_df, "ICA mixing tsv")
-    else:  # Make sure the relative path to the supplied mixing matrix is saved in the registry
-        io_generator.registry["ICA mixing tsv"] = op.basename(
-            io_generator.get_name("ICA mixing tsv")
-        )
+    io_generator.save_file(mixing_df, "ICA mixing tsv")
+
     betas_oc = utils.unmask(computefeats2(data_optcom, mixing, mask_denoise), mask_denoise)
     io_generator.save_file(betas_oc, "z-scored ICA components img")
+
+    # calculate the fit of rejected to accepted components to use as a quality measure
+    # Note: This adds a column to component_table & needs to run before the table is saved
+    reporting.quality_metrics.calculate_rejected_components_impact(selector, mixing)
 
     # Save component selector and tree
     selector.to_files(io_generator)
@@ -1073,6 +1118,10 @@ def tedana_workflow(
         reporting.generate_report(io_generator, cluster_labels, similarity_t_sne)
 
     LGR.info("Workflow completed")
+
+    # Add newsletter info to the log
+    utils.log_newsletter_info()
+
     utils.teardown_loggers()
 
 

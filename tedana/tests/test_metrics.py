@@ -8,6 +8,7 @@ import pytest
 
 from tedana import io, utils
 from tedana.metrics import collect, dependence, external
+from tedana.metrics._utils import flip_components
 from tedana.tests.test_external_metrics import (
     sample_external_regressor_config,
     sample_external_regressors,
@@ -74,7 +75,7 @@ def test_smoke_generate_metrics(testdata1):
         external_regressors, external_regressor_config, n_vols
     )
 
-    component_table, _ = collect.generate_metrics(
+    component_table, new_mixing = collect.generate_metrics(
         data_cat=testdata1["data_cat"],
         data_optcom=testdata1["data_optcom"],
         mixing=testdata1["mixing"],
@@ -87,6 +88,12 @@ def test_smoke_generate_metrics(testdata1):
         metrics=metrics,
     )
     assert isinstance(component_table, pd.DataFrame)
+    # new_mixing should have flipped signs compared to mixing.
+    # multiplying by "optimal sign" will flip the signs back so it should match
+    assert (
+        np.round(flip_components(new_mixing, signs=component_table["optimal sign"].to_numpy()), 4)
+        == np.round(testdata1["mixing"], 4)
+    ).all()
 
 
 def test_generate_metrics_fails(testdata1):
@@ -205,9 +212,20 @@ def test_smoke_calculate_f_maps():
     data_cat = np.random.random((n_voxels, n_echos, n_volumes))
     z_maps = np.random.normal(size=(n_voxels, n_components))
     mixing = np.random.random((n_volumes, n_components))
-    adaptive_mask = np.random.randint(1, n_echos + 1, size=n_voxels)
+    # The ordering is random, but make sure the adaptive mask always includes values of 1-5
+    adaptive_mask = np.random.permutation(
+        np.concatenate(
+            (
+                np.tile(1, int(np.round(n_voxels * 0.05))),
+                np.tile(2, int(np.round(n_voxels * 0.1))),
+                np.tile(3, int(np.round(n_voxels * 0.4))),
+                np.tile(4, int(np.round(n_voxels * 0.2))),
+                np.tile(5, int(np.round(n_voxels * 0.25))),
+            )
+        )
+    )
     tes = np.array([15, 25, 35, 45, 55])
-    f_t2_maps, f_s0_maps, _, _ = dependence.calculate_f_maps(
+    f_t2_maps_orig, f_s0_maps_orig, _, _ = dependence.calculate_f_maps(
         data_cat=data_cat,
         z_maps=z_maps,
         mixing=mixing,
@@ -215,7 +233,46 @@ def test_smoke_calculate_f_maps():
         tes=tes,
         f_max=500,
     )
+    assert f_t2_maps_orig.shape == f_s0_maps_orig.shape == (n_voxels, n_components)
+
+    # rerunning with n_independent_echos=3
+    f_t2_maps, f_s0_maps, _, _ = dependence.calculate_f_maps(
+        data_cat=data_cat,
+        z_maps=z_maps,
+        mixing=mixing,
+        adaptive_mask=adaptive_mask,
+        tes=tes,
+        n_independent_echos=3,
+        f_max=500,
+    )
     assert f_t2_maps.shape == f_s0_maps.shape == (n_voxels, n_components)
+    # exclude voxels f==0 and f==f_max since the >0 clause for 5 echoes wouldn't be true
+    noextreme_f_mask = np.logical_and(
+        np.logical_and(
+            np.logical_and(f_t2_maps_orig > 0.0, f_s0_maps_orig > 0.0), f_t2_maps_orig < 500
+        ),
+        f_s0_maps_orig < 500,
+    )
+    # When n_independent_echos == the number of echoes (3),
+    # then f_maps_orig should equal f_maps
+    echo3_mask = np.logical_and(np.tile(adaptive_mask == 3, (50, 1)).T, noextreme_f_mask)
+    assert np.round(
+        np.min(f_t2_maps_orig[echo3_mask] - f_t2_maps[echo3_mask]), decimals=3
+    ) == np.round(0.0, decimals=3)
+    assert np.round(
+        np.min(f_s0_maps_orig[echo3_mask] - f_s0_maps[echo3_mask]), decimals=3
+    ) == np.round(0.0, decimals=3)
+    assert np.round(
+        np.max(f_t2_maps_orig[echo3_mask] - f_t2_maps[echo3_mask]), decimals=3
+    ) == np.round(0.0, decimals=3)
+    assert np.round(
+        np.max(f_s0_maps_orig[echo3_mask] - f_s0_maps[echo3_mask]), decimals=3
+    ) == np.round(0.0, decimals=3)
+    # When n_independent_echos==3, there are 5 good echoes,
+    # then f_maps_orig should always be larger than f_maps with fewer DOF
+    echo5_mask = np.logical_and(np.tile(adaptive_mask == 5, (50, 1)).T, noextreme_f_mask)
+    assert np.min(f_t2_maps_orig[echo5_mask] - f_t2_maps[echo5_mask]) > 0.0
+    assert np.min(f_s0_maps_orig[echo5_mask] - f_s0_maps[echo5_mask]) > 0.0
 
 
 def test_smoke_calculate_varex():
