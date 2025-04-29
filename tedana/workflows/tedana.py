@@ -37,7 +37,7 @@ from tedana.config import (
     DEFAULT_SEED,
 )
 from tedana.selection.component_selector import ComponentSelector
-from tedana.stats import computefeats2
+from tedana.stats import computefeats2, variance_explained
 from tedana.workflows.parser_utils import (
     check_n_robust_runs_value,
     check_tedpca_value,
@@ -809,6 +809,7 @@ def tedana_workflow(
     # Default r_ica results to None as they are expected for the reports
     cluster_labels = None
     similarity_t_sne = None
+    fastica_convergence_warning_count = None
 
     if mixing_file is None:
         # Identify and remove thermal noise from data
@@ -835,17 +836,22 @@ def tedana_workflow(
         seed = fixed_seed
 
         while keep_restarting:
-            mixing, seed, cluster_labels, similarity_t_sne = decomposition.tedica(
-                data_reduced,
-                n_components,
-                seed,
-                ica_method,
-                n_robust_runs,
-                maxit,
-                maxrestart=(maxrestart - n_restarts),
+            mixing, seed, cluster_labels, similarity_t_sne, fastica_convergence_warning_count = (
+                decomposition.tedica(
+                    data_reduced,
+                    n_components,
+                    seed,
+                    ica_method,
+                    n_robust_runs,
+                    maxit,
+                    maxrestart=(maxrestart - n_restarts),
+                )
             )
             seed += 1
             n_restarts = seed - fixed_seed
+
+            ica_variance_explained, _ = variance_explained(data_optcom, mixing, mask=mask_clf)
+            LGR.info(f"Variance Explained by ICA: {ica_variance_explained}%")
 
             # Estimate betas and compute selection metrics for mixing matrix
             # generated from dimensionally reduced data using full data (i.e., data
@@ -877,15 +883,7 @@ def tedana_workflow(
                 n_independent_echos=n_independent_echos,
             )
             n_likely_bold_comps = selector.n_likely_bold_comps_
-            LGR.info("Selecting components from ICA results")
-            selector = selection.automatic_selection(
-                component_table,
-                selector,
-                n_echos=n_echos,
-                n_vols=n_vols,
-                n_independent_echos=n_independent_echos,
-            )
-            n_likely_bold_comps = selector.n_likely_bold_comps_
+
             if (n_restarts < maxrestart) and (n_likely_bold_comps == 0):
                 LGR.warning("No BOLD components found. Re-attempting ICA.")
             elif n_likely_bold_comps == 0:
@@ -937,6 +935,12 @@ def tedana_workflow(
             n_echos=n_echos,
             n_vols=n_vols,
             n_independent_echos=n_independent_echos,
+        )
+
+    if ica_method.lower() == "robustica":
+        # If robustica was used, store number of iterations where ICA failed
+        selector.cross_component_metrics_["fastica_convergence_warning_count"] = (
+            fastica_convergence_warning_count
         )
 
     comp_names = component_table["Component"].values

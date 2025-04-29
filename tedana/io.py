@@ -20,7 +20,7 @@ from nilearn._utils import check_niimg
 from nilearn.image import new_img_like
 
 from tedana import utils
-from tedana.stats import computefeats2, get_coeffs
+from tedana.stats import computefeats2, get_coeffs, variance_explained
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -556,13 +556,8 @@ def denoise_ts(data, mixing, mask, component_table):
     acc = component_table[component_table.classification == "accepted"].index.values
     rej = component_table[component_table.classification == "rejected"].index.values
 
-    # mask and de-mean data
-    mdata = data[mask]
-    dmdata = mdata.T - mdata.T.mean(axis=0)
+    varexpl, betas = variance_explained(data, mixing, mask=mask)
 
-    # get variance explained by retained components
-    betas = get_coeffs(dmdata.T, mixing, mask=None)
-    varexpl = (1 - ((dmdata.T - betas.dot(mixing.T)) ** 2.0).sum() / (dmdata**2.0).sum()) * 100
     LGR.info(f"Variance explained by decomposition: {varexpl:.02f}%")
 
     # create component-based data

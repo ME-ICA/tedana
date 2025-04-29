@@ -8,6 +8,7 @@ from robustica import RobustICA, abs_pearson_dist
 from scipy import stats
 from sklearn import manifold
 from sklearn.decomposition import FastICA
+from sklearn.exceptions import ConvergenceWarning
 
 from tedana.config import (
     DEFAULT_ICA_METHOD,
@@ -70,10 +71,10 @@ def tedica(
     ica_method = ica_method.lower()
 
     # Default r_ica results to None to avoid errors in the case of fastica
-    c_labels, similarity_t_sne = None, None
+    c_labels, similarity_t_sne, fastica_convergence_warning_count = None, None, None
 
     if ica_method == "robustica":
-        mixing, fixed_seed, c_labels, similarity_t_sne = r_ica(
+        mixing, fixed_seed, c_labels, similarity_t_sne, fastica_convergence_warning_count = r_ica(
             data,
             n_components=n_components,
             fixed_seed=fixed_seed,
@@ -91,7 +92,7 @@ def tedica(
     else:
         raise ValueError("The selected ICA method is invalid!")
 
-    return mixing, fixed_seed, c_labels, similarity_t_sne
+    return mixing, fixed_seed, c_labels, similarity_t_sne, fastica_convergence_warning_count
 
 
 def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
@@ -144,7 +145,34 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
                 robust_method=robust_method,
             )
 
-            s, mixing = robust_ica.fit_transform(data)
+            with warnings.catch_warnings(record=True) as caught_warnings:
+                warnings.simplefilter(
+                    "always", category=ConvergenceWarning
+                )  # Ensure all warnings are captured
+                s, mixing = robust_ica.fit_transform(data)
+
+            # Count specific FastICA convergence warnings
+            fastica_convergence_warning_count = 0
+            for w in caught_warnings:
+                if issubclass(
+                    w.category, ConvergenceWarning
+                ) and "FastICA did not converge" in str(w.message):
+                    fastica_convergence_warning_count += 1
+
+            if fastica_convergence_warning_count / n_robust_runs > 0.1:
+                # Log a warning if there's non-convergence in >10% of the attempted iterations
+                LGR.warning(
+                    "For RobustICA, FastICA did not converge in "
+                    f"{fastica_convergence_warning_count} of {n_robust_runs} interations. "
+                    "Consider rerunning with fewer initial PCA components."
+                )
+            elif fastica_convergence_warning_count > 0:
+                # Log info if there's non-convergence in <=10% of the attempted iterations
+                LGR.info(
+                    "For RobustICA, FastICA did not converge in "
+                    f"{fastica_convergence_warning_count} of {n_robust_runs} interations."
+                )
+
             q = robust_ica.evaluate_clustering(
                 robust_ica.S_all,
                 robust_ica.clustering.labels_,
@@ -212,7 +240,7 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
     p_dissimilarity = abs_pearson_dist(robust_ica.S_all)
     similarity_t_sne = t_sne.fit_transform(p_dissimilarity)
 
-    return mixing, fixed_seed, c_labels, similarity_t_sne
+    return mixing, fixed_seed, c_labels, similarity_t_sne, fastica_convergence_warning_count
 
 
 def f_ica(data, n_components, fixed_seed, maxit, maxrestart):
