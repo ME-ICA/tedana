@@ -6,7 +6,7 @@ import os.path as op
 import pandas as pd
 import pytest
 
-from tedana.workflows import tedana as tedana_cli
+from tedana.tests.utils import data_for_testing_info
 from tedana.workflows.parser_utils import (
     check_tedpca_value,
     parse_manual_list_int,
@@ -73,7 +73,7 @@ def test_parse_manual_list_int():
     assert tmp == []
 
     to_accept = [i for i in range(3)]
-    test_data_path = op.abspath(op.join(tedana_cli.__file__, "../../../.testing_data_cache"))
+    test_data_path = data_for_testing_info("path")
     acc_df = pd.DataFrame(data=to_accept, columns=["Components"])
     acc_csv_fname = op.join(test_data_path, "accept.csv")
     acc_df.to_csv(acc_csv_fname)
