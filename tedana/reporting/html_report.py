@@ -118,7 +118,9 @@ def _generate_buttons(out_dir, io_generator):
     return buttons_html
 
 
-def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, bokeh_js, buttons):
+def _update_template_bokeh(
+    bokeh_id, info_table, about, prefix, references, bokeh_js, buttons, tsne
+):
     """
     Populate a report with content.
 
@@ -138,6 +140,8 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
         Javascript created by bokeh.embed.components
     buttons : str
         HTML div created by _generate_buttons()
+    tsne : str
+        HTML div created by _create_clustering_tsne_plt()
 
     Returns
     -------
@@ -223,6 +227,7 @@ def _update_template_bokeh(bokeh_id, info_table, about, prefix, references, boke
         references=references,
         javascript=bokeh_js,
         buttons=buttons,
+        tsne=tsne,
     )
     return body
 
@@ -267,7 +272,7 @@ def _generate_info_table(info_dict):
     return info_html
 
 
-def generate_report(io_generator: OutputGenerator) -> None:
+def generate_report(io_generator: OutputGenerator, cluster_labels, similarity_t_sne) -> None:
     """Generate an HTML report.
 
     Parameters
@@ -356,6 +361,17 @@ def generate_report(io_generator: OutputGenerator) -> None:
     )
     varexp_pie_plot = df._create_varexp_pie_plt(comptable_cds)
 
+    # Create clustering plot
+    if cluster_labels is not None:
+        clustering_tsne_plot = df._create_clustering_tsne_plt(cluster_labels, similarity_t_sne)
+        tsne_script, tsne_div = embed.components(clustering_tsne_plot)
+        tsne_html = f"{tsne_script}"
+        tsne_html += (
+            f"<div class='tsne-plots'><h1>Robust ICA component clustering</h1>{tsne_div}</div>"
+        )
+    else:
+        tsne_html = ""
+
     # link all dynamic figures
     figs = [kappa_rho_plot, kappa_sorted_plot, rho_sorted_plot, varexp_pie_plot]
 
@@ -407,6 +423,7 @@ def generate_report(io_generator: OutputGenerator) -> None:
         prefix=io_generator.prefix,
         bokeh_js=kr_script,
         buttons=buttons_html,
+        tsne=tsne_html,
     )
     html = _save_as_html(body)
     with open(opj(io_generator.out_dir, f"{io_generator.prefix}tedana_report.html"), "wb") as f:

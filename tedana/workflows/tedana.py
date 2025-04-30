@@ -806,6 +806,10 @@ def tedana_workflow(
     fout = io_generator.save_file(data_optcom, "combined img")
     LGR.info(f"Writing optimally combined data set: {fout}")
 
+    # Default r_ica results to None as they are expected for the reports
+    cluster_labels = None
+    similarity_t_sne = None
+
     if mixing_file is None:
         # Identify and remove thermal noise from data
         data_reduced, n_components = decomposition.tedpca(
@@ -829,8 +833,9 @@ def tedana_workflow(
         keep_restarting = True
         n_restarts = 0
         seed = fixed_seed
+
         while keep_restarting:
-            mixing, seed = decomposition.tedica(
+            mixing, seed, cluster_labels, similarity_t_sne = decomposition.tedica(
                 data_reduced,
                 n_components,
                 seed,
@@ -1115,7 +1120,7 @@ def tedana_workflow(
             )
 
         LGR.info("Generating dynamic report")
-        reporting.generate_report(io_generator)
+        reporting.generate_report(io_generator, cluster_labels, similarity_t_sne)
 
     LGR.info("Workflow completed")
 

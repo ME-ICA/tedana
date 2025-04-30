@@ -426,3 +426,201 @@ def _link_figures(fig, comptable_ds, div_content, io_generator):
     """
     fig.js_on_event(events.Tap, _tap_callback(comptable_ds, div_content, io_generator))
     return fig
+
+
+def _create_clustering_tsne_plt(cluster_labels, similarity_t_sne):
+    """Plot the clustering results of robustica using Bokeh.
+
+    Parameters
+    ----------
+    cluster_labels : (n_pca_components x n_robust_runs,) : numpy.ndarray
+        A one dimensional array that has the cluster label of each run.
+    similarity_t_sne : (n_pca_components x n_robust_runs,2) : numpy.ndarray
+        An array containing the coordinates of projected data.
+    """
+    title = "2D projection of clustered ICA runs using TSNE"
+    marker_size = 8
+    alpha = 0.8
+    line_width = 2
+    scaling_factor = 1.1  # Moderate scaling factor
+
+    # First create the figure without the hover tool
+    p = plotting.figure(
+        title=title,
+        width=800,
+        height=600,
+        tools=["pan", "box_zoom", "wheel_zoom", "reset", "save"],  # No hover tool here
+    )
+
+    point_renderers = []  # List to store point renderers
+    has_drawn_boundary_legend = False  # Track if we've added the legend entry
+
+    # Plot regular clusters
+    for cluster_id in range(np.max(cluster_labels) + 1):
+        cluster_mask = cluster_labels == cluster_id
+        if not np.any(cluster_mask):
+            continue
+
+        # Get points for this cluster
+        cluster_points = similarity_t_sne[cluster_mask]
+
+        # Format hover text with proper string formatting for coordinates
+        hover_texts = []
+        for point in cluster_points:
+            # Format each coordinate to 4 decimal places and create a nice string representation
+            coords_str = f"({point[0]:.4f}, {point[1]:.4f})"
+            hover_texts.append(f"Cluster {cluster_id}: {coords_str}")
+
+        # Add scatter plot for cluster points with hover info
+        circle_renderer = p.scatter(
+            x="x",
+            y="y",
+            source=models.ColumnDataSource(
+                {
+                    "x": cluster_points[:, 0],
+                    "y": cluster_points[:, 1],
+                    "cluster_label": hover_texts,
+                }
+            ),
+            size=marker_size,
+            alpha=alpha,
+            line_color="black",
+            fill_color=None,
+            line_width=line_width,
+            legend_label="Clustered runs",
+            name="points",
+            marker="circle",  # Explicitly specify circle marker
+        )
+        point_renderers.append(circle_renderer)
+
+        # Handle boundary drawing based on number of points
+        if cluster_points.shape[0] > 2:
+            # For 3+ points, draw convex hull
+            from scipy.spatial import ConvexHull
+
+            try:
+                hull = ConvexHull(cluster_points)
+                # Get the vertices of the hull in order
+                hull_vertices = hull.vertices
+
+                # Calculate the centroid of the cluster
+                centroid = np.mean(cluster_points, axis=0)
+
+                # Create hull line segments with moderate scaling from centroid
+                hull_points = cluster_points[hull_vertices]
+                # Apply moderate scaling from centroid
+                scaled_hull_points = centroid + scaling_factor * (hull_points - centroid)
+
+                # Extract x and y coordinates
+                x_hull = scaled_hull_points[:, 0]
+                y_hull = scaled_hull_points[:, 1]
+
+                # Close the loop by adding the first point at the end
+                x_hull = np.append(x_hull, x_hull[0])
+                y_hull = np.append(y_hull, y_hull[0])
+
+                # Add line without hover tooltips
+                # FIXED: Only add legend_label for the first boundary
+                line_kwargs = {
+                    "x": x_hull,
+                    "y": y_hull,
+                    "line_color": "blue",
+                    "line_dash": "dashed",
+                    "line_width": line_width,
+                }
+
+                if not has_drawn_boundary_legend:
+                    line_kwargs["legend_label"] = "Cluster's boundary"
+                    has_drawn_boundary_legend = True
+
+                p.line(**line_kwargs)
+            except Exception:
+                # Skip hull if it can't be computed (e.g., coplanar points)
+                pass
+
+        elif cluster_points.shape[0] == 2:
+            # Special handling for exactly 2 points - just draw a simple line connecting them
+            point1 = cluster_points[0]
+            point2 = cluster_points[1]
+
+            # Draw a straight line connecting the two points directly
+            line_kwargs = {
+                "x": [point1[0], point2[0]],
+                "y": [point1[1], point2[1]],
+                "line_color": "blue",
+                "line_dash": "dashed",
+                "line_width": line_width,
+            }
+
+            if not has_drawn_boundary_legend:
+                line_kwargs["legend_label"] = "Cluster's boundary"
+                has_drawn_boundary_legend = True
+
+            p.line(**line_kwargs)
+
+        elif cluster_points.shape[0] == 1:
+            # For a single point, draw a small circle around it
+            point = cluster_points[0]
+            # Make the circle less expansive but still visible
+            circle_radius = marker_size * 0.4  # Reduced from 0.8 to 0.4
+
+            # FIXED: Only add legend_label for the first boundary
+            ellipse_kwargs = {
+                "x": point[0],
+                "y": point[1],
+                "width": circle_radius * 2,  # width is diameter
+                "height": circle_radius * 2,  # height is diameter
+                "line_color": "blue",
+                "line_dash": "dashed",
+                "line_width": line_width,
+                "fill_color": None,
+            }
+
+            if not has_drawn_boundary_legend:
+                ellipse_kwargs["legend_label"] = "Cluster's boundary"
+                has_drawn_boundary_legend = True
+
+            p.ellipse(**ellipse_kwargs)
+
+    # Plot noise clusters if they exist
+    if np.min(cluster_labels) == -1:
+        noise_mask = cluster_labels == -1
+        noise_points = similarity_t_sne[noise_mask]
+
+        # Format hover text for unclustered points
+        noise_hover_texts = []
+        for point in noise_points:
+            coords_str = f"({point[0]:.4f}, {point[1]:.4f})"
+            noise_hover_texts.append(f"Unclustered: {coords_str}")
+
+        # Add noise points with hover tooltips
+        x_renderer = p.scatter(
+            x="x",
+            y="y",
+            size=marker_size * 2,
+            alpha=0.6,
+            color="red",
+            legend_label="Unclustered runs",
+            source=models.ColumnDataSource(
+                {
+                    "x": noise_points[:, 0],
+                    "y": noise_points[:, 1],
+                    "cluster_label": noise_hover_texts,
+                }
+            ),
+            marker="x",  # Use 'x' marker instead of x() method
+        )
+        point_renderers.append(x_renderer)
+
+    # Update hover tool to use the new cluster_label field
+    hover_tool = models.HoverTool(
+        tooltips=[("", "@cluster_label")],  # No label, just show the formatted cluster info
+        renderers=point_renderers,  # Only apply to stored point renderers
+    )
+    p.add_tools(hover_tool)
+
+    # Configure legend
+    p.legend.click_policy = "hide"
+    p.legend.location = "top_right"
+
+    return p

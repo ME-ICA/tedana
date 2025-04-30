@@ -313,7 +313,7 @@ ICA Components Report
 
 The reporting page for the tedana decomposition presents a series
 of interactive plots designed to help you evaluate the quality of your
-analyses. This page describes the plots forming the reports and well as
+analyses. This page describes the plots forming the reports as well as
 information on how to take advantage of the interactive functionalities.
 You can also play around with `our demo`_.
 
@@ -513,6 +513,34 @@ Save          |Save|   Saves an image reproduction of the plot in PNG format.
   the toolbar of a given plot. Active interactions show an horizontal blue line underneath their
   icon, while inactive ones lack the line.
 
+****************************
+RobustICA Component Clusters
+****************************
+
+This plot will appear when the ``--ica_method robustica`` option is used.
+RobustICA runs multiple iterations of ICA and identifies stable components
+across iterations. This plot uses t-SNE to plot the components in 2D.
+Each marker is a component from one iteration.
+Components that are in stable clusters are black dots
+and the dashed blue line surrounds the cluster.
+Hover text shows the cluster number for each dot.
+Components that are not in stable clusters are red x's.
+This figure is a work-in-progress in attempting to find ways to evaluate
+robustICA results.
+In general, tight clusters of black dots are better.
+When evaluating results, a run with more diffuse clusters than others
+with the same acquisition parameters,
+but it's unclear what variations are genuinely problemmatic.
+The red x's sometimes appear in clusters that are below the threshold
+for being a cluster, but it's unclear how to decide if clusters were missed.
+If a cluster has some black dots that are far from others in the cluster,
+that might be an effect of the t-SNE dimensionality reduction.
+The goal of future work will be to improve visualizations
+and quantification of clusters.
+
+.. image:: /_static/rep01_ica_tsne_plot.png
+  :align: center
+  :height: 400px
 
 ************
 Carpet plots

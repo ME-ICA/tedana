@@ -39,9 +39,6 @@
 
   .carpet-plots {
     float: left;
-  }
-
-  .carpet-plots {
     margin-left: 5%;
     margin-right: 5%;
     margin-bottom: 100px;
@@ -62,6 +59,13 @@
     margin-bottom: 150px;
     height: auto;
     float: left;
+  }
+
+  .tsne-plots {
+    float: left;
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-bottom: 100px;
   }
 
   button {
@@ -171,6 +175,7 @@
   <h1>ICA components</h1>
   {{ content }}
 </div>
+<div>{{ tsne }}</div>
 <div class="carpet-plots">
   <h1>Carpet plots</h1>
   <div class="carpet-wrapper">
