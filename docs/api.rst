@@ -199,9 +199,9 @@ API
 
 .. _api_stats_ref:
 
-******************************************
+********************************************
 :mod:`tedana.reporting`: Reporting functions
-******************************************
+********************************************
 
 .. automodule:: tedana.reporting
    :no-members:
@@ -214,7 +214,6 @@ API
    :template: function.rst
 
    tedana.reporting.html_report.generate_report
-   tedana.reporting.html_report.get_elbow_val
    tedana.reporting.quality_metrics.calculate_rejected_components_impact
    tedana.reporting.static_figures.comp_figures
    tedana.reporting.static_figures.pca_results
