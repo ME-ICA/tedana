@@ -8,6 +8,7 @@ import pytest
 
 from tedana import io, utils
 from tedana.metrics import collect, dependence, external
+from tedana.metrics._utils import flip_components
 from tedana.tests.test_external_metrics import (
     sample_external_regressor_config,
     sample_external_regressors,
@@ -74,7 +75,7 @@ def test_smoke_generate_metrics(testdata1):
         external_regressors, external_regressor_config, n_vols
     )
 
-    component_table, _ = collect.generate_metrics(
+    component_table, new_mixing = collect.generate_metrics(
         data_cat=testdata1["data_cat"],
         data_optcom=testdata1["data_optcom"],
         mixing=testdata1["mixing"],
@@ -87,6 +88,12 @@ def test_smoke_generate_metrics(testdata1):
         metrics=metrics,
     )
     assert isinstance(component_table, pd.DataFrame)
+    # new_mixing should have flipped signs compared to mixing.
+    # multiplying by "optimal sign" will flip the signs back so it should match
+    assert (
+        np.round(flip_components(new_mixing, signs=component_table["optimal sign"].to_numpy()), 4)
+        == np.round(testdata1["mixing"], 4)
+    ).all()
 
 
 def test_generate_metrics_fails(testdata1):
