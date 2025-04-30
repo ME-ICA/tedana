@@ -16,6 +16,7 @@ from typing import List
 import nibabel as nib
 import numpy as np
 import pandas as pd
+import requests
 from nilearn._utils import check_niimg
 from nilearn.image import new_img_like
 
@@ -500,6 +501,52 @@ def load_json(path: str) -> dict:
         except json.decoder.JSONDecodeError:
             raise ValueError(f"File {path} is not a valid JSON.")
     return data
+
+
+def download_json(tree: str, out_dir: str) -> str:
+    """Download a json file from figshare unless the file already exists.
+
+    Parameters
+    ----------
+    tree : str
+        The name of the tree to download
+    out_dir : str
+        The directory where the json file will be saved
+
+    Returns
+    -------
+    save_path : str
+        The filepath of the downloaded decision tree.
+    """
+    base_url = "https://api.figshare.com/v2"
+    item_id = 25251433
+
+    fname = tree + ".json" if not tree.endswith(".json") else tree
+    save_path = op.join(out_dir, fname)
+
+    if op.isfile(save_path):
+        return save_path
+
+    try:
+        r = requests.get(f"{base_url}/articles/{item_id}")
+        r.raise_for_status()
+        metadata = r.json()
+
+        file_info = next((f for f in metadata["files"] if f["name"] == fname.lower()), None)
+
+        if not file_info:
+            return
+
+        download_r = requests.get(file_info["download_url"])
+        download_r.raise_for_status()
+
+        with open(save_path, "wb") as f:
+            f.write(download_r.content)
+        LGR.info(f"Tree {tree} downloaded from figshare to {save_path}")
+        return save_path
+
+    except requests.RequestException as e:
+        LGR.error(f"Cannot connect to figshare: {e}")
 
 
 def add_decomp_prefix(comp_num, prefix, max_value):

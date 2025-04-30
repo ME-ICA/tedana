@@ -613,7 +613,7 @@ def tedana_workflow(
         data = [data]
 
     LGR.info("Initializing and validating component selection tree")
-    selector = ComponentSelector(tree)
+    selector = ComponentSelector(tree, out_dir)
 
     LGR.info(f"Loading input data: {[f for f in data]}")
     data_cat, ref_img = io.load_data(data, n_echos=n_echos)
@@ -884,26 +884,30 @@ def tedana_workflow(
             )
             n_likely_bold_comps = selector.n_likely_bold_comps_
 
-            if (n_restarts < maxrestart) and (n_likely_bold_comps == 0):
-                LGR.warning("No BOLD components found. Re-attempting ICA.")
-            elif n_likely_bold_comps == 0:
-                LGR.warning("No BOLD components found, but maximum number of restarts reached.")
-                keep_restarting = False
+            if n_likely_bold_comps == 0:
+                if ica_method.lower() == "robustica":
+                    LGR.warning("No BOLD components found with robustICA mixing matrix.")
+                    keep_restarting = False
+                elif n_restarts >= maxrestart:
+                    LGR.warning(
+                        "No BOLD components found, but maximum number of restarts reached."
+                    )
+                    keep_restarting = False
+                else:
+                    LGR.warning("No BOLD components found. Re-attempting ICA.")
+                    # If we're going to restart, temporarily allow force overwrite
+                    io_generator.overwrite = True
+                    # Create a re-initialized selector object if rerunning
+                    # Since external_regressor_config might have been expanded to remove
+                    # regular expressions immediately after initialization,
+                    # store and copy this key
+                    tmp_external_regressor_config = selector.tree["external_regressor_config"]
+                    selector = ComponentSelector(tree)
+                    selector.tree["external_regressor_config"] = tmp_external_regressor_config
+                    RepLGR.disabled = True  # Disable the report to avoid duplicate text
             else:
                 keep_restarting = False
 
-            # If we're going to restart, temporarily allow force overwrite
-            if keep_restarting:
-                io_generator.overwrite = True
-                # Create a re-initialized selector object if rerunning
-                # Since external_regressor_config might have been expanded to remove
-                # regular expressions immediately after initialization,
-                # store and copy this key
-                tmp_external_regressor_config = selector.tree["external_regressor_config"]
-                selector = ComponentSelector(tree)
-                selector.tree["external_regressor_config"] = tmp_external_regressor_config
-
-            RepLGR.disabled = True  # Disable the report to avoid duplicate text
         RepLGR.disabled = False  # Re-enable the report after the while loop is escaped
         io_generator.overwrite = overwrite  # Re-enable original overwrite behavior
     else:
@@ -937,12 +941,18 @@ def tedana_workflow(
             n_independent_echos=n_independent_echos,
         )
 
+        if selector.n_likely_bold_comps_ == 0:
+            LGR.warning("No BOLD components found with user-provided ICA mixing matrix.")
+
     if ica_method.lower() == "robustica":
         # If robustica was used, store number of iterations where ICA failed
         selector.cross_component_metrics_["fastica_convergence_warning_count"] = (
             fastica_convergence_warning_count
         )
 
+    # TODO The ICA mixing matrix should be written out after it is created
+    #     It is currently being written after component selection is done
+    #     and rewritten if an existing mixing matrix is given as an input
     comp_names = component_table["Component"].values
     mixing_df = pd.DataFrame(data=mixing, columns=comp_names)
     io_generator.save_file(mixing_df, "ICA mixing tsv")

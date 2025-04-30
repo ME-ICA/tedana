@@ -1,0 +1,20 @@
+{
+    "tree_id": "reject_all_tree",
+    "info": "designed to reject all components to test functionality",
+    "report": "If you are publishing results using this tree, you are doing something wrong. ",
+    "necessary_metrics": [],
+    "intermediate_classifications": [],
+    "classification_tags": ["Rejected just because"],
+    "nodes": [
+        {
+            "functionname": "manual_classify",
+            "parameters": {"new_classification": "rejected", "decide_comps": "all"},
+            "kwargs": {
+                "clear_classification_tags": true,
+                "dont_warn_reclassify": true,
+                "tag": "Rejected just because"
+            },
+            "_comment": "All components are labeled as 'rejected'."
+        }
+    ]
+}

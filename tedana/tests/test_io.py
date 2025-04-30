@@ -2,15 +2,17 @@
 
 import json
 import os
+from unittest import mock
 
 import nibabel as nib
 import numpy as np
 import pandas as pd
 import pytest
+import requests
 
 from tedana import io as me
 from tedana.tests.test_utils import fnames, tes
-from tedana.tests.utils import get_test_data_path
+from tedana.tests.utils import data_for_testing_info, get_test_data_path
 
 data_dir = get_test_data_path()
 
@@ -318,3 +320,75 @@ def test_custom_encoder():
     encoded = json.dumps(test_data, cls=me.CustomEncoder)
     decoded = json.loads(encoded)
     assert test_data == decoded
+
+
+@mock.patch("tedana.io.requests.get")
+@mock.patch("tedana.io.op.isfile")
+def test_download_json_file_not_found(mock_isfile, mock_requests_get):
+    """Test case when file doesn't exist locally or on figshare"""
+    mock_isfile.return_value = False
+
+    mock_response = mock.Mock()
+    mock_response.raise_for_status = mock.Mock()
+    mock_response.json.return_value = {"files": [{"name": "tree.json", "download_url": "url.com"}]}
+    mock_requests_get.return_value = mock_response
+
+    result = me.download_json("non_existent_tree", "some_dir")
+
+    assert result is None
+    mock_response.raise_for_status.assert_called_once()
+
+
+@mock.patch("tedana.io.requests.get")
+@mock.patch("tedana.io.op.isfile")
+def test_download_json_skips_if_exists(mock_isfile, mock_requests_get):
+    """Test case when file already exists locally"""
+    mock_isfile.return_value = True
+
+    result = me.download_json("my_tree", "some_dir")
+
+    assert result == "some_dir/my_tree.json"
+    mock_requests_get.assert_not_called()
+
+
+@mock.patch("tedana.io.requests.get")
+def test_download_json_doesnt_connect_to_url(mock_requests_get, caplog: pytest.LogCaptureFixture):
+    """Tests that the correct log message appears when URL not connected"""
+    mock_requests_get.side_effect = requests.exceptions.ConnectionError(
+        "Simulated connection error"
+    )
+
+    result = me.download_json("tedana_orig", "./")
+    assert result is None
+    assert "Cannot connect to figshare" in caplog.text
+
+
+@mock.patch("tedana.io.requests.get")
+@mock.patch("tedana.io.op.isfile")
+def test_download_json_file_is_downloaded(mock_isfile, mock_requests_get):
+    """Test json is downloaded if it exists on figshare"""
+    mock_isfile.return_value = False
+
+    metadata_response = mock.Mock()
+    metadata_response.raise_for_status = mock.Mock()
+    metadata_response.json.return_value = {
+        "files": [{"name": "tree.json", "download_url": "url.com"}]
+    }
+
+    download_response = mock.Mock()
+    download_response.raise_for_status = mock.Mock()
+    file_content = {"sample": "data"}
+    download_response.content = json.dumps(file_content).encode("utf-8")
+
+    mock_requests_get.side_effect = [metadata_response, download_response]
+
+    out_dir = data_for_testing_info("path")
+    result = me.download_json("tree.json", out_dir)
+
+    assert result == f"{out_dir}/tree.json"
+    assert os.path.exists(result)
+
+    with open(result, "r") as f:
+        content = json.load(f)
+    assert content == file_content
+    os.remove(result)
