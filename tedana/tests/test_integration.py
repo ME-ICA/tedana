@@ -91,18 +91,20 @@ def check_integration_outputs(
         for append_name in extra_expected_files:
             expected_files.append(append_name)
 
-    comp_fig_regex = "^figures/comp_[0-9]{3}.png$"
+    comp_fig_regex = "^figures/.*comp_[0-9]{3}.png$"
     if max_expected_comp and max_expected_comp > 0:
         tmp_comps = sorted([out for out in expected_files if re.match(comp_fig_regex, out)])
         stored_max_expected_comp = int(tmp_comps[-1][-7:-4])
+        # Since the prefix can be a variable length, pull from an existing file
+        comp_prefix = tmp_comps[1][:-7]
         # if there are more components than expected, then delete extra file names
         if max_expected_comp < stored_max_expected_comp:
             for comp_idx in range(max_expected_comp + 1, stored_max_expected_comp + 1):
-                expected_files.remove(f"figures/comp_{comp_idx:03}.png")
+                expected_files.remove(f"{comp_prefix}{comp_idx:03}.png")
         # if there are fewer components than expected, then add expected file names
         if stored_max_expected_comp < max_expected_comp:
             for comp_idx in range(stored_max_expected_comp + 1, max_expected_comp + 1):
-                expected_files.append(f"figures/comp_{comp_idx:03}.png")
+                expected_files.append(f"{comp_prefix}{comp_idx:03}.png")
 
     if max_expected_comp == -1:
         # Remove all component figures from comparisions in both expected_files and found_files
