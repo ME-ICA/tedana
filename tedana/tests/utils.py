@@ -45,15 +45,20 @@ def data_for_testing_info(test_dataset=str):
         three-echo-reclassify
         four-echo
         five-echo
+       To only return the base path without downloading data,
+       you can supply:
+        path
 
     Returns
     -------
     test_data_path : str
        The path to the local directory where the data will be downloaded
+       If "path" is specified, returns the base directory path.
     osf_id : str
        The ID for the OSF file.
        Data download link would be https://osf.io/osf_id/download
        Metadata download link would be https://osf.io/osf_id/metadata/?format=datacite-json
+       If "path" is specified, this value is not returned.
     """
 
     tedana_path = dirname(tedana_cli.__file__)
@@ -79,6 +84,8 @@ def data_for_testing_info(test_dataset=str):
         osf_id = "9c42e"
         makedirs(join(base_data_path, "five-echo"), exist_ok=True)
         makedirs(join(base_data_path, "outputs/five-echo"), exist_ok=True)
+    elif test_dataset == "path":
+        return base_data_path
     else:
         raise ValueError(f"{test_dataset} is not a valid dataset string for data_for_testing_info")
 
