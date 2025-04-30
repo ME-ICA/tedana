@@ -126,8 +126,8 @@ def sample_mixing_matrix():
 
     return pd.read_csv(
         op.join(
-            THIS_DIR,
-            "../../.testing_data_cache/three-echo/TED.three-echo/desc_ICA_mixing_static.tsv",
+            data_for_testing_info("path"),
+            "three-echo/TED.three-echo/desc_ICA_mixing_static.tsv",
         ),
         delimiter="\t",
     ).to_numpy()
