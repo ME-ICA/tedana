@@ -268,15 +268,3 @@ def fit_model(x, y, output_residual=False):
         # the least-squares solution [beta] betw X & Y is calculated
         df = y.shape[0] - betas.shape[0]
         return betas, sse, df
-
-
-def variance_explained(data, mixing, mask):
-    """Calculate total variance explained by components."""
-    # mask and de-mean data
-    mdata = data[mask]
-    dmdata = mdata.T - mdata.T.mean(axis=0)
-
-    betas = get_coeffs(dmdata.T, mixing, mask=None)
-    varexpl = (1 - ((dmdata.T - betas.dot(mixing.T)) ** 2.0).sum() / (dmdata**2.0).sum()) * 100
-
-    return varexpl, betas

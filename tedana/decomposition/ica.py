@@ -159,19 +159,25 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
                 ) and "FastICA did not converge" in str(w.message):
                     fastica_convergence_warning_count += 1
 
-            if fastica_convergence_warning_count / n_robust_runs > 0.1:
+            nonconverge_message = (
+                "For RobustICA, FastICA did not converge in "
+                f"{fastica_convergence_warning_count} of {n_robust_runs} interations."
+            )
+            if fastica_convergence_warning_count / n_robust_runs > 0.25:
+                raise ValueError(
+                    f"{nonconverge_message} "
+                    "Failing more than 1/4 of the time means something is likely wrong. "
+                    "Consider rerunning with fewer initial PCA components."
+                )
+            elif fastica_convergence_warning_count / n_robust_runs > 0.1:
                 # Log a warning if there's non-convergence in >10% of the attempted iterations
                 LGR.warning(
-                    "For RobustICA, FastICA did not converge in "
-                    f"{fastica_convergence_warning_count} of {n_robust_runs} interations. "
+                    f"{nonconverge_message} "
                     "Consider rerunning with fewer initial PCA components."
                 )
             elif fastica_convergence_warning_count > 0:
                 # Log info if there's non-convergence in <=10% of the attempted iterations
-                LGR.info(
-                    "For RobustICA, FastICA did not converge in "
-                    f"{fastica_convergence_warning_count} of {n_robust_runs} interations."
-                )
+                LGR.info(f"{nonconverge_message}")
 
             q = robust_ica.evaluate_clustering(
                 robust_ica.S_all,

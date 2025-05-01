@@ -37,7 +37,7 @@ from tedana.config import (
     DEFAULT_SEED,
 )
 from tedana.selection.component_selector import ComponentSelector
-from tedana.stats import computefeats2, variance_explained
+from tedana.stats import computefeats2
 from tedana.workflows.parser_utils import (
     check_n_robust_runs_value,
     check_tedpca_value,
@@ -849,9 +849,6 @@ def tedana_workflow(
             )
             seed += 1
             n_restarts = seed - fixed_seed
-
-            ica_variance_explained, _ = variance_explained(data_optcom, mixing, mask=mask_clf)
-            LGR.info(f"Variance Explained by ICA: {ica_variance_explained}%")
 
             # Estimate betas and compute selection metrics for mixing matrix
             # generated from dimensionally reduced data using full data (i.e., data
