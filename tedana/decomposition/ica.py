@@ -242,6 +242,7 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
 
     LGR.info(
         f"RobustICA with {n_robust_runs} robust runs and seed {fixed_seed} was used. "
+        f"{mixing.shape[1]} components identified. "
         f"The mean Index Quality is {index_quality}."
     )
 
