@@ -610,7 +610,6 @@ def denoise_ts(data, mixing, mask, component_table):
     # get variance explained by retained components
     betas = get_coeffs(dmdata.T, mixing, mask=None)
     varexpl = (1 - ((dmdata.T - betas.dot(mixing.T)) ** 2.0).sum() / (dmdata**2.0).sum()) * 100
-
     LGR.info(f"Variance explained by decomposition: {varexpl:.02f}%")
 
     # create component-based data

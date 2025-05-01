@@ -836,16 +836,21 @@ def tedana_workflow(
         seed = fixed_seed
 
         while keep_restarting:
-            mixing, seed, cluster_labels, similarity_t_sne, fastica_convergence_warning_count = (
-                decomposition.tedica(
-                    data_reduced,
-                    n_components,
-                    seed,
-                    ica_method,
-                    n_robust_runs,
-                    maxit,
-                    maxrestart=(maxrestart - n_restarts),
-                )
+            (
+                mixing,
+                seed,
+                cluster_labels,
+                similarity_t_sne,
+                fastica_convergence_warning_count,
+                index_quality,
+            ) = decomposition.tedica(
+                data_reduced,
+                n_components,
+                seed,
+                ica_method,
+                n_robust_runs,
+                maxit,
+                maxrestart=(maxrestart - n_restarts),
             )
             seed += 1
             n_restarts = seed - fixed_seed
@@ -946,6 +951,7 @@ def tedana_workflow(
         selector.cross_component_metrics_["fastica_convergence_warning_count"] = (
             fastica_convergence_warning_count
         )
+        selector.cross_component_metrics_["robustica_mean_index_quality"] = index_quality
 
     # TODO The ICA mixing matrix should be written out after it is created
     #     It is currently being written after component selection is done
