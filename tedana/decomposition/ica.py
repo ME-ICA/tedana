@@ -8,6 +8,7 @@ from robustica import RobustICA, abs_pearson_dist
 from scipy import stats
 from sklearn import manifold
 from sklearn.decomposition import FastICA
+from sklearn.exceptions import ConvergenceWarning
 
 from tedana.config import (
     DEFAULT_ICA_METHOD,
@@ -71,9 +72,17 @@ def tedica(
 
     # Default r_ica results to None to avoid errors in the case of fastica
     c_labels, similarity_t_sne = None, None
+    index_quality, fastica_convergence_warning_count = None, None
 
     if ica_method == "robustica":
-        mixing, fixed_seed, c_labels, similarity_t_sne = r_ica(
+        (
+            mixing,
+            fixed_seed,
+            c_labels,
+            similarity_t_sne,
+            fastica_convergence_warning_count,
+            index_quality,
+        ) = r_ica(
             data,
             n_components=n_components,
             fixed_seed=fixed_seed,
@@ -91,7 +100,14 @@ def tedica(
     else:
         raise ValueError("The selected ICA method is invalid!")
 
-    return mixing, fixed_seed, c_labels, similarity_t_sne
+    return (
+        mixing,
+        fixed_seed,
+        c_labels,
+        similarity_t_sne,
+        fastica_convergence_warning_count,
+        index_quality,
+    )
 
 
 def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
@@ -118,6 +134,15 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
         where `C` is components and `T` is the same as in `data`
     fixed_seed : :obj:`int`
         Random seed from final decomposition.
+    c_labels : (n_pca_components x n_robust_runs,) :obj:`numpy.ndarray`
+        A one dimensional array that has the cluster label of each run.
+    similarity_t_sne : (n_pca_components x n_robust_runs,2) :obj:`numpy.ndarray`
+        An array containing the 2D coordinates of projected data.
+    fastica_convergence_warning_count : :obj:`int`
+        The number of iterations of fastICA that failed to converge.
+    index_quality : :obj:`float`
+        The mean cluster index quality for robustICA.
+        robustICA cites https://doi.org/10.1109/NNSP.2003.1318025 for the measure
     """
     if n_robust_runs > WARN_N_ROBUST_RUNS:
         LGR.warning(
@@ -144,7 +169,40 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
                 robust_method=robust_method,
             )
 
-            s, mixing = robust_ica.fit_transform(data)
+            with warnings.catch_warnings(record=True) as caught_warnings:
+                warnings.simplefilter(
+                    "always", category=ConvergenceWarning
+                )  # Ensure all warnings are captured
+                s, mixing = robust_ica.fit_transform(data)
+
+            # Count specific FastICA convergence warnings
+            fastica_convergence_warning_count = 0
+            for w in caught_warnings:
+                if issubclass(
+                    w.category, ConvergenceWarning
+                ) and "FastICA did not converge" in str(w.message):
+                    fastica_convergence_warning_count += 1
+
+            nonconverge_message = (
+                "For RobustICA, FastICA did not converge in "
+                f"{fastica_convergence_warning_count} of {n_robust_runs} interations."
+            )
+            if fastica_convergence_warning_count / n_robust_runs > 0.25:
+                LGR.warning(
+                    f"{nonconverge_message} "
+                    "Failing >1/4 of the time means inputted data are not appropriate for ICA. "
+                    "Consider rerunning with fewer initial PCA components."
+                )
+            elif fastica_convergence_warning_count / n_robust_runs > 0.1:
+                # Log a warning if there's non-convergence in >10% of the attempted iterations
+                LGR.warning(
+                    f"{nonconverge_message} "
+                    "Consider rerunning with fewer initial PCA components."
+                )
+            elif fastica_convergence_warning_count > 0:
+                # Log info if there's non-convergence in <=10% of the attempted iterations
+                LGR.info(f"{nonconverge_message}")
+
             q = robust_ica.evaluate_clustering(
                 robust_ica.S_all,
                 robust_ica.clustering.labels_,
@@ -170,12 +228,12 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
     )
 
     # Excluding outliers (cluster -1) from the index quality calculation
-    iq = np.array(np.mean(q[q["cluster_id"] >= 0].iq))
+    index_quality = np.array(np.mean(q[q["cluster_id"] >= 0].iq))
 
-    if iq < WARN_IQ:
+    if index_quality < WARN_IQ:
         LGR.warning(
-            f"The resultant mean Index Quality is low ({iq}). It is recommended to rerun the "
-            "process with a different seed."
+            f"The resultant mean Index Quality is low ({index_quality}). "
+            "It is recommended to rerun the process with a different seed."
         )
 
     # Excluding outliers (cluster -1) when calculating the mixing matrix
@@ -184,7 +242,8 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
 
     LGR.info(
         f"RobustICA with {n_robust_runs} robust runs and seed {fixed_seed} was used. "
-        f"The mean Index Quality is {iq}."
+        f"{mixing.shape[1]} components identified. "
+        f"The mean Index Quality is {index_quality}."
     )
 
     no_outliers = np.count_nonzero(robust_ica.clustering.labels_ == -1)
@@ -212,7 +271,14 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
     p_dissimilarity = abs_pearson_dist(robust_ica.S_all)
     similarity_t_sne = t_sne.fit_transform(p_dissimilarity)
 
-    return mixing, fixed_seed, c_labels, similarity_t_sne
+    return (
+        mixing,
+        fixed_seed,
+        c_labels,
+        similarity_t_sne,
+        fastica_convergence_warning_count,
+        index_quality,
+    )
 
 
 def f_ica(data, n_components, fixed_seed, maxit, maxrestart):

@@ -809,6 +809,7 @@ def tedana_workflow(
     # Default r_ica results to None as they are expected for the reports
     cluster_labels = None
     similarity_t_sne = None
+    fastica_convergence_warning_count = None
 
     if mixing_file is None:
         # Identify and remove thermal noise from data
@@ -835,7 +836,14 @@ def tedana_workflow(
         seed = fixed_seed
 
         while keep_restarting:
-            mixing, seed, cluster_labels, similarity_t_sne = decomposition.tedica(
+            (
+                mixing,
+                seed,
+                cluster_labels,
+                similarity_t_sne,
+                fastica_convergence_warning_count,
+                index_quality,
+            ) = decomposition.tedica(
                 data_reduced,
                 n_components,
                 seed,
@@ -937,6 +945,13 @@ def tedana_workflow(
 
         if selector.n_likely_bold_comps_ == 0:
             LGR.warning("No BOLD components found with user-provided ICA mixing matrix.")
+
+    if ica_method.lower() == "robustica":
+        # If robustica was used, store number of iterations where ICA failed
+        selector.cross_component_metrics_["fastica_convergence_warning_count"] = (
+            fastica_convergence_warning_count
+        )
+        selector.cross_component_metrics_["robustica_mean_index_quality"] = index_quality
 
     # TODO The ICA mixing matrix should be written out after it is created
     #     It is currently being written after component selection is done
