@@ -188,9 +188,9 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
                 f"{fastica_convergence_warning_count} of {n_robust_runs} interations."
             )
             if fastica_convergence_warning_count / n_robust_runs > 0.25:
-                raise ValueError(
+                LGR.warning(
                     f"{nonconverge_message} "
-                    "Failing more than 1/4 of the time means something is likely wrong. "
+                    "Failing >1/4 of the time means inputted data are not appropriate for ICA. "
                     "Consider rerunning with fewer initial PCA components."
                 )
             elif fastica_convergence_warning_count / n_robust_runs > 0.1:
