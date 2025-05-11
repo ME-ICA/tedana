@@ -70,6 +70,9 @@ figures/sub-01_carpet_rejected.svg
 figures/sub-01_carpet_optcom_nogsr.svg
 figures/sub-01_carpet_denoised_mir.svg
 figures/sub-01_carpet_accepted_mir.svg
+figures/sub-01_T1likeEffect_boldmap.svg
+figures/sub-01_gscontrol_bold.svg
+figures/sub-01_gsr_boldmap.svg
 figures/sub-01_comp_000.png
 figures/sub-01_comp_001.png
 figures/sub-01_comp_002.png

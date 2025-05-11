@@ -252,10 +252,8 @@
   </div>
   {% endif %}
 </div>
-GSR: {{ gsr }}
-MIR: {{ mir }}
-Both: {{ gsr or mir }}
-{% if (gsr or mir) %}
+
+{% if gsr or mir %}
 <div class="carpet-plots">
   <h2>Global Signal Control</h2>
     {% if gsr %}
