@@ -120,12 +120,13 @@ def gscontrol_raw(
     # Project global signal (but not Legendre bases) out of optimally combined data
     betas = np.linalg.lstsq(glbase, data_optcom_masked.T, rcond=None)[0]
     gs_fitted = np.dot(glbase[:, :1], betas[:1, :]).T
-    data_optcom_nogs = data_optcom_masked - gs_fitted + temporal_mean
+    data_optcom_nogs = data_optcom_masked - gs_fitted
 
     # Calculate the variance explained by the global signal
     varexpl = 100 * (1 - ((data_optcom_nogs**2).sum() / (data_optcom_masked**2).sum()))
     LGR.info(f"Variance in optimally combined data explained by global signal: {varexpl:.02f}%")
 
+    data_optcom_nogs += temporal_mean
     data_optcom_nogs = utils.unmask(data_optcom_nogs, temporal_mean_mask)
     io_generator.save_file(data_optcom_nogs, "removed gs combined img")
 
