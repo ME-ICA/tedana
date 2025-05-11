@@ -184,11 +184,14 @@ def _update_template_bokeh(
     rmse_timeseries = f"./figures/{rmse_timeseries_filename}"
 
     # Check for gscontrol images
-    gsr_brain = f"./figures/{prefix}gsr_boldmap.svg"
-    mir_brain = f"./figures/{prefix}T1likeEffect_boldmap.svg"
-    gsr_timeseries = f"./figures/{prefix}gscontrol_bold.svg"
-    gsr = gsr_brain in files_in_figures and gsr_timeseries in files_in_figures
-    mir = mir_brain in files_in_figures and gsr_timeseries in files_in_figures
+    gsr_brain_filename = f"{prefix}gsr_boldmap.svg"
+    mir_brain_filename = f"{prefix}T1likeEffect_boldmap.svg"
+    gsr_timeseries_filename = f"{prefix}gscontrol_bold.svg"
+    gsr_brain = f"./figures/{gsr_brain_filename}"
+    mir_brain = f"./figures/{mir_brain_filename}"
+    gsr_timeseries = f"./figures/{gsr_timeseries_filename}"
+    gsr = gsr_brain_filename in files_in_figures and gsr_timeseries_filename in files_in_figures
+    mir = mir_brain_filename in files_in_figures and gsr_timeseries_filename in files_in_figures
 
     # Check if each set of images exists
     t2star_exists = (
