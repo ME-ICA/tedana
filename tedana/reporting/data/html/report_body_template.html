@@ -252,8 +252,11 @@
   </div>
   {% endif %}
 </div>
+GSR: {{ gsr }}
+MIR: {{ mir }}
+Both: {{ gsr or mir }}
+{% if (gsr or mir) %}
 <div class="carpet-plots">
-  {% if gsr or mir %}
   <h2>Global Signal Control</h2>
     {% if gsr %}
       <div class="carpet-plots-image">
@@ -280,8 +283,8 @@
         style="width: 95%; max-width: 1200px; height: auto"
       />
     </div>
-  {% endif %}
 </div>
+{% endif %}
 <div class="info">
   <h1>Info</h1>
   {{ info }}
