@@ -836,7 +836,11 @@ def plot_gscontrol(
         gsr_img = io_generator.get_name("gsr img")
         gsr_plot = f"{io_generator.prefix}gsr_boldmap.svg"
         with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
+            warnings.filterwarnings(
+                "ignore",
+                message="A non-diagonal affine.*",
+                category=UserWarning,
+            )
             plotting.plot_stat_map(
                 gsr_img,
                 bg_img=None,
@@ -852,7 +856,11 @@ def plot_gscontrol(
         mir_img = io_generator.get_name("t1 like img")
         mir_plot = f"{io_generator.prefix}T1likeEffect_boldmap.svg"
         with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
+            warnings.filterwarnings(
+                "ignore",
+                message="A non-diagonal affine.*",
+                category=UserWarning,
+            )
             plotting.plot_stat_map(
                 mir_img,
                 bg_img=None,
