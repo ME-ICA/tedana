@@ -833,7 +833,7 @@ def plot_gscontrol(
     import pandas as pd
 
     if "gsr" in gscontrol:
-        gsr_img = io_generator.get_name("gsr img")
+        gsr_img = io_generator.get_name("gs img")
         gsr_plot = f"{io_generator.prefix}gsr_boldmap.svg"
         with warnings.catch_warnings():
             warnings.filterwarnings(
