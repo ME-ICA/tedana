@@ -388,7 +388,7 @@ def ica_reclassify_workflow(
     # If global signal was removed in the previous run, we can assume that
     # the user wants to use that file again. If not, use the default of
     # optimally combined data.
-    if 'gsr' in gscontrol:
+    if "gsr" in gscontrol:
         key = "removed gs combined img"
         if not ioh.get_file_path(key):
             raise FileNotFoundError(
@@ -443,7 +443,7 @@ def ica_reclassify_workflow(
         "ICA decomposition json",
         "ICA metrics json",
     ]
-    if 'gsr' in gscontrol:
+    if "gsr" in gscontrol:
         to_copy.append("removed gs combined img")
         to_copy.append("has gs combined img")
 
@@ -506,7 +506,7 @@ def ica_reclassify_workflow(
         io_generator=io_generator,
     )
 
-    if 'mir' in gscontrol:
+    if "mir" in gscontrol:
         io_generator.overwrite = True
         gsc.minimum_image_regression(
             data_optcom=data_optcom,
