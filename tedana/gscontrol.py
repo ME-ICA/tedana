@@ -266,7 +266,7 @@ def minimum_image_regression(
     t1_gs_data = np.dot(np.linalg.lstsq(gs_ts.T, mehk_ts.T, rcond=None)[0].T, gs_ts)
 
     # Calculate the variance explained by the T1-like global signal
-    varexpl = 100 * (1 - (((data_optcom_z - t1_gs_data)**2).sum() / (data_optcom_z**2).sum()))
+    varexpl = 100 * (1 - (((data_optcom_z - t1_gs_data) ** 2).sum() / (data_optcom_z**2).sum()))
     LGR.info(
         f"Variance in optimally combined data explained by T1-like global signal: {varexpl:.02f}%"
     )
