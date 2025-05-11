@@ -252,6 +252,36 @@
   </div>
   {% endif %}
 </div>
+<div class="carpet-plots">
+  {% if gsr or mir %}
+  <h2>Global Signal Control</h2>
+    {% if gsr %}
+      <div class="carpet-plots-image">
+        <img
+          id="gsrBrainPlot"
+          src="{{ gsrBrainPlot }}"
+          style="width: 95%; max-width: 1200px; height: auto"
+        />
+      </div>
+    {% endif %}
+    {% if mir %}
+      <div class="carpet-plots-image">
+        <img
+          id="mirBrainPlot"
+          src="{{ mirBrainPlot }}"
+          style="width: 95%; max-width: 1200px; height: auto"
+        />
+      </div>
+    {% endif %}
+    <div class="carpet-plots-image">
+      <img
+        id="gsrTimeseries"
+        src="{{ gsrTimeseries }}"
+        style="width: 95%; max-width: 1200px; height: auto"
+      />
+    </div>
+  {% endif %}
+</div>
 <div class="info">
   <h1>Info</h1>
   {{ info }}

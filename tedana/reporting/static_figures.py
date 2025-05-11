@@ -814,3 +814,82 @@ def plot_adaptive_mask(
     )
     adaptive_mask_plot = f"{io_generator.prefix}adaptive_mask.svg"
     fig.savefig(os.path.join(io_generator.out_dir, "figures", adaptive_mask_plot))
+
+
+def plot_gscontrol(
+    *,
+    io_generator: io.OutputGenerator,
+    gscontrol: list,
+):
+    """Plot the results of the gscontrol steps.
+
+    Parameters
+    ----------
+    io_generator : :obj:`~tedana.io.OutputGenerator`
+        The output generator for this workflow.
+    gscontrol : list
+        List of gscontrol methods applied.
+    """
+    import pandas as pd
+
+    if "gsr" in gscontrol:
+        gsr_img = io_generator.get_name("gsr img")
+        gsr_plot = f"{io_generator.prefix}gsr_boldmap.svg"
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
+            plotting.plot_stat_map(
+                gsr_img,
+                bg_img=None,
+                display_mode="mosaic",
+                symmetric_cbar=False,
+                black_bg=True,
+                cmap="gray",
+                annotate=False,
+                output_file=os.path.join(io_generator.out_dir, "figures", gsr_plot),
+            )
+
+    if "mir" in gscontrol:
+        mir_img = io_generator.get_name("t1 like img")
+        mir_plot = f"{io_generator.prefix}T1likeEffect_boldmap.svg"
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="A non-diagonal affine.*", category=UserWarning)
+            plotting.plot_stat_map(
+                mir_img,
+                bg_img=None,
+                display_mode="mosaic",
+                symmetric_cbar=False,
+                black_bg=True,
+                cmap="gray",
+                annotate=False,
+                output_file=os.path.join(io_generator.out_dir, "figures", mir_plot),
+            )
+
+    if "gsr" in gscontrol or "mir" in gscontrol:
+        confounds_file = io_generator.get_name("confounds tsv")
+        confounds_df = pd.read_table(confounds_file)
+
+        # Get repetition time from reference image
+        tr = io_generator.reference_img.header.get_zooms()[-1]
+        time_arr = np.arange(confounds_df.shape[0]) * tr
+
+        fig, ax = plt.subplots(figsize=(10, 6))
+        if "gsr" in gscontrol:
+            gs = confounds_df["global_signal"].values
+            ax.plot(time_arr, gs, label="Global Signal", color="red")
+
+        if "mir" in gscontrol:
+            mir = confounds_df["mir_global_signal"].values
+            ax.plot(time_arr, mir, label="MIR Global Signal", color="blue")
+
+        ax.legend()
+        ax.set_title("Global Signal and MIR Global Signal")
+        ax.set_xlabel("Time")
+        ax.set_ylabel("Signal")
+        ax.set_xlim(0, time_arr[-1])
+        fig.savefig(
+            os.path.join(
+                io_generator.out_dir,
+                "figures",
+                f"{io_generator.prefix}gscontrol_bold.svg",
+            )
+        )

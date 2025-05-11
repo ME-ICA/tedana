@@ -183,6 +183,11 @@ def _update_template_bokeh(
     rmse_brain = f"./figures/{rmse_brain_filename}"
     rmse_timeseries = f"./figures/{rmse_timeseries_filename}"
 
+    # Check for gscontrol images
+    gsr_brain = f"./figures/{prefix}gsr_boldmap.svg"
+    mir_brain = f"./figures/{prefix}T1likeEffect_boldmap.svg"
+    gsr_timeseries = f"./figures/{prefix}gscontrol_bold.svg"
+
     # Check if each set of images exists
     t2star_exists = (
         t2star_brain_filename in files_in_figures and t2star_histogram_filename in files_in_figures
@@ -224,6 +229,9 @@ def _update_template_bokeh(
         rmseBrainPlot=rmse_brain,
         rmseTimeseries=rmse_timeseries,
         rmseExists=rmse_exists,
+        gsrBrainPlot=gsr_brain,
+        mirBrainPlot=mir_brain,
+        gsrTimeseries=gsr_timeseries,
         references=references,
         javascript=bokeh_js,
         buttons=buttons,
