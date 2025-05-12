@@ -8,6 +8,7 @@ from io import BytesIO
 import matplotlib
 import nibabel as nb
 import numpy as np
+import scipy.stats as sstats
 
 matplotlib.use("AGG")
 import matplotlib.pyplot as plt
@@ -883,12 +884,12 @@ def plot_gscontrol(
         fig, ax = plt.subplots(figsize=(10, 6))
         if "gsr" in gscontrol:
             gs = confounds_df["global_signal"].values
-            gs_z = stats.zscore(gs)
+            gs_z = sstats.zscore(gs)
             ax.plot(time_arr, gs_z, label="GSR", color="red")
 
         if "mir" in gscontrol:
             mir = confounds_df["mir_global_signal"].values
-            mir_z = stats.zscore(mir)
+            mir_z = sstats.zscore(mir)
             ax.plot(time_arr, mir_z, label="MIR", color="blue")
 
         ax.legend()
