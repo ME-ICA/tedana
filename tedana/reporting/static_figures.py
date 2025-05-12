@@ -847,7 +847,7 @@ def plot_gscontrol(
                 display_mode="mosaic",
                 symmetric_cbar=False,
                 black_bg=True,
-                cmap="gray",
+                cmap="Reds",
                 annotate=False,
                 output_file=os.path.join(io_generator.out_dir, "figures", gsr_plot),
             )
@@ -867,7 +867,7 @@ def plot_gscontrol(
                 display_mode="mosaic",
                 symmetric_cbar=False,
                 black_bg=True,
-                cmap="gray",
+                cmap="Reds",
                 annotate=False,
                 output_file=os.path.join(io_generator.out_dir, "figures", mir_plot),
             )
