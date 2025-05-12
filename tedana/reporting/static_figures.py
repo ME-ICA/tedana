@@ -883,16 +883,18 @@ def plot_gscontrol(
         fig, ax = plt.subplots(figsize=(10, 6))
         if "gsr" in gscontrol:
             gs = confounds_df["global_signal"].values
-            ax.plot(time_arr, gs, label="Global Signal", color="red")
+            gs_z = stats.zscore(gs)
+            ax.plot(time_arr, gs_z, label="GSR", color="red")
 
         if "mir" in gscontrol:
             mir = confounds_df["mir_global_signal"].values
-            ax.plot(time_arr, mir, label="MIR Global Signal", color="blue")
+            mir_z = stats.zscore(mir)
+            ax.plot(time_arr, mir_z, label="MIR", color="blue")
 
         ax.legend()
-        ax.set_title("Global Signal and MIR Global Signal")
-        ax.set_xlabel("Time")
-        ax.set_ylabel("Signal")
+        ax.set_title("Global Signals")
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel("Signal (z-scored)")
         ax.set_xlim(0, time_arr[-1])
         fig.savefig(
             os.path.join(
