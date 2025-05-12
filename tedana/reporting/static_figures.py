@@ -845,9 +845,9 @@ def plot_gscontrol(
                 gsr_img,
                 bg_img=None,
                 display_mode="mosaic",
-                symmetric_cbar=False,
+                symmetric_cbar=True,
                 black_bg=True,
-                cmap="Reds",
+                cmap="coolwarm",
                 annotate=False,
                 output_file=os.path.join(io_generator.out_dir, "figures", gsr_plot),
             )
@@ -865,9 +865,9 @@ def plot_gscontrol(
                 mir_img,
                 bg_img=None,
                 display_mode="mosaic",
-                symmetric_cbar=False,
+                symmetric_cbar=True,
                 black_bg=True,
-                cmap="Reds",
+                cmap="coolwarm",
                 annotate=False,
                 output_file=os.path.join(io_generator.out_dir, "figures", mir_plot),
             )
