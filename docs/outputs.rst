@@ -618,6 +618,18 @@ relatively high RMSE values for runs or timepoints might be a marker of an under
   :height: 400px
 
 
+***************************
+Global Signal Removal Plots
+***************************
+
+Below the decay model fit plots are the global signal removal plots, if ``--gscontrol`` was used.
+These plots show the voxel-wise global signal weights and the global signal time series.
+
+.. image:: /_static/gsr_plots.png
+  :align: center
+  :height: 400px
+
+
 **************************
 Citable workflow summaries
 **************************

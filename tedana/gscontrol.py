@@ -120,7 +120,13 @@ def gscontrol_raw(
     # Project global signal (but not Legendre bases) out of optimally combined data
     betas = np.linalg.lstsq(glbase, data_optcom_masked.T, rcond=None)[0]
     gs_fitted = np.dot(glbase[:, :1], betas[:1, :]).T
-    data_optcom_nogs = data_optcom_masked - gs_fitted + temporal_mean
+    data_optcom_nogs = data_optcom_masked - gs_fitted
+
+    # Calculate the variance explained by the global signal
+    varexpl = 100 * (1 - ((data_optcom_nogs**2).sum() / (data_optcom_masked**2).sum()))
+    LGR.info(f"Variance in optimally combined data explained by global signal: {varexpl:.02f}%")
+
+    data_optcom_nogs += temporal_mean
     data_optcom_nogs = utils.unmask(data_optcom_nogs, temporal_mean_mask)
     io_generator.save_file(data_optcom_nogs, "removed gs combined img")
 
@@ -257,11 +263,17 @@ def minimum_image_regression(
     glsig_df = pd.DataFrame(data=gs_ts.T, columns=["mir_global_signal"])
     io_generator.add_df_to_file(glsig_df, "confounds tsv")
 
-    # Remove T1-like global signal from MEHK time series
-    mehk_no_t1_gs = mehk_ts - np.dot(
-        np.linalg.lstsq(gs_ts.T, mehk_ts.T, rcond=None)[0].T,
-        gs_ts,
+    # Calculate the T1-like global signal
+    t1_gs_data = np.dot(np.linalg.lstsq(gs_ts.T, mehk_ts.T, rcond=None)[0].T, gs_ts)
+
+    # Calculate the variance explained by the T1-like global signal
+    varexpl = 100 * (1 - (((data_optcom_z - t1_gs_data) ** 2).sum() / (data_optcom_z**2).sum()))
+    LGR.info(
+        f"Variance in optimally combined data explained by T1-like global signal: {varexpl:.02f}%"
     )
+
+    # Remove T1-like global signal from MEHK time series
+    mehk_no_t1_gs = mehk_ts - t1_gs_data
 
     # Make denoised version of T1-corrected time series
     medn_ts = optcom_mean + ((mehk_no_t1_gs + resid) * optcom_std)
