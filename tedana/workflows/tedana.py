@@ -1136,6 +1136,12 @@ def tedana_workflow(
                 adaptive_mask=masksum_denoise,
             )
 
+        if gscontrol:
+            reporting.static_figures.plot_gscontrol(
+                io_generator=io_generator,
+                gscontrol=gscontrol,
+            )
+
         LGR.info("Generating dynamic report")
         reporting.generate_report(io_generator, cluster_labels, similarity_t_sne)
 
