@@ -934,8 +934,8 @@ def plot_heatmap(
     corr = df.T.corr().values
     pdist_uncondensed = 1.0 - corr
     pdist_condensed = np.concatenate([row[i+1:] for i, row in enumerate(pdist_uncondensed)])
-    linkage = spc.linkage(pdist_condensed, method='complete')
-    cluster_assignments = spc.fcluster(linkage, 0.5 * pdist_condensed.max(), 'distance')
+    linkage = spc.linkage(pdist_condensed, method="complete")
+    cluster_assignments = spc.fcluster(linkage, 0.5 * pdist_condensed.max(), "distance")
     idx = np.argsort(cluster_assignments)
     new_order = [index_values[i] for i in idx]
     df = df.loc[new_order]
@@ -954,9 +954,9 @@ def plot_heatmap(
         cbar_kws={"shrink": .5},
         ax=ax,
     )
-    ax.tick_params(axis='y', labelrotation=0)
-    ax.set_xlabel('Component', fontsize=16)
-    ax.set_ylabel('External Regressor', fontsize=16)
+    ax.tick_params(axis="y", labelrotation=0)
+    ax.set_xlabel("Component", fontsize=16)
+    ax.set_ylabel("External Regressor", fontsize=16)
     fig.savefig(
         os.path.join(
             io_generator.out_dir,
