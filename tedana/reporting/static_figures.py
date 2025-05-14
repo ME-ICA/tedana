@@ -950,8 +950,8 @@ def plot_heatmap(
         vmax=1,
         vmin=-1,
         square=True,
-        linewidths=.5,
-        cbar_kws={"shrink": .5},
+        linewidths=0.5,
+        cbar_kws={"shrink": 0.5},
         ax=ax,
     )
     ax.tick_params(axis="y", labelrotation=0)
