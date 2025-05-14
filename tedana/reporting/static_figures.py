@@ -8,6 +8,7 @@ from io import BytesIO
 import matplotlib
 import nibabel as nb
 import numpy as np
+import pandas as pd
 import scipy.stats as sstats
 
 matplotlib.use("AGG")
@@ -904,3 +905,112 @@ def plot_gscontrol(
                 f"{io_generator.prefix}gscontrol_bold.svg",
             )
         )
+
+
+def plot_heatmap(
+    *,
+    mixing: pd.DataFrame,
+    external_regressors: pd.DataFrame,
+    io_generator: io.OutputGenerator,
+):
+    """Plot a heatmap of the mixing matrix and external regressors.
+
+    Parameters
+    ----------
+    mixing : (C x T) :obj:`numpy.ndarray`
+        Mixing matrix.
+    external_regressors : (E x T) :obj:`numpy.ndarray`
+        External regressors.
+    io_generator : :obj:`~tedana.io.OutputGenerator`
+        The output generator for this workflow.
+    """
+    import seaborn as sns
+    import scipy.cluster.hierarchy as spc
+
+    df = _correlate_dataframes(mixing, external_regressors)
+    index_values = df.index.tolist()
+
+    # Perform hierarchical clustering on rows
+    corr = df.T.corr().values
+    pdist_uncondensed = 1.0 - corr
+    pdist_condensed = np.concatenate([row[i+1:] for i, row in enumerate(pdist_uncondensed)])
+    linkage = spc.linkage(pdist_condensed, method='complete')
+    cluster_assignments = spc.fcluster(linkage, 0.5 * pdist_condensed.max(), 'distance')
+    idx = np.argsort(cluster_assignments)
+    new_order = [index_values[i] for i in idx]
+    df = df.loc[new_order]
+
+    cmap = sns.diverging_palette(230, 20, as_cmap=True)
+
+    fig, ax = plt.subplots(figsize=(df.shape[0] * 0.25, df.shape[1] * 0.25))
+    sns.heatmap(
+        df,
+        cmap=cmap,
+        center=0,
+        vmax=1,
+        vmin=-1,
+        square=True,
+        linewidths=.5,
+        cbar_kws={"shrink": .5},
+        ax=ax,
+    )
+    ax.tick_params(axis='y', labelrotation=0)
+    ax.set_xlabel('Component', fontsize=16)
+    ax.set_ylabel('External Regressor', fontsize=16)
+    fig.savefig(
+        os.path.join(
+            io_generator.out_dir,
+            "figures",
+            f"{io_generator.prefix}confound_correlations.svg",
+        ),
+        bbox_inches="tight",
+    )
+
+
+def _correlate_dataframes(df1, df2):
+    """Correlate each column in two DataFrames using numpy.corrcoef.
+
+    Parameters
+    ----------
+    df1 : pandas.DataFrame of shape (T, C)
+        The first DataFrame.
+    df2 : pandas.DataFrame of shape (T, E)
+        The second DataFrame. Rows must align with df1.
+
+    Returns
+    -------
+    correlation_df : pandas.DataFrame of shape (C, E)
+        A DataFrame where rows are columns from df1, columns are columns from df2,
+        and values are the Pearson correlation coefficients.
+    """
+    if not isinstance(df1, pd.DataFrame) or not isinstance(df2, pd.DataFrame):
+        raise ValueError("Both inputs must be pandas DataFrames.")
+
+    if df1.shape[0] != df2.shape[0]:
+        raise ValueError("DataFrames must have the same number of rows.")
+
+    # Convert DataFrames to numpy arrays
+    arr1 = df1.values
+    arr2 = df2.values
+
+    # Concatenate arrays column-wise
+    # This creates an array where the first df1.shape[1] columns are from df1
+    # and the subsequent columns are from df2.
+    combined_arr = np.hstack((arr1, arr2))
+
+    # Calculate the full correlation matrix.
+    # np.corrcoef expects variables as rows, so we transpose combined_arr.
+    # If df1 has m columns and df2 has n columns, combined_arr.T has m+n rows.
+    # full_corr_matrix will be an (m+n) x (m+n) matrix.
+    full_corr_matrix = np.corrcoef(combined_arr.T)
+
+    # Extract the part of the matrix that corresponds to correlations
+    # between columns of df1 and columns of df2.
+    # This is the block from row 0 to df1.shape[1]-1,
+    # and from column df1.shape[1] to the end.
+    num_cols_df1 = df1.shape[1]
+    cross_corr_matrix = full_corr_matrix[:num_cols_df1, num_cols_df1:]
+
+    # Convert the result back to a DataFrame with appropriate labels
+    correlation_df = pd.DataFrame(cross_corr_matrix, index=df1.columns, columns=df2.columns)
+    return correlation_df
