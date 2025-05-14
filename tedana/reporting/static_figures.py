@@ -927,7 +927,7 @@ def plot_heatmap(
     import scipy.cluster.hierarchy as spc
     import seaborn as sns
 
-    df = _correlate_dataframes(mixing, external_regressors)
+    df = _correlate_dataframes(external_regressors, mixing)
     index_values = df.index.tolist()
 
     # Perform hierarchical clustering on rows
@@ -942,7 +942,7 @@ def plot_heatmap(
 
     cmap = sns.diverging_palette(230, 20, as_cmap=True)
 
-    fig, ax = plt.subplots(figsize=(df.shape[0] * 0.25, df.shape[1] * 0.25))
+    fig, ax = plt.subplots(figsize=(df.shape[1] * 0.25, df.shape[0] * 0.25))
     sns.heatmap(
         df,
         cmap=cmap,
