@@ -924,8 +924,8 @@ def plot_heatmap(
     io_generator : :obj:`~tedana.io.OutputGenerator`
         The output generator for this workflow.
     """
-    import seaborn as sns
     import scipy.cluster.hierarchy as spc
+    import seaborn as sns
 
     df = _correlate_dataframes(mixing, external_regressors)
     index_values = df.index.tolist()
