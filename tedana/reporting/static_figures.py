@@ -912,7 +912,7 @@ def plot_heatmap(
     mixing: pd.DataFrame,
     external_regressors: pd.DataFrame,
     component_table: pd.DataFrame,
-    io_generator: io.OutputGenerator,
+    out_file: str,
 ):
     """Plot a heatmap of the mixing matrix and external regressors.
 
@@ -922,8 +922,10 @@ def plot_heatmap(
         Mixing matrix.
     external_regressors : (E x T) :obj:`numpy.ndarray`
         External regressors.
-    io_generator : :obj:`~tedana.io.OutputGenerator`
-        The output generator for this workflow.
+    component_table : pandas.DataFrame
+        Component table.
+    out_file : str
+        The output file name.
     """
     import re
 
@@ -945,16 +947,18 @@ def plot_heatmap(
     corr_df = corr_df.loc[new_regressor_order]
 
     # Get the metrics for the models from the component table
-    pattern = "R2stat (.*) model"
-    models = [re.search(pattern, col).group(1) for col in component_table.columns]
+    pattern = "(R2stat .* model)"
+    searches = [re.search(pattern, col) for col in component_table.columns]
+    models = [search.group(1) for search in searches if search is not None]
     models_df = component_table[models]
     # Remove the R2stat string from the models_df column names
-    models_df.columns = models_df.columns.str.replace("R2stat ", "").replace(" model", "")
+    models_df.columns = models_df.columns.str.replace("R2stat ", "").str.replace(" model", "")
     models_df = models_df.T  # transpose so components are columns
 
     n_regressors = corr_df.shape[0]
     n_components = corr_df.shape[1]
     n_models = models_df.shape[0]
+    ratio = n_regressors / n_models
 
     fig, axes = plt.subplots(
         figsize=(n_components * 0.25, (n_regressors * 0.25) + (n_models * 0.25) + 0.5),
@@ -970,12 +974,18 @@ def plot_heatmap(
         vmin=-1,
         square=True,
         linewidths=0.5,
-        cbar_kws={"shrink": 0.5},
+        cbar_kws={
+            "shrink": 0.85,
+            "label": "Correlation",
+            "ticks": [-1, 0, 1],
+            "pad": 0.01,
+            "aspect": 20,
+        },
         ax=axes[0],
     )
     axes[0].tick_params(axis="y", labelrotation=0)
     axes[0].set_xticks([])
-    axes[0].set_ylabel("External Regressor", fontsize=16)
+    axes[0].tick_params(axis="x", bottom=False)
 
     sns.heatmap(
         models_df,
@@ -983,20 +993,21 @@ def plot_heatmap(
         center=0.5,
         vmax=1,
         vmin=0,
+        square=True,
+        linewidths=0.5,
+        cbar_kws={
+            "shrink": 0.85,
+            "label": "R-Squared",
+            "ticks": [0, 1],
+            "pad": 0.01,
+            "aspect": 20 / ratio,
+        },
         ax=axes[1],
     )
     axes[1].tick_params(axis="y", labelrotation=0)
     axes[1].set_xlabel("Component", fontsize=16)
-    axes[1].set_ylabel("Model", fontsize=16)
 
-    fig.savefig(
-        os.path.join(
-            io_generator.out_dir,
-            "figures",
-            f"{io_generator.prefix}confound_correlations.svg",
-        ),
-        bbox_inches="tight",
-    )
+    fig.savefig(out_file, bbox_inches="tight")
 
 
 def _correlate_dataframes(df1, df2):

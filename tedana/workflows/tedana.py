@@ -1147,7 +1147,11 @@ def tedana_workflow(
                 mixing=mixing_df,
                 external_regressors=external_regressors,
                 component_table=component_table,
-                io_generator=io_generator,
+                out_file=os.path.join(
+                    io_generator.out_dir,
+                    "figures",
+                    f"{io_generator.prefix}confound_correlations.svg",
+                ),
             )
 
         LGR.info("Generating dynamic report")
