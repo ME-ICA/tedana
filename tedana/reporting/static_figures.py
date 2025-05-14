@@ -950,20 +950,21 @@ def plot_heatmap(
     models_df = component_table[models]
     # Remove the R2stat string from the models_df column names
     models_df.columns = models_df.columns.str.replace("R2stat ", "").replace(" model", "")
+    models_df = models_df.T  # transpose so components are columns
 
-    n_components = corr_df.shape[0]
-    n_regressors = corr_df.shape[1]
-    n_models = models_df.shape[1]
+    n_regressors = corr_df.shape[0]
+    n_components = corr_df.shape[1]
+    n_models = models_df.shape[0]
 
     fig, axes = plt.subplots(
-        figsize=((n_regressors * 0.25) + (n_models * 0.25) + 0.5, n_components * 0.25),
+        figsize=(n_components * 0.25, (n_regressors * 0.25) + (n_models * 0.25) + 0.5),
         nrows=2,
         height_ratios=[n_regressors, n_models],
         sharex=True,
     )
     sns.heatmap(
         corr_df,
-        cmap="vlag",
+        cmap="seismic",
         center=0,
         vmax=1,
         vmin=-1,
