@@ -933,7 +933,7 @@ def plot_heatmap(
     # Perform hierarchical clustering on rows
     corr = df.T.corr().values
     pdist_uncondensed = 1.0 - corr
-    pdist_condensed = np.concatenate([row[i+1:] for i, row in enumerate(pdist_uncondensed)])
+    pdist_condensed = np.concatenate([row[i + 1 :] for i, row in enumerate(pdist_uncondensed)])
     linkage = spc.linkage(pdist_condensed, method="complete")
     cluster_assignments = spc.fcluster(linkage, 0.5 * pdist_condensed.max(), "distance")
     idx = np.argsort(cluster_assignments)
