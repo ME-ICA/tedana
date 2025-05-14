@@ -911,6 +911,7 @@ def plot_heatmap(
     *,
     mixing: pd.DataFrame,
     external_regressors: pd.DataFrame,
+    component_table: pd.DataFrame,
     io_generator: io.OutputGenerator,
 ):
     """Plot a heatmap of the mixing matrix and external regressors.
@@ -924,39 +925,69 @@ def plot_heatmap(
     io_generator : :obj:`~tedana.io.OutputGenerator`
         The output generator for this workflow.
     """
+    import re
+
     import scipy.cluster.hierarchy as spc
     import seaborn as sns
 
-    df = _correlate_dataframes(external_regressors, mixing)
-    index_values = df.index.tolist()
+    # Plot the heatmap of the external regressors and mixing matrix
+    corr_df = _correlate_dataframes(external_regressors, mixing)
+    regressors = corr_df.index.tolist()
 
     # Perform hierarchical clustering on rows
-    corr = df.T.corr().values
+    corr = corr_df.T.corr().values
     pdist_uncondensed = 1.0 - corr
     pdist_condensed = np.concatenate([row[i + 1 :] for i, row in enumerate(pdist_uncondensed)])
     linkage = spc.linkage(pdist_condensed, method="complete")
     cluster_assignments = spc.fcluster(linkage, 0.5 * pdist_condensed.max(), "distance")
     idx = np.argsort(cluster_assignments)
-    new_order = [index_values[i] for i in idx]
-    df = df.loc[new_order]
+    new_regressor_order = [regressors[i] for i in idx]
+    corr_df = corr_df.loc[new_regressor_order]
 
-    cmap = sns.diverging_palette(230, 20, as_cmap=True)
+    # Get the metrics for the models from the component table
+    pattern = "R2stat (.*) model"
+    models = [re.search(pattern, col).group(1) for col in component_table.columns]
+    models_df = component_table[models]
+    # Remove the R2stat string from the models_df column names
+    models_df.columns = models_df.columns.str.replace("R2stat ", "").replace(" model", "")
 
-    fig, ax = plt.subplots(figsize=(df.shape[1] * 0.25, df.shape[0] * 0.25))
+    n_components = corr_df.shape[0]
+    n_regressors = corr_df.shape[1]
+    n_models = models_df.shape[1]
+
+    fig, axes = plt.subplots(
+        figsize=((n_regressors * 0.25) + (n_models * 0.25) + 0.5, n_components * 0.25),
+        nrows=2,
+        height_ratios=[n_regressors, n_models],
+        sharex=True,
+    )
     sns.heatmap(
-        df,
-        cmap=cmap,
+        corr_df,
+        cmap="vlag",
         center=0,
         vmax=1,
         vmin=-1,
         square=True,
         linewidths=0.5,
         cbar_kws={"shrink": 0.5},
-        ax=ax,
+        ax=axes[0],
     )
-    ax.tick_params(axis="y", labelrotation=0)
-    ax.set_xlabel("Component", fontsize=16)
-    ax.set_ylabel("External Regressor", fontsize=16)
+    axes[0].tick_params(axis="y", labelrotation=0)
+    axes[0].set_xticks([])
+    axes[0].set_ylabel("External Regressor", fontsize=16)
+
+    sns.heatmap(
+        models_df,
+        cmap="Reds",
+        center=0.5,
+        vmax=1,
+        vmin=0,
+        ax=axes[1],
+    )
+    axes[1].tick_params(axis="y", labelrotation=0)
+    axes[1].set_xlabel("Component", fontsize=16)
+    axes[1].set_ylabel("Model", fontsize=16)
+
     fig.savefig(
         os.path.join(
             io_generator.out_dir,

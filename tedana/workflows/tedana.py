@@ -1146,6 +1146,7 @@ def tedana_workflow(
             reporting.static_figures.plot_heatmap(
                 mixing=mixing_df,
                 external_regressors=external_regressors,
+                component_table=component_table,
                 io_generator=io_generator,
             )
 
