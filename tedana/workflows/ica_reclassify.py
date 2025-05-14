@@ -122,11 +122,18 @@ def _get_parser():
         default=False,
     )
     optional.add_argument(
-        "--mir",
-        dest="mir",
-        action="store_true",
-        help="Run minimum image regression.",
-        default=False,
+        "--gscontrol",
+        dest="gscontrol",
+        required=False,
+        action="store",
+        nargs="+",
+        help=(
+            "Perform additional denoising to remove spatially diffuse noise. "
+            "This argument can be single value or a space delimited list. "
+            "'gsr' will only work if the previous tedana run used --gscontrol gsr."
+        ),
+        choices=["gsr", "mir"],
+        default="",
     )
     optional.add_argument(
         "--no-reports",
@@ -199,7 +206,7 @@ def _main(argv=None):
         prefix=args.prefix,
         convention=args.convention,
         tedort=args.tedort,
-        mir=args.mir,
+        gscontrol=args.gscontrol,
         no_reports=args.no_reports,
         png_cmap=args.png_cmap,
         overwrite=args.overwrite,
@@ -221,7 +228,7 @@ def ica_reclassify_workflow(
     convention="bids",
     prefix="",
     tedort=False,
-    mir=False,
+    gscontrol=None,
     no_reports=False,
     png_cmap="coolwarm",
     verbose=False,
@@ -254,8 +261,9 @@ def ica_reclassify_workflow(
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
         denoising. Default is False.
-    mir : :obj:`bool`, optional
-        Run minimum image regression after denoising. Default is False.
+    gscontrol : {None, 'gsr', 'mir'} or :obj:`list`, optional
+        Perform additional denoising to remove spatially diffuse noise.
+        Default is None.
     no_reports : obj:'bool', optional
         Do not generate .html reports and .png plots. Default is false such
         that reports are generated.
@@ -313,6 +321,10 @@ def ica_reclassify_workflow(
     start_time = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
     logname = op.join(out_dir, (basename + start_time + "." + extension))
     utils.setup_loggers(logname=logname, repname=repname, quiet=quiet, debug=debug)
+
+    # Coerce gscontrol to list
+    if not isinstance(gscontrol, list):
+        gscontrol = [gscontrol]
 
     # If accept and reject are a list of integers, they stay the same
     # If they are a filename, load numbers of from
@@ -376,13 +388,16 @@ def ica_reclassify_workflow(
     # If global signal was removed in the previous run, we can assume that
     # the user wants to use that file again. If not, use the default of
     # optimally combined data.
-    gskey = "removed gs combined img"
-    if ioh.get_file_path(gskey):
-        data_optcom = ioh.get_file_contents(gskey)
-        used_gs = True
+    if "gsr" in gscontrol:
+        key = "removed gs combined img"
+        if not ioh.get_file_path(key):
+            raise FileNotFoundError(
+                f"File '{key}' not found in registry. "
+                "Did you originally run tedana with --gscontrol gsr?"
+            )
+        data_optcom = ioh.get_file_contents(key)
     else:
         data_optcom = ioh.get_file_contents("combined img")
-        used_gs = False
 
     if verbose:
         LGR.debug("Loading input 4D data")
@@ -428,8 +443,8 @@ def ica_reclassify_workflow(
         "ICA decomposition json",
         "ICA metrics json",
     ]
-    if used_gs:
-        to_copy.append(gskey)
+    if "gsr" in gscontrol:
+        to_copy.append("removed gs combined img")
         to_copy.append("has gs combined img")
 
     for tc in to_copy:
@@ -491,7 +506,7 @@ def ica_reclassify_workflow(
         io_generator=io_generator,
     )
 
-    if mir:
+    if "mir" in gscontrol:
         io_generator.overwrite = True
         gsc.minimum_image_regression(
             data_optcom=data_optcom,
@@ -540,6 +555,7 @@ def ica_reclassify_workflow(
     with open(repname) as fo:
         report = [line.rstrip() for line in fo.readlines()]
         report = " ".join(report)
+
     with open(repname, "w") as fo:
         fo.write(report)
 
@@ -553,14 +569,6 @@ def ica_reclassify_workflow(
         LGR.info("Making figures folder with static component maps and timecourse plots.")
 
         dn_ts, hikts, lowkts = io.denoise_ts(data_optcom, mixing, mask_denoise, component_table)
-
-        # Figure out which control methods were used
-        gscontrol = []
-        if used_gs:
-            gscontrol.append("gsr")
-        if mir:
-            gscontrol.append("mir")
-        gscontrol = None if gscontrol == [] else gscontrol
 
         reporting.static_figures.carpet_plot(
             optcom_ts=data_optcom,

@@ -264,7 +264,7 @@ def test_integration_four_echo(skip_integration):
         reject=[4, 5, 6],
         tag_accept=["manual tag 1", "manual tag 2"],
         out_dir=out_dir_manual,
-        mir=True,
+        gscontrol=["gsr", "mir"],
         verbose=True,
     )
 
@@ -627,7 +627,8 @@ def test_integration_reclassify_debug(skip_integration):
         "--convention",
         "orig",
         "--tedort",
-        "--mir",
+        "--gscontrol",
+        "mir",
         "--no-reports",
         "--out-dir",
         out_dir,
