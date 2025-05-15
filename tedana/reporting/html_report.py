@@ -197,16 +197,19 @@ def _update_template_bokeh(
     t2star_exists = (
         t2star_brain_filename in files_in_figures and t2star_histogram_filename in files_in_figures
     )
-
     s0_exists = s0_brain_filename in files_in_figures and s0_histogram_filename in files_in_figures
-
     rmse_exists = (
         rmse_brain_filename in files_in_figures and rmse_timeseries_filename in files_in_figures
     )
-
     LGR.info(f"T2* files exist: {t2star_exists}")
     LGR.info(f"S0 files exist: {s0_exists}")
     LGR.info(f"RMSE files exist: {rmse_exists}")
+
+    # Check for external regressors
+    erc_filename = f"{prefix}confound_correlations.svg"
+    external_regressors_exist = erc_filename in files_in_figures
+    external_regressor_correlations = f"./figures/{erc_filename}"
+    LGR.info(f"External regressors exist: {external_regressors_exist}")
 
     # Convert bibtex to html
     references, bibliography = _bib2html(references)
@@ -239,6 +242,8 @@ def _update_template_bokeh(
         gsrBrainPlot=gsr_brain,
         mirBrainPlot=mir_brain,
         gsrTimeseries=gsr_timeseries,
+        externalRegressorsExist=external_regressors_exist,
+        externalRegressorCorrelations=external_regressor_correlations,
         references=references,
         javascript=bokeh_js,
         buttons=buttons,

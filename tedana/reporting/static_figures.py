@@ -8,6 +8,7 @@ from io import BytesIO
 import matplotlib
 import nibabel as nb
 import numpy as np
+import pandas as pd
 import scipy.stats as sstats
 
 matplotlib.use("AGG")
@@ -904,3 +905,155 @@ def plot_gscontrol(
                 f"{io_generator.prefix}gscontrol_bold.svg",
             )
         )
+
+
+def plot_heatmap(
+    *,
+    mixing: pd.DataFrame,
+    external_regressors: pd.DataFrame,
+    component_table: pd.DataFrame,
+    out_file: str,
+):
+    """Plot a heatmap of the mixing matrix and external regressors.
+
+    Parameters
+    ----------
+    mixing : (C x T) :obj:`numpy.ndarray`
+        Mixing matrix.
+    external_regressors : (E x T) :obj:`numpy.ndarray`
+        External regressors.
+    component_table : pandas.DataFrame
+        Component table.
+    out_file : str
+        The output file name.
+    """
+    import re
+
+    import scipy.cluster.hierarchy as spc
+    import seaborn as sns
+
+    # Plot the heatmap of the external regressors and mixing matrix
+    corr_df = _correlate_dataframes(external_regressors, mixing)
+    regressors = corr_df.index.tolist()
+
+    # Perform hierarchical clustering on rows
+    corr = corr_df.T.corr().values
+    pdist_uncondensed = 1.0 - corr
+    pdist_condensed = np.concatenate([row[i + 1 :] for i, row in enumerate(pdist_uncondensed)])
+    linkage = spc.linkage(pdist_condensed, method="complete")
+    cluster_assignments = spc.fcluster(linkage, 0.5 * pdist_condensed.max(), "distance")
+    idx = np.argsort(cluster_assignments)
+    new_regressor_order = [regressors[i] for i in idx]
+    corr_df = corr_df.loc[new_regressor_order]
+
+    # Get the metrics for the models from the component table
+    pattern = "(R2stat .* model)"
+    searches = [re.search(pattern, col) for col in component_table.columns]
+    models = [search.group(1) for search in searches if search is not None]
+    models_df = component_table[models]
+    # Remove the R2stat string from the models_df column names
+    models_df.columns = models_df.columns.str.replace("R2stat ", "").str.replace(" model", "")
+    models_df = models_df.T  # transpose so components are columns
+
+    n_regressors = corr_df.shape[0]
+    n_components = corr_df.shape[1]
+    n_models = models_df.shape[0]
+    ratio = n_regressors / n_models
+
+    fig, axes = plt.subplots(
+        figsize=(n_components * 0.25, (n_regressors * 0.25) + (n_models * 0.25) + 0.5),
+        nrows=2,
+        height_ratios=[n_regressors, n_models],
+        sharex=True,
+    )
+    sns.heatmap(
+        corr_df,
+        cmap="seismic",
+        center=0,
+        vmax=1,
+        vmin=-1,
+        square=True,
+        linewidths=0.5,
+        cbar_kws={
+            "shrink": 0.85,
+            "label": "Correlation",
+            "ticks": [-1, 0, 1],
+            "pad": 0.01,
+            "aspect": 20,
+        },
+        ax=axes[0],
+    )
+    axes[0].tick_params(axis="y", labelrotation=0)
+    axes[0].set_xticks([])
+    axes[0].tick_params(axis="x", bottom=False)
+
+    sns.heatmap(
+        models_df,
+        cmap="Reds",
+        center=0.5,
+        vmax=1,
+        vmin=0,
+        square=True,
+        linewidths=0.5,
+        cbar_kws={
+            "shrink": 0.85,
+            "label": "R-Squared",
+            "ticks": [0, 1],
+            "pad": 0.01,
+            "aspect": 20 / ratio,
+        },
+        ax=axes[1],
+    )
+    axes[1].tick_params(axis="y", labelrotation=0)
+    axes[1].set_xlabel("Component", fontsize=16)
+
+    fig.savefig(out_file, bbox_inches="tight")
+
+
+def _correlate_dataframes(df1, df2):
+    """Correlate each column in two DataFrames using numpy.corrcoef.
+
+    Parameters
+    ----------
+    df1 : pandas.DataFrame of shape (T, C)
+        The first DataFrame.
+    df2 : pandas.DataFrame of shape (T, E)
+        The second DataFrame. Rows must align with df1.
+
+    Returns
+    -------
+    correlation_df : pandas.DataFrame of shape (C, E)
+        A DataFrame where rows are columns from df1, columns are columns from df2,
+        and values are the Pearson correlation coefficients.
+    """
+    if not isinstance(df1, pd.DataFrame) or not isinstance(df2, pd.DataFrame):
+        raise ValueError("Both inputs must be pandas DataFrames.")
+
+    if df1.shape[0] != df2.shape[0]:
+        raise ValueError("DataFrames must have the same number of rows.")
+
+    # Convert DataFrames to numpy arrays
+    arr1 = df1.values
+    arr2 = df2.values
+
+    # Concatenate arrays column-wise
+    # This creates an array where the first df1.shape[1] columns are from df1
+    # and the subsequent columns are from df2.
+    combined_arr = np.hstack((arr1, arr2))
+
+    # Calculate the full correlation matrix.
+    # np.corrcoef expects variables as rows, so we transpose combined_arr.
+    # If df1 has m columns and df2 has n columns, combined_arr.T has m+n rows.
+    # full_corr_matrix will be an (m+n) x (m+n) matrix.
+    full_corr_matrix = np.corrcoef(combined_arr.T)
+
+    # Extract the part of the matrix that corresponds to correlations
+    # between columns of df1 and columns of df2.
+    # This is the block from row 0 to df1.shape[1]-1,
+    # and from column df1.shape[1] to the end.
+    num_cols_df1 = df1.shape[1]
+    cross_corr_matrix = full_corr_matrix[:num_cols_df1, num_cols_df1:]
+
+    # Convert the result back to a DataFrame with appropriate labels
+    correlation_df = pd.DataFrame(cross_corr_matrix, index=df1.columns, columns=df2.columns)
+    return correlation_df

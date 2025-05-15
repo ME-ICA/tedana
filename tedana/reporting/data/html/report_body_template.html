@@ -286,6 +286,19 @@
     </div>
 </div>
 {% endif %}
+{% if externalRegressorsExist %}
+<div class="carpet-plots">
+  <div class="carpet-plots-image">
+  <h1>External Regressors</h1>
+  <img
+    id="externalRegressorCorrelations"
+    src="{{ externalRegressorCorrelations }}"
+    style="width: 95%; max-width: 1200px; height: auto"
+  />
+  </div>
+</div>
+{% endif %}
+
 <div class="info">
   <h1>Info</h1>
   {{ info }}

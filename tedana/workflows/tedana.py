@@ -1142,6 +1142,18 @@ def tedana_workflow(
                 gscontrol=gscontrol,
             )
 
+        if external_regressors is not None:
+            reporting.static_figures.plot_heatmap(
+                mixing=mixing_df,
+                external_regressors=external_regressors,
+                component_table=component_table,
+                out_file=os.path.join(
+                    io_generator.out_dir,
+                    "figures",
+                    f"{io_generator.prefix}confound_correlations.svg",
+                ),
+            )
+
         LGR.info("Generating dynamic report")
         reporting.generate_report(io_generator, cluster_labels, similarity_t_sne)
 

@@ -450,7 +450,13 @@ def test_integration_three_echo_external_regressors_single_model(skip_integratio
         "figures/pca_criteria.png",
         "figures/pca_variance_explained.png",
     ]
-    check_integration_outputs(fn, out_dir, max_expected_comp=42, unexpected_files=unexpected_files)
+    check_integration_outputs(
+        fn,
+        out_dir,
+        max_expected_comp=42,
+        unexpected_files=unexpected_files,
+        extra_expected_files=["figures/confound_correlations.svg"],
+    )
 
     assert "It is strongly recommended to provide an external mask," in caplog.text
 
@@ -489,7 +495,11 @@ def test_integration_three_echo_external_regressors_motion_task_models(skip_inte
 
     # compare the generated output files
     fn = resource_filename("tedana", "tests/data/cornell_three_echo_preset_mixing_outputs.txt")
-    check_integration_outputs(fn, out_dir)
+    check_integration_outputs(
+        fn,
+        out_dir,
+        extra_expected_files=["figures/confound_correlations.svg"],
+    )
 
 
 def test_integration_reclassify_insufficient_args(skip_integration):
