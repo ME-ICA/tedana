@@ -1,0 +1,72 @@
+name: Tox
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+      - main
+
+defaults:
+  run:
+    shell: bash
+
+# Force tox and pytest to use color
+env:
+  FORCE_COLOR: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ['ubuntu-latest']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        dependencies: ['latest', 'pre']
+        include:
+          - os: ubuntu-latest
+            python-version: '3.9'
+            dependencies: 'min'
+        exclude:
+          # Skip pre-releases for Pythons dropped by SPEC-0000
+          # https://scientific-python.org/specs/spec-0000/#support-window
+          - python-version: '3.9'
+            dependencies: 'pre'
+          - python-version: '3.10'
+            dependencies: 'pre'
+
+    env:
+      DEPENDS: ${{ matrix.dependencies }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v6
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+      - name: Install tox
+        run: |
+          uv tool install --with=tox-uv --with=tox-gh-actions tox
+      - name: Show tox config
+        run: tox c
+      - name: Run tox
+        run: tox -v --exit-and-dump-after 1200
+      - uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+        if: ${{ always() }}
