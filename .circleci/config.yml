@@ -6,48 +6,26 @@ version: 2.1
 orbs:
   codecov: codecov/codecov@5.2.1
 jobs:
-  makeenv_38:
+  makeenv_39:
     docker:
       - image: continuumio/miniconda3
     working_directory: /tmp/src/tedana
     steps:
       - checkout
       - restore_cache:
-          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
+          key: conda-py39-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Generate environment
           command: |
-            if [ ! -d /opt/conda/envs/tedana_py38 ]; then
-              conda create -yq -n tedana_py38 python=3.8
-              source activate tedana_py38
+            if [ ! -d /opt/conda/envs/tedana_py39 ]; then
+              conda create -yq -n tedana_py39 python=3.9
+              source activate tedana_py39
               pip install -e .[tests]
             fi
       - save_cache:
-          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
+          key: conda-py39-v3-{{ checksum "pyproject.toml" }}
           paths:
-            - /opt/conda/envs/tedana_py38
-
-  unittest_38:
-    docker:
-      - image: continuumio/miniconda3
-    working_directory: /tmp/src/tedana
-    steps:
-      - checkout
-      - restore_cache:
-          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
-      - run:
-          name: Running unit tests
-          command: |
-            apt-get update
-            apt-get install -y make
-            source activate tedana_py38  # depends on makeenv_38
-            make unittest
-            mkdir /tmp/src/coverage
-            mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py38
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-            - src/coverage/.coverage.py38
+            - /opt/conda/envs/tedana_py39
 
   unittest_39:
     docker:
@@ -58,26 +36,14 @@ jobs:
       - restore_cache:
           key: conda-py39-v3-{{ checksum "pyproject.toml" }}
       - run:
-          name: Generate environment
-          command: |
-            apt-get update
-            apt-get install -yqq make
-            if [ ! -d /opt/conda/envs/tedana_py39 ]; then
-              conda create -yq -n tedana_py39 python=3.9
-              source activate tedana_py39
-              pip install .[tests]
-            fi
-      - run:
           name: Running unit tests
           command: |
-            source activate tedana_py39
+            apt-get update
+            apt-get install -y make
+            source activate tedana_py39  # depends on makeenv_39
             make unittest
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.py39
-      - save_cache:
-          key: conda-py39-v3-{{ checksum "pyproject.toml" }}
-          paths:
-            - /opt/conda/envs/tedana_py39
       - persist_to_workspace:
           root: /tmp
           paths:
@@ -226,13 +192,13 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
+          key: conda-py39-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Style check
           command: |
             apt-get update
             apt-get install -yqq make
-            source activate tedana_py38  # depends on makeenv38
+            source activate tedana_py39  # depends on makeenv38
             make lint
 
   three-echo:
@@ -242,14 +208,14 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
+          key: conda-py39-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
             apt-get update
             apt-get install -yqq make
-            source activate tedana_py38  # depends on makeenv_38
+            source activate tedana_py39  # depends on makeenv_39
             make three-echo
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.three-echo
@@ -267,14 +233,14 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
+          key: conda-py39-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
             apt-get update
             apt-get install -yqq make
-            source activate tedana_py38  # depends on makeenv_38
+            source activate tedana_py39  # depends on makeenv_39
             make four-echo
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.four-echo
@@ -292,14 +258,14 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
+          key: conda-py39-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
             apt-get update
             apt-get install -yqq make
-            source activate tedana_py38  # depends on makeenv_38
+            source activate tedana_py39  # depends on makeenv_39
             make five-echo
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.five-echo
@@ -317,14 +283,14 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
+          key: conda-py39-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
             apt-get update
             apt-get install -yqq make
-            source activate tedana_py38  # depends on makeenv_38
+            source activate tedana_py39  # depends on makeenv_39
             make reclassify
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.reclassify
@@ -342,14 +308,14 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
+          key: conda-py39-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Run integration tests
           no_output_timeout: 40m
           command: |
             apt-get update
             apt-get install -yqq make
-            source activate tedana_py38  # depends on makeenv_38
+            source activate tedana_py39  # depends on makeenv_39
             make t2smap
             mkdir /tmp/src/coverage
             mv /tmp/src/tedana/.coverage /tmp/src/coverage/.coverage.t2smap
@@ -369,13 +335,13 @@ jobs:
           at: /tmp
       - checkout
       - restore_cache:
-          key: conda-py38-v3-{{ checksum "pyproject.toml" }}
+          key: conda-py39-v3-{{ checksum "pyproject.toml" }}
       - run:
           name: Merge coverage files
           command: |
             apt-get update
             apt-get install -yqq curl gnupg
-            source activate tedana_py38  # depends on makeenv38
+            source activate tedana_py39  # depends on makeenv38
             cd /tmp/src/coverage/
             coverage combine
             coverage xml
@@ -387,36 +353,34 @@ jobs:
 workflows:
   upload-to-codecov:
     jobs:
-      - makeenv_38
-      - unittest_38:
+      - makeenv_39
+      - unittest_39:
           requires:
-            - makeenv_38
+            - makeenv_39
       - style_check:
           requires:
-            - makeenv_38
+            - makeenv_39
       - three-echo:
           requires:
-            - makeenv_38
+            - makeenv_39
       - four-echo:
           requires:
-            - makeenv_38
+            - makeenv_39
       - five-echo:
           requires:
-            - makeenv_38
+            - makeenv_39
       - reclassify:
           requires:
-            - makeenv_38
+            - makeenv_39
       - t2smap:
           requires:
-            - makeenv_38
-      - unittest_39
+            - makeenv_39
       - unittest_310
       - unittest_311
       - unittest_312
       - unittest_313
       - merge_coverage:
           requires:
-            - unittest_38
             - unittest_39
             - unittest_310
             - unittest_311
