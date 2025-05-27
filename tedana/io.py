@@ -849,7 +849,12 @@ def load_data(data, n_echos=None, dummy_scans=0):
             fdata = np.stack([utils.reshape_niimg(f) for f in data], axis=1)
             ref_img = check_niimg(data[0])
             ref_img.header.extensions = []
-            return np.atleast_3d(fdata), ref_img
+
+            fdata = np.atleast_3d(fdata)
+            if dummy_scans != 0:
+                fdata = fdata[..., dummy_scans:]
+
+            return fdata, ref_img
 
     # Z-concatenated file/img
     img = check_niimg(data)
