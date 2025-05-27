@@ -43,7 +43,7 @@ def test_load_data():
 
     # list of filepath to images *with dummy scans*
     d, ref = me.load_data(fnames, dummy_scans=1)
-    assert d.shape == (exp_shape[0] - 1, exp_shape[1], exp_shape[2])
+    assert d.shape == (exp_shape[0], exp_shape[1], exp_shape[2] - 1)
     assert isinstance(ref, nib.Nifti1Image)
     assert np.allclose(ref.get_fdata(), nib.load(fnames[0]).get_fdata())
 
