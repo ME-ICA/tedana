@@ -267,7 +267,7 @@ def test_validate_extern_regress_succeeds(caplog):
     external.validate_extern_regress(
         external_regressors=external_regressors,
         external_regressor_config=external_regressor_config,
-        n_vols=n_vols - 5,
+        n_vols=n_vols + 5,
         dummy_scans=5,
     )
     assert "External regressors have the same number of timepoints" not in caplog.text
@@ -351,6 +351,19 @@ def test_validate_extern_regress_fails():
             external_regressor_config=external_regressor_config_expanded,
             n_vols=n_vols,
             dummy_scans=0,
+        )
+
+    # If there is a mismatch in the expected number of volumes, number of dummy scans, and actual
+    # number of volumes
+    with pytest.raises(
+        external.RegressError,
+        match=re.escape("External regressors have 75 timepoints while fMRI data have"),
+    ):
+        external.validate_extern_regress(
+            external_regressors=external_regressors,
+            external_regressor_config=external_regressor_config_expanded,
+            n_vols=n_vols - 6,
+            dummy_scans=5,
         )
 
 

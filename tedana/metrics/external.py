@@ -229,7 +229,7 @@ def validate_extern_regress(
             external_regressors = external_regressors.iloc[dummy_scans:]
         else:
             err_msg += (
-                f"External Regressors have {len(external_regressors.index)} timepoints "
+                f"External regressors have {len(external_regressors.index)} timepoints "
                 f"while fMRI data have {n_vols} timepoints, of which {dummy_scans} are dummy "
                 "scans.\n"
             )
