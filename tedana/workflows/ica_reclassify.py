@@ -115,6 +115,13 @@ def _get_parser():
         default="bids",
     )
     optional.add_argument(
+        "--dummy-scans",
+        dest="dummy_scans",
+        type=int,
+        help="Number of dummy scans to remove from the beginning of the data.",
+        default=0,
+    )
+    optional.add_argument(
         "--tedort",
         dest="tedort",
         action="store_true",
@@ -205,6 +212,7 @@ def _main(argv=None):
         config=args.config,
         prefix=args.prefix,
         convention=args.convention,
+        dummy_scans=args.dummy_scans,
         tedort=args.tedort,
         gscontrol=args.gscontrol,
         no_reports=args.no_reports,
@@ -227,6 +235,7 @@ def ica_reclassify_workflow(
     config="auto",
     convention="bids",
     prefix="",
+    dummy_scans=0,
     tedort=False,
     gscontrol=None,
     no_reports=False,
@@ -258,6 +267,8 @@ def ica_reclassify_workflow(
         Will be applied to all listed rejected components, even if they were already rejected.
     out_dir : :obj:`str`, optional
         Output directory.
+    dummy_scans : :obj:`int`, optional
+        Number of dummy scans to remove from the beginning of the data. Default is 0.
     tedort : :obj:`bool`, optional
         Orthogonalize rejected components w.r.t. accepted ones prior to
         denoising. Default is False.
@@ -403,7 +414,7 @@ def ica_reclassify_workflow(
         LGR.debug("Loading input 4D data")
         data_cat = ioh.get_file_contents("input img")
         # Extract the data from the nibabel objects
-        data_cat, _ = io.load_data(data_cat, n_echos=len(data_cat))
+        data_cat, _ = io.load_data(data_cat, n_echos=len(data_cat), dummy_scans=dummy_scans)
 
     io_generator = io.OutputGenerator(
         data_optcom,

@@ -23,7 +23,11 @@ class RegressError(Exception):
 
 
 def load_validate_external_regressors(
-    external_regressors: str, external_regressor_config: Dict, n_vols: int
+    *,
+    external_regressors: str,
+    external_regressor_config: Dict,
+    n_vols: int,
+    dummy_scans: int,
 ) -> Tuple[pd.DataFrame, Dict]:
     """Load and validate external regressors and descriptors in dictionary.
 
@@ -34,7 +38,9 @@ def load_validate_external_regressors(
     external_regressor_config: :obj:`dict`
         A dictionary with info for fitting external regressors to component time series
     n_vols: :obj:`int`
-        Number of timepoints in the fMRI time series
+        Number of timepoints in the fMRI time series.
+    dummy_scans: :obj:`int`
+        Number of dummy scans in the fMRI time series.
 
     Returns
     -------
@@ -52,14 +58,21 @@ def load_validate_external_regressors(
         raise ValueError(f"Cannot load tsv file with external regressors: {external_regressors}")
 
     external_regressor_config = validate_extern_regress(
-        external_regressors, external_regressor_config, n_vols
+        external_regressors=external_regressors,
+        external_regressor_config=external_regressor_config,
+        n_vols=n_vols,
+        dummy_scans=dummy_scans,
     )
 
     return external_regressors, external_regressor_config
 
 
 def validate_extern_regress(
-    external_regressors: pd.DataFrame, external_regressor_config: List[Dict], n_vols: int
+    *,
+    external_regressors: pd.DataFrame,
+    external_regressor_config: List[Dict],
+    n_vols: int,
+    dummy_scans: int,
 ) -> List[Dict]:
     """Confirm external regressor dictionary matches data and expands regular expressions.
 
@@ -83,7 +96,9 @@ def validate_extern_regress(
         Each element in the list is a dict defining the regressors
         and statistical models for a test.
     n_vols : :obj:`int`
-        The number of time points in the fMRI time series
+        The number of time points in the fMRI time series.
+    dummy_scans : :obj:`int`
+        The number of dummy scans in the fMRI time series.
 
     Returns
     -------
@@ -204,11 +219,20 @@ def validate_extern_regress(
                         f"{sorted(extra_names)}\n"
                     )
 
-    if len(external_regressors.index) != n_vols:
-        err_msg += (
-            f"External Regressors have {len(external_regressors.index)} timepoints "
-            f"while fMRI data have {n_vols} timepoints\n"
-        )
+    if len(external_regressors.index) != (n_vols - dummy_scans):
+        if len(external_regressors.index) == n_vols:
+            LGR.warning(
+                "External regressors have the same number of timepoints as the fMRI data, "
+                "but dummy scans are included in the fMRI data. "
+                "tedana will remove the dummy scans from the external regressors."
+            )
+            external_regressors = external_regressors.iloc[dummy_scans:]
+        else:
+            err_msg += (
+                f"External Regressors have {len(external_regressors.index)} timepoints "
+                f"while fMRI data have {n_vols} timepoints, of which {dummy_scans} are dummy "
+                "scans.\n"
+            )
 
     if err_msg:
         raise RegressError(err_msg)

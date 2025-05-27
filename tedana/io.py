@@ -808,7 +808,7 @@ def writeresults_echoes(data_cat, mixing, mask, component_table, io_generator):
 
 
 # File Loading Functions
-def load_data(data, n_echos=None):
+def load_data(data, n_echos=None, dummy_scans=0):
     """Coerce input `data` files to required 3D array output.
 
     Parameters
@@ -819,6 +819,8 @@ def load_data(data, n_echos=None):
     n_echos : :obj:`int`, optional
         Number of echos in provided data array. Only necessary if `data` is a single,
         z-concatenated file. Default: None
+    dummy_scans : :obj:`int`, optional
+        Number of dummy scans in the fMRI time series. Default: 0
 
     Returns
     -------
@@ -853,6 +855,10 @@ def load_data(data, n_echos=None):
     img = check_niimg(data)
     (nx, ny), nz = img.shape[:2], img.shape[2] // n_echos
     fdata = utils.reshape_niimg(img.get_fdata().reshape(nx, ny, nz, n_echos, -1, order="F"))
+
+    if dummy_scans != 0:
+        fdata = fdata[..., dummy_scans:]
+
     # create reference image
     ref_img = img.__class__(
         np.zeros((nx, ny, nz, 1)), affine=img.affine, header=img.header, extra=img.extra

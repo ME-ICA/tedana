@@ -310,7 +310,10 @@ def test_load_validate_external_regressors_fails():
         ValueError, match=f"Cannot load tsv file with external regressors: {external_regressors}"
     ):
         external.load_validate_external_regressors(
-            external_regressors, external_regressor_config, 200
+            external_regressors=external_regressors,
+            external_regressor_config=external_regressor_config,
+            n_vols=200,
+            dummy_scans=0,
         )
 
 
@@ -324,7 +327,10 @@ def test_load_validate_external_regressors_smoke():
     # Not testing outputs because this is just calling validate_extern_regress and
     # outputs are checked in those tests
     external.load_validate_external_regressors(
-        external_regressors, external_regressor_config, n_vols
+        external_regressors=external_regressors,
+        external_regressor_config=external_regressor_config,
+        n_vols=n_vols,
+        dummy_scans=0,
     )
 
 
