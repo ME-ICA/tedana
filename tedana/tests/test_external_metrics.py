@@ -187,7 +187,10 @@ def test_validate_extern_regress_succeeds(caplog):
     external_regressors, n_vols = sample_external_regressors()
     external_regressor_config = sample_external_regressor_config()
     external_regressor_config_expanded = external.validate_extern_regress(
-        external_regressors, external_regressor_config, n_vols
+        external_regressors=external_regressors,
+        external_regressor_config=external_regressor_config,
+        n_vols=n_vols,
+        dummy_scans=0,
     )
 
     # The regex patterns should have been replaced with the full names of the regressors
@@ -215,14 +218,22 @@ def test_validate_extern_regress_succeeds(caplog):
     # Shouldn't change anything, but making sure it runs
     caplog.clear()
     external_regressor_config_expanded = external.validate_extern_regress(
-        external_regressors, external_regressor_config_expanded, n_vols
+        external_regressors=external_regressors,
+        external_regressor_config=external_regressor_config_expanded,
+        n_vols=n_vols,
+        dummy_scans=0,
     )
     assert "WARNING" not in caplog.text
 
     # Removing all partial model and task_keep stuff to confirm it still runs, but with a warning
     caplog.clear()
     external_regressor_config = sample_external_regressor_config("no_task_partial")
-    external.validate_extern_regress(external_regressors, external_regressor_config, n_vols)
+    external.validate_extern_regress(
+        external_regressors=external_regressors,
+        external_regressor_config=external_regressor_config,
+        n_vols=n_vols,
+        dummy_scans=0,
+    )
     assert (
         "User-provided external_regressors include columns not used "
         "in any external regressor model: ['Signal']"
@@ -231,7 +242,12 @@ def test_validate_extern_regress_succeeds(caplog):
     # Add "CSF" to "Motion" partial model (also in "CSF" partial model) to test if warning appears
     caplog.clear()
     external_regressor_config = sample_external_regressor_config("csf_in_mot")
-    external.validate_extern_regress(external_regressors, external_regressor_config, n_vols)
+    external.validate_extern_regress(
+        external_regressors=external_regressors,
+        external_regressor_config=external_regressor_config,
+        n_vols=n_vols,
+        dummy_scans=0,
+    )
     assert "['CSF'] used in more than one partial regressor model for nuisance" in caplog.text
 
 
@@ -246,7 +262,10 @@ def test_validate_extern_regress_fails():
         external.RegressError, match=f"while fMRI data have {n_vols - 1} timepoints"
     ):
         external.validate_extern_regress(
-            external_regressors, external_regressor_config, n_vols - 1
+            external_regressors=external_regressors,
+            external_regressor_config=external_regressor_config,
+            n_vols=n_vols - 1,
+            dummy_scans=0,
         )
 
     # If no external regressor labels match the regex label in config
@@ -259,7 +278,12 @@ def test_validate_extern_regress_fails():
             )
         ),
     ):
-        external.validate_extern_regress(external_regressors, external_regressor_config, n_vols)
+        external.validate_extern_regress(
+            external_regressors=external_regressors,
+            external_regressor_config=external_regressor_config,
+            n_vols=n_vols,
+            dummy_scans=0,
+        )
 
     # If Signal is in a partial model, but not "regressors" for the full model
     external_regressor_config = sample_external_regressor_config("signal_in_mot")
@@ -272,7 +296,12 @@ def test_validate_extern_regress_fails():
             )
         ),
     ):
-        external.validate_extern_regress(external_regressors, external_regressor_config, n_vols)
+        external.validate_extern_regress(
+            external_regressors=external_regressors,
+            external_regressor_config=external_regressor_config,
+            n_vols=n_vols,
+            dummy_scans=0,
+        )
 
     # If a regressor expected in the config is not in external_regressors
     # Run successfully to expand Motion labels in config and then create error
@@ -280,7 +309,10 @@ def test_validate_extern_regress_fails():
     external_regressor_config = sample_external_regressor_config()
     external_regressors, n_vols = sample_external_regressors()
     external_regressor_config_expanded = external.validate_extern_regress(
-        external_regressors, external_regressor_config, n_vols
+        external_regressors=external_regressors,
+        external_regressor_config=external_regressor_config,
+        n_vols=n_vols,
+        dummy_scans=0,
     )
     external_regressors, n_vols = sample_external_regressors("no_mot_y_column")
     # The same error message will appear twice.
@@ -293,7 +325,10 @@ def test_validate_extern_regress_fails():
         ),
     ):
         external.validate_extern_regress(
-            external_regressors, external_regressor_config_expanded, n_vols
+            external_regressors=external_regressors,
+            external_regressor_config=external_regressor_config_expanded,
+            n_vols=n_vols,
+            dummy_scans=0,
         )
 
 
@@ -345,7 +380,10 @@ def test_fit_regressors(caplog):
     external_regressors, n_vols = sample_external_regressors()
     external_regressor_config = sample_external_regressor_config()
     external_regressor_config_expanded = external.validate_extern_regress(
-        external_regressors, external_regressor_config, n_vols
+        external_regressors=external_regressors,
+        external_regressor_config=external_regressor_config,
+        n_vols=n_vols,
+        dummy_scans=0,
     )
     mixing = sample_mixing_matrix()
 
@@ -431,7 +469,10 @@ def test_fit_mixing_to_regressors(caplog):
     external_regressors, n_vols = sample_external_regressors()
     external_regressor_config = sample_external_regressor_config()
     external_regressor_config_expanded = external.validate_extern_regress(
-        external_regressors, external_regressor_config, n_vols
+        external_regressors=external_regressors,
+        external_regressor_config=external_regressor_config,
+        n_vols=n_vols,
+        dummy_scans=0,
     )
     mixing = sample_mixing_matrix()
 
@@ -535,7 +576,10 @@ def test_build_fstat_regressor_models(caplog):
     external_regressors, n_vols = sample_external_regressors()
     external_regressor_config = sample_external_regressor_config()
     external_regressor_config_expanded = external.validate_extern_regress(
-        external_regressors, external_regressor_config, n_vols
+        external_regressors=external_regressors,
+        external_regressor_config=external_regressor_config,
+        n_vols=n_vols,
+        dummy_scans=0,
     )
 
     detrend_regressors = sample_detrend_regressors(n_vols, dtrank=3)
