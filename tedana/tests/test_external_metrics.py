@@ -250,6 +250,28 @@ def test_validate_extern_regress_succeeds(caplog):
     )
     assert "['CSF'] used in more than one partial regressor model for nuisance" in caplog.text
 
+    # Check that dummy scans are removed from the external regressors
+    caplog.clear()
+    external_regressor_config = sample_external_regressor_config("valid")
+    external.validate_extern_regress(
+        external_regressors=external_regressors,
+        external_regressor_config=external_regressor_config,
+        n_vols=n_vols,
+        dummy_scans=5,
+    )
+    assert "External regressors have the same number of timepoints" in caplog.text
+
+    # Check that dummy scans are removed from the external regressors
+    caplog.clear()
+    external_regressor_config = sample_external_regressor_config("valid")
+    external.validate_extern_regress(
+        external_regressors=external_regressors,
+        external_regressor_config=external_regressor_config,
+        n_vols=n_vols - 5,
+        dummy_scans=5,
+    )
+    assert "External regressors have the same number of timepoints" not in caplog.text
+
 
 def test_validate_extern_regress_fails():
     """Test validate_extern_regress fails when expected."""
@@ -366,6 +388,15 @@ def test_load_validate_external_regressors_smoke():
         external_regressor_config=external_regressor_config,
         n_vols=n_vols,
         dummy_scans=0,
+    )
+
+    # Not testing outputs because this is just calling validate_extern_regress and
+    # outputs are checked in those tests
+    external.load_validate_external_regressors(
+        external_regressors=external_regressors,
+        external_regressor_config=external_regressor_config,
+        n_vols=n_vols,
+        dummy_scans=5,
     )
 
 
