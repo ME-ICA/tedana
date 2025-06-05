@@ -369,10 +369,8 @@ def tedpca(
 
     # Flip signs for voxel_comp_weights to match comp_ts mixing matrix
     # that were flipped in collect.generate_metrics
-    optimal_sign = np.matlib.repmat(
-        component_table["optimal sign"].to_numpy(), voxel_comp_weights.shape[0], 1
-    )
-    voxel_comp_weights = voxel_comp_weights * optimal_sign
+    optimal_sign = component_table["optimal sign"].to_numpy()
+    voxel_comp_weights = voxel_comp_weights * optimal_sign[None, :]
 
     # varex_norm from PCA overrides varex_norm from dependence_metrics,
     # but we retain the original
