@@ -72,7 +72,10 @@ def test_smoke_generate_metrics(testdata1):
 
     external_regressor_config = sample_external_regressor_config()
     external_regressor_config_expanded = external.validate_extern_regress(
-        external_regressors, external_regressor_config, n_vols
+        external_regressors=external_regressors,
+        external_regressor_config=external_regressor_config,
+        n_vols=n_vols,
+        dummy_scans=0,
     )
 
     component_table, new_mixing = collect.generate_metrics(

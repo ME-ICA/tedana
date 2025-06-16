@@ -123,6 +123,13 @@ def _get_parser():
         default="bids",
     )
     optional.add_argument(
+        "--dummy-scans",
+        dest="dummy_scans",
+        type=int,
+        help="Number of dummy scans to remove from the beginning of the data.",
+        default=0,
+    )
+    optional.add_argument(
         "--masktype",
         dest="masktype",
         required=False,
@@ -399,6 +406,7 @@ def tedana_workflow(
     mask=None,
     convention="bids",
     prefix="",
+    dummy_scans=0,
     masktype=["dropout"],
     fittype="loglin",
     combmode="t2s",
@@ -453,6 +461,10 @@ def tedana_workflow(
     prefix : :obj:`str` or None, optional
         Prefix for filenames generated.
         Default is ""
+    dummy_scans : :obj:`int`, optional
+        Number of dummy scans to remove from the beginning of the data
+        (both in the BOLD data and in any confounds).
+        Default is 0.
     masktype : :obj:`list` with 'dropout' and/or 'decay' or None, optional
         Method(s) by which to define the adaptive mask. Default is ["dropout"].
     fittype : {'loglin', 'curvefit'}, optional
@@ -616,7 +628,7 @@ def tedana_workflow(
     selector = ComponentSelector(tree, out_dir)
 
     LGR.info(f"Loading input data: {[f for f in data]}")
-    data_cat, ref_img = io.load_data(data, n_echos=n_echos)
+    data_cat, ref_img = io.load_data(data, n_echos=n_echos, dummy_scans=dummy_scans)
 
     # Load external regressors if provided
     # Decided to do the validation here so that, if there are issues, an error
@@ -627,7 +639,10 @@ def tedana_workflow(
     ):
         external_regressors, selector.tree["external_regressor_config"] = (
             metrics.external.load_validate_external_regressors(
-                external_regressors, selector.tree["external_regressor_config"], data_cat.shape[2]
+                external_regressors=external_regressors,
+                external_regressor_config=selector.tree["external_regressor_config"],
+                n_vols=data_cat.shape[2],
+                dummy_scans=dummy_scans,
             )
         )
 

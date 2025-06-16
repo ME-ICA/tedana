@@ -86,6 +86,13 @@ def _get_parser():
         default="bids",
     )
     optional.add_argument(
+        "--dummy-scans",
+        dest="dummy_scans",
+        type=int,
+        help="Number of dummy scans to remove from the beginning of the data.",
+        default=0,
+    )
+    optional.add_argument(
         "--masktype",
         dest="masktype",
         required=False,
@@ -191,6 +198,7 @@ def t2smap_workflow(
     mask=None,
     prefix="",
     convention="bids",
+    dummy_scans=0,
     masktype=["dropout"],
     fittype="loglin",
     fitmode="all",
@@ -222,6 +230,8 @@ def t2smap_workflow(
     mask : :obj:`str`, optional
         Binary mask of voxels to include in TE Dependent ANAlysis. Must be spatially
         aligned with `data`.
+    dummy_scans : :obj:`int`, optional
+        Number of dummy scans to remove from the beginning of the data. Default is 0.
     masktype : :obj:`list` with 'dropout' and/or 'decay' or None, optional
         Method(s) by which to define the adaptive mask. Default is ["dropout"].
     fittype : {'loglin', 'curvefit'}, optional
@@ -314,7 +324,7 @@ def t2smap_workflow(
         data = [data]
 
     LGR.info(f"Loading input data: {[f for f in data]}")
-    data_cat, ref_img = io.load_data(data, n_echos=n_echos)
+    data_cat, ref_img = io.load_data(data, n_echos=n_echos, dummy_scans=dummy_scans)
     io_generator = io.OutputGenerator(
         ref_img,
         convention=convention,
