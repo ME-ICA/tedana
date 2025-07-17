@@ -57,7 +57,7 @@ def load_validate_external_regressors(
     except FileNotFoundError:
         raise ValueError(f"Cannot load tsv file with external regressors: {external_regressors}")
 
-    external_regressor_config = validate_extern_regress(
+    external_regressors, external_regressor_config = validate_extern_regress(
         external_regressors=external_regressors,
         external_regressor_config=external_regressor_config,
         n_vols=n_vols,
@@ -237,7 +237,7 @@ def validate_extern_regress(
     if err_msg:
         raise RegressError(err_msg)
 
-    return external_regressor_config
+    return external_regressors, external_regressor_config
 
 
 def fit_regressors(
