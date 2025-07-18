@@ -186,7 +186,7 @@ def test_validate_extern_regress_succeeds(caplog):
 
     external_regressors, n_vols = sample_external_regressors()
     external_regressor_config = sample_external_regressor_config()
-    external_regressor_config_expanded = external.validate_extern_regress(
+    external_regressors, external_regressor_config_expanded = external.validate_extern_regress(
         external_regressors=external_regressors,
         external_regressor_config=external_regressor_config,
         n_vols=n_vols,
@@ -194,6 +194,7 @@ def test_validate_extern_regress_succeeds(caplog):
     )
 
     # The regex patterns should have been replaced with the full names of the regressors
+    assert external_regressors.notna().all(axis=None)
     assert set(external_regressor_config_expanded[0]["partial_models"]["Motion"]) == set(
         [
             "Mot_X",
@@ -217,7 +218,7 @@ def test_validate_extern_regress_succeeds(caplog):
     # Rerunning with explicit names for the above three categories instead of regex patterns
     # Shouldn't change anything, but making sure it runs
     caplog.clear()
-    external_regressor_config_expanded = external.validate_extern_regress(
+    external_regressors, external_regressor_config_expanded = external.validate_extern_regress(
         external_regressors=external_regressors,
         external_regressor_config=external_regressor_config_expanded,
         n_vols=n_vols,
@@ -330,7 +331,7 @@ def test_validate_extern_regress_fails():
     # when "Mot_Y" is in the config, but removed from external_regressors
     external_regressor_config = sample_external_regressor_config()
     external_regressors, n_vols = sample_external_regressors()
-    external_regressor_config_expanded = external.validate_extern_regress(
+    external_regressors, external_regressor_config_expanded = external.validate_extern_regress(
         external_regressors=external_regressors,
         external_regressor_config=external_regressor_config,
         n_vols=n_vols,
@@ -423,7 +424,7 @@ def test_fit_regressors(caplog):
     caplog.set_level(logging.INFO)
     external_regressors, n_vols = sample_external_regressors()
     external_regressor_config = sample_external_regressor_config()
-    external_regressor_config_expanded = external.validate_extern_regress(
+    external_regressors, external_regressor_config_expanded = external.validate_extern_regress(
         external_regressors=external_regressors,
         external_regressor_config=external_regressor_config,
         n_vols=n_vols,
@@ -512,7 +513,7 @@ def test_fit_mixing_to_regressors(caplog):
     caplog.set_level(logging.INFO)
     external_regressors, n_vols = sample_external_regressors()
     external_regressor_config = sample_external_regressor_config()
-    external_regressor_config_expanded = external.validate_extern_regress(
+    external_regressors, external_regressor_config_expanded = external.validate_extern_regress(
         external_regressors=external_regressors,
         external_regressor_config=external_regressor_config,
         n_vols=n_vols,
@@ -619,7 +620,7 @@ def test_build_fstat_regressor_models(caplog):
     caplog.set_level(logging.INFO)
     external_regressors, n_vols = sample_external_regressors()
     external_regressor_config = sample_external_regressor_config()
-    external_regressor_config_expanded = external.validate_extern_regress(
+    external_regressors, external_regressor_config_expanded = external.validate_extern_regress(
         external_regressors=external_regressors,
         external_regressor_config=external_regressor_config,
         n_vols=n_vols,
