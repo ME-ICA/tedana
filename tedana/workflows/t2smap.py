@@ -93,6 +93,17 @@ def _get_parser():
         default=0,
     )
     optional.add_argument(
+        "--ignore",
+        dest="ignore",
+        type=int,
+        help=(
+            "Number of volumes from the beginning of the data to ignore for adaptive mask "
+            "generation and T2* and S0 estimation, "
+            "but which will be retained in the optimally combined data."
+        ),
+        default=0,
+    )
+    optional.add_argument(
         "--masktype",
         dest="masktype",
         required=False,
@@ -199,6 +210,7 @@ def t2smap_workflow(
     prefix="",
     convention="bids",
     dummy_scans=0,
+    ignore=0,
     masktype=["dropout"],
     fittype="loglin",
     fitmode="all",
@@ -315,6 +327,22 @@ def t2smap_workflow(
     info_dict = utils.get_system_version_info()
     info_dict["Command"] = t2smap_command
 
+    if fitmode == "ts" and ignore > 0:
+        raise ValueError(
+            "Ignoring volumes is not supported for fitmode='ts'. "
+            "Please set fitmode='all' or set ignore to 0."
+        )
+
+    if dummy_scans > ignore:
+        LGR.warning(
+            "'dummy_scans' ({dummy_scans}) is greater than 'ignore' ({ignore}). "
+            "'ignore' will have no effect.'"
+        )
+        ignore = 0
+    elif ignore > 0:
+        # Dummy scans are already removed from the data, so we need to subtract them from ignore
+        ignore = ignore - dummy_scans
+
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
     n_echos = len(tes)
@@ -346,8 +374,9 @@ def t2smap_workflow(
         mask = compute_epi_mask(first_echo_img)
     else:
         LGR.info("Using user-defined mask")
+
     mask, masksum = utils.make_adaptive_mask(
-        data_cat,
+        data_cat[:, :, ignore:],
         mask=mask,
         n_independent_echos=n_independent_echos,
         threshold=1,
@@ -357,7 +386,7 @@ def t2smap_workflow(
     LGR.info("Computing adaptive T2* map")
     decay_function = decay.fit_decay if fitmode == "all" else decay.fit_decay_ts
     (t2s_limited, s0_limited, t2s_full, s0_full) = decay_function(
-        data_cat, tes, mask, masksum, fittype
+        data_cat[:, :, ignore:], tes, mask, masksum, fittype
     )
 
     # set a hard cap for the T2* map/timeseries
@@ -380,7 +409,7 @@ def t2smap_workflow(
     io_generator.save_file(rmse_df, "confounds tsv")
 
     LGR.info("Computing optimal combination")
-    # optimally combine data
+    # optimally combine data, including the ignored volumes
     data_optcom = combine.make_optcom(data_cat, tes, masksum, t2s=t2s_full, combmode=combmode)
 
     # clean up numerical errors
