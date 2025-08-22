@@ -274,6 +274,32 @@ def test_validate_extern_regress_succeeds(caplog):
     assert "External regressors have the same number of timepoints" not in caplog.text
 
 
+# validate_extern_regress_warn_na
+# -----------------------
+def test_validate_extern_regress_warn_na(caplog):
+    """Test validate_extern_regress works as expected."""
+
+    external_regressors, n_vols = sample_external_regressors()
+    # add NA values to regressor before validating
+    for col in external_regressors.columns:
+        if "d1" in col:
+            external_regressors.loc[0, col] = pd.NA
+    external_regressor_config = sample_external_regressor_config()
+
+    caplog.clear()
+    external_regressors, external_regressor_config_expanded = external.validate_extern_regress(
+        external_regressors=external_regressors,
+        external_regressor_config=external_regressor_config,
+        n_vols=n_vols,
+        dummy_scans=0,
+    )
+    assert (
+        "WARNING" in caplog.text
+        and "External regressors include columns with NaN values" in caplog.text
+    )
+    assert not external_regressors.isna().any(axis=None)
+
+
 def test_validate_extern_regress_fails():
     """Test validate_extern_regress fails when expected."""
 
