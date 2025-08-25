@@ -335,7 +335,7 @@ def t2smap_workflow(
 
     if dummy_scans > ignore:
         LGR.warning(
-            "'dummy_scans' ({dummy_scans}) is greater than 'ignore' ({ignore}). "
+            f"'dummy_scans' ({dummy_scans}) is greater than 'ignore' ({ignore}). "
             "'ignore' will have no effect.'"
         )
         ignore = 0
