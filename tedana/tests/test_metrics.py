@@ -71,7 +71,7 @@ def test_smoke_generate_metrics(testdata1):
     external_regressors = external_regressors.drop(labels=range(5, 75), axis=0)
 
     external_regressor_config = sample_external_regressor_config()
-    external_regressor_config_expanded = external.validate_extern_regress(
+    external_regressors, external_regressor_config_expanded = external.validate_extern_regress(
         external_regressors=external_regressors,
         external_regressor_config=external_regressor_config,
         n_vols=n_vols,
