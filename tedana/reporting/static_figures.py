@@ -967,7 +967,7 @@ def plot_heatmap(
         sharex=True,
     )
     sns.heatmap(
-        corr_df,
+        corr_df.sort_index(),
         cmap="seismic",
         center=0,
         vmax=1,
