@@ -244,6 +244,10 @@ def t2smap_workflow(
         aligned with `data`.
     dummy_scans : :obj:`int`, optional
         Number of dummy scans to remove from the beginning of the data. Default is 0.
+    ignore : :obj:`int`, optional
+        Number of volumes from the beginning of the data to ignore for adaptive mask generation
+        and T2* and S0 estimation, but which will be retained in the optimally combined data.
+        Default is 0.
     masktype : :obj:`list` with 'dropout' and/or 'decay' or None, optional
         Method(s) by which to define the adaptive mask. Default is ["dropout"].
     fittype : {'loglin', 'curvefit'}, optional
