@@ -749,7 +749,7 @@ def parse_volume_indices(indices_str):
                 raise ValueError(
                     f"Invalid volume indices string ({indices_str}). Step sizes are not supported."
                 )
-            elif len(parts) < 2:
+            elif parts[0] == '' or parts[1] == '':
                 raise ValueError(
                     f"Invalid volume indices string ({indices_str}). "
                     "Open-ended ranges are not supported."
