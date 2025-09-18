@@ -747,7 +747,8 @@ def parse_volume_indices(indices_str):
             parts = item.split(":")
             if len(parts) > 2:
                 raise ValueError(
-                    f"Invalid volume indices string ({indices_str}). Step sizes are not supported."
+                    f"Invalid volume indices string ({indices_str}). "
+                    "Step sizes are not supported."
                 )
             elif parts[0] == "" or parts[1] == "":
                 raise ValueError(
