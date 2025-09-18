@@ -420,4 +420,27 @@ def test_check_te_values():
         utils.check_te_values([0.5, 1, 2.5])
 
 
-# TODO: "BREAK" AND UNIT TESTS
+def test_parse_volume_indices():
+    """Ensure that parse_volume_indices returns the correct values."""
+    assert utils.parse_volume_indices("0,1,2") == [0, 1, 2]
+    assert utils.parse_volume_indices("0:3") == [0, 1, 2]
+    assert utils.parse_volume_indices("0:3,5,6,10:12") == [0, 1, 2, 5, 6, 10, 11]
+
+    # Check that errors are raised for invalid inputs
+    # Step size is not supported
+    with pytest.raises(ValueError, match="Invalid volume indices string"):
+        utils.parse_volume_indices("0:10:2")
+
+    with pytest.raises(ValueError, match="Invalid volume indices string"):
+        utils.parse_volume_indices("::2")
+
+    # Open-ended range is not supported
+    with pytest.raises(ValueError, match="Invalid volume indices string"):
+        utils.parse_volume_indices(":5")
+
+    with pytest.raises(ValueError, match="Invalid volume indices string"):
+        utils.parse_volume_indices("5:")
+
+    # Negative indices are not supported
+    with pytest.raises(ValueError, match="Invalid volume indices string"):
+        utils.parse_volume_indices("0:-5")
