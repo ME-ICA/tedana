@@ -740,16 +740,16 @@ def parse_volume_indices(indices_str):
         return []
 
     indices = set()
-    for item in indices_str.split(','):
+    for item in indices_str.split(","):
         item = item.strip()
-        if ':' in item:
+        if ":" in item:
             # Handle range
-            parts = item.split(':')
+            parts = item.split(":")
             if len(parts) > 2:
                 raise ValueError(
                     f"Invalid volume indices string ({indices_str}). Step sizes are not supported."
                 )
-            elif parts[0] == '' or parts[1] == '':
+            elif parts[0] == "" or parts[1] == "":
                 raise ValueError(
                     f"Invalid volume indices string ({indices_str}). "
                     "Open-ended ranges are not supported."
