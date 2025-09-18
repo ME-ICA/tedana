@@ -102,7 +102,8 @@ def _get_parser():
             "but which will be retained in the optimally combined data. "
             "Can be individual indices (e.g., '0,5,10'), ranges (e.g., '5:10'), "
             "or a mix of the two (e.g., '0,5:10,15'). "
-            "Indices are 0-based. As in Python lists, ranges are start-inclusive and end-exclusive "
+            "Indices are 0-based. "
+            "As in Python lists, ranges are start-inclusive and end-exclusive "
             "(for example, '0:5' includes the first [0] through fifth [4] timepoints). "
             "Default is to not exclude any volumes."
         ),
