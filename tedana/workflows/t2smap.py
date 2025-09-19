@@ -354,12 +354,9 @@ def t2smap_workflow(
         LGR.info(f"Excluding volumes: {exclude_idx}")
         # Adjust exclude indices for dummy scans that are already removed
         exclude_idx = np.setdiff1d(exclude_idx, np.arange(dummy_scans))
-        LGR.info(f"Excluded indices after dummy scans: {exclude_idx}")
         # Offset exclude indices by the number of dummy scans so they index into loaded data_cat
         exclude_idx = exclude_idx - dummy_scans
-        LGR.info(f"Excluded indices after dummy scans (2): {exclude_idx}")
         n_exclude = len(exclude_idx)
-        LGR.info(f"Number of excluded volumes after dummy scans (3): {n_exclude}")
         if n_exclude == 0:
             LGR.warning(f"All exclude indices overlap with dummy scans ({dummy_scans}).")
 
@@ -384,7 +381,7 @@ def t2smap_workflow(
         verbose=verbose,
     )
     n_echos, n_vols = data_cat.shape[1], data_cat.shape[2]
-    LGR.info(f"Resulting data shape: {data_cat.shape}")
+    LGR.debug(f"Resulting data shape: {data_cat.shape}")
 
     if mask is None:
         LGR.info(
@@ -402,15 +399,13 @@ def t2smap_workflow(
             f"timepoints in the data ({n_vols})."
         )
     elif n_exclude > 0:
-        LGR.info(f"Using {n_exclude} excluded volumes")
+        LGR.info(f"Excluding {n_exclude} volumes from adaptive mask and T2*/S0 estimation")
         use_volumes = np.ones(n_vols, dtype=bool)
         use_volumes[exclude_idx] = False
         data_for_mask = data_cat[:, :, use_volumes]
-        LGR.info(f"Data shape after excluding volumes: {data_for_mask.shape}")
     else:
         data_for_mask = data_cat
 
-    LGR.info(f"Data shape before adaptive mask: {data_for_mask.shape}")
     mask, masksum = utils.make_adaptive_mask(
         data_for_mask,
         mask=mask,
