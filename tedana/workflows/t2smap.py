@@ -383,8 +383,8 @@ def t2smap_workflow(
         overwrite=overwrite,
         verbose=verbose,
     )
-    n_echos = data_cat.shape[1]
-    LGR.debug(f"Resulting data shape: {data_cat.shape}")
+    n_echos, n_vols = data_cat.shape[1], data_cat.shape[2]
+    LGR.info(f"Resulting data shape: {data_cat.shape}")
 
     if mask is None:
         LGR.info(
@@ -396,14 +396,14 @@ def t2smap_workflow(
         LGR.info("Using user-defined mask")
 
     # Create mask for volumes to use based on exclude indices
-    if n_exclude > 0 and np.max(exclude_idx) > data_cat.shape[2]:
+    if n_exclude > 0 and np.max(exclude_idx) > n_vols:
         raise ValueError(
             f"The maximum exclude index ({np.max(exclude_idx)}) is greater than the number of "
-            f"timepoints in the data ({data_cat.shape[2]})."
+            f"timepoints in the data ({n_vols})."
         )
     elif n_exclude > 0:
         LGR.info(f"Using {n_exclude} excluded volumes")
-        use_volumes = np.ones(data_cat.shape[2], dtype=bool)
+        use_volumes = np.ones(n_vols, dtype=bool)
         use_volumes[exclude_idx] = False
         data_for_mask = data_cat[:, :, use_volumes]
         LGR.info(f"Data shape after excluding volumes: {data_for_mask.shape}")
