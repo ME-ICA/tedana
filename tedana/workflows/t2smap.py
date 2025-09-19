@@ -402,12 +402,15 @@ def t2smap_workflow(
             f"timepoints in the data ({data_cat.shape[2]})."
         )
     elif n_exclude > 0:
+        LGR.info(f"Using {n_exclude} excluded volumes")
         use_volumes = np.ones(data_cat.shape[2], dtype=bool)
         use_volumes[exclude_idx] = False
         data_for_mask = data_cat[:, :, use_volumes]
+        LGR.info(f"Data shape after excluding volumes: {data_for_mask.shape}")
     else:
         data_for_mask = data_cat
 
+    LGR.info(f"Data shape before adaptive mask: {data_for_mask.shape}")
     mask, masksum = utils.make_adaptive_mask(
         data_for_mask,
         mask=mask,
