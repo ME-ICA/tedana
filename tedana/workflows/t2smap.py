@@ -253,8 +253,8 @@ def t2smap_workflow(
     exclude : :obj:`str`, optional
         Volume indices to exclude from adaptive mask generation and T2* and S0 estimation,
         but which will be retained in the optimally combined data.
-        Can be individual indices (e.g., '0,5,10'), ranges (e.g., '5-10'),
-        or a mix of the two (e.g., '0,5-10,15').
+        Can be individual indices (e.g., '0,5,10'), ranges (e.g., '5:10'),
+        or a mix of the two (e.g., '0,5:10,15').
         Indices are 0-based.
         Default is to not exclude any volumes.
     masktype : :obj:`list` with 'dropout' and/or 'decay' or None, optional
@@ -354,6 +354,8 @@ def t2smap_workflow(
         LGR.info(f"Excluding volumes: {exclude_idx}")
         # Adjust exclude indices for dummy scans that are already removed
         exclude_idx = np.setdiff1d(exclude_idx, np.arange(dummy_scans))
+        # Offset exclude indices by the number of dummy scans so they index into loaded data_cat
+        exclude_idx = exclude_idx - dummy_scans
         n_exclude = len(exclude_idx)
         if n_exclude == 0:
             LGR.warning(f"All exclude indices overlap with dummy scans ({dummy_scans}).")
@@ -416,6 +418,8 @@ def t2smap_workflow(
     (t2s_limited, s0_limited, t2s_full, s0_full) = decay_function(
         data_for_mask, tes, mask, masksum, fittype
     )
+    # Delete unused variable
+    del data_for_mask
 
     # set a hard cap for the T2* map/timeseries
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
