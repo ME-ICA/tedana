@@ -441,6 +441,10 @@ def test_parse_volume_indices():
     with pytest.raises(ValueError, match="Invalid volume indices string"):
         utils.parse_volume_indices("5:")
 
-    # Negative indices are not supported
+    # Negative indices are not supported (in a range)
     with pytest.raises(ValueError, match="Invalid volume indices string"):
         utils.parse_volume_indices("0:-5")
+
+    # Negative indices are not supported (at all)
+    with pytest.raises(ValueError, match="Invalid volume indices string"):
+        utils.parse_volume_indices("-1")
