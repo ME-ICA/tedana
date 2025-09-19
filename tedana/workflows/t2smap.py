@@ -354,9 +354,12 @@ def t2smap_workflow(
         LGR.info(f"Excluding volumes: {exclude_idx}")
         # Adjust exclude indices for dummy scans that are already removed
         exclude_idx = np.setdiff1d(exclude_idx, np.arange(dummy_scans))
+        LGR.info(f"Excluded indices after dummy scans: {exclude_idx}")
         # Offset exclude indices by the number of dummy scans so they index into loaded data_cat
         exclude_idx = exclude_idx - dummy_scans
+        LGR.info(f"Excluded indices after dummy scans (2): {exclude_idx}")
         n_exclude = len(exclude_idx)
+        LGR.info(f"Number of excluded volumes after dummy scans (3): {n_exclude}")
         if n_exclude == 0:
             LGR.warning(f"All exclude indices overlap with dummy scans ({dummy_scans}).")
 
