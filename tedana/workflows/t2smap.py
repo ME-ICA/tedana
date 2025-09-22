@@ -250,6 +250,7 @@ def t2smap_workflow(
         aligned with `data`.
     dummy_scans : :obj:`int`, optional
         Number of dummy scans to remove from the beginning of the data. Default is 0.
+        dummy_scans are excluded from the optimally combined data.
     exclude : :obj:`str`, optional
         Volume indices to exclude from adaptive mask generation and T2* and S0 estimation,
         but which will be retained in the optimally combined data.
@@ -350,6 +351,8 @@ def t2smap_workflow(
             "Please set fitmode='all' or remove the exclude argument."
         )
 
+    if dummy_scans > 0:
+        LGR.warning(f"Removing the first {dummy_scans} volumes as dummy scans.")
     if n_exclude > 0:
         LGR.info(f"Excluding volumes: {exclude_idx}")
         # Adjust exclude indices for dummy scans that are already removed
