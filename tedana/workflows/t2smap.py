@@ -405,12 +405,12 @@ def t2smap_workflow(
         LGR.info(f"Excluding {n_exclude} volumes from adaptive mask and T2*/S0 estimation")
         use_volumes = np.ones(n_vols, dtype=bool)
         use_volumes[exclude_idx] = False
-        data_for_mask = data_cat[:, :, use_volumes]
+        data_without_excluded_vols = data_cat[:, :, use_volumes]
     else:
-        data_for_mask = data_cat
+        data_without_excluded_vols = data_cat
 
     mask, masksum = utils.make_adaptive_mask(
-        data_for_mask,
+        data_without_excluded_vols,
         mask=mask,
         n_independent_echos=n_independent_echos,
         threshold=1,
@@ -420,10 +420,10 @@ def t2smap_workflow(
     LGR.info("Computing adaptive T2* map")
     decay_function = decay.fit_decay if fitmode == "all" else decay.fit_decay_ts
     (t2s_limited, s0_limited, t2s_full, s0_full) = decay_function(
-        data_for_mask, tes, mask, masksum, fittype
+        data_without_excluded_vols, tes, mask, masksum, fittype
     )
     # Delete unused variable
-    del data_for_mask
+    del data_without_excluded_vols
 
     # set a hard cap for the T2* map/timeseries
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
