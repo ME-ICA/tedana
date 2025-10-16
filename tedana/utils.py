@@ -15,7 +15,7 @@ from mapca import __version__ as mapca_version
 from matplotlib import __version__ as matplotlib_version
 from nibabel import __version__ as nibabel_version
 from nilearn import __version__ as nilearn_version
-from nilearn._utils import check_niimg
+from nilearn._utils.niimg_conversions import check_niimg
 from numpy import __version__ as numpy_version
 from pandas import __version__ as pandas_version
 from robustica import __version__ as robustica_version

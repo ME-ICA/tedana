@@ -17,7 +17,7 @@ import nibabel as nib
 import numpy as np
 import pandas as pd
 import requests
-from nilearn._utils import check_niimg
+from nilearn._utils.niimg_conversions import check_niimg
 from nilearn.image import new_img_like
 
 from tedana import utils
