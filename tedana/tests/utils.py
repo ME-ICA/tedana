@@ -57,7 +57,7 @@ def data_for_testing_info(test_dataset=str):
     osf_id : str
        The ID for the OSF file.
        Data download link would be https://osf.io/osf_id/download
-       Metadata download link would be https://osf.io/osf_id/metadata/?format=datacite-json
+       Metadata download link would be https://osf.io/metadata/osf_id?format=datacite-json
        If "path" is specified, this value is not returned.
     """
 
@@ -107,7 +107,7 @@ def download_test_data(osf_id, test_data_path):
     """
 
     try:
-        datainfo = requests.get(f"https://osf.io/{osf_id}/metadata/?format=datacite-json")
+        datainfo = requests.get(f"https://osf.io/metadata/{osf_id}/?format=datacite-json")
     except Exception:
         if len(listdir(test_data_path)) == 0:
             raise ConnectionError(
