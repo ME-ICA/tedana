@@ -140,15 +140,23 @@ Make sure to always [keep your fork up to date][link_updateupstreamwiki] with th
 ### 3. Run the developer setup
 
 To test a change, you may need to set up your local repository to run a `tedana` workflow.
-To do so, run
+
+If you have [uv][link_uv] installed, then you can install or update a local development environment with
+
+```shell
+uv sync --extra=all
+```
+
+from within your local `tedana` repository. This installs tedana and all of its dependencies into a `.venv` directory, which ensures it does not interfere with other Python environments.
+To install into a pre-existing environment, run
 ```
 # UNIX (MacOS/Linux)
 pip install -e '.[all]'
 # Windows
 pip install -e .[all]
 ```
-from within your local `tedana` repository. This should ensure all packages are correctly organized and linked on your user profile.
-We recommend including the `[all]` flag when you install `tedana` so that "extra" requirements necessary for running tests and building the documentation will also be installed.
+instead. This should ensure all packages are correctly organized and linked on your user profile.
+We recommend including the `--extra=all` (uv) or `[all]` (pip) flag when you install `tedana` so that "extra" requirements necessary for running tests and building the documentation will also be installed.
 
 Once you've run this, your repository should be set for most changes (i.e., you do not have to re-run with every change).
 
@@ -182,14 +190,17 @@ If you are new to ``git`` and would like to work in a graphical user interface (
 
 ### 5. Test your changes
 
-You can run style checks by running the following:
+You can run style checks by running one of the following:
 ```
 make lint
+OR
+tox -e lint
 ```
 which will use flake8, black, and isort to perform various style checks.
-Please make sure you have all 3 of these programs on your path, or the check will pass even in circumstances where it shouldn't.
+To use `make`, you must have all three programs in your path. If you used `uv sync --extra all`, you can activate the environment with `source .venv/bin/activate`.
+If you do not have all 3 of these programs on your path, the check may pass even in circumstances where it shouldn't.
 
-and unit/integration tests by running `pytest` (more details below).
+You can unit/integration tests by running `pytest` (more details below).
 If you know a file will test your change, you can run only that test (see "One test file only" below).
 Alternatively, running all unit tests is relatively quick and should be fairly comprehensive.
 Running all `pytest` tests will be useful for pre-pushing checks.
@@ -216,6 +227,12 @@ from within your local `tedana` repository.
 The test run will indicate the number of passes and failures.
 Most often, the failures give enough information to determine the cause; if not, you can
 refer to the [pytest documentation][link_pytest] for more details on the failure.
+
+If you are using uv, calling `uv run pytest` will run `pytest` inside the uv-managed environment, so it will not be necessary to activate the environment manually.
+Thus, to run unit tests only, run from inside the repository:
+```
+uv run pytest --skipintegration tedana/tests
+```
 
 #### Changes to documentation
 
@@ -393,6 +410,7 @@ You're awesome. :wave::smiley:
 [link_stemmrolemodels]: https://github.com/KirstieJane/STEMMRoleModels
 [link_pytest]: https://docs.pytest.org/en/latest/usage.html
 [link_developing_rtd]: https://tedana.readthedocs.io/en/latest/developing.html
+[link_uv]: https://docs.astral.sh/uv/
 
 [link_git_kraken]: https://www.gitkraken.com/
 [link_github_desktop]: https://desktop.github.com/
