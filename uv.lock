@@ -1450,7 +1450,7 @@ wheels = [
 
 [[package]]
 name = "mapca"
-version = "0.0.5"
+version = "0.0.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nibabel" },
@@ -1464,9 +1464,9 @@ dependencies = [
     { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
     { name = "scipy", version = "1.16.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/55/d0/c01bd84f9a354f14ba5faeb329194ffd8629a18a6bad526b78be527ce6d4/mapca-0.0.5.tar.gz", hash = "sha256:948fd1f7a8ab2a41e4fe67694a36a626b7fc23f549bc0dcc0129bdc4535d2c8e", size = 27694, upload-time = "2024-02-15T16:00:12.405Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c9/d0/6e25a01c26ef46b9c43fb010f275d5e36864b054f744248c9b513cfcddd9/mapca-0.0.6.tar.gz", hash = "sha256:38c727c779e1868c0b17a95777004a5a28076aab40e51e50d972db0a26decf25", size = 27892, upload-time = "2025-10-17T15:42:33.546Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/26/ae/737f6885141307e0a0939e643c2d2d0546f6de746dae6565d93ed37414b6/mapca-0.0.5-py3-none-any.whl", hash = "sha256:fd3a59f541a1a910543a177e42d96b4edbdce485891780bde3092f4098d122fb", size = 31019, upload-time = "2024-02-15T16:00:08.268Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/0c/3df66635634ec17d46455d2baf3ffdebbaf80bce6dc63263e34f3673b494/mapca-0.0.6-py3-none-any.whl", hash = "sha256:5f018d8cb2c47b631dc1ed21f569a2439eb302d129fa41874d8e64b145911993", size = 31297, upload-time = "2025-10-17T15:42:32.694Z" },
 ]
 
 [[package]]
@@ -1754,7 +1754,7 @@ wheels = [
 
 [[package]]
 name = "nilearn"
-version = "0.11.1"
+version = "0.12.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "joblib" },
@@ -1772,9 +1772,9 @@ dependencies = [
     { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
     { name = "scipy", version = "1.16.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bf/da/99933b75f89288bc356e8ad7096af3d1ae7e59db6891ba7fb8e9c71ee994/nilearn-0.11.1.tar.gz", hash = "sha256:a01df08fc6c8ded3cd6fb7a211634603ad46a6df780504b6d05222c2e7a972fe", size = 12481586, upload-time = "2024-12-23T09:28:21.726Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4f/1c/5d6ef3f80145889bee1c7abbf107c88e7adea7d5b498633f8644910c673c/nilearn-0.12.1.tar.gz", hash = "sha256:a08bbfae94d0fac5ba0aebbbcd864b7f91d1ef5725d1c309ce643dd64b2391b9", size = 25134624, upload-time = "2025-09-03T06:00:40.631Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/44/61/cccfbc8df9559fc9f44a940cccd99f02c1f1ec9992291a89e3eb3cdafe25/nilearn-0.11.1-py3-none-any.whl", hash = "sha256:8446fc815034affe56dcf3c6e74caf6749b421a859347adc302c331138ea37e9", size = 10478884, upload-time = "2024-12-23T09:28:14.635Z" },
+    { url = "https://files.pythonhosted.org/packages/6b/90/f17ebc6914b9ed0b577475a17a0b8d31e929897f7002bae1b03438852dad/nilearn-0.12.1-py3-none-any.whl", hash = "sha256:2112e1cdf9f7b96e0af87d679997e834ee36534fc0a970811a703700820edc4c", size = 12743284, upload-time = "2025-09-03T06:00:18.625Z" },
 ]
 
 [[package]]
@@ -3291,7 +3291,7 @@ requires-dist = [
     { name = "mapca", specifier = ">=0.0.4" },
     { name = "matplotlib", specifier = ">=3.7" },
     { name = "nibabel", specifier = ">=2.5.1" },
-    { name = "nilearn", specifier = ">=0.10.3,<0.12" },
+    { name = "nilearn", specifier = ">=0.10.3" },
     { name = "numpy", specifier = ">=1.21" },
     { name = "pandas", specifier = ">=2.0" },
     { name = "pep8-naming", marker = "extra == 'all'", specifier = ">=0.14" },
