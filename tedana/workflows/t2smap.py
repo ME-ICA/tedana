@@ -12,6 +12,7 @@ from scipy import stats
 from threadpoolctl import threadpool_limits
 
 from tedana import __version__, combine, decay, io, utils
+from tedana.utils import parse_volume_indices
 from tedana.workflows.parser_utils import is_valid_file
 
 LGR = logging.getLogger("GENERAL")
@@ -91,6 +92,22 @@ def _get_parser():
         type=int,
         help="Number of dummy scans to remove from the beginning of the data.",
         default=0,
+    )
+    optional.add_argument(
+        "--exclude",
+        dest="exclude",
+        type=str,
+        help=(
+            "Volume indices to exclude from adaptive mask generation and T2* and S0 estimation, "
+            "but which will be retained in the optimally combined data. "
+            "Can be individual indices (e.g., '0,5,10'), ranges (e.g., '5:10'), "
+            "or a mix of the two (e.g., '0,5:10,15'). "
+            "Indices are 0-based. "
+            "As in Python lists, ranges are start-inclusive and end-exclusive "
+            "(for example, '0:5' includes the first [0] through fifth [4] timepoints). "
+            "Default is to not exclude any volumes."
+        ),
+        default=None,
     )
     optional.add_argument(
         "--masktype",
@@ -199,6 +216,7 @@ def t2smap_workflow(
     prefix="",
     convention="bids",
     dummy_scans=0,
+    exclude=None,
     masktype=["dropout"],
     fittype="loglin",
     fitmode="all",
@@ -232,6 +250,14 @@ def t2smap_workflow(
         aligned with `data`.
     dummy_scans : :obj:`int`, optional
         Number of dummy scans to remove from the beginning of the data. Default is 0.
+        dummy_scans are excluded from the optimally combined data.
+    exclude : :obj:`str`, optional
+        Volume indices to exclude from adaptive mask generation and T2* and S0 estimation,
+        but which will be retained in the optimally combined data.
+        Can be individual indices (e.g., '0,5,10'), ranges (e.g., '5:10'),
+        or a mix of the two (e.g., '0,5:10,15').
+        Indices are 0-based.
+        Default is to not exclude any volumes.
     masktype : :obj:`list` with 'dropout' and/or 'decay' or None, optional
         Method(s) by which to define the adaptive mask. Default is ["dropout"].
     fittype : {'loglin', 'curvefit'}, optional
@@ -295,6 +321,10 @@ def t2smap_workflow(
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
 
+    # Parse exclude parameter
+    exclude_idx = parse_volume_indices(exclude)
+    n_exclude = len(exclude_idx)
+
     utils.setup_loggers(quiet=quiet, debug=debug)
 
     LGR.info(f"Using output directory: {out_dir}")
@@ -314,6 +344,24 @@ def t2smap_workflow(
     # Save system info to json
     info_dict = utils.get_system_version_info()
     info_dict["Command"] = t2smap_command
+
+    if fitmode == "ts" and n_exclude > 0:
+        raise ValueError(
+            "Excluding volumes is not supported for fitmode='ts'. "
+            "Please set fitmode='all' or remove the exclude argument."
+        )
+
+    if dummy_scans > 0:
+        LGR.warning(f"Removing the first {dummy_scans} volumes as dummy scans.")
+    if n_exclude > 0:
+        LGR.info(f"Excluding volumes: {exclude_idx}")
+        # Adjust exclude indices for dummy scans that are already removed
+        exclude_idx = np.setdiff1d(exclude_idx, np.arange(dummy_scans))
+        # Offset exclude indices by the number of dummy scans so they index into loaded data_cat
+        exclude_idx = exclude_idx - dummy_scans
+        n_exclude = len(exclude_idx)
+        if n_exclude == 0:
+            LGR.warning(f"All exclude indices overlap with dummy scans ({dummy_scans}).")
 
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
@@ -335,7 +383,7 @@ def t2smap_workflow(
         overwrite=overwrite,
         verbose=verbose,
     )
-    n_echos = data_cat.shape[1]
+    n_echos, n_vols = data_cat.shape[1], data_cat.shape[2]
     LGR.debug(f"Resulting data shape: {data_cat.shape}")
 
     if mask is None:
@@ -346,8 +394,23 @@ def t2smap_workflow(
         mask = compute_epi_mask(first_echo_img)
     else:
         LGR.info("Using user-defined mask")
+
+    # Create mask for volumes to use based on exclude indices
+    if n_exclude > 0 and np.max(exclude_idx) > n_vols:
+        raise ValueError(
+            f"The maximum exclude index ({np.max(exclude_idx)}) is greater than the number of "
+            f"timepoints in the data ({n_vols})."
+        )
+    elif n_exclude > 0:
+        LGR.info(f"Excluding {n_exclude} volumes from adaptive mask and T2*/S0 estimation")
+        use_volumes = np.ones(n_vols, dtype=bool)
+        use_volumes[exclude_idx] = False
+        data_without_excluded_vols = data_cat[:, :, use_volumes]
+    else:
+        data_without_excluded_vols = data_cat
+
     mask, masksum = utils.make_adaptive_mask(
-        data_cat,
+        data_without_excluded_vols,
         mask=mask,
         n_independent_echos=n_independent_echos,
         threshold=1,
@@ -357,8 +420,10 @@ def t2smap_workflow(
     LGR.info("Computing adaptive T2* map")
     decay_function = decay.fit_decay if fitmode == "all" else decay.fit_decay_ts
     (t2s_limited, s0_limited, t2s_full, s0_full) = decay_function(
-        data_cat, tes, mask, masksum, fittype
+        data_without_excluded_vols, tes, mask, masksum, fittype
     )
+    # Delete unused variable
+    del data_without_excluded_vols
 
     # set a hard cap for the T2* map/timeseries
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
@@ -380,7 +445,7 @@ def t2smap_workflow(
     io_generator.save_file(rmse_df, "confounds tsv")
 
     LGR.info("Computing optimal combination")
-    # optimally combine data
+    # optimally combine data, including the ignored volumes
     data_optcom = combine.make_optcom(data_cat, tes, masksum, t2s=t2s_full, combmode=combmode)
 
     # clean up numerical errors

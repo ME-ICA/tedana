@@ -4,6 +4,7 @@ import os.path as op
 from shutil import rmtree
 
 import nibabel as nib
+import pytest
 
 from tedana import workflows
 from tedana.tests.utils import get_test_data_path
@@ -147,6 +148,10 @@ class TestT2smap:
                 "14.5",
                 "38.5",
                 "62.5",
+                "--dummy-scans",
+                "1",
+                "--exclude",
+                "0:1",
                 "--combmode",
                 "t2s",
                 "--fitmode",
@@ -168,6 +173,44 @@ class TestT2smap:
         assert len(img.shape) == 3
         img = nib.load(op.join(out_dir, "desc-optcom_bold.nii.gz"))
         assert len(img.shape) == 4
+
+    def test_failing_t2smap_01(self):
+        """A simple failing configuration for t2smap."""
+        data_dir = get_test_data_path()
+        data = [
+            op.join(data_dir, "echo1.nii.gz"),
+            op.join(data_dir, "echo2.nii.gz"),
+            op.join(data_dir, "echo3.nii.gz"),
+        ]
+        out_dir = "TED.echo1.t2smap"
+        with pytest.raises(ValueError, match="Excluding volumes is not supported for fitmode"):
+            workflows.t2smap_workflow(
+                data,
+                [14.5, 38.5, 62.5],
+                combmode="t2s",
+                fitmode="ts",
+                out_dir=out_dir,
+                exclude="0,1,2,3",
+            )
+
+    def test_failing_t2smap_02(self):
+        """A simple failing configuration for t2smap."""
+        data_dir = get_test_data_path()
+        data = [
+            op.join(data_dir, "echo1.nii.gz"),
+            op.join(data_dir, "echo2.nii.gz"),
+            op.join(data_dir, "echo3.nii.gz"),
+        ]
+        out_dir = "TED.echo1.t2smap"
+        with pytest.raises(ValueError, match="The maximum exclude index"):
+            workflows.t2smap_workflow(
+                data,
+                [14.5, 38.5, 62.5],
+                combmode="t2s",
+                fitmode="all",
+                out_dir=out_dir,
+                exclude="1000",
+            )
 
     def teardown_method(self):
         # Clean up folders

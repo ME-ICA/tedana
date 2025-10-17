@@ -707,3 +707,75 @@ def log_newsletter_info():
         "This is a very low volume email list."
     )
     LGR.info("https://groups.google.com/g/tedana-newsletter")
+
+
+def parse_volume_indices(indices_str):
+    """Parse volume indices string into a list of integers.
+
+    As in Python lists, ranges are start-inclusive and end-exclusive
+    (for example, '0:5' includes the first [0] through fifth [4] timepoints).
+
+    Supports:
+    - None: None
+    - Individual indices: '0,5,10'
+    - Ranges: '0:5'
+    - Mixed: '0,5:10,15,20:25'
+
+    Does not support:
+    - Negative indices: '-1,-2,-3'
+    - Open-ended ranges: '0:' or ':5'
+    - Ranges with step size: '0:5:2' or '::2'
+
+    Parameters
+    ----------
+    indices_str : str
+        Comma-separated string of indices and ranges
+
+    Returns
+    -------
+    list of int
+        Sorted list of unique volume indices
+    """
+    if not indices_str:
+        return []
+
+    indices = set()
+    for item in indices_str.split(","):
+        item = item.strip()
+        if ":" in item:
+            # Handle range
+            parts = item.split(":")
+            if len(parts) > 2:
+                raise ValueError(
+                    f"Invalid volume indices string ({indices_str}). "
+                    "Step sizes are not supported."
+                )
+            elif parts[0] == "" or parts[1] == "":
+                raise ValueError(
+                    f"Invalid volume indices string ({indices_str}). "
+                    "Open-ended ranges are not supported."
+                )
+
+            start, end = int(parts[0]), int(parts[1])
+
+            # Check for negative indices
+            if start < 0 or end < 0:
+                raise ValueError(
+                    f"Invalid volume indices string ({indices_str}). "
+                    "Negative indices are not supported."
+                )
+
+            # Range is end-exclusive (like Python lists)
+            indices.update(range(start, end))
+        else:
+            # Handle single index
+            index = int(item)
+            # Check for negative indices
+            if index < 0:
+                raise ValueError(
+                    f"Invalid volume indices string ({indices_str}). "
+                    "Negative indices are not supported."
+                )
+            indices.add(index)
+
+    return sorted(indices)
