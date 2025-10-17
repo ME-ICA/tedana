@@ -1450,7 +1450,7 @@ wheels = [
 
 [[package]]
 name = "mapca"
-version = "0.0.5"
+version = "0.0.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nibabel" },
@@ -1464,9 +1464,9 @@ dependencies = [
     { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
     { name = "scipy", version = "1.16.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/55/d0/c01bd84f9a354f14ba5faeb329194ffd8629a18a6bad526b78be527ce6d4/mapca-0.0.5.tar.gz", hash = "sha256:948fd1f7a8ab2a41e4fe67694a36a626b7fc23f549bc0dcc0129bdc4535d2c8e", size = 27694, upload-time = "2024-02-15T16:00:12.405Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c9/d0/6e25a01c26ef46b9c43fb010f275d5e36864b054f744248c9b513cfcddd9/mapca-0.0.6.tar.gz", hash = "sha256:38c727c779e1868c0b17a95777004a5a28076aab40e51e50d972db0a26decf25", size = 27892, upload-time = "2025-10-17T15:42:33.546Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/26/ae/737f6885141307e0a0939e643c2d2d0546f6de746dae6565d93ed37414b6/mapca-0.0.5-py3-none-any.whl", hash = "sha256:fd3a59f541a1a910543a177e42d96b4edbdce485891780bde3092f4098d122fb", size = 31019, upload-time = "2024-02-15T16:00:08.268Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/0c/3df66635634ec17d46455d2baf3ffdebbaf80bce6dc63263e34f3673b494/mapca-0.0.6-py3-none-any.whl", hash = "sha256:5f018d8cb2c47b631dc1ed21f569a2439eb302d129fa41874d8e64b145911993", size = 31297, upload-time = "2025-10-17T15:42:32.694Z" },
 ]
 
 [[package]]
