@@ -30,18 +30,11 @@ jobs:
       matrix:
         os: ['ubuntu-latest']
         python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
-        dependencies: ['latest', 'pre']
+        dependencies: ['latest']
         include:
           - os: ubuntu-latest
             python-version: '3.9'
             dependencies: 'min'
-        exclude:
-          # Skip pre-releases for Pythons dropped by SPEC-0000
-          # https://scientific-python.org/specs/spec-0000/#support-window
-          - python-version: '3.9'
-            dependencies: 'pre'
-          - python-version: '3.10'
-            dependencies: 'pre'
 
     env:
       DEPENDS: ${{ matrix.dependencies }}
