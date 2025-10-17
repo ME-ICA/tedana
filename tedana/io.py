@@ -826,6 +826,7 @@ def load_data(data, n_echos=None, dummy_scans=0):
     -------
     fdata : (S x E x T) :obj:`numpy.ndarray`
         Output data where `S` is samples, `E` is echos, and `T` is time.
+        If dummy_scans is not 0, then those initial volumes are not returned with fdata
     ref_img : img_like
         Reference image object for saving output files.
     """
