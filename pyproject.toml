@@ -100,6 +100,7 @@ exclude = [
 
 [tool.hatch.version]
 source = "vcs"
+fallback-version = "25.1.1a1"
 
 [tool.hatch.build.hooks.vcs]
 version-file = "tedana/_version.py"
