@@ -225,6 +225,7 @@ def t2smap_workflow(
     verbose=False,
     quiet=False,
     overwrite=False,
+    n_threads=1,
     t2smap_command=None,
 ):
     """
@@ -273,12 +274,16 @@ def t2smap_workflow(
         Default is 'all'.
     combmode : {'t2s', 'paid'}, optional
         Combination scheme for TEs: 't2s' (Posse 1999, default), 'paid' (Poser).
-    t2smap_command : :obj:`str`, optional
-        The command used to run t2smap. Default is None.
     verbose : :obj:`bool`, optional
         Generate intermediate and additional files. Default is False.
     overwrite : :obj:`bool`, optional
         If True, force overwriting of files. Default is False.
+    n_threads : :obj:`int`, optional
+        Number of threads to use. Used by threadpoolctl to set the parameter
+        outside of the workflow function, as well as the number of threads to use
+        for the decay model fitting. Default is 1.
+    t2smap_command : :obj:`str`, optional
+        The command used to run t2smap. Default is None.
 
     Other Parameters
     ----------------
@@ -420,7 +425,12 @@ def t2smap_workflow(
     LGR.info("Computing adaptive T2* map")
     decay_function = decay.fit_decay if fitmode == "all" else decay.fit_decay_ts
     (t2s_limited, s0_limited, t2s_full, s0_full) = decay_function(
-        data_without_excluded_vols, tes, mask, masksum, fittype
+        data=data_without_excluded_vols,
+        tes=tes,
+        mask=mask,
+        adaptive_mask=masksum,
+        fittype=fittype,
+        n_threads=n_threads,
     )
     # Delete unused variable
     del data_without_excluded_vols
@@ -519,7 +529,7 @@ def _main(argv=None):
         t2smap_command = "t2smap " + " ".join(sys.argv[1:])
     options = _get_parser().parse_args(argv)
     kwargs = vars(options)
-    n_threads = kwargs.pop("n_threads")
+    n_threads = kwargs.get("n_threads", 1)
     n_threads = None if n_threads == -1 else n_threads
     with threadpool_limits(limits=n_threads, user_api=None):
         t2smap_workflow(**kwargs, t2smap_command=t2smap_command)
