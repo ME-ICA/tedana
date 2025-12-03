@@ -370,6 +370,15 @@ def _get_parser():
     )
 
     optional.add_argument(
+        "--mean_center_only",
+        "--mean-center-only",
+        dest="mean_center_only",
+        action="store_false",
+        help="Only mean center fMRI time series before PCA and ICA. Do not scale by stdev.",
+        default=False,
+    )
+
+    optional.add_argument(
         "--quiet", dest="quiet", help=argparse.SUPPRESS, action="store_true", default=False
     )
     optional.add_argument(
@@ -431,6 +440,7 @@ def tedana_workflow(
     t2smap=None,
     mixing_file=None,
     tedana_command=None,
+    mean_center_only=False,
 ):
     """Run the "canonical" TE-Dependent ANAlysis workflow.
 
@@ -549,6 +559,9 @@ def tedana_workflow(
     mixing_file : :obj:`str` or None, optional
         File containing mixing matrix, to be used when re-running the workflow.
         If not provided, ME-PCA and ME-ICA are done. Default is None.
+    mean_center_only  : :obj:`bool`, optional
+        Only center the mean time series to 0 instead of also scaling the variance
+        Default: False
     quiet : :obj:`bool`, optional
         If True, suppresses logging/printing of messages. Default is False.
     overwrite : :obj:`bool`, optional
@@ -840,6 +853,7 @@ def tedana_workflow(
             kdaw=10.0,
             rdaw=1.0,
             low_mem=low_mem,
+            mean_center_only=mean_center_only,
         )
         if verbose:
             io_generator.save_file(utils.unmask(data_reduced, mask_clf), "whitened img")

@@ -60,6 +60,7 @@ def tedpca(
     kdaw=10.0,
     rdaw=1.0,
     low_mem=False,
+    mean_center_only=False,
 ):
     r"""Use principal components analysis (PCA) to identify and remove thermal noise from data.
 
@@ -103,6 +104,9 @@ def tedpca(
     low_mem : :obj:`bool`, optional
         Whether to use incremental PCA (for low-memory systems) or not.
         This is only compatible with the "kundu" or "kundu-stabilize" algorithms.
+        Default: False
+    mean_center_only  : :obj:`bool`, optional
+        Only center the mean time series to 0 instead of also scaling the variance
         Default: False
 
     Returns
@@ -210,8 +214,13 @@ def tedpca(
     )
     data = data_optcom[mask, :]
 
-    data_z = ((data.T - data.T.mean(axis=0)) / data.T.std(axis=0)).T  # var normalize ts
-    data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
+    if mean_center_only:
+        LGR.info("Mean centering data before PCA")
+        data_z = data - data.mean(axis=1, keepdims=True)  # mean normalize ts
+    else:
+        LGR.info("Z scaling data before PCA")
+        data_z = ((data.T - data.T.mean(axis=0)) / data.T.std(axis=0)).T  # var normalize ts
+        data_z = (data_z - data_z.mean()) / data_z.std()  # var normalize everything
 
     if algorithm in ["mdl", "aic", "kic"]:
         data_img = io.new_nii_like(io_generator.reference_img, utils.unmask(data, mask))
@@ -450,7 +459,12 @@ def tedpca(
     voxel_kept_comp_weighted = voxel_comp_weights[:, acc] * varex[None, acc]
     kept_data = np.dot(voxel_kept_comp_weighted, comp_ts[:, acc].T)
 
-    kept_data = stats.zscore(kept_data, axis=1)  # variance normalize time series
-    kept_data = stats.zscore(kept_data, axis=None)  # variance normalize everything
+    if mean_center_only:
+        LGR.info("Mean centering data before ICA")
+        kept_data = kept_data - np.mean(kept_data, axis=1, keepdims=True)
+    else:
+        LGR.info("Z scaling data before ICA")
+        kept_data = stats.zscore(kept_data, axis=1)  # variance normalize time series
+        kept_data = stats.zscore(kept_data, axis=None)  # variance normalize everything
 
     return kept_data, n_components
