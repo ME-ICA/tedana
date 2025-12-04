@@ -161,7 +161,7 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
             robust_ica = RobustICA(
                 n_components=n_components,
                 robust_runs=n_robust_runs,
-                whiten="arbitrary-variance",
+                whiten="unit-variance",
                 max_iter=max_it,
                 random_state=fixed_seed,
                 robust_dimreduce=False,
@@ -320,6 +320,7 @@ def f_ica(data, n_components, fixed_seed, maxit, maxrestart):
             n_components=n_components,
             algorithm="parallel",
             fun="logcosh",
+            whiten="unit-variance",
             max_iter=maxit,
             random_state=fixed_seed,
         )
