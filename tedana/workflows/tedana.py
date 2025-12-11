@@ -876,6 +876,7 @@ def tedana_workflow(
                 n_robust_runs,
                 maxit,
                 maxrestart=(maxrestart - n_restarts),
+                n_threads=n_threads,
             )
             seed += 1
             n_restarts = seed - fixed_seed
