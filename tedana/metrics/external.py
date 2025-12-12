@@ -219,8 +219,8 @@ def validate_extern_regress(
                         f"{sorted(extra_names)}\n"
                     )
 
-    if len(external_regressors.index) != (n_vols - dummy_scans):
-        if len(external_regressors.index) == n_vols:
+    if len(external_regressors.index) != n_vols:
+        if len(external_regressors.index) == (n_vols - dummy_scans):
             LGR.warning(
                 "External regressors have the same number of timepoints as the fMRI data, "
                 "but dummy scans are included in the fMRI data. "
