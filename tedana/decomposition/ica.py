@@ -264,7 +264,7 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
         n_components=2,
         perplexity=perplexity,
         init="random",
-        n_iter=2500,
+        max_iter=2500,
         random_state=10,
     )
 
