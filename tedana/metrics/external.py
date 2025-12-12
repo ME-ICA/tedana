@@ -219,19 +219,13 @@ def validate_extern_regress(
                         f"{sorted(extra_names)}\n"
                     )
 
-    if len(external_regressors.index) != (n_vols - dummy_scans):
-        if len(external_regressors.index) == n_vols:
-            LGR.warning(
-                "External regressors have the same number of timepoints as the fMRI data, "
-                "but dummy scans are included in the fMRI data. "
-                "tedana will remove the dummy scans from the external regressors."
-            )
+    if len(external_regressors.index) != n_vols:
+        if len(external_regressors.index) == n_vols + dummy_scans:
             external_regressors = external_regressors.iloc[dummy_scans:]
         else:
             err_msg += (
                 f"External regressors have {len(external_regressors.index)} timepoints "
-                f"while fMRI data have {n_vols} timepoints, of which {dummy_scans} are dummy "
-                "scans.\n"
+                f"while fMRI data have {n_vols} timepoints.\n"
             )
 
     if err_msg:
