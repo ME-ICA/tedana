@@ -1,11 +1,13 @@
 """ICA and related signal decomposition methods for tedana."""
 
 import logging
+import re
 import warnings
 
 import numpy as np
 from robustica import RobustICA, abs_pearson_dist
 from scipy import stats
+from sklearn import __version__ as sklearn_version
 from sklearn import manifold
 from sklearn.decomposition import FastICA
 from sklearn.exceptions import ConvergenceWarning
@@ -260,14 +262,23 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
     perplexity = min(robust_ica.S_all.shape[1] - 1, 80)
 
     perplexity = perplexity - 1 if perplexity < 81 else 80
-    t_sne = manifold.TSNE(
-        n_components=2,
-        perplexity=perplexity,
-        init="random",
-        max_iter=2500,
-        random_state=10,
-    )
 
+    # Configure t-SNE parameters based on sklearn version check https://github.com/ME-ICA/tedana/pull/1276 for more details
+    t_sne_args = {
+        "n_components": 2,
+        "perplexity": perplexity,
+        "init": "random",
+        "random_state": 10,
+    }
+    # Parse sklearn version
+    _parts = re.findall(r"\d+", sklearn_version)
+    _major, _minor, _patch = (list(map(int, _parts[:3])) + [0, 0, 0])[:3]
+    if (_major, _minor, _patch) >= (1, 8, 0):
+        t_sne_args["max_iter"] = 2500
+    else:
+        t_sne_args["n_iter"] = 2500
+
+    t_sne = manifold.TSNE(**t_sne_args)
     p_dissimilarity = abs_pearson_dist(robust_ica.S_all)
     similarity_t_sne = t_sne.fit_transform(p_dissimilarity)
 
