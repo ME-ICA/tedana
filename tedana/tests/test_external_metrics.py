@@ -257,7 +257,7 @@ def test_validate_extern_regress_succeeds(caplog):
     external.validate_extern_regress(
         external_regressors=external_regressors,
         external_regressor_config=external_regressor_config,
-        n_vols=n_vols,
+        n_vols=n_vols - 5,
         dummy_scans=5,
     )
     assert "External regressors have the same number of timepoints" in caplog.text
@@ -268,7 +268,7 @@ def test_validate_extern_regress_succeeds(caplog):
     external.validate_extern_regress(
         external_regressors=external_regressors,
         external_regressor_config=external_regressor_config,
-        n_vols=n_vols + 5,
+        n_vols=n_vols,
         dummy_scans=5,
     )
     assert "External regressors have the same number of timepoints" not in caplog.text
