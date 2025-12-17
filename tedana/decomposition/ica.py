@@ -1,12 +1,12 @@
 """ICA and related signal decomposition methods for tedana."""
 
 import logging
-import re
 import warnings
 
 import numpy as np
 from robustica import RobustICA, abs_pearson_dist
 from scipy import stats
+from packaging.version import Version
 from sklearn import __version__ as sklearn_version
 from sklearn import manifold
 from sklearn.decomposition import FastICA
@@ -270,10 +270,7 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
         "init": "random",
         "random_state": 10,
     }
-    # Parse sklearn version
-    _parts = re.findall(r"\d+", sklearn_version)
-    _major, _minor, _patch = (list(map(int, _parts[:3])) + [0, 0, 0])[:3]
-    if (_major, _minor, _patch) >= (1, 8, 0):
+    if Version(sklearn_version) >= Version("1.8.0"):
         t_sne_args["max_iter"] = 2500
     else:
         t_sne_args["n_iter"] = 2500
