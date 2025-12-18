@@ -263,7 +263,8 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
 
     perplexity = perplexity - 1 if perplexity < 81 else 80
 
-    # Configure t-SNE parameters based on sklearn version check https://github.com/ME-ICA/tedana/pull/1276 for more details
+    # Configure t-SNE parameters based on sklearn version check
+    # https://github.com/ME-ICA/tedana/pull/1276 for more details
     t_sne_args = {
         "n_components": 2,
         "perplexity": perplexity,
