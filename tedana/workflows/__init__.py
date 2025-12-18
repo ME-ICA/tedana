@@ -2,7 +2,16 @@
 # ex: set sts=4 ts=4 sw=4 et:
 """Command line interfaces and workflows."""
 from tedana.workflows.ica_reclassify import ica_reclassify_workflow
+from tedana.workflows.pipeline_context import PipelineContext, create_context_from_args
+from tedana.workflows.pipeline_stages import run_tedana_pipeline
 from tedana.workflows.t2smap import t2smap_workflow
 from tedana.workflows.tedana import tedana_workflow
 
-__all__ = ["tedana_workflow", "t2smap_workflow", "ica_reclassify_workflow"]
+__all__ = [
+    "tedana_workflow",
+    "t2smap_workflow",
+    "ica_reclassify_workflow",
+    "PipelineContext",
+    "create_context_from_args",
+    "run_tedana_pipeline",
+]
