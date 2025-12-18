@@ -61,6 +61,7 @@ def test_smoke_generate_metrics(testdata1):
         "variance explained",
         "normalized variance explained",
         "d_table_score",
+        "kappa_rho_difference",
     ]
 
     external_regressors, _ = sample_external_regressors()
