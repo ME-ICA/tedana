@@ -1,6 +1,7 @@
 sub-01_S0map.nii.gz
 sub-01_T2starmap.nii.gz
 sub-01_dataset_description.json
+sub-01_desc-decayFitFailures_mask.nii.gz
 sub-01_desc-ICAAccepted_components.nii.gz
 sub-01_desc-ICAAccepted_stat-z_components.nii.gz
 sub-01_desc-ICAAveragingWeights_components.nii.gz
