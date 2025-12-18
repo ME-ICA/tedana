@@ -46,6 +46,10 @@
         "normalized variance explained": [
             "map weight"
         ],
+        "kappa_rho_difference": [
+            "kappa",
+            "rho"
+        ],
         "d_table_score": [
             "kappa",
             "dice_FT2",
