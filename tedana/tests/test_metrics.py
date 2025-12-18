@@ -61,6 +61,7 @@ def test_smoke_generate_metrics(testdata1):
         "variance explained",
         "normalized variance explained",
         "d_table_score",
+        "kappa_rho_difference",
     ]
 
     external_regressors, _ = sample_external_regressors()
@@ -386,6 +387,18 @@ def test_smoke_generate_decision_table_score():
         countsig_ft2=countsig_ft2,
     )
     assert decision_table_score.shape == (n_components,)
+
+
+def test_smoke_compute_kappa_rho_difference():
+    """Smoke test for tedana.metrics.dependence.compute_kappa_rho_difference."""
+    n_components = 50
+    kappa = np.random.random(n_components)
+    rho = np.random.random(n_components)
+    kappa_rho_difference = dependence.compute_kappa_rho_difference(
+        kappa=kappa,
+        rho=rho,
+    )
+    assert kappa_rho_difference.shape == (n_components,)
 
 
 def test_smoke_calculate_dependence_metrics():
