@@ -174,7 +174,6 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
         adaptive_mask=adaptive_mask,
         report=False,
     )
-    failures = np.zeros(n_samp, dtype=bool)
 
     echos_to_run = np.unique(adaptive_mask)
     # When there is one good echo, use two
@@ -184,6 +183,7 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
 
     t2s_asc_maps = np.zeros([n_samp, len(echos_to_run)])
     s0_asc_maps = np.zeros([n_samp, len(echos_to_run)])
+    failures_asc_maps = np.zeros([n_samp, len(echos_to_run)], dtype=bool)
     echo_masks = np.zeros([n_samp, len(echos_to_run)], dtype=bool)
 
     for i_echo, echo_num in enumerate(echos_to_run):
@@ -221,7 +221,7 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
         fail_count = 0
         for voxel, s0_voxel, t2s_voxel, failure in results:
             if failure:
-                failures[voxel] = True
+                failures_asc_maps[voxel, i_echo] = True
                 fail_count += 1
             else:
                 s0_full[voxel] = s0_voxel
@@ -241,13 +241,14 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
     # create limited T2* and S0 maps
     t2s_limited = utils.unmask(t2s_asc_maps[echo_masks], adaptive_mask > 1)
     s0_limited = utils.unmask(s0_asc_maps[echo_masks], adaptive_mask > 1)
+    failures = utils.unmask(failures_asc_maps[echo_masks], adaptive_mask > 1)
 
     # create full T2* maps with S0 estimation errors
     t2s_full, s0_full = t2s_limited.copy(), s0_limited.copy()
     t2s_full[adaptive_mask == 1] = t2s_asc_maps[adaptive_mask == 1, 0]
     s0_full[adaptive_mask == 1] = s0_asc_maps[adaptive_mask == 1, 0]
 
-    return t2s_limited, s0_limited, t2s_full, s0_full
+    return t2s_limited, s0_limited, t2s_full, s0_full, failures
 
 
 def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
