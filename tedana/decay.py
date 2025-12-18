@@ -98,8 +98,8 @@ def _fit_single_voxel(voxel, echo_times_1d, data_column, s0_init, t2s_init, boun
     Returns
     -------
     result : tuple or None
-        If successful: (voxel, s0, t2s)
-        If failed: None
+        If successful: (voxel, s0, t2s, False)
+        If failed: (voxel, None, None, True)
     """
     try:
         popt, cov = scipy.optimize.curve_fit(
@@ -109,9 +109,9 @@ def _fit_single_voxel(voxel, echo_times_1d, data_column, s0_init, t2s_init, boun
             p0=(s0_init, t2s_init),
             bounds=bounds,
         )
-        return (voxel, popt[0], popt[1])
+        return (voxel, popt[0], popt[1], False)
     except (RuntimeError, ValueError):
-        return None
+        return (voxel, None, None, True)
 
 
 def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_threads=1):
@@ -138,6 +138,8 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
     -------
     t2s_limited, s0_limited, t2s_full, s0_full : (S,) :obj:`numpy.ndarray`
         T2* and S0 estimate maps.
+    failures : (S,) :obj:`numpy.ndarray`
+        Boolean array indicating samples that failed to fit the model.
 
     See Also
     --------
@@ -172,6 +174,7 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
         adaptive_mask=adaptive_mask,
         report=False,
     )
+    failures = np.zeros(n_samp, dtype=bool)
 
     echos_to_run = np.unique(adaptive_mask)
     # When there is one good echo, use two
@@ -216,13 +219,13 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
 
         # Update results and count failures
         fail_count = 0
-        for result in results:
-            if result is None:
+        for voxel, (s0_voxel, t2s_voxel, failure) in enumerate(results):
+            if failure:
+                failures[voxel] = True
                 fail_count += 1
             else:
-                voxel, s0_val, t2s_val = result
-                s0_full[voxel] = s0_val
-                t2s_full[voxel] = t2s_val
+                s0_full[voxel] = s0_voxel
+                t2s_full[voxel] = t2s_voxel
 
         if fail_count:
             fail_percent = 100 * fail_count / len(voxel_idx)
@@ -425,6 +428,7 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True, n_threads=1)
     data_masked = data[mask, :, :]
     adaptive_mask_masked = adaptive_mask[mask]
 
+    failures = None
     if fittype == "loglin":
         t2s_limited, s0_limited, t2s_full, s0_full = fit_loglinear(
             data_cat=data_masked,
@@ -433,7 +437,7 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True, n_threads=1)
             report=report,
         )
     elif fittype == "curvefit":
-        t2s_limited, s0_limited, t2s_full, s0_full = fit_monoexponential(
+        t2s_limited, s0_limited, t2s_full, s0_full, failures = fit_monoexponential(
             data_cat=data_masked,
             echo_times=tes,
             adaptive_mask=adaptive_mask_masked,
@@ -458,13 +462,16 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True, n_threads=1)
     t2s_full = utils.unmask(t2s_full, mask)
     s0_full = utils.unmask(s0_full, mask)
 
+    if fittype == "curvefit":
+        failures = utils.unmask(failures, mask)
+
     # set a hard cap for the T2* map
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
     cap_t2s = stats.scoreatpercentile(t2s_limited.flatten(), 99.5, interpolation_method="lower")
     LGR.debug(f"Setting cap on T2* map at {cap_t2s * 10:.5f}")
     t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
 
-    return t2s_limited, s0_limited, t2s_full, s0_full
+    return t2s_limited, s0_limited, t2s_full, s0_full, failures
 
 
 def fit_decay_ts(data, tes, mask, adaptive_mask, fittype, n_threads=1):
@@ -507,6 +514,9 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype, n_threads=1):
         Full S0 timeseries. For voxels affected by dropout, with good signal
         from only one echo, the full timeseries uses the single echo's value
         at that voxel/volume.
+    failures_ts : (S x T) :obj:`numpy.ndarray` or None
+        Boolean array indicating samples that failed to fit the model.
+        None if fittype is not "curvefit".
 
     See Also
     --------
@@ -522,10 +532,12 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype, n_threads=1):
     s0_limited_ts = np.copy(t2s_limited_ts)
     t2s_full_ts = np.copy(t2s_limited_ts)
     s0_full_ts = np.copy(t2s_limited_ts)
+    if fittype == "curvefit":
+        failures_ts = np.zeros([n_samples, n_vols], dtype=bool)
 
     report = True
     for vol in range(n_vols):
-        t2s_limited, s0_limited, t2s_full, s0_full = fit_decay(
+        t2s_limited, s0_limited, t2s_full, s0_full, failures = fit_decay(
             data=data[:, :, vol][:, :, None],
             tes=tes,
             mask=mask,
@@ -538,9 +550,12 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype, n_threads=1):
         s0_limited_ts[:, vol] = s0_limited
         t2s_full_ts[:, vol] = t2s_full
         s0_full_ts[:, vol] = s0_full
+        if fittype == "curvefit":
+            failures_ts[:, vol] = failures
+
         report = False
 
-    return t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts
+    return t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts, failures_ts
 
 
 def rmse_of_fit_decay_ts(
