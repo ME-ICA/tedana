@@ -1,21 +1,31 @@
 """Run the reclassification workflow for a previous tedana run."""
 
 import argparse
-import datetime
 import logging
 import os
 import os.path as op
 import sys
-from glob import glob
 
 import numpy as np
 import pandas as pd
 
-import tedana.gscontrol as gsc
-from tedana import __version__, io, reporting, selection, utils
-from tedana.bibtex import get_description_references
+from tedana import io, reporting, selection, utils
 from tedana.io import ALLOWED_COMPONENT_DELIMITERS
 from tedana.workflows.parser_utils import parse_manual_list_int, parse_manual_list_str
+from tedana.workflows.shared import (
+    apply_mir,
+    apply_tedort,
+    finalize_report_text,
+    generate_dynamic_report,
+    generate_reclassify_figures,
+    rename_previous_reports,
+    save_derivative_metadata,
+    save_workflow_command,
+    setup_logging,
+    teardown_workflow,
+    write_denoised_results,
+    write_echo_results,
+)
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -312,26 +322,10 @@ def ica_reclassify_workflow(
     if not op.isdir(out_dir):
         os.mkdir(out_dir)
 
-    # boilerplate
+    # Setup boilerplate
     prefix = io._infer_prefix(prefix)
-    basename = f"{prefix}report"
-    extension = "txt"
-    repname = op.join(out_dir, (basename + "." + extension))
-    bibtex_file = op.join(out_dir, f"{prefix}references.bib")
-    repex = op.join(out_dir, (basename + "*"))
-    previousreps = glob(repex)
-    previousreps.sort(reverse=True)
-    for f in previousreps:
-        previousparts = op.splitext(f)
-        newname = previousparts[0] + "_old" + previousparts[1]
-        os.rename(f, newname)
-
-    # create logfile name
-    basename = "tedana_"
-    extension = "tsv"
-    start_time = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
-    logname = op.join(out_dir, (basename + start_time + "." + extension))
-    utils.setup_loggers(logname=logname, repname=repname, quiet=quiet, debug=debug)
+    repname, bibtex_file = rename_previous_reports(out_dir, prefix)
+    setup_logging(out_dir, repname, quiet, debug)
 
     # Coerce gscontrol to list
     if not isinstance(gscontrol, list):
@@ -371,15 +365,12 @@ def ica_reclassify_workflow(
         raise ValueError(f"The following components were both accepted and rejected: {in_both}")
 
     # Save command into sh file, if the command-line interface was used
-    # TODO: use io_generator to save command
     if reclassify_command is not None:
-        command_file = open(os.path.join(out_dir, "ica_reclassify_call.sh"), "w")
-        command_file.write(reclassify_command)
-        command_file.close()
+        save_workflow_command(out_dir, reclassify_command, "ica_reclassify_call.sh")
     else:
-        # Get variables passed to function if the tedana command is None
+        # Get variables passed to function if the reclassify command is None
         variables = ", ".join(f"{name}={value}" for name, value in locals().items())
-        # From variables, remove everything after ", tedana_command"
+        # From variables, remove everything after ", reclassify_command"
         variables = variables.split(", reclassify_command")[0]
         reclassify_command = f"ica_reclassify_workflow({variables})"
 
@@ -476,40 +467,21 @@ def ica_reclassify_workflow(
         )
 
     mixing_orig = mixing.copy()
-    # TODO: make this a function
     if tedort:
-        comps_accepted = selector.accepted_comps_
-        comps_rejected = selector.rejected_comps_
-        acc_ts = mixing[:, comps_accepted]
-        rej_ts = mixing[:, comps_rejected]
-        betas = np.linalg.lstsq(acc_ts, rej_ts, rcond=None)[0]
-        pred_rej_ts = np.dot(acc_ts, betas)
-        resid = rej_ts - pred_rej_ts
-        mixing[:, comps_rejected] = resid
+        mixing = apply_tedort(mixing, selector.accepted_comps_, selector.rejected_comps_)
         comp_names = [
             io.add_decomp_prefix(comp, prefix="ica", max_value=component_table.index.max())
             for comp in range(selector.n_comps_)
         ]
         mixing_df = pd.DataFrame(data=mixing, columns=comp_names)
         io_generator.save_file(mixing_df, "ICA orthogonalized mixing tsv")
-        RepLGR.info(
-            "Rejected components' time series were then "
-            "orthogonalized with respect to accepted components' time "
-            "series."
-        )
 
     # img_t_r = io_generator.reference_img.header.get_zooms()[-1]
     adaptive_mask = utils.reshape_niimg(adaptive_mask)
     mask_denoise = adaptive_mask >= 1
     data_optcom = utils.reshape_niimg(data_optcom)
 
-    # TODO: make a better result-writing function
-    # #############################################!!!!
-    # TODO: make a better time series creation function
-    #       - get_ts_fit_tag(include=[], exclude=[])
-    #       - get_ts_regress/residual_tag(include=[], exclude=[])
-    #       How to handle [acc/rej] + tag ?
-    io.writeresults(
+    write_denoised_results(
         data_optcom,
         mask=mask_denoise,
         component_table=component_table,
@@ -519,7 +491,7 @@ def ica_reclassify_workflow(
 
     if "mir" in gscontrol:
         io_generator.overwrite = True
-        gsc.minimum_image_regression(
+        apply_mir(
             data_optcom=data_optcom,
             mixing=mixing,
             mask=mask_denoise,
@@ -531,84 +503,38 @@ def ica_reclassify_workflow(
 
     if verbose:
         LGR.debug("Writing out verbose data")
-        io.writeresults_echoes(data_cat, mixing, mask_denoise, component_table, io_generator)
+        write_echo_results(data_cat, mixing, mask_denoise, component_table, io_generator)
 
     # Write out BIDS-compatible description file
-    derivative_metadata = {
-        "Name": "tedana Outputs",
-        "BIDSVersion": "1.5.0",
-        "DatasetType": "derivative",
-        "GeneratedBy": [
-            {
-                "Name": "ica_reclassify",
-                "Version": __version__,
-                "Description": (
-                    "A denoising pipeline for the identification and removal "
-                    "of non-BOLD noise from multi-echo fMRI data."
-                ),
-                "CodeURL": "https://github.com/ME-ICA/tedana",
-                "Node": {
-                    "Name": info_dict["Node"],
-                    "System": info_dict["System"],
-                    "Machine": info_dict["Machine"],
-                    "Processor": info_dict["Processor"],
-                    "Release": info_dict["Release"],
-                    "Version": info_dict["Version"],
-                },
-                "Python": info_dict["Python"],
-                "Python_Libraries": info_dict["Python_Libraries"],
-                "Command": info_dict["Command"],
-            }
-        ],
-    }
-    io_generator.save_file(derivative_metadata, "data description json")
+    save_derivative_metadata(
+        io_generator,
+        info_dict,
+        workflow_name="ica_reclassify",
+        workflow_description=(
+            "A denoising pipeline for the identification and removal "
+            "of non-BOLD noise from multi-echo fMRI data."
+        ),
+    )
 
-    with open(repname) as fo:
-        report = [line.rstrip() for line in fo.readlines()]
-        report = " ".join(report)
-
-    with open(repname, "w") as fo:
-        fo.write(report)
-
-    # Collect BibTeX entries for cited papers
-    references = get_description_references(report)
-
-    with open(bibtex_file, "w") as fo:
-        fo.write(references)
+    # Finalize report text and write BibTeX references
+    finalize_report_text(repname, bibtex_file)
 
     if not no_reports:
-        LGR.info("Making figures folder with static component maps and timecourse plots.")
-
-        dn_ts, hikts, lowkts = io.denoise_ts(data_optcom, mixing, mask_denoise, component_table)
-
-        reporting.static_figures.carpet_plot(
-            optcom_ts=data_optcom,
-            denoised_ts=dn_ts,
-            hikts=hikts,
-            lowkts=lowkts,
-            mask=mask_denoise,
-            io_generator=io_generator,
-            gscontrol=gscontrol,
-        )
-        reporting.static_figures.comp_figures(
-            data_optcom,
-            mask=mask_denoise,
+        generate_reclassify_figures(
+            data_optcom=data_optcom,
+            mask_denoise=mask_denoise,
             component_table=component_table,
             mixing=mixing_orig,
             io_generator=io_generator,
             png_cmap=png_cmap,
+            gscontrol=gscontrol,
         )
-
-        LGR.info("Generating dynamic report")
-        reporting.generate_report(io_generator, cluster_labels=None, similarity_t_sne=None)
+        generate_dynamic_report(io_generator)
 
     io_generator.save_self()
     LGR.info("Workflow completed")
 
-    # Add newsletter info to the log
-    utils.log_newsletter_info()
-
-    utils.teardown_loggers()
+    teardown_workflow()
 
 
 if __name__ == "__main__":

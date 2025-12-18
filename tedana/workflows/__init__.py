@@ -5,4 +5,8 @@ from tedana.workflows.ica_reclassify import ica_reclassify_workflow
 from tedana.workflows.t2smap import t2smap_workflow
 from tedana.workflows.tedana import tedana_workflow
 
-__all__ = ["tedana_workflow", "t2smap_workflow", "ica_reclassify_workflow"]
+__all__ = [
+    "tedana_workflow",
+    "t2smap_workflow",
+    "ica_reclassify_workflow",
+]

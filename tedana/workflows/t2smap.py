@@ -11,9 +11,17 @@ from nilearn.masking import compute_epi_mask
 from scipy import stats
 from threadpoolctl import threadpool_limits
 
-from tedana import __version__, combine, decay, io, utils
+from tedana import decay, io, utils
 from tedana.utils import parse_volume_indices
 from tedana.workflows.parser_utils import is_valid_file
+from tedana.workflows.shared import (
+    compute_optimal_combination_simple,
+    create_simple_adaptive_mask,
+    fit_decay_model_simple,
+    save_derivative_metadata,
+    save_workflow_command,
+    teardown_workflow,
+)
 
 LGR = logging.getLogger("GENERAL")
 RepLGR = logging.getLogger("REPORT")
@@ -336,9 +344,7 @@ def t2smap_workflow(
 
     # Save command into sh file, if the command-line interface was used
     if t2smap_command is not None:
-        command_file = open(os.path.join(out_dir, "t2smap_call.sh"), "w")
-        command_file.write(t2smap_command)
-        command_file.close()
+        save_workflow_command(out_dir, t2smap_command, "t2smap_call.sh")
     else:
         # Get variables passed to function if the tedana command is None
         variables = ", ".join(f"{name}={value}" for name, value in locals().items())
@@ -414,23 +420,15 @@ def t2smap_workflow(
     else:
         data_without_excluded_vols = data_cat
 
-    mask, masksum = utils.make_adaptive_mask(
+    mask, masksum = create_simple_adaptive_mask(
         data_without_excluded_vols,
         mask=mask,
+        masktype=masktype,
         n_independent_echos=n_independent_echos,
-        threshold=1,
-        methods=masktype,
     )
 
-    LGR.info("Computing adaptive T2* map")
-    decay_function = decay.fit_decay if fitmode == "all" else decay.fit_decay_ts
-    (t2s_limited, s0_limited, t2s_full, s0_full) = decay_function(
-        data=data_without_excluded_vols,
-        tes=tes,
-        mask=mask,
-        adaptive_mask=masksum,
-        fittype=fittype,
-        n_threads=n_threads,
+    (t2s_limited, s0_limited, t2s_full, s0_full) = fit_decay_model_simple(
+        data_without_excluded_vols, tes, mask, masksum, fittype, fitmode, n_threads
     )
     # Delete unused variable
     del data_without_excluded_vols
@@ -456,7 +454,7 @@ def t2smap_workflow(
 
     LGR.info("Computing optimal combination")
     # optimally combine data, including the ignored volumes
-    data_optcom = combine.make_optcom(data_cat, tes, masksum, t2s=t2s_full, combmode=combmode)
+    data_optcom = compute_optimal_combination_simple(data_cat, tes, masksum, t2s_full, combmode)
 
     # clean up numerical errors
     for arr in (data_optcom, s0_full, t2s_full):
@@ -481,43 +479,20 @@ def t2smap_workflow(
     io_generator.save_file(data_optcom, "combined img")
 
     # Write out BIDS-compatible description file
-    derivative_metadata = {
-        "Name": "t2smap Outputs",
-        "BIDSVersion": "1.5.0",
-        "DatasetType": "derivative",
-        "GeneratedBy": [
-            {
-                "Name": "t2smap",
-                "Version": __version__,
-                "Description": (
-                    "A pipeline estimating T2* from multi-echo fMRI data and "
-                    "combining data across echoes."
-                ),
-                "CodeURL": "https://github.com/ME-ICA/tedana",
-                "Node": {
-                    "Name": info_dict["Node"],
-                    "System": info_dict["System"],
-                    "Machine": info_dict["Machine"],
-                    "Processor": info_dict["Processor"],
-                    "Release": info_dict["Release"],
-                    "Version": info_dict["Version"],
-                },
-                "Python": info_dict["Python"],
-                "Python_Libraries": info_dict["Python_Libraries"],
-                "Command": info_dict["Command"],
-            }
-        ],
-    }
-
-    io_generator.save_file(derivative_metadata, "data description json")
+    save_derivative_metadata(
+        io_generator,
+        info_dict,
+        workflow_name="t2smap",
+        workflow_description=(
+            "A pipeline estimating T2* from multi-echo fMRI data and "
+            "combining data across echoes."
+        ),
+    )
     io_generator.save_self()
 
     LGR.info("Workflow completed")
 
-    # Add newsletter info to the log
-    utils.log_newsletter_info()
-
-    utils.teardown_loggers()
+    teardown_workflow()
 
 
 def _main(argv=None):
