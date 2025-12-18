@@ -533,6 +533,7 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype, n_threads=1):
     s0_limited_ts = np.copy(t2s_limited_ts)
     t2s_full_ts = np.copy(t2s_limited_ts)
     s0_full_ts = np.copy(t2s_limited_ts)
+    failures_ts = None
     if fittype == "curvefit":
         failures_ts = np.zeros([n_samples, n_vols], dtype=bool)
 
