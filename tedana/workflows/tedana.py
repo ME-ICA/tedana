@@ -786,7 +786,7 @@ def tedana_workflow(
             n_threads=n_threads,
         )
         if fittype == "curvefit":
-            io_generator.save_file(failures, "fit failures img")
+            io_generator.save_file(failures.astype(np.uint8), "fit failures img")
 
         del failures
 

@@ -433,7 +433,7 @@ def t2smap_workflow(
         n_threads=n_threads,
     )
     if fittype == "curvefit":
-        io_generator.save_file(failures, "fit failures img")
+        io_generator.save_file(failures.astype(np.uint8), "fit failures img")
 
     # Delete unused variables
     del data_without_excluded_vols, failures
