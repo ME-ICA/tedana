@@ -430,6 +430,7 @@ def tedana_workflow(
     overwrite=False,
     t2smap=None,
     mixing_file=None,
+    n_threads=1,
     tedana_command=None,
 ):
     """Run the "canonical" TE-Dependent ANAlysis workflow.
@@ -553,6 +554,10 @@ def tedana_workflow(
         If True, suppresses logging/printing of messages. Default is False.
     overwrite : :obj:`bool`, optional
         If True, force overwriting of files. Default is False.
+    n_threads : :obj:`int` or None, optional
+        Number of threads to use. Used by threadpoolctl to set the parameter
+        outside of the workflow function, as well as the number of threads to use
+        for the decay model fitting. Default is 1.
     tedana_command : :obj:`str`, optional
         If the command-line interface was used, this is the command that was
         run. Default is None.
@@ -773,7 +778,12 @@ def tedana_workflow(
     if t2smap is None:
         LGR.info("Computing T2* map")
         t2s_limited, s0_limited, t2s_full, s0_full = decay.fit_decay(
-            data_cat, tes, mask_denoise, masksum_denoise, fittype
+            data=data_cat,
+            tes=tes,
+            mask=mask_denoise,
+            adaptive_mask=masksum_denoise,
+            fittype=fittype,
+            n_threads=n_threads,
         )
 
         # set a hard cap for the T2* map
@@ -866,6 +876,7 @@ def tedana_workflow(
                 n_robust_runs,
                 maxit,
                 maxrestart=(maxrestart - n_restarts),
+                n_threads=n_threads,
             )
             seed += 1
             n_restarts = seed - fixed_seed
@@ -1189,7 +1200,7 @@ def _main(argv=None):
         tedana_command = "tedana " + " ".join(sys.argv[1:])
     options = _get_parser().parse_args(argv)
     kwargs = vars(options)
-    n_threads = kwargs.pop("n_threads")
+    n_threads = kwargs.get("n_threads", 1)
     n_threads = None if n_threads == -1 else n_threads
     with threadpool_limits(limits=n_threads, user_api=None):
         tedana_workflow(**kwargs, tedana_command=tedana_command)

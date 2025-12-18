@@ -33,6 +33,7 @@ def tedica(
     n_robust_runs=DEFAULT_N_ROBUST_RUNS,
     maxit=DEFAULT_N_MAX_ITER,
     maxrestart=DEFAULT_N_MAX_RESTART,
+    n_threads=1,
 ):
     """Perform ICA on `data` with the user selected ica method and returns mixing matrix.
 
@@ -55,6 +56,8 @@ def tedica(
         Maximum number of attempted decompositions to perform with different
         random seeds. ICA will stop running if there is convergence prior to
         reaching this limit. Default is 10.
+    n_threads : :obj:`int`, optional
+        Number of threads to use for parallel computation. Default is 1.
 
     Returns
     -------
@@ -90,6 +93,7 @@ def tedica(
             fixed_seed=fixed_seed,
             n_robust_runs=n_robust_runs,
             max_it=maxit,
+            n_threads=n_threads,
         )
     elif ica_method == "fastica":
         mixing, fixed_seed = f_ica(
@@ -112,7 +116,7 @@ def tedica(
     )
 
 
-def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
+def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it, n_threads=1):
     """Perform robustica on `data` and returns mixing matrix.
 
     Parameters
@@ -128,6 +132,8 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
         selected number of robust runs when robustica is used. Default is 30.
     maxit : :obj:`int`, optional
         Maximum number of iterations for ICA. Default is 500.
+    n_threads : :obj:`int`, optional
+        Number of threads to use for parallel computation. Default is 1.
 
     Returns
     -------
@@ -169,6 +175,7 @@ def r_ica(data, n_components, fixed_seed, n_robust_runs, max_it):
                 robust_dimreduce=False,
                 fun="logcosh",
                 robust_method=robust_method,
+                n_jobs=n_threads,
             )
 
             with warnings.catch_warnings(record=True) as caught_warnings:
