@@ -4,9 +4,9 @@ import logging
 import warnings
 
 import numpy as np
+from packaging.version import Version
 from robustica import RobustICA, abs_pearson_dist
 from scipy import stats
-from packaging.version import Version
 from sklearn import __version__ as sklearn_version
 from sklearn import manifold
 from sklearn.decomposition import FastICA
