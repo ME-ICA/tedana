@@ -388,6 +388,18 @@ def test_smoke_generate_decision_table_score():
     assert decision_table_score.shape == (n_components,)
 
 
+def test_smoke_compute_kappa_rho_difference():
+    """Smoke test for tedana.metrics.dependence.compute_kappa_rho_difference."""
+    n_components = 50
+    kappa = np.random.random(n_components)
+    rho = np.random.random(n_components)
+    kappa_rho_difference = dependence.compute_kappa_rho_difference(
+        kappa=kappa,
+        rho=rho,
+    )
+    assert kappa_rho_difference.shape == (n_components,)
+
+
 def test_smoke_calculate_dependence_metrics():
     """Smoke test for tedana.metrics.dependence.calculate_dependence_metrics."""
     n_voxels, n_components = 1000, 50
