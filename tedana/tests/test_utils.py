@@ -485,7 +485,7 @@ def test_check_te_values(caplog):
 
     # Check that the error is raised when TE values are in mixed units
     with pytest.raises(ValueError):
-        utils.check_te_values([0.5, 1, 2.5])
+        utils.check_te_values([0.5, 2, 3])
 
 
 def test_check_t2s_values(caplog):

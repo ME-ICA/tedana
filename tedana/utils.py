@@ -789,7 +789,7 @@ def check_te_values(te_values):
     The heuristic used is:
     - If all TE values are between 0 and 1: values are assumed to be in seconds
       (correct per BIDS), converted to milliseconds and returned
-    - If all TE values are > 1: values are assumed to be in milliseconds, a
+    - If all TE values are >= 1: values are assumed to be in milliseconds, a
       deprecation warning is logged, and values are returned as-is
     - Mixed values or negative values raise an error
     """
@@ -798,7 +798,7 @@ def check_te_values(te_values):
         # Values appear to be in seconds (expected per BIDS)
         LGR.info("TE values appear to be in seconds. Converting to milliseconds for internal use.")
         return (te_values * 1000).tolist()
-    elif all(te_values > 1):
+    elif all(te_values >= 1):
         # Values appear to be in milliseconds (deprecated)
         LGR.warning(
             "TE values appear to be in milliseconds. Per BIDS convention, echo times should "
@@ -809,7 +809,7 @@ def check_te_values(te_values):
     else:
         raise ValueError(
             "TE values must be positive and either all in seconds (values < 1, preferred per "
-            "BIDS convention) or all in milliseconds (values > 1, deprecated)."
+            "BIDS convention) or all in milliseconds (values >= 1, deprecated)."
         )
 
 
