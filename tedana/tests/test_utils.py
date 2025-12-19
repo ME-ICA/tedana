@@ -413,11 +413,45 @@ def test_millisec2sec():
 
 def test_check_te_values():
     """Ensure that check_te_values returns the correct values."""
-    assert utils.check_te_values([2, 3, 4]) == [2, 3, 4]
+    # Values in seconds (preferred per BIDS) - should be converted to milliseconds
+    assert utils.check_te_values([0.015, 0.039, 0.063]) == [15, 39, 63]
     assert utils.check_te_values([0.15, 0.35, 0.55]) == [150, 350, 550]
-    # Check that the error is raised when TE values are in different units
+
+    # Values in milliseconds (deprecated) - should be returned as-is with warning
+    assert utils.check_te_values([15, 39, 63]) == [15, 39, 63]
+    assert utils.check_te_values([2, 3, 4]) == [2, 3, 4]
+
+    # Check that the error is raised when TE values are in mixed units
     with pytest.raises(ValueError):
         utils.check_te_values([0.5, 1, 2.5])
+
+
+def test_check_t2s_values():
+    """Ensure that check_t2s_values returns the correct values."""
+    # Values in seconds (expected per BIDS) - should be converted to milliseconds
+    t2s_sec = np.array([0.015, 0.025, 0.035, 0.045])
+    result = utils.check_t2s_values(t2s_sec)
+    np.testing.assert_array_equal(result, [15, 25, 35, 45])
+
+    # Values in milliseconds (common mistake) - should be returned as-is with warning
+    t2s_ms = np.array([15, 25, 35, 45])
+    result = utils.check_t2s_values(t2s_ms)
+    np.testing.assert_array_equal(result, [15, 25, 35, 45])
+
+    # Array with zeros (common in T2* maps for masked voxels)
+    t2s_with_zeros = np.array([0, 0.020, 0.030, 0, 0.040])
+    result = utils.check_t2s_values(t2s_with_zeros)
+    np.testing.assert_array_equal(result, [0, 20, 30, 0, 40])
+
+    # All zeros - should return as-is with warning
+    t2s_all_zeros = np.array([0, 0, 0, 0])
+    result = utils.check_t2s_values(t2s_all_zeros)
+    np.testing.assert_array_equal(result, [0, 0, 0, 0])
+
+    # Values that are too large - should raise ValueError
+    t2s_invalid = np.array([1500, 2500, 3500])
+    with pytest.raises(ValueError):
+        utils.check_t2s_values(t2s_invalid)
 
 
 def test_parse_volume_indices():
