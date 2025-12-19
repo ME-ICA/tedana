@@ -630,6 +630,85 @@ These plots show the voxel-wise global signal weights and the global signal time
   :height: 400px
 
 
+.. _rica-reports:
+
+***********************************
+Rica Interactive Reports (Optional)
+***********************************
+
+In addition to the standard HTML report, ``tedana`` can generate files for
+`Rica <https://github.com/ME-ICA/rica>`_, an interactive web-based visualization
+tool for exploring ICA components. Rica provides a more detailed and interactive
+way to inspect individual components, including 3D brain visualization using NiiVue.
+
+Generating Rica Reports
+-----------------------
+
+To generate Rica report files, use the ``--rica-report`` flag:
+
+.. code-block:: bash
+
+    tedana -d echo1.nii.gz echo2.nii.gz echo3.nii.gz \
+           -e 14.5 29.0 43.5 \
+           --out-dir output \
+           --rica-report
+
+This will:
+
+1. Download Rica from the `ME-ICA/rica GitHub releases <https://github.com/ME-ICA/rica/releases>`_
+   (cached locally for future use)
+2. Copy Rica files to ``output/rica/``
+3. Generate a launcher script ``open_rica_report.py`` in the output directory
+
+Opening Rica
+------------
+
+After running ``tedana`` with ``--rica-report``, open the Rica visualization:
+
+.. code-block:: bash
+
+    cd output
+    python open_rica_report.py
+
+This will:
+
+- Start a local HTTP server
+- Automatically open Rica in your default web browser
+- Load the tedana output files for visualization
+
+Press ``Ctrl+C`` in the terminal to stop the server when you're done.
+
+Rica Output Files
+-----------------
+
+When ``--rica-report`` is used, the following files are added to the output directory:
+
+==================================  ===========================================================
+File                                Description
+==================================  ===========================================================
+``open_rica_report.py``             Cross-platform launcher script to start Rica
+``rica/index.html``                 Rica web application (single-file bundle)
+``rica/rica_server.py``             HTTP server with CORS support for serving files
+``rica/favicon.ico``                Rica favicon
+==================================  ===========================================================
+
+Platform Support
+----------------
+
+Rica reports work on all major platforms:
+
+- **Linux**: Cache stored in ``~/.cache/tedana/rica``
+- **macOS**: Cache stored in ``~/Library/Caches/tedana/rica``
+- **Windows**: Cache stored in ``%LOCALAPPDATA%/tedana/rica``
+
+The launcher script automatically finds an available port if the default (8000) is busy.
+
+.. note::
+
+    Rica reports require an internet connection for the initial download.
+    Once cached, Rica can be used offline.
+
+
 **************************
 Citable workflow summaries
 **************************
