@@ -569,6 +569,93 @@ def millisec2sec(arr):
     return arr / 1000.0
 
 
+def check_t2s_values(t2s_map):
+    """Check and convert T2* map values to milliseconds.
+
+    This function checks if a precalculated T2* map is in seconds (expected
+    per BIDS convention) or milliseconds. Typical brain T2* values at 3T are
+    approximately 0.015-0.070 seconds (15-70 ms).
+
+    Parameters
+    ----------
+    t2s_map : array_like
+        T2* map values to check. Expected to be in seconds per BIDS convention.
+
+    Returns
+    -------
+    array_like
+        T2* map values converted to milliseconds for internal use.
+
+    Raises
+    ------
+    ValueError
+        If T2* values appear to be in unexpected units.
+
+    Notes
+    -----
+    The heuristic used is:
+    - If median non-zero T2* < 1: values are assumed to be in seconds (correct
+      per BIDS), converted to milliseconds and returned
+    - If median non-zero T2* >= 1 and < 1000: values are assumed to be in
+      milliseconds already, a warning is logged, and values are returned as-is
+    - If median non-zero T2* >= 1000: values are considered invalid
+
+    This function is designed to handle the common case where users provide
+    T2* maps in milliseconds rather than seconds, which can cause severely
+    biased optimal combination weighting.
+    """
+    t2s_map = np.asarray(t2s_map)
+
+    # Get non-zero values for checking
+    nonzero_mask = t2s_map != 0
+    if not np.any(nonzero_mask):
+        LGR.warning("T2* map contains only zeros.")
+        return t2s_map
+
+    nonzero_values = t2s_map[nonzero_mask]
+
+    # Check for negative values
+    if np.any(nonzero_values < 0):
+        LGR.warning(
+            "T2* map contains negative values. These will be set to zero during processing."
+        )
+
+    # Use median of positive values for unit detection
+    positive_values = nonzero_values[nonzero_values > 0]
+    if len(positive_values) == 0:
+        LGR.warning("T2* map contains no positive values.")
+        return t2s_map
+
+    median_t2s = np.median(positive_values)
+
+    # Typical T2* values at 3T: 0.015-0.070 seconds (15-70 ms)
+    # At 1.5T values can be higher (~0.08-0.1 s), at 7T lower (~0.01-0.03 s)
+    # Use 1 second as threshold - brain T2* should never be >= 1 second
+    if median_t2s < 1:
+        # Values appear to be in seconds (expected per BIDS)
+        LGR.info(
+            f"T2* map values appear to be in seconds (median={median_t2s:.4f}s). "
+            "Converting to milliseconds for internal use."
+        )
+        return sec2millisec(t2s_map)
+    elif median_t2s < 1000:
+        # Values appear to be in milliseconds already
+        LGR.warning(
+            f"T2* map median value is {median_t2s:.2f}, which suggests values are in "
+            "milliseconds rather than seconds. Per BIDS convention, T2* maps should be "
+            "in seconds. The map will be used as-is (in milliseconds), but please consider "
+            "providing T2* maps in seconds in the future for consistency with BIDS."
+        )
+        return t2s_map
+    else:
+        # Values are unexpectedly large
+        raise ValueError(
+            f"T2* map median value is {median_t2s:.2f}, which is outside the expected range. "
+            "T2* maps should be in seconds (typical values: 0.01-0.1s per BIDS convention) "
+            "or milliseconds (typical values: 10-100ms). Please check your T2* map units."
+        )
+
+
 def setup_loggers(logname=None, repname=None, quiet=False, debug=False):
     """Set up loggers for tedana.
 
@@ -676,27 +763,54 @@ def get_system_version_info():
 
 
 def check_te_values(te_values):
-    """Check if all TE values are in ms by checking if they are higher than 1.
+    """Check and convert TE values to milliseconds for internal use.
+
+    This function checks if TE values are provided in seconds (preferred per
+    BIDS convention) or milliseconds. Echo times are converted to milliseconds
+    for internal processing.
 
     Parameters
     ----------
     te_values : list
-        TE values to check.
+        TE values to check. Per BIDS convention, these should be in seconds.
 
     Returns
     -------
     list
-        TE values in milliseconds.
+        TE values in milliseconds for internal use.
+
+    Raises
+    ------
+    ValueError
+        If TE values are not positive or appear to be in unexpected units.
+
+    Notes
+    -----
+    The heuristic used is:
+    - If all TE values are between 0 and 1: values are assumed to be in seconds
+      (correct per BIDS), converted to milliseconds and returned
+    - If all TE values are >= 1: values are assumed to be in milliseconds, a
+      deprecation warning is logged, and values are returned as-is
+    - Mixed values or negative values raise an error
     """
     te_values = np.array(te_values)
-    if all(te_values > 1):
-        return te_values.tolist()
-    elif all((te_values > 0) & (te_values < 1)):
-        # Raise a warning and convert to ms by multiplying by 1000
-        LGR.warning("Assuming the provided TE values are in seconds. Converting to ms.")
+    if all((te_values > 0) & (te_values < 1)):
+        # Values appear to be in seconds (expected per BIDS)
+        LGR.info("TE values appear to be in seconds. Converting to milliseconds for internal use.")
         return (te_values * 1000).tolist()
+    elif all(te_values >= 1):
+        # Values appear to be in milliseconds (deprecated)
+        LGR.warning(
+            "TE values appear to be in milliseconds. Per BIDS convention, echo times should "
+            "be provided in seconds. Support for millisecond TE values is deprecated and will "
+            "be removed in a future version. Please provide TE values in seconds."
+        )
+        return te_values.tolist()
     else:
-        raise ValueError("TE values must be positive and in milliseconds.")
+        raise ValueError(
+            "TE values must be positive and either all in seconds (values < 1, preferred per "
+            "BIDS convention) or all in milliseconds (values >= 1, deprecated)."
+        )
 
 
 def log_newsletter_info():

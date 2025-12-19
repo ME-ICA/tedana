@@ -52,7 +52,10 @@ def _get_parser():
         nargs="+",
         metavar="TE",
         type=float,
-        help="Echo times (in ms). E.g., 15.0 39.0 63.0",
+        help=(
+            "Echo times in seconds (per BIDS convention). E.g., 0.015 0.039 0.063. "
+            "Millisecond values (e.g., 15.0 39.0 63.0) are still accepted but deprecated."
+        ),
         required=True,
     )
     optional.add_argument(
@@ -239,7 +242,8 @@ def t2smap_workflow(
         Either a single z-concatenated file (single-entry list or str) or a
         list of echo-specific files, in ascending order.
     tes : :obj:`list`
-        List of echo times associated with data in milliseconds.
+        List of echo times associated with data. Values should be in seconds
+        per BIDS convention. Millisecond values are still accepted but deprecated.
     n_independent_echos : :obj:`int`, optional
         Number of independent echoes to use in goodness of fit metrics (fstat).
         Primarily used for EPTI acquisitions.
@@ -370,6 +374,7 @@ def t2smap_workflow(
 
     # ensure tes are in appropriate format
     tes = [float(te) for te in tes]
+    tes = utils.check_te_values(tes)
     n_echos = len(tes)
 
     # coerce data to samples x echos x time array
