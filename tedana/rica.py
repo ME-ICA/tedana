@@ -18,6 +18,7 @@ import stat
 import urllib.error
 import urllib.request
 from pathlib import Path
+from typing import Dict, Optional, Tuple, Union
 
 LGR = logging.getLogger("GENERAL")
 
@@ -61,7 +62,7 @@ def get_rica_cache_dir() -> Path:
     return rica_cache
 
 
-def get_latest_rica_version() -> tuple[str, dict]:
+def get_latest_rica_version() -> Tuple[str, Dict]:
     """Fetch the latest Rica version information from GitHub.
 
     Returns
@@ -116,7 +117,7 @@ def download_rica_file(url: str, dest_path: Path) -> None:
         dest_path.write_bytes(response.read())
 
 
-def get_cached_rica_version(cache_dir: Path) -> str | None:
+def get_cached_rica_version(cache_dir: Path) -> Optional[str]:
     """Get the version of Rica currently cached.
 
     Parameters
@@ -222,7 +223,7 @@ def download_rica(force: bool = False) -> Path:
     return cache_dir
 
 
-def generate_rica_launcher_script(out_dir: str | Path, port: int = 8000) -> Path:
+def generate_rica_launcher_script(out_dir: Union[str, Path], port: int = 8000) -> Path:
     """Generate the Rica launcher script for a tedana output directory.
 
     This creates a Python script that, when executed, starts a local server
@@ -434,7 +435,7 @@ if __name__ == "__main__":
     return script_path
 
 
-def setup_rica_report(out_dir: str | Path) -> Path | None:
+def setup_rica_report(out_dir: Union[str, Path]) -> Optional[Path]:
     """Set up Rica report files in a tedana output directory.
 
     This function:
@@ -485,7 +486,7 @@ def setup_rica_report(out_dir: str | Path) -> Path | None:
         return None
 
 
-def get_rica_version() -> str | None:
+def get_rica_version() -> Optional[str]:
     """Get the version of Rica that is cached.
 
     Returns
