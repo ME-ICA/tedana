@@ -565,6 +565,15 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype, n_threads=1):
     failures_ts : (S x T) :obj:`numpy.ndarray` or None
         Boolean array indicating samples that failed to fit the model.
         None if fittype is not "curvefit".
+    t2s_var_ts : (S x T) :obj:`numpy.ndarray` or None
+        Variance of the T2* estimates.
+        None if fittype is not "curvefit".
+    s0_var_ts : (S x T) :obj:`numpy.ndarray` or None
+        Variance of the S0 estimates.
+        None if fittype is not "curvefit".
+    t2s_s0_covar_ts : (S x T) :obj:`numpy.ndarray` or None
+        Covariance of the T2* and S0 estimates.
+        None if fittype is not "curvefit".
 
     See Also
     --------
@@ -581,12 +590,27 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype, n_threads=1):
     t2s_full_ts = np.copy(t2s_limited_ts)
     s0_full_ts = np.copy(t2s_limited_ts)
     failures_ts = None
+    t2s_var_ts = None
+    s0_var_ts = None
+    t2s_s0_covar_ts = None
     if fittype == "curvefit":
         failures_ts = np.zeros([n_samples, n_vols], dtype=bool)
+        t2s_var_ts = np.zeros([n_samples, n_vols])
+        s0_var_ts = np.zeros([n_samples, n_vols])
+        t2s_s0_covar_ts = np.zeros([n_samples, n_vols])
 
     report = True
     for vol in range(n_vols):
-        t2s_limited, s0_limited, t2s_full, s0_full, failures = fit_decay(
+        (
+            t2s_limited,
+            s0_limited,
+            t2s_full,
+            s0_full,
+            failures,
+            t2s_var,
+            s0_var,
+            t2s_s0_covar,
+        ) = fit_decay(
             data=data[:, :, vol][:, :, None],
             tes=tes,
             mask=mask,
@@ -601,10 +625,22 @@ def fit_decay_ts(data, tes, mask, adaptive_mask, fittype, n_threads=1):
         s0_full_ts[:, vol] = s0_full
         if fittype == "curvefit":
             failures_ts[:, vol] = failures
+            t2s_var_ts[:, vol] = t2s_var
+            s0_var_ts[:, vol] = s0_var
+            t2s_s0_covar_ts[:, vol] = t2s_s0_covar
 
         report = False
 
-    return t2s_limited_ts, s0_limited_ts, t2s_full_ts, s0_full_ts, failures_ts
+    return (
+        t2s_limited_ts,
+        s0_limited_ts,
+        t2s_full_ts,
+        s0_full_ts,
+        failures_ts,
+        t2s_var_ts,
+        s0_var_ts,
+        t2s_s0_covar_ts,
+    )
 
 
 def rmse_of_fit_decay_ts(
