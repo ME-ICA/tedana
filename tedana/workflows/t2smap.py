@@ -450,8 +450,8 @@ def t2smap_workflow(
         io_generator.save_file(failures.astype(np.uint8), "fit failures img")
         if verbose:
             io_generator.save_file(t2s_var, "t2star variance img")
-            io_generator.add_df_to_file(s0_var, "s0 variance img")
-            io_generator.add_df_to_file(t2s_s0_covar, "t2star-s0 covariance img")
+            io_generator.save_file(s0_var, "s0 variance img")
+            io_generator.save_file(t2s_s0_covar, "t2star-s0 covariance img")
 
     # Delete unused variables
     del data_without_excluded_vols, failures, t2s_var, s0_var, t2s_s0_covar
