@@ -11,6 +11,10 @@
         "orig": "s0vG",
         "bidsv1.5.0": "S0map"
     },
+    "fit failures img": {
+        "orig": "fit_failures",
+        "bidsv1.5.0": "desc-decayFitFailures_mask"
+    },
     "combined img": {
         "orig": "ts_OC",
         "bidsv1.5.0": "desc-optcom_bold"

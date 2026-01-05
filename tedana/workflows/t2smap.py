@@ -429,7 +429,7 @@ def t2smap_workflow(
 
     LGR.info("Computing adaptive T2* map")
     decay_function = decay.fit_decay if fitmode == "all" else decay.fit_decay_ts
-    (t2s_limited, s0_limited, t2s_full, s0_full) = decay_function(
+    (t2s_limited, s0_limited, t2s_full, s0_full, failures) = decay_function(
         data=data_without_excluded_vols,
         tes=tes,
         mask=mask,
@@ -437,8 +437,11 @@ def t2smap_workflow(
         fittype=fittype,
         n_threads=n_threads,
     )
-    # Delete unused variable
-    del data_without_excluded_vols
+    if fittype == "curvefit":
+        io_generator.save_file(failures.astype(np.uint8), "fit failures img")
+
+    # Delete unused variables
+    del data_without_excluded_vols, failures
 
     # set a hard cap for the T2* map/timeseries
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile

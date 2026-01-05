@@ -786,7 +786,7 @@ def tedana_workflow(
 
     if t2smap is None:
         LGR.info("Computing T2* map")
-        t2s_limited, s0_limited, t2s_full, s0_full = decay.fit_decay(
+        t2s_limited, s0_limited, t2s_full, s0_full, failures = decay.fit_decay(
             data=data_cat,
             tes=tes,
             mask=mask_denoise,
@@ -794,6 +794,10 @@ def tedana_workflow(
             fittype=fittype,
             n_threads=n_threads,
         )
+        if fittype == "curvefit":
+            io_generator.save_file(failures.astype(np.uint8), "fit failures img")
+
+        del failures
 
         # set a hard cap for the T2* map
         # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
