@@ -109,9 +109,9 @@ def _fit_single_voxel(voxel, echo_times_1d, data_column, s0_init, t2s_init, boun
             p0=(s0_init, t2s_init),
             bounds=bounds,
         )
-        return (voxel, popt[0], popt[1], False)
+        return (voxel, popt[0], popt[1], False, cov[0, 0], cov[1, 1], cov[0, 1])
     except (RuntimeError, ValueError):
-        return (voxel, None, None, True)
+        return (voxel, None, None, True, None, None, None)
 
 
 def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_threads=1):
@@ -140,6 +140,12 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
         T2* and S0 estimate maps.
     failures : (S,) :obj:`numpy.ndarray`
         Boolean array indicating samples that failed to fit the model.
+    t2s_var : (S,) :obj:`numpy.ndarray`
+        Variance of the T2* estimates.
+    s0_var : (S,) :obj:`numpy.ndarray`
+        Variance of the S0 estimates.
+    t2s_s0_covar : (S,) :obj:`numpy.ndarray`
+        Covariance of the T2* and S0 estimates.
 
     See Also
     --------
@@ -184,6 +190,9 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
     t2s_asc_maps = np.zeros([n_samp, len(echos_to_run)])
     s0_asc_maps = np.zeros([n_samp, len(echos_to_run)])
     failures_asc_maps = np.zeros([n_samp, len(echos_to_run)], dtype=bool)
+    t2s_var_asc_maps = np.zeros([n_samp, len(echos_to_run)])
+    s0_var_asc_maps = np.zeros([n_samp, len(echos_to_run)])
+    t2s_s0_covar_asc_maps = np.zeros([n_samp, len(echos_to_run)])
     echo_masks = np.zeros([n_samp, len(echos_to_run)], dtype=bool)
 
     for i_echo, echo_num in enumerate(echos_to_run):
@@ -219,13 +228,16 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
 
         # Update results and count failures
         fail_count = 0
-        for voxel, s0_voxel, t2s_voxel, failure in results:
+        for voxel, s0_voxel, t2s_voxel, failure, t2s_var_voxel, s0_var_voxel, t2s_s0_covar_voxel in results:
             if failure:
                 failures_asc_maps[voxel, i_echo] = True
                 fail_count += 1
             else:
                 s0_full[voxel] = s0_voxel
                 t2s_full[voxel] = t2s_voxel
+                t2s_var_asc_maps[voxel, i_echo] = t2s_var_voxel
+                s0_var_asc_maps[voxel, i_echo] = s0_var_voxel
+                t2s_s0_covar_asc_maps[voxel, i_echo] = t2s_s0_covar_voxel
 
         if fail_count:
             fail_percent = 100 * fail_count / len(voxel_idx)
@@ -242,13 +254,16 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
     t2s_limited = utils.unmask(t2s_asc_maps[echo_masks], adaptive_mask > 1)
     s0_limited = utils.unmask(s0_asc_maps[echo_masks], adaptive_mask > 1)
     failures = utils.unmask(failures_asc_maps[echo_masks], adaptive_mask > 1)
+    t2s_var = utils.unmask(t2s_var_asc_maps[echo_masks], adaptive_mask > 1)
+    s0_var = utils.unmask(s0_var_asc_maps[echo_masks], adaptive_mask > 1)
+    t2s_s0_covar = utils.unmask(t2s_s0_covar_asc_maps[echo_masks], adaptive_mask > 1)
 
     # create full T2* maps with S0 estimation errors
     t2s_full, s0_full = t2s_limited.copy(), s0_limited.copy()
     t2s_full[adaptive_mask == 1] = t2s_asc_maps[adaptive_mask == 1, 0]
     s0_full[adaptive_mask == 1] = s0_asc_maps[adaptive_mask == 1, 0]
 
-    return t2s_limited, s0_limited, t2s_full, s0_full, failures
+    return t2s_limited, s0_limited, t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar
 
 
 def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
@@ -395,11 +410,23 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True, n_threads=1)
         Full S0 map. For voxels affected by dropout, with good signal from
         only one echo, the full map uses the S0 estimate from the first two
         echoes.
+    failures : (S,) :obj:`numpy.ndarray` or None
+        Boolean array indicating samples that failed to fit the model.
+        None if fittype is not "curvefit".
+    t2s_var : (S,) :obj:`numpy.ndarray` or None
+        Variance of the T2* estimates.
+        None if fittype is not "curvefit".
+    s0_var : (S,) :obj:`numpy.ndarray` or None
+        Variance of the S0 estimates.
+        None if fittype is not "curvefit".
+    t2s_s0_covar : (S,) :obj:`numpy.ndarray` or None
+        Covariance of the T2* and S0 estimates.
+        None if fittype is not "curvefit".
 
     See Also
     --------
-    : func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
-                                                       parameter.
+    :func:`tedana.utils.make_adaptive_mask` : The function used to create the ``adaptive_mask``
+                                              parameter.
 
     Notes
     -----
@@ -429,7 +456,7 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True, n_threads=1)
     data_masked = data[mask, :, :]
     adaptive_mask_masked = adaptive_mask[mask]
 
-    failures = None
+    failures, t2s_var, s0_var, t2s_s0_covar = None, None, None, None
     if fittype == "loglin":
         t2s_limited, s0_limited, t2s_full, s0_full = fit_loglinear(
             data_cat=data_masked,
@@ -438,7 +465,16 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True, n_threads=1)
             report=report,
         )
     elif fittype == "curvefit":
-        t2s_limited, s0_limited, t2s_full, s0_full, failures = fit_monoexponential(
+        (
+            t2s_limited,
+            s0_limited,
+            t2s_full,
+            s0_full,
+            failures,
+            t2s_var,
+            s0_var,
+            t2s_s0_covar,
+        ) = fit_monoexponential(
             data_cat=data_masked,
             echo_times=tes,
             adaptive_mask=adaptive_mask_masked,
@@ -465,6 +501,9 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True, n_threads=1)
 
     if fittype == "curvefit":
         failures = utils.unmask(failures, mask)
+        t2s_var = utils.unmask(t2s_var, mask)
+        s0_var = utils.unmask(s0_var, mask)
+        t2s_s0_covar = utils.unmask(t2s_s0_covar, mask)
 
     # set a hard cap for the T2* map
     # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
@@ -472,7 +511,7 @@ def fit_decay(data, tes, mask, adaptive_mask, fittype, report=True, n_threads=1)
     LGR.debug(f"Setting cap on T2* map at {cap_t2s * 10:.5f}")
     t2s_limited[t2s_limited > cap_t2s * 10] = cap_t2s
 
-    return t2s_limited, s0_limited, t2s_full, s0_full, failures
+    return t2s_limited, s0_limited, t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar
 
 
 def fit_decay_ts(data, tes, mask, adaptive_mask, fittype, n_threads=1):
