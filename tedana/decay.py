@@ -228,7 +228,15 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
 
         # Update results and count failures
         fail_count = 0
-        for voxel, s0_voxel, t2s_voxel, failure, t2s_var_voxel, s0_var_voxel, t2s_s0_covar_voxel in results:
+        for (
+            voxel,
+            s0_voxel,
+            t2s_voxel,
+            failure,
+            t2s_var_voxel,
+            s0_var_voxel,
+            t2s_s0_covar_voxel,
+        ) in results:
             if failure:
                 failures_asc_maps[voxel, i_echo] = True
                 fail_count += 1
