@@ -786,8 +786,8 @@ def tedana_workflow(
 
     if t2smap is None:
         LGR.info("Computing T2* map")
-        data_masked = data_cat[mask, ...]
-        masksum_masked = masksum_denoise[mask]
+        data_masked = data_cat[mask_denoise, ...]
+        masksum_masked = masksum_denoise[mask_denoise]
         raise Exception(
             f"data_masked: {data_masked.shape}\n"
             f"masksum_masked: {masksum_masked.shape}\n"
@@ -804,11 +804,20 @@ def tedana_workflow(
         del data_masked
 
         if fittype == "curvefit":
-            io_generator.save_file(utils.unmask(failures, mask).astype(np.uint8), "fit failures img")
+            io_generator.save_file(
+                utils.unmask(failures, mask_denoise).astype(np.uint8),
+                "fit failures img",
+            )
             if verbose:
-                io_generator.save_file(utils.unmask(t2s_var, mask), "t2star variance img")
-                io_generator.save_file(utils.unmask(s0_var, mask), "s0 variance img")
-                io_generator.save_file(utils.unmask(t2s_s0_covar, mask), "t2star-s0 covariance img")
+                io_generator.save_file(
+                    utils.unmask(t2s_var, mask_denoise),
+                    "t2star variance img",
+                )
+                io_generator.save_file(utils.unmask(s0_var, mask_denoise), "s0 variance img")
+                io_generator.save_file(
+                    utils.unmask(t2s_s0_covar, mask_denoise),
+                    "t2star-s0 covariance img",
+                )
 
         del failures, t2s_var, s0_var, t2s_s0_covar
 
@@ -820,10 +829,10 @@ def tedana_workflow(
         )
         del masksum_masked
 
-        t2s_full = utils.unmask(t2s_full, mask)
-        s0_full = utils.unmask(s0_full, mask)
-        t2s_limited = utils.unmask(t2s_limited, mask)
-        s0_limited = utils.unmask(s0_limited, mask)
+        t2s_full = utils.unmask(t2s_full, mask_denoise)
+        s0_full = utils.unmask(s0_full, mask_denoise)
+        t2s_limited = utils.unmask(t2s_limited, mask_denoise)
+        s0_limited = utils.unmask(s0_limited, mask_denoise)
 
         io_generator.save_file(utils.millisec2sec(t2s_full), "t2star img")
         io_generator.save_file(s0_full, "s0 img")
