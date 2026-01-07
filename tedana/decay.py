@@ -23,7 +23,7 @@ def _apply_t2s_floor(t2s, echo_times):
 
     Parameters
     ----------
-    t2s : (S,) array_like
+    t2s : (S [x T]) array_like
         T2* estimates.
     echo_times : (E,) array_like
         Echo times in milliseconds.
@@ -34,6 +34,13 @@ def _apply_t2s_floor(t2s, echo_times):
         T2* estimates with very small, positive values replaced with a floor value.
     """
     t2s_corrected = t2s.copy()
+
+    if t2s.ndim == 2:
+        for i_vol in range(t2s.shape[1]):
+            t2s_corrected[:, i_vol] = _apply_t2s_floor(t2s[:, i_vol], echo_times)
+
+        return t2s_corrected
+
     echo_times = np.asarray(echo_times)
     if echo_times.ndim == 1:
         echo_times = echo_times[:, None]

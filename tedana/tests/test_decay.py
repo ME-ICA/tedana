@@ -156,12 +156,12 @@ def test_smoke_fit_decay_curvefit():
         masked_adaptive_mask,
         fittype,
     )
-    assert t2s.ndim == 2
-    assert s0.ndim == 2
-    assert failures.ndim == 2
-    assert t2s_var.ndim == 2
-    assert s0_var.ndim == 2
-    assert t2s_s0_covar.ndim == 2
+    assert t2s.ndim == 1
+    assert s0.ndim == 1
+    assert failures.ndim == 1
+    assert t2s_var.ndim == 1
+    assert s0_var.ndim == 1
+    assert t2s_s0_covar.ndim == 1
 
 
 def test_smoke_fit_decay_ts():
