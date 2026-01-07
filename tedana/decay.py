@@ -337,7 +337,6 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
     t2s_asc_maps = np.zeros([n_samp, len(echos_to_run)])
     s0_asc_maps = np.zeros([n_samp, len(echos_to_run)])
     echo_masks = np.zeros([n_samp, len(echos_to_run)], dtype=bool)
-    raise Exception(echos_to_run)
 
     for i_echo, echo_num in enumerate(echos_to_run):
         if echo_num == 2:
@@ -369,13 +368,6 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
         t2s_asc_maps[voxel_idx, i_echo] = t2s
         s0_asc_maps[voxel_idx, i_echo] = s0
 
-    raise Exception(
-        f"t2s: {t2s.shape}, "
-        f"s0: {s0.shape}, "
-        f"t2s_asc_maps: {t2s_asc_maps.shape}, "
-        f"s0_asc_maps: {s0_asc_maps.shape}, "
-        f"adaptive_mask: {adaptive_mask.shape}"
-    )
     # create full T2* and S0 maps with S0 estimation errors
     t2s = utils.unmask(t2s_asc_maps[echo_masks], adaptive_mask > 1)
     s0 = utils.unmask(s0_asc_maps[echo_masks], adaptive_mask > 1)
