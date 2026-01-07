@@ -212,7 +212,8 @@ def _update_template_bokeh(
     LGR.info(f"RMSE files exist: {rmse_exists}")
 
     variance_exists = (
-        t2star_variance_filename in files_in_figures and s0_variance_filename in files_in_figures
+        t2star_variance_filename in files_in_figures
+        and s0_variance_filename in files_in_figures
         and t2s_s0_covariance_filename in files_in_figures
     )
     LGR.info(f"Variance files exist: {variance_exists}")
