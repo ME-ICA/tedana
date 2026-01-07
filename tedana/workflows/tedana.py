@@ -84,7 +84,10 @@ def _get_parser():
         nargs="+",
         metavar="TE",
         type=float,
-        help="Echo times (in ms). E.g., 15.0 39.0 63.0",
+        help=(
+            "Echo times in seconds (per BIDS convention). E.g., 0.015 0.039 0.063. "
+            "Millisecond values (e.g., 15.0 39.0 63.0) are still accepted but deprecated."
+        ),
         required=True,
     )
     optional.add_argument(
@@ -357,7 +360,11 @@ def _get_parser():
         dest="t2smap",
         metavar="FILE",
         type=lambda x: is_valid_file(parser, x),
-        help=("Precalculated T2* map in the same space as the input data."),
+        help=(
+            "Precalculated T2* map in the same space as the input data. "
+            "Values should be in seconds (per BIDS convention). Maps in milliseconds "
+            "are auto-detected and handled with a warning."
+        ),
         default=None,
     )
     optional.add_argument(
@@ -430,6 +437,7 @@ def tedana_workflow(
     overwrite=False,
     t2smap=None,
     mixing_file=None,
+    n_threads=1,
     tedana_command=None,
 ):
     """Run the "canonical" TE-Dependent ANAlysis workflow.
@@ -442,7 +450,8 @@ def tedana_workflow(
         Either a single z-concatenated file (single-entry list or str) or a
         list of echo-specific files, in ascending order.
     tes : :obj:`list`
-        List of echo times associated with data in milliseconds.
+        List of echo times associated with data. Values should be in seconds
+        per BIDS convention. Millisecond values are still accepted but deprecated.
 
     Other Parameters
     ----------------
@@ -544,8 +553,9 @@ def tedana_workflow(
     debug : :obj:`bool`, optional
         Whether to run in debugging mode or not. Default is False.
     t2smap : :obj:`str`, optional
-        Precalculated T2* map in the same space as the input data. Values in
-        the map must be in seconds.
+        Precalculated T2* map in the same space as the input data. Values should
+        be in seconds per BIDS convention. Maps in milliseconds are auto-detected
+        and handled with a warning.
     mixing_file : :obj:`str` or None, optional
         File containing mixing matrix, to be used when re-running the workflow.
         If not provided, ME-PCA and ME-ICA are done. Default is None.
@@ -553,6 +563,10 @@ def tedana_workflow(
         If True, suppresses logging/printing of messages. Default is False.
     overwrite : :obj:`bool`, optional
         If True, force overwriting of files. Default is False.
+    n_threads : :obj:`int` or None, optional
+        Number of threads to use. Used by threadpoolctl to set the parameter
+        outside of the workflow function, as well as the number of threads to use
+        for the decay model fitting. Default is 1.
     tedana_command : :obj:`str`, optional
         If the command-line interface was used, this is the command that was
         run. Default is None.
@@ -719,15 +733,15 @@ def tedana_workflow(
         RepLGR.info("A user-defined mask was applied to the data.")
         mask = utils.reshape_niimg(mask).astype(int)
     elif t2smap and not mask:
-        LGR.info("Assuming user=defined T2* map is masked and using it to generate mask")
-        t2s_limited_sec = utils.reshape_niimg(t2smap)
-        t2s_limited = utils.sec2millisec(t2s_limited_sec)
+        LGR.info("Assuming user-defined T2* map is masked and using it to generate mask")
+        t2s_loaded = utils.reshape_niimg(t2smap)
+        t2s_limited = utils.check_t2s_values(t2s_loaded)
         t2s_full = t2s_limited.copy()
         mask = (t2s_limited != 0).astype(int)
     elif t2smap and mask:
         LGR.info("Combining user-defined mask and T2* map to generate mask")
-        t2s_limited_sec = utils.reshape_niimg(t2smap)
-        t2s_limited = utils.sec2millisec(t2s_limited_sec)
+        t2s_loaded = utils.reshape_niimg(t2smap)
+        t2s_limited = utils.check_t2s_values(t2s_loaded)
         t2s_full = t2s_limited.copy()
         mask = utils.reshape_niimg(mask).astype(int)
         mask[t2s_limited == 0] = 0  # reduce mask based on T2* map
@@ -772,9 +786,18 @@ def tedana_workflow(
 
     if t2smap is None:
         LGR.info("Computing T2* map")
-        t2s_limited, s0_limited, t2s_full, s0_full = decay.fit_decay(
-            data_cat, tes, mask_denoise, masksum_denoise, fittype
+        t2s_limited, s0_limited, t2s_full, s0_full, failures = decay.fit_decay(
+            data=data_cat,
+            tes=tes,
+            mask=mask_denoise,
+            adaptive_mask=masksum_denoise,
+            fittype=fittype,
+            n_threads=n_threads,
         )
+        if fittype == "curvefit":
+            io_generator.save_file(failures.astype(np.uint8), "fit failures img")
+
+        del failures
 
         # set a hard cap for the T2* map
         # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
@@ -866,6 +889,7 @@ def tedana_workflow(
                 n_robust_runs,
                 maxit,
                 maxrestart=(maxrestart - n_restarts),
+                n_threads=n_threads,
             )
             seed += 1
             n_restarts = seed - fixed_seed
@@ -1189,7 +1213,7 @@ def _main(argv=None):
         tedana_command = "tedana " + " ".join(sys.argv[1:])
     options = _get_parser().parse_args(argv)
     kwargs = vars(options)
-    n_threads = kwargs.pop("n_threads")
+    n_threads = kwargs.get("n_threads", 1)
     n_threads = None if n_threads == -1 else n_threads
     with threadpool_limits(limits=n_threads, user_api=None):
         tedana_workflow(**kwargs, tedana_command=tedana_command)

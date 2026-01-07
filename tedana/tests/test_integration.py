@@ -789,6 +789,7 @@ def test_integration_t2smap(skip_integration):
         + ["--n-independent-echos", "4"]
         + ["--dummy-scans", "1"]
         + ["--exclude", "1:4"]
+        + ["--n-threads", "2"]
     )
     t2smap_cli._main(args)
 
