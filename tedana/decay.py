@@ -452,14 +452,7 @@ def fit_decay(data, tes, adaptive_mask, fittype, report=True, n_threads=1):
             report=report,
         )
     elif fittype == "curvefit":
-        (
-            t2s,
-            s0,
-            failures,
-            t2s_var,
-            s0_var,
-            t2s_s0_covar,
-        ) = fit_monoexponential(
+        t2s, s0, failures, t2s_var, s0_var, t2s_s0_covar = fit_monoexponential(
             data_cat=data,
             echo_times=tes,
             adaptive_mask=adaptive_mask,
@@ -537,14 +530,7 @@ def fit_decay_ts(data, tes, adaptive_mask, fittype, n_threads=1):
 
     report = True
     for vol in range(n_vols):
-        (
-            t2s_vol,
-            s0_vol,
-            failures_vol,
-            t2s_var_vol,
-            s0_var_vol,
-            t2s_s0_covar_vol
-        ) = fit_decay(
+        t2s_vol, s0_vol, failures_vol, t2s_var_vol, s0_var_vol, t2s_s0_covar_vol = fit_decay(
             data=data[:, :, vol][:, :, None],
             tes=tes,
             adaptive_mask=adaptive_mask,

@@ -788,12 +788,6 @@ def tedana_workflow(
         LGR.info("Computing T2* map")
         data_masked = data_cat[mask_denoise, ...]
         masksum_masked = masksum_denoise[mask_denoise]
-        raise Exception(
-            f"data_masked: {data_masked.shape}\n"
-            f"masksum_masked: {masksum_masked.shape}\n"
-            f"masksum_masked unique: {np.unique(masksum_masked)}\n"
-            f"masksum_denoise unique: {np.unique(masksum_denoise)}"
-        )
         t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar = decay.fit_decay(
             data=data_masked,
             tes=tes,
