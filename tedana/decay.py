@@ -443,8 +443,8 @@ def fit_decay(data, tes, adaptive_mask, fittype, report=True, n_threads=1):
     if data.ndim == 2:
         data = data[:, :, None]
 
-    failures, t2s_var, s0_var, t2s_s0_covar = None, None, None, None
     if fittype == "loglin":
+        failures, t2s_var, s0_var, t2s_s0_covar = None, None, None, None
         t2s, s0 = fit_loglinear(
             data_cat=data,
             echo_times=tes,
@@ -518,10 +518,7 @@ def fit_decay_ts(data, tes, adaptive_mask, fittype, n_threads=1):
 
     t2s = np.zeros([n_samples, n_vols])
     s0 = np.zeros([n_samples, n_vols])
-    failures = None
-    t2s_var = None
-    s0_var = None
-    t2s_s0_covar = None
+    failures, t2s_var, s0_var, t2s_s0_covar = None, None, None, None
     if fittype == "curvefit":
         failures = np.zeros([n_samples, n_vols], dtype=bool)
         t2s_var = np.zeros([n_samples, n_vols])

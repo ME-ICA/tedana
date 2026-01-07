@@ -13,7 +13,6 @@ from glob import glob
 import numpy as np
 import pandas as pd
 from nilearn.masking import compute_epi_mask
-from scipy import stats
 from threadpoolctl import threadpool_limits
 
 import tedana.gscontrol as gsc
