@@ -1080,11 +1080,11 @@ def plot_decay_variance(
     mask_img = io.new_nii_like(io_generator.reference_img, (adaptive_mask >= 2).astype(np.int32))
 
     names = [
-        'stat-variance_desc-t2star_statmap',
-        'stat-variance_desc-s0_statmap',
-        'stat-covariance_desc-t2star+s0_statmap',
+        "stat-variance_desc-t2star_statmap",
+        "stat-variance_desc-s0_statmap",
+        "stat-covariance_desc-t2star+s0_statmap",
     ]
-    imgs = ['t2star variance img', 's0 variance img', 't2star-s0 covariance img']
+    imgs = ["t2star variance img", "s0 variance img", "t2star-s0 covariance img"]
     for name, img in zip(names, imgs):
         in_file = io_generator.get_name(img)
         data = masking.apply_mask(in_file, mask_img)
