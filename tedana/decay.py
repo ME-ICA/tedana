@@ -337,6 +337,7 @@ def fit_loglinear(data_cat, echo_times, adaptive_mask, report=True):
     t2s_asc_maps = np.zeros([n_samp, len(echos_to_run)])
     s0_asc_maps = np.zeros([n_samp, len(echos_to_run)])
     echo_masks = np.zeros([n_samp, len(echos_to_run)], dtype=bool)
+    raise Exception(echos_to_run)
 
     for i_echo, echo_num in enumerate(echos_to_run):
         if echo_num == 2:
