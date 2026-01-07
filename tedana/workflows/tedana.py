@@ -1201,6 +1201,11 @@ def tedana_workflow(
                 io_generator=io_generator,
                 adaptive_mask=masksum_denoise,
             )
+            if fittype == "curvefit" and verbose:
+                reporting.static_figures.plot_decay_variance(
+                    io_generator=io_generator,
+                    adaptive_mask=masksum_denoise,
+                )
 
         if gscontrol:
             reporting.static_figures.plot_gscontrol(

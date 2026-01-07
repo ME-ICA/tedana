@@ -1057,3 +1057,54 @@ def _correlate_dataframes(df1, df2):
     # Convert the result back to a DataFrame with appropriate labels
     correlation_df = pd.DataFrame(cross_corr_matrix, index=df1.columns, columns=df2.columns)
     return correlation_df
+
+
+def plot_decay_variance(
+    *,
+    io_generator: io.OutputGenerator,
+    adaptive_mask: np.ndarray,
+):
+    """Plot the variance of the T2* and S0 estimates.
+
+    Parameters
+    ----------
+    io_generator : :obj:`~tedana.io.OutputGenerator`
+        The output generator for this workflow.
+    adaptive_mask : (S,) :obj:`numpy.ndarray`
+        Array where each value indicates the number of echoes with good signal
+        for that voxel. This mask may be thresholded; for example, with values
+        less than 3 set to 0.
+        For more information on thresholding, see `make_adaptive_mask`.
+    """
+    # Mask that only includes values >=2 (i.e. at least 2 good echoes)
+    mask_img = io.new_nii_like(io_generator.reference_img, (adaptive_mask >= 2).astype(np.int32))
+
+    names = [
+        'stat-variance_desc-t2star_statmap',
+        'stat-variance_desc-s0_statmap',
+        'stat-covariance_desc-t2star+s0_statmap',
+    ]
+    imgs = ['t2star variance img', 's0 variance img', 't2star-s0 covariance img']
+    for name, img in zip(names, imgs):
+        in_file = io_generator.get_name(img)
+        data = masking.apply_mask(in_file, mask_img)
+        data_p02, data_p98 = np.percentile(data, [2, 98])
+        plot_name = f"{io_generator.prefix}{name}.svg"
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message="A non-diagonal affine.*",
+                category=UserWarning,
+            )
+            plotting.plot_stat_map(
+                in_file,
+                bg_img=None,
+                display_mode="mosaic",
+                symmetric_cbar=False,
+                black_bg=True,
+                cmap="Reds",
+                vmin=data_p02,
+                vmax=data_p98,
+                annotate=False,
+                output_file=os.path.join(io_generator.out_dir, "figures", plot_name),
+            )
