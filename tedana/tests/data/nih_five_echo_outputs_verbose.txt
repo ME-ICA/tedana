@@ -83,6 +83,9 @@ sub-01_echo-5_desc-PCA_components.nii.gz
 sub-01_echo-5_desc-Rejected_bold.nii.gz
 sub-01_references.bib
 sub-01_report.txt
+sub-01_stat-covariance_desc-t2star+s0_statmap.nii.gz
+sub-01_stat-variance_desc-s0_statmap.nii.gz
+sub-01_stat-variance_desc-t2star_statmap.nii.gz
 sub-01_tedana_report.html
 figures
 figures/sub-01_adaptive_mask.svg
