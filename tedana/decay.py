@@ -261,8 +261,9 @@ def fit_monoexponential(data_cat, echo_times, adaptive_mask, report=True, n_thre
         t2s_asc_maps[:, i_echo] = t2s_init
         s0_asc_maps[:, i_echo] = s0_init
 
-    # create limited T2* and S0 maps
+    # create full T2* and S0 maps
     t2s = utils.unmask(t2s_asc_maps[echo_masks], adaptive_mask > 1)
+    raise Exception(t2s.shape)
     s0 = utils.unmask(s0_asc_maps[echo_masks], adaptive_mask > 1)
     failures = utils.unmask(failures_asc_maps[echo_masks], adaptive_mask > 1)
     t2s_var = utils.unmask(t2s_var_asc_maps[echo_masks], adaptive_mask > 1)
