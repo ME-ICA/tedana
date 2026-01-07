@@ -786,39 +786,42 @@ def tedana_workflow(
 
     if t2smap is None:
         LGR.info("Computing T2* map")
-        (
-            t2s_limited,
-            s0_limited,
-            t2s_full,
-            s0_full,
-            failures,
-            t2s_var,
-            s0_var,
-            t2s_s0_covar,
-        ) = decay.fit_decay(
-            data=data_cat,
+        data_masked = data_cat[mask, ...]
+        masksum_masked = masksum_denoise[mask]
+        t2s_full, s0_full, failures, t2s_var, s0_var, t2s_s0_covar = decay.fit_decay(
+            data=data_masked,
             tes=tes,
-            mask=mask_denoise,
-            adaptive_mask=masksum_denoise,
+            adaptive_mask=masksum_masked,
             fittype=fittype,
             n_threads=n_threads,
         )
+        del data_masked
+
         if fittype == "curvefit":
-            io_generator.save_file(failures.astype(np.uint8), "fit failures img")
+            io_generator.save_file(utils.unmask(failures, mask).astype(np.uint8), "fit failures img")
             if verbose:
-                io_generator.save_file(t2s_var, "t2star variance img")
-                io_generator.save_file(s0_var, "s0 variance img")
-                io_generator.save_file(t2s_s0_covar, "t2star-s0 covariance img")
+                io_generator.save_file(utils.unmask(t2s_var, mask), "t2star variance img")
+                io_generator.save_file(utils.unmask(s0_var, mask), "s0 variance img")
+                io_generator.save_file(utils.unmask(t2s_s0_covar, mask), "t2star-s0 covariance img")
 
         del failures, t2s_var, s0_var, t2s_s0_covar
 
-        # set a hard cap for the T2* map
-        # anything that is 10x higher than the 99.5 %ile will be reset to 99.5 %ile
-        cap_t2s = stats.scoreatpercentile(t2s_full.flatten(), 99.5, interpolation_method="lower")
-        LGR.debug(f"Setting cap on T2* map at {utils.millisec2sec(cap_t2s):.5f}s")
-        t2s_full[t2s_full > cap_t2s * 10] = cap_t2s
+        t2s_full, s0_full, t2s_limited, s0_limited = decay.modify_t2s_s0_maps(
+            t2s=t2s_full,
+            s0=s0_full,
+            adaptive_mask=masksum_masked,
+            tes=tes,
+        )
+        del masksum_masked
+
+        t2s_full = utils.unmask(t2s_full, mask)
+        s0_full = utils.unmask(s0_full, mask)
+        t2s_limited = utils.unmask(t2s_limited, mask)
+        s0_limited = utils.unmask(s0_limited, mask)
+
         io_generator.save_file(utils.millisec2sec(t2s_full), "t2star img")
         io_generator.save_file(s0_full, "s0 img")
+        del s0_full
 
         if verbose:
             io_generator.save_file(utils.millisec2sec(t2s_limited), "limited t2star img")
@@ -836,6 +839,8 @@ def tedana_workflow(
         io_generator.save_file(rmse_map, "rmse img")
         io_generator.add_df_to_file(rmse_df, "confounds tsv")
 
+        del s0_limited, t2s_limited
+
     # optimally combine data
     data_optcom = combine.make_optcom(
         data_cat,
@@ -844,6 +849,7 @@ def tedana_workflow(
         t2s=t2s_full,
         combmode=combmode,
     )
+    del t2s_full
 
     if "gsr" in gscontrol:
         # regress out global signal
