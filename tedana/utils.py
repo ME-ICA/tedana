@@ -182,13 +182,10 @@ def make_adaptive_mask(data, mask, n_independent_echos=None, threshold=1, method
 
         # get 33rd %ile of `first_echo` and find corresponding index
         # NOTE: percentile is arbitrary
-        # TODO: "interpolation" param changed to "method" in numpy 1.22.0
-        #       confirm method="higher" is the same as interpolation="higher"
-        #       Current minimum version for numpy in tedana is 1.16 where
-        #       there is no "method" parameter. Either wait until we bump
-        #       our minimum numpy version to 1.22 or add a version check
-        #       or try/catch statement.
-        perc = np.percentile(first_echo, 33, interpolation="higher")
+        if np.lib.NumpyVersion(np.__version__) >= "1.22.0":
+            perc = np.percentile(first_echo, 33, method="higher")
+        else:
+            perc = np.percentile(first_echo, 33, interpolation="higher")
         perc_val = echo_means[:, 0] == perc
 
         # extract values from all echos at relevant index
